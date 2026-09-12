@@ -159361,7 +159361,7 @@
       "width": 900,
       "fill": "$print-paper",
       "layout": "vertical",
-      "gap": 24,
+      "gap": 10,
       "padding": 44,
       "children": [
         {
@@ -159388,7 +159388,7 @@
         },
         {
           "type": "frame",
-          "id": "uaRHv",
+          "id": "pT2s4",
           "name": "N R3 板清單（新順序；root／裝置框／截圖槽／沖印品 id 對照）",
           "width": "fill_container",
           "layout": "vertical",
@@ -159402,7 +159402,7 @@
           "children": [
             {
               "type": "text",
-              "id": "ehfPq",
+              "id": "pCSYd",
               "name": "H",
               "fill": "$print-ink",
               "content": "R3 板清單（新順序，MJ-14；取代 R2 uaRHv 段舊順序描述）",
@@ -159412,14 +159412,14 @@
             },
             {
               "type": "frame",
-              "id": "X0JW5",
+              "id": "n9xluK",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "jF0VT",
+                  "id": "nrMc0",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159433,7 +159433,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "E1qnvI",
+                  "id": "QDkLV",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159448,14 +159448,14 @@
             },
             {
               "type": "frame",
-              "id": "c0cdAI",
+              "id": "U1QVDq",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "yprKN",
+                  "id": "A2Hhh",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159469,7 +159469,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "oeo0g",
+                  "id": "SWAza",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159486,7 +159486,7 @@
         },
         {
           "type": "frame",
-          "id": "ECjGL",
+          "id": "sTxIt",
           "name": "N BL-1 修正：11 板重新落位（document scope root 級 AABB 全量比對＝0）",
           "width": "fill_container",
           "layout": "vertical",
@@ -159500,7 +159500,7 @@
           "children": [
             {
               "type": "text",
-              "id": "LkJnW",
+              "id": "kyrhk",
               "name": "H",
               "fill": "$print-ink",
               "content": "BL-1 修正：11 板重新落位（document scope root 級 AABB 全量比對＝0）",
@@ -159510,14 +159510,14 @@
             },
             {
               "type": "frame",
-              "id": "bJuNz",
+              "id": "R476M",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "lr2gP",
+                  "id": "fzYca",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159531,7 +159531,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "e2XZAz",
+                  "id": "iPqcc",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159548,7 +159548,7 @@
         },
         {
           "type": "frame",
-          "id": "RnPyj",
+          "id": "G9OMiL",
           "name": "N BL-2 修正：iPad 堆疊重算（Device Frame 底緣 ≤ 2752）",
           "width": "fill_container",
           "layout": "vertical",
@@ -159562,7 +159562,7 @@
           "children": [
             {
               "type": "text",
-              "id": "rxdYA",
+              "id": "n2l9U",
               "name": "H",
               "fill": "$print-ink",
               "content": "BL-2 修正：iPad 堆疊重算（Device Frame 底緣 ≤ 2752）",
@@ -159572,14 +159572,14 @@
             },
             {
               "type": "frame",
-              "id": "nz827",
+              "id": "ssYME",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "AbHok",
+                  "id": "V5B9YC",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159593,7 +159593,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "kNpy9",
+                  "id": "piZ1n",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159610,7 +159610,7 @@
         },
         {
           "type": "frame",
-          "id": "V6VUm",
+          "id": "X5WyV",
           "name": "N BL-3 修正：02 板換真實留言／愛心畫面＋用詞改回「愛心」",
           "width": "fill_container",
           "layout": "vertical",
@@ -159624,7 +159624,7 @@
           "children": [
             {
               "type": "text",
-              "id": "KgKmF",
+              "id": "MbNO4",
               "name": "H",
               "fill": "$print-ink",
               "content": "BL-3 修正：02 板換真實留言／愛心畫面＋用詞改回「愛心」",
@@ -159634,14 +159634,14 @@
             },
             {
               "type": "frame",
-              "id": "iY0Ek",
+              "id": "Wwzip",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "dIQng",
+                  "id": "fqauY",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159655,7 +159655,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "BKtlC",
+                  "id": "pIuvI",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159670,14 +159670,14 @@
             },
             {
               "type": "frame",
-              "id": "dSoPO",
+              "id": "z2k2ry",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "nUVtt",
+                  "id": "s0bCeK",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159691,7 +159691,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "obyzt",
+                  "id": "AxRNB",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159708,7 +159708,7 @@
         },
         {
           "type": "frame",
-          "id": "dNav3",
+          "id": "tCMlg",
           "name": "N BL-4 修正：iPad 05 換真實 iPad 畫面，不再 letterbox",
           "width": "fill_container",
           "layout": "vertical",
@@ -159722,7 +159722,7 @@
           "children": [
             {
               "type": "text",
-              "id": "yqePd",
+              "id": "ZYJh9",
               "name": "H",
               "fill": "$print-ink",
               "content": "BL-4 修正：iPad 05 換真實 iPad 畫面，不再 letterbox",
@@ -159732,14 +159732,14 @@
             },
             {
               "type": "frame",
-              "id": "zTRlA",
+              "id": "bfqJg",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "lvOrD",
+                  "id": "ussCB",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159753,7 +159753,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "n8zwx",
+                  "id": "XJGIb",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159768,14 +159768,14 @@
             },
             {
               "type": "frame",
-              "id": "fwVc6",
+              "id": "P6sNh",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "cLf3q",
+                  "id": "kyYz0",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159789,7 +159789,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "AIzmn",
+                  "id": "eXOfG",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159806,7 +159806,7 @@
         },
         {
           "type": "frame",
-          "id": "L8UCB",
+          "id": "pfdC6",
           "name": "N MJ-1／MJ-2 修正：五板各有版面節奏，字標只留 01",
           "width": "fill_container",
           "layout": "vertical",
@@ -159820,7 +159820,7 @@
           "children": [
             {
               "type": "text",
-              "id": "pspUK",
+              "id": "VJ6Dm",
               "name": "H",
               "fill": "$print-ink",
               "content": "MJ-1／MJ-2 修正：五板各有版面節奏，字標只留 01",
@@ -159830,14 +159830,14 @@
             },
             {
               "type": "frame",
-              "id": "PVIRy",
+              "id": "zYMUE",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "kahio",
+                  "id": "eyBIs",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159851,7 +159851,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "FpzH7",
+                  "id": "zdeED",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159868,7 +159868,7 @@
         },
         {
           "type": "frame",
-          "id": "UbGir",
+          "id": "M8zg1m",
           "name": "N MJ-3 修正：沖印品／台紙語彙加入海報層",
           "width": "fill_container",
           "layout": "vertical",
@@ -159882,7 +159882,7 @@
           "children": [
             {
               "type": "text",
-              "id": "aULpd",
+              "id": "SalAt",
               "name": "H",
               "fill": "$print-ink",
               "content": "MJ-3 修正：沖印品／台紙語彙加入海報層",
@@ -159892,14 +159892,14 @@
             },
             {
               "type": "frame",
-              "id": "v0lVN",
+              "id": "UaqOV",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "Ycn79",
+                  "id": "TIDXZ",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159913,7 +159913,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "yRaDb",
+                  "id": "tnB79",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159928,14 +159928,14 @@
             },
             {
               "type": "frame",
-              "id": "MLQjM",
+              "id": "ixx86",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "IgCtz",
+                  "id": "HeQP5",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -159949,7 +159949,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "vuWZO",
+                  "id": "H2gOl",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -159966,7 +159966,7 @@
         },
         {
           "type": "frame",
-          "id": "ldAq7",
+          "id": "RqIM9",
           "name": "N MJ-4 修正：iPhone 槽比例對齊實機（含推導）",
           "width": "fill_container",
           "layout": "vertical",
@@ -159980,7 +159980,7 @@
           "children": [
             {
               "type": "text",
-              "id": "hG73z",
+              "id": "W2rDai",
               "name": "H",
               "fill": "$print-ink",
               "content": "MJ-4 修正：iPhone 槽比例對齊實機（含推導）",
@@ -159990,14 +159990,14 @@
             },
             {
               "type": "frame",
-              "id": "sneEB",
+              "id": "HxGPd",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "xOS2X",
+                  "id": "Y7KXb",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160011,7 +160011,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "PITpl",
+                  "id": "LhCIp",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160028,7 +160028,7 @@
         },
         {
           "type": "frame",
-          "id": "jvRuW",
+          "id": "b0edcf",
           "name": "N MJ-5 修正：裝置框落影是真的了",
           "width": "fill_container",
           "layout": "vertical",
@@ -160042,7 +160042,7 @@
           "children": [
             {
               "type": "text",
-              "id": "vkvBV",
+              "id": "ZGFyP",
               "name": "H",
               "fill": "$print-ink",
               "content": "MJ-5 修正：裝置框落影是真的了",
@@ -160052,14 +160052,14 @@
             },
             {
               "type": "frame",
-              "id": "eFgNl",
+              "id": "qgJDA",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "dde55",
+                  "id": "Gah5O",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160073,7 +160073,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "vUrPW",
+                  "id": "Q0Rnwx",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160090,7 +160090,7 @@
         },
         {
           "type": "frame",
-          "id": "zgljV",
+          "id": "pMpiu",
           "name": "N MJ-6 裁定執行：Dynamic Island 已刪除",
           "width": "fill_container",
           "layout": "vertical",
@@ -160104,7 +160104,7 @@
           "children": [
             {
               "type": "text",
-              "id": "XYaoR",
+              "id": "eAWoM",
               "name": "H",
               "fill": "$print-ink",
               "content": "MJ-6 裁定執行：Dynamic Island 已刪除",
@@ -160114,14 +160114,14 @@
             },
             {
               "type": "frame",
-              "id": "Arhum",
+              "id": "kaftX",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "ugBzR",
+                  "id": "SOC1K",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160135,7 +160135,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "vVvdo",
+                  "id": "TlRhc",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160152,7 +160152,7 @@
         },
         {
           "type": "frame",
-          "id": "N4sXlR",
+          "id": "RyZe8",
           "name": "N MJ-7 修正：標語字數上限依板個別聲明，不再套單一「≤14 字」",
           "width": "fill_container",
           "layout": "vertical",
@@ -160166,7 +160166,7 @@
           "children": [
             {
               "type": "text",
-              "id": "uV0dy",
+              "id": "KxhFx",
               "name": "H",
               "fill": "$print-ink",
               "content": "MJ-7 修正：標語字數上限依板個別聲明，不再套單一「≤14 字」",
@@ -160176,14 +160176,14 @@
             },
             {
               "type": "frame",
-              "id": "ogurd",
+              "id": "gl279",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "l2cZc",
+                  "id": "Cfu7p",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160197,7 +160197,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "vEWCw",
+                  "id": "MHKd4",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160214,7 +160214,7 @@
         },
         {
           "type": "frame",
-          "id": "vuEiF",
+          "id": "sWvRr",
           "name": "N MJ-8 裁定執行：長輩賣點升格為標語",
           "width": "fill_container",
           "layout": "vertical",
@@ -160228,7 +160228,7 @@
           "children": [
             {
               "type": "text",
-              "id": "k32TK5",
+              "id": "oZl12",
               "name": "H",
               "fill": "$print-ink",
               "content": "MJ-8 裁定執行：長輩賣點升格為標語",
@@ -160238,14 +160238,14 @@
             },
             {
               "type": "frame",
-              "id": "O1sOv",
+              "id": "U0oVb",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "xFV2J",
+                  "id": "M5biG",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160259,7 +160259,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "YVjtE",
+                  "id": "h0GRy",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160276,7 +160276,7 @@
         },
         {
           "type": "frame",
-          "id": "l26MtZ",
+          "id": "XdFbD",
           "name": "N MJ-9 修正：副標數量與字級",
           "width": "fill_container",
           "layout": "vertical",
@@ -160290,7 +160290,7 @@
           "children": [
             {
               "type": "text",
-              "id": "apOzv",
+              "id": "U6aC2h",
               "name": "H",
               "fill": "$print-ink",
               "content": "MJ-9 修正：副標數量與字級",
@@ -160300,14 +160300,14 @@
             },
             {
               "type": "frame",
-              "id": "y2C4lb",
+              "id": "WxZnb",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "D6fRmJ",
+                  "id": "Q2zDsU",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160321,7 +160321,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "cnZx0",
+                  "id": "nXrPN",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160338,7 +160338,7 @@
         },
         {
           "type": "frame",
-          "id": "wrhfT",
+          "id": "mTEkB",
           "name": "N MN-1 修正：Spacer 不再是倒推餘數",
           "width": "fill_container",
           "layout": "vertical",
@@ -160352,7 +160352,7 @@
           "children": [
             {
               "type": "text",
-              "id": "d4XNb",
+              "id": "jMQcT",
               "name": "H",
               "fill": "$print-ink",
               "content": "MN-1 修正：Spacer 不再是倒推餘數",
@@ -160362,14 +160362,14 @@
             },
             {
               "type": "frame",
-              "id": "PijB2",
+              "id": "m5wzc",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "W1Deg",
+                  "id": "hqJuy",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160383,7 +160383,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "M8W6O",
+                  "id": "NvEfj",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160400,7 +160400,7 @@
         },
         {
           "type": "frame",
-          "id": "RpEQA",
+          "id": "vRjMB",
           "name": "N MN-2 修正：板背景與文字改用字面色值，不掛 theme",
           "width": "fill_container",
           "layout": "vertical",
@@ -160414,7 +160414,7 @@
           "children": [
             {
               "type": "text",
-              "id": "BEqKG",
+              "id": "EaBtm",
               "name": "H",
               "fill": "$print-ink",
               "content": "MN-2 修正：板背景與文字改用字面色值，不掛 theme",
@@ -160424,14 +160424,14 @@
             },
             {
               "type": "frame",
-              "id": "UN6v8",
+              "id": "qcpo5",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "zEVVf",
+                  "id": "F8a9s",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160445,7 +160445,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "t1TyMd",
+                  "id": "P1pEO0",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160462,7 +160462,7 @@
         },
         {
           "type": "frame",
-          "id": "s4pzlz",
+          "id": "aYiwY",
           "name": "N MN-3／MN-4：iPad 槽密度與圓角推導（記錄，未逐板精算）",
           "width": "fill_container",
           "layout": "vertical",
@@ -160476,7 +160476,7 @@
           "children": [
             {
               "type": "text",
-              "id": "GJjdm",
+              "id": "w1N4B",
               "name": "H",
               "fill": "$print-ink",
               "content": "MN-3／MN-4：iPad 槽密度與圓角推導（記錄，未逐板精算）",
@@ -160486,14 +160486,14 @@
             },
             {
               "type": "frame",
-              "id": "IoPtk",
+              "id": "BaBkC",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "HuYed",
+                  "id": "S2tk7",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160507,7 +160507,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "K4uHXi",
+                  "id": "f0v5bD",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160522,14 +160522,14 @@
             },
             {
               "type": "frame",
-              "id": "YL9S1",
+              "id": "l2JEXP",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "X5Sco",
+                  "id": "a3Ybeb",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160543,7 +160543,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "nY3sZ",
+                  "id": "PvScX",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160560,7 +160560,7 @@
         },
         {
           "type": "frame",
-          "id": "A1yDR",
+          "id": "CQ6FX",
           "name": "N MN-6 修正：顯示級標點",
           "width": "fill_container",
           "layout": "vertical",
@@ -160574,7 +160574,7 @@
           "children": [
             {
               "type": "text",
-              "id": "FFigH",
+              "id": "R2P0XN",
               "name": "H",
               "fill": "$print-ink",
               "content": "MN-6 修正：顯示級標點",
@@ -160584,14 +160584,14 @@
             },
             {
               "type": "frame",
-              "id": "L3DsoE",
+              "id": "a459u",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "BBvmN",
+                  "id": "Uri0E",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160605,7 +160605,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "AQkOC",
+                  "id": "W6e34G",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160622,7 +160622,7 @@
         },
         {
           "type": "frame",
-          "id": "K9vcd",
+          "id": "K7afio",
           "name": "N MN-7：1:1 未縮放占位板（不採納，理由）",
           "width": "fill_container",
           "layout": "vertical",
@@ -160636,7 +160636,7 @@
           "children": [
             {
               "type": "text",
-              "id": "iGBj1",
+              "id": "U2t1Ca",
               "name": "H",
               "fill": "$print-ink",
               "content": "MN-7：1:1 未縮放占位板（不採納，理由）",
@@ -160646,14 +160646,14 @@
             },
             {
               "type": "frame",
-              "id": "vZBzD",
+              "id": "fm25U",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "oCa60",
+                  "id": "O1ukHv",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160667,7 +160667,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "P1ar7",
+                  "id": "e4aXC",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160684,7 +160684,7 @@
         },
         {
           "type": "frame",
-          "id": "z4iuw",
+          "id": "wbrqA",
           "name": "N 其他：溢出掃描盲區的 harness 建議（供 orchestrator 參考）",
           "width": "fill_container",
           "layout": "vertical",
@@ -160698,7 +160698,7 @@
           "children": [
             {
               "type": "text",
-              "id": "QPER4",
+              "id": "PQkTY",
               "name": "H",
               "fill": "$print-ink",
               "content": "其他：溢出掃描盲區的 harness 建議（供 orchestrator 參考）",
@@ -160708,14 +160708,14 @@
             },
             {
               "type": "frame",
-              "id": "ZsxSR",
+              "id": "Gvu2y",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "empuk",
+                  "id": "pqfGE",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160729,7 +160729,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "tMZjU",
+                  "id": "i4PBq",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160746,7 +160746,7 @@
         },
         {
           "type": "frame",
-          "id": "Omj1O",
+          "id": "qOgJ5",
           "name": "N 匯出步驟（Pen 匯出 PNG 1x；R3 新增前置 blocker）",
           "width": "fill_container",
           "layout": "vertical",
@@ -160760,7 +160760,7 @@
           "children": [
             {
               "type": "text",
-              "id": "SumTt",
+              "id": "QDCfC",
               "name": "H",
               "fill": "$print-ink",
               "content": "匯出步驟（Pen 匯出 PNG 1x；R3 新增前置 blocker）",
@@ -160770,14 +160770,14 @@
             },
             {
               "type": "frame",
-              "id": "WRUV9",
+              "id": "nHuaR",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "dsPxw",
+                  "id": "WyXCR",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160791,7 +160791,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "OvxO1",
+                  "id": "Yqagr",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160806,14 +160806,14 @@
             },
             {
               "type": "frame",
-              "id": "BQcFu",
+              "id": "KgGtp",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "u64JX",
+                  "id": "oNX5S",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160827,7 +160827,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "kdgfe",
+                  "id": "WUjfA",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160842,14 +160842,14 @@
             },
             {
               "type": "frame",
-              "id": "lyg8Y",
+              "id": "xiLgy",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "Kmkje",
+                  "id": "IB6uS",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160863,7 +160863,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "VxljM",
+                  "id": "d2A5u",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160880,7 +160880,7 @@
         },
         {
           "type": "frame",
-          "id": "Bth2w",
+          "id": "hFRXC",
           "name": "N 6.5\" 縮放做法（沿用 R1，未變）",
           "width": "fill_container",
           "layout": "vertical",
@@ -160894,7 +160894,7 @@
           "children": [
             {
               "type": "text",
-              "id": "DETpb",
+              "id": "W2osdO",
               "name": "H",
               "fill": "$print-ink",
               "content": "6.5\" 縮放做法（沿用 R1，未變）",
@@ -160904,14 +160904,14 @@
             },
             {
               "type": "frame",
-              "id": "iY5bF",
+              "id": "DdTfL",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "fb5wq",
+                  "id": "C3uvK",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160925,7 +160925,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "V9ybB",
+                  "id": "CBW1j",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -160942,7 +160942,7 @@
         },
         {
           "type": "frame",
-          "id": "g6VHN",
+          "id": "fSpuX",
           "name": "N 槽替換方法（LS-147 讀這裡，id 已更新為 R3）",
           "width": "fill_container",
           "layout": "vertical",
@@ -160956,24 +160956,24 @@
           "children": [
             {
               "type": "text",
-              "id": "dSuaP",
+              "id": "CdSIc",
               "name": "H",
               "fill": "$print-ink",
-              "content": "槽替換方法（LS-147 讀這裡，id 已更新為 R3——10 個 slot id 不變，只有 3 個 R3 複合截圖檔名有 -v2 後綴，見下）",
+              "content": "槽替換方法（LS-147 讀這裡，id 已更新為 R3）",
               "fontFamily": "Noto Sans TC",
               "fontSize": 22,
               "fontWeight": "700"
             },
             {
               "type": "frame",
-              "id": "TJlYr",
+              "id": "v6SB5",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "O4BI1",
+                  "id": "gqqEa",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -160987,7 +160987,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "h0DuvL",
+                  "id": "x6VSkl",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -161004,7 +161004,7 @@
         },
         {
           "type": "frame",
-          "id": "GYQMe",
+          "id": "IEpLx",
           "name": "N 每張對應的 LS-146 示範家庭資料狀態",
           "width": "fill_container",
           "layout": "vertical",
@@ -161018,7 +161018,7 @@
           "children": [
             {
               "type": "text",
-              "id": "sPynG",
+              "id": "inf2Y",
               "name": "H",
               "fill": "$print-ink",
               "content": "每張對應的 LS-146 示範家庭資料狀態",
@@ -161028,14 +161028,14 @@
             },
             {
               "type": "frame",
-              "id": "pua7s",
+              "id": "L9GWZ3",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "yzQ4t",
+                  "id": "O26Sw",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -161049,7 +161049,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "C0geK",
+                  "id": "VPVz5",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -161066,7 +161066,7 @@
         },
         {
           "type": "frame",
-          "id": "H5iga",
+          "id": "WmCiz",
           "name": "N R3 修訂重點（BL-5～BL-7／MJ-10～14／MN-5，取代／補充 R2 對應描述）",
           "width": "fill_container",
           "layout": "vertical",
@@ -161080,7 +161080,7 @@
           "children": [
             {
               "type": "text",
-              "id": "Iw0Qd",
+              "id": "Qjwqz",
               "name": "H",
               "fill": "$print-ink",
               "content": "R3 修訂重點（BL-5～BL-7／MJ-10～14／MN-5，2026-09-13）",
@@ -161090,14 +161090,14 @@
             },
             {
               "type": "frame",
-              "id": "N2PUSd",
+              "id": "bAdzq",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "CtsCQ",
+                  "id": "Gtfeq",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -161111,7 +161111,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "S9RG9",
+                  "id": "H7782",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -161126,14 +161126,14 @@
             },
             {
               "type": "frame",
-              "id": "RY6n4",
+              "id": "PdUnx",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "T99ydn",
+                  "id": "fmK6I",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -161147,7 +161147,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "OEO8p",
+                  "id": "f4H6D",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -161162,14 +161162,14 @@
             },
             {
               "type": "frame",
-              "id": "j8nwM",
+              "id": "iVBaz",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "uzMp9",
+                  "id": "KiFmS",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -161183,7 +161183,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "ZDhuQ",
+                  "id": "Bwpif",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -161198,14 +161198,14 @@
             },
             {
               "type": "frame",
-              "id": "aGw6B",
+              "id": "PCdXR",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "Z1Lv51",
+                  "id": "Q2JgX",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -161219,7 +161219,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "YQbvF",
+                  "id": "JOpCE",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -161234,14 +161234,14 @@
             },
             {
               "type": "frame",
-              "id": "xQ02u",
+              "id": "Kz1B9",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "c93Gu1",
+                  "id": "OSb0a",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -161255,7 +161255,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "a6q3pa",
+                  "id": "VdV9f",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -161270,14 +161270,14 @@
             },
             {
               "type": "frame",
-              "id": "YgLWr",
+              "id": "gy78L",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "YHf8G",
+                  "id": "QuLqO",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -161291,7 +161291,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "RrF5I",
+                  "id": "KokPM",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -161306,14 +161306,14 @@
             },
             {
               "type": "frame",
-              "id": "MQCLq",
+              "id": "Fp0qN",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "JhF9N",
+                  "id": "Q1qfJ",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -161327,7 +161327,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "Kiacm",
+                  "id": "YNqk6",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -161342,14 +161342,14 @@
             },
             {
               "type": "frame",
-              "id": "yy13a",
+              "id": "HvyC3",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "PsWn6",
+                  "id": "H0Jn0x",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -161363,7 +161363,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "WNKyf",
+                  "id": "v7QRb",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
@@ -161378,14 +161378,14 @@
             },
             {
               "type": "frame",
-              "id": "K6ehA",
+              "id": "xVDun",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "Ut7EK",
+                  "id": "Oae6a",
                   "name": "stamp",
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
@@ -161399,7 +161399,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "FUQ5J",
+                  "id": "PoV1I",
                   "name": "l",
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
