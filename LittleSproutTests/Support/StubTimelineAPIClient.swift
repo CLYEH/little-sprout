@@ -11,12 +11,30 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
     typealias FetchAlbumsHandler = @Sendable ([UUID]) async throws -> [AlbumRow]
     typealias FetchMediaHandler = @Sendable ([UUID]) async throws -> [MediaRow]
     typealias SignedURLsHandler = @Sendable ([String]) async throws -> [String: URL]
+    typealias ReactionCountsHandler = @Sendable (UUID, String, [UUID]) async throws -> [ReactionCountRow]
+    typealias ToggleReactionHandler = @Sendable (UUID, String, UUID) async throws -> Bool
+    typealias ReactorsHandler = @Sendable (UUID, String, UUID) async throws -> [ReactorRow]
 
     struct FetchPointersCall: Equatable {
         let familyID: UUID
         let childID: UUID?
         let cursor: TimelineCursor?
         let limit: Int
+    }
+
+    /// LS-216：`reactionCounts(familyID:targetType:targetIDs:)` 每次呼叫收到的參數，依呼叫
+    /// 順序——供測試斷言「同一頁最多 3 次呼叫、一種 kind 一次」（不是逐卡呼叫），同
+    /// `signedURLsCalls` 既有理由：不能只看最終結果字典，要看呼叫次數與每次傳入什麼。
+    struct ReactionCountsCall: Equatable {
+        let familyID: UUID
+        let targetType: String
+        let targetIDs: [UUID]
+    }
+
+    struct ToggleReactionCall: Equatable {
+        let familyID: UUID
+        let targetType: String
+        let targetID: UUID
     }
 
     private struct Box {
@@ -31,6 +49,11 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
         /// 供測試斷言「全尺寸只在放大／播放時簽」：計數呼叫次數、檢查每次傳入的路徑是縮圖
         /// 還是原圖，不能只看最終結果字典（字典看不出簽了幾次、每次簽了什麼）。
         var signedURLsCalls: [[String]] = []
+        var reactionCountsHandler: ReactionCountsHandler = { _, _, _ in [] }
+        var reactionCountsCalls: [ReactionCountsCall] = []
+        var toggleReactionHandler: ToggleReactionHandler = { _, _, _ in true }
+        var toggleReactionCalls: [ToggleReactionCall] = []
+        var reactorsHandler: ReactorsHandler = { _, _, _ in [] }
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
@@ -41,6 +64,14 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
 
     var signedURLsCalls: [[String]] {
         box.withLock { $0.signedURLsCalls }
+    }
+
+    var reactionCountsCalls: [ReactionCountsCall] {
+        box.withLock { $0.reactionCountsCalls }
+    }
+
+    var toggleReactionCalls: [ToggleReactionCall] {
+        box.withLock { $0.toggleReactionCalls }
     }
 
     func setFetchPointersHandler(_ handler: @escaping FetchPointersHandler) {
@@ -65,6 +96,18 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
 
     func setSignedURLsHandler(_ handler: @escaping SignedURLsHandler) {
         box.withLock { $0.signedURLsHandler = handler }
+    }
+
+    func setReactionCountsHandler(_ handler: @escaping ReactionCountsHandler) {
+        box.withLock { $0.reactionCountsHandler = handler }
+    }
+
+    func setToggleReactionHandler(_ handler: @escaping ToggleReactionHandler) {
+        box.withLock { $0.toggleReactionHandler = handler }
+    }
+
+    func setReactorsHandler(_ handler: @escaping ReactorsHandler) {
+        box.withLock { $0.reactorsHandler = handler }
     }
 
     func fetchTimelinePointers(
@@ -100,5 +143,24 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
         box.withLock { $0.signedURLsCalls.append(paths) }
         let handler = box.withLock { $0.signedURLsHandler }
         return try await handler(paths)
+    }
+
+    func reactionCounts(familyID: UUID, targetType: String, targetIDs: [UUID]) async throws -> [ReactionCountRow] {
+        let call = ReactionCountsCall(familyID: familyID, targetType: targetType, targetIDs: targetIDs)
+        box.withLock { $0.reactionCountsCalls.append(call) }
+        let handler = box.withLock { $0.reactionCountsHandler }
+        return try await handler(familyID, targetType, targetIDs)
+    }
+
+    func toggleReaction(familyID: UUID, targetType: String, targetID: UUID) async throws -> Bool {
+        let call = ToggleReactionCall(familyID: familyID, targetType: targetType, targetID: targetID)
+        box.withLock { $0.toggleReactionCalls.append(call) }
+        let handler = box.withLock { $0.toggleReactionHandler }
+        return try await handler(familyID, targetType, targetID)
+    }
+
+    func reactors(familyID: UUID, targetType: String, targetID: UUID) async throws -> [ReactorRow] {
+        let handler = box.withLock { $0.reactorsHandler }
+        return try await handler(familyID, targetType, targetID)
     }
 }

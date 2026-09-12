@@ -60,6 +60,23 @@ enum TapTargetGateScreenName: String {
     // 不需要任何 seed 資料（`AlbumsStore.preview()`／`ChildrenStore.preview()` 已是
     // `#Preview` 在用的假 client），姓名欄／寶貝標記欄／建立鈕三顆可點元件一開畫面就有代表性。
     case createAlbum = "CreateAlbumView"
+    // LS-166：`AlbumDetailView` 從 LS-165 的最小佔位（`ContentUnavailableView`）換成正式內容，
+    // 取代 `tap-target-exemptions.txt` 原本的具名排除（同 `albumsDefaultState` 的既有理由）。
+    // owner 視角涵蓋 Nav Row（自畫返回鍵／更多選單）＋Action Bar（加入照片）三顆可點元件；
+    // 照片牆本身無互動元件（`AlbumPhotoPrintCell` 具名排除），空狀態就有代表性。
+    case albumDetailOwner = "AlbumDetailView"
+    // LS-166：member 視角——「更多」選單依 Notes `OHMPk` 僅 owner 可見，這個變體不是獨立
+    // 檔案，不需要另外具名排除（同 `.settingsMemberRole` 既有先例）。
+    case albumDetailMember = "AlbumDetailViewMemberRole"
+    // LS-166：「編輯相簿名稱」sheet——初始態（標題已預填）不需要任何 seed 資料，同
+    // `createAlbum` 的既有理由。
+    case editAlbum = "EditAlbumView"
+    // LS-166：相簿詳情「有照片」（12 張，真實比例混排）——不用來做逐元件 tap target 量測
+    // （同 `.diaryCardVideoBadges`／`.deleteAccountInProgress` 既有先例），純粹借用「launch
+    // environment 指定畫面」這條通道供 QA／設計對稿截圖。
+    case albumDetailPopulated = "AlbumDetailViewPopulated"
+    // LS-166 票文範圍 3：34 張壓測，同上不用於逐元件量測。
+    case albumDetailStress = "AlbumDetailViewStress"
     // LS-136：`SectionTabBar`（`cmp/Tab Bar` 全字級純 icon）本身不是 `Features/**/*View.swift`
     // （住在 `Navigation/`），`tap-target-registry-check.sh` 不會強制要求註冊，但票文 scope 4
     // 明確要求「TapTargetGateHarness 註冊 Tab Bar 預設態（四顆 ≥44pt）」——直接掛完整的
@@ -188,6 +205,23 @@ enum TapTargetGateScreenName: String {
     // 下是 disabled，不是可點但按下去沒反應。同 `.reportInboxResolveError` 的既有理由，不用來
     // 做逐元件 tap target 量測（disabled 按鈕本來就不該被量測熱區）。
     case diaryDetailRoleNotReady = "DiaryDetailViewRoleNotReady"
+    // LS-216：時間軸互動列（`InteractionRow`）——三種卡片（日記／相簿／照片）底部各有
+    // Like Toggle／Count Zone／Comment Button 三顆按鈕，共 9 顆。刻意不 seed `familyStore`
+    // （同 `sectionTabViewWithDiaryHost` 文件註解點名的既有陷阱：seed 了會讓 `TimelineView`
+    // 的 `.task` 真的打 `PreviewTimelineAPIClient.fetchTimelinePointers`，固定回傳 `[]`
+    // 蓋掉種好的 `timelineStore.entries`），改直接種 `timelineStore.familyID`（LS-216
+    // `seedForPreview(entries:familyID:)` 新參數）讓 `InteractionRow` 的按讚／按讚名單
+    // 呼叫有 `familyID` 可用。
+    case timelineInteractionRow = "TimelineViewInteractionRow"
+    // LS-217：推播權限前置說明頁——初始態（`PushNotificationStore.preview()` 預設
+    // `.notDetermined`）不需要任何 seed 資料即有代表性，同 `.createChild` 等既有先例。
+    case pushPreprompt = "PushPrepromptView"
+    // LS-217：設定頁「推播通知」列——`.denied`／`.authorized` 兩個變體，不是獨立檔案（同
+    // `.settingsMemberRole`／`.uploadQueueSheetNormal` 等既有變體 case 的先例），用來覆蓋
+    // `.settings`（預設 `.notDetermined`）之外的另外兩種授權狀態，讓三態文案與點擊行為都能被
+    // UITest／tap-target-check 覆蓋。
+    case settingsPushDenied = "SettingsViewPushDenied"
+    case settingsPushAuthorized = "SettingsViewPushAuthorized"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -221,6 +255,13 @@ enum TapTargetGateScreenName: String {
         // 獨立存在、不受相簿資料影響的文字節點（同 `.albumsDefaultState` 的既有理由）。
         case .albumsPopulatedState: return .staticText("相簿")
         case .createAlbum: return .staticText("新增相簿")
+        // 「更多操作」accessibility label——owner 視角一開畫面就會渲染，不依賴使用者先點開。
+        case .albumDetailOwner: return .button("更多操作")
+        // 「更多」在 member 視角不渲染，改用一定會渲染的相簿標題文字當 sentinel。
+        case .albumDetailMember: return .staticText("上禮拜的動物園一日遊")
+        case .editAlbum: return .staticText("編輯相簿名稱")
+        case .albumDetailPopulated: return .staticText("阿公阿嬤家過年")
+        case .albumDetailStress: return .staticText("34 張全滿壓測")
         // 預設選中分頁＝時間軸（`AuthenticatedRootView` 的 `selection` 初值），headerRow
         // 「時間軸」一定會渲染，不依賴任何 seed 資料。
         case .sectionTabView: return .staticText("時間軸")
@@ -271,6 +312,11 @@ enum TapTargetGateScreenName: String {
         case .diaryDetail: return .button("更多操作")
         case .diaryDetailOwnContent: return .button("更多操作")
         case .diaryDetailRoleNotReady: return .button("更多操作")
+        case .timelineInteractionRow: return .staticText("時間軸")
+        case .pushPreprompt: return .button("開啟通知")
+        // 同 `.settings`：「登出」列不受推播授權狀態影響，一定會渲染。
+        case .settingsPushDenied: return .button("登出")
+        case .settingsPushAuthorized: return .button("登出")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

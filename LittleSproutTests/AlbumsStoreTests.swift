@@ -3,7 +3,7 @@ import Foundation
 import XCTest
 
 private func albumRow(id: UUID = UUID(), title: String = "相簿", createdAt: Date) -> AlbumListingRow {
-    AlbumListingRow(id: id, title: title, coverMediaId: nil, createdAt: createdAt)
+    AlbumListingRow(id: id, title: title, createdAt: createdAt)
 }
 
 /// 同 `TimelineStoreTests.AsyncGate`（`private`，以檔案為界，這裡另建一份小型版本）——精準
@@ -145,7 +145,7 @@ final class AlbumsStoreTests: XCTestCase {
         stub.setFetchAlbumsHandler { _, _, _ in [] }
         let createdAlbumID = UUID()
         stub.setCreateAlbumHandler { _, title in
-            AlbumListingRow(id: createdAlbumID, title: title, coverMediaId: nil, createdAt: Date())
+            AlbumListingRow(id: createdAlbumID, title: title, createdAt: Date())
         }
         let store = AlbumsStore(apiClient: stub)
         let childID = UUID()
@@ -191,7 +191,7 @@ final class AlbumsStoreTests: XCTestCase {
         let stub = StubAlbumsAPIClient()
         let createdAlbumID = UUID()
         stub.setCreateAlbumHandler { _, title in
-            AlbumListingRow(id: createdAlbumID, title: title, coverMediaId: nil, createdAt: Date())
+            AlbumListingRow(id: createdAlbumID, title: title, createdAt: Date())
         }
         stub.setSetAlbumChildrenHandler { _, _ in throw AppError.network(message: "offline") }
         stub.setFetchAlbumsHandler { _, _, _ in
@@ -243,7 +243,7 @@ final class AlbumsStoreTests: XCTestCase {
         let staleAlbumID = UUID()
         stub.setCreateAlbumHandler { _, title in
             await staleGate.wait()
-            return AlbumListingRow(id: staleAlbumID, title: title, coverMediaId: nil, createdAt: Date())
+            return AlbumListingRow(id: staleAlbumID, title: title, createdAt: Date())
         }
 
         // 較舊的一次先開始（世代號先遞增），卡在閘門裡——`childIDs` 空陣列，放行後會直接走到
@@ -254,7 +254,7 @@ final class AlbumsStoreTests: XCTestCase {
 
         // 較新的一次完整跑完（不卡閘門）：`setAlbumChildren` 失敗，補償軟刪後回報錯誤。
         stub.setCreateAlbumHandler { _, title in
-            AlbumListingRow(id: UUID(), title: title, coverMediaId: nil, createdAt: Date())
+            AlbumListingRow(id: UUID(), title: title, createdAt: Date())
         }
         stub.setSetAlbumChildrenHandler { _, _ in throw AppError.network(message: "新的失敗") }
         let newResult = await store.createAlbum(familyID: familyID, title: "新的", childIDs: [UUID()])
@@ -271,6 +271,53 @@ final class AlbumsStoreTests: XCTestCase {
             return XCTFail("應該是較新一次呼叫的錯誤，實際是 \(error)")
         }
         XCTAssertEqual(message, "新的失敗", "較舊一次呼叫晚完成時不該覆蓋較新一次已經寫回的 createAlbumState")
+    }
+
+    // MARK: - attachUploadedMedia（merge-review R2 M2）
+
+    /// merge-review R2 M2 根因重現：使用者在上傳飛行中離開相簿詳情頁，`AlbumDetailView` 的
+    /// `@State AlbumDetailStore` 會 deinit，若 `album_media` 寫入掛在那支 store 上，這裡就
+    /// 什麼都不會發生。這支測試**完全不建立任何 `AlbumDetailStore` 實例**——直接對長生命週期
+    /// 的 `AlbumsStore` 呼叫，模擬「detailStore 早就不存在」的極端情況，證明寫入路徑不依賴它。
+    func test_attachUploadedMedia_writesAlbumMedia_withoutAnyAlbumDetailStoreInstance() async {
+        let stub = StubAlbumsAPIClient()
+        let albumID = UUID()
+        let familyID = UUID()
+        let mediaID = UUID()
+        let store = AlbumsStore(apiClient: stub)
+
+        await store.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: mediaID)
+
+        XCTAssertEqual(stub.attachMediaCalls.count, 1, "沒有任何 AlbumDetailStore 存在也該寫入 album_media")
+        XCTAssertEqual(stub.attachMediaCalls.first?.albumID, albumID)
+        XCTAssertEqual(stub.attachMediaCalls.first?.familyID, familyID)
+        XCTAssertEqual(stub.attachMediaCalls.first?.mediaID, mediaID)
+    }
+
+    func test_attachUploadedMedia_computesSortOrderFromCurrentLinkCount() async {
+        let stub = StubAlbumsAPIClient()
+        let albumID = UUID()
+        stub.setFetchAlbumMediaLinksHandler { _ in
+            [
+                AlbumMediaLinkRow(albumId: albumID, mediaId: UUID(), sortOrder: 0),
+                AlbumMediaLinkRow(albumId: albumID, mediaId: UUID(), sortOrder: 1)
+            ]
+        }
+        let store = AlbumsStore(apiClient: stub)
+
+        await store.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: UUID())
+
+        XCTAssertEqual(stub.attachMediaCalls.first?.sortOrder, 2, "現查現算：已有 2 筆連結，新的一筆接續在後")
+    }
+
+    func test_attachUploadedMedia_attachFails_doesNotThrow() async {
+        let stub = StubAlbumsAPIClient()
+        stub.setAttachMediaHandler { _, _, _, _ in throw AppError.rejected(message: "家庭已停權", code: "LS053") }
+        let store = AlbumsStore(apiClient: stub)
+
+        // best-effort：不拋錯（見文件註解），呼叫端（`UploadQueueStore` 的 Task）不需要
+        // 額外的 catch 分支。
+        await store.attachUploadedMedia(albumID: UUID(), familyID: familyID, mediaID: UUID())
     }
 
     // MARK: - reset

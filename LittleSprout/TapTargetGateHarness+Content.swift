@@ -74,7 +74,13 @@ extension TapTargetGateHarness {
             albumsStore: .preview(), eulaStore: .preview(shouldPresent: true, judgedUserID: userID),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
             accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
-            safetyAPIClient: PreviewSafetyAPIClient(), pendingInviteCode: .constant(nil)
+            safetyAPIClient: PreviewSafetyAPIClient(),
+            // LS-217：`.authorized`（非 `.notDetermined`）——避免這支流程測試意外撞上
+            // `AuthenticatedRootView` 新增的「登入後首次進時間軸」推播前置頁 `fullScreenCover`
+            // （`.preview()` 預設 `.notDetermined` 會讓 `showsPreprompt` 判定為 true，蓋住這支
+            // 測試要斷言的時間軸 Header，見 `PushPrepromptPolicy`）。
+            pushNotificationStore: .preview(authorizationStatus: .authorized),
+            pendingInviteCode: .constant(nil)
         )
         .environment(\.horizontalSizeClass, .compact)
     }

@@ -9,10 +9,13 @@ private final class PreviewAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable
     func fetchMedia(ids: [UUID]) async throws -> [MediaRow] { [] }
     func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] { [:] }
     func createAlbum(familyID: UUID, title: String) async throws -> AlbumListingRow {
-        AlbumListingRow(id: UUID(), title: title, coverMediaId: nil, createdAt: Date())
+        AlbumListingRow(id: UUID(), title: title, createdAt: Date())
     }
     func setAlbumChildren(albumID: UUID, childIDs: [UUID]) async throws {}
     func setAlbumDeleted(albumID: UUID, deleted: Bool) async throws {}
+    func fetchAlbumMediaLinks(albumID: UUID) async throws -> [AlbumMediaLinkRow] { [] }
+    func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws {}
+    func updateAlbumTitle(albumID: UUID, title: String) async throws {}
 }
 
 extension AlbumsStore {

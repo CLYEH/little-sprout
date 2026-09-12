@@ -1,21 +1,43 @@
 import SwiftUI
+import UserNotifications
 
 /// LS-188：01 設定頁「內容與安全」區塊的列組成——依角色決定「檢舉紀錄」列在不在（稿面：
 /// 檢舉收件匣僅 Owner 可見，票文範圍 1）。抽成純函式（不含任何 View／async 依賴）方便
 /// XCTest 直接覆蓋這條判斷，不需要真的渲染 SwiftUI 視圖（同 `UploadFailureReason`／
 /// `ChildFilterLayout` 這類「View 只認清單、判斷邏輯抽出去測」的既有慣例）。
 ///
-/// `SettingsView.contentSafetySection` 依這份清單順序建列；`.blockList`／`.storage` 兩列
-/// 兩種角色都會出現，`.reportInbox` 只在 `isOwner` 為 true 時插在中間。
+/// `SettingsView.contentSafetySection` 依這份清單順序建列；`.blockList`／`.storage`／`.push`
+/// 三種角色都會出現，`.reportInbox` 只在 `isOwner` 為 true 時插在中間。`.push`（LS-217）固定
+/// 排在清單最後——稿面 `y7KAW` `DVEow`「推播通知」列是這個卡片新增的最後一列。
 enum SettingsContentSafetyRow: Equatable {
     case blockList
     case reportInbox
     case storage
+    case push
 }
 
 enum SettingsContentSafetyComposition {
     static func rows(isOwner: Bool) -> [SettingsContentSafetyRow] {
-        isOwner ? [.blockList, .reportInbox, .storage] : [.blockList, .storage]
+        (isOwner ? [.blockList, .reportInbox, .storage] : [.blockList, .storage]) + [.push]
+    }
+}
+
+/// LS-217：設定頁「推播通知」列的 value 文字／Toggle 視覺開關——純函式，同
+/// `SettingsContentSafetyComposition` 既有慣例，方便 XCTest 直接覆蓋「狀態→列 value」這條
+/// 對應，不需要真的建立 View 或系統權限環境。`.provisional`／`.ephemeral`（罕見：本 app 不主動
+/// 要求 provisional 授權，ephemeral 只給 App Clip）視同「已授權」的效果——某種形式的權限已經
+/// 存在，列面不需要區分。
+enum SettingsPushRowComposition {
+    static func isOn(for status: UNAuthorizationStatus) -> Bool {
+        switch status {
+        case .authorized, .provisional, .ephemeral: true
+        case .notDetermined, .denied: false
+        @unknown default: false
+        }
+    }
+
+    static func valueText(for status: UNAuthorizationStatus) -> String {
+        isOn(for: status) ? "開啟" : "關閉"
     }
 }
 

@@ -227,5 +227,79 @@ struct TimelineEntry: Equatable, Sendable, Identifiable {
 
     /// 同時涵蓋三種 kind 的複合鍵——`ref_id` 理論上跨表不會相撞，但 `kind` 一起入 id
     /// 讓「同一頁三種 kind 各查各的表」這件事在型別層面就不可能因為 UUID 巧合碰撞。
-    var id: String { "\(kind.rawValue)_\(refId.uuidString)" }
+    var id: String { Self.id(kind: kind, refId: refId) }
+
+    /// LS-216：`TimelineStore.reactionStates`／`commentCounts` 的字典鍵——與 `id` 用同一個
+    /// 公式，抽成 `static` 讓 `InteractionRow`（拿不到完整 `TimelineEntry`，只有
+    /// `kind`／`refId`）也能算出同一把鍵，不必各自重寫格式字串。
+    static func id(kind: FeedKind, refId: UUID) -> String { "\(kind.rawValue)_\(refId.uuidString)" }
+}
+
+/// LS-216：單一 target（diary／album／media）的愛心反應狀態——`TimelineStore.reactionStates`
+/// 的 value 型別。`count`／`reactedByMe` 分開存放（不是只存一個 bool）：`toggle_reaction` 只
+/// 回傳切換後的 `reactedByMe`，不回傳計數，樂觀更新需要獨立維護 `count`（見
+/// `TimelineStore.toggleReaction` 文件註解）。
+struct ReactionState: Equatable, Sendable {
+    var count: Int
+    var reactedByMe: Bool
+
+    static let zero = ReactionState(count: 0, reactedByMe: false)
+}
+
+/// `get_reaction_counts` 一列（docs/API.md §4）。
+struct ReactionCountRow: Decodable, Sendable, Equatable {
+    let targetID: UUID
+    let reactionCount: Int
+    let reactedByMe: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case targetID = "target_id"
+        case reactionCount = "reaction_count"
+        case reactedByMe = "reacted_by_me"
+    }
+}
+
+/// 按讚名單 sheet（`GZ3pb`）一列——直接 SELECT `reactions` join `profiles`（LS-216 票文
+/// scope 3：「無需新 RPC」），只取顯示名稱。頭像沿用 `ProfilePrintChip` 既有的沖印占位圖
+/// （同 `ProfileEditView` 文件註解點名的既有缺口：目前 app 內沒有任何畫面會把「別人的」
+/// `avatar_url` 簽名成可顯示的圖片，`FamilyStore.avatarSignedURLs` 只批次簽自己＋
+/// `FamilyStore.members`，這裡不新建一條平行的簽名管線——見 LS-216 handoff「未完成」）。
+struct ReactorRow: Decodable, Sendable, Equatable, Identifiable {
+    let userID: UUID
+    let displayName: String
+
+    var id: UUID { userID }
+
+    enum CodingKeys: String, CodingKey {
+        case userID = "user_id"
+        case profile = "profiles"
+    }
+
+    enum ProfileCodingKeys: String, CodingKey {
+        case displayName = "display_name"
+    }
+
+    /// LS-216 R2（merge-review R1 M3）：`profiles` 巢狀 embed 改成可選解碼——按讚者退出家庭
+    /// 後，`profiles_select`（`security invoker`，`peer_profile_ids()` 只認「目前」同家庭的
+    /// 人）會把那一列濾掉，PostgREST 的 embed 對「有外鍵、但關聯列被 RLS 擋下」回傳
+    /// `"profiles": null`（不是整列消失，`reactions` 本身那一列還在）。原本 `nestedContainer`
+    /// 對 null 值會拋錯，讓整份 `[ReactorRow]` 解碼失敗、按讚名單整個開不出來——只因為其中
+    /// 一位按讚者離開了家庭，不成比例。改用 `try?` 吞掉「拿不到巢狀容器」或「拿不到
+    /// display_name」兩種情況，顯示名稱退回「家人」（純資訊性列表，仍能看到「有 N 人按讚」，
+    /// 只是其中一位顯示為通用稱呼，不影響功能）。
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        userID = try container.decode(UUID.self, forKey: .userID)
+        if let profile = try? container.nestedContainer(keyedBy: ProfileCodingKeys.self, forKey: .profile),
+           let name = try? profile.decode(String.self, forKey: .displayName) {
+            displayName = name
+        } else {
+            displayName = "家人"
+        }
+    }
+
+    init(userID: UUID, displayName: String) {
+        self.userID = userID
+        self.displayName = displayName
+    }
 }

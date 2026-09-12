@@ -88,25 +88,35 @@ struct ProfileSummaryRow: View {
 /// `GEBcf` ref 的 Mount TL／Mount BR）。「加入於 YYYY/M」壓印字未實作：那需要 `profiles
 /// .created_at`，同樣是 02 頁的範圍，見 `SettingsView.displayName` 文件註解——記入 handoff
 /// 「未完成」。
+///
+/// LS-216：加 `size` 參數（預設 60，既有呼叫端 `ProfilePrintChip()` 行為不變）——LS-177
+/// Handoff Notes `d5RNKR`「AX3 頭像／送出鈕覆寫」定案 `scale = size/60`（元件原生 60px
+/// 基準），本檔所有幾何值（相片邊長 45／內距 7.5／外框圓角 6／相片圓角 2／角托邊長
+/// 16.4／角托外移 3.8）等比例縮放；按讚名單 sheet（`LikersListSheet`）用 `size: 40`
+/// （scale 0.667），對照 `bsbDd` 的 `Get` 實測 override 值（`lOPO7` 40×40 圓角 4／`MN0WF`
+/// 30×30 圓角 1.333／角托 10.93／外移 2.53）逐一核對過一致。
 struct ProfilePrintChip: View {
-    private let cornerSize: CGFloat = 16.4
-    private let cornerOut: CGFloat = 3.8
+    var size: CGFloat = 60
+
+    private var scale: CGFloat { size / 60 }
+    private var cornerSize: CGFloat { 16.4 * scale }
+    private var cornerOut: CGFloat { 3.8 * scale }
 
     var body: some View {
         ZStack {
             Color.lsSurface2
             Image(systemName: "person.fill")
-                .font(.system(size: 22))
+                .font(.system(size: 22 * scale))
                 .foregroundStyle(Color.lsTextSecondary.opacity(0.5))
         }
-        .frame(width: 45, height: 45)
-        .clipShape(RoundedRectangle(cornerRadius: 2))
-        .padding(7.5)
+        .frame(width: 45 * scale, height: 45 * scale)
+        .clipShape(RoundedRectangle(cornerRadius: 2 * scale))
+        .padding(7.5 * scale)
         .background(Color.lsPrintPaper)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .clipShape(RoundedRectangle(cornerRadius: 6 * scale))
         .overlay(corner(.topLeading, alignment: .topLeading, out: -cornerOut))
         .overlay(corner(.bottomTrailing, alignment: .bottomTrailing, out: cornerOut))
-        .frame(width: 60, height: 60)
+        .frame(width: size, height: size)
         .accessibilityHidden(true)
     }
 

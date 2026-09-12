@@ -15,8 +15,11 @@ extension TapTargetGateHarness {
     /// `TapTargetGateHarness+DeleteAccount.swift` 的 `generalMemberFamilyStore()` 既有作法，
     /// 避免依賴 `PreviewFamilyAPIClient.listMembers()` 那組 async 才會拿到、且第二位成員
     /// `userID` 每次呼叫都不同的樣本。
+    /// LS-217：改回預設（internal）存取層級——`TapTargetGateHarness+Push.swift` 的
+    /// `settingsPushDeniedHost`／`settingsPushAuthorizedHost` 需要同一組「已同步 seed
+    /// `ownerUserID`／`members` 的測試家庭」建構邏輯，跨檔案 extension 存取不到 `private`。
     @MainActor
-    private static func settingsFamilyStore(withFamily family: Family) -> FamilyStore {
+    static func settingsFamilyStore(withFamily family: Family) -> FamilyStore {
         let familyStore = FamilyStore.preview(withFamily: family)
         let myID = UUID()
         familyStore.seedOwnerUserIDForPreview(myID)
@@ -55,7 +58,7 @@ extension TapTargetGateHarness {
                 timelineStore: .preview(),
                 albumsStore: .preview(),
                 eulaStore: .preview(shouldPresent: false), resumer: .preview(),
-                safetyAPIClient: PreviewSafetyAPIClient()
+                safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
             )
         }
         .environment(\.horizontalSizeClass, .compact)
@@ -80,7 +83,7 @@ extension TapTargetGateHarness {
                 timelineStore: .preview(),
                 albumsStore: .preview(),
                 eulaStore: .preview(shouldPresent: false), resumer: .preview(),
-                safetyAPIClient: PreviewSafetyAPIClient()
+                safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
             )
         }
         .environment(\.horizontalSizeClass, .compact)
@@ -102,7 +105,7 @@ extension TapTargetGateHarness {
                 timelineStore: .preview(),
                 albumsStore: .preview(),
                 eulaStore: .preview(shouldPresent: false), resumer: .preview(),
-                safetyAPIClient: PreviewSafetyAPIClient()
+                safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
             )
         }
         .environment(\.horizontalSizeClass, .regular)

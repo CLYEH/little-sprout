@@ -75,6 +75,22 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.createAlbum)
     }
 
+    /// LS-166：相簿詳情 owner 視角——量測 Nav Row（自畫返回鍵／更多選單）與 Action Bar
+    /// （加入照片）三顆可點元件。
+    func testAlbumDetailViewOwner() {
+        assertAllTappablesMeetMinimum(.albumDetailOwner)
+    }
+
+    /// LS-166：相簿詳情 member 視角——「更多」選單不渲染，這裡只剩返回鍵／加入照片兩顆。
+    func testAlbumDetailViewMember() {
+        assertAllTappablesMeetMinimum(.albumDetailMember)
+    }
+
+    /// LS-166：「編輯相簿名稱」sheet，初始態（名稱欄／寶貝標記欄／儲存鈕）不需要任何 seed 資料。
+    func testEditAlbumView() {
+        assertAllTappablesMeetMinimum(.editAlbum)
+    }
+
     /// LS-164：帳號密碼登入畫面，初始態（Email／密碼欄＋顯示密碼切換鈕＋登入鈕）不需要任何
     /// seed 資料。`.welcome` 不在這裡——WelcomeView 仍留在 tap-target-exemptions.txt（Apple
     /// 官方按鈕量測意義有限，理由未變），見該畫面 case 文件註解。
@@ -188,6 +204,18 @@ final class TapTargetGateTests: XCTestCase {
     /// `TapTargetGateHarness.diaryDetailHost` 文件註解）。
     func testDiaryDetailView() {
         assertAllTappablesMeetMinimum(.diaryDetail)
+    }
+
+    /// LS-216：時間軸卡片互動列——三種卡片（日記／相簿／照片）底部各 3 顆按鈕（Like
+    /// Toggle／Count Zone／Comment Button）共 9 顆，含已按讚／未按讚／計數 0 三態。
+    func testTimelineViewInteractionRow() {
+        assertAllTappablesMeetMinimum(.timelineInteractionRow)
+    }
+
+    /// LS-217：推播權限前置說明頁——CTA「開啟通知」（`PrimaryButton`）與「稍後再說」
+    /// （`minHeight: 48`）兩顆。
+    func testPushPrepromptView() {
+        assertAllTappablesMeetMinimum(.pushPreprompt)
     }
 
     /// 任一元件 <44pt 就用 `XCTFail` 記一筆——逐一累計，不是遇到第一個違規就提前結束，讓

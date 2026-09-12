@@ -22,7 +22,11 @@ final class AlbumsStore {
     /// 用同一個數字單純是維持全站列表分頁筆數一致的慣例，不是共用同一份契約。
     static let pageSize = 20
 
-    private let apiClient: AlbumsAPIClient
+    /// LS-166：從 `private` 改成預設（internal）存取層級——`AlbumDetailView` 建構
+    /// `AlbumDetailStore` 需要重用同一個 client 實例（同一份 Supabase session／同一組
+    /// preview stub），不需要為此另外把 `AlbumsAPIClient` 往下多傳一層參數（`AlbumsView`／
+    /// `RootView` 目前都只認得到 `AlbumsStore`，見該檔）。
+    let apiClient: AlbumsAPIClient
 
     private(set) var albums: [AlbumSummary] = []
     private(set) var refreshState: AlbumsOperationState = .idle
@@ -150,6 +154,37 @@ final class AlbumsStore {
 
     func resetCreateAlbumState() {
         createAlbumState = .idle
+    }
+
+    /// merge-review R2 M2：`UploadQueueStore.onUploadSucceeded` 掛鉤的**唯一**寫入端——原本
+    /// 掛在 `AlbumDetailStore.attachUploadedMedia`（隨 `AlbumDetailView` 的 `@State` 存活，
+    /// pop 掉詳情頁就 deinit），使用者在上傳飛行中離開相簿詳情頁時，完成的照片會建出 `media`
+    /// 列，卻永遠沒有 `album_media` 連結（`UploadQueueStore` 自己的飛行中 `Task` 靠
+    /// `guard let self` 撐住不會被連帶釋放，但這個掛鉤原本弱引用的 `AlbumDetailStore` 沒有
+    /// 任何其他強參照，會先它一步 deinit，掛鉤變成 no-op）。`AlbumsStore` 跟
+    /// `TimelineStore`／`ChildrenStore` 同一等級（app 層存活，見檔頭），不隨任何一次進出相簿
+    /// 詳情頁的導覽而消失，掛在這裡才能保證「上傳成功＝一定掛進相簿」不看使用者是否還留在
+    /// 畫面上。
+    ///
+    /// **best-effort，不對外拋錯**：理由同舊版 `AlbumDetailStore.attachUploadedMedia` 文件
+    /// 註解——真的失敗時（例如上傳當下家庭被停權）這張照片已經合法上傳成功、有 `media` 列，
+    /// 只是沒有掛進這本相簿；佇列 sheet 已經告訴使用者「上傳完成」，這裡再跳一個獨立錯誤會
+    /// 製造「明明說完成了又說失敗」的矛盾體驗。
+    ///
+    /// `sortOrder` 現查現算（`fetchAlbumMediaLinks(albumID:).count`）——不像舊版用
+    /// `AlbumDetailStore` 那顆跟著單次瀏覽走的記憶體計數器：這裡沒有一個天生綁定「這次上傳
+    /// 佇列」的計數器可以沿用，現查一次連結數是唯一不需要額外狀態就能正確算出「接在後面」的
+    /// 做法（多裝置／多次瀏覽同時對同一相簿加照片仍可能撞號，同舊版既有風險，不是本票新增的
+    /// 退步，見 handoff m4）。
+    func attachUploadedMedia(albumID: UUID, familyID: UUID, mediaID: UUID) async {
+        do {
+            let links = try await apiClient.fetchAlbumMediaLinks(albumID: albumID)
+            try await apiClient.attachMedia(
+                albumID: albumID, familyID: familyID, mediaID: mediaID, sortOrder: links.count
+            )
+        } catch {
+            return
+        }
     }
 
     /// 登出時歸零——同 `TimelineStore.reset()`／`ChildrenStore` 的角色。

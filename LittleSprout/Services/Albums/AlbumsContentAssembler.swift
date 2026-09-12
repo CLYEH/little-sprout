@@ -1,62 +1,51 @@
 import Foundation
 
-/// 把一頁 `AlbumListingRow`（`albums` 表直接讀出、已內嵌張數與封面 fallback 的一頁，見該型別
-/// 文件註解）組裝成 `[AlbumSummary]`（封面已簽名 URL、寶貝標記 id）——同
-/// `TimelineContentAssembler` 的角色，只是這裡沒有 `get_family_timeline` 指標可以先分組，
-/// 直接對一頁相簿 id 批次查詢。
+/// 把一頁 `AlbumListingRow`（`album_summaries` view 直接讀出，已套用呼叫者 RLS 算好張數與
+/// 封面 fallback 路徑的一頁，見該型別文件註解）組裝成 `[AlbumSummary]`（封面已簽名 URL、寶貝
+/// 標記 id）——同 `TimelineContentAssembler` 的角色，只是這裡沒有 `get_family_timeline`
+/// 指標可以先分組，直接對一頁相簿 id 批次查詢。
 ///
-/// merge-review R1 M1：張數不再由這裡對 `album_media` 分組計數（`AlbumListingRow.photoCount`
-/// 已經是 PostgREST aggregate 算好的值），這裡只剩兩件事——寶貝標記 id、封面簽名 URL。
+/// LS-203：張數與封面優先序改讀 `album_summaries` 的彙總欄，這裡不再呼叫 `fetchMedia` 反查
+/// `cover_media_id`（LS-165 R1 M3 的做法）——view 的 `cover_thumb_path`／`cover_storage_path`
+/// 已經是「`cover_media_id` 指到的那筆 media，套用呼叫者 RLS 之後」的路徑，可見性判準與
+/// 縮圖／原圖優先序都在 SQL 層做完，不需要再發第二支查詢。這裡只剩兩件事——寶貝標記 id、
+/// 封面（四段 fallback）已簽名 URL。
 enum AlbumsContentAssembler {
     static func assemble(
         rows: [AlbumListingRow], apiClient: AlbumsAPIClient
     ) async throws -> [AlbumSummary] {
         guard !rows.isEmpty else { return [] }
         let ids = rows.map(\.id)
+        let displayPathByAlbum: [UUID: String] = rows.reduce(into: [:]) { paths, row in
+            paths[row.id] = displayPath(for: row)
+        }
 
-        // 兩支批次查詢彼此不依賴（都只吃 `ids`），平行發出省 RTT——同
-        // `TimelineContentAssembler.fetchDiaryContents` m5 的既有理由。封面簽名 URL 依賴
-        // `fetchMedia` 的結果（要先知道 `cover_media_id` 指到哪些 media id 的
-        // `thumb_path`／`storage_path`），所以簽名放在 `coverMediaTask` 完成之後才發。
+        // merge-review R2 minor-1：兩者互不相依（`fetchAlbumChildren` 只吃 `ids`，
+        // `signedURLs` 只吃 `displayPathByAlbum`，`fetchMedia` 反查已隨 LS-203 拿掉），平行
+        // 發出省一個 RTT——同 `TimelineContentAssembler.fetchDiaryContents` m5 的既有理由。
         async let childLinksTask = apiClient.fetchAlbumChildren(albumIds: ids)
-        let explicitCoverIds = Array(Set(rows.compactMap(\.coverMediaId)))
-        async let coverMediaTask: [MediaRow] = explicitCoverIds.isEmpty
-            ? [] : apiClient.fetchMedia(ids: explicitCoverIds)
-        let (childLinks, coverMediaRows) = try await (childLinksTask, coverMediaTask)
+        async let signedTask = signedURLs(forPaths: Array(Set(displayPathByAlbum.values)), apiClient: apiClient)
+        let (childLinks, signed) = try await (childLinksTask, signedTask)
 
-        // `MediaRow.storagePath` 非 optional（每一列一定有原始檔路徑），這裡的顯示路徑因此
-        // 保證非 nil，用非 optional 字典——避免跟下面 fallback 分支（兩個欄位皆 optional）
-        // 混在一起變成 `[UUID: String?]` 雙層 optional，`??` 疊 `flatMap` 不會自動壓平。
-        let explicitCoverPathById: [UUID: String] = Dictionary(uniqueKeysWithValues: coverMediaRows.map { mediaRow in
-            (mediaRow.id, mediaRow.thumbPath ?? mediaRow.storagePath)
-        })
         let childIdsByAlbum = Dictionary(grouping: childLinks, by: \.albumId)
             .mapValues { links in links.map(\.childId) }
-
-        // 每本相簿的顯示路徑：`cover_media_id` 指到的 media 列（`explicitCoverPathById`）優先；
-        // 否則退回 `AlbumListingRow` 內嵌的最新一筆 album_media（merge-review R1 M3，票文
-        // Scope 1 原意）；相簿沒有任何照片時兩者皆無，`nil`。
-        let displayPathByAlbum: [UUID: String] = rows.reduce(into: [:]) { paths, row in
-            paths[row.id] = row.coverMediaId.flatMap { explicitCoverPathById[$0] }
-                ?? displayPath(thumbPath: row.latestMediaThumbPath, storagePath: row.latestMediaStoragePath)
-        }
-        let signed = try await signedURLs(forPaths: Array(Set(displayPathByAlbum.values)), apiClient: apiClient)
 
         return rows.map { row in
             AlbumSummary(
                 id: row.id, title: row.title, photoCount: row.photoCount,
                 cover: displayPathByAlbum[row.id].flatMap { signed[$0] },
-                childIds: childIdsByAlbum[row.id] ?? [], createdAt: row.createdAt
+                childIds: childIdsByAlbum[row.id] ?? [], createdAt: row.createdAt,
+                latestMediaId: row.latestMediaId
             )
         }
     }
 
-    /// 列表情境要簽的路徑——`thumb_path` 優先、`nil` 時退回 `storage_path`（過渡期既有列、
-    /// 縮圖產生失敗的列，或根本沒有 `thumb_path` 這一欄可選的情境），見 docs/API.md §6
-    /// 「簽名 URL 與 egress 防線」。`storagePath` 為 `nil` 時（相簿沒有任何照片、也沒有指定
-    /// 封面）整條回傳 `nil`，呼叫端顯示占位圖。
-    private static func displayPath(thumbPath: String?, storagePath: String?) -> String? {
-        thumbPath ?? storagePath
+    /// 封面優先序（票文 Scope 2，`album_summaries` 四個彙總欄）：`cover_thumb_path` →
+    /// `cover_storage_path`（縮圖產生失敗的過渡列）→ `latest_thumb_path`（未指定封面，退回
+    /// 可見範圍內最新一張）→ `latest_storage_path` → 全部皆無時 `nil`（灰底占位）。四段都
+    /// 直接讀 `AlbumListingRow` 欄位，不需要另外查 `media` 表。
+    private static func displayPath(for row: AlbumListingRow) -> String? {
+        row.coverThumbPath ?? row.coverStoragePath ?? row.latestMediaThumbPath ?? row.latestMediaStoragePath
     }
 
     private static func signedURLs(
