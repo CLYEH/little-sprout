@@ -15,6 +15,15 @@
 // ETIMEDOUT、fetch failed 等字樣）——採**允許清單**而非黑名單：4xx／SQL 語法類
 // 錯誤（例如欄位不存在、權限不足）不會出現在允許清單裡，第一次就回傳、不重試，
 // 避免對「重試也沒用」的永久性錯誤白白多等 7 秒（1+2+4）才失敗。
+//
+// R2（merge-review R1 comment da96a7d0，m1）：R1 版本 QUEUE_READ_MAX_ATTEMPTS=3
+// 其實是「總嘗試次數」（含首次），只會重試 2 次（attempt 1→2、2→3 各退避一次，
+// attempt 3 失敗就直接放棄），退避表第三格 4000 永遠取不到——跟票文「最多重試
+// 3 次、退避 1s→2s→4s」的字面（3 次「重試」＝首次之外再 3 次＝總嘗試 4 次）
+// 對不上。改成 QUEUE_READ_MAX_ATTEMPTS=4（1 次首次嘗試＋最多 3 次重試），
+// QUEUE_READ_BACKOFF_MS 改由 (QUEUE_READ_MAX_ATTEMPTS - 1) 動態產生退避表長度，
+// 不再是寫死的字面陣列——避免未來只改其中一個常數、另一個沒跟著改，又出現同一種
+// 「退避表有值但永遠用不到」的死值。
 
 /** 讀取一次 purge_storage_queue 的最小回傳形狀——刻意不依賴 index.ts 的
  * QueueRow／PostgrestError 型別，維持這個模組跟真正的 supabase-js 完全解耦
@@ -42,6 +51,13 @@ const TRANSIENT_ERROR_PATTERNS: RegExp[] = [
   /bad gateway/i,
   /service unavailable/i,
   /\b50[0234]\b/, // 500／502／503／504
+  // R2（merge-review R1 comment da96a7d0，i1，PLAUSIBLE）：以上多是 Node／undici
+  // 的 fetch 錯誤措辭；Deno（Edge Function 執行環境）的原生 fetch 失敗訊息形狀
+  // 不同，常見「error sending request for url (…): client error (Connect) …」
+  // 或「connection closed before message completed」，兩者都不含上面任何關鍵字
+  // ——會被誤判成永久性錯誤、第一次就放棄，正好是這票想接住的那類故障。
+  /error sending request/i,
+  /connection closed/i,
 ];
 
 /** 判斷這則錯誤訊息是否屬於暫時性錯誤（值得重試）。允許清單設計：不在清單內
@@ -50,8 +66,16 @@ export function isTransientQueueReadError(message: string): boolean {
   return TRANSIENT_ERROR_PATTERNS.some((pattern) => pattern.test(message));
 }
 
-export const QUEUE_READ_MAX_ATTEMPTS = 3;
-export const QUEUE_READ_BACKOFF_MS = [1000, 2000, 4000];
+// 1 次首次嘗試＋最多 3 次重試＝總嘗試上限 4 次（R2 修正，見上方檔頭 m1 說明）。
+export const QUEUE_READ_MAX_ATTEMPTS = 4;
+// 由 QUEUE_READ_MAX_ATTEMPTS 動態產生（長度＝MAX_ATTEMPTS-1，即重試次數）——
+// 1000ms 為基準、每次退避時間翻倍（1000, 2000, 4000, …），不是寫死的字面陣列，
+// 避免以後只改 QUEUE_READ_MAX_ATTEMPTS 卻忘記同步退避表長度，又出現「表裡有
+// 值但迴圈永遠取不到」的死值（R2 merge-review R1 m1）。
+export const QUEUE_READ_BACKOFF_MS: number[] = Array.from(
+  { length: QUEUE_READ_MAX_ATTEMPTS - 1 },
+  (_, i) => 1000 * 2 ** i,
+);
 
 /**
  * 對讀取 purge_storage_queue 這一步做重試／退避。`sleep` 由呼叫端注入——正式

@@ -8,8 +8,9 @@
 // 對應票文（LS-235）驗收：
 //   - 第 1 次 timeout、第 2 次成功 → 回傳 error:null、attempts=2（index.ts 收到
 //     error:null 就會照既有邏輯回 200，見 index.ts 的整合）。
-//   - 連續 3 次（timeout 類）失敗 → 回傳 error 非 null、attempts=3（index.ts
-//     收到 error 非 null 就會照既有邏輯回 500）。
+//   - 連續 4 次（timeout 類）失敗 → 回傳 error 非 null、attempts=4（1 次首次
+//     嘗試＋3 次重試，見 queue_retry.ts 檔頭 R2／m1 說明；index.ts 收到 error
+//     非 null 就會照既有邏輯回 500）。
 //   - 4xx／SQL 語法類錯誤（不在允許清單內）第一次就放棄，不重試，attempts=1。
 //   - mutation 對照組：拿掉重試（maxAttempts=1）之後，「第 1 次 timeout、第 2
 //     次成功」這組會轉紅——見檔尾說明與 handoff 附的實際跑法／斷言原文。
@@ -64,7 +65,7 @@ Deno.test("readQueueWithRetry：第 1 次 Gateway Timeout、第 2 次成功 → 
   );
 });
 
-Deno.test("readQueueWithRetry：連續 3 次都是 ETIMEDOUT → error 非 null、attempts=3，退避序列 1000ms→2000ms", async () => {
+Deno.test("readQueueWithRetry：連續 4 次都是 ETIMEDOUT → error 非 null、attempts=4，退避序列 1000ms→2000ms→4000ms 全部用到（R2 修正 m1：三格退避表不再有取不到的死值）", async () => {
   let calls = 0;
   const selectBatch = (): Promise<QueueSelectResult<string[]>> => {
     calls++;
@@ -78,15 +79,19 @@ Deno.test("readQueueWithRetry：連續 3 次都是 ETIMEDOUT → error 非 null�
   const result = await readQueueWithRetry(selectBatch, fakeSleep(sleepLog));
 
   assertEquals(result.error, {
-    message: "讀取失敗：connect ETIMEDOUT（第 3 次）",
+    message: "讀取失敗：connect ETIMEDOUT（第 4 次）",
   });
   assertEquals(result.data, null);
-  assertEquals(result.attempts, 3);
-  assertEquals(calls, 3, "達到 MAX_ATTEMPTS(3) 後不再繼續呼叫 selectBatch");
+  assertEquals(result.attempts, 4);
+  assertEquals(calls, 4, "達到 MAX_ATTEMPTS(4) 後不再繼續呼叫 selectBatch");
   assertEquals(
     sleepLog,
-    [QUEUE_READ_BACKOFF_MS[0], QUEUE_READ_BACKOFF_MS[1]],
-    "只在第 1→2、2→3 次之間退避兩次（最後一次失敗後不再退避），序列是 1000ms→2000ms",
+    [
+      QUEUE_READ_BACKOFF_MS[0],
+      QUEUE_READ_BACKOFF_MS[1],
+      QUEUE_READ_BACKOFF_MS[2],
+    ],
+    "在第 1→2、2→3、3→4 次之間各退避一次（最後一次失敗後不再退避），序列是 1000ms→2000ms→4000ms，三格退避表全部用到",
   );
 });
 
@@ -136,7 +141,7 @@ Deno.test("readQueueWithRetry：成功且不需要重試 → attempts=1，完全
 // isTransientQueueReadError —— 允許清單的正負樣本
 // ---------------------------------------------------------------------------
 
-Deno.test("isTransientQueueReadError：暫時性錯誤關鍵字（timeout／5xx／網路錯誤）判定為 true", () => {
+Deno.test("isTransientQueueReadError：暫時性錯誤關鍵字（timeout／5xx／網路錯誤／Deno 原生 fetch 錯誤措辭）判定為 true", () => {
   const transientSamples = [
     "讀取 purge_storage_queue 失敗：Gateway Timeout",
     "connect ETIMEDOUT 10.0.0.1:443",
@@ -146,6 +151,10 @@ Deno.test("isTransientQueueReadError：暫時性錯誤關鍵字（timeout／5xx�
     "upstream connect error: 502 Bad Gateway",
     "503 Service Unavailable",
     "statement timeout",
+    // R2（merge-review R1 comment da96a7d0，i1）：Deno 原生 fetch 失敗的實際措辭，
+    // 不是 Node/undici 的「fetch failed」／「network error」。
+    "error sending request for url (https://xxx.supabase.co/rest/v1/purge_storage_queue): client error (Connect)",
+    "connection closed before message completed",
   ];
   for (const message of transientSamples) {
     assertEquals(

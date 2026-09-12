@@ -341,10 +341,15 @@ Deno.serve(async (req: Request) => {
   const failures: { object_path: string; error: string }[] = [];
   const warnings: string[] = [];
   let batches = 0;
-  // LS-235：這次 invocation 讀取 purge_storage_queue 累計嘗試的總次數（含成功
-  // 那一次；跨多個批次時累加）——觀測用，讓「讀了幾次才成功／最終失敗前重試了
-  // 幾次」在回應 JSON 與 log 裡看得到，不必事後從 Edge Function 的原始 log 猜。
+  // LS-235（R2 修正 m3，merge-review R1 comment da96a7d0）：queueReadAttempts 是
+  // 「這次 invocation 對 purge_storage_queue 總共發出幾次 SELECT」——健康的
+  // invocation 本來就會因為批次數而遞增（迴圈讀到空批次才 break，見下方
+  // `if (!queue || queue.length === 0) break;`：處理 1 個批次要讀 2 次、2 個
+  // 批次要讀 3 次），不是「有沒有發生過暫時性錯誤」的訊號，這個數字本身**不能**
+  // 用來判斷有沒有重試過。真正代表「重試了幾次」的是 queueReadRetries——每次
+  // 讀取的 `readAttempts - 1`（0 代表那次讀取一次就成功／放棄，沒有重試）累加。
   let queueReadAttempts = 0;
+  let queueReadRetries = 0;
 
   // 記錄「這次 invocation 已經確認過存在／不存在」的 bucket，避免同一個 bucket
   // 在同一次 invocation 裡被 getBucket() 反覆確認（多個批次、同一個 bucket 常見，
@@ -400,11 +405,18 @@ Deno.serve(async (req: Request) => {
         sleep,
       );
     queueReadAttempts += readAttempts;
+    // R2 修正 m2（merge-review R1 comment da96a7d0）：readAttempts 是「這次讀取
+    // 總共嘗試了幾次」（最小值 1），不是「重試了幾次」——4xx／SQL 錯這種永久性
+    // 錯誤第一次就放棄，readAttempts=1，但那是「一次都沒重試」，不是「重試 1
+    // 次」。用 readAttempts - 1 才是真正的重試次數。
+    const thisReadRetries = readAttempts - 1;
+    queueReadRetries += thisReadRetries;
 
     if (queueError) {
       console.error(
-        `purge-storage: 讀取 purge_storage_queue 失敗（重試 ${readAttempts} 次` +
-          `後放棄，這次 invocation 累計嘗試 ${queueReadAttempts} 次）：${queueError.message}`,
+        `purge-storage: 讀取 purge_storage_queue 失敗（嘗試 ${readAttempts} 次` +
+          `後放棄，重試 ${thisReadRetries} 次；這次 invocation 累計嘗試 ` +
+          `${queueReadAttempts} 次、累計重試 ${queueReadRetries} 次）：${queueError.message}`,
       );
       return new Response(
         JSON.stringify({
@@ -413,8 +425,9 @@ Deno.serve(async (req: Request) => {
           failures,
           warnings,
           attempts: queueReadAttempts,
+          retries: queueReadRetries,
           error:
-            `讀取 purge_storage_queue 失敗（已重試 ${readAttempts} 次）：${queueError.message}`,
+            `讀取 purge_storage_queue 失敗（已嘗試 ${readAttempts} 次、重試 ${thisReadRetries} 次）：${queueError.message}`,
         }),
         { status: 500, headers: { "Content-Type": "application/json" } },
       );
@@ -557,7 +570,7 @@ Deno.serve(async (req: Request) => {
   console.log(
     `purge-storage: parked=${
       parked ?? 0
-    } queueReadAttempts=${queueReadAttempts} orphanEnqueued=${orphanScan.enqueued} orphanDropped=${orphanScan.dropped} ` +
+    } queueReadAttempts=${queueReadAttempts} queueReadRetries=${queueReadRetries} orphanEnqueued=${orphanScan.enqueued} orphanDropped=${orphanScan.dropped} ` +
       `orphanInvalid=${orphanScan.invalidCount} ` +
       `orphanScanCompleted=${orphanScan.scanCompleted} orphanScanCursor=${
         orphanScan.cursor ?? "null"
@@ -570,10 +583,13 @@ Deno.serve(async (req: Request) => {
       failed: failures.length,
       failures,
       warnings,
-      // LS-235：這次 invocation 讀取 purge_storage_queue 累計嘗試的總次數
-      // （見上方迴圈的 readQueueWithRetry() 呼叫）——恆為 1 代表完全沒有重試，
-      // >1 代表期間有暫時性錯誤發生過但最終讀取成功。
+      // LS-235（R2 修正 m3，merge-review R1 comment da96a7d0）：attempts 是這次
+      // invocation 對 purge_storage_queue 發出的 SELECT **總次數**——會隨批次數
+      // 遞增（讀到空批次才 break，健康的 invocation 處理 N 個批次本來就要讀
+      // N+1 次），不是「有沒有重試過」的訊號，不能單看這個數字判讀。真正代表
+      // 「這次 invocation 期間發生過幾次重試」的是 retries（0＝完全沒有重試）。
       attempts: queueReadAttempts,
+      retries: queueReadRetries,
       parked: parked ?? 0,
       orphanEnqueued: orphanScan.enqueued,
       // LS-222（收口 LS-213 R2 merge-review N3）：形狀不合規或前綴不符而被
