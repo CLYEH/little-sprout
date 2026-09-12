@@ -153,6 +153,61 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
         }
     }
 
+    // MARK: - LS-166（相簿詳情）
+
+    func fetchAlbumMediaLinks(albumID: UUID) async throws -> [AlbumMediaLinkRow] {
+        do {
+            let response: PostgrestResponse<[AlbumMediaLinkRow]> = try await client
+                .from("album_media")
+                .select("album_id,media_id,sort_order")
+                .eq("album_id", value: albumID)
+                .execute()
+            return response.value
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws {
+        do {
+            let row = AttachAlbumMediaPayload(
+                albumID: albumID, mediaID: mediaID, familyID: familyID, sortOrder: sortOrder
+            )
+            try await client.from("album_media")
+                .upsert(row, onConflict: "album_id,media_id", ignoreDuplicates: false)
+                .execute()
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    func updateAlbumTitle(albumID: UUID, title: String) async throws {
+        do {
+            try await requireUpdatedRow(
+                client.from("albums")
+                    .update(UpdateAlbumTitlePayload(title: title))
+                    .eq("id", value: albumID)
+            )
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    /// merge-review R2 M1：`albums_update` policy 是 USING 過濾（不是 WITH CHECK 擋 INSERT
+    /// 那種硬性拒絕）——owner 對別人建立的相簿下 `.update()` 內容欄位時，那一列不在 USING
+    /// 比對得到的範圍內，UPDATE 語句本身合法執行，只是匹配 0 列，PostgREST 回 200 + `[]`，
+    /// SDK 端完全不會 throw（`docs/API.md` §2「靜默 0 列」例外，`albums.title`／
+    /// `cover_media_id` 適用）。同 `SupabaseFamilyAPIClient.requireUpdatedRow`
+    /// （`families_update` 一樣是 USING 過濾）同一組理由，這裡不重複貼一遍——不擋這個情況的話，
+    /// UI 會顯示「已儲存」但伺服器其實什麼都沒改。這裡把「0 列受影響」明確轉成錯誤（`.update()`
+    /// 預設 `returning: .representation`，不需要另外呼叫 `.select()` 才能拿到受影響列）。
+    private func requireUpdatedRow(_ builder: PostgrestFilterBuilder) async throws {
+        let response: PostgrestResponse<[AlbumIDRow]> = try await builder.execute()
+        guard !response.value.isEmpty else {
+            throw AppError.rejected(message: "沒有權限修改這本相簿，或相簿不存在", code: "no_rows_updated")
+        }
+    }
+
     /// 明確帶 'Z' 的 ISO8601 字串——同 `SupabaseTimelineAPIClient.iso8601String` 的理由：SDK
     /// 預設 Date 編碼不帶時區指示，Postgres 收到不帶時區的 timestamptz 字面值會依 session
     /// timezone 解讀，不保證是 UTC。不用 `Date.rawValue`（`PostgrestFilterValue` 協定）：
@@ -203,4 +258,28 @@ private struct SetAlbumDeletedParams: Encodable {
         case albumID = "p_album_id"
         case deleted = "p_deleted"
     }
+}
+
+private struct AttachAlbumMediaPayload: Encodable {
+    let albumID: UUID
+    let mediaID: UUID
+    let familyID: UUID
+    let sortOrder: Int
+
+    enum CodingKeys: String, CodingKey {
+        case albumID = "album_id"
+        case mediaID = "media_id"
+        case familyID = "family_id"
+        case sortOrder = "sort_order"
+    }
+}
+
+private struct UpdateAlbumTitlePayload: Encodable {
+    let title: String
+}
+
+/// `requireUpdatedRow` 的解碼目標——只需要知道「有沒有列」，不需要完整 `albums` 欄位（`Decodable`
+/// 對多出來的欄位本來就會忽略，不需要宣告完整欄位才能解碼成功）。
+private struct AlbumIDRow: Decodable {
+    let id: UUID
 }

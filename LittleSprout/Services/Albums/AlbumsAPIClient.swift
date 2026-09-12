@@ -47,7 +47,36 @@ protocol AlbumsAPIClient: Sendable {
     /// `childIDs` 為空陣列＝不標記任何寶貝。
     func setAlbumChildren(albumID: UUID, childIDs: [UUID]) async throws
 
-    /// 軟刪／還原（見 docs/API.md §4 `set_album_deleted`）——`AlbumsStore.createAlbum` 補償
-    /// 路徑專用（見協定檔文件註解），本票不提供還原／刪除相簿的使用者入口（LS-166 範圍）。
+    /// 軟刪／還原（見 docs/API.md §4 `set_album_deleted`）——LS-165 只用於 `AlbumsStore
+    /// .createAlbum` 補償路徑；LS-166 起也是相簿詳情「刪除相簿」的使用者入口（owner 限定，
+    /// 見 `AlbumDetailView`）。
     func setAlbumDeleted(albumID: UUID, deleted: Bool) async throws
+
+    // MARK: - LS-166（相簿詳情）
+
+    /// 一本相簿目前的全部 `album_media` 連結列（不分頁——票文壓測上限 34 張，一次抓齊）。
+    func fetchAlbumMediaLinks(albumID: UUID) async throws -> [AlbumMediaLinkRow]
+
+    /// 「加入照片」上傳成功後把新 `media` 列掛進這本相簿——直接 `.insert()`（`album_media`
+    /// 對 owner／member 開 INSERT grant，不是 RPC-only，見 docs/API.md §2），同
+    /// `DiaryAPIClient.attachMedia` 對 `diary_media` 的既有寫法（`upsert`＋`onConflict`，
+    /// 避免同一張照片被同一個呼叫端意外重複掛兩次時撞 `(album_id, media_id)` 主鍵衝突）。
+    /// `sortOrder` 由呼叫端算好傳入——`AlbumsStore.attachUploadedMedia`（merge-review R2 M2
+    /// 起唯一的呼叫端）現查一次 `fetchAlbumMediaLinks(albumID:).count` 當基底，見該方法
+    /// 文件註解。
+    func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws
+
+    /// 編輯相簿名稱——`albums.title` 僅建立者本人可直接 `.update()`（`albums_update` policy，
+    /// docs/API.md §2 `albums` 列），owner 對別人建立的相簿沒有這條路徑（`AlbumDetailView`
+    /// 因此把「更多」選單整體限定 owner 可見，不細分「owner 改自己的」與「owner 改別人的」
+    /// 這種 policy 不允許的情境）。
+    ///
+    /// **merge-review R2 M1**：`albums_update` 的 USING 子句只比對得到「建立者本人」這一列
+    /// ——owner 對別人建立的相簿下這個 `.update()` 時，那一列根本不在 USING 範圍內，PostgREST
+    /// 回 200 + `[]`，不會有 `42501`（docs/API.md §2 明文的「靜默 0 列」例外）。實作**必須**
+    /// 檢查受影響列數（`.select()` 回應是否為空），0 列時丟出明確的 `AppError`，不能假設
+    /// 「沒有丟出錯誤＝改到了」——見 `SupabaseAlbumsAPIClient.updateAlbumTitle` 實作與
+    /// `SupabaseFamilyAPIClient.requireUpdatedRow`（`families_update` 同一種 USING 過濾語意，
+    /// 已有的既有解法，這裡沿用同一組理由與慣例，不重複貼一遍）。
+    func updateAlbumTitle(albumID: UUID, title: String) async throws
 }

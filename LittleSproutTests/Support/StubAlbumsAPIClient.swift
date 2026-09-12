@@ -12,6 +12,9 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
     typealias CreateAlbumHandler = @Sendable (UUID, String) async throws -> AlbumListingRow
     typealias SetAlbumChildrenHandler = @Sendable (UUID, [UUID]) async throws -> Void
     typealias SetAlbumDeletedHandler = @Sendable (UUID, Bool) async throws -> Void
+    typealias FetchAlbumMediaLinksHandler = @Sendable (UUID) async throws -> [AlbumMediaLinkRow]
+    typealias AttachMediaHandler = @Sendable (UUID, UUID, UUID, Int) async throws -> Void
+    typealias UpdateAlbumTitleHandler = @Sendable (UUID, String) async throws -> Void
 
     struct FetchAlbumsCall: Equatable {
         let familyID: UUID
@@ -29,6 +32,18 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         let deleted: Bool
     }
 
+    struct AttachMediaCall: Equatable {
+        let albumID: UUID
+        let familyID: UUID
+        let mediaID: UUID
+        let sortOrder: Int
+    }
+
+    struct UpdateAlbumTitleCall: Equatable {
+        let albumID: UUID
+        let title: String
+    }
+
     private struct Box {
         var fetchAlbumsHandler: FetchAlbumsHandler = { _, _, _ in [] }
         var fetchAlbumsCalls: [FetchAlbumsCall] = []
@@ -42,6 +57,11 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         var setAlbumChildrenCalls: [SetAlbumChildrenCall] = []
         var setAlbumDeletedHandler: SetAlbumDeletedHandler = { _, _ in }
         var setAlbumDeletedCalls: [SetAlbumDeletedCall] = []
+        var fetchAlbumMediaLinksHandler: FetchAlbumMediaLinksHandler = { _ in [] }
+        var attachMediaHandler: AttachMediaHandler = { _, _, _, _ in }
+        var attachMediaCalls: [AttachMediaCall] = []
+        var updateAlbumTitleHandler: UpdateAlbumTitleHandler = { _, _ in }
+        var updateAlbumTitleCalls: [UpdateAlbumTitleCall] = []
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
@@ -86,6 +106,26 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         box.withLock { $0.setAlbumDeletedHandler = handler }
     }
 
+    var attachMediaCalls: [AttachMediaCall] {
+        box.withLock { $0.attachMediaCalls }
+    }
+
+    var updateAlbumTitleCalls: [UpdateAlbumTitleCall] {
+        box.withLock { $0.updateAlbumTitleCalls }
+    }
+
+    func setFetchAlbumMediaLinksHandler(_ handler: @escaping FetchAlbumMediaLinksHandler) {
+        box.withLock { $0.fetchAlbumMediaLinksHandler = handler }
+    }
+
+    func setAttachMediaHandler(_ handler: @escaping AttachMediaHandler) {
+        box.withLock { $0.attachMediaHandler = handler }
+    }
+
+    func setUpdateAlbumTitleHandler(_ handler: @escaping UpdateAlbumTitleHandler) {
+        box.withLock { $0.updateAlbumTitleHandler = handler }
+    }
+
     func fetchAlbums(familyID: UUID, cursor: AlbumsCursor?, limit: Int) async throws -> [AlbumListingRow] {
         let call = FetchAlbumsCall(familyID: familyID, cursor: cursor, limit: limit)
         box.withLock { $0.fetchAlbumsCalls.append(call) }
@@ -123,5 +163,23 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         box.withLock { $0.setAlbumDeletedCalls.append(SetAlbumDeletedCall(albumID: albumID, deleted: deleted)) }
         let handler = box.withLock { $0.setAlbumDeletedHandler }
         try await handler(albumID, deleted)
+    }
+
+    func fetchAlbumMediaLinks(albumID: UUID) async throws -> [AlbumMediaLinkRow] {
+        let handler = box.withLock { $0.fetchAlbumMediaLinksHandler }
+        return try await handler(albumID)
+    }
+
+    func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws {
+        let call = AttachMediaCall(albumID: albumID, familyID: familyID, mediaID: mediaID, sortOrder: sortOrder)
+        box.withLock { $0.attachMediaCalls.append(call) }
+        let handler = box.withLock { $0.attachMediaHandler }
+        try await handler(albumID, familyID, mediaID, sortOrder)
+    }
+
+    func updateAlbumTitle(albumID: UUID, title: String) async throws {
+        box.withLock { $0.updateAlbumTitleCalls.append(UpdateAlbumTitleCall(albumID: albumID, title: title)) }
+        let handler = box.withLock { $0.updateAlbumTitleHandler }
+        try await handler(albumID, title)
     }
 }

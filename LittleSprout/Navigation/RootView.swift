@@ -316,7 +316,10 @@ struct SectionContentView: View {
                 safetyAPIClient: safetyAPIClient
             )
         case .albums:
-            AlbumsView(familyStore: familyStore, childrenStore: childrenStore, albumsStore: albumsStore)
+            AlbumsView(
+                familyStore: familyStore, childrenStore: childrenStore, albumsStore: albumsStore,
+                mediaUploadService: mediaUploadService
+            )
         case .children: ChildrenManagementView(familyStore: familyStore, childrenStore: childrenStore)
         case .settings:
             SettingsView(

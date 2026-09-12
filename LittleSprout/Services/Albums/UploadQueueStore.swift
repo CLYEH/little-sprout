@@ -47,6 +47,15 @@ final class UploadQueueStore {
     private let mediaUploadService: MediaUploadService
     private let maxConcurrentUploads: Int
     private let now: @MainActor () -> Date
+    /// LS-166：這支店原本零 production 接線（見 LS-212 補充於票文「來源」段引用的原文）——
+    /// 「加入照片」呼叫端需要在**每一筆**上傳真的成功、拿到新 `media` id 的當下就掛進
+    /// `album_media`＋讓照片牆立即出現新格，不能只等整批完成再一次查詢（使用者選了 10 張，
+    /// 前 3 張早就傳完，卻要等第 10 張也傳完才看得到任何一張，體驗上不合理，票文「完成後照片牆
+    /// 即時出現新格」也隱含逐張反應）。`start(_:)` 原本呼叫 `performUpload` 拿到的 `mediaID`
+    /// 只用來標記 `.completed`，沒有任何管道往外送——這裡補一個 side-effect 掛鉤，呼叫端可選擇
+    /// 性注入；預設空閉包，不影響 `UploadQueueStoreTests`／`UploadQueueStoreDefensiveTests`
+    /// 既有呼叫端（皆未帶這個參數）。
+    private let onUploadSucceeded: @MainActor (_ id: UUID, _ mediaID: UUID) -> Void
     private var entries: [UUID: Entry] = [:]
     /// 插入順序——`entries` 是字典（用 id 查找／更新方便），排序另外靠這份陣列記住「先進
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
@@ -58,12 +67,14 @@ final class UploadQueueStore {
 
     init(
         familyID: UUID, mediaUploadService: MediaUploadService, maxConcurrentUploads: Int = 3,
-        now: @escaping @MainActor () -> Date = Date.init
+        now: @escaping @MainActor () -> Date = Date.init,
+        onUploadSucceeded: @escaping @MainActor (_ id: UUID, _ mediaID: UUID) -> Void = { _, _ in }
     ) {
         self.familyID = familyID
         self.mediaUploadService = mediaUploadService
         self.maxConcurrentUploads = maxConcurrentUploads
         self.now = now
+        self.onUploadSucceeded = onUploadSucceeded
     }
 
     // MARK: - 讀取（View／測試用）
@@ -197,7 +208,13 @@ final class UploadQueueStore {
         Task { [weak self] in
             guard let self else { return }
             do {
-                _ = try await self.performUpload(payload, pixelSize: pixelSize)
+                let mediaID = try await self.performUpload(payload, pixelSize: pixelSize)
+                // LS-166：先呼叫掛鉤（讓呼叫端有機會把這張掛進相簿／更新畫面），再翻成
+                // `.completed`——兩者順序不影響 `entries`／`order` 的一致性（掛鉤不觸碰這兩個
+                // 屬性），純粹是「先讓呼叫端知道結果，這支 store 自己的狀態轉換晚一步」，同
+                // `DeleteConfirmationSheet.confirmTapped` 檔頭「先 dismiss 再 onSuccess」相反
+                // 順序但同樣理由：這裡呼叫端不會讓這個 store 消失，不需要那個順序保護。
+                self.onUploadSucceeded(id, mediaID)
                 self.finish(id, state: .completed)
             } catch let error as AppError {
                 self.finish(id, state: .failed(.from(error)))
