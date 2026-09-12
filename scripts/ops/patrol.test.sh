@@ -1562,12 +1562,15 @@ has   '㉘ mutant（m1）：pending 判斷搬到 fail 之前 → 904 的 fail �
 hasnt '㉘ mutant（m1）：check 紅／run id 資訊消失' "$l904m" 'check 紅'
 
 # mutation（m4 舊版守門，仍保留：拿掉 Go 零值前綴守門，只留 try/catch）：merge-review R3 delta 發現
-# `0001-01-01` 這個特定值是否讓 fromdateiso8601 拋錯是平台相依的（本機 macOS 兩個 jq 版本都會拋、CI
-# 的 Ubuntu jq 不會）——這代表「拿掉前綴守門」在本機（try/catch 仍在）**不會**再現查詢失敗（try/catch
-# 把 macOS 會拋的錯接住了），跟 R2 delta 時的舊行為不同，這正是本輪要修的平台不一致本身。改成驗證
-# 這個事實：拿掉前綴守門、只留 try/catch，907 的 merge-review 項在本機仍應正確印 ?m（不崩），證明
-# try/catch 對「本機會拋錯的這個值」有redundant 保護——若這條反而崩了，代表 try/catch 沒有真的包住
-# fromdateiso8601 那段，才是需要擔心的退化。
+# `0001-01-01` 這個特定值是否讓 fromdateiso8601 拋錯是平台相依的——本機 macOS 兩個 jq 版本都會拋、
+# CI 的 Ubuntu（glibc）jq **不會拋錯**，而是把它算成一個巨大的垃圾分鐘數（merge-review R4 delta B1
+# 實測：CI run 34702037809 印出 `⏳ CI 跑中 1065413727m（merge-review、ci）`，R3 那次 run 34700632619
+# 同位置是 `1065413699m`）——這正是保留前綴守門的理由：glibc 平台上 try/catch 完全不會被觸發（沒有
+# 拋出例外可 catch），前綴守門才是唯一能擋下垃圾數字的機制。R4 delta B1（blocker，已修）：這裡原本
+# 斷言「印出 `CI 跑中 ?m`」在 macOS 成立、在 glibc 不成立（垃圾數字不是 `?`）——`has` 是硬斷言，
+# 「不強求」的註解軟化不了，CI 因此紅。改成只留兩個平台都成立的斷言：`hasnt 查詢失敗`（macOS `?m`、
+# glibc 垃圾數字皆非查詢失敗）＋`has CI 跑中`（不管後面接的是 `?` 還是垃圾數字，只要走了 pending 分支
+# 就一定印這四個字，不依賴 jq 對這個值的日期解析結果）；不再對分鐘值本身斷言。
 mut_pr_m4a="$work/patrol.no-zerodate-prefix.sh"
 python3 - "$patrol" "$mut_pr_m4a" <<'PY'
 import sys
@@ -1579,8 +1582,8 @@ open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
 PY
 out28m4a="$(PATH="$work/bin:$PATH" bash "$mut_pr_m4a" --repo "$repo" --no-fetch 10 2>&1)"
 l907m4a=$(row "$out28m4a" 'feature/LS-907-realjq-zerodate')
-has   '㉘ mutant（拿掉零值前綴守門，留 try/catch）：本機 907 仍印 ?m，不崩（證明 try/catch 對本機會拋錯的這個值有 redundant 保護；此斷言在 Ubuntu 上是否仍立即命中缺值取決於 Ubuntu jq 本身是否拋錯，不強求）' "$l907m4a" 'CI 跑中 ?m'
-hasnt '㉘ mutant（拿掉零值前綴守門，留 try/catch）：不應退回查詢失敗（try/catch 兜底）' "$l907m4a" '查詢失敗'
+has   '㉘ mutant（拿掉零值前綴守門，留 try/catch）：仍走 pending 分支印「CI 跑中」（不斷言分鐘值——macOS 印 ?、glibc 印垃圾數字，兩者都對）' "$l907m4a" 'CI 跑中'
+hasnt '㉘ mutant（拿掉零值前綴守門，留 try/catch）：不應退回查詢失敗（macOS try/catch 兜底、glibc 根本不拋錯，兩者皆不會查詢失敗）' "$l907m4a" '查詢失敗'
 
 # mutation（m4，merge-review R3 delta i5，主要證據）：拿掉 try/catch（退回只有前綴守門的舊寫法）——
 # 907 的 ci 項（startedAt="not-a-date"，strptime 格式比對失敗，不是範圍驗證，**所有** jq 版本都一致
