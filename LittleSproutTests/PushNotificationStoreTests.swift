@@ -108,6 +108,19 @@ final class PushNotificationStoreTests: XCTestCase {
         store.didFailToRegister(error: AppError.network(message: "offline"))
     }
 
+    /// merge-review R3-m1：`error.localizedDescription` 對沒有 conform `LocalizedError` 的
+    /// `AppError` 只印得出泛用文案「無法完成作業。（LittleSprout.AppError錯誤0 。）」，看不出
+    /// 是哪一種錯誤、也看不出後端碼——`didFailToRegister` 改用 `PushNotificationStore
+    /// .logDescription(for:)` 之後，log 文字必須含 `AppError` 的 `code`，工程師撈 Release log
+    /// 才分得出 `.rejected(code: "42501")`（未登入）跟其他根因的差別。
+    func testLogDescription_appErrorWithCode_containsCode() {
+        let error = AppError.rejected(message: "未登入，無法註冊裝置 token", code: "42501")
+        XCTAssertTrue(
+            PushNotificationStore.logDescription(for: error).contains("42501"),
+            "log 文字沒有帶上 AppError 的 code，Release log 又變回無法分流的空話"
+        )
+    }
+
     // MARK: - didRegister（AppDelegate 轉呼叫的整段路徑）
 
     func testDidRegister_hexEncodesTokenAndSubmits() async {

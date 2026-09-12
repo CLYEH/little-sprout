@@ -106,10 +106,26 @@ final class PushNotificationStore {
 
     /// `AppDelegate.application(_:didFailToRegisterForRemoteNotificationsWithError:)` 轉呼叫
     /// ——票文範圍 2「註冊失敗記 log 不擋 UI」，不改變任何 store 狀態。
+    ///
+    /// merge-review R3-m1：`error.localizedDescription` 對沒有 conform `LocalizedError` 的
+    /// `AppError`（`AppError.swift:22`）只會印出 Foundation 橋接的泛用文案「無法完成作業。
+    /// （LittleSprout.AppError錯誤0 。）」——reviewer 實測三種完全不同根因（`.rejected`／
+    /// `.validationRetryable`／`.network`）印出來一模一樣，`AppError.map`（`AppError.swift:246-305`）
+    /// 明確保留下來供 log／除錯用的 `message`／`code` 兩欄全部被丟掉，Release log 沒有任何可
+    /// 分流的資訊。改印 `String(describing: error)`：`AppError` 是 enum，會印成
+    /// `rejected(message: "…", code: Optional("42501"))`，`message`／`code` 都保留；不是
+    /// `AppError` 的其他 `Error`（理論上不會發生，`PushAuthorizationService`／
+    /// `PushDeviceTokenAPIClient` 的實作皆映射成 `AppError`）一樣印得出型別與內容。裝置 token
+    /// 不在 `AppError` 的任何欄位裡，不會外洩。抽成 `static` helper 讓單元測試能直接斷言字串
+    /// 內容（`os.Logger` 本身的輸出不是 XCTest 能攔截斷言的東西）。
     func didFailToRegister(error: Error) {
         Self.logger.error(
-            "LS-217 push registerForRemoteNotifications 失敗：\(error.localizedDescription, privacy: .public)"
+            "LS-217 push registerForRemoteNotifications 失敗：\(Self.logDescription(for: error), privacy: .public)"
         )
+    }
+
+    static func logDescription(for error: Error) -> String {
+        String(describing: error)
     }
 
     /// 去重核心：同一個 (userID, tokenHex) 只送一次 `register_device_token`；RPC 失敗時不標記
