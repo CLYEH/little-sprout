@@ -200,4 +200,41 @@ final class UploadQueueStoreTests: XCTestCase {
         gateB.continuation.finish()
         await waitUntil { store.remainingCount == 0 }
     }
+
+    // MARK: - onUploadSucceeded（LS-166：接上真實上傳路徑的掛鉤）
+
+    func test_onUploadSucceeded_firesWithOriginalIDAndMediaID_onlyOnSuccess() async {
+        let mediaService = StubMediaUploadService()
+        let succeededMediaID = UUID()
+        mediaService.setUploadPhotoHandler { _, data, _, _ in
+            let tag = String(bytes: data, encoding: .utf8)!
+            if tag == "fail" { throw AppError.network(message: "offline") }
+            return succeededMediaID
+        }
+        let calls = OSAllocatedUnfairLock(initialState: [(UUID, UUID)]())
+        let successID = UUID()
+        let failID = UUID()
+        let store = UploadQueueStore(
+            familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 2,
+            onUploadSucceeded: { id, mediaID in calls.withLock { $0.append((id, mediaID)) } }
+        )
+
+        store.enqueue([makeUpload(tag: "ok", id: successID), makeUpload(tag: "fail", id: failID)])
+
+        await waitUntil { store.remainingCount == 1 }
+        let recorded = calls.withLock { $0 }
+        XCTAssertEqual(recorded.count, 1, "只有成功那筆該觸發掛鉤")
+        XCTAssertEqual(recorded.first?.0, successID)
+        XCTAssertEqual(recorded.first?.1, succeededMediaID)
+    }
+
+    func test_onUploadSucceeded_defaultsToNoOp_whenNotProvided() async {
+        // 沒有帶這個參數（既有呼叫端）——不該編譯失敗，也不該在成功時做任何事（無從斷言，
+        // 這裡只驗證整條流程不受影響仍能正常完成）。
+        let mediaService = StubMediaUploadService()
+        let store = UploadQueueStore(familyID: familyID, mediaUploadService: mediaService)
+        store.enqueue([makeUpload(tag: "solo")])
+        await waitUntil { store.remainingCount == 0 }
+        XCTAssertEqual(store.sections.first { $0.kind == .completed }?.rows.count, 1)
+    }
 }

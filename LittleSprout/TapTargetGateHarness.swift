@@ -50,6 +50,16 @@ enum TapTargetGateHarness {
             albumsPopulatedStateHost
         case .createAlbum:
             createAlbumHost
+        case .albumDetailOwner:
+            albumDetailOwnerHost
+        case .albumDetailMember:
+            albumDetailMemberHost
+        case .editAlbum:
+            editAlbumHost
+        case .albumDetailPopulated:
+            albumDetailPopulatedHost
+        case .albumDetailStress:
+            albumDetailStressHost
         case .sectionTabView:
             sectionTabViewHost
         case .sectionTabViewWithDiary:

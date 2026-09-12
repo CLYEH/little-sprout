@@ -75,6 +75,22 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.createAlbum)
     }
 
+    /// LS-166：相簿詳情 owner 視角——量測 Nav Row（自畫返回鍵／更多選單）與 Action Bar
+    /// （加入照片）三顆可點元件。
+    func testAlbumDetailViewOwner() {
+        assertAllTappablesMeetMinimum(.albumDetailOwner)
+    }
+
+    /// LS-166：相簿詳情 member 視角——「更多」選單不渲染，這裡只剩返回鍵／加入照片兩顆。
+    func testAlbumDetailViewMember() {
+        assertAllTappablesMeetMinimum(.albumDetailMember)
+    }
+
+    /// LS-166：「編輯相簿名稱」sheet，初始態（名稱欄／寶貝標記欄／儲存鈕）不需要任何 seed 資料。
+    func testEditAlbumView() {
+        assertAllTappablesMeetMinimum(.editAlbum)
+    }
+
     /// LS-164：帳號密碼登入畫面，初始態（Email／密碼欄＋顯示密碼切換鈕＋登入鈕）不需要任何
     /// seed 資料。`.welcome` 不在這裡——WelcomeView 仍留在 tap-target-exemptions.txt（Apple
     /// 官方按鈕量測意義有限，理由未變），見該畫面 case 文件註解。
