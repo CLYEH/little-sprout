@@ -53,6 +53,15 @@
 // purge_expired() 的 DB 端結果，混進 EF 自己的觀測會耦合兩件事）。巡檢 SQL 見
 // docs/API.md §6，由 orchestrator 接排程時一併接進巡檢。
 //
+// LS-235（來源 LS-96 池項 fa8c91fc：09-11 一次 Gateway Timeout 訊息即讓整輪
+// invocation 直接回 500，即使佇列本身完全正常）：讀取 purge_storage_queue 這一步
+// （上面 while 迴圈開頭的 SELECT）改用 ./queue_retry.ts 的 readQueueWithRetry()
+// 包一層重試／退避——只有這一步；迴圈裡其他步驟（remove()／markFailed()／
+// dequeue／孤兒掃描）各自已有自己的失敗處理，不在這次變更範圍內。同時新增
+// scripts/ops/prod-purge-health.sh：正式站 `cron.job_run_details` 經 pg_net
+// 非同步呼叫恆為 succeeded，看不出這支函式實際回應的 HTTP 狀態，該腳本改唯讀查
+// `net._http_response` 並與 purge_runs 對帳（見 docs/COLLABORATION.md §4-b）。
+//
 // 已知限制（如實揭露，見 docs/API.md §6「自動清除」與本票 handoff）：本機已用
 // `supabase functions serve --no-verify-jwt`（經 scripts/ops/supabase-lock.sh）
 // 對這支函式做過端對端手動驗證，但**沒有**寫成 `supabase/tests/` 底下可重複執行的
