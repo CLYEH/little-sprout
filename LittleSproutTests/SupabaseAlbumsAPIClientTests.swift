@@ -1,5 +1,6 @@
 import Foundation
 @testable import LittleSprout
+import os
 import Supabase
 import XCTest
 
@@ -20,7 +21,7 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
 
     func test_fetchAlbums_firstPage_filtersFamilyAndExcludesDeleted_noOrFilter() async throws {
         let client = TestSupabaseClient.make { [familyID] request in
-            XCTAssertEqual(request.url?.path, "/rest/v1/albums")
+            XCTAssertEqual(request.url?.path, "/rest/v1/album_summaries")
             let query = request.url?.query ?? ""
             XCTAssertTrue(query.contains("family_id=eq.\(familyID.uuidString)"))
             // `PostgrestFilterBuilder.is(_:value:)` 對 `Bool?.none` 的 `rawValue` 是大寫
@@ -51,30 +52,24 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
         _ = try await apiClient.fetchAlbums(familyID: familyID, cursor: cursor, limit: 20)
     }
 
-    /// merge-review R1 M1：張數與封面 fallback 改內嵌 PostgREST aggregate 查詢，不再整頁抓
-    /// `album_media` 在 client 端數——本機已用真實 Supabase CLI 容器實測確認
-    /// `db-aggregates-enabled` 可用且這組 select／order／limit 字串回得出正確資料（見
-    /// `SupabaseAlbumsAPIClient.listSelect`／`fetchAlbums` 文件註解）。這裡鎖住 query 組出的
-    /// 實際字元，SDK 或後端行為改變時能直接測出來，不會悄悄跟著漂移。
-    func test_fetchAlbums_selectsAggregateCountAndLatestFallback_withCorrectOrderAndLimit() async throws {
+    /// LS-203：張數與封面 fallback 改讀 `album_summaries` view 的扁平彙總欄，不再組
+    /// PostgREST 內嵌 aggregate／embed 查詢——這裡鎖住 select 字串只包含六個彙總欄＋主鍵/
+    /// 標題/時間戳，且沒有 `latest.order=`／`latest.limit=` 這類只服務內嵌形狀的修飾詞，SDK
+    /// 或後端行為改變時能直接測出來，不會悄悄跟著漂移。
+    func test_fetchAlbums_selectsFlatViewColumns_withoutEmbedModifiers() async throws {
         let client = TestSupabaseClient.make { request in
-            // `URLRequest` 送出前已經把 `(`／`)`／`,` 等字元 percent-encode 過（`request.url?.
-            // query` 在這裡回的是編碼後的原始形式，不是解碼過的——同 UUID／純英數的既有斷言
-            // 不會露餡，這裡第一次踩到，解碼後比對才可讀）。
             let query = (request.url?.query ?? "").removingPercentEncoding ?? ""
-            XCTAssertTrue(query.contains("album_media(count)"), "應該內嵌 count aggregate，實際 query：\(query)")
-            XCTAssertTrue(
-                query.contains("latest:album_media(media!inner(thumb_path,storage_path,created_at))"),
-                "應該用別名 latest 內嵌最新一筆 album_media，且對 media 用 !inner（merge-review R2 " +
-                    "B1：LEFT JOIN 語意在使用者看不到最新一筆時會產生 {\"media\": null} 解碼失敗），" +
-                    "實際 query：\(query)"
-            )
-            XCTAssertTrue(
-                query.contains("latest.order=media(created_at).desc"),
-                "應該依巢狀 media(created_at) 排序、用別名 latest 當修飾詞前綴（不是 album_media，避免" +
-                    "同一張表嵌兩次時 PGRST108 別名歧義），實際 query：\(query)"
-            )
-            XCTAssertTrue(query.contains("latest.limit=1"), "應該只取最新一筆，實際 query：\(query)")
+            for column in [
+                "visible_media_count", "latest_media_id", "latest_thumb_path", "latest_storage_path",
+                "cover_thumb_path", "cover_storage_path"
+            ] {
+                XCTAssertTrue(query.contains(column), "select 應包含彙總欄 \(column)，實際 query：\(query)")
+            }
+            XCTAssertFalse(query.contains("album_media"), "不應該再內嵌 album_media，實際 query：\(query)")
+            XCTAssertFalse(query.contains("latest:"), "不應該再用 latest 別名內嵌，實際 query：\(query)")
+            XCTAssertFalse(query.contains("latest.order="), "不應該再有內嵌修飾詞，實際 query：\(query)")
+            XCTAssertFalse(query.contains("latest.limit="), "不應該再有內嵌修飾詞，實際 query：\(query)")
+            XCTAssertTrue(query.contains("order=created_at.desc"), "應依 created_at desc 排序，實際 query：\(query)")
             return MockURLProtocol.StubResponse(statusCode: 200, body: Data("[]".utf8))
         }
         let apiClient = SupabaseAlbumsAPIClient(client: client)
@@ -82,12 +77,17 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
         _ = try await apiClient.fetchAlbums(familyID: familyID, cursor: nil, limit: 20)
     }
 
-    func test_fetchAlbums_decodesRows_includingAggregateCountAndEmptyLatest() async throws {
+    /// `album_summaries` 回應是扁平欄位（不是 LS-165 那種巢狀陣列），相簿沒有任何照片時
+    /// 六個彙總欄皆為 `NULL`／`0`（view 的 `coalesce(..., 0)` 保證 `visible_media_count`
+    /// 非 NULL，其餘五欄皆可為 NULL）。
+    func test_fetchAlbums_decodesRows_noPhotos() async throws {
         let client = TestSupabaseClient.make { [albumID] _ in
             MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
             [{
-              "id": "\(albumID.uuidString)", "title": "生日派對", "cover_media_id": null,
-              "created_at": "2026-09-04T10:00:00Z", "album_media": [{"count": 0}], "latest": []
+              "id": "\(albumID.uuidString)", "title": "生日派對",
+              "created_at": "2026-09-04T10:00:00Z", "visible_media_count": 0,
+              "latest_media_id": null, "latest_thumb_path": null, "latest_storage_path": null,
+              "cover_thumb_path": null, "cover_storage_path": null
             }]
             """.utf8))
         }
@@ -98,51 +98,27 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
         XCTAssertEqual(rows.count, 1)
         XCTAssertEqual(rows[0].id, albumID)
         XCTAssertEqual(rows[0].title, "生日派對")
-        XCTAssertNil(rows[0].coverMediaId)
         XCTAssertEqual(rows[0].photoCount, 0)
+        XCTAssertNil(rows[0].latestMediaId)
         XCTAssertNil(rows[0].latestMediaThumbPath)
         XCTAssertNil(rows[0].latestMediaStoragePath)
+        XCTAssertNil(rows[0].coverThumbPath)
+        XCTAssertNil(rows[0].coverStoragePath)
     }
 
-    /// merge-review R2 B1（blocker）迴歸測試——本機用 Supabase CLI 容器造「唯一一筆
-    /// album_media 連結指到已軟刪＋`uploaded_by` 被清空的 media」重現過的真實回應形狀：
-    /// `latest` 陣列非空，但內含元素的 `media` 是 `null`（`media!inner` 修好之後這個形狀在
-    /// 正式查詢裡不會再出現，但 `AlbumListingRow.init(from:)` 仍要能安全解碼這個形狀——
-    /// 不只依賴查詢寫法保證正確性，見該型別文件註解「第二層防守」）。
-    func test_fetchAlbums_decodesLatestEntryWithNullMedia_withoutThrowing() async throws {
+    /// 六個彙總欄皆有值的完整形狀——`visible_media_count`／`latest_media_id`／
+    /// `latest_thumb_path`／`latest_storage_path`／`cover_thumb_path`／`cover_storage_path`
+    /// 逐一解碼正確。
+    func test_fetchAlbums_decodesRows_withAllSummaryColumnsPopulated() async throws {
+        let latestMediaID = UUID()
         let client = TestSupabaseClient.make { [albumID] _ in
             MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
             [{
-              "id": "\(albumID.uuidString)", "title": "只有看不到的相片", "cover_media_id": null,
-              "created_at": "2026-09-04T10:00:00Z", "album_media": [{"count": 1}],
-              "latest": [{"media": null}]
-            }]
-            """.utf8))
-        }
-        let apiClient = SupabaseAlbumsAPIClient(client: client)
-
-        let rows = try await apiClient.fetchAlbums(familyID: familyID, cursor: nil, limit: 20)
-
-        XCTAssertEqual(rows.count, 1, "不應該因為 {\"media\": null} 讓整頁解碼失敗")
-        XCTAssertEqual(rows[0].photoCount, 1, "連結列計數不受影響（merge-review R2 m3：口徑包含看不見的連結）")
-        XCTAssertNil(rows[0].latestMediaThumbPath, "看不見的 media 不該被當成封面 fallback 來源")
-        XCTAssertNil(rows[0].latestMediaStoragePath)
-    }
-
-    /// 本機真人測試撞過的實際回應形狀（見 `AlbumListingRow` 文件註解）：`album_media` 恆為
-    /// 一個元素的陣列（不是裸物件、也不是空陣列），`latest` 有照片時是一個元素的陣列，元素
-    /// 包一層 `media`。
-    func test_fetchAlbums_decodesRows_withPhotosAndLatestFallback() async throws {
-        let client = TestSupabaseClient.make { [albumID] _ in
-            MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
-            [{
-              "id": "\(albumID.uuidString)", "title": "跨年連假出遊", "cover_media_id": null,
-              "created_at": "2026-09-04T10:00:00Z",
-              "album_media": [{"count": 62}],
-              "latest": [{"media": {
-                "thumb_path": "f/latest_thumb.jpg", "storage_path": "f/latest.jpg",
-                "created_at": "2026-09-04T09:00:00Z"
-              }}]
+              "id": "\(albumID.uuidString)", "title": "跨年連假出遊",
+              "created_at": "2026-09-04T10:00:00Z", "visible_media_count": 62,
+              "latest_media_id": "\(latestMediaID.uuidString)",
+              "latest_thumb_path": "f/latest_thumb.jpg", "latest_storage_path": "f/latest.jpg",
+              "cover_thumb_path": "f/cover_thumb.jpg", "cover_storage_path": "f/cover.jpg"
             }]
             """.utf8))
         }
@@ -151,8 +127,11 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
         let rows = try await apiClient.fetchAlbums(familyID: familyID, cursor: nil, limit: 20)
 
         XCTAssertEqual(rows[0].photoCount, 62)
+        XCTAssertEqual(rows[0].latestMediaId, latestMediaID)
         XCTAssertEqual(rows[0].latestMediaThumbPath, "f/latest_thumb.jpg")
         XCTAssertEqual(rows[0].latestMediaStoragePath, "f/latest.jpg")
+        XCTAssertEqual(rows[0].coverThumbPath, "f/cover_thumb.jpg")
+        XCTAssertEqual(rows[0].coverStoragePath, "f/cover.jpg")
     }
 
     // MARK: - fetchAlbumChildren / fetchMedia
@@ -185,24 +164,41 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
 
     // MARK: - createAlbum
 
-    func test_createAlbum_sendsCreatedByAndDecodesRow() async throws {
+    /// LS-203 票文 Scope 3：`album_summaries` 不可寫，INSERT 一律走 `albums`，插入後再向 view
+    /// 重讀同一列——這裡鎖住兩步都真的發生（不是只組一份猜出來的回應），且重讀請求帶對
+    /// `id=eq.<剛插入的 id>` 篩選。
+    func test_createAlbum_insertsIntoAlbumsThenRereadsFromView() async throws {
+        let albumsInsertCallCount = OSAllocatedUnfairLock(initialState: 0)
+        let summariesRereadCallCount = OSAllocatedUnfairLock(initialState: 0)
         let client = TestSupabaseClient.make { [userID, familyID, albumID] request in
             if request.url?.path == "/auth/v1/token" {
                 return MockURLProtocol.StubResponse(
                     statusCode: 200, body: SessionFixture.json(userID: userID, email: "owner@example.com")
                 )
             }
-            XCTAssertEqual(request.url?.path, "/rest/v1/albums")
-            XCTAssertEqual(request.httpMethod, "POST")
-            let body = try XCTUnwrap(request.bodyData)
-            let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: String])
-            XCTAssertEqual(payload["title"], "新相簿")
-            XCTAssertEqual(payload["family_id"], familyID.uuidString)
-            XCTAssertEqual(payload["created_by"], userID.uuidString)
-            return MockURLProtocol.StubResponse(statusCode: 201, body: Data("""
+            if request.url?.path == "/rest/v1/albums" {
+                albumsInsertCallCount.withLock { $0 += 1 }
+                XCTAssertEqual(request.httpMethod, "POST")
+                let body = try XCTUnwrap(request.bodyData)
+                let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: String])
+                XCTAssertEqual(payload["title"], "新相簿")
+                XCTAssertEqual(payload["family_id"], familyID.uuidString)
+                XCTAssertEqual(payload["created_by"], userID.uuidString)
+                return MockURLProtocol.StubResponse(
+                    statusCode: 201, body: Data("{\"id\": \"\(albumID.uuidString)\"}".utf8)
+                )
+            }
+            XCTAssertEqual(request.url?.path, "/rest/v1/album_summaries")
+            summariesRereadCallCount.withLock { $0 += 1 }
+            XCTAssertEqual(request.httpMethod, "GET")
+            let query = request.url?.query ?? ""
+            XCTAssertTrue(query.contains("id=eq.\(albumID.uuidString)"), "重讀應該篩這一本剛建立的相簿，實際 query：\(query)")
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
             {
-              "id": "\(albumID.uuidString)", "title": "新相簿", "cover_media_id": null,
-              "created_at": "2026-09-05T00:00:00Z", "album_media": [{"count": 0}], "latest": []
+              "id": "\(albumID.uuidString)", "title": "新相簿",
+              "created_at": "2026-09-05T00:00:00Z", "visible_media_count": 0,
+              "latest_media_id": null, "latest_thumb_path": null, "latest_storage_path": null,
+              "cover_thumb_path": null, "cover_storage_path": null
             }
             """.utf8))
         }
@@ -213,7 +209,9 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
 
         XCTAssertEqual(row.id, albumID)
         XCTAssertEqual(row.title, "新相簿")
-        XCTAssertEqual(row.photoCount, 0, "剛建立的相簿必定 0 張照片")
+        XCTAssertEqual(row.photoCount, 0, "剛建立的相簿必定 0 張照片，不會短暫顯示錯誤張數")
+        XCTAssertEqual(albumsInsertCallCount.withLock { $0 }, 1)
+        XCTAssertEqual(summariesRereadCallCount.withLock { $0 }, 1)
     }
 
     func test_createAlbum_notSignedIn_throwsRejectedWithoutSendingRequest() async {
