@@ -1,8 +1,8 @@
 # docs/legal — 法務文件（LS-132）
 
-> **這些是草稿，供使用者審閱與（建議）律師審閱，不是法律意見。** 未經使用者核可不得生效、不得公開發佈、不得填入 App Store Connect。
+> **正文 v1.0.0 已於 2026-09-12 生效**（`privacy-policy.md`／`terms-of-service.md`／`eula-addendum.md`）。本 README 為法務文本的編輯來源與維護說明，是內部作業文件，不對外發佈（見 `docs/_config.yml` exclude；LS-132 merge-review R1 B1）。
 >
-> **填入生效日前須逐條核對下方「文本中承諾、但程式尚未落地的項目」對齊表**——表列項目送審時仍未上線者，對應正文必須先改寫。三份正文檔頭各有一行 DRAFT 標記；**正文內不放 HTML 註解錨點**（merge-review R2 實測 `AttributedString(markdown:)` 會把 `<!-- -->` 原樣顯示為文字），待落地標記只在本表，以段落編號定位。正文括號內的票號（例如「（LS-153，待落地）」）是草稿期標記，生效前一併移除——驗收：`grep -n 'LS-[0-9]' docs/legal/privacy-policy.md docs/legal/terms-of-service.md docs/legal/eula-addendum.md` 應為空。
+> **修訂法務文本時須逐條核對下方「文本中承諾、但程式尚未落地的項目」對齊表**——表列項目若尚未上線，對應正文必須先改寫，否則是對使用者的不實陳述、也可能被 App Review 退件。**正文內不放 HTML 註解錨點**（merge-review R2 實測 `AttributedString(markdown:)` 會把 `<!-- -->` 原樣顯示為文字），待落地標記只在本表，以段落編號定位。正文括號內若出現票號（例如「（LS-153，待落地）」），是功能尚未上線的暫時標記，該功能上線後須立即移除——不變式（正文定稿後任何時候都應成立，不只是生效前）：`grep -n 'LS-[0-9]' docs/legal/privacy-policy.md docs/legal/terms-of-service.md docs/legal/eula-addendum.md` 應為空。
 
 ## 三份文件的用途
 
@@ -40,22 +40,22 @@
 
 ## 文本中承諾、但程式尚未落地的項目（送審前必須對齊）
 
-文件寫的是**送審時**的狀態；下列功能目前在 Backlog／進行中，任何一項若送審時仍未上線，對應段落必須改寫，否則是對使用者的不實陳述、也會被 App Review 退件：
+文件寫的是**當下**的狀態；下表逐項列出正文承諾與其落地現況，任何一項若尚未上線，對應段落必須改寫，否則是對使用者的不實陳述、也會被 App Review 退件：
 
-| 文本承諾 | 對應票 | 現況（2026-09-03） |
+| 文本承諾 | 對應票 | 現況（2026-09-12，LS-132 R2） |
 |---|---|---|
-| App 內「設定 → 刪除帳號」兩步流程（隱私 §5 期間、§8「刪除帳號」；條款 §9.1；EULA §四.1）：① RPC 立即——退出家庭／唯一成員的家庭 cascade 刪除／自己的日記相簿留言軟刪／**您上傳的照片與影片（含日記附帶、含已退出家庭仍留有的）一併軟刪並立即停止對家庭成員顯示**／`profiles.deletion_requested_at` 標記；② 登入身分（email／顯示名稱／頭像＝`auth.users`＋`profiles`）與推播裝置代碼於帳號刪除完成時移除；標記資料 30 天內系統自動永久清除 | LS-24（UI）／LS-143（RPC，PR #244）／**LS-151**（Edge Function 以 service_role 刪 `auth.users`）／**LS-153**（30 天自動清除）／**LS-155**（media 軟刪＋伺服器端立即隱藏，PR #270） | LS-143／LS-151 Done；LS-153 QA（SQL 面 `purge_expired()`／清除排程已完成，cron→Edge Function 觸發接線待使用者提供 vault 金鑰）；LS-155 PR #270 review 中（SQL／RLS／文件皆已完成）；LS-24 Backlog，Swift 端尚無「設定 → 刪除帳號」畫面，本表其餘項目待該票補上 |
-| 「在 App 內」檢舉（條款 §6.2）、封鎖（§6.4）、Owner 移除內容與處理檢舉（§6.5）、檢舉同時送達平台方；EULA §二.3 | LS-23（UI，設計併入 LS-152）／LS-149（後端） | 表與 RLS 已在（`content_reports`／`blocked_users`）；App 端無呼叫端（`grep -rn -e create_content_report -e blocked_users LittleSprout/` 0 hits）；LS-149 In Progress、LS-23 Backlog |
-| 24 小時內處理檢舉（條款 §6.3） | 營運承諾，非程式 | 需有人（使用者本人）看 Supabase Dashboard 的 `content_reports`；建議設 email 或 webhook 提醒，否則 24 小時承諾靠自律 |
-| 清除排程：軟刪內容／逾期孩子檔案／刪除帳號後的標記資料 30 天後系統自動永久清除，含照片影片實體檔案與額度對帳（隱私 §5、§8 全段） | **LS-153**（使用者 2026-09-03 裁決：系統自動、不做人工清除；TestFlight 前落地） | Backlog。repo 目前無任何排程（`grep -rni -e pg_cron -e cron.schedule -e purge supabase/` 0 hits）；`docs/API.md:1263` 現行設計**刻意**不硬刪軟刪 `media` 的 Storage 物件；30 天還原邊界只有 `children`（`LS043`，且**無硬刪路徑**、軟刪列對全體成員可讀），`diaries`／`comments`／`albums` 軟刪無時間邊界。正文已依裁決寫「系統自動永久清除（LS-153，待落地）」——**LS-153 未上線前不得填生效日** |
-| 推播通知（隱私 §2.5） | LS-22 | 文本已寫「尚未啟用；啟用前不蒐集」——LS-22 上線時把該句刪掉並在 App Privacy 標籤加 Device ID |
-| 「重大變更於 App 內通知」（隱私 §13、條款 §15） | 無票 | 目前無 in-app 公告機制；第一版可用 App Store 更新說明＋歡迎頁版本號達成，或另票 |
-| 帳號刪除向 Apple 撤銷 token（隱私 §8） | **LS-151**（orchestrator 2026-09-03 已列入票文範圍） | Apple 帳號刪除指引要求以 Sign in with Apple REST API 撤銷；`20260903084231_delete_account.sql`（純 SQL）不做，由 LS-151 的 service_role Edge Function 執行；正文句保留 |
-| 刪除單筆內容（照片／日記／留言）UI（隱私 §4.4、§8「刪除單筆內容」；條款 §6.5） | **LS-152**（設定與成員管理畫面群設計票，使用者 2026-09-03 裁決併入） | 後端已在（`set_diary_deleted`／`set_comment_deleted`／`set_album_deleted`、`media.deleted_at`）；App 端無呼叫端（`grep -rn -e set_diary_deleted -e set_comment_deleted -e set_album_deleted LittleSprout/` 只命中 `Errors/AppError.swift` 註解）；唯一有刪除 UI 的是孩子檔案（`Features/Children/EditChildView.swift`）。正文已改為「透過 App 或來信」 |
-| 退出家庭 UI（條款 §4.5；隱私 §9） | **LS-152** | 後端已在（`family_members` DELETE policy「任何人可自行退出」，API.md §2）；`Features/SettingsView.swift` 只有「邀請家人」與「登出」。正文已改為「透過 App 或來信」 |
-| Owner 移除成員 UI（條款 §4.5、§6.5；隱私 §4.5） | **LS-152** | 後端已在（owner 移除任何人）；`Features/Family/` 無成員清單畫面。正文已改為「有權」 |
-| 修改顯示名稱與頭像 UI（隱私 §2.1、§9） | **LS-152** | `profiles` 可 update；`Features/` 無 profile 編輯畫面。正文已改為「透過 App 或來信要求修改」 |
-| 留言／愛心／相簿功能本身（條款 §2.1；隱私 §2.4） | LS-22（留言／愛心）；相簿 Phase 1-4（本票未查到專屬票號） | App 端未實作（`create_comment`／`toggle_reaction` 無呼叫端；`Features/AlbumsView.swift` 為 placeholder）；Phase 1 核心功能、送審前必然在——列入只為對齊表完整（R1 n2） |
+| App 內「設定 → 刪除帳號」兩步流程（隱私 §5 期間、§8「刪除帳號」；條款 §9.1；EULA §四.1）：① RPC 立即——退出家庭／唯一成員的家庭 cascade 刪除／自己的日記相簿留言軟刪／**您上傳的照片與影片（含日記附帶、含已退出家庭仍留有的）一併軟刪並立即停止對家庭成員顯示**／`profiles.deletion_requested_at` 標記；② 登入身分（email／顯示名稱／頭像＝`auth.users`＋`profiles`）與推播裝置代碼於帳號刪除完成時移除；標記資料 30 天內系統自動永久清除 | LS-24（UI）／LS-143（RPC，PR #244）／**LS-151**（Edge Function 以 service_role 刪 `auth.users`）／**LS-153**（30 天自動清除）／**LS-155**（media 軟刪＋伺服器端立即隱藏，PR #270） | **已上線**：`LittleSprout/Features/Settings/DeleteAccountFlowView.swift`／`DeleteAccountStep.swift`（App 內「設定 → 刪除帳號」完整流程，含唯一 Owner 先轉移分流）；LS-143／LS-151／LS-153／LS-155 皆 Done。`LS-24` 這張 Story 票本身仍標 Backlog（實際落地在子票／後續票完成，Story 票未正式關閉），不影響本列結論 |
+| 「在 App 內」檢舉（條款 §6.2）、封鎖（§6.4）、Owner 移除內容與處理檢舉（§6.5）、檢舉同時送達平台方；EULA §二.3 | LS-23（UI，設計併入 LS-152）／LS-149（後端） | **已上線**：`Services/Safety/SupabaseSafetyAPIClient.swift`（`reportContent`／`blockUser`／`unblockUser`／`removeContentAsOwner`）；`Features/Timeline/DiaryDetailView+ContentActions.swift`「⋯」操作表（LS-189）串起檢舉／封鎖／Owner 移除／自刪；`Features/Content/BlockConfirmSheet.swift`、`Features/Settings/BlockListView.swift`（封鎖名單）。LS-149 Done。`LS-23` Story 票仍標 Backlog（同上，不影響本列結論） |
+| 24 小時內處理檢舉（條款 §6.3） | 營運承諾，非程式 | 未變：需有人（使用者本人）看 Supabase Dashboard 的 `content_reports`；建議設 email 或 webhook 提醒，否則 24 小時承諾靠自律 |
+| 清除排程：軟刪內容／逾期孩子檔案／刪除帳號後的標記資料 30 天後系統自動永久清除，含照片影片實體檔案與額度對帳（隱私 §5、§8 全段） | **LS-153**（使用者 2026-09-03 裁決：系統自動、不做人工清除；TestFlight 前落地） | **已上線**：`supabase/migrations/20260903110908_purge_expired.sql` 的 `cron.schedule('ls153-purge-expired-daily', …)`＋`supabase/functions/purge-storage/`；正式站已接線並煙測回應 200（`docs/API.md` LS-223 訂正段）。LS-153 Done（completedAt 2026-09-06） |
+| 推播通知（隱私 §2.5） | LS-22 | 文本現寫「尚未啟用；啟用前不蒐集」——LS-22（Story）仍標 Backlog。**注意**：`Services/Push/`（`PushAuthorizationService`／`PushDeviceTokenAPIClient`／`register_device_token` RPC）與 `supabase/functions/push-dispatch` 已有實作，`PushPrepromptView` 也已是登入後全屏 gate 之一（QADriver 已標記）——本列「尚未啟用」是否仍準確，**LS-132 R2 未逐一核實到底發送端是否真的已對使用者啟用，留給下一輪或另票確認**，正文本次未動 |
+| 「重大變更於 App 內通知」（隱私 §13、條款 §15） | 無票 | 未變：目前無 in-app 公告機制；第一版可用 App Store 更新說明＋歡迎頁版本號達成，或另票 |
+| 帳號刪除向 Apple 撤銷 token（隱私 §8） | **LS-151**（orchestrator 2026-09-03 已列入票文範圍） | **已上線**：LS-151 Done（completedAt 2026-09-04），Edge Function 以 service_role 呼叫 Sign in with Apple REST API 撤銷；正文句保留（現在式陳述） |
+| 刪除單筆內容（照片／日記／留言）UI（隱私 §4.4、§8「刪除單筆內容」；條款 §6.5） | **LS-152**（設定與成員管理畫面群設計票，使用者 2026-09-03 裁決併入） | **已上線**：`Features/Content/DiaryDeleteConfirmationSheet.swift`／`Features/Albums/AlbumDeleteConfirmationSheet.swift`／`Services/Comment/SupabaseCommentAPIClient.swift`（`set_comment_deleted`），經 `DiaryDetailView+ContentActions.swift`「⋯」操作表（LS-189）串接真實入口。LS-152 Done（completedAt 2026-09-05） |
+| 退出家庭 UI（條款 §4.5；隱私 §9） | **LS-152** | **已上線**：`Features/Settings/FamilyMembersView.swift`「退出家庭」列＋`FamilyMembersView+Sheets.swift:246`（`leaveFamily()`）。LS-152 Done |
+| Owner 移除成員 UI（條款 §4.5、§6.5；隱私 §4.5） | **LS-152** | **已上線**：`FamilyMembersView+Sheets.swift:89`（`removeMember`），成員清單畫面已在。LS-152 Done |
+| 修改顯示名稱與頭像 UI（隱私 §2.1、§9） | **LS-152** | **已上線**：`Features/Settings/ProfileEditView.swift`，經 `SettingsView.swift:238` 導覽進入。LS-152 Done |
+| 留言／愛心／相簿功能本身（條款 §2.1；隱私 §2.4） | LS-22（留言／愛心）；相簿 Phase 1-4（本票未查到專屬票號） | **部分已上線**：愛心（`toggle_reaction`，`Services/Timeline/SupabaseTimelineAPIClient.swift`／`Features/Timeline/InteractionRow.swift`）與相簿（`Features/Albums/` 完整功能，非 placeholder）已在；**留言本體仍未上線**——`Features/Timeline/DiaryDetailView.swift` 只畫「留言」占位區塊＋「留言功能即將推出」文字，`Services/Comment/CommentAPIClient.swift` 的 `create_comment`／讀取清單無呼叫端；`LS-22`（Story，含彙總推播）仍為 Backlog |
 
 ## 事實核對清單（送審前逐項確認）
 
@@ -93,7 +93,7 @@ App Store Connect 的「隱私權政策 URL」與「支援 URL」都必須是公
 
 ### 自有網域（`[[SUPPORT_URL]]` 的最終形狀）
 
-三案都可再掛自有網域：Settings → Pages → Custom domain 填 `littlesprout.app`（或子網域 `legal.littlesprout.app`），DNS 端子網域用 CNAME 指到 `<owner>.github.io`、apex 用 A/ALIAS 記錄；**先在 GitHub 設定 custom domain 再改 DNS**，避免子網域被他人接管（docs.github.com「Managing a custom domain」）。若使用者尚未持有 `littlesprout.app`，`WelcomeView.swift` 目前的佔位網址就不能用，需改成 GitHub Pages 預設網址或購買網域。
+三案都可再掛自有網域：Settings → Pages → Custom domain 填自訂網域（本專案已選定 `littlesprout.xyz`，見 `docs/CNAME`），DNS 端子網域用 CNAME 指到 `<owner>.github.io`、apex 用 A/ALIAS 記錄；**先在 GitHub 設定 custom domain 再改 DNS**，避免子網域被他人接管（docs.github.com「Managing a custom domain」）。
 
 ### 建議
 
