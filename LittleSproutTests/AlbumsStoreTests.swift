@@ -3,7 +3,7 @@ import Foundation
 import XCTest
 
 private func albumRow(id: UUID = UUID(), title: String = "相簿", createdAt: Date) -> AlbumListingRow {
-    AlbumListingRow(id: id, title: title, coverMediaId: nil, createdAt: createdAt)
+    AlbumListingRow(id: id, title: title, createdAt: createdAt)
 }
 
 /// 同 `TimelineStoreTests.AsyncGate`（`private`，以檔案為界，這裡另建一份小型版本）——精準
@@ -145,7 +145,7 @@ final class AlbumsStoreTests: XCTestCase {
         stub.setFetchAlbumsHandler { _, _, _ in [] }
         let createdAlbumID = UUID()
         stub.setCreateAlbumHandler { _, title in
-            AlbumListingRow(id: createdAlbumID, title: title, coverMediaId: nil, createdAt: Date())
+            AlbumListingRow(id: createdAlbumID, title: title, createdAt: Date())
         }
         let store = AlbumsStore(apiClient: stub)
         let childID = UUID()
@@ -191,7 +191,7 @@ final class AlbumsStoreTests: XCTestCase {
         let stub = StubAlbumsAPIClient()
         let createdAlbumID = UUID()
         stub.setCreateAlbumHandler { _, title in
-            AlbumListingRow(id: createdAlbumID, title: title, coverMediaId: nil, createdAt: Date())
+            AlbumListingRow(id: createdAlbumID, title: title, createdAt: Date())
         }
         stub.setSetAlbumChildrenHandler { _, _ in throw AppError.network(message: "offline") }
         stub.setFetchAlbumsHandler { _, _, _ in
@@ -243,7 +243,7 @@ final class AlbumsStoreTests: XCTestCase {
         let staleAlbumID = UUID()
         stub.setCreateAlbumHandler { _, title in
             await staleGate.wait()
-            return AlbumListingRow(id: staleAlbumID, title: title, coverMediaId: nil, createdAt: Date())
+            return AlbumListingRow(id: staleAlbumID, title: title, createdAt: Date())
         }
 
         // 較舊的一次先開始（世代號先遞增），卡在閘門裡——`childIDs` 空陣列，放行後會直接走到
@@ -254,7 +254,7 @@ final class AlbumsStoreTests: XCTestCase {
 
         // 較新的一次完整跑完（不卡閘門）：`setAlbumChildren` 失敗，補償軟刪後回報錯誤。
         stub.setCreateAlbumHandler { _, title in
-            AlbumListingRow(id: UUID(), title: title, coverMediaId: nil, createdAt: Date())
+            AlbumListingRow(id: UUID(), title: title, createdAt: Date())
         }
         stub.setSetAlbumChildrenHandler { _, _ in throw AppError.network(message: "新的失敗") }
         let newResult = await store.createAlbum(familyID: familyID, title: "新的", childIDs: [UUID()])
