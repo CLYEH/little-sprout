@@ -21,8 +21,8 @@ struct DiaryCardView: View {
     /// 需要它組 target key／呼叫 `toggle_reaction`，由呼叫端（`TimelineView`）用
     /// `TimelineEntry.refId` 傳入。
     let refId: UUID
-    /// LS-218（留言 sheet）尚未實作——本票先接空回呼，見 `InteractionRow.onOpenComments`
-    /// 文件註解。
+    /// LS-218：`TimelineView.openComments(kind:refId:)` 開留言 sheet，見
+    /// `InteractionRow.onOpenComments` 文件註解。
     var onOpenComments: () -> Void = {}
 
     /// merge-review `443ec21a` i2（既有 LS-126 幾何缺陷，本輪順手修——同一 surface，QA 會
