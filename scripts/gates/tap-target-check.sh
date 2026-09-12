@@ -152,7 +152,12 @@ if [ -n "$other_failed" ]; then
   echo "本輪所有失敗測試（每筆下方為對應 assertion 訊息，LS-231）：" >&2
   printf '%s\n' "$other_failed" | print_failed_tests_with_assertions
 fi
-echo "log 尾段：" >&2
+# LS-231（來源 LS-229 comment e5237cfb：`tail -n 60` 曾被誤讀成失敗測試自己的 trace，實際是整輪
+# ~110 支 UITests 序列跑到最後、字母序排最後那支「剛好通過」的測試的輸出，跟真正失敗的測試無關，
+# 誤導票文引用了錯的證據）——這裡明確標「僅供參考」＋指向正確位置，不能再讓人以為這是失敗測試的
+# 輸出：真正的失敗行看上面「本輪所有失敗測試」逐筆列出的 assertion 訊息（按測試名在全份 log 裡定位、
+# 不受它在整輪跑的先後順序影響），或下載 xcresult artifact 用 xcresulttool 查。
+echo "log 尾段（僅供參考——整輪 xcodebuild 輸出的最後 60 行，不代表是上面失敗測試自己的輸出；何支測試失敗、為什麼請看上面「本輪所有失敗測試」與其 assertion 訊息，或下載 xcresult 用 xcresulttool 查）：" >&2
 tail -n 60 "$log" >&2
 print_result_bundle_hint
 exit 1
