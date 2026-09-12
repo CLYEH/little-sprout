@@ -833,7 +833,7 @@ mk_mutant() {
 }
 
 # ==== mutation A：拿掉 --kill 流程呼叫 restore_main_checkout 那行 → ⑲ 的綠樣本必須變回 dirty（不再還原）====
-mk_mutant mutA-root '/\[ "\$kill_mode" -eq 1 \] && restore_main_checkout "\$root"/d'
+mk_mutant mutA-root '/\[ "\$kill_mode" -eq 1 \] && { restore_main_checkout "\$root" || restore_rc=\$?; }/d'
 mutA="${work}/mutA-root/scripts/ops/pen-open.sh"
 if grep -qF 'restore_main_checkout "$root"' "$mutA"; then
   bad "mutation A：拿掉呼叫失敗，負控本身無效"
@@ -877,6 +877,60 @@ else
 fi
 clear_fake_pen
 mainCkWt_reset_clean
+
+# ---- ㉑（LS-236 R2，merge-review F2）：--restore 對 staged（`git add` 過但未 commit）的 .pen 污染也要
+#        還原，不能只比對 index（裸 `git diff -- <path>`／`git checkout -- <path>` 都是跟 index 比、從
+#        index 還原）——reviewer 重放：改掉 .pen 並 git add 之後，`patrol.sh` 那側（`git diff --name-only
+#        HEAD` 看得到 staged 變更）會印「Pen 寫回」提示，但舊版 `--restore` 卻回報「已一致，無需還原」
+#        且完全沒有動檔案，兩邊互相矛盾、無路可走。改用 HEAD 為基準後，staged 的污染內容也要被還原
+#        （index 與 worktree 一起被 `git checkout HEAD --` 覆寫）----
+mainCk_dirty
+git -C "$mainCk" add design/littlesprout.pen
+out21=$( cd "$mainCk" && bash "$script" --restore 2>&1 ); got21=$?
+if [ "$got21" -eq 0 ] && printf '%s' "$out21" | grep -qF 'Pen 寫回 → 已還原' \
+  && [ -z "$(git -C "$mainCk" status --porcelain -- design/littlesprout.pen)" ]; then
+  ok '㉑ --restore：staged（git add 過）的污染 .pen 也會被還原，git status 乾淨'
+else
+  bad "㉑ 應 exit 0 且已還原（實得 ${got21}）"; printf '%s\n' "$out21" | sed 's/^/    /' >&2
+fi
+mainCk_reset_clean
+
+# ---- ㉒（LS-236 R2，merge-review F3，PLAUSIBLE 重放）：還原後複驗——用一支「checkout 回報成功但其實
+#        沒有真的動到檔案」的 mutant 模擬「還原之後內容又被寫回」的等價效果，驗證 restore_main_checkout()
+#        會在複驗時發現「還原後仍與 HEAD 不同」，印 ⚠ 並回傳非 0（不是默默印「已還原」蓋過去）----
+mut_noop_checkout="${work}/pen-open.checkout-noop.sh"
+sed 's/env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 git -C "\$root" checkout HEAD -- design\/littlesprout\.pen 2>\/dev\/null/true/' "$script" > "$mut_noop_checkout"
+if grep -qF 'if ! true; then' "$mut_noop_checkout"; then
+  ok '㉒ mutate：確認已把「還原」指令換成 no-op（模擬「回報成功但內容沒真的變」）'
+else
+  bad '㉒ mutate：替換失敗，負控本身無效'
+fi
+mainCk_dirty
+out22=$( cd "$mainCk" && bash "$mut_noop_checkout" --restore 2>&1 ); got22=$?
+if [ "$got22" -ne 0 ] && printf '%s' "$out22" | grep -qF '⚠ pen-open --restore：還原後複驗仍與 HEAD 不同' \
+  && [ -n "$(git -C "$mainCk" status --porcelain -- design/littlesprout.pen)" ]; then
+  ok '㉒ 還原後複驗發現仍不同 → 印 ⚠ 並回傳非 0，不假裝已還原（F3 PLAUSIBLE 重放）'
+else
+  bad "㉒ 應 exit 非 0 且印複驗失敗警告（實得 exit ${got22}）"; printf '%s\n' "$out22" | sed 's/^/    /' >&2
+fi
+mainCk_reset_clean
+
+# ---- ㉓（LS-236 R2，merge-review F2 迴歸防線）：非 git 倉庫的 --kill 目標（既有 $wt 之類的純目錄
+#        fixture）→ restore_main_checkout() 靜默跳過（return 0），不得讓整體 --kill 因此失敗
+#        （回歸防線：R2 開發過程中曾經把「不是 git 倉庫」錯判成硬錯誤 return 2，導致 ⑮e 這類既有
+#        非 git fixture 的 --kill 從 exit 0 退化成 exit 2）----
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe
+set_state "PATH:${want}"
+start_fake_pen
+export PEN_STUB_OSASCRIPT_KILLS=1
+out23=$(run "$wt" --kill 2>&1); got23=$?
+unset PEN_STUB_OSASCRIPT_KILLS
+if [ "$got23" -eq 0 ] && printf '%s' "$out23" | grep -qF '不是 git 倉庫，跳過'; then
+  ok '㉓ --kill 目標不是 git 倉庫 → 靜默跳過還原比對，整體仍 exit 0'
+else
+  bad "㉓ 應 exit 0 且印跳過訊息（實得 exit ${got23}）"; printf '%s\n' "$out23" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-open-check 自測失敗" >&2

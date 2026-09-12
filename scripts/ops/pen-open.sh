@@ -63,6 +63,12 @@
 # `main-checkout-guard.sh` 的判定慣例）才比對／還原——linked worktree 的 `.pen` 髒可能是合法的設計 WIP，
 # 不能被這裡自動蓋掉。自測：`pen-open.test.sh`（fixture 化 git 倉庫＋pen CLI，正負樣本＋mutation）。
 #
+# **注意（LS-236 R2 merge-review i2）**：`restore_main_checkout()` 傳入的是本次 `--kill` 的**清場目標
+# `$root`**，不是「無條件去找主 checkout 比對」——`--kill <票 worktree>` 時會整段判定成 linked worktree
+# 而跳過（印訊息、不比對）。這與 LS-208 事故本身的形狀一致（事故是 `pen-open.sh <主 checkout> --kill`，
+# `$root` 當時就是主 checkout），也是刻意的 WIP 保護；只有呼叫端真的對主 checkout 下 `--kill` 時才會
+# 觸發還原，對票 worktree 下 `--kill` 不會意外去動主 checkout。
+#
 # R2／R3（自動清場，使用者核可 2026-08-25）：目標路徑已在背景視窗開著時，`open -a Pen` 不會奪回 active（見
 # 下方「已知坑」）。輪詢逾時仍不一致 → **`kill` 殺的是 Pen 主行程＝全部視窗一起結束**，所以安全判定必須涵蓋
 # 「目前所有開著的 .pen」，不能只驗目前 active 那一份（R2 版本只驗了 active 那份就漏了：目標路徑本身必定也
@@ -297,9 +303,12 @@ PY
 # 不能被這裡自動蓋掉。回傳 0＝一致或已還原或非主 checkout（略過）；2＝判定或還原本身失敗。
 restore_main_checkout() {
   local root=$1 gd cgd stat ins del
+  # 不是 git 倉庫＝這個 root 壓根沒有「跟 HEAD 比對」的概念可言，跟「linked worktree、不比對」是同一
+  # 等級的「不適用」，不是錯誤——不當 return 2（`--kill` 呼叫端會把非 0 反映進整體 exit code，把這種
+  # 情境當失敗會誤擋原本該成功的 --kill 收工）。
   git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
-    echo "✗ pen-open --restore：「${root}」不是 git 倉庫" >&2
-    return 2
+    echo "  「${root}」不是 git 倉庫，跳過 design/littlesprout.pen 比對／還原" >&2
+    return 0
   }
   gd=$(git -C "$root" rev-parse --path-format=absolute --git-dir 2>/dev/null) || {
     echo "✗ pen-open --restore：讀不到「${root}」的 --git-dir" >&2
@@ -317,15 +326,29 @@ restore_main_checkout() {
     echo "  「${root}」沒有 design/littlesprout.pen，無需比對" >&2
     return 0
   fi
-  if git -C "$root" diff --quiet -- design/littlesprout.pen 2>/dev/null; then
+  # LS-236 R2（merge-review F2）：明確帶 HEAD，不是裸 `git diff -- <path>`（比對 index 對 worktree）／
+  # `git checkout -- <path>`（從 index 還原）——Pen 寫回若被 `git add` 進 index（例如某個外部工具剛好
+  # 也 stage 過這個檔），裸版本的「與 HEAD 一致」判斷會誤判成一致（index 已經是污染內容，worktree 跟
+  # index 相同、跟 HEAD 不同也測不出來），還原也只會拿 index 蓋 worktree、把污染內容原封不動留著。
+  # 一律用 `HEAD` 當比較與還原基準，staged 的污染內容一樣能被還原（`git checkout HEAD -- <path>` 同時
+  # 覆寫 index 與 worktree）。
+  if git -C "$root" diff --quiet HEAD -- design/littlesprout.pen 2>/dev/null; then
     echo "✓ pen-open --restore：主 checkout「${root}」design/littlesprout.pen 與 HEAD 一致，無需還原"
     return 0
   fi
-  stat=$(git -C "$root" diff --shortstat -- design/littlesprout.pen 2>/dev/null)
+  stat=$(git -C "$root" diff --shortstat HEAD -- design/littlesprout.pen 2>/dev/null)
   ins=$(printf '%s' "$stat" | grep -oE '[0-9]+ insertion' | grep -oE '^[0-9]+'); ins=${ins:-0}
   del=$(printf '%s' "$stat" | grep -oE '[0-9]+ deletion' | grep -oE '^[0-9]+'); del=${del:-0}
-  if ! env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 git -C "$root" checkout -- design/littlesprout.pen 2>/dev/null; then
-    echo "✗ pen-open --restore：git checkout -- design/littlesprout.pen 失敗（${root}）" >&2
+  if ! env LS_ALLOW_MAIN_CHECKOUT_WRITE=1 git -C "$root" checkout HEAD -- design/littlesprout.pen 2>/dev/null; then
+    echo "✗ pen-open --restore：git checkout HEAD -- design/littlesprout.pen 失敗（${root}）" >&2
+    return 2
+  fi
+  # LS-236 R2（merge-review F3，PLAUSIBLE）：還原後複驗一次——若 Pen 在這次還原「之後」又寫回一次
+  # （例如重開後第一次自動存檔剛好卡在還原動作之後），這裡至少要能察覺、不要默默印「已還原」卻其實
+  # 沒有還原乾淨；仍不同就印 ⚠ 並回傳非 0，讓呼叫端（--kill 流程／--restore 子命令）都能反映在整體
+  # exit code，不是只有下一輪巡檢才發現。
+  if ! git -C "$root" diff --quiet HEAD -- design/littlesprout.pen 2>/dev/null; then
+    echo "⚠ pen-open --restore：還原後複驗仍與 HEAD 不同（${root}）——可能是 Pen 在還原之後又寫回一次，請重跑 pen-open.sh --restore 或 bash scripts/ops/pen-open.sh <主 checkout> --kill 再清一次" >&2
     return 2
   fi
   echo "  Pen 寫回 → 已還原（+${ins}/−${del}）"
@@ -601,8 +624,16 @@ poll_rc=$?
 # 不只發生在「路徑一致」那個分支）之後，比對主 checkout design/littlesprout.pen 是否被寫回；不同就自動
 # 用 LS_ALLOW_MAIN_CHECKOUT_WRITE=1 git checkout -- 還原並印「Pen 寫回 → 已還原（+N/−M）」。只在 $root
 # 真的是主 checkout 時動（restore_main_checkout 內部判定，linked worktree 的 .pen 髒可能是合法 WIP）。
-[ "$kill_mode" -eq 1 ] && restore_main_checkout "$root"
-if [ "$poll_rc" -eq 0 ]; then
+restore_rc=0
+[ "$kill_mode" -eq 1 ] && { restore_main_checkout "$root" || restore_rc=$?; }
+# LS-236 R2（merge-review F3）：還原複驗失敗（restore_rc 非 0）不能被下面「路徑已一致」的 exit 0 蓋過去——
+# 那個分支管的是「Pen 有沒有切回正確文件」，跟「主 checkout .pen 有沒有真的還原乾淨」是兩件事，兩者都要過
+# 才算收工成功。
+if [ "$poll_rc" -eq 0 ] && [ "$restore_rc" -ne 0 ]; then
+  echo "✗ pen-open：清場後 Pen 目前文件＝${want}，但主 checkout design/littlesprout.pen 還原複驗失敗（見上方 ⚠）" >&2
+  reconnect_notice
+  exit 2
+elif [ "$poll_rc" -eq 0 ]; then
   echo "✓ pen-open：清場後 Pen 目前文件＝${want}"
   reconnect_notice
   exit 0
