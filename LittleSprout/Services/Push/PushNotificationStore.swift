@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 import UserNotifications
 
 /// 推播權限與裝置 token 註冊（LS-217）的 `@Observable` 狀態管理——同 `EULAStore` 之於
@@ -17,6 +18,14 @@ final class PushNotificationStore {
     /// 送出中」的 (userID, tokenHex) 組合；store 是 `@MainActor`，插入與檢查之間沒有 `await`，
     /// 是原子的。
     private var inFlightSubmissions: Set<String> = []
+    /// merge-review R2 m3：`didFailToRegister` 原本只在 `#if DEBUG print(...)`，Release／
+    /// TestFlight build 完全靜默——`register_device_token` 打不通（RLS、離線）或 APNs 註冊失敗
+    /// 時沒有任何痕跡，而這正是「使用者說收不到推播」最可能的成因。改用 `os.Logger` 讓 Release
+    /// 也留得下紀錄（`subsystem` 用 bundle id，找不到時退回硬編字面值——測試環境的
+    /// `Bundle.main.bundleIdentifier` 未必是 app 的 bundle id，但 log 訊息本身不影響測試）。
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.leoyeh.littlesprout", category: "push"
+    )
 
     private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
     /// `AuthenticatedRootView` 的 `.fullScreenCover(isPresented:)` 綁這個——同
@@ -98,9 +107,9 @@ final class PushNotificationStore {
     /// `AppDelegate.application(_:didFailToRegisterForRemoteNotificationsWithError:)` 轉呼叫
     /// ——票文範圍 2「註冊失敗記 log 不擋 UI」，不改變任何 store 狀態。
     func didFailToRegister(error: Error) {
-        #if DEBUG
-        print("LS-217 push registerForRemoteNotifications 失敗：\(error)")
-        #endif
+        Self.logger.error(
+            "LS-217 push registerForRemoteNotifications 失敗：\(error.localizedDescription, privacy: .public)"
+        )
     }
 
     /// 去重核心：同一個 (userID, tokenHex) 只送一次 `register_device_token`；RPC 失敗時不標記
