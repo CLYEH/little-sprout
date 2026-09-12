@@ -30,6 +30,14 @@ SUPABASE_ANON_KEY = placeholder-anon-key-not-a-real-secret
 // 賦值」，見 `LittleSprout.entitlements` 文件註解），`CODE_SIGN_ENTITLEMENTS` 就會展開成
 // `CODE_SIGN_ENTITLEMENTS_YES`，正式引用該檔。
 PUSH_ENTITLEMENT = NO
+// merge-review R2 informational（orchestrator 裁示）：模擬器簽名不需要 provisioning profile，
+// `aps-environment` 在 iphonesimulator SDK 下可以簽入，不受 LS-8 未完成的限制——加一條 SDK
+// 條件覆寫，只在建置給 iphonesimulator（模擬器）時把旗標打開，讓「授權後 device_tokens 出現
+// 本機一列」這條驗收可以在模擬器上實測。裝置（`iphoneos*`）與 Archive（`generic/platform=iOS`
+// 走 `iphoneos` SDK）不受影響，仍是上面 `PUSH_ENTITLEMENT = NO` 那個未限定版本，等 LS-8 後才
+// 在 `Secrets.xcconfig` 開。SDK 限定的設定不看檔案裡的先後順序、看的是「比對得上目前建置的
+// SDK 就用它」，所以放在這裡（`PUSH_ENTITLEMENT = NO` 之後）純粹是就近註解，不影響效果。
+PUSH_ENTITLEMENT[sdk=iphonesimulator*] = YES
 CODE_SIGN_ENTITLEMENTS_NO =
 CODE_SIGN_ENTITLEMENTS_YES = LittleSprout/LittleSprout.entitlements
 CODE_SIGN_ENTITLEMENTS = $(CODE_SIGN_ENTITLEMENTS_$(PUSH_ENTITLEMENT))
