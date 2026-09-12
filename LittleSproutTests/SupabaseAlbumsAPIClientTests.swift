@@ -164,42 +164,35 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
 
     // MARK: - createAlbum
 
-    /// LS-203 票文 Scope 3：`album_summaries` 不可寫，INSERT 一律走 `albums`，插入後再向 view
-    /// 重讀同一列——這裡鎖住兩步都真的發生（不是只組一份猜出來的回應），且重讀請求帶對
-    /// `id=eq.<剛插入的 id>` 篩選。
-    func test_createAlbum_insertsIntoAlbumsThenRereadsFromView() async throws {
-        let albumsInsertCallCount = OSAllocatedUnfairLock(initialState: 0)
-        let summariesRereadCallCount = OSAllocatedUnfairLock(initialState: 0)
+    /// merge-review R1 major-1：INSERT 改 `.select("id,title,created_at")` 直接取回列，
+    /// 本地組出等價的 `AlbumListingRow`（`visible_media_count=0`＋五個 NULL 路徑欄），不再
+    /// 向 `album_summaries` 發第二個請求重讀——原本的兩步驟設計在 INSERT 已 commit、重讀
+    /// 失敗時會整個 throw，沒有補償，導致重複建立相簿（見票 R2 comment）。這裡鎖住：(a)
+    /// INSERT 的 `select=` 只取三欄、(b) 全程只有一個 REST 請求（沒有第二次打
+    /// `album_summaries`）、(c) 組出的列張數與四個路徑欄符合「剛建立必為 0／NULL」。
+    func test_createAlbum_insertsWithSelectThenBuildsRowLocally_withoutSecondRequest() async throws {
+        let restRequestCount = OSAllocatedUnfairLock(initialState: 0)
         let client = TestSupabaseClient.make { [userID, familyID, albumID] request in
             if request.url?.path == "/auth/v1/token" {
                 return MockURLProtocol.StubResponse(
                     statusCode: 200, body: SessionFixture.json(userID: userID, email: "owner@example.com")
                 )
             }
-            if request.url?.path == "/rest/v1/albums" {
-                albumsInsertCallCount.withLock { $0 += 1 }
-                XCTAssertEqual(request.httpMethod, "POST")
-                let body = try XCTUnwrap(request.bodyData)
-                let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: String])
-                XCTAssertEqual(payload["title"], "新相簿")
-                XCTAssertEqual(payload["family_id"], familyID.uuidString)
-                XCTAssertEqual(payload["created_by"], userID.uuidString)
-                return MockURLProtocol.StubResponse(
-                    statusCode: 201, body: Data("{\"id\": \"\(albumID.uuidString)\"}".utf8)
-                )
-            }
-            XCTAssertEqual(request.url?.path, "/rest/v1/album_summaries")
-            summariesRereadCallCount.withLock { $0 += 1 }
-            XCTAssertEqual(request.httpMethod, "GET")
-            let query = request.url?.query ?? ""
-            XCTAssertTrue(query.contains("id=eq.\(albumID.uuidString)"), "重讀應該篩這一本剛建立的相簿，實際 query：\(query)")
-            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
-            {
-              "id": "\(albumID.uuidString)", "title": "新相簿",
-              "created_at": "2026-09-05T00:00:00Z", "visible_media_count": 0,
-              "latest_media_id": null, "latest_thumb_path": null, "latest_storage_path": null,
-              "cover_thumb_path": null, "cover_storage_path": null
-            }
+            restRequestCount.withLock { $0 += 1 }
+            XCTAssertEqual(
+                request.url?.path, "/rest/v1/albums",
+                "本地組出後不應該再向 album_summaries 發第二個請求（merge-review R1 major-1）"
+            )
+            XCTAssertEqual(request.httpMethod, "POST")
+            let query = (request.url?.query ?? "").removingPercentEncoding ?? ""
+            XCTAssertTrue(query.contains("select=id,title,created_at"), "select 應只取三欄，實際 query：\(query)")
+            let body = try XCTUnwrap(request.bodyData)
+            let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: String])
+            XCTAssertEqual(payload["title"], "新相簿")
+            XCTAssertEqual(payload["family_id"], familyID.uuidString)
+            XCTAssertEqual(payload["created_by"], userID.uuidString)
+            return MockURLProtocol.StubResponse(statusCode: 201, body: Data("""
+            {"id": "\(albumID.uuidString)", "title": "新相簿", "created_at": "2026-09-05T00:00:00Z"}
             """.utf8))
         }
         try await signIn(client: client)
@@ -209,9 +202,16 @@ final class SupabaseAlbumsAPIClientTests: XCTestCase {
 
         XCTAssertEqual(row.id, albumID)
         XCTAssertEqual(row.title, "新相簿")
-        XCTAssertEqual(row.photoCount, 0, "剛建立的相簿必定 0 張照片，不會短暫顯示錯誤張數")
-        XCTAssertEqual(albumsInsertCallCount.withLock { $0 }, 1)
-        XCTAssertEqual(summariesRereadCallCount.withLock { $0 }, 1)
+        XCTAssertEqual(row.photoCount, 0, "剛建立的相簿必定 0 張照片，本地組出不需要向 view 重讀")
+        XCTAssertNil(row.latestMediaId)
+        XCTAssertNil(row.latestMediaThumbPath)
+        XCTAssertNil(row.latestMediaStoragePath)
+        XCTAssertNil(row.coverThumbPath)
+        XCTAssertNil(row.coverStoragePath)
+        XCTAssertEqual(
+            restRequestCount.withLock { $0 }, 1,
+            "全程只應該有一個 REST 請求（INSERT），不重讀 album_summaries"
+        )
     }
 
     func test_createAlbum_notSignedIn_throwsRejectedWithoutSendingRequest() async {
