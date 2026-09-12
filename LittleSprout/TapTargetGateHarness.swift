@@ -218,7 +218,7 @@ enum TapTargetGateHarness {
             TimelineView(
                 familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
                 diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-                safetyAPIClient: PreviewSafetyAPIClient()
+                safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient()
             )
         }
     }
@@ -240,7 +240,8 @@ enum TapTargetGateHarness {
             eulaStore: .preview(shouldPresent: false),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
             accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
-            safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
+            safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
+            pushNotificationStore: .preview()
         )
         .environment(\.horizontalSizeClass, .compact)
     }
@@ -283,7 +284,8 @@ enum TapTargetGateHarness {
             eulaStore: .preview(shouldPresent: false),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
             accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
-            safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
+            safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
+            pushNotificationStore: .preview()
         )
         .environment(\.horizontalSizeClass, .compact)
     }

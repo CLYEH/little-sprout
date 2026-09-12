@@ -30,6 +30,8 @@ struct RootView: View {
     /// LS-189：轉手往下傳到 `TimelineView`／`SettingsView`（內容操作表：檢舉／封鎖／Owner 移除
     /// ／封鎖名單／檢舉收件匣），這裡不直接使用。
     let safetyAPIClient: SafetyAPIClient
+    /// LS-218：轉手往下傳到 `TimelineView`（留言 sheet），這裡不直接使用。
+    let commentAPIClient: CommentAPIClient
     /// LS-217：轉手往下傳到 `AuthenticatedGate`；也用在下方「回前景重讀推播授權狀態」
     /// （票文範圍 2）。
     let pushNotificationStore: PushNotificationStore
@@ -53,6 +55,7 @@ struct RootView: View {
                     accountAPIClient: accountAPIClient,
                     resumer: resumer,
                     safetyAPIClient: safetyAPIClient,
+                    commentAPIClient: commentAPIClient,
                     pushNotificationStore: pushNotificationStore,
                     pendingInviteCode: $pendingInviteCode
                 )
@@ -95,6 +98,7 @@ struct AuthenticatedRootView: View {
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
     let safetyAPIClient: SafetyAPIClient
+    let commentAPIClient: CommentAPIClient
     /// LS-217：轉手往下傳到 `SettingsView`；也用在下方「登入後首次進時間軸」前置頁
     /// （票文範圍 1）。
     let pushNotificationStore: PushNotificationStore
@@ -110,6 +114,7 @@ struct AuthenticatedRootView: View {
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
+                    commentAPIClient: commentAPIClient,
                     pushNotificationStore: pushNotificationStore, selection: $selection
                 )
             } else {
@@ -118,6 +123,7 @@ struct AuthenticatedRootView: View {
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
+                    commentAPIClient: commentAPIClient,
                     pushNotificationStore: pushNotificationStore, selection: $selection
                 )
             }
@@ -196,6 +202,7 @@ private struct SectionTabView: View {
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
     let safetyAPIClient: SafetyAPIClient
+    let commentAPIClient: CommentAPIClient
     let pushNotificationStore: PushNotificationStore
     @Binding var selection: AppSection
 
@@ -208,6 +215,7 @@ private struct SectionTabView: View {
                         childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
                         eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
                         accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
+                        commentAPIClient: commentAPIClient,
                         pushNotificationStore: pushNotificationStore
                     )
                     // LS-136 實測發現（R1）：掛在外層 `TabView` 的 `.toolbar(.hidden, for: .tabBar)`
@@ -250,6 +258,7 @@ private struct SectionSplitView: View {
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
     let safetyAPIClient: SafetyAPIClient
+    let commentAPIClient: CommentAPIClient
     let pushNotificationStore: PushNotificationStore
     @Binding var selection: AppSection
 
@@ -268,6 +277,7 @@ private struct SectionSplitView: View {
                     childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
                     eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
+                    commentAPIClient: commentAPIClient,
                     pushNotificationStore: pushNotificationStore
                 )
             }
@@ -299,6 +309,7 @@ struct SectionContentView: View {
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
     let safetyAPIClient: SafetyAPIClient
+    let commentAPIClient: CommentAPIClient
     let pushNotificationStore: PushNotificationStore
 
     var body: some View {
@@ -313,7 +324,7 @@ struct SectionContentView: View {
             TimelineView(
                 familyStore: familyStore, childrenStore: childrenStore, timelineStore: timelineStore,
                 diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
-                safetyAPIClient: safetyAPIClient
+                safetyAPIClient: safetyAPIClient, commentAPIClient: commentAPIClient
             )
         case .albums:
             AlbumsView(
@@ -338,7 +349,8 @@ struct SectionContentView: View {
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
         mediaUploadService: PreviewMediaUploadService(), accountAPIClient: PreviewAccountAPIClient(),
-        resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
+        resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient(),
+        commentAPIClient: PreviewCommentAPIClient(), pushNotificationStore: .preview()
     )
     .environment(\.horizontalSizeClass, .compact)
 }
@@ -348,7 +360,8 @@ struct SectionContentView: View {
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
         mediaUploadService: PreviewMediaUploadService(), accountAPIClient: PreviewAccountAPIClient(),
-        resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
+        resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient(),
+        commentAPIClient: PreviewCommentAPIClient(), pushNotificationStore: .preview()
     )
     .environment(\.horizontalSizeClass, .regular)
 }
