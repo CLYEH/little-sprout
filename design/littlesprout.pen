@@ -157337,7 +157337,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "appstore-slots/comments-iphone.jpg",
+                    "url": "appstore-slots/comments-iphone-v2.jpg",
                     "mode": "fill"
                   },
                   "cornerRadius": 134,
@@ -158679,7 +158679,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "appstore-slots/comments-ipad.jpg",
+                    "url": "appstore-slots/comments-ipad-v2.jpg",
                     "mode": "fill"
                   },
                   "cornerRadius": 44,
@@ -158880,7 +158880,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "appstore-slots/child-ipad.jpg",
+                "url": "appstore-slots/child-ipad-v2.jpg",
                 "mode": "fill"
               },
               "cornerRadius": 44,
@@ -159286,7 +159286,7 @@
       "id": "H73kPC",
       "x": 42308,
       "y": -2428,
-      "name": "Notes / LS-234 App Store",
+      "name": "App Store / LS-234",
       "width": 900,
       "fill": "$print-paper",
       "layout": "vertical",
