@@ -22,14 +22,34 @@
 //      `classification`（含「同類 N 例」），補 `ticket`／`round`／`head_sha`，`tree_hash` 抄 SUMMARY 的值（LS-168；見
 //      ui-designer.md）。`SCAN_OVERLAY_RE = "Action Bar|…"`（字串）覆寫第五支的覆蓋層名稱，`SCAN_HASH_DEBUG = "<id>"` 印
 //      該節點的雜湊行。`SCAN_HASH_ONLY = true` 只跑雜湊走訪、印 `SUMMARY-HASH total_nodes=… tree_hash=…`；`SCAN_SKIP_HASH = true`
-//      跑六支不算雜湊（SUMMARY 印 `tree_hash=skipped`；兩旗標同時設會 throw）——8000 節點級的稿一次 execute 跑完雜湊＋六支會 `InternalError:
-//      interrupted`（LS-152 VR R3 實測），拆成同一稿態、中間無任何寫入的連續兩次唯讀 execute，收據 `tree_hash` 抄第一次（LS-171）。
-//      `SCAN_SCOPE = "boards"`（LS-185）把快照限縮到 SCAN_BOARDS 子樹再跑六支，SUMMARY 與收據 `scan_scope` 如實標 `boards`（預設
-//      `document`＝全稿；見下方 scan_scope 段）。
-//   2. node：`require` 本檔取得純函數（`scanAll` 與六支 `scan*`、`treeHash`／`treeHashLines`／`canonNode`），
-//      `scripts/design/overflow-scan.test.js` 用合成節點樹驗演算法、並以 python 交叉驗 tree_hash 同值；CI rules job 的自測
-//      step 跑它。掃描核心不碰 Pencil API，Pen 不在時也能驗。注意：.pen JSON 只存 root／absolute 節點的 x／y，layout 子節點
-//      的絕對座標要 Pencil 版面引擎才算得出——離線 node 能驗的是演算法與 tree_hash，不是真實稿的六支數字。
+//      跑六支不算雜湊，**必須同時帶 `SCAN_TREE_HASH = "<第一趟的 16 碼 tree_hash>"`**（LS-226：result_hash 綁 tree_hash，沒帶就 throw；
+//      兩旗標同時設會 throw）——這是 LS-171 的兩趟舊法（同一稿態、中間無任何寫入的連續兩次唯讀 execute）；9000 節點級的稿改用
+//      下方 1b 的**分批模式**，一趟 execute 只做一批 root、不再逾時。`SCAN_SCOPE = "boards"`（LS-185）把快照限縮到 SCAN_BOARDS 子樹
+//      再跑六支，SUMMARY 與收據 `scan_scope` 如實標 `boards`（預設 `document`＝全稿；見下方 scan_scope 段）。不分批時 SCAN 段之後另印
+//      一行 `RESULT-JSON {…}`＝收據形狀的完整 JSON（見下方「收據形狀」段；含六支 `result_hash`），設計端照抄進收據再補 `ticket`／
+//      `round`／`head_sha`／`scan_note` 與每筆代表的 `classification`。
+//   1b. 分批模式（LS-226，取代 LS-171／LS-185 的手工拆段）：snippet 第一行加 `SCAN_BATCH = <k>`（1 起算的批號；每批 root 數預設
+//      DEFAULT_BATCH_SIZE=20，`SCAN_BATCH_SIZE = <n>` 覆寫）或 `SCAN_BATCH_ROOTS = [lo, hi]`（明確的全稿 root 序範圍 [lo,hi)——某批太重
+//      時只把那一段再切小、不必重跑其他批），每次 execute 只做那一批：① 一趟全稿**未展開**走訪（不在本批的 root `skipChildren`）收全部
+//      root 的 AABB／名稱／enabled＋本批 root 子樹的 tree_hash 局部和 `hash_part`／未展開節點數 `total_nodes`／refMap；② 本批每個 root
+//      各一趟 `Get(rootId, visit, {resolveInstances:true})` 收展開快照（scope=boards 時只展開 SCAN_BOARDS 內的 root）；③ 其餘 root 以
+//      **裸節點**放進快照（root 層兩板相鄰的 sibling 配對才算得到、板名解析才看得到全部板），六支只以本批 root 子樹內的節點當主節點
+//      （scanAll `opts.batch` → `primaryRoots`）——除 root 層 sibling 外六支的配對都不跨板，所以各批依 root 序串接＝不分批的結果，
+//      跨批配對由腳本自己算、不會漏（overflow-scan.test.js 釘住 K=1…7 與裸 root 快照逐位元相同＋拿掉裸 root 的 mutation 少配對）。
+//      Print：`SUMMARY-BATCH …`、`TIMING …`、`BATCH-JSON {…}`（收據形狀，另帶 `batch.roots`／`batch.root_count`／`hash_part`／各支
+//      `result_hash_part`）。把每批的 execute 輸出原文各存一檔，node 端 `node scripts/design/overflow-scan.js --merge <批檔…> --out
+//      <merged.json>` 驗各批 root 範圍首尾相接、蓋滿 `[0, root_count)`、同一稿態參數一致，六支合併（三支 O(n²) 以 class 鍵合併 count、
+//      其餘陣列串接、整數相加）、`tree_hash`＝各批 `hash_part` mod 2^64 相加、每支 `result_hash`＝各批局部和＋標頭三行，stderr 印與
+//      不分批同格式的 SUMMARY／WARNING／SCAN 段、stdout（或 --out）印最終單一 JSON。LS-208 head（9899 節點／231 root）實跑：19 批、
+//      每批 execute 約 1.5–4 s（全稿走訪固定 ~1.2–2.3 s＋本批展開走訪＋六支 <0.5 s），合併結果與 r6 收據六支 document_count／
+//      tree_hash／total_nodes／ref_hits／unresolved 逐欄相同（.claude/evidence/LS-226/r1）。某批 `InternalError: interrupted`（間歇性）
+//      先原樣重試一次、再不行就把 `SCAN_BATCH_ROOTS` 切小重跑那一段。分批期間不得寫入文件（各批必須同一稿態，tree_hash 對不上 CI 就紅）；
+//      分批模式與 SCAN_HASH_ONLY／SCAN_SKIP_HASH 互斥、SCAN_BATCH 與 SCAN_BATCH_ROOTS 擇一。
+//   2. node：`require` 本檔取得純函數（`scanAll` 與六支 `scan*`、`treeHash`／`treeHashLines`／`canonNode`、分批的 `batchRange`／
+//      `mergeBatches`／`compactScans`／`withResultHashes`），`scripts/design/overflow-scan.test.js` 用合成節點樹驗演算法、並以 python
+//      交叉驗 tree_hash／result_hash 同值；CI rules job 的自測 step 跑它。直接執行＝`--merge` CLI（見 1b；node 端環境變數
+//      `SCAN_BATCH_SIZE` 覆寫 batchRange 的預設批大小）。掃描核心不碰 Pencil API，Pen 不在時也能驗。注意：.pen JSON 只存 root／absolute
+//      節點的 x／y，layout 子節點的絕對座標要 Pencil 版面引擎才算得出——離線 node 能驗的是演算法與 tree_hash，不是真實稿的六支數字。
 //
 // 節點快照格式（純函數的唯一輸入）：陣列，父先於子（top-down，陣列順序＝繪製順序，第五支據此判 z-order），每筆：
 //   {id, name, parent (父 id；頂層為 null), type, enabled (布林), clip (布林，第五／六支用), image (布林，fill 含 image——第六支
@@ -119,7 +139,7 @@
 //       `Get(boardId)` 繞過逾時後 `corner_anchor.document_*` 塌縮成 boards 值、LS-177 R1／R2 `cross_parent_collision` 限縮 17 板，
 //       收據語意都靠 scan_note 文字自述（VR MJ-9／MN-5；LS-96 `83694378`）。設計端在 `boards` 模式下 `document_*` 就是限縮值，
 //       收據照印、不得改標成 `document`。
-//   大稿分段跑法（LS-185 記錄；LS-177 R1 handoff bcfa06d5、LS-120 R6 `767eb2cb`）：9416 節點級的稿單次 execute 連雜湊帶六支
+//   大稿分段跑法（歷史記錄，LS-226 起一律改用上方 1b 分批模式；LS-185 記錄；LS-177 R1 handoff bcfa06d5、LS-120 R6 `767eb2cb`）：9416 節點級的稿單次 execute 連雜湊帶六支
 //       會 `InternalError: interrupted`，且**間歇發生**（同一 snippet 原樣重送第二次常成功）——跟 snippet 內 O(n²) 配對的絕對
 //       大小與 O(n·depth) 陣列累加寫法相關，不是節點數門檻。實跑可用的手法：①雜湊拆段——`SCAN_HASH_ONLY` 一趟仍逾時時，
 //       依 Get 走訪 index 把全樹切成 9 段（前 4 段各 1500 節點、中 4 段各 750、末段 416），每段一次唯讀 execute 算 FNV-1a 64
@@ -138,6 +158,17 @@
 //       字面字串 `"..."`（LS-152 VR R3 三方比對 6383b2fa：py＝js `03e7804b035d8e4b`、Pencil 不帶選項 `84420d7b6419b40e`，把磁碟
 //       JSON 的 8 個 geometry 改成 `"..."` 即重現；帶選項後三方同值），且 `cmp/Photo Corner` 全專案共用，漏帶就對所有含 path
 //       的稿 fail-closed。空字串 geometry（`mzo0K`）兩端都是 `""`，原樣參與雜湊。overflow-scan.test.js 以原始碼斷言釘住這個選項。
+//   收據形狀（LS-226）：`RESULT-JSON`／`--merge` 的輸出＝收據本體。三支 O(n²)（sibling_intersection／row_overflow／cross_parent_collision）
+//       的 `flagged` 只留「每類一筆代表」：`class`＝同名對／同容器鍵（sibling `name_a × name_b @ parent_name`、cross `… @ board_name`、
+//       row `parent_name :: name`，與 SCAN 彙整段同一把鍵）、`count`＝同類筆數、`classes`＝類數，`document_count` 仍是全量；其餘三支的
+//       `flagged`／`unresolved`／`document_*` 原樣完整。設計端補 `ticket`／`round`／`head_sha`／`scan_note`（必填，自述跑法與範圍）與每筆
+//       代表的 `classification`（gate 驗非空；腳本不代寫）。
+//   result_hash（LS-226，六支各一、收據必填）：對下列各行做 FNV-1a 64 後 mod 2^64 相加（同 tree_hash 的加總法，順序無關）的 16 碼 hex：
+//       `scan=<支名>`、`scope=<頂層 scan_scope>`、`tree_hash=<收據 tree_hash>`、in-scope `flagged` 每筆一行 `flagged=<身分>`、corner_anchor
+//       另對 in-scope `unresolved` 每筆一行 `unresolved=<container>`；身分＝sibling／cross `node_a|node_b`、row `node`、corner_anchor
+//       `corner:axis`、text_occlusion `node|overlay`、board_clip `node`。三支 O(n²) 在壓成代表前對全量算（收據存代表、CI 不能重算，但同一
+//       稿態重跑腳本必得同值）；corner_anchor／text_occlusion／board_clip 的 in-scope 陣列收據完整，design-evidence-check.sh 用
+//       scripts/gates/design_tree_hash.py 同規格重算比對（fail-closed）——陣列被改過、hash 從別次掃描抄來、或 tree_hash 對不上都紅。
 //       盲區：只證明「收據對應這份 .pen 的節點樹」（`children` 全樹；頂層 `variables`／`themes`／`fileToken` 不在雜湊內——
 //       Pencil `Get` 只走節點樹，掃描後只改 design token 再落地看不到，merge-review R1 N4），不證明各支掃描的數字算對（那要 CI 跑 Pencil）。
 // 輸出每筆都帶 name／parent 等欄位方便分類；design-evidence-check.sh 只驗 node／node_a／node_b／classification、
@@ -162,6 +193,10 @@ const OVERLAY_RE = /Action Bar|Tab Bar|Capsule|Footer|Toast|Banner/;
 // 第六支的可見葉節點型別（.pen 實測型別集：frame／text／ref／icon／rectangle／note／path／ellipse；frame 只有帶 image fill 才算）
 const LEAF_TYPE_RE = /^(text|icon|path|rectangle|ellipse)$/;
 const SCAN_SCOPES = ["document", "boards"];
+// LS-226：分批預設批大小（每批的頂層 root 數；SCAN_BATCH_SIZE 覆寫，見 defaultBatchSize）——依 LS-208 head（231 root／9899 節點／
+// 16017 展開節點）實測調定：execute 沙盒約 2.5–6 秒 wall-clock 就會間歇 `InternalError: interrupted`（同長度有時過有時不過），
+// 一批＝一次全稿 root 走訪（固定約 1.2–1.6 秒）＋本批板子的展開走訪＋雜湊＋六支，目標每批 ≤ 2–3 秒
+const DEFAULT_BATCH_SIZE = 20;
 
 function hasImageFill(fill) {
   const one = (f) => !!f && typeof f === "object" && f.type === "image" && f.enabled !== false;
@@ -215,7 +250,10 @@ function buildIndex(nodes) {
     kids.get(key).push(n);
   }
   const roots = nodes.filter((n) => n.parent == null);
-  return { byId, liveNodes, kids, chain, roots };
+  // LS-226：id → 在快照陣列的位置（pre-order＝繪製順序）；第五支的 z-order 比較與分批範圍 [lo,hi) 都用它
+  const pos = new Map();
+  nodes.forEach((n, i) => pos.set(n.id, i));
+  return { byId, liveNodes, kids, chain, roots, pos };
 }
 
 function pairEntry(a, b, extra) {
@@ -226,27 +264,49 @@ function pairEntry(a, b, extra) {
   );
 }
 
-function scanSiblingIntersection(nodes, idx) {
-  const { byId, kids } = idx || buildIndex(nodes);
+// LS-226 分批：opts.primaryRoots＝本批負責的 root id 集合——六支只處理「主節點」（配對的 a／i／text／容器／葉節點）的 root 落在集合內
+// 的項目，配對對象不受限（同板的節點一定同批；root 層兩板相鄰的配對由 a 所在批補算，每對恰被順序較前的那一側算一次，見檔頭「分批模式」）
+function primaryFilter(idx, opts) {
+  const set = opts && opts.primaryRoots;
+  if (!set) return null;
+  return (n) => {
+    const c = idx.chain.get(n.id);
+    return set.has(c[c.length - 1]);
+  };
+}
+
+function scanSiblingIntersection(nodes, idx, opts) {
+  const index = idx || buildIndex(nodes);
+  const { byId, liveNodes, kids } = index;
+  const isPrimary = primaryFilter(index, opts);
+  // LS-226：外層改以主節點 a 的快照位置為序（liveNodes 的順序＝pre-order），每個 a 只配對同父、排在它之後的兄弟 b——命中集合與
+  // 舊的逐 parent 雙迴圈相同，輸出順序改為 (pos a, pos b) 字典序（舊寫法依 parent 群組出現序，父子群組會交錯），分批時各批依序
+  // 串接才能與不分批逐位元相同（mergeBatches）
+  const slot = new Map();
+  for (const arr of kids.values()) arr.forEach((n, i) => slot.set(n.id, i));
   const flagged = [];
-  for (const [pid, arr] of kids) {
+  for (const a of liveNodes) {
+    if (isPrimary && !isPrimary(a)) continue;
+    const pid = a.parent == null ? null : a.parent;
+    const arr = kids.get(pid);
     const parent = pid == null ? null : byId.get(pid);
-    for (let i = 0; i < arr.length; i++) {
-      for (let j = i + 1; j < arr.length; j++) {
-        if (overlapArea(arr[i], arr[j]) > AREA_MIN) {
-          flagged.push(pairEntry(arr[i], arr[j], { parent: pid == null ? null : pid, parent_name: parent ? parent.name : "root" }));
-        }
+    for (let j = slot.get(a.id) + 1; j < arr.length; j++) {
+      if (overlapArea(a, arr[j]) > AREA_MIN) {
+        flagged.push(pairEntry(a, arr[j], { parent: pid, parent_name: parent ? parent.name : "root" }));
       }
     }
   }
   return { flagged };
 }
 
-function scanRowOverflow(nodes, idx) {
-  const { byId, liveNodes } = idx || buildIndex(nodes);
+function scanRowOverflow(nodes, idx, opts) {
+  const index = idx || buildIndex(nodes);
+  const { byId, liveNodes } = index;
+  const isPrimary = primaryFilter(index, opts);
   const flagged = [];
   for (const n of liveNodes) {
     if (n.parent == null) continue;
+    if (isPrimary && !isPrimary(n)) continue;
     const p = byId.get(n.parent);
     if (!p) continue;
     const over = n.x + n.w - (p.x + p.w);
@@ -260,6 +320,7 @@ function scanRowOverflow(nodes, idx) {
 function scanCrossParentCollision(nodes, idx, opts) {
   const { byId, liveNodes, chain } = idx || buildIndex(nodes);
   const all = !!(opts && opts.crossAll);
+  const primaryRoots = opts && opts.primaryRoots ? opts.primaryRoots : null;
   const boards = new Map();
   for (const n of liveNodes) {
     const c = chain.get(n.id);
@@ -274,6 +335,7 @@ function scanCrossParentCollision(nodes, idx, opts) {
   }
   const flagged = [];
   for (const [board, arr] of boards) {
+    if (primaryRoots && !primaryRoots.has(board)) continue;
     const boardName = byId.get(board).name;
     // LS-185（LS-96 32754383）：預設只報「任一側命中 BLEED_RE」的對，所以先把候選挑出來，只配對候選×其餘、不再全配對後才過濾
     // ——配對數 n²/2 → |候選|·n（真實稿 15359 個展開節點裡候選是少數）。走訪順序仍是 (i, j) 字典序、a＝arr[i]、b＝arr[j]，
@@ -331,7 +393,9 @@ function cornerComponentIds(roots) {
 }
 
 function scanCornerAnchor(nodes, idx, opts) {
-  const { byId, liveNodes, kids, chain, roots } = idx || buildIndex(nodes);
+  const index = idx || buildIndex(nodes);
+  const { byId, liveNodes, kids, chain, roots } = index;
+  const isPrimary = primaryFilter(index, opts);
   const boards = resolveBoards(opts && opts.boards, roots);
   const scoped = boards.length > 0;
   const cornerIds = cornerComponentIds(roots);
@@ -352,6 +416,7 @@ function scanCornerAnchor(nodes, idx, opts) {
   let refHitsInstances = 0, refHitsDefs = 0;
   for (const n of liveNodes) {
     if (n.ref == null || !cornerIds.includes(n.ref)) continue;
+    if (isPrimary && !isPrimary(n)) continue;
     const c = chain.get(n.id);
     const rootId = c && c.length ? c[c.length - 1] : null;
     const root = rootId != null ? byId.get(rootId) : null;
@@ -362,6 +427,7 @@ function scanCornerAnchor(nodes, idx, opts) {
   const groups = new Map();
   for (const n of liveNodes) {
     if (!isCorner(n) || n.parent == null || !byId.get(n.parent)) continue;
+    if (isPrimary && !isPrimary(n)) continue;
     const m = CORNER_VARIANT_RE.exec(n.name || "");
     if (!groups.has(n.parent)) groups.set(n.parent, []);
     groups.get(n.parent).push({ node: n, variant: m ? m[1] : null });
@@ -445,12 +511,12 @@ function scanCornerAnchor(nodes, idx, opts) {
 }
 
 function scanTextOcclusion(nodes, idx, opts) {
-  const { byId, liveNodes, chain, roots } = idx || buildIndex(nodes);
+  const { byId, liveNodes, chain, roots, pos } = idx || buildIndex(nodes);
   const re = resolveOverlayRe(opts);
   const boards = resolveBoards(opts && opts.boards, roots);
   const scoped = boards.length > 0;
-  const order = new Map();
-  nodes.forEach((n, i) => order.set(n.id, i));
+  const primaryRoots = opts && opts.primaryRoots ? opts.primaryRoots : null;
+  const order = pos;
   const texts = new Map();
   const overlays = new Map();
   for (const n of liveNodes) {
@@ -479,6 +545,7 @@ function scanTextOcclusion(nodes, idx, opts) {
   }
   const out = { boards, flagged: [], document_flagged: [] };
   for (const [board, ts] of texts) {
+    if (primaryRoots && !primaryRoots.has(board)) continue;
     const os = overlays.get(board) || [];
     if (!os.length) continue;
     const boardName = byId.get(board).name;
@@ -505,13 +572,16 @@ function scanTextOcclusion(nodes, idx, opts) {
 
 // (f) LS-185 第六支：可見葉節點伸出有 clip 的 root frame 邊界（語意見檔頭）
 function scanBoardClip(nodes, idx, opts) {
-  const { byId, liveNodes, kids, chain, roots } = idx || buildIndex(nodes);
+  const index = idx || buildIndex(nodes);
+  const { byId, liveNodes, kids, chain, roots } = index;
+  const isPrimary = primaryFilter(index, opts);
   const re = resolveOverlayRe(opts);
   const boards = resolveBoards(opts && opts.boards, roots);
   const scoped = boards.length > 0;
   const out = { boards, flagged: [], document_flagged: [] };
   for (const n of liveNodes) {
     if (n.parent == null) continue;
+    if (isPrimary && !isPrimary(n)) continue;
     // 可見節點：帶 image fill 的節點不論有無子節點都以自身 AABB 參與（merge-review R1 minor-2：Photo Wrap／Thumb＋Video Badge 這種
     // 「照片框帶子標籤」伸出板外時，子標籤在板內、框本身卻沒人報）；其餘只算沒有 live 子節點的 text／icon／path／rectangle／ellipse
     const isLeaf = !(kids.get(n.id) || []).length;
@@ -574,34 +644,29 @@ function canonNode(node, parentId, index) {
   return (parentId == null ? "" : parentId) + "\t" + index + "\t" + canon(body);
 }
 
-function utf8Bytes(str) {
-  const out = [];
+// FNV-1a 64：狀態以 (hi, lo) 兩個 uint32 表示，prime 0x100000001b3 = 2^40 + 0x1b3——h·2^40 只把 lo 的低 24 位元推進 hi（(lo<<8)>>>0），
+// h·0x1b3 兩段各乘後進位，每 byte 兩次乘法；UTF-8 位元組就地產生、不建陣列（LS-226：Pencil 沙盒實測舊的四 limb＋utf8Bytes 陣列寫法
+// 2.9 µs/字元，雜湊是分批裡最貴的一段）。回傳仍是四個 16 位元 limb（低→高），hex64／addLimbs 介面與 design_tree_hash.py 規格不變
+function fnv1a64(str) {
+  let hi = 0xcbf29ce4, lo = 0x84222325;
+  const mix = (b) => {
+    lo = (lo ^ b) >>> 0;
+    const L = lo * 0x1b3;
+    hi = (hi * 0x1b3 + Math.floor(L / 4294967296) + ((lo << 8) >>> 0)) >>> 0;
+    lo = L >>> 0;
+  };
   for (let i = 0; i < str.length; i++) {
     let c = str.charCodeAt(i);
+    if (c < 0x80) { mix(c); continue; }
     if (c >= 0xd800 && c <= 0xdbff && i + 1 < str.length) {
       const d = str.charCodeAt(i + 1);
       if (d >= 0xdc00 && d <= 0xdfff) { c = 0x10000 + ((c - 0xd800) << 10) + (d - 0xdc00); i++; }
     }
-    if (c < 0x80) out.push(c);
-    else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 63));
-    else if (c < 0x10000) out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
-    else out.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+    if (c < 0x800) { mix(0xc0 | (c >> 6)); mix(0x80 | (c & 63)); }
+    else if (c < 0x10000) { mix(0xe0 | (c >> 12)); mix(0x80 | ((c >> 6) & 63)); mix(0x80 | (c & 63)); }
+    else { mix(0xf0 | (c >> 18)); mix(0x80 | ((c >> 12) & 63)); mix(0x80 | ((c >> 6) & 63)); mix(0x80 | (c & 63)); }
   }
-  return out;
-}
-
-// 64 位元以四個 16 位元 limb 表示（低→高）；prime 0x100000001b3 = 2^40 + 0x1b3
-function fnv1a64(str) {
-  let h0 = 0x2325, h1 = 0x8422, h2 = 0x9ce4, h3 = 0xcbf2;
-  for (const b of utf8Bytes(str)) {
-    h0 ^= b;
-    const t0 = h0 * 0x1b3;
-    const t1 = h1 * 0x1b3 + (t0 >>> 16);
-    const t2 = h2 * 0x1b3 + (t1 >>> 16) + ((h0 << 8) & 0xffff);
-    const t3 = h3 * 0x1b3 + (t2 >>> 16) + (h0 >>> 8) + ((h1 & 0xff) << 8);
-    h0 = t0 & 0xffff; h1 = t1 & 0xffff; h2 = t2 & 0xffff; h3 = t3 & 0xffff;
-  }
-  return [h0, h1, h2, h3];
+  return [lo & 0xffff, lo >>> 16, hi & 0xffff, hi >>> 16];
 }
 
 function hex64(limbs) {
@@ -646,20 +711,173 @@ function scanAll(nodes, opts) {
     if (!scanned.length) throw new Error("overflow-scan：scanScope=boards 但 boards " + JSON.stringify(ids) + " 沒有對應到任何 root——限縮後快照為空，不得默默印全零收據");
   }
   const idx = buildIndex(scanned);
-  // LS-202：每支帶 scope＋document_count（該支在整份快照裡的命中數；scope=boards 時是限縮值）
+  // LS-226：opts.batch={index,size?} → 只處理 root 落在本批（全稿 root 順序 [lo,hi)）的主節點；輸出附 batch 描述供 mergeBatches。
+  // 分批依「限縮前」的全稿 root 清單切（scope=boards 時 Pencil 端仍把全部 root 以裸節點放進快照，見檔尾），限縮後不在 scanned 的
+  // root 自然沒有主節點；scanned_nodes 只數本批 root 底下的節點，merge 相加＝全量
+  const allRoots = nodes.filter((n) => n.parent == null);
+  const b = batchRange(allRoots.length, opts && opts.batch);
+  const primaryRoots = b ? new Set(allRoots.slice(b.lo, b.hi).map((r) => r.id)) : null;
+  const so = Object.assign({}, opts, { primaryRoots });
+  // opts.timing={} 時逐支記錄毫秒（Pencil 端印 TIMING 行、調批大小用）
+  const timed = (key, fn) => {
+    const t0 = Date.now();
+    const r = fn();
+    if (opts && opts.timing) opts.timing[key] = Date.now() - t0;
+    return r;
+  };
+  // LS-202：每支帶 scope＋document_count（該支在整份快照裡的命中數；scope=boards 時是限縮值；分批時是該批的部分數，merge 重算）
   const tag = (o) => Object.assign({ scope, document_count: (o.document_flagged || o.flagged).length }, o);
-  return {
-    scanned_nodes: scanned.length,
+  const out = {
+    scanned_nodes: primaryRoots ? scanned.filter((n) => primaryRoots.has(idx.chain.get(n.id).slice(-1)[0])).length : scanned.length,
     scan_scope: scope,
     scans: {
-      sibling_intersection: tag(scanSiblingIntersection(scanned, idx)),
-      row_overflow: tag(scanRowOverflow(scanned, idx)),
-      cross_parent_collision: tag(scanCrossParentCollision(scanned, idx, opts)),
-      corner_anchor: tag(scanCornerAnchor(scanned, idx, opts)),
-      text_occlusion: tag(scanTextOcclusion(scanned, idx, opts)),
-      board_clip: tag(scanBoardClip(scanned, idx, opts)),
+      sibling_intersection: tag(timed("sibling_intersection", () => scanSiblingIntersection(scanned, idx, so))),
+      row_overflow: tag(timed("row_overflow", () => scanRowOverflow(scanned, idx, so))),
+      cross_parent_collision: tag(timed("cross_parent_collision", () => scanCrossParentCollision(scanned, idx, so))),
+      corner_anchor: tag(timed("corner_anchor", () => scanCornerAnchor(scanned, idx, so))),
+      text_occlusion: tag(timed("text_occlusion", () => scanTextOcclusion(scanned, idx, so))),
+      board_clip: tag(timed("board_clip", () => scanBoardClip(scanned, idx, so))),
     },
   };
+  if (b) {
+    out.batch = { roots: [b.lo, b.hi], root_count: allRoots.length };
+    if (b.index != null) Object.assign(out.batch, { index: b.index, total: b.total, size: b.size });
+  }
+  return out;
+}
+
+// ---- LS-226 分批＋加總（語意見檔頭「分批模式」）----
+const SCAN_KEYS = ["sibling_intersection", "row_overflow", "cross_parent_collision", "corner_anchor", "text_occlusion", "board_clip"];
+
+// 批大小預設值：Pencil 端以 SCAN_BATCH_SIZE 全域覆寫、node 端以環境變數 SCAN_BATCH_SIZE 覆寫（單位＝每批頂層 root 數）
+function defaultBatchSize() {
+  const env = typeof process === "object" && process && process.env ? process.env.SCAN_BATCH_SIZE : undefined;
+  if (env == null || env === "") return DEFAULT_BATCH_SIZE;
+  const n = Number(env);
+  if (!Number.isInteger(n) || n < 1) throw new Error("overflow-scan：環境變數 SCAN_BATCH_SIZE 須為 ≥1 的整數（收到 " + JSON.stringify(env) + "）");
+  return n;
+}
+
+// rootCount＝全稿頂層 root 數。兩種寫法：{index, size?}＝等寬批（批 index（1 起算）負責 root 順序 [(index−1)·size, index·size)）；
+// {roots: [lo, hi]}＝明確範圍（某批太重時可只把那一段再切小，不必重跑其他批——merge 只驗各批 [lo,hi) 首尾相接、蓋滿 [0, rootCount)）
+function batchRange(rootCount, batch) {
+  if (!batch) return null;
+  if (Array.isArray(batch.roots)) {
+    const lo = Number(batch.roots[0]), hi = Number(batch.roots[1]);
+    if (!Number.isInteger(lo) || !Number.isInteger(hi) || lo < 0 || hi <= lo || hi > rootCount) throw new Error("overflow-scan：batch.roots 須為 [lo, hi)、0 ≤ lo < hi ≤ root 數 " + rootCount + "（收到 " + JSON.stringify(batch.roots) + "）");
+    return { lo, hi, root_count: rootCount };
+  }
+  const size = batch.size != null ? Number(batch.size) : defaultBatchSize();
+  const index = Number(batch.index);
+  if (!Number.isInteger(size) || size < 1) throw new Error("overflow-scan：batch.size 須為 ≥1 的整數（收到 " + JSON.stringify(batch.size) + "）");
+  const total = Math.max(1, Math.ceil(rootCount / size));
+  if (!Number.isInteger(index) || index < 1 || index > total) throw new Error("overflow-scan：batch.index 須在 1.." + total + "（root 數=" + rootCount + "、size=" + size + "；收到 " + JSON.stringify(batch.index) + "）");
+  return { index, total, size, lo: (index - 1) * size, hi: Math.min(index * size, rootCount), root_count: rootCount };
+}
+
+function hexToLimbs(hex) {
+  if (typeof hex !== "string" || !/^[0-9a-f]{16}$/.test(hex)) throw new Error("overflow-scan merge：hash_part 須為 16 碼小寫 hex（收到 " + JSON.stringify(hex) + "）");
+  const limbs = [];
+  for (let i = 0; i < 4; i++) limbs.push(parseInt(hex.slice(16 - 4 * (i + 1), 16 - 4 * i), 16));
+  return limbs;
+}
+
+// parts＝各批的 scanAll 輸出（Pencil 端 BATCH-JSON 另帶 total_nodes／hash_part／flags）。驗 K／size／root_count／scan_scope／flags
+// 一致、批次不缺不重、root 範圍首尾相接、每支的 scope／boards 各批相同，任一不符即 throw；六支一律「陣列串接、整數計數相加、
+// document_count 重算」，scanned_nodes／total_nodes 相加、hash_part mod 2^64 相加——合併結果與不分批的 scanAll 逐位元相同
+// （各批依 root 順序串接＝不分批的輸出順序；overflow-scan.test.js 釘住）
+function mergeBatches(parts) {
+  if (!Array.isArray(parts) || !parts.length) throw new Error("overflow-scan merge：沒有任何批次");
+  for (const p of parts) if (!p || !p.batch || !Array.isArray(p.batch.roots) || !Number.isInteger(p.batch.roots[0]) || !Number.isInteger(p.batch.roots[1]) || !Number.isInteger(p.batch.root_count)) throw new Error("overflow-scan merge：批次缺 batch.roots=[lo,hi]／batch.root_count（不是分批模式的輸出）");
+  const sorted = parts.slice().sort((p, q) => p.batch.roots[0] - q.batch.roots[0]);
+  const first = sorted[0];
+  const K = sorted.length;
+  const label = (p) => "roots=[" + p.batch.roots.join(",") + ")";
+  const same = (key, get) => {
+    const want = JSON.stringify(get(first));
+    for (const p of sorted) if (JSON.stringify(get(p)) !== want) throw new Error("overflow-scan merge：" + label(p) + " 那批的 " + key + "=" + JSON.stringify(get(p)) + " ≠ 第一批 " + want + "（不是同一稿態／同一參數的分批）");
+  };
+  same("batch.root_count", (p) => p.batch.root_count);
+  same("scan_scope", (p) => p.scan_scope);
+  same("flags", (p) => p.flags);
+  const hashed = sorted.filter((p) => p.hash_part != null).length;
+  if (hashed !== 0 && hashed !== K) throw new Error("overflow-scan merge：只有 " + hashed + "/" + K + " 批帶 hash_part");
+  const counted = sorted.filter((p) => p.total_nodes != null).length;
+  if (counted !== 0 && counted !== K) throw new Error("overflow-scan merge：只有 " + counted + "/" + K + " 批帶 total_nodes");
+  let cursor = 0;
+  for (const p of sorted) {
+    const r = p.batch.roots;
+    if (r[0] !== cursor) throw new Error("overflow-scan merge：" + label(p) + " 與前一批不相接（期望起點 " + cursor + "——缺一批、重複、或不同 size 的批混在一起）");
+    if (r[1] <= r[0]) throw new Error("overflow-scan merge：" + label(p) + " 範圍為空");
+    cursor = r[1];
+    if (!Number.isInteger(p.scanned_nodes)) throw new Error("overflow-scan merge：" + label(p) + " 缺 scanned_nodes");
+    for (const k of SCAN_KEYS) {
+      if (!p.scans || !p.scans[k] || !Array.isArray(p.scans[k].flagged)) throw new Error("overflow-scan merge：" + label(p) + " 缺 scans." + k + ".flagged");
+      if (!Number.isInteger(p.scans[k].document_count) || p.scans[k].document_count < 0) throw new Error("overflow-scan merge：" + label(p) + " 的 scans." + k + ".document_count 不是非負整數");
+    }
+  }
+  if (cursor !== first.batch.root_count) throw new Error("overflow-scan merge：各批 roots 串接到 " + cursor + " ≠ root_count " + first.batch.root_count + "（缺最後幾批）");
+  // 各批先壓成代表形狀（BATCH-JSON 本來就是；完整陣列的批也收）——三支 O(n²) 以 class 鍵合併 count、代表取最早那批的；其餘三支陣列串接
+  const norm = sorted.map((p) => compactScans(p.scans));
+  const scans = {};
+  for (const k of SCAN_KEYS) {
+    same("scans." + k + ".scope", (p) => p.scans[k].scope);
+    same("scans." + k + ".boards", (p) => p.scans[k].boards);
+    const partSum = () => {
+      const acc = [0, 0, 0, 0];
+      for (const sc of norm) addLimbs(acc, hexToLimbs(sc[k].result_hash_part));
+      return hex64(acc);
+    };
+    if (CLASS_KEYS[k]) {
+      const m = new Map();
+      for (const sc of norm) for (const f of sc[k].flagged) {
+        if (typeof f.class !== "string" || !Number.isInteger(f.count) || f.count < 1) throw new Error("overflow-scan merge：scans." + k + ".flagged 有一筆缺 class／count（不是分批輸出的代表形狀）");
+        const hit = m.get(f.class);
+        if (hit) hit.count += f.count; else m.set(f.class, Object.assign({}, f));
+      }
+      scans[k] = { scope: first.scans[k].scope, document_count: norm.reduce((acc, sc) => acc + sc[k].document_count, 0), classes: m.size, flagged: [...m.values()], result_hash_part: partSum() };
+      continue;
+    }
+    const merged = Object.assign({}, norm[0][k]);
+    for (const key of Object.keys(merged)) {
+      const v = merged[key];
+      if (key === "scope" || key === "boards" || key === "document_count" || key === "result_hash_part") continue;
+      if (Array.isArray(v)) merged[key] = [].concat(...norm.map((sc) => Array.isArray(sc[k][key]) ? sc[k][key] : []));
+      else if (Number.isInteger(v)) merged[key] = norm.reduce((acc, sc) => acc + (Number.isInteger(sc[k][key]) ? sc[k][key] : 0), 0);
+    }
+    merged.document_count = (merged.document_flagged || merged.flagged).length;
+    merged.result_hash_part = partSum();
+    scans[k] = merged;
+  }
+  let out = { scanned_nodes: sorted.reduce((acc, p) => acc + p.scanned_nodes, 0), scan_scope: first.scan_scope, scans };
+  if (counted) out.total_nodes = sorted.reduce((acc, p) => acc + p.total_nodes, 0);
+  if (hashed) {
+    const acc = [0, 0, 0, 0];
+    for (const p of sorted) addLimbs(acc, hexToLimbs(p.hash_part));
+    out.tree_hash = hex64(acc);
+    out = withResultHashes(out);
+  }
+  if (first.flags != null) out.flags = first.flags;
+  out.batching = { batches: K, root_count: first.batch.root_count, roots: sorted.map((p) => p.batch.roots) };
+  return out;
+}
+
+// 一行 SUMMARY（Pencil 端不分批／merge 後同一格式）；flags={crossAll, overlayRe} 只影響標註字樣
+function summaryLine(out, flags) {
+  const f = flags || out.flags || {};
+  const crossAll = !!(f.crossAll || f.cross_all), overlayRe = !!(f.overlayRe || f.custom_overlay_re);
+  const s = out.scans;
+  return "SUMMARY total_nodes=" + out.total_nodes + " scanned_nodes=" + out.scanned_nodes + " scan_scope=" + out.scan_scope +
+    " sibling_intersection=" + s.sibling_intersection.document_count +
+    " row_overflow=" + s.row_overflow.document_count +
+    " cross_parent_collision=" + s.cross_parent_collision.document_count + (crossAll ? "(all)" : "(bleed-only)") +
+    " text_occlusion=" + s.text_occlusion.flagged.length + "/" + s.text_occlusion.document_flagged.length + (overlayRe ? "(custom-re)" : "") +
+    " board_clip=" + s.board_clip.flagged.length + "/" + s.board_clip.document_flagged.length +
+    " corner_anchor=" + s.corner_anchor.containers + "/" + s.corner_anchor.points + "/" + s.corner_anchor.mismatch +
+    " document=" + s.corner_anchor.document_containers + "/" + s.corner_anchor.document_points + "/" + s.corner_anchor.document_mismatch +
+    " ref_hits=" + s.corner_anchor.ref_hits + "(defs=" + s.corner_anchor.ref_hits_defs + ")" +
+    " unresolved=" + s.corner_anchor.unresolved.length + "/" + s.corner_anchor.document_unresolved.length + " boards=" + JSON.stringify(s.corner_anchor.boards) +
+    " tree_hash=" + out.tree_hash;
 }
 
 // LS-202 R2 minor-1：corner_anchor 歸零警示——scope=document 時 document_containers=0 是第四支停擺（快照沒讀到 ref 且名稱備援也沒命中），
@@ -684,8 +902,95 @@ function cornerWarnings(ca) {
   return warnings;
 }
 
+// ---- 收據形狀（LS-226）----
+// 三支 O(n²)（sibling_intersection／row_overflow／cross_parent_collision）的 flagged 全量在真實稿是數千筆（LS-208 r6：2066／560／321，
+// 完整 JSON 26 萬字元），收據與分批輸出都只留「每類一筆代表」：`class`＝同名對／同容器鍵（與 compactLines 彙整段同一把鍵）、
+// `count`＝同類筆數、其餘欄位＝該類第一筆（快照序）原樣、`classes`＝類數；`document_count` 仍是全量。設計端在每筆代表補
+// `classification` 文字（gate 驗非空，腳本不代寫）。其餘三支的 flagged／unresolved／document_* 陣列原樣完整（in-scope 必為空、
+// 全稿數字通常小、gate 要逐筆看），`container_corners` 只留在 scanAll 輸出（診斷用，SCAN_VERBOSE 印 CORNERS 行）。
+const CLASS_KEYS = {
+  sibling_intersection: (f) => f.name_a + " × " + f.name_b + " @ " + f.parent_name,
+  cross_parent_collision: (f) => f.name_a + " × " + f.name_b + " @ " + f.board_name,
+  row_overflow: (f) => f.parent_name + " :: " + f.name,
+};
+// ---- result_hash（LS-226）----
+// 每支一個 16 碼 hex：對下列各行做 FNV-1a 64 後 mod 2^64 相加（同 tree_hash 的加總法，順序無關、不排序）：
+//   "scan=<支名>"、"scope=<頂層 scan_scope>"、"tree_hash=<收據 tree_hash>"、in-scope `flagged` 每筆一行 "flagged=<身分>"、
+//   corner_anchor 另對 in-scope `unresolved` 每筆一行 "unresolved=<container>"。身分（IDENTITY）：sibling_intersection／
+//   cross_parent_collision `node_a|node_b`、row_overflow `node`、corner_anchor `corner:axis`、text_occlusion `node|overlay`、board_clip `node`。
+// 三支 O(n²) 在壓成代表**之前**對全量 flagged 算（收據只存代表、CI 不能重算，但同一稿態重跑腳本必得同值＝收據對得回這次掃描）；
+// 其餘三支的 in-scope 陣列收據原樣完整，design-evidence-check.sh 用 design_tree_hash.py 同規格重算 corner_anchor／text_occlusion／
+// board_clip 比對（fail-closed）。分批：各批先算身分行的局部和 `result_hash_part`（不含三行標頭），merge 相加、最後加標頭＝不分批同值。
+const IDENTITY = {
+  sibling_intersection: (f) => f.node_a + "|" + f.node_b,
+  cross_parent_collision: (f) => f.node_a + "|" + f.node_b,
+  row_overflow: (f) => f.node,
+  corner_anchor: (f) => f.corner + ":" + f.axis,
+  text_occlusion: (f) => f.node + "|" + f.overlay,
+  board_clip: (f) => f.node,
+};
+function resultHashLines(key, scan) {
+  const lines = scan.flagged.map((f) => "flagged=" + IDENTITY[key](f));
+  if (key === "corner_anchor") for (const u of scan.unresolved) lines.push("unresolved=" + u.container);
+  return lines;
+}
+function sumLines(lines, acc) {
+  const a = acc || [0, 0, 0, 0];
+  for (const l of lines) addLimbs(a, fnv1a64(l));
+  return a;
+}
+function resultHash(key, scanScope, treeHash, part) {
+  return hex64(sumLines(["scan=" + key, "scope=" + scanScope, "tree_hash=" + treeHash], hexToLimbs(part)));
+}
+// 代表形狀的 result_hash_part → result_hash（需要頂層 tree_hash／scan_scope；tree_hash 不是 16 碼 hex 就 throw——SCAN_SKIP_HASH 要帶 SCAN_TREE_HASH）
+function withResultHashes(out) {
+  if (typeof out.tree_hash !== "string" || !/^[0-9a-f]{16}$/.test(out.tree_hash)) throw new Error("overflow-scan：算 result_hash 需要 16 碼 hex 的 tree_hash（收到 " + JSON.stringify(out.tree_hash) + "）");
+  const scans = {};
+  for (const k of SCAN_KEYS) {
+    const o = Object.assign({}, out.scans[k]);
+    o.result_hash = resultHash(k, out.scan_scope, out.tree_hash, o.result_hash_part);
+    delete o.result_hash_part;
+    scans[k] = o;
+  }
+  return Object.assign({}, out, { scans });
+}
+
+// scans（scanAll 輸出或已是代表形狀）→ 代表形狀；冪等（`classes` 已在＝已壓過，原樣回）。代表順序＝各類第一筆的快照序，不排序
+// （分批 merge 依 root 序串接各批的類，與不分批壓出的順序相同；排序只在 compactLines 印字時做）。六支各補 `result_hash_part`
+// （已有就沿用——完整陣列的輸出在這裡算、代表形狀的輸出只能沿用）
+function compactScans(scans) {
+  const out = {};
+  for (const k of SCAN_KEYS) {
+    const o = scans[k];
+    if (!o || !Array.isArray(o.flagged)) throw new Error("overflow-scan：缺 scans." + k + ".flagged");
+    if (!CLASS_KEYS[k]) {
+      const c = Object.assign({}, o);
+      delete c.container_corners;
+      if (c.result_hash_part == null && c.result_hash == null) c.result_hash_part = hex64(sumLines(resultHashLines(k, o)));
+      out[k] = c;
+      continue;
+    }
+    if (o.classes != null) {
+      if (o.result_hash_part == null && o.result_hash == null) throw new Error("overflow-scan：scans." + k + " 已是代表形狀卻沒有 result_hash_part（舊版腳本的分批輸出，重跑）");
+      out[k] = o;
+      continue;
+    }
+    const m = new Map();
+    for (const f of o.flagged) {
+      const key = CLASS_KEYS[k](f);
+      const hit = m.get(key);
+      if (hit) hit.count++; else m.set(key, Object.assign({}, f, { class: key, count: 1 }));
+    }
+    out[k] = { scope: o.scope, document_count: o.document_count, classes: m.size, flagged: [...m.values()], result_hash_part: hex64(sumLines(resultHashLines(k, o))) };
+  }
+  return out;
+}
+function compactResult(out) {
+  return Object.assign({}, out, { scans: compactScans(out.scans) });
+}
+
 function compactLines(out) {
-  const s = out.scans;
+  const s = compactScans(out.scans);
   const agg = (items, keyFn, exFn) => {
     const m = new Map();
     for (const it of items) {
@@ -695,16 +1000,16 @@ function compactLines(out) {
     }
     return [...m.entries()].sort((p, q) => q[1].n - p[1].n);
   };
+  const byCount = (arr) => arr.slice().sort((p, q) => q.count - p.count);
   // LS-202：每段標頭尾綴 scope／document_count（收據每支照抄這兩個欄位）
   const tail = (o) => " scope=" + o.scope + " document_count=" + o.document_count;
   const blocks = [];
   for (const key of ["sibling_intersection", "cross_parent_collision"]) {
-    const items = s[key].flagged;
-    const rows = agg(items, (f) => f.name_a + " × " + f.name_b + " @ " + (key === "sibling_intersection" ? f.parent_name : f.board_name), (f) => f.node_a + "×" + f.node_b);
-    blocks.push(["SCAN " + key + " flagged=" + items.length + " classes=" + rows.length + tail(s[key])].concat(rows.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex)).join("\n"));
+    const o = s[key];
+    blocks.push(["SCAN " + key + " flagged=" + o.document_count + " classes=" + o.classes + tail(o)].concat(byCount(o.flagged).map((f) => "  " + f.count + "× " + f.class + " e.g. " + f.node_a + "×" + f.node_b)).join("\n"));
   }
-  const ro = agg(s.row_overflow.flagged, (f) => f.parent_name + " :: " + f.name, (f) => f.node + " (+" + f.overflow + ")");
-  blocks.push(["SCAN row_overflow flagged=" + s.row_overflow.flagged.length + " classes=" + ro.length + tail(s.row_overflow)].concat(ro.map(([k, v]) => "  " + v.n + "× " + k + " e.g. " + v.ex)).join("\n"));
+  const ro = s.row_overflow;
+  blocks.push(["SCAN row_overflow flagged=" + ro.document_count + " classes=" + ro.classes + tail(ro)].concat(byCount(ro.flagged).map((f) => "  " + f.count + "× " + f.class + " e.g. " + f.node + " (+" + f.overflow + ")")).join("\n"));
   const ca = s.corner_anchor;
   const lines = ["SCAN corner_anchor boards=" + JSON.stringify(ca.boards) + " containers/points/mismatch=" + ca.containers + "/" + ca.points + "/" + ca.mismatch +
     " document=" + ca.document_containers + "/" + ca.document_points + "/" + ca.document_mismatch + " ref_hits=" + ca.ref_hits + "(defs=" + ca.ref_hits_defs + ")" + " unresolved=" + ca.unresolved.length + "/" + ca.document_unresolved.length + tail(ca)];
@@ -729,6 +1034,42 @@ function compactLines(out) {
   return blocks;
 }
 
+// node CLI（LS-226）：`--merge <batch-1> … <batch-K> [--out <merged.json>]`——每個檔可以是 BATCH-JSON 本體，或含 `BATCH-JSON ` 行的
+// execute 輸出原文；合併結果 JSON 寫 --out（否則 stdout），SUMMARY／WARNING／SCAN 彙整段印 stderr（與不分批的 Pencil 輸出同格式）
+function extractBatchJson(text, name) {
+  const t = String(text).trim();
+  if (t.startsWith("{")) return JSON.parse(t);
+  const line = t.split("\n").find((l) => l.startsWith("BATCH-JSON "));
+  if (!line) throw new Error("overflow-scan merge：" + name + " 既不是 JSON、也找不到 `BATCH-JSON ` 行");
+  return JSON.parse(line.slice("BATCH-JSON ".length));
+}
+function cli(argv, fs, stdout, stderr) {
+  const usage = "用法：node scripts/design/overflow-scan.js --merge <batch-1> … <batch-K> [--out <merged.json>]";
+  if (argv[0] !== "--merge") { stderr(usage); return 2; }
+  const files = [];
+  let outPath = null;
+  for (let i = 1; i < argv.length; i++) {
+    if (argv[i] === "--out") {
+      outPath = argv[++i];
+      if (!outPath) { stderr("✗ --out 缺值\n" + usage); return 2; }
+    } else files.push(argv[i]);
+  }
+  if (!files.length) { stderr("✗ --merge 後至少要一個批次檔\n" + usage); return 2; }
+  let merged;
+  try {
+    merged = mergeBatches(files.map((f) => extractBatchJson(fs.readFileSync(f, "utf8"), f)));
+  } catch (e) {
+    stderr("✗ " + (e && e.message ? e.message : e));
+    return 1;
+  }
+  stderr(summaryLine(merged));
+  for (const w of cornerWarnings(merged.scans.corner_anchor)) stderr("WARNING " + w);
+  for (const block of compactLines(merged)) stderr(block);
+  const json = JSON.stringify(merged) + "\n";
+  if (outPath) fs.writeFileSync(outPath, json); else stdout(json);
+  return 0;
+}
+
 if (typeof Get === "function" && typeof Print === "function") {
   const scope = typeof SCAN_BOARDS !== "undefined" && Array.isArray(SCAN_BOARDS) ? SCAN_BOARDS : [];
   const crossAll = typeof SCAN_CROSS_ALL !== "undefined" && SCAN_CROSS_ALL === true;
@@ -738,33 +1079,49 @@ if (typeof Get === "function" && typeof Print === "function") {
   const hashOnly = typeof SCAN_HASH_ONLY !== "undefined" && SCAN_HASH_ONLY === true;
   const skipHash = typeof SCAN_SKIP_HASH !== "undefined" && SCAN_SKIP_HASH === true;
   const scanScope = typeof SCAN_SCOPE !== "undefined" && SCAN_SCOPE ? String(SCAN_SCOPE) : "document";
+  // LS-226：SCAN_BATCH=<k>（1 起算，等寬批、SCAN_BATCH_SIZE 覆寫每批 root 數）或 SCAN_BATCH_ROOTS=[lo,hi]（明確 root 範圍）→ 本次
+  // execute 只做這一批
+  const batchIndex = typeof SCAN_BATCH !== "undefined" && SCAN_BATCH != null ? Number(SCAN_BATCH) : null;
+  const batchSize = typeof SCAN_BATCH_SIZE !== "undefined" && SCAN_BATCH_SIZE != null ? Number(SCAN_BATCH_SIZE) : undefined;
+  const batchRoots = typeof SCAN_BATCH_ROOTS !== "undefined" && Array.isArray(SCAN_BATCH_ROOTS) ? SCAN_BATCH_ROOTS : null;
+  const batchSpec = batchRoots ? { roots: batchRoots } : (batchIndex != null ? { index: batchIndex, size: batchSize } : null);
   if (hashOnly && skipHash) throw new Error("overflow-scan：SCAN_HASH_ONLY 與 SCAN_SKIP_HASH 互斥——第一次只設 SCAN_HASH_ONLY（雜湊），第二次只設 SCAN_SKIP_HASH（六支掃描）；同時設會既不算雜湊也不跑掃描（LS-171 R1 N4）");
-  let total = 0;
-  const hashAcc = [0, 0, 0, 0];
-  // LS-171：includePathGeometry 必帶——Pencil Get 預設把 path 的 geometry 省略成 "..."，雜湊會與 js／py 不同（見檔頭）
-  Get((n, c) => {
-    total++;
-    if (skipHash) return;
-    const line = canonNode(n, c.parentCtx ? c.parentCtx.node.id : null, c.index);
-    addLimbs(hashAcc, fnv1a64(line));
-    if (hashDebug && n.id === hashDebug) Print("HASHLINE " + line);
-  }, { includePathGeometry: true });
-  const treeHashHex = skipHash ? "skipped" : hex64(hashAcc);
+  if (batchSpec && (hashOnly || skipHash)) throw new Error("overflow-scan：SCAN_BATCH 分批模式自帶 tree_hash 分段，不得與 SCAN_HASH_ONLY／SCAN_SKIP_HASH 併用（LS-226）");
+  if (batchRoots && batchIndex != null) throw new Error("overflow-scan：SCAN_BATCH 與 SCAN_BATCH_ROOTS 擇一（LS-226）");
+  const timing = {};
+  const tick = (key, t0) => { timing[key] = Date.now() - t0; };
+  const timingLine = () => "TIMING " + Object.keys(timing).map((k) => k + "=" + timing[k] + "ms").join(" ");
+  // 雜湊走訪＝未展開全樹（total_nodes 的唯一來源）；LS-171 includePathGeometry 必帶——Pencil Get 預設把 path 的 geometry 省略成
+  // "..."，雜湊會與 js／py 不同（見檔頭）。不分批時整棵一趟；分批模式不走這裡（各批在 roots 走訪裡算自己 root 子樹的局部和）
+  const hashWalk = () => {
+    const t0 = Date.now();
+    let count = 0;
+    const hashAcc = [0, 0, 0, 0];
+    Get((n, c) => {
+      count++;
+      if (skipHash) return;
+      const line = canonNode(n, c.parentCtx ? c.parentCtx.node.id : null, c.index);
+      addLimbs(hashAcc, fnv1a64(line));
+      if (hashDebug && n.id === hashDebug) Print("HASHLINE " + line);
+    }, { includePathGeometry: true });
+    timing.hash_walk = Date.now() - t0;
+    return { count, acc: hashAcc };
+  };
   if (hashOnly) {
-    Print("SUMMARY-HASH total_nodes=" + total + " tree_hash=" + treeHashHex);
+    const h = hashWalk();
+    Print("SUMMARY-HASH total_nodes=" + h.count + " tree_hash=" + hex64(h.acc));
+    Print(timingLine());
   } else {
+  let t0 = Date.now();
   const abs = {};
+  const snap = [];
   // LS-207：resolveInstances:true 展開後的樹裡，實例根節點本身已不是 type:"ref"、沒有 n.ref（LS-201 VR R2／R3 實測，
   // LS-202 當時的假設不成立）——另跑一次 resolveInstances:false 的走訪，把每個 type:"ref" 節點的 id → ref（元件 id）收進
   // 對照表；同一個實例根節點在兩次走訪的 id 相同（只有它的子孫在展開版多出 instanceId/childId 複合 id，根節點自己的 id
   // 不變），所以下面展開版走訪時可以用 id 查表把 ref 榫接回去。查不到就是 undefined，isCorner 退回名稱備援，行為不變。
-  // 這次走訪不算 total_nodes（雜湊走訪才是 total 的唯一來源），也不必管訪問序／絕對座標，只收 id→ref。
+  // 這次走訪不算 total_nodes（雜湊走訪才是 total 的唯一來源）。
   const refMap = {};
-  Get((n) => {
-    if (n.type === "ref" && n.ref != null) refMap[n.id] = n.ref;
-  }, { resolveInstances: false });
-  const snap = [];
-  Get((n, c) => {
+  const snapVisit = (n, c) => {
     const pid = c.parentCtx ? c.parentCtx.node.id : null;
     if (abs[n.id]) throw new Error("overflow-scan：Get 走訪到重複 id " + n.id);
     if (pid != null && !abs[pid]) throw new Error("overflow-scan：父節點 " + pid + " 尚未走訪（訪問序非 pre-order），無法累加絕對座標");
@@ -776,32 +1133,110 @@ if (typeof Get === "function" && typeof Print === "function") {
     // 兩者擇一有值即可，corner_anchor 的 ref_hits／isCorner 只看這個欄位最終有沒有值，不管來源（LS-202 舊註解）
     const ref = n.ref != null ? n.ref : refMap[n.id];
     snap.push({ id: n.id, name: n.name || "", parent: pid, type: n.type || "", ref, enabled: n.enabled !== false, clip: n.clip === true, image: hasImageFill(n.fill), x: a.x, y: a.y, w: b.width, h: b.height });
-  }, { resolveInstances: true });
-  const out = scanAll(snap, { boards: scope, crossAll, overlayRe, scanScope });
-  out.total_nodes = total;
-  out.tree_hash = treeHashHex;
-  const s = out.scans;
-  if (scope.length === 0) Print("WARNING SCAN_BOARDS 未設定：corner_anchor 以全稿計 mismatch，收據 gate 會因 boards 為空而紅——在本 snippet 第一行加 SCAN_BOARDS=[...] 再重跑（跨 execute 的全域不保留）");
-  Print(
-    "SUMMARY total_nodes=" + total + " scanned_nodes=" + out.scanned_nodes + " scan_scope=" + out.scan_scope +
-      " sibling_intersection=" + s.sibling_intersection.flagged.length +
-      " row_overflow=" + s.row_overflow.flagged.length +
-      " cross_parent_collision=" + s.cross_parent_collision.flagged.length + (crossAll ? "(all)" : "(bleed-only)") +
-      " text_occlusion=" + s.text_occlusion.flagged.length + "/" + s.text_occlusion.document_flagged.length + (overlayRe ? "(custom-re)" : "") +
-      " board_clip=" + s.board_clip.flagged.length + "/" + s.board_clip.document_flagged.length +
-      " corner_anchor=" + s.corner_anchor.containers + "/" + s.corner_anchor.points + "/" + s.corner_anchor.mismatch +
-      " document=" + s.corner_anchor.document_containers + "/" + s.corner_anchor.document_points + "/" + s.corner_anchor.document_mismatch +
-      " ref_hits=" + s.corner_anchor.ref_hits + "(defs=" + s.corner_anchor.ref_hits_defs + ")" +
-      " unresolved=" + s.corner_anchor.unresolved.length + "/" + s.corner_anchor.document_unresolved.length + " boards=" + JSON.stringify(s.corner_anchor.boards) +
-      " tree_hash=" + treeHashHex
-  );
-  for (const w of cornerWarnings(s.corner_anchor)) Print("WARNING " + w);
-  for (const block of compactLines(out)) Print(block);
-  if (verbose) for (const cc of s.corner_anchor.container_corners) Print("CORNERS " + cc.container_name + "(" + cc.container + ") n=" + cc.n + (cc.in_scope ? "" : " (document)") + " board=" + cc.board_name + "(" + cc.board + ")");
-  if (verbose) for (const key of Object.keys(s)) Print("JSON " + key + " " + JSON.stringify(s[key]));
+  };
+  if (!batchSpec) {
+    Get((n) => {
+      if (n.type === "ref" && n.ref != null) refMap[n.id] = n.ref;
+    }, { resolveInstances: false });
+    tick("ref_walk", t0);
+    t0 = Date.now();
+    Get(snapVisit, { resolveInstances: true });
+    tick("snapshot_walk", t0);
+    t0 = Date.now();
+    const out = scanAll(snap, { boards: scope, crossAll, overlayRe, scanScope, timing });
+    tick("scans", t0);
+    const s = out.scans;
+    if (scope.length === 0) Print("WARNING SCAN_BOARDS 未設定：corner_anchor 以全稿計 mismatch，收據 gate 會因 boards 為空而紅——在本 snippet 第一行加 SCAN_BOARDS=[...] 再重跑（跨 execute 的全域不保留）");
+    const h = hashWalk();
+    out.total_nodes = h.count;
+    // LS-226：SCAN_SKIP_HASH 那趟要帶 SCAN_TREE_HASH（第一趟 SUMMARY-HASH 印的值）——result_hash 綁 tree_hash，沒有就算不出、收據 gate 會紅
+    const givenHash = typeof SCAN_TREE_HASH !== "undefined" && SCAN_TREE_HASH ? String(SCAN_TREE_HASH) : "";
+    if (skipHash && !/^[0-9a-f]{16}$/.test(givenHash)) throw new Error("overflow-scan：SCAN_SKIP_HASH 須同時設 SCAN_TREE_HASH = \"<第一趟 SUMMARY-HASH 的 16 碼 tree_hash>\"（result_hash 綁 tree_hash，LS-226）；或改用 SCAN_BATCH 分批模式");
+    out.tree_hash = skipHash ? givenHash : hex64(h.acc);
+    out.flags = { cross_all: crossAll, custom_overlay_re: !!overlayRe };
+    Print(summaryLine(out, { crossAll, overlayRe }));
+    for (const w of cornerWarnings(s.corner_anchor)) Print("WARNING " + w);
+    for (const block of compactLines(out)) Print(block);
+    // LS-226：收據形狀的完整 JSON（三支 O(n²) 每類一筆代表；與 --merge 的輸出同形）——設計端照抄進收據再補 ticket／round／head_sha／
+    // scan_note 與每筆代表的 classification
+    Print("RESULT-JSON " + JSON.stringify(withResultHashes(compactResult(out))));
+    Print(timingLine());
+    if (verbose) for (const cc of s.corner_anchor.container_corners) Print("CORNERS " + cc.container_name + "(" + cc.container + ") n=" + cc.n + (cc.in_scope ? "" : " (document)") + " board=" + cc.board_name + "(" + cc.board + ")");
+    if (verbose) for (const key of Object.keys(s)) Print("JSON " + key + " " + JSON.stringify(s[key]));
+  } else {
+    // LS-226 分批（一批一次 execute）：① roots 走訪（skipChildren，只訪 231 個頂層節點）拿全稿 root 順序＋每個 root 的絕對 AABB／
+    // 名稱／enabled；② 本批 root＝全稿 root 順序 [lo,hi)——每個先走一趟未展開（refMap＋雜湊局部和＋未展開節點數），再走一趟展開
+    // （快照）；scope=boards 時展開走訪只做 SCAN_BOARDS 內的 root，雜湊仍做本批全部 root（total_nodes／tree_hash 永遠是全稿）；
+    // ③ 不在本批（或不在 SCAN_BOARDS）的 root 以**裸節點**放進快照——root 層兩板相鄰的 sibling 配對才算得到、resolveBoards／
+    // cornerComponentIds 才看得到全部板名，它們的子樹不進快照、也不是主節點（scanAll 以 primaryRoots 過濾）。
+    const roots = [];
+    let unexpanded = 0;
+    const hashAcc = [0, 0, 0, 0];
+    // 等寬批的 [lo,hi) 不需要 root 總數就算得出、明確範圍亦然；總數在走訪後才由 batchRange 驗
+    const bsize = batchSpec.size != null ? Number(batchSpec.size) : (batchSpec.roots ? 0 : defaultBatchSize());
+    const wantLo = batchSpec.roots ? Number(batchSpec.roots[0]) : (Number(batchSpec.index) - 1) * bsize;
+    const wantHi = batchSpec.roots ? Number(batchSpec.roots[1]) : wantLo + bsize;
+    // ① 全稿未展開走訪：root 層記 AABB／名稱；不在 [lo,hi) 的 root skipChildren；本批 root 子樹算雜湊局部和＋數節點＋收 refMap。
+    //    LS-171：includePathGeometry 必帶；不帶 resolveInstances（＝未展開，total_nodes 語意）
+    Get((n, c) => {
+      if (!c.parentCtx) {
+        const b = c.bounds;
+        roots.push({ id: n.id, name: n.name || "", parent: null, type: n.type || "", ref: undefined, enabled: n.enabled !== false, clip: n.clip === true, image: hasImageFill(n.fill), x: b.x, y: b.y, w: b.width, h: b.height });
+        if (c.index < wantLo || c.index >= wantHi) { c.skipChildren(); return; }
+      }
+      unexpanded++;
+      if (n.type === "ref" && n.ref != null) refMap[n.id] = n.ref;
+      const line = canonNode(n, c.parentCtx ? c.parentCtx.node.id : null, c.index);
+      addLimbs(hashAcc, fnv1a64(line));
+      if (hashDebug && n.id === hashDebug) Print("HASHLINE " + line);
+    }, { includePathGeometry: true });
+    tick("roots_hash_walk", t0);
+    const br = batchRange(roots.length, batchSpec);
+    const scanRootIds = scanScope === "boards" ? resolveBoards(scope, roots) : null;
+    const bare = new Set();
+    t0 = Date.now();
+    // ② 本批每個 root（scope=boards 時限 SCAN_BOARDS 內）各走一趟展開的 scoped Get 收快照
+    for (let i = 0; i < roots.length; i++) {
+      const r = roots[i];
+      if (i < br.lo || i >= br.hi || (scanRootIds && !scanRootIds.includes(r.id))) { bare.add(r.id); continue; }
+      Get(r.id, snapVisit, { resolveInstances: true });
+    }
+    tick("snapshot_walk", t0);
+    // ③ 快照＝全稿 root 順序：本批已走訪的 root 子樹原樣（snap 已依走訪順序 push），其餘 root 只放裸節點——用一趟重排保證 pre-order
+    const byRoot = new Map();
+    let cur = null;
+    for (const n of snap) {
+      if (n.parent == null) { cur = []; byRoot.set(n.id, cur); }
+      cur.push(n);
+    }
+    const ordered = [];
+    for (const r of roots) {
+      if (bare.has(r.id)) { ordered.push(r); continue; }
+      const sub = byRoot.get(r.id);
+      if (!sub) throw new Error("overflow-scan：root " + r.id + " 應已走訪卻不在快照裡（分批期間不得寫入）");
+      for (const n of sub) ordered.push(n);
+    }
+    t0 = Date.now();
+    const out = scanAll(ordered, { boards: scope, crossAll, overlayRe, scanScope, batch: batchSpec, timing });
+    tick("scans", t0);
+    if (out.batch.roots[0] !== br.lo || out.batch.roots[1] !== br.hi || out.batch.root_count !== roots.length) throw new Error("overflow-scan：scanAll 的批次描述 " + JSON.stringify(out.batch) + " 與走訪算出的 " + JSON.stringify(br) + " 不一致");
+    if (scope.length === 0) Print("WARNING SCAN_BOARDS 未設定：corner_anchor 以全稿計 mismatch，收據 gate 會因 boards 為空而紅——在本 snippet 第一行加 SCAN_BOARDS=[...] 再重跑（跨 execute 的全域不保留）");
+    // 批次輸出＝收據形狀（三支 O(n²) 只留每類一筆代表＋count；merge 以 class 鍵合併）——完整陣列一批就可能數百筆、設計端抄不動
+    const part = { batch: out.batch, total_nodes: unexpanded, hash_part: hex64(hashAcc), scanned_nodes: out.scanned_nodes, scan_scope: out.scan_scope, flags: { cross_all: crossAll, custom_overlay_re: !!overlayRe }, scans: compactScans(out.scans) };
+    const s = out.scans;
+    Print("SUMMARY-BATCH " + (br.index != null ? br.index + "/" + br.total + " size=" + br.size + " " : "") + "roots=[" + br.lo + "," + br.hi + ")/" + roots.length + " total_nodes=" + unexpanded + " scanned_nodes=" + out.scanned_nodes + " scan_scope=" + out.scan_scope +
+      " sibling_intersection=" + s.sibling_intersection.document_count + " row_overflow=" + s.row_overflow.document_count + " cross_parent_collision=" + s.cross_parent_collision.document_count +
+      " corner_anchor=" + s.corner_anchor.containers + "/" + s.corner_anchor.points + "/" + s.corner_anchor.mismatch + " text_occlusion=" + s.text_occlusion.flagged.length + "/" + s.text_occlusion.document_flagged.length +
+      " board_clip=" + s.board_clip.flagged.length + "/" + s.board_clip.document_flagged.length + " hash_part=" + part.hash_part);
+    Print(timingLine());
+    Print("BATCH-JSON " + JSON.stringify(part));
+  }
   }
 } else if (typeof module === "object" && module && module.exports) {
-  module.exports = { AREA_MIN, TOL, CORNER_OUT, PHOTO_CORNER_ID, PHOTO_CORNER_NAME, CORNER_NAME_RE, CORNER_VARIANT_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, cornerComponentIds, cornerWarnings, compactLines, pairEntry, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
+  module.exports = { AREA_MIN, TOL, CORNER_OUT, PHOTO_CORNER_ID, PHOTO_CORNER_NAME, CORNER_NAME_RE, CORNER_VARIANT_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, DEFAULT_BATCH_SIZE, SCAN_KEYS, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, cornerComponentIds, cornerWarnings, CLASS_KEYS, IDENTITY, resultHashLines, resultHash, withResultHashes, compactScans, compactResult, compactLines, pairEntry, primaryFilter, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, batchRange, defaultBatchSize, mergeBatches, summaryLine, extractBatchJson, cli, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
+  if (typeof require === "function" && require.main === module) {
+    process.exitCode = cli(process.argv.slice(2), require("fs"), (t) => process.stdout.write(t), (t) => process.stderr.write(t + "\n"));
+  }
 } else {
   throw new Error("overflow-scan：既不是 Pencil execute（無 Get／Print）也不是 node module 環境，無處輸出");
 }

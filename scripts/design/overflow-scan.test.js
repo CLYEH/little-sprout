@@ -878,4 +878,230 @@ ok("(c) 候選過濾效能：3000 節點單板（bleed 每 20 個一個）新實
   console.log("    cross_parent 3000 節點：全配對 " + (t1 - t0) + "ms → 候選過濾 " + (t2 - t1) + "ms（flagged " + JSON.parse(b).flagged.length + "）");
 });
 
+// ───── LS-226 分批＋跨批配對＋merge＋收據形狀＋result_hash ─────
+// fixture scripts/design/fixtures/cross-batch-snapshot.json（快照格式、173 節點、6 root）：cmp/Photo Corner 定義＋五張板，B1|B2／B2|B3／
+// B4|B5 在畫布 root 層相鄰重疊（＝跨批才算得到的配對），板內六支各有命中（Photo Wrap × 角托、Corner TR/BR +5、Badge 出血撞 Caption、
+// B3 一顆 BR 錯位 3pt、B1 Mount 對角兩顆 unresolved mount_pair、B4 Label × Tab Bar、B5 clip 板 text／photo 伸出板底、B3 disabled 子樹）。
+const FIX = JSON.parse(require("fs").readFileSync(path.join(__dirname, "fixtures", "cross-batch-snapshot.json"), "utf8"));
+const FIX_ROOTS = FIX.filter((x) => x.parent == null).map((x) => x.id);
+const FIX_OPTS = { boards: ["B1", "B2"] };
+const stripOut = (o) => JSON.stringify({ scanned_nodes: o.scanned_nodes, scan_scope: o.scan_scope, scans: M.compactScans(o.scans) });
+// Pencil 分批快照形狀：本批 root 子樹原樣、其餘 root 只剩裸節點（keepForeign=false ＝ mutation：連裸 root 都拿掉）
+function bareSnapshot(nodes, lo, hi, keepForeign) {
+  const roots = nodes.filter((x) => x.parent == null);
+  const mine = new Set(roots.slice(lo, hi).map((r) => r.id));
+  const byId = new Map(nodes.map((x) => [x.id, x]));
+  const rootOf = (x) => { let c = x; while (c.parent != null) c = byId.get(c.parent); return c.id; };
+  return nodes.filter((x) => mine.has(rootOf(x)) || (keepForeign !== false && x.parent == null));
+}
+function partsOf(nodes, size, opts, bare) {
+  const K = Math.ceil(nodes.filter((x) => x.parent == null).length / size);
+  const parts = [];
+  for (let k = 1; k <= K; k++) {
+    const snap = bare ? bareSnapshot(nodes, (k - 1) * size, k * size) : nodes;
+    parts.push(M.scanAll(snap, Object.assign({}, opts, { batch: { index: k, size } })));
+  }
+  return parts;
+}
+const deep = (v) => JSON.parse(JSON.stringify(v));
+
+ok("LS-226 fixture：六 root、B1|B2／B2|B3／B4|B5 在 root 層相鄰（跨批配對）、六支各有命中（sibling 88／row 32／cross 6／corner 4·32·0 document 10·80·1／unresolved mount_pair／text 1／clip 2）", () => {
+  const out = M.scanAll(FIX, FIX_OPTS);
+  const s = out.scans;
+  assert.deepStrictEqual(FIX_ROOTS, ["GEBcf", "B1", "B2", "B3", "B4", "B5"]);
+  assert.strictEqual(out.scanned_nodes, 173);
+  assert.deepStrictEqual(s.sibling_intersection.flagged.filter((f) => f.parent == null).map((f) => f.node_a + "|" + f.node_b), ["B1|B2", "B2|B3", "B4|B5"]);
+  assert.deepStrictEqual([s.sibling_intersection.document_count, s.row_overflow.document_count, s.cross_parent_collision.document_count], [88, 32, 6]);
+  assert.deepStrictEqual([s.corner_anchor.containers, s.corner_anchor.points, s.corner_anchor.mismatch, s.corner_anchor.document_containers, s.corner_anchor.document_points, s.corner_anchor.document_mismatch, s.corner_anchor.ref_hits, s.corner_anchor.ref_hits_defs], [4, 32, 0, 10, 80, 1, 42, 0]);
+  assert.deepStrictEqual(s.corner_anchor.unresolved.map((u) => u.container + ":" + u.classification), ["B1/body/print:mount_pair"]);
+  assert.deepStrictEqual(s.corner_anchor.document_flagged.map((f) => f.corner + ":" + f.axis), ["B3/body/cell1/BR:y"]);
+  assert.deepStrictEqual([s.text_occlusion.flagged.length, s.text_occlusion.document_flagged.map((f) => f.node + "|" + f.overlay)], [0, ["B4/body/label|B4/tabbar"]]);
+  assert.deepStrictEqual([s.board_clip.flagged.length, s.board_clip.document_flagged.map((f) => f.node + ":" + f.side)], [0, ["B5/column/photo:bottom", "B5/column/text:bottom"]]);
+});
+
+ok("LS-226 分批＝不分批：size 1／2／3／6 的 scanAll(batch) 依 root 序 merge 後，六支代表形狀＋計數與 compactScans(scanAll(全稿)) 逐位元相同；Pencil 裸 root 快照同；各批先壓成代表形狀（BATCH-JSON）再 merge 同；scope=boards 同；不等寬 {roots:[lo,hi]} 同", () => {
+  const full = stripOut(M.scanAll(FIX, FIX_OPTS));
+  for (const size of [1, 2, 3, 6]) {
+    const merged = M.mergeBatches(partsOf(FIX, size, FIX_OPTS));
+    assert.strictEqual(stripOut(merged), full, "size=" + size);
+    assert.deepStrictEqual([merged.batching.batches, merged.batching.root_count], [Math.ceil(6 / size), 6]);
+    assert.strictEqual(stripOut(M.mergeBatches(partsOf(FIX, size, FIX_OPTS, true))), full, "裸 root 快照 size=" + size);
+    const compactParts = partsOf(FIX, size, FIX_OPTS, true).map((p) => Object.assign({}, p, { scans: M.compactScans(p.scans) }));
+    assert.strictEqual(stripOut(M.mergeBatches(compactParts)), full, "代表形狀各批 size=" + size);
+  }
+  const optsB = { scanScope: "boards", boards: ["B2", "B5"] };
+  assert.strictEqual(stripOut(M.mergeBatches(partsOf(FIX, 2, optsB, true))), stripOut(M.scanAll(FIX, optsB)), "scope=boards");
+  const uneven = [[0, 1], [1, 4], [4, 6]].map(([lo, hi]) => M.scanAll(bareSnapshot(FIX, lo, hi), Object.assign({}, FIX_OPTS, { batch: { roots: [lo, hi] } })));
+  const um = M.mergeBatches(uneven);
+  assert.strictEqual(stripOut(um), full, "不等寬範圍");
+  assert.deepStrictEqual(um.batching.roots, [[0, 1], [1, 4], [4, 6]]);
+});
+
+ok("LS-226 mutation：分批時拿掉他批的裸 root（＝不補算跨批配對）→ sibling 少掉 B1|B2／B2|B3／B4|B5 三筆、document_count −3、sibling result_hash 變；其餘五支不受影響（配對不跨板）", () => {
+  const withHash = (parts) => parts.map((p, i) => Object.assign({}, p, { total_nodes: 1, hash_part: "000000000000000" + (i + 1) }));
+  const proper = M.mergeBatches(withHash(partsOf(FIX, 1, FIX_OPTS, true)));
+  const mutant = M.mergeBatches(withHash(FIX_ROOTS.map((rid, i) => {
+    const p = M.scanAll(bareSnapshot(FIX, i, i + 1, false), Object.assign({}, FIX_OPTS, { batch: { index: 1, size: 1 } }));
+    p.batch = { index: i + 1, total: 6, size: 1, roots: [i, i + 1], root_count: 6 };
+    return p;
+  })));
+  assert.strictEqual(proper.scans.sibling_intersection.document_count, 88);
+  assert.strictEqual(mutant.scans.sibling_intersection.document_count, 85, "少三筆 root 層配對");
+  const rootPairs = (m) => m.scans.sibling_intersection.flagged.filter((f) => f.parent == null).map((f) => f.class);
+  assert.deepStrictEqual(rootPairs(proper), ["Board B1 × Board B2 @ root", "Board B2 × Board B3 @ root", "Board B4 × Board B5 @ root"]);
+  assert.deepStrictEqual(rootPairs(mutant), []);
+  assert.notStrictEqual(mutant.scans.sibling_intersection.result_hash, proper.scans.sibling_intersection.result_hash);
+  for (const k of ["row_overflow", "cross_parent_collision", "corner_anchor", "text_occlusion", "board_clip"]) {
+    assert.deepStrictEqual(mutant.scans[k], proper.scans[k], k + " 不跨板、不受影響");
+  }
+});
+
+ok("LS-226 mergeBatches 驗證：缺批／重複／不相接、root_count／scan_scope／boards 不一致、代表形狀缺 result_hash_part、缺 document_count、hash_part 只有部分批帶、空陣列一律 throw", () => {
+  const parts = partsOf(FIX, 2, FIX_OPTS, true);
+  assert.throws(() => M.mergeBatches(parts.slice(1)), /不相接/);
+  assert.throws(() => M.mergeBatches(parts.slice(0, 2)), /缺最後幾批/);
+  assert.throws(() => M.mergeBatches(parts.concat([parts[1]])), /不相接/);
+  assert.throws(() => M.mergeBatches([]), /沒有任何批次/);
+  assert.throws(() => M.mergeBatches([M.scanAll(FIX, FIX_OPTS)]), /不是分批模式的輸出/);
+  let bad = deep(parts); bad[1].batch.root_count = 7;
+  assert.throws(() => M.mergeBatches(bad), /batch\.root_count/);
+  bad = deep(parts); bad[2].scan_scope = "boards";
+  assert.throws(() => M.mergeBatches(bad), /scan_scope/);
+  bad = deep(parts); bad[0].scans.corner_anchor.boards = ["B1"];
+  assert.throws(() => M.mergeBatches(bad), /boards/);
+  bad = deep(parts).map((p) => Object.assign({}, p, { scans: M.compactScans(p.scans) })); delete bad[1].scans.sibling_intersection.result_hash_part;
+  assert.throws(() => M.mergeBatches(bad), /result_hash_part/);
+  bad = deep(parts); delete bad[0].scans.row_overflow.document_count;
+  assert.throws(() => M.mergeBatches(bad), /document_count/);
+  bad = deep(parts); bad[0].hash_part = "0000000000000001";
+  assert.throws(() => M.mergeBatches(bad), /hash_part/);
+  bad = deep(parts); bad[0].flags = { cross_all: true };
+  assert.throws(() => M.mergeBatches(bad), /flags/);
+});
+
+ok("LS-226 batchRange：等寬批 [lo,hi)／最後一批截尾／index 超界 throw／{roots:[lo,hi]} 明確範圍與非法值 throw／預設 DEFAULT_BATCH_SIZE=20、SCAN_BATCH_SIZE 環境變數覆寫、非法值 throw", () => {
+  assert.deepStrictEqual(M.batchRange(231, { index: 1, size: 20 }), { index: 1, total: 12, size: 20, lo: 0, hi: 20, root_count: 231 });
+  assert.deepStrictEqual(M.batchRange(231, { index: 12, size: 20 }), { index: 12, total: 12, size: 20, lo: 220, hi: 231, root_count: 231 });
+  assert.throws(() => M.batchRange(231, { index: 13, size: 20 }), /1\.\.12/);
+  assert.throws(() => M.batchRange(231, { index: 0, size: 20 }), /index/);
+  assert.throws(() => M.batchRange(231, { index: 1, size: 0 }), /size/);
+  assert.deepStrictEqual(M.batchRange(231, { roots: [113, 115] }), { lo: 113, hi: 115, root_count: 231 });
+  assert.throws(() => M.batchRange(231, { roots: [115, 115] }), /roots/);
+  assert.throws(() => M.batchRange(231, { roots: [230, 232] }), /roots/);
+  assert.strictEqual(M.batchRange(10, null), null);
+  const saved = process.env.SCAN_BATCH_SIZE;
+  try {
+    delete process.env.SCAN_BATCH_SIZE;
+    assert.strictEqual(M.DEFAULT_BATCH_SIZE, 20);
+    assert.strictEqual(M.defaultBatchSize(), 20);
+    assert.deepStrictEqual(M.batchRange(45, { index: 3 }), { index: 3, total: 3, size: 20, lo: 40, hi: 45, root_count: 45 });
+    process.env.SCAN_BATCH_SIZE = "7";
+    assert.deepStrictEqual(M.batchRange(20, { index: 3 }), { index: 3, total: 3, size: 7, lo: 14, hi: 20, root_count: 20 });
+    process.env.SCAN_BATCH_SIZE = "0";
+    assert.throws(() => M.defaultBatchSize(), /SCAN_BATCH_SIZE/);
+    process.env.SCAN_BATCH_SIZE = "abc";
+    assert.throws(() => M.batchRange(20, { index: 1 }), /SCAN_BATCH_SIZE/);
+  } finally {
+    if (saved === undefined) delete process.env.SCAN_BATCH_SIZE; else process.env.SCAN_BATCH_SIZE = saved;
+  }
+});
+
+ok("LS-226 收據形狀 compactScans：三支 O(n²) 每類一筆代表（class＝SCAN 段同一把鍵、count 加總＝document_count、classes＝類數、代表＝該類第一筆原欄位、順序＝首見序不排序）、其餘三支原樣但去掉 container_corners、冪等、compactLines 對完整／代表輸入印同一段文字", () => {
+  const out = M.scanAll(FIX, FIX_OPTS);
+  const c = M.compactScans(out.scans);
+  for (const k of ["sibling_intersection", "row_overflow", "cross_parent_collision"]) {
+    const full = out.scans[k].flagged;
+    assert.strictEqual(c[k].document_count, full.length, k);
+    assert.strictEqual(c[k].flagged.reduce((a, f) => a + f.count, 0), full.length, k + " count 加總");
+    assert.strictEqual(c[k].classes, c[k].flagged.length, k);
+    assert.strictEqual(new Set(c[k].flagged.map((f) => f.class)).size, c[k].classes, k + " class 不重複");
+    const firstSeen = []; for (const f of full) { const key = M.CLASS_KEYS[k](f); if (!firstSeen.includes(key)) firstSeen.push(key); }
+    assert.deepStrictEqual(c[k].flagged.map((f) => f.class), firstSeen, k + " 順序＝首見序");
+    for (const f of c[k].flagged) {
+      const first = full.find((x) => M.CLASS_KEYS[k](x) === f.class);
+      for (const key of Object.keys(first)) assert.deepStrictEqual(f[key], first[key], k + " 代表＝該類第一筆的 " + key);
+    }
+    assert.ok(/^[0-9a-f]{16}$/.test(c[k].result_hash_part), k);
+  }
+  assert.deepStrictEqual([c.sibling_intersection.classes, c.row_overflow.classes, c.cross_parent_collision.classes], [16, 5, 4]);
+  assert.ok(!("container_corners" in c.corner_anchor) && Array.isArray(out.scans.corner_anchor.container_corners));
+  assert.deepStrictEqual(c.corner_anchor.unresolved, out.scans.corner_anchor.unresolved);
+  assert.deepStrictEqual(c.board_clip.document_flagged, out.scans.board_clip.document_flagged);
+  assert.strictEqual(JSON.stringify(M.compactScans(c)), JSON.stringify(c), "冪等");
+  assert.strictEqual(compactLines(out).join("\n"), compactLines({ scans: c }).join("\n"));
+  assert.ok(/^SCAN sibling_intersection flagged=88 classes=16 scope=document document_count=88\n  \d+× /.test(compactLines(out)[0]));
+  assert.throws(() => M.compactScans({}), /缺 scans\.sibling_intersection\.flagged/);
+});
+
+ok("LS-226 result_hash：＝標頭三行（scan／scope／tree_hash）＋in-scope flagged 身分行（corner_anchor 另加 unresolved）的 FNV 加總；withResultHashes 需要 16 碼 tree_hash；改 unresolved／flagged／tree_hash／scope 任一即變、改名稱不變；js／py（design_tree_hash.py --result-hash）六支同值", () => {
+  const out = M.scanAll(FIX, FIX_OPTS);
+  out.tree_hash = "0123456789abcdef";
+  const fin = M.withResultHashes(M.compactResult(out));
+  for (const k of M.SCAN_KEYS) assert.ok(/^[0-9a-f]{16}$/.test(fin.scans[k].result_hash) && !("result_hash_part" in fin.scans[k]), k);
+  const ca = out.scans.corner_anchor;
+  const want = treeHash(["scan=corner_anchor", "scope=document", "tree_hash=0123456789abcdef"].concat(ca.flagged.map((f) => "flagged=" + f.corner + ":" + f.axis), ca.unresolved.map((u) => "unresolved=" + u.container)));
+  assert.strictEqual(fin.scans.corner_anchor.result_hash, want);
+  assert.strictEqual(fin.scans.sibling_intersection.result_hash, treeHash(["scan=sibling_intersection", "scope=document", "tree_hash=0123456789abcdef"].concat(out.scans.sibling_intersection.flagged.map((f) => "flagged=" + f.node_a + "|" + f.node_b))), "三支 O(n²) 對全量算、不是對代表算");
+  assert.throws(() => M.withResultHashes(M.compactResult(Object.assign({}, out, { tree_hash: "skipped" }))), /tree_hash/);
+  const mut = (f) => { const o = deep(out); f(o); return M.withResultHashes(M.compactResult(o)); };
+  assert.notStrictEqual(mut((o) => { o.scans.corner_anchor.unresolved[0].container = "X"; }).scans.corner_anchor.result_hash, want);
+  assert.notStrictEqual(mut((o) => { o.tree_hash = "0123456789abcdee"; }).scans.corner_anchor.result_hash, want);
+  assert.notStrictEqual(mut((o) => { o.scan_scope = "boards"; }).scans.corner_anchor.result_hash, want);
+  assert.notStrictEqual(mut((o) => { o.scans.sibling_intersection.flagged.pop(); }).scans.sibling_intersection.result_hash, fin.scans.sibling_intersection.result_hash);
+  assert.strictEqual(mut((o) => { o.scans.sibling_intersection.flagged[0].name_a = "renamed"; }).scans.sibling_intersection.result_hash, fin.scans.sibling_intersection.result_hash, "身分只看 id，名稱不影響");
+  const fs = require("fs"); const os = require("os"); const { execFileSync } = require("child_process");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "LS-226-rh-"));
+  const py = path.join(__dirname, "..", "gates", "design_tree_hash.py");
+  const env = Object.assign({}, process.env, { PYTHONDONTWRITEBYTECODE: "1" });
+  const compactPath = path.join(dir, "compact.json");
+  fs.writeFileSync(compactPath, JSON.stringify(fin));
+  const fullPath = path.join(dir, "full.json");
+  fs.writeFileSync(fullPath, JSON.stringify(out));
+  for (const k of M.SCAN_KEYS) {
+    const file = ["corner_anchor", "text_occlusion", "board_clip"].includes(k) ? compactPath : fullPath;
+    const got = execFileSync("python3", [py, "--result-hash", file, k], { encoding: "utf8", env }).trim();
+    assert.strictEqual(got, fin.scans[k].result_hash, k + " js／py 同值");
+  }
+  const rep = execFileSync("python3", [py, "--result-hash", compactPath, "sibling_intersection"], { encoding: "utf8", env }).trim();
+  assert.notStrictEqual(rep, fin.scans.sibling_intersection.result_hash, "代表形狀的三支 O(n²) py 重算不等於全量（收據只存代表，gate 不重算這三支）");
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+ok("LS-226 CLI --merge：吃 execute 輸出原文（含 BATCH-JSON 行）或 JSON 本體，--out 寫最終 JSON（tree_hash＝hash_part 相加、六支 result_hash、batching），stderr 印 SUMMARY／SCAN 段；缺批 exit 1；用法錯 exit 2", () => {
+  const fs = require("fs"); const os = require("os"); const { spawnSync } = require("child_process");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "LS-226-cli-"));
+  const parts = partsOf(FIX, 2, FIX_OPTS, true).map((p, i) => Object.assign({}, p, { total_nodes: 10 * (i + 1), hash_part: "000000000000000" + (i + 1), flags: { cross_all: false, custom_overlay_re: false }, scans: M.compactScans(p.scans) }));
+  const files = parts.map((p, i) => {
+    const f = path.join(dir, "batch-" + (i + 1) + ".txt");
+    fs.writeFileSync(f, (i === 0 ? JSON.stringify(p) : "SUMMARY-BATCH x\nTIMING y\nBATCH-JSON " + JSON.stringify(p)) + "\n");
+    return f;
+  });
+  const script = path.join(__dirname, "overflow-scan.js");
+  const outPath = path.join(dir, "merged.json");
+  const r = spawnSync("node", [script, "--merge", ...files, "--out", outPath], { encoding: "utf8" });
+  assert.strictEqual(r.status, 0, r.stderr);
+  const merged = JSON.parse(fs.readFileSync(outPath, "utf8"));
+  assert.deepStrictEqual([merged.total_nodes, merged.tree_hash, merged.scanned_nodes, merged.batching.batches], [60, "0000000000000006", 173, 3]);
+  const expect = M.withResultHashes(Object.assign(M.compactResult(M.scanAll(FIX, FIX_OPTS)), { tree_hash: "0000000000000006" }));
+  for (const k of M.SCAN_KEYS) assert.deepStrictEqual(merged.scans[k], expect.scans[k], k);
+  assert.ok(/^SUMMARY total_nodes=60 scanned_nodes=173 scan_scope=document sibling_intersection=88 row_overflow=32 /.test(r.stderr), r.stderr.split("\n")[0]);
+  assert.ok(r.stderr.includes("SCAN sibling_intersection flagged=88 classes=16") && r.stderr.includes("UNRESOLVED Print(B1/body/print)"));
+  assert.strictEqual(spawnSync("node", [script, "--merge", ...files.slice(1)], { encoding: "utf8" }).status, 1);
+  assert.strictEqual(spawnSync("node", [script], { encoding: "utf8" }).status, 2);
+  assert.strictEqual(spawnSync("node", [script, "--merge"], { encoding: "utf8" }).status, 2);
+  assert.strictEqual(spawnSync("node", [script, "--merge", files[0], "--out"], { encoding: "utf8" }).status, 2);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+ok("LS-226 原始碼斷言：分批路徑對不在本批的 root skipChildren、本批 root 各一趟 Get(rootId, snapVisit, {resolveInstances:true})、BATCH-JSON 帶代表形狀；不分批印 RESULT-JSON（withResultHashes）；SCAN_SKIP_HASH 沒帶 SCAN_TREE_HASH throw；分批與 HASH_ONLY／SKIP_HASH 互斥、SCAN_BATCH 與 SCAN_BATCH_ROOTS 擇一", () => {
+  const src = require("fs").readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
+  assert.ok(src.includes("if (c.index < wantLo || c.index >= wantHi) { c.skipChildren(); return; }"), "他批 root 必須 skipChildren（否則每批都是全稿走訪、分批白做）");
+  assert.ok(src.includes("Get(r.id, snapVisit, { resolveInstances: true })"), "本批 root 各一趟 scoped 展開走訪");
+  assert.ok(src.includes("scans: compactScans(out.scans) }") && src.includes('Print("BATCH-JSON " + JSON.stringify(part))'), "BATCH-JSON 帶代表形狀");
+  assert.ok(src.includes('Print("RESULT-JSON " + JSON.stringify(withResultHashes(compactResult(out))))'), "不分批印 RESULT-JSON");
+  assert.ok(src.includes("if (skipHash && !/^[0-9a-f]{16}$/.test(givenHash)) throw new Error("), "SCAN_SKIP_HASH 必帶 SCAN_TREE_HASH");
+  assert.ok(src.includes("if (batchSpec && (hashOnly || skipHash)) throw new Error("), "分批與兩趟舊法互斥");
+  assert.ok(src.includes("if (batchRoots && batchIndex != null) throw new Error("), "SCAN_BATCH／SCAN_BATCH_ROOTS 擇一");
+});
+
 console.log("overflow-scan.test.js：全數通過（" + n + " 組）");
