@@ -112,24 +112,21 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
             let session = try await client.auth.session
             let payload = CreateAlbumPayload(familyID: familyID, title: title, createdBy: session.user.id)
             // `album_summaries` 是唯讀 view（沒有 INSERT grant），INSERT 一律走 `albums`
-            // 本身——這裡只取 `id` 供下一步重讀用（票文 Scope 3）。
-            let inserted: PostgrestResponse<CreatedAlbumIDRow> = try await client
+            // 本身。merge-review R1 major-1：原本插入後另外向 view 重讀一次，中間開了一個
+            // 「INSERT 已 commit、重讀失敗就整個 throw」的窗口，導致使用者看到失敗、重試造成
+            // 兩本同名相簿。改成本地組出等價的 `AlbumListingRow`——剛建立的相簿必定沒有
+            // `album_media` 連結列、`cover_media_id` 為 NULL，view 對這種列回的就是
+            // `visible_media_count=0` 與五個 NULL 路徑欄（R1 review「已驗證」第 5 項已在
+            // lock 內以 SQL 實跑對照確認等價），不需要再發第二個請求去確認。
+            let inserted: PostgrestResponse<CreatedAlbumRow> = try await client
                 .from("albums")
                 .insert(payload)
-                .select("id")
+                .select("id,title,created_at")
                 .single()
                 .execute()
-            // 插入後以 view 重讀剛建立的這一列，取得跟 `fetchAlbums` 一致的摘要形狀——剛建立
-            // 的相簿必定 0 張照片、沒有封面，重讀一次比在這裡手動組一份「猜」出來的
-            // `AlbumListingRow` 更穩：不必自己重複 view 的 `coalesce`／fallback 邏輯，未來
-            // view 欄位若調整也不會有兩份邏輯各自漂移，也不會有新建相簿短暫顯示錯誤張數的空窗。
-            let response: PostgrestResponse<AlbumListingRow> = try await client
-                .from("album_summaries")
-                .select(Self.listSelect)
-                .eq("id", value: inserted.value.id)
-                .single()
-                .execute()
-            return response.value
+            return AlbumListingRow(
+                id: inserted.value.id, title: inserted.value.title, createdAt: inserted.value.createdAt
+            )
         } catch {
             throw AppError.map(error)
         }
@@ -233,11 +230,18 @@ private struct CreateAlbumPayload: Encodable {
     }
 }
 
-/// `createAlbum` INSERT 步驟只需要拿回新列的 id，供第二步向 `album_summaries` 重讀用——不
-/// 借用 `AlbumListingRow`（那支對映的是 view 的欄位形狀，`albums` 表的 INSERT 回應不會有
-/// `visible_media_count` 等彙總欄）。
-private struct CreatedAlbumIDRow: Decodable {
+/// `createAlbum` INSERT 步驟只取回本地組出 `AlbumListingRow` 所需的三欄——不借用
+/// `AlbumListingRow` 本身（那支對映的是 view 的欄位形狀，`albums` 表的 INSERT 回應不會有
+/// `visible_media_count` 等彙總欄；merge-review R1 major-1 起改為本地組出，不再向 view 重讀）。
+private struct CreatedAlbumRow: Decodable {
     let id: UUID
+    let title: String
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, title
+        case createdAt = "created_at"
+    }
 }
 
 private struct SetAlbumChildrenParams: Encodable {
