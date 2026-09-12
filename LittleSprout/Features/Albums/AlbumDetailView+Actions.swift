@@ -60,7 +60,10 @@ extension AlbumDetailView {
     // MARK: - 加入照片
 
     var addPhotosBarButton: some View {
-        PrimaryButton(icon: "photo.badge.plus", title: "加入照片", action: { showsPhotosPicker = true })
+        PrimaryButton(
+            icon: "photo.badge.plus", title: "加入照片", isLoading: isLoadingPickedItems,
+            loadingTitle: "照片載入中…", action: { showsPhotosPicker = true }
+        )
     }
 
     /// iPad「行內」版（Notes `rFiLJ` `RbEqx`：`width:fit_content`，不像 Action Bar 版滿版）。
@@ -78,13 +81,23 @@ extension AlbumDetailView {
         }
         .foregroundStyle(Color.lsOnAccent)
         .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+        // merge-review R2 m1：同 `addPhotosBarButton`——loading 期間停用，不讓使用者開出
+        // 第二批 picker 跟第一批交錯。
+        .disabled(isLoadingPickedItems)
     }
 
     /// PhotosPicker 挑選結果 → `MediaUploadService` 佇列（沿 `DiaryEditorView+Photos
-    /// .loadPicked` 既有路徑，這裡不需要 20 張上限／載入中旗標那一套——相簿沒有單篇張數
-    /// 上限，佇列本身的並發／重試已經是 `UploadQueueStore` 的職責）。
+    /// .loadPicked` 既有路徑，這裡不需要 20 張上限那一套——相簿沒有單篇張數上限，佇列本身的
+    /// 並發／重試已經是 `UploadQueueStore` 的職責）。
+    ///
+    /// **merge-review R2 m1**：`isLoadingPickedItems` 包住整個迴圈——`addPhotosBarButton`／
+    /// `addPhotosInlineButton` 都讀這顆旗標停用，擋下「使用者在第一批還在解碼時開第二批
+    /// picker，兩批非按開始順序完成，後完成的那批把 `uploadQueueStore` 整個換掉」（同
+    /// `DiaryEditorView+Photos.loadPicked` 既有的 M3／m6 修法）。
     @MainActor
     func loadPicked(_ items: [PhotosPickerItem], detailStore: AlbumDetailStore) async {
+        isLoadingPickedItems = true
+        defer { isLoadingPickedItems = false }
         var uploads: [PendingUpload] = []
         for item in items {
             guard let loaded = await PickedItemLoader.load(item) else { continue }

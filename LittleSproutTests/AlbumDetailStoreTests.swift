@@ -58,6 +58,29 @@ final class AlbumDetailStoreTests: XCTestCase {
         XCTAssertEqual(store.photoCount, 2)
     }
 
+    /// merge-review R2 m4：`sortOrder` 重複時（跨裝置同時加照片、或現查現算撞號）`sorted`
+    /// 不保證穩定——加了 `mediaId` tie-break 後，同分的兩筆在多次 `refresh()` 之間排序結果
+    /// 必須一致（用 UUID 字串序當 tie-break，這裡直接照公式算出預期順序斷言，不是猜結果）。
+    func test_refresh_duplicateSortOrder_tieBreaksByMediaIdDeterministically() async {
+        let idA = UUID(uuidString: "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")!
+        let idB = UUID(uuidString: "BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB")!
+        let capturedAlbumID = albumID
+        let apiClient = StubAlbumsAPIClient()
+        apiClient.setFetchAlbumMediaLinksHandler { _ in
+            [
+                AlbumMediaLinkRow(albumId: capturedAlbumID, mediaId: idA, sortOrder: 0),
+                AlbumMediaLinkRow(albumId: capturedAlbumID, mediaId: idB, sortOrder: 0)
+            ]
+        }
+        apiClient.setFetchMediaHandler { ids in ids.map { Self.makeMediaRow(id: $0) } }
+        apiClient.setSignedURLsHandler(Self.echoSignedURLsHandler)
+        let store = makeStore(apiClient: apiClient)
+
+        await store.refresh()
+
+        XCTAssertEqual(store.photos.map(\.id), [idB, idA], "同分時 tie-break 用 mediaId 字串序由大到小")
+    }
+
     func test_refresh_linkPointsToInvisibleMedia_skipsItWithoutThrowing() async {
         let visibleID = UUID()
         let invisibleID = UUID()
@@ -161,6 +184,24 @@ final class AlbumDetailStoreTests: XCTestCase {
     }
 
     // MARK: - submitEdit
+
+    /// merge-review R2 m3：`EditAlbumView.submit()` 把 `Set<UUID>` 轉回 `Array` 傳進來，
+    /// 順序不保證跟 `childIDs` 原本的順序一致——同一組寶貝、只是陣列順序不同時，不該被誤判成
+    /// 「改過」而多打一次 `set_album_children`。
+    func test_submitEdit_childIDsSameSetDifferentOrder_isNoOp_doesNotCallSetAlbumChildren() async {
+        let apiClient = StubAlbumsAPIClient()
+        let childA = UUID()
+        let childB = UUID()
+        let store = AlbumDetailStore(
+            albumID: albumID, familyID: familyID, title: "起始標題", childIDs: [childA, childB],
+            apiClient: apiClient
+        )
+
+        let succeeded = await store.submitEdit(title: "起始標題", childIDs: [childB, childA])
+
+        XCTAssertTrue(succeeded)
+        XCTAssertTrue(apiClient.setAlbumChildrenCalls.isEmpty, "同一組寶貝只是陣列順序不同，不該多打一次請求")
+    }
 
     func test_submitEdit_titleChangedOnly_callsUpdateTitle_notSetAlbumChildren() async {
         let apiClient = StubAlbumsAPIClient()

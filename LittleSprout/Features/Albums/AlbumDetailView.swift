@@ -41,6 +41,11 @@ struct AlbumDetailView: View {
     @State var uploadQueueStore: UploadQueueStore?
     @State var showsUploadQueueSheet = false
     @State var showsPhotosPicker = false
+    /// merge-review R2 m1：`loadPicked` 期間停用「加入照片」按鈕（同
+    /// `DiaryComposerStore.isLoadingPickedItems` 既有解法）——沒有這道旗標，使用者可以在
+    /// 第一批還在解碼時立刻開第二批 picker，兩批 `loadPicked` 非按開始順序完成時，後完成的
+    /// 那批會把 `uploadQueueStore` 換掉，先建立的那批列（含失敗列與重試鈕）從 sheet 消失。
+    @State var isLoadingPickedItems = false
     @State private var pickerSelection: [PhotosPickerItem] = []
     @State var showsEditAlbum = false
     @State var showsDeleteConfirmation = false

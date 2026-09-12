@@ -65,7 +65,15 @@ final class AlbumDetailStore {
             let mediaRows = try await apiClient.fetchMedia(ids: links.map(\.mediaId))
             let signed = try await Self.signedURLs(for: mediaRows, apiClient: apiClient)
             let rowsByID = Dictionary(uniqueKeysWithValues: mediaRows.map { ($0.id, $0) })
-            let newestFirstLinks = links.sorted { $0.sortOrder > $1.sortOrder }
+            // merge-review R2 m4：`sorted` 不保證穩定，`sortOrder` 一旦有重複（跨裝置同時
+            // 加照片、或現查現算的 `AlbumsStore.attachUploadedMedia` 剛好算出同一個值），同分
+            // 的照片順序會在每次 `refresh()` 之間跳動。加 `mediaId` 當 tie-break，讓同分時的
+            // 排序結果是確定性的（不影響「新加入的排最前」這個主要規則，只決定同分時的次序）。
+            let newestFirstLinks = links.sorted {
+                $0.sortOrder != $1.sortOrder
+                    ? $0.sortOrder > $1.sortOrder
+                    : $0.mediaId.uuidString > $1.mediaId.uuidString
+            }
             let newPhotos = newestFirstLinks.compactMap { link in
                 Self.content(for: link.mediaId, in: rowsByID, signed: signed)
             }
@@ -121,7 +129,12 @@ final class AlbumDetailStore {
                 try await apiClient.updateAlbumTitle(albumID: albumID, title: newTitle)
                 title = newTitle
             }
-            if newChildIDs != childIDs {
+            // merge-review R2 m3：呼叫端（`EditAlbumView.submit()`）把 `Set<UUID>` 轉回
+            // `Array` 傳進來——`Set` 沒有穩定的走訪順序，同一組選擇每次轉出來的陣列順序可能
+            // 不同。用陣列相等（`!=`）判斷「有沒有改」會把「順序剛好不一樣但內容其實沒變」
+            // 誤判成改過，多打一次不必要的 `set_album_children`。改用集合比較，只看內容
+            // 差異，不管陣列順序。
+            if Set(newChildIDs) != Set(childIDs) {
                 try await apiClient.setAlbumChildren(albumID: albumID, childIDs: newChildIDs)
                 childIDs = newChildIDs
             }
