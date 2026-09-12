@@ -87,6 +87,9 @@ enum TapTargetGateHarness {
         case .deleteDiaryConfirmation: deleteDiaryConfirmationHost
         case .deleteCommentConfirmation: deleteCommentConfirmationHost
         case .eulaConsentToTimelineFlow: eulaConsentToTimelineHost
+        case .pushPreprompt: pushPrepromptHost
+        case .settingsPushDenied: settingsPushDeniedHost
+        case .settingsPushAuthorized: settingsPushAuthorizedHost
         case .selfTestTooSmall:
             selfTestTooSmallHost
         case .selfTestGood:
@@ -227,7 +230,7 @@ enum TapTargetGateHarness {
             eulaStore: .preview(shouldPresent: false),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
             accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
-            safetyAPIClient: PreviewSafetyAPIClient()
+            safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
         )
         .environment(\.horizontalSizeClass, .compact)
     }
@@ -270,7 +273,7 @@ enum TapTargetGateHarness {
             eulaStore: .preview(shouldPresent: false),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
             accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
-            safetyAPIClient: PreviewSafetyAPIClient()
+            safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
         )
         .environment(\.horizontalSizeClass, .compact)
     }
