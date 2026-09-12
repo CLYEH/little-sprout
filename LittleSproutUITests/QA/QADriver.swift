@@ -194,6 +194,8 @@ final class QADriver {
     /// `waitForExistence` 逾時直接放行，不當失敗（同前置頁本身邏輯：只在「登入後首次進時間軸」
     /// 顯示一次，見 `PushPrepromptPolicy` 文件註解）。
     func dismissPushPrepromptIfPresent() throws {
+        // QA-GATE-HANDLED: PushPrepromptView（LS-232：對應 `RootView.swift` 的
+        // `// QA-GATE: PushPrepromptView` 標記——這裡點「稍後再說」再等一次時間軸就是處理方式）。
         guard pushPrepromptSkipButton.waitForExistence(timeout: 10) else { return }
         snap("push-preprompt")
         pushPrepromptSkipButton.tap()

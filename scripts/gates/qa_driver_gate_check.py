@@ -36,8 +36,14 @@
 對 `RootView*.swift` 檔案掃 `.fullScreenCover(`／`.sheet(` 出現的行，往下最多
 `BACKUP_SCAN_LOOKAHEAD` 行找第一個「大寫開頭識別字 + `(`」且不是常見 SwiftUI 基本／容器型別
 （`CONTAINER_EXCLUDE`）當作綁定的 View 型別名候選。這是 heuristic，不保證抓到每一種寫法（例如
-型別名用變數組出來、巢狀更深的寫法可能找不到候選）——找不到候選不代表沒有全屏 gate，仍要靠
-code review／DoD 自律補位；標記（步驟 1）才是能涵蓋所有實作型態的來源。
+型別名用變數組出來、巢狀更深的寫法可能找不到候選；`.fullScreenCover { VStack { Text…; Button… } }`
+這種把 gate 直接寫在 closure 裡、不抽成具名 View 的寫法，closure 內只剩 `CONTAINER_EXCLUDE`
+型別，一律找不到候選——LS-232 R2 merge-review N3，兩起真實事故 `EULAConsentView`／
+`PushPrepromptView` 皆為具名 View，專案慣例也是具名，故列已知盲區不列必修）——找不到候選
+不代表沒有全屏 gate，仍要靠 code review／DoD 自律補位；標記（步驟 1）才是能涵蓋所有實作型態
+的來源。另外，這是**線性文字掃描、不認 modifier closure 邊界**：視窗若跨過該 modifier 的收合
+`}` 仍會繼續找，可能把 closure 外的無關型別誤判成候選（假紅）；視窗太短也可能漏抓真候選（該紅
+沒紅）——LS-232 R2 merge-review N2／N6，已記入待辦池 LS-96（comment `4c7a7d7e`），非本輪必修。
 
 `CONTAINER_EXCLUDE`（LS-232 R2 m1：merge-review R1 實測 `.sheet { Text(…) }` 會把 `Text` 當
 候選，M1 把備援掃描候選轉紅之後這種型別若不排除就是假紅——必須在此列出所有常見的 SwiftUI

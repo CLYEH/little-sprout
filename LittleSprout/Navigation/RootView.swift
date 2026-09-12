@@ -147,6 +147,9 @@ struct AuthenticatedRootView: View {
             guard let userID = authStore.session?.userID else { return }
             await pushNotificationStore.refreshForEnteringApp(userID: userID)
         }
+        // QA-GATE: PushPrepromptView（LS-232：登入後全屏 gate 清單的單一來源標記；QADriver 對應標記見
+        // `QADriver.swift` 的 `// QA-GATE-HANDLED: PushPrepromptView`——`dismissPushPrepromptIfPresent()`
+        // 點「稍後再說」那一步）。
         .fullScreenCover(isPresented: Binding(
             get: { pushNotificationStore.showsPreprompt },
             set: { isPresented in
