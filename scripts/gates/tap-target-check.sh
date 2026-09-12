@@ -55,6 +55,13 @@ cd "$repo"
 log=$(mktemp -t tap-target-check.XXXXXX)
 trap 'rm -f "$log"' EXIT
 
+# LS-231：固定相對路徑的 xcresult bundle，供呼叫端（ci.yml「點擊目標 gate」步驟之後緊接的
+# `if: failure()` 上傳步驟）用同一個路徑撈。本機重跑（push-gate.sh 會呼叫本腳本）前先清掉舊
+# bundle——xcodebuild 拒絕寫入已存在的 -resultBundlePath。成功時清掉（不留垃圾在工作目錄）；
+# 失敗時保留，CI 撈去當 artifact、本機也留給人手動打開。
+result_bundle="$repo/tap-target-check.xcresult"
+rm -rf "$result_bundle"
+
 #    刻意不帶 `-quiet`：那個旗標會把 xcodebuild 的輸出收斂成「Failing tests: <方法名>」的
 #    精簡摘要，連 `TAP-TARGET-FAIL:` 這種來自 `XCTFail` 訊息本體的文字都一起被吞掉（實測
 #    重現：帶 `-quiet` 時，故意造出的違規只印得出方法名，抓不到下面要 grep 的標記）。
@@ -67,10 +74,12 @@ trap 'rm -f "$log"' EXIT
 if xcodebuild test \
   -scheme "$scheme" \
   -destination "platform=iOS Simulator,id=${udid}" \
+  -resultBundlePath "$result_bundle" \
   -skip-testing:LittleSproutTests \
   -skip-testing:LittleSproutUITests/QASmokeTests \
   -parallel-testing-enabled NO \
   > "$log" 2>&1; then
+  rm -rf "$result_bundle"
   # merge-review R1 M1：不印「所有量測畫面」這種聽起來像全域覆蓋的措辭——目前只有
   # LittleSprout/TapTargetGateScreenName.swift 註冊的畫面會被實際量到（其餘 Features 畫面見
   # scripts/gates/tap-target-exemptions.txt 具名排除，或尚待補進註冊表），明確點名以免誤導。
@@ -91,21 +100,64 @@ violations=$(grep 'TAP-TARGET-FAIL:' "$log" || true)
 # 這輪所有紅測試比「排除自己」更不容易漏東西。
 other_failed=$(grep -oE "Test Case '-\[[^]']+\]' failed" "$log" | sort -u || true)
 
+# LS-231（來源 LS-96 池項 bdf9eeae／LS-230）：對「本輪所有失敗測試」清單裡的每一筆，再找出並印出
+# 它在 log 裡的第一行 assertion 訊息——xcodebuild 逐一列印的
+# `<檔案>:<行號>: error: -[Target.Class method] : <assertion 訊息>` 這種行，`] : ` 是固定分隔（不
+# 論訊息本體是 `failed - <msg>`（純 XCTFail）或 `XCTAssertEqual failed: (a) is not equal to (b) - <msg>`
+# 這類帶巨集名稱與自動生成描述的形式——LS-231 R1 原本只認前者，實際觸發驗證（本票故意讓
+# `TapTargetGateSelfTests.testTooSmallSampleIsFlagged` 紅）才發現 `XCTAssertEqual` 這種真實格式沒有
+# 「failed - 」這個子字串、完全沒印出來，R1 自測的 golden sample 對真實 xcodebuild 輸出格式失真）。
+# 只印測試名看不出「為什麼」，flake 疑案（同一支測試不同輪失敗訊息是否相同）得逐行比對 assertion 訊息
+# 才分得出來。找不到對應 assertion 行（例如在 setUp／tearDown 就掛掉，不是這個格式）就靜默略過那一筆，
+# 不中斷其餘筆數的列印。
+print_failed_tests_with_assertions() {  # 讀 stdin：每行一筆「Test Case '-[...]' failed」
+  local case_line id assertion
+  while IFS= read -r case_line; do
+    [ -n "$case_line" ] || continue
+    printf '    %s\n' "$case_line" >&2
+    id=$(printf '%s' "$case_line" | sed -E "s/^Test Case '(.*)' failed\$/\1/")
+    assertion=$(grep -F -- "$id" "$log" | grep -F '] : ' | head -n1 || true)
+    if [ -n "$assertion" ]; then
+      printf '        %s\n' "${assertion#*] : }" >&2
+    fi
+  done
+}
+
+# LS-231：xcresult 失敗時仍在（見上方 result_bundle），印路徑與（CI 情境下）對應的 artifact 命名
+# 慣例提示，呼應 ci.yml 上傳步驟的名稱格式（含 job 與 run attempt）與 docs/COLLABORATION.md §4-b
+# 「ci／ci-ipad 紅先下載 xcresult 看失敗行」。GITHUB_ACTIONS／GITHUB_JOB／GITHUB_RUN_ATTEMPT 是
+# GitHub Actions runner 自動注入的環境變數，本機（push-gate.sh 呼叫）不會有 GITHUB_ACTIONS，走
+# 另一個分支。
+print_result_bundle_hint() {
+  if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    echo "  完整結果見 xcresult（此 gate 失敗時 CI 會把 ${result_bundle} 作為 artifact 上傳，名稱含 job「${GITHUB_JOB:-?}」與 run attempt「${GITHUB_RUN_ATTEMPT:-?}」，見 .github/workflows/ci.yml；下載後 xcrun xcresulttool get test-results summary --path <bundle> --format json 可讀——舊版 get --path（不帶 test-results）在本專案釘住的 Xcode 版本已 deprecated，LS-231 實測驗證）" >&2
+  else
+    echo "  xcresult 已保留在 ${result_bundle}（可用 Xcode 開啟，或 xcrun xcresulttool get test-results summary --path <bundle> --format json 讀取）" >&2
+  fi
+}
+
 if [ -n "$violations" ]; then
   echo "✗ tap-target-check：以下元件 <44×44pt（一般字級 content_size large 量測，長輩硬約束 ≥44pt）：" >&2
   printf '%s\n' "$violations" | sed 's/^/    /' >&2
   if [ -n "$other_failed" ]; then
-    echo "本輪所有失敗測試（含觸發上面 TAP-TARGET-FAIL 的那支自己，一併列出避免被吞——LS-167 事故）：" >&2
-    printf '%s\n' "$other_failed" | sed 's/^/    /' >&2
+    echo "本輪所有失敗測試（含觸發上面 TAP-TARGET-FAIL 的那支自己，一併列出避免被吞——LS-167 事故；每筆下方為對應 assertion 訊息，LS-231）：" >&2
+    printf '%s\n' "$other_failed" | print_failed_tests_with_assertions
   fi
+  print_result_bundle_hint
   exit 1
 fi
 
 echo "✗ tap-target-check：xcodebuild test 失敗，但輸出裡沒有 TAP-TARGET-FAIL 標記——不是點擊目標違規，可能是編譯或其他測試失敗。" >&2
 if [ -n "$other_failed" ]; then
-  echo "本輪所有失敗測試：" >&2
-  printf '%s\n' "$other_failed" | sed 's/^/    /' >&2
+  echo "本輪所有失敗測試（每筆下方為對應 assertion 訊息，LS-231）：" >&2
+  printf '%s\n' "$other_failed" | print_failed_tests_with_assertions
 fi
-echo "log 尾段：" >&2
+# LS-231（來源 LS-229 comment e5237cfb：`tail -n 60` 曾被誤讀成失敗測試自己的 trace，實際是整輪
+# ~110 支 UITests 序列跑到最後、字母序排最後那支「剛好通過」的測試的輸出，跟真正失敗的測試無關，
+# 誤導票文引用了錯的證據）——這裡明確標「僅供參考」＋指向正確位置，不能再讓人以為這是失敗測試的
+# 輸出：真正的失敗行看上面「本輪所有失敗測試」逐筆列出的 assertion 訊息（按測試名在全份 log 裡定位、
+# 不受它在整輪跑的先後順序影響），或下載 xcresult artifact 用 xcresulttool 查。
+echo "log 尾段（僅供參考——整輪 xcodebuild 輸出的最後 60 行，不代表是上面失敗測試自己的輸出；何支測試失敗、為什麼請看上面「本輪所有失敗測試」與其 assertion 訊息，或下載 xcresult 用 xcresulttool 查）：" >&2
 tail -n 60 "$log" >&2
+print_result_bundle_hint
 exit 1

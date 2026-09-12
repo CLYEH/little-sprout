@@ -676,6 +676,7 @@ jobs:
           }
 
       - name: Build & Test
+        id: build_and_test
         run: |
           if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
             echo "::warning::尚未建立 Xcode 專案，略過 build/test（Phase 0-1 完成後生效）"
@@ -728,8 +729,27 @@ jobs:
             -scheme LittleSprout \
             -destination "$dest" \
             -only-testing:LittleSproutTests \
+            -resultBundlePath ci-build-test.xcresult \
             -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO
+
+      # LS-231（來源 LS-96 池項 bdf9eeae）：這支 gate 唯一的失敗訊號是 log 裡的測試名——flake vs
+      # 真缺陷、同一支測試不同輪是否為同一種失敗，過去只能靠推論裁決（LS-230 四次 rerun）。上面
+      # 固定 -resultBundlePath，這裡失敗時把它整包上傳成 artifact，reviewer／orchestrator 可以
+      # `gh run download <run-id> -n <artifact>` 取下來後 `xcrun xcresulttool get test-results
+      # summary --path <bundle> --format json`（本專案釘住的 Xcode 版本已把不帶 test-results 的
+      # 舊版 get 標為 deprecated，LS-231 實測驗證）或直接用 Xcode 打開看完整時間軸／attachment（見 docs/COLLABORATION.md
+      # §4-b）。用 `steps.build_and_test.outcome`（不是單純 `failure()`）——只在這一步本身失敗才
+      # 上傳，不會被後面步驟（Release 組態編譯 gate／點擊目標 gate）的失敗誤觸發去撈一個不相關
+      # 的 bundle。成功時 `outcome` 是 `success`，這步整個略過（不上傳）。
+      - name: 上傳測試失敗 xcresult（Build & Test，LS-231）
+        if: failure() && steps.build_and_test.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult-${{ github.job }}-build-test-${{ github.run_attempt }}
+          path: ci-build-test.xcresult
+          retention-days: 3
+          if-no-files-found: warn
 
       # LS-139（LS-138 的反饋 gate）：Release 組態只 build 不測試。上面 Build & Test 與點擊目標 gate 都跑 scheme
       # 的 Debug 組態（SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG），#Preview 引用 `#if DEBUG` 才有的 mock
@@ -769,6 +789,7 @@ jobs:
           echo "✓ Release 組態編譯通過（-configuration Release，generic/platform=iOS Simulator）"
 
       - name: 點擊目標 gate（LS-95：≥44pt，長輩硬約束）
+        id: tap_target_gate
         run: |
           if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
             echo "::warning::尚未建立 Xcode 專案，略過（Phase 0-1 完成後生效）"
@@ -796,6 +817,18 @@ jobs:
           dest=$(bash scripts/gates/detect-simulator.sh)
           bash scripts/gates/tap-target-check.sh "$(printf '%s' "$dest" | sed -n 's/.*id=//p')" LittleSprout
 
+      # LS-231：tap-target-check.sh 內部的 `xcodebuild test` 自己決定 -resultBundlePath（固定相對
+      # 路徑 `tap-target-check.xcresult`，見該腳本），失敗時腳本會保留它、成功時腳本自己清掉——
+      # 這裡只負責在這一步真的失敗時把它撈去當 artifact，同上一支上傳步驟的 outcome 判斷理由。
+      - name: 上傳測試失敗 xcresult（點擊目標 gate，LS-231）
+        if: failure() && steps.tap_target_gate.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult-${{ github.job }}-tap-target-${{ github.run_attempt }}
+          path: tap-target-check.xcresult
+          retention-days: 3
+          if-no-files-found: warn
+
   # LS-209（LS-96 池項 00b9c9ef）：`*IPadTests`（如 SettingsViewIPadTests）與 TapTargetGateTests 的
   # 「Regular」具名案在 CI 的 `ci` job 上永遠不會執行——`ci` job 只用 iPhone 機型，這些測試驗的是 iPad
   # （regular 寬度）互動回歸，本質上要在 iPad 形狀的模擬器上跑才有意義。獨立成一個 job（不是 `ci` job
@@ -818,6 +851,7 @@ jobs:
           xcodebuild -version
 
       - name: iPad 回歸測試（LS-209：機型 iPad Air 11-inch (M3)，測試清單由 scripts/gates/list-ipad-tests.sh 自動產生）
+        id: ipad_test
         run: |
           if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
             echo "::warning::尚未建立 Xcode 專案，略過（Phase 0-1 完成後生效）"
@@ -880,5 +914,16 @@ jobs:
             -scheme LittleSprout \
             -destination "platform=iOS Simulator,id=${ipad_udid}" \
             "${only_args[@]}" \
+            -resultBundlePath ci-ipad-test.xcresult \
             -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO
+
+      # LS-231：同 ci job 的兩支上傳步驟，理由與 outcome 判斷方式相同（見上）。
+      - name: 上傳測試失敗 xcresult（iPad 回歸測試，LS-231）
+        if: failure() && steps.ipad_test.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult-${{ github.job }}-ipad-test-${{ github.run_attempt }}
+          path: ci-ipad-test.xcresult
+          retention-days: 3
+          if-no-files-found: warn

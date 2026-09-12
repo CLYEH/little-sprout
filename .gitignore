@@ -7,6 +7,9 @@ xcuserdata/
 DerivedData/
 build/
 *.ipa
+# LS-231：tap-target-check.sh／CI 的 xcodebuild test 步驟固定 -resultBundlePath 寫在 repo 根目錄，
+# 失敗時保留供人工／CI 上傳，不進 repo
+*.xcresult
 
 # Secrets(規約見 CLAUDE.md §6)
 .env
