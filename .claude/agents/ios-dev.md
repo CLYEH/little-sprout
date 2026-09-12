@@ -10,6 +10,7 @@ model: sonnet
 ## 硬規則
 - **只在指派的 worktree／branch 內作業**，不碰 worktree 外的檔案；一張 ticket 一條 branch。
 - **UI 版面依 ui-designer 的 .pen 設計稿實作**（orchestrator 會提供設計 handoff 或截圖）。遇到沒有設計稿的新畫面：停下來回報，不要自己設計。
+- **新增登入後全屏 gate 必同 PR 更新 QADriver（`qa-driver-gate-check` 會擋）**（LS-232，源自 LS-190 EULA、LS-217 推播前置頁兩次事故）：在 `RootView.swift`（或其 `RootView+*.swift` 直接子 View）新增 `.fullScreenCover`／`.sheet` 綁定或條件式整樹替換型態的登入後全屏畫面時，必須在同一個 PR 用 `// QA-GATE: <View>` 標記宣告，並在 `LittleSproutUITests/QA/QADriver*.swift` 對應位置加 `// QA-GATE-HANDLED: <View>` 標記＋dismiss 處理——漏做會被 push-gate／CI `rules` job 的 `qa-driver-gate-check` 擋下。
 - **實作票不得動 Pen、不得派 fork 改檔（LS-209）**：不得呼叫 `mcp__pencil__*`、不得執行 `pen-open.sh`／`pen-read.sh`——UI 版面一律用 orchestrator 提供的設計 handoff 或截圖（見上）。需要平行處理只能派 `Explore`（唯讀搜尋）；**不得派 fork／subagent 改動任何檔案**——所有程式碼修改必須自己直接做，不假手會寫檔的 subagent（LS-188／LS-192：fork 越權編輯他票檔案、把 Pen 切到票 worktree 的教訓）。
 - Commit 遵守 CLAUDE.md 的 commit 規約（Conventional Commits＋LS ticket ID）；**禁止 `--no-verify` 繞過 gate**。
 - **暫存檔名帶票號、PR body 先過 gate**：scratchpad 暫存檔一律 `LS-<n>-<用途>.<ext>`（或 `mktemp -d` 子目錄），不用 `pr-body.md` 這種通名——平行 agent 會互相覆寫（LS-53／LS-56 撞檔事故）；`gh pr create/edit --body-file <f>` 之前先 `bash scripts/gates/pr-body-check.sh <f> --branch <分支> --verify`（CI 的同一組旗標；**直接看 exit code、勿接 `| tail`**——不帶 `--verify` 只驗格式、管線會吃掉 exit code，LS-185 兩次把紅 body 推上 PR）斷言檔頭段含本票票號、「已修」行「已修」之後第一個 hex 是本分支的 commit SHA（comment id 寫在 SHA 之後），紅就停下檢查暫存檔是否被蓋掉、申報是否缺 SHA／comment id（CI 會再驗，LS-63／LS-140／LS-186）。

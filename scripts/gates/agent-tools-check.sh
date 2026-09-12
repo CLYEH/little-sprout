@@ -125,7 +125,8 @@ merge-reviewer|background-bash-guard.sh|LS-215：正文須引用新 PreToolUse g
 qa|bash scripts/gates/handoff-evidence-check.sh <暫存檔>|LS-211：貼 comment 前先跑 handoff-evidence-check.sh，附輸出
 merge-reviewer|bash scripts/gates/handoff-evidence-check.sh <暫存檔>|LS-211：貼 comment 前先跑 handoff-evidence-check.sh，附輸出
 qa|紅則逐條說明是誤判或補證據|LS-211 R2（merge-review R1 F3）：不要求一定要綠，紅時逐條交代誤判或補證據，不得為了討好工具改寫正確敘述
-merge-reviewer|紅則逐條說明是誤判或補證據|LS-211 R2（merge-review R1 F3）：不要求一定要綠，紅時逐條交代誤判或補證據，不得為了討好工具改寫正確敘述"
+merge-reviewer|紅則逐條說明是誤判或補證據|LS-211 R2（merge-review R1 F3）：不要求一定要綠，紅時逐條交代誤判或補證據，不得為了討好工具改寫正確敘述
+ios-dev|新增登入後全屏 gate 必同 PR 更新 QADriver|LS-232：RootView 新增登入後全屏 gate 必同 PR 用 // QA-GATE 標記＋更新 QADriver 的 // QA-GATE-HANDLED 標記，qa-driver-gate-check 機械擋（LS-190／LS-217 兩次事故）"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，
