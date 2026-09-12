@@ -16,10 +16,7 @@ final class TapTargetGateSelfTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.selfTestTooSmall)
         TapTargetMeasurement.assertScreenRendered(.selfTestTooSmall, in: app)
         let violations = TapTargetMeasurement.violations(in: app)
-        // LS-231 驗證用（暫時，稍後 revert）：故意改成錯誤的期望值 2，讓這支測試必敗，藉此驗證
-        // ci job 失敗時 xcresult artifact 是否出現、tap-target-check.sh 摘要是否印出這支測試的
-        // assertion 訊息原文。
-        XCTAssertEqual(violations.count, 2, "22×22pt 樣本應該被抓到剛好 1 個違規，實得：\(violations)")
+        XCTAssertEqual(violations.count, 1, "22×22pt 樣本應該被抓到剛好 1 個違規，實得：\(violations)")
     }
 
     func testGoodSamplePasses() {
