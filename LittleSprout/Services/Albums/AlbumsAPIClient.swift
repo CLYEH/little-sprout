@@ -17,7 +17,8 @@ import Foundation
 ///                              的協定，見 `ChildAPIClient`／`DiaryAPIClient`／
 ///                              `TimelineAPIClient` 既有先例）
 ///   - `createAlbum`          → INSERT `public.albums`（owner／member，`created_by` 必須是
-///                              自己，見 docs/API.md §2 `albums` 列）
+///                              自己，見 docs/API.md §2 `albums` 列）＋插入後向
+///                              `album_summaries` 重讀該列（view 不可寫，見票文 Scope 3）
 ///   - `setAlbumChildren`     → RPC `set_album_children(p_album_id, p_child_ids)`
 ///   - `setAlbumDeleted`      → RPC `set_album_deleted(p_album_id, p_deleted)`——目前唯一
 ///                              呼叫端是 `AlbumsStore.createAlbum` 的補償路徑（merge-review R1

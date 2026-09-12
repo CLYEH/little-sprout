@@ -111,14 +111,22 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
             // 就已經補過 `profiles` 列。
             let session = try await client.auth.session
             let payload = CreateAlbumPayload(familyID: familyID, title: title, createdBy: session.user.id)
-            // 剛建立的相簿必定 0 張照片（`album_media` 還沒有任何連結列）——用跟 `fetchAlbums`
-            // 同一份 `Self.listSelect`，讓 `AlbumListingRow.init(from:)` 吃到的巢狀陣列形狀
-            // 一致（`album_media: [{"count": 0}]`／`latest: []`），不需要另外維護一份簡化版
-            // select 字串。
-            let response: PostgrestResponse<AlbumListingRow> = try await client
+            // `album_summaries` 是唯讀 view（沒有 INSERT grant），INSERT 一律走 `albums`
+            // 本身——這裡只取 `id` 供下一步重讀用（票文 Scope 3）。
+            let inserted: PostgrestResponse<CreatedAlbumIDRow> = try await client
                 .from("albums")
                 .insert(payload)
+                .select("id")
+                .single()
+                .execute()
+            // 插入後以 view 重讀剛建立的這一列，取得跟 `fetchAlbums` 一致的摘要形狀——剛建立
+            // 的相簿必定 0 張照片、沒有封面，重讀一次比在這裡手動組一份「猜」出來的
+            // `AlbumListingRow` 更穩：不必自己重複 view 的 `coalesce`／fallback 邏輯，未來
+            // view 欄位若調整也不會有兩份邏輯各自漂移，也不會有新建相簿短暫顯示錯誤張數的空窗。
+            let response: PostgrestResponse<AlbumListingRow> = try await client
+                .from("album_summaries")
                 .select(Self.listSelect)
+                .eq("id", value: inserted.value.id)
                 .single()
                 .execute()
             return response.value
@@ -168,6 +176,13 @@ private struct CreateAlbumPayload: Encodable {
         case title
         case createdBy = "created_by"
     }
+}
+
+/// `createAlbum` INSERT 步驟只需要拿回新列的 id，供第二步向 `album_summaries` 重讀用——不
+/// 借用 `AlbumListingRow`（那支對映的是 view 的欄位形狀，`albums` 表的 INSERT 回應不會有
+/// `visible_media_count` 等彙總欄）。
+private struct CreatedAlbumIDRow: Decodable {
+    let id: UUID
 }
 
 private struct SetAlbumChildrenParams: Encodable {
