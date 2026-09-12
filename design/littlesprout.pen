@@ -156947,7 +156947,7 @@
       "clip": true,
       "width": 1320,
       "height": 2868,
-      "fill": "#F5E1E3",
+      "fill": "#EDD3D6",
       "layout": "vertical",
       "padding": [
         110,
@@ -157391,7 +157391,7 @@
           "content": "回憶好好收藏",
           "textAlign": "center",
           "fontFamily": "Noto Sans TC",
-          "fontSize": 72,
+          "fontSize": 100,
           "fontWeight": "700"
         },
         {
@@ -157413,7 +157413,7 @@
       "clip": true,
       "width": 1320,
       "height": 2868,
-      "fill": "#F5E1E3",
+      "fill": "#EDD3D6",
       "layout": "vertical",
       "padding": [
         110,
@@ -157515,7 +157515,7 @@
       "clip": true,
       "width": 1320,
       "height": 2868,
-      "fill": "#F6DDE2",
+      "fill": "#EDD3D6",
       "layout": "vertical",
       "padding": [
         100,
@@ -158286,7 +158286,7 @@
       "clip": true,
       "width": 2064,
       "height": 2752,
-      "fill": "#F5E1E3",
+      "fill": "#EDD3D6",
       "layout": "vertical",
       "padding": [
         130,
@@ -158730,7 +158730,7 @@
           "content": "回憶好好收藏",
           "textAlign": "center",
           "fontFamily": "Noto Sans TC",
-          "fontSize": 90,
+          "fontSize": 157,
           "fontWeight": "700"
         },
         {
@@ -158752,7 +158752,7 @@
       "clip": true,
       "width": 2064,
       "height": 2752,
-      "fill": "#F5E1E3",
+      "fill": "#EDD3D6",
       "layout": "vertical",
       "padding": [
         130,
@@ -158861,7 +158861,7 @@
       "clip": true,
       "width": 2064,
       "height": 2752,
-      "fill": "#F6DDE2",
+      "fill": "#EDD3D6",
       "layout": "vertical",
       "padding": [
         120,
