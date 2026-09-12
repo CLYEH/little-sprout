@@ -126,7 +126,10 @@ qa|bash scripts/gates/handoff-evidence-check.sh <暫存檔>|LS-211：貼 comment
 merge-reviewer|bash scripts/gates/handoff-evidence-check.sh <暫存檔>|LS-211：貼 comment 前先跑 handoff-evidence-check.sh，附輸出
 qa|紅則逐條說明是誤判或補證據|LS-211 R2（merge-review R1 F3）：不要求一定要綠，紅時逐條交代誤判或補證據，不得為了討好工具改寫正確敘述
 merge-reviewer|紅則逐條說明是誤判或補證據|LS-211 R2（merge-review R1 F3）：不要求一定要綠，紅時逐條交代誤判或補證據，不得為了討好工具改寫正確敘述
-ios-dev|新增登入後全屏 gate 必同 PR 更新 QADriver|LS-232：RootView 新增登入後全屏 gate 必同 PR 用 // QA-GATE 標記＋更新 QADriver 的 // QA-GATE-HANDLED 標記，qa-driver-gate-check 機械擋（LS-190／LS-217 兩次事故）"
+ios-dev|新增登入後全屏 gate 必同 PR 更新 QADriver|LS-232：RootView 新增登入後全屏 gate 必同 PR 用 // QA-GATE 標記＋更新 QADriver 的 // QA-GATE-HANDLED 標記，qa-driver-gate-check 機械擋（LS-190／LS-217 兩次事故）
+ios-dev|不得依賴截斷後的自動背景化|LS-236：xcodebuild 一律前景、Bash timeout 600000（工具上限），預期超過 10 分鐘的測試以 -only-testing 分段跑；工具 timeout 截斷後子行程不會被殺掉，殘留會與下一輪 xcodebuild 搶模擬器（LS-166／LS-217），scripts/gates/stale-xcodebuild-check.sh 機械擋殘留
+merge-reviewer|不得依賴截斷後的自動背景化|LS-236：審 PR 時同樣須留意 xcodebuild 一律前景、timeout 600000，那句被刪即紅
+qa|不得依賴截斷後的自動背景化|LS-236：驗收時同樣須留意 xcodebuild 一律前景、timeout 600000，那句被刪即紅"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，
