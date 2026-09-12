@@ -102,19 +102,23 @@ other_failed=$(grep -oE "Test Case '-\[[^]']+\]' failed" "$log" | sort -u || tru
 
 # LS-231（來源 LS-96 池項 bdf9eeae／LS-230）：對「本輪所有失敗測試」清單裡的每一筆，再找出並印出
 # 它在 log 裡的第一行 assertion 訊息——xcodebuild 逐一列印的
-# `<檔案>:<行號>: error: -[Target.Class method] : failed - <訊息>` 這種行，TAP-TARGET-FAIL 與一般
-# XCTAssert 失敗共用這個格式。只印測試名看不出「為什麼」，flake 疑案（同一支測試不同輪失敗訊息是否
-# 相同）得逐行比對 assertion 訊息才分得出來。找不到對應 assertion 行（例如在 setUp／tearDown 就
-# 掛掉，不是這個格式）就靜默略過那一筆，不中斷其餘筆數的列印。
+# `<檔案>:<行號>: error: -[Target.Class method] : <assertion 訊息>` 這種行，`] : ` 是固定分隔（不
+# 論訊息本體是 `failed - <msg>`（純 XCTFail）或 `XCTAssertEqual failed: (a) is not equal to (b) - <msg>`
+# 這類帶巨集名稱與自動生成描述的形式——LS-231 R1 原本只認前者，實際觸發驗證（本票故意讓
+# `TapTargetGateSelfTests.testTooSmallSampleIsFlagged` 紅）才發現 `XCTAssertEqual` 這種真實格式沒有
+# 「failed - 」這個子字串、完全沒印出來，R1 自測的 golden sample 對真實 xcodebuild 輸出格式失真）。
+# 只印測試名看不出「為什麼」，flake 疑案（同一支測試不同輪失敗訊息是否相同）得逐行比對 assertion 訊息
+# 才分得出來。找不到對應 assertion 行（例如在 setUp／tearDown 就掛掉，不是這個格式）就靜默略過那一筆，
+# 不中斷其餘筆數的列印。
 print_failed_tests_with_assertions() {  # 讀 stdin：每行一筆「Test Case '-[...]' failed」
   local case_line id assertion
   while IFS= read -r case_line; do
     [ -n "$case_line" ] || continue
     printf '    %s\n' "$case_line" >&2
     id=$(printf '%s' "$case_line" | sed -E "s/^Test Case '(.*)' failed\$/\1/")
-    assertion=$(grep -F -- "$id" "$log" | grep -F 'failed - ' | head -n1 || true)
+    assertion=$(grep -F -- "$id" "$log" | grep -F '] : ' | head -n1 || true)
     if [ -n "$assertion" ]; then
-      printf '        %s\n' "${assertion#*failed - }" >&2
+      printf '        %s\n' "${assertion#*] : }" >&2
     fi
   done
 }

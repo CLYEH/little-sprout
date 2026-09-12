@@ -65,14 +65,18 @@ case "${FAKE_XCODEBUILD_MODE:-pass}" in
     echo "Test Suite 'TapTargetGateTests' started."
     echo "/repo/LittleSproutUITests/TapTargetGateTests.swift:24: error: -[LittleSproutUITests.TapTargetGateTests testSettingsView] : failed - TAP-TARGET-FAIL: 登出 frame=34.0x20.3pt（需 ≥44×44pt）"
     echo "Test Case '-[LittleSproutUITests.TapTargetGateTests testSettingsView]' failed (1.0 seconds)."
-    echo "/repo/LittleSproutUITests/UploadQueueAlignmentTests.swift:80: error: -[LittleSproutUITests.UploadQueueAlignmentTests testM1Alignment] : failed - XCTAssertEqual failed: (\"31.04\") is not equal to (\"24.0\")"
+    # LS-231 R2：真實 xcodebuild（Xcode 26.6，本票驗收 4 故意讓 TapTargetGateSelfTests 紅實測
+    # 拿到的實際格式）對 XCTAssertEqual 這類斷言巨集，是 `] : XCTAssertEqual failed: (...)`，
+    # 不是 `] : failed - XCTAssertEqual failed: (...)`（R1 自測樣本這裡失真，導致 print_result 對
+    # 真實 CI 輸出格式沒印出來，是本次修正的起因）。
+    echo "/repo/LittleSproutUITests/UploadQueueAlignmentTests.swift:80: error: -[LittleSproutUITests.UploadQueueAlignmentTests testM1Alignment] : XCTAssertEqual failed: (\"31.04\") is not equal to (\"24.0\")"
     echo "Test Case '-[LittleSproutUITests.UploadQueueAlignmentTests testM1Alignment]' failed (0.5 seconds)."
     echo "** TEST FAILED **"
     exit 65
     ;;
   fail_with_unmatched_crash)
     # LS-231 負控樣本：一支違規 TAP-TARGET-FAIL＋一支「Test Case ... failed」但 log 裡找不到
-    # 對應 `: failed - ` 格式的 assertion 行（模擬 setUp／tearDown 崩潰，xcodebuild 只印得出
+    # 對應 `] : ` 格式的 assertion 行（模擬 setUp／tearDown 崩潰，xcodebuild 只印得出
     # Test Case 那一行）——這支測試只該印測試名，不能因為找不到 assertion 行就讓腳本壞掉或
     # 誤吞掉其餘筆數。
     echo "/repo/LittleSproutUITests/TapTargetGateTests.swift:24: error: -[LittleSproutUITests.TapTargetGateTests testSettingsView] : failed - TAP-TARGET-FAIL: 登出 frame=34.0x20.3pt（需 ≥44×44pt）"
