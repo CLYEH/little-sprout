@@ -314,6 +314,7 @@
 		B9853BAED2D457FC7FE55DA8 /* DiaryDeleteConfirmationCopyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DCE924A2746DCCAF6CA4B5 /* DiaryDeleteConfirmationCopyTests.swift */; };
 		B9BDE1E1AD633D323BBC2B5D /* AuthStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA929B8CFBB700BE9E073B4 /* AuthStoreTests.swift */; };
 		B9E34C05BFD746FB7B9C7F06 /* EditChildAvatarFieldContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E62ED61585669EC87D192B4 /* EditChildAvatarFieldContent.swift */; };
+		BA25637DB60CFE6147BF647D /* AlbumDetailViewPartitionPickedItemsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDC40A75E4ED58DECBBE351 /* AlbumDetailViewPartitionPickedItemsTests.swift */; };
 		BA9894A590C79F2FDA2FB85D /* ApprovalStatusRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1154E2337B7278510C8971B1 /* ApprovalStatusRow.swift */; };
 		BB12C06995D331D1D4B2453C /* AvatarLoadCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC634C1AC693267EBF2A0A6 /* AvatarLoadCoordinatorTests.swift */; };
 		BB2352EE2A36E552094AE5A5 /* PasswordSignInModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55ABA1362A5D5A948083DC7B /* PasswordSignInModel.swift */; };
@@ -644,6 +645,7 @@
 		6C7E229440047D04B81BCE30 /* ChildrenStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenStoreTests.swift; sourceTree = "<group>"; };
 		6D35DF8C6C4A6D967A2E4055 /* SupabaseAlbumsAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAlbumsAPIClient.swift; sourceTree = "<group>"; };
 		6F661C1D17CB2CBE46884126 /* DiaryDeleteConfirmationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDeleteConfirmationSheet.swift; sourceTree = "<group>"; };
+		6FDC40A75E4ED58DECBBE351 /* AlbumDetailViewPartitionPickedItemsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailViewPartitionPickedItemsTests.swift; sourceTree = "<group>"; };
 		70052DB9EED77AAB95731CAD /* TapTargetGateHarness+Push.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Push.swift"; sourceTree = "<group>"; };
 		7006BAF63356FF9EA95F7134 /* QASupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASupport.swift; sourceTree = "<group>"; };
 		715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStorePublishRetryTests.swift; sourceTree = "<group>"; };
@@ -1056,6 +1058,7 @@
 			isa = PBXGroup;
 			children = (
 				241E93FAAAD79FEF6D2138E2 /* AlbumDetailStoreTests.swift */,
+				6FDC40A75E4ED58DECBBE351 /* AlbumDetailViewPartitionPickedItemsTests.swift */,
 				1A51CFAE26D804B928A282B6 /* AlbumPhotoGridLayoutTests.swift */,
 				B07A1CE61F80D184428D957F /* AlbumsContentAssemblerTests.swift */,
 				B4E372B4C02D73ADFF00C356 /* AlbumSignatureFormatterTests.swift */,
@@ -2042,6 +2045,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A5652476504158AC7AB56B1D /* AlbumDetailStoreTests.swift in Sources */,
+				BA25637DB60CFE6147BF647D /* AlbumDetailViewPartitionPickedItemsTests.swift in Sources */,
 				1A585F5255E6F256DA08F3EF /* AlbumPhotoGridLayoutTests.swift in Sources */,
 				669D29B18AE042ABE6B8661C /* AlbumSignatureFormatterTests.swift in Sources */,
 				08CCDFE903AB9F89F47A149C /* AlbumThicknessTierTests.swift in Sources */,
