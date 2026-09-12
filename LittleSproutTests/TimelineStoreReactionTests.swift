@@ -156,6 +156,95 @@ final class TimelineStoreReactionTests: XCTestCase {
         )
     }
 
+    // MARK: - R4（merge-review R3 F1／F2）：失敗降級與飛行中樂觀更新的保護
+
+    /// F1：某個 kind 的 `get_reaction_counts` 這次請求**失敗**（不是「查成功但沒有任何列」）
+    /// 時，這個 kind 底下既有的 `reactionStates` 必須維持原狀，不可被誤判成「伺服器說 0」而
+    /// 洗成 `.zero`——同一批請求裡查詢成功的其他 kind 仍要正常寫回。若這支測試被移除
+    /// `succeededKinds` 過濾（改回 `(try? ...) ?? []`），diary 那個既有值會被寫成 `.zero`，
+    /// 此斷言會轉紅。
+    func test_refresh_oneKindReactionCountsFails_preservesExistingStateForThatKindOnly() async {
+        let stub = StubTimelineAPIClient()
+        let diaryID = UUID()
+        let albumID = UUID()
+        stub.setFetchPointersHandler { _, _, _, _ in
+            [
+                TimelineFeedPointer(kind: .diary, refId: diaryID, occurredAt: Date(), childIds: []),
+                TimelineFeedPointer(kind: .album, refId: albumID, occurredAt: Date(), childIds: [])
+            ]
+        }
+        stub.setReactionCountsHandler { _, targetType, targetIDs in
+            if targetType == "diary" { throw AppError.network(message: "offline") }
+            return targetIDs.map { ReactionCountRow(targetID: $0, reactionCount: 7, reactedByMe: true) }
+        }
+        let store = TimelineStore(apiClient: stub)
+        let diaryKey = TimelineEntry.id(kind: .diary, refId: diaryID)
+        let existing = ReactionState(count: 5, reactedByMe: true)
+        store.seedReactionState(existing, forKey: diaryKey)
+
+        await store.refresh(familyID: familyID, childID: nil)
+
+        XCTAssertEqual(
+            store.reactionState(forKey: diaryKey), existing,
+            "diary 這次查詢失敗——既有的愛心狀態不能被洗成 .zero，也不能是使用者自己的讚被誤刪"
+        )
+        XCTAssertEqual(
+            store.reactionState(forKey: TimelineEntry.id(kind: .album, refId: albumID)),
+            ReactionState(count: 7, reactedByMe: true),
+            "album 查詢成功——不受 diary 那個 kind 失敗影響，照樣正常寫回"
+        )
+    }
+
+    /// F2：使用者按讚的 RPC 還在飛行中（`togglingReactionKeys` 內）時，同時有一個批次刷新的
+    /// `get_reaction_counts` 回應回來（伺服器快照早於這次按讚，省略了這個 target）——這個
+    /// target 的樂觀更新不能被歸零。用兩個 `AsyncGate` 精準卡住兩支 handler 的完成順序，不猜
+    /// 時間（見 `AsyncGate` 文件註解 LS-214 教訓）。若這支測試被移除 `togglingReactionKeys`
+    /// 跳過寫回那行，中段斷言會轉紅。
+    func test_refresh_inFlightToggleReaction_isNotZeroedByConcurrentBatchRefresh() async throws {
+        let stub = StubTimelineAPIClient()
+        let refId = UUID()
+        stub.setFetchPointersHandler { _, _, _, _ in
+            [TimelineFeedPointer(kind: .diary, refId: refId, occurredAt: Date(), childIds: [])]
+        }
+        let countsGate = AsyncGate()
+        stub.setReactionCountsHandler { _, _, _ in
+            await countsGate.wait()
+            return []
+        }
+        let toggleGate = AsyncGate()
+        stub.setToggleReactionHandler { _, _, _ in
+            await toggleGate.wait()
+            return true
+        }
+        let store = TimelineStore(apiClient: stub)
+        let key = TimelineEntry.id(kind: .diary, refId: refId)
+
+        let refreshTask = Task { await store.refresh(familyID: familyID, childID: nil) }
+        await countsGate.waitForWaiters(count: 1)
+
+        let toggleTask = Task { try await store.toggleReaction(kind: .diary, refId: refId, familyID: familyID) }
+        await toggleGate.waitForWaiters(count: 1)
+        XCTAssertEqual(
+            store.reactionState(forKey: key), ReactionState(count: 1, reactedByMe: true),
+            "toggle 的樂觀更新應該已經先落地"
+        )
+
+        // 放行批次刷新的回應——伺服器快照沒有這個 target，但它正在 togglingReactionKeys 內。
+        await countsGate.open()
+        _ = await refreshTask.value
+        XCTAssertEqual(
+            store.reactionState(forKey: key), ReactionState(count: 1, reactedByMe: true),
+            "in-flight 的樂觀更新不能被同時進行的批次刷新歸零"
+        )
+
+        await toggleGate.open()
+        try await toggleTask.value
+        XCTAssertEqual(
+            store.reactionState(forKey: key), ReactionState(count: 1, reactedByMe: true),
+            "toggle RPC 確認完成後，最終狀態仍應是使用者剛按下的這顆讚"
+        )
+    }
+
     // MARK: - toggleReaction：樂觀更新／失敗回滾（票文 scope 2）
 
     func test_toggleReaction_fromUnliked_optimisticallyLikesAndConfirms() async throws {
