@@ -49,4 +49,7 @@ enum QAAccessibilityID {
     static func interactionRowElement(kind: String, element: String) -> String {
         "qa.interactionRow.\(kind).\(element)"
     }
+    /// LS-217：01 設定頁「推播通知」列——`value`（「開啟」／「關閉」）隨
+    /// `UNAuthorizationStatus` 而變，同 `settingsStorageRow` 的既有理由改用 identifier。
+    static let settingsPushRow = "qa.settings.pushRow"
 }

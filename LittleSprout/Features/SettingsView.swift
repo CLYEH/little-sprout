@@ -37,8 +37,25 @@ struct SettingsView: View {
     /// LS-189：轉手往下傳到 `BlockListView`／`ReportInboxView`（封鎖名單／檢舉收件匣，取代
     /// LS-188 的最小佔位），這裡不直接使用。
     let safetyAPIClient: SafetyAPIClient
+    /// LS-217：「推播通知」列的狀態來源——`AuthenticatedRootView` 已經在 `.task(id:)` 查過一次
+    /// `authorizationStatus`（進場／回前景都會更新，見該檔），這裡只讀不重查。
+    let pushNotificationStore: PushNotificationStore
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    /// LS-217：「推播通知」列——邏輯拆到 `SettingsView+Push.swift`（理由同
+    /// `SettingsView+Account.swift`／`SettingsView+Profile.swift` 既有先例：加完這段內容後
+    /// `SettingsView.swift` 超過 SwiftLint `file_length`／`type_body_length` 上限）。不標
+    /// `private`：跨檔案 extension 存取不到（同 `regularSelection` 屬性宣告處的既有理由）。
+    ///
+    /// `presentsPushPreprompt`：`.notDetermined` 態被點擊時走「第 1 項流程」——重新呈現
+    /// `PushPrepromptView`（不受「已看過」旗標限制，見該檔文件註解）。
+    @State var presentsPushPreprompt = false
+    /// `.denied` 態被點擊時的確認 alert（票文範圍 3）。
+    @State var showsPushDeniedAlert = false
+    /// 已授權態被點擊（=想關閉）時的確認 alert——取消則不做任何事，Toggle 視覺直接讀
+    /// `pushNotificationStore.authorizationStatus`，沒有另外的本地「待定」狀態，取消後自然
+    /// 維持原本的「開」（Notes `Z7vNe`：「取消則 Toggle 彈回開啟」）。
+    @State var showsPushDisableConfirm = false
     /// merge-review R2 B3：`signOut()` 拆去 `SettingsView+SignOut.swift`（理由同
     /// `SettingsView+Sidebar.swift`／`SettingsView+Profile.swift` 既有先例）。不標 `private`：
     /// 跨檔案 extension 存取不到（同 `regularSelection` 屬性宣告處的既有理由）。
@@ -319,8 +336,13 @@ struct SettingsView: View {
             // merge-review R1 m1：label 會隨 `quota` 是否載入完成而變，同 `settingsInviteRow`
             // 的既有理由改用 identifier。
             .accessibilityIdentifier(QAAccessibilityID.settingsStorageRow)
+        case .push:
+            pushRow
         }
     }
+
+    // MARK: - 推播通知（`pushRow`／`handlePushRowTapped`／`openSystemNotificationSettings`
+    // 拆到 `SettingsView+Push.swift`——見該檔文件註解）
 
     // MARK: - 法律
 
@@ -354,7 +376,7 @@ struct SettingsView: View {
             childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
             timelineStore: .preview(),
             albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), resumer: .preview(),
-            safetyAPIClient: PreviewSafetyAPIClient()
+            safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
         )
     }
 }
@@ -369,7 +391,7 @@ struct SettingsView: View {
             childrenStore: .preview(), accountAPIClient: PreviewAccountAPIClient(),
             timelineStore: .preview(),
             albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), resumer: .preview(),
-            safetyAPIClient: PreviewSafetyAPIClient()
+            safetyAPIClient: PreviewSafetyAPIClient(), pushNotificationStore: .preview()
         )
     }
     .environment(\.horizontalSizeClass, .regular)
