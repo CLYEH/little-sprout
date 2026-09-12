@@ -129,21 +129,26 @@ extension AlbumDetailView {
     /// `onUploadSucceeded`（merge-review R2 M2 修正）：真正把照片掛進相簿（`album_media`
     /// INSERT）改成呼叫 `albumsStore.attachUploadedMedia`——`albumID`／`familyID` 先從
     /// `detailStore` 抽成區域變數值型別捕捉，`albumsStore` 是長生命週期物件（app 層存活，
-    /// 不像 `detailStore` 是這個 View 的 `@State`），三者都不會因為使用者在上傳飛行中 pop 掉
-    /// 詳情頁而消失——原本 `[weak detailStore]` 直接掛在唯一負責寫入的路徑上，detailStore
-    /// deinit 後整段變成 no-op，是 M2 的根因（見 `AlbumsStore.attachUploadedMedia` 文件
-    /// 註解）。`detailStore` 仍然弱引用，只用來「如果使用者還留在這個畫面，立刻讓照片牆反映
-    /// 最新狀態」（`AlbumDetailStore.reflectUploadedMedia`，不重複打一次 `attachMedia`）。
+    /// 不像 `detailStore` 是這個 View 的 `@State`），兩者都不會因為使用者在上傳飛行中 pop 掉
+    /// 詳情頁而消失。
+    ///
+    /// **LS-237 修（池 `4fafaa19`(b)）**：不再傳 `[weak detailStore]` 進來——那份參照是
+    /// 「這個 upload queue 建立當下使用者留在哪個畫面」，使用者若在上傳飛行中離開再進同一本
+    /// 相簿，`AlbumDetailView.task(id:)` 會建一個全新的 `AlbumDetailStore` 實例，這個
+    /// closure 捕捉到的舊參照對新畫面沒有任何幫助（見池項原文「新 detailStore 收不到後續
+    /// 完成的照片」）。「如果使用者還留在這個畫面，立刻讓照片牆反映最新狀態」現在改由
+    /// `AlbumsStore.attachUploadedMedia` 自己查「目前是誰在看這本相簿」（`subscribeDetailStore`
+    /// 登記的最新一份）直接呼叫 `reflectUploadedMedia`，一定是使用者現在正看著的畫面，見該
+    /// 方法文件註解。
     private func makeUploadQueueStore(detailStore: AlbumDetailStore) -> UploadQueueStore {
         let albumID = detailStore.albumID
         let familyID = detailStore.familyID
         let albumsStore = albumsStore
         return UploadQueueStore(
             familyID: familyID, mediaUploadService: mediaUploadService,
-            onUploadSucceeded: { [weak detailStore] _, mediaID in
+            onUploadSucceeded: { _, mediaID in
                 Task {
                     await albumsStore.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: mediaID)
-                    await detailStore?.reflectUploadedMedia(mediaID)
                 }
             }
         )

@@ -101,11 +101,20 @@ final class AlbumDetailStore {
     /// 保證「上傳成功＝一定掛進相簿」；這裡只在「使用者還留在這個相簿詳情頁」時把新照片插進
     /// 畫面上的 `photos` 陣列，不重複打一次 `attachMedia`（重複打會多一次網路呼叫，且兩邊
     /// 各自現查一次連結數當 `sortOrder`，同時發生時可能算出同一個值）。
+    ///
+    /// **LS-237 修（池 `4fafaa19`(c)，PLAUSIBLE）**：這裡完成兩次 `await`（`fetchMedia`／
+    /// `signedURLs`）才寫 `photos`，原本沒有參與 `generation` 守門——若一個較早開始的
+    /// `refresh()` 剛好在這兩次 `await` 之間還在飛行、稍後才完成，它拿到的是「插入這張新照片
+    /// 之前」查到的舊快照，`refresh()` 自己的 `guard myGeneration == generation` 若沒有被
+    /// 打斷會直接覆蓋 `photos`，把剛插入的這張蓋掉。插入前遞增 `generation`——插入本身（跟
+    /// 遞增之間沒有 `await`）保證是這個世代唯一權威的寫入，任何更舊世代的 `refresh()` 收尾時
+    /// 世代號已經對不上，會被它自己的守門擋下，不會拿舊快照覆蓋這裡剛插入的結果。
     func reflectUploadedMedia(_ mediaID: UUID) async {
         guard let row = (try? await apiClient.fetchMedia(ids: [mediaID]))?.first else { return }
         let signed = (try? await Self.signedURLs(for: [row], apiClient: apiClient)) ?? [:]
         guard let content = Self.content(for: mediaID, in: [mediaID: row], signed: signed) else { return }
         guard !photos.contains(where: { $0.id == content.id }) else { return }
+        generation += 1
         photos.insert(content, at: 0)
     }
 

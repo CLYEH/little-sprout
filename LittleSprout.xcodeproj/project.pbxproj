@@ -65,6 +65,7 @@
 		1F393961CF9F97E34474AD4F /* AuthButtonsState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB26A8533526BFBFD692560 /* AuthButtonsState.swift */; };
 		206A1B32B7EF93F3805932C5 /* TimelineStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C5672CE61BE2296C5EA787 /* TimelineStoreTests.swift */; };
 		21F13267AB0CDCF93F74ABF9 /* DiaryComposerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72BAB19B1C35B0F183EE2699 /* DiaryComposerStore.swift */; };
+		21F98CEDA845DD25BED57494 /* AlbumsStoreAttachUploadedMediaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F8DB1B6261D3E2F9C337CC3 /* AlbumsStoreAttachUploadedMediaTests.swift */; };
 		2325DA8B5284BAF26E51345A /* InviteFamilyView+Role.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF3F18D213D33204A82A0BEE /* InviteFamilyView+Role.swift */; };
 		245C5DD4E64BBA6217C815C8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E001ADD4BD2FAB3AAD8A3B8E /* AppDelegate.swift */; };
 		252D10CE9F600B1DF2D9FEB4 /* AvatarImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E7946776E289C18F37C9B35 /* AvatarImageProcessor.swift */; };
@@ -671,6 +672,7 @@
 		7C56719C166519CF22A55AFD /* CreateAlbumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateAlbumView.swift; sourceTree = "<group>"; };
 		7D8E6D658192216FDCE4EA85 /* LegalDocumentSheetLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentSheetLayoutTests.swift; sourceTree = "<group>"; };
 		7DD92F585174EABEB3BA92CA /* SettingsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewTests.swift; sourceTree = "<group>"; };
+		7F8DB1B6261D3E2F9C337CC3 /* AlbumsStoreAttachUploadedMediaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsStoreAttachUploadedMediaTests.swift; sourceTree = "<group>"; };
 		7FB942E7809A7A51E7E182B9 /* WelcomeView+PasswordSignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WelcomeView+PasswordSignIn.swift"; sourceTree = "<group>"; };
 		7FD928203A33BAF4F43BDB5D /* BirthdayFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayFormatTests.swift; sourceTree = "<group>"; };
 		80BE44290C63CE158EBE0830 /* DeleteAccountFlowAX3UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountFlowAX3UITests.swift; sourceTree = "<group>"; };
@@ -1057,6 +1059,7 @@
 				1A51CFAE26D804B928A282B6 /* AlbumPhotoGridLayoutTests.swift */,
 				B07A1CE61F80D184428D957F /* AlbumsContentAssemblerTests.swift */,
 				B4E372B4C02D73ADFF00C356 /* AlbumSignatureFormatterTests.swift */,
+				7F8DB1B6261D3E2F9C337CC3 /* AlbumsStoreAttachUploadedMediaTests.swift */,
 				893682752F0A665802D5D435 /* AlbumsStoreTests.swift */,
 				F6E311904EB7885960AF830E /* AlbumThicknessTierTests.swift */,
 				8C74E777AB0094919EC703B2 /* AppConfigTests.swift */,
@@ -2043,6 +2046,7 @@
 				669D29B18AE042ABE6B8661C /* AlbumSignatureFormatterTests.swift in Sources */,
 				08CCDFE903AB9F89F47A149C /* AlbumThicknessTierTests.swift in Sources */,
 				8CD42A33A7D04F52D172819D /* AlbumsContentAssemblerTests.swift in Sources */,
+				21F98CEDA845DD25BED57494 /* AlbumsStoreAttachUploadedMediaTests.swift in Sources */,
 				7B1479806249CE5B68050D67 /* AlbumsStoreTests.swift in Sources */,
 				649D627F2BC3D16B5A550488 /* AppConfigTests.swift in Sources */,
 				912E644926254F979A9250AB /* AppErrorTests.swift in Sources */,

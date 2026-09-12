@@ -183,6 +183,39 @@ final class AlbumDetailStoreTests: XCTestCase {
         XCTAssertEqual(store.photos.count, 1, "同一個 id 已經在畫面上就不重複插入")
     }
 
+    /// LS-237 修（池 `4fafaa19`(c)，PLAUSIBLE）：`reflectUploadedMedia` 原本不參與
+    /// `generation` 守門——一個較早開始、還在飛行中的 `refresh()` 若在插入完成「之後」才收到
+    /// 回應，會用查詢當下（插入之前）的舊快照整批覆蓋 `photos`，把剛插入的這張蓋掉。用
+    /// `AsyncGate` 卡住 `fetchAlbumMediaLinks`（`refresh()` 的第一步）讓它先開始、後完成，
+    /// 驗證插入後即使 `refresh()` 才收尾，`photos` 仍然是插入後的結果，不會被舊快照蓋掉。
+    func test_reflectUploadedMedia_notClobberedByStaleInFlightRefresh() async throws {
+        let apiClient = StubAlbumsAPIClient()
+        let existingID = UUID()
+        let gate = AsyncGate()
+        apiClient.setFetchAlbumMediaLinksHandler { albumID in
+            await gate.wait()
+            return [AlbumMediaLinkRow(albumId: albumID, mediaId: existingID, sortOrder: 0)]
+        }
+        apiClient.setFetchMediaHandler { ids in ids.map { Self.makeMediaRow(id: $0) } }
+        apiClient.setSignedURLsHandler(Self.echoSignedURLsHandler)
+        let store = makeStore(apiClient: apiClient)
+        let newMediaID = UUID()
+
+        let refreshTask = Task { await store.refresh() }
+        await gate.waitForWaiters(count: 1)
+
+        await store.reflectUploadedMedia(newMediaID)
+        XCTAssertEqual(store.photos.map(\.id), [newMediaID], "插入應該先落地")
+
+        await gate.open()
+        _ = await refreshTask.value
+
+        XCTAssertEqual(
+            store.photos.map(\.id), [newMediaID],
+            "較舊世代的 refresh() 收尾時，插入後的結果不該被它查到的舊快照（插入前）覆蓋"
+        )
+    }
+
     // MARK: - submitEdit
 
     /// merge-review R2 m3：`EditAlbumView.submit()` 把 `Set<UUID>` 轉回 `Array` 傳進來，

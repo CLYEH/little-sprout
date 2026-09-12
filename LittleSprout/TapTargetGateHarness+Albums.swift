@@ -245,6 +245,8 @@ final class AlbumDetailScreenshotAPIClient: AlbumsAPIClient, @unchecked Sendable
         }
     }
 
+    func fetchMaxSortOrder(albumID: UUID) async throws -> Int? { photoCount > 0 ? photoCount - 1 : nil }
+
     func fetchMedia(ids: [UUID]) async throws -> [MediaRow] {
         ids.compactMap { id in
             guard let dimensions = dimensionsByID[id] else { return nil }

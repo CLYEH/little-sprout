@@ -113,6 +113,12 @@ struct AlbumDetailView: View {
                 apiClient: albumsStore.apiClient
             )
             detailStore = store
+            // LS-237 修（池 `4fafaa19`(b)）：登記「目前是誰在看這本相簿」——使用者若在上傳
+            // 飛行中離開再進同一本相簿，這裡會建一個全新的 `AlbumDetailStore` 實例並重新登記
+            // （覆蓋舊登記），`AlbumsStore.attachUploadedMedia` 之後查到的一定是這一份，不是
+            // 上傳當下 upload queue 捕捉到的那份已經失效的弱參照，見 `AlbumsStore
+            // .subscribeDetailStore` 文件註解。
+            albumsStore.subscribeDetailStore(albumID: albumID, store)
             await store.refresh()
         }
     }
