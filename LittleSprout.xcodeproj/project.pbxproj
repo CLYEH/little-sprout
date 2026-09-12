@@ -192,6 +192,7 @@
 		7B1479806249CE5B68050D67 /* AlbumsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893682752F0A665802D5D435 /* AlbumsStoreTests.swift */; };
 		7B8176B2BD7383B37347B3AB /* QASupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7006BAF63356FF9EA95F7134 /* QASupport.swift */; };
 		7C07BF69FAFB75E77DA11249 /* TimelineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F8DC307DA209CD5559A0E6 /* TimelineStore.swift */; };
+		151C8B026CF248CECDD7982E /* TimelineStore+Reactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86008668EED15768F2DB4C4F /* TimelineStore+Reactions.swift */; };
 		7C64D41B5C041B3BFA66B7A8 /* EmailFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D71D805DBF9E7B36AF16BE8 /* EmailFormatTests.swift */; };
 		7CAD0EC8F441148C2F770D86 /* FamilyStoreSuspensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC6D1B24D8A44CFBF902A2D /* FamilyStoreSuspensionTests.swift */; };
 		7DA98586E59FA617D07C323D /* SupabaseFamilyAPIClientInviteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64087AB29C1A51AC86834868 /* SupabaseFamilyAPIClientInviteTests.swift */; };
@@ -722,6 +723,7 @@
 		D3E2CD07A3D49AF4B16C0D9A /* MultiChildCaptionFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiChildCaptionFormatter.swift; sourceTree = "<group>"; };
 		D4B8B83A763BF11381A8A48B /* QAAccessibilityID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QAAccessibilityID.swift; sourceTree = "<group>"; };
 		D4F8DC307DA209CD5559A0E6 /* TimelineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStore.swift; sourceTree = "<group>"; };
+		86008668EED15768F2DB4C4F /* TimelineStore+Reactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimelineStore+Reactions.swift"; sourceTree = "<group>"; };
 		D500E43E6BE915800BDC015C /* TimelineDayGroupingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineDayGroupingTests.swift; sourceTree = "<group>"; };
 		D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModelTests.swift; sourceTree = "<group>"; };
 		D5C8A6A59E9D7E1205CC9E65 /* OTPVerificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationView.swift; sourceTree = "<group>"; };
@@ -1290,6 +1292,7 @@
 				1E1A187F8B4D813F1BCB0135 /* TimelineContentAssembler.swift */,
 				131C968476EFA7FF91F30E97 /* TimelineModels.swift */,
 				D4F8DC307DA209CD5559A0E6 /* TimelineStore.swift */,
+				86008668EED15768F2DB4C4F /* TimelineStore+Reactions.swift */,
 			);
 			path = Timeline;
 			sourceTree = "<group>";
@@ -1784,6 +1787,7 @@
 				5EC1E966C14830184690D16B /* TimelineModels.swift in Sources */,
 				2D6B7200292271FD2DCEC9C1 /* TimelineRoute.swift in Sources */,
 				7C07BF69FAFB75E77DA11249 /* TimelineStore.swift in Sources */,
+				151C8B026CF248CECDD7982E /* TimelineStore+Reactions.swift in Sources */,
 				9784D85D783D81C9D00970E2 /* TimelineView.swift in Sources */,
 				02E21F9DC4DC1A797657A859 /* Typography.swift in Sources */,
 				32463742EC96BA86452232E8 /* UploadQueueModels.swift in Sources */,
