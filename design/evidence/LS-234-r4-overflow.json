@@ -75,6 +75,7 @@
     },
     "corner_anchor": {
       "scope": "boards",
+      "document_count": 0,
       "boards": ["c2yk3s", "y9r9Fq", "Bm7Lx", "ZRyXL", "Q9Zw3f", "Vn4TL", "mWZy3", "BnjqP", "b59DUk", "ak7RI", "H73kPC"],
       "containers": 6,
       "points": 48,
@@ -89,11 +90,15 @@
       "result_hash": "e5d691187ddf557b"
     },
     "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
       "flagged": [],
       "document_flagged": [],
       "result_hash": "5a760833a4f75dfb"
     },
     "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
       "flagged": [],
       "document_flagged": [],
       "result_hash": "9dc50a655a854f79"
