@@ -1298,6 +1298,314 @@ else
   echo "✗ ㉗ mutant（R1 舊形狀）應變成 ok（比對不到鎖定），實得「${lock_section_ml}」——負控本身可能無效" >&2; fail=1
 fi
 
+# ---- ㉘（LS-233；merge-review R1 m1／m2 已修）：PR 段 BLOCKED 三分流——讀 check bucket 分「CI 跑中」／
+#        「check 全綠仍卡＝缺必要 status」／「check 紅」，取代舊版籠統「無動作（CI 沒回報？）」（09-12
+#        #365／#366 兩起事故的重放）。m1：fail 優先於 pending，兩者並存時不再把 fail 整個吞掉（並列印
+#        「另 N 項跑中」）。m2：pending 的「已跑幾分」改用 gh pr checks 的 startedAt（取 pending 項裡最早
+#        開始、即 elapsed 最大的那個），不再用 PR updatedAt 年齡——09-12 #365 正是「PR 沒被互動更新、但
+#        CI 剛開跑」的反例。
+# 假 gh：讀 fixtures 目錄回應，不打真的 GitHub API／不需要真的 origin 是 GitHub repo。
+#   gh pr list ...                                                → 固定回 pr-list.tsv（已是 -q 處理過的最終 TSV）
+#   gh pr checks <n> --json ... -q ...                            → pr-checks-<n>.tsv（無此檔＝exit 1，模擬查詢失敗；
+#                                                                    第 4 欄＝pending 項已預先算好的「距今幾分」
+#                                                                    （即真實 jq 運算式 `now - (startedAt|fromdateiso8601)`
+#                                                                    的結果，假 gh 直接 cat 檔案、不跑 jq，固定值才不會
+#                                                                    隨測試執行時間漂移），非 pending 或無 startedAt 留空）
+#                                                                  → 若改放 pr-checks-<n>.json（原始陣列，非 TSV），假
+#                                                                    gh 改為忠實模擬 gh 自己套用 -q 的行為：把 patrol.sh
+#                                                                    實際傳入的 -q 引數（即 pr_check_flag() 裡那條 jq
+#                                                                    運算式本尊）原封不動丟給真的 jq 執行（i4，merge-review
+#                                                                    R2 delta：假 gh 直接 cat 已算好的 TSV 完全繞過真 jq，
+#                                                                    運算式本身寫錯語法／語意也測不出來——m4 的 Go 零值
+#                                                                    `strptime` 崩潰就是這樣漏掉的）。兩種形態並存、
+#                                                                    .json 優先；既有 .tsv fixture 不必改。
+#   gh api repos/:owner/:repo/branches/<b>/protection/required_status_checks -q '.contexts[]'
+#                                                                  → protection-<b>.txt
+#   gh api repos/:owner/:repo/commits/<oid>/status -q '...'       → status-<oid>.txt（缺檔＝空字串，不當失敗）
+mkdir -p "$work/gh-fixtures"
+cat > "$work/bin/gh" <<STUB
+#!/bin/bash
+dir="$work/gh-fixtures"
+if [ "\$1" = pr ] && [ "\$2" = list ]; then
+  cat "\$dir/pr-list.tsv" 2>/dev/null
+  exit 0
+fi
+if [ "\$1" = pr ] && [ "\$2" = checks ]; then
+  n="\$3"
+  if [ -f "\$dir/pr-checks-\${n}.json" ]; then
+    filter=""
+    while [ \$# -gt 0 ]; do
+      if [ "\$1" = "-q" ]; then filter="\$2"; break; fi
+      shift
+    done
+    jq -r "\$filter" "\$dir/pr-checks-\${n}.json"
+    exit \$?
+  fi
+  if [ -f "\$dir/pr-checks-\${n}.tsv" ]; then cat "\$dir/pr-checks-\${n}.tsv"; exit 0; else exit 1; fi
+fi
+if [ "\$1" = api ]; then
+  path="\$2"
+  case "\$path" in
+    */protection/required_status_checks)
+      b=\$(printf '%s' "\$path" | sed -E 's#.*/branches/([^/]+)/protection.*#\1#')
+      if [ -f "\$dir/protection-\${b}.txt" ]; then cat "\$dir/protection-\${b}.txt"; exit 0; else exit 1; fi
+      ;;
+    */commits/*/status)
+      oid=\$(printf '%s' "\$path" | sed -E 's#.*/commits/([^/]+)/status#\1#')
+      cat "\$dir/status-\${oid}.txt" 2>/dev/null
+      exit 0
+      ;;
+  esac
+fi
+exit 1
+STUB
+chmod +x "$work/bin/gh"
+
+oid900="a5773c0$(printf '0%.0s' $(seq 1 33))"   # 09-12 #365 head 前綴
+oid901="ca5021e$(printf '0%.0s' $(seq 1 33))"   # 09-12 #366 head 前綴
+oid902="deadbee$(printf '0%.0s' $(seq 1 33))"
+oid903="1234567$(printf '0%.0s' $(seq 1 33))"
+oid904="f00f00f$(printf '0%.0s' $(seq 1 33))"   # m1：fail＋pending 並存
+oid905="ab00000$(printf '0%.0s' $(seq 1 33))"   # m2 負控：pending 全無 startedAt → 印 ?m
+oid906="600d600d$(printf '0%.0s' $(seq 1 32))"  # i4：真 jq 通道，正常 startedAt
+oid907="0001000$(printf '0%.0s' $(seq 1 33))"   # i4／m4：真 jq 通道，Go 零值 startedAt
+cat > "$work/gh-fixtures/pr-list.tsv" <<TSV
+900	BLOCKED	-	48	feature/LS-900-pending	development	false	${oid900}	LS-900 demo pending（重放 #365：18:59 checks 有 pending）
+901	BLOCKED	-	48	feature/LS-901-missing	development	false	${oid901}	LS-901 demo missing-status（重放 #366：21:10 五項全 pass、無 pending、仍 BLOCKED）
+902	BLOCKED	-	48	feature/LS-902-fail	development	false	${oid902}	LS-902 demo check-red
+903	BLOCKED	-	5	feature/LS-903-fresh	development	false	${oid903}	LS-903 demo not-stale-yet
+904	BLOCKED	-	48	feature/LS-904-fail-and-pending	development	false	${oid904}	LS-904 demo fail 與 pending 並存（m1）
+905	BLOCKED	-	48	feature/LS-905-pending-no-started	development	false	${oid905}	LS-905 demo pending 缺 startedAt（m2 負控）
+906	BLOCKED	-	48	feature/LS-906-realjq-normal	development	false	${oid906}	LS-906 demo 真 jq 通道、正常時間（i4）
+907	BLOCKED	-	48	feature/LS-907-realjq-zerodate	development	false	${oid907}	LS-907 demo 真 jq 通道、Go 零值 startedAt（m4／i4）
+TSV
+cat > "$work/gh-fixtures/protection-development.txt" <<TXT
+ci
+lint
+rules
+db
+merge-review
+TXT
+# 900（#365 重放）：db／ci 兩項 pending，各自帶已算好的「距今幾分」——db 22、ci 9，db 較早開始（elapsed
+# 較大）故取代表值 22；PR 本身 updatedAt 年齡是 48（見 pr-list.tsv），刻意與 22 不同，證明訊息裡的分鐘數
+# 來自 check 的 startedAt、不是 PR 年齡（m2 修的正是這個）。
+cat > "$work/gh-fixtures/pr-checks-900.tsv" <<TSV
+ci-ipad	pass	https://github.com/CLYEH/little-sprout/actions/runs/1001/job/1
+lint	pass	https://github.com/CLYEH/little-sprout/actions/runs/1001/job/2
+rules	pass	https://github.com/CLYEH/little-sprout/actions/runs/1001/job/3
+db	pending	https://github.com/CLYEH/little-sprout/actions/runs/1001/job/4	22
+ci	pending	https://github.com/CLYEH/little-sprout/actions/runs/1001/job/5	9
+TSV
+cat > "$work/gh-fixtures/pr-checks-901.tsv" <<TSV
+ci-ipad	pass	https://github.com/CLYEH/little-sprout/actions/runs/1002/job/1
+ci	pass	https://github.com/CLYEH/little-sprout/actions/runs/1002/job/2
+lint	pass	https://github.com/CLYEH/little-sprout/actions/runs/1002/job/3
+rules	pass	https://github.com/CLYEH/little-sprout/actions/runs/1002/job/4
+db	pass	https://github.com/CLYEH/little-sprout/actions/runs/1002/job/5
+TSV
+: > "$work/gh-fixtures/status-${oid901}.txt"   # 21:10 當時 statuses=[]（merge-review 尚未回報）
+cat > "$work/gh-fixtures/pr-checks-902.tsv" <<TSV
+ci-ipad	pass	https://github.com/CLYEH/little-sprout/actions/runs/1003/job/1
+lint	pass	https://github.com/CLYEH/little-sprout/actions/runs/1003/job/2
+ci	fail	https://github.com/CLYEH/little-sprout/actions/runs/999888/job/3
+TSV
+# 903：age 5 < stale 10，不查（沒建 pr-checks-903.tsv；若被誤查，假 gh 會 exit 1，pr_check_flag 會印
+# 「查詢失敗」，即可揭穿 age 門檻退化成無條件查詢）
+
+# 904（m1：09-12 #355 那種「必要 job 已紅、另一個還在跑」的形狀）：ci fail＋lint pending 並存。
+cat > "$work/gh-fixtures/pr-checks-904.tsv" <<TSV
+ci-ipad	pass	https://github.com/CLYEH/little-sprout/actions/runs/2001/job/1
+lint	pending	https://github.com/CLYEH/little-sprout/actions/runs/2001/job/2	15
+ci	fail	https://github.com/CLYEH/little-sprout/actions/runs/777111/job/3
+TSV
+
+# 905（m2 負控）：唯一的 pending 項沒有 startedAt（第 4 欄空）→ 代表值印 ?，不是 0 或空字串。
+cat > "$work/gh-fixtures/pr-checks-905.tsv" <<TSV
+lint	pass	https://github.com/CLYEH/little-sprout/actions/runs/3001/job/1
+ci	pending	https://github.com/CLYEH/little-sprout/actions/runs/3001/job/2
+TSV
+
+# 906／907（i4，merge-review R2 delta：假 gh 直接 cat 已算好的 TSV 完全繞過真 jq，`now - (startedAt|
+# fromdateiso8601)` 這條本輪唯一新增的查詢邏輯從未真的被執行過——語法／語意寫錯，自測仍全綠）：改用
+# .json 原始陣列＋假 gh 對 -q 引數跑真的 jq（見上面假 gh 腳本），忠實驗證 patrol.sh 裡那條 jq 運算式本尊。
+# 906：兩項 pending 帶真實 ISO 時間（ci 17 分前、ci-ipad 5 分前，取代表值＝較早開始者 17）＋一項 pass
+# 帶 Go 零值 startedAt（重放 09-12 真實觀察：`gh pr checks 355／349` 的 merge-review 項就是這個值）——
+# 驗證 pass bucket 的零值不會被求值（jq if/then/else 短路，只有 bucket=="pending" 才會走到
+# fromdateiso8601 那支），不誤觸 m4 的崩潰。
+ci17_epoch=$(( $(date +%s) - 17 * 60 )); ci17_iso=$(date -u -r "$ci17_epoch" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d "@${ci17_epoch}" +%Y-%m-%dT%H:%M:%SZ)
+ipad5_epoch=$(( $(date +%s) - 5 * 60 )); ipad5_iso=$(date -u -r "$ipad5_epoch" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d "@${ipad5_epoch}" +%Y-%m-%dT%H:%M:%SZ)
+cat > "$work/gh-fixtures/pr-checks-906.json" <<JSON
+[
+  {"name":"merge-review","bucket":"pass","link":"https://linear.app/x","startedAt":"0001-01-01T00:00:00Z"},
+  {"name":"ci","bucket":"pending","link":"https://github.com/CLYEH/little-sprout/actions/runs/4001/job/1","startedAt":"${ci17_iso}"},
+  {"name":"ci-ipad","bucket":"pending","link":"https://github.com/CLYEH/little-sprout/actions/runs/4001/job/2","startedAt":"${ipad5_iso}"}
+]
+JSON
+# 907：兩種「解析不了」都要印 `?m`，不是查詢失敗。
+#   - merge-review：bucket=pending 且 startedAt 為 Go 零值（m4 觸發條件本尊，merge-review R2 delta 端
+#     到端重現用的正是這個組合，而非 355／349 實測到的 pass bucket 零值，因為只有 pending 才會真的
+#     求值 fromdateiso8601）——這個值靠字串前綴守門擋下，跟平台無關（比對發生在呼叫 fromdateiso8601
+#     之前）。
+#   - ci：bucket=pending 且 startedAt 是完全不合格式的垃圾值「not-a-date」（merge-review R3 delta
+#     i5／m4：本機兩個 jq 版本（1.6、系統版 jq-1.7.1-apple）對 Go 零值都會拋錯，但 CI 的 Ubuntu jq
+#     不會——`fromdateiso8601` 拋不拋錯是 C 函式庫的 gmtime 範圍驗證行為、macOS 與 glibc 不一致，
+#     字串前綴守門本身不受這個平台差異影響，但只覆蓋這一個已知值；`not-a-date` 是 strptime **格式
+#     比對失敗**（不是範圍驗證），這一類失敗在所有平台的 jq 上都一致會拋錯——本機已用 jq 1.6 與
+#     jq-1.7.1-apple 各自驗證兩者皆拋錯，是可攜的 mutation 觸發點，`0001-01-01` 則不是）由 try/catch
+#     接住。
+cat > "$work/gh-fixtures/pr-checks-907.json" <<JSON
+[
+  {"name":"merge-review","bucket":"pending","link":"https://linear.app/y","startedAt":"0001-01-01T00:00:00Z"},
+  {"name":"ci","bucket":"pending","link":"https://linear.app/z","startedAt":"not-a-date"}
+]
+JSON
+
+t0=$(date +%s)
+out28="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-fetch 10 2>&1)"; rc=$?
+t28=$(( $(date +%s) - t0 ))
+rc_is '㉘ exit 0' 0 "$rc" "$out28"
+l900=$(row "$out28" 'feature/LS-900-pending')
+has   '㉘ #365 重放：pending → CI 跑中' "$l900" '⏳ CI 跑中'
+has   '㉘ #365 重放：pending 名單含 db、ci' "$l900" 'db、ci'
+has   '㉘ m2：分鐘數取自 check startedAt（db 22＝pending 裡最早開始者）' "$l900" 'CI 跑中 22m'
+# 註：整行本來就含裸的「48m」——那是表格固定欄位印的 PR 原始 age（與 flag 無關，任何 PR 都會印），
+# 這裡要驗的是「flag 訊息本身」沒有把 48 當成 CI 時間講，故比對更明確的字串「CI 跑中 48m」而非裸 48m。
+hasnt '㉘ m2：不再是 PR updatedAt 年齡（48，與 22 刻意不同）' "$l900" 'CI 跑中 48m'
+hasnt '㉘ m2：pending 訊息不再帶 head sha（已改用 CI 時間，不需要沿用舊格式的 head 提示）' "$l900" "head ${oid900:0:7}"
+hasnt '㉘ #365 重放：不再印舊「無動作」字樣' "$l900" '無動作'
+l901=$(row "$out28" 'feature/LS-901-missing')
+has   '㉘ #366 重放：全綠仍 BLOCKED＝缺必要 status' "$l901" '⚠ check 全綠仍 BLOCKED＝缺必要 status'
+has   '㉘ #366 重放：缺 merge-review' "$l901" '缺：merge-review'
+has   '㉘ #366 重放：現有 status contexts 印（無）（statuses=[] 當時）' "$l901" '現有 status contexts：（無）'
+has   '㉘ #366 重放：head sha7' "$l901" "${oid901:0:7}"
+has   '㉘ #366 重放：貼 promote: no content diff 提示' "$l901" 'promote: no content diff'
+has   '㉘ #366 重放：否則派 review 提示' "$l901" '否則派 review'
+hasnt '㉘ #366 重放：不再印舊「無動作」字樣' "$l901" '無動作'
+l902=$(row "$out28" 'feature/LS-902-fail')
+has   '㉘ check 紅：列出失敗名稱' "$l902" '✗ check 紅：ci'
+has   '㉘ check 紅：rerun 指令' "$l902" 'gh run rerun'
+has   '㉘ check 紅：--failed（flaky）或修' "$l902" '--failed（flaky）或修'
+has   '㉘ check 紅：附 run id' "$l902" '999888'
+hasnt '㉘ check 紅（純 fail，無 pending）：不印「另 N 項跑中」' "$l902" '另'
+l903=$(row "$out28" 'feature/LS-903-fresh')
+has   '㉘ age 未達 stale → 不查、維持 ok' "$l903" ' ok'
+hasnt '㉘ age 未達 stale → 未觸發查詢失敗（門檻仍生效，未退化成無條件查）' "$l903" '查詢失敗'
+l904=$(row "$out28" 'feature/LS-904-fail-and-pending')
+has   '㉘ m1：fail＋pending 並存 → fail 優先，不被 pending 吞掉' "$l904" '✗ check 紅：ci'
+has   '㉘ m1：fail 附 run id（777111，證明真的走 fail 分支）' "$l904" '777111'
+has   '㉘ m1：併印「另 1 項跑中（lint）」，pending 資訊沒有整個消失' "$l904" '另 1 項跑中（lint）'
+hasnt '㉘ m1：不誤判成純 CI 跑中（fail 沒被吞）' "$l904" '⏳ CI 跑中'
+l905=$(row "$out28" 'feature/LS-905-pending-no-started')
+has   '㉘ m2 負控：pending 缺 startedAt → 印 ?m（不是 0 或空字串）' "$l905" 'CI 跑中 ?m（ci）'
+l906=$(row "$out28" 'feature/LS-906-realjq-normal')
+has   '㉘ i4：真 jq 通道，正常時間 → 取最早開始者（ci 17 分前 ＞ ci-ipad 5 分前）' "$l906" 'CI 跑中 17m（ci、ci-ipad）'
+hasnt '㉘ i4：pass bucket 的 Go 零值 startedAt 不觸發查詢失敗（if/then/else 短路，只有 pending 才求值）' "$l906" '查詢失敗'
+l907=$(row "$out28" 'feature/LS-907-realjq-zerodate')
+has   '㉘ m4（真 jq 通道）：pending 項 startedAt 是 Go 零值 → 視同缺值印 ?m，不再讓整條查詢中止' "$l907" 'CI 跑中 ?m（merge-review、ci）'
+hasnt '㉘ m4：不再印查詢失敗' "$l907" '查詢失敗'
+has   '㉘ i5：pending 項 startedAt 是完全不合格式的垃圾值（not-a-date）→ try/catch 接住、同樣印 ?m' "$l907" 'ci'
+brief28="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-fetch --brief 10 2>&1)"
+has   '㉘ --brief 同步分流：CI 跑中' "$brief28" '⏳ CI 跑中'
+has   '㉘ --brief 同步分流：缺必要 status' "$brief28" '缺必要 status'
+has   '㉘ --brief 同步分流：check 紅' "$brief28" '✗ check 紅：ci'
+has   '㉘ --brief 同步分流：m1 的「另 N 項跑中」也帶出去' "$brief28" '另 1 項跑中（lint）'
+echo "ⓘ ㉘ 巡檢耗時（含 5 筆 BLOCKED-且-stale 各 1～3 次 gh 呼叫，1 筆未達 stale 不查）：${t28}s"
+
+# mutation：拿掉三分流、退回舊版單純看 age 印「無動作（CI 沒回報？）」→ #366 重放樣本必須變回舊字樣，
+# 證明上面的分流訊息確實是這段程式碼造成的（同 ㉕／㉗ 慣例：python3 精確替換、count==1 才算找對）。
+mut_pr="$work/patrol.no-blocked-triage.sh"
+python3 - "$patrol" "$mut_pr" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = '*) if [ "$age" -ge "$STALE" ]; then flag=$(pr_check_flag "$n" "$oid" "$base" "$st"); fi ;;'
+new = '*) if [ "$age" -ge "$STALE" ]; then flag="⏳ ${st} ${age}m 無動作（CI 沒回報？）"; fi ;;'
+assert src.count(old) == 1, "找不到 BLOCKED 三分流呼叫，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+out28m="$(PATH="$work/bin:$PATH" bash "$mut_pr" --repo "$repo" --no-fetch 10 2>&1)"
+l901m=$(row "$out28m" 'feature/LS-901-missing')
+has   '㉘ mutant：拿掉三分流後退回舊字樣「無動作（CI 沒回報？）」（證明分流訊息是這段程式碼造成的）' "$l901m" '無動作（CI 沒回報？）'
+hasnt '㉘ mutant：不再印新版缺必要 status 訊息' "$l901m" '缺必要 status'
+
+# mutation（m1，merge-review R1）：把 pending／fail 兩個完整區塊（條件＋printf 內文）整段對調順序，
+# 復原 R1「pending 先判、fail 被整個吞掉」的舊行為——904（fail＋pending 並存）的 pend 非空會先命中、
+# 直接 return 印出舊版純「CI 跑中」訊息，永遠輪不到 fail 那段。用 Python raw 字串精準比對兩個完整區塊
+# （含 emoji／中文 printf 內文與行尾 `\` 續行），count==1 才算找對，證明「fail 優先」是這段程式碼造成的。
+mut_pr_m1="$work/patrol.pending-before-fail.sh"
+python3 - "$patrol" "$mut_pr_m1" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = r'''  if [ -n "$fail_names" ]; then
+    printf '✗ check 紅：%s → gh run rerun <run-id> --failed（flaky）或修（run id：%s）%s' \
+      "$fail_names" "${fail_ids:-未取得，見 PR #${n} 頁面}" "${pend:+；另 ${pend_count} 項跑中（${pend}）}"
+    return
+  fi
+  if [ -n "$pend" ]; then
+    printf '⏳ CI 跑中 %sm（%s）' "${pend_max_m:-?}" "$pend"
+    return
+  fi'''
+new = r'''  if [ -n "$pend" ]; then
+    printf '⏳ CI 跑中 %sm（%s）' "${pend_max_m:-?}" "$pend"
+    return
+  fi
+  if [ -n "$fail_names" ]; then
+    printf '✗ check 紅：%s → gh run rerun <run-id> --failed（flaky）或修（run id：%s）%s' \
+      "$fail_names" "${fail_ids:-未取得，見 PR #${n} 頁面}" "${pend:+；另 ${pend_count} 項跑中（${pend}）}"
+    return
+  fi'''
+assert src.count(old) == 1, "找不到 fail/pending 判定區塊，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+out28m1="$(PATH="$work/bin:$PATH" bash "$mut_pr_m1" --repo "$repo" --no-fetch 10 2>&1)"
+l904m=$(row "$out28m1" 'feature/LS-904-fail-and-pending')
+has   '㉘ mutant（m1）：pending 判斷搬到 fail 之前 → 904 的 fail 被吞、變回純「CI 跑中」（證明 fail 優先是這段程式碼造成的）' "$l904m" '⏳ CI 跑中'
+hasnt '㉘ mutant（m1）：check 紅／run id 資訊消失' "$l904m" 'check 紅'
+
+# mutation（m4 舊版守門，仍保留：拿掉 Go 零值前綴守門，只留 try/catch）：merge-review R3 delta 發現
+# `0001-01-01` 這個特定值是否讓 fromdateiso8601 拋錯是平台相依的——本機 macOS 兩個 jq 版本都會拋、
+# CI 的 Ubuntu（glibc）jq **不會拋錯**，而是把它算成一個巨大的垃圾分鐘數（merge-review R4 delta B1
+# 實測：CI run 34702037809 印出 `⏳ CI 跑中 1065413727m（merge-review、ci）`，R3 那次 run 34700632619
+# 同位置是 `1065413699m`）——這正是保留前綴守門的理由：glibc 平台上 try/catch 完全不會被觸發（沒有
+# 拋出例外可 catch），前綴守門才是唯一能擋下垃圾數字的機制。R4 delta B1（blocker，已修）：這裡原本
+# 斷言「印出 `CI 跑中 ?m`」在 macOS 成立、在 glibc 不成立（垃圾數字不是 `?`）——`has` 是硬斷言，
+# 「不強求」的註解軟化不了，CI 因此紅。改成只留兩個平台都成立的斷言：`hasnt 查詢失敗`（macOS `?m`、
+# glibc 垃圾數字皆非查詢失敗）＋`has CI 跑中`（不管後面接的是 `?` 還是垃圾數字，只要走了 pending 分支
+# 就一定印這四個字，不依賴 jq 對這個值的日期解析結果）；不再對分鐘值本身斷言。
+mut_pr_m4a="$work/patrol.no-zerodate-prefix.sh"
+python3 - "$patrol" "$mut_pr_m4a" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = 'if $s == "" or ($s | startswith("0001-01-01")) then ""'
+new = 'if $s == "" then ""'
+assert src.count(old) == 1, "找不到 Go 零值前綴守門，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+out28m4a="$(PATH="$work/bin:$PATH" bash "$mut_pr_m4a" --repo "$repo" --no-fetch 10 2>&1)"
+l907m4a=$(row "$out28m4a" 'feature/LS-907-realjq-zerodate')
+has   '㉘ mutant（拿掉零值前綴守門，留 try/catch）：仍走 pending 分支印「CI 跑中」（不斷言分鐘值——macOS 印 ?、glibc 印垃圾數字，兩者都對）' "$l907m4a" 'CI 跑中'
+hasnt '㉘ mutant（拿掉零值前綴守門，留 try/catch）：不應退回查詢失敗（macOS try/catch 兜底、glibc 根本不拋錯，兩者皆不會查詢失敗）' "$l907m4a" '查詢失敗'
+
+# mutation（m4，merge-review R3 delta i5，主要證據）：拿掉 try/catch（退回只有前綴守門的舊寫法）——
+# 907 的 ci 項（startedAt="not-a-date"，strptime 格式比對失敗，不是範圍驗證，**所有** jq 版本都一致
+# 拋錯——本機已用 jq 1.6 與系統版 jq-1.7.1-apple 個別驗證過，見 handoff）應該從「?m」變回「查詢
+# 失敗」，證明 try/catch 正是這段程式碼造成的、且是可攜（不受平台影響）的驗證方式，不像舊版 mutation
+# 依賴會因 jq 版本而異的零值拋錯行為。
+mut_pr_m4="$work/patrol.no-trycatch.sh"
+python3 - "$patrol" "$mut_pr_m4" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = '(try (((now - ($s | fromdateiso8601)) / 60) | floor | tostring) catch "")'
+new = '(((now - ($s | fromdateiso8601)) / 60) | floor | tostring)'
+assert src.count(old) == 1, "找不到 try/catch 包裝，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+out28m4="$(PATH="$work/bin:$PATH" bash "$mut_pr_m4" --repo "$repo" --no-fetch 10 2>&1)"
+l907m=$(row "$out28m4" 'feature/LS-907-realjq-zerodate')
+has   '㉘ mutant（m4／i5）：拿掉 try/catch → 907 的 not-a-date 項從「?m」退回「查詢失敗」（證明 try/catch 是這段程式碼造成的，且用可攜的 not-a-date 而非平台相依的零值）' "$l907m" '查詢失敗'
+hasnt '㉘ mutant（m4／i5）：不再印出正確的 ?m 結果' "$l907m" 'CI 跑中 ?m'
+l906m4=$(row "$out28m4" 'feature/LS-906-realjq-normal')
+has   '㉘ mutant（m4／i5）對照：906（沒有 not-a-date、只有正常時間＋pass 零值）不受影響仍正確' "$l906m4" 'CI 跑中 17m（ci、ci-ipad）'
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
 fi
