@@ -522,11 +522,11 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   （含 `media_select` 的上傳者例外，見上方 `media` 表）皆沿用既有 policy，不在 view
   裡重複判準。欄位與 `albums` 表其餘部分完全一致（含 `id`／`created_at`，keyset
   分頁條件照舊可用），grant 只開 `authenticated` 的 `SELECT`，`anon` 沒有。
-  **取代下面兩則舊口徑筆記描述的計數方式**：`album_summaries` 就是下方「相簿張數
-  口徑」筆記（LS-165 R2 merge-review m3）當時說「需要後端另開一個 view」的那個
-  物件，`SupabaseAlbumsAPIClient` 改讀本 view、拿掉內嵌 aggregate 屬於另一張 iOS
-  票（不在 LS-200 範圍，見 LS-200 票文「不做」段）——**在那張票落地前，下面兩則
-  筆記描述的仍是 iOS 端目前實際在跑的行為，尚未過時，先保留**。
+  **LS-203 已落地**：`SupabaseAlbumsAPIClient.fetchAlbums` 改 `from("album_summaries")`，
+  不再用 PostgREST 內嵌 aggregate／embed 查詢（`album_summaries` 就是 LS-165 R2
+  merge-review m3 當時說「需要後端另開一個 view」的那個物件）——原本跟著內嵌查詢並存的
+  三則舊口徑筆記（`db-aggregates-enabled` 依賴、連結列計數口徑、`latest` 內嵌
+  `media!inner` null 安全）已隨切換一併移除，不再有兩種口徑並存。
   **view 欄位於建立時凍結（R2 N3）**：`select a.*, ...` 這種寫法的 `a.*` 是在
   `CREATE VIEW` 當下就展開成固定的欄位清單，寫進 view 的定義裡，不是查詢時動態
   解析——之後對 `albums` 下 `ADD COLUMN`，新欄位**不會**自動出現在
@@ -537,32 +537,6 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   重新展開 `a.*`），不能假設它自動生效。`supabase/tests/107_album_summaries.sql`
   的 0b 段落把「`albums` 欄位集合 ⊆ `album_summaries`」釘成機械斷言，忘記重建
   view 會直接測出來。
-- **相簿列表依賴 PostgREST `db-aggregates-enabled`（LS-165 R2）**：iOS 相簿 tab 首頁
-  （`SupabaseAlbumsAPIClient.fetchAlbums`）用內嵌查詢 `album_media(count)`／
-  `latest:album_media(media!inner(...))` 一次取得張數與封面 fallback（不再整頁抓
-  `album_media` 在 client 端數），本機 Supabase CLI 容器已實測這個設定預設可用。
-  若未來調整 PostgREST 設定（本機 `supabase/config.toml`、正式站 Dashboard／
-  `postgrest.conf`）**關掉這個選項，這支查詢會直接失敗**（`AlbumListingRow.
-  init(from:)` 對 `album_media` 欄位是必要解碼，不是靜默退化），變更前請先確認
-  這個依賴。
-- **相簿張數口徑：計的是連結列，不是「看得見的照片數」（LS-165 R2 merge-review m3）**：
-  `album_media(count)` 數的是 `album_media` 連結列本身，包含使用者透過 RLS 看不到的
-  media（該列已軟刪、且不是自己上傳；或 LS-155 刪帳號後 `media.uploaded_by` 被 FK
-  `on delete set null` 清成 `NULL`，兩者都落在 `media_select` policy「上傳者自己
-  例外」以外）——「12 張相片」可能包含 1–2 張使用者實際上看不到的照片。本機測過幾種
-  「inner join 後計數」的 select 寫法（`album_media(media!inner(id),count)` 拿到
-  `42803` GROUP BY 錯誤；`album_media!inner(media!inner(count))` 拿到的是「每個
-  album_media 各自一個 count」而不是單一總數），PostgREST 目前的 embed+aggregate
-  語法組合做不到「只數 inner join 命中的列」這種依賴巢狀可見性的計數——**這正是
-  `album_summaries`（LS-200，見上）存在的理由**，iOS 端改讀該 view 之前，這裡描述
-  的口徑差異仍然存在。
-- **封面 fallback 的 `latest` 內嵌用 `media!inner`，不是 `media`（LS-165 R2
-  merge-review B1）**：唯一的 `album_media` 連結指到使用者看不到的 media 時，
-  `media(...)`（LEFT JOIN 語意）會讓那個位置回傳 `{"media": null}`，若這個看不見的
-  候選被 `media(created_at) desc` 排序＋`limit 1` 選中（本機實測：候選數只有一個時
-  必定選中它），解碼會直接失敗。改用 `media!inner(...)`（INNER JOIN 語意）讓看不見的
-  候選在 SQL 層就被排除，`latest` 正確變成空陣列，封面 fallback 落到「兩者皆無→占位
-  圖」分支，不會讓整頁請求失敗。
 - **寶貝標記自 LS-121 起是多對多**（見 §8 完整說明）：一篇日記／一本相簿可以標
   0～N 個孩子，透過 `diary_children`／`album_children` 連結表表達，不再是
   `albums.child_id`／`diaries.child_id` 這種單一欄位（兩欄已隨 LS-121 移除）。

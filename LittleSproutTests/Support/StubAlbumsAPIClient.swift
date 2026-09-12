@@ -51,7 +51,7 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         var fetchMediaHandler: FetchMediaHandler = { _ in [] }
         var signedURLsHandler: SignedURLsHandler = { _ in [:] }
         var createAlbumHandler: CreateAlbumHandler = { _, title in
-            AlbumListingRow(id: UUID(), title: title, coverMediaId: nil, createdAt: Date())
+            AlbumListingRow(id: UUID(), title: title, createdAt: Date())
         }
         var setAlbumChildrenHandler: SetAlbumChildrenHandler = { _, _ in }
         var setAlbumChildrenCalls: [SetAlbumChildrenCall] = []

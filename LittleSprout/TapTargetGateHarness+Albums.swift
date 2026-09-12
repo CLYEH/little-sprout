@@ -231,7 +231,7 @@ final class AlbumDetailScreenshotAPIClient: AlbumsAPIClient, @unchecked Sendable
     func fetchAlbums(familyID: UUID, cursor: AlbumsCursor?, limit: Int) async throws -> [AlbumListingRow] { [] }
     func fetchAlbumChildren(albumIds: [UUID]) async throws -> [AlbumChildLinkRow] { [] }
     func createAlbum(familyID: UUID, title: String) async throws -> AlbumListingRow {
-        AlbumListingRow(id: UUID(), title: title, coverMediaId: nil, createdAt: Date())
+        AlbumListingRow(id: UUID(), title: title, createdAt: Date())
     }
     func setAlbumChildren(albumID: UUID, childIDs: [UUID]) async throws {}
     func setAlbumDeleted(albumID: UUID, deleted: Bool) async throws {}
