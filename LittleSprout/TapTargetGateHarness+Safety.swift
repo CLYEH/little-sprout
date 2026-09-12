@@ -213,7 +213,7 @@ extension TapTargetGateHarness {
             DiaryDetailView(
                 diaryID: diaryID, timelineStore: timelineStore, childrenStore: childrenStore,
                 familyStore: familyStore, safetyAPIClient: PreviewSafetyAPIClient(authorID: UUID()),
-                diaryAPIClient: PreviewDiaryAPIClient()
+                diaryAPIClient: PreviewDiaryAPIClient(), commentAPIClient: PreviewCommentAPIClient()
             )
         }
     }
@@ -245,7 +245,7 @@ extension TapTargetGateHarness {
             DiaryDetailView(
                 diaryID: diaryID, timelineStore: timelineStore, childrenStore: childrenStore,
                 familyStore: familyStore, safetyAPIClient: PreviewSafetyAPIClient(authorID: viewerUserID),
-                diaryAPIClient: PreviewDiaryAPIClient()
+                diaryAPIClient: PreviewDiaryAPIClient(), commentAPIClient: PreviewCommentAPIClient()
             )
         }
     }
@@ -276,7 +276,7 @@ extension TapTargetGateHarness {
             DiaryDetailView(
                 diaryID: diaryID, timelineStore: timelineStore, childrenStore: ChildrenStore.preview(),
                 familyStore: familyStore, safetyAPIClient: PreviewSafetyAPIClient(authorID: UUID()),
-                diaryAPIClient: PreviewDiaryAPIClient()
+                diaryAPIClient: PreviewDiaryAPIClient(), commentAPIClient: PreviewCommentAPIClient()
             )
         }
     }
