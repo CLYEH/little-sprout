@@ -54,7 +54,18 @@ final class ContentActionsAX3UITests: XCTestCase {
 
         let submitButton = app.buttons["送出"]
         scrollUntilAllHittable([submitButton], in: app)
-        XCTAssertTrue(submitButton.isHittable && submitButton.isEnabled, "選完原因後送出鈕在 AX3 下仍要可觸達")
+        XCTAssertTrue(submitButton.isHittable, "捲到底之後送出鈕在 AX3 下仍要可觸達")
+        // LS-229：`isEnabled` 是選原因後才由 SwiftUI 狀態更新驅動、非同步反映到 accessibility
+        // 樹——tap 後立即查詢是一次性快照，CI runner 負載高時會誤判失敗（同 LS-230 決定性同步點
+        // 修法，見 InteractionRowUITests.swift 既有 `XCTNSPredicateExpectation` 寫法）。改成正向
+        // 等它變成 true，不受 runner 負載影響。
+        let submitEnabledExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isEnabled == true"), object: submitButton
+        )
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [submitEnabledExpectation], timeout: 10), .completed,
+            "選完原因後送出鈕應該變成 enabled"
+        )
         submitButton.tap()
 
         XCTAssertTrue(
