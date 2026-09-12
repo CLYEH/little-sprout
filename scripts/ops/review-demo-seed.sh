@@ -42,6 +42,19 @@
 #   bash scripts/ops/review-demo-seed.sh --target prod                只印計畫，不連線、不寫入（沒有 --yes）
 #   bash scripts/ops/review-demo-seed.sh --target prod --yes --owner-email <addr>
 #                                                                      種正式站（讀 .env 取連線，見下；owner-email 必填見下）
+#   bash scripts/ops/review-demo-seed.sh --target prod --yes --storage-only
+#                                                                      續傳（LS-240）：DB 已是本輪資料、只有 Storage
+#                                                                      上傳段中途失敗時用——見下方「--storage-only」段
+#
+# --storage-only（LS-240，來源：LS-96 池項 `3f23757a` 09-13 事故——SQL 段成功後 Storage 上傳
+#   第 9 張因 504 中止，只能整份重跑）：跳過 SQL 段（不清理／不重建 DB，也不動 auth.users，因此
+#   **不需要 `--owner-email`**）與 Storage 批次清理（續傳的前提是先前已成功上傳的物件還在，
+#   清理會把它們也刪掉，違背「續傳」的本意）；仍會照常準備照片／影片素材，對本輪 20 筆
+#   media 對應的 40 個固定路徑（原檔＋縮圖）逐一用 Storage list API 探測是否已存在（不用
+#   HEAD——見下方 storage_exists 函式註解的實測理由），只對缺的
+#   物件上傳（沿用既有的 service-role Bearer／apikey 認證方式，不新增讀取憑證的管道）。
+#   `--target local`／`--target prod --yes` 皆可搭配；prod 分支仍照常需要 `.env` 三個連線變數
+#   （見下方「環境」段，未特別為 --storage-only 放寬）。
 #
 # --owner-email／--member-email（LS-162）：覆寫 owner／member 帳號的 email，不帶時維持
 #   下方 OWNER_EMAIL／MEMBER_EMAIL 兩個固定預設值。**`--target prod --yes` 時 --owner-email
@@ -76,12 +89,26 @@
 #     操作者自己先把這三個變數放進 .env；截至 LS-146 撰寫當下 .env 尚未定義它們，
 #     見 PR body／handoff）。
 #
-# 本票只做本機驗證：LS-146 不會以 --target prod --yes 執行，正式站落地留待使用者核可。
+# Storage 上傳重試（LS-240，同一起事故）：上傳段每個物件對暫時性錯誤（curl exit
+#   56／7／28＝連線／接收/逾時失敗，或 HTTP 5xx／429）最多重試 3 次、退避
+#   1s→2s→4s，全部試完仍失敗才印 ✗ 並中止；其餘錯誤（其他 curl exit、4xx 除 429）
+#   視為永久性錯誤，不重試立刻回報。sleep 呼叫外部命令 `sleep`，自測以 PATH 前置
+#   假身注入拉快測試（同 curl／supabase 等既有假身慣例），正式路徑不變。
+#
+# psql 偵測（LS-240，同一起事故：host 沒有 link 的 psql，libpq 裝在
+#   `/opt/homebrew/opt/libpq/bin` 卻不在 PATH 上——brew 不自動 link 是為了避免跟
+#   macOS 系統 `psql` 衝突）：`command -v psql` 找不到時依序試
+#   `/opt/homebrew/opt/libpq/bin/psql`、`/usr/local/opt/libpq/bin/psql`，再退回既有
+#   的 docker exec 備援；仍找不到才印 `brew install libpq` 安裝提示並 exit。
+#   `SEED_PSQL_CANDIDATES`（空白分隔）可覆寫這份候選清單，供自測用假路徑，正式
+#   路徑不受影響。
+#
+# 本票只做本機驗證：LS-146／LS-240 不會以 --target prod --yes 執行，正式站落地留待使用者核可。
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-usage() { echo "用法：review-demo-seed.sh --target local|prod [--yes] [--owner-email <addr>] [--member-email <addr>] [--owner-password <pw>]"; }
+usage() { echo "用法：review-demo-seed.sh --target local|prod [--yes] [--owner-email <addr>] [--member-email <addr>] [--owner-password <pw>] [--storage-only]"; }
 
 # i1（merge-review R1）：email 值原封不動插進種子 SQL 字面（下方 auth.users insert／
 # 清理 SQL），local／prod 皆套用——單引號會破壞 SQL 字面（fail loud，非資料風險，因為
@@ -114,8 +141,10 @@ yes=0
 owner_email_opt=""
 member_email_opt=""
 owner_password_opt=""
+storage_only=0
 while [ $# -gt 0 ]; do
   case "$1" in
+    --storage-only) storage_only=1; shift ;;
     --target)
       # F5（merge-review R1）：漏帶值時 ${2:-} 是空字串、shift 2 在只剩 1 個參數時會失敗
       # （set -uo pipefail 沒有 -e，失敗的 shift 不會中止腳本）——不擋住就是 while 條件
@@ -186,6 +215,15 @@ reaction_ids=(d7000000-0000-4000-8000-000000000001 d7000000-0000-4000-8000-00000
   d7000000-0000-4000-8000-000000000003 d7000000-0000-4000-8000-000000000004)
 
 print_plan() {
+  if [ "$storage_only" -eq 1 ]; then
+    cat <<PLAN
+→ 審核用 demo 資料種子計畫（LS-240 --storage-only，target=${target}）
+  family_id：${FAMILY_ID}（審核家庭，沿用既有資料，不動 DB／不動 auth.users）
+  media：20（18 張照片＋2 支影片＝40 個固定 Storage 路徑：原檔＋縮圖）
+  續傳：只對 Storage 缺的物件補上傳（list API 逐一判缺），不清理既有物件、不需要 --owner-email
+PLAN
+    return
+  fi
   cat <<PLAN
 → 審核用 demo 資料種子計畫（LS-146，target=${target}）
   family_id：${FAMILY_ID}（審核家庭）
@@ -210,20 +248,26 @@ if [ "$target" = prod ]; then
   # LS-162：正式站真的執行前先驗 owner-email——退出點要早於下面的 `source .env`，兩個
   # 負案都不能碰到任何 prod 連線資訊。必須是操作者明確傳入的地址（不接受沿用預設值），
   # 且不得是 @little-sprout.app（該網域非我們所有，審核員收不到信，見腳本檔頭與
-  # docs/store/review-notes.md）。
-  if [ -z "$owner_email_opt" ]; then
-    echo "✗ review-demo-seed：--target prod --yes 需要 --owner-email（不得沿用預設 review-demo@little-sprout.app，該網域非我們所有、審核員收不到信，LS-162）" >&2
-    exit 2
+  # docs/store/review-notes.md）。LS-240：--storage-only 不動 auth.users，整段跳過。
+  if [ "$storage_only" -eq 0 ]; then
+    if [ -z "$owner_email_opt" ]; then
+      echo "✗ review-demo-seed：--target prod --yes 需要 --owner-email（不得沿用預設 review-demo@little-sprout.app，該網域非我們所有、審核員收不到信，LS-162）" >&2
+      exit 2
+    fi
+    # i2（merge-review R1）：DNS 網域不分大小寫——比對前先轉小寫，否則
+    # someone@LITTLE-SPROUT.APP 會通過檢查但仍是同一個收不到信的網域。
+    owner_email_lower=$(printf '%s' "$OWNER_EMAIL" | tr '[:upper:]' '[:lower:]')
+    case "$owner_email_lower" in
+      *@little-sprout.app)
+        echo "✗ review-demo-seed：--owner-email 不得使用 @little-sprout.app 網域（非我們所有，審核員收不到信，LS-162）" >&2
+        exit 2 ;;
+    esac
   fi
-  # i2（merge-review R1）：DNS 網域不分大小寫——比對前先轉小寫，否則
-  # someone@LITTLE-SPROUT.APP 會通過檢查但仍是同一個收不到信的網域。
-  owner_email_lower=$(printf '%s' "$OWNER_EMAIL" | tr '[:upper:]' '[:lower:]')
-  case "$owner_email_lower" in
-    *@little-sprout.app)
-      echo "✗ review-demo-seed：--owner-email 不得使用 @little-sprout.app 網域（非我們所有，審核員收不到信，LS-162）" >&2
-      exit 2 ;;
-  esac
-  echo "⚠ review-demo-seed：--target prod --yes，即將對正式站寫入審核用 demo 資料（owner=${OWNER_EMAIL}）" >&2
+  if [ "$storage_only" -eq 1 ]; then
+    echo "⚠ review-demo-seed：--target prod --yes --storage-only，即將確認／補齊正式站 Storage 物件（不寫 DB、不動帳號）" >&2
+  else
+    echo "⚠ review-demo-seed：--target prod --yes，即將對正式站寫入審核用 demo 資料（owner=${OWNER_EMAIL}）" >&2
+  fi
   [ -f "$ROOT/.env" ] || { echo "✗ 找不到 $ROOT/.env" >&2; exit 2; }
   set -a
   # shellcheck disable=SC1091
@@ -255,42 +299,64 @@ else
   print_plan
 fi
 
-# 方案 B（LS-162 R2）：解出 owner 密碼——只在真的要寫入時才做（prod 無 --yes 早就
-# exit 0 了，走不到這裡）。操作者自帶 --owner-password 就用那組；否則自動產生 20 字元
-# 英數強密碼，只印終端這一次（不寫進 review-notes.md／log／任何持久檔案）。
-if [ -n "$owner_password_opt" ]; then
-  OWNER_PASSWORD=$owner_password_opt
-else
-  # 純英數：密碼會被原封不動插進種子 SQL 字面（crypt('${OWNER_PASSWORD}', …)），避開
-  # 符號可以不用另外處理跳脫；用 48 bytes 的 base64 隨機源，過濾後仍有遠多於 20 個
-  # 英數字元可截取。
-  OWNER_PASSWORD=$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-20)
-  [ ${#OWNER_PASSWORD} -ge 20 ] || { echo "✗ review-demo-seed：自動產生的 owner 密碼長度不足（openssl／tr 異常）" >&2; exit 1; }
-  echo "⚠ review-demo-seed：已自動產生 owner 密碼（只顯示這一次，請立即記下並填入 App Store Connect Review Notes，不會再印出）：${OWNER_PASSWORD}" >&2
+# 方案 B（LS-162 R2）：解出 owner 密碼——只在真的要寫入 DB 時才做（prod 無 --yes 早就
+# exit 0 了，走不到這裡；LS-240 --storage-only 不動 auth.users，整段跳過）。操作者自帶
+# --owner-password 就用那組；否則自動產生 20 字元英數強密碼，只印終端這一次（不寫進
+# review-notes.md／log／任何持久檔案）。
+if [ "$storage_only" -eq 0 ]; then
+  if [ -n "$owner_password_opt" ]; then
+    OWNER_PASSWORD=$owner_password_opt
+  else
+    # 純英數：密碼會被原封不動插進種子 SQL 字面（crypt('${OWNER_PASSWORD}', …)），避開
+    # 符號可以不用另外處理跳脫；用 48 bytes 的 base64 隨機源，過濾後仍有遠多於 20 個
+    # 英數字元可截取。
+    OWNER_PASSWORD=$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-20)
+    [ ${#OWNER_PASSWORD} -ge 20 ] || { echo "✗ review-demo-seed：自動產生的 owner 密碼長度不足（openssl／tr 異常）" >&2; exit 1; }
+    echo "⚠ review-demo-seed：已自動產生 owner 密碼（只顯示這一次，請立即記下並填入 App Store Connect Review Notes，不會再印出）：${OWNER_PASSWORD}" >&2
+  fi
+  case "$OWNER_PASSWORD" in
+    *\'*) echo "✗ review-demo-seed：--owner-password 不可含單引號（會破壞直寫 SQL 字面）" >&2; exit 2 ;;
+  esac
 fi
-case "$OWNER_PASSWORD" in
-  *\'*) echo "✗ review-demo-seed：--owner-password 不可含單引號（會破壞直寫 SQL 字面）" >&2; exit 2 ;;
-esac
 
 command -v sips >/dev/null 2>&1 || { echo "✗ review-demo-seed：找不到 sips（macOS 內建工具）" >&2; exit 2; }
 command -v swift >/dev/null 2>&1 || { echo "✗ review-demo-seed：找不到 swift CLI" >&2; exit 2; }
 
-# psql 不一定裝在 host 上；沒有的話借用 supabase 本機 DB container 裡那一份（同
-# supabase/tests/run.sh 既有慣例）——這條路徑只在 --target local 用得到，prod 一律要求
-# host 有 psql（正式站不會借用本機 docker container）。
-db_container="${SUPABASE_DB_CONTAINER:-supabase_db_little-sprout}"
-if command -v psql >/dev/null 2>&1; then
-  # F2（merge-review R1）：--single-transaction——沒有它，psql -f 逐句 autocommit，
-  # ON_ERROR_STOP=1 只保證「出錯就停」不保證「出錯就回捲」；seed.sql 檔尾的自我檢查
-  # DO 區塊 raise exception 時，前面的 auth.users／families／children… 早就各自
-  # commit 了，留下半套審核家庭。加這個旗標讓整份 SQL 檔全有或全無。
-  run_sql() { psql "$DB_URL" -v ON_ERROR_STOP=1 --no-psqlrc -q --single-transaction -f "$1"; }
-elif [ "$target" = local ] && docker exec "$db_container" true >/dev/null 2>&1; then
-  echo "→ host 沒有 psql，改用 docker exec ${db_container}" >&2
-  run_sql() { docker exec -i "$db_container" psql -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q --single-transaction < "$1"; }
-else
-  echo "✗ review-demo-seed：找不到 psql，也連不到 DB container（${db_container}）" >&2
-  exit 2
+# psql 不一定裝在 host 上；沒有的話依序試已知的 libpq 安裝位置，再借用 supabase 本機 DB
+# container 裡那一份（同 supabase/tests/run.sh 既有慣例）——這整段只有真的要跑 SQL 時才需要
+# （LS-240 --storage-only 不動 DB，整段跳過，也因此不必裝 psql）；docker exec 備援只在
+# --target local 用得到，prod 一律要求能找到 psql（正式站不會借用本機 docker container）。
+if [ "$storage_only" -eq 0 ]; then
+  db_container="${SUPABASE_DB_CONTAINER:-supabase_db_little-sprout}"
+  psql_bin=""
+  if command -v psql >/dev/null 2>&1; then
+    psql_bin=psql
+  else
+    # LS-240（同 LS-96 池項 `3f23757a`）：libpq 常見透過 brew 裝但刻意不 link 進 PATH
+    # （避免跟 macOS 系統 psql 衝突）——依序試已知安裝位置。SEED_PSQL_CANDIDATES（空白
+    # 分隔）可覆寫供自測用假路徑，預設是兩個真實已知安裝位置。
+    IFS=' ' read -r -a libpq_candidates <<< "${SEED_PSQL_CANDIDATES:-/opt/homebrew/opt/libpq/bin/psql /usr/local/opt/libpq/bin/psql}"
+    for candidate in "${libpq_candidates[@]}"; do
+      if [ -x "$candidate" ]; then
+        psql_bin=$candidate
+        echo "→ host PATH 沒有 psql，改用 ${psql_bin}" >&2
+        break
+      fi
+    done
+  fi
+  if [ -n "$psql_bin" ]; then
+    # F2（merge-review R1）：--single-transaction——沒有它，psql -f 逐句 autocommit，
+    # ON_ERROR_STOP=1 只保證「出錯就停」不保證「出錯就回捲」；seed.sql 檔尾的自我檢查
+    # DO 區塊 raise exception 時，前面的 auth.users／families／children… 早就各自
+    # commit 了，留下半套審核家庭。加這個旗標讓整份 SQL 檔全有或全無。
+    run_sql() { "$psql_bin" "$DB_URL" -v ON_ERROR_STOP=1 --no-psqlrc -q --single-transaction -f "$1"; }
+  elif [ "$target" = local ] && docker exec "$db_container" true >/dev/null 2>&1; then
+    echo "→ host 沒有 psql，改用 docker exec ${db_container}" >&2
+    run_sql() { docker exec -i "$db_container" psql -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q --single-transaction < "$1"; }
+  else
+    echo "✗ review-demo-seed：找不到 psql（PATH／/opt/homebrew/opt/libpq/bin／/usr/local/opt/libpq/bin 皆無），也連不到 DB container（${db_container}）——請先 brew install libpq" >&2
+    exit 2
+  fi
 fi
 
 work=$(mktemp -d "${TMPDIR:-/tmp}/ls146-review-demo-seed.XXXXXX")
@@ -365,7 +431,10 @@ echo "→ 影片素材備妥（2 支，實測秒數：${video_durations[*]}）"
 
 # ---------------------------------------------------------------------------
 # 3. DB：清理＋重建（單一 psql session，postgres 身分繞過 RLS／RPC-only 收斂）
+#    LS-240：--storage-only 整段跳過（不動 DB）——這裡面的 SQL 字面組裝也用到
+#    OWNER_PASSWORD／OWNER_EMAIL 等只在 storage_only=0 時才會設定的值，一併跳過。
 # ---------------------------------------------------------------------------
+if [ "$storage_only" -eq 0 ]; then
 sql_file="$work/seed.sql"
 cat > "$sql_file" <<SQL
 \set ON_ERROR_STOP on
@@ -597,12 +666,17 @@ begin
 end;
 \$\$;
 SQL
+fi
 
-echo "→ 套用 SQL（${sql_file}）"
-# N1（merge-review R2）：這句失敗時 --single-transaction（F2）已經把 DB 完整回捲，Storage
-# 這裡還沒被碰過（清理搬到下面、SQL 成功之後才做，見下）——「中止」現在才真的是全有或
-# 全無，訊息不再誤導操作者以為「回捲了＝什麼都沒動」卻其實 Storage 已經被清空。
-run_sql "$sql_file" || { echo "✗ review-demo-seed：SQL 套用失敗（見上方錯誤），中止——DB 已回捲，Storage 未動（清理與上傳都排在 SQL 成功之後）" >&2; exit 1; }
+if [ "$storage_only" -eq 1 ]; then
+  echo "→ --storage-only：跳過 SQL 段與帳號建立，沿用既有 DB 資料"
+else
+  echo "→ 套用 SQL（${sql_file}）"
+  # N1（merge-review R2）：這句失敗時 --single-transaction（F2）已經把 DB 完整回捲，Storage
+  # 這裡還沒被碰過（清理搬到下面、SQL 成功之後才做，見下）——「中止」現在才真的是全有或
+  # 全無，訊息不再誤導操作者以為「回捲了＝什麼都沒動」卻其實 Storage 已經被清空。
+  run_sql "$sql_file" || { echo "✗ review-demo-seed：SQL 套用失敗（見上方錯誤），中止——DB 已回捲，Storage 未動（清理與上傳都排在 SQL 成功之後）" >&2; exit 1; }
+fi
 
 # ---------------------------------------------------------------------------
 # 4. Storage：清理舊物件＋上傳新物件（DB 已確認寫入成功才動 Storage，這是本步驟排在 SQL
@@ -615,58 +689,140 @@ run_sql "$sql_file" || { echo "✗ review-demo-seed：SQL 套用失敗（見上�
 # 20 張破圖，App Review 沒有第二次機會）。搬到這裡（SQL 成功之後、上傳之前）之後，SQL
 # 失敗時 Storage 原封不動，真正做到全有或全無；這裡只依賴 media_ids／FAMILY_ID／
 # SEED_YM／API_URL／SERVICE_KEY，在 SQL 之前就已備妥，搬動不影響清理本身的正確性。
-echo "→ 清理既有 Storage 物件（$FAMILY_ID/$SEED_YM/…）"
-del_paths_json="["
-first=1
-add_path() {
-  [ "$first" -eq 1 ] || del_paths_json="${del_paths_json},"
-  del_paths_json="${del_paths_json}\"${1}\""
-  first=0
-}
-for id in "${media_ids[@]}"; do
-  # 縮圖副檔名恆為 .jpg（docs/API.md §6），只有一種可能，不必列舉
-  add_path "${FAMILY_ID}/${SEED_YM}/${id}_thumb.jpg"
-  # 原檔副檔名依素材種類而定（4 種可能），這裡是「清舊資料」的寬鬆一步——列出全部
-  # 可能副檔名，不存在的路徑由 Storage API 靜默忽略，比對照 DB 現況窄縮更省事、也更
-  # 保守（換了素材來源時舊副檔名的孤兒物件也會一併清掉）。
-  for ext in jpg jpeg png mp4; do
-    add_path "${FAMILY_ID}/${SEED_YM}/${id}.${ext}"
+# LS-240：--storage-only 整段跳過清理——續傳的前提是先前已成功上傳的物件還在，清理會把
+# 它們也刪掉，違背「續傳」的本意。
+if [ "$storage_only" -eq 1 ]; then
+  echo "→ --storage-only：略過批次清理（續傳只補缺物件，不清掉先前已成功上傳的內容）"
+else
+  echo "→ 清理既有 Storage 物件（$FAMILY_ID/$SEED_YM/…）"
+  del_paths_json="["
+  first=1
+  add_path() {
+    [ "$first" -eq 1 ] || del_paths_json="${del_paths_json},"
+    del_paths_json="${del_paths_json}\"${1}\""
+    first=0
+  }
+  for id in "${media_ids[@]}"; do
+    # 縮圖副檔名恆為 .jpg（docs/API.md §6），只有一種可能，不必列舉
+    add_path "${FAMILY_ID}/${SEED_YM}/${id}_thumb.jpg"
+    # 原檔副檔名依素材種類而定（4 種可能），這裡是「清舊資料」的寬鬆一步——列出全部
+    # 可能副檔名，不存在的路徑由 Storage API 靜默忽略，比對照 DB 現況窄縮更省事、也更
+    # 保守（換了素材來源時舊副檔名的孤兒物件也會一併清掉）。
+    for ext in jpg jpeg png mp4; do
+      add_path "${FAMILY_ID}/${SEED_YM}/${id}.${ext}"
+    done
   done
-done
-del_paths_json="${del_paths_json}]"
-# F3（merge-review R1）：加 -f 讓非 2xx 直接判定失敗——這裡失敗時 DB 已經是最新狀態，
-# Storage 物件則新舊混雜（有些清了、有些沒清），不是「什麼都沒動」，訊息據實反映。
-if ! curl -sS -f -X DELETE "$API_URL/storage/v1/object/media" \
-  -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \
-  -H "Content-Type: application/json" \
-  -d "{\"prefixes\":${del_paths_json}}" -o /dev/null; then
-  echo "✗ review-demo-seed：Storage 批次刪除失敗（$API_URL/storage/v1/object/media）——DB 已重建完成，Storage 物件可能新舊混雜；重跑一次會自動收斂（清理具冪等性）" >&2
-  exit 1
+  del_paths_json="${del_paths_json}]"
+  # F3（merge-review R1）：加 -f 讓非 2xx 直接判定失敗——這裡失敗時 DB 已經是最新狀態，
+  # Storage 物件則新舊混雜（有些清了、有些沒清），不是「什麼都沒動」，訊息據實反映。
+  if ! curl -sS -f -X DELETE "$API_URL/storage/v1/object/media" \
+    -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \
+    -H "Content-Type: application/json" \
+    -d "{\"prefixes\":${del_paths_json}}" -o /dev/null; then
+    echo "✗ review-demo-seed：Storage 批次刪除失敗（$API_URL/storage/v1/object/media）——DB 已重建完成，Storage 物件可能新舊混雜；重跑一次會自動收斂（清理具冪等性）" >&2
+    exit 1
+  fi
+  echo "  ✓ 批次刪除請求已送出（不存在的路徑會被忽略）"
 fi
-echo "  ✓ 批次刪除請求已送出（不存在的路徑會被忽略）"
+
+# ---------------------------------------------------------------------------
+# LS-240：上傳重試——curl exit 56／7／28（連線／接收/逾時失敗）或 HTTP 5xx／429（伺服器
+# 端暫時性錯誤）最多重試 3 次、退避 1s→2s→4s；其餘錯誤（其他 curl exit、4xx 除 429）視為
+# 永久性錯誤，不重試立刻回報失敗。改用 `-w '%{http_code}'` 取代原本的 `-f`——`-f` 會把所有
+# HTTP >=400 一律轉成 curl exit 22，沒辦法分辨「該重試的 5xx／429」跟「不該重試的其他
+# 4xx」；sleep 呼叫外部命令，自測以 PATH 前置假身注入拉快測試，正式路徑不變。
+# ---------------------------------------------------------------------------
+upload_ok_count=0
+upload_skip_count=0
+upload_retry_count=0
+is_retryable_curl_rc() { case "$1" in 56|7|28) return 0 ;; *) return 1 ;; esac; }
+is_retryable_http() { case "$1" in 5??|429) return 0 ;; *) return 1 ;; esac; }
 
 storage_put() {  # $1=本機檔案 $2=storage path（不含 bucket 前綴） $3=content-type
-  curl -sS -f -X POST "$API_URL/storage/v1/object/media/$2" \
+  local file=$1 path=$2 ctype=$3
+  local attempt=1 max_retries=3 retry_num=0 delay http_code curl_rc
+  while :; do
+    http_code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$API_URL/storage/v1/object/media/$path" \
+      -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \
+      -H "Content-Type: $ctype" --data-binary "@$file")
+    curl_rc=$?
+    [ -n "$http_code" ] || http_code=000
+    if [ "$curl_rc" -eq 0 ]; then
+      case "$http_code" in
+        2??)
+          upload_ok_count=$((upload_ok_count + 1))
+          [ "$attempt" -eq 1 ] || echo "  ✓ 上傳成功（第 ${attempt} 次嘗試，重試 ${retry_num} 次）：$path" >&2
+          return 0 ;;
+      esac
+    fi
+    if { [ "$curl_rc" -ne 0 ] && is_retryable_curl_rc "$curl_rc"; } || { [ "$curl_rc" -eq 0 ] && is_retryable_http "$http_code"; }; then
+      if [ "$retry_num" -ge "$max_retries" ]; then
+        echo "✗ 上傳失敗（重試 ${max_retries} 次仍失敗，curl exit ${curl_rc}，HTTP ${http_code}）：$path" >&2
+        return 1
+      fi
+      case "$retry_num" in 0) delay=1 ;; 1) delay=2 ;; *) delay=4 ;; esac
+      echo "  ⚠ 上傳暫時性錯誤（curl exit ${curl_rc}，HTTP ${http_code}），${delay}s 後重試（第 $((attempt + 1)) 次嘗試）：$path" >&2
+      sleep "$delay"
+      retry_num=$((retry_num + 1))
+      upload_retry_count=$((upload_retry_count + 1))
+      attempt=$((attempt + 1))
+      continue
+    fi
+    echo "✗ 上傳失敗（curl exit ${curl_rc}，HTTP ${http_code}，不重試）：$path" >&2
+    return 1
+  done
+}
+
+# LS-240：--storage-only 續傳——判斷物件是否已存在於 Storage，已存在就略過、不重新上傳。
+# 原本用 HEAD 判斷（票文原意），實測本機 storage-api 對物件下載端點的 HEAD 回應會宣告
+# Content-Length 卻不實際送出對應 body（keep-alive 連線因此掛住直到逾時，curl exit 28；
+# 2026-09-13 本機 --target local 全流程驗證時發現，見 handoff）——改用 Storage 既有的
+# list API（`POST .../object/list/media`，以 body 帶 prefix／search 而非 URL 路徑指定物件，
+# 回一份小 JSON、不牽扯下載端點那個 body 續傳問題，也不必真的下載整個檔案內容判斷存
+# 在），仍沿用既有的 service-role Bearer／apikey 認證方式，不新增讀取憑證的管道。
+storage_exists() {  # $1=storage path（含 family_id/yyyy/mm/filename，不含 bucket 前綴）
+  local path=$1 dir file resp
+  dir=${path%/*}
+  file=${path##*/}
+  resp=$(curl -sS -X POST "$API_URL/storage/v1/object/list/media" \
     -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \
-    -H "Content-Type: $3" --data-binary "@$1" -o /dev/null
+    -H "Content-Type: application/json" \
+    -d "{\"prefix\":\"${dir}\",\"search\":\"${file}\",\"limit\":1}")
+  case "$resp" in
+    *'"name"'*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+ensure_uploaded() {  # $1=本機檔案 $2=storage path $3=content-type
+  if [ "$storage_only" -eq 1 ] && storage_exists "$2"; then
+    echo "  · Storage 已有此物件，略過：$2" >&2
+    upload_skip_count=$((upload_skip_count + 1))
+    return 0
+  fi
+  storage_put "$1" "$2" "$3"
 }
 
 echo "→ 上傳 Storage 物件"
 for i in $(seq 1 18); do
   id=${media_ids[$((i-1))]}
   src_idx=$(( (i - 1) % ${#photo_sources[@]} ))
-  storage_put "${photo_sources[$src_idx]}" "${FAMILY_ID}/${SEED_YM}/${id}.${photo_ext[$src_idx]}" "${photo_ctype[$src_idx]}" \
+  ensure_uploaded "${photo_sources[$src_idx]}" "${FAMILY_ID}/${SEED_YM}/${id}.${photo_ext[$src_idx]}" "${photo_ctype[$src_idx]}" \
     || { echo "✗ 上傳原圖失敗：media_id=$id" >&2; exit 1; }
-  storage_put "${photo_thumb[$src_idx]}" "${FAMILY_ID}/${SEED_YM}/${id}_thumb.jpg" "image/jpeg" \
+  ensure_uploaded "${photo_thumb[$src_idx]}" "${FAMILY_ID}/${SEED_YM}/${id}_thumb.jpg" "image/jpeg" \
     || { echo "✗ 上傳縮圖失敗：media_id=$id" >&2; exit 1; }
 done
 for i in 19 20; do
   id=${media_ids[$((i-1))]}
   vidx=$((i - 19))
-  storage_put "${video_files[$vidx]}" "${FAMILY_ID}/${SEED_YM}/${id}.mp4" "video/mp4" \
+  ensure_uploaded "${video_files[$vidx]}" "${FAMILY_ID}/${SEED_YM}/${id}.mp4" "video/mp4" \
     || { echo "✗ 上傳影片失敗：media_id=$id" >&2; exit 1; }
-  storage_put "${video_thumb[$vidx]}" "${FAMILY_ID}/${SEED_YM}/${id}_thumb.jpg" "image/jpeg" \
+  ensure_uploaded "${video_thumb[$vidx]}" "${FAMILY_ID}/${SEED_YM}/${id}_thumb.jpg" "image/jpeg" \
     || { echo "✗ 上傳影片縮圖失敗：media_id=$id" >&2; exit 1; }
 done
-echo "✓ review-demo-seed 完成：20 個原檔 + 20 個縮圖已上傳，DB 計數見上方 NOTICE"
-echo "  邀請碼：${INVITE_CODE}　owner：${OWNER_EMAIL}（密碼登入，密碼見上方僅印一次的提示或操作者自帶的 --owner-password）　member：${MEMBER_EMAIL}（Email OTP）"
+if [ "$storage_only" -eq 1 ]; then
+  echo "✓ review-demo-seed --storage-only 完成：${upload_ok_count} 個物件已上傳、${upload_skip_count} 個已存在略過，重試 ${upload_retry_count} 次"
+else
+  echo "✓ review-demo-seed 完成：${upload_ok_count} 個物件已上傳（20 個原檔 + 20 個縮圖），重試 ${upload_retry_count} 次，DB 計數見上方 NOTICE"
+  echo "  邀請碼：${INVITE_CODE}　owner：${OWNER_EMAIL}（密碼登入，密碼見上方僅印一次的提示或操作者自帶的 --owner-password）　member：${MEMBER_EMAIL}（Email OTP）"
+fi
