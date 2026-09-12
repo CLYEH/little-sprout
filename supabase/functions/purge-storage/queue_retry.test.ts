@@ -14,9 +14,22 @@
 //   - 4xx／SQL 語法類錯誤（不在允許清單內）第一次就放棄，不重試，attempts=1。
 //   - mutation 對照組：拿掉重試（maxAttempts=1）之後，「第 1 次 timeout、第 2
 //     次成功」這組會轉紅——見檔尾說明與 handoff 附的實際跑法／斷言原文。
+//
+// LS-242（來源 LS-96 池項 cc85f81b）新增三組（見檔尾「整次 invocation 共用
+// 預算」區塊）：
+//   - 連續暫時性錯誤下，跨多個 readQueueWithRetry() 呼叫（模擬 index.ts 迴圈
+//     的多個批次）共用同一個 RetryBudget 物件時，總退避等待不會超過建立時
+//     設定的預算上限——即使某一批單獨來看還沒用完自己的 QUEUE_READ_MAX_ATTEMPTS，
+//     也會因為預算不夠而提早放棄。
+//   - 預算用盡時 classifyQueueReadFailure() 回傳 200／partial:true（不是既有
+//     的 500），而非預算耗盡（永久性錯誤或其他原因）維持 500。
+//   - 帶了 budget 參數但完全不需要重試的正常路徑，attempts／budget 消耗量都
+//     不受影響（budget 沒有被使用到就不該被消耗）。
 
 import { assertEquals } from "jsr:@std/assert@1";
 import {
+  classifyQueueReadFailure,
+  createRetryBudget,
   isTransientQueueReadError,
   QUEUE_READ_BACKOFF_MS,
   type QueueSelectResult,
@@ -52,7 +65,12 @@ Deno.test("readQueueWithRetry：第 1 次 Gateway Timeout、第 2 次成功 → 
 
   const result = await readQueueWithRetry(selectBatch, fakeSleep(sleepLog));
 
-  assertEquals(result, { data: ["row-1"], error: null, attempts: 2 });
+  assertEquals(result, {
+    data: ["row-1"],
+    error: null,
+    attempts: 2,
+    budgetExhausted: false,
+  });
   assertEquals(
     calls,
     2,
@@ -83,6 +101,11 @@ Deno.test("readQueueWithRetry：連續 4 次都是 ETIMEDOUT → error 非 null�
   });
   assertEquals(result.data, null);
   assertEquals(result.attempts, 4);
+  assertEquals(
+    result.budgetExhausted,
+    false,
+    "沒有傳入 budget（未定義）——放棄重試是因為用完自己的 QUEUE_READ_MAX_ATTEMPTS，不是預算問題（LS-242）",
+  );
   assertEquals(calls, 4, "達到 MAX_ATTEMPTS(4) 後不再繼續呼叫 selectBatch");
   assertEquals(
     sleepLog,
@@ -111,6 +134,7 @@ Deno.test("readQueueWithRetry：4xx 類錯誤（權限不足）第一次就放�
     data: null,
     error: { message: "permission denied for table purge_storage_queue" },
     attempts: 1,
+    budgetExhausted: false,
   });
   assertEquals(calls, 1, "永久性錯誤（不在允許清單內）不該重試");
 });
@@ -134,7 +158,12 @@ Deno.test("readQueueWithRetry：成功且不需要重試 → attempts=1，完全
 
   const result = await readQueueWithRetry(selectBatch, unreachableSleep());
 
-  assertEquals(result, { data: [], error: null, attempts: 1 });
+  assertEquals(result, {
+    data: [],
+    error: null,
+    attempts: 1,
+    budgetExhausted: false,
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -184,9 +213,165 @@ Deno.test("isTransientQueueReadError：永久性錯誤（4xx／SQL 語法／權�
 });
 
 // ---------------------------------------------------------------------------
+// LS-242 —— 整次 invocation 共用的重試等待預算（RetryBudget）
+// ---------------------------------------------------------------------------
+
+Deno.test("readQueueWithRetry：兩個模擬 index.ts 不同批次的呼叫共用同一個 RetryBudget → 第 2 批的重試會被第 1 批已消耗的預算限縮，累計退避不超過建立時的預算上限（LS-242：修前每批各自獨立套用 7 秒上限，20 批相乘可逼近 140 秒）", async () => {
+  const budget = createRetryBudget(3000);
+
+  // 第 1 批（模擬 index.ts 迴圈的第 1 次 readQueueWithRetry() 呼叫）：第 1 次
+  // 暫時性失敗、第 2 次成功——消耗 1 次退避（1000ms）。
+  let callsA = 0;
+  const selectBatchA = (): Promise<QueueSelectResult<string[]>> => {
+    callsA++;
+    if (callsA === 1) {
+      return Promise.resolve({
+        data: null,
+        error: { message: "Gateway Timeout" },
+      });
+    }
+    return Promise.resolve({ data: ["batch-a-row"], error: null });
+  };
+  const sleepLogA: number[] = [];
+  const resultA = await readQueueWithRetry(
+    selectBatchA,
+    fakeSleep(sleepLogA),
+    budget,
+  );
+
+  assertEquals(resultA, {
+    data: ["batch-a-row"],
+    error: null,
+    attempts: 2,
+    budgetExhausted: false,
+  });
+  assertEquals(sleepLogA, [1000]);
+  assertEquals(
+    budget.remainingMs,
+    2000,
+    "第 1 批消耗 1000ms，共用預算剩 3000-1000=2000ms",
+  );
+
+  // 第 2 批：用同一個 budget 物件，持續遇到暫時性錯誤（永遠不成功）。若這一批
+  // 有自己獨立的 7 秒上限（LS-242 之前的行為），會照樣退避 1000→2000→4000
+  // 共 3 次；但共用預算只剩 2000ms——退避完第 1 次（1000ms，剩 1000ms）之後，
+  // 第 2 次原本要等 2000ms，剩下的 1000ms 不夠，直接放棄，不再等待。
+  let callsB = 0;
+  const selectBatchB = (): Promise<QueueSelectResult<string[]>> => {
+    callsB++;
+    return Promise.resolve({
+      data: null,
+      error: { message: `Gateway Timeout（第 ${callsB} 次）` },
+    });
+  };
+  const sleepLogB: number[] = [];
+  const resultB = await readQueueWithRetry(
+    selectBatchB,
+    fakeSleep(sleepLogB),
+    budget,
+  );
+
+  assertEquals(resultB.data, null);
+  assertEquals(resultB.error, { message: "Gateway Timeout（第 2 次）" });
+  assertEquals(
+    resultB.attempts,
+    2,
+    "只嘗試 2 次就放棄——第 2 次失敗後本該退避 2000ms，但共用預算只剩 1000ms",
+  );
+  assertEquals(
+    resultB.budgetExhausted,
+    true,
+    "第 2 批是因為共用預算用盡而放棄，不是自己的 QUEUE_READ_MAX_ATTEMPTS 用盡（那要到 attempts=4）",
+  );
+  assertEquals(
+    sleepLogB,
+    [1000],
+    "只退避一次（用掉最後 1000ms 預算），第 2 次退避前預算不夠、不會真的呼叫 sleep",
+  );
+  assertEquals(
+    budget.remainingMs,
+    1000,
+    "累計退避 1000(A)+1000(B)=2000ms，未超過建立時的 3000ms 預算上限；剩餘 1000ms 因為不夠付第 2 批第 2 次退避（2000ms）而保留未消耗",
+  );
+
+  const totalSlept = sleepLogA.reduce((a, b) => a + b, 0) +
+    sleepLogB.reduce((a, b) => a + b, 0);
+  assertEquals(
+    totalSlept <= 3000,
+    true,
+    `兩批合計實際退避 ${totalSlept}ms 不應超過共用預算 3000ms（若無 LS-242 修法，第 2 批單獨可退避到 1000+2000+4000=7000ms，遠超此上限）`,
+  );
+});
+
+Deno.test("classifyQueueReadFailure：budgetExhausted=true → status 200、partial=true（不是既有的 500，讓 index.ts 停止處理後續批次但不當成硬失敗，見 LS-242）", () => {
+  assertEquals(
+    classifyQueueReadFailure({ budgetExhausted: true }),
+    { status: 200, partial: true },
+  );
+});
+
+Deno.test("classifyQueueReadFailure：budgetExhausted=false（永久性錯誤，或單一批次自己的 QUEUE_READ_MAX_ATTEMPTS 用盡但預算還夠，與預算無關）→ status 500、partial=false（既有行為不變）", () => {
+  assertEquals(
+    classifyQueueReadFailure({ budgetExhausted: false }),
+    { status: 500, partial: false },
+  );
+});
+
+Deno.test("readQueueWithRetry：帶 budget 但完全不需要重試（一次就成功）→ attempts=1、budgetExhausted=false，且完全不消耗 budget（LS-242：新增的預算參數不影響既有『不需要重試』的正常路徑）", async () => {
+  const budget = createRetryBudget(500); // 刻意給一個很小的預算，證明「用不到」時完全不受影響
+  const selectBatch = (): Promise<QueueSelectResult<string[]>> =>
+    Promise.resolve({ data: ["row-1"], error: null });
+
+  const result = await readQueueWithRetry(
+    selectBatch,
+    unreachableSleep(),
+    budget,
+  );
+
+  assertEquals(result, {
+    data: ["row-1"],
+    error: null,
+    attempts: 1,
+    budgetExhausted: false,
+  });
+  assertEquals(budget.remainingMs, 500, "沒有重試就沒有消耗任何預算");
+});
+
+Deno.test("readQueueWithRetry：帶 budget 但遇到永久性錯誤（不在允許清單內）→ 第一次就放棄，attempts=1、budgetExhausted=false，budget 不受影響（永久性錯誤與預算無關，index.ts 仍應回 500，見 classifyQueueReadFailure）", async () => {
+  const budget = createRetryBudget(500);
+  const selectBatch = (): Promise<QueueSelectResult<string[]>> =>
+    Promise.resolve({
+      data: null,
+      error: { message: "permission denied for table purge_storage_queue" },
+    });
+
+  const result = await readQueueWithRetry(
+    selectBatch,
+    unreachableSleep(),
+    budget,
+  );
+
+  assertEquals(result, {
+    data: null,
+    error: { message: "permission denied for table purge_storage_queue" },
+    attempts: 1,
+    budgetExhausted: false,
+  });
+  assertEquals(budget.remainingMs, 500);
+});
+
+// ---------------------------------------------------------------------------
 // Mutation 對照組（LS-209 handoff 規約：改了什麼一行 → 哪條測試紅 → 斷言訊息
 // 原文，見票 handoff）。這個測試檔本身不執行 mutation——mutation 驗證是「暫時
 // 把 readQueueWithRetry 的重試迴圈拿掉（maxAttempts 固定傳 1），跑一次上面
 // 「第 1 次 Gateway Timeout、第 2 次成功」那組」，證明拿掉重試後這組真的會轉
 // 紅，不是恆真斷言。實際跑法與轉紅後的斷言訊息原文記在票 handoff（PR 不含這段
 // mutation 本身的程式碼變更，只有驗證過程留痕）。
+//
+// LS-242 mutation 對照組：暫時把 `if (budget.remainingMs < wait)` 這個判斷式
+// 拿掉（budget 完全不生效，行為退回 LS-242 之前——每批各自獨立套用
+// QUEUE_READ_MAX_ATTEMPTS／QUEUE_READ_BACKOFF_MS，不受共用預算限制），跑一次
+// 上面「兩個模擬 index.ts 不同批次的呼叫共用同一個 RetryBudget」那組，證明
+// 拿掉判斷式後第 2 批會退回自己完整跑滿 3 次重試（attempts 變成 4、
+// budgetExhausted 恆為 false、sleepLogB 變成 [1000, 2000, 4000]），不是恆真
+// 斷言。實際跑法與轉紅後的斷言訊息原文記在票 handoff。

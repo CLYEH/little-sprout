@@ -62,6 +62,15 @@
 // 非同步呼叫恆為 succeeded，看不出這支函式實際回應的 HTTP 狀態，該腳本改唯讀查
 // `net._http_response` 並與 purge_runs 對帳（見 docs/COLLABORATION.md §4-b）。
 //
+// LS-242（來源 LS-96 池項 cc85f81b，LS-235 merge-review R2 留下的唯一未收口
+// 項）：LS-235 的重試／退避是「單一批次」各自的上限（最壞 7 秒），但迴圈最多
+// 跑 MAX_BATCHES=20 批，相乘後最壞可逼近 140 秒，超過呼叫端
+// `pg_net.http_post(... timeout_milliseconds := 60000)`。改為整次 invocation
+// 共用一個重試等待預算（`retryBudget`，見下方與 queue_retry.ts 的
+// `RetryBudget`／`createRetryBudget()`）——用盡就停止處理後續批次，回應改
+// 200 帶 `partial: true`／`budgetExhausted: true`，已處理批次不回滾（最壞總
+// 時長推算見票 handoff）。
+//
 // 已知限制（如實揭露，見 docs/API.md §6「自動清除」與本票 handoff）：本機已用
 // `supabase functions serve --no-verify-jwt`（經 scripts/ops/supabase-lock.sh）
 // 對這支函式做過端對端手動驗證，但**沒有**寫成 `supabase/tests/` 底下可重複執行的
@@ -98,7 +107,11 @@ import {
   scanOrphanStorageObjects,
   type StorageEntry,
 } from "./orphan_scan.ts";
-import { readQueueWithRetry } from "./queue_retry.ts";
+import {
+  classifyQueueReadFailure,
+  createRetryBudget,
+  readQueueWithRetry,
+} from "./queue_retry.ts";
 
 const BATCH_SIZE = 200; // 每批讀取／刪除的筆數，對齊 Storage remove() API 一次呼叫的合理批次大小。
 const MAX_BATCHES = 20; // 安全上限（20 × 200 = 4000 筆／次 invocation）：避免佇列量體異常大時單次執行時間失控。
@@ -350,6 +363,15 @@ Deno.serve(async (req: Request) => {
   // 讀取的 `readAttempts - 1`（0 代表那次讀取一次就成功／放棄，沒有重試）累加。
   let queueReadAttempts = 0;
   let queueReadRetries = 0;
+  // LS-242（來源 LS-96 池項 cc85f81b）：整次 invocation 共用的重試等待預算——
+  // 見 queue_retry.ts 的 RetryBudget／createRetryBudget() 檔頭。這裡只建立
+  // 一次（迴圈外），逐批傳給下面同一個 readQueueWithRetry() 呼叫，靠物件參照
+  // 讓已消耗的退避時間跨批次累計，避免 MAX_BATCHES=20 批各自重新套用整組
+  // 7 秒上限、最壞情況相乘到 ~140 秒（超過呼叫端 60 秒逾時，見 docs/API.md
+  // §6）。`partial` 一旦變 true 就不會再變回 false（單調）：代表這次
+  // invocation 因為預算用盡而提早停止處理後續批次，已處理的批次不回滾。
+  const retryBudget = createRetryBudget();
+  let partial = false;
 
   // 記錄「這次 invocation 已經確認過存在／不存在」的 bucket，避免同一個 bucket
   // 在同一次 invocation 裡被 getBucket() 反覆確認（多個批次、同一個 bucket 常見，
@@ -384,26 +406,32 @@ Deno.serve(async (req: Request) => {
     // 網路錯誤，見 queue_retry.ts 的允許清單）最多重試到 QUEUE_READ_MAX_ATTEMPTS
     // 次，退避 1s→2s→4s；4xx／SQL 語法類錯誤第一次就放棄。race：這裡重試的是
     // 唯讀 SELECT，沒有寫入副作用，重試不會讓同一批佇列項被處理兩次（見
-    // queue_retry.ts 檔頭「race 安全性」）。
-    const { data: queue, error: queueError, attempts: readAttempts } =
-      await readQueueWithRetry<QueueRow[]>(
-        // Promise.resolve() 包一層：PostgrestFilterBuilder 是 thenable（有
-        // .then()）但不是真正的 Promise（缺 catch／finally／
-        // Symbol.toStringTag），readQueueWithRetry() 的 selectBatch 簽章要求
-        // 真正的 Promise，直接回傳 builder 物件在 `deno check` 會報型別不符。
-        () =>
-          Promise.resolve(
-            supabase
-              .from("purge_storage_queue")
-              .select("id, bucket_id, object_path")
-              .lt("attempts", MAX_ATTEMPTS)
-              .or(`next_attempt_at.is.null,next_attempt_at.lte.${nowIso}`)
-              .order("enqueued_at", { ascending: true })
-              .limit(BATCH_SIZE)
-              .returns<QueueRow[]>(),
-          ),
-        sleep,
-      );
+    // queue_retry.ts 檔頭「race 安全性」）。LS-242：`retryBudget` 是跨批次共用
+    // 的同一個物件（迴圈外建立一次），不是每批各自的新預算。
+    const {
+      data: queue,
+      error: queueError,
+      attempts: readAttempts,
+      budgetExhausted,
+    } = await readQueueWithRetry<QueueRow[]>(
+      // Promise.resolve() 包一層：PostgrestFilterBuilder 是 thenable（有
+      // .then()）但不是真正的 Promise（缺 catch／finally／
+      // Symbol.toStringTag），readQueueWithRetry() 的 selectBatch 簽章要求
+      // 真正的 Promise，直接回傳 builder 物件在 `deno check` 會報型別不符。
+      () =>
+        Promise.resolve(
+          supabase
+            .from("purge_storage_queue")
+            .select("id, bucket_id, object_path")
+            .lt("attempts", MAX_ATTEMPTS)
+            .or(`next_attempt_at.is.null,next_attempt_at.lte.${nowIso}`)
+            .order("enqueued_at", { ascending: true })
+            .limit(BATCH_SIZE)
+            .returns<QueueRow[]>(),
+        ),
+      sleep,
+      retryBudget,
+    );
     queueReadAttempts += readAttempts;
     // R2 修正 m2（merge-review R1 comment da96a7d0）：readAttempts 是「這次讀取
     // 總共嘗試了幾次」（最小值 1），不是「重試了幾次」——4xx／SQL 錯這種永久性
@@ -413,6 +441,27 @@ Deno.serve(async (req: Request) => {
     queueReadRetries += thisReadRetries;
 
     if (queueError) {
+      // LS-242：`classifyQueueReadFailure()` 是「這裡該回 500 還是停下來回
+      // 200 partial」的唯一分流依據（見 queue_retry.ts 檔頭）——預算用盡
+      // 不是服務端真的出錯，是這次 invocation 自己設的節流上限被碰到，不當
+      // 硬失敗回 500，停止處理後續批次，已經處理完成的批次（已 dequeue／已
+      // 標記失敗）不回滾；下次 invocation 的 SELECT 排序（enqueued_at／
+      // next_attempt_at）保證接著處理剩下的列，不會漏掉。
+      const disposition = classifyQueueReadFailure({ budgetExhausted });
+      if (disposition.partial) {
+        partial = true;
+        warnings.push(
+          `purge-storage: 這次 invocation 的重試等待預算已用盡，停止處理` +
+            `後續批次（已處理 ${batches} 批；這一批讀取嘗試 ${readAttempts} 次` +
+            `後放棄）：${queueError.message}`,
+        );
+        console.error(
+          `purge-storage: 重試預算用盡，提早結束（已處理 ${batches} 批，` +
+            `累計嘗試 ${queueReadAttempts} 次、累計重試 ${queueReadRetries} 次）：` +
+            `${queueError.message}`,
+        );
+        break;
+      }
       console.error(
         `purge-storage: 讀取 purge_storage_queue 失敗（嘗試 ${readAttempts} 次` +
           `後放棄，重試 ${thisReadRetries} 次；這次 invocation 累計嘗試 ` +
@@ -570,7 +619,7 @@ Deno.serve(async (req: Request) => {
   console.log(
     `purge-storage: parked=${
       parked ?? 0
-    } queueReadAttempts=${queueReadAttempts} queueReadRetries=${queueReadRetries} orphanEnqueued=${orphanScan.enqueued} orphanDropped=${orphanScan.dropped} ` +
+    } queueReadAttempts=${queueReadAttempts} queueReadRetries=${queueReadRetries} partial=${partial} orphanEnqueued=${orphanScan.enqueued} orphanDropped=${orphanScan.dropped} ` +
       `orphanInvalid=${orphanScan.invalidCount} ` +
       `orphanScanCompleted=${orphanScan.scanCompleted} orphanScanCursor=${
         orphanScan.cursor ?? "null"
@@ -608,9 +657,24 @@ Deno.serve(async (req: Request) => {
       // invocation 會從這裡續掃，不是「已經確認整個 bucket 都乾淨」。
       orphanScanCompleted: orphanScan.scanCompleted,
       orphanScanCursor: orphanScan.cursor,
+      // LS-242（來源 LS-96 池項 cc85f81b）：`partial` 與 `budgetExhausted`
+      // 目前恆相等（唯一會讓這次 invocation 提早結束的原因就是重試預算用盡，
+      // 見 queue_retry.ts 的 classifyQueueReadFailure()）——刻意用兩個欄位
+      // 而不是共用一個：`partial` 是「這次 invocation 有沒有完整處理完」的
+      // 一般性訊號，`budgetExhausted` 是「為什麼」的具體原因，未來如果出現
+      // 其他會讓 invocation 提早結束的原因（例如逾時保護），兩者不必然再相等，
+      // 呼叫端現在就可以分開判讀，不必等到那時候才改回應形狀。
+      partial,
+      budgetExhausted: partial,
     }),
     {
-      status: failures.length > 0 || warnings.length > 0 ? 207 : 200,
+      // LS-242：預算用盡時強制回 200（票文明定，不論 failures／warnings 是否
+      // 非空）——這是這次 invocation 自己設的節流上限被碰到，不是 Storage
+      // 物件層級的部分失敗（207 既有語意），也不是服務端錯誤（500）；已處理
+      // 的批次都已確認成功，只是還沒處理完，下次 invocation 接著做。
+      status: partial
+        ? 200
+        : (failures.length > 0 || warnings.length > 0 ? 207 : 200),
       headers: { "Content-Type": "application/json" },
     },
   );
