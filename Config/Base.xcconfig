@@ -35,8 +35,20 @@ PUSH_ENTITLEMENT = NO
 // 條件覆寫，只在建置給 iphonesimulator（模擬器）時把旗標打開，讓「授權後 device_tokens 出現
 // 本機一列」這條驗收可以在模擬器上實測。裝置（`iphoneos*`）與 Archive（`generic/platform=iOS`
 // 走 `iphoneos` SDK）不受影響，仍是上面 `PUSH_ENTITLEMENT = NO` 那個未限定版本，等 LS-8 後才
-// 在 `Secrets.xcconfig` 開。SDK 限定的設定不看檔案裡的先後順序、看的是「比對得上目前建置的
-// SDK 就用它」，所以放在這裡（`PUSH_ENTITLEMENT = NO` 之後）純粹是就近註解，不影響效果。
+// 在 `Secrets.xcconfig` 開。
+//
+// merge-review R3-m2 訂正：上一版這裡寫「SDK 限定的設定不看檔案裡的先後順序」是錯的——
+// reviewer 用 `xcodebuild -showBuildSettings` 實測兩個反例：(1) 把這行跟上面
+// `PUSH_ENTITLEMENT = NO` 對調（條件式在前、無條件賦值在後，內容一字未改）→
+// `-sdk iphonesimulator` 也變成 `NO`；(2) `Secrets.xcconfig` 寫
+// `PUSH_ENTITLEMENT = NO`（無條件、在 `#include?` 之後才生效）→ 模擬器同樣被蓋成 `NO`。
+// 這行**必須維持在 `PUSH_ENTITLEMENT = NO` 之後**——xcconfig 同名 key 是「後定義者勝」
+// （見上一段 `LittleSprout.entitlements` 文件註解那句話，才是對的），這裡的 SDK 條件式
+// 之所以生效，純粹是因為它剛好排在無條件賦值的後面，不是因為 SDK 限定的設定有更高優先權。
+// 順帶一提：`Secrets.xcconfig` 裡任何對 `PUSH_ENTITLEMENT` 的無條件賦值也會同時蓋掉這行
+// 模擬器條件式——LS-8 後要在 `Secrets.xcconfig` 開關時，務必用 SDK 限定寫法
+// （例如只在需要時對 `iphoneos*` 覆寫，不要寫不帶 `[sdk=...]` 的裸 `PUSH_ENTITLEMENT = YES`
+// 覆蓋全域，否則會連帶把這裡的模擬器行為改掉）。
 PUSH_ENTITLEMENT[sdk=iphonesimulator*] = YES
 CODE_SIGN_ENTITLEMENTS_NO =
 CODE_SIGN_ENTITLEMENTS_YES = LittleSprout/LittleSprout.entitlements
