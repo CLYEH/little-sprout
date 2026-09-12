@@ -17,7 +17,15 @@ Pencil execute 環境沒有 crypto，所以選 FNV-1a 而非 SHA-256；64 位元
 
 用法：design_tree_hash.py <path.pen>            印 tree_hash
       design_tree_hash.py <path.pen> --dump <id>  印該節點的那一行（與 JS `SCAN_HASH_DEBUG = "<id>"` 對照除錯）
-也可被 import：tree_hash(doc: dict) -> str。
+      design_tree_hash.py --result-hash <receipt.json> <scan_key>  以收據自己的 scan_scope／tree_hash／該支陣列重算 result_hash（LS-226）
+也可被 import：tree_hash(doc: dict) -> str、result_hash(key, scan_scope, tree_hash_hex, scan: dict) -> str。
+
+LS-226 result_hash（與 overflow-scan.js 的 IDENTITY／resultHashLines／resultHash 同規格）：對下列各行做同一套 FNV-1a 64
+加總 mod 2^64：`scan=<支名>`、`scope=<頂層 scan_scope>`、`tree_hash=<收據 tree_hash>`、in-scope `flagged` 每筆一行 `flagged=<身分>`、
+corner_anchor 另對 in-scope `unresolved` 每筆一行 `unresolved=<container>`；身分＝sibling_intersection／cross_parent_collision
+`node_a|node_b`、row_overflow `node`、corner_anchor `corner:axis`、text_occlusion `node|overlay`、board_clip `node`。
+design-evidence-check.sh 只對 corner_anchor／text_occlusion／board_clip 重算（收據的 in-scope 陣列完整）；三支 O(n²) 收據只存每類
+一筆代表，重算不了、只驗格式。缺欄位的身分片段用字面 "undefined"（JS 字串串接 undefined 的結果），兩端同值。
 """
 import json
 import math
@@ -125,9 +133,66 @@ def tree_hash(doc):
     return "%016x" % total
 
 
+# ---- LS-226 result_hash ----
+SCAN_KEYS = ("sibling_intersection", "row_overflow", "cross_parent_collision", "corner_anchor", "text_occlusion", "board_clip")
+
+
+def _s(v):
+    return "undefined" if v is None else str(v)
+
+
+def _get(item, key):
+    return item.get(key) if isinstance(item, dict) else None
+
+
+SCAN_IDENTITY = {
+    "sibling_intersection": lambda f: _s(_get(f, "node_a")) + "|" + _s(_get(f, "node_b")),
+    "cross_parent_collision": lambda f: _s(_get(f, "node_a")) + "|" + _s(_get(f, "node_b")),
+    "row_overflow": lambda f: _s(_get(f, "node")),
+    "corner_anchor": lambda f: _s(_get(f, "corner")) + ":" + _s(_get(f, "axis")),
+    "text_occlusion": lambda f: _s(_get(f, "node")) + "|" + _s(_get(f, "overlay")),
+    "board_clip": lambda f: _s(_get(f, "node")),
+}
+
+
+def result_hash_lines(key, scan_scope, tree_hash_hex, scan):
+    if key not in SCAN_IDENTITY:
+        raise KeyError("result_hash：未知的掃描 %r（只接受 %s）" % (key, "|".join(SCAN_KEYS)))
+    lines = ["scan=" + key, "scope=" + _s(scan_scope), "tree_hash=" + _s(tree_hash_hex)]
+    ident = SCAN_IDENTITY[key]
+    for f in (scan.get("flagged") if isinstance(scan, dict) else None) or []:
+        lines.append("flagged=" + ident(f))
+    if key == "corner_anchor":
+        for u in (scan.get("unresolved") if isinstance(scan, dict) else None) or []:
+            lines.append("unresolved=" + _s(_get(u, "container")))
+    return lines
+
+
+def result_hash(key, scan_scope, tree_hash_hex, scan):
+    total = 0
+    for line in result_hash_lines(key, scan_scope, tree_hash_hex, scan):
+        total = (total + fnv1a64(line.encode("utf-8"))) & MASK64
+    return "%016x" % total
+
+
 def main(argv):
+    if len(argv) >= 3 and argv[0] == "--result-hash":
+        try:
+            with open(argv[1], encoding="utf-8") as fh:
+                receipt = json.load(fh)
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            sys.stderr.write("✗ design_tree_hash：%s 讀取／解析失敗（%s）\n" % (argv[1], exc))
+            return 2
+        key = argv[2]
+        scans = receipt.get("scans") if isinstance(receipt, dict) else None
+        scan = scans.get(key) if isinstance(scans, dict) else None
+        if key not in SCAN_IDENTITY or not isinstance(scan, dict):
+            sys.stderr.write("✗ design_tree_hash：收據沒有 scans.%s（只接受 %s）\n" % (key, "|".join(SCAN_KEYS)))
+            return 1
+        print(result_hash(key, receipt.get("scan_scope"), receipt.get("tree_hash"), scan))
+        return 0
     if not argv or argv[0].startswith("--"):
-        sys.stderr.write("用法：design_tree_hash.py <path.pen> [--dump <id>]\n")
+        sys.stderr.write("用法：design_tree_hash.py <path.pen> [--dump <id>] | --result-hash <receipt.json> <scan_key>\n")
         return 2
     try:
         with open(argv[0], encoding="utf-8") as fh:
