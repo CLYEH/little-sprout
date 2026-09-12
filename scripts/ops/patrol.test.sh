@@ -1298,6 +1298,132 @@ else
   echo "✗ ㉗ mutant（R1 舊形狀）應變成 ok（比對不到鎖定），實得「${lock_section_ml}」——負控本身可能無效" >&2; fail=1
 fi
 
+# ---- ㉘（LS-233）：PR 段 BLOCKED 三分流——讀 check bucket 分「CI 跑中」／「check 全綠仍卡＝缺必要
+#        status」／「check 紅」，取代舊版籠統「無動作（CI 沒回報？）」（09-12 #365／#366 兩起事故的重放）。
+# 假 gh：讀 fixtures 目錄回應，不打真的 GitHub API／不需要真的 origin 是 GitHub repo。
+#   gh pr list ...                                                → 固定回 pr-list.tsv（已是 -q 處理過的最終 TSV）
+#   gh pr checks <n> --json ... -q ...                            → pr-checks-<n>.tsv（無此檔＝exit 1，模擬查詢失敗）
+#   gh api repos/:owner/:repo/branches/<b>/protection/required_status_checks -q '.contexts[]'
+#                                                                  → protection-<b>.txt
+#   gh api repos/:owner/:repo/commits/<oid>/status -q '...'       → status-<oid>.txt（缺檔＝空字串，不當失敗）
+mkdir -p "$work/gh-fixtures"
+cat > "$work/bin/gh" <<STUB
+#!/bin/bash
+dir="$work/gh-fixtures"
+if [ "\$1" = pr ] && [ "\$2" = list ]; then
+  cat "\$dir/pr-list.tsv" 2>/dev/null
+  exit 0
+fi
+if [ "\$1" = pr ] && [ "\$2" = checks ]; then
+  n="\$3"
+  if [ -f "\$dir/pr-checks-\${n}.tsv" ]; then cat "\$dir/pr-checks-\${n}.tsv"; exit 0; else exit 1; fi
+fi
+if [ "\$1" = api ]; then
+  path="\$2"
+  case "\$path" in
+    */protection/required_status_checks)
+      b=\$(printf '%s' "\$path" | sed -E 's#.*/branches/([^/]+)/protection.*#\1#')
+      if [ -f "\$dir/protection-\${b}.txt" ]; then cat "\$dir/protection-\${b}.txt"; exit 0; else exit 1; fi
+      ;;
+    */commits/*/status)
+      oid=\$(printf '%s' "\$path" | sed -E 's#.*/commits/([^/]+)/status#\1#')
+      cat "\$dir/status-\${oid}.txt" 2>/dev/null
+      exit 0
+      ;;
+  esac
+fi
+exit 1
+STUB
+chmod +x "$work/bin/gh"
+
+oid900="a5773c0$(printf '0%.0s' $(seq 1 33))"   # 09-12 #365 head 前綴
+oid901="ca5021e$(printf '0%.0s' $(seq 1 33))"   # 09-12 #366 head 前綴
+oid902="deadbee$(printf '0%.0s' $(seq 1 33))"
+oid903="1234567$(printf '0%.0s' $(seq 1 33))"
+cat > "$work/gh-fixtures/pr-list.tsv" <<TSV
+900	BLOCKED	-	48	feature/LS-900-pending	development	false	${oid900}	LS-900 demo pending（重放 #365：18:59 checks 有 pending）
+901	BLOCKED	-	48	feature/LS-901-missing	development	false	${oid901}	LS-901 demo missing-status（重放 #366：21:10 五項全 pass、無 pending、仍 BLOCKED）
+902	BLOCKED	-	48	feature/LS-902-fail	development	false	${oid902}	LS-902 demo check-red
+903	BLOCKED	-	5	feature/LS-903-fresh	development	false	${oid903}	LS-903 demo not-stale-yet
+TSV
+cat > "$work/gh-fixtures/protection-development.txt" <<TXT
+ci
+lint
+rules
+db
+merge-review
+TXT
+cat > "$work/gh-fixtures/pr-checks-900.tsv" <<TSV
+ci-ipad	pass	https://github.com/CLYEH/little-sprout/actions/runs/1001/job/1
+lint	pass	https://github.com/CLYEH/little-sprout/actions/runs/1001/job/2
+rules	pass	https://github.com/CLYEH/little-sprout/actions/runs/1001/job/3
+db	pending	https://github.com/CLYEH/little-sprout/actions/runs/1001/job/4
+ci	pending	https://github.com/CLYEH/little-sprout/actions/runs/1001/job/5
+TSV
+cat > "$work/gh-fixtures/pr-checks-901.tsv" <<TSV
+ci-ipad	pass	https://github.com/CLYEH/little-sprout/actions/runs/1002/job/1
+ci	pass	https://github.com/CLYEH/little-sprout/actions/runs/1002/job/2
+lint	pass	https://github.com/CLYEH/little-sprout/actions/runs/1002/job/3
+rules	pass	https://github.com/CLYEH/little-sprout/actions/runs/1002/job/4
+db	pass	https://github.com/CLYEH/little-sprout/actions/runs/1002/job/5
+TSV
+: > "$work/gh-fixtures/status-${oid901}.txt"   # 21:10 當時 statuses=[]（merge-review 尚未回報）
+cat > "$work/gh-fixtures/pr-checks-902.tsv" <<TSV
+ci-ipad	pass	https://github.com/CLYEH/little-sprout/actions/runs/1003/job/1
+lint	pass	https://github.com/CLYEH/little-sprout/actions/runs/1003/job/2
+ci	fail	https://github.com/CLYEH/little-sprout/actions/runs/999888/job/3
+TSV
+# 903：age 5 < stale 10，不查（沒建 pr-checks-903.tsv；若被誤查，假 gh 會 exit 1，pr_check_flag 會印
+# 「查詢失敗」，即可揭穿 age 門檻退化成無條件查詢）
+
+t0=$(date +%s)
+out28="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-fetch 10 2>&1)"; rc=$?
+t28=$(( $(date +%s) - t0 ))
+rc_is '㉘ exit 0' 0 "$rc" "$out28"
+l900=$(row "$out28" 'feature/LS-900-pending')
+has   '㉘ #365 重放：pending → CI 跑中' "$l900" '⏳ CI 跑中'
+has   '㉘ #365 重放：pending 名單含 db、ci' "$l900" 'db、ci'
+has   '㉘ #365 重放：head sha7' "$l900" "head ${oid900:0:7}"
+has   '㉘ #365 重放：已 48m' "$l900" '已 48m'
+hasnt '㉘ #365 重放：不再印舊「無動作」字樣' "$l900" '無動作'
+l901=$(row "$out28" 'feature/LS-901-missing')
+has   '㉘ #366 重放：全綠仍 BLOCKED＝缺必要 status' "$l901" '⚠ check 全綠仍 BLOCKED＝缺必要 status'
+has   '㉘ #366 重放：缺 merge-review' "$l901" '缺：merge-review'
+has   '㉘ #366 重放：現有 status contexts 印（無）（statuses=[] 當時）' "$l901" '現有 status contexts：（無）'
+has   '㉘ #366 重放：head sha7' "$l901" "${oid901:0:7}"
+has   '㉘ #366 重放：貼 promote: no content diff 提示' "$l901" 'promote: no content diff'
+has   '㉘ #366 重放：否則派 review 提示' "$l901" '否則派 review'
+hasnt '㉘ #366 重放：不再印舊「無動作」字樣' "$l901" '無動作'
+l902=$(row "$out28" 'feature/LS-902-fail')
+has   '㉘ check 紅：列出失敗名稱' "$l902" '✗ check 紅：ci'
+has   '㉘ check 紅：rerun 指令' "$l902" 'gh run rerun'
+has   '㉘ check 紅：--failed（flaky）或修' "$l902" '--failed（flaky）或修'
+has   '㉘ check 紅：附 run id' "$l902" '999888'
+l903=$(row "$out28" 'feature/LS-903-fresh')
+has   '㉘ age 未達 stale → 不查、維持 ok' "$l903" ' ok'
+hasnt '㉘ age 未達 stale → 未觸發查詢失敗（門檻仍生效，未退化成無條件查）' "$l903" '查詢失敗'
+brief28="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-fetch --brief 10 2>&1)"
+has   '㉘ --brief 同步分流：CI 跑中' "$brief28" '⏳ CI 跑中'
+has   '㉘ --brief 同步分流：缺必要 status' "$brief28" '缺必要 status'
+has   '㉘ --brief 同步分流：check 紅' "$brief28" '✗ check 紅：ci'
+echo "ⓘ ㉘ 巡檢耗時（含 3 筆 BLOCKED 各 1～3 次 gh 呼叫）：${t28}s"
+
+# mutation：拿掉三分流、退回舊版單純看 age 印「無動作（CI 沒回報？）」→ #366 重放樣本必須變回舊字樣，
+# 證明上面的分流訊息確實是這段程式碼造成的（同 ㉕／㉗ 慣例：python3 精確替換、count==1 才算找對）。
+mut_pr="$work/patrol.no-blocked-triage.sh"
+python3 - "$patrol" "$mut_pr" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = '*) if [ "$age" -ge "$STALE" ]; then flag=$(pr_check_flag "$n" "$oid" "$base" "$st" "$age"); fi ;;'
+new = '*) if [ "$age" -ge "$STALE" ]; then flag="⏳ ${st} ${age}m 無動作（CI 沒回報？）"; fi ;;'
+assert src.count(old) == 1, "找不到 BLOCKED 三分流呼叫，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+out28m="$(PATH="$work/bin:$PATH" bash "$mut_pr" --repo "$repo" --no-fetch 10 2>&1)"
+l901m=$(row "$out28m" 'feature/LS-901-missing')
+has   '㉘ mutant：拿掉三分流後退回舊字樣「無動作（CI 沒回報？）」（證明分流訊息是這段程式碼造成的）' "$l901m" '無動作（CI 沒回報？）'
+hasnt '㉘ mutant：不再印新版缺必要 status 訊息' "$l901m" '缺必要 status'
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
 fi
