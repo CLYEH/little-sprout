@@ -156703,7 +156703,7 @@
           "id": "s1Kzm",
           "layoutPosition": "absolute",
           "x": 60,
-          "y": 2275.53,
+          "y": 2268,
           "name": "Hero Print",
           "width": 786,
           "height": 584,
@@ -156895,192 +156895,44 @@
               ]
             },
             {
-              "type": "frame",
-              "id": "Z0Lxx",
-              "x": 27,
-              "y": 424.2,
+              "id": "K5E5c",
+              "type": "ref",
+              "ref": "GEBcf",
               "name": "Corner BL",
+              "x": 27,
+              "y": 424.2,
               "width": 52,
-              "height": 52,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "path",
-                  "id": "QIZ89",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Corner Shape",
-                  "geometry": "M0 26l0-26 26 26z",
-                  "viewBox": [
-                    0,
-                    0,
-                    26,
-                    26
-                  ],
-                  "fill": "#C89AA3",
-                  "width": 52,
-                  "height": 52
-                },
-                {
-                  "type": "path",
-                  "id": "Ny9ct",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Corner Edge",
-                  "geometry": "M0 0l26 26",
-                  "viewBox": [
-                    0,
-                    0,
-                    26,
-                    26
-                  ],
-                  "width": 52,
-                  "height": 52,
-                  "stroke": "#FBEBEC8C",
-                  "strokeWidth": 3
-                }
-              ]
+              "height": 52
             },
             {
-              "type": "frame",
-              "id": "nAC3A",
+              "id": "PzO2E",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BR",
               "x": 707,
               "y": 424.2,
-              "name": "Corner BR",
               "width": 52,
-              "height": 52,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "path",
-                  "id": "ErLRq",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Corner Shape",
-                  "geometry": "M26 26l0-26-26 26z",
-                  "viewBox": [
-                    0,
-                    0,
-                    26,
-                    26
-                  ],
-                  "fill": "#C89AA3",
-                  "width": 52,
-                  "height": 52
-                },
-                {
-                  "type": "path",
-                  "id": "uw62J",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Corner Edge",
-                  "geometry": "M26 0l-26 26",
-                  "viewBox": [
-                    0,
-                    0,
-                    26,
-                    26
-                  ],
-                  "width": 52,
-                  "height": 52,
-                  "stroke": "#FBEBEC8C",
-                  "strokeWidth": 3
-                }
-              ]
+              "height": 52
             },
             {
-              "type": "frame",
-              "id": "WwLom",
+              "id": "xV4t0",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TL",
               "x": 27,
               "y": 5,
-              "name": "Corner TL",
               "width": 52,
-              "height": 52,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "path",
-                  "id": "t5yP2b",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Corner Shape",
-                  "geometry": "M0 0l26 0-26 26z",
-                  "viewBox": [
-                    0,
-                    0,
-                    26,
-                    26
-                  ],
-                  "fill": "#C89AA3",
-                  "width": 52,
-                  "height": 52
-                },
-                {
-                  "type": "path",
-                  "id": "t7yS3X",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Corner Edge",
-                  "geometry": "M26 0l-26 26",
-                  "viewBox": [
-                    0,
-                    0,
-                    26,
-                    26
-                  ],
-                  "width": 52,
-                  "height": 52,
-                  "stroke": "#FBEBEC8C",
-                  "strokeWidth": 3
-                }
-              ]
+              "height": 52
             },
             {
-              "type": "frame",
-              "id": "nwqNz",
+              "id": "tzuZ2",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TR",
               "x": 707,
               "y": 5,
-              "name": "Corner TR",
               "width": 52,
-              "height": 52,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "path",
-                  "id": "sKwge",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Corner Shape",
-                  "geometry": "M26 0l-26 0 26 26z",
-                  "viewBox": [
-                    0,
-                    0,
-                    26,
-                    26
-                  ],
-                  "fill": "#C89AA3",
-                  "width": 52,
-                  "height": 52
-                },
-                {
-                  "type": "path",
-                  "id": "sXkDn",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Corner Edge",
-                  "geometry": "M0 0l26 26",
-                  "viewBox": [
-                    0,
-                    0,
-                    26,
-                    26
-                  ],
-                  "width": 52,
-                  "height": 52,
-                  "stroke": "#FBEBEC8C",
-                  "strokeWidth": 3
-                }
-              ]
+              "height": 52
             }
           ]
         }
