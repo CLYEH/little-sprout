@@ -81,6 +81,20 @@ final class CommentsStore {
 
     var commentCount: Int { comments.count }
 
+    /// merge-review R1 m1：`comments.count` 只有在 `hasEarlier == false`（清單已經載到底，
+    /// 不管是首載一頁就裝得下、還是點了幾次「載入更早的留言」後翻完）時才等於伺服器上的真正
+    /// 總數；`hasEarlier == true` 時只代表「至少這麼多」，不是總數（`list_comments`／
+    /// `get_family_timeline` 都沒有回留言計數欄位，已查 `docs/API.md` 確認，見
+    /// `TimelineStore.swift` `commentCounts` 文件註解），這裡不再假裝知道確切總數。
+    ///
+    /// `CommentsSheetView` 只在這個值非 `nil` 時才把它同步回互動列（`TimelineStore.
+    /// setCommentCount`）——效果等同「互動列既有計數 ± 本地送出／移除的增減」：只要
+    /// `hasEarlier` 已經是 `false`，往後每次 `send()` 成功／`removeLocally()` 都會讓
+    /// `comments.count`（進而這個值）正好 ±1，不需要另外維護一份增減簿記；`hasEarlier` 還是
+    /// `true` 時這個值維持 `nil`，互動列既有數字（可能是 LS-216 尚未有總數來源時的預設 0）
+    /// 保持不動，不寫入一個已知不完整、卻讓人誤以為精確的數字。
+    var knownExactCount: Int? { hasEarlier ? nil : comments.count }
+
     func loadInitial() async {
         generation += 1
         let myGeneration = generation

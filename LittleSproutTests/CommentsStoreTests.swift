@@ -71,6 +71,53 @@ final class CommentsStoreTests: XCTestCase {
         XCTAssertFalse(store.hasEarlier, "回傳筆數小於 pageSize 代表這已經是全部")
     }
 
+    // MARK: - merge-review R1 m1：knownExactCount 只在確定總數時才非 nil
+
+    func test_knownExactCount_isNil_whenHasEarlierTrue() async {
+        let stub = StubCommentAPIClient()
+        let rows = (0..<CommentsStore.pageSize).map {
+            makeRow(id: UUID(), createdAt: Date(timeIntervalSince1970: Double($0)))
+        }
+        stub.setListCommentsHandler { _, _, _, _, _ in rows }
+        let store = makeStore(stub)
+
+        await store.loadInitial()
+
+        XCTAssertNil(
+            store.knownExactCount,
+            "hasEarlier 為 true 時 comments.count 只是「至少這麼多」，不該當成確定總數同步回互動列"
+        )
+    }
+
+    func test_knownExactCount_equalsCommentCount_whenHasEarlierFalse() async {
+        let stub = StubCommentAPIClient()
+        stub.setListCommentsHandler { _, _, _, _, _ in
+            [makeCommentRow(id: UUID(), createdAt: Date()), makeCommentRow(id: UUID(), createdAt: Date())]
+        }
+        let store = makeStore(stub)
+
+        await store.loadInitial()
+
+        XCTAssertFalse(store.hasEarlier)
+        XCTAssertEqual(store.knownExactCount, 2, "hasEarlier 為 false 時清單已載到底，等於伺服器上的真正總數")
+    }
+
+    /// 送出成功後（清單已經載到底）：`knownExactCount` 應該正好 +1，等同「互動列既有計數 ± 本地
+    /// 增刪」的效果，不需要另外維護一份增減簿記。
+    func test_knownExactCount_incrementsBySendSuccess_whenAlreadyKnown() async {
+        let stub = StubCommentAPIClient()
+        stub.setListCommentsHandler { _, _, _, _, _ in [makeCommentRow(id: UUID(), createdAt: Date())] }
+        let store = makeStore(stub)
+        await store.loadInitial()
+        XCTAssertEqual(store.knownExactCount, 1)
+
+        stub.setCreateCommentHandler { _, _, _, _ in UUID() }
+        let success = await store.send(body: "太可愛了", authorID: authorID, authorDisplayName: "我")
+
+        XCTAssertTrue(success)
+        XCTAssertEqual(store.knownExactCount, 2, "已知總數的情況下，送出成功應該讓確定總數正好 +1")
+    }
+
     func test_loadInitial_failure_mapsToAppError() async {
         let stub = StubCommentAPIClient()
         stub.setListCommentsHandler { _, _, _, _, _ in throw AppError.network(message: "offline") }

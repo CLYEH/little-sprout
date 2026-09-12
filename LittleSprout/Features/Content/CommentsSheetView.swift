@@ -19,9 +19,12 @@ import UIKit
 /// 輸入列，`.medium` 對這個畫面沒有意義。
 ///
 /// **分頁**：`CommentsStore` 首載最新 `pageSize`（20，同 `docs/API.md` 預設）則＋頂端「載入更早
-/// 的留言」（票文範圍 2 的取捨，見 handoff）。**留言計數同步回互動列**（票文範圍 3）：
-/// `.onChange(of: store.commentCount)` 寫回 `timelineStore.setCommentCount(_:forKey:)`，不需要
-/// 呼叫端手動同步。
+/// 的留言」（票文範圍 2 的取捨，見 handoff）。**留言計數同步回互動列**（票文範圍 3，merge-review
+/// R1 m1 訂正）：`.onChange(of: store.knownExactCount)` 寫回
+/// `timelineStore.setCommentCount(_:forKey:)`——只在 `store.hasEarlier == false`（清單已載到底、
+/// `comments.count` 才等於真正總數）時才寫，不需要呼叫端手動同步；`hasEarlier == true` 時互動列
+/// 既有數字保持不動，不寫入一個已知不完整卻看起來很精確的數字（見 `CommentsStore.
+/// knownExactCount` 文件註解）。
 ///
 /// 每次開啟建一份新的 `CommentsStore`（`@State` 初始值運算式只在這個 View 身分第一次出現時執行
 /// 一次，見 `CommentsStore` 文件註解「每次開啟 sheet 建一份新的」）。
@@ -123,8 +126,9 @@ struct CommentsSheetView: View {
             }
         }
         .task { await store.loadInitial() }
-        .onChange(of: store.commentCount) { _, newCount in
-            timelineStore.setCommentCount(newCount, forKey: targetKey)
+        .onChange(of: store.knownExactCount) { _, newValue in
+            guard let newValue else { return }
+            timelineStore.setCommentCount(newValue, forKey: targetKey)
         }
         .overlay(commentActionsSheetHost)
         .alert(
@@ -180,12 +184,31 @@ struct CommentsSheetView: View {
                 .foregroundStyle(Color.lsTextPrimary)
                 .accessibilityAddTraits(.isHeader)
             // `dHSyh` 稿面用一個全形空白佔位保留高度，不用「0 則留言」——載入完成前／失敗時
-            // 顯示筆數沒有意義，見該板文件註解。
-            Text(store.initialLoadState == .success ? "\(store.commentCount) 則留言" : "\u{3000}")
+            // 顯示筆數沒有意義，見該板文件註解。merge-review R1 m1：`hasEarlier == true` 時
+            // `store.commentCount` 只是「至少這麼多」，不是總數——這裡是 sheet 內部，使用者
+            // 往下就能看到清單與「載入更早的留言」鈕，用「+」誠實標示不確定並不會誤導（同
+            // `store.knownExactCount` 只在確定總數時才寫回互動列的裁量不同：互動列在 sheet
+            // 外，看不到清單佐證，不能用同一套「+」標示）。
+            Text(headCommentCountText)
                 .appFont(.note)
                 .foregroundStyle(Color.lsTextSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var headCommentCountText: String {
+        Self.headCommentCountText(
+            initialLoadState: store.initialLoadState, commentCount: store.commentCount, hasEarlier: store.hasEarlier
+        )
+    }
+
+    /// 抽成靜態純函式方便單元測試（同 `CommentsErrorPresentation.make(from:)` 既有慣例：不依賴
+    /// View 就能測分岔）——merge-review R1 m1。
+    static func headCommentCountText(
+        initialLoadState: CommentsOperationState, commentCount: Int, hasEarlier: Bool
+    ) -> String {
+        guard initialLoadState == .success else { return "\u{3000}" }
+        return hasEarlier ? "\(commentCount)+ 則留言" : "\(commentCount) 則留言"
     }
 }
 

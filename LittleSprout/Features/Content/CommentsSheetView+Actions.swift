@@ -92,7 +92,9 @@ extension CommentsSheetView {
     }
 
     /// Owner 移除／作者刪除成功後——本地立即移除（`CommentsStore.removeLocally`），`.onChange(
-    /// of: store.commentCount)` 會自動把新筆數同步回互動列，這裡不需要額外呼叫。
+    /// of: store.knownExactCount)` 會在總數已確定（`hasEarlier == false`）時自動把新筆數同步
+    /// 回互動列，這裡不需要額外呼叫（見 `CommentsStore.knownExactCount` 文件註解，
+    /// merge-review R1 m1）。
     func commentRemoved(_ commentID: UUID) {
         store.removeLocally(commentID: commentID)
     }
