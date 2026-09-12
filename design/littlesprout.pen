@@ -159287,7 +159287,7 @@
               "id": "pCSYd",
               "name": "H",
               "fill": "$print-ink",
-              "content": "R4 板清單（新順序沿用 MJ-14；沖印品尺寸／04 槽內容 R4 重做，取代 R3 pT2s4 段舊描述）",
+              "content": "R4 板清單（沖印品尺寸／04 槽內容更新，取代 R3 舊描述）",
               "fontFamily": "Noto Sans TC",
               "fontSize": 22,
               "fontWeight": "700"
@@ -160841,7 +160841,7 @@
               "id": "CdSIc",
               "name": "H",
               "fill": "$print-ink",
-              "content": "槽替換方法（LS-147 讀這裡，id 已更新為 R4——逐板寫明要在哪個畫面、哪個狀態按下截圖，不是「直接覆蓋 fill」）",
+              "content": "槽替換方法（LS-147 讀這裡，R4 改為逐板可執行步驟）",
               "fontFamily": "Noto Sans TC",
               "fontSize": 22,
               "fontWeight": "700"
