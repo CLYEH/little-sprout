@@ -14,6 +14,7 @@ private final class PreviewAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable
     func setAlbumChildren(albumID: UUID, childIDs: [UUID]) async throws {}
     func setAlbumDeleted(albumID: UUID, deleted: Bool) async throws {}
     func fetchAlbumMediaLinks(albumID: UUID) async throws -> [AlbumMediaLinkRow] { [] }
+    func fetchMaxSortOrder(albumID: UUID) async throws -> Int? { nil }
     func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws {}
     func updateAlbumTitle(albumID: UUID, title: String) async throws {}
 }

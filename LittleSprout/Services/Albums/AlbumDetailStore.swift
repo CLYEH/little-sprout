@@ -55,10 +55,20 @@ final class AlbumDetailStore {
     }
 
     /// 載入（或重新載入）這本相簿的全部照片——不分頁，票文壓測上限 34 張，一次抓齊。
+    ///
+    /// **LS-237 R2 修（merge-review R1 F1 major）**：`photosAtStart` 記下呼叫當下（第一個
+    /// `await` 之前）`photos` 已有哪些 id——收尾時只把「這次 `refresh()` 飛行期間才新出現」
+    /// 的項目（不在 `photosAtStart`、也不在這次查到的 `newPhotos` 裡）保留並疊在最前面，
+    /// 其餘一律以這次查到的 `newPhotos` 為準。理由：`reflectUploadedMedia(_:)` 不再靠
+    /// `generation` 擋（見該方法文件註解），若這裡整批覆蓋，飛行期間插入的新照片會被這次
+    /// 查詢（發起時還沒查到它）的舊快照蓋掉；但也不能無條件保留 `photos` 裡所有查無的
+    /// id——那樣會讓「`refresh()` 開始之前就已經存在、這次查詢後才發現已被移除」的舊項目
+    /// 復活。只有「開始之前不存在、現在查無」這個交集才是「飛行期間新插入」，才需要保留。
     @discardableResult
     func refresh() async -> Bool {
         generation += 1
         let myGeneration = generation
+        let photosAtStart = Set(photos.map(\.id))
         loadState = .submitting
         do {
             let links = try await apiClient.fetchAlbumMediaLinks(albumID: albumID)
@@ -78,7 +88,9 @@ final class AlbumDetailStore {
                 Self.content(for: link.mediaId, in: rowsByID, signed: signed)
             }
             guard myGeneration == generation else { return false }
-            photos = newPhotos
+            let newIDs = Set(newPhotos.map(\.id))
+            let insertedDuringFlight = photos.filter { !photosAtStart.contains($0.id) && !newIDs.contains($0.id) }
+            photos = insertedDuringFlight + newPhotos
             loadState = .success
             return true
         } catch {
@@ -101,6 +113,16 @@ final class AlbumDetailStore {
     /// 保證「上傳成功＝一定掛進相簿」；這裡只在「使用者還留在這個相簿詳情頁」時把新照片插進
     /// 畫面上的 `photos` 陣列，不重複打一次 `attachMedia`（重複打會多一次網路呼叫，且兩邊
     /// 各自現查一次連結數當 `sortOrder`，同時發生時可能算出同一個值）。
+    ///
+    /// **LS-237 修（池 `4fafaa19`(c)，PLAUSIBLE；R2 依 merge-review R1 F1 major 訂正）**：
+    /// 這裡完成兩次 `await`（`fetchMedia`／`signedURLs`）才寫 `photos`——R1 版本插入前遞增
+    /// `generation`，原意是擋掉一個較早開始、稍後才收尾的 `refresh()` 用插入前的舊快照覆蓋
+    /// 這裡剛插入的結果；但 reviewer 用 gated stub 重現：這正是票文 1(b) 的主場景（上傳飛行中
+    /// 離開再進），新 `AlbumDetailStore` 的**首次** `refresh()` 若跟這裡的插入交錯，會被自己的
+    /// `generation` 守門整批丟棄——相簿既有的照片全部從畫面消失、`loadState` 卡在
+    /// `.submitting`，比「只丟剛上傳那 1 張」的舊行為更差。**改用不動 `generation` 的作法**：
+    /// 這裡只管插入，`refresh()` 收尾時改成以 id 去重合併（見該方法文件註解），不管
+    /// `reflectUploadedMedia` 跟它交錯幾次都不會整批覆蓋。
     func reflectUploadedMedia(_ mediaID: UUID) async {
         guard let row = (try? await apiClient.fetchMedia(ids: [mediaID]))?.first else { return }
         let signed = (try? await Self.signedURLs(for: [row], apiClient: apiClient)) ?? [:]

@@ -36,8 +36,16 @@ struct AlbumDetailView: View {
     // `uploadQueueStore`／`showsUploadQueueSheet`／`dismiss`／`isOwner` 不標 `private`——
     // `AlbumDetailView+Actions.swift`（Nav Row／更多選單／加入照片，跨檔案 extension）需要
     // 讀寫，Swift 的 `private` 以檔案為界，同 `DiaryDetailView`／`DiaryDetailView
-    // +ContentActions.swift` 既有拆檔慣例（該檔文件註解）。
-    @State private var detailStore: AlbumDetailStore?
+    // +ContentActions.swift` 既有拆檔慣例（該檔文件註解）。LS-237：`detailStore`／
+    // `seedLoadFailed` 也加入這個清單——`loadDetailStoreIfNeeded()`／`seedLoadFailureState`
+    // 移到 `AlbumDetailView+Actions.swift`（本檔 `type_body_length` 逼近上限，同檔案拆分
+    // 理由）需要讀寫這兩個。
+    @State var detailStore: AlbumDetailStore?
+    /// LS-237 修（池 `1aa74165` m6）：`.task(id:)` 的 guard（`familyStore.myFamily?.id`／
+    /// `albumSeed` 任一為 nil）落空時原本沒有任何後續，畫面永遠停在 `ProgressView`（Rule 11
+    /// fail loud 違反）——加這顆旗標驅動一個明確的錯誤態＋「重新載入」，見 `body`／
+    /// `AlbumDetailView+Actions.seedLoadFailureState`／`.loadDetailStoreIfNeeded()`。
+    @State var seedLoadFailed = false
     @State var uploadQueueStore: UploadQueueStore?
     @State var showsUploadQueueSheet = false
     @State var showsPhotosPicker = false
@@ -46,6 +54,10 @@ struct AlbumDetailView: View {
     /// 第一批還在解碼時立刻開第二批 picker，兩批 `loadPicked` 非按開始順序完成時，後完成的
     /// 那批會把 `uploadQueueStore` 換掉，先建立的那批列（含失敗列與重試鈕）從 sheet 消失。
     @State var isLoadingPickedItems = false
+    /// LS-237 修（池 `1aa74165` m2）：這批 `loadPicked` 裡有幾個項目因為格式不支援或載入
+    /// 失敗被跳過——沿 `DiaryComposerStore.unsupportedFormatSkippedCount` 既有解法（見
+    /// `AlbumDetailView+Actions.loadPicked`），每次開新一批時歸零。
+    @State var skippedItemCount = 0
     @State private var pickerSelection: [PhotosPickerItem] = []
     @State var showsEditAlbum = false
     @State var showsDeleteConfirmation = false
@@ -55,8 +67,10 @@ struct AlbumDetailView: View {
 
     /// 只在還沒建立 `detailStore` 之前查一次當「種子」（初始 title／childIds）——之後畫面上
     /// 顯示的一律讀 `detailStore` 自己的狀態（`rename`／`setChildren` 之後才是最新值，`
-    /// albumsStore.albums` 這份列表快取不會自動同步，見該檔文件註解）。
-    private var albumSeed: AlbumSummary? {
+    /// albumsStore.albums` 這份列表快取不會自動同步，見該檔文件註解）。LS-237：不標
+    /// `private`——`AlbumDetailView+Actions.loadDetailStoreIfNeeded()` 需要讀，理由同上方
+    /// `detailStore`／`seedLoadFailed` 那段註解。
+    var albumSeed: AlbumSummary? {
         albumsStore.albums.first { $0.id == albumID }
     }
 
@@ -98,6 +112,8 @@ struct AlbumDetailView: View {
                     pickerSelection = []
                     Task { await loadPicked(itemsToLoad, detailStore: detailStore) }
                 }
+            } else if seedLoadFailed {
+                seedLoadFailureState
             } else {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -106,15 +122,7 @@ struct AlbumDetailView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
-        .task(id: albumID) {
-            guard detailStore == nil, let familyID = familyStore.myFamily?.id, let seed = albumSeed else { return }
-            let store = AlbumDetailStore(
-                albumID: albumID, familyID: familyID, title: seed.title, childIDs: seed.childIds,
-                apiClient: albumsStore.apiClient
-            )
-            detailStore = store
-            await store.refresh()
-        }
+        .task(id: albumID) { await loadDetailStoreIfNeeded() }
     }
 
     // MARK: - Compact (iPhone)：釘底 Action Bar
@@ -136,11 +144,12 @@ struct AlbumDetailView: View {
     }
 
     private var actionBar: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: AppSpacing.label) {
+            if skippedItemCount > 0 { skippedItemsReplyRow }
             addPhotosBarButton
-                .padding(.vertical, AppSpacing.item)
-                .padding(.horizontal, AppSpacing.screenPad)
         }
+        .padding(.vertical, AppSpacing.item)
+        .padding(.horizontal, AppSpacing.screenPad)
         .background(Color.lsSurface)
     }
 
@@ -156,6 +165,7 @@ struct AlbumDetailView: View {
                     titleText(store)
                     metaRow(store)
                     addPhotosInlineButton
+                    if skippedItemCount > 0 { skippedItemsReplyRow }
                 }
                 photoGridOrEmptyState(store, containerWidth: contentWidth)
             }

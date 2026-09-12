@@ -183,6 +183,70 @@ final class AlbumDetailStoreTests: XCTestCase {
         XCTAssertEqual(store.photos.count, 1, "同一個 id 已經在畫面上就不重複插入")
     }
 
+    /// LS-237 R2 修（merge-review R1 F1 major）：這支原本叫
+    /// `test_reflectUploadedMedia_notClobberedByStaleInFlightRefresh`，斷言「較舊世代的
+    /// refresh() 收尾時，photos 仍然只有插入後的那 1 張」——reviewer 指出這正是把「整批丟棄
+    /// refresh() 的既有照片」寫成了正確行為（票文 1(b) 的主場景：`AlbumDetailStore` 建好後的
+    /// **首次** `refresh()` 若跟上傳完成交錯，會把相簿既有的 N 張全部丟光，只剩剛上傳那 1
+    /// 張，`loadState` 也卡在 `.submitting`）。改用 `AsyncGate` 卡住 `fetchAlbumMediaLinks`
+    /// （`refresh()` 的第一步）讓它先開始、後完成，驗證正確行為：**結果是「查到的既有照片」
+    /// ＋「飛行期間插入的新照片」合併**，不是互相蓋掉，且 `loadState` 落在 `.success`。
+    func test_refresh_receivesUploadDuringInitialFlight_mergesInsteadOfDiscardingExistingLinks() async throws {
+        let apiClient = StubAlbumsAPIClient()
+        let existingID = UUID()
+        let gate = AsyncGate()
+        apiClient.setFetchAlbumMediaLinksHandler { albumID in
+            await gate.wait()
+            return [AlbumMediaLinkRow(albumId: albumID, mediaId: existingID, sortOrder: 0)]
+        }
+        apiClient.setFetchMediaHandler { ids in ids.map { Self.makeMediaRow(id: $0) } }
+        apiClient.setSignedURLsHandler(Self.echoSignedURLsHandler)
+        let store = makeStore(apiClient: apiClient)
+        let newMediaID = UUID()
+
+        let refreshTask = Task { await store.refresh() }
+        await gate.waitForWaiters(count: 1)
+
+        await store.reflectUploadedMedia(newMediaID)
+        XCTAssertEqual(store.photos.map(\.id), [newMediaID], "插入應該先落地")
+
+        await gate.open()
+        let result = await refreshTask.value
+
+        XCTAssertTrue(result, "初次 refresh() 不該因為飛行中收到上傳完成就整批失敗")
+        XCTAssertEqual(store.loadState, .success, "loadState 應該落在終態，不是卡在 .submitting")
+        XCTAssertEqual(
+            store.photos.map(\.id), [newMediaID, existingID],
+            "結果應該是「飛行中插入的新照片」＋「查到的既有照片」合併，不是互相覆蓋掉一邊"
+        )
+    }
+
+    /// LS-237 R2 新增（merge-review R1 F1 的對稱情境）：上面那支證明「飛行期間新插入的項目
+    /// 不會被覆蓋」，這支證明合併邏輯**不會反過來讓「refresh() 開始之前就已經存在、這次查詢
+    /// 沒查到（已被移除）」的舊項目復活**——只用 `photosAtStart` 排除還不夠，若沒有同時排除
+    /// `newIDs` 已涵蓋的項目、或誤把所有舊 id 都當「飛行期間插入」保留下來，這支會抓到。
+    func test_refresh_doesNotResurrectItemRemovedBeforeThisRefreshStarted() async {
+        let apiClient = StubAlbumsAPIClient()
+        let staleID = UUID()
+        apiClient.setFetchAlbumMediaLinksHandler { _ in [] }
+        apiClient.setFetchMediaHandler { _ in [] }
+        let store = makeStore(apiClient: apiClient)
+        store.seedForPreview(photos: [
+            MediaContent(
+                id: staleID, type: .photo, width: 400, height: 300, thumbWidth: nil, thumbHeight: nil,
+                storagePath: "orig/stale.jpg", isThumbnail: false, signedURL: nil, durationSeconds: nil
+            )
+        ])
+
+        let result = await store.refresh()
+
+        XCTAssertTrue(result)
+        XCTAssertTrue(
+            store.photos.isEmpty,
+            "refresh() 開始之前就已經在 photos 裡、這次查詢查無的舊項目不該復活（已被移除）"
+        )
+    }
+
     // MARK: - submitEdit
 
     /// merge-review R2 m3：`EditAlbumView.submit()` 把 `Set<UUID>` 轉回 `Array` 傳進來，

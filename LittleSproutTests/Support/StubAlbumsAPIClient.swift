@@ -13,6 +13,7 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
     typealias SetAlbumChildrenHandler = @Sendable (UUID, [UUID]) async throws -> Void
     typealias SetAlbumDeletedHandler = @Sendable (UUID, Bool) async throws -> Void
     typealias FetchAlbumMediaLinksHandler = @Sendable (UUID) async throws -> [AlbumMediaLinkRow]
+    typealias FetchMaxSortOrderHandler = @Sendable (UUID) async throws -> Int?
     typealias AttachMediaHandler = @Sendable (UUID, UUID, UUID, Int) async throws -> Void
     typealias UpdateAlbumTitleHandler = @Sendable (UUID, String) async throws -> Void
 
@@ -58,6 +59,8 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         var setAlbumDeletedHandler: SetAlbumDeletedHandler = { _, _ in }
         var setAlbumDeletedCalls: [SetAlbumDeletedCall] = []
         var fetchAlbumMediaLinksHandler: FetchAlbumMediaLinksHandler = { _ in [] }
+        var fetchMaxSortOrderHandler: FetchMaxSortOrderHandler = { _ in nil }
+        var fetchMaxSortOrderCalls: [UUID] = []
         var attachMediaHandler: AttachMediaHandler = { _, _, _, _ in }
         var attachMediaCalls: [AttachMediaCall] = []
         var updateAlbumTitleHandler: UpdateAlbumTitleHandler = { _, _ in }
@@ -118,6 +121,14 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         box.withLock { $0.fetchAlbumMediaLinksHandler = handler }
     }
 
+    func setFetchMaxSortOrderHandler(_ handler: @escaping FetchMaxSortOrderHandler) {
+        box.withLock { $0.fetchMaxSortOrderHandler = handler }
+    }
+
+    var fetchMaxSortOrderCalls: [UUID] {
+        box.withLock { $0.fetchMaxSortOrderCalls }
+    }
+
     func setAttachMediaHandler(_ handler: @escaping AttachMediaHandler) {
         box.withLock { $0.attachMediaHandler = handler }
     }
@@ -167,6 +178,12 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
 
     func fetchAlbumMediaLinks(albumID: UUID) async throws -> [AlbumMediaLinkRow] {
         let handler = box.withLock { $0.fetchAlbumMediaLinksHandler }
+        return try await handler(albumID)
+    }
+
+    func fetchMaxSortOrder(albumID: UUID) async throws -> Int? {
+        box.withLock { $0.fetchMaxSortOrderCalls.append(albumID) }
+        let handler = box.withLock { $0.fetchMaxSortOrderHandler }
         return try await handler(albumID)
     }
 

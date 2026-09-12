@@ -165,6 +165,24 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
         }
     }
 
+    /// LS-237 修（池 `4fafaa19`(a)）：`order(desc).limit(1)` 只取這本相簿目前最大的
+    /// `sort_order`——同 `SupabaseFamilyAPIClient.fetchMyFamily` 既有的「排序＋`limit(1)`
+    /// 取單筆聚合值」寫法，不需要 PostgREST 的 `max()` 聚合語法。
+    func fetchMaxSortOrder(albumID: UUID) async throws -> Int? {
+        do {
+            let response: PostgrestResponse<[SortOrderRow]> = try await client
+                .from("album_media")
+                .select("sort_order")
+                .eq("album_id", value: albumID)
+                .order("sort_order", ascending: false)
+                .limit(1)
+                .execute()
+            return response.value.first?.sortOrder
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
     func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws {
         do {
             let row = AttachAlbumMediaPayload(
@@ -286,4 +304,13 @@ private struct UpdateAlbumTitlePayload: Encodable {
 /// 對多出來的欄位本來就會忽略，不需要宣告完整欄位才能解碼成功）。
 private struct AlbumIDRow: Decodable {
     let id: UUID
+}
+
+/// `fetchMaxSortOrder` 的解碼目標——只選了 `sort_order` 一欄。
+private struct SortOrderRow: Decodable {
+    let sortOrder: Int
+
+    enum CodingKeys: String, CodingKey {
+        case sortOrder = "sort_order"
+    }
 }

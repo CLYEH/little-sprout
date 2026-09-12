@@ -81,12 +81,13 @@ struct CommentsSheetView: View {
 
     var isAX3: Bool { dynamicTypeSize >= .accessibility3 }
     var avatarSize: CGFloat { isAX3 ? 72 : 36 }
-    private var targetKey: String { TimelineEntry.id(kind: kind, refId: refId) }
     /// `+Actions.swift`／`+Footer.swift` 需要組 `ContentActionTarget`／各確認卡的
-    /// `familyID`／`familyName`——同 `TimelineStore.apiClient` 的既有存取層級理由（跨檔案
-    /// extension 碰不到 `private`），這裡不能標 `private`。
+    /// `familyID`／`familyName`／`syncCommentCountIfKnown()` 需要的計數 key——同
+    /// `TimelineStore.apiClient` 的既有存取層級理由（跨檔案 extension 碰不到 `private`），
+    /// 這三個都不能標 `private`。
     var familyID: UUID { store.familyID }
     var familyName: String { familyStore.myFamily?.name ?? "" }
+    var targetKey: String { TimelineEntry.id(kind: kind, refId: refId) }
 
     /// 目前是不是卡在「目標已刪／不屬本家庭」這個終態（票文範圍 4 LS026）——首載或送出任一個
     /// 撞到都要整張 sheet 換成這個態（`docs/API.md`：`list_comments`／`create_comment` 共用

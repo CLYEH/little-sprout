@@ -105,7 +105,24 @@ extension TimelineStore {
         for (kind, targetID) in idsByKind.flatMap({ kind, ids in ids.map { (kind, $0) } })
         where succeededKinds.contains(kind) {
             let key = TimelineEntry.id(kind: kind, refId: targetID)
-            guard !togglingReactionKeys.contains(key) else { continue }
+            guard !togglingReactionKeys.contains(key) else {
+                // LS-237 修（池 `37be169f` m2）：原本整筆 `continue`——這批查到的伺服器計數
+                // 完全丟棄，`toggleReaction` 自己完成時只校正 `reactedByMe`、不校正
+                // `count`，count 停在樂觀更新那一刻的猜測值，直到下次 `refresh` 才會自癒（票
+                // 文範例：首載一個 RTT 競窗內按讚，最終停在錯誤的樂觀值，正確值要等下一次
+                // `refresh` 才會出現）。`reactedByMe` 仍然只信任 `toggleReaction` 自己 RPC
+                // 回來的權威值（這裡不動它，維持「連點去重」文件註解那組理由）；`count` 改用
+                // 這批剛查到的伺服器值校正——伺服器這筆快照的 `reactedByMe` 若跟本地目前的
+                // 樂觀值不一致，代表快照拍攝時間點早於／晚於使用者這次切換，用 ±1 換算成
+                // 「若快照也反映了使用者這次切換」的等價值。
+                let serverState = merged[key] ?? .zero
+                if let localReactedByMe = reactionStates[key]?.reactedByMe {
+                    reactionStates[key]?.count = serverState.reactedByMe == localReactedByMe
+                        ? serverState.count
+                        : (localReactedByMe ? serverState.count + 1 : max(0, serverState.count - 1))
+                }
+                continue
+            }
             reactionStates[key] = merged[key] ?? .zero
         }
     }

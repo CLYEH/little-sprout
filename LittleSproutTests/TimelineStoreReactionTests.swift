@@ -245,93 +245,55 @@ final class TimelineStoreReactionTests: XCTestCase {
         )
     }
 
-    // MARK: - toggleReaction：樂觀更新／失敗回滾（票文 scope 2）
-
-    func test_toggleReaction_fromUnliked_optimisticallyLikesAndConfirms() async throws {
+    /// LS-237 修（池 `37be169f` m2）驗收「競窗計數＝伺服器值 ±1」：首載一個 RTT 競窗內按讚
+    /// （票文原例）——伺服器這批查詢的快照早於使用者這次按讚（`reactedByMe: false`，這則
+    /// 內容原本已經有其他人按的 4 個讚），本地樂觀更新已經先落地成 `(count: 1, reactedByMe:
+    /// true)`（`previous` 預設 `.zero`，還沒收到任何批次計數）。修正前這批查詢整筆
+    /// `continue`，最終停在錯誤的樂觀值 1；修正後應該用伺服器快照 4 校正成 4+1=5——這才是
+    /// 「若快照也反映了使用者這次切換」的正確值。
+    func test_refresh_inFlightToggleReaction_countCorrectedByServerSnapshotPlusOne() async throws {
         let stub = StubTimelineAPIClient()
-        stub.setToggleReactionHandler { _, _, _ in true }
-        let store = TimelineStore(apiClient: stub)
         let refId = UUID()
-
-        try await store.toggleReaction(kind: .diary, refId: refId, familyID: familyID)
-
-        XCTAssertEqual(
-            store.reactionState(forKey: TimelineEntry.id(kind: .diary, refId: refId)),
-            ReactionState(count: 1, reactedByMe: true)
-        )
-        XCTAssertEqual(stub.toggleReactionCalls.count, 1)
-        XCTAssertEqual(stub.toggleReactionCalls.first?.targetType, "diary")
-        XCTAssertEqual(stub.toggleReactionCalls.first?.targetID, refId)
-    }
-
-    func test_toggleReaction_fromLiked_optimisticallyUnlikesAndDecrementsCount() async throws {
-        let stub = StubTimelineAPIClient()
-        stub.setToggleReactionHandler { _, _, _ in false }
-        let store = TimelineStore(apiClient: stub)
-        let refId = UUID()
-        let key = TimelineEntry.id(kind: .diary, refId: refId)
-        store.seedReactionState(ReactionState(count: 3, reactedByMe: true), forKey: key)
-
-        try await store.toggleReaction(kind: .diary, refId: refId, familyID: familyID)
-
-        XCTAssertEqual(store.reactionState(forKey: key), ReactionState(count: 2, reactedByMe: false))
-    }
-
-    /// 失敗要整個 `ReactionState` 回滾到呼叫前的快照（不是只回滾 `reactedByMe`，計數也要一起
-    /// 復原），並把 `AppError` 往外拋讓呼叫端（`InteractionRow`）決定怎麼顯示。
-    func test_toggleReaction_failure_rollsBackToPreviousStateAndThrows() async {
-        let stub = StubTimelineAPIClient()
-        stub.setToggleReactionHandler { _, _, _ in throw AppError.network(message: "offline") }
-        let store = TimelineStore(apiClient: stub)
-        let refId = UUID()
-        let key = TimelineEntry.id(kind: .diary, refId: refId)
-        store.seedReactionState(ReactionState(count: 3, reactedByMe: false), forKey: key)
-
-        do {
-            try await store.toggleReaction(kind: .diary, refId: refId, familyID: familyID)
-            XCTFail("預期拋出錯誤")
-        } catch {
-            XCTAssertTrue(error is AppError, "應拋出已映射的 AppError，不是原始 SDK 錯誤型別")
+        stub.setFetchPointersHandler { _, _, _, _ in
+            [TimelineFeedPointer(kind: .diary, refId: refId, occurredAt: Date(), childIds: [])]
         }
-
-        XCTAssertEqual(
-            store.reactionState(forKey: key), ReactionState(count: 3, reactedByMe: false),
-            "失敗要回滾到呼叫前的狀態（count 與 reactedByMe 都要復原）"
-        )
-    }
-
-    // MARK: - 連點去重（票文 scope 2：in-flight 期間忽略）
-
-    /// 同一個 target 在第一次呼叫還沒完成前又被呼叫第二次——第二次應該安靜忽略（不排隊、
-    /// 不重複打 API），同票文「in-flight 期間忽略或序列化」的第一個選項。用 `AsyncGate` 精準
-    /// 卡住第一次呼叫在「已經進入 in-flight」但「API 尚未回應」的狀態，避免用 `Task.sleep`／
-    /// 裸 `Task.yield` 猜時間（見 `AsyncGate` 文件註解 LS-214 教訓）。
-    func test_toggleReaction_secondCallWhileInFlight_isIgnoredNotQueued() async throws {
-        let stub = StubTimelineAPIClient()
-        let gate = AsyncGate()
+        let countsGate = AsyncGate()
+        stub.setReactionCountsHandler { _, _, targetIDs in
+            await countsGate.wait()
+            return targetIDs.map { ReactionCountRow(targetID: $0, reactionCount: 4, reactedByMe: false) }
+        }
+        let toggleGate = AsyncGate()
         stub.setToggleReactionHandler { _, _, _ in
-            await gate.wait()
+            await toggleGate.wait()
             return true
         }
         let store = TimelineStore(apiClient: stub)
-        let refId = UUID()
+        let key = TimelineEntry.id(kind: .diary, refId: refId)
 
-        // 用 `Task { }`（不是 `async let`）：後者在 Swift 6 strict concurrency 下對
-        // `@MainActor` 測試類別的 `self`（`familyID` 隱含 `self.familyID`）送進子任務會被
-        // 判定「sending 'self' risks causing data races」，同 `EULAStoreTests` 既有的
-        // `Task { await store... }` 寫法（見該檔文件註解）。
-        let firstTask = Task { try await store.toggleReaction(kind: .diary, refId: refId, familyID: familyID) }
-        // 等到第一次呼叫真的卡在 `await apiClient.toggleReaction`（已經插入
-        // `togglingReactionKeys`）才發第二次——program-order 保證，不是猜時間。
-        await gate.waitForWaiters(count: 1)
-        try await store.toggleReaction(kind: .diary, refId: refId, familyID: familyID)
-        await gate.open()
-        try await firstTask.value
+        let refreshTask = Task { await store.refresh(familyID: familyID, childID: nil) }
+        await countsGate.waitForWaiters(count: 1)
 
-        XCTAssertEqual(stub.toggleReactionCalls.count, 1, "in-flight 期間的第二次呼叫應被忽略，不應真的打第二次 API")
+        let toggleTask = Task { try await store.toggleReaction(kind: .diary, refId: refId, familyID: familyID) }
+        await toggleGate.waitForWaiters(count: 1)
         XCTAssertEqual(
-            store.reactionState(forKey: TimelineEntry.id(kind: .diary, refId: refId)),
-            ReactionState(count: 1, reactedByMe: true)
+            store.reactionState(forKey: key), ReactionState(count: 1, reactedByMe: true),
+            "toggle 的樂觀更新應該已經先落地（前提還沒收到任何伺服器計數）"
+        )
+
+        // 放行批次刷新的回應——伺服器快照回報 4（`reactedByMe: false`，還沒反映使用者這次
+        // 切換），跟本地樂觀值 `reactedByMe: true` 不一致，count 應該校正成 4+1=5。
+        await countsGate.open()
+        _ = await refreshTask.value
+        XCTAssertEqual(
+            store.reactionState(forKey: key), ReactionState(count: 5, reactedByMe: true),
+            "count 應該用伺服器快照校正成 4+1=5，不是停在樂觀更新當下猜的 1"
+        )
+
+        await toggleGate.open()
+        try await toggleTask.value
+        XCTAssertEqual(
+            store.reactionState(forKey: key), ReactionState(count: 5, reactedByMe: true),
+            "toggle RPC 確認完成後 reactedByMe 不變，count 維持批次刷新校正後的 5"
         )
     }
 }

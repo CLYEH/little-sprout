@@ -17,8 +17,16 @@ import Foundation
 ///                              的協定，見 `ChildAPIClient`／`DiaryAPIClient`／
 ///                              `TimelineAPIClient` 既有先例）
 ///   - `createAlbum`          → INSERT `public.albums`（owner／member，`created_by` 必須是
-///                              自己，見 docs/API.md §2 `albums` 列）＋插入後向
-///                              `album_summaries` 重讀該列（view 不可寫，見票文 Scope 3）
+///                              自己，見 docs/API.md §2 `albums` 列）——INSERT 回應只取
+///                              `id,title,created_at` 三欄，本地組出等價的 `AlbumListingRow`
+///                              （剛建立的相簿必定沒有 `album_media` 連結、`cover_media_id`
+///                              為 NULL，等同 `album_summaries` view 對這種列回的值，見
+///                              `AlbumListingRow` 文件註解與 `SupabaseAlbumsAPIClient
+///                              .createAlbum` 實作）。LS-237 修（池 `ca7ab3c3`／`0975ec67`）
+///                              訂正這裡舊敘述的「插入後向 `album_summaries` 重讀該列」——
+///                              merge-review R1 major-1 已經改掉這條路徑（兩次請求中間有
+///                              「INSERT 已 commit、重讀失敗就整個 throw」的視窗，會讓使用者
+///                              誤判失敗而重試出兩本同名相簿），這份文件註解沒有跟著更新
 ///   - `setAlbumChildren`     → RPC `set_album_children(p_album_id, p_child_ids)`
 ///   - `setAlbumDeleted`      → RPC `set_album_deleted(p_album_id, p_deleted)`——目前唯一
 ///                              呼叫端是 `AlbumsStore.createAlbum` 的補償路徑（merge-review R1
@@ -57,13 +65,18 @@ protocol AlbumsAPIClient: Sendable {
     /// 一本相簿目前的全部 `album_media` 連結列（不分頁——票文壓測上限 34 張，一次抓齊）。
     func fetchAlbumMediaLinks(albumID: UUID) async throws -> [AlbumMediaLinkRow]
 
+    /// 這本相簿目前最大的 `sort_order`（沒有任何連結列時 `nil`）——LS-237 修（池
+    /// `4fafaa19`(a)）：只取這一個聚合值，不像舊版 `fetchAlbumMediaLinks(albumID:).count`
+    /// 那樣把全部連結列都抓回來只為了數數量。`AlbumsStore.attachUploadedMedia` 只在「這本
+    /// 相簿本地還沒快取過下一個 `sortOrder`」時打這支一次，見該方法文件註解。
+    func fetchMaxSortOrder(albumID: UUID) async throws -> Int?
+
     /// 「加入照片」上傳成功後把新 `media` 列掛進這本相簿——直接 `.insert()`（`album_media`
     /// 對 owner／member 開 INSERT grant，不是 RPC-only，見 docs/API.md §2），同
     /// `DiaryAPIClient.attachMedia` 對 `diary_media` 的既有寫法（`upsert`＋`onConflict`，
     /// 避免同一張照片被同一個呼叫端意外重複掛兩次時撞 `(album_id, media_id)` 主鍵衝突）。
-    /// `sortOrder` 由呼叫端算好傳入——`AlbumsStore.attachUploadedMedia`（merge-review R2 M2
-    /// 起唯一的呼叫端）現查一次 `fetchAlbumMediaLinks(albumID:).count` 當基底，見該方法
-    /// 文件註解。
+    /// `sortOrder` 由呼叫端算好傳入——`AlbumsStore.attachUploadedMedia`（唯一的呼叫端）用
+    /// `fetchMaxSortOrder` 查一次基底後本地原子遞增，見該方法文件註解。
     func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws
 
     /// 編輯相簿名稱——`albums.title` 僅建立者本人可直接 `.update()`（`albums_update` policy，
