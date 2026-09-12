@@ -159213,7 +159213,7 @@
       "width": 900,
       "fill": "$print-paper",
       "layout": "vertical",
-      "gap": 10,
+      "gap": 24,
       "padding": 44,
       "children": [
         {
