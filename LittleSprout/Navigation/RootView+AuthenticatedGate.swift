@@ -48,6 +48,8 @@ struct AuthenticatedGate: View {
     /// 自己的 `.task` 是另一個觸發點（畫面進場）。
     let resumer: PendingAccountDeletionResumer
     let safetyAPIClient: SafetyAPIClient
+    /// LS-218：轉手往下傳到 `AuthenticatedRootView`（留言 sheet），這裡不直接使用。
+    let commentAPIClient: CommentAPIClient
     /// LS-217：轉手往下傳到 `AuthenticatedRootView`，這裡不直接使用。
     let pushNotificationStore: PushNotificationStore
     @Binding var pendingInviteCode: String?
@@ -138,7 +140,7 @@ struct AuthenticatedGate: View {
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
-                    pushNotificationStore: pushNotificationStore
+                    commentAPIClient: commentAPIClient, pushNotificationStore: pushNotificationStore
                 )
             } else {
                 ForkView(

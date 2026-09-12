@@ -420,11 +420,13 @@ $$;
 --     SECURITY DEFINER 但**不對 authenticated 開放**、只給 service_role 執行的
 --     public RPC——finalize_account_deletion（LS-151，Edge Function delete-account
 --     用 service_role 呼叫）、purge_storage_queue_mark_failed／
---     purge_storage_queue_enqueue_orphans／purge_storage_unknown_media_paths
---     （LS-153／LS-213，purge-storage Edge Function 用；enqueue_orphans 是
+--     purge_storage_unknown_media_paths
+--     （LS-153／LS-213，purge-storage Edge Function 用；enqueue_orphans 原本是
 --     LS-213 範圍 2 補的——service_role 對 purge_storage_queue 原本只有
 --     select／delete，沒有 insert，見
---     20260906050606_soft_delete_unreferenced_media.sql 第 1c 段；
+--     20260906050606_soft_delete_unreferenced_media.sql 第 1c 段；LS-222 起改由
+--     下面的 purge_storage_queue_enqueue_orphans_v2 取代、原簽名 v1 已於 LS-227
+--     DESTRUCTIVE 移除，見下方另一則說明；
 --     unknown_media_paths 是 LS-213 R2（merge-review R1 F2）補的——把反查
 --     media.storage_path／thumb_path 從 GET .in() 查詢改成 RPC，避免候選路徑
 --     一多撞 HTTP 414，見同檔第 1e 段）、
@@ -436,6 +438,12 @@ $$;
 --     `supabase-js` 的 `.rpc()` 完全叫不到），皆非前端直接呼叫的 API 邊界。授權方向與
 --     另外兩組相反：authenticated／anon／PUBLIC 都必須「不可執行」，service_role
 --     必須「可執行」；definer／search_path 收斂的檢查與 v_definer_rpcs 相同。
+--
+--   LS-227（DESTRUCTIVE）：`purge_storage_queue_enqueue_orphans(text, uuid,
+--   text[])`（v1，單整數回傳）已零生產呼叫端（LS-222 起由 `_v2` 取代，LS-223
+--   sweeper comment `3cbe31bb` 確認唯一呼叫端是 `109_…sql` 自測）；使用者
+--   DESTRUCTIVE-APPROVED 核可後由本票移除函式本體，白名單同步移除這一行
+--   （`_v2` 保留不動）。
 --
 -- N3 的問題背景：第 1 輪把 get_family_timeline 從白名單裡整支排除（因為它不是
 -- definer），順帶把它排除到了下面「清單外函式」那段掃描的**輸入條件**之外——那段
@@ -512,8 +520,7 @@ declare
     'public.finalize_account_deletion(uuid)',  -- LS-151：delete-account 用
     'public.notification_recipients(uuid[])',  -- LS-172：push-dispatch 用（R2 改批次簽章，見 migration 檔頭第 2 段）
     'public.purge_storage_classify_orphan_paths(text[])',  -- LS-222：purge-storage 用（收口 LS-213 R2 N3）
-    'public.purge_storage_queue_enqueue_orphans(text, uuid, text[])',  -- LS-213：舊簽名，deprecated（LS-222 起由 _v2 取代，index.ts 已改呼叫 _v2，零呼叫端只剩 109_…sql §4 自測；移除待 DESTRUCTIVE 核可票，見 migration 檔頭）
-    'public.purge_storage_queue_enqueue_orphans_v2(text, uuid, text[])',  -- LS-222：purge-storage 用（收口 LS-213 R2 N3，回傳加 dropped）
+    'public.purge_storage_queue_enqueue_orphans_v2(text, uuid, text[])',  -- LS-222：purge-storage 用（收口 LS-213 R2 N3，回傳加 dropped）；舊簽名 v1 已於 LS-227 DESTRUCTIVE 移除（2026-09-12）
     'public.purge_storage_queue_mark_failed(uuid[], text)',  -- LS-153：purge-storage 用
     'public.purge_storage_unknown_media_paths(text[])'  -- LS-213 R2：舊簽名，仍被 purge_storage_classify_orphan_paths() 內部呼叫，保留不刪
   ];

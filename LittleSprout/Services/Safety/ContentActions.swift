@@ -23,15 +23,26 @@ enum ContentAction: Equatable, Sendable {
     case block(memberID: UUID, memberName: String)
     case removeAsOwner
     case deleteOwn
+    /// LS-218（依 LS-177 稿 `DUyg3`）：留言專屬的 Owner 移除——RPC／icon／危險色語意與
+    /// `.removeAsOwner` 完全相同，唯一差異是顯示文案「移除這則留言」而非「移除這則內容」
+    /// （Notes `QFvDu`：「與 LS-152 05 的差異只在 Action List 只有一列『移除這則留言』」）。
+    /// **不重用 `.removeAsOwner` 這個 case**：它的 `.label` 是 LS-189 已經測試釘住的既有字串
+    /// （`ContentActionsTests.test_action_icon_labelAndDanger`），改了會連動改掉日記／照片的
+    /// 顯示文案——這不是「多一個 case 比較乾淨」的偏好，是避免同一個字串背兩種語意的必要區分。
+    /// **另一個關鍵差異**：點下去之後導向的不是 `OwnerRemoveContentConfirmSheet`，而是跟
+    /// `.deleteOwn` 一樣的 `CommentDeleteConfirmationSheet`（`docs/API.md` `set_comment_deleted`
+    /// 本來就同時服務作者自刪與 owner 移除兩種呼叫者，不像 `remove_content_as_owner` 是
+    /// owner 專用的另一支 RPC），見 `CommentsSheetView+Actions.handleCommentAction`。
+    case removeCommentAsOwner
 
     /// SF Symbol 對照（LS-152 Notes「SF Symbol 對照」段）：flag→flag.fill、
-    /// user-x→person.fill.xmark、trash-2→trash（`removeAsOwner`／`deleteOwn` 共用，同
-    /// `DeleteConfirmationSheet` 既有的刪除圖示）。
+    /// user-x→person.fill.xmark、trash-2→trash（`removeAsOwner`／`deleteOwn`／
+    /// `removeCommentAsOwner` 共用，同 `DeleteConfirmationSheet` 既有的刪除圖示）。
     var icon: String {
         switch self {
         case .report: "flag.fill"
         case .block: "person.fill.xmark"
-        case .removeAsOwner, .deleteOwn: "trash"
+        case .removeAsOwner, .deleteOwn, .removeCommentAsOwner: "trash"
         }
     }
 
@@ -39,13 +50,15 @@ enum ContentAction: Equatable, Sendable {
     /// 本身不在 `WgbNc` demo 出現（那張示範態刻意呈現「viewer 是家庭管理者、且不是作者」的組合，
     /// 見 `contentActions` 文件註解），這裡的「刪除」是這一列本身的通用文案——實際刪除確認卡
     /// 的標題／內文由呼叫端接的 `DiaryDeleteConfirmationSheet`／`CommentDeleteConfirmationSheet`
-    /// （LS-190）各自提供，這裡只需要一個夠清楚的動作列文字。
+    /// （LS-190）各自提供，這裡只需要一個夠清楚的動作列文字。`removeCommentAsOwner`：`DUyg3`
+    /// 稿面示範文案「移除這則留言」。
     var label: String {
         switch self {
         case .report: "檢舉這則內容"
         case .block(_, let memberName): "封鎖\(memberName)"
         case .removeAsOwner: "移除這則內容"
         case .deleteOwn: "刪除"
+        case .removeCommentAsOwner: "移除這則留言"
         }
     }
 
@@ -54,7 +67,7 @@ enum ContentAction: Equatable, Sendable {
     var isDanger: Bool {
         switch self {
         case .report, .block: false
-        case .removeAsOwner, .deleteOwn: true
+        case .removeAsOwner, .deleteOwn, .removeCommentAsOwner: true
         }
     }
 }

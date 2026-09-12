@@ -37,6 +37,8 @@ struct LittleSproutApp: App {
     /// LS-189：內容操作表（檢舉／封鎖／Owner 移除）用的 client——不是 `@State`，同
     /// `diaryAPIClient` 的既有理由（不可變的純 service 物件，本身不 Observable）。
     let safetyAPIClient: SafetyAPIClient
+    /// LS-218：留言 sheet（清單／送出／刪除）用的 client——同 `safetyAPIClient` 的既有理由。
+    let commentAPIClient: CommentAPIClient
     /// LS-217：推播權限與裝置 token 註冊——跟 `familyStore` 同理隨 app 存活，見
     /// `PushNotificationStore` 文件註解。
     @State private var pushNotificationStore: PushNotificationStore
@@ -77,6 +79,7 @@ struct LittleSproutApp: App {
         accountAPIClient = SupabaseAccountAPIClient(client: client)
         _resumer = State(initialValue: PendingAccountDeletionResumer(accountAPIClient: accountAPIClient))
         safetyAPIClient = SupabaseSafetyAPIClient(client: client)
+        commentAPIClient = SupabaseCommentAPIClient(client: client)
         let pushNotificationStore = PushNotificationStore(
             authorizationService: SystemPushAuthorizationService(),
             deviceTokenAPIClient: SupabasePushDeviceTokenAPIClient(client: client)
@@ -121,6 +124,7 @@ struct LittleSproutApp: App {
             accountAPIClient: accountAPIClient,
             resumer: resumer,
             safetyAPIClient: safetyAPIClient,
+            commentAPIClient: commentAPIClient,
             pushNotificationStore: pushNotificationStore,
             pendingInviteCode: $pendingInviteCode
         )

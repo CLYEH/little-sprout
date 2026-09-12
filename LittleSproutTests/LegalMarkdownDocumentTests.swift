@@ -147,10 +147,10 @@ final class LegalMarkdownDocumentTests: XCTestCase {
             "docs/legal/terms-of-service.md 應已透過 project.yml resources 進 app bundle"
         )
         XCTAssertFalse(document.blocks.isEmpty)
-        // 草稿期現況（LS-132 文本核可、填入真正生效日期前）：這兩個斷言預期會隨 LS-132
-        // 一起更新，不是意外回歸——見票文「不做：法務文本修訂」，日期字串就是從檔案動態讀出。
-        XCTAssertEqual(document.version, "v0.1（草稿，尚未生效）")
-        XCTAssertEqual(document.effectiveDateDisplay, "核可後公布")
+        // LS-132 已填入 placeholder、標記正式生效（1.0.0 / 2026-09-12）：這兩個斷言隨檔案
+        // 內容更新，不是意外回歸——版本／日期字串就是從檔案動態讀出（見 splitHeader）。
+        XCTAssertEqual(document.version, "1.0.0")
+        XCTAssertEqual(document.effectiveDateDisplay, "2026-09-12")
     }
 
     func test_loadBundled_privacyPolicy_parsesRealFileWithoutError() throws {
@@ -159,8 +159,8 @@ final class LegalMarkdownDocumentTests: XCTestCase {
             "docs/legal/privacy-policy.md 應已透過 project.yml resources 進 app bundle"
         )
         XCTAssertFalse(document.blocks.isEmpty)
-        XCTAssertEqual(document.version, "v0.1（草稿，尚未生效）")
-        XCTAssertEqual(document.effectiveDateDisplay, "核可後公布")
+        XCTAssertEqual(document.version, "1.0.0")
+        XCTAssertEqual(document.effectiveDateDisplay, "2026-09-12")
     }
 
     /// 兩份文件的 Doc Title 是固定字串（Notes `jaQmb` 對照表），不是讀自檔案的 H1。

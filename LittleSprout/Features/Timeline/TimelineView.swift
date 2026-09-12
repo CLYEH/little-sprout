@@ -15,12 +15,20 @@ struct TimelineView: View {
     let timelineStore: TimelineStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
-    /// LS-189：轉手往下傳到 `DiaryDetailView`（內容操作表：檢舉／封鎖／Owner 移除／刪除），
-    /// 這裡不直接使用。
+    /// LS-189：轉手往下傳到 `DiaryDetailView`（內容操作表：檢舉／封鎖／Owner 移除／刪除）；
+    /// LS-218：留言 sheet（`CommentsSheetView`）內的留言列操作表（檢舉／封鎖）也用得到，這裡
+    /// 一併直接用。
     let safetyAPIClient: SafetyAPIClient
+    /// LS-218：留言 sheet 用——`InteractionRow.onOpenComments` 開出的 `CommentsSheetView`。
+    let commentAPIClient: CommentAPIClient
 
     @State private var selectedChildID: UUID?
     @State private var showsDiaryEditor = false
+    /// LS-218：`InteractionRow.onOpenComments`（三種卡片共用）開出的留言 sheet 目標——見
+    /// `TimelineView+Comments.swift`（`commentsSheetHost`／`openComments(kind:refId:)`）。不是
+    /// `private`：跨檔案 extension 需要 `$commentsSheetTarget`，同 `apiClient` 在
+    /// `TimelineStore` 的既有存取層級理由。
+    @State var commentsSheetTarget: CommentsSheetTarget?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     /// merge-review R3（`add3f2c1` m1）：`feedScrollView` 內容區實際渲染寬度（已扣掉
@@ -75,6 +83,7 @@ struct TimelineView: View {
                 )
             }
         }
+        .overlay(commentsSheetHost)
         .navigationDestination(isPresented: $showsDiaryEditor) {
             if let familyID = familyStore.myFamily?.id {
                 DiaryEditorView(
@@ -215,8 +224,10 @@ struct TimelineView: View {
 
     /// 單張卡片實際可用的外部寬度——`columns == 1` 時就是整個 feed 內容寬；`columns > 1`
     /// （iPad `LazyVGrid`）時依 `GridItem(.flexible())` 的既有演算法（欄距 `AppSpacing.label`
-    /// 均分扣除後平分欄數）反推，跟 `LazyVGrid` 自己算出的欄寬一致。
-    private func cardOuterWidth(columns: Int) -> CGFloat {
+    /// 均分扣除後平分欄數）反推，跟 `LazyVGrid` 自己算出的欄寬一致。不是 `private`——
+    /// `TimelineView+Comments.swift` 的 `cardView(for:columns:)` 需要它，跨檔案 extension 碰
+    /// 不到 `private`（同 `commentAPIClient` 等既有存取層級理由）。
+    func cardOuterWidth(columns: Int) -> CGFloat {
         guard columns > 1 else { return feedContentWidth }
         let totalGap = AppSpacing.label * CGFloat(columns - 1)
         return max(0, (feedContentWidth - totalGap) / CGFloat(columns))
@@ -254,33 +265,6 @@ struct TimelineView: View {
                 }
             }
         }
-    }
-
-    @ViewBuilder
-    private func cardView(for entry: TimelineEntry, columns: Int) -> some View {
-        switch entry.content {
-        case .diary(let content):
-            NavigationLink(value: TimelineRoute.diaryDetail(entry.refId)) {
-                DiaryCardView(
-                    content: content, taggedChildren: taggedChildren(for: entry), timelineStore: timelineStore,
-                    refId: entry.refId,
-                    previewRowWidth: max(0, cardOuterWidth(columns: columns) - 2 * AppSpacing.insetCard)
-                )
-            }
-            .buttonStyle(.plain)
-            // LS-158：QA e2e 用 identifier 找卡片（整張卡合併成一顆 button，label＝日記本文，會隨內容變）。
-            .accessibilityIdentifier(QAAccessibilityID.timelineDiaryCard)
-        case .album(let content):
-            AlbumCardView(content: content, timelineStore: timelineStore, refId: entry.refId)
-        case .media(let content):
-            PhotoCardView(content: content, timelineStore: timelineStore)
-        case nil:
-            EmptyView()
-        }
-    }
-
-    private func taggedChildren(for entry: TimelineEntry) -> [Child] {
-        childrenStore.children.filter { entry.childIds.contains($0.id) }
     }
 
     /// 捲到最後幾筆時觸發載入下一頁——不是捲到絕對底部才觸發，避免使用者要等到看到
@@ -379,7 +363,7 @@ struct TimelineView: View {
         TimelineView(
             familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-            safetyAPIClient: PreviewSafetyAPIClient()
+            safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient()
         )
     }
 }

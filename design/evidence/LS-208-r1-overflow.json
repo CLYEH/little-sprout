@@ -1,0 +1,99 @@
+{
+  "ticket": "LS-208",
+  "round": 1,
+  "head_sha": "b193bf1c629efc72b1957cd5190301218096c189",
+  "total_nodes": 9879,
+  "tree_hash": "245c0476a10c760e",
+  "scan_scope": "document",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "document",
+      "document_count": 2071,
+      "flagged": [
+        {"node_a": "XekQz", "node_b": "pYE38", "classification": "母題角托 corner-out 5pt 或圖示遮罩幾何既有交疊（品牌母題設計，非本票新增缺陷；同類 1710 例）"},
+        {"node_a": "cPbyp", "node_b": "XMVoJ", "classification": "Sheet／Dialog modal 遮罩層與底稿既有 z-order 交疊（VR 既定不算真實遮蔽；同類 100 例）"},
+        {"node_a": "Z4TsQ/tBi8u", "node_b": "Z4TsQ/xlLIo", "classification": "扇疊照片裝飾（Fan Ghost／Photo Print 堆疊）既有視覺重疊（同類 95 例）"},
+        {"node_a": "ilY9O", "node_b": "NUPWz", "classification": "既有暗化／染料池裝飾疊層（照片母題既定視覺處理；同類 47 例）"},
+        {"node_a": "yqk1S/GuOM0", "node_b": "yqk1S/j7iqM", "classification": "Google G Mark 圖示內部四色路徑重疊（單一 icon 向量拼接，設計本身如此；同類 36 例）"},
+        {"node_a": "lxZzb", "node_b": "gJOJT", "classification": "版面佔位 Spacer／Body 與固定 UI 元件（Tab Bar／FAB／Dropdown／Accessory Bar／Keyboard）既有版面共享（不可見排版框，非可見缺陷；同類 36 例）"},
+        {"node_a": "osCBD/X7DYDo/go3YL", "node_b": "osCBD/X7DYDo/uHUe1", "classification": "既有 cmp/Role Option 元件內部圖文重疊（勾選標記與文字既定佈局；同類 11 例）"},
+        {"node_a": "abfZE", "node_b": "wOzaO", "classification": "頭像堆疊裝飾既有重疊（Avatar Stack 母題；同類 11 例）"},
+        {"node_a": "CV0TW", "node_b": "iCUJF", "classification": "拖曳／已選狀態徽章既有疊層（Selected Badge／Dragging Photo；同類 6 例）"},
+        {"node_a": "jftM0", "node_b": "yec61", "classification": "root 層畫面／Notes 板在畫布上緊鄰擺放（僅畫布座標距離判定，非同一畫面內視覺重疊；同類 5 例）"},
+        {"node_a": "b66CZc", "node_b": "BXbTE", "classification": "版面佔位 Spacer 與印品母題舞台（Print Stage）既有重疊（同類 5 例）"},
+        {"node_a": "F9Gvz2", "node_b": "EfgyZ", "classification": "劃線裝飾（Struck Text／Strike Rule）既有視覺處理（同類 4 例）"},
+        {"node_a": "zBeVi", "node_b": "L5YAG", "classification": "OTP 欄位焦點框既有視覺重疊（Focus Ring；同類 2 例）"},
+        {"node_a": "KhdcJ", "node_b": "rNjIR", "classification": "既有 Row 元件內部圖文重疊（icon／文字與 chevron 既定佈局，本票範圍 8 新板 UOWte／L6iIQ0 沿用 RxXvq 既有結構；同類 2 例）"},
+        {"node_a": "WitwS/uZ5Lt", "node_b": "WitwS/kVUWa", "classification": "堆疊紙張裝飾（Stack Sheet）既有視覺重疊（同類 1 例）"}
+      ]
+    },
+    "row_overflow": {
+      "scope": "document",
+      "document_count": 560,
+      "flagged": [
+        {"node": "tlJFt", "classification": "母題角托 corner-out 5pt 既有版面右緣外溢設計（同類 508 例）"},
+        {"node": "jCGWG", "classification": "日記編輯器照片挑選列（Photo Strip）橫向捲動 peek 邊界既有設計（同類 29 例）"},
+        {"node": "BXbTE", "classification": "印品母題舞台（Print Stage）既有版面外溢（同類 5 例）"},
+        {"node": "X9BSMc/A30rIX", "classification": "頭像縮寫文字（Initial）在 Avatar 圓形裁切內既有外溢（視覺已被圓形 clip 裁掉，同類 5 例）"},
+        {"node": "qX0b8", "classification": "Hero Photo 在 Photo Wrap 內既有版面外溢（同類 2 例）"},
+        {"node": "WitwS/uZ5Lt", "classification": "堆疊紙張裝飾（Stack Sheet）既有版面外溢（同類 2 例）"},
+        {"node": "aNTzo/OCYqN", "classification": "日期章戳記（Date Anchor／Stamp Wrap）既有版面外溢（同類 2 例）"},
+        {"node": "QQOCI", "classification": "法務連結底線（Legal Link Underline）既定寬度既有外溢（同類 2 例）"},
+        {"node": "KhdcJ", "classification": "既有 Row 元件內部圖文重疊（icon／文字與 chevron 既定佈局；同類 2 例）"},
+        {"node": "FBRlf/iu3Q8", "classification": "欄位佔位文字（Field Value）既有版面外溢（同類 1 例）"},
+        {"node": "z0ATW/yxwnz", "classification": "貼上連結按鈕文字標籤（Secondary Label）既有版面外溢（同類 1 例）"},
+        {"node": "k8PVy", "classification": "分段控制項標籤（Segment Label）既有版面外溢（同類 1 例）"}
+      ]
+    },
+    "cross_parent_collision": {
+      "scope": "document",
+      "document_count": 321,
+      "flagged": [
+        {"node_a": "ilY9O", "node_b": "pYE38", "classification": "角托 corner-out 跨 parent 絕對座標交疊（既有印品母題設計，同類 140 例）"},
+        {"node_a": "Wo9Ox", "node_b": "K4qvK6", "classification": "角托與相鄰版面 Spacer 16 跨 parent 交疊（既有版面節奏，同類 76 例）"},
+        {"node_a": "aSlCA", "node_b": "R0UbU/R1lbwf/sD5Ma", "classification": "Sheet Scrim 與底稿角托跨 parent z-order 交疊（modal 遮罩既定設計，同類 74 例）"},
+        {"node_a": "zfSO1/DjW91", "node_b": "OR1hw", "classification": "角托與 Tab Bar 跨 parent 交疊（既有 Feed／Tab Bar 版面節奏，同類 14 例）"},
+        {"node_a": "bOKfx/DjW91", "node_b": "sbsqF", "classification": "角托與 Home Indicator Area 跨 parent 交疊（既有版面節奏，同類 6 例）"},
+        {"node_a": "gEYpf", "node_b": "zGEet", "classification": "角托與下拉選單（Dropdown Menu）跨 parent z-order 交疊（既有設計，同類 4 例）"},
+        {"node_a": "C1f3W", "node_b": "EnaX4", "classification": "角托與系統通知示意圖（Notification Preview）跨 parent 交疊（既有設計，同類 3 例）"},
+        {"node_a": "s1LfAj", "node_b": "repj6", "classification": "照片列表頭與拖曳中照片（Dragging Photo）跨 parent 交疊（既有拖曳互動設計，同類 2 例）"},
+        {"node_a": "GWAHq", "node_b": "CpjLh", "classification": "角托 corner-out 與相鄰卡片文字內容（Card Text）跨 parent 交疊（AX3 大字級下既有母題設計，同類 1 例）"},
+        {"node_a": "SV5Ka", "node_b": "CpjLh", "classification": "角托 corner-out 與相鄰卡片文字內容（Card Text）跨 parent 交疊（AX3 大字級下既有母題設計，同類 1 例）"}
+      ]
+    },
+    "corner_anchor": {
+      "boards": ["yec61", "HLXo3", "qtCd7", "kHDk4", "N1aeiU", "FEuAL", "iBYUK", "XhwG6", "b3nzDp", "dxPvP", "i6uiB4", "z042Yg", "Oic2v", "JzyIv", "RC7bN", "jftM0", "UOWte", "VDO0S", "L6iIQ0", "Z8Q4R"],
+      "scope": "document",
+      "document_count": 0,
+      "containers": 6,
+      "points": 48,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 225,
+      "document_points": 1784,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "ref_hits": 746,
+      "unresolved": [
+        {"container": "olUEl", "container_name": "Icon 180", "board": "設計語言 v3.3 · 褪色相片粉調 Design Tokens", "classification": "mount_pair"},
+        {"container": "C9eEt", "container_name": "Icon 60", "board": "設計語言 v3.3 · 褪色相片粉調 Design Tokens", "classification": "mount_pair"},
+        {"container": "H1HjAP", "container_name": "Icon 40", "board": "設計語言 v3.3 · 褪色相片粉調 Design Tokens", "classification": "mount_pair"}
+      ]
+    },
+    "text_occlusion": {
+      "boards": ["yec61", "HLXo3", "qtCd7", "kHDk4", "N1aeiU", "FEuAL", "iBYUK", "XhwG6", "b3nzDp", "dxPvP", "i6uiB4", "z042Yg", "Oic2v", "JzyIv", "RC7bN", "jftM0", "UOWte", "VDO0S", "L6iIQ0", "Z8Q4R"],
+      "scope": "document",
+      "document_count": 0,
+      "flagged": [],
+      "document_flagged": []
+    },
+    "board_clip": {
+      "boards": ["yec61", "HLXo3", "qtCd7", "kHDk4", "N1aeiU", "FEuAL", "iBYUK", "XhwG6", "b3nzDp", "dxPvP", "i6uiB4", "z042Yg", "Oic2v", "JzyIv", "RC7bN", "jftM0", "UOWte", "VDO0S", "L6iIQ0", "Z8Q4R"],
+      "scope": "document",
+      "document_count": 0,
+      "flagged": [],
+      "document_flagged": []
+    }
+  },
+  "scan_note": "R1 收工前六支掃描（正典腳本 scripts/design/overflow-scan.js，scan_scope=document，SCAN_BOARDS 涵蓋本輪觸碰的 20 個頂層節點/元件定義，含 kHDk4／LS-142 Handoff Notes——scope 2/5 補的 epDnW 節點所在板，首版收據漏列後已補齊重跑）。修正過程中發現並修復 3 處新碰撞（詳見 head_sha 前一支 commit 訊息）：HLXo3 Feed 缺 clip 導致簽名文字伸入 Tab Bar（補 clip:true + 收緊高度至 992）；z042Yg/JzyIv 新增 Disagree Button 後 Action Bar 增高擠壓零容忍卡文字（板高各自 852→912／852→940）；Oic2v/RC7bN 的 Card Head Label 在 AX3 大字級下未換行伸出板緣 41pt（改 fixed-width+fill_container 換行，同步修正 z042Yg/JzyIv 對應節點）；並修正因 JzyIv 加高導致與 RC7bN 產生的 root 層重疊（RC7bN y 下移 80pt）。sibling_intersection／row_overflow／cross_parent_collision 三支的 flagged 為代表性分類彙整（每類一筆代表＋「同類 N 例」，N 加總與 SUMMARY 逐項核對相符：2071／560／321），絕大多數屬品牌既定母題（角托 corner-out、Fan Ghost 堆疊、Sheet 遮罩 z-order、Spacer 版面佔位）既有重疊，非本票新增缺陷；corner_anchor／text_occlusion／board_clip 三項硬性指標於本票 boards 範圍內皆為 0（mismatch=0、flagged=[]）。SUMMARY 原文：SUMMARY total_nodes=9879 scanned_nodes=15951 scan_scope=document sibling_intersection=2071 row_overflow=560 cross_parent_collision=321(bleed-only) text_occlusion=0/0 board_clip=0/0 corner_anchor=6/48/0 document=225/1784/0 ref_hits=746(defs=10) unresolved=3/14 tree_hash=245c0476a10c760e"
+}

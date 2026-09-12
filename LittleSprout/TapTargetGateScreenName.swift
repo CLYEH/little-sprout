@@ -222,6 +222,26 @@ enum TapTargetGateScreenName: String {
     // UITest／tap-target-check 覆蓋。
     case settingsPushDenied = "SettingsViewPushDenied"
     case settingsPushAuthorized = "SettingsViewPushAuthorized"
+    // LS-218：留言 sheet——有留言的常態（3 則，同 `FiBvh` 稿面示範筆數），涵蓋輸入列（欄位＋
+    // 送出鈕）與逐則留言列（`Button`，點下去開操作表）。空狀態／錯誤態／載入更早只靠這三顆
+    // 元件無法一次覆蓋，留給 `CommentsSheetUITests` 各自的變體覆蓋（同 `.uploadQueueSheet`／
+    // `.uploadQueueSheetNormal` 只挑一個常態進 tap-target 量測、其餘變體交給功能性 UITest 的
+    // 既有分工）。
+    case commentsSheet = "CommentsSheetView"
+    // LS-218：空狀態（`TnxXE`）——不用來做逐元件 tap target 量測（同 `.reportInboxEmpty` 等
+    // 既有變體 case 的先例），純粹借用「launch environment 指定畫面」通道跑功能性 UITest 與
+    // 截圖對稿。
+    case commentsSheetEmpty = "CommentsSheetViewEmpty"
+    // LS-218：網路錯誤態（`dHSyh`）——同上，不用來做逐元件 tap target 量測。
+    case commentsSheetNetworkError = "CommentsSheetViewNetworkError"
+    // LS-218 merge-review R1 m3：送出留言時撞到 LS026（目標已刪）——同上，不用來做逐元件 tap
+    // target 量測，純粹借用「launch environment 指定畫面」通道釘住「只呈現終態、不疊 alert」
+    // 這個修正（`CommentsSheetUITests.testSendTargetGone_showsOnlyTerminalState_noAlert`）。
+    case commentsSheetSendTargetGone = "CommentsSheetViewSendTargetGone"
+    // LS-218 merge-review R1 m4：`familyStore.ownerUserID` 還沒就緒（同 `.diaryDetailRoleNotReady`
+    // 既有先例）——同上，不用來做逐元件 tap target 量測，純粹驗證留言列／送出鈕正確變成
+    // `.disabled`。
+    case commentsSheetOwnerNotReady = "CommentsSheetViewOwnerNotReady"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -317,6 +337,12 @@ enum TapTargetGateScreenName: String {
         // 同 `.settings`：「登出」列不受推播授權狀態影響，一定會渲染。
         case .settingsPushDenied: return .button("登出")
         case .settingsPushAuthorized: return .button("登出")
+        // Head Title——不依賴 `list_comments` 的非同步載入是否已完成，一開畫面就渲染。
+        case .commentsSheet: return .staticText("留言")
+        case .commentsSheetEmpty: return .staticText("留言")
+        case .commentsSheetNetworkError: return .staticText("留言")
+        case .commentsSheetSendTargetGone: return .staticText("留言")
+        case .commentsSheetOwnerNotReady: return .staticText("留言")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

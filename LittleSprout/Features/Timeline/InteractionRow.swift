@@ -26,8 +26,8 @@ struct InteractionRow: View {
     let kind: FeedKind
     let refId: UUID
     let timelineStore: TimelineStore
-    /// LS-218（留言 sheet）尚未實作——本票先接空回呼，待 LS-218 落地後改接真正的 sheet
-    /// 呈現（票文 scope 1）。
+    /// LS-218：`TimelineView.openComments(kind:refId:)` 接住這個回呼，開出
+    /// `CommentsSheetView`（票文 scope 1）。
     var onOpenComments: () -> Void = {}
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
