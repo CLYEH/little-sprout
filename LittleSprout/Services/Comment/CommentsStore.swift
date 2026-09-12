@@ -48,6 +48,30 @@ final class CommentsStore {
     private(set) var hasEarlier = true
     private(set) var sendState: CommentsOperationState = .idle
 
+    /// merge-review R1 m2：`loadEarlier()`（載入更早的留言）與 `loadInitial()`（封鎖成功／
+    /// 重試按鈕觸發，見 `CommentsSheetView+Actions.swift`／`+States.swift`）沒有世代守門時，
+    /// `loadEarlier()` 進行中若 `loadInitial()` 換掉整份 `comments`（例如封鎖了某位作者、清單
+    /// 改用過濾後的新首頁），稍後才回來的 `loadEarlier()` 舊回應只會拿「新的 `comments`」去算
+    /// `existingIDs` 去重，把舊頁（可能含被封鎖者的留言）prepend 回一份已經是新世代的清單，也
+    /// 用舊頁筆數覆蓋 `hasEarlier`——同 `TimelineStore.generation` 既有技法：只有「換掉整份
+    /// 清單」的 `loadInitial()` 會遞增這個計數，`loadEarlier()` 只讀取＋比對，不遞增（同
+    /// `TimelineStore.loadMore()` 不遞增 `generation`、只有 `refresh()` 遞增的既有分工——
+    /// `loadInitial()` 才是會換掉 `comments` 這個「base」的操作）。
+    ///
+    /// **不需要另外加 `TimelineStore.loadMore()` 那種 `baseTailID` 身分核對**——那支額外核對
+    /// 存在的理由是「`refresh()` 先開始（世代號先遞增）、`loadMore()` 後開始」這個順序下，
+    /// `loadMore()` 捕捉到的世代號其實已經跟 `refresh()` 完成後的世代號相同（見
+    /// `TimelineStoreTests.test_loadMore_startedDuringInFlightRefresh_discardsStaleResultsEvenWithSameGeneration`），
+    /// 純世代號比對抓不到，需要另外核對 `entries` 的基底身分。這裡不會發生對應的反向順序：
+    /// 「载入更早的留言」按鈕只在 `initialLoadState == .success` 且清單非空時渲染（`+List.swift`
+    /// `commentsList`）；`loadInitial()` 一旦開始執行，`initialLoadState` 立刻變成
+    /// `.submitting`，畫面同一幀切成 `skeletonList`（`+States.swift` `contentArea`），使用者
+    /// 在那之後已經按不到「载入更早」——因此「`loadInitial()` 先開始、`loadEarlier()` 後開始」
+    /// 這個會讓純世代號比對失效的順序，在這支 View 的實際互動路徑下不可達；反過來「
+    /// `loadEarlier()` 先開始、`loadInitial()` 後開始」（m2 描述的封鎖／重試情境）則是
+    /// `loadInitial()` 遞增世代號在後，`loadEarlier()` 捕捉到的仍是舊世代號，單純比對即可抓到。
+    private var generation = 0
+
     init(apiClient: CommentAPIClient, familyID: UUID, targetType: String, targetID: UUID) {
         self.apiClient = apiClient
         self.familyID = familyID
@@ -58,15 +82,19 @@ final class CommentsStore {
     var commentCount: Int { comments.count }
 
     func loadInitial() async {
+        generation += 1
+        let myGeneration = generation
         initialLoadState = .submitting
         do {
             let page = try await apiClient.listComments(
                 familyID: familyID, targetType: targetType, targetID: targetID, cursor: nil, limit: Self.pageSize
             )
+            guard myGeneration == generation else { return }
             comments = page.reversed()
             hasEarlier = page.count == Self.pageSize
             initialLoadState = .success
         } catch {
+            guard myGeneration == generation else { return }
             initialLoadState = .failure(AppError.map(error))
         }
     }
@@ -75,12 +103,23 @@ final class CommentsStore {
     /// 當下一批的游標（同 `list_comments` 的 keyset 規則：兩個游標參數要嘛都給、要嘛都不給）。
     func loadEarlier() async {
         guard hasEarlier, !loadEarlierState.isSubmitting, let oldest = comments.first else { return }
+        let myGeneration = generation
         loadEarlierState = .submitting
         do {
             let cursor = CommentsCursor(createdAt: oldest.createdAt, id: oldest.id)
             let page = try await apiClient.listComments(
                 familyID: familyID, targetType: targetType, targetID: targetID, cursor: cursor, limit: Self.pageSize
             )
+            // merge-review R1 m2：世代已經被 `loadInitial()` 換過（封鎖成功／重試觸發）——
+            // 這批回應是回答一份已經不存在的舊清單，整批丟棄，不寫入 `comments`／`hasEarlier`。
+            // `loadEarlierState` 仍要收回 `.idle`（同 `TimelineStore.loadMore()` 的
+            // discard-reset 慣例）：`loadInitial()` 不會碰 `loadEarlierState`，這個 in-flight
+            // 呼叫自己是唯一有機會把它從 `.submitting` 收回的人，不收的話「載入更早的留言」
+            // 鈕會卡在永久轉圈。
+            guard myGeneration == generation else {
+                loadEarlierState = .idle
+                return
+            }
             // 防禦性去重（票文「分頁合併去重」）：keyset 分頁理論上不會跟既有頁重疊，這裡仍
             // 用 `id` 過濾——同 `TimelineStore` 系列多處「防禦性去重不是信任伺服器一定不重疊」
             // 的既有哲學。
@@ -90,6 +129,10 @@ final class CommentsStore {
             hasEarlier = page.count == Self.pageSize
             loadEarlierState = .success
         } catch {
+            guard myGeneration == generation else {
+                loadEarlierState = .idle
+                return
+            }
             loadEarlierState = .failure(AppError.map(error))
         }
     }

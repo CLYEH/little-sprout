@@ -122,6 +122,68 @@ final class CommentsStoreTests: XCTestCase {
         XCTAssertEqual(store.loadEarlierState, .success)
     }
 
+    /// merge-review R1 m2：`loadEarlier()` 進行中若被 `loadInitial()`（封鎖成功／重試觸發）
+    /// 換掉整份 `comments`，稍後才回來的 `loadEarlier()` 舊回應不該把舊頁 prepend 回一份已經
+    /// 是新世代的清單，也不該用舊頁筆數覆蓋 `hasEarlier`。
+    func test_loadEarlier_supersededByLoadInitial_discardsStaleResult() async {
+        let stub = StubCommentAPIClient()
+        let firstPageOldest = makeRow(id: UUID(), createdAt: Date(timeIntervalSince1970: 200), body: "第一批較舊")
+        let fillers = (0..<(CommentsStore.pageSize - 1)).map {
+            makeRow(id: UUID(), createdAt: Date(timeIntervalSince1970: 201 + Double($0)), body: "填充\($0)")
+        }
+        stub.setListCommentsHandler { _, _, _, cursor, _ in
+            cursor == nil ? fillers + [firstPageOldest] : []
+        }
+        let store = makeStore(stub)
+        await store.loadInitial()
+        XCTAssertTrue(store.hasEarlier)
+
+        // 換 handler：loadEarlier（帶游標）與 loadInitial（block 成功後重新首載，無游標）
+        // 分別卡在各自的閘門，精準控制「loadInitial 後開始、但先完成」這個 m2 描述的順序。
+        let loadEarlierGate = AsyncGate()
+        let loadInitialGate = AsyncGate()
+        let blockedAuthorRow = makeRow(id: UUID(), createdAt: Date(timeIntervalSince1970: 50), body: "被封鎖者的舊留言")
+        let freshAfterBlockRow = makeRow(id: UUID(), createdAt: Date(timeIntervalSince1970: 999), body: "封鎖後的新首頁")
+        stub.setListCommentsHandler { _, _, _, cursor, _ in
+            if let cursor {
+                XCTAssertEqual(cursor.createdAt, firstPageOldest.createdAt)
+                await loadEarlierGate.wait()
+                return [blockedAuthorRow]
+            } else {
+                await loadInitialGate.wait()
+                return [freshAfterBlockRow]
+            }
+        }
+
+        // loadEarlier 先開始（世代號還沒被 loadInitial 動過），卡在閘門裡。
+        let loadEarlierTask = Task { await store.loadEarlier() }
+        while store.loadEarlierState != .submitting { await Task.yield() }
+
+        // loadEarlier 還沒完成時，block 成功觸發的 loadInitial 才起跑（世代號遞增）。
+        let loadInitialTask = Task { await store.loadInitial() }
+        while store.initialLoadState != .submitting { await Task.yield() }
+
+        // 先放行 loadInitial：完成後 comments 整批換成 [freshAfterBlockRow]。
+        await loadInitialGate.open()
+        await loadInitialTask.value
+        XCTAssertEqual(store.comments.map(\.body), ["封鎖後的新首頁"])
+        XCTAssertFalse(store.hasEarlier)
+
+        // 再放行 loadEarlier：世代號已經被 loadInitial 換過，舊回應必須整批丟棄。
+        await loadEarlierGate.open()
+        await loadEarlierTask.value
+
+        XCTAssertEqual(
+            store.comments.map(\.body), ["封鎖後的新首頁"],
+            "loadEarlier 的舊回應不該把被封鎖者的留言 prepend 回一份已經是新世代的清單"
+        )
+        XCTAssertFalse(store.hasEarlier, "loadEarlier 的舊回應不該用舊頁筆數覆蓋 hasEarlier")
+        XCTAssertEqual(
+            store.loadEarlierState, .idle,
+            "被丟棄的 loadEarlier 要把 loadEarlierState 收回 .idle，不然「載入更早的留言」鈕會卡在永久轉圈"
+        )
+    }
+
     func test_loadEarlier_whenNoMoreEarlier_doesNotCallAPI() async {
         let stub = StubCommentAPIClient()
         stub.setListCommentsHandler { _, _, _, _, _ in [makeCommentRow(id: UUID(), createdAt: Date())] }
