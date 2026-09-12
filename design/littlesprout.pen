@@ -156982,18 +156982,21 @@
         {
           "type": "frame",
           "id": "hUNFn",
+          "layoutPosition": "absolute",
+          "x": 314,
+          "y": 2268,
           "name": "Print Stage",
-          "width": 393,
-          "height": 292,
+          "width": 786,
+          "height": 584,
           "layout": "none",
           "children": [
             {
               "type": "frame",
               "id": "k4Tyqi",
-              "x": 16,
-              "y": 5,
+              "x": 32,
+              "y": 10,
               "name": "Print",
-              "width": 361,
+              "width": 722,
               "fill": [
                 "$print-paper",
                 {
@@ -157111,13 +157114,8 @@
                 "blur": 12
               },
               "layout": "vertical",
-              "gap": 7,
-              "padding": [
-                "$print-edge",
-                "$print-edge",
-                "$print-edge-bottom",
-                "$print-edge"
-              ],
+              "gap": 14,
+              "padding": 16,
               "children": [
                 {
                   "type": "frame",
@@ -157125,14 +157123,14 @@
                   "name": "Photo Wrap",
                   "clip": true,
                   "width": "fill_container",
-                  "height": 190.1,
+                  "height": 380.2,
                   "layout": "none",
                   "children": [
                     {
                       "type": "rectangle",
                       "id": "aD9EO",
                       "x": 0,
-                      "y": -84,
+                      "y": -168,
                       "name": "Hero Photo",
                       "fill": {
                         "type": "image",
@@ -157140,8 +157138,8 @@
                         "url": "join-parents.png",
                         "mode": "fill"
                       },
-                      "width": 345,
-                      "height": 515
+                      "width": 690,
+                      "height": 1030
                     },
                     {
                       "type": "rectangle",
@@ -157149,9 +157147,9 @@
                       "x": 0,
                       "y": 0,
                       "name": "Night Dim",
-                      "fill": "$photo-dim",
-                      "width": 345,
-                      "height": 190.1
+                      "fill": "#FFFFFF00",
+                      "width": 690,
+                      "height": 380.2
                     }
                   ]
                 },
@@ -157169,9 +157167,9 @@
                       "fill": "$print-ink-secondary",
                       "content": "LITTLE SPROUT",
                       "fontFamily": "$font",
-                      "fontSize": "$fs-imprint",
+                      "fontSize": 24,
                       "fontWeight": "600",
-                      "letterSpacing": 3.5
+                      "letterSpacing": 7
                     }
                   ]
                 }
@@ -157182,8 +157180,10 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Corner BL",
-              "x": 11,
-              "y": 214.1,
+              "x": 27,
+              "y": 424,
+              "width": 52,
+              "height": 52,
               "descendants": {
                 "sD5Ma": {
                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -157198,8 +157198,10 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Corner BR",
-              "x": 356,
-              "y": 214.1,
+              "x": 707,
+              "y": 424,
+              "width": 52,
+              "height": 52,
               "descendants": {
                 "sD5Ma": {
                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -157214,8 +157216,10 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Corner TL",
-              "x": 11,
-              "y": 0,
+              "x": 27,
+              "y": 5,
+              "width": 52,
+              "height": 52,
               "descendants": {
                 "sD5Ma": {
                   "geometry": "M0 0 L26 0 L0 26 Z"
@@ -157230,8 +157234,10 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Corner TR",
-              "x": 356,
-              "y": 0,
+              "x": 707,
+              "y": 5,
+              "width": 52,
+              "height": 52,
               "descendants": {
                 "sD5Ma": {
                   "geometry": "M26 0 L0 0 L26 26 Z"
@@ -157296,7 +157302,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "appstore-slots/comments-iphone-v2.jpg",
+                    "url": "appstore-slots/comments-iphone-v3.jpg",
                     "mode": "fill"
                   },
                   "cornerRadius": 95,
@@ -158315,18 +158321,21 @@
         {
           "type": "frame",
           "id": "D2juW",
+          "layoutPosition": "absolute",
+          "x": 743,
+          "y": 1823,
           "name": "Print Stage",
-          "width": 393,
-          "height": 292,
+          "width": 1229,
+          "height": 913,
           "layout": "none",
           "children": [
             {
               "type": "frame",
               "id": "cNSP8",
-              "x": 16,
-              "y": 5,
+              "x": 50,
+              "y": 16,
               "name": "Print",
-              "width": 361,
+              "width": 1129,
               "fill": [
                 "$print-paper",
                 {
@@ -158444,13 +158453,8 @@
                 "blur": 12
               },
               "layout": "vertical",
-              "gap": 7,
-              "padding": [
-                "$print-edge",
-                "$print-edge",
-                "$print-edge-bottom",
-                "$print-edge"
-              ],
+              "gap": 22,
+              "padding": 25,
               "children": [
                 {
                   "type": "frame",
@@ -158458,14 +158462,14 @@
                   "name": "Photo Wrap",
                   "clip": true,
                   "width": "fill_container",
-                  "height": 190.1,
+                  "height": 594.5,
                   "layout": "none",
                   "children": [
                     {
                       "type": "rectangle",
                       "id": "j5Bns",
                       "x": 0,
-                      "y": -84,
+                      "y": -262.7,
                       "name": "Hero Photo",
                       "fill": {
                         "type": "image",
@@ -158473,8 +158477,8 @@
                         "url": "join-parents.png",
                         "mode": "fill"
                       },
-                      "width": 345,
-                      "height": 515
+                      "width": 1079,
+                      "height": 1610.6
                     },
                     {
                       "type": "rectangle",
@@ -158482,9 +158486,9 @@
                       "x": 0,
                       "y": 0,
                       "name": "Night Dim",
-                      "fill": "$photo-dim",
-                      "width": 345,
-                      "height": 190.1
+                      "fill": "#FFFFFF00",
+                      "width": 1079,
+                      "height": 594.5
                     }
                   ]
                 },
@@ -158502,9 +158506,9 @@
                       "fill": "$print-ink-secondary",
                       "content": "LITTLE SPROUT",
                       "fontFamily": "$font",
-                      "fontSize": "$fs-imprint",
+                      "fontSize": 37.5,
                       "fontWeight": "600",
-                      "letterSpacing": 3.5
+                      "letterSpacing": 10.9
                     }
                   ]
                 }
@@ -158515,8 +158519,10 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Corner BL",
-              "x": 11,
-              "y": 214.1,
+              "x": 45,
+              "y": 661,
+              "width": 81,
+              "height": 81,
               "descendants": {
                 "sD5Ma": {
                   "geometry": "M0 26 L0 0 L26 26 Z"
@@ -158531,8 +158537,10 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Corner BR",
-              "x": 356,
-              "y": 214.1,
+              "x": 1103,
+              "y": 661,
+              "width": 81,
+              "height": 81,
               "descendants": {
                 "sD5Ma": {
                   "geometry": "M26 26 L26 0 L0 26 Z"
@@ -158547,8 +158555,10 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Corner TL",
-              "x": 11,
-              "y": 0,
+              "x": 45,
+              "y": 11,
+              "width": 81,
+              "height": 81,
               "descendants": {
                 "sD5Ma": {
                   "geometry": "M0 0 L26 0 L0 26 Z"
@@ -158563,8 +158573,10 @@
               "type": "ref",
               "ref": "GEBcf",
               "name": "Corner TR",
-              "x": 356,
-              "y": 0,
+              "x": 1103,
+              "y": 11,
+              "width": 81,
+              "height": 81,
               "descendants": {
                 "sD5Ma": {
                   "geometry": "M26 0 L0 0 L26 26 Z"
@@ -158629,7 +158641,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "appstore-slots/comments-ipad-v2.jpg",
+                    "url": "appstore-slots/comments-ipad-v3.jpg",
                     "mode": "fill"
                   },
                   "cornerRadius": 27.645,
