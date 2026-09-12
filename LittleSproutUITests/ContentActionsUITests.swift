@@ -58,7 +58,16 @@ final class ContentActionsUITests: XCTestCase {
         let submitButton = app.buttons["送出"]
         XCTAssertFalse(submitButton.isEnabled, "尚未選原因前，送出鈕應該是 disabled")
         reasonRow.tap()
-        XCTAssertTrue(submitButton.isEnabled, "選了原因之後，送出鈕應該變成 enabled")
+        // LS-229（同 LS-230 決定性同步點修法）：`isEnabled` 由選原因後的狀態更新驅動，tap 後
+        // 立即查詢是一次性快照，CI runner 負載高時會誤判失敗。改用 `XCTNSPredicateExpectation`
+        // 正向等它變成 true。
+        let submitEnabledExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isEnabled == true"), object: submitButton
+        )
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [submitEnabledExpectation], timeout: 5), .completed,
+            "選了原因之後，送出鈕應該變成 enabled"
+        )
         submitButton.tap()
 
         // 05c：已送出。
@@ -120,7 +129,15 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertTrue(reasonRow.waitForExistence(timeout: 5))
         reasonRow.tap()
         let submitButton = app.buttons["送出"]
-        XCTAssertTrue(submitButton.isEnabled)
+        // LS-229（同上一處、同 LS-230 決定性同步點修法）：改用 `XCTNSPredicateExpectation` 正向
+        // 等 `isEnabled` 變成 true，不再是 tap 後立即查詢的一次性快照。
+        let submitEnabledExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isEnabled == true"), object: submitButton
+        )
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [submitEnabledExpectation], timeout: 5), .completed,
+            "選了原因之後，送出鈕應該變成 enabled"
+        )
         submitButton.tap()
 
         XCTAssertTrue(

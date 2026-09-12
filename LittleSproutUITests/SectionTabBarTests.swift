@@ -54,9 +54,20 @@ final class SectionTabBarTests: XCTestCase {
     func testTappingATabMovesTheSelectedTraitToIt() {
         let app = TapTargetMeasurement.launch(.sectionTabView)
         TapTargetMeasurement.assertScreenRendered(.sectionTabView, in: app)
-        app.buttons["相簿"].tap()
-        XCTAssertTrue(app.buttons["相簿"].isSelected, "點擊後「相簿」應變成選中狀態")
-        XCTAssertFalse(app.buttons["時間軸"].isSelected, "點擊「相簿」後「時間軸」應變回未選中")
+        let albumsTab = app.buttons["相簿"]
+        let timelineTab = app.buttons["時間軸"]
+        albumsTab.tap()
+        // LS-229（同 LS-230 決定性同步點修法）：`isSelected` 由點擊後的分頁切換狀態更新驅動，
+        // tap 後立即查詢是一次性快照，CI runner 負載高時會誤判失敗。改用
+        // `XCTNSPredicateExpectation` 正向等它變成 true。
+        let albumsSelectedExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isSelected == true"), object: albumsTab
+        )
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [albumsSelectedExpectation], timeout: 5), .completed,
+            "點擊後「相簿」應變成選中狀態"
+        )
+        XCTAssertFalse(timelineTab.isSelected, "點擊「相簿」後「時間軸」應變回未選中")
     }
 
     // MARK: - entry-conditions.md ⑬：tab-root 首屏標題

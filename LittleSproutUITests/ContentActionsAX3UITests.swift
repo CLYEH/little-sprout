@@ -49,12 +49,33 @@ final class ContentActionsAX3UITests: XCTestCase {
         scrollUntilAllHittable(reasonButtons, in: app)
 
         let lastReason = reasonButtons[reasons.count - 1]
-        XCTAssertTrue(lastReason.isHittable, "捲到底之後最後一個原因（「其他」）應該可以點到")
+        // LS-229 merge-review R1 m1：`isHittable` 的一次性快照緊接在 best-effort 捲動 helper
+        // 之後——若最後一次 swipe 剛好在讀 frame 前 0.7–1.1s 才套用完成（AX3 下實測需要捲 2
+        // 次），快照會讀到尚未捲到位的舊狀態。改用 `XCTNSPredicateExpectation` 正向等它變成
+        // true，讓晚到的捲動仍能通過；helper 本身的早退邏輯另修（見 scrollUntilAllHittable）。
+        let lastReasonHittableExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isHittable == true"), object: lastReason
+        )
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [lastReasonHittableExpectation], timeout: 5), .completed,
+            "捲到底之後最後一個原因（「其他」）應該可以點到"
+        )
         lastReason.tap()
 
         let submitButton = app.buttons["送出"]
         scrollUntilAllHittable([submitButton], in: app)
-        XCTAssertTrue(submitButton.isHittable && submitButton.isEnabled, "選完原因後送出鈕在 AX3 下仍要可觸達")
+        XCTAssertTrue(submitButton.isHittable, "捲到底之後送出鈕在 AX3 下仍要可觸達")
+        // LS-229：`isEnabled` 是選原因後才由 SwiftUI 狀態更新驅動、非同步反映到 accessibility
+        // 樹——tap 後立即查詢是一次性快照，CI runner 負載高時會誤判失敗（同 LS-230 決定性同步點
+        // 修法，見 InteractionRowUITests.swift 既有 `XCTNSPredicateExpectation` 寫法）。改成正向
+        // 等它變成 true，不受 runner 負載影響。
+        let submitEnabledExpectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isEnabled == true"), object: submitButton
+        )
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [submitEnabledExpectation], timeout: 10), .completed,
+            "選完原因後送出鈕應該變成 enabled"
+        )
         submitButton.tap()
 
         XCTAssertTrue(
@@ -67,13 +88,22 @@ final class ContentActionsAX3UITests: XCTestCase {
 
     /// 同 `DeleteConfirmationAX3UITests.scrollUntilHittable`（同檔案樹不同 target 無法共用
     /// private 方法，這裡另寫一份最小版）：對整個 app 做 `swipeUp`，直到所有給定元素都
-    /// `isHittable` 或連續兩次捲動位置沒有變化（判定捲到底，避免無限迴圈）。
+    /// `isHittable` 或連續**兩次**捲動位置都沒有變化（判定捲到底，避免無限迴圈）。LS-229
+    /// merge-review R1 m1：原本比一次沒變就提早 return——單一一次 `swipeUp` 沒生效（事件被
+    /// 丟、或 runner 負載高使 frame 讀到尚未套用捲動的舊值）就會被誤判成「已捲到底」，此時
+    /// 還沒全部 hittable 就提早收手。改成要連續兩次觀察到同一位置才判定真的到底。
     private func scrollUntilAllHittable(_ elements: [XCUIElement], in app: XCUIApplication, maxAttempts: Int = 6) {
         var previousYs: [CGFloat] = []
+        var unchangedCount = 0
         for _ in 0..<maxAttempts {
             if elements.allSatisfy(\.isHittable) { return }
             let currentYs = elements.map { $0.frame.minY }
-            if currentYs == previousYs { return }
+            if currentYs == previousYs {
+                unchangedCount += 1
+                if unchangedCount >= 2 { return }
+            } else {
+                unchangedCount = 0
+            }
             previousYs = currentYs
             app.swipeUp()
         }
