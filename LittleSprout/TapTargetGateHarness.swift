@@ -100,6 +100,9 @@ enum TapTargetGateHarness {
         case .pushPreprompt: pushPrepromptHost
         case .settingsPushDenied: settingsPushDeniedHost
         case .settingsPushAuthorized: settingsPushAuthorizedHost
+        case .commentsSheet: commentsSheetHost
+        case .commentsSheetEmpty: commentsSheetEmptyHost
+        case .commentsSheetNetworkError: commentsSheetNetworkErrorHost
         case .selfTestTooSmall:
             selfTestTooSmallHost
         case .selfTestGood:
