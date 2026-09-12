@@ -18,7 +18,9 @@ import SwiftUI
 /// `TimelineView+Comments.swift` 的 `.sheet` 呈現規則，這裡沒有多個 kind／refId 需要區分，
 /// 用 `Bool` 旗標而非 `CommentsSheetTarget` item 就夠）。`design/littlesprout.pen`
 /// 查無詳情頁專屬的互動列板（LS-177 只畫了三種卡片的規格板 `IgqGF`／`VZ0wV`／`Qzz3r`）——沿用
-/// 占位原本在 `VStack` 裡的位置，不新畫版面、只用 `InteractionRow` 自身的間距 token。
+/// 占位原本的位置（compact layout 仍在文字內容 `VStack` 裡），不新畫版面、只用 `InteractionRow`
+/// 自身的間距 token；iPad layout 見 `iPadLayout` 文件註解（merge-review R2 M1，位置與 compact
+/// 不同）。
 struct DiaryDetailView: View {
     let diaryID: UUID
     let timelineStore: TimelineStore
@@ -154,18 +156,27 @@ struct DiaryDetailView: View {
 
     private func iPadLayout(_ content: DiaryContent) -> some View {
         ScrollView {
-            HStack(alignment: .top, spacing: AppSpacing.block) {
-                MasonryPhotoWallView(
-                    photos: photos, containerWidth: 360, timelineStore: timelineStore, onTapVideo: playVideo
-                )
-                .frame(width: 360, alignment: .leading)
+            // merge-review R2 M1：`interactionRow` 原本擠在右欄 `VStack` 裡——右欄寬＝pane −
+            // 2×`screenPadLarge` − 360（照片欄）− `block`，側欄展開的 13" 直向只剩約 248pt，
+            // 小於 `InteractionRow` 標準態橫向需求（≈291pt），「留言」字樣與計數被壓掉／折行
+            // （reviewer 在 iPad mini 全寬 280pt 也重現）。移出兩欄 `HStack`、放最外層 `VStack`
+            // 整寬（掃過的可用寬＝pane − 2×`screenPadLarge`，遠大於兩欄各自的寬度），同一台
+            // 裝置換算下時間軸卡片可用寬本就夠、只有這個新版位不夠，不需要動 `InteractionRow`
+            // 本身。
+            VStack(alignment: .leading, spacing: AppSpacing.block) {
+                HStack(alignment: .top, spacing: AppSpacing.block) {
+                    MasonryPhotoWallView(
+                        photos: photos, containerWidth: 360, timelineStore: timelineStore, onTapVideo: playVideo
+                    )
+                    .frame(width: 360, alignment: .leading)
 
-                VStack(alignment: .leading, spacing: AppSpacing.block) {
-                    header(content)
-                    bodyText(content)
-                    interactionRow
+                    VStack(alignment: .leading, spacing: AppSpacing.block) {
+                        header(content)
+                        bodyText(content)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                interactionRow
             }
             .padding(AppSpacing.screenPadLarge)
         }

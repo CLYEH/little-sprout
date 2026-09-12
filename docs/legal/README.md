@@ -55,7 +55,7 @@
 | 退出家庭 UI（條款 §4.5；隱私 §9） | **LS-152** | **已上線**：`Features/Settings/FamilyMembersView.swift`「退出家庭」列＋`FamilyMembersView+Sheets.swift:246`（`leaveFamily()`）。LS-152 Done |
 | Owner 移除成員 UI（條款 §4.5、§6.5；隱私 §4.5） | **LS-152** | **已上線**：`FamilyMembersView+Sheets.swift:89`（`removeMember`），成員清單畫面已在。LS-152 Done |
 | 修改顯示名稱與頭像 UI（隱私 §2.1、§9） | **LS-152** | **已上線**：`Features/Settings/ProfileEditView.swift`，經 `SettingsView.swift:238` 導覽進入。LS-152 Done |
-| 留言／愛心／相簿功能本身（條款 §2.1；隱私 §2.4） | LS-22（留言／愛心）；相簿 Phase 1-4（本票未查到專屬票號） | **已上線**：愛心（`toggle_reaction`，`Services/Timeline/SupabaseTimelineAPIClient.swift`／`Features/Timeline/InteractionRow.swift`）、相簿（`Features/Albums/` 完整功能，非 placeholder）、留言（`Features/Timeline/InteractionRow.swift` 的「留言」按鈕→`TimelineView+Comments.swift` `commentsSheetHost`→`Features/Content/CommentsSheetView.swift`，LS-218 PR #367，本輪 R2 merge origin/development 時併入）皆已在。`Features/Timeline/DiaryDetailView.swift` 自己那個「留言功能即將推出」占位區塊是舊入口，LS-218 加的是時間軸卡片上的新入口——兩者不一致，留給後續票／dead-code-sweeper 處理，不在本票範圍 |
+| 留言／愛心／相簿功能本身（條款 §2.1；隱私 §2.4） | LS-22（留言／愛心）；相簿 Phase 1-4（本票未查到專屬票號） | **已上線**：愛心（`toggle_reaction`，`Services/Timeline/SupabaseTimelineAPIClient.swift`／`Features/Timeline/InteractionRow.swift`）、相簿（`Features/Albums/` 完整功能，非 placeholder）、留言（`Features/Timeline/InteractionRow.swift` 的「留言」按鈕→`TimelineView+Comments.swift` `commentsSheetHost`→`Features/Content/CommentsSheetView.swift`，LS-218 PR #367，本輪 R2 merge origin/development 時併入）皆已在。`Features/Timeline/DiaryDetailView.swift`（LS-241）已改接同一顆 `InteractionRow`／`CommentsSheetView`，日記詳情頁與時間軸卡片留言入口一致，不再各自一套 |
 
 ## 事實核對清單（送審前逐項確認）
 
