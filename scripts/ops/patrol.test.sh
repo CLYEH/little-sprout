@@ -246,6 +246,54 @@ jq_ok '⑦ pull 後 behind 0、flag 空' "$json2" '.main_checkout.behind_origin_
 hj3="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$hook" 2>/dev/null)"
 jq_ok '⑦ pull 後 hook 不再指示 pull' "$hj3" '.hookSpecificOutput.additionalContext | test("git pull --ff-only origin main") | not'
 
+# ---- ⑦b（LS-236，來源：LS-208 收尾事故，LS-96 池項 `797c7149`）：主 checkout 唯一 dirty 檔就是
+#        design/littlesprout.pen 時，印「Pen 寫回 → pen-open.sh --restore」而非泛用「N 個未提交變更」；
+#        對照組確認這不是「隨便什麼單檔 dirty 都特殊處理」（改別的檔仍是泛用訊息），也不是「有 .pen 在
+#        變更清單裡就特殊處理」（.pen 加另一檔 dirty 仍走泛用訊息，唯一單檔才特殊）。**刻意不 push**這個
+#        種子 commit 到 origin main——後面 ⑫ 的三分支漂移案例對 origin main／development 的差距數要精確
+#        計數，這裡的 commit 只是為了讓本機 $repo 的 HEAD 有一份可 diff 的 design/littlesprout.pen，不需要
+#        也不該進共用的 remote。斷言用「主 checkout 有 N 個未提交變更」這個精確片語（含「主 checkout 有」
+#        字樣）——worktree 層級的停滯旗標用的是不同措辭「⏳ N 個未提交變更、最後改動…」（:411，不含
+#        「主 checkout 有」），兩者不會互相誤中，不需要額外把輸出切到單一行再比對 ----
+mkdir -p "$repo/design"
+printf '{"version":1,"children":[]}\n' > "$repo/design/littlesprout.pen"
+g -C "$repo" add design/littlesprout.pen
+g -C "$repo" commit -qm 'chore: LS-0 seed design/littlesprout.pen（本機 only，不 push）'
+printf '{"version":1,"children":[{"id":"polluted","children":[]}]}\n' > "$repo/design/littlesprout.pen"
+out7b="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has '⑦b 唯一 dirty 檔是 design/littlesprout.pen → 印 Pen 寫回還原提示' "$out7b" 'Pen 寫回 → bash scripts/ops/pen-open.sh --restore'
+hasnt '⑦b 不印泛用「主 checkout 有 N 個未提交變更」（phrase 只在 mc_flag 泛用分支出現，worktree 層級的措辭不含「主 checkout 有」，兩者不會誤中）' "$out7b" '主 checkout 有 1 個未提交變更'
+g -C "$repo" checkout -q -- design/littlesprout.pen
+
+# ⑦c 對照：改別的檔（非 .pen）單檔 dirty → 仍是泛用訊息，不誤觸發 Pen 專屬提示
+echo dirty >> "$repo/file.txt"
+out7c="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has '⑦c 改別的單檔 dirty → 仍印泛用「1 個未提交變更」' "$out7c" '主 checkout 有 1 個未提交變更'
+hasnt '⑦c 不誤觸發 Pen 寫回提示' "$out7c" 'Pen 寫回 →'
+g -C "$repo" checkout -q -- file.txt
+
+# ⑦d 對照：.pen 連同另一檔一起 dirty（兩檔）→ 走泛用訊息（不是「有 .pen 就特殊」，是「唯一 dirty 檔才特殊」）
+printf '{"version":1,"children":[{"id":"polluted2","children":[]}]}\n' > "$repo/design/littlesprout.pen"
+echo dirty2 >> "$repo/file.txt"
+out7d="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has '⑦d .pen＋另一檔皆 dirty → 印泛用「2 個未提交變更」' "$out7d" '主 checkout 有 2 個未提交變更'
+hasnt '⑦d 不誤觸發 Pen 寫回提示（非唯一單檔）' "$out7d" 'Pen 寫回 →'
+g -C "$repo" checkout -q -- design/littlesprout.pen file.txt
+
+# mutation：拿掉「唯一 dirty 檔是 design/littlesprout.pen」特殊判斷（改成恆假）→ ⑦b 的樣本必須變回泛用訊息
+mut_mc="$work/patrol.no-pen-dirty-special-case.sh"
+sed 's/if \[ "\$mc_dirty" -eq 1 \] && \[ "\$mc_dirty_files" = "design\/littlesprout.pen" \]; then/if false; then/' "$patrol" > "$mut_mc"
+if grep -qF 'if false; then' "$mut_mc"; then
+  echo "✓ ⑦b mutant：確認已把「唯一 dirty 檔是 design/littlesprout.pen」判斷改成恆假"
+else
+  echo "✗ ⑦b mutant：改判準失敗，負控本身無效" >&2; fail=1
+fi
+printf '{"version":1,"children":[{"id":"polluted3","children":[]}]}\n' > "$repo/design/littlesprout.pen"
+outm7b="$(bash "$mut_mc" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has '⑦b mutant：拿掉特殊判斷後改印泛用「1 個未提交變更」——證明特殊判斷是這裡在挑的' "$outm7b" '主 checkout 有 1 個未提交變更'
+hasnt '⑦b mutant：不再印 Pen 寫回提示' "$outm7b" 'Pen 寫回 →'
+g -C "$repo" checkout -q -- design/littlesprout.pen
+
 # ---- ⑧ 全部乾淨時 --brief 印「巡檢：無異常」——把有異常的 worktree 移掉 ----
 for n in LS-1 LS-2 LS-4 LS-5 LS-7; do
   g -C "$repo" worktree remove --force "$wts/$n" >/dev/null 2>&1 || { echo "✗ ⑧ 移除 worktree ${n} 失敗" >&2; fail=1; }
@@ -1571,6 +1619,11 @@ hasnt '㉘ mutant（m1）：check 紅／run id 資訊消失' "$l904m" 'check 紅
 # 「不強求」的註解軟化不了，CI 因此紅。改成只留兩個平台都成立的斷言：`hasnt 查詢失敗`（macOS `?m`、
 # glibc 垃圾數字皆非查詢失敗）＋`has CI 跑中`（不管後面接的是 `?` 還是垃圾數字，只要走了 pending 分支
 # 就一定印這四個字，不依賴 jq 對這個值的日期解析結果）；不再對分鐘值本身斷言。
+# LS-233 收尾 sweeper `7e1d5d62` O1（merge-review R5 i8，LS-96 池項 `588c483f`(1)）：這組 mutation（拿掉
+# Go 零值前綴守門、只留 try/catch）的守門責任已轉移到 production PR #907 對真實 CI（Ubuntu glibc jq）的
+# 斷言（見上方 m1／m4 段落與 R4 delta B1／m6 的容器實測）——**這組仍是回歸防線，不要因為看起來跟 PR #907
+# 重複就把它刪掉**：本機 macOS 兩個 jq 版本仍會對 `0001-01-01` 拋錯，這組驗的正是「macOS 開發機本機跑
+# 自測」這條路徑不會退化成查詢失敗。
 mut_pr_m4a="$work/patrol.no-zerodate-prefix.sh"
 python3 - "$patrol" "$mut_pr_m4a" <<'PY'
 import sys
