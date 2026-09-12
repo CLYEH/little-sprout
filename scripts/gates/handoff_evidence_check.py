@@ -44,12 +44,53 @@
           誤判跳過，實測讓 ios-dev handoff 的存在性檢查在該類列項上形同虛設（6–9 個候選裡 0 個
           被驗）。改成只看候選**所在那一行**，範圍收緊到 mutation 說明與其示範假名通常同一行的
           實際寫法。
-  (b) 路徑——含 `.png`／`.log`／`.test.sh`／`scratchpad/`／`evidence/`／`.swift` 子字串（`.swift` 是
-      code-review 型驗證的合法「怎麼驗」指向，如 `FamilyMemberActionVisibility.swift:89-100`；真實
-      樣本 LS-192 QA comment `88fb24bc` 項 6 就是靠這種引用交代怎麼驗的）；**R3（merge-review R2
-      m3）**：harness 票 handoff 常引用原始碼／文件路徑當「怎麼驗」依據（如 `handoff_evidence_check.py:191`、
-      `docs/COLLABORATION.md:323`），R2 只認 `.swift`／`.test.sh` 一樣是 iOS 本位，補上 `.py`／`.sh`／
-      `.md`／`.yml`／`.json`（同 `.swift` 既有行為：只是子字串比對，不驗證那個路徑真的存在）。
+  (b) 路徑（子字串比對，不驗證真的存在）——含 `.png`／`.log`／`.test.sh`／`scratchpad/`／`evidence/`／
+      `.swift`／`.py`／`.sh`／`.md`／`.yml`／`.json` 子字串（`.swift` 是 code-review 型驗證的合法
+      「怎麼驗」指向，如 `FamilyMemberActionVisibility.swift:89-100`；真實樣本 LS-192 QA comment
+      `88fb24bc` 項 6 就是靠這種引用交代怎麼驗的）；**R3（merge-review R2 m3）**：harness 票 handoff
+      常引用原始碼／文件路徑當「怎麼驗」依據（如 `handoff_evidence_check.py:191`），補上 `.py`／
+      `.json`（同 `.swift` 既有行為：只是子字串比對，不驗證那個路徑真的存在）。**R4（LS-228）** 一度
+      把 `.sh`／`.md`／`.yml` 從這條無條件子字串移除、改成只走 (b2) 白名單目錄＋存在性驗證，結果對
+      既有語料淨增誤報（merge-review R1 `43e2f60e` F1：規約必引的 `bash supabase/tests/run.sh`、根目錄
+      `project.yml`、裸檔名 `db-reset-retry.sh` 這類引用改前 exit 0、R4 head exit 1）——**R5（LS-228
+      R2）原樣還原 `.sh`／`.md`／`.yml`**，本票（LS-228）的白名單只做加法：(b2) 之外仍保留這條寬鬆
+      的無條件子字串當 fallback，不收緊既有行為（純加法，見票文 R2 裁定）。
+  (b2) 白名單目錄下的具體路徑（**必須**驗證檔案在 repo 內真實存在，比 (b) 更嚴格——同一個路徑若落在
+      (b2) 涵蓋的目錄內，即使 (b) 的無條件子字串已判定「有證據」，仍會因 (b2) 的存在性檢查落空而讓
+      整列判紅；(b2) 的目的是在特定重要目錄內防堵「引用不存在檔案」矇混，不是要收窄 (b) 的涵蓋範圍）
+      ——**R4（LS-228，來源 LS-96 池項 `acb4e2df`：2026-09-06 同一天 LS-222／LS-223 兩張 merge-review
+      與其 sweeper handoff 各自撞到同一個缺口——backend／SQL 票引用 `orphan_scan.ts:46-108`、
+      `109_soft_delete_unreferenced_media.sql` 這類 `.ts`／`.sql` 路徑當「怎麼驗」依據，gate 完全
+      不認，9 列裡誤報 3 列）**：`supabase/functions/**/*.ts`、`supabase/migrations/*.sql`、
+      `supabase/tests/*.sql`、`supabase/**/*.sh`、`docs/**/*.md`、`.claude/**/*.md`、`scripts/**/*.sh`、
+      `.github/workflows/*.yml`（可帶 `:行號`／`:起-迄`，冒號之後的內容不影響比對，正規表示式在副
+      檔名處就結束）。與 (b) 不同，這批**必須驗證檔案在 repo 內真實存在**（`os.path.isfile`，相對
+      `--repo` 根目錄——不是 `git ls-files`，未被 git 追蹤但實際存在的檔案也算存在；**R5（LS-228
+      R2，F5）**：候選先 `os.path.normpath` 正規化並確認仍落在 `--repo` 根目錄之內才驗存在，見
+      `path_within_repo`——字元類別 `[\\w.-]+` 涵蓋 `..`，不正規化的話 `scripts/../../evil.sh` 這類
+      候選能逃出 `--repo` 去檢查任意檔案是否存在）——不存在（或逃出 repo）仍判紅並點名哪個路徑找不到
+      （`HANDOFF-PATH-EXISTS`）。範圍邊界刻意收緊、不是疏漏：
+        - `supabase/migrations/*.sql`／`supabase/tests/*.sql` 只認**直接掛在該目錄下**的檔案，不含
+          `**`——即使 `supabase/tests/concurrency/*.sql` 底下也有真實檔案，這是票文字面 `*.sql` 的
+          邊界，不做「放寬到任意路徑」（LS-228 範圍「不做」明文禁止）。
+        - `supabase/functions/**/*.ts`／`supabase/**/*.sh`／`scripts/**/*.sh`／`docs/**/*.md`／
+          `.claude/**/*.md` 允許任意層級子目錄——**R5（LS-228 R2，F2）**：`docs/*.md` 放寬成
+          `docs/**/*.md`（原本只認直接掛在 `docs/` 下的檔案，`docs/legal/eula-addendum.md` 這類子
+          目錄檔案會被判「不算證據」，`LS-208-mr-r2-verdict.md` 唯一證據被誤判紅正是一例）；另補
+          `.claude/**/*.md`（`.claude/agents/*.md`、`.claude/skills/**/*.md` 是 harness／設計票的
+          正典引用來源）與 `supabase/**/*.sh`（供 `supabase/tests/run.sh` 這類規約必引的腳本存在性
+          驗證——`bash ` 前綴仍走 (c) 命令證據不驗存在，同下段）。
+      正規表示式的字元類別（`[\\w.-]+`）本身就不含 `*`，shell glob 寫法（如 `scripts/gates/*.sh`、
+      `.github/workflows/*.yml` 這種**帶字面星號**的寫法）不會被誤判成具體路徑候選，不需要像 (a) 的
+      `is_glob_candidate` 那樣另外判準；`supabase/**/*.sh`／`scripts/**/*.sh` 排除 `.test.sh`（既有
+      `.test.sh` 由 (b) 的無條件子字串涵蓋，本檔既有樣本用示意性假檔名如 `scripts/gates/foo.test.sh`
+      佐證，不該連坐要求真的存在）。候選層級 skip 判準：`is_command_invocation_candidate`——候選緊接
+      在 `bash ` 之後（如 `` `bash scripts/gates/foo.sh` ``）視為 (c) 命令證據的一部分（COMMAND_RE 的
+      `bash scripts/` 已涵蓋），不驗存在性——既有樣本慣用 `bash scripts/ops/foo.sh` 這類示意性假
+      檔名示範「跑了某支腳本」，不是在引用具體檔案。**R5（LS-228 R2，F4）**：另加 `is_negated`／
+      `is_mutation_context` 兩個既有判準（比照 (a) 測試名候選）——原本只有 `is_command_invocation_candidate`
+      一種，導致「這個白名單路徑不存在，gate 正確判紅」這類正確的否定／mutation 語境敘述本身會被
+      誤判為引用（merge-review R1 `43e2f60e` F4：驗這支 gate 自己的 verdict 會踩到）。
   (c) 命令——含 `xcodebuild`、`bash scripts/`、`gh run view` 或 `.xcresult` 子字串（R2 補後兩者：
       merge-review verdict 常用 `gh run view --job --log` 核對 CI、`.xcresult` 是測試結果檔）。
 
@@ -80,9 +121,10 @@
   - N9 本 gate 只驗「有沒有寫怎麼驗」，驗不出「證據與宣稱是否對應」這種語意問題（`1ff7b8d8`(b)：
     QA 用歡迎頁測試證明設定頁能開 sheet，這種「證據↔宣稱錯配」機械面仍是空的）。
 
-exit：0＝全過；1＝任一項缺證據或引用的測試名不存在；2＝找不到檔案／不在 git repo 且未給 --repo
-（fail closed）。
+exit：0＝全過；1＝任一項缺證據、引用的測試名不存在，或引用的白名單路徑（見 (b2)）不存在；2＝找不到
+檔案／不在 git repo 且未給 --repo（fail closed）。
 """
+import os
 import re
 import subprocess
 import sys
@@ -104,7 +146,31 @@ DASH_ITEM_RE = re.compile(r"^-\s+")
 TEST_NAME_RE = re.compile(r"\btest[A-Z][A-Za-z0-9_]*\b|\b[A-Za-z_][A-Za-z0-9_]*Tests\b")  # HANDOFF-EVIDENCE-TESTNAME
 # R3（merge-review R2 m3）：補 harness 票常見的原始碼／文件路徑副檔名——只補「常見到會被引用來當
 # 『怎麼驗』依據」的幾種，仍是子字串比對、不驗證那個路徑真的存在（與 `.swift` 既有行為一致）。
+# R4（LS-228）一度把 `.sh`／`.md`／`.yml` 從這條無條件子字串移除，merge-review R1（`43e2f60e` F1）
+# 實測對既有語料淨增 20 份誤報（規約必引的 `bash supabase/tests/run.sh`、根目錄 `project.yml`、裸
+# 檔名皆中）——R5（LS-228 R2）原樣還原，本票只做加法（見 (b2)，不收緊這條既有行為）。
 PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/|\.swift\b|\.py\b|\.sh\b|\.md\b|\.yml\b|\.json\b")  # HANDOFF-EVIDENCE-PATH
+# R4（LS-228，來源 LS-96 池項 `acb4e2df`）：白名單目錄下的具體路徑，必須驗證檔案真的存在（見 (b2)
+# 檔頭說明）。`supabase/functions`／`supabase`（.sh）／`scripts`／`docs`／`.claude` 允許任意層級子目錄
+# （`(?:[\w.-]+/)+` 或 `(?:[\w.-]+/)*`）；`supabase/migrations`／`supabase/tests`（.sql）只認直接掛在
+# 該目錄下的檔案（無 `**`，票文字面邊界）。字元類別 `[\w.-]+` 不含 `*`，shell glob 寫法
+# （`scripts/gates/*.sh`）天生就不會誤配成具體路徑候選。`supabase/**/*.sh`／`scripts/**/*.sh` 排除
+# `.test.sh`（`(?<!\.test\.sh)`）——`.test.sh` 已由 PATH_RE 的既有 `\.test\.sh` 無條件子字串涵蓋，本檔
+# 既有樣本（①g／①h／①o）用 `scripts/gates/foo.test.sh` 這種示意性假檔名當佐證，不需要真的存在
+# （同 (a) 測試名存在性檢查排除 `.test.sh`／`.test.js` 自測 fixture 的理由一致）。
+# R5（LS-228 R2，F2）：`docs/[\w.-]+\.md`→`docs/(?:[\w.-]+/)*[\w.-]+\.md`（純加法，`*` 涵蓋零層，原本
+# 直接掛在 docs/ 下的檔案仍照樣命中），另加 `\.claude/(?:[\w.-]+/)*[\w.-]+\.md` 與
+# `supabase/(?:[\w.-]+/)+[\w.-]+(?<!\.test)\.sh`（新增分支，不動既有五類）。
+PATH_ANCHOR_RE = re.compile(
+    r"supabase/functions/(?:[\w.-]+/)+[\w.-]+\.ts"
+    r"|supabase/migrations/[\w.-]+\.sql"
+    r"|supabase/tests/[\w.-]+\.sql"
+    r"|supabase/(?:[\w.-]+/)+[\w.-]+(?<!\.test)\.sh"
+    r"|docs/(?:[\w.-]+/)*[\w.-]+\.md"
+    r"|\.claude/(?:[\w.-]+/)*[\w.-]+\.md"
+    r"|scripts/(?:[\w.-]+/)+[\w.-]+(?<!\.test)\.sh"
+    r"|\.github/workflows/[\w.-]+\.yml"
+)  # HANDOFF-PATH-ANCHOR
 COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|\.xcresult")  # HANDOFF-EVIDENCE-COMMAND
 
 # ---- R2（merge-review R1 F1）：候選過濾——glob 形狀／同句否定詞／mutation 語境不驗存在性 ----
@@ -285,8 +351,55 @@ def test_name_exists(repo, name):
     return False
 
 
+def is_command_invocation_candidate(text, start):
+    """候選緊接在 `bash ` 之後（如 `` `bash scripts/gates/foo.sh` ``）——這是在描述「執行這支腳本」
+    的命令，COMMAND_RE 的 `bash scripts/` 子字串已經涵蓋這種證據；既有 handoff／本檔自測樣本（如
+    ①d／①f）慣用 `bash scripts/gates/foo.sh`／`bash scripts/ops/foo.sh` 這類示意性假檔名示範
+    「跑了某支 gate／ops 腳本」，不是在引用一個具體檔案當佐證，不驗存在性（同 `xcodebuild` 這類
+    COMMAND_RE 證據本來就不驗證二進位檔真的存在的邏輯一致）。"""
+    return text[max(0, start - 5):start] == "bash "
+
+
+def path_anchor_candidates(block):
+    """回傳區塊內符合白名單目錄＋副檔名樣式的路徑——`supabase/functions/**/*.ts`、
+    `supabase/migrations/*.sql`、`supabase/tests/*.sql`、`supabase/**/*.sh`、`docs/**/*.md`、
+    `.claude/**/*.md`、`scripts/**/*.sh`、`.github/workflows/*.yml`。`:行號`／`:起-迄` 後綴不在擷取
+    範圍內（正規表示式在副檔名處就結束比對），不影響後續存在性判定。回傳 `[(path, skip)]`（同名路徑
+    去重、`skip` 取任一次出現成立即整體 skip，語意同 `test_name_candidates`）。字元類別 `[\\w.-]+`
+    本身就不含 `*`，shell glob 寫法不會被擷取成候選，不需要像 (a) 的 `is_glob_candidate` 那樣另外
+    判準。**R5（LS-228 R2，F4）**：skip 判準從只有 `is_command_invocation_candidate`（緊接 `bash `）
+    一種，補上 `is_negated`／`is_mutation_context`（比照 `test_name_candidates`）——原本「這個白名單
+    路徑不存在，gate 正確判紅」這類正確的否定／mutation 語境敘述本身會被誤判為引用（merge-review R1
+    `43e2f60e` F4：驗這支 gate 自己的 verdict 會踩到）。`skip` 為 True 的候選仍計入 `has_evidence`
+    （PATH_ANCHOR_RE.search 不看 skip），只跳過後續的存在性驗證（見 HANDOFF-PATH-EXISTS）。"""
+    out = {}
+    for m in PATH_ANCHOR_RE.finditer(block):
+        p = m.group(0)
+        skip = is_command_invocation_candidate(block, m.start()) or is_negated(block, m.start(), m.end()) or is_mutation_context(block, m.start())  # HANDOFF-PATH-SKIP-CHECK
+        out[p] = out.get(p, False) or skip
+    return sorted(out.items())
+
+
+def path_within_repo(repo, p):
+    """F5（merge-review R1 `43e2f60e`）：候選正規化後仍須落在 `--repo` 根目錄之內——
+    `PATH_ANCHOR_RE` 的字元類別 `[\\w.-]+` 涵蓋 `..`，`scripts/../../outside.sh` 這類候選若不正規化
+    直接餵給 `os.path.isfile`，會逃出 `--repo` 去檢查任意檔案是否存在。用 `os.path.normpath` 正規化
+    後比對是否仍以 `repo` 的絕對路徑為前綴（`os.sep` 結尾，避免 `/repo-evil` 誤判為 `/repo` 的
+    子目錄）。"""
+    repo_abs = os.path.normpath(os.path.abspath(repo))
+    full = os.path.normpath(os.path.join(repo_abs, p))
+    return full == repo_abs or full.startswith(repo_abs + os.sep)  # HANDOFF-PATH-BOUNDARY-CHECK
+
+
+def path_exists_in_repo(repo, p):
+    """白名單路徑存在性驗證——正規化候選後先確認未逃出 `--repo`（見 `path_within_repo`），
+    再用 `os.path.isfile` 驗證真的存在。"""
+    full = os.path.normpath(os.path.join(os.path.abspath(repo), p))
+    return path_within_repo(repo, p) and os.path.isfile(full)
+
+
 def has_evidence(text):
-    return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or COMMAND_RE.search(text))
+    return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or PATH_ANCHOR_RE.search(text) or COMMAND_RE.search(text))  # HANDOFF-HAS-EVIDENCE-PATH-ANCHOR
 
 
 def resolve_repo(repo):
@@ -327,10 +440,17 @@ def run(path, repo):
         missing_evidence = not has_evidence(block)  # HANDOFF-MISSING-EVIDENCE-CHECK
         candidates = test_name_candidates(block)
         bad_names = [n for n, skip in candidates if not skip and not test_name_exists(repo, n)]  # HANDOFF-BADNAMES-CHECK
+        # R4（LS-228）：白名單目錄路徑（supabase/functions|migrations|tests、supabase（.sh）、docs、
+        # .claude、scripts、.github/workflows）必須驗證真的存在於 repo（且未逃出 --repo，見 F5），
+        # 不存在仍判紅並點名哪個路徑。
+        bad_paths = [p for p, skip in path_anchor_candidates(block) if not skip and not path_exists_in_repo(repo, p)]  # HANDOFF-PATH-EXISTS
         if missing_evidence:
             print(
                 "✗ handoff-evidence-check：第 %d 行起的列項缺『怎麼驗』證據（須含測試名、"
-                ".png/.log/.test.sh/scratchpad//evidence//.swift/.py/.sh/.md/.yml/.json 路徑，或 "
+                ".png/.log/.test.sh/scratchpad//evidence//.swift/.py/.sh/.md/.yml/.json 路徑、"
+                "白名單目錄路徑（supabase/functions/**/*.ts、supabase/migrations/*.sql、"
+                "supabase/tests/*.sql、supabase/**/*.sh、docs/**/*.md、.claude/**/*.md、"
+                "scripts/**/*.sh、.github/workflows/*.yml），或 "
                 "xcodebuild／bash scripts/／gh run view／.xcresult 命令）" % line_no,
                 file=sys.stderr,
             )
@@ -343,7 +463,14 @@ def run(path, repo):
                 file=sys.stderr,
             )
             ok = False
-        if not missing_evidence and not bad_names:
+        for p in bad_paths:
+            print(
+                "✗ handoff-evidence-check：第 %d 行引用的路徑 `%s` 在 repo 內找不到（--repo %s）"
+                % (line_no, p, repo),
+                file=sys.stderr,
+            )
+            ok = False
+        if not missing_evidence and not bad_names and not bad_paths:
             print("✓ 第 %d 行起的列項有證據" % line_no)
     return ok
 
