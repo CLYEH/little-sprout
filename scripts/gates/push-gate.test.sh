@@ -136,18 +136,30 @@ done
 exit 0
 STUB
 chmod +x "$work/bin/xcodebuild"
-# LS-236：stub `pgrep`／`ps`，供 scripts/gates/stale-xcodebuild-check.sh（合成 repo 內的真檔）跑。預設
-# `$STUB_STALE_PGREP_OUT` 為空＝「無殘留」，讓既有案例（①～㊴）不受影響；㊵ 系列案例改寫控制檔模擬殘留。
+# LS-236：stub `pgrep`／`ps`，供 scripts/gates/stale-xcodebuild-check.sh（合成 repo 內的真檔）跑。空
+# `$STUB_STALE_PS_DB`＝「無殘留」，讓既有案例（①～㊴）不受影響；㊵ 系列案例寫入該檔模擬殘留。
 # `pgrep` 只在第一個參數是 `-f` 時走假身（stale-xcodebuild-check.sh 的呼叫形狀）——`-P <pid>` 這類呼叫
 # 原樣轉給真正的系統 `pgrep`（用先於 PATH 覆寫前解出的絕對路徑），不動 LS-199 看門狗（wd_kill_tree／
-# wd_descendants）既有的行程樹管理，那些呼叫在既有案例 ㉙～㊳ 全程都要跑得動。
+# wd_descendants）既有的行程樹管理，那些呼叫在既有案例 ㉙～㊳ 全程都要跑得動。**R2（merge-review R1
+# F1 重放時抓到）**：`-f` 形狀的比對從 `$STUB_STALE_PS_DB` 的 `cmd` 欄位derive（同一次 push-gate 呼叫
+# 會對 sim_udid／ipad_udid 各查一次，若假身不管 pattern 內容一律回同一份固定清單，兩次查詢會撈到同一批
+# pid、測不出「這把呼叫是不是真的因為那顆 UDID 才觸發」）：從呼叫端傳入的 pattern（`xcodebuild .*<UDID>`）
+# 剝掉固定前綴取出 `<UDID>`，只回傳 `cmd` 欄位真的含這個 UDID 字面的那些 pid，貼近真 `pgrep -f` 的比對
+# 語意。
 REAL_PGREP="$(command -v pgrep)"
-export STUB_STALE_PGREP_OUT="$work/stale-pgrep.out"
-: > "$STUB_STALE_PGREP_OUT"
+export STUB_STALE_PS_DB="$work/stale-ps.db"
+: > "$STUB_STALE_PS_DB"
 cat > "$work/bin/pgrep" <<STUB
 #!/bin/bash
 if [ "\$1" = "-f" ]; then
-  [ -s "\${STUB_STALE_PGREP_OUT:?}" ] && cat "\${STUB_STALE_PGREP_OUT}"
+  needle="\${2#"xcodebuild .*"}"
+  db="\${STUB_STALE_PS_DB:?}"
+  if [ -f "\$db" ] && [ -n "\$needle" ]; then
+    while IFS=\$'\t' read -r pid etime cmd || [ -n "\$pid" ]; do
+      [ -n "\$pid" ] || continue
+      case "\$cmd" in *"\$needle"*) printf '%s\n' "\$pid" ;; esac
+    done < "\$db"
+  fi
   exit 0
 fi
 exec "$REAL_PGREP" "\$@"
@@ -160,8 +172,6 @@ chmod +x "$work/bin/pgrep"
 # 實際重現：foreign_pid37 在測試腳本自己這層 `kill -0` 判定明明存活，push-gate.sh／simulator-lock.sh 那層
 # 用假身 `ps` 判定卻說「已不存在」）。
 REAL_PS="$(command -v ps)"
-export STUB_STALE_PS_DB="$work/stale-ps.db"
-: > "$STUB_STALE_PS_DB"
 cat > "$work/bin/ps" <<STUB
 #!/bin/bash
 if [ "\$1" = "-o" ] && [ "\$2" = "pid=,etime=,command=" ] && [ "\$3" = "-p" ]; then
@@ -1501,6 +1511,99 @@ else
   echo "✓ ㊴ mutant：拿掉 ipad_trigger 判定後，(a) 的正樣本消失（判定確實是原因）"
 fi
 cp "$gate_src" "$R/scripts/gates/push-gate.sh"   # 還原成真的 push-gate.sh，收工
+
+# ---- ㊵（LS-236 R2，merge-review R1 F1）：push-gate.sh 兩個呼叫 stale-xcodebuild-check.sh 的呼叫點
+#      （:354 對 sim_udid、:688 對 ipad_udid）本身要有機械保護——R1 reviewer 重放：刪掉這兩行仍
+#      96/96 全綠，票文驗收要的「殘留 xcodebuild 存在時 push-gate 拒跑（原文）」從未在任何自測裡真的
+#      印出過。此區塊承接 ㊴ 的既有狀態（`$R` 仍在 `feature/LS-209-ipad-trigger` 分支、diff 已含
+#      IPad 檔名觸發、`$ipad_udid` 已知、`list-ipad-tests.sh` 假身固定回 FooIPadTests），不必重建。----
+
+# (a) sim_udid 有殘留 xcodebuild（無鎖）→ push-gate exit 2、印警告、完全沒跑到 xcodebuild test
+#     （TEST_LOG 應為空——`run_unit_tests` 從未被呼叫，不是跑了又被別的機制擋下）
+test_log35a="$work/test-log-35a.txt"; : > "$test_log35a"
+printf '9001\t00:00:10\txcodebuild test -destination platform=iOS Simulator,id=%s\n' "$ded_udid" > "$STUB_STALE_PS_DB"
+out35a=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log35a"); rc35a=$?
+: > "$STUB_STALE_PS_DB"
+if [ "$rc35a" -eq 2 ] && printf '%s' "$out35a" | grep -qF '⚠ 殘留 xcodebuild' && [ ! -s "$test_log35a" ]; then
+  echo "✓ ㊵(a) sim_udid 有殘留 xcodebuild → push-gate exit 2、印警告、完全沒跑到 xcodebuild test"
+else
+  echo "✗ ㊵(a) 應 exit 2、印警告、且 test_log 全空（實得 exit ${rc35a}，test_log：$(cat "$test_log35a" 2>/dev/null || echo 無)）" >&2
+  printf '%s\n' "$out35a" | sed 's/^/    /' >&2; fail=1
+fi
+
+# (b) mutation：刪掉 :354 那行呼叫 → (a) 的紅樣本必須變綠（xcodebuild test 真的被跑到）
+mut35b="$work/push-gate.no-sim-udid-stale-check.sh"
+sed '/bash "\$(git rev-parse --show-toplevel)\/scripts\/gates\/stale-xcodebuild-check\.sh" "\$sim_udid" "\$sim_lock_dir"/d' "$gate_src" > "$mut35b"
+if grep -qF '"$sim_udid" "$sim_lock_dir"' "$mut35b"; then
+  echo "✗ ㊵(b) mutate：刪除呼叫行失敗，負控本身無效" >&2; fail=1
+else
+  echo "✓ ㊵(b) mutate：確認已刪除 push-gate.sh:354 呼叫 stale-xcodebuild-check.sh 那行"
+fi
+cp "$mut35b" "$R/scripts/gates/push-gate.sh"
+test_log35b="$work/test-log-35b.txt"; : > "$test_log35b"
+printf '9001\t00:00:10\txcodebuild test -destination platform=iOS Simulator,id=%s\n' "$ded_udid" > "$STUB_STALE_PS_DB"
+outm35b=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log35b"); rcm35b=$?
+: > "$STUB_STALE_PS_DB"
+cp "$gate_src" "$R/scripts/gates/push-gate.sh"
+if [ "$rcm35b" -eq 0 ] && grep -qF "id=${ded_udid}" "$test_log35b"; then
+  echo "✓ ㊵(b) mutant（刪掉 :354 呼叫）：(a) 的紅樣本改判成 exit 0、xcodebuild test 真的被跑到——證明該呼叫是這裡在擋"
+else
+  echo "✗ ㊵(b) mutant 未如預期翻轉（實得 exit ${rcm35b}）" >&2; printf '%s\n' "$outm35b" | sed 's/^/    /' >&2; fail=1
+fi
+
+# (c) ipad_udid 有殘留 xcodebuild → 主測試（sim_udid）照跑，但 iPad best-effort 段被擋，整體 exit 2
+test_log35c="$work/test-log-35c.txt"; : > "$test_log35c"
+printf '9002\t00:00:10\txcodebuild test -destination platform=iOS Simulator,id=%s\n' "$ipad_udid" > "$STUB_STALE_PS_DB"
+out35c=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log35c"); rc35c=$?
+: > "$STUB_STALE_PS_DB"
+if [ "$rc35c" -eq 2 ] && printf '%s' "$out35c" | grep -qF '⚠ 殘留 xcodebuild' \
+  && grep -qF "id=${ded_udid}" "$test_log35c" && ! grep -qF "id=${ipad_udid}" "$test_log35c"; then
+  echo "✓ ㊵(c) ipad_udid 有殘留 xcodebuild → 主測試照跑，iPad best-effort 測試被擋（整體 exit 2）"
+else
+  echo "✗ ㊵(c) 應 exit 2、主測試跑了但 iPad 測試沒跑（實得 exit ${rc35c}）" >&2
+  printf '%s\n' "$out35c" | sed 's/^/    /' >&2; cat "$test_log35c" | sed 's/^/    log: /' >&2; fail=1
+fi
+
+# (d) mutation：刪掉 :688 那行呼叫 → (c) 的紅樣本必須變綠（iPad 測試真的被跑到，即使有殘留）
+mut35d="$work/push-gate.no-ipad-udid-stale-check.sh"
+sed '/bash "\$(git rev-parse --show-toplevel)\/scripts\/gates\/stale-xcodebuild-check\.sh" "\$ipad_udid" "\$sim_lock_dir"/d' "$gate_src" > "$mut35d"
+if grep -qF '"$ipad_udid" "$sim_lock_dir"' "$mut35d"; then
+  echo "✗ ㊵(d) mutate：刪除呼叫行失敗，負控本身無效" >&2; fail=1
+else
+  echo "✓ ㊵(d) mutate：確認已刪除 push-gate.sh:688 呼叫 stale-xcodebuild-check.sh 那行"
+fi
+cp "$mut35d" "$R/scripts/gates/push-gate.sh"
+test_log35d="$work/test-log-35d.txt"; : > "$test_log35d"
+printf '9002\t00:00:10\txcodebuild test -destination platform=iOS Simulator,id=%s\n' "$ipad_udid" > "$STUB_STALE_PS_DB"
+outm35d=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log35d"); rcm35d=$?
+: > "$STUB_STALE_PS_DB"
+cp "$gate_src" "$R/scripts/gates/push-gate.sh"
+if [ "$rcm35d" -eq 0 ] && grep -qF "id=${ipad_udid}" "$test_log35d"; then
+  echo "✓ ㊵(d) mutant（刪掉 :688 呼叫）：(c) 的紅樣本改判成 exit 0、iPad test 真的被跑到——證明該呼叫是這裡在擋"
+else
+  echo "✗ ㊵(d) mutant 未如預期翻轉（實得 exit ${rcm35d}）" >&2; printf '%s\n' "$outm35d" | sed 's/^/    /' >&2; fail=1
+fi
+
+# (e) detect-simulator.sh 回傳 exit 2（自己偵測到殘留）時，push-gate.sh 應原樣轉發，不吞成泛用
+#     「模擬器偵測失敗」（:311-318 的 `if dest=$(...); then :; else ds_rc=$?; [ "$ds_rc" = 2 ] && exit 2; ...`）
+cat > "$R/scripts/gates/detect-simulator.sh" <<'DSFAKE'
+#!/bin/bash
+echo "⚠ 殘留 xcodebuild（假身：detect-simulator.sh 自己偵測到的）" >&2
+exit 2
+DSFAKE
+chmod +x "$R/scripts/gates/detect-simulator.sh"
+out35e=$(run_gate STUB_TEST_RC=0); rc35e=$?
+cat > "$R/scripts/gates/detect-simulator.sh" <<EOF
+#!/bin/bash
+printf 'platform=iOS Simulator,id=%s\n' "\${FAKE_DEST_UDID:-$ded_udid}"
+EOF
+chmod +x "$R/scripts/gates/detect-simulator.sh"
+if [ "$rc35e" -eq 2 ] && printf '%s' "$out35e" | grep -qF '假身：detect-simulator.sh 自己偵測到的' \
+  && ! printf '%s' "$out35e" | grep -qF '模擬器偵測失敗'; then
+  echo "✓ ㊵(e) detect-simulator.sh 回傳 exit 2 → push-gate 原樣轉發（exit 2、原始訊息保留、不吞成泛用「模擬器偵測失敗」）"
+else
+  echo "✗ ㊵(e) 應原樣轉發 exit 2（實得 exit ${rc35e}）" >&2; printf '%s\n' "$out35e" | sed 's/^/    /' >&2; fail=1
+fi
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ push-gate 模擬器自測通過"
