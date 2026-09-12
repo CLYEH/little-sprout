@@ -102,9 +102,12 @@ final class AlbumDetailStoreTests: XCTestCase {
         XCTAssertEqual(store.loadState, .success)
     }
 
-    // MARK: - attachUploadedMedia（UploadQueueStore.onUploadSucceeded 掛鉤接線）
+    // MARK: - reflectUploadedMedia（merge-review R2 M2：UI-only，寫入已移到 AlbumsStore）
 
-    func test_attachUploadedMedia_insertsAlbumMediaRow_andPrependsToPhotos() async {
+    /// merge-review R2 M2：這支方法**不再**打 `attachMedia`——`album_media` 的寫入已經移到
+    /// `AlbumsStore.attachUploadedMedia`（見該方法與 `AlbumsStoreTests` 的對應測試），這裡只
+    /// 驗證「media 抓得到就插進畫面」這一半。
+    func test_reflectUploadedMedia_prependsToPhotos_whenMediaFetchSucceeds() async {
         let apiClient = StubAlbumsAPIClient()
         apiClient.setFetchMediaHandler { ids in ids.map { Self.makeMediaRow(id: $0) } }
         apiClient.setSignedURLsHandler(Self.echoSignedURLsHandler)
@@ -119,41 +122,27 @@ final class AlbumDetailStoreTests: XCTestCase {
         ])
         let newMediaID = UUID()
 
-        await store.attachUploadedMedia(newMediaID)
+        await store.reflectUploadedMedia(newMediaID)
 
-        XCTAssertEqual(apiClient.attachMediaCalls.count, 1)
-        XCTAssertEqual(apiClient.attachMediaCalls.first?.albumID, albumID)
-        XCTAssertEqual(apiClient.attachMediaCalls.first?.familyID, familyID)
-        XCTAssertEqual(apiClient.attachMediaCalls.first?.mediaID, newMediaID)
-        XCTAssertEqual(apiClient.attachMediaCalls.first?.sortOrder, 1, "已有 1 張（seedForPreview），新的一筆 sortOrder 該接續在後")
+        XCTAssertTrue(apiClient.attachMediaCalls.isEmpty, "寫入已經移到 AlbumsStore，這支方法不該再打一次 attachMedia")
         XCTAssertEqual(store.photos.map(\.id), [newMediaID, existingID], "新加入的照片插在最前面")
     }
 
-    func test_attachUploadedMedia_incrementsSortOrder_acrossMultipleCallsInSameSession() async {
+    /// `fetchMedia` 抓不到這筆（例如已經被別的流程軟刪，或掛鉤的 mediaID 有誤）時不拋錯、
+    /// 也不插入——同舊版 `attachUploadedMedia` 對 INSERT 失敗的 best-effort 取捨（見
+    /// 該方法舊文件註解，現移到 `AlbumsStore.attachUploadedMedia`），這裡是 UI-only 那一半
+    /// 的對應情境。
+    func test_reflectUploadedMedia_fetchMediaReturnsEmpty_doesNotThrow_andDoesNotAppendPhoto() async {
         let apiClient = StubAlbumsAPIClient()
-        apiClient.setFetchMediaHandler { ids in ids.map { Self.makeMediaRow(id: $0) } }
-        apiClient.setSignedURLsHandler { _ in [:] }
+        apiClient.setFetchMediaHandler { _ in [] }
         let store = makeStore(apiClient: apiClient)
 
-        await store.attachUploadedMedia(UUID())
-        await store.attachUploadedMedia(UUID())
+        await store.reflectUploadedMedia(UUID())
 
-        XCTAssertEqual(apiClient.attachMediaCalls.map(\.sortOrder), [0, 1])
+        XCTAssertTrue(store.photos.isEmpty, "抓不到這筆 media 的話不該出現在照片牆")
     }
 
-    func test_attachUploadedMedia_insertFails_doesNotThrow_andDoesNotAppendPhoto() async {
-        let apiClient = StubAlbumsAPIClient()
-        apiClient.setAttachMediaHandler { _, _, _, _ in throw AppError.rejected(message: "家庭已停權", code: "LS053") }
-        let store = makeStore(apiClient: apiClient)
-
-        // best-effort：不拋錯（見文件註解），呼叫端（`UploadQueueStore` 的 Task）不需要
-        // 額外的 catch 分支。
-        await store.attachUploadedMedia(UUID())
-
-        XCTAssertTrue(store.photos.isEmpty, "INSERT 失敗的這張不該出現在照片牆")
-    }
-
-    func test_attachUploadedMedia_alreadyPresent_doesNotDuplicate() async {
+    func test_reflectUploadedMedia_alreadyPresent_doesNotDuplicate() async {
         let apiClient = StubAlbumsAPIClient()
         let mediaID = UUID()
         apiClient.setFetchMediaHandler { ids in ids.map { Self.makeMediaRow(id: $0) } }
@@ -166,7 +155,7 @@ final class AlbumDetailStoreTests: XCTestCase {
             )
         ])
 
-        await store.attachUploadedMedia(mediaID)
+        await store.reflectUploadedMedia(mediaID)
 
         XCTAssertEqual(store.photos.count, 1, "同一個 id 已經在畫面上就不重複插入")
     }

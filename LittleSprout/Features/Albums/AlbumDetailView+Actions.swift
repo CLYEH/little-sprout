@@ -112,12 +112,26 @@ extension AlbumDetailView {
 
     /// 每個 `AlbumDetailStore` 只建立一次、往後重用（`UploadQueueStore` 檔頭：飛行中的
     /// `Task` 跟著這個實例走，不是跟著 sheet 的 View 走，關閉 sheet 不會中斷上傳）。
-    /// `onUploadSucceeded`：LS-166／LS-212 補充要求的真實接線——上傳成功立刻掛進相簿。
+    ///
+    /// `onUploadSucceeded`（merge-review R2 M2 修正）：真正把照片掛進相簿（`album_media`
+    /// INSERT）改成呼叫 `albumsStore.attachUploadedMedia`——`albumID`／`familyID` 先從
+    /// `detailStore` 抽成區域變數值型別捕捉，`albumsStore` 是長生命週期物件（app 層存活，
+    /// 不像 `detailStore` 是這個 View 的 `@State`），三者都不會因為使用者在上傳飛行中 pop 掉
+    /// 詳情頁而消失——原本 `[weak detailStore]` 直接掛在唯一負責寫入的路徑上，detailStore
+    /// deinit 後整段變成 no-op，是 M2 的根因（見 `AlbumsStore.attachUploadedMedia` 文件
+    /// 註解）。`detailStore` 仍然弱引用，只用來「如果使用者還留在這個畫面，立刻讓照片牆反映
+    /// 最新狀態」（`AlbumDetailStore.reflectUploadedMedia`，不重複打一次 `attachMedia`）。
     private func makeUploadQueueStore(detailStore: AlbumDetailStore) -> UploadQueueStore {
-        UploadQueueStore(
-            familyID: detailStore.familyID, mediaUploadService: mediaUploadService,
+        let albumID = detailStore.albumID
+        let familyID = detailStore.familyID
+        let albumsStore = albumsStore
+        return UploadQueueStore(
+            familyID: familyID, mediaUploadService: mediaUploadService,
             onUploadSucceeded: { [weak detailStore] _, mediaID in
-                Task { await detailStore?.attachUploadedMedia(mediaID) }
+                Task {
+                    await albumsStore.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: mediaID)
+                    await detailStore?.reflectUploadedMedia(mediaID)
+                }
             }
         )
     }

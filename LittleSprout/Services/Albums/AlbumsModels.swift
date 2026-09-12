@@ -127,8 +127,9 @@ struct AlbumChildLinkRow: Decodable, Sendable, Equatable {
 /// `album_media` 連結表一列（LS-166，相簿詳情用）——同 `DiaryMediaLinkRow` 的角色，只是這張表
 /// 沒有時間戳（見 `supabase/migrations/20260822120000_init_schema.sql` 表定義：`album_id`／
 /// `media_id`／`family_id`／`sort_order`，沒有 `created_at`），排序只能靠 `sortOrder`。
-/// `AlbumDetailStore.attachUploadedMedia` 每次新增照片都用「目前已知連結數」當基底遞增寫入，
-/// 詳情頁顯示時依 `sortOrder` 由大到小排（新加入的排最前）——見該檔文件註解。
+/// `AlbumsStore.attachUploadedMedia`（merge-review R2 M2 起這支才是唯一的寫入端，見該方法
+/// 文件註解）每次新增照片都現查一次目前連結數當基底寫入，詳情頁顯示時依 `sortOrder` 由大到小
+/// 排（新加入的排最前）——見該方法文件註解。
 struct AlbumMediaLinkRow: Decodable, Sendable, Equatable {
     let albumId: UUID
     let mediaId: UUID
