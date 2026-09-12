@@ -45,7 +45,27 @@ protocol AlbumsAPIClient: Sendable {
     /// `childIDs` 為空陣列＝不標記任何寶貝。
     func setAlbumChildren(albumID: UUID, childIDs: [UUID]) async throws
 
-    /// 軟刪／還原（見 docs/API.md §4 `set_album_deleted`）——`AlbumsStore.createAlbum` 補償
-    /// 路徑專用（見協定檔文件註解），本票不提供還原／刪除相簿的使用者入口（LS-166 範圍）。
+    /// 軟刪／還原（見 docs/API.md §4 `set_album_deleted`）——LS-165 只用於 `AlbumsStore
+    /// .createAlbum` 補償路徑；LS-166 起也是相簿詳情「刪除相簿」的使用者入口（owner 限定，
+    /// 見 `AlbumDetailView`）。
     func setAlbumDeleted(albumID: UUID, deleted: Bool) async throws
+
+    // MARK: - LS-166（相簿詳情）
+
+    /// 一本相簿目前的全部 `album_media` 連結列（不分頁——票文壓測上限 34 張，一次抓齊）。
+    func fetchAlbumMediaLinks(albumID: UUID) async throws -> [AlbumMediaLinkRow]
+
+    /// 「加入照片」上傳成功後把新 `media` 列掛進這本相簿——直接 `.insert()`（`album_media`
+    /// 對 owner／member 開 INSERT grant，不是 RPC-only，見 docs/API.md §2），同
+    /// `DiaryAPIClient.attachMedia` 對 `diary_media` 的既有寫法（`upsert`＋`onConflict`，
+    /// 避免同一張照片被同一個呼叫端意外重複掛兩次時撞 `(album_id, media_id)` 主鍵衝突）。
+    /// `sortOrder` 由呼叫端算好傳入（`AlbumDetailStore` 依目前已知連結數遞增），這裡不重新查
+    /// 一次目前最大值——見該 store 文件註解。
+    func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws
+
+    /// 編輯相簿名稱——`albums.title` 僅建立者本人可直接 `.update()`（`albums_update` policy，
+    /// docs/API.md §2 `albums` 列），owner 對別人建立的相簿沒有這條路徑（`AlbumDetailView`
+    /// 因此把「更多」選單整體限定 owner 可見，不細分「owner 改自己的」與「owner 改別人的」
+    /// 這種 policy 不允許的情境）。
+    func updateAlbumTitle(albumID: UUID, title: String) async throws
 }

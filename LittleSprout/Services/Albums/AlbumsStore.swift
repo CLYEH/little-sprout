@@ -22,7 +22,11 @@ final class AlbumsStore {
     /// 用同一個數字單純是維持全站列表分頁筆數一致的慣例，不是共用同一份契約。
     static let pageSize = 20
 
-    private let apiClient: AlbumsAPIClient
+    /// LS-166：從 `private` 改成預設（internal）存取層級——`AlbumDetailView` 建構
+    /// `AlbumDetailStore` 需要重用同一個 client 實例（同一份 Supabase session／同一組
+    /// preview stub），不需要為此另外把 `AlbumsAPIClient` 往下多傳一層參數（`AlbumsView`／
+    /// `RootView` 目前都只認得到 `AlbumsStore`，見該檔）。
+    let apiClient: AlbumsAPIClient
 
     private(set) var albums: [AlbumSummary] = []
     private(set) var refreshState: AlbumsOperationState = .idle

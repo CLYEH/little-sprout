@@ -170,6 +170,45 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
         }
     }
 
+    // MARK: - LS-166（相簿詳情）
+
+    func fetchAlbumMediaLinks(albumID: UUID) async throws -> [AlbumMediaLinkRow] {
+        do {
+            let response: PostgrestResponse<[AlbumMediaLinkRow]> = try await client
+                .from("album_media")
+                .select("album_id,media_id,sort_order")
+                .eq("album_id", value: albumID)
+                .execute()
+            return response.value
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws {
+        do {
+            let row = AttachAlbumMediaPayload(
+                albumID: albumID, mediaID: mediaID, familyID: familyID, sortOrder: sortOrder
+            )
+            try await client.from("album_media")
+                .upsert(row, onConflict: "album_id,media_id", ignoreDuplicates: false)
+                .execute()
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    func updateAlbumTitle(albumID: UUID, title: String) async throws {
+        do {
+            try await client.from("albums")
+                .update(UpdateAlbumTitlePayload(title: title))
+                .eq("id", value: albumID)
+                .execute()
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
     /// 明確帶 'Z' 的 ISO8601 字串——同 `SupabaseTimelineAPIClient.iso8601String` 的理由：SDK
     /// 預設 Date 編碼不帶時區指示，Postgres 收到不帶時區的 timestamptz 字面值會依 session
     /// timezone 解讀，不保證是 UTC。不用 `Date.rawValue`（`PostgrestFilterValue` 協定）：
@@ -213,4 +252,22 @@ private struct SetAlbumDeletedParams: Encodable {
         case albumID = "p_album_id"
         case deleted = "p_deleted"
     }
+}
+
+private struct AttachAlbumMediaPayload: Encodable {
+    let albumID: UUID
+    let mediaID: UUID
+    let familyID: UUID
+    let sortOrder: Int
+
+    enum CodingKeys: String, CodingKey {
+        case albumID = "album_id"
+        case mediaID = "media_id"
+        case familyID = "family_id"
+        case sortOrder = "sort_order"
+    }
+}
+
+private struct UpdateAlbumTitlePayload: Encodable {
+    let title: String
 }

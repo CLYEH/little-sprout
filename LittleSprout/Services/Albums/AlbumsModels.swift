@@ -124,6 +124,23 @@ struct AlbumChildLinkRow: Decodable, Sendable, Equatable {
     }
 }
 
+/// `album_media` 連結表一列（LS-166，相簿詳情用）——同 `DiaryMediaLinkRow` 的角色，只是這張表
+/// 沒有時間戳（見 `supabase/migrations/20260822120000_init_schema.sql` 表定義：`album_id`／
+/// `media_id`／`family_id`／`sort_order`，沒有 `created_at`），排序只能靠 `sortOrder`。
+/// `AlbumDetailStore.attachUploadedMedia` 每次新增照片都用「目前已知連結數」當基底遞增寫入，
+/// 詳情頁顯示時依 `sortOrder` 由大到小排（新加入的排最前）——見該檔文件註解。
+struct AlbumMediaLinkRow: Decodable, Sendable, Equatable {
+    let albumId: UUID
+    let mediaId: UUID
+    let sortOrder: Int
+
+    enum CodingKeys: String, CodingKey {
+        case albumId = "album_id"
+        case mediaId = "media_id"
+        case sortOrder = "sort_order"
+    }
+}
+
 /// 相簿厚度分級（LS-142 Handoff Notes `EBlnw`）：扇影（Fan Ghost）片數是相簿「有多厚」唯一的
 /// 視覺訊號，卡底 Stack Sheet 三片永久停用。純函式，不含任何 View 邏輯——單元測試不需要建立
 /// View 就能斷言邊界。
