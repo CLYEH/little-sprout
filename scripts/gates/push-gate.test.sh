@@ -63,6 +63,7 @@ echo a > "$R/f.txt"; g add -A; g commit -qm 'chore: LS-0 seed'
 #      不複製真的——用下面的可控假身取代（見檔頭說明） ----
 cp "$gate_src" "$R/scripts/gates/push-gate.sh"
 cp "${root}/scripts/gates/push-ref-check.sh" "$R/scripts/gates/push-ref-check.sh"
+cp "${root}/scripts/gates/stale-xcodebuild-check.sh" "$R/scripts/gates/stale-xcodebuild-check.sh"
 cp "${root}/scripts/ops/simulator-lock.sh" "$R/scripts/ops/simulator-lock.sh"
 cp "$R/scripts/ops/simulator-lock.sh" "$work/simulator-lock.sh.real"
 # 觸發 push-gate.sh「Xcode 專案存在」那個分支；ls -d 只認目錄存在，內容不重要
@@ -135,6 +136,50 @@ done
 exit 0
 STUB
 chmod +x "$work/bin/xcodebuild"
+# LS-236：stub `pgrep`／`ps`，供 scripts/gates/stale-xcodebuild-check.sh（合成 repo 內的真檔）跑。預設
+# `$STUB_STALE_PGREP_OUT` 為空＝「無殘留」，讓既有案例（①～㊴）不受影響；㊵ 系列案例改寫控制檔模擬殘留。
+# `pgrep` 只在第一個參數是 `-f` 時走假身（stale-xcodebuild-check.sh 的呼叫形狀）——`-P <pid>` 這類呼叫
+# 原樣轉給真正的系統 `pgrep`（用先於 PATH 覆寫前解出的絕對路徑），不動 LS-199 看門狗（wd_kill_tree／
+# wd_descendants）既有的行程樹管理，那些呼叫在既有案例 ㉙～㊳ 全程都要跑得動。
+REAL_PGREP="$(command -v pgrep)"
+export STUB_STALE_PGREP_OUT="$work/stale-pgrep.out"
+: > "$STUB_STALE_PGREP_OUT"
+cat > "$work/bin/pgrep" <<STUB
+#!/bin/bash
+if [ "\$1" = "-f" ]; then
+  [ -s "\${STUB_STALE_PGREP_OUT:?}" ] && cat "\${STUB_STALE_PGREP_OUT}"
+  exit 0
+fi
+exec "$REAL_PGREP" "\$@"
+STUB
+chmod +x "$work/bin/pgrep"
+# `ps` 只在完整命中 stale-xcodebuild-check.sh 的呼叫形狀（`-o pid=,etime=,command= -p <pid>`）時走假身；
+# 其餘一律 passthrough 給真正的系統 `ps`——**simulator-lock.sh 自己的 `alive()` 也會呼叫 `ps -p "$1" -o
+# pid=` 判斷鎖持有者死活**，若不區分形狀、照樣全部截走，會把既有 ㊲ 案例（驗證「別人持有中的鎖不能被
+# 誤判死鎖回收」）的持有者判定打成「假身資料庫裡沒有這個 pid＝死」，讓合法持有中的鎖被誤收（LS-236 自測
+# 實際重現：foreign_pid37 在測試腳本自己這層 `kill -0` 判定明明存活，push-gate.sh／simulator-lock.sh 那層
+# 用假身 `ps` 判定卻說「已不存在」）。
+REAL_PS="$(command -v ps)"
+export STUB_STALE_PS_DB="$work/stale-ps.db"
+: > "$STUB_STALE_PS_DB"
+cat > "$work/bin/ps" <<STUB
+#!/bin/bash
+if [ "\$1" = "-o" ] && [ "\$2" = "pid=,etime=,command=" ] && [ "\$3" = "-p" ]; then
+  target=\$4
+  db="\${STUB_STALE_PS_DB:?}"
+  [ -f "\$db" ] || exit 1
+  while IFS=\$'\t' read -r pid etime cmd || [ -n "\$pid" ]; do
+    [ -n "\$pid" ] || continue
+    if [ "\$pid" = "\$target" ]; then
+      printf '%5s %s %s\n' "\$pid" "\$etime" "\$cmd"
+      exit 0
+    fi
+  done < "\$db"
+  exit 1
+fi
+exec "$REAL_PS" "\$@"
+STUB
+chmod +x "$work/bin/ps"
 # ⑯～⑳（LS-76）：真的加了 .swift 檔到 $R 之後 step 1 的 `git ls-files '*.swift'` 不再是空的，會走到
 # 「有 Swift 檔」分支——stub 掉 swiftlint（PATH 前置，蓋過本機真的 swiftlint），不依賴 rules job（ubuntu）
 # 是否裝了 swiftlint，也不對這個合成的假 repo 真的跑 lint。
@@ -389,6 +434,7 @@ mk_race_repo() {
   cp "$gate_src" "$d/scripts/gates/push-gate.sh"
   cp "${root}/scripts/gates/push-ref-check.sh" "$d/scripts/gates/push-ref-check.sh"
   cp "${root}/scripts/gates/detect-simulator.sh" "$d/scripts/gates/detect-simulator.sh"
+  cp "${root}/scripts/gates/stale-xcodebuild-check.sh" "$d/scripts/gates/stale-xcodebuild-check.sh"
   cp "${root}/scripts/ops/simulator-lock.sh" "$d/scripts/ops/simulator-lock.sh"
   # 模擬 push-gate 第 3～7 步耗時（真環境要好幾秒；LS-65 之後這幾步跑在「執行 xcodebuild test」之前，
   # 不是之後——sleep 一樣代表這段耗時，只是現在發生在兩個 worktree 各自搶鎖之前，不影響下面 ⑧ 要驗的
@@ -926,6 +972,7 @@ printf '99.9\n' > "$hf2_root/.xcode-version"
 printf '26.0\n' > "$hf2_root/.ios-runtime"   # LS-205：同款單一來源，fail-closed
 cp "$gate_src" "$hf2_root/scripts/gates/push-gate.sh"
 cp "${root}/scripts/gates/push-ref-check.sh" "$hf2_root/scripts/gates/push-ref-check.sh"
+cp "${root}/scripts/gates/stale-xcodebuild-check.sh" "$hf2_root/scripts/gates/stale-xcodebuild-check.sh"
 cp "${root}/scripts/ops/simulator-lock.sh" "$hf2_root/scripts/ops/simulator-lock.sh"
 cat > "$hf2_root/scripts/gates/detect-simulator.sh" <<EOF
 #!/bin/bash
