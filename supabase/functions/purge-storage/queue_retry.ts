@@ -24,6 +24,25 @@
 // QUEUE_READ_BACKOFF_MS 改由 (QUEUE_READ_MAX_ATTEMPTS - 1) 動態產生退避表長度，
 // 不再是寫死的字面陣列——避免未來只改其中一個常數、另一個沒跟著改，又出現同一種
 // 「退避表有值但永遠用不到」的死值。
+//
+// LS-242（來源 LS-96 池項 cc85f81b，LS-235 merge-review R2 留下的唯一未收口項）：
+// 上面這一組常數只約束「單一批次讀取」的最壞等待（1+2+4=7 秒）——但
+// index.ts 的迴圈最多跑 MAX_BATCHES=20 批，每批都各自重新套用同一組上限，
+// 最壞情況 20 批全部連續遇到暫時性錯誤，總等待可以逼近 20 × 7s ≈ 140 秒，
+// 超過呼叫端 pg_net.http_post(... timeout_milliseconds := 60000)（見
+// docs/API.md §6「pg_cron＋pg_net 呼叫範本」）。修法：新增整次 invocation
+// 共用的「重試等待預算」（`RetryBudget`）——由 index.ts 在迴圈開始前建立
+// 一個物件（`createRetryBudget()`），逐批傳入同一個 `readQueueWithRetry()`
+// 呼叫；每次要退避之前先檢查剩餘預算夠不夠這一次的退避時長，不夠就不等待、
+// 直接放棄這次讀取的剩餘重試（`budgetExhausted: true`），讓 index.ts 停止
+// 處理後續批次。**這不是把單一批次的 QUEUE_READ_MAX_ATTEMPTS／
+// QUEUE_READ_BACKOFF_MS 改小**（那樣會讓「只是剛好前面幾批比較不順」的正常
+// 情況提早放棄重試）——是在「單一批次的重試上限」之外再疊一層「整次
+// invocation 的總退避時間上限」，兩者各自獨立生效，先碰到哪個就先放棄。
+// `budget` 參數刻意放在 `sleep` 之後、`maxAttempts`／`backoffMs` 之前
+// （設計為選填，預設 `undefined`＝不設預算上限，行為與 LS-242 之前完全相同）
+// ——這兩個既有參數目前只有測試會覆寫，`budget` 才是正式呼叫會用到的新參數，
+// 放在測試用參數前面比追加在最後面更符合「常用參數在前」的可讀性。
 
 /** 讀取一次 purge_storage_queue 的最小回傳形狀——刻意不依賴 index.ts 的
  * QueueRow／PostgrestError 型別，維持這個模組跟真正的 supabase-js 完全解耦
@@ -39,6 +58,53 @@ export interface QueueReadOutcome<T> {
   error: { message: string } | null;
   /** 這一次讀取總共嘗試的次數（成功或最終放棄都算，最小值 1）。 */
   attempts: number;
+  /** LS-242：這次讀取是因為整次 invocation 共用的重試預算已用盡而放棄重試
+   * （不是因為到達單一批次自己的 QUEUE_READ_MAX_ATTEMPTS，也不是因為遇到
+   * 非暫時性錯誤）。只有 `error` 非 null 時才可能是 true；`error` 為 null
+   * （這次讀取成功）時恆為 false。 */
+  budgetExhausted: boolean;
+}
+
+/** LS-242：整次 invocation 共用的重試等待預算——由呼叫端（index.ts）建立一個
+ * 物件，逐批傳入同一個 `readQueueWithRetry()` 呼叫，靠物件參照在呼叫之間
+ * 累計已消耗的退避時間。`remainingMs` 只會遞減，不會回補。 */
+export interface RetryBudget {
+  remainingMs: number;
+}
+
+/** 這次 invocation 允許的重試等待總量（毫秒）——跨所有批次累計共用，不是每批
+ * 各自的上限（那是 QUEUE_READ_MAX_ATTEMPTS／QUEUE_READ_BACKOFF_MS，見上方
+ * LS-242 檔頭說明）。20000ms（20 秒）留給批次本身的 I/O（SELECT／
+ * storage.remove()／dequeue）與孤兒掃描約 40 秒餘裕，維持整次 invocation
+ * 最壞情況仍在呼叫端 60 秒逾時之內（推算見票 handoff）。 */
+export const QUEUE_READ_TOTAL_BUDGET_MS = 20_000;
+
+/** 建立一個新的 `RetryBudget`——每次 invocation 呼叫一次（在 index.ts 的批次
+ * 迴圈開始前），不要在迴圈內重複呼叫，否則預算會被重新灌滿、失去「整次
+ * invocation 共用」的意義。 */
+export function createRetryBudget(
+  totalMs: number = QUEUE_READ_TOTAL_BUDGET_MS,
+): RetryBudget {
+  return { remainingMs: totalMs };
+}
+
+/** LS-242：讀取失敗時，index.ts 該回 500 還是回 200 帶 `partial: true` 的唯一
+ * 判斷點——`budgetExhausted` 是這次失敗的唯一分流依據：預算用盡是「這次
+ * invocation 自己設的節流上限被碰到」，不是真的服務端錯誤，不該回應成
+ * 500（那會讓呼叫端／健康度巡檢誤判成一次真正的失敗，即使已處理的批次都是
+ * 成功的、佇列狀態完全正常、下次 invocation 接著處理就好）；其他情況（永久性
+ * 錯誤第一次就放棄、或單一批次自己的重試已經用盡但整次 invocation 的預算
+ * 還夠）維持既有的 500，行為不變。抽成獨立函式而不是寫死在 index.ts 的
+ * `Deno.serve()` 內：讓這條規則能被 deno test 直接單元測試，不需要另外搭建
+ * index.ts 的 HTTP handler 測試治具（這個 repo 目前沒有，見 index.ts 檔頭
+ * 「已知限制」）。 */
+export function classifyQueueReadFailure(
+  outcome: Pick<QueueReadOutcome<unknown>, "budgetExhausted">,
+): { status: 200 | 500; partial: boolean } {
+  if (outcome.budgetExhausted) {
+    return { status: 200, partial: true };
+  }
+  return { status: 500, partial: false };
 }
 
 const TRANSIENT_ERROR_PATTERNS: RegExp[] = [
@@ -85,21 +151,34 @@ export const QUEUE_READ_BACKOFF_MS: number[] = Array.from(
 export async function readQueueWithRetry<T>(
   selectBatch: () => Promise<QueueSelectResult<T>>,
   sleep: (ms: number) => Promise<void>,
+  budget?: RetryBudget,
   maxAttempts: number = QUEUE_READ_MAX_ATTEMPTS,
   backoffMs: number[] = QUEUE_READ_BACKOFF_MS,
 ): Promise<QueueReadOutcome<T>> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const { data, error } = await selectBatch();
     if (!error) {
-      return { data, error: null, attempts: attempt };
+      return { data, error: null, attempts: attempt, budgetExhausted: false };
     }
 
     const isFinalAttempt = attempt >= maxAttempts;
     if (isFinalAttempt || !isTransientQueueReadError(error.message)) {
-      return { data: null, error, attempts: attempt };
+      return { data: null, error, attempts: attempt, budgetExhausted: false };
     }
 
-    await sleep(backoffMs[attempt - 1] ?? backoffMs[backoffMs.length - 1]);
+    const wait = backoffMs[attempt - 1] ?? backoffMs[backoffMs.length - 1];
+    // LS-242：budget 未提供（呼叫端刻意不設整次 invocation 的預算上限，例如
+    // 測試）時完全不檢查，行為與 LS-242 之前一致。提供時，剩餘預算不夠這一次
+    // 退避就不等待、直接放棄——不消耗任何預算（沒有真的等待），讓呼叫端知道
+    // 「不是這次讀取自己重試到底仍失敗」，是整次 invocation 的時間預算用盡。
+    if (budget !== undefined) {
+      if (budget.remainingMs < wait) {
+        return { data: null, error, attempts: attempt, budgetExhausted: true };
+      }
+      budget.remainingMs -= wait;
+    }
+
+    await sleep(wait);
   }
   // 迴圈一定會在 attempt === maxAttempts 時 return（isFinalAttempt 恆真）——
   // 這裡純粹滿足 TypeScript 對「所有路徑都要有回傳值」的要求，正常呼叫方式
