@@ -1,0 +1,12 @@
+# GitHub Pages（legacy Jekyll build，source main／docs）設定。
+#
+# exclude 排除不該公開的內部文件——LS-132 merge-review R1 B1 實測：`jekyll-readme-index`
+# 預設把目錄下的 README.md 當成該目錄的 index 頁公開渲染（`https://.../legal/` 200，
+# 首屏即為 legal/README.md 的「這些是草稿…不得公開發佈」內部聲明）。
+# - legal/README.md：法務文本編輯來源的內部作業文件，含裁決紀錄與對齊表，不對外發佈。
+# - legal/eula-addendum.md：整份是要貼入 App Store Connect 授權合約欄位的文字＋內部使用說明，
+#   不是要公開瀏覽的頁面。
+# docs/legal/index.md 補上真正該公開的 /legal/ 首頁（只列隱私權政策／使用條款兩個連結）。
+exclude:
+  - legal/README.md
+  - legal/eula-addendum.md
