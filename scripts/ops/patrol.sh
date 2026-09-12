@@ -157,20 +157,31 @@ fi
 #      不會出現在清單裡，mergeStateStatus 卻仍卡 BLOCKED）這兩種假象都誤判成「CI 沒回報」。只在原本
 #      就會被標記的（age ≥ stale 的 catch-all 分支）才多查——不對 CLEAN／CONFLICTING／DIRTY／UNSTABLE／
 #      BEHIND 查（這幾種已有自己明確的訊息與成因，不是本票兩起事故的根因），成本只落在真的卡住的 PR。
-pr_check_flag() {  # $1=PR號 $2=head oid（40 hex） $3=base branch 名（不含 origin/） $4=mergeStateStatus $5=age(分)
-  local n=$1 oid=$2 base=$3 st=$4 age=$5
+pr_check_flag() {  # $1=PR號 $2=head oid（40 hex） $3=base branch 名（不含 origin/） $4=mergeStateStatus
+  local n=$1 oid=$2 base=$3 st=$4
   local sha7=${oid:0:7}
-  local rows rc name bucket link rid pend='' fail_names='' fail_ids='' present=$'\n'
-  rows=$(cd "$ROOT" && gh pr checks "$n" --json name,bucket,link -q '.[] | [.name, .bucket, .link] | @tsv' 2>/dev/null); rc=$?
+  local rows rc name bucket link started_m rid pend='' pend_count=0 pend_max_m='' fail_names='' fail_ids='' present=$'\n'
+  # merge-review R1 m2：pending 的「已跑多久」改用 gh pr checks 的 startedAt（CI 實際開始時間），不是
+  # PR 的 updatedAt 年齡——09-12 #365 正是「PR 沒被互動更新、但 CI 剛開跑」的反例，用 updatedAt 會誤導
+  # 成「CI 卡了 48 分」。同一次呼叫加 startedAt 欄位（不加呼叫）；只對 pending 的項目算「距今幾分」，取
+  # 最早開始（＝elapsed 最大）的那個當代表；沒有任何 pending 項帶得到 startedAt 就印 ?。
+  rows=$(cd "$ROOT" && gh pr checks "$n" --json name,bucket,link,startedAt \
+    -q '.[] | [.name, .bucket, .link, (if .bucket == "pending" then ((.startedAt // "") as $s | if $s == "" then "" else (((now - ($s | fromdateiso8601)) / 60) | floor | tostring) end) else "" end)] | @tsv' 2>/dev/null); rc=$?
   if [ "$rc" -ne 0 ]; then
     printf '⚠ %s 但 gh pr checks 查詢失敗（exit %s）→ 人工看 PR #%s 頁面' "$st" "$rc" "$n"
     return
   fi
-  while IFS=$'\t' read -r name bucket link; do
+  while IFS=$'\t' read -r name bucket link started_m; do
     [ -n "$name" ] || continue
     present="${present}${name}"$'\n'
     case "$bucket" in
-      pending) pend="${pend:+${pend}、}${name}" ;;
+      pending)
+        pend="${pend:+${pend}、}${name}"; pend_count=$((pend_count + 1))
+        case "$started_m" in
+          ''|*[!0-9]*) ;;
+          *) if [ -z "$pend_max_m" ] || [ "$started_m" -gt "$pend_max_m" ]; then pend_max_m=$started_m; fi ;;
+        esac
+        ;;
       fail)
         fail_names="${fail_names:+${fail_names}、}${name}"
         rid=$(printf '%s' "$link" | grep -oE '/runs/[0-9]+' | head -1 | grep -oE '[0-9]+')
@@ -180,12 +191,16 @@ pr_check_flag() {  # $1=PR號 $2=head oid（40 hex） $3=base branch 名（不�
   done <<EOF
 $rows
 EOF
-  if [ -n "$pend" ]; then
-    printf '⏳ CI 跑中（%s，head %s 已 %sm）' "$pend" "$sha7" "${age:-0}"
+  # merge-review R1 m1：fail 優先於 pending（原本 pending 存在就提早 return，fail 被整個吞掉——
+  # 09-12 #355 那種「必要 job 已經紅、另一個 job 還在跑」的形狀會被誤報成「CI 跑中」，白等到 pending
+  # 那個也跑完才看得到紅，正是本票要消滅的等待）。fail 存在時，pending 併入同一句提示，不分開判斷。
+  if [ -n "$fail_names" ]; then
+    printf '✗ check 紅：%s → gh run rerun <run-id> --failed（flaky）或修（run id：%s）%s' \
+      "$fail_names" "${fail_ids:-未取得，見 PR #${n} 頁面}" "${pend:+；另 ${pend_count} 項跑中（${pend}）}"
     return
   fi
-  if [ -n "$fail_names" ]; then
-    printf '✗ check 紅：%s → gh run rerun <run-id> --failed（flaky）或修（run id：%s）' "$fail_names" "${fail_ids:-未取得，見 PR #${n} 頁面}"
+  if [ -n "$pend" ]; then
+    printf '⏳ CI 跑中 %sm（%s）' "${pend_max_m:-?}" "$pend"
     return
   fi
   # 全綠或查無資料：gh pr checks 只列「已有回報」的項目，完全沒回報過的必要 context 不會出現──查
@@ -241,7 +256,7 @@ if [ "$PR_CHECKED" -eq 1 ] && [ -n "$pr_raw" ]; then
         CLEAN)
           if [ "$rd" = APPROVED ]; then flag="✅ CLEAN 且已 APPROVE → 可併"
           elif [ "$age" -ge "$STALE" ]; then flag="⏳ CLEAN 但 ${age}m 無動作（待審／待併？）"; fi ;;
-        *) if [ "$age" -ge "$STALE" ]; then flag=$(pr_check_flag "$n" "$oid" "$base" "$st" "$age"); fi ;;
+        *) if [ "$age" -ge "$STALE" ]; then flag=$(pr_check_flag "$n" "$oid" "$base" "$st"); fi ;;
       esac
       if [ "$rd" = CHANGES_REQUESTED ]; then flag="${flag:+${flag}；}⚠ CHANGES_REQUESTED"; fi
     fi
