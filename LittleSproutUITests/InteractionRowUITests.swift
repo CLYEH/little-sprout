@@ -77,6 +77,16 @@ final class InteractionRowUITests: XCTestCase {
 
         diaryLikeToggle.tap()
 
+        // LS-237 修（池 `08cad41e`(1)）：原本 tap 後立即對「時間軸」做一次性 `.exists` 快照
+        // ——約 1 成假綠殘量：若回歸讓 tap 誤觸外層 `NavigationLink`，轉場動畫尚未完成的那個
+        // 瞬間「時間軸」標題仍在 hierarchy 裡，會誤判成通過。同
+        // `testLikeToggleTap_doesNotMoveCommentButton`（:57-59）既有的同步點：先等愛心切換
+        // 真的發生（`label` 翻成「已按愛心」），確定 tap 是被 Like Toggle 吃掉、沒有觸發導覽
+        // ，再做「時間軸」還在的斷言才有意義。
+        let labelPredicate = NSPredicate(format: "label == %@", "已按愛心")
+        let labelExpectation = XCTNSPredicateExpectation(predicate: labelPredicate, object: diaryLikeToggle)
+        XCTAssertEqual(XCTWaiter().wait(for: [labelExpectation], timeout: 10), .completed, "點擊後應該切換成已按讚態")
+
         XCTAssertTrue(app.staticTexts["時間軸"].exists, "點擊 Like Toggle 不應該導覽離開時間軸")
     }
 
@@ -91,7 +101,13 @@ final class InteractionRowUITests: XCTestCase {
 
         mediaCountZone.tap()
 
-        XCTAssertFalse(likersSheetHeadline(in: app).exists, "計數 0 時點擊不應該開啟按讚名單 sheet")
+        // LS-237 修（池 `08cad41e`(2)）：同上一支的理由（風險更低——Count Zone 本身就是
+        // disabled，理論上 tap 不會有任何系統層級效果）——`.exists` 一次性快照在「若真的開啟
+        // 了 sheet」的情境下，開啟動畫還沒跑完的瞬間量到「不存在」也可能只是還沒畫出來，改用
+        // `waitForExistence` 積極輪詢一段時間再判斷「真的沒有出現」，同 `SettingsViewTests`
+        // 等既有「等一段時間確認不存在」的既有慣例（見該檔案系列 `XCTAssertFalse(...
+        // waitForExistence(timeout:))` 寫法）。
+        XCTAssertFalse(likersSheetHeadline(in: app).waitForExistence(timeout: 3), "計數 0 時點擊不應該開啟按讚名單 sheet")
     }
 
     /// 按讚名單 sheet：相簿卡種子已按讚（5 人），點擊 Count Zone 應該開啟 sheet。**不斷言
@@ -176,10 +192,14 @@ final class InteractionRowUITests: XCTestCase {
         let app = TapTargetMeasurement.launch(.timelineInteractionRow)
         TapTargetMeasurement.assertScreenRendered(.timelineInteractionRow, in: app)
 
+        // LS-237 修（池 `08cad41e`(2)，PLAUSIBLE）：原本 `count` 斷言排在 `waitForExistence`
+        // 之前——畫面若還沒渲染完成，`.count` 這個一次性查詢可能量到 0，讓斷言用錯誤的理由
+        // 失敗（不是「命中超過一個元素」，是「還沒渲染出來」）。先等至少一個元素存在（確定畫面
+        // 已經渲染），再做精確的數量比對。
         let diaryCards = app.buttons.matching(identifier: QAAccessibilityID.timelineDiaryCard)
-        XCTAssertEqual(diaryCards.count, 1, "同一頁只有一張日記卡，qa.timeline.diaryCard 應該剛好命中一個元素")
         let diaryCard = diaryCards.firstMatch
         XCTAssertTrue(diaryCard.waitForExistence(timeout: 10))
+        XCTAssertEqual(diaryCards.count, 1, "同一頁只有一張日記卡，qa.timeline.diaryCard 應該剛好命中一個元素")
 
         diaryCard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
 
