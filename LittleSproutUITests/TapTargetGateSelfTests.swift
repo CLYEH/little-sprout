@@ -16,10 +16,7 @@ final class TapTargetGateSelfTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.selfTestTooSmall)
         TapTargetMeasurement.assertScreenRendered(.selfTestTooSmall, in: app)
         let violations = TapTargetMeasurement.violations(in: app)
-        // LS-231 驗證用 R2（暫時，稍後 revert）：R1 驗證時發現 assertion 訊息擷取有 bug（已在
-        // f052ff1 修正），這裡重跑同一個故意失敗案例，確認修正後 tap-target-check.sh 真的印得出
-        // 這支測試的 assertion 訊息本體。
-        XCTAssertEqual(violations.count, 2, "22×22pt 樣本應該被抓到剛好 1 個違規，實得：\(violations)")
+        XCTAssertEqual(violations.count, 1, "22×22pt 樣本應該被抓到剛好 1 個違規，實得：\(violations)")
     }
 
     func testGoodSamplePasses() {
