@@ -128,8 +128,10 @@ extension DiaryDetailView {
         case .removeCommentAsOwner:
             // LS-218：留言專屬 case，`contentActions(for:...)` 不會對日記產生它——這個分支
             // 理論上不可達，只是滿足 `ContentAction` 窮舉 switch 的編譯要求（見該 case
-            // 文件註解，`Services/Safety/ContentActions.swift`）。
-            break
+            // 文件註解，`Services/Safety/ContentActions.swift`）。merge-review R1 i2：改用
+            // `assertionFailure` 而不是靜默 `break`（同 `CommentsSheetView+Actions.swift`
+            // `.removeAsOwner` 分支的對稱處理）——同專案 fail-loud 原則，Release 不受影響。
+            assertionFailure("DiaryDetailView：不應該收到 .removeCommentAsOwner，日記一律走 .removeAsOwner")
         }
     }
 

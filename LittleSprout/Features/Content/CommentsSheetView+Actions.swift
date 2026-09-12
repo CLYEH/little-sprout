@@ -66,8 +66,11 @@ extension CommentsSheetView {
         case .removeAsOwner:
             // 留言的 owner 移除一律走 `.removeCommentAsOwner`（見該 case 文件註解），
             // `commentRowActions` 不會產生這個 case——這個分支理論上不可達，只是滿足
-            // `ContentAction` 窮舉 switch 的編譯要求。
-            break
+            // `ContentAction` 窮舉 switch 的編譯要求。merge-review R1 i2：改用
+            // `assertionFailure` 而不是靜默 `break`——同專案 fail-loud 原則，未來若
+            // `commentRowActions` 真的不小心產出這個 case，DEBUG 建置會立刻炸開讓人看到，
+            // 不是默默無反應（Release 不受影響，`assertionFailure` 只在 DEBUG 生效）。
+            assertionFailure("CommentsSheetView：不應該收到 .removeAsOwner，留言一律走 .removeCommentAsOwner")
         }
     }
 
