@@ -359,13 +359,19 @@ if [ "$storage_only" -eq 0 ]; then
   fi
 fi
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/ls146-review-demo-seed.XXXXXX")
-trap 'rm -rf "$work"' EXIT
-
-# ---------------------------------------------------------------------------
-# 1. 準備照片素材：沿用既有 design/ 圖檔（不新增二進位檔進 repo），各自產生一份縮圖
-#    （長邊 512、JPEG 品質 0.8，docs/API.md §6 縮圖規格），快取重用於多個 media 列。
-# ---------------------------------------------------------------------------
+# LS-240 R2（merge-review m2）：--storage-only 最常見的情境是「全部已存在」的重跑
+# （操作者只是想確認要不要救援）——這種情況完全不需要準備照片／影片素材（sips／
+# AVFoundation 合成是最耗時的步驟），因此在準備素材之前先把本輪 40 個固定路徑
+# （原檔＋縮圖）跟 Storage 既有物件比對一次：全部都在就直接印摘要、跳過素材準備／
+# SQL／清理／上傳迴圈；只要缺一個就照舊完整跑（不做「只準備缺的那幾個」這種更細緻
+# 但複雜度不成比例的最佳化——缺件本來就是少見的救援情境，見下方 storage_only_all_present
+# 之後的 if／else）。photo_sources 因此提早到這裡宣告（原本在「1. 準備照片素材」段）。
+photo_ext_for() {  # $1=素材來源路徑 → 印出副檔名（png｜jpg）；抽出來給早判斷與素材準備共用
+  case "$1" in
+    *.png) echo png ;;
+    *) echo jpg ;;
+  esac
+}
 photo_sources=(
   "$ROOT/design-canvas/family.jpg"
   "$ROOT/design-canvas-d/family.jpg"
@@ -377,14 +383,105 @@ for f in "${photo_sources[@]}"; do
   [ -f "$f" ] || { echo "✗ review-demo-seed：找不到照片素材 $f" >&2; exit 1; }
 done
 
+# LS-240 R2（merge-review m1／m2）：--storage-only 一次列出整個資料夾（<family>/<yyyy>/<mm>，
+# 本輪 40 個物件全落在同一個 prefix 底下）再本地比對，取代原本逐物件打 list（m2：次數從
+# 40 次降成 1 次）；這一次呼叫套用跟 storage_put() 一樣的暫時性錯誤重試（curl exit
+# 56／7／28、HTTP 5xx／429，退避 1s→2s→4s），把「list 本身暫時失敗」跟「真的回空陣列」
+# 分開（m1：前者原本會被誤判成「物件不存在」，觸發不必要的重傳，可能撞上 M1 的
+# duplicate 情境）；重試耗盡仍失敗就 fail loud 中止，不是靜默當成缺漏或當成都存在。
+# --max-time 10（m2）避免卡住的連線無限期掛住（同 storage_put() 的理由）。
+existing_objects_body=""
+existing_objects_listed=0
+existing_objects_retries=0
+# N1（LS-240 R2 自測時發現）：這支函式**不能**用 `x=$(list_existing_objects)` 這種command
+# substitution 呼叫——command substitution 會把函式丟進子 shell 執行，子 shell 裡的
+# `exit 1`（fail loud）只會結束子 shell 本身、父行程渾然不覺並繼續往下跑；`existing_objects_*`
+# 這幾個全域變數在子 shell 裡的修改（快取）也不會回寫到父 shell，導致 m1／m2 兩個修法都
+# 靜默失效（實測：40 個物件各自重新觸發一次完整重試循環，且持續失敗時腳本沒有真的中止，
+# 見自測 R2 除錯過程）。改成直接呼叫（不接 `$()`），用全域變數 `existing_objects_body`
+# 傳回結果，讓 `exit`／快取都留在同一個 shell 裡。
+list_existing_objects() {   # 設定全域變數 existing_objects_body；只真的打一次
+  [ "$existing_objects_listed" -eq 1 ] && return 0
+  local resp curl_rc attempt=1 max_retries=3 retry_num=0 delay
+  while :; do
+    resp=$(curl -sS --max-time 10 -X POST "$API_URL/storage/v1/object/list/media" \
+      -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \
+      -H "Content-Type: application/json" \
+      -d "{\"prefix\":\"${FAMILY_ID}/${SEED_YM}\",\"limit\":200}")
+    curl_rc=$?
+    case "$resp" in
+      \[*\]) break ;;   # 合法 JSON 陣列（含空陣列 []）視為成功回應
+    esac
+    if [ "$retry_num" -ge "$max_retries" ]; then
+      echo "✗ review-demo-seed：--storage-only 列出 Storage 既有物件失敗（重試 ${max_retries} 次仍失敗，curl exit ${curl_rc}），無法判斷缺漏，中止" >&2
+      exit 1
+    fi
+    case "$retry_num" in 0) delay=1 ;; 1) delay=2 ;; *) delay=4 ;; esac
+    echo "  ⚠ 列出 Storage 既有物件暫時性錯誤（curl exit ${curl_rc}），${delay}s 後重試（第 $((attempt + 1)) 次嘗試）" >&2
+    sleep "$delay"
+    retry_num=$((retry_num + 1))
+    existing_objects_retries=$((existing_objects_retries + 1))
+    attempt=$((attempt + 1))
+  done
+  existing_objects_body=$resp
+  existing_objects_listed=1
+}
+
+# LS-240：--storage-only 續傳——判斷物件是否已存在於 Storage（用上面快取的 list 結果本地
+# 比對，不逐一物件打網路），已存在就略過、不重新上傳。原本用 HEAD 判斷（票文原意），實測
+# 本機 storage-api 對物件下載端點的 HEAD 回應會宣告 Content-Length 卻不實際送出對應 body
+# （keep-alive 連線因此掛住直到逾時，curl exit 28；2026-09-13 本機 --target local 全流程
+# 驗證時發現，見 handoff）——改用 Storage 既有的 list API，仍沿用既有的 service-role
+# Bearer／apikey 認證方式，不新增讀取憑證的管道。
+storage_exists() {  # $1=storage path（含 family_id/yyyy/mm/filename，不含 bucket 前綴）
+  local path=$1 file
+  file=${path##*/}
+  list_existing_objects
+  case "$existing_objects_body" in
+    *"\"name\":\"${file}\""*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+storage_only_all_present=0
+if [ "$storage_only" -eq 1 ]; then
+  all_present=1
+  for i in $(seq 1 20); do
+    id=${media_ids[$((i-1))]}
+    if [ "$i" -le 18 ]; then
+      src_idx=$(( (i - 1) % ${#photo_sources[@]} ))
+      ext=$(photo_ext_for "${photo_sources[$src_idx]}")
+      orig_path="${FAMILY_ID}/${SEED_YM}/${id}.${ext}"
+    else
+      orig_path="${FAMILY_ID}/${SEED_YM}/${id}.mp4"
+    fi
+    thumb_path="${FAMILY_ID}/${SEED_YM}/${id}_thumb.jpg"
+    if ! storage_exists "$orig_path" || ! storage_exists "$thumb_path"; then
+      all_present=0
+      break
+    fi
+  done
+  [ "$all_present" -eq 1 ] && storage_only_all_present=1
+fi
+
+if [ "$storage_only_all_present" -eq 1 ]; then
+  echo "→ --storage-only：本輪 40 個固定路徑已全部存在於 Storage，略過素材準備／SQL／清理／上傳"
+  echo "✓ review-demo-seed --storage-only 完成：0 個物件已上傳、40 個已存在略過，重試 ${existing_objects_retries} 次"
+else
+
+work=$(mktemp -d "${TMPDIR:-/tmp}/ls146-review-demo-seed.XXXXXX")
+trap 'rm -rf "$work"' EXIT
+
+# ---------------------------------------------------------------------------
+# 1. 準備照片素材：沿用既有 design/ 圖檔（不新增二進位檔進 repo），各自產生一份縮圖
+#    （長邊 512、JPEG 品質 0.8，docs/API.md §6 縮圖規格），快取重用於多個 media 列。
+# ---------------------------------------------------------------------------
 mkdir -p "$work/thumbs"
 photo_ext=(); photo_ctype=(); photo_bytes=(); photo_w=(); photo_h=(); photo_thumb=(); photo_tw=(); photo_th=()
 for idx in "${!photo_sources[@]}"; do
   src=${photo_sources[$idx]}
-  case "$src" in
-    *.png) ext=png; ctype=image/png ;;
-    *) ext=jpg; ctype=image/jpeg ;;
-  esac
+  ext=$(photo_ext_for "$src")
+  case "$ext" in png) ctype=image/png ;; *) ctype=image/jpeg ;; esac
   thumb="$work/thumbs/photo_${idx}_thumb.jpg"
   sips -s format jpeg -s formatOptions 80 -Z 512 "$src" --out "$thumb" >/dev/null
   photo_ext[$idx]=$ext
@@ -731,6 +828,14 @@ fi
 # 永久性錯誤，不重試立刻回報失敗。改用 `-w '%{http_code}'` 取代原本的 `-f`——`-f` 會把所有
 # HTTP >=400 一律轉成 curl exit 22，沒辦法分辨「該重試的 5xx／429」跟「不該重試的其他
 # 4xx」；sleep 呼叫外部命令，自測以 PATH 前置假身注入拉快測試，正式路徑不變。
+#
+# M1（merge-review R1 major）：重試對「同一個 path」原樣重送非冪等的 POST——若第一次嘗試
+# 其實已經把物件寫進去了、只是回應階段斷掉（curl exit 56／28／504 依定義都發生在 body
+# 送出之後，正是 LS-96 池項 `3f23757a` 那次事故的形狀），重送會撞 duplicate。reviewer 實測
+# 本機 storage-api：同 path 重送回 **HTTP 400**（body code＝`KeyAlreadyExists`，不是 409），
+# 原本的 `is_retryable_http` 不含 400 → 判定成永久性錯誤、印「不重試」中止，本票要救的
+# 情境反而救不到。修法：第 2 次起的嘗試加 `-H "x-upsert: true"`（reviewer 實測回 200 且
+# `Id` 與首傳相同，等同覆寫成功）；首次嘗試維持不加，保留「不該存在卻存在」這個訊號。
 # ---------------------------------------------------------------------------
 upload_ok_count=0
 upload_skip_count=0
@@ -741,10 +846,15 @@ is_retryable_http() { case "$1" in 5??|429) return 0 ;; *) return 1 ;; esac; }
 storage_put() {  # $1=本機檔案 $2=storage path（不含 bucket 前綴） $3=content-type
   local file=$1 path=$2 ctype=$3
   local attempt=1 max_retries=3 retry_num=0 delay http_code curl_rc
+  local upsert_hdr=()
   while :; do
-    http_code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$API_URL/storage/v1/object/media/$path" \
+    # M1：第 2 次起（重試）才加 x-upsert，讓「其實已落地」的重送變成覆寫成功而不是
+    # duplicate 錯誤；--max-time 30（m2）避免卡住的連線無限期掛住，讓 curl exit 28
+    # 真的能觸發、進到上面這條重試路徑，而不是腳本整支卡死。
+    if [ "$attempt" -gt 1 ]; then upsert_hdr=(-H "x-upsert: true"); else upsert_hdr=(); fi
+    http_code=$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' -X POST "$API_URL/storage/v1/object/media/$path" \
       -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \
-      -H "Content-Type: $ctype" --data-binary "@$file")
+      -H "Content-Type: $ctype" ${upsert_hdr[@]+"${upsert_hdr[@]}"} --data-binary "@$file")
     curl_rc=$?
     [ -n "$http_code" ] || http_code=000
     if [ "$curl_rc" -eq 0 ]; then
@@ -773,26 +883,8 @@ storage_put() {  # $1=本機檔案 $2=storage path（不含 bucket 前綴） $3=
   done
 }
 
-# LS-240：--storage-only 續傳——判斷物件是否已存在於 Storage，已存在就略過、不重新上傳。
-# 原本用 HEAD 判斷（票文原意），實測本機 storage-api 對物件下載端點的 HEAD 回應會宣告
-# Content-Length 卻不實際送出對應 body（keep-alive 連線因此掛住直到逾時，curl exit 28；
-# 2026-09-13 本機 --target local 全流程驗證時發現，見 handoff）——改用 Storage 既有的
-# list API（`POST .../object/list/media`，以 body 帶 prefix／search 而非 URL 路徑指定物件，
-# 回一份小 JSON、不牽扯下載端點那個 body 續傳問題，也不必真的下載整個檔案內容判斷存
-# 在），仍沿用既有的 service-role Bearer／apikey 認證方式，不新增讀取憑證的管道。
-storage_exists() {  # $1=storage path（含 family_id/yyyy/mm/filename，不含 bucket 前綴）
-  local path=$1 dir file resp
-  dir=${path%/*}
-  file=${path##*/}
-  resp=$(curl -sS -X POST "$API_URL/storage/v1/object/list/media" \
-    -H "Authorization: Bearer $SERVICE_KEY" -H "apikey: $SERVICE_KEY" \
-    -H "Content-Type: application/json" \
-    -d "{\"prefix\":\"${dir}\",\"search\":\"${file}\",\"limit\":1}")
-  case "$resp" in
-    *'"name"'*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
+# LS-240 R2：storage_exists()／list_existing_objects() 已提早到素材準備之前定義（見上方
+# 「--storage-only 最常見的情境」區塊，merge-review m1／m2），這裡不重複定義。
 
 ensure_uploaded() {  # $1=本機檔案 $2=storage path $3=content-type
   if [ "$storage_only" -eq 1 ] && storage_exists "$2"; then
@@ -826,3 +918,5 @@ else
   echo "✓ review-demo-seed 完成：${upload_ok_count} 個物件已上傳（20 個原檔 + 20 個縮圖），重試 ${upload_retry_count} 次，DB 計數見上方 NOTICE"
   echo "  邀請碼：${INVITE_CODE}　owner：${OWNER_EMAIL}（密碼登入，密碼見上方僅印一次的提示或操作者自帶的 --owner-password）　member：${MEMBER_EMAIL}（Email OTP）"
 fi
+
+fi   # 關閉 storage_only_all_present 的 if／else（LS-240 R2 merge-review m2）
