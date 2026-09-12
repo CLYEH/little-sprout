@@ -47,9 +47,12 @@ struct AlbumListingRow: Decodable, Sendable, Equatable, Identifiable {
         case coverStoragePath = "cover_storage_path"
     }
 
-    /// 供測試／`.preview()` 假資料建構——view 回應是扁平欄位，`Decodable` 走合成的
-    /// `init(from:)`（不需要像 LS-165 內嵌形狀那樣自訂解碼邏輯），這支只是讓呼叫端不必每次
-    /// 都把六個彙總欄全部填滿。
+    /// **production 路徑**（LS-237 修，池 `0975ec67`(2)：訂正舊敘述「供測試／`.preview()`
+    /// 假資料建構」——`SupabaseAlbumsAPIClient.createAlbum` 本地組出等價 `AlbumListingRow`
+    /// 就是靠這支初始化子，見該方法文件註解）：`photoCount: Int = 0`＋五個 `nil` 預設值正是
+    /// 「剛建立的相簿必定沒有任何 `album_media` 連結、`cover_media_id` 為 NULL」這份契約——
+    /// `album_summaries` view 對這種列回的正是這組值，兩者等價。也順便讓測試／`.preview()`
+    /// 假資料不必每次把六個彙總欄全部填滿，但這不是它存在的主要理由。
     init(
         id: UUID, title: String, createdAt: Date, photoCount: Int = 0, latestMediaId: UUID? = nil,
         latestMediaThumbPath: String? = nil, latestMediaStoragePath: String? = nil,
