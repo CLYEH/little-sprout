@@ -82,7 +82,9 @@ NOFORK='不得派 fork／subagent 改動任何檔案。'
 # 正文另須含「handoff 申報的 mutation 一律自己重放，對不上列 major」
 MUTPLAY='每支 mutation 必列三段：改了什麼一行 → 哪條測試紅 → 斷言訊息原文。'
 REPLAYRULE='handoff 申報的 mutation 一律自己重放，對不上列 major。'
-IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE}"
+# LS-232：ios-dev 正文另須含「新增登入後全屏 gate 必同 PR 更新 QADriver」（qa-driver-gate-check 機械化）
+QAGATE='新增登入後全屏 gate 必同 PR 更新 QADriver（`qa-driver-gate-check` 會擋）。'
+IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE}"
 MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE}"
 # LS-209：ios-dev 新增 tools: 白名單（移除 mcp__pencil__*）——取代舊的 `NONE`（無 tools: 行＝繼承全部工具，其中
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求
@@ -142,7 +144,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（38 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 38 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（39 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 39 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -383,6 +385,18 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'background-bash-guard.sh
   ok '⑲ mutant：拿掉規則後「缺 background-bash-guard.sh」的負樣本變綠'
 else
   echo "✗ ⑲ mutant（background-bash-guard.sh）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ⑳ LS-232：ios-dev 正文須含「新增登入後全屏 gate 必同 PR 更新 QADriver」（qa-driver-gate-check 機械化，
+#        來源 LS-190／LS-217 兩次全屏 gate 新增後 QADriver 沒同步更新的事故）----
+reset; expect 0 '⑳ ios-dev 正文含新增全屏 gate 規約句 → 印「正文含」' 'ios-dev.md：正文含「新增登入後全屏 gate 必同 PR 更新 QADriver」'
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE}"; expect 1 '⑳ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「新增登入後全屏 gate 必同 PR 更新 QADriver」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
+reset
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '新增登入後全屏 gate 必同 PR 更新 QADriver'; then
+  ok '⑳ mutant：拿掉規則後「缺新增全屏 gate 規約句」的負樣本變綠'
+else
+  echo "✗ ⑳ mutant（新增全屏 gate 規約句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過
