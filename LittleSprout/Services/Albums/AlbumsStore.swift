@@ -46,12 +46,23 @@ final class AlbumsStore {
 
     /// LS-237 修（池 `4fafaa19`(a)）：每本相簿下一個要用的 `sortOrder`，`.pending` 是「正在
     /// 打第一次 `fetchMaxSortOrder` 查詢、還不知道基底值」、`.ready` 是「已經知道基底，之後
-    /// 都是同步遞增」——見 `nextSortOrder(forAlbum:)` 文件註解。
+    /// 都是同步遞增」（`lastUsedAt` 見 `sortOrderCursorIdleTTL` 文件註解）——見
+    /// `nextSortOrder(forAlbum:)` 文件註解。
     private enum SortOrderCursor {
         case pending(Task<Int?, Error>)
-        case ready(next: Int)
+        case ready(next: Int, lastUsedAt: Date)
     }
     private var sortOrderCursors: [UUID: SortOrderCursor] = [:]
+
+    /// R2 修（merge-review R1 F3 minor）：`.ready` cursor 原本只在 `reset()`（登出）才清除，
+    /// 同一個 app session 可能橫跨數小時——這段時間內若別的裝置也對同一本相簿加了照片，
+    /// 這裡快取的基底沒有機會發現，下一次同步遞增算出的值可能跟別的裝置撞號（現查現算的
+    /// 舊版每次都重新讀連結數，不會有這個問題）。改成「閒置超過這個秒數就視為這批上傳已經
+    /// 結束」：每次使用（讀或寫）都把 `lastUsedAt` 更新成現在，只有連續閒置超過 TTL 才會在
+    /// 下一次呼叫時重新查一次，同一批次（幾秒到幾十秒內接續上傳）內不受影響。
+    private static let sortOrderCursorIdleTTL: TimeInterval = 60
+    /// 可注入的時鐘——同 `UploadQueueStore.now` 既有先例，測試才能不真的等 60 秒就驗證 TTL。
+    private let now: @MainActor () -> Date
 
     /// LS-237 修（池 `4fafaa19`(b)）：`attachUploadedMedia` 寫入成功後，呼叫「目前是誰在看這本
     /// 相簿」的 `AlbumDetailStore`（若有）——不是「上傳當下捕捉到哪一份」，見
@@ -65,8 +76,9 @@ final class AlbumsStore {
     /// 結果。
     private var createAlbumGeneration = 0
 
-    init(apiClient: AlbumsAPIClient) {
+    init(apiClient: AlbumsAPIClient, now: @escaping @MainActor () -> Date = Date.init) {
         self.apiClient = apiClient
+        self.now = now
     }
 
     /// 第一頁／換家庭時呼叫——整批換掉 `albums`。
@@ -221,33 +233,46 @@ final class AlbumsStore {
     /// （`maxConcurrentUploads = 3`）內多張照片交錯完成時，只有第一張真的打一次
     /// `fetchMaxSortOrder`，後續照片直接從記憶體遞增，不會因為併發讀到同一個基底而撞號。
     ///
-    /// **single-flight**：還沒快取基底時，第一個呼叫建立查詢 `Task` 存進 `.pending`，後續
-    /// 交錯呼叫共享同一個 `Task`（不會各自重複打一次查詢）；`Task` 完成後多個呼叫的續行會
-    /// 排進同一個 `@MainActor` 依序執行（中間沒有 `await`），只有第一個真正把狀態換成
-    /// `.ready` 並回傳查到的基底，其餘直接從已經是 `.ready` 的狀態同步遞增——這裡沒有用
-    /// 額外的鎖，「同步遞增」本身就是靠 `@MainActor` 保證同一時間只有一個呼叫在跑這段不含
-    /// `await` 的程式碼達成原子性。
+    /// **single-flight**：還沒快取基底時，第一個呼叫（`isOwner == true`）建立查詢 `Task`
+    /// 存進 `.pending`，後續交錯呼叫（`isOwner == false`）共享同一個 `Task`（不會各自重複
+    /// 打一次查詢）；`Task` 完成後多個呼叫的續行會排進同一個 `@MainActor` 依序執行（中間
+    /// 沒有 `await`），只有第一個真正把狀態換成 `.ready` 並回傳查到的基底，其餘直接從已經是
+    /// `.ready` 的狀態同步遞增——這裡沒有用額外的鎖，「同步遞增」本身就是靠 `@MainActor`
+    /// 保證同一時間只有一個呼叫在跑這段不含 `await` 的程式碼達成原子性。
+    ///
+    /// **R2 修（merge-review R1 F2 minor）**：查詢失敗時，原本共用這個 `Task` 的**所有**
+    /// 呼叫端都會收到同一個錯誤而放棄（`attachUploadedMedia` 的 `catch` 是靜默 best-effort
+    /// ——一次暫時性網路失敗會讓同批最多 `maxConcurrentUploads` 張照片全部跳過
+    /// `attachMedia`，media 列建好卻沒有連結）。改成只有真正發起查詢的那一次
+    /// （`isOwner == true`）把失敗往外拋；加入同一個查詢的其他呼叫端（`isOwner == false`）
+    /// 不連坐，狀態已經被清空，遞迴呼叫會各自建立新查詢獨立重試一次。
     private func nextSortOrder(forAlbum albumID: UUID) async throws -> Int {
-        if case .ready(let next) = sortOrderCursors[albumID] {
-            sortOrderCursors[albumID] = .ready(next: next + 1)
+        if case .ready(let next, let lastUsedAt) = sortOrderCursors[albumID],
+           now().timeIntervalSince(lastUsedAt) < Self.sortOrderCursorIdleTTL {
+            sortOrderCursors[albumID] = .ready(next: next + 1, lastUsedAt: now())
             return next
         }
         let task: Task<Int?, Error>
+        let isOwner: Bool
         if case .pending(let existing) = sortOrderCursors[albumID] {
             task = existing
+            isOwner = false
         } else {
             let newTask = Task { try await self.apiClient.fetchMaxSortOrder(albumID: albumID) }
             sortOrderCursors[albumID] = .pending(newTask)
             task = newTask
+            isOwner = true
         }
         do {
             let maxOrder = try await task.value
-            if case .ready(let next) = sortOrderCursors[albumID] {
-                sortOrderCursors[albumID] = .ready(next: next + 1)
+            let resolvedAt = now()
+            if case .ready(let next, let lastUsedAt) = sortOrderCursors[albumID],
+               resolvedAt.timeIntervalSince(lastUsedAt) < Self.sortOrderCursorIdleTTL {
+                sortOrderCursors[albumID] = .ready(next: next + 1, lastUsedAt: resolvedAt)
                 return next
             }
             let next = (maxOrder ?? -1) + 1
-            sortOrderCursors[albumID] = .ready(next: next + 1)
+            sortOrderCursors[albumID] = .ready(next: next + 1, lastUsedAt: resolvedAt)
             return next
         } catch {
             // 查詢失敗——清掉 `.pending`，讓下一次呼叫可以重新查一次，不要讓一次失敗的
@@ -256,6 +281,7 @@ final class AlbumsStore {
             if case .pending = sortOrderCursors[albumID] {
                 sortOrderCursors[albumID] = nil
             }
+            guard isOwner else { return try await nextSortOrder(forAlbum: albumID) }
             throw error
         }
     }
@@ -277,9 +303,12 @@ final class AlbumsStore {
         familyID = nil
         generation += 1
         createAlbumGeneration += 1
-        // LS-237：下一個帳號的 sortOrder 基底跟這個帳號無關，登出時一併清掉快取——`weak`
-        // 讓 `detailStoreByAlbumID` 本來就不會累積記憶體占用，這裡清掉只是避免登出後還殘留
-        // 舊帳號的相簿 id 對照。
+        // LS-237：下一個帳號的 sortOrder 基底跟這個帳號無關，登出時一併清掉快取。
+        // R2 訂正（merge-review R1 i2）：`weak` 只讓 value（`AlbumDetailStore` 實例）在
+        // deinit 後變 nil，字典本身的 key（進過的每一本 albumID）不會自動移除——`
+        // detailStoreByAlbumID` 的 entry 數其實會隨本 session 瀏覽過的相簿數量增加，不是
+        // 完全不會累積，只是這個量級（頂多幾十個 UUID key＋已經是 nil 的 box）可忽略不計；
+        // 這裡清掉單純是避免登出後還殘留舊帳號的相簿 id 對照。
         sortOrderCursors = [:]
         detailStoreByAlbumID = [:]
     }

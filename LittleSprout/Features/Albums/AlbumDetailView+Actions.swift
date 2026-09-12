@@ -103,9 +103,15 @@ extension AlbumDetailView {
     /// 但沒加入」，不需要細分原因）。分類邏輯抽成 `partitionPickedItems(_:)`（見該方法文件
     /// 註解）——`PhotosPickerItem` 本身無法在單元測試建構假值，但載入完成「之後」的分類
     /// 純粹是資料轉換，不需要真的跑一次 picker。
+    ///
+    /// **R2 訂正（merge-review R1 i1）**：`skippedItemCount` 原本只在整批載入**完成後**才
+    /// 賦值——若使用者這一批還在解碼時，畫面上仍掛著「上一批」的舊回話列，會被誤以為是這一批
+    /// 的結果。同 `DiaryComposerStore.beginLoadingPickedItems()` 既有作法，在新一批開始時就
+    /// 先歸零。
     @MainActor
     func loadPicked(_ items: [PhotosPickerItem], detailStore: AlbumDetailStore) async {
         isLoadingPickedItems = true
+        skippedItemCount = 0
         defer { isLoadingPickedItems = false }
         var loaded: [PickedItemLoader.LoadedItem?] = []
         for item in items {
