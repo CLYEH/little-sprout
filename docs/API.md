@@ -2300,6 +2300,48 @@ select count(*) from public.purge_storage_queue where attempts >= 5;
 `purge_expired()` 的 DB 端結果，EF 是完全獨立的 invocation，混進同一張表的
 schema 會讓兩件事的觀測耦合在一起，不是這裡要解的問題）。
 
+**整次 invocation 共用的重試等待預算（LS-242，來源 LS-96 池項 `cc85f81b`，
+收口 LS-235 merge-review R2 留下的唯一未收口項）**：上面「讀取 purge_storage_queue
+這一步」的重試／退避（1s→2s→4s，最壞單一批次約 7 秒）原本是**每一批各自獨立**
+套用——但迴圈最多跑 `MAX_BATCHES=20` 批，最壞情況（20 批全部連續遇到暫時性錯誤、
+但每批最終都成功，佇列本身完全正常）總等待可以逼近 20×7s≈140 秒，超過上面
+`timeout_milliseconds := 60000` 這個呼叫端逾時；pg_net 判定逾時之後
+`net._http_response` 記一筆錯誤，但 EF 本身可能仍在跑、稍後才真的完成，
+`prod-purge-health.sh` 的健康度巡檢因此可能看到假陰性——這正是本票要消滅的
+情境（跟 LS-235 起因的 09-11 事故同一類，只是觸發條件從「一次錯誤」變成
+「連續多次錯誤但每次都恢復」）。修法：`supabase/functions/purge-storage/queue_retry.ts`
+新增 `RetryBudget`（`createRetryBudget()`，預設 `QUEUE_READ_TOTAL_BUDGET_MS=20000`，
+20 秒）——由 `index.ts` 在批次迴圈開始前建立一次，逐批傳入同一個
+`readQueueWithRetry()` 呼叫，靠物件參照讓已消耗的退避時間跨批次累計；某一批
+要退避之前，若剩餘預算不夠這一次的退避時長，就不等待、直接放棄這次讀取
+（`budgetExhausted: true`），`index.ts` 停止處理後續批次（已處理完成的批次——
+已 dequeue、已標記失敗——不回滾，下次 invocation 的 SELECT 排序保證接著處理
+剩下的列）。**這不是把單一批次的重試上限改小**，是在既有的「單一批次上限」之外
+再疊一層「整次 invocation 的總退避時間上限」，兩者各自獨立生效。回應 JSON 新增
+`partial`／`budgetExhausted` 兩個布林欄位（目前恆相等：`partial` 是「這次
+invocation 有沒有完整處理完」的一般性訊號、`budgetExhausted` 是具體原因），
+預算用盡時 HTTP 狀態固定回 **200**（不是既有的 500——這是這次 invocation 自己
+設的節流上限被碰到，不是服務端錯誤；也不是 207——不是 Storage 物件層級的部分
+失敗）。
+
+**最壞總時長推算**（不含孤兒掃描，理由見下方）：能同時最大化「批次數」與
+「預算耗用」兩個成本的組合是——`MAX_BATCHES=20` 批、每批都剛好只需要 1 次
+1000ms 的退避就成功（20×1000ms=20,000ms，恰好耗盡整個共用預算，但因為是
+「剛好用完、不是不夠用」所以 20 批仍全部處理完成，不會提早因預算用盡而中止）。
+這個組合下：重試等待固定 20,000ms（`QUEUE_READ_TOTAL_BUDGET_MS`，硬上限，
+不因批次數增加而變大）＋每批非重試 I/O（2 次 SELECT×~100ms、`storage.remove()`
+1 次×~400ms、dequeue `DELETE`×最多 4 段（`DELETE_CHUNK_SIZE=50`，200 筆／批）
+×~100ms，合計約 1,000ms／批×20 批=20,000ms）＝約 40,000ms（40 秒），距離
+呼叫端 60 秒逾時尚有約 20 秒（33%）餘裕（推導過程與其他候選組合的比較見票
+handoff）。**I/O 估算是推理值，不是正式站實測遙測**——這個 repo 目前沒有
+purge-storage 在正式站的計時資料（同既有「已知限制」：只有本機
+`supabase functions serve` 手動 e2e 驗證，沒有自動化的計時基準）。**已知限制**：
+上面 40 秒的推算刻意不含孤兒掃描（`scanOrphanStorageObjects()`，排在佇列消化
+迴圈之後）——孤兒掃描不走這裡的重試機制，其自身的 worst-case 時長是既有、
+獨立於這次「重試預算」修法的風險，不在本票範圍（票文「不做」：不改 purge
+演算法），這次修法只保證「佇列消化這一段」不再因重試相乘而失控，不是保證整次
+invocation（含孤兒掃描）恆小於 60 秒。
+
 `public.purge_storage_queue` 啟用 RLS、無 policy、只 `grant select, delete` 給
 `service_role`（`authenticated`／`anon` 兩層皆擋，同 `notification_events` 既有
 模式）——**刻意無 policy，僅 service_role（EF／cron）存取**（LS-224，
