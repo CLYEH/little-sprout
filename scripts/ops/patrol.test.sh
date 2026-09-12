@@ -1441,12 +1441,22 @@ cat > "$work/gh-fixtures/pr-checks-906.json" <<JSON
   {"name":"ci-ipad","bucket":"pending","link":"https://github.com/CLYEH/little-sprout/actions/runs/4001/job/2","startedAt":"${ipad5_iso}"}
 ]
 JSON
-# 907（m4 觸發條件本尊：merge-review 的 bucket 是 pending 且 startedAt 為 Go 零值——merge-review R2
-# delta 端到端重現用的正是這個組合，而非 355／349 實測到的 pass bucket 零值，因為只有 pending 才會
-# 真的求值 fromdateiso8601）。m4 修好後預期印 `?m`（缺值），不是查詢失敗。
+# 907：兩種「解析不了」都要印 `?m`，不是查詢失敗。
+#   - merge-review：bucket=pending 且 startedAt 為 Go 零值（m4 觸發條件本尊，merge-review R2 delta 端
+#     到端重現用的正是這個組合，而非 355／349 實測到的 pass bucket 零值，因為只有 pending 才會真的
+#     求值 fromdateiso8601）——這個值靠字串前綴守門擋下，跟平台無關（比對發生在呼叫 fromdateiso8601
+#     之前）。
+#   - ci：bucket=pending 且 startedAt 是完全不合格式的垃圾值「not-a-date」（merge-review R3 delta
+#     i5／m4：本機兩個 jq 版本（1.6、系統版 jq-1.7.1-apple）對 Go 零值都會拋錯，但 CI 的 Ubuntu jq
+#     不會——`fromdateiso8601` 拋不拋錯是 C 函式庫的 gmtime 範圍驗證行為、macOS 與 glibc 不一致，
+#     字串前綴守門本身不受這個平台差異影響，但只覆蓋這一個已知值；`not-a-date` 是 strptime **格式
+#     比對失敗**（不是範圍驗證），這一類失敗在所有平台的 jq 上都一致會拋錯——本機已用 jq 1.6 與
+#     jq-1.7.1-apple 各自驗證兩者皆拋錯，是可攜的 mutation 觸發點，`0001-01-01` 則不是）由 try/catch
+#     接住。
 cat > "$work/gh-fixtures/pr-checks-907.json" <<JSON
 [
-  {"name":"merge-review","bucket":"pending","link":"https://linear.app/y","startedAt":"0001-01-01T00:00:00Z"}
+  {"name":"merge-review","bucket":"pending","link":"https://linear.app/y","startedAt":"0001-01-01T00:00:00Z"},
+  {"name":"ci","bucket":"pending","link":"https://linear.app/z","startedAt":"not-a-date"}
 ]
 JSON
 
@@ -1491,8 +1501,9 @@ l906=$(row "$out28" 'feature/LS-906-realjq-normal')
 has   '㉘ i4：真 jq 通道，正常時間 → 取最早開始者（ci 17 分前 ＞ ci-ipad 5 分前）' "$l906" 'CI 跑中 17m（ci、ci-ipad）'
 hasnt '㉘ i4：pass bucket 的 Go 零值 startedAt 不觸發查詢失敗（if/then/else 短路，只有 pending 才求值）' "$l906" '查詢失敗'
 l907=$(row "$out28" 'feature/LS-907-realjq-zerodate')
-has   '㉘ m4（真 jq 通道）：pending 項 startedAt 是 Go 零值 → 視同缺值印 ?m，不再讓整條查詢中止' "$l907" 'CI 跑中 ?m（merge-review）'
+has   '㉘ m4（真 jq 通道）：pending 項 startedAt 是 Go 零值 → 視同缺值印 ?m，不再讓整條查詢中止' "$l907" 'CI 跑中 ?m（merge-review、ci）'
 hasnt '㉘ m4：不再印查詢失敗' "$l907" '查詢失敗'
+has   '㉘ i5：pending 項 startedAt 是完全不合格式的垃圾值（not-a-date）→ try/catch 接住、同樣印 ?m' "$l907" 'ci'
 brief28="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-fetch --brief 10 2>&1)"
 has   '㉘ --brief 同步分流：CI 跑中' "$brief28" '⏳ CI 跑中'
 has   '㉘ --brief 同步分流：缺必要 status' "$brief28" '缺必要 status'
@@ -1550,25 +1561,47 @@ l904m=$(row "$out28m1" 'feature/LS-904-fail-and-pending')
 has   '㉘ mutant（m1）：pending 判斷搬到 fail 之前 → 904 的 fail 被吞、變回純「CI 跑中」（證明 fail 優先是這段程式碼造成的）' "$l904m" '⏳ CI 跑中'
 hasnt '㉘ mutant（m1）：check 紅／run id 資訊消失' "$l904m" 'check 紅'
 
-# mutation（m4，merge-review R2 delta）：拿掉 Go 零值守門（`or ($s | startswith("0001-01-01"))`），
-# 退回 R2 的舊寫法——907（pending 項 startedAt 為零值，真 jq 通道）應該從「?m」變回「查詢失敗」，證明
-# 守門正是這段程式碼造成的。用真 jq 的 906/907 fixture（不必額外建假身），因為假 gh 對這兩個 PR 是
-# 忠實執行 patrol.sh（或其 mutant）傳入的 -q 引數本尊，不需要另外同步 mutate 假身。
-mut_pr_m4="$work/patrol.no-zerodate-guard.sh"
-python3 - "$patrol" "$mut_pr_m4" <<'PY'
+# mutation（m4 舊版守門，仍保留：拿掉 Go 零值前綴守門，只留 try/catch）：merge-review R3 delta 發現
+# `0001-01-01` 這個特定值是否讓 fromdateiso8601 拋錯是平台相依的（本機 macOS 兩個 jq 版本都會拋、CI
+# 的 Ubuntu jq 不會）——這代表「拿掉前綴守門」在本機（try/catch 仍在）**不會**再現查詢失敗（try/catch
+# 把 macOS 會拋的錯接住了），跟 R2 delta 時的舊行為不同，這正是本輪要修的平台不一致本身。改成驗證
+# 這個事實：拿掉前綴守門、只留 try/catch，907 的 merge-review 項在本機仍應正確印 ?m（不崩），證明
+# try/catch 對「本機會拋錯的這個值」有redundant 保護——若這條反而崩了，代表 try/catch 沒有真的包住
+# fromdateiso8601 那段，才是需要擔心的退化。
+mut_pr_m4a="$work/patrol.no-zerodate-prefix.sh"
+python3 - "$patrol" "$mut_pr_m4a" <<'PY'
 import sys
 src = open(sys.argv[1], encoding="utf-8").read()
 old = 'if $s == "" or ($s | startswith("0001-01-01")) then ""'
 new = 'if $s == "" then ""'
-assert src.count(old) == 1, "找不到 Go 零值守門，mutation 樣板需同步"
+assert src.count(old) == 1, "找不到 Go 零值前綴守門，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
+PY
+out28m4a="$(PATH="$work/bin:$PATH" bash "$mut_pr_m4a" --repo "$repo" --no-fetch 10 2>&1)"
+l907m4a=$(row "$out28m4a" 'feature/LS-907-realjq-zerodate')
+has   '㉘ mutant（拿掉零值前綴守門，留 try/catch）：本機 907 仍印 ?m，不崩（證明 try/catch 對本機會拋錯的這個值有 redundant 保護；此斷言在 Ubuntu 上是否仍立即命中缺值取決於 Ubuntu jq 本身是否拋錯，不強求）' "$l907m4a" 'CI 跑中 ?m'
+hasnt '㉘ mutant（拿掉零值前綴守門，留 try/catch）：不應退回查詢失敗（try/catch 兜底）' "$l907m4a" '查詢失敗'
+
+# mutation（m4，merge-review R3 delta i5，主要證據）：拿掉 try/catch（退回只有前綴守門的舊寫法）——
+# 907 的 ci 項（startedAt="not-a-date"，strptime 格式比對失敗，不是範圍驗證，**所有** jq 版本都一致
+# 拋錯——本機已用 jq 1.6 與系統版 jq-1.7.1-apple 個別驗證過，見 handoff）應該從「?m」變回「查詢
+# 失敗」，證明 try/catch 正是這段程式碼造成的、且是可攜（不受平台影響）的驗證方式，不像舊版 mutation
+# 依賴會因 jq 版本而異的零值拋錯行為。
+mut_pr_m4="$work/patrol.no-trycatch.sh"
+python3 - "$patrol" "$mut_pr_m4" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = '(try (((now - ($s | fromdateiso8601)) / 60) | floor | tostring) catch "")'
+new = '(((now - ($s | fromdateiso8601)) / 60) | floor | tostring)'
+assert src.count(old) == 1, "找不到 try/catch 包裝，mutation 樣板需同步"
 open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
 PY
 out28m4="$(PATH="$work/bin:$PATH" bash "$mut_pr_m4" --repo "$repo" --no-fetch 10 2>&1)"
 l907m=$(row "$out28m4" 'feature/LS-907-realjq-zerodate')
-has   '㉘ mutant（m4）：拿掉 Go 零值守門 → 907 從「?m」退回「查詢失敗」（證明守門是這段程式碼造成的）' "$l907m" '查詢失敗'
-hasnt '㉘ mutant（m4）：不再印出正確的 ?m 結果' "$l907m" 'CI 跑中 ?m'
+has   '㉘ mutant（m4／i5）：拿掉 try/catch → 907 的 not-a-date 項從「?m」退回「查詢失敗」（證明 try/catch 是這段程式碼造成的，且用可攜的 not-a-date 而非平台相依的零值）' "$l907m" '查詢失敗'
+hasnt '㉘ mutant（m4／i5）：不再印出正確的 ?m 結果' "$l907m" 'CI 跑中 ?m'
 l906m4=$(row "$out28m4" 'feature/LS-906-realjq-normal')
-has   '㉘ mutant（m4）對照：906（沒有零值、只有正常時間＋pass 零值）不受影響仍正確' "$l906m4" 'CI 跑中 17m（ci、ci-ipad）'
+has   '㉘ mutant（m4／i5）對照：906（沒有 not-a-date、只有正常時間＋pass 零值）不受影響仍正確' "$l906m4" 'CI 跑中 17m（ci、ci-ipad）'
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"

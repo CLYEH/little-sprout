@@ -169,8 +169,14 @@ pr_check_flag() {  # $1=PR號 $2=head oid（40 hex） $3=base branch 名（不�
   # 值，本 repo 真資料如 `gh pr checks 355` 的 merge-review 項）餵給 fromdateiso8601 會直接讓整條 -q
   # 以 rc=1 中止（`// ""` 只擋 null／缺欄位，擋不了這個非空字串）——三分流因此整個退化成「查詢失敗」。
   # 補一個字串前綴守門，視同缺值（印 ?）。
+  # merge-review R3 delta m4（i5）：CI（Ubuntu jq）對這個零值不會炸——`fromdateiso8601` 是否對某個值
+  # 拋錯是 C 函式庫層級的行為（gmtime 範圍驗證），macOS／BSD 與 glibc 的實作不一致，本機兩個版本
+  # （jq 1.6、系統版 jq-1.7.1-apple）都會炸，CI 的 Ubuntu jq 不會——純字串前綴守門本身跟這個平台差異
+  # 無關（比對發生在呼叫 fromdateiso8601 之前，永遠一致），**但只涵蓋這一個已知值**；`try … catch`
+  # 補的是另一類保護：任何其他真的解析不了的字串（如格式對不上的垃圾值）在「所有」jq 版本上都是
+  # strptime 格式比對失敗、不是範圍驗證差異，try/catch 能一致地接住。兩者互補、不是互斥，都留著。
   rows=$(cd "$ROOT" && gh pr checks "$n" --json name,bucket,link,startedAt \
-    -q '.[] | [.name, .bucket, .link, (if .bucket == "pending" then ((.startedAt // "") as $s | if $s == "" or ($s | startswith("0001-01-01")) then "" else (((now - ($s | fromdateiso8601)) / 60) | floor | tostring) end) else "" end)] | @tsv' 2>/dev/null); rc=$?
+    -q '.[] | [.name, .bucket, .link, (if .bucket == "pending" then ((.startedAt // "") as $s | if $s == "" or ($s | startswith("0001-01-01")) then "" else (try (((now - ($s | fromdateiso8601)) / 60) | floor | tostring) catch "") end) else "" end)] | @tsv' 2>/dev/null); rc=$?
   if [ "$rc" -ne 0 ]; then
     printf '⚠ %s 但 gh pr checks 查詢失敗（exit %s）→ 人工看 PR #%s 頁面' "$st" "$rc" "$n"
     return
