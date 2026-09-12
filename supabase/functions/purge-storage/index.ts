@@ -53,6 +53,15 @@
 // purge_expired() 的 DB 端結果，混進 EF 自己的觀測會耦合兩件事）。巡檢 SQL 見
 // docs/API.md §6，由 orchestrator 接排程時一併接進巡檢。
 //
+// LS-235（來源 LS-96 池項 fa8c91fc：09-11 一次 Gateway Timeout 訊息即讓整輪
+// invocation 直接回 500，即使佇列本身完全正常）：讀取 purge_storage_queue 這一步
+// （上面 while 迴圈開頭的 SELECT）改用 ./queue_retry.ts 的 readQueueWithRetry()
+// 包一層重試／退避——只有這一步；迴圈裡其他步驟（remove()／markFailed()／
+// dequeue／孤兒掃描）各自已有自己的失敗處理，不在這次變更範圍內。同時新增
+// scripts/ops/prod-purge-health.sh：正式站 `cron.job_run_details` 經 pg_net
+// 非同步呼叫恆為 succeeded，看不出這支函式實際回應的 HTTP 狀態，該腳本改唯讀查
+// `net._http_response` 並與 purge_runs 對帳（見 docs/COLLABORATION.md §4-b）。
+//
 // 已知限制（如實揭露，見 docs/API.md §6「自動清除」與本票 handoff）：本機已用
 // `supabase functions serve --no-verify-jwt`（經 scripts/ops/supabase-lock.sh）
 // 對這支函式做過端對端手動驗證，但**沒有**寫成 `supabase/tests/` 底下可重複執行的
@@ -89,6 +98,7 @@ import {
   scanOrphanStorageObjects,
   type StorageEntry,
 } from "./orphan_scan.ts";
+import { readQueueWithRetry } from "./queue_retry.ts";
 
 const BATCH_SIZE = 200; // 每批讀取／刪除的筆數，對齊 Storage remove() API 一次呼叫的合理批次大小。
 const MAX_BATCHES = 20; // 安全上限（20 × 200 = 4000 筆／次 invocation）：避免佇列量體異常大時單次執行時間失控。
@@ -155,6 +165,12 @@ function chunk<T>(items: T[], size: number): T[][] {
     out.push(items.slice(i, i + size));
   }
   return out;
+}
+
+// LS-235：readQueueWithRetry() 注入的真正退避等待——測試用假 sleep（見
+// queue_retry.test.ts），這裡是正式呼叫唯一會用到真的 setTimeout 的地方。
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // R2 F3（i）：分頁走完一個路徑底下的所有項目，不假設一頁（1000 筆）就是全部。
@@ -325,6 +341,15 @@ Deno.serve(async (req: Request) => {
   const failures: { object_path: string; error: string }[] = [];
   const warnings: string[] = [];
   let batches = 0;
+  // LS-235（R2 修正 m3，merge-review R1 comment da96a7d0）：queueReadAttempts 是
+  // 「這次 invocation 對 purge_storage_queue 總共發出幾次 SELECT」——健康的
+  // invocation 本來就會因為批次數而遞增（迴圈讀到空批次才 break，見下方
+  // `if (!queue || queue.length === 0) break;`：處理 1 個批次要讀 2 次、2 個
+  // 批次要讀 3 次），不是「有沒有發生過暫時性錯誤」的訊號，這個數字本身**不能**
+  // 用來判斷有沒有重試過。真正代表「重試了幾次」的是 queueReadRetries——每次
+  // 讀取的 `readAttempts - 1`（0 代表那次讀取一次就成功／放棄，沒有重試）累加。
+  let queueReadAttempts = 0;
+  let queueReadRetries = 0;
 
   // 記錄「這次 invocation 已經確認過存在／不存在」的 bucket，避免同一個 bucket
   // 在同一次 invocation 裡被 getBucket() 反覆確認（多個批次、同一個 bucket 常見，
@@ -354,23 +379,55 @@ Deno.serve(async (req: Request) => {
   // 成因之一，R3 移除，見檔頭）。
   while (batches < MAX_BATCHES) {
     const nowIso = new Date().toISOString();
-    const { data: queue, error: queueError } = await supabase
-      .from("purge_storage_queue")
-      .select("id, bucket_id, object_path")
-      .lt("attempts", MAX_ATTEMPTS)
-      .or(`next_attempt_at.is.null,next_attempt_at.lte.${nowIso}`)
-      .order("enqueued_at", { ascending: true })
-      .limit(BATCH_SIZE)
-      .returns<QueueRow[]>();
+    // LS-235（來源 LS-96 池項 fa8c91fc：09-11 一次 Gateway Timeout 訊息即讓整輪
+    // invocation 直接回 500）：只重試這一步讀取——暫時性錯誤（timeout／5xx／
+    // 網路錯誤，見 queue_retry.ts 的允許清單）最多重試到 QUEUE_READ_MAX_ATTEMPTS
+    // 次，退避 1s→2s→4s；4xx／SQL 語法類錯誤第一次就放棄。race：這裡重試的是
+    // 唯讀 SELECT，沒有寫入副作用，重試不會讓同一批佇列項被處理兩次（見
+    // queue_retry.ts 檔頭「race 安全性」）。
+    const { data: queue, error: queueError, attempts: readAttempts } =
+      await readQueueWithRetry<QueueRow[]>(
+        // Promise.resolve() 包一層：PostgrestFilterBuilder 是 thenable（有
+        // .then()）但不是真正的 Promise（缺 catch／finally／
+        // Symbol.toStringTag），readQueueWithRetry() 的 selectBatch 簽章要求
+        // 真正的 Promise，直接回傳 builder 物件在 `deno check` 會報型別不符。
+        () =>
+          Promise.resolve(
+            supabase
+              .from("purge_storage_queue")
+              .select("id, bucket_id, object_path")
+              .lt("attempts", MAX_ATTEMPTS)
+              .or(`next_attempt_at.is.null,next_attempt_at.lte.${nowIso}`)
+              .order("enqueued_at", { ascending: true })
+              .limit(BATCH_SIZE)
+              .returns<QueueRow[]>(),
+          ),
+        sleep,
+      );
+    queueReadAttempts += readAttempts;
+    // R2 修正 m2（merge-review R1 comment da96a7d0）：readAttempts 是「這次讀取
+    // 總共嘗試了幾次」（最小值 1），不是「重試了幾次」——4xx／SQL 錯這種永久性
+    // 錯誤第一次就放棄，readAttempts=1，但那是「一次都沒重試」，不是「重試 1
+    // 次」。用 readAttempts - 1 才是真正的重試次數。
+    const thisReadRetries = readAttempts - 1;
+    queueReadRetries += thisReadRetries;
 
     if (queueError) {
+      console.error(
+        `purge-storage: 讀取 purge_storage_queue 失敗（嘗試 ${readAttempts} 次` +
+          `後放棄，重試 ${thisReadRetries} 次；這次 invocation 累計嘗試 ` +
+          `${queueReadAttempts} 次、累計重試 ${queueReadRetries} 次）：${queueError.message}`,
+      );
       return new Response(
         JSON.stringify({
           processed,
           failed: failures.length,
           failures,
           warnings,
-          error: `讀取 purge_storage_queue 失敗：${queueError.message}`,
+          attempts: queueReadAttempts,
+          retries: queueReadRetries,
+          error:
+            `讀取 purge_storage_queue 失敗（已嘗試 ${readAttempts} 次、重試 ${thisReadRetries} 次）：${queueError.message}`,
         }),
         { status: 500, headers: { "Content-Type": "application/json" } },
       );
@@ -513,7 +570,7 @@ Deno.serve(async (req: Request) => {
   console.log(
     `purge-storage: parked=${
       parked ?? 0
-    } orphanEnqueued=${orphanScan.enqueued} orphanDropped=${orphanScan.dropped} ` +
+    } queueReadAttempts=${queueReadAttempts} queueReadRetries=${queueReadRetries} orphanEnqueued=${orphanScan.enqueued} orphanDropped=${orphanScan.dropped} ` +
       `orphanInvalid=${orphanScan.invalidCount} ` +
       `orphanScanCompleted=${orphanScan.scanCompleted} orphanScanCursor=${
         orphanScan.cursor ?? "null"
@@ -526,6 +583,13 @@ Deno.serve(async (req: Request) => {
       failed: failures.length,
       failures,
       warnings,
+      // LS-235（R2 修正 m3，merge-review R1 comment da96a7d0）：attempts 是這次
+      // invocation 對 purge_storage_queue 發出的 SELECT **總次數**——會隨批次數
+      // 遞增（讀到空批次才 break，健康的 invocation 處理 N 個批次本來就要讀
+      // N+1 次），不是「有沒有重試過」的訊號，不能單看這個數字判讀。真正代表
+      // 「這次 invocation 期間發生過幾次重試」的是 retries（0＝完全沒有重試）。
+      attempts: queueReadAttempts,
+      retries: queueReadRetries,
       parked: parked ?? 0,
       orphanEnqueued: orphanScan.enqueued,
       // LS-222（收口 LS-213 R2 merge-review N3）：形狀不合規或前綴不符而被
