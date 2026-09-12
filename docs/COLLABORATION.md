@@ -23,12 +23,12 @@
 |---|---|---|
 | ui-designer | sonnet | 建立全新設計語言／資訊架構大改版時 |
 | ios-dev | sonnet | 併發或架構性的票（背景上傳佇列、導航骨架、RLS 設計）、同一票 sonnet 兩次未過 gate、hotfix |
-| merge-reviewer | opus | 預設即最高——review 是安全網；純文件 diff 可降 sonnet |
+| merge-reviewer | opus | review 是安全網；純文件 diff 可降 sonnet |
 | qa | sonnet | 驗收含併發時序或安全（RLS）判斷時 |
 | dead-code-sweeper | sonnet | 大型 feature 批次或跨模組重構後的巡檢 |
-| visual-reviewer | opus | 預設即最高——視覺判斷是對抗審查的核心能力 |
+| visual-reviewer | opus | 視覺判斷是對抗審查的核心能力 |
 
-降級同理：機械性小任務（批次改名、跑腳本回報）可用 haiku。升降級都要在派工訊息中註明理由。
+降級同理：機械性小任務（批次改名、跑腳本回報）可用 haiku。Agent 工具另有 `fable` 層（orchestrator 自己跑的模型，成本為 opus 兩倍；本表未納入預設）——要把某輪派工升到 fable 時同樣在派工訊息註明理由。升降級都要在派工訊息中註明理由。
 
 **審查類 agent 的 Linear 權限**（LS-60）：merge-reviewer 與 dead-code-sweeper 具 Linear 讀票（`get_issue`／`list_comments`）權與 `save_comment` 寫回權（sweeper 自 LS-157 起直貼巡檢結果，不再由 orchestrator 代貼）；兩者皆**無** `save_issue`（不得改狀態或票文）。審查依據以票文為準，不得只憑 commit／PR body 推斷。
 
