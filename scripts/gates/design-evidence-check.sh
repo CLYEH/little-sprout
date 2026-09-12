@@ -75,6 +75,15 @@
 #     **R2（merge-review R1 fd783f6c F7）**：`ref_hits` 只計實例層（排除 `cmp/` 定義子樹內部的 ref 節點）——定義子樹的
 #     節點在兩次走訪 id 都是原生 id，一定 join 得上，天真地數「任何 ref 命中」會被它撐起來、蓋掉板上實例真正沒接上這件
 #     事；正典腳本另外多印 `ref_hits_defs`（純供人工核對，本 gate 不驗、收據可以沒有這個鍵）。
+#   - **LS-226：六支各帶 `result_hash`＋頂層 `scan_note`**——正典腳本自帶分批（SCAN_BATCH／SCAN_BATCH_ROOTS＋`--merge`）後，收據可能
+#     來自多次 execute 的合併；`tree_hash` 只證明節點樹是同一份，證明不了「這支的陣列就是那次掃描算出來的」。每支 `result_hash`＝
+#     對 `scan=<支名>`／`scope=<scan_scope>`／`tree_hash=<tree_hash>` 三行＋in-scope `flagged` 每筆一行 `flagged=<身分>`（corner_anchor
+#     另加 `unresolved=<container>`）做 FNV-1a 64 加總 mod 2^64 的 16 碼 hex（身分規則見 scripts/gates/design_tree_hash.py 檔頭），
+#     正典腳本 RESULT-JSON／`--merge` 輸出照抄。gate：(a) 六支各有、16 碼小寫 hex；(b) corner_anchor／text_occlusion／board_clip 的
+#     in-scope 陣列收據完整，用 design_tree_hash.result_hash 以收據自己的 scan_scope／tree_hash／陣列重算，不符即紅（fail-closed）——陣列
+#     被改過、hash 從別次掃描抄來、tree_hash 對不上都抓得到；三支 O(n²) 收據只存代表、只驗格式；(c) `scan_note` 必填非空（跑法與範圍
+#     自述：分批批次／SCAN_BOARDS／scope／同一稿態）。cutoff 同形（RESULT_HASH_MARKER `result_hash`）：舊收據缺欄位放行並印一行，
+#     result_hash 若在仍驗；輪次最高的收據另看 PR head tree。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -102,8 +111,9 @@
 #   "ticket": "LS-67", "round": 2, "head_sha": "<40 hex，本 PR 落地這份 .pen 的其中一次 commit>",
 #   "total_nodes": 87, "tree_hash": "<16 hex，SUMMARY 印的值（LS-168）>",
 #   "scan_scope": "document"  ←（LS-185）boards|document；每支物件可帶同值 "scope"
+#   "scan_note": "<跑法與範圍自述：分批批次／SCAN_BOARDS／scope／同一稿態（LS-226 必填）>",
 #   "scans": {
-#     "sibling_intersection": {"flagged": [{"node_a": "...", "node_b": "...", "classification": "..."}]},
+#     "sibling_intersection": {"flagged": [{"node_a": "...", "node_b": "...", "class": "...", "count": 12, "classification": "..."}]},
 #     "row_overflow": {"flagged": [{"node": "...", "classification": "..."}]},
 #     "cross_parent_collision": {"flagged": [{"node_a": "...", "node_b": "...", "classification": "..."}]},
 #     "corner_anchor": {"boards": ["<root frame id>", ...], "containers": 91, "points": 728, "mismatch": 0, "flagged": [],
@@ -112,6 +122,7 @@
 #     "text_occlusion": {"flagged": [], "document_flagged": [...]},
 #     "board_clip": {"flagged": [], "document_flagged": [{"board": "...", "node": "...", "side": "bottom", "overflow_px": 123, "classification": "intentional_bleed"}]}
 #   }   ←（LS-202）六支物件各帶 "scope": "document"（同 scan_scope）與 "document_count": <非負整數>
+#       ←（LS-226）六支物件各帶 "result_hash": "<16 hex，RESULT-JSON／--merge 輸出照抄>"
 # }
 #
 # 用法：design-evidence-check.sh <path.pen> --ticket <LS-n> --base <ref> [--head-sha <sha>]
@@ -259,6 +270,11 @@ SIXTH_MARKER = "scanBoardClip"
 PERSCAN_MARKER = "document_count"
 # LS-207：corner_anchor.ref_hits（ref 判準本身的哨兵）的 cutoff——同一支腳本含 REF_HITS_MARKER 才要求（同形）
 REF_HITS_MARKER = "ref_hits"
+# LS-226：六支各帶 result_hash＋頂層 scan_note 的 cutoff——同一支腳本含 RESULT_HASH_MARKER 才要求（同形）；
+# RECOMPUTE＝收據 in-scope 陣列完整、gate 能以 design_tree_hash.result_hash 重算比對的三支
+RESULT_HASH_MARKER = "result_hash"
+RECOMPUTE = ("corner_anchor", "text_occlusion", "board_clip")
+HEX16 = re.compile(r"[0-9a-f]{16}")
 SIX = FOUR + ("text_occlusion", "board_clip")
 SCAN_SCOPES = ("boards", "document")
 sys.path.insert(0, os.path.dirname(os.path.abspath(landing_script)))
@@ -319,6 +335,8 @@ perscan = False
 perscan_at_sha = False
 refhits_marker = False
 refhits_marker_at_sha = False
+resulthash = False
+resulthash_at_sha = False
 
 if not isinstance(sha, str) or sha not in pen_commits:
     errs.append(
@@ -348,15 +366,18 @@ else:
         perscan_at_head = has_marker(head, PERSCAN_MARKER) if is_latest else False
         refhits_marker_at_sha = has_marker(sha, REF_HITS_MARKER)
         refhits_marker_at_head = has_marker(head, REF_HITS_MARKER) if is_latest else False
-        if None in (fifth_at_sha, fifth_at_head, sixth_at_sha, sixth_at_head, perscan_at_sha, perscan_at_head, refhits_marker_at_sha, refhits_marker_at_head):
+        resulthash_at_sha = has_marker(sha, RESULT_HASH_MARKER)
+        resulthash_at_head = has_marker(head, RESULT_HASH_MARKER) if is_latest else False
+        if None in (fifth_at_sha, fifth_at_head, sixth_at_sha, sixth_at_head, perscan_at_sha, perscan_at_head, refhits_marker_at_sha, refhits_marker_at_head, resulthash_at_sha, resulthash_at_head):
             errs.append(
-                f"無法判定 {FIFTH_SCRIPT} 在 {sha[:7]}／PR head 的 tree 裡是否含第五／六支／per-scan／ref_hits 欄位（git ls-tree／show 失敗，淺 clone 或物件缺失）"
+                f"無法判定 {FIFTH_SCRIPT} 在 {sha[:7]}／PR head 的 tree 裡是否含第五／六支／per-scan／ref_hits／result_hash 欄位（git ls-tree／show 失敗，淺 clone 或物件缺失）"
                 "——不能靠猜放行舊收據（fail closed）"
             )
         fifth = bool(fifth_at_sha) or (is_latest and bool(fifth_at_head))
         sixth = bool(sixth_at_sha) or (is_latest and bool(sixth_at_head))
         perscan = bool(perscan_at_sha) or (is_latest and bool(perscan_at_head))
         refhits_marker = bool(refhits_marker_at_sha) or (is_latest and bool(refhits_marker_at_head))
+        resulthash = bool(resulthash_at_sha) or (is_latest and bool(resulthash_at_head))
         tmp_path = None
         try:
             with tempfile.NamedTemporaryFile(suffix=".pen", delete=False) as tf:
@@ -587,6 +608,51 @@ if refhits_marker and isinstance(scans, dict):
                 "這類非 Corner 命名的角托看不到（LS-207）；boards 限縮快照可能真的沒有 ref 命中，不判"
             )
 
+# LS-226：六支各帶 result_hash（16 碼小寫 hex，正典腳本 RESULT-JSON／`--merge` 輸出照抄）＋頂層 scan_note（非空字串，自述跑法與範圍）。
+# 只對「正典腳本已含 RESULT_HASH_MARKER」的收據要求（head_sha tree；輪次最高另看 PR head tree，同 perscan 的 cutoff 手續），舊收據缺
+# 欄位放行並印一行；result_hash 若在仍驗。(b) corner_anchor／text_occlusion／board_clip 的 in-scope 陣列收據完整（前兩者本 gate 本來就
+# 要求 flagged 為空、unresolved 逐筆有分類），用 design_tree_hash.result_hash 以收據自己的 scan_scope／tree_hash／flagged／unresolved
+# 重算比對——陣列被改過、hash 從別次掃描抄來、或 tree_hash 對不上都紅（fail-closed；tree_hash／scan_scope 本身不合法時上面已紅，這裡
+# 不重算）。三支 O(n²) 收據只存每類一筆代表、不能重算，只驗格式（同一稿態重跑腳本必得同值，複驗留給 visual-reviewer）。
+def lacks_result_hash():
+    if not isinstance(scans, dict):
+        return False
+    return d.get("scan_note") is None or any(isinstance(scans.get(k), dict) and "result_hash" not in scans[k] for k in SIX)
+
+if resulthash and not resulthash_at_sha and lacks_result_hash():
+    errs.append(
+        f"本 PR 輪次最高的收據：head_sha={sha[:7]} 落地時正典腳本尚無 result_hash／scan_note，但 PR head 的 tree 已含（新腳本已併入本分支）"
+        "——最新輪次的 .pen 內容＝工作區，用現行 scripts/design/overflow-scan.js 對它重跑一次（大稿用 SCAN_BATCH 分批＋--merge），把六支 result_hash 與 scan_note 補進這份收據（LS-226）"
+    )
+if resulthash:
+    note = d.get("scan_note")
+    if not isinstance(note, str) or not note.strip():
+        errs.append(
+            f"缺 scan_note（收據={note!r}）——收據必須自述跑法與範圍：不分批／分批（SCAN_BATCH 批數或 SCAN_BATCH_ROOTS 各段）、SCAN_BOARDS、"
+            "scope 與限縮原因、跨 execute 是否同一稿態（LS-226；VR MJ-9／MN-5 的自述現在是必填欄位）"
+        )
+if isinstance(scans, dict):
+    for key in SIX:
+        scan = scans.get(key)
+        if not isinstance(scan, dict):
+            continue  # 缺支由上面的 required／第五／六支檢查報
+        if "result_hash" not in scan:
+            if resulthash:
+                errs.append(f"scans.{key}.result_hash 必填（16 碼小寫 hex）——抄正典腳本 RESULT-JSON／--merge 輸出該支的 result_hash（LS-226）")
+            continue
+        rh = scan.get("result_hash")
+        if not isinstance(rh, str) or not HEX16.fullmatch(rh):
+            errs.append(f"scans.{key}.result_hash 須為 16 碼小寫 hex（收據={rh!r}）——抄正典腳本 RESULT-JSON／--merge 輸出該支的 result_hash（LS-226）")
+            continue
+        if key in RECOMPUTE and isinstance(receipt_hash, str) and HEX16.fullmatch(receipt_hash) and scan_scope in SCAN_SCOPES:
+            want_rh = design_tree_hash.result_hash(key, scan_scope, receipt_hash, scan)
+            if want_rh != rh:
+                arrays = "flagged／unresolved" if key == "corner_anchor" else "flagged"
+                errs.append(
+                    f"scans.{key}.result_hash 不符：收據={rh}，以收據自己的 scan_scope={scan_scope}／tree_hash={receipt_hash}／{arrays} 重算={want_rh}"
+                    f"——該支的 in-scope 陣列被改過、或 result_hash 從別次掃描抄來；整份收據只能來自對同一稿態的同一次掃描（LS-226）"
+                )
+
 if errs:
     print(f"✗ design-evidence gate：{p} 未通過：", file=sys.stderr)
     for e in errs:
@@ -614,6 +680,11 @@ if perscan:
 elif lacks_perscan():
     also = "、PR head 的亦無" if is_latest else ""
     print(f"（{p}：head_sha={sha_disp} 快照的 {FIFTH_SCRIPT} 尚無 per-scan scope／document_count{also}，LS-202 新欄位不要求——舊收據放行）")
+if resulthash:
+    schema += "、六支各帶 result_hash（corner_anchor／text_occlusion／board_clip 重算相符）、scan_note"
+elif lacks_result_hash():
+    also = "、PR head 的亦無" if is_latest else ""
+    print(f"（{p}：head_sha={sha_disp} 快照的 {FIFTH_SCRIPT} 尚無 result_hash{also}，LS-226 新欄位 result_hash／scan_note 不要求——舊收據放行）")
 print(f"✓ design-evidence gate 通過：{p}（head_sha={sha_disp}{tag}，total_nodes={want_nodes}，{schema}）")
 PY
   then
