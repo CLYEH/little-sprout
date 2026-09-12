@@ -107,6 +107,46 @@ final class PushNotificationStoreRegistrationTests: XCTestCase {
         )
     }
 
+    /// merge-review R2 M2：A→B→**A 再登入**——上面那支 A→B 兩個全新使用者的回歸測試剛好避開
+    /// 了這個洞。`PushDeviceTokenSubmissionRecord` 若仍以 `userID` 分 key，A 自己在第一步留下
+    /// 的紀錄不會因為 B 登入而消失；A 第三步回鍋登入時讀到的不是 `nil`，是自己第一步的舊值，
+    /// 去重 guard 會誤判成「已經送過」而不重送，`device_tokens` 那一列永遠留在 B 身上（A 的
+    /// 裝置持續收到 B 家庭的推播，且沒有任何路徑能自行復原）。改成裝置層級單一綁定紀錄後，
+    /// 三次登入都必須各自重新送出。
+    func testRefreshForEnteringApp_accountSwitchBackToFirstUser_sameToken_reregistersAgain() async {
+        let userA = UUID()
+        let userB = UUID()
+        defer {
+            PushPrepromptDisplayRecord.reset(userID: userA)
+            PushPrepromptDisplayRecord.reset(userID: userB)
+            PushDeviceTokenSubmissionRecord.reset(userID: userA)
+            PushDeviceTokenSubmissionRecord.reset(userID: userB)
+        }
+        let authService = StubPushAuthorizationService(status: .authorized)
+        let deviceTokenClient = StubPushDeviceTokenAPIClient()
+        let store = PushNotificationStore(authorizationService: authService, deviceTokenAPIClient: deviceTokenClient)
+        let tokenData = Data([0xDE, 0xAD, 0xBE, 0xEF])
+
+        // A 登入。
+        await store.refreshForEnteringApp(userID: userA)
+        await store.didRegister(deviceToken: tokenData, userID: userA)
+        // A 登出、B 登入（同一支裝置、token 不變）。
+        await store.refreshForEnteringApp(userID: userB)
+        await store.didRegister(deviceToken: tokenData, userID: userB)
+        // B 登出、A 再次登入（同一支裝置、token 仍不變）。
+        await store.refreshForEnteringApp(userID: userA)
+        await store.didRegister(deviceToken: tokenData, userID: userA)
+
+        XCTAssertEqual(
+            deviceTokenClient.registerCallCount, 3,
+            "A 再次登入時 device_tokens 還綁在 B 身上，必須重送 register_device_token"
+        )
+        XCTAssertEqual(
+            PushDeviceTokenSubmissionRecord.lastSubmittedTokenHex(userID: userA), "deadbeef",
+            "裝置目前的綁定紀錄應該指向最後一次登入的 A，不是殘留 B 換手前的舊值"
+        )
+    }
+
     // MARK: - m2：refreshForEnteringApp 被取消時不寫入過期狀態
 
     /// merge-review R1 m2：`.task(id:)` 換帳號時會取消舊 task，但

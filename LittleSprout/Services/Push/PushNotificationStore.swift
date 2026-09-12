@@ -36,7 +36,9 @@ final class PushNotificationStore {
     /// merge-review R1 M1：已授權／provisional 時必須重新呼叫 `registerForRemoteNotifications()`
     /// 讓系統再送一次裝置 token 回呼，否則 (a) token 輪替後永遠不會重送、(b) 換帳號後這支裝置
     /// 會持續收到前一位使用者家庭的推播（`docs/API.md:767-770`）。去重邏輯仍在
-    /// `submitTokenIfNeeded` 那一層（依 userID 分 key，換帳號天然視為未送過），這裡只負責觸發。
+    /// `submitTokenIfNeeded` 那一層——merge-review R2 M2：`PushDeviceTokenSubmissionRecord`
+    /// 改成裝置層級單一綁定紀錄後，任何帳號切換（含 A→B→A 切回）都會視為未送過，這裡
+    /// 只負責觸發。
     func refreshForEnteringApp(userID: UUID) async {
         let status = await authorizationService.currentAuthorizationStatus()
         // merge-review R1 m2：`.task(id:)` 換帳號時會取消舊 task，但
