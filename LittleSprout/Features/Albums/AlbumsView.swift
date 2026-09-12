@@ -16,6 +16,10 @@ struct AlbumsView: View {
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
     let albumsStore: AlbumsStore
+    /// LS-166：`AlbumDetailView`「加入照片」上傳需要——同 `TimelineView`／`DiaryEditorView`
+    /// 既有的注入路徑（`RootView.SectionContentView` 一路往下傳，不隨 app 存活的無狀態
+    /// client）。
+    let mediaUploadService: MediaUploadService
 
     @State private var showsCreateAlbum = false
     @State private var contentWidth: CGFloat = UIScreen.main.bounds.width - 2 * AppSpacing.screenPad
@@ -36,7 +40,10 @@ struct AlbumsView: View {
         .navigationDestination(for: AlbumRoute.self) { route in
             switch route {
             case .detail(let albumID):
-                AlbumDetailView(albumID: albumID, albumsStore: albumsStore)
+                AlbumDetailView(
+                    albumID: albumID, albumsStore: albumsStore, familyStore: familyStore,
+                    childrenStore: childrenStore, mediaUploadService: mediaUploadService
+                )
             }
         }
         .sheet(isPresented: $showsCreateAlbum) {
@@ -292,13 +299,19 @@ struct AlbumsView: View {
         AlbumSummary(id: UUID(), title: "跨年連假出遊", photoCount: 62, cover: nil, childIds: [], createdAt: Date())
     ])
     return NavigationStack {
-        AlbumsView(familyStore: .preview(), childrenStore: .preview(), albumsStore: store)
+        AlbumsView(
+            familyStore: .preview(), childrenStore: .preview(), albumsStore: store,
+            mediaUploadService: PreviewMediaUploadService()
+        )
     }
 }
 
 #Preview("空狀態") {
     NavigationStack {
-        AlbumsView(familyStore: .preview(), childrenStore: .preview(), albumsStore: .preview())
+        AlbumsView(
+            familyStore: .preview(), childrenStore: .preview(), albumsStore: .preview(),
+            mediaUploadService: PreviewMediaUploadService()
+        )
     }
 }
 #endif
