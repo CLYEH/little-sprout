@@ -736,8 +736,9 @@ jobs:
       # LS-231（來源 LS-96 池項 bdf9eeae）：這支 gate 唯一的失敗訊號是 log 裡的測試名——flake vs
       # 真缺陷、同一支測試不同輪是否為同一種失敗，過去只能靠推論裁決（LS-230 四次 rerun）。上面
       # 固定 -resultBundlePath，這裡失敗時把它整包上傳成 artifact，reviewer／orchestrator 可以
-      # `gh run download <run-id> -n <artifact>` 取下來後 `xcrun xcresulttool get --path <bundle>
-      # --format json` 或直接用 Xcode 打開看完整時間軸／attachment（見 docs/COLLABORATION.md
+      # `gh run download <run-id> -n <artifact>` 取下來後 `xcrun xcresulttool get test-results
+      # summary --path <bundle> --format json`（本專案釘住的 Xcode 版本已把不帶 test-results 的
+      # 舊版 get 標為 deprecated，LS-231 實測驗證）或直接用 Xcode 打開看完整時間軸／attachment（見 docs/COLLABORATION.md
       # §4-b）。用 `steps.build_and_test.outcome`（不是單純 `failure()`）——只在這一步本身失敗才
       # 上傳，不會被後面步驟（Release 組態編譯 gate／點擊目標 gate）的失敗誤觸發去撈一個不相關
       # 的 bundle。成功時 `outcome` 是 `success`，這步整個略過（不上傳）。

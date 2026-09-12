@@ -126,9 +126,9 @@ print_failed_tests_with_assertions() {  # 讀 stdin：每行一筆「Test Case '
 # 另一個分支。
 print_result_bundle_hint() {
   if [ -n "${GITHUB_ACTIONS:-}" ]; then
-    echo "  完整結果見 xcresult（此 gate 失敗時 CI 會把 ${result_bundle} 作為 artifact 上傳，名稱含 job「${GITHUB_JOB:-?}」與 run attempt「${GITHUB_RUN_ATTEMPT:-?}」，見 .github/workflows/ci.yml；下載後 xcrun xcresulttool get --path <bundle> --format json 可讀）" >&2
+    echo "  完整結果見 xcresult（此 gate 失敗時 CI 會把 ${result_bundle} 作為 artifact 上傳，名稱含 job「${GITHUB_JOB:-?}」與 run attempt「${GITHUB_RUN_ATTEMPT:-?}」，見 .github/workflows/ci.yml；下載後 xcrun xcresulttool get test-results summary --path <bundle> --format json 可讀——舊版 get --path（不帶 test-results）在本專案釘住的 Xcode 版本已 deprecated，LS-231 實測驗證）" >&2
   else
-    echo "  xcresult 已保留在 ${result_bundle}（可用 Xcode 開啟，或 xcrun xcresulttool get --path <bundle> --format json 讀取）" >&2
+    echo "  xcresult 已保留在 ${result_bundle}（可用 Xcode 開啟，或 xcrun xcresulttool get test-results summary --path <bundle> --format json 讀取）" >&2
   fi
 }
 
