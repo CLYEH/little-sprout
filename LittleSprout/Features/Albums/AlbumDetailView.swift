@@ -19,10 +19,12 @@ import SwiftUI
 /// （見 docs/API.md §2／§4：後兩者其實是**僅建立者本人**、比「owner 任何一本」更窄），不是
 /// 要求 UI 額外開放給非 owner 的建立者。Notes 是唯一針對「這顆選單什麼時候看得到」給出明確
 /// 文字的來源，這裡以其為準；owner 若剛好不是這本相簿的建立者，送出編輯／刪除時會收到
-/// `42501`／`LS045`／`LS027`，錯誤文案會呈現（`AlbumDetailStore.submitEdit`／
-/// `AlbumDeleteConfirmationSheet` 皆走既有 `AppError.userFacingMessage` 映射），不會靜默失敗
-/// 或 crash——這個已知落差記入 handoff，若要更精確的可見性規則（例如「owner 或建立者才看得到
-/// 編輯，僅 owner 看得到刪除」）需要另開票調整設計稿。
+/// `42501`／`LS027`，或（`albums.title` 這一半，merge-review R2 M1 修正前是靜默 0 列、
+/// 現在已由 `SupabaseAlbumsAPIClient.updateAlbumTitle` 明確轉成 `AppError`）明確的失敗——
+/// 三者錯誤文案都會呈現（`AlbumDetailStore.submitEdit`／`AlbumDeleteConfirmationSheet` 皆走
+/// 既有 `AppError.userFacingMessage` 映射），不會靜默失敗或 crash——這個「看得到但改不動」的
+/// 可見性落差本身記入 handoff（m5，不修＋理由：Notes 是唯一明確來源），若要更精確的可見性
+/// 規則（例如「owner 或建立者才看得到編輯，僅 owner 看得到刪除」）需要另開票調整設計稿。
 struct AlbumDetailView: View {
     let albumID: UUID
     let albumsStore: AlbumsStore

@@ -133,10 +133,11 @@ struct EditAlbumView: View {
         return names.isEmpty ? "不指定" : names.joined(separator: "、")
     }
 
-    /// LS045／42501（`docs/API.md` §4 `set_album_children`／`albums` 段：兩者皆僅建立者本人
-    /// 且仍是該家庭 owner/member）落在這裡由 `error.userFacingMessage` 的既有映射處理——
-    /// `AlbumDetailView` 把「更多」限定 owner 可見，owner 若不是建立者送出時會撞到這兩碼，
-    /// 見 `AlbumDetailStore.submitEdit` 文件註解「已知落差」。
+    /// `set_album_children`（`LS045`／`42501`）與 `albums.title` 直接 `.update()`
+    /// （merge-review R2 M1 起由 `SupabaseAlbumsAPIClient.updateAlbumTitle` 明確轉出的
+    /// `AppError`，不再是靜默 0 列）落在這裡由 `error.userFacingMessage` 的既有映射處理——
+    /// `AlbumDetailView` 把「更多」限定 owner 可見，owner 若不是建立者送出時會撞到這兩種
+    /// 錯誤，見 `AlbumDetailStore.submitEdit` 文件註解「已知落差」。
     private func errorMessage(_ error: AppError) -> some View {
         HStack(alignment: .top, spacing: AppSpacing.label) {
             Image(systemName: "exclamationmark.circle.fill").appIconFrame(.small).foregroundStyle(Color.lsDanger)

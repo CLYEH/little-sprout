@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		012FB97A0E8E2CA0FE8AD7D2 /* FamilyStore+JoinRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B23739E7B0F9748A7D2119 /* FamilyStore+JoinRequests.swift */; };
+		013FBEE38E6C45968FFF18A6 /* SupabaseAlbumsAPIClientUpdateAlbumTitleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D66CEB537C54030E42729822 /* SupabaseAlbumsAPIClientUpdateAlbumTitleTests.swift */; };
 		01978C27E89C317B0515118F /* ScrollableFillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */; };
 		021CD39BC4A1EBE28CC5020F /* DiaryCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73162165F62AEFC93093639C /* DiaryCardView.swift */; };
 		029E01DF7D1CB1D359682C31 /* CreateChildView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278A962343297A6DC3C456F7 /* CreateChildView.swift */; };
@@ -781,6 +782,7 @@
 		D500E43E6BE915800BDC015C /* TimelineDayGroupingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineDayGroupingTests.swift; sourceTree = "<group>"; };
 		D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModelTests.swift; sourceTree = "<group>"; };
 		D5C8A6A59E9D7E1205CC9E65 /* OTPVerificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationView.swift; sourceTree = "<group>"; };
+		D66CEB537C54030E42729822 /* SupabaseAlbumsAPIClientUpdateAlbumTitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAlbumsAPIClientUpdateAlbumTitleTests.swift; sourceTree = "<group>"; };
 		D6FB791F1C8D6FD682B0ABDB /* AuthButtonsStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthButtonsStateTests.swift; sourceTree = "<group>"; };
 		D75234ADADB6EE19F2977CB2 /* SupabaseChildAvatarUploadServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseChildAvatarUploadServiceTests.swift; sourceTree = "<group>"; };
 		D7DE28F37645984E622E64F5 /* AvatarImageProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarImageProcessorTests.swift; sourceTree = "<group>"; };
@@ -1100,6 +1102,7 @@
 				669695C5807128CB808DA8B4 /* SettingsSidebarRowStyleTests.swift */,
 				3937323EACD7FED565CE10D5 /* StorageUsageFormattingTests.swift */,
 				349D50973057FF7C3329F069 /* SupabaseAlbumsAPIClientTests.swift */,
+				D66CEB537C54030E42729822 /* SupabaseAlbumsAPIClientUpdateAlbumTitleTests.swift */,
 				10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */,
 				D1CD6635FE0F483577B007AB /* SupabaseChildAPIClientTests.swift */,
 				D75234ADADB6EE19F2977CB2 /* SupabaseChildAvatarUploadServiceTests.swift */,
@@ -2074,6 +2077,7 @@
 				461C75A20A501B88C1BD57B5 /* StubSafetyAPIClient.swift in Sources */,
 				64BCBF29279ECB24DF6646AD /* StubTimelineAPIClient.swift in Sources */,
 				3520499B34E4DFD4F5CA28CE /* SupabaseAlbumsAPIClientTests.swift in Sources */,
+				013FBEE38E6C45968FFF18A6 /* SupabaseAlbumsAPIClientUpdateAlbumTitleTests.swift in Sources */,
 				F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */,
 				A5A4BBD45115AEF64171B683 /* SupabaseChildAPIClientTests.swift in Sources */,
 				785AEF7CC537CF0D7CFE3605 /* SupabaseChildAvatarUploadServiceTests.swift in Sources */,
