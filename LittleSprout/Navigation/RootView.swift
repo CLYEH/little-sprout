@@ -132,6 +132,9 @@ struct AuthenticatedRootView: View {
         // 文件註解）。`CreateChildView` 呼叫環境 `dismiss()` 時，這裡的 `set` 分支會呼叫
         // `dismissChildOnboarding()` 把旗標寫回 false——不是直接綁 `private(set)` 屬性
         // （`FamilyStore` 一貫的作法是只透過方法變動狀態，不對外暴露可寫入的屬性）。
+        // QA-GATE: CreateChildView（LS-232：登入後全屏 gate 清單的單一來源標記；QADriver 對應標記見
+        // `QADriver.swift` 的 `// QA-GATE-HANDLED: CreateChildView`——`ensureFamily()` 點「之後再說」
+        // 那一步）。
         .fullScreenCover(isPresented: Binding(
             get: { familyStore.showsChildOnboarding },
             set: { isPresented in
@@ -150,6 +153,9 @@ struct AuthenticatedRootView: View {
             guard let userID = authStore.session?.userID else { return }
             await pushNotificationStore.refreshForEnteringApp(userID: userID)
         }
+        // QA-GATE: PushPrepromptView（LS-232：登入後全屏 gate 清單的單一來源標記；QADriver 對應標記見
+        // `QADriver.swift` 的 `// QA-GATE-HANDLED: PushPrepromptView`——`dismissPushPrepromptIfPresent()`
+        // 點「稍後再說」那一步）。
         .fullScreenCover(isPresented: Binding(
             get: { pushNotificationStore.showsPreprompt },
             set: { isPresented in
