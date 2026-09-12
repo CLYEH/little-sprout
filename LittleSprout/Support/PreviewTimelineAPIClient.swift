@@ -14,6 +14,9 @@ private final class PreviewTimelineAPIClient: TimelineAPIClient, @unchecked Send
     func fetchAlbums(ids: [UUID]) async throws -> [AlbumRow] { [] }
     func fetchMedia(ids: [UUID]) async throws -> [MediaRow] { [] }
     func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] { [:] }
+    func reactionCounts(familyID: UUID, targetType: String, targetIDs: [UUID]) async throws -> [ReactionCountRow] { [] }
+    func toggleReaction(familyID: UUID, targetType: String, targetID: UUID) async throws -> Bool { true }
+    func reactors(familyID: UUID, targetType: String, targetID: UUID) async throws -> [ReactorRow] { [] }
 }
 
 extension TimelineStore {

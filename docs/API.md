@@ -750,7 +750,10 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   §4）。`family_id` 同樣已經不可能被移動（`update_comment` 簽章不接受 `family_id`
   參數），trigger 的 `family_id` 不可變檢查對 `comments` 同樣是額外一層防線。
 - `reactions`（LS-58）：加入／收回都收斂進 `toggle_reaction` RPC（見 §4），直接
-  `.insert()`／`.delete()` 一律 `42501`。呼叫端**不再需要**自己處理
+  `.insert()`／`.delete()` 一律 `42501`。**封鎖過濾（LS-225）**：`reactions_select`
+  RLS policy 疊加了 `blocked_pairs` 述詞，被封鎖者的反應在直接 `SELECT` 這張表時
+  看不到，細節見下方「封鎖過濾」小節與 §4 `get_reaction_counts` 的對應說明。呼叫端
+  **不再需要**自己處理
   `UNIQUE(target_type, target_id, user_id)` 的 `23505`——`toggle_reaction` 內部用
   advisory lock 序列化「查詢現況→決定加或刪」，永遠回傳布林值（`true`＝加入、
   `false`＝收回），不會噴 `23505`。**唯一鍵不含 `family_id`**（`UNIQUE(target_type,
@@ -833,7 +836,10 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   非 NULL 的防禦性邊界也排除在外，見 migration 檔頭）。
 - **權限：成員完全讀不到**——沒有 RLS policy（`enable row level security` 但零 policy），
   也沒有任何 table grant 給 `authenticated`／`anon`；PostgREST 會在到達 RLS 之前就先被
-  grant 層擋下（`42501`）。`service_role`（LS-22 的 Edge Function 用）明確 grant 了
+  grant 層擋下（`42501`）。**刻意無 policy，僅 service_role（EF／cron）存取**（LS-224，
+  `supabase/tests/110_advisors_hardening.sql` §2 釘住 `anon`／`authenticated` 對這張表
+  的 select/insert/update/delete 皆無權限這個前提）。`service_role`（LS-22 的 Edge
+  Function 用）明確 grant 了
   `SELECT`／`UPDATE`（讀待送事件、標記 `sent_at`）——**不要假設平台預設會給
   service_role 足夠的權限**：本 repo 實測過 public schema 新表對 `service_role` 的
   預設只有 `TRUNCATE`/`REFERENCES`/`TRIGGER`/`MAINTAIN`，沒有 `SELECT`/`UPDATE`，這張
@@ -874,14 +880,24 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   grant／policy，理由見 migration 檔頭「設計裁量」第 3 點），RPC 版本的差異只在冪等
   （`ON CONFLICT DO NOTHING`／對不存在的列 `DELETE` 皆是 no-op，不會撞
   `23505`／噴錯）。
-- **封鎖過濾（LS-149）**：被封鎖者的內容在三處查詢一律看不到——`albums_select`／
-  `comments_select` 兩條 RLS policy、`get_family_timeline` RPC（時間軸）都疊加了
+- **封鎖過濾（LS-149；reactions 由 LS-225 補上）**：被封鎖者的內容在下列查詢一律
+  看不到——`albums_select`／`comments_select`／`reactions_select` 三條 RLS policy、
+  `get_family_timeline` RPC（時間軸）、`get_reaction_counts` RPC 都疊加了
   `NOT EXISTS`（blocker 對這個 family 的封鎖名單，見 `private.blocked_pairs()`）。
   這是**封鎖者單向的視角過濾**，不是雙向互相看不到——被封鎖的人看得到封鎖者的內容，
   只是反過來看不到（跟 §9-A1 的「封鎖使用者」語意一致：封鎖是「我不想再看到這個人」，
   不是雙向拉黑）。**範圍刻意排除** `media_select`（單張照片／影片的直接讀取）與
   `diaries_select`——時間軸已經把被封鎖者的相簿／日記／照片項目擋住，這兩張表的
-  直接讀取路徑不在 LS-149 票文列的三處測項內，是刻意縮小的範圍。
+  直接讀取路徑不在 LS-149 票文列的測項內，是刻意縮小的範圍。
+
+  | 查詢／表 | 過濾方式 | 補上版本 |
+  | --- | --- | --- |
+  | `albums_select` | RLS policy `NOT EXISTS` | LS-149 |
+  | `comments_select` | RLS policy `NOT EXISTS` | LS-149 |
+  | `reactions_select` | RLS policy `NOT EXISTS` | LS-225 |
+  | `get_family_timeline`（時間軸） | RPC 內建 `NOT EXISTS`（`v_has_blocks` 分支） | LS-149 |
+  | `get_reaction_counts` | RPC 內建 `NOT EXISTS` | LS-225 |
+  | `list_comments` | RPC 內建 `NOT EXISTS` | LS-149 |
 
 ### `join_requests`
 - 完全沒有直接寫入路徑（`grant` 只給了 `SELECT`），一律透過 §4 的 RPC 操作。
@@ -889,6 +905,69 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `get_my_join_request` 兩支 RPC（比直接 `select` 這張表多拿得到對方的顯示名稱／家庭
   名稱，因為申請成立當下雙方還沒有成員關係，直接查這張表加 `profiles`/`families` 的
   join 會被 RLS 擋掉）。
+
+### SECURITY DEFINER RPC 白名單（authenticated 可執行，LS-224）
+
+正式站 advisors `authenticated_security_definer_function_executable` WARN 點名的架構
+選擇：這些 RPC 都是 `SECURITY DEFINER`（RLS 由函式內部呼叫 `private.*` 集合函式把關，
+不是靠呼叫端自己的 RLS 身分），且對 `authenticated` 開放 `EXECUTE`——這是刻意的架構
+選擇，不是漏洞。以下 28 支是目前完整清單（單一清單來源：與
+`supabase/tests/60_default_privileges.sql` §8 的 `v_definer_rpcs`、
+`supabase/tests/110_advisors_hardening.sql` §3 的 `v_whitelist` 三處逐字同步；新增
+對 `authenticated` 開放的 SECURITY DEFINER RPC 時，三處都要更新，`110_` 的反向掃描
+會在漏改時直接 FAIL）：
+
+| 函式 | 用途 |
+| --- | --- |
+| `accept_eula(text)` | 接受指定版本的 EULA |
+| `approve_join(uuid)` | owner 核准加入申請 |
+| `block_user(uuid, uuid)` | 封鎖使用者 |
+| `create_child(uuid, text, date, text)` | 建立孩子檔案 |
+| `create_comment(uuid, text, uuid, text)` | 建立留言 |
+| `create_diary_entry(uuid, uuid[], text, date)` | 建立日記 |
+| `create_invite(uuid, text, timestamptz, integer)` | 建立家庭邀請碼 |
+| `delete_my_account()` | 使用者刪除自己的帳號 |
+| `get_my_join_request()` | 申請人查自己的加入申請狀態 |
+| `list_comments(uuid, text, uuid, timestamptz, uuid, integer)` | 分頁列出留言 |
+| `list_join_requests()` | owner 查看待審加入申請清單 |
+| `register_device_token(text, text)` | 註冊推播裝置 token |
+| `reject_join(uuid)` | owner 拒絕加入申請 |
+| `remove_content_as_owner(text, uuid)` | owner 代為移除內容 |
+| `report_content(uuid, text, uuid, text)` | 檢舉內容 |
+| `request_join(text)` | 用邀請碼申請加入家庭 |
+| `set_album_children(uuid, uuid[])` | 設定相簿的孩子標記 |
+| `set_album_deleted(uuid, boolean)` | 軟刪／還原相簿 |
+| `set_child_deleted(uuid, boolean)` | 軟刪／還原孩子檔案 |
+| `set_comment_deleted(uuid, boolean)` | 軟刪／還原留言 |
+| `set_diary_deleted(uuid, boolean)` | 軟刪／還原日記 |
+| `toggle_reaction(uuid, text, uuid)` | 切換按讚 |
+| `transfer_ownership(uuid, uuid)` | 轉移家庭 owner 身份 |
+| `unblock_user(uuid, uuid)` | 解除封鎖 |
+| `update_child(uuid, text, date, text)` | 編輯孩子檔案 |
+| `update_comment(uuid, text)` | 編輯留言 |
+| `update_diary_entry(uuid, text, date, uuid[])` | 編輯日記 |
+| `withdraw_join(uuid)` | 申請人撤回加入申請 |
+
+**新增 RPC 必更新此表與測試**：任何新的 public schema SECURITY DEFINER RPC，只要要
+對 `authenticated` 開放 `EXECUTE`，落地時必須同時更新這張表、
+`60_default_privileges.sql` §8 的 `v_definer_rpcs`、`110_advisors_hardening.sql` §3
+的 `v_whitelist`——三處任一漏改，`110_advisors_hardening.sql` 都會在下次
+`run.sh` 變紅（正向：新函式不在測試白名單裡會被清單外掃描抓到；或若只忘記更新這裡
+的文件，至少 CI 的 advisors 複掃會再次點名，但那是部署後才發現，寧可靠本機測試提早
+擋下）。
+
+不在此白名單、但同樣是 `SECURITY DEFINER` 的 public schema RPC，是刻意只給
+`service_role`（Edge Function／cron）呼叫、不對 `authenticated` 開放的另一類（見
+`60_default_privileges.sql` §8 的 `v_service_role_rpcs`：`claim_notification_events`／
+`finalize_account_deletion`／`notification_recipients`／
+`purge_storage_classify_orphan_paths`／`purge_storage_queue_enqueue_orphans[_v2]`／
+`purge_storage_queue_mark_failed`／`purge_storage_unknown_media_paths`），這些不算在
+上表的 28 支之內，也不是 advisors WARN 點名的對象（`authenticated` 對它們沒有
+`EXECUTE`）。另有 4 支 `SECURITY INVOKER` 的 public RPC（`get_family_timeline`／
+`get_reaction_counts`／`list_children`／`get_family_quota`，見
+`60_default_privileges.sql` §8 的 `v_invoker_rpcs`）同樣對 `authenticated` 開放
+`EXECUTE`，但因為不是 `SECURITY DEFINER`，不在 advisors 這個特定 WARN 的判準內，不
+列入上表。
 
 ---
 
@@ -1300,6 +1379,10 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **回傳規則**：**沒有任何反應的 `target_id` 不會出現在回傳列裡**（`GROUP BY` 天生
   排除 0 筆的組合）——呼叫端要把缺席的 `target_id` 當成 `reaction_count = 0`，同
   `get_my_join_request()`「0 列＝空結果」的既有慣例，不是遺漏。
+- **封鎖過濾（LS-225）**：`reaction_count` 排除呼叫者已封鎖的人（`blocked_pairs`
+  述詞，同 `albums_select`／`comments_select`／`get_family_timeline` 既有寫法，見上方
+  §3「封鎖過濾」小節），單向——只影響封鎖者自己看到的計數，被封鎖者與其他成員的
+  視角不受影響。`reacted_by_me` 不受這個述詞影響（呼叫者不可能封鎖自己）。
 - **非本家庭成員不會拿到錯誤**：這支是 `security invoker`，`p_family_id` 傳一個自己
   不屬於的家庭不會 raise，只會依 `reactions_select` RLS 自然回傳空集合——跟
   `get_family_timeline` 是同一種行為（見該支說明），**跟 `create_comment`／
@@ -2243,7 +2326,9 @@ schema 會讓兩件事的觀測耦合在一起，不是這裡要解的問題）�
 
 `public.purge_storage_queue` 啟用 RLS、無 policy、只 `grant select, delete` 給
 `service_role`（`authenticated`／`anon` 兩層皆擋，同 `notification_events` 既有
-模式）；`attempts`／`last_error`／`next_attempt_at` 的寫入不直接開 `UPDATE` 給
+模式）——**刻意無 policy，僅 service_role（EF／cron）存取**（LS-224，
+`supabase/tests/110_advisors_hardening.sql` §2 同時釘住這張表與 `notification_events`／
+`private.purge_runs`）；`attempts`／`last_error`／`next_attempt_at` 的寫入不直接開 `UPDATE` 給
 `service_role`，只能透過 `purge_storage_queue_mark_failed()` 這支 definer 函式
 （見 migration 第 2b 段）。**已驗證（R2＋R3）**：這支 Edge Function 已用本機
 `supabase functions serve --no-verify-jwt`（經 `scripts/ops/supabase-lock.sh`）
@@ -2282,6 +2367,8 @@ pg_net 呼叫範本」小節）。
 （執行時間、六張表各自清除筆數——`comments`／`reactions` 是累加值——Storage 佇列
 筆數、失敗表數與原因）；每張表的清除各自獨立錯誤處理，一張表失敗不影響其他表照常
 清除，WHERE 條件冪等，失敗的表下次排程自然重試，不需要額外的重試佇列。
+`private.purge_runs` 啟用 RLS、刻意無 policy，僅 service_role／orchestrator 管理端連線
+讀寫（LS-224，`supabase/tests/110_advisors_hardening.sql` §2）。
 
 **LS-213 補完的兩個孤兒方向**（見上方 §3「`media`」的完整說明，這裡只記排程與驗證
 現況）：

@@ -113,6 +113,46 @@ final class SupabaseTimelineAPIClient: TimelineAPIClient {
         }
     }
 
+    func reactionCounts(familyID: UUID, targetType: String, targetIDs: [UUID]) async throws -> [ReactionCountRow] {
+        guard !targetIDs.isEmpty else { return [] }
+        do {
+            let params = ReactionCountsParams(familyID: familyID, targetType: targetType, targetIDs: targetIDs)
+            let response: PostgrestResponse<[ReactionCountRow]> = try await client
+                .rpc("get_reaction_counts", params: params)
+                .execute()
+            return response.value
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    func toggleReaction(familyID: UUID, targetType: String, targetID: UUID) async throws -> Bool {
+        do {
+            let params = ToggleReactionParams(familyID: familyID, targetType: targetType, targetID: targetID)
+            let response: PostgrestResponse<Bool> = try await client
+                .rpc("toggle_reaction", params: params)
+                .execute()
+            return response.value
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    func reactors(familyID: UUID, targetType: String, targetID: UUID) async throws -> [ReactorRow] {
+        do {
+            let response: PostgrestResponse<[ReactorRow]> = try await client
+                .from("reactions")
+                .select("user_id, profiles(display_name)")
+                .eq("family_id", value: familyID)
+                .eq("target_type", value: targetType)
+                .eq("target_id", value: targetID)
+                .execute()
+            return response.value
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
     /// 明確帶 'Z' 的 ISO8601 字串——同 `SupabaseFamilyAPIClient.iso8601String` 的理由：
     /// SDK 預設 Date 編碼不帶時區指示，Postgres 收到不帶時區的 timestamptz 字面值會依
     /// session timezone 解讀，不保證是 UTC。
@@ -143,5 +183,32 @@ private struct TimelineParams: Encodable {
         case cursorOccurredAt = "p_cursor_occurred_at"
         case cursorRefID = "p_cursor_ref_id"
         case limit = "p_limit"
+    }
+}
+
+/// LS-216：`get_reaction_counts` 的 3 個具名參數皆無 SQL 預設值（docs/API.md §4）——三個都是
+/// 必填，不需要 `Optional`／`encodeIfPresent` 那套省略邏輯（同 `create_child` 的既有慣例）。
+private struct ReactionCountsParams: Encodable {
+    let familyID: UUID
+    let targetType: String
+    let targetIDs: [UUID]
+
+    enum CodingKeys: String, CodingKey {
+        case familyID = "p_family_id"
+        case targetType = "p_target_type"
+        case targetIDs = "p_target_ids"
+    }
+}
+
+/// LS-216：`toggle_reaction` 的 3 個具名參數，同上皆無 SQL 預設值。
+private struct ToggleReactionParams: Encodable {
+    let familyID: UUID
+    let targetType: String
+    let targetID: UUID
+
+    enum CodingKeys: String, CodingKey {
+        case familyID = "p_family_id"
+        case targetType = "p_target_type"
+        case targetID = "p_target_id"
     }
 }

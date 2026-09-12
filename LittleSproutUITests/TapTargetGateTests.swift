@@ -190,6 +190,12 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.diaryDetail)
     }
 
+    /// LS-216：時間軸卡片互動列——三種卡片（日記／相簿／照片）底部各 3 顆按鈕（Like
+    /// Toggle／Count Zone／Comment Button）共 9 顆，含已按讚／未按讚／計數 0 三態。
+    func testTimelineViewInteractionRow() {
+        assertAllTappablesMeetMinimum(.timelineInteractionRow)
+    }
+
     /// LS-217：推播權限前置說明頁——CTA「開啟通知」（`PrimaryButton`）與「稍後再說」
     /// （`minHeight: 48`）兩顆。
     func testPushPrepromptView() {

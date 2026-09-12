@@ -1,9 +1,13 @@
 import SwiftUI
 
 /// 時間軸日記卡（`cmp/Card Diary`，LS-126 票文 Scope 1）——多寶貝 caption＋日記全文（截斷）
-/// ＋附照預覽（最多 3 張，第 3 張若還有更多張疊上「還有 N 張」暗蓋）。
+/// ＋附照預覽（最多 3 張，第 3 張若還有更多張疊上「還有 N 張」暗蓋）＋底部互動列
+/// （`InteractionRow`，LS-216）。
 ///
 /// 純顯示元件，不含導覽——外層（`TimelineView`）決定要不要包一層 `NavigationLink`。
+/// LS-216：`InteractionRow` 的三顆按鈕會落在那層 `NavigationLink` 的可點範圍「內」，見
+/// `InteractionRow` 文件註解——SwiftUI 巢狀可互動元件的觸控分派交給階層最深的手勢辨識器，
+/// 不是外層整片吃掉，已模擬器實測（LS-216 handoff）。
 struct DiaryCardView: View {
     let content: DiaryContent
     /// 這篇日記標記的寶貝，依 `ChildrenStore.children` 原本的順序（依 birthday 排序）——
@@ -11,8 +15,15 @@ struct DiaryCardView: View {
     let taggedChildren: [Child]
     /// fix/LS-130-video-badge-fallback：附照預覽縮圖裡的影片要顯示「影片」／「影片 M:SS」
     /// 徽章、且無縮圖的舊影片要能讀時長，需要 `TimelineStore`（同 `PhotoCardView` 已有的
-    /// 依賴）。
+    /// 依賴）。LS-216：`InteractionRow` 也靠它讀／寫愛心狀態與 `familyID`。
     let timelineStore: TimelineStore
+    /// LS-216：這篇日記的 id——`DiaryContent` 本身不帶 id（純顯示模型），`InteractionRow`
+    /// 需要它組 target key／呼叫 `toggle_reaction`，由呼叫端（`TimelineView`）用
+    /// `TimelineEntry.refId` 傳入。
+    let refId: UUID
+    /// LS-218（留言 sheet）尚未實作——本票先接空回呼，見 `InteractionRow.onOpenComments`
+    /// 文件註解。
+    var onOpenComments: () -> Void = {}
 
     /// merge-review `443ec21a` i2（既有 LS-126 幾何缺陷，本輪順手修——同一 surface，QA 會
     /// 撞到）：`previewPhotosRow` 真正可用的內容寬（已扣掉 `insetCard` 左右 padding），由
@@ -41,22 +52,27 @@ struct DiaryCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.group) {
-            if !taggedChildren.isEmpty {
-                Text(MultiChildCaptionFormatter.attributed(children: taggedChildren, asOf: content.entryDate))
-                    .lineLimit(2)
+            VStack(alignment: .leading, spacing: AppSpacing.group) {
+                if !taggedChildren.isEmpty {
+                    Text(MultiChildCaptionFormatter.attributed(children: taggedChildren, asOf: content.entryDate))
+                        .lineLimit(2)
+                }
+                Text(content.body)
+                    .appFont(.body)
+                    .foregroundStyle(Color.lsTextPrimary)
+                    .lineLimit(4)
+                if !content.previewPhotos.isEmpty {
+                    previewPhotosRow
+                }
             }
-            Text(content.body)
-                .appFont(.body)
-                .foregroundStyle(Color.lsTextPrimary)
-                .lineLimit(4)
-            if !content.previewPhotos.isEmpty {
-                previewPhotosRow
-            }
+            // LS-216：`.combine` 只圍住上面這段「純顯示」內容——`InteractionRow` 留在範圍
+            // 外（見型別文件註解），三顆按鈕才能各自被 VoiceOver 獨立唸出、獨立操作。
+            .accessibilityElement(children: .combine)
+            InteractionRow(kind: .diary, refId: refId, timelineStore: timelineStore, onOpenComments: onOpenComments)
         }
         .padding(AppSpacing.insetCard)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusLarge))
-        .accessibilityElement(children: .combine)
     }
 
     private var remainingPhotoCount: Int {
@@ -227,6 +243,7 @@ struct DiaryCardView: View {
             Child(id: UUID(), name: "陳小安", birthday: Date(), avatarURL: nil, deletedAt: nil, createdAt: Date())
         ],
         timelineStore: .preview(),
+        refId: UUID(),
         previewRowWidth: 320 - 2 * AppSpacing.insetCard
     )
     .padding()

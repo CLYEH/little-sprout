@@ -1,0 +1,62 @@
+-- LS-224 — 正式站 advisors 健檢收口，範圍 1：`function_search_path_mutable` WARN
+--
+-- 來源：orchestrator 2026-09-06 20:23 對正式站 `get_advisors`（唯讀）：
+-- `private.is_media_object_path`、`private.is_avatar_object_path`、
+-- `private.deletion_bypass_active`、`private.enforce_deletion_bypass` 四支未設
+-- `search_path`。票文原始假設是「其餘函式皆已設，這四支是後來票漏掉」。
+--
+-- **實況（重要，跟票文假設不同，這裡分開記）**：這四支函式**不是漏掉**——
+-- `supabase/tests/60_default_privileges.sql` §9 早就把它們列為刻意的 invoker
+-- 例外，逐一寫明理由。逐支核對票文假設是否成立：
+--
+--   `private.is_media_object_path(text)`／`private.is_avatar_object_path(text)`：
+--   **不能加**，本票維持原狀不動。這兩支是 `language sql`、`security invoker`
+--   （非 definer）、純 regex（不碰任何資料庫物件，沒有 search_path 挾持的面），
+--   直接掛在 `storage.objects` 的 `media_bucket_insert`／`media_bucket_update`／
+--   `media_bucket_delete` 三條 policy 的 `USING`／`WITH CHECK` 上，每一次媒體／
+--   頭像上傳或編輯的 INSERT／UPDATE 都逐列求值。Postgres 對「帶 SET 子句的
+--   SQL 函式」的既定行為：**無法被規劃器 inline**（本 repo 另有三處獨立驗證同一件
+--   事：`docs/API.md` §4 `get_family_timeline` 效能說明、
+--   `supabase/migrations/20260824010000_diaries_write_path_and_timeline.sql`
+--   第 403 行、`supabase/tests/50_rls_plan_no_percall_subquery.sql` 第 350 行——
+--   不是本票新發現，是這個 repo 從 LS-48 F1 開始反覆驗證過的既定事實）。加上
+--   `set search_path = ''` 會讓這支函式從「規劃器內聯進呼叫端查詢」退化成
+--   「逐列真正的函式呼叫」，直接影響每一次媒體寫入的效能，且對這兩支函式而言
+--   沒有對應的安全收益——它們是 invoker、body 裡沒有任何未綁 schema 的物件參照，
+--   `~` 也是 `pg_catalog` 的內建 operator，沒有可被攻擊者用 search_path 劫持的
+--   面。這是實際被測試過、審過的效能／安全權衡（LS-40、LS-169 R2 各自的
+--   review round），不是本票該回頭推翻的決定——`function_search_path_mutable`
+--   這個 advisor WARN 對這兩支函式是已知、可接受的殘留，見
+--   `60_default_privileges.sql` §9 與本票新增的 `110_advisors_hardening.sql`
+--   §1 例外清單。
+--
+--   `private.deletion_bypass_active()`／`private.enforce_deletion_bypass()`：
+--   **可以加，本票加上**。同樣是 `language sql`、`security invoker`、純讀寫
+--   一個 GUC（`current_setting`／`set_config`，皆 `pg_catalog` 內建函式），
+--   一樣沒有 search_path 挾持的面；這兩支的**唯一呼叫處**分別是
+--   `private.enforce_not_suspended()`（trigger，`language plpgsql`）內的
+--   `if` 判斷式，與 `public.delete_my_account()`（`language plpgsql`）內的
+--   `perform` 陳述式——都是從 **plpgsql** 呼叫。
+--   **plpgsql 語境同樣會 inline**：plpgsql 裡的運算式（`if`／`perform` 等）
+--   一樣交給規劃器規劃，SQL 函式在其中照樣是 inlining 的候選，加
+--   `set search_path = ''` 一樣會把它從「規劃器內聯」退化成「不透明的函式
+--   呼叫」，多一層 fmgr 的 GUC 存還開銷——這兩支**不是**「plpgsql 呼叫不會
+--   inline、純收益沒有代價」（merge-review R1 `4365d9af` 實測：
+--   `explain verbose select private.deletion_bypass_active()` 加 SET 前後從
+--   展開的 `coalesce(current_setting(...), '')` 變成不透明函式呼叫，20 萬次
+--   迴圈 0.024 s → 0.24–0.26 s，每次呼叫約 +1.1 µs）。但這裡仍然值得加：
+--   唯一呼叫處 `private.enforce_not_suspended()` 是掛在 16 張表上的
+--   for-each-row trigger，同一個 trigger 內已有查表成本（比對 active／
+--   suspended 狀態）比這 ~1 µs 貴上好幾個數量級，這個代價落在雜訊裡；
+--   security definer／plpgsql 呼叫端固定收斂 search_path 的收益優先於這個
+--   量級的代價，所以這兩支仍補 SET，換掉一個 advisor WARN 划算。
+--
+-- 不改邏輯：兩支函式的本體逐字不動，只加 `set search_path = ''`（用
+-- `alter function`，不是 `create or replace function`——後者對已存在的函式
+-- 簽章會被 `scripts/gates/migration-breaking-check.sh` B4 判定 BREAKING，
+-- 這裡的變更本質是「函式屬性微調」，不是「重新定義行為」，`alter function`
+-- 準確反映這個事實，也讓本票的 `migration-breaking-check.sh` 結果如票文驗收
+-- 條件所預期地不出現 BREAKING）。
+
+alter function private.deletion_bypass_active() set search_path = '';
+alter function private.enforce_deletion_bypass() set search_path = '';
