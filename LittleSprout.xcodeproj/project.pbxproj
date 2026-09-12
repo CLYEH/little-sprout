@@ -55,6 +55,7 @@
 		1B2910F0B8FB633A862EC79D /* DiaryEditorView+Fields.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C20EEF08C7F204261BE68D /* DiaryEditorView+Fields.swift */; };
 		1C5AF463F2A7DF887C811BCB /* FamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */; };
 		1CA62E1F7EE1AF788BDAC560 /* DiaryDetailView+ContentActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B99EC50D8E436ECFB8234F53 /* DiaryDetailView+ContentActions.swift */; };
+		1CBA80A960EAA16E708E4F9F /* CommentsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A711F7DFF4A82BB7D08AF553 /* CommentsStoreTests.swift */; };
 		1CF1D19C1EE4684CD48558BF /* StubMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865AA94C394265F3FEA5B37D /* StubMediaUploadService.swift */; };
 		1D03D9D4C76C029973315865 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C608A0E7AB49C7BAF3669796 /* RootView.swift */; };
 		1D8CD9A1C4FB43018038FB4B /* StubAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462D42E5774046BDAEAA69E2 /* StubAuthService.swift */; };
@@ -112,10 +113,12 @@
 		3A97FE1AF8ADB0D3FD7B39F2 /* PendingAccountDeletionResumerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA736FBC40A77EA45DCD9D90 /* PendingAccountDeletionResumerTests.swift */; };
 		3B8B050311C2E7D8ABC66A97 /* SupabaseMediaSoftDeleteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4765EF6D4F14332FC2ED3B3B /* SupabaseMediaSoftDeleteTests.swift */; };
 		3C4525B513B5947A8F801211 /* TapTargetGateHarness+Albums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548C97E596BB9FBC3C8CA3FD /* TapTargetGateHarness+Albums.swift */; };
+		3CB1682578BB0630201FB19E /* CommentRowActionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11042C3303B03B569497C31D /* CommentRowActionsTests.swift */; };
 		3CF008F18A802F26417FE3D2 /* SettingsRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24956A0B458F559DEA9A97B /* SettingsRowView.swift */; };
 		3DE6FD3FBE226113DC1CCC57 /* VideoPlayerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1905C686E265375F2E30D04 /* VideoPlayerScreen.swift */; };
 		3E6AD4C8220D0C00A205AFA4 /* LegalDocumentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B4A5D2DBCF16762B8D2F87 /* LegalDocumentSheet.swift */; };
 		3E851BE2E0FD96463C07D775 /* PhotoCornerShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD268EF45ACA8D3FE3F11E2 /* PhotoCornerShape.swift */; };
+		3EF7D1DC36BF1CB888308BF5 /* CommentsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0C7AE2D49AF5987CD1CEBC /* CommentsStore.swift */; };
 		3EFC0C57ED75313D4F4AA023 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18AB0FEB21BA55A39EB67982 /* Assets.xcassets */; };
 		3FCA5C7F27DFB77A097EB8D8 /* AlbumsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55EFEBD89186C116A6062C6D /* AlbumsViewTests.swift */; };
 		4095733E802A0A772A5F047D /* OTPVerificationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E25074609E9AF1D1EC50AD1E /* OTPVerificationModel.swift */; };
@@ -292,6 +295,7 @@
 		B0FA3B419745F9D231E75C58 /* VideoTrimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E13DE0D017682C31FBABE1 /* VideoTrimmer.swift */; };
 		B1B5FCC8B7A31A61D4969EE3 /* AvatarPickerLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BECC7D79F1B9E53EABE6120 /* AvatarPickerLoader.swift */; };
 		B1C19A2319494642B99A46EB /* WelcomeView+PasswordSignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FB942E7809A7A51E7E182B9 /* WelcomeView+PasswordSignIn.swift */; };
+		B3F22A9DBC8E0F21E14C26F1 /* StubCommentAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69091E685140B608F5F75E5 /* StubCommentAPIClient.swift */; };
 		B444B88CA39F26AA7C74C7A1 /* StubPushDeviceTokenAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A94E2A486BB54362C3343ED /* StubPushDeviceTokenAPIClient.swift */; };
 		B6F140BBE36A520831E94856 /* JoinCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B283C4309A804140F52F79A /* JoinCodeView.swift */; };
 		B6F6E333A886376E31C29D17 /* DeleteAccountFlowView+Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25D6169D65B86B668496E26 /* DeleteAccountFlowView+Status.swift */; };
@@ -394,6 +398,7 @@
 		F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */; };
 		F346107C7C4ED65779715E73 /* JoinCodePhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604B48C433197767C7EAA5D6 /* JoinCodePhaseTests.swift */; };
 		F3549AB9A9912E8CFBAF3B2D /* PickedItemLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */; };
+		F400886C67EB440F0BF36A5A /* CommentRowActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D1271C2CC39AA7D7D71E59 /* CommentRowActions.swift */; };
 		F462FED59ADC341536F34B8A /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76C79515621CA9052803B7EA /* AppError.swift */; };
 		F4F8DB0821FDA59E9EB1B08C /* AlbumsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283015CC749C2FA945FE395B /* AlbumsModels.swift */; };
 		F72DC9FECA93AF65A84657C6 /* BlockConfirmSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7527E2B1A3FCC80DBEB44EB5 /* BlockConfirmSheet.swift */; };
@@ -462,6 +467,7 @@
 		0EDCB1C873A0DB57A3165E54 /* MediaUploadService+Duration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MediaUploadService+Duration.swift"; sourceTree = "<group>"; };
 		0F379004A37B44A1986570C5 /* ReportReasonSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportReasonSheet.swift; sourceTree = "<group>"; };
 		10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAuthServiceTests.swift; sourceTree = "<group>"; };
+		11042C3303B03B569497C31D /* CommentRowActionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentRowActionsTests.swift; sourceTree = "<group>"; };
 		1154E2337B7278510C8971B1 /* ApprovalStatusRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalStatusRow.swift; sourceTree = "<group>"; };
 		118638BDAF3AB058A5A805C0 /* DeleteAccountStepTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountStepTests.swift; sourceTree = "<group>"; };
 		1316439F5231DB2C470519A8 /* SupabaseMediaUploadServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaUploadServiceTests.swift; sourceTree = "<group>"; };
@@ -707,6 +713,8 @@
 		A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyAPIClient.swift; sourceTree = "<group>"; };
 		A5718C2E6D09354F5950BEA5 /* ChildrenRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenRoute.swift; sourceTree = "<group>"; };
 		A5C9C0FFAC9911BA268EBA27 /* OTPVerificationModelLockoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModelLockoutTests.swift; sourceTree = "<group>"; };
+		A69091E685140B608F5F75E5 /* StubCommentAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubCommentAPIClient.swift; sourceTree = "<group>"; };
+		A711F7DFF4A82BB7D08AF553 /* CommentsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentsStoreTests.swift; sourceTree = "<group>"; };
 		A730792B37FCBC07486A4363 /* FamilyMembersView+Sheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FamilyMembersView+Sheets.swift"; sourceTree = "<group>"; };
 		A7E27393FD410CD5BA282DCB /* StorageUsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageView.swift; sourceTree = "<group>"; };
 		A890D7141A740E1F67B93BD7 /* EmailSignInModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInModel.swift; sourceTree = "<group>"; };
@@ -716,6 +724,7 @@
 		AA1EFC1792C4BB1EA62606E2 /* QADriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QADriver.swift; sourceTree = "<group>"; };
 		AA736FBC40A77EA45DCD9D90 /* PendingAccountDeletionResumerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingAccountDeletionResumerTests.swift; sourceTree = "<group>"; };
 		AAE2BD7F1D83D2C316B63293 /* MediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaUploadService.swift; sourceTree = "<group>"; };
+		AB0C7AE2D49AF5987CD1CEBC /* CommentsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentsStore.swift; sourceTree = "<group>"; };
 		AB59B9D30E351F20B3ECF494 /* PushNotificationStoreRegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationStoreRegistrationTests.swift; sourceTree = "<group>"; };
 		AC1EF5E70745F2D0DCAA3405 /* ChildAgeFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildAgeFormatterTests.swift; sourceTree = "<group>"; };
 		AD69D0A2456BC4F954E29446 /* InviteCodeParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeParserTests.swift; sourceTree = "<group>"; };
@@ -738,6 +747,7 @@
 		B65A9E81D3E3B5D92B0B6BDE /* DiaryEditorViewLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryEditorViewLifecycleTests.swift; sourceTree = "<group>"; };
 		B6B922E8AD56E1EF2150FE2B /* PushPrepromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushPrepromptView.swift; sourceTree = "<group>"; };
 		B7011C61D613644C595C9208 /* LittleSproutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LittleSproutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B8D1271C2CC39AA7D7D71E59 /* CommentRowActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentRowActions.swift; sourceTree = "<group>"; };
 		B953E2D0F652452A92AA6639 /* FamilyMemberActionVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberActionVisibility.swift; sourceTree = "<group>"; };
 		B99EC50D8E436ECFB8234F53 /* DiaryDetailView+ContentActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DiaryDetailView+ContentActions.swift"; sourceTree = "<group>"; };
 		B9AEBD63E7E59131E2B285E4 /* JoinWaitingPhaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinWaitingPhaseTests.swift; sourceTree = "<group>"; };
@@ -991,6 +1001,7 @@
 				462D42E5774046BDAEAA69E2 /* StubAuthService.swift */,
 				F1DAB46AC3F3092BECE9EE37 /* StubChildAPIClient.swift */,
 				FA51041D6190DA7BB8F683D0 /* StubChildAvatarUploadService.swift */,
+				A69091E685140B608F5F75E5 /* StubCommentAPIClient.swift */,
 				860B26A62EB9FA9842759C25 /* StubDiaryAPIClient.swift */,
 				295DB44A67ECD1153F5F9B54 /* StubEULAAPIClient.swift */,
 				F5CC227F2B168D39029462E5 /* StubFamilyAPIClient.swift */,
@@ -1042,6 +1053,8 @@
 				C9C8D00E975B4DE5DC111D3D /* ChildrenStoreAvatarListRefreshTests.swift */,
 				33A580FB25AD23E59B1A979C /* ChildrenStoreAvatarTests.swift */,
 				6C7E229440047D04B81BCE30 /* ChildrenStoreTests.swift */,
+				11042C3303B03B569497C31D /* CommentRowActionsTests.swift */,
+				A711F7DFF4A82BB7D08AF553 /* CommentsStoreTests.swift */,
 				98F91F255268FEE8F549166E /* ContentActionsTests.swift */,
 				41B7B10C2108552F0A805115 /* DeleteAccountFlowModelRaceTests.swift */,
 				FC6B2DBBC978E2E01973D4FE /* DeleteAccountFlowModelResumeTests.swift */,
@@ -1165,6 +1178,7 @@
 			isa = PBXGroup;
 			children = (
 				1EFD1FF4DE88B8A84B28A7C2 /* CommentAPIClient.swift */,
+				AB0C7AE2D49AF5987CD1CEBC /* CommentsStore.swift */,
 				2ED1E7ACF67B24DEE53C39DF /* SupabaseCommentAPIClient.swift */,
 			);
 			path = Comment;
@@ -1186,6 +1200,7 @@
 			children = (
 				7527E2B1A3FCC80DBEB44EB5 /* BlockConfirmSheet.swift */,
 				3B04119AE44DC83DF4A5A616 /* CommentDeleteConfirmationSheet.swift */,
+				B8D1271C2CC39AA7D7D71E59 /* CommentRowActions.swift */,
 				0216A05C437344DD0EBBB829 /* ContentActionsSheet.swift */,
 				75ECDD98F8DDC62243057E57 /* DeleteConfirmationSheet.swift */,
 				1422150ED25BE1054FB9631F /* DiaryDeleteConfirmationCopy.swift */,
@@ -1753,6 +1768,8 @@
 				E96D464C2FD698F14A9B2604 /* ColorTokens.swift in Sources */,
 				27765396913C304FC059C525 /* CommentAPIClient.swift in Sources */,
 				556DB5B8B8585087B96537AC /* CommentDeleteConfirmationSheet.swift in Sources */,
+				F400886C67EB440F0BF36A5A /* CommentRowActions.swift in Sources */,
+				3EF7D1DC36BF1CB888308BF5 /* CommentsStore.swift in Sources */,
 				D2E1CC90D6A00B31BE3D2C01 /* ContentActions.swift in Sources */,
 				A9B7EC237A2E7E23054C7F50 /* ContentActionsSheet.swift in Sources */,
 				67B0447ADF48F5AAFDA6629B /* CreateAlbumView.swift in Sources */,
@@ -2003,6 +2020,8 @@
 				F20F691FBACD89A57DFE187C /* ChildrenStoreAvatarListRefreshTests.swift in Sources */,
 				B0D70EB20B4074F89886D5B5 /* ChildrenStoreAvatarTests.swift in Sources */,
 				0373CF2DC8FA481EBC64CFF3 /* ChildrenStoreTests.swift in Sources */,
+				3CB1682578BB0630201FB19E /* CommentRowActionsTests.swift in Sources */,
+				1CBA80A960EAA16E708E4F9F /* CommentsStoreTests.swift in Sources */,
 				D7ED98C0BB0F1AA10D10D890 /* ContentActionsTests.swift in Sources */,
 				947B5736557D6D1227AC9252 /* DeleteAccountFlowModelRaceTests.swift in Sources */,
 				BCCC6A1B7C284C355C6509FF /* DeleteAccountFlowModelResumeTests.swift in Sources */,
@@ -2072,6 +2091,7 @@
 				1D8CD9A1C4FB43018038FB4B /* StubAuthService.swift in Sources */,
 				4B00D9F0878757751BECB467 /* StubChildAPIClient.swift in Sources */,
 				7F4B5EC36F95C02CCF5A14E0 /* StubChildAvatarUploadService.swift in Sources */,
+				B3F22A9DBC8E0F21E14C26F1 /* StubCommentAPIClient.swift in Sources */,
 				02E35416BAAB0EB950882764 /* StubDiaryAPIClient.swift in Sources */,
 				E409BA55E3F378ABFD4F9721 /* StubEULAAPIClient.swift in Sources */,
 				BC3FB92A8F2F032CC1F8797B /* StubFamilyAPIClient.swift in Sources */,
