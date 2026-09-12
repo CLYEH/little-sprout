@@ -284,6 +284,7 @@
 		A6BCA981974F93A150209ECE /* OwnerRemoveContentConfirmSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 182C20B3BCF4D582DF384B73 /* OwnerRemoveContentConfirmSheet.swift */; };
 		A7AECBA18A961E41A47BAB0F /* PreviewAlbumsAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE813E351514384C73E8F63C /* PreviewAlbumsAPIClient.swift */; };
 		A8A85A0D5B277951BF2774AE /* SettingsView+Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = D930D1FC550EE3B315AA4F97 /* SettingsView+Account.swift */; };
+		A9974BD1FAB09CA34048A2BB /* DiaryDetailCommentsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C7A785A791F12CA1B57CA1 /* DiaryDetailCommentsUITests.swift */; };
 		A9B20464836A95F97E2F3826 /* ReportInboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F56EF256D3B9E2D1400A5F1E /* ReportInboxView.swift */; };
 		A9B7EC237A2E7E23054C7F50 /* ContentActionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0216A05C437344DD0EBBB829 /* ContentActionsSheet.swift */; };
 		A9DD648DEC1C15C2232BA6D8 /* MultiChildCaptionFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0507B2F97DF5468321E35CF3 /* MultiChildCaptionFormatterTests.swift */; };
@@ -750,6 +751,7 @@
 		B07A1CE61F80D184428D957F /* AlbumsContentAssemblerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsContentAssemblerTests.swift; sourceTree = "<group>"; };
 		B132DF653BFCE2A50058F737 /* EULAStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EULAStoreTests.swift; sourceTree = "<group>"; };
 		B13A37E8CC8794D85456D566 /* DiaryDateFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDateFormatTests.swift; sourceTree = "<group>"; };
+		B1C7A785A791F12CA1B57CA1 /* DiaryDetailCommentsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDetailCommentsUITests.swift; sourceTree = "<group>"; };
 		B234575FDCCD4463DB6E74AE /* TapTargetGateHarness+Timeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Timeline.swift"; sourceTree = "<group>"; };
 		B23FABDDFED802022946EB16 /* ReportInboxAssembler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportInboxAssembler.swift; sourceTree = "<group>"; };
 		B24956A0B458F559DEA9A97B /* SettingsRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRowView.swift; sourceTree = "<group>"; };
@@ -935,6 +937,7 @@
 				317678ECB5D24231C3DCC568 /* DeleteConfirmationAX3UITests.swift */,
 				9F97BDDD344600BC1DFCF3BC /* DeleteConfirmationUITests.swift */,
 				17ADF30BD9D82AA5300EFF5B /* DiaryCardVideoBadgeGeometryTests.swift */,
+				B1C7A785A791F12CA1B57CA1 /* DiaryDetailCommentsUITests.swift */,
 				CF78305F7D375B0D04B208D8 /* EULAConsentUITests.swift */,
 				3A3E469D46F901CC4530B24A /* FamilyMembersLeaveFlowUITests.swift */,
 				E715D59C5D776BF6611E5E33 /* InteractionRowUITests.swift */,
@@ -2010,6 +2013,7 @@
 				9C6A7F70A286E7D8E3502E70 /* DeleteConfirmationAX3UITests.swift in Sources */,
 				6B047AD54D66A273C432CC0F /* DeleteConfirmationUITests.swift in Sources */,
 				10CB97ED4D75A21D2579F3CF /* DiaryCardVideoBadgeGeometryTests.swift in Sources */,
+				A9974BD1FAB09CA34048A2BB /* DiaryDetailCommentsUITests.swift in Sources */,
 				807A732C47F2294FA3A3CA7C /* EULAConsentUITests.swift in Sources */,
 				E772320BB13188A0A3532E7D /* FamilyMembersLeaveFlowUITests.swift in Sources */,
 				0754150D65EACBAE3CC44A30 /* InteractionRowUITests.swift in Sources */,
