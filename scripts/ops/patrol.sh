@@ -21,7 +21,9 @@
 #
 # 停滯判定（§4-b 三型態；stale＝上面的分鐘數）：
 #   PR       CONFLICTING／UNSTABLE／BEHIND／CHANGES_REQUESTED 立即標；CLEAN 且 APPROVED 立即標「可併」；
-#            其餘 CLEAN／BLOCKED 超過 stale 沒更新標 ⏳（草稿不標）
+#            其餘 CLEAN 超過 stale 標 ⏳；BLOCKED（及其他未列名狀態）超過 stale 改查 check bucket 分三流
+#            （LS-233）：pending→CI 跑中／全綠仍卡→缺必要 status／有 fail→check 紅，取代舊版籠統「無
+#            動作（CI 沒回報？）」（草稿不標）
 #   分支     有 commit 但分支從未 push、最後 commit 超過 PATROL_PUSH_GRACE_MIN（預設 30 分，> push-gate 看門狗 25 分，LS-207 R2）
 #            且真的 pgrep 不到該 worktree 下的 push-gate.sh 行程；領先 remote 且最後 commit 超過 stale（push gate 卡？）；
 #            落後 remote（別處 push 過）；已 push、無 open PR、最後 commit 超過 stale
@@ -148,6 +150,68 @@ if [ "$DO_FETCH" -eq 1 ]; then
   else fetch_warn="⚠ git fetch origin 失敗（離線？），用本機 ref 繼續——以下 origin/* 可能過期"; fi
 fi
 
+# ---- LS-233：BLOCKED（含其他未列名 mergeStateStatus）超過 stale 時，查 check bucket 分三流，取代
+#      舊版籠統「⏳ <st> <age>m 無動作（CI 沒回報？）」——這句對「CI 其實還在跑」（09-12 #365：age 已
+#      超過 stale 只是 PR 沒被互動更新 updatedAt，跟 CI 有沒有在跑無關）與「必要 status 根本沒回報」
+#      （09-12 #366：gh pr checks 五項全綠，因為它只列「已有回報」的項目，完全沒回報過的必要 context
+#      不會出現在清單裡，mergeStateStatus 卻仍卡 BLOCKED）這兩種假象都誤判成「CI 沒回報」。只在原本
+#      就會被標記的（age ≥ stale 的 catch-all 分支）才多查——不對 CLEAN／CONFLICTING／DIRTY／UNSTABLE／
+#      BEHIND 查（這幾種已有自己明確的訊息與成因，不是本票兩起事故的根因），成本只落在真的卡住的 PR。
+pr_check_flag() {  # $1=PR號 $2=head oid（40 hex） $3=base branch 名（不含 origin/） $4=mergeStateStatus $5=age(分)
+  local n=$1 oid=$2 base=$3 st=$4 age=$5
+  local sha7=${oid:0:7}
+  local rows rc name bucket link rid pend='' fail_names='' fail_ids='' present=$'\n'
+  rows=$(cd "$ROOT" && gh pr checks "$n" --json name,bucket,link -q '.[] | [.name, .bucket, .link] | @tsv' 2>/dev/null); rc=$?
+  if [ "$rc" -ne 0 ]; then
+    printf '⚠ %s 但 gh pr checks 查詢失敗（exit %s）→ 人工看 PR #%s 頁面' "$st" "$rc" "$n"
+    return
+  fi
+  while IFS=$'\t' read -r name bucket link; do
+    [ -n "$name" ] || continue
+    present="${present}${name}"$'\n'
+    case "$bucket" in
+      pending) pend="${pend:+${pend}、}${name}" ;;
+      fail)
+        fail_names="${fail_names:+${fail_names}、}${name}"
+        rid=$(printf '%s' "$link" | grep -oE '/runs/[0-9]+' | head -1 | grep -oE '[0-9]+')
+        fail_ids="${fail_ids:+${fail_ids}、}${name}${rid:+#${rid}}"
+        ;;
+    esac
+  done <<EOF
+$rows
+EOF
+  if [ -n "$pend" ]; then
+    printf '⏳ CI 跑中（%s，head %s 已 %sm）' "$pend" "$sha7" "${age:-0}"
+    return
+  fi
+  if [ -n "$fail_names" ]; then
+    printf '✗ check 紅：%s → gh run rerun <run-id> --failed（flaky）或修（run id：%s）' "$fail_names" "${fail_ids:-未取得，見 PR #${n} 頁面}"
+    return
+  fi
+  # 全綠或查無資料：gh pr checks 只列「已有回報」的項目，完全沒回報過的必要 context 不會出現──查
+  # protection 的必要清單、與現有 status contexts 比對，找出真正缺的那個（09-12 #366 根因）。
+  local req ctx missing='' status_ctx
+  req=$(cd "$ROOT" && gh api "repos/:owner/:repo/branches/${base}/protection/required_status_checks" -q '.contexts[]' 2>/dev/null); rc=$?
+  if [ "$rc" -ne 0 ] || [ -z "$req" ]; then
+    printf '⚠ check 全綠仍 %s＝缺必要 status → 無法讀 protection（repos/…/branches/%s/protection/required_status_checks）→ 人工查 gh api repos/…/commits/%s/status' "$st" "$base" "$sha7"
+    return
+  fi
+  while IFS= read -r ctx; do
+    [ -n "$ctx" ] || continue
+    case "$present" in *$'\n'"${ctx}"$'\n'*) ;; *) missing="${missing:+${missing}、}${ctx}" ;; esac
+  done <<EOF
+$req
+EOF
+  status_ctx=$(cd "$ROOT" && gh api "repos/:owner/:repo/commits/${oid}/status" -q '[.statuses[].context] | join("、")' 2>/dev/null)
+  [ -n "$status_ctx" ] || status_ctx="（無）"
+  if [ -n "$missing" ]; then
+    printf '⚠ check 全綠仍 %s＝缺必要 status（現有 status contexts：%s；缺：%s）→ gh api repos/…/commits/%s/status 看缺 merge-review／qa；head 是 merge commit 就依 §2 貼 promote: no content diff（post-status.sh %s merge-review success "…" --expect %s），否則派 review' \
+      "$st" "$status_ctx" "$missing" "$sha7" "$sha7" "$sha7"
+  else
+    printf '⚠ %s 但 check／status 均已回報且無缺項（gh pr checks 全綠、protection 必要清單皆滿足）→ 人工看 PR #%s 頁面 merge 按鈕提示' "$st" "$n"
+  fi
+}
+
 # ---- PR（open）：gh 未裝／失敗一律略過並標示原因，不炸 ----
 PR_CHECKED=0; pr_skip=; pr_total=0; pr_flagged=0; PR_LINES=; J_PRS=; PR_HEADS=; pr_raw=
 # gh 的 stderr 另存暫存檔，不併進 TSV（2>&1 會把警告行當成一筆 PR 讀進去；PR #99 R1）
@@ -156,14 +220,14 @@ trap 'rm -f "$gh_err"' EXIT
 if [ "$DO_PR" -eq 0 ]; then pr_skip="--no-pr"
 elif ! command -v gh >/dev/null 2>&1; then pr_skip="gh 未安裝"
 elif pr_raw=$(cd "$ROOT" && gh pr list --state open --limit 50 \
-      --json number,title,headRefName,baseRefName,mergeStateStatus,updatedAt,reviewDecision,isDraft \
-      -q '.[] | [.number, .mergeStateStatus, (if (.reviewDecision // "") == "" then "-" else .reviewDecision end), (((now - (.updatedAt | fromdateiso8601)) / 60) | floor), .headRefName, .baseRefName, (.isDraft | tostring), .title] | @tsv' 2>"$gh_err"); then
+      --json number,title,headRefName,baseRefName,mergeStateStatus,updatedAt,reviewDecision,isDraft,headRefOid \
+      -q '.[] | [.number, .mergeStateStatus, (if (.reviewDecision // "") == "" then "-" else .reviewDecision end), (((now - (.updatedAt | fromdateiso8601)) / 60) | floor), .headRefName, .baseRefName, (.isDraft | tostring), .headRefOid, .title] | @tsv' 2>"$gh_err"); then
   PR_CHECKED=1
 else
   pr_skip="gh 失敗：$(head -1 "$gh_err" 2>/dev/null)"
 fi
 if [ "$PR_CHECKED" -eq 1 ] && [ -n "$pr_raw" ]; then
-  while IFS=$'\t' read -r n st rd age head base draft title; do
+  while IFS=$'\t' read -r n st rd age head base draft oid title; do
     [ -n "$n" ] || continue
     pr_total=$((pr_total + 1))
     PR_HEADS="${PR_HEADS}${head}"$'\t'"${n}"$'\n'
@@ -177,7 +241,7 @@ if [ "$PR_CHECKED" -eq 1 ] && [ -n "$pr_raw" ]; then
         CLEAN)
           if [ "$rd" = APPROVED ]; then flag="✅ CLEAN 且已 APPROVE → 可併"
           elif [ "$age" -ge "$STALE" ]; then flag="⏳ CLEAN 但 ${age}m 無動作（待審／待併？）"; fi ;;
-        *) if [ "$age" -ge "$STALE" ]; then flag="⏳ ${st} ${age}m 無動作（CI 沒回報？）"; fi ;;
+        *) if [ "$age" -ge "$STALE" ]; then flag=$(pr_check_flag "$n" "$oid" "$base" "$st" "$age"); fi ;;
       esac
       if [ "$rd" = CHANGES_REQUESTED ]; then flag="${flag:+${flag}；}⚠ CHANGES_REQUESTED"; fi
     fi
