@@ -250,6 +250,24 @@ STUB
 chmod +x "$stubborn_script"
 start_fake_pen_stubborn() { "$stubborn_script" & echo $! > "$PEN_STUB_PID_FILE"; disown; }
 
+# mainCk／mainCkWt（LS-236）：真的 git 倉庫＋真的 linked worktree，供 `--restore` 與 `--kill` 清場後自動
+# 還原主 checkout `design/littlesprout.pen` 用。mainCk 本身是主 working tree（`--git-dir`＝`--git-common-dir`），
+# mainCkWt 是它的 linked worktree（兩者不相等）——比照 wtP 的「真的 git 倉庫」作法，不建 backup（同 wt4：
+# 「查無 backup」是安全訊號，check_root_safe() 會判定可以清場，不需要為了通過安全判定去偽造 backup 內容）。
+mainCk="${work}/mainCk"
+mkdir -p "${mainCk}/design"
+printf '%s' '{"version":1,"children":[]}' > "${mainCk}/design/littlesprout.pen"
+( cd "$mainCk" && git init -q && git add -A && git -c user.email=test@example.com -c user.name=test commit -q -m init ) >/dev/null 2>&1
+wantMain="$(cd "${mainCk}/design" && pwd -P)/littlesprout.pen"
+mainCk_dirty() { printf '%s' '{"version":1,"children":[{"id":"polluted","children":[]}]}' > "${mainCk}/design/littlesprout.pen"; }
+mainCk_reset_clean() { git -C "$mainCk" checkout -q -- design/littlesprout.pen; }
+
+mainCkWt="${work}/mainCk-linked"
+( cd "$mainCk" && git worktree add -q -b ls236-linked-branch "$mainCkWt" ) >/dev/null 2>&1
+wantMainWt="$(cd "${mainCkWt}/design" && pwd -P)/littlesprout.pen"
+mainCkWt_dirty() { printf '%s' '{"version":1,"children":[{"id":"polluted-wt","children":[]}]}' > "${mainCkWt}/design/littlesprout.pen"; }
+mainCkWt_reset_clean() { git -C "$mainCkWt" checkout -q -- design/littlesprout.pen; }
+
 run() { bash "$script" "$@"; }
 
 # ---- 一致 ----
@@ -738,6 +756,127 @@ else
   bad "⑮i 應 exit 2（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 clear_fake_pen
+
+# ---- ⑯～⑳（LS-236）：`--restore` 子命令＋`--kill` 清場後自動比對還原主 checkout `design/littlesprout.pen`
+#        （來源：LS-208 收尾事故，pen-open.sh <主 checkout> --kill 重開後 Pen 把記憶體中的票檔內容寫回主
+#        checkout，主 checkout 變 dirty，巡檢才發現）----
+
+# ⑯ --restore：主 checkout dirty → 自動用 git checkout -- 還原並印「Pen 寫回 → 已還原（+N/−M）」
+mainCk_dirty
+out16=$( cd "$mainCk" && bash "$script" --restore 2>&1 ); got16=$?
+if [ "$got16" -eq 0 ] && printf '%s' "$out16" | grep -qF 'Pen 寫回 → 已還原' \
+  && [ -z "$(git -C "$mainCk" status --porcelain -- design/littlesprout.pen)" ]; then
+  ok '⑯ --restore：主 checkout dirty → 自動還原，還原後 git status 乾淨'
+else
+  bad "⑯ 應 exit 0 且已還原（實得 ${got16}）"; printf '%s\n' "$out16" | sed 's/^/    /' >&2
+fi
+
+# ⑰ --restore：主 checkout 已一致 → 印「一致，無需還原」，不動任何東西（對照 ⑯ 剛還原完之後再跑一次）
+out17=$( cd "$mainCk" && bash "$script" --restore 2>&1 ); got17=$?
+if [ "$got17" -eq 0 ] && printf '%s' "$out17" | grep -qF '一致，無需還原'; then
+  ok '⑰ --restore：已一致 → 印「一致，無需還原」（不重複還原）'
+else
+  bad "⑰ 應印一致訊息（實得 exit ${got17}）"; printf '%s\n' "$out17" | sed 's/^/    /' >&2
+fi
+
+# ⑱ --restore：不在 git repo 內呼叫 → exit 2（找不到主 checkout）
+out18=$( cd "$work" && bash "$script" --restore 2>&1 ); got18=$?
+if [ "$got18" -eq 2 ]; then ok '⑱ --restore：不在 git repo 內 → exit 2'; else bad "⑱ 應 exit 2（實得 ${got18}）"; fi
+
+# ⑲ --kill：清場重開後，主 checkout 被寫回（此處直接以「清場後仍 dirty」模擬 Pen 寫回的可觀察結果，
+#    成因本身不可控——真正觸發 Pen 寫回需要真的 Pen app）→ 自動還原
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files
+mainCk_dirty
+set_state "PATH:${wantMain}"
+start_fake_pen
+export PEN_STUB_OSASCRIPT_KILLS=1
+out19=$(run "$mainCk" --kill 2>&1); got19=$?
+unset PEN_STUB_OSASCRIPT_KILLS
+if [ "$got19" -eq 0 ] && printf '%s' "$out19" | grep -qF 'Pen 寫回 → 已還原' \
+  && [ -z "$(git -C "$mainCk" status --porcelain -- design/littlesprout.pen)" ]; then
+  ok '⑲ --kill：清場重開後自動還原被 Pen 寫回的主 checkout design/littlesprout.pen'
+else
+  bad "⑲ 應清場成功且自動還原（實得 exit ${got19}）"; printf '%s\n' "$out19" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# ⑳ --kill：目標是 linked worktree（不是主 checkout）→ 清場照樣成功，但不比對／不還原它的 dirty .pen
+#    （可能是合法的設計 WIP，LS-236 裁決：只動真正的主 checkout）
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files
+mainCkWt_dirty
+set_state "PATH:${wantMainWt}"
+start_fake_pen
+export PEN_STUB_OSASCRIPT_KILLS=1
+out20=$(run "$mainCkWt" --kill 2>&1); got20=$?
+unset PEN_STUB_OSASCRIPT_KILLS
+if [ "$got20" -eq 0 ] && printf '%s' "$out20" | grep -qF 'linked worktree' \
+  && [ -n "$(git -C "$mainCkWt" status --porcelain -- design/littlesprout.pen)" ]; then
+  ok '⑳ --kill：linked worktree 的 dirty .pen 清場後保持原樣（不誤還原）'
+else
+  bad "⑳ 應清場成功但不還原、保持 dirty（實得 exit ${got20}）"; printf '%s\n' "$out20" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+mainCkWt_reset_clean
+
+# mk_mutant <mut_root_name> <sed 表達式>：把 pen-open.sh 依原本的相對深度（scripts/ops/）複製進
+# $work/<mut_root_name>/ 並套用 sed 表達式，同時複製 pen-land.sh（check_root_safe() 用 script_root 相對
+# 路徑找它）——直接把 mutant 丟在 $work 頂層（扁平檔案）會讓 `script_root=$(dirname .../../..)` 解到
+# $work 的上兩層（系統暫存目錄），連 pen-land.sh 都找不到、`--kill` 清場流程本身就會提早失敗，而不是真的
+# 走到我們要驗的那段邏輯——印出 mut_root 路徑供呼叫端組出 mutant script 路徑。
+mk_mutant() {
+  local mut_root="${work}/$1" sed_expr=$2
+  mkdir -p "${mut_root}/scripts/ops"
+  sed "$sed_expr" "$script" > "${mut_root}/scripts/ops/pen-open.sh"
+  cp "${root}/scripts/ops/pen-land.sh" "${mut_root}/scripts/ops/pen-land.sh"
+  mkdir -p "${mut_root}/scripts/gates"
+  cp "${root}/scripts/gates/design_tree_hash.py" "${mut_root}/scripts/gates/design_tree_hash.py"
+}
+
+# ==== mutation A：拿掉 --kill 流程呼叫 restore_main_checkout 那行 → ⑲ 的綠樣本必須變回 dirty（不再還原）====
+mk_mutant mutA-root '/\[ "\$kill_mode" -eq 1 \] && restore_main_checkout "\$root"/d'
+mutA="${work}/mutA-root/scripts/ops/pen-open.sh"
+if grep -qF 'restore_main_checkout "$root"' "$mutA"; then
+  bad "mutation A：拿掉呼叫失敗，負控本身無效"
+else
+  ok "mutation A：確認已拿掉 --kill 流程對 restore_main_checkout 的呼叫"
+fi
+mainCk_dirty
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files
+set_state "PATH:${wantMain}"
+start_fake_pen
+export PEN_STUB_OSASCRIPT_KILLS=1
+outmA=$(bash "$mutA" "$mainCk" --kill 2>&1); gotmA=$?
+unset PEN_STUB_OSASCRIPT_KILLS
+if [ "$gotmA" -eq 0 ] && [ -n "$(git -C "$mainCk" status --porcelain -- design/littlesprout.pen)" ]; then
+  ok "mutation A：拿掉呼叫後 ⑲ 的綠樣本清場照樣成功但不再被還原（仍 dirty）——證明呼叫是這裡在還原"
+else
+  bad "mutation A 未如預期翻轉（實得 exit ${gotmA}）"; printf '%s\n' "$outmA" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+mainCk_reset_clean
+
+# ==== mutation B：拿掉「非主 checkout」排除判斷（改成恆假）→ ⑳ 的負樣本（linked worktree）必須被誤還原 ====
+mk_mutant mutB-root 's/if \[ "\$gd" != "\$cgd" \]; then/if false; then/'
+mutB="${work}/mutB-root/scripts/ops/pen-open.sh"
+if grep -qF 'if false; then' "$mutB"; then
+  ok "mutation B：確認已把「非主 checkout」判斷改成恆假"
+else
+  bad "mutation B：改判準失敗，負控本身無效"
+fi
+mainCkWt_dirty
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files
+set_state "PATH:${wantMainWt}"
+start_fake_pen
+export PEN_STUB_OSASCRIPT_KILLS=1
+outmB=$(bash "$mutB" "$mainCkWt" --kill 2>&1); gotmB=$?
+unset PEN_STUB_OSASCRIPT_KILLS
+if [ "$gotmB" -eq 0 ] && [ -z "$(git -C "$mainCkWt" status --porcelain -- design/littlesprout.pen)" ]; then
+  ok "mutation B：拿掉排除判斷後，⑳ 的負樣本（linked worktree）被誤還原——證明該判斷是這裡在保護"
+else
+  bad "mutation B 未如預期翻轉（實得 exit ${gotmB}）"; printf '%s\n' "$outmB" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+mainCkWt_reset_clean
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-open-check 自測失敗" >&2
