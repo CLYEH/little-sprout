@@ -33,6 +33,12 @@
 # cutoff＝腳本含 `document_count` 字面（同 LS-168／LS-185 用腳本標記不用時間）。R2 minor-1：㊺ scan_scope=document 且
 # corner_anchor.document_containers=0 紅（第四支停擺）／㊺-b boards 限縮全零綠／㊺-c in-scope containers=0 而 document 216 綠（LS-133 形狀）／
 # ㊺-d R3 省略 document_containers 鍵紅（cutoff 下必填；㉞～㊶ 的 write_receipt6 收據在 cutoff 前、沒有此鍵仍綠）。
+#
+# LS-226：㊼～㊼-l-b 驗六支 result_hash＋scan_note——六支正確（corner_anchor／text_occlusion／board_clip 以 design_tree_hash.result_hash 重算
+# 相符）＋scan_note 綠（㊼）／scope=boards 同綠（㊼-b）／某支缺 result_hash 紅（㊼-c）／格式壞紅（㊼-d）／unresolved 事後改過重算不符紅
+# （㊼-e）／board_clip hash 綁到別的 tree_hash 紅（㊼-f）／text_occlusion hash 的 scope 不同紅（㊼-g）／缺 scan_note 或空白紅（㊼-h／i）／
+# cutoff 前舊形狀綠＋放行行（㊼-j）、cutoff 前但 hash 在且不符仍紅（㊼-k）／PR head 已含標記而最新收據缺欄位紅、補齊綠（㊼-l／l-b）。
+# cutoff＝腳本含 `result_hash` 字面（同形）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -1011,6 +1017,151 @@ write_receipt7 "$R/design/evidence/LS-67-r8-overflow.json" "$sha51" "$(hash_of "
 g add design/evidence/LS-67-r8-overflow.json
 g commit -qm 'design(evidence): LS-67 r8 收據（cutoff 前，無 ref_hits 標記）'
 expect 0 '㊻-h cutoff 前：省略 ref_hits → 綠（舊收據放行）' '六支各帶 scope／document_count' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ───── LS-226：六支各帶 result_hash（corner_anchor／text_occlusion／board_clip 重算）＋ scan_note 必填 ─────
+# 新欄位只對「head_sha 快照（或最新輪次的 PR head）tree 裡正典腳本含 result_hash」的收據要求；land9 依 <script> 放入含／不含
+# result_hash 標記的腳本副本。write_receipt9 以 write_receipt8 的六支＋ref_hits 為底，六支各帶 result_hash（用 design_tree_hash.result_hash
+# 以收據自己的 scan_scope／tree_hash／陣列算，corner_anchor 帶一筆 unresolved 讓重算真的走到身分行）＋ scan_note，再依 mode 挖掉／改壞一格。
+rh9() {
+  # rh9 <scan_key> <scan_scope> <tree_hash> <scan-json>
+  PYTHONDONTWRITEBYTECODE=1 python3 - "$root/scripts/gates" "$@" <<'PY'
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import design_tree_hash as T
+print(T.result_hash(sys.argv[2], sys.argv[3], sys.argv[4], json.loads(sys.argv[5])))
+PY
+}
+land9() {
+  # land9 <branch> <script: resulthash|refhits>（refhits＝有 ref_hits 標記但還沒有 result_hash，模擬 cutoff 前）
+  g checkout -q -b "$1" "$base_ref"
+  printf '%s\n' "$pen4" > "$R/design/littlesprout.pen"
+  g add design/littlesprout.pen
+  mkdir -p "$R/scripts/design"
+  if [ "$2" = resulthash ]; then
+    printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n// tag: scope + document_count\nref_hits\n// tag: result_hash\n' > "$R/scripts/design/overflow-scan.js"
+  else
+    printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n// tag: scope + document_count\nref_hits\n' > "$R/scripts/design/overflow-scan.js"
+  fi
+  g add scripts/design/overflow-scan.js
+  g commit -qm 'design(pen): LS-67 落地（LS-226 樣本）'
+  g rev-parse HEAD
+}
+write_receipt9() {
+  # write_receipt9 <path> <head_sha> <tree_hash> <mode: ok|boards|missing_rh|bad_rh|tamper|foreign|wrongscope|nonote|emptynote>
+  local path=$1 sha=$2 hash=$3 mode=$4
+  local ss=document note=',"scan_note":"分批 SCAN_BATCH 1..3（size 2）＋--merge；SCAN_BOARDS=[d]；scope=document；三批同一稿態"'
+  [ "$mode" = boards ] && ss=boards
+  local unres='[{"container":"u1","classification":"mount_pair"}]'
+  local ca='{"flagged":[],"unresolved":'"$unres"'}' empty='{"flagged":[]}'
+  local rhS rhR rhX rhC rhT rhB
+  rhS="$(rh9 sibling_intersection "$ss" "$hash" "$empty")"
+  rhR="$(rh9 row_overflow "$ss" "$hash" "$empty")"
+  rhX="$(rh9 cross_parent_collision "$ss" "$hash" "$empty")"
+  rhC="$(rh9 corner_anchor "$ss" "$hash" "$ca")"
+  rhT="$(rh9 text_occlusion "$ss" "$hash" "$empty")"
+  rhB="$(rh9 board_clip "$ss" "$hash" "$empty")"
+  local fR=',"result_hash":"'"$rhR"'"'
+  case "$mode" in
+    missing_rh) fR='' ;;
+    bad_rh)     rhC='ABC' ;;
+    tamper)     unres='[{"container":"u2","classification":"mount_pair"}]' ;;   # hash 照 u1 算、陣列改成 u2
+    foreign)    rhB="$(rh9 board_clip "$ss" 0000000000000000 "$empty")" ;;      # 從別次掃描（別的 tree_hash）抄來
+    wrongscope) rhT="$(rh9 text_occlusion boards "$hash" "$empty")" ;;         # 收據標 document、hash 卻是 boards 那份
+    nonote)     note='' ;;
+    emptynote)  note=',"scan_note":"  "' ;;
+  esac
+  local ps='"scope":"'"$ss"'","document_count":0,'
+  local counts='"containers":1,"points":8,"mismatch":0,"document_containers":1,"document_mismatch":0,"ref_hits":32'
+  mkdir -p "$(dirname "$path")"
+  printf '%s\n' '{"ticket":"LS-67","round":9,"head_sha":"'"$sha"'","total_nodes":4,"tree_hash":"'"$hash"'","scan_scope":"'"$ss"'"'"$note"',' \
+    ' "scans":{"sibling_intersection":{'"$ps"'"flagged":[],"result_hash":"'"$rhS"'"},"row_overflow":{'"$ps"'"flagged":[]'"$fR"'},' \
+    '  "cross_parent_collision":{'"$ps"'"flagged":[],"result_hash":"'"$rhX"'"},' \
+    '  "corner_anchor":{'"$ps"'"boards":["d"],'"$counts"',"flagged":[],"unresolved":'"$unres"',"result_hash":"'"$rhC"'"},' \
+    '  "text_occlusion":{'"$ps"'"flagged":[],"document_flagged":[],"result_hash":"'"$rhT"'"},' \
+    '  "board_clip":{'"$ps"'"flagged":[],"document_flagged":[],"result_hash":"'"$rhB"'"}}}' > "$path"
+}
+
+# ㊼ 六支 result_hash 正確（三支重算相符）＋ scan_note → 綠
+sha60="$(land9 pr-resulthash-ok resulthash)"
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha60" "$(hash_of "$sha60")" ok
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（result_hash＋scan_note）'
+expect 0 '㊼ 六支 result_hash（三支重算相符）＋scan_note → 綠' '六支各帶 result_hash（corner_anchor／text_occlusion／board_clip 重算相符）、scan_note' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊼-b scan_scope=boards：標頭行 scope=boards 一起進 hash，仍綠
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha60" "$(hash_of "$sha60")" boards
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（boards）'
+expect 0 '㊼-b scan_scope=boards 的 result_hash（標頭 scope=boards）→ 綠' 'scan_scope=boards' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊼-c 某支缺 result_hash → 紅
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha60" "$(hash_of "$sha60")" missing_rh
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（row_overflow 缺 result_hash）'
+expect 1 '㊼-c row_overflow 缺 result_hash → 紅（cutoff 下六支必填）' 'scans.row_overflow.result_hash 必填' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊼-d result_hash 格式壞（非 16 碼小寫 hex）→ 紅
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha60" "$(hash_of "$sha60")" bad_rh
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（corner_anchor result_hash=ABC）'
+expect 1 '㊼-d corner_anchor result_hash 非 16 碼小寫 hex → 紅' 'scans.corner_anchor.result_hash 須為 16 碼小寫 hex' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊼-e 陣列事後被改（unresolved 容器 u1→u2，hash 沒重算）→ 重算不符紅
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha60" "$(hash_of "$sha60")" tamper
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（unresolved 改過）'
+expect 1 '㊼-e corner_anchor.unresolved 事後改過 → result_hash 重算不符紅' 'scans.corner_anchor.result_hash 不符' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊼-f board_clip result_hash 從別次掃描（別的 tree_hash）抄來 → 紅
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha60" "$(hash_of "$sha60")" foreign
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（board_clip hash 抄自別次）'
+expect 1 '㊼-f board_clip result_hash 綁到別的 tree_hash → 紅' 'scans.board_clip.result_hash 不符' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊼-g text_occlusion result_hash 是 scope=boards 那份、收據卻標 document → 紅
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha60" "$(hash_of "$sha60")" wrongscope
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（text_occlusion hash 的 scope 不同）'
+expect 1 '㊼-g text_occlusion result_hash 的 scope 與收據不同 → 紅' 'scans.text_occlusion.result_hash 不符' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊼-h 缺 scan_note → 紅；㊼-i scan_note 空白 → 紅
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha60" "$(hash_of "$sha60")" nonote
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（無 scan_note）'
+expect 1 '㊼-h 缺 scan_note → 紅' '缺 scan_note（收據=None）' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha60" "$(hash_of "$sha60")" emptynote
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（scan_note 空白）'
+expect 1 '㊼-i scan_note 只有空白 → 紅' '缺 scan_note' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊼-j cutoff 前（head_sha tree 的腳本尚無 result_hash 標記）：write_receipt8 的舊形狀（無 result_hash／scan_note）仍綠＋放行行
+sha61="$(land9 pr-legacy-resulthash refhits)"
+write_receipt8 "$R/design/evidence/LS-67-r9-overflow.json" "$sha61" "$(hash_of "$sha61")" ok
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（cutoff 前，無 result_hash）'
+expect 0 '㊼-j cutoff 前：無 result_hash／scan_note → 綠（舊收據放行、印放行行）' '尚無 result_hash' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊼-k cutoff 前但收據自己帶了 result_hash 且重算不符 → 仍紅（欄位若在仍驗）
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha61" "$(hash_of "$sha61")" tamper
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（cutoff 前但 hash 不符）'
+expect 1 '㊼-k cutoff 前但 result_hash 在且重算不符 → 紅（欄位若在仍驗）' 'scans.corner_anchor.result_hash 不符' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+# ㊼-l 最新收據：head_sha tree 無標記、之後分支併入含 result_hash 的腳本（不碰 .pen）→ 缺欄位紅；同 head_sha 補齊 → 綠
+write_receipt8 "$R/design/evidence/LS-67-r9-overflow.json" "$sha61" "$(hash_of "$sha61")" ok
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（舊形狀）'
+printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n// tag: scope + document_count\nref_hits\n// tag: result_hash\n' > "$R/scripts/design/overflow-scan.js"
+g add scripts/design/overflow-scan.js
+g commit -qm 'chore: 併入含 result_hash 的正典腳本（不碰 .pen）'
+expect 1 '㊼-l PR head 已含 result_hash 標記、最新收據缺欄位 → 紅' '尚無 result_hash／scan_note，但 PR head 的 tree 已含' \
+  "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+write_receipt9 "$R/design/evidence/LS-67-r9-overflow.json" "$sha61" "$(hash_of "$sha61")" ok
+g add design/evidence/LS-67-r9-overflow.json
+g commit -qm 'design(evidence): LS-67 r9 收據（補 result_hash＋scan_note）'
+expect 0 '㊼-l-b 同 head_sha 補齊 result_hash＋scan_note → 綠' '六支各帶 result_hash' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
 
 if [ "$fail" -eq 0 ]; then
