@@ -10,8 +10,8 @@ import SwiftUI
 struct PhotoCardView: View {
     let content: MediaContent
     let timelineStore: TimelineStore
-    /// LS-218（留言 sheet）尚未實作——本票先接空回呼，見 `InteractionRow.onOpenComments`
-    /// 文件註解。
+    /// LS-218：`TimelineView.openComments(kind:refId:)` 開留言 sheet，見
+    /// `InteractionRow.onOpenComments` 文件註解。
     var onOpenComments: () -> Void = {}
 
     var body: some View {

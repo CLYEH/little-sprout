@@ -86,7 +86,7 @@ private struct InteractionRowHost: View {
             TimelineView(
                 familyStore: .preview(), childrenStore: .preview(), timelineStore: timelineStore,
                 diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-                safetyAPIClient: PreviewSafetyAPIClient()
+                safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient()
             )
         }
     }

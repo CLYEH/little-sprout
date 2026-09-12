@@ -59,4 +59,15 @@ enum QAAccessibilityID {
     /// 是因為那些文案不會跟別的畫面撞名，但這裡刻意留一個機械可辨識、不受未來文案調整影響的
     /// 錨點（同檔案既有慣例：只放「靠 label 找不穩」或需要穩定性保證的元件）。
     static let pushPrepromptSkipButton = "qa.pushPreprompt.skipButton"
+    /// LS-218：留言 sheet 輸入列——`TextField`／送出鈕文案固定（皆「留言...」／icon-only），
+    /// 不需要靠 identifier 分辨「哪一個」，只是同 `diaryBodyEditor` 既有理由改用 identifier
+    /// （欄位靠 label 找不穩）。
+    static let commentInputField = "qa.comments.inputField"
+    static let commentSendButton = "qa.comments.sendButton"
+    /// 留言列——同 `interactionRowElement` 理由，多則留言可能有相同作者／相對時間文字（例如
+    /// 都是「剛剛」），改用依 `id` 區分的 identifier。
+    static func commentRow(id: String) -> String { "qa.comments.row.\(id)" }
+    static let commentLoadEarlierButton = "qa.comments.loadEarlierButton"
+    static let commentRetryButton = "qa.comments.retryButton"
+    static let commentCloseButton = "qa.comments.closeButton"
 }
