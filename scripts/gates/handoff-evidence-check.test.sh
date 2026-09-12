@@ -100,8 +100,29 @@ final class ExcludedFixtureOnlyTests: XCTestCase {}
 INNER
 EOF
 
+# R4（LS-228，來源 LS-96 池項 acb4e2df）：白名單目錄路徑（PATH_ANCHOR_RE）的存在性驗證用 os.path.isfile
+# 對 --repo 檔案系統直接檢查，不靠 git ls-files——這裡仍把 fixture 建在合成 repo 裡（同 R2/N7 的理由：
+# 不耦合真 LittleSprout 路徑，未來 supabase/functions 底下任何檔案改名都不該讓這支自測連坐轉紅）。
+mkdir -p "$R/supabase/functions/fixture" "$R/supabase/migrations" "$R/supabase/tests" "$R/docs/legal" "$R/.claude/agents" "$R/scripts/fixture" "$R/.github/workflows"
+printf 'export const fixture = true;\n' > "$R/supabase/functions/fixture/example.ts"
+printf -- '-- fixture migration\n' > "$R/supabase/migrations/20260101000000_fixture.sql"
+printf -- '-- fixture test\n' > "$R/supabase/tests/00_fixture.sql"
+printf '# Fixture doc\n' > "$R/docs/fixture.md"
+printf '#!/bin/bash\necho fixture\n' > "$R/scripts/fixture/example.sh"
+printf 'name: fixture\n' > "$R/.github/workflows/fixture.yml"
+# R5（LS-228 R2，F2）：docs/**/*.md（巢狀子目錄）與 .claude/**/*.md 白名單路徑存在性驗證用 fixture。
+printf '# Legal fixture\n' > "$R/docs/legal/fixture.md"
+printf '# Agent fixture\n' > "$R/.claude/agents/fixture.md"
+# R5（LS-228 R2，F1）：supabase/**/*.sh 白名單路徑——同時是 merge-review R1 F1(a) 點名的真實回歸樣本
+# （規約必引的 `bash supabase/tests/run.sh`），這裡建一支同名真實存在的 fixture。
+printf '#!/bin/bash\necho run\n' > "$R/supabase/tests/run.sh"
+
 git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false add -A
 git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q -m 'chore(harness): LS-211 fixture'
+
+# R5（LS-228 R2，F5）：--repo 之外建一個真實存在的檔案，證明 `..` 逃逸不能拿它來蒙混存在性檢查——
+# 這個檔案刻意留在 $work（$R 的上層目錄），不進 $R 的 git repo。
+printf '#!/bin/bash\necho outside\n' > "$work/outside-escape.sh"
 
 # expect <期望 exit code> <樣本名稱> <輸出必含字串|''> <handoff 內容>
 expect() {
@@ -197,13 +218,10 @@ expect 0 '①m（R2，F1）mutation 語境的假名不驗存在性（ios-dev「�
 - 條件 1：拿掉某條檢查 → mutation 樣本 `BogusMutationOnlyTests` 改判過，斷言原文：`✓ mutant → 紅`
 '
 
-expect 0 '①n（R3，m3）PATH_RE 認 .py/.sh/.md/.yml/.json 路徑為證據' '' \
+expect 0 '①n（R3，m3；R5／LS-228 R2 還原 .sh/.md/.yml 後，PATH_RE 完整涵蓋 .py/.json 這兩個既有副檔名——.sh/.md/.yml 另見 ①x-①z）PATH_RE 認 .py/.json 路徑為證據' '' \
 '## 已驗證
 - 條件 1：核對過 `handoff_evidence_check.py:191` 的實作
-- 條件 2：核對過 `docs/COLLABORATION.md:323` 的敘述
-- 條件 3：核對過 `.github/workflows/ci.yml:172` 的名稱表
-- 條件 4：核對過 `some/config.json` 的內容
-- 條件 5：核對過 `scripts/ops/promote.sh:8` 這行敘述（純檔名參照，不靠 xcodebuild／bash scripts/ 命令字面）
+- 條件 2：核對過 `some/config.json` 的內容
 '
 
 expect 0 '①o（R3，m4）verdict 圈號編號形狀（**① 標題**：…，無句點）不再 exit 2' '' \
@@ -222,6 +240,90 @@ expect 0 '①p（R3，m4）全形數字編號（１.）也算列項起點' '' \
 expect 0 '①q（R3，i3）否定詞在候選之後也跳過存在性（`FooBarTests` 這個類別不存在）' '' \
 '## 已驗證
 - 條件 1：`FooBarTests` 這個類別不存在，改用 `FooTests` 驗證
+'
+
+# R4（LS-228，來源 LS-96 池項 acb4e2df）：白名單目錄路徑（supabase/functions/**/*.ts、
+# supabase/migrations/*.sql、supabase/tests/*.sql、docs/*.md、scripts/**/*.sh、
+# .github/workflows/*.yml）——這批必須驗證檔案在合成 repo（$R）內真的存在（os.path.isfile），
+# 不像 ①n 的 .py/.json 只是子字串比對。
+
+expect 0 '①r（R4，LS-228）supabase/functions/**/*.ts 白名單路徑，存在' '' \
+'## 已驗證
+- 條件 1：`supabase/functions/fixture/example.ts:1` 核對通過
+'
+
+expect 0 '①s（R4，LS-228）supabase/migrations/*.sql 白名單路徑，存在' '' \
+'## 已驗證
+- 條件 1：`supabase/migrations/20260101000000_fixture.sql:1` 核對通過
+'
+
+expect 0 '①t（R4，LS-228）supabase/tests/*.sql 白名單路徑，存在' '' \
+'## 已驗證
+- 條件 1：`supabase/tests/00_fixture.sql:1` 核對通過
+'
+
+expect 0 '①u（R4，LS-228）docs/*.md 白名單路徑，存在' '' \
+'## 已驗證
+- 條件 1：`docs/fixture.md:1` 核對通過
+'
+
+expect 0 '①v（R4，LS-228）scripts/**/*.sh 白名單路徑，存在' '' \
+'## 已驗證
+- 條件 1：`scripts/fixture/example.sh:1` 核對通過
+'
+
+expect 0 '①w（R4，LS-228）.github/workflows/*.yml 白名單路徑，存在' '' \
+'## 已驗證
+- 條件 1：`.github/workflows/fixture.yml:1` 核對通過
+'
+
+# R5（LS-228 R2，F1；merge-review R1 43e2f60e）：PATH_RE 還原 .sh/.md/.yml 三個副檔名——①x/①y/①z
+# 對應 F1 report 點名的三種真實回歸情境（規約必引的 bash supabase/tests/run.sh、根目錄 .yml、裸檔名
+# .sh），這三個副檔名都不落在任何 PATH_ANCHOR_RE 白名單目錄前綴內，只能靠 PATH_RE 的無條件子字串放行。
+
+expect 0 '①x（R5，LS-228 R2，F1(a)）本 repo 規約必引的「bash supabase/tests/run.sh」形狀，PATH_RE 的 .sh 放行' '' \
+'## 已驗證
+- 條件 1：跑了 `bash supabase/tests/run.sh` 全綠，連線方式：host psql
+'
+
+expect 0 '①y（R5，LS-228 R2，F1(b)）根目錄 .yml（project.yml），PATH_RE 的 .yml 放行' '' \
+'## 已驗證
+- 條件 1：核對過 `project.yml` 的內容
+'
+
+expect 0 '①z（R5，LS-228 R2，F1(c)）裸檔名 .sh（不在任何白名單目錄前綴下），PATH_RE 的 .sh 放行' '' \
+'## 已驗證
+- 條件 1：跑了 `db-reset-retry.sh` 全綠
+'
+
+# R5（LS-228 R2，F2）：docs/**/*.md（巢狀子目錄）與 .claude/**/*.md 兩個新白名單類別，皆驗證真的存在。
+
+expect 0 '①aa（R5，LS-228 R2，F2）docs/**/*.md 巢狀子目錄白名單路徑，存在' '' \
+'## 已驗證
+- 條件 1：`docs/legal/fixture.md:1` 核對通過
+'
+
+expect 0 '①ab（R5，LS-228 R2，F2）.claude/**/*.md 白名單路徑，存在' '' \
+'## 已驗證
+- 條件 1：`.claude/agents/fixture.md:1` 核對通過
+'
+
+expect 0 '①ac（R5，LS-228 R2，F2）supabase/**/*.sh 白名單路徑（非 bash 前綴、直接引用），存在' '' \
+'## 已驗證
+- 條件 1：`supabase/tests/run.sh:1` 核對通過
+'
+
+# R5（LS-228 R2，F4）：path_anchor_candidates() 的 skip 判準補上 is_negated／is_mutation_context——
+# 白名單路徑候選在同句含否定詞、或同行為 mutation 語境時不驗存在性（比照 (a) 測試名候選既有判準）。
+
+expect 0 '①ad（R5，LS-228 R2，F4）白名單路徑候選同句含否定詞「不存在」→ 不驗存在性（正確的否定陳述）' '' \
+'## 已驗證
+- 條件 1：`supabase/migrations/20990101000000_x.sql` 這個檔不存在，gate 正確判紅
+'
+
+expect 0 '①ae（R5，LS-228 R2，F4）白名單路徑候選在 mutation 語境（同一行）→ 不驗存在性' '' \
+'## 已驗證
+- 條件 1：mutation 樣本 `supabase/tests/99_nonexistent_mutant.sql` → 紅
 '
 
 # ==== ② 負樣本（≥4）====
@@ -265,6 +367,26 @@ expect 1 '②g（R3，i1）候選是既有檔名的後綴而非整字相等 → 
 expect 1 '②h（R3，i2）只出現在 .test.sh fixture heredoc 裡的假型別不算存在（排除自測 fixture 檔）' '`ExcludedFixtureOnlyTests`' \
 '## 已驗證
 - 條件 1：`ExcludedFixtureOnlyTests` 全綠
+'
+
+expect 1 '②i（R4，LS-228）supabase/migrations/*.sql 引用不存在的檔案 → 紅，訊息點名哪個路徑' '`supabase/migrations/20260101000000_does_not_exist.sql`' \
+'## 已驗證
+- 條件 1：`supabase/migrations/20260101000000_does_not_exist.sql:1` 核對通過
+'
+
+expect 1 '②j（R5，LS-228 R2，F1／F2 邊界示範改版：docs/ 目錄內指名一個不存在的檔案）(b2) 存在性檢查仍紅，即使 (b) 的 .md 無條件子字串已放行整列' '`docs/legal/does-not-exist-fixture.md`' \
+'## 已驗證
+- 條件 1：核對過 `docs/legal/does-not-exist-fixture.md` 的內容
+'
+
+expect 1 '②k（R5，LS-228 R2，F5）候選用 `..` 逃出 --repo——即使該路徑在 repo 外真的存在也判「找不到」' '`scripts/../../outside-escape.sh`' \
+'## 已驗證
+- 條件 1：核對過 `scripts/../../outside-escape.sh` 的內容
+'
+
+expect 1 '②l（R5，LS-228 R2，F1 新增類別）supabase/**/*.sh 白名單路徑引用不存在的檔案 → 紅，訊息點名哪個路徑' '`supabase/tests/does-not-exist.sh`' \
+'## 已驗證
+- 條件 1：核對過 `supabase/tests/does-not-exist.sh` 的內容
 '
 
 # ==== ③ --help／參數 ====
@@ -541,16 +663,17 @@ else
   fail=1
 fi
 
-# ==== ⑧（R3，m3）mutation：PATH_RE 拿掉新補的 .py/.sh/.md/.yml/.json → ①n 的正樣本必須改判紅 ====
+# ==== ⑧（R3，m3；R4／LS-228 縮小為 .py/.json）mutation：PATH_RE 拿掉 .py/.json → ①n 的正樣本必須改判紅
+#        （.sh/.md/.yml 已在 R4 移出 PATH_RE，改由 ⑬ 驗證 PATH_ANCHOR_RE 那條路） ====
 mut_path="$work/handoff_evidence_check.no-new-path-ext.py"
 awk '
   index($0, "# HANDOFF-EVIDENCE-PATH") > 0 { print "PATH_RE = re.compile(r\"\\.png|\\.log|\\.test\\.sh|scratchpad/|evidence/|\\.swift\\b\")  # HANDOFF-EVIDENCE-PATH"; next }
   { print }
 ' "$py" > "$mut_path"
 if grep -qF 'PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/|\.swift\b")  # HANDOFF-EVIDENCE-PATH' "$mut_path"; then
-  echo "✓ ⑧ mutate：確認已把 PATH_RE 拿掉 .py/.sh/.md/.yml/.json"
+  echo "✓ ⑧ mutate：確認已把 PATH_RE 拿掉 .py/.json"
   printf '%s' '## 已驗證
-- 條件 1：核對過 `docs/COLLABORATION.md:323` 的敘述
+- 條件 1：核對過 `some/config.json` 的內容
 ' > "$work/pathext.md"
   out_pathext="$(python3 "$mut_path" "$work/pathext.md" --repo "$R" 2>&1)"; rc_pathext=$?
   if [ "$rc_pathext" -eq 1 ] && printf '%s' "$out_pathext" | grep -qF '缺『怎麼驗』證據'; then
@@ -634,6 +757,155 @@ if grep -qF 'clause_end = start  # HANDOFF-NEGATION-AFTER' "$mut_negafter"; then
   fi
 else
   echo "✗ ⑪ mutate：找不到 HANDOFF-NEGATION-AFTER 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑫（R4，LS-228）mutation 負控：拿掉白名單路徑存在性驗證 → ②i 的負樣本（不存在的 .sql 路徑）
+#        必須改判過，證明②i 的紅是 HANDOFF-PATH-EXISTS 這條檢查造成的 ====
+mut_pathexists="$work/handoff_evidence_check.no-path-exists.py"
+awk '
+  index($0, "# HANDOFF-PATH-EXISTS") > 0 { print "        bad_paths = []  # HANDOFF-PATH-EXISTS"; next }
+  { print }
+' "$py" > "$mut_pathexists"
+if grep -qF 'bad_paths = []  # HANDOFF-PATH-EXISTS' "$mut_pathexists"; then
+  echo "✓ ⑫ mutate：確認已把白名單路徑存在性驗證恆改為空（等同一律判定存在）"
+  missing_sql_body='## 已驗證
+- 條件 1：`supabase/migrations/20260101000000_does_not_exist.sql:1` 核對通過
+'
+  printf '%s' "$missing_sql_body" > "$work/missingsql.md"
+  out_missingsql="$(python3 "$mut_pathexists" "$work/missingsql.md" --repo "$R" 2>&1)"; rc_missingsql=$?
+  if [ "$rc_missingsql" -eq 0 ]; then
+    echo "✓ ⑫ mutant（拿掉白名單路徑存在性驗證）：②i 的負樣本（不存在的 .sql 路徑）改判過——證明 HANDOFF-PATH-EXISTS 是原因"
+  else
+    echo "✗ ⑫ mutant 未如預期翻轉（實得 exit ${rc_missingsql}）" >&2
+    printf '%s\n' "$out_missingsql" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑫ mutate：找不到 HANDOFF-PATH-EXISTS 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑬（R4，LS-228）mutation 負控：has_evidence() 拿掉 PATH_ANCHOR_RE 判斷 → 只靠白名單路徑舉證的
+#        正樣本（①r）必須改判紅，證明白名單路徑舉證確實是這條規則造成的 ====
+mut_noanchor="$work/handoff_evidence_check.no-anchor-evidence.py"
+awk '
+  index($0, "# HANDOFF-HAS-EVIDENCE-PATH-ANCHOR") > 0 { print "    return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or COMMAND_RE.search(text))  # HANDOFF-HAS-EVIDENCE-PATH-ANCHOR"; next }
+  { print }
+' "$py" > "$mut_noanchor"
+if grep -qF 'return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or COMMAND_RE.search(text))  # HANDOFF-HAS-EVIDENCE-PATH-ANCHOR' "$mut_noanchor"; then
+  echo "✓ ⑬ mutate：確認已把 has_evidence() 的 PATH_ANCHOR_RE 判斷拿掉"
+  ts_only_body='## 已驗證
+- 條件 1：`supabase/functions/fixture/example.ts:1` 核對通過
+'
+  printf '%s' "$ts_only_body" > "$work/tsonly.md"
+  out_tsonly="$(python3 "$mut_noanchor" "$work/tsonly.md" --repo "$R" 2>&1)"; rc_tsonly=$?
+  if [ "$rc_tsonly" -eq 1 ] && printf '%s' "$out_tsonly" | grep -qF '缺『怎麼驗』證據'; then
+    echo "✓ ⑬ mutant（拿掉 PATH_ANCHOR_RE 舉證）：①r 型樣本改判紅——證明白名單路徑舉證確實是 PATH_ANCHOR_RE 這條規則造成的"
+  else
+    echo "✗ ⑬ mutant 未如預期翻轉（實得 exit ${rc_tsonly}）" >&2
+    printf '%s\n' "$out_tsonly" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑬ mutate：找不到 HANDOFF-HAS-EVIDENCE-PATH-ANCHOR 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑭（R5，LS-228 R2，F5）mutation 負控：拿掉 repo 邊界檢查（path_within_repo 恆回 True）→ ②k 的
+#        逃逸樣本必須改判過（存在），證明②k 的紅是 HANDOFF-PATH-BOUNDARY-CHECK 這條檢查造成的 ====
+mut_noboundary="$work/handoff_evidence_check.no-boundary.py"
+awk '
+  index($0, "# HANDOFF-PATH-BOUNDARY-CHECK") > 0 { print "    return True  # HANDOFF-PATH-BOUNDARY-CHECK"; next }
+  { print }
+' "$py" > "$mut_noboundary"
+if grep -qF 'return True  # HANDOFF-PATH-BOUNDARY-CHECK' "$mut_noboundary"; then
+  echo "✓ ⑭ mutate：確認已把 repo 邊界檢查恆改為 True（等同不檢查是否逃出 --repo）"
+  escape_body='## 已驗證
+- 條件 1：核對過 `scripts/../../outside-escape.sh` 的內容
+'
+  printf '%s' "$escape_body" > "$work/escape.md"
+  out_escape="$(python3 "$mut_noboundary" "$work/escape.md" --repo "$R" 2>&1)"; rc_escape=$?
+  if [ "$rc_escape" -eq 0 ]; then
+    echo "✓ ⑭ mutant（拿掉 repo 邊界檢查）：②k 的逃逸樣本改判過（因為 \$work/outside-escape.sh 確實存在）——證明 HANDOFF-PATH-BOUNDARY-CHECK 是原因"
+  else
+    echo "✗ ⑭ mutant 未如預期翻轉（實得 exit ${rc_escape}）" >&2
+    printf '%s\n' "$out_escape" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑭ mutate：找不到 HANDOFF-PATH-BOUNDARY-CHECK 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑮（R5，LS-228 R2，F4）mutation 負控：path_anchor_candidates() 的 skip 判準退回只有
+#        is_command_invocation_candidate 一種 → ①ad／①ae 的正樣本必須改判紅，證明 is_negated／
+#        is_mutation_context 這兩個新判準是原因 ====
+mut_nopathskip="$work/handoff_evidence_check.no-path-skip.py"
+awk '
+  index($0, "# HANDOFF-PATH-SKIP-CHECK") > 0 { print "        skip = is_command_invocation_candidate(block, m.start())  # HANDOFF-PATH-SKIP-CHECK"; next }
+  { print }
+' "$py" > "$mut_nopathskip"
+if grep -qF 'skip = is_command_invocation_candidate(block, m.start())  # HANDOFF-PATH-SKIP-CHECK' "$mut_nopathskip"; then
+  echo "✓ ⑮ mutate：確認已把 path_anchor_candidates() 的 skip 判準退回只有 is_command_invocation_candidate 一種"
+  neg_path_body='## 已驗證
+- 條件 1：`supabase/migrations/20990101000000_x.sql` 這個檔不存在，gate 正確判紅
+'
+  printf '%s' "$neg_path_body" > "$work/negpath.md"
+  out_negpath="$(python3 "$mut_nopathskip" "$work/negpath.md" --repo "$R" 2>&1)"; rc_negpath=$?
+  if [ "$rc_negpath" -eq 1 ] && printf '%s' "$out_negpath" | grep -qF '20990101000000_x.sql'; then
+    echo "✓ ⑮ mutant（否定詞）：①ad 的正樣本改判紅（20990101000000_x.sql 被當成引用驗存在）——證明否定詞判準是原因"
+  else
+    echo "✗ ⑮ mutant（否定詞）未如預期翻轉（實得 exit ${rc_negpath}）" >&2
+    printf '%s\n' "$out_negpath" | sed 's/^/    /' >&2
+    fail=1
+  fi
+
+  mut_path_body='## 已驗證
+- 條件 1：mutation 樣本 `supabase/tests/99_nonexistent_mutant.sql` → 紅
+'
+  printf '%s' "$mut_path_body" > "$work/mutpath.md"
+  out_mutpath="$(python3 "$mut_nopathskip" "$work/mutpath.md" --repo "$R" 2>&1)"; rc_mutpath=$?
+  if [ "$rc_mutpath" -eq 1 ] && printf '%s' "$out_mutpath" | grep -qF '99_nonexistent_mutant.sql'; then
+    echo "✓ ⑮ mutant（mutation 語境）：①ae 的正樣本改判紅——證明 mutation 語境判準是原因"
+  else
+    echo "✗ ⑮ mutant（mutation 語境）未如預期翻轉（實得 exit ${rc_mutpath}）" >&2
+    printf '%s\n' "$out_mutpath" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑮ mutate：找不到 HANDOFF-PATH-SKIP-CHECK 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑯（R5，LS-228 R2，F1）mutation 負控：PATH_RE 退回 LS-228 首版（拿掉 .sh/.md/.yml）→ ①y（根
+#        目錄 project.yml）／①z（裸檔名 db-reset-retry.sh）兩個正樣本必須改判紅，證明修復 merge-review
+#        R1 F1 的正是把這三個副檔名還原回 PATH_RE ====
+mut_r4regress="$work/handoff_evidence_check.r4-regression.py"
+awk '
+  index($0, "# HANDOFF-EVIDENCE-PATH") > 0 { print "PATH_RE = re.compile(r\"\\.png|\\.log|\\.test\\.sh|scratchpad/|evidence/|\\.swift\\b|\\.py\\b|\\.json\\b\")  # HANDOFF-EVIDENCE-PATH"; next }
+  { print }
+' "$py" > "$mut_r4regress"
+if grep -qF 'PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/|\.swift\b|\.py\b|\.json\b")  # HANDOFF-EVIDENCE-PATH' "$mut_r4regress"; then
+  echo "✓ ⑯ mutate：確認已把 PATH_RE 退回 LS-228 首版（拿掉 .sh/.md/.yml）"
+  printf '%s' '## 已驗證
+- 條件 1：核對過 `project.yml` 的內容
+' > "$work/rootyml.md"
+  out_rootyml="$(python3 "$mut_r4regress" "$work/rootyml.md" --repo "$R" 2>&1)"; rc_rootyml=$?
+  printf '%s' '## 已驗證
+- 條件 1：跑了 `db-reset-retry.sh` 全綠
+' > "$work/barename.md"
+  out_barename="$(python3 "$mut_r4regress" "$work/barename.md" --repo "$R" 2>&1)"; rc_barename=$?
+  if [ "$rc_rootyml" -eq 1 ] && [ "$rc_barename" -eq 1 ]; then
+    echo "✓ ⑯ mutant（PATH_RE 退回 LS-228 首版）：①y（project.yml）與①z（db-reset-retry.sh）雙雙改判紅——證明是這三個副檔名的還原修好了 merge-review R1 F1 的迴歸"
+  else
+    echo "✗ ⑯ mutant 未如預期翻轉（project.yml exit ${rc_rootyml}、db-reset-retry.sh exit ${rc_barename}，期望皆為 1）" >&2
+    printf '%s\n' "$out_rootyml" | sed 's/^/    /' >&2
+    printf '%s\n' "$out_barename" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑯ mutate：找不到 HANDOFF-EVIDENCE-PATH 標記，負控本身無效" >&2
   fail=1
 fi
 
