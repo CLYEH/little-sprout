@@ -16,15 +16,19 @@ enum AlbumsContentAssembler {
     ) async throws -> [AlbumSummary] {
         guard !rows.isEmpty else { return [] }
         let ids = rows.map(\.id)
-
-        let childLinks = try await apiClient.fetchAlbumChildren(albumIds: ids)
-        let childIdsByAlbum = Dictionary(grouping: childLinks, by: \.albumId)
-            .mapValues { links in links.map(\.childId) }
-
         let displayPathByAlbum: [UUID: String] = rows.reduce(into: [:]) { paths, row in
             paths[row.id] = displayPath(for: row)
         }
-        let signed = try await signedURLs(forPaths: Array(Set(displayPathByAlbum.values)), apiClient: apiClient)
+
+        // merge-review R2 minor-1：兩者互不相依（`fetchAlbumChildren` 只吃 `ids`，
+        // `signedURLs` 只吃 `displayPathByAlbum`，`fetchMedia` 反查已隨 LS-203 拿掉），平行
+        // 發出省一個 RTT——同 `TimelineContentAssembler.fetchDiaryContents` m5 的既有理由。
+        async let childLinksTask = apiClient.fetchAlbumChildren(albumIds: ids)
+        async let signedTask = signedURLs(forPaths: Array(Set(displayPathByAlbum.values)), apiClient: apiClient)
+        let (childLinks, signed) = try await (childLinksTask, signedTask)
+
+        let childIdsByAlbum = Dictionary(grouping: childLinks, by: \.albumId)
+            .mapValues { links in links.map(\.childId) }
 
         return rows.map { row in
             AlbumSummary(
