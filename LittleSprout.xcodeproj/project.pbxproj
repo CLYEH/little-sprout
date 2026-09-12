@@ -34,6 +34,7 @@
 		0B082F905D18BB1C48FCD6B6 /* PhotoCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2956BF7EEFC4095F0306AF4A /* PhotoCardView.swift */; };
 		0B135682647FD84B6E6E5E92 /* SettingsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD3CBB68CBE0464929AEABA /* SettingsModels.swift */; };
 		0B8A0DB73C4423B756633874 /* QASmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985785A57F53FA7B6C2252FA /* QASmokeTests.swift */; };
+		0C26B811F96F8122199B4E8A /* QADriver+LoginLanding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8935226D375AB85EFBC17CC3 /* QADriver+LoginLanding.swift */; };
 		0EBB91992D58C3FF21900433 /* UploadQueueSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00431FCAC56E01318E03FCFD /* UploadQueueSheetView.swift */; };
 		0F2F86603BE0C13DB1C9E552 /* ForkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B061439F3147E44FA344DFC /* ForkView.swift */; };
 		0F72FB6A09D4EA5C229698CF /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF885D756104B3EBAAD6DB2 /* WelcomeView.swift */; };
@@ -661,6 +662,7 @@
 		87513375A08C97FF0C5EB35F /* TimelineDayGrouping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineDayGrouping.swift; sourceTree = "<group>"; };
 		87CB2AF4E34834F3279C2367 /* SupabaseMediaUploadServiceDurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaUploadServiceDurationTests.swift; sourceTree = "<group>"; };
 		891013E5A75CD7CC488037D0 /* PendingAccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingAccountDeletionTests.swift; sourceTree = "<group>"; };
+		8935226D375AB85EFBC17CC3 /* QADriver+LoginLanding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "QADriver+LoginLanding.swift"; sourceTree = "<group>"; };
 		893682752F0A665802D5D435 /* AlbumsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsStoreTests.swift; sourceTree = "<group>"; };
 		8AFA10890A15EC69C5CB0BF9 /* MasonryLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasonryLayout.swift; sourceTree = "<group>"; };
 		8BECC7D79F1B9E53EABE6120 /* AvatarPickerLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarPickerLoader.swift; sourceTree = "<group>"; };
@@ -1452,6 +1454,7 @@
 			isa = PBXGroup;
 			children = (
 				AA1EFC1792C4BB1EA62606E2 /* QADriver.swift */,
+				8935226D375AB85EFBC17CC3 /* QADriver+LoginLanding.swift */,
 				985785A57F53FA7B6C2252FA /* QASmokeTests.swift */,
 				7006BAF63356FF9EA95F7134 /* QASupport.swift */,
 				77B2ADF90A1C1D0DF7CFA17B /* Fixtures */,
@@ -1955,6 +1958,7 @@
 				AC8A8F9C1879FC34779A78E6 /* PasswordSignInUITests.swift in Sources */,
 				DB02391F5C7C742DA21005B2 /* PushPrepromptUITests.swift in Sources */,
 				92FEF23707CA351E42C25C02 /* QAAccessibilityID.swift in Sources */,
+				0C26B811F96F8122199B4E8A /* QADriver+LoginLanding.swift in Sources */,
 				31A49F9904E6C7D2143C5CA4 /* QADriver.swift in Sources */,
 				0B8A0DB73C4423B756633874 /* QASmokeTests.swift in Sources */,
 				7B8176B2BD7383B37347B3AB /* QASupport.swift in Sources */,

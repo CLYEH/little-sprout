@@ -120,6 +120,10 @@ struct PushPrepromptView: View {
                     .foregroundStyle(Color.lsTextSecondary)
                     .frame(maxWidth: .infinity, minHeight: 48)
             }
+            // LS-217 QA R1 FAIL（Linear comment `e4863482`）修正：`QADriver` 需要在真實 app 導覽
+            // （非 `TapTargetGateHarness`）中辨識這個畫面出現，identifier 不影響 VoiceOver 朗讀
+            // （見 `QAAccessibilityID` 檔頭），同該檔既有慣例不圍 `#if DEBUG`。
+            .accessibilityIdentifier(QAAccessibilityID.pushPrepromptSkipButton)
         }
         .padding(.bottom, AppSpacing.block)
     }
