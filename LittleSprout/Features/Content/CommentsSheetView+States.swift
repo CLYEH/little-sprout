@@ -122,7 +122,15 @@ extension CommentsSheetView {
 }
 
 /// 空狀態的空白沖印品（`TnxXE` `K1yE6j`）——同 `ProfilePrintChip` 的白邊＋左上／右下角托視覺
-/// 語言，但內頁完全透明（`Empty Page` 節點 fill 為 `#00000000`：沒有照片，也沒有人像 icon）。
+/// 語言，但內頁完全透明（`Empty Page` 節點 `HwcGv` fill 為 `#00000000`：沒有照片，也沒有人像
+/// icon）。merge-review R1 m6：淺色外觀下 `$print-paper`／`$surface` 同色（皆
+/// `#FBEBEC`），若只靠內頁透明會讓整張卡片在淺色模式視覺消失——離線讀 `.pen` `K1yE6j` 節點
+/// 補回設計原本就有、先前遺漏的兩層：外框 `$paper-edge` 描邊＋`$paper-shadow` 陰影（稿面
+/// Notes `EclPC` MJ-5「換成空白沖印品（白邊＋左上/右下角托＋`$print-paper` 空內頁）」明講
+/// 是靠這道「白邊」可見，不是內頁本身），以及內頁 `HwcGv` 的 `$border` 描邊（把透明內頁的
+/// 邊界畫出來，而不是無邊框的純色塊）——三者皆既有 `Color.lsPaperEdge`／`Color.lsPaperShadow`／
+/// `Color.lsBorder` token，未新增或修改任何 token 值。稿面卡片為直角方形（無 cornerRadius
+/// 欄位，同 `ppXvK`「Print」等其餘沖印品 frame），故移除先前誤加的 8pt 圓角裁切。
 private struct EmptyPrintView: View {
     private let outerSize: CGFloat = 120
     private let innerSize: CGFloat = 104
@@ -130,13 +138,17 @@ private struct EmptyPrintView: View {
     private let cornerOut: CGFloat = 5
 
     var body: some View {
-        Color.clear
-            .frame(width: innerSize, height: innerSize)
-            .background(Color.lsPrintPaper)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+        Color.lsPrintPaper
+            .frame(width: outerSize, height: outerSize)
+            .overlay(Rectangle().strokeBorder(Color.lsPaperEdge, lineWidth: 1))
+            .shadow(color: Color.lsPaperShadow, radius: 6, x: 0, y: 3)
+            .overlay(
+                Rectangle()
+                    .strokeBorder(Color.lsBorder, lineWidth: 1)
+                    .frame(width: innerSize, height: innerSize)
+            )
             .overlay(corner(.topLeading, alignment: .topLeading, out: -cornerOut))
             .overlay(corner(.bottomTrailing, alignment: .bottomTrailing, out: cornerOut))
-            .frame(width: outerSize, height: outerSize)
             .accessibilityHidden(true)
     }
 
