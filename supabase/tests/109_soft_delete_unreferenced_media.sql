@@ -36,6 +36,13 @@
 -- 第 7 段（來源 LS-96 comment c601ccd0）：orphan_scan_cursor 專屬 grant／RLS
 -- 正向對照——這張表是唯一由 EF 直接經 PostgREST 讀寫的新表，60_default_privileges.sql
 -- 第 1 段的通掃只驗證機制本身，這裡補實際 grant 狀態的專屬斷言。
+--
+-- LS-227（DESTRUCTIVE，v1 移除）：`public.purge_storage_queue_enqueue_orphans`
+-- （text, uuid, text[]，returns integer）已由 LS-222 的 `_v2` 全面取代，LS-223
+-- sweeper（comment `3cbe31bb`）確認生產零呼叫端、唯一呼叫端就是本檔原第 4 段
+-- 自測——使用者 DESTRUCTIVE-APPROVED 核可後移除函式本體，原第 4 段測試一併
+-- 刪除（第 3／5／6／7 段驗證的是仍然存在的函式，保留，段號不重排，避免無關
+-- diff）。
 
 \set ON_ERROR_STOP on
 
@@ -307,59 +314,6 @@ begin
   end if;
 
   raise notice 'ok：purge_storage_unknown_media_paths 正確排除活列與 30 天救援窗內已軟刪列（原圖＋縮圖），只回傳真正未知的路徑 %', v_result;
-end;
-$$;
-
-rollback;
-
--- ===========================================================================
--- 4.（LS-213 R2，merge-review R1 F4）public.purge_storage_queue_enqueue_orphans
---    路徑驗證：不符 p_family_id 前綴、或不符合 private.is_media_object_path()
---    形狀的路徑一律丟掉，不寫入佇列。
--- ===========================================================================
-begin;
-
-do $$
-declare
-  v_family uuid := 'dc300000-0000-4000-8000-000000000001';
-  v_other_family uuid := 'dc300000-0000-4000-8000-000000000099';
-  v_media_id uuid := 'dc300000-0000-4000-8000-000000000010';
-  v_valid_path text;
-  v_wrong_prefix_path text;
-  v_bad_shape_path text;
-  v_n int;
-  v_result int;
-begin
-  set local role postgres;
-
-  v_valid_path := v_family::text || '/2026/07/' || v_media_id::text || '.jpg';
-  v_wrong_prefix_path := v_other_family::text || '/2026/07/' || v_media_id::text || '.jpg';
-  v_bad_shape_path := v_family::text || '/not-a-valid-media-path.txt';
-
-  select public.purge_storage_queue_enqueue_orphans(
-    'media', v_family, array[v_valid_path, v_wrong_prefix_path, v_bad_shape_path]
-  ) into v_result;
-
-  if v_result <> 1 then
-    raise exception 'FAIL：三條路徑裡只有 1 條合法（前綴符合 p_family_id 且形狀合規），應該只排入 1 筆，實際回傳 %', v_result;
-  end if;
-
-  select count(*) into v_n from public.purge_storage_queue where object_path = v_valid_path;
-  if v_n <> 1 then
-    raise exception 'FAIL：合法路徑 % 應該已排入佇列', v_valid_path;
-  end if;
-
-  select count(*) into v_n from public.purge_storage_queue where object_path = v_wrong_prefix_path;
-  if v_n <> 0 then
-    raise exception 'FAIL：家庭前綴不符的路徑 % 不該被排入佇列', v_wrong_prefix_path;
-  end if;
-
-  select count(*) into v_n from public.purge_storage_queue where object_path = v_bad_shape_path;
-  if v_n <> 0 then
-    raise exception 'FAIL：形狀不合規的路徑 % 不該被排入佇列', v_bad_shape_path;
-  end if;
-
-  raise notice 'ok：purge_storage_queue_enqueue_orphans 正確丟棄家庭前綴不符與形狀不合規的路徑，只排入合法的那一筆';
 end;
 $$;
 
