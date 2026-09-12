@@ -59,8 +59,12 @@ extension CommentsSheetView {
         Task {
             let success = await store.send(body: body, authorID: viewerUserID, authorDisplayName: authorDisplayName)
             if success {
-                draft = ""
+                // LS-237 修（池 `d17bed11` i3）：無條件 `draft = ""` 會在「送出往返期間使用者
+                // 又打了新字」時把新字一併清掉（`body` 已在按下當下正確快照，只差清空這一步沒
+                // 比對是否仍是同一份草稿）——只有草稿沒被改過才清空。
+                if draft == body { draft = "" }
                 draftSendSucceededTick += 1
+                syncCommentCountIfKnown()
             } else if case .failure(let error) = store.sendState,
                       !CommentsErrorPresentation.make(from: error).isTargetGone {
                 // merge-review R1 m3：LS026（目標已刪）已經由 `targetGoneError` 把整張 sheet
@@ -70,5 +74,25 @@ extension CommentsSheetView {
                 sendError = error
             }
         }
+    }
+
+    /// LS-237 修（池 `d17bed11` i4）：`sendTapped()` 用的是 unstructured `Task`，sheet 若在
+    /// 送出仍在飛行中被關閉，`CommentsSheetView.body` 的 `.onChange(of: store.knownExactCount)`
+    /// 已經隨 View 卸載、不會再觸發——這次送出造成的計數變化本來要等下次重開同一則留言 sheet
+    /// 才會同步回互動列（無資料遺失：送出本身仍在背景完成，只有「回報計數」這一步被錯過）。
+    /// 兩種修法擇一：(a) 改用可取消的 `Task` 存到 `@State`、`.onDisappear` 呼叫 `cancel()`；
+    /// (b) 送出完成後直接回寫 `TimelineStore`。這裡選 (b)：(a) 會讓「使用者關閉 sheet 時送出
+    /// 仍在飛行中」這個情境從「送出仍會完成」退化成「留言真的送不出去」（`cancel()` 會連
+    /// `store.send()` 本身的網路呼叫一起中止），比原本的小落差更嚴重；(b) 不改變送出本身的
+    /// 行為，只是把「回報計數」這一步從倚賴 View 是否還在畫面上，改成直接呼叫
+    /// `timelineStore`（這個 View 之外的長生命週期物件，同 `AlbumsStore` 之於
+    /// `AlbumDetailView` 的角色）。抽成 internal 方法（同 `CommentsSheetView
+    /// .headCommentCountText` 既有慣例）方便單元測試：不需要真的把 View 安裝到畫面上，直接
+    /// 建構值就能呼叫並驗證。`.onChange` 仍保留給「使用者還在畫面上、`loadEarlier()` 之類的
+    /// 其他路徑改變 `knownExactCount`」的一般情況，兩者不衝突（都只是把同一個值寫進
+    /// `timelineStore`，重複寫入是無害的 no-op）。
+    func syncCommentCountIfKnown() {
+        guard let count = store.knownExactCount else { return }
+        timelineStore.setCommentCount(count, forKey: targetKey)
     }
 }
