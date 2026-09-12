@@ -183,7 +183,16 @@ final class InteractionRowUITests: XCTestCase {
 
         diaryCard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
 
-        XCTAssertFalse(app.staticTexts["時間軸"].exists, "點擊日記卡本體（非互動列按鈕）應該正常導覽離開時間軸")
+        // LS-230（merge-review R4 `4be70111` m3）：原本 tap 後立即 `XCTAssertFalse(app.staticTexts["時間軸"]
+        // .exists, …)` 沒有任何等待——`exists` 是一次性快照，CI runner 負載高、導覽轉場尚未完成時「時間軸」
+        // 標題仍在 hierarchy 裡，就會誤判失敗（兩度命中：LS-216 R3 PR run／09-12 development push run
+        // 34668565895）。改成正向等待目的頁（`DiaryDetailView`）的識別元素出現——語意更貼近測試想證的事
+        // 「點卡片本體會導覽到日記詳情」，也是決定性同步點（成功即代表轉場已完成，不受 runner 負載影響）。
+        let diaryDetailBody = app.staticTexts[QAAccessibilityID.diaryDetailBody]
+        XCTAssertTrue(
+            diaryDetailBody.waitForExistence(timeout: 10),
+            "點擊日記卡本體（非互動列按鈕）應該正常導覽到日記詳情頁"
+        )
     }
 
     // MARK: - Helpers（同 `ContentActionsAX3UITests` 既有寫法，不同 target 無法共用 private 方法）
