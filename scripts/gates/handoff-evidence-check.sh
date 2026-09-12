@@ -22,7 +22,7 @@ case "${1:-}" in
 行起，或標題含「驗收」／「查實」如「逐條驗收」「逐條查實」）的每一個列項，要求每項至少含一種
 「怎麼驗」證據：測試名（存在性驗證，見 handoff_evidence_check.py 檔頭）、路徑（.png/.log/.test.sh/
 scratchpad//evidence//.swift/.py/.sh/.md/.yml/.json，子字串比對不驗證存在）、白名單目錄路徑（必須
-驗證真的存在：supabase/functions/**/*.ts、supabase/migrations/*.sql、
+驗證真的存在且未逃出 --repo：supabase/functions/**/*.ts、supabase/migrations/*.sql、
 supabase/tests/*.sql、supabase/**/*.sh、docs/**/*.md、.claude/**/*.md、scripts/**/*.sh、
 .github/workflows/*.yml），或命令（xcodebuild／bash scripts/／gh run view／.xcresult）。
 exit：0＝全過；1＝有違規（含引用的白名單路徑不存在）；2＝參數／環境錯誤。

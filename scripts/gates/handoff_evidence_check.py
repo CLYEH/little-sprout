@@ -65,8 +65,11 @@
       `supabase/tests/*.sql`、`supabase/**/*.sh`、`docs/**/*.md`、`.claude/**/*.md`、`scripts/**/*.sh`、
       `.github/workflows/*.yml`（可帶 `:行號`／`:起-迄`，冒號之後的內容不影響比對，正規表示式在副
       檔名處就結束）。與 (b) 不同，這批**必須驗證檔案在 repo 內真實存在**（`os.path.isfile`，相對
-      `--repo` 根目錄——不是 `git ls-files`，未被 git 追蹤但實際存在的檔案也算存在）——不存在仍判紅
-      並點名哪個路徑找不到（`HANDOFF-PATH-EXISTS`）。範圍邊界刻意收緊、不是疏漏：
+      `--repo` 根目錄——不是 `git ls-files`，未被 git 追蹤但實際存在的檔案也算存在；**R5（LS-228
+      R2，F5）**：候選先 `os.path.normpath` 正規化並確認仍落在 `--repo` 根目錄之內才驗存在，見
+      `path_within_repo`——字元類別 `[\\w.-]+` 涵蓋 `..`，不正規化的話 `scripts/../../evil.sh` 這類
+      候選能逃出 `--repo` 去檢查任意檔案是否存在）——不存在（或逃出 repo）仍判紅並點名哪個路徑找不到
+      （`HANDOFF-PATH-EXISTS`）。範圍邊界刻意收緊、不是疏漏：
         - `supabase/migrations/*.sql`／`supabase/tests/*.sql` 只認**直接掛在該目錄下**的檔案，不含
           `**`——即使 `supabase/tests/concurrency/*.sql` 底下也有真實檔案，這是票文字面 `*.sql` 的
           邊界，不做「放寬到任意路徑」（LS-228 範圍「不做」明文禁止）。
@@ -377,6 +380,24 @@ def path_anchor_candidates(block):
     return sorted(out.items())
 
 
+def path_within_repo(repo, p):
+    """F5（merge-review R1 `43e2f60e`）：候選正規化後仍須落在 `--repo` 根目錄之內——
+    `PATH_ANCHOR_RE` 的字元類別 `[\\w.-]+` 涵蓋 `..`，`scripts/../../outside.sh` 這類候選若不正規化
+    直接餵給 `os.path.isfile`，會逃出 `--repo` 去檢查任意檔案是否存在。用 `os.path.normpath` 正規化
+    後比對是否仍以 `repo` 的絕對路徑為前綴（`os.sep` 結尾，避免 `/repo-evil` 誤判為 `/repo` 的
+    子目錄）。"""
+    repo_abs = os.path.normpath(os.path.abspath(repo))
+    full = os.path.normpath(os.path.join(repo_abs, p))
+    return full == repo_abs or full.startswith(repo_abs + os.sep)  # HANDOFF-PATH-BOUNDARY-CHECK
+
+
+def path_exists_in_repo(repo, p):
+    """白名單路徑存在性驗證——正規化候選後先確認未逃出 `--repo`（見 `path_within_repo`），
+    再用 `os.path.isfile` 驗證真的存在。"""
+    full = os.path.normpath(os.path.join(os.path.abspath(repo), p))
+    return path_within_repo(repo, p) and os.path.isfile(full)
+
+
 def has_evidence(text):
     return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or PATH_ANCHOR_RE.search(text) or COMMAND_RE.search(text))  # HANDOFF-HAS-EVIDENCE-PATH-ANCHOR
 
@@ -420,8 +441,9 @@ def run(path, repo):
         candidates = test_name_candidates(block)
         bad_names = [n for n, skip in candidates if not skip and not test_name_exists(repo, n)]  # HANDOFF-BADNAMES-CHECK
         # R4（LS-228）：白名單目錄路徑（supabase/functions|migrations|tests、supabase（.sh）、docs、
-        # .claude、scripts、.github/workflows）必須驗證真的存在於 repo，不存在仍判紅並點名哪個路徑。
-        bad_paths = [p for p, skip in path_anchor_candidates(block) if not skip and not os.path.isfile(os.path.join(repo, p))]  # HANDOFF-PATH-EXISTS
+        # .claude、scripts、.github/workflows）必須驗證真的存在於 repo（且未逃出 --repo，見 F5），
+        # 不存在仍判紅並點名哪個路徑。
+        bad_paths = [p for p, skip in path_anchor_candidates(block) if not skip and not path_exists_in_repo(repo, p)]  # HANDOFF-PATH-EXISTS
         if missing_evidence:
             print(
                 "✗ handoff-evidence-check：第 %d 行起的列項缺『怎麼驗』證據（須含測試名、"
