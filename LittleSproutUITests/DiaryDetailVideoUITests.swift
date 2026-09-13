@@ -7,23 +7,29 @@ import XCTest
 /// 1. 「留言 sheet 開著時點影片」——`playVideo()` 先 tap、簽名 URL 回來才設狀態；如果簽名
 ///    回來時留言 sheet 恰好也已經被觸發開啟，晚到的影片必須正確接手（把留言 sheet 收起、換成
 ///    全螢幕播放器），不是被系統忽略或兩者同時呈現。`.diaryDetailWithVideo` harness（見
-///    `TapTargetGateHarness+Safety.swift`）用 `signDelayNanoseconds: 3_000_000_000` 讓「點
-///    影片、簽名回來」之間有個穩定的窗口——這裡先點影片（啟動非同步簽名）、緊接著點留言鈕
-///    （此時還沒有任何東西呈現，留言鈕點得到），留言 sheet 應該先正確開啟；接著等簽名回來，
+///    `TapTargetGateHarness+DiaryDetailVideo.swift`）用 `signDelayNanoseconds: 3_000_000_000`
+///    讓「點影片、簽名回來」之間有個穩定的窗口——這裡先點影片（啟動非同步簽名）、緊接著點留言
+///    鈕（此時還沒有任何東西呈現，留言鈕點得到），留言 sheet 應該先正確開啟；接著等簽名回來，
 ///    畫面應該換成影片全螢幕。
+/// 2. 「影片全螢幕關閉後點『⋯』」——AVKit 播放器本身有系統原生的「關閉」鈕，關閉後應該正確
+///    回到 `DiaryDetailView` 並且「⋯」仍能正確開出內容操作表，不會因為剛才影片用過同一個
+///    `activeSheet` 而卡住。
 ///
-///    **斷言選型說明（R1 實測踩過的坑）**：一開始想斷言「`interactionRow` 的留言鈕從
-///    accessibility tree 消失」佐證 `fullScreenCover` 蓋滿全螢幕——實測發現 SwiftUI 的
-///    `.fullScreenCover` **不會**把背景內容從 XCUITest 的 accessibility 快照移除（`exists`
-///    仍回 `true`，即使畫面上完全看不到、點不到），跟 `.sheet` 真正 dismiss 後內容確實消失
-///    的行為不同（本檔 debug 探針實測：`moreButton.exists` 在影片呈現後 4.5 秒仍是 `true`，
-///    `UnsupportedContentIndicator` 則精準在延遲的第 3 秒從 `false` 轉 `true`）。改成斷言
-///    `UnsupportedContentIndicator`（`AVPlayerViewController` 內容載入失敗態下唯一穩定、且
-///    只有影片全螢幕真的呈現時才會出現的元素，harness 用假 URL 必定載入失敗）——這是正向存在
-///    斷言，不是脆弱的「背景元素消失」負向斷言。
-/// 2. 「影片全螢幕關閉後點『⋯』」——AVKit 播放器本身有系統原生的「關閉」鈕（`Close Button`，
-///    點一下畫面內容區才會浮現控制列，同真實使用者操作），關閉後應該正確回到 `DiaryDetailView`
-///    並且「⋯」仍能正確開出內容操作表，不會因為剛才影片用過同一個 `activeSheet` 而卡住。
+/// **R2（dev CI run `34743983632` FAIL 根因修正，非猜測——逐行核對 xcresult
+/// `test-results activities` 時間軸）**：R1 版本 `signedURL` 指向假的
+/// `https://example.com/harness-video.mp4`——這個網域*真的能連上*（IANA 保留測試網域，回一個
+/// HTML 頁面），`AVPlayer` 因此把它當成「內容存在但格式不支援」（`UnsupportedContentIndicator`），
+/// 在 dev CI（iOS 26.2）上這個狀態維持數秒後**系統自己把整個呈現關掉**——`關閉` 鈕的
+/// `waitForExistence(timeout: 5)` 確認存在（通過）後、`.tap()` 內部重新尋找元素的 1–3 秒窗口
+/// 內 `fullScreenCover` 已經消失，最終回報「找不到『關閉』」，此時畫面已經是 `DiaryDetailView`
+/// 本體。本機 iOS 26.0 沒有重現；是 iOS 26.2 上 AVKit 對「內容不支援」狀態的自動收起時機
+/// 差異，**不是**本票互斥邏輯（`sheetBinding`／`videoBinding`）的缺陷——失敗發生在
+/// `activeSheet` 已經正確等於 `.video(...)` 之後，是 AVKit 自己把呈現關掉，不是被留言
+/// sheet／內容操作表搶走。改用 `TapTargetGateHarness+DiaryDetailVideo.swift` 本機合成的真實
+/// 可播放影片（見該檔文件註解）——真正有效的內容不會進入「不支援」狀態，不會觸發那個自動
+/// 收起行為。另外兩處收斂：(1) 點影片鈕前先確認 `hittable`（不只是 `exists`）；(2) 找「關閉」
+/// 鈕改用有界重試（`waitForCloseButtonAppearing`，最多 3 次、每次 10 秒）——AVKit 控制列
+/// 「一開始就浮現」與「需要先點一下內容區才浮現」兩種情況都收斂，不預先假設是哪一種。
 @MainActor
 final class DiaryDetailVideoUITests: XCTestCase {
     func testVideoTap_whileCommentsSheetOpen_videoTakesOverCorrectly() {
@@ -32,6 +38,7 @@ final class DiaryDetailVideoUITests: XCTestCase {
 
         let videoTile = app.buttons["影片 0:05，點兩下播放"]
         XCTAssertTrue(videoTile.waitForExistence(timeout: 10), "詳情頁瀑布流應該有一支可播放的影片格")
+        XCTAssertTrue(waitForHittable(videoTile, timeout: 5), "影片格應該是可點擊狀態，不只是存在")
         videoTile.tap()
 
         // 影片簽名仍在飛行中（harness 種了 3 秒延遲，見 `diaryDetailWithVideoHost` 文件註解）
@@ -45,14 +52,19 @@ final class DiaryDetailVideoUITests: XCTestCase {
         let emptyStateText = app.staticTexts["還沒有人留言"]
         XCTAssertTrue(emptyStateText.waitForExistence(timeout: 2), "應該先正確呈現留言 sheet")
 
-        // 等影片簽名回來接手——見上方文件註解，用 `UnsupportedContentIndicator` 的正向存在
-        // 斷言，不是背景元素消失的負向斷言。timeout 8 秒：留給 3 秒延遲＋前面幾步 XCUITest
-        // 動作本身的耗時餘裕。
-        let videoIndicator = app.images["UnsupportedContentIndicator"]
-        XCTAssertTrue(videoIndicator.waitForExistence(timeout: 8), "影片簽名回來後應該正確接手、呈現影片全螢幕")
+        // 等影片簽名回來接手——`.sheet` 真的 dismiss 後內容確實從 accessibility tree 消失
+        // （跟背景元素在 `fullScreenCover` 蓋上後仍持續 `exists` 不同，見檔頭 R2 補充）。
+        // timeout 8 秒：留給 3 秒延遲＋前面幾步 XCUITest 動作本身的耗時餘裕。
         XCTAssertTrue(
-            waitForNonExistence(emptyStateText, timeout: 3),
-            "影片全螢幕接手後，留言 sheet 應該已經被收起（是換掉，不是疊在旁邊）"
+            waitForNonExistence(emptyStateText, timeout: 8), "影片簽名回來後應該把留言 sheet 收起，換成影片全螢幕"
+        )
+
+        // 進一步確認「收起的是換成影片全螢幕」而不是其他非預期狀態——有界重試找系統原生
+        // 「關閉」鈕（見檔頭文件註解），找得到就是真的在播放器畫面上。
+        let closeButton = app.buttons["關閉"]
+        XCTAssertTrue(
+            waitForCloseButtonAppearing(closeButton, in: app),
+            "留言 sheet 收起後應該是換成影片全螢幕（找得到系統原生的關閉鈕）"
         )
     }
 
@@ -62,23 +74,17 @@ final class DiaryDetailVideoUITests: XCTestCase {
 
         let videoTile = app.buttons["影片 0:05，點兩下播放"]
         XCTAssertTrue(videoTile.waitForExistence(timeout: 10), "詳情頁瀑布流應該有一支可播放的影片格")
+        XCTAssertTrue(waitForHittable(videoTile, timeout: 5), "影片格應該是可點擊狀態，不只是存在")
         videoTile.tap()
 
         // `videoTile` 點下後仍要等 harness 種的 3 秒延遲（見 `diaryDetailWithVideoHost` 文件
-        // 註解）簽名回來才會真的呈現全螢幕播放器；`UnsupportedContentIndicator` 見上一支測試
-        // 文件註解的斷言選型說明。
-        let videoIndicator = app.images["UnsupportedContentIndicator"]
-        XCTAssertTrue(videoIndicator.waitForExistence(timeout: 8), "影片簽名回來後應該正確呈現全螢幕播放器")
-
-        // AVKit 播放器控制列預設收起，點一下內容區才會浮現（同真實使用者操作）。
-        videoIndicator.tap()
-
+        // 註解）簽名回來才會真的呈現全螢幕播放器；AVKit 控制列可能一開始就浮現、也可能需要先
+        // 點一下內容區才浮現——見檔頭文件註解的有界重試。
         let closeButton = app.buttons["關閉"]
-        XCTAssertTrue(closeButton.waitForExistence(timeout: 5), "點一下內容區應該浮現播放器控制列，包含系統原生的關閉鈕")
+        XCTAssertTrue(waitForCloseButtonAppearing(closeButton, in: app), "應該正確呈現全螢幕播放器＋系統原生的關閉鈕")
         closeButton.tap()
 
         let moreButton = app.buttons["更多操作"]
-        XCTAssertTrue(waitForNonExistence(videoIndicator, timeout: 5), "關閉影片後全螢幕播放器應該已經收起")
         XCTAssertTrue(moreButton.waitForExistence(timeout: 5), "關閉影片後應該回到詳情頁本體，看得到「更多操作」")
         moreButton.tap()
 
@@ -88,13 +94,35 @@ final class DiaryDetailVideoUITests: XCTestCase {
         )
     }
 
+    /// AVKit 控制列（含系統原生「關閉」鈕）可能一開始就浮現、也可能需要先點一下內容區才浮現
+    /// （且會在數秒後自動再收起）——有界重試：先直接等一下關閉鈕，等不到才點一次畫面中央
+    /// 再重試，不預先假設是哪一種情況。見檔頭文件註解 R2 根因分析（dev CI run
+    /// `34743983632`）；點畫面中央用座標（不用元素參照）——控制列收起時沒有可穩定取到的
+    /// 元素代表內容區。
+    private func waitForCloseButtonAppearing(
+        _ closeButton: XCUIElement, in app: XCUIApplication, maxAttempts: Int = 3, timeoutPerAttempt: TimeInterval = 10
+    ) -> Bool {
+        let center = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        for attempt in 1...maxAttempts {
+            if closeButton.waitForExistence(timeout: timeoutPerAttempt) { return true }
+            if attempt < maxAttempts { center.tap() }
+        }
+        return false
+    }
+
     /// `XCTNSPredicateExpectation` 等「停止存在」——同 `SettingsViewIPadTests`／
     /// `DiaryDetailCommentsUITests` 既有的 `waitForNonExistence` helper（LS-237 第 8 項教訓：
-    /// 一次性 `.exists` 快照在關閉動畫還沒跑完的瞬間可能誤判成「還在」）。這裡只用在真正會被
-    /// 移除的元素上（`.sheet` 內容、`fullScreenCover` 本身），不用在 `fullScreenCover` 背景的
-    /// 元素——見上方文件註解，那類元素 `.exists` 不會轉 `false`。
+    /// 一次性 `.exists` 快照在關閉動畫還沒跑完的瞬間可能誤判成「還在」）。
     private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    /// 同 `SettingsViewIPadTests` 既有的 `waitForHittable` helper——`.exists` 只確認元素在
+    /// accessibility tree 上，不保證真的可點；點影片鈕前確認 `hittable` 才是同真實使用者操作
+    /// 對齊的同步點。
+    private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: element)
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 }
