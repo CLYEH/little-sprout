@@ -39,8 +39,7 @@ extension XCUIElement {
     /// 為，且與 merge-review R1 M2 要求的「降低取樣成本」方向相反。若之後同型故障仍伴隨
     /// TOCTOU（而非本次的 `frame` 恆為 `CGRectNull`）再評估。
     ///
-    /// `pollInterval` 只給測試用（重現／驗證用），正常呼叫一律用預設值。
-    func waitForHittable(timeout: TimeInterval, pollInterval: TimeInterval = 0.5) -> Bool {
+    func waitForHittable(timeout: TimeInterval) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while true {
             if isSafelyHittable {
@@ -49,9 +48,14 @@ extension XCUIElement {
             if Date() >= deadline {
                 return false
             }
-            Thread.sleep(forTimeInterval: min(pollInterval, max(deadline.timeIntervalSinceNow, 0)))
+            Thread.sleep(forTimeInterval: min(Self.hittablePollInterval, max(deadline.timeIntervalSinceNow, 0)))
         }
     }
+
+    /// merge-review R1 m2：R1 版加了 `pollInterval` 參數但沒有任何呼叫點或測試傳它——票文
+    /// 明訂「語意不變、呼叫端零改動」，這是未被要求的可設定性（CLAUDE.md Rule 2），移除，
+    /// 要用時再加。
+    private static let hittablePollInterval: TimeInterval = 0.5
 
     /// `waitForHittable` 的取樣前置檢查：只有 `exists` 且 `frame` 看起來有效時才去讀
     /// `isHittable`——`frame` 在轉場中段可能暫時是零大小或含 NaN／Infinite 分量，此時讀
