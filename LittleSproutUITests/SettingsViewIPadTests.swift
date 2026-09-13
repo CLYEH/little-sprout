@@ -164,7 +164,11 @@ final class SettingsViewIPadTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
 
-        app.buttons["帳號"].tap()
+        // LS-253 R2（merge-review R1 m1）：與家庭／內容與安全／法律同類，「帳號」sidebar 切換
+        // tap 也補上 waitForHittable 同步點——同一種轉場競速風險，同檔其餘四處都已補過。
+        let accountTab = app.buttons["帳號"]
+        XCTAssertTrue(waitForHittable(accountTab, timeout: 5), "「帳號」sidebar 列應該可點擊")
+        accountTab.tap()
         XCTAssertTrue(app.buttons["刪除帳號"].waitForExistence(timeout: 5), "切到「帳號」後應該看得到「刪除帳號」列")
 
         assertPushThenBackReturnsToList(
@@ -212,8 +216,13 @@ final class SettingsViewIPadTests: XCTestCase {
         // 「不存在」——tap 後 dismiss 動畫還沒跑完的那個瞬間，第一次輪詢就可能量到「還存在」，
         // `waitForExistence` 因此立刻回傳 `true`（不會等滿 3 秒看它會不會消失），斷言就此
         // 誤判失敗。改用真正等「停止存在」的 `waitForNonExistence`。
+        // LS-253 R2（merge-review R1 M1）：timeout 由 3s 拉到 10s——run 34741136505 attempt 1
+        // 證實 sheet 其實有關掉（下一行馬上點到「隱私權政策」），純粹是忙碌 runner 上單次
+        // accessibility snapshot 就吃掉 2.3s，3s 只夠輪詢 1–2 次；3s 也是全 repo
+        // `waitForNonExistence` 呼叫裡唯一的離群值（本檔 L51 用 10、`ContentActionsUITests.swift`／
+        // `DiaryDetailCommentsUITests.swift` 用 5），對齊本檔 L51 同類「轉場後等消失」情境。
         XCTAssertTrue(
-            waitForNonExistence(closeButton, timeout: 3), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）"
+            waitForNonExistence(closeButton, timeout: 10), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）"
         )
 
         let privacyRow = app.buttons["隱私權政策"]
@@ -249,7 +258,13 @@ final class SettingsViewIPadTests: XCTestCase {
 
         XCTAssertEqual(selectedLabels(), ["個人"], "預設應該恰好一列帶「已選取」訊號，且是「個人」")
 
-        app.buttons["家庭"].tap()
+        // LS-253 R2（merge-review R1 m1）：這裡 tap 後直接同步讀 `selectedLabels()`，本檔最脆的
+        // 一行——tap 前補 `waitForHittable` 同步點；tap 後讀值前先確認「家庭」列本身仍在
+        // accessibility tree 裡（`waitForExistence`）才讀取它的 value，避免轉場瞬間讀到過渡態。
+        let familyTab = app.buttons["家庭"]
+        XCTAssertTrue(waitForHittable(familyTab, timeout: 5), "「家庭」sidebar 列應該可點擊")
+        familyTab.tap()
+        XCTAssertTrue(familyTab.waitForExistence(timeout: 5), "點擊「家庭」後該列應仍存在，才能讀取其 accessibility value")
         XCTAssertEqual(selectedLabels(), ["家庭"], "點擊「家庭」後「已選取」訊號應該恰好移到「家庭」，其餘四列都不再帶")
     }
 }
