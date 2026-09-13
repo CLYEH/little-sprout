@@ -63,6 +63,14 @@ create table public.growth_records (
   constraint growth_records_height_positive check (height_cm is null or height_cm > 0),
   constraint growth_records_weight_positive check (weight_kg is null or weight_kg > 0),
   constraint growth_records_head_positive check (head_cm is null or head_cm > 0),
+  -- 備註長度上限（merge-review R1 m3）：沿 init_schema.sql 既有慣例——每一個
+  -- 使用者輸入的文字欄都有上限（`children.name` 1–50、`albums.title` 1–100、
+  -- `comments.body` 1–2000）。`note` 是選填欄位（可為 NULL），比照這個既有形狀，
+  -- 有填的話一樣要求 1–2000（`comments.body` 同量級的自由文字備註，且 2000 字
+  -- 對一則量測備註綽綽有餘；`btrim` 後長度 0 視同沒填，同 `children.name` 的
+  -- 既有處理）。
+  constraint growth_records_note_length
+    check (note is null or char_length(btrim(note)) between 1 and 2000),
   -- 複合外鍵：孩子必須屬於同一個 family（同 diaries/albums 既有慣例）。child_id 在
   -- 這張表是 NOT NULL——一筆量測記錄不像日記／相簿可以是「全家共用、不掛特定孩子」，
   -- 量測的對象一定是某一個孩子；children 目前沒有硬刪路徑（LS-66 R1 I5），
@@ -212,10 +220,107 @@ grant update (measured_on, height_cm, weight_kg, head_cm, note, updated_at)
 --    不需要那張票重新實作一次 LS-57 的規則（跟 diaries/albums/comments/children
 --    共用同一支函式的理由完全相同）。
 -- ---------------------------------------------------------------------------
+--
+-- merge-review R1 m1（informational，可選）：`v_label` 的 CASE 沒有
+-- `growth_records` 分支，`LS027` 訊息會掉到 `else` 的泛稱「這筆內容」。這裡用
+-- `CREATE OR REPLACE FUNCTION` 覆寫函式本體（只加一個 CASE 分支，其餘邏輯逐字
+-- 不變，比照 20260825040000_deletion_attribution.sql 檔尾覆寫
+-- `enforce_children_family_immutable()` 的既有慣例）——**不修改**
+-- `20260825040000_deletion_attribution.sql` 那個檔案本身（已併入 main，
+-- append-only）。
+
+create or replace function private.enforce_deletion_attribution()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid;
+  v_label text;
+  v_is_owner boolean;
+begin
+  v_label := case tg_table_name
+               when 'diaries' then '這篇日記'
+               when 'albums' then '這本相簿'
+               when 'comments' then '這則留言'
+               when 'growth_records' then '這筆成長紀錄'
+               else '這筆內容'
+             end;
+
+  if new.family_id is distinct from old.family_id then
+    raise exception '% 所屬的家庭不可變更（family_id 是不可變欄位，LS-57）', v_label
+      using errcode = '42501';
+  end if;
+
+  if new.deleted_by is null
+     and old.deleted_by is not null
+     and to_jsonb(new) - 'deleted_by' = to_jsonb(old) - 'deleted_by' then
+    return new;
+  end if;
+
+  if new.deleted_at is not distinct from old.deleted_at then
+    return new;
+  end if;
+
+  v_uid := auth.uid();
+
+  v_is_owner := exists (
+    select 1 from public.family_members m
+     where m.family_id = old.family_id and m.user_id = v_uid and m.role = 'owner'
+  );
+
+  if v_is_owner then
+    if new.deleted_at is null then
+      new.deleted_by := null;
+    else
+      new.deleted_by := v_uid;
+    end if;
+    return new;
+  end if;
+
+  if old.deleted_at is not null and old.deleted_by is distinct from v_uid then
+    raise exception '% 已被家庭管理者移除，只有管理者能還原', v_label
+      using errcode = 'LS027';
+  end if;
+
+  if new.deleted_at is null then
+    new.deleted_by := null;
+  elsif old.deleted_at is null then
+    new.deleted_by := v_uid;
+  else
+    new.deleted_by := old.deleted_by;
+  end if;
+
+  return new;
+end;
+$$;
 
 create trigger growth_records_deletion_attribution
   before update on public.growth_records
   for each row execute function private.enforce_deletion_attribution();
+
+-- ---------------------------------------------------------------------------
+-- 4b.（merge-review R1 m2）已軟刪的孩子不能再被指定為新內容——重用 LS-66/LS-121
+-- 的共用函式 private.enforce_child_not_deleted()（20260825030000_children_write_
+-- path_and_soft_delete.sql 定義，diaries／albums 的 BEFORE INSERT/UPDATE 已掛，見
+-- 該函式檔頭：「已軟刪的孩子不能再被指定為新內容的 child_id」）。函式邏輯只依賴
+-- `new.child_id`／`tg_op`／`old.child_id`（若存在）三者，不知道也不需要知道自己
+-- 掛在哪張表，growth_records 有 `child_id` 欄位，可以直接掛，不必另寫一份等價
+-- 邏輯。回傳既有碼 LS044（不新增碼，error-codes-check.sh 不受影響）。
+--
+-- 「既有內容不動」原則同 diaries／albums：只在 child_id 真的被指定新值時檢查
+-- （INSERT 恆檢查；UPDATE 只在 `new.child_id is distinct from old.child_id` 時
+-- 檢查）。growth_records 的 UPDATE 路徑（upsert_growth_record 的更新分支）從不
+-- SET child_id（GRANT 也沒開放這欄，見第 3 段），因此這支 trigger 對 UPDATE
+-- 永遠是 no-op、只有 INSERT 分支會真正生效——掛 `before insert or update` 純粹是
+-- 跟 diaries／albums 的既有宣告形狀一致（面向未來：若日後 UPDATE 路徑真的開放
+-- 改 child_id，這裡不需要回頭補）。
+-- ---------------------------------------------------------------------------
+
+create trigger growth_records_child_not_deleted
+  before insert or update on public.growth_records
+  for each row execute function private.enforce_child_not_deleted();
 
 -- ---------------------------------------------------------------------------
 -- 5. 掛上既有的兩支共用 guard trigger（LS-151／LS-179）——growth_records 是一張
@@ -245,22 +350,49 @@ create trigger growth_records_not_suspended
 -- 6. RPC
 -- ---------------------------------------------------------------------------
 
--- list_growth_records：keyset 分頁（measured_on desc, created_at desc），p_before
--- 是「只回傳 measured_on 早於這個日期」的簡化游標（不是嚴格 tuple 游標——票面
--- 的簽章本身只給了 p_before date 一個參數，且「同一 child 同日多筆取最後」由讀端
--- 處理，跨頁邊界剛好卡在同一天的極端情況不是本票要解的問題）。security invoker
--- （未寫 security definer，同 list_children／get_family_timeline 的既有慣例）：
--- 完全依賴 growth_records_select RLS（family 成員＋未刪），呼叫端傳一個自己不屬於
--- 的 p_child_id 不會報錯，只會回傳 0 列。
+-- list_growth_records：真正的 keyset 分頁（measured_on desc, id desc）。
+--
+-- **R1 訂正（merge-reviewer PR #392 review M1，major）**：R1 版本只用
+-- `p_before date` 單值游標（`measured_on < p_before`），reviewer 實跑重現：同一
+-- child 4 筆（D1 單獨一天、D2a／D2b 同一天、D3 更早一天），`p_limit=2` 分頁——
+-- page1={D1,D2a}，游標取 page1 最後一筆的 measured_on，page2({p_before=D2 那天})
+-- 只回 {D3}，**D2b 從此拿不回來**（`measured_on < p_before` 的嚴格不等式把整個
+-- D2 那天都排除，包括還沒被 page1 涵蓋的 D2b）——票面明訂「同一 child 同日多筆
+-- 允許」「同日多筆取最後由讀端處理」，讀端要能「取最後」的前提是看得到該日
+-- **全部**列，這個漏洞會讓被漏掉的那筆若剛好是當天最新一筆，最新值卡／曲線就
+-- 吃到過期資料。
+--
+-- 修法：改成真正的 2 元組 keyset 游標 `(measured_on, id) < (p_before, p_before_id)`
+-- ——新增 `p_before_id uuid default null` 參數，呼叫端從上一頁最後一列的
+-- `id`（連同 `measured_on`）帶進來。用 `id` 而不是 `created_at` 當同一天的
+-- tie-break（不是 `get_family_timeline` 的 `(occurred_at, ref_id)` 或
+-- `media_family_created_idx` 的 `(created_at, id)` 兩種既有寫法的隨機挑選）：
+-- `id` 是主鍵，結構上保證每一列互不相同，`created_at` 雖然本表大多數情況下也是
+-- 唯一的，但同一交易內連續呼叫 `upsert_growth_record` 會拿到同一個 `now()`
+-- （transaction_timestamp 語意，同 88_deletion_attribution.sql 檔頭的既有
+-- 說明——本票 `113_growth_records.sql` 開發期間就實際踩過這個陷阱，見該檔 §8
+-- 的處理方式）——用 `id` 完全迴避這個collision 風險，不需要額外假設呼叫端一定是
+-- 分開的交易。`ORDER BY`／索引使用的排序鍵因此也從 `created_at desc` 改成
+-- `id desc`；`created_at` 仍是回傳列的一個欄位（讀端如果真的需要用建立時間排序
+-- 「同日多筆取最後」，資料還在，只是本 RPC 自己的排序鍵不再依賴它）。
+--
+-- 半游標檢查沿用既有碼 `LS022`（`get_family_timeline`／`list_comments` 已經在用
+-- 的同一個碼，語意完全相同——「keyset 分頁的游標參數只給了一半」，不新增碼、
+-- `docs/API.md` §5 只需要把 `list_growth_records` 加進這個碼的觸發清單）。
+--
+-- security invoker（未寫 security definer，同 list_children／get_family_timeline
+-- 的既有慣例）：完全依賴 growth_records_select RLS（family 成員＋未刪），呼叫端
+-- 傳一個自己不屬於的 p_child_id 不會報錯，只會回傳 0 列。
 --
 -- 拆成 if/else 兩個靜態查詢分支（不是同一句 SQL 裡的 `p_before is null or ...`
 -- OR 條件）：20260824010000_diaries_write_path_and_timeline.sql 第 4 段（review
--- F1）實測過 OR 條件會讓規划器選不到部分索引、整段落到 Filter 逐列判斷，這裡直接
+-- F1）實測過 OR 條件會讓規劃器選不到部分索引、整段落到 Filter 逐列判斷，這裡直接
 -- 沿用那次學到的寫法，不重蹈覆轍。
 create or replace function public.list_growth_records(
   p_child_id uuid,
   p_limit integer default 50,
-  p_before date default null
+  p_before date default null,
+  p_before_id uuid default null
 )
 returns setof public.growth_records
 language plpgsql
@@ -270,27 +402,32 @@ as $$
 declare
   v_limit integer := least(greatest(coalesce(p_limit, 50), 1), 200);
 begin
+  if (p_before is null) <> (p_before_id is null) then
+    raise exception '游標參數必須同時提供或同時省略（p_before／p_before_id）'
+      using errcode = 'LS022';
+  end if;
+
   if p_before is null then
     return query
       select g.*
         from public.growth_records g
        where g.child_id = p_child_id
-       order by g.measured_on desc, g.created_at desc
+       order by g.measured_on desc, g.id desc
        limit v_limit;
   else
     return query
       select g.*
         from public.growth_records g
        where g.child_id = p_child_id
-         and g.measured_on < p_before
-       order by g.measured_on desc, g.created_at desc
+         and (g.measured_on, g.id) < (p_before, p_before_id)
+       order by g.measured_on desc, g.id desc
        limit v_limit;
   end if;
 end;
 $$;
 
-revoke execute on function public.list_growth_records(uuid, integer, date) from public, anon;
-grant execute on function public.list_growth_records(uuid, integer, date) to authenticated;
+revoke execute on function public.list_growth_records(uuid, integer, date, uuid) from public, anon;
+grant execute on function public.list_growth_records(uuid, integer, date, uuid) to authenticated;
 
 -- upsert_growth_record：p_id 為 NULL＝新增（owner/member 皆可，author_id 一律是
 -- 呼叫者本人）；p_id 非 NULL＝更新內容（僅原作者，且仍是該家庭 owner/member——見
