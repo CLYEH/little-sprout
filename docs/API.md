@@ -69,6 +69,7 @@
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
+| `growth_records`（LS-255） | 我所屬家庭**未刪**的成長紀錄（身高／體重／頭圍） | owner／member（`author_id` 必須是自己） | 僅內容欄位（`measured_on`／`height_cm`／`weight_kg`／`head_cm`／`note`），**僅原作者本人**（owner 不在這條路徑——見 §3「為什麼 growth_records 用了真 RLS」） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_growth_record` RPC（作者本人，或該家庭 owner——不限作者，見 §4） | 真 RLS 直接開放 INSERT／UPDATE（不是 diaries/albums/comments/children 那種 RPC-only 收斂）：`deleted_at`／`deleted_by` 兩欄對 authenticated 無 UPDATE grant，唯一寫入路徑是 `delete_growth_record`（`SECURITY DEFINER`）；設計理由見 §3 |
 | `media` | 我所屬家庭**尚未軟刪**的檔案中繼資料，**上傳者自己的例外**——不論是否已軟刪都看得到自己上傳的列（`deleted_at is null or uploaded_by = auth.uid()`，LS-155 R2 起；與 `children` 全員可見已軟刪列的例外不同，這裡只有上傳者本人是例外，見 §3「`media_select` 過濾」段落的已知殘留缺口） | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | **文件承諾「owner 任意列」，實際只對 owner 自己上傳的列與尚未軟刪的別人的列成立**（一般刪除走 `deleted_at`）——owner 對「別人上傳、已軟刪」的列直接 `DELETE` 會因為 R2 的 `media_select` 把該列藏起來而**靜默影響 0 列**（LS-155 R2 review m1 實測，見 §3 殘留缺口段落）；真正的 owner moderation 請走 `remove_content_as_owner('media', id)`（`SECURITY DEFINER`，不受這個限制） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
 | `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對別人相簿的內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8 |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
@@ -130,7 +131,8 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
 **過渡期擋寫（LS-151，R2 訂正範圍）**：`profiles.deletion_requested_at` 非
 `NULL`（呼叫過 `delete_my_account()`、還沒被 Edge Function `delete-account` 真正
 刪除 `auth.users` 的窗口期）時，`families`／`media`／`diaries`／`albums`／
-`children`／`comments`／`join_requests` 七張表的 `INSERT` 一律拒絕（`LS051`），
+`children`／`comments`／`join_requests`／`growth_records`（LS-255）八張表的
+`INSERT` 一律拒絕（`LS051`），
 `family_members` 額外擋 `UPDATE OF role, user_id`——不論走的是直接 `.insert()`
 還是任何 `SECURITY DEFINER` RPC（`create_child`／`create_diary_entry`／
 `create_comment`／`approve_join`／`request_join`／建立新家庭時自動寫入 owner 的
@@ -322,6 +324,79 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   `INSERT`/`UPDATE` 冒出標準 `23514`/`23502`（見 §5 標準碼表；雖然 `children` 已是
   RPC-only、不是「允許直寫的表」，但 RPC 參數映射進 `INSERT`/`UPDATE` 撞到表上的
   `CHECK`/`NOT NULL` 時，冒出來的仍是同一組標準碼，呼叫端的處理方式不變）。
+
+### `growth_records`（LS-255，LS-250 後端先行）
+- 身高／體重／頭圍量測記錄，`family_id, child_id` 複合外鍵綁定同家庭的孩子
+  （`child_id` **NOT NULL**——一筆量測一定屬於某一個孩子，跟 `diaries`/`albums`
+  可以不掛特定孩子不同）。設計稿（LS-252）尚未核可，本表只是資料模型，不受呈現
+  裁決（百分位帶／曲線／feed 卡片）影響。
+- **為什麼 `growth_records` 用了真 RLS，不是 diaries/albums/comments/children 那種
+  RPC-only 收斂**：那四張表最終收斂成 RPC-only，起因是「真 RLS 直接開放寫入」
+  在 review 中被抓到兩類具體漏洞——(a) owner 分支的 grant 比 policy 意圖給的權力
+  更寬，藉此竄改別人內容；(b) `author_id = 我` 是靜態欄位比對，被降級成 viewer
+  或離開家庭之後仍然成立。`growth_records_update` policy 從一開始就避開這兩類：
+  owner 完全不在這條 policy 裡（**更新只限作者**，owner 沒有編輯他人紀錄內容的
+  路徑），且 `family_id in (select private.contributor_family_ids())` 是即時子
+  查詢，每次 UPDATE 都重新求值目前的成員狀態。「owner 可以軟刪別人的紀錄」這件
+  無法只靠 author-scoped RLS 表達的行為，改用 `delete_growth_record()`
+  （`SECURITY DEFINER`）承接，不需要為了這一件事把整張表的寫入面都收斂成
+  RPC-only。完整推導見 `supabase/migrations/20260913065021_growth_records.sql`
+  檔頭第 0 段。
+- **RLS 三條真的會生效的 `CREATE POLICY`**：讀（家庭成員皆可，僅未刪列）／新增
+  （owner／member，`author_id` 必須是自己）／更新內容（僅原作者本人，且仍是該
+  家庭 owner/member）。**沒有第四條「軟刪」policy**——開發期間本機實測抓到：
+  PostgreSQL 對同一個 UPDATE 命令的多條 permissive policy 是用 **OR** 合併
+  USING/WITH CHECK，不是逐欄位判斷；曾經加過一條「owner 或作者皆可觸碰
+  deleted_at／deleted_by」的第四條 policy，原意是純防禦性宣告（那兩欄沒有
+  UPDATE grant，這條 policy 應該求值不到），但 OR 合併的結果是 owner 分支一旦
+  為真，`upsert_growth_record` 的更新分支（只碰內容欄位）也會通過 RLS——等於
+  意外讓 owner 能編輯別人的內容，跟本節第一條要避開的漏洞一模一樣。移除這條
+  policy 後問題消失；「owner 可以軟刪別人的紀錄」完全交給 `delete_growth_record()`
+  （`SECURITY DEFINER`，繞過 RLS）處理，RLS 層不再插手 `deleted_at`。完整說明見
+  migration 檔頭第 2 段。
+- **GRANT 收斂**：`SELECT` 整表開放（列的可見性交給 RLS）；`INSERT` 只開放
+  `family_id`／`child_id`／`author_id`／`measured_on`／`height_cm`／`weight_kg`／
+  `head_cm`／`note`；`UPDATE` 開放五個內容欄位＋`updated_at`（`measured_on`／
+  `height_cm`／`weight_kg`／`head_cm`／`note`／`updated_at`——`updated_at` 開放
+  只是因為 `upsert_growth_record` 同一句 UPDATE 會把它 SET 成 `now()`，呼叫端
+  參數列表沒有 `p_updated_at` 可以指定別的值）——`deleted_at`／`deleted_by`／
+  `family_id`／`child_id`／`author_id` 一律不可直接寫，唯一寫入路徑是
+  `delete_growth_record()` RPC。直接 `.update()` 這幾欄以外的欄位一律 `42501`
+  （欄位級 grant 未開放）。
+- **軟刪沿用 LS-57**：`deleted_by` 由 `private.enforce_deletion_attribution()`
+  共用 trigger（20260825040000_deletion_attribution.sql）推導寫入，規則與
+  `diaries`/`albums`/`comments` 相同——作者只能軟刪自己的，owner 對任何一筆的
+  觸碰一律把 `deleted_by` 覆寫成自己，作者不能清除 owner 設下的 `deleted_at`。
+  目前只有 `delete_growth_record()` 一支 RPC 會觸碰 `deleted_at`（單一方向，
+  `NULL → now()`，沒有還原參數），還原鎖是面向未來的防線——見該 RPC 說明。
+- **帳號停權／刪除過渡期**：跟其餘「自著內容」表一樣掛了
+  `private.enforce_account_not_deletion_requested()`（`BEFORE INSERT`，`LS051`）
+  與 `private.enforce_not_suspended()`（`BEFORE INSERT/UPDATE/DELETE`，
+  `LS052`／`LS053`），見 §2 與 §5。
+- **已軟刪的孩子不能再被指定為新內容（LS-255 R2，merge-review R1 m2 登記）**：
+  `BEFORE INSERT/UPDATE` 掛了 LS-121 的共用函式 `private.enforce_child_not_
+  deleted()`（沿系統性規則，不新開碼）——`upsert_growth_record` 的新增分支若
+  `p_child_id` 指向一個已軟刪的孩子，拋既有碼 `LS044`；更新分支從不改
+  `child_id`（欄位級 grant 未開放），這支 trigger 對更新分支恆為 no-op（「既有
+  內容不動」，同 `diaries`／`albums`）。
+- **CHECK 約束**：三項量測（`height_cm`／`weight_kg`／`head_cm`）至少一項非空
+  （`growth_records_measurement_required`）；每一項若有填必須是正值
+  （`growth_records_height_positive`／`_weight_positive`／`_head_positive`）；
+  `note` 若有填必須是 1–2000 字（`btrim` 後，`growth_records_note_length`，
+  LS-255 R2 merge-review R1 m3 登記，沿 `comments.body` 同量級的既有慣例）——
+  違反皆為標準碼 `23514`。
+- **同一孩子同一天允許多筆**：`measured_on` 沒有唯一約束，「同一天多筆時 UI 只
+  取最後一筆」由呼叫端（LS-252 核可稿的規則）處理，後端不去重；
+  `list_growth_records` 的分頁保證回傳每一筆（見 §4，R2 修過 M1 的跨頁邊界
+  漏筆問題）。
+- **owner 對別人的紀錄直接 `.update()` 內容欄位是靜默 0 列，不是 `42501`
+  （R1 informational i5）**：`growth_records_update` 的 `USING` 只有作者本人這
+  一個分支，owner 對別人的列下 `.update()` 這幾個內容欄位時，那一列根本不在
+  `USING` 比對得到的範圍內，Postgres 對「比對不上 USING 的列」的標準反應是直接
+  排除、不觸發任何錯誤——跟 `media`／`albums` 已記載的同一種形狀（見 §2「例外」
+  段）。owner 想對別人的紀錄做事，唯一有意義的操作是移除，要呼叫
+  `delete_growth_record` RPC——這支失敗時**會**丟出明確的 `42501`，不會有「靜默
+  0 列」這種模稜兩可的結果。
 
 ### `media`
 - `storage_path` 必須符合 `{family_id}/{yyyy}/{mm}/{media_id}.{ext}`（見 §6），且有
@@ -886,7 +961,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 正式站 advisors `authenticated_security_definer_function_executable` WARN 點名的架構
 選擇：這些 RPC 都是 `SECURITY DEFINER`（RLS 由函式內部呼叫 `private.*` 集合函式把關，
 不是靠呼叫端自己的 RLS 身分），且對 `authenticated` 開放 `EXECUTE`——這是刻意的架構
-選擇，不是漏洞。以下 28 支是目前完整清單（單一清單來源：與
+選擇，不是漏洞。以下 29 支是目前完整清單（單一清單來源：與
 `supabase/tests/60_default_privileges.sql` §8 的 `v_definer_rpcs`、
 `supabase/tests/110_advisors_hardening.sql` §3 的 `v_whitelist` 三處逐字同步；新增
 對 `authenticated` 開放的 SECURITY DEFINER RPC 時，三處都要更新，`110_` 的反向掃描
@@ -901,6 +976,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 | `create_comment(uuid, text, uuid, text)` | 建立留言 |
 | `create_diary_entry(uuid, uuid[], text, date)` | 建立日記 |
 | `create_invite(uuid, text, timestamptz, integer)` | 建立家庭邀請碼 |
+| `delete_growth_record(uuid)` | 軟刪成長紀錄（作者本人或該家庭 owner） |
 | `delete_my_account()` | 使用者刪除自己的帳號 |
 | `get_my_join_request()` | 申請人查自己的加入申請狀態 |
 | `list_comments(uuid, text, uuid, timestamptz, uuid, integer)` | 分頁列出留言 |
@@ -938,9 +1014,10 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 `purge_storage_classify_orphan_paths`／`purge_storage_queue_enqueue_orphans_v2`
 （LS-227 起 v1 已 DROP，只剩這一個簽名）／`purge_storage_queue_mark_failed`／
 `purge_storage_unknown_media_paths`），這些不算在
-上表的 28 支之內，也不是 advisors WARN 點名的對象（`authenticated` 對它們沒有
-`EXECUTE`）。另有 4 支 `SECURITY INVOKER` 的 public RPC（`get_family_timeline`／
-`get_reaction_counts`／`list_children`／`get_family_quota`，見
+上表的 29 支之內，也不是 advisors WARN 點名的對象（`authenticated` 對它們沒有
+`EXECUTE`）。另有 6 支 `SECURITY INVOKER` 的 public RPC（`get_family_timeline`／
+`get_reaction_counts`／`list_children`／`get_family_quota`／`list_growth_records`／
+`upsert_growth_record`，見
 `60_default_privileges.sql` §8 的 `v_invoker_rpcs`）同樣對 `authenticated` 開放
 `EXECUTE`，但因為不是 `SECURITY DEFINER`，不在 advisors 這個特定 WARN 的判準內，不
 列入上表。
@@ -1553,6 +1630,89 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **錯誤碼**：無自訂碼；未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
+### `list_growth_records(p_child_id uuid, p_limit integer default 50, p_before date default null, p_before_id uuid default null) -> setof growth_records`（LS-255；R2 加 `p_before_id`，見下）
+- **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭、未刪的成長紀錄——
+  `p_child_id` 傳一個自己不屬於的家庭的孩子不會報錯，只會回傳 0 列
+  （`security invoker`，完全依賴 `growth_records_select` RLS，同 `list_children`
+  的既有慣例）。
+- **用途**：依 `child_id` 列出成長紀錄，`measured_on desc, id desc` 排序（**R2
+  訂正**：原本是 `created_at desc`，M1 修正後改用 `id` 當同一天的 tie-break，理由
+  見下）。真正的 2 元組 keyset 分頁：`p_before`／`p_before_id` 要嘛同時提供、要嘛
+  同時省略（半游標拿 `LS022`，同 `get_family_timeline`／`list_comments` 既有慣例，
+  不是新碼）——`NULL`＝取第一頁；帶值時回傳 `(measured_on, id) < (p_before,
+  p_before_id)` 的列（呼叫端從上一頁**最後一列**的 `measured_on`／`id` 組游標）。
+  `p_limit` 收斂在 1–200 之間（預設 50）。
+  **R1 曾經是單值游標 `measured_on < p_before`（merge-review R1 M1，major）**：
+  同一 child 同日多筆時，卡在頁尾的同日紀錄會被靜默漏掉（實跑重現：4 筆中同一天
+  2 筆，`p_limit=2` 分頁只走訪得到 3 筆）——票面「同日多筆取最後由讀端處理」的
+  前提是讀端看得到該日全部列，單值游標無法保證這件事。修法：改用 `id`（結構上
+  保證唯一）取代 `created_at` 當第二個游標欄位——沒有選 `created_at` 是因為同一
+  交易內連續呼叫 `upsert_growth_record` 會拿到同一個 `now()`（transaction_
+  timestamp 語意），`created_at` 在這種情況下不保證唯一，`id` 沒有這個風險。
+- **錯誤碼**：`p_before`／`p_before_id` 只給一個 `LS022`；其餘無自訂碼；未登入或
+  不屬於的家庭，配合 RLS 自然回傳 0 列。
+- **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
+
+### `upsert_growth_record(p_id uuid, p_child_id uuid, p_measured_on date, p_height_cm numeric, p_weight_kg numeric, p_head_cm numeric, p_note text) -> growth_records`（LS-255）
+- **誰能呼叫**：`p_id` 為 `NULL`（新增）時，該家庭 owner／member（viewer 不行，
+  PLAN §3）；`p_id` 非 `NULL`（更新內容）時，**僅原作者本人**，且仍是該家庭
+  owner/member（`growth_records_update` RLS，owner 不在這條路徑——見 §3）。
+- **用途**：`security invoker`（未寫 `security definer`，`growth_records_insert`／
+  `growth_records_update` 兩條真 RLS 已經是完整的授權面，不需要函式內部再手動
+  判斷一次——見 migration 檔頭第 0 段與本函式說明）。新增分支：`p_child_id` 對應
+  的 `family_id` 用一句 `SELECT`（依賴 `children_select` RLS）解出；`p_child_id`
+  不存在或指向呼叫者不屬於的家庭時，`family_id` 解析為 `NULL`，`INSERT` 撞
+  `growth_records_insert` 的 `WITH CHECK`（`NULL in (...)` 求值為非 `TRUE`）得到
+  `42501`——**本機實測結果**：PostgreSQL 對 INSERT 先評估 RLS 的 `WITH CHECK`
+  才輪到 `NOT NULL` 約束，不會是原本可能猜測的 `23502`。新增分支若 `p_child_id`
+  指向一個已軟刪的孩子，`BEFORE INSERT` trigger（`private.enforce_child_not_
+  deleted()`，LS-255 R2 merge-review R1 m2 登記）拋既有碼 `LS044`（沿 LS-121 的
+  系統性規則，見 §3／§5）。更新分支是整組替換（PUT 語意）五個內容欄位，
+  `updated_at` 一併寫入 `now()`——**`p_child_id` 在更新分支完全被忽略**（R1
+  informational i4）：`SET` 子句沒有 `child_id`，也不驗證 `p_child_id` 與該列是否
+  相符，呼叫端傳錯 `p_child_id` 不會報錯。這是安全的（`child_id` 是不可變欄位、
+  沒有直接寫入 grant），但呼叫端不該依賴更新分支的 `p_child_id` 參數有任何效果
+  ——它只在新增分支（`p_id is null`）有意義。
+- **回傳**：整列（`growth_records` 的所有欄位，含 `id`／`created_at` 等呼叫端
+  可能需要的欄位）。
+- **錯誤碼**：未登入 `42501`；`p_id` 非 `NULL` 但更新命中 0 列（不存在，或不是
+  這筆的作者，或已不是該家庭 owner/member）`42501`；`p_child_id` 不存在或不屬於
+  呼叫者任何家庭（新增分支，RLS 違反）`42501`；`p_child_id` 指向已軟刪的孩子
+  （新增分支）`LS044`；三項量測全空、任一項非正值、或 `note` 超過 2000 字
+  `23514`。**刻意不開自訂 `LSnnn` 碼**——本票是純後端票，不動 `LittleSprout/
+  Errors/AppError.swift`，`error-codes-check.sh` 要求新碼須同一 PR 登記
+  API.md／Swift 兩處；若日後 iOS 實作票需要對「找不到孩子」與「一般 RLS 拒絕」
+  給不同文案，屆時可另開自訂碼並同步補 Swift enum（`LS044` 是既有碼，不受此
+  限制，見上）。
+- **併發**：新增分支是純 `INSERT`，無鎖需求；更新分支是單一 `UPDATE ... RETURNING`
+  陳述式，授權判斷（RLS）與寫入在同一個原子操作內完成，不像 `create_diary_entry`
+  那類 `SECURITY DEFINER` RPC 需要先 `SELECT ... FOR UPDATE` 讀出目前狀態再手動
+  判斷——這裡沒有那個 TOCTOU 窗口，也就不需要那個防護代價。「同一 child 並發
+  upsert」（`p_id` 皆為 `NULL`）：多筆同日紀錄是設計內允許的行為（見 §3），不是
+  需要序列化的競態。
+
+### `delete_growth_record(p_id uuid) -> void`（LS-255）
+- **誰能呼叫**：作者本人（且仍是該家庭成員，門檻同 `set_diary_deleted`——移除自己
+  貢獻過的東西不因被降級而被剝奪，但完全離開家庭之後關閉）或該家庭 owner（不要求
+  仍是 contributor，同 `set_diary_deleted`／`set_album_deleted` 的既有慣例）。
+- **用途**：軟刪，`deleted_at: NULL → now()`。**必須是 `SECURITY DEFINER`**：
+  `deleted_at`／`deleted_by` 對 authenticated 沒有任何 UPDATE grant，且「owner
+  可以移除他人紀錄」無法只靠 author-scoped 的 `growth_records_update` policy
+  表達（把 owner 加進那條 policy 會連內容欄位一起開放給 owner，違反「更新只限
+  作者」——見 §3）。只有單一方向，沒有 `p_deleted` 參數／還原方向——票面範圍只要
+  求軟刪，還原功能留給日後的票；即使日後加還原 RPC，只要一樣是 `SECURITY
+  DEFINER` 直接 `UPDATE`，LS-57 的 `private.enforce_deletion_attribution()`
+  還原鎖已經就位，不需要重新設計（見 migration 檔頭第 4 段）。
+- **錯誤碼**：未登入 `42501`；紀錄不存在 `42501`；不是作者本人（或雖是作者但
+  已離開家庭）且不是該家庭 owner `42501`；**`LS027`（LS-255 R2，merge-review R1
+  m1 登記，既有碼、非新增）**——owner 已軟刪這筆紀錄之後，作者（跨交易，`now()`
+  不同）再呼叫這支 RPC，函式本身的授權檢查會放行（仍是作者、仍是家庭成員），但
+  底下的 `UPDATE` 觸發共用 trigger `private.enforce_deletion_attribution()` 的
+  還原鎖，拋 `LS027`「這筆成長紀錄已被家庭管理者移除，只有管理者能還原」（見
+  migration 檔頭第 4 段、§5）。其餘刻意不開自訂碼（理由同 `upsert_growth_record`）。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住再讀 `family_id`／`author_id` 做授權判斷
+  （LS-52 既定規則：RPC 授權判斷讀到的列都要先鎖住，防 TOCTOU）。
+
 ### `report_content(p_family_id uuid, p_target_type text, p_target_id uuid, p_reason text) -> uuid`
 - **LS-149**（PLAN §9-A1 UGC 三件套）。任何家庭成員都能檢舉同家庭的內容
   （`album`／`media`／`diary`／`comment`，同 `content_target_type`）。
@@ -1905,20 +2065,20 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS017` | 邀請碼參數不合法（到期時間或可用次數超出範圍） | `create_invite` |
 | `LS020` | 日記不存在，或（`update_diary_entry` 情境）已被軟刪除須先還原 | `update_diary_entry`／`set_diary_deleted` |
 | `LS021` | 不是作者本人，或雖是作者但已不是該家庭 owner/member | `update_diary_entry` |
-| `LS022` | keyset 分頁的游標參數只給了一半（兩個游標參數要嘛都給、要嘛都不給） | `get_family_timeline`／`list_comments`（游標都是呼叫端自己組的，不是使用者輸入——使用者沒有東西可換，原地重試不會成功；Swift 端 `AppError`／`LSErrorCode.Tier` 把它歸在 `rejected` 層，不是 `validationRetryable`，見 LS-55 PR #77 R1 裁決） |
+| `LS022` | keyset 分頁的游標參數只給了一半（兩個游標參數要嘛都給、要嘛都不給） | `get_family_timeline`／`list_comments`／`list_growth_records`（LS-255 R2，merge-review R1 M1 修正——`p_before`／`p_before_id` 同一組游標）（游標都是呼叫端自己組的，不是使用者輸入——使用者沒有東西可換，原地重試不會成功；Swift 端 `AppError`／`LSErrorCode.Tier` 把它歸在 `rejected` 層，不是 `validationRetryable`，見 LS-55 PR #77 R1 裁決） |
 | `LS023` | 相簿不存在 | `set_album_deleted` |
 | `LS024` | 留言不存在 | `update_comment`／`set_comment_deleted` |
 | `LS025` | 不是留言作者本人，或雖是作者但已離開該家庭 | `update_comment` |
 | `LS026` | 留言／按讚／檢舉的 target 存在，但屬於別的家庭 | `create_comment`／`toggle_reaction`／`report_content`（LS-149，同一種目標歸屬檢查，見 §4） |
-| `LS027` | 這篇日記／這本相簿／這則留言已被家庭管理者移除，只有管理者能還原 | `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted`（還原方向或重新軟刪方向皆可能；albums 的建立者直接 `.update()` 路徑也會撞到；由 `private.enforce_deletion_attribution()` trigger 統一 raise，LS-57，PR #98 review 擴大到重新軟刪方向並涵蓋 `deleted_by` 為 `NULL` 的情況） |
+| `LS027` | 這篇日記／這本相簿／這則留言／這筆成長紀錄已被家庭管理者移除，只有管理者能還原 | `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted`／`delete_growth_record`（LS-255 R2，merge-review R1 m1 登記——owner 已軟刪的紀錄，作者跨交易再呼叫 `delete_growth_record` 會撞到，由共用 trigger 統一 raise；`v_label` 補了 `growth_records` 分支，訊息主詞正確顯示「這筆成長紀錄」，不是掉到泛稱）（還原方向或重新軟刪方向皆可能；albums 的建立者直接 `.update()` 路徑也會撞到；由 `private.enforce_deletion_attribution()` trigger 統一 raise，LS-57，PR #98 review 擴大到重新軟刪方向並涵蓋 `deleted_by` 為 `NULL` 的情況） |
 | `LS041` | 孩子檔案不存在，或（`update_child` 情境）已被軟刪除須先還原 | `update_child`／`set_child_deleted` |
 | `LS042` | 不是仍是該家庭 owner/member 的成員，無法編輯孩子檔案 | `update_child` |
 | `LS043` | 孩子檔案已被移除超過 30 天，無法還原 | `set_child_deleted`（`p_deleted = false`） |
-| `LS044` | 寶貝已移除，無法歸屬新內容 | `diary_children`／`album_children` 的 `BEFORE INSERT` trigger（LS-121 起搬到連結表；原本掛在 `diaries`／`albums` 本體，見 §8）——`create_diary_entry`／`update_diary_entry`／`set_album_children`（`p_child_ids` 任一元素指向已軟刪的孩子）皆可能撞到，這是這支 trigger 唯一會被觸發的路徑（`diary_children`／`album_children` 對 `authenticated` 沒有任何直接寫入 grant，見 §2／§3，不存在繞過三支 RPC 直接撞到這個碼的呼叫端路徑）；只在真的要新增一列標記時才會觸發，不影響既有標記繼續存在、既有內容繼續軟刪／還原／編輯自己（見 §8） |
+| `LS044` | 寶貝已移除，無法歸屬新內容 | `diary_children`／`album_children` 的 `BEFORE INSERT` trigger（LS-121 起搬到連結表；原本掛在 `diaries`／`albums` 本體，見 §8）——`create_diary_entry`／`update_diary_entry`／`set_album_children`（`p_child_ids` 任一元素指向已軟刪的孩子）皆可能撞到，這是這支 trigger 唯一會被觸發的路徑（`diary_children`／`album_children` 對 `authenticated` 沒有任何直接寫入 grant，見 §2／§3，不存在繞過三支 RPC 直接撞到這個碼的呼叫端路徑）；只在真的要新增一列標記時才會觸發，不影響既有標記繼續存在、既有內容繼續軟刪／還原／編輯自己（見 §8）。**`growth_records`（LS-255 R2，merge-review R1 m2 登記）**：`growth_records` 的 `BEFORE INSERT/UPDATE` 也掛了同一支共用函式 `private.enforce_child_not_deleted()`——`upsert_growth_record` 的新增分支若 `p_child_id` 指向已軟刪的孩子會撞到；更新分支從不改 `child_id`（欄位級 grant 未開放），這支 trigger 對更新分支恆為 no-op |
 | `LS045` | 不是相簿建立者本人，或雖是建立者但已不是該家庭 owner/member，無法設定寶貝標記 | `set_album_children`（LS-121） |
 | `LS050` | 你是家庭的唯一 owner，且家庭還有其他成員，須先轉移 owner 身份才能刪除帳號——`DETAIL` 帶 JSON 陣列列出全部需要轉移的家庭（`[{"family_id","family_name"}, ...]`），見 §4 `delete_my_account` | `delete_my_account`（LS-143） |
 | `LS051` | 帳號已請求刪除（`deletion_requested_at` 非 `NULL`），過渡期間不能再建立新資料——沒有輸入可換，只能等 Edge Function `delete-account` 完成刪除 | `families`／`family_members`／`media`／`diaries`／`albums`／`children`／`comments` 的 `BEFORE INSERT` trigger（`private.enforce_account_not_deletion_requested()`，LS-151），涵蓋直接 `.insert()` 與 `create_child`／`create_diary_entry`／`create_comment`／`approve_join`／建立新家庭自動寫入 owner 等 RPC 路徑，見 §2「過渡期擋寫」 |
-| `LS052` | 這個帳號已被暫停使用，請聯絡我們 | `profiles.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時：(a) `private.enforce_not_suspended()`——掛在 `family_members`／`invites`／`children`／`media`／`albums`／`album_media`／`diaries`／`diary_media`／`diary_children`／`album_children`／`comments`／`reactions`／`content_reports`／`blocked_users`／`join_requests` 十五張表的 `BEFORE INSERT/UPDATE/DELETE`，涵蓋直接 `.insert()`/`.update()`/`.delete()` 與全部 `SECURITY DEFINER` RPC（trigger 不受 `SECURITY DEFINER` 影響——**`delete_my_account()` 是唯一的例外**，R2 見 §4，永遠豁免這個檢查）；(b) `private.enforce_caller_not_suspended_for_families()`——`families` 的 `BEFORE INSERT`（自建新家庭）；(c) `list_join_requests`／`get_my_join_request`／`list_comments` 三支唯讀 `SECURITY DEFINER` RPC 各自的明確檢查（這三支沒有寫入、又繞過 RLS 讀，前兩種機制都碰不到）。**讀取（SELECT）與 Storage 簽名上傳**：透過 `private.family_ids()`／`owned_family_ids()`／`contributor_family_ids()`／`uploadable_family_ids()` 四支集合函式收斂，停權者這四個集合皆為空，對應的 `_select` policy 與 `storage.objects` 四條 policy 靜默回 0 列／`42501`，不會有 `LS052`（RLS 違反沒有自訂碼這條路）；`content_reports_select`／`join_requests_select`／`families_select` 的「自己那一支」分支（R2 訂正，見 §3）也已補上同一組排除 |
+| `LS052` | 這個帳號已被暫停使用，請聯絡我們 | `profiles.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時：(a) `private.enforce_not_suspended()`——掛在 `family_members`／`invites`／`children`／`media`／`albums`／`album_media`／`diaries`／`diary_media`／`diary_children`／`album_children`／`comments`／`reactions`／`content_reports`／`blocked_users`／`join_requests`／`growth_records`（LS-255）十六張表的 `BEFORE INSERT/UPDATE/DELETE`，涵蓋直接 `.insert()`/`.update()`/`.delete()` 與全部 `SECURITY DEFINER` RPC（trigger 不受 `SECURITY DEFINER` 影響——**`delete_my_account()` 是唯一的例外**，R2 見 §4，永遠豁免這個檢查）；(b) `private.enforce_caller_not_suspended_for_families()`——`families` 的 `BEFORE INSERT`（自建新家庭）；(c) `list_join_requests`／`get_my_join_request`／`list_comments` 三支唯讀 `SECURITY DEFINER` RPC 各自的明確檢查（這三支沒有寫入、又繞過 RLS 讀，前兩種機制都碰不到）。**讀取（SELECT）與 Storage 簽名上傳**：透過 `private.family_ids()`／`owned_family_ids()`／`contributor_family_ids()`／`uploadable_family_ids()` 四支集合函式收斂，停權者這四個集合皆為空，對應的 `_select` policy 與 `storage.objects` 四條 policy 靜默回 0 列／`42501`，不會有 `LS052`（RLS 違反沒有自訂碼這條路）；`content_reports_select`／`join_requests_select`／`families_select` 的「自己那一支」分支（R2 訂正，見 §3）也已補上同一組排除 |
 | `LS053` | 這個家庭已被暫停使用，請聯絡我們 | `families.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時，觸發路徑同 `LS052` 的 (a)／(c)（家庭停權只影響該家庭本身的資料，成員對其他家庭不受影響，`delete_my_account()` 同樣豁免，見 §4）；讀取與 Storage 同樣經四支集合函式收斂成 0 列／`42501` |
 | `LS054` | 目前暫停開放新註冊，請稍後再試 | `private.enforce_registrations_open()`——`families` 的 `BEFORE INSERT`（自建新家庭），`app_settings.registrations_open = false` 時觸發（PLAN §10-A(3)，LS-179）。**只擋自建新家庭**：憑邀請碼加入既有家庭（`request_join`／`approve_join`）不碰 `families` 表，不受影響 |
 | `LS055` | 條款版本已更新，請重新閱讀 | `accept_eula(p_version)`——`p_version` 與呼叫當下的 `app_settings.eula_version` 不相符時觸發（LS-197，PLAN §6 第 7 項／§10-B）。呼叫端多半是讀到的版本已經過期，該重新抓一次目前版本、重新顯示條款內容 |
@@ -2626,6 +2786,7 @@ create_child(uuid, text, date, text)
 create_comment(uuid, text, uuid, text)
 create_diary_entry(uuid, uuid[], text, date)
 create_invite(uuid, text, timestamptz, integer)
+delete_growth_record(uuid)
 delete_my_account()
 finalize_account_deletion(uuid)
 get_family_quota(uuid)
@@ -2634,6 +2795,7 @@ get_my_join_request()
 get_reaction_counts(uuid, text, uuid[])
 list_children(uuid)
 list_comments(uuid, text, uuid, timestamptz, uuid, integer)
+list_growth_records(uuid, integer, date, uuid)
 list_join_requests()
 notification_recipients(uuid[])
 purge_storage_classify_orphan_paths(text[])
@@ -2656,6 +2818,7 @@ unblock_user(uuid, uuid)
 update_child(uuid, text, date, text)
 update_comment(uuid, text)
 update_diary_entry(uuid, text, date, uuid[])
+upsert_growth_record(uuid, uuid, date, numeric, numeric, numeric, text)
 withdraw_join(uuid)
 -->
 
@@ -2677,6 +2840,7 @@ families
 family_members
 feed_item_children
 feed_items
+growth_records
 invites
 join_requests
 media
