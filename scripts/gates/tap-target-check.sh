@@ -79,7 +79,10 @@ if xcodebuild test \
   -skip-testing:LittleSproutUITests/QASmokeTests \
   -parallel-testing-enabled NO \
   > "$log" 2>&1; then
-  rm -rf "$result_bundle"
+  # LS-257：CI 的 `ci` job 在「點擊目標 gate」步驟之後新增一步印這份 bundle（對應
+  # LittleSproutUITests）的耗時（見 ci.yml），需要 bundle 撐到那一步才能讀；本機
+  # push-gate.sh 反覆呼叫不需要保留，成功時仍清掉避免工作目錄累積垃圾。
+  [ -n "${GITHUB_ACTIONS:-}" ] || rm -rf "$result_bundle"
   # merge-review R1 M1：不印「所有量測畫面」這種聽起來像全域覆蓋的措辭——目前只有
   # LittleSprout/TapTargetGateScreenName.swift 註冊的畫面會被實際量到（其餘 Features 畫面見
   # scripts/gates/tap-target-exemptions.txt 具名排除，或尚待補進註冊表），明確點名以免誤導。
