@@ -206,6 +206,15 @@ enum TapTargetGateScreenName: String {
     // 下是 disabled，不是可點但按下去沒反應。同 `.reportInboxResolveError` 的既有理由，不用來
     // 做逐元件 tap target 量測（disabled 按鈕本來就不該被量測熱區）。
     case diaryDetailRoleNotReady = "DiaryDetailViewRoleNotReady"
+    // LS-246（票文範圍 1）：同 `.diaryDetail`，但瀑布流帶一支真的「可播放」影片格
+    // （`MasonryPhotoWallView.isPlayableVideo`）——`DiaryDetailCommentsUITests`／
+    // `ContentActionsUITests` 既有的兩支「連續觸發兩來源仍能各自呈現」測試只涵蓋留言 sheet／
+    // 內容操作表這一組，這個變體讓「影片 fullScreenCover」也能被同一種手法覆蓋（見
+    // `TapTargetGateHarness+Safety.swift` 的 `diaryDetailWithVideoHost` 文件註解）。不是獨立
+    // 檔案，不需要另外具名排除（同 `.diaryDetailOwnContent` 既有先例）；不用來做逐元件 tap
+    // target 量測（瀑布流格熱區大小取決於 `MasonryLayout.place` 算出的版面，不是本票範圍，同
+    // `.diaryCardVideoBadges`／`.albumDetailPopulated` 既有先例）。
+    case diaryDetailWithVideo = "DiaryDetailViewWithVideo"
     // LS-216：時間軸互動列（`InteractionRow`）——三種卡片（日記／相簿／照片）底部各有
     // Like Toggle／Count Zone／Comment Button 三顆按鈕，共 9 顆。刻意不 seed `familyStore`
     // （同 `sectionTabViewWithDiaryHost` 文件註解點名的既有陷阱：seed 了會讓 `TimelineView`
@@ -333,6 +342,7 @@ enum TapTargetGateScreenName: String {
         case .diaryDetail: return .button("更多操作")
         case .diaryDetailOwnContent: return .button("更多操作")
         case .diaryDetailRoleNotReady: return .button("更多操作")
+        case .diaryDetailWithVideo: return .button("更多操作")
         case .timelineInteractionRow: return .staticText("時間軸")
         case .pushPreprompt: return .button("開啟通知")
         // 同 `.settings`：「登出」列不受推播授權狀態影響，一定會渲染。

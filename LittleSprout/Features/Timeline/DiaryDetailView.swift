@@ -32,20 +32,27 @@ import SwiftUI
 /// 維持各自獨立的 `@State`：LS-190 R2 既有規約保證每一步都是「sheet 自己先 `dismiss()`，才
 /// 呼叫成功回呼」，彼此依序接力、沒有非同步窗口重疊的空間，不在這次收斂範圍內。
 ///
-/// **範圍決定（不含 `.fullScreenCover(item: $playingVideo)`）**：影片播放用 `fullScreenCover`
-/// 而非 `sheet`——兩者是不同的呈現風格（全螢幕無 grabber vs. 可拖曳收合），把它併進同一個
-/// `sheet(item:)` 會連帶改變影片播放的呈現方式，不是本票要求的行為變更；票文本輪只收斂
-/// 「留言 sheet」與「⋯」內容操作表這兩個都用 `.sheet` 呈現的來源。影片與這兩者之間仍有相同
-/// 類型的非同步窗口重疊風險（`playVideo` 也是先 tap、簽名 URL 回來才設 `playingVideo`）——
-/// 未觀測到實際發生（不像 comments/contentActions 那組已有具體重現路徑），記入待辦池。
+/// LS-246（票文範圍 1，池 `8a00311d` i3）：上面「範圍決定」原本把影片播放排除在收斂範圍
+/// 外——`playingVideo`（`.fullScreenCover(item:)`）留著當第三個獨立呈現來源，跟這裡併入
+/// `activeSheet` 的留言 sheet／內容操作表並存。併回來的理由：`playVideo()` 一樣是先 tap、
+/// 簽名 URL 回來才設狀態，若簽名回來時留言 sheet 或內容操作表恰好也在飛行中觸發，`.sheet`
+/// 與 `.fullScreenCover` 會同時想呈現——SwiftUI 對「同一棵畫面樹上 `.sheet`／
+/// `.fullScreenCover` 同時非 nil」沒有定義良好的行為（其中一個呈現會被忽略），跟原本
+/// comments/contentActions 那組問題同一個成因。加了 `.video` case 之後，三個來源共用同一個
+/// `Optional`，任何時刻只有一個「目前要呈現的」；`.sheet`／`.fullScreenCover` 兩種呈現風格
+/// 不同、沒辦法掛在同一個 modifier 上，改用兩個各自只認自己 case 的 derived `Binding`
+/// （`sheetBinding`／`videoBinding`，見 `DiaryDetailView` 屬性區文件註解）分別接
+/// `.sheet(item:)`／`.fullScreenCover(item:)`，寫入端仍然只有這一個 `activeSheet`。
 enum DiaryDetailSheet: Identifiable {
     case comments
     case contentActions(DiaryContentActionsContext)
+    case video(PlayingVideo)
 
     var id: String {
         switch self {
         case .comments: "comments"
         case .contentActions(let context): "contentActions-\(context.id)"
+        case .video(let video): "video-\(video.id)"
         }
     }
 }
@@ -67,7 +74,6 @@ struct DiaryDetailView: View {
 
     @State private var photos: [MediaContent] = []
     @State private var loadState: TimelineOperationState = .idle
-    @State private var playingVideo: PlayingVideo?
     @State private var photoWallWidth: CGFloat = UIScreen.main.bounds.width - 2 * AppSpacing.screenPad
     /// R2-m1（merge-review `b7ecfbf4`）：`playVideo` 現簽全尺寸 URL 前的 in-flight 去重旗標
     /// ——鍵是 `MediaContent.id`，同一支影片快速連點時第二次以後的 tap 直接忽略，不會對
@@ -85,10 +91,10 @@ struct DiaryDetailView: View {
     @State var blockConfirmContext: DiaryBlockConfirmContext?
     @State var removeConfirmTarget: ContentActionTarget?
     @State var showsDeleteConfirmation = false
-    /// LS-245：留言 sheet／「⋯」內容操作表（05）的單一呈現來源，取代原本各自獨立的
-    /// `showsCommentsSheet`／`contentActionsContext`——見檔頭文件註解、`DiaryDetailSheet`。
-    /// 不標 `private`：`DiaryDetailView+ContentActions.swift`（跨檔案 extension）需要寫入
-    /// （同上面幾個內容操作表狀態的既有理由）。
+    /// LS-245／LS-246：留言 sheet／「⋯」內容操作表（05）／影片播放三個呈現來源的單一狀態，
+    /// 取代原本各自獨立的 `showsCommentsSheet`／`contentActionsContext`／`playingVideo`——見
+    /// 檔頭文件註解、`DiaryDetailSheet`。不標 `private`：`DiaryDetailView+ContentActions.swift`
+    /// （跨檔案 extension）需要寫入（同上面幾個內容操作表狀態的既有理由）。
     @State var activeSheet: DiaryDetailSheet?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dismiss) var dismiss
@@ -148,7 +154,9 @@ struct DiaryDetailView: View {
                 loadState = .failure(AppError.map(error))
             }
         }
-        .fullScreenCover(item: $playingVideo) { video in
+        // LS-246：改用 `videoBinding`（不是直接的 `@State`）——見該屬性文件註解，讓影片跟
+        // 留言 sheet／內容操作表共用同一個 `activeSheet` 來源。
+        .fullScreenCover(item: videoBinding) { video in
             VideoPlayerScreen(url: video.url).ignoresSafeArea()
         }
     }
@@ -255,7 +263,9 @@ struct DiaryDetailView: View {
                     videoPrepareError = .rejected(message: "signFullSizeURL 回傳 nil：\(media.storagePath)", code: nil)
                     return
                 }
-                playingVideo = PlayingVideo(url: url)
+                // LS-246：改寫共用的 `activeSheet`（不再是獨立的 `playingVideo`）——見
+                // `DiaryDetailSheet`、`videoBinding` 文件註解。
+                activeSheet = .video(PlayingVideo(url: url))
             } catch {
                 videoPrepareError = AppError.map(error)
             }
@@ -315,7 +325,9 @@ struct DiaryDetailView: View {
     /// 開出的 sheet 本來就是空的，不阻擋按鈕本身）。
     private var activeSheetHost: some View {
         EmptyView()
-            .sheet(item: $activeSheet) { sheet in
+            // LS-246：改用 `sheetBinding`——`.video` case 的呈現交給 `videoBinding`／
+            // `.fullScreenCover(item:)`（見 body），這裡不會真的收到 `.video`。
+            .sheet(item: sheetBinding) { sheet in
                 switch sheet {
                 case .comments:
                     if let familyID = familyStore.myFamily?.id {
@@ -329,6 +341,10 @@ struct DiaryDetailView: View {
                     ContentActionsSheet(headline: context.target.headline, actions: context.actions) { action in
                         handleContentAction(action, context: context)
                     }
+                case .video:
+                    // 不可達：`sheetBinding` 的 getter 只回傳 `.comments`／`.contentActions`
+                    // （見該屬性文件註解），只是滿足 `DiaryDetailSheet` 窮舉 switch 的編譯要求。
+                    EmptyView()
                 }
             }
     }
