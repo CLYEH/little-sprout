@@ -440,6 +440,7 @@ u23=$(id_of "$out23")
 has '㉓ 建在同 major 最接近的 26.5（不是 header_os 26.0）' "$(cat "$db23")" "$(printf 'LS-120-iPhone17Pro\t%s\t26.5' "$u23")"
 has '㉓ stderr 印出 LS-260 裁決文案（實際版／釘住版／須揭露）' "$(cat "$work/err23")" 'runtime 26.5 ≠ 釘住 26.2（本機無 26.2；派工單／handoff 須揭露）'
 has '㉓ stderr 列出本機可用 runtime 清單' "$(cat "$work/err23")" '本機可用 iOS：26.0、26.5'
+has '㉓（R2 m3）揭露行講明是「新建專屬機」時的版本，並指向 push-gate 的 simulator 行' "$(cat "$work/err23")" '是**新建專屬機**時採用的版本，重用既有機時以 push-gate 印的 `simulator: … iOS <ver>` 為準'
 
 # ㉔ 釘住 26.5 沒裝、同 major 只有比它舊的 26.0／26.2 → 取同 major 最新的 26.2（不是 header_os 26.0）
 db24="$work/db24"

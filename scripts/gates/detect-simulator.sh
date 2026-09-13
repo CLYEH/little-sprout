@@ -229,7 +229,11 @@ else
       # 項 3 要消滅的那種形狀。實測 `printf 'iOS 26.0\niOS 26.5\n'` 經本行：BSD 與 ubuntu:24.04
       # 皆輸出同樣 12 bytes（`26.0` ＋ `343 200 201` ＋ `26.5` ＋ `\n`）；空輸入兩邊皆空輸出。
       avail=$(xcrun simctl list runtimes 2>/dev/null | awk '/^iOS /{printf "%s%s", (n++ ? "、" : ""), $2} END{if (n) print ""}')
-      echo "⚠ detect-simulator：runtime ${target_os} ≠ 釘住 ${pinned_os}（本機無 ${pinned_os}；派工單／handoff 須揭露）——本機可用 iOS：${avail:-無}；CI 跑 iOS ${pinned_os}，本機重現不出 CI 紅時先懷疑 runtime 差（LS-260）" >&2
+      # LS-260 R2 m3（merge-review R1）：這裡印的 `target_os` 是「這次**要建**的 runtime」，重用既有
+      # 專屬機時實際跑的是那台機器自己的版本（可能更舊，由下方 `warn_runtime_mismatch` 另行點名）。
+      # 照抄這一行寫進 handoff 會揭露錯的版本——權威來源是 `push-gate.sh` 取自實機的
+      # `simulator: <name> <udid> iOS <ver>（pinned <ver>）`，所以這裡明講「新建時」並指去那一行。
+      echo "⚠ detect-simulator：runtime ${target_os} ≠ 釘住 ${pinned_os}（本機無 ${pinned_os}；派工單／handoff 須揭露）——本機可用 iOS：${avail:-無}；${target_os} 是**新建專屬機**時採用的版本，重用既有機時以 push-gate 印的 \`simulator: … iOS <ver>\` 為準；CI 跑 iOS ${pinned_os}，本機重現不出 CI 紅時先懷疑 runtime 差（LS-260）" >&2
     fi
   fi
   # DETECT_SIMULATOR_SHARED=1：強制走共用，連本 worktree 專屬模擬器是否已存在都不查

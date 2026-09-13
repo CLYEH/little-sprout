@@ -49,10 +49,27 @@ extension QADriver {
                 return CGPoint(x: cardFrame.midX, y: min(max(cardFrame.midY, top), bottom))
             }
             guard attempt < Self.cardScrollAttempts else { break }
-            // 捲不動（例如卡片其實在畫面外、時間軸已到底）時畫面不會變——`snap` 的連續同畫面自診斷
-            // 會先於下面的逾時把它判成卡住，訊息比「等不到日記詳情內文」精確。
+            // LS-260 R2 m2（merge-review R1）：捲不動的判定改看「卡片 frame 有沒有動」，不再依賴
+            // `snap()` 的跨步驟 streak。原寫法有一個會**反過來咬自己**的交互：streak 是全域計數，
+            // 若進迴圈前已經有兩張逐字相同的截圖（`landed-timeline` → `ensureFamily` 的 `timeline`，
+            // 中間只有幾秒、狀態列分鐘沒跳就會相同——正是 `snap()` 註解自己舉的例子），第一次
+            // attempt 的 `snap` 就把 streak 推到 3 而 `XCTFail`：連一次 `swipeUp()` 都還沒發生，
+            // 捲動重試等於沒生效；而且 `continueAfterFailure = false`（`QASmokeTests.swift`）會讓
+            // 下面的 `attachHierarchy`／`snap("fail")`／詳細訊息全部不執行，診斷比修之前更差。
+            // 修法：進迴圈就把 streak 歸零（本迴圈自己的截圖才互相比），再用 frame 位移直接判定。
+            resetScreenStreak()
             snap("card-under-tabbar")
             app.swipeUp()
+            let movedFrame = card.frame
+            guard movedFrame.minY != cardFrame.minY else {
+                attachHierarchy(reason: "diary-card-scroll-stuck")
+                snap("fail")
+                XCTFail(
+                    "時間軸日記卡整張落在浮動 Tab Bar 頂緣以下，往上捲之後 card.frame 完全沒動"
+                    + "（minY 仍是 \(cardFrame.minY)）——時間軸捲不動，不再重試；座標附件已在 xcresult"
+                )
+                throw QAFailure.screen("時間軸日記卡（捲不動）")
+            }
         }
         attachHierarchy(reason: "diary-card-under-tabbar")
         snap("fail")

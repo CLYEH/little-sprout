@@ -62,6 +62,14 @@ final class QADriver {
         )
     }
 
+    /// LS-260 R2 m2：讓「同一段流程自己的截圖才互相比」——`safeCardTapPoint` 的捲動重試迴圈進場時
+    /// 呼叫，避免迴圈外累積的 streak（例如 `landed-timeline` → `timeline` 兩張相同）在第一次
+    /// attempt 就湊滿門檻而誤判成卡住。
+    func resetScreenStreak() {
+        lastScreenshotDigest = ""
+        sameScreenshotStreak = 0
+    }
+
     func attachHierarchy(reason: String) {
         let attachment = XCTAttachment(string: app.debugDescription)
         attachment.name = "\(env.scenario.rawValue)-hierarchy-\(reason)"

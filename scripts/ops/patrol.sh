@@ -642,6 +642,11 @@ GH_BIN=${PATROL_GH:-gh}
 REDS_DAYS=${PATROL_REDS_DAYS:-7}
 REDS_MAX_FETCH=${PATROL_REDS_MAX_FETCH:-5}
 REDS_CACHE=${PATROL_REDS_CACHE:-${TMPDIR:-/tmp}/patrol-reds-cache}
+# LS-260 R2 m1（merge-review R1）：快取以 run id 為 key、不帶簽章格式版本——簽章規則一改，舊檔
+# 照樣被讀進來。reviewer 實地重現過：用本 head 跑 patrol 時讀到更早草稿版寫下的快取，印出
+# 「⚠ 同類紅 10 次」的假警報（內容是現行程式碼根本不會產生的字串）。路徑加一段版本，簽章規則
+# 變更就把常數往上跳，舊批整批自然失效（也不必手動清 /tmp）。
+REDS_CACHE_VER=v1
 # LS-260 R2 M1：cancelled job 跑滿幾分鐘才算「撞 job timeout-minutes」（見下方分類邏輯的實測分離度）
 REDS_TIMEOUT_MIN=${PATROL_REDS_TIMEOUT_MIN:-30}
 case "$REDS_DAYS" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_DAYS 須為整數天（得到「${REDS_DAYS}」）" >&2; exit 2 ;; esac
@@ -659,13 +664,14 @@ else
   if [ -z "$reds_list" ]; then
     reds_note="近 ${REDS_DAYS} 日無 failure／cancelled 的 run（或 gh 查詢失敗／未登入，fail-soft 不擋）"
   else
-    mkdir -p "$REDS_CACHE" 2>/dev/null
+    reds_cache_dir="${REDS_CACHE}/${REDS_CACHE_VER}"
+    mkdir -p "$reds_cache_dir" 2>/dev/null
     find "$REDS_CACHE" -type f -mtime "+$((REDS_DAYS * 2))" -delete 2>/dev/null
     reds_fetched=0; reds_sigs=
     while IFS=$'\t' read -r r_id r_concl r_branch; do
       [ -n "$r_id" ] || continue
       reds_runs=$((reds_runs + 1))
-      cache_f="${REDS_CACHE}/${r_id}"
+      cache_f="${reds_cache_dir}/${r_id}"
       if [ ! -f "$cache_f" ]; then
         # 額度用完就先不算這個 run（不寫快取），下一輪再補——`cancelled` 那條雖然只查 JSON、比較便宜，
         # 但同樣是一次網路往返，一併受額度管，巡檢的單輪成本才有上界。
@@ -740,7 +746,7 @@ EOF
 $(printf '%s' "$reds_sigs" | sort | uniq -c | awk '$1 >= 2 { n = $1; $1 = ""; sub(/^ +/, ""); printf "%d\t%s\n", n, $0 }' | sort -rn)
 EOF
     fi
-    reds_note="近 ${REDS_DAYS} 日 failure／cancelled run ${reds_runs} 個（本輪新下載 log ${reds_fetched} 個，上限 ${REDS_MAX_FETCH}；快取 ${REDS_CACHE}）"
+    reds_note="近 ${REDS_DAYS} 日 failure／cancelled run ${reds_runs} 個（本輪新下載 log ${reds_fetched} 個，上限 ${REDS_MAX_FETCH}；快取 ${reds_cache_dir}）"
   fi
 fi
 
