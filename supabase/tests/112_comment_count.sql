@@ -219,21 +219,30 @@ rollback;
 -- 總量成正比。
 --
 -- LS-258（清倉 1，項 1）：CI（PR #392）一次量到 951（同 SHA rerun 卻只有 74 級），
--- `vacuum (analyze)` 當時只涵蓋 comments／feed_items／diaries 三張表。`run.sh`
--- 依檔名排序在 112_ 之前還會跑到觸碰 albums／media 的測試檔（例如
--- `86_albums_comments_owner_scope.sql`／`98_media_thumbnails.sql`／`99_media_
--- duration.sql`，皆各自 `begin;/rollback;`），同樣會在這兩張表留下 dead tuple，
--- autovacuum 時序若沒追上就會讓 `get_family_timeline` 內部對 album 目標的 EXISTS
--- 探測（見下方 §3 主查詢的目標判斷）多走訪幾頁死頁——這裡補上這兩張表的
--- `vacuum (analyze)`，涵蓋面比照本檔 §3 開頭原本三張表的理由。
+-- `vacuum (analyze)` 當時只涵蓋 comments／feed_items／diaries 三張表。
+--
+-- merge-review R1 major-1（訂正，`bb3f7934`）：R1 版本這裡原本補的是
+-- `albums`／`media` 兩張表，理由寫成「`get_family_timeline` 內部對 album 目標的
+-- EXISTS 探測」——**這個機制在現行函式裡不存在**，實查目前生效的函式本體
+-- （`supabase/migrations/20260913010217_comment_count.sql` 的
+-- `get_family_timeline`）只讀 `feed_items`／`feed_item_children`／
+-- `diary_children`／`album_children`／`comments` 五張表，没有 `albums`、没有
+-- `media`：album 目標的關聯讀的是 `album_children`（`coalesce(case p.kind when
+-- 'album' then (select array_agg(ac.child_id...) from public.album_children
+-- ac...) end, ...)`），不是對 `albums` 本體的 EXISTS 探測。真正每一列都會逐列
+-- correlated 探測、卻沒被 vacuum 的是 `diary_children`／`album_children`（reviewer
+-- 實測 `pg_stat_all_tables`：兩表 `last_vacuum` 皆為 NULL）——下方（見 F1 段
+-- VACUUM 清單）改補這兩張表，`albums`／`media` 移除（量測路徑實際不讀，留著是
+-- inert 的）。
 --
 -- 即便涵蓋面補齊，跨測試檔的殘留污染仍可能在單次量測裡偶發偏高（autovacuum 是
 -- 背景程序，不保證這裡的顯式 VACUUM 之後不會有新的殘留）——下面的量測邏輯改成
 -- 「第一次量測超標才重測一次，取兩次的小值」，**不放寬門檻本身**：真退化（例如
--- comment_count 退化成 N+1）兩次量測都會超標，殘留污染通常只影響其中一次；連續
--- 兩次呼叫同一段查詢，第二次也會受益於 Postgres 對死列的 opportunistic pruning
--- （第一次讀取頁面時，可見度檢查順便清掉已確認不可見的版本），單純重跑就可能量到
--- 更低的 buffers，不代表門檻本身失去鑑別力。
+-- comment_count 退化成 N+1）兩次量測都會超標，殘留污染通常只影響其中一次；重測
+-- 只是多給一次機會（merge-review R1 i1：reviewer 把門檻壓到 1 逼出兩次量測，
+-- 第一次 87、重測反而更高的 98——「第二次通常受益於 Postgres 對死列的
+-- opportunistic pruning、buffers 較低」這個前提不成立，這裡不宣稱重測一定更低，
+-- 只是「兩次機會、任一次過關就算過」，真退化仍會兩次都超標）。
 --
 -- merge-review R1 F1：VACUUM 放在這裡（`begin;` 之前，不能在交易內執行）——
 -- `run.sh` 依檔名排序（`sort -V`：50 < 112）先跑 50_rls_plan_no_percall_subquery.sql
@@ -249,8 +258,8 @@ rollback;
 vacuum (analyze) public.comments;
 vacuum (analyze) public.feed_items;
 vacuum (analyze) public.diaries;
-vacuum (analyze) public.albums;
-vacuum (analyze) public.media;
+vacuum (analyze) public.diary_children;
+vacuum (analyze) public.album_children;
 -- ===========================================================================
 begin;
 do $$
@@ -306,6 +315,10 @@ declare
   v_plan text := '';
   v_hit bigint;
   v_read bigint;
+  v_hit1 bigint;
+  v_read1 bigint;
+  v_hit_retry bigint;
+  v_read_retry bigint;
   v_buffers bigint;
   v_buffers_retry bigint;
   v_plan_final text;
@@ -336,21 +349,29 @@ begin
 
     if v_attempt = 1 then
       v_buffers := v_hit + v_read;
+      v_hit1 := v_hit;
+      v_read1 := v_read;
       v_plan_final := v_plan;
       exit when v_buffers <= c_buffer_budget;
     else
+      v_hit_retry := v_hit;
+      v_read_retry := v_read;
       v_buffers_retry := v_hit + v_read;
       v_plan_final := v_plan;
     end if;
   end loop;
 
+  -- merge-review R1 minor-2：三個分支的訊息都把 hit=%／read= 拆解印回來——池項
+  -- `72eeae64` 記錄 CI 當時的紅訊息就是靠 hit=893／read=58 這個拆解才判斷出「是
+  -- 走訪死頁、不是 N+1」，只印合計 buffers 會少掉這個第一手線索。用 v_hit1／
+  -- v_read1 凍住第一次的拆解（迴圈跑到第二輪時 v_hit／v_read 會被覆寫）。
   if v_buffers <= c_buffer_budget then
-    raise notice 'ok 效能：get_family_timeline（200 筆 feed，含留言）buffers=%（第一次量測即過關，門檻 ≤%）', v_buffers, c_buffer_budget;
+    raise notice 'ok 效能：get_family_timeline（200 筆 feed，含留言）buffers=%（hit=% read=%，第一次量測即過關，門檻 ≤%）', v_buffers, v_hit1, v_read1, c_buffer_budget;
   elsif v_buffers_retry <= c_buffer_budget then
-    raise notice 'ok 效能：get_family_timeline（200 筆 feed，含留言）buffers=%（第一次 % 超標，重測取小值過關，門檻 ≤%，LS-258）', v_buffers_retry, v_buffers, c_buffer_budget;
+    raise notice 'ok 效能：get_family_timeline（200 筆 feed，含留言）buffers=%（hit=% read=%，第一次 buffers=%〔hit=% read=%〕超標，重測取小值過關，門檻 ≤%，LS-258）', v_buffers_retry, v_hit_retry, v_read_retry, v_buffers, v_hit1, v_read1, c_buffer_budget;
   else
-    raise exception E'FAIL 效能：get_family_timeline（200 筆 feed，含留言）兩次量測皆超標（第一次 buffers=%、重測 buffers=%，門檻 %）—— comment_count 疑似退化成跟 feed 總量或留言總量成正比\n%',
-      v_buffers, v_buffers_retry, c_buffer_budget, v_plan_final;
+    raise exception E'FAIL 效能：get_family_timeline（200 筆 feed，含留言）兩次量測皆超標（第一次 buffers=%〔hit=% read=%〕、重測 buffers=%〔hit=% read=%〕、門檻 %）—— comment_count 疑似退化成跟 feed 總量或留言總量成正比\n%',
+      v_buffers, v_hit1, v_read1, v_buffers_retry, v_hit_retry, v_read_retry, c_buffer_budget, v_plan_final;
   end if;
 end;
 $$;

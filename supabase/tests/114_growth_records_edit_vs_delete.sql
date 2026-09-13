@@ -46,6 +46,7 @@ declare
   v_id uuid;
   v_row public.growth_records%rowtype;
   v_edit_failed boolean := false;
+  v_edit_succeeded boolean := false;
 begin
   -- 作者（member）建一筆
   perform set_config('request.jwt.claims',
@@ -64,12 +65,19 @@ begin
   reset role;
 
   -- 作者事後嘗試編輯內容：必須無效（42501）
+  --
+  -- merge-review R1 minor-1：不在 `begin ... exception when others` 同一個 block
+  -- 裡就地 `raise exception`——那句 raise 會被自己緊接著的 `when others` 接住
+  -- （sqlstate 變成 P0001），讓「守則破了、真的改到了」這個最重要的失敗模式，被
+  -- 誤判成「錯誤碼不是 42501」印出（reviewer 用 M2 拿掉 policy 的 `deleted_at is
+  -- null` 實跑到這個訊息陷阱）。改成 perform 成功只設旗標，離開 block 之後才
+  -- raise，讓兩種失敗各自印出正確訊息。
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
     perform public.upsert_growth_record(v_id, v_child, current_date, 99.0, null, null, '作者想改');
-    raise exception 'FAIL：owner 軟刪之後，作者竟然還能編輯內容成功';
+    v_edit_succeeded := true;
   exception when others then
     if sqlstate <> '42501' then
       raise exception 'FAIL：owner 軟刪之後作者編輯應拿到 42501，實際 %', sqlstate;
@@ -78,6 +86,9 @@ begin
   end;
   reset role;
 
+  if v_edit_succeeded then
+    raise exception 'FAIL：owner 軟刪之後，作者竟然還能編輯內容成功';
+  end if;
   if not v_edit_failed then
     raise exception 'FAIL：作者編輯應該要失敗，卻沒有進入例外分支';
   end if;
