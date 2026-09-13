@@ -113,9 +113,9 @@ join-r2-1、join-r2-3、join-r2-4：三人臉部與肢體接觸點目視估算�
 
 **次選：`join-r2-3`**（母親手部同樣自然、ΔE00 40.19 同樣有清楚邊際，肢體接觸略少於 join-r2-4）。**第三順位：`join-r2-1`**（判準 5 為邊際案例需人工複審記錄在案，且迴避手部入鏡的策略較不利於長期驗證「手部異常」修正是否徹底解決）。
 
-**R3 置換仍待 orchestrator 於 VR R2 verdict 後下達指示，本節僅完成候選評估，未執行 `.pen` 節點置換。**
+**R3 置換已完成**（VR R2 verdict `bc8d4ddf` 裁決 (1)）：join 題已置換為 join-r2-4，`aD9EO`／`j5Bns` Update＋讀回確認，六板截圖見 `.claude/evidence/LS-247/r3/`，commit `dcafc1a`。
 
-## R2 定稿
+## R2 定稿（歷史，join 尚未置換前；現行狀態見下方「R3 定稿」）
 
 | 題 | 定稿檔名（候選原檔） | 落地檔 |
 |---|---|---|
@@ -123,11 +123,19 @@ join-r2-1、join-r2-3、join-r2-4：三人臉部與肢體接觸點目視估算�
 | invite | `candidates/invite-3.png`（**R2 換選，原 invite-4**） | `design/appstore-photos/invite.jpg`（**R2 重裁** `(80,100,2080,1202)`→2000×1102，JPEG q90，400113 bytes） |
 | join | 無（**R2 判定需重生，待 codex 重生後 R3 置換**） | `design/appstore-photos/join.jpg`（**R1 遺留**，內容＝join-2 裁切，已知帶 MJ-1 手部缺陷，僅供板面佔位，不得作為出貨版本） |
 
+## R3 定稿（現行）
+
+| 題 | 定稿檔名（候選原檔） | 落地檔 | 狀態 |
+|---|---|---|---|
+| hero | `candidates/hero-3.png`（不變） | `design/appstore-photos/hero.jpg`（370321 bytes） | 定稿，未動 |
+| invite | `candidates/invite-3.png`（R2 換選） | `design/appstore-photos/invite.jpg`（2000×1102，400113 bytes） | **暫定**——VR R2 MJ-A／MJ-D 待處理，orchestrator 已派 Codex 重生 invite-r2，下一輪可能再次置換 |
+| **join** | `candidates/join-r2-4.png`（**R3 新選**） | `design/appstore-photos/join.jpg`（裁切 `(0,6,2160,1196)`→2160×1190，JPEG q90，410811 bytes） | **定稿**，CIEDE2000 min=38.23、判準 3 五指齊全可逐指驗證、東亞面孔 |
+
 ## 風險與已知限制（沿革累積，供核可頁揭露）
 
 （**R3 移除**，VR R2 MN-C：原「hero-3 背景月曆假中文筆畫」風險項經 6x 放大複審非缺陷——月曆為失焦山景照＋自洽日期格網，正常景深表現，非假字，不列風險。判準 2 見上方訂正段。）
 - **invite-3**：（**R3 移除**，VR R2 MJ-C——「解析度低於下限 7%」為 BRIEF §2 算式錯誤造成的不存在風險，已訂正，見上方「invite-3 重裁說明」的 R3 訂正段。裁切是否切到阿公老花眼鏡屬 MJ-A／MJ-D 範圍，待下一輪 invite-r2 候選評估後一併處理。）
-- **join**：本輪無定稿，`join.jpg` 仍為 R1 遺留（帶 MJ-1 AI 手缺陷），**核可頁與 LS-248 前必須重生置換，現狀不得上架**。
+- **join**：（**R3 解除**）已置換為 join-r2-4，CIEDE2000 四角 min=38.23、判準 3 五指齊全可逐指驗證、東亞面孔，不再帶 MJ-1 AI 手缺陷。
 - 判準 5 邊際保護（BRIEF §6-5，VR MN-3）：本輪 12 張中僅 join-2（12.27，距門檻 15 差 2.73）與 join-4（11.67，差 3.33）較接近門檻，皆未落入 ±1.0 邊際區間，非邊界爭議案例。
 
 ---
