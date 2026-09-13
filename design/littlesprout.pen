@@ -160586,7 +160586,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "匯出前置 blocker（第 0 步，優先於下列所有步驟）：海報層 6 個 Hero Photo 節點（scpdc／ayJoy／F92jh／yzfCx／aD9EO／j5Bns，見上「BL-5 相片來源」段）目前皆為 LS-46 設計佔位圖，非出貨資產。正式匯出上架素材前，先確認使用者已就 D10（自有照片／Codex 生圖／授權圖庫）拍板並完成置換，否則不得執行下方匯出步驟。",
+                  "content": "匯出前置 blocker（第 0 步，優先於下列所有步驟）：海報層 6 個 Hero Photo 節點（scpdc／ayJoy／F92jh／yzfCx／aD9EO／j5Bns，見上「BL-5 相片來源」段）目前皆為 LS-46 設計佔位圖，非出貨資產。正式匯出上架素材前，先確認使用者已就 D10（自有照片／Codex 生圖／授權圖庫）拍板並完成置換，否則不得執行下方匯出步驟。\n\nLS-247 R2 訂正（VR R1 MJ-4：本段才是真正的「第 0 步 blocker」，R1 誤只在 H7782 段追加）：六個 Hero Photo 節點已於 2026-09-13 置換為 Codex 生圖，不再是 LS-46 設計佔位圖。hero（scpdc／ayJoy）與 invite（F92jh／yzfCx）已依 R2 判準定稿（圖源與選圖判準見 design/appstore-photos/SELECTION.md）。join（aD9EO／j5Bns）目前仍是 R1 候選 join-2、經 VR R1 MJ-1 判定帶 AI 生成手部異常缺陷，待重生後才是合格定稿——匯出前必須再次確認 join 節點已完成置換，現狀不得作為出貨資產匯出。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
