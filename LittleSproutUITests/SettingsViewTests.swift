@@ -88,40 +88,63 @@ final class SettingsViewTests: XCTestCase {
     ///    對調）時只剩列本身那一個，數量掉到 1——用數量比對取代單純的存在性判斷，才測得出
     ///    「開錯文件」這種 mutation（只判斷存在性，兩種情況下「使用條款」都查得到，測不出來，
     ///    實測驗證過）。
+    /// LS-259 第 1 項（沿 LS-253 `7b493a8` 同一 helper／寫法）：`waitForHittable` 讓 tap
+    /// 前多一個「真的可點」同步點，`waitForNonExistence` 用輪詢取代一次性 `.exists` 快照
+    /// （避免轉場動畫尚未跑完時誤判）；兩處 sheet 斷言的 timeout 對齊 10s（同
+    /// `SettingsViewIPadTests` 的 `pushedSentinel`／legal 用值），不再用 5s／3s。
     func testTappingTermsRowOpensLegalDocumentSheet_thenCloses() {
         let app = TapTargetMeasurement.launch(.settings)
         TapTargetMeasurement.assertScreenRendered(.settings, in: app)
 
         let termsRow = app.buttons["使用條款"]
         XCTAssertTrue(termsRow.waitForExistence(timeout: 5), "設定頁「法律」區應有可點擊的「使用條款」列")
+        XCTAssertTrue(waitForHittable(termsRow, timeout: 5), "「使用條款」列應該可點擊")
         termsRow.tap()
 
         let closeButton = app.buttons["關閉"]
-        XCTAssertTrue(closeButton.waitForExistence(timeout: 5), "點擊「使用條款」列後應開啟 LegalDocumentSheet（Footer「關閉」鈕可見）")
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 10), "點擊「使用條款」列後應開啟 LegalDocumentSheet（Footer「關閉」鈕可見）")
         XCTAssertEqual(
             app.staticTexts.matching(NSPredicate(format: "label == %@", "使用條款")).count, 2,
             "應同時看到「使用條款」列與 Doc Title 兩個「使用條款」文字元件——只剩 1 個代表開錯文件（sheet 顯示的是隱私權政策）"
         )
 
         closeButton.tap()
-        XCTAssertFalse(closeButton.waitForExistence(timeout: 3), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）")
+        XCTAssertTrue(waitForNonExistence(closeButton, timeout: 10), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）")
     }
 
     /// 同上，換「隱私權政策」列，驗證開的是對應文件（不是誤開使用條款）——理由與數量比對手法
-    /// 見上一支測試文件註解。
+    /// 見上一支測試文件註解。LS-259 第 1 項：本測試沒有關閉步驟（只驗開啟），故只補
+    /// `waitForHittable`＋開啟斷言 timeout 對齊 10s，不新增關閉／`waitForNonExistence`——
+    /// 關閉行為已由上一支 `testTappingTermsRowOpensLegalDocumentSheet_thenCloses` 涵蓋。
     func testTappingPrivacyRowOpensCorrectLegalDocumentSheet() {
         let app = TapTargetMeasurement.launch(.settings)
         TapTargetMeasurement.assertScreenRendered(.settings, in: app)
 
         let privacyRow = app.buttons["隱私權政策"]
         XCTAssertTrue(privacyRow.waitForExistence(timeout: 5), "設定頁「法律」區應有可點擊的「隱私權政策」列")
+        XCTAssertTrue(waitForHittable(privacyRow, timeout: 5), "「隱私權政策」列應該可點擊")
         privacyRow.tap()
 
-        XCTAssertTrue(app.buttons["關閉"].waitForExistence(timeout: 5), "點擊「隱私權政策」列應開啟 LegalDocumentSheet（Footer「關閉」鈕可見）")
+        XCTAssertTrue(
+            app.buttons["關閉"].waitForExistence(timeout: 10), "點擊「隱私權政策」列應開啟 LegalDocumentSheet（Footer「關閉」鈕可見）"
+        )
         XCTAssertEqual(
             app.staticTexts.matching(NSPredicate(format: "label == %@", "隱私權政策")).count, 2,
             "應同時看到「隱私權政策」列與 Doc Title 兩個「隱私權政策」文字元件——只剩 1 個代表開錯文件（sheet 顯示的是使用條款）"
         )
+    }
+
+    /// 同 `SettingsViewIPadTests`（LS-237 第 8 項）：`waitForNonExistence` 用
+    /// `XCTNSPredicateExpectation` 輪詢「停止存在」，`waitForHittable` 用同一套機制等
+    /// `hittable == true`，比一次性 `.exists`／`.isHittable` 快照可靠。
+    private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
     // MARK: - 垂直置中（使用者 2026-09-05 核可 LS-152 稿的唯一意見）

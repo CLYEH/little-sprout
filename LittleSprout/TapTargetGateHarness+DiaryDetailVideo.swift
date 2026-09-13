@@ -28,8 +28,9 @@ import SwiftUI
 /// 合成一支*真正可解碼*的最短 H.264 mp4（同 `scripts/ops/review-demo-genvideo.swift` 既有
 /// 技術，那支是給 demo seed 用的獨立命令列工具，這裡是 app harness 內部需要、不能共用同一份
 /// 檔案）。真正有效的影片內容讓 `AVPlayerViewController` 走正常播放路徑，不會進入
-/// 「不支援」狀態、不會觸發那個自動收起行為；30 秒长度遠超過測試互動所需時間，不會播完自然
-/// 結束。
+/// 「不支援」狀態、不會觸發那個自動收起行為；300 秒長度遠超過測試互動所需時間，不會播完自然
+/// 結束（LS-259 第 3 項：訂正註解與 `harnessVideoURL` 實際參數 `seconds: 300, fps: 1` 對齊，
+/// 原文誤寫「30 秒」且混入簡體字「长」）。
 extension TapTargetGateHarness {
     /// LS-246（票文範圍 1）：同 `diaryDetailHost`，但瀑布流帶一支已經簽好名（`isPlayableVideo`
     /// 判定為可播放）的影片格——`DiaryDetailVideoUITests` 用它驗證「留言 sheet 開著時點影片」
@@ -93,8 +94,9 @@ extension TapTargetGateHarness {
 
     /// R2：合成一支真正可解碼的最短 H.264 mp4（同 `scripts/ops/review-demo-genvideo.swift`
     /// 既有技術，那支是命令列工具、跑在獨立 process，這裡是 app 內部同步呼叫，不能共用同一份
-    /// 檔案）。64×64、2 fps、30 秒——解析度與 fps 壓到最低讓合成在毫秒等級完成，長度留足測試
-    /// 互動所需的餘裕（遠超過任何單一 UITest 的執行時間），避免播完自然結束、被系統收起。
+    /// 檔案）。64×64、1 fps、300 秒（LS-259 第 3 項：訂正與 `harnessVideoURL` 實際呼叫參數
+    /// 對齊，原文誤寫「2 fps、30 秒」）——解析度與 fps 壓到最低讓合成在毫秒等級完成，長度留足
+    /// 測試互動所需的餘裕（遠超過任何單一 UITest 的執行時間），避免播完自然結束、被系統收起。
     ///
     /// 用 `DispatchSemaphore` 同步等待（同 `review-demo-genvideo.swift` 既有作法）：這裡是
     /// DEBUG-only harness 的一次性初始化，不是生產路徑的效能敏感區。任何一步失敗都
@@ -138,7 +140,7 @@ extension TapTargetGateHarness {
                 let frame = frameCounter.withLock { $0 }
                 if frame >= frameCount {
                     input.markAsFinished()
-                    writer.finishWriting { done.signal() }
+                    writer.finishWriting { Self.assertFinishedWriting(writer, done: done) }
                     return
                 }
                 guard Self.appendFrame(frame, to: adaptor, height: height, fps: fps, writer: writer) else {
@@ -152,6 +154,22 @@ extension TapTargetGateHarness {
             assertionFailure("LS-246 test harness：影片合成逾時（20 秒）")
         }
         return url
+    }
+
+    /// LS-259 第 2 項（merge-review R1 m1，`82724334`）：`finishWriting` 的 completion 只
+    /// signal，沒檢查 `writer.status`——合成若在這個階段才失敗（早於此的 `startWriting`／
+    /// `adaptor.append` guard 都沒攔到），會靜默把 `url` 交給呼叫端，下游
+    /// `AVPlayerViewController` 播放不了一支不完整的檔案，錯誤訊息離真正病灶（合成失敗）很遠。
+    /// 明確失敗優於假綠（同 `appendFrame` 既有理由）。抽出成獨立函式單純是為了不讓
+    /// `makeTestVideoURL` 超過 SwiftLint `function_body_length`，邏輯未變。
+    private static func assertFinishedWriting(_ writer: AVAssetWriter, done: DispatchSemaphore) {
+        guard writer.status == .completed else {
+            preconditionFailure(
+                "LS-259 test harness：finishWriting 後 status 非 .completed（\(writer.status.rawValue)）："
+                    + "\(writer.error?.localizedDescription ?? "unknown")"
+            )
+        }
+        done.signal()
     }
 
     /// `makeTestVideoURL` 逐格寫入抽出的一步——純色畫格，內容本身不重要（同 `makeTestImageURL`

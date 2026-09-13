@@ -259,12 +259,20 @@ final class SettingsViewIPadTests: XCTestCase {
         XCTAssertEqual(selectedLabels(), ["個人"], "預設應該恰好一列帶「已選取」訊號，且是「個人」")
 
         // LS-253 R2（merge-review R1 m1）：這裡 tap 後直接同步讀 `selectedLabels()`，本檔最脆的
-        // 一行——tap 前補 `waitForHittable` 同步點；tap 後讀值前先確認「家庭」列本身仍在
-        // accessibility tree 裡（`waitForExistence`）才讀取它的 value，避免轉場瞬間讀到過渡態。
+        // 一行——tap 前補 `waitForHittable` 同步點。
+        //
+        // LS-259 第 4 項（merge-review R2 informational i4，`0bb126d4`）：訂正下一行
+        // `waitForExistence` 的因果陳述——「家庭」列 tap 前已確認 hittable、選取後也不會離開
+        // accessibility tree，所以這個 `exists` 判斷本身近乎恆真，並不是像原註解說的「先確認
+        // 列仍在 tree 裡才讀值、避免轉場瞬間讀到過渡態」那個機制（無法偵測、也無法等待 value
+        // 轉換）。它真正的效益是 `XCTNSPredicateExpectation` 附帶的輪詢延遲，讓「已選取」訊號
+        // 的轉場多一點時間沉澱再讀值。**不要改成直接等 `value == "已選取"`**——那會讓下一行的
+        // `XCTAssertEqual` 斷言恆真（等到成立才斷言成立）。保留這個寫法（等一個正交屬性）是
+        // 刻意的取捨，不是疏漏。
         let familyTab = app.buttons["家庭"]
         XCTAssertTrue(waitForHittable(familyTab, timeout: 5), "「家庭」sidebar 列應該可點擊")
         familyTab.tap()
-        XCTAssertTrue(familyTab.waitForExistence(timeout: 5), "點擊「家庭」後該列應仍存在，才能讀取其 accessibility value")
+        XCTAssertTrue(familyTab.waitForExistence(timeout: 5), "借輪詢延遲讓「已選取」轉場沉澱，才讀取 accessibility value")
         XCTAssertEqual(selectedLabels(), ["家庭"], "點擊「家庭」後「已選取」訊號應該恰好移到「家庭」，其餘四列都不再帶")
     }
 }
