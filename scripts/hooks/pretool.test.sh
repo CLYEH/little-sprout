@@ -349,6 +349,60 @@ else
 fi
 rm -rf "$mut_dir"
 
+# ============================================================
+# F5b（LS-264，來源 LS-96 池項 `2ce0014f`(b)）：**備援解析路徑的 mutation 負控格**。
+# 本檔對 python3 備援路徑只有正控（上面三格：H1 deny／無關命令 allow／多行 command 判得到 H2），
+# 沒有任何 mutation——備援分支的欄位抽取被改壞（例如 `read` 掉了 `-d ''`，多行 command 在第一個
+# 換行就被截斷，R1 F1 的原始事故）時，那三格裡只有「多行」那格會紅，而它紅不紅取決於樣本，
+# 沒有負控證明「它就是被那一行擋下來的」。這裡把**只有 python3 分支**那一行的 `-d ''` 拿掉
+# （jq 分支同一行原樣保留，用出現序數區分），在 py-only PATH 下重跑同一份多行樣本：必須從
+# deny 變成 allow。反向確認 mutant 只動到第二處。
+if [ -n "$real_python3" ]; then
+  f5b_dir=$(mktemp -d)
+  # pretool.sh 以自己所在目錄找 pretool_engine.py，mutant 要跟引擎放在一起才跑得起來
+  cp "${root}/scripts/hooks/pretool_engine.py" "$f5b_dir/"
+  # 兩個分支的 read 行字面完全相同，用出現序數區分：只改第 2 個（python3 備援分支）。
+  # `[^ ]+` 吃掉分隔符參數本身，awk 程式裡才不必寫單引號。
+  awk '
+    /IFS="\$SEP" read -r -d / {
+      n++
+      if (n == 2) { sub(/read -r -d [^ ]+ /, "read -r "); print; next }
+    }
+    { print }
+  ' "$pretool" > "$f5b_dir/no-nul-fallback.sh"
+  before=$(grep -c -- 'IFS="$SEP" read -r -d ' "$pretool")
+  after=$(grep -c -- 'IFS="$SEP" read -r -d ' "$f5b_dir/no-nul-fallback.sh")
+  if [ "$before" -eq 2 ] && [ "$after" -eq 1 ]; then
+    echo '✓ F5b：mutant 只拿掉 python3 分支那一行的 NUL 分隔（jq 分支原樣保留，負控本身有效）'
+  else
+    echo "✗ F5b：mutant 動到的行數不對（本尊 ${before} 行、mutant ${after} 行，期望 2 → 1）——負控本身無效" >&2
+    fail=1
+  fi
+  out=$(printf '%s' "$(bash_json 'cd /tmp\ncat .env')" | env PATH="$work/py-only" "$bash_bin" "$f5b_dir/no-nul-fallback.sh" 2>&1); got=$?
+  if [ "$got" -eq 0 ] && [ -z "$out" ]; then
+    echo '✓ F5b：備援路徑拿掉 NUL 分隔後，多行 command 的 H2 判定改判 allow（證明那格的 deny 確實由該行造成）'
+  else
+    echo "✗ F5b：備援路徑拿掉 NUL 分隔後仍非 allow（實得 exit ${got}：${out}）——這格沒測到備援分支的欄位抽取" >&2
+    fail=1
+  fi
+  # 對照：同一份 mutant 在 jq 在場時（jq 分支未被動到）仍須 deny——證明改的真的只有備援那條路徑
+  if [ -n "$real_jq" ]; then
+    out=$(printf '%s' "$(bash_json 'cd /tmp\ncat .env')" | bash "$f5b_dir/no-nul-fallback.sh" 2>&1); got=$?
+    if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+      echo '✓ F5b：同一份 mutant 在 jq 路徑仍 deny（改動確實只落在備援分支）'
+    else
+      echo "✗ F5b：mutant 在 jq 路徑也變了（實得 exit ${got}：${out}）——awk 動到了 jq 分支那一行" >&2
+      fail=1
+    fi
+  else
+    echo 'SKIP 1 組（無 jq）：F5b 的 jq 路徑對照未跑'
+    i6_skipped=$(( ${i6_skipped:-0} + 1 ))
+  fi
+  rm -rf "$f5b_dir"
+else
+  echo '⚠ 略過 F5b 備援路徑 mutation 負控（本機找不到 python3）'
+fi
+
 rm -rf "$work"
 trap - EXIT
 
