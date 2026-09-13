@@ -61,7 +61,7 @@ if printf '%s' "$out" | grep -q '^\[hooks\]'; then
   ctx="${ctx}⚠ gate hooks 未裝好（上列 [hooks] 行）：本機 commit／push gate 靜默不跑、只剩 CI 攔——先照指示修（\`git config core.hooksPath .githooks\`／\`chmod +x .githooks/*\`）再 commit／push 或派工（COLLABORATION §2，LS-87）。"$'\n'
 fi
 [ -n "$ssh_note" ] && ctx="${ctx}${ssh_note}"$'\n'
-ctx="${ctx}若本 session 尚未建立巡檢 cron，立即用 CronCreate 建 \`*/26 * * * *\`，prompt 模板見 docs/COLLABORATION.md §4-b。"
+ctx="${ctx}先 CronList 確認本 session 是否已有巡檢 cron（compact／resume 後 session 仍在，cron 不會消失），沒有才用 CronCreate 建 \`*/26 * * * *\`（模板見 docs/COLLABORATION.md §4-b）；已有就不要重建。"
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":%s}}\n' "$(json_str "$ctx")"
 printed=1
 exit 0

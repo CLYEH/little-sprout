@@ -200,6 +200,9 @@ rc_is '⑥ hook exit 0' 0 "$rc" "$hj"
 jq_ok '⑥ hookSpecificOutput.hookEventName = SessionStart' "$hj" '.hookSpecificOutput.hookEventName == "SessionStart"'
 jq_ok '⑥ additionalContext 含巡檢摘要與 cron 指示（*/26、§4-b）' "$hj" '.hookSpecificOutput.additionalContext | test("巡檢") and test("CronCreate") and test("\\*/26 \\* \\* \\* \\*") and test("§4-b")'
 jq_ok '⑥ 主 checkout 落後 → 含先 pull 的指示' "$hj" '.hookSpecificOutput.additionalContext | test("git pull --ff-only origin main")'
+# LS-239 範圍 3：先 CronList 確認、已有不重建（compact／resume 後 session 仍在，cron 不會消失）
+jq_ok '⑥ cron 指示改為先 CronList 確認、已有不重建（LS-239）' "$hj" '.hookSpecificOutput.additionalContext | test("CronList") and test("已有就不要重建")'
+hasnt '⑥ 舊句「尚未建立巡檢 cron，立即用 CronCreate 建」0 hit（LS-239）' "$hj" '尚未建立巡檢 cron，立即用 CronCreate 建'
 hj2="$(printf '{}' | CLAUDE_PROJECT_DIR="$work/nope" bash "$hook" 2>/dev/null)"; rc=$?
 rc_is '⑥ repo 不存在：fail-soft 仍 exit 0' 0 "$rc" "$hj2"
 jq_ok '⑥ repo 不存在：仍合法 JSON、context 說明失敗＋仍提醒建 cron' "$hj2" '.hookSpecificOutput.hookEventName == "SessionStart" and (.hookSpecificOutput.additionalContext | test("失敗") and test("CronCreate"))'
