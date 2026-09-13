@@ -181,10 +181,14 @@ final class SettingsViewIPadTests: XCTestCase {
 
         // LS-253 R2（merge-review R1 m1）：與家庭／內容與安全／法律同類，「帳號」sidebar 切換
         // tap 也補上 waitForHittable 同步點——同一種轉場競速風險，同檔其餘四處都已補過。
-        let accountTab = app.buttons["帳號"]
-        XCTAssertTrue(waitForHittable(accountTab, timeout: 5), "「帳號」sidebar 列應該可點擊")
-        accountTab.tap()
-        XCTAssertTrue(app.buttons["刪除帳號"].waitForExistence(timeout: 5), "切到「帳號」後應該看得到「刪除帳號」列")
+        // LS-261（LS-96 池 `a3778131`）：09-13 ci-ipad 同類紅第 5 次，紅在「切到「帳號」後應該
+        // 看得到「刪除帳號」列」這一步——與 LS-245 內容與安全那次同一種失敗（忙碌 runner 上單次
+        // snapshot 偏慢，5s 只夠輪詢 1–2 次）。改走統一的 `switchSidebarTab` helper，timeout
+        // 對齊 10s。
+        switchSidebarTab(
+            app: app, tabLabel: "帳號",
+            expectedRow: app.buttons["刪除帳號"], rowDescription: "刪除帳號"
+        )
 
         assertPushThenBackReturnsToList(
             app: app,
