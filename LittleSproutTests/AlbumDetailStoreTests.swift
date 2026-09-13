@@ -221,6 +221,44 @@ final class AlbumDetailStoreTests: XCTestCase {
         )
     }
 
+    /// LS-246（票文範圍 2，池 `430a34a1` n3）：`id` 合併三分支的第三支——`insertedDuringFlight`
+    /// 同時排除 `photosAtStart`（見下一支）與 `newIDs`；這支專門鎖住 `newIDs` 那一半：同一個
+    /// `mediaId` 若在 `refresh()` 飛行期間被 `reflectUploadedMedia` 插入、且這次查詢剛好也
+    /// 查到同一筆（`attachMedia` 先 commit、`refresh()` 的查詢稍後才追上），合併後只該保留
+    /// 一份，不是「插入的一份」＋「查到的一份」各自出現。R2 merge-review `5be48b1e`「對抗性
+    /// 複驗」用暫時測試驗過（「合併去重：`photos == [newMediaID, existingID]`，不重複」），
+    /// 但那支是 review-only、跑完就 `git checkout` 還原，repo 內沒有留下永久測試（n3 原文）。
+    func test_refresh_sameIDInsertedDuringFlightAndFoundInNewResults_appearsOnlyOnce() async throws {
+        let apiClient = StubAlbumsAPIClient()
+        let sharedID = UUID()
+        let gate = AsyncGate()
+        apiClient.setFetchAlbumMediaLinksHandler { albumID in
+            await gate.wait()
+            return [AlbumMediaLinkRow(albumId: albumID, mediaId: sharedID, sortOrder: 0)]
+        }
+        apiClient.setFetchMediaHandler { ids in ids.map { Self.makeMediaRow(id: $0) } }
+        apiClient.setSignedURLsHandler(Self.echoSignedURLsHandler)
+        let store = makeStore(apiClient: apiClient)
+
+        let refreshTask = Task { await store.refresh() }
+        await gate.waitForWaiters(count: 1)
+
+        // 飛行期間插入同一個 id——同 `test_refresh_receivesUploadDuringInitialFlight_...`
+        // 的時序，差別只在於這次 `refresh()` 稍後查到的結果剛好也包含這個 id。
+        await store.reflectUploadedMedia(sharedID)
+        XCTAssertEqual(store.photos.map(\.id), [sharedID], "插入應該先落地")
+
+        await gate.open()
+        let result = await refreshTask.value
+
+        XCTAssertTrue(result)
+        XCTAssertEqual(
+            store.photos.map(\.id), [sharedID],
+            "同一個 id 同時在飛行期間插入、又出現在這次查到的新結果裡，合併後只該保留一份"
+        )
+        XCTAssertEqual(store.photos.count, 1, "不該因為兩邊都有就重複出現")
+    }
+
     /// LS-237 R2 新增（merge-review R1 F1 的對稱情境）：上面那支證明「飛行期間新插入的項目
     /// 不會被覆蓋」，這支證明合併邏輯**不會反過來讓「refresh() 開始之前就已經存在、這次查詢
     /// 沒查到（已被移除）」的舊項目復活**——只用 `photosAtStart` 排除還不夠，若沒有同時排除
