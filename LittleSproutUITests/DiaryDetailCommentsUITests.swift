@@ -55,7 +55,7 @@ final class DiaryDetailCommentsUITests: XCTestCase {
         XCTAssertTrue(sheetTitle.waitForExistence(timeout: 5), "留言 sheet 應該有標題可以當拖曳起點")
         let dragStart = sheetTitle.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         dragStart.press(forDuration: 0.05, thenDragTo: dragStart.withOffset(CGVector(dx: 0, dy: 500)))
-        XCTAssertTrue(waitForNonExistence(emptyStateText, timeout: 5), "留言 sheet 應該已經關閉")
+        XCTAssertTrue(emptyStateText.waitForNonExistence(timeout: 5), "留言 sheet 應該已經關閉")
 
         let moreButton = app.buttons["更多操作"]
         XCTAssertTrue(moreButton.waitForExistence(timeout: 5), "留言 sheet 關閉後應該回到詳情頁、看得到「更多操作」")
@@ -65,13 +65,5 @@ final class DiaryDetailCommentsUITests: XCTestCase {
             app.staticTexts["「今天在溜滑梯上玩得好開心。」"].waitForExistence(timeout: 5),
             "接著觸發「⋯」應該正確呈現內容操作表——不應該因為剛才留言 sheet 用過同一個 activeSheet 而卡住"
         )
-    }
-
-    /// `XCTNSPredicateExpectation` 等「停止存在」——同 `SettingsViewIPadTests` 既有的
-    /// `waitForNonExistence` helper（LS-237 第 8 項教訓：一次性 `.exists` 快照在關閉動畫還沒
-    /// 跑完的瞬間可能誤判成「還在」）。
-    private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
-        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 }

@@ -98,7 +98,7 @@ final class SettingsViewTests: XCTestCase {
 
         let termsRow = app.buttons["使用條款"]
         XCTAssertTrue(termsRow.waitForExistence(timeout: 5), "設定頁「法律」區應有可點擊的「使用條款」列")
-        XCTAssertTrue(waitForHittable(termsRow, timeout: 5), "「使用條款」列應該可點擊")
+        XCTAssertTrue(termsRow.waitForHittable(timeout: 5), "「使用條款」列應該可點擊")
         termsRow.tap()
 
         let closeButton = app.buttons["關閉"]
@@ -109,7 +109,7 @@ final class SettingsViewTests: XCTestCase {
         )
 
         closeButton.tap()
-        XCTAssertTrue(waitForNonExistence(closeButton, timeout: 10), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）")
+        XCTAssertTrue(closeButton.waitForNonExistence(timeout: 10), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）")
     }
 
     /// 同上，換「隱私權政策」列，驗證開的是對應文件（不是誤開使用條款）——理由與數量比對手法
@@ -122,7 +122,7 @@ final class SettingsViewTests: XCTestCase {
 
         let privacyRow = app.buttons["隱私權政策"]
         XCTAssertTrue(privacyRow.waitForExistence(timeout: 5), "設定頁「法律」區應有可點擊的「隱私權政策」列")
-        XCTAssertTrue(waitForHittable(privacyRow, timeout: 5), "「隱私權政策」列應該可點擊")
+        XCTAssertTrue(privacyRow.waitForHittable(timeout: 5), "「隱私權政策」列應該可點擊")
         privacyRow.tap()
 
         XCTAssertTrue(
@@ -132,19 +132,6 @@ final class SettingsViewTests: XCTestCase {
             app.staticTexts.matching(NSPredicate(format: "label == %@", "隱私權政策")).count, 2,
             "應同時看到「隱私權政策」列與 Doc Title 兩個「隱私權政策」文字元件——只剩 1 個代表開錯文件（sheet 顯示的是使用條款）"
         )
-    }
-
-    /// 同 `SettingsViewIPadTests`（LS-237 第 8 項）：`waitForNonExistence` 用
-    /// `XCTNSPredicateExpectation` 輪詢「停止存在」，`waitForHittable` 用同一套機制等
-    /// `hittable == true`，比一次性 `.exists`／`.isHittable` 快照可靠。
-    private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
-        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
-    }
-
-    private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: element)
-        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
     // MARK: - 垂直置中（使用者 2026-09-05 核可 LS-152 稿的唯一意見）
