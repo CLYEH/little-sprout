@@ -1683,6 +1683,10 @@ has   '㉘ mutant（m4／i5）對照：906（沒有 not-a-date、只有正常時
 # ---- ㉙（LS-260；來源 LS-96 池項 `b2947c3f`）：Supabase 容器啟動時間不一致偵測。
 #      LS-246 QA R2 實況：`auth`／`db` 被單獨重啟、`rest`／`kong` 沒有（uptime 差 7 天），OTP 登入後
 #      REST 401。假 docker 只回 `ps`／`inspect` 兩種輸出（patrol 只用這兩個唯讀子命令）。
+#      R2 M2：容器清單擴成六台（多了 storage／realtime／analytics），因為判準改成「先依 StartedAt
+#      分批、看最新一批是不是恰好等於 db reset 的群組」——`supabase db reset` 只重啟
+#      db／auth／storage／realtime／analytics，要分辨它與 LS-246 的「只有 auth／db 被重啟」，夾具就
+#      必須把兩種群組都表示得出來。㉙b2 是 R1 偽陽性的回歸防線。
 cat > "$work/fake-docker" <<'FAKEDOCKER'
 #!/bin/bash
 case "${1:-}" in
@@ -1692,35 +1696,65 @@ case "${1:-}" in
 esac
 FAKEDOCKER
 chmod +x "$work/fake-docker"
-printf 'supabase_db_x\nsupabase_kong_x\nsupabase_auth_x\nsupabase_rest_x\n' > "$work/docker-names"
+printf 'supabase_db_x\nsupabase_kong_x\nsupabase_auth_x\nsupabase_rest_x\nsupabase_storage_x\nsupabase_realtime_x\nsupabase_analytics_x\n' > "$work/docker-names"
 
-# ㉙a 不一致（auth／db 7 天前重啟過，kong／rest 是 7 天前那批）→ 人類段印差值＋旗標行給整組重啟指令
+# ㉙a LS-246 形狀：**只有** auth／db 被重啟（7 天後），storage／realtime／analytics 與 kong／rest
+#     都還留在舊批次 → 最新一批 ≠ reset 群組 → 掛旗標
 {
   printf '/supabase_kong_x 2026-09-06T01:00:00.000000000Z\n'
   printf '/supabase_rest_x 2026-09-06T01:00:01.000000000Z\n'
+  printf '/supabase_storage_x 2026-09-06T01:00:02.000000000Z\n'
+  printf '/supabase_realtime_x 2026-09-06T01:00:03.000000000Z\n'
+  printf '/supabase_analytics_x 2026-09-06T01:00:04.000000000Z\n'
   printf '/supabase_db_x 2026-09-13T01:00:00.000000000Z\n'
   printf '/supabase_auth_x 2026-09-13T01:00:05.000000000Z\n'
 } > "$work/docker-inspect-skew"
 out29a="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
-has   '㉙a 人類段印出容器數與最大差（7 天＝10080 分）' "$out29a" '容器 4 個，啟動時間最大差 10080 分（最舊 supabase_kong_x／最新 supabase_auth_x；門檻 60 分）'
+has   '㉙a 人類段印出容器數、focus 四台的最大差（7 天＝10080 分）與形狀判定' "$out29a" '容器 7 個，rest／kong／db／auth 之間最大差 10080 分（最舊 supabase_kong_x／最新 supabase_auth_x；門檻 60 分；最新一批不是 reset 群組）'
 brief29a="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
-has   '㉙a 旗標行點名「容器啟動時間不一致」' "$brief29a" '[Supabase 容器] ⚠ 容器啟動時間不一致（最舊 supabase_kong_x 與最新 supabase_auth_x 差 10080 分 > 60）'
-has   '㉙a 旗標行給的是 lock 內整組重啟指令（不是單獨重啟某台）' "$brief29a" 'bash scripts/ops/supabase-lock.sh -- supabase stop 之後 bash scripts/ops/supabase-lock.sh -- supabase start'
+has   '㉙a 旗標行點名「容器啟動時間不一致」且說明最新一批不是 reset 群組' "$brief29a" '[Supabase 容器] ⚠ 容器啟動時間不一致（rest／kong／db／auth 之間最舊 supabase_kong_x 與最新 supabase_auth_x 差 10080 分 > 60，且最新一批不是 db reset 的群組）'
+has   '㉙a（R2 m4）旗標行的整組重啟包成一次 lock（不是兩次獨立 lock）' "$brief29a" 'bash scripts/ops/supabase-lock.sh -- bash -c "supabase stop && supabase start"'
 json29a="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>&1)"
-jq_ok '㉙a --json supabase_containers＝4' "$json29a" '.supabase_containers == 4'
+jq_ok '㉙a --json supabase_containers＝7' "$json29a" '.supabase_containers == 7'
 jq_ok '㉙a --json supabase_start_skew_minutes＝10080' "$json29a" '.supabase_start_skew_minutes == 10080'
 
 # ㉙b 一致（同一次 start，差 30 秒）→ 人類段照印，但不掛旗標（負向控制：門檻真的有在生效）
 {
   printf '/supabase_kong_x 2026-09-13T01:00:00.000000000Z\n'
   printf '/supabase_rest_x 2026-09-13T01:00:10.000000000Z\n'
+  printf '/supabase_storage_x 2026-09-13T01:00:12.000000000Z\n'
+  printf '/supabase_realtime_x 2026-09-13T01:00:14.000000000Z\n'
+  printf '/supabase_analytics_x 2026-09-13T01:00:16.000000000Z\n'
   printf '/supabase_db_x 2026-09-13T01:00:20.000000000Z\n'
   printf '/supabase_auth_x 2026-09-13T01:00:30.000000000Z\n'
 } > "$work/docker-inspect-ok"
 brief29b="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-ok" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 hasnt '㉙b 啟動時間一致 → 不掛旗標' "$brief29b" '[Supabase 容器]'
 out29b="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-ok" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
-has   '㉙b 人類段仍印出差值（0 分）供人判讀' "$out29b" '容器 4 個，啟動時間最大差 0 分'
+has   '㉙b 人類段仍印出差值（0 分）與「整組同一次啟動」形狀' "$out29b" '容器 7 個，rest／kong／db／auth 之間最大差 0 分（最舊 supabase_kong_x／最新 supabase_auth_x；門檻 60 分；整組同一次啟動）'
+
+# ㉙b2（R2 M2 的核心回歸防線）：**例行 `supabase db reset` 的形狀**——rest／kong 維持 7 天前的
+#     uptime，db／auth／storage／realtime／analytics 剛剛被 reset 重啟。R1 版本會把它判成「容器啟動
+#     時間不一致 10080 分」並建議做一次有破壞性的整組重啟（R1 handoff 申報的「84 分真實事故」就是
+#     這個偽陽性）。修法後最新一批恰好等於 reset 群組 → 不掛旗標，人類段註明形狀。
+{
+  printf '/supabase_kong_x 2026-09-06T01:00:00.000000000Z\n'
+  printf '/supabase_rest_x 2026-09-06T01:00:01.000000000Z\n'
+  printf '/supabase_db_x 2026-09-13T01:00:00.000000000Z\n'
+  printf '/supabase_auth_x 2026-09-13T01:00:05.000000000Z\n'
+  printf '/supabase_storage_x 2026-09-13T01:00:06.000000000Z\n'
+  printf '/supabase_realtime_x 2026-09-13T01:00:07.000000000Z\n'
+  printf '/supabase_analytics_x 2026-09-13T01:00:08.000000000Z\n'
+} > "$work/docker-inspect-reset"
+brief29b2="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-reset" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉙b2 例行 db reset 形狀 → 不掛旗標（R1 偽陽性的回歸防線）' "$brief29b2" '[Supabase 容器]'
+out29b2="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-reset" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙b2 人類段照印差值但註明形狀符合例行 db reset' "$out29b2" '最新一批＝db／auth／storage／realtime／analytics，形狀符合例行 supabase db reset，不掛旗標'
+# ㉙b3（負向控制）：同一份 reset 形狀的資料，只要 analytics 沒跟著重啟（最新一批變成 reset 群組的
+#     真子集＝有人單獨動了某幾台），就必須轉紅——證明「不掛旗標」是形狀比對的結果，不是門檻失效。
+sed 's#^/supabase_analytics_x 2026-09-13.*#/supabase_analytics_x 2026-09-06T01:00:02.000000000Z#' "$work/docker-inspect-reset" > "$work/docker-inspect-reset-partial"
+brief29b3="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-reset-partial" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉙b3 最新一批是 reset 群組的真子集（analytics 沒跟著重啟）→ 轉紅' "$brief29b3" '[Supabase 容器] ⚠ 容器啟動時間不一致'
 
 # ㉙c 門檻可調：同一份 30 秒差的資料把門檻降到 0 分就必須轉紅（mutation——證明 ㉙b 的綠是門檻擋下來的，
 #     不是這段程式碼根本沒在比）

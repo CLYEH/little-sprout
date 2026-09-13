@@ -515,7 +515,11 @@ fi
 DOCKER_BIN=${PATROL_DOCKER:-docker}
 SUPA_SKEW_MIN=${PATROL_SUPABASE_SKEW_MIN:-60}
 case "$SUPA_SKEW_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_SUPABASE_SKEW_MIN 須為整數分鐘（得到「${SUPA_SKEW_MIN}」）" >&2; exit 2 ;; esac
-SUPA_LINE=; supa_containers=0; supa_skew_m=0
+# LS-260 R2 M2：StartedAt 相差幾秒內算「同一次操作」（分批用）——`supabase db reset` 重啟那幾台
+# 實測落在數秒到數十秒內，120 秒有足夠餘裕又遠小於 60 分門檻。
+SUPA_BATCH_SEC=${PATROL_SUPABASE_BATCH_SEC:-120}
+case "$SUPA_BATCH_SEC" in ''|*[!0-9]*) echo "✗ patrol：PATROL_SUPABASE_BATCH_SEC 須為整數秒（得到「${SUPA_BATCH_SEC}」）" >&2; exit 2 ;; esac
+SUPA_LINE=; supa_containers=0; supa_skew_m=0; supa_shape=
 if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
   supa_names=$("$DOCKER_BIN" ps --filter name=supabase_ --format '{{.Names}}' 2>/dev/null | tr '\n' ' ')
   case "${supa_names// /}" in
@@ -524,9 +528,25 @@ if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
       # 一次 inspect 全部容器（每台各 fork 一次 docker 在 SessionStart hook 的 30s 預算下太貴）。
       # StartedAt 是 RFC3339 UTC；awk 內自己換算 epoch（days-from-civil），不碰 date -j／date -d
       # ——同本檔開頭「時間一律用 epoch、不碰 date -j／date -d」的既有理由（GNU／BSD 旗標不同）。
-      # 精度到秒（小數秒丟棄）：門檻本來就是分鐘級；同一秒並列時「最舊／最新」取先出現的那台當代表，
-      # 差值不受影響。
-      supa_parsed=$("$DOCKER_BIN" inspect --format '{{.Name}} {{.State.StartedAt}}' $supa_names 2>/dev/null | awk '
+      # 精度到秒（小數秒丟棄）：門檻本來就是分鐘級。
+      #
+      # LS-260 R2 M2（merge-review R1 `870bf760`）：R1 版本對「全部容器的 max-min」設門檻，會被
+      # **例行的 `supabase db reset`** 觸發——reset 只重建／重啟 `db`／`auth`／`storage`／`realtime`
+      # ／`analytics`，`rest`／`kong`／`studio`／`vector`／`pg_meta`／`edge_runtime` 維持原 uptime。
+      # stack 常連續跑數小時到數天，任何 uptime > 門檻之後的 reset 都會掛旗標，並建議做一次有破壞性
+      # 的整組重啟（LS-184：起停共用容器會打斷持有者）。R1 handoff 申報的「84 分真實事故」經 reviewer
+      # 比對 `docker inspect .Created`／`.State.StartedAt` 與 hold.log 時間，正是本票實作者自己那次
+      # reset 造成的**偽陽性**（訂正見 R2 handoff）。
+      #
+      # 改判準（reviewer 建議 (a)＋(b) 的合成）：先把容器依 StartedAt **分批**（相差 ≤
+      # `SUPA_BATCH_SEC` 秒視為同一次操作），再看**最新那一批的成員集合**：
+      #   - 集合 == 現存的 reset 群組（`db`／`auth`／`storage`／`realtime`／`analytics` 取交集）
+      #     → 判為例行 `supabase db reset`，**不掛旗標**（human 段註明形狀）。
+      #   - 否則才看 `rest`／`kong`／`db`／`auth` 這四台之間的 skew（LS-246 症狀的直接關係人：
+      #     auth／db 重啟而 rest／kong 沒有 → REST 401），超過門檻才掛旗標。
+      # 為什麼不改讀 hold.log：`supabase-lock.sh` 只記 `cmd=` 的**第一個字**（實際內容是
+      # `cmd=supabase`），reset／stop／start／status 在 log 裡長得一模一樣，時間比對無從分辨。
+      supa_parsed=$("$DOCKER_BIN" inspect --format '{{.Name}} {{.State.StartedAt}}' $supa_names 2>/dev/null | awk -v batch="${SUPA_BATCH_SEC}" '
         function epoch(s,   a, y, m, d, H, M, S, yy, era, yoe, doy, doe, days) {
           split(s, a, /[-T:]/)
           y = a[1] + 0; m = a[2] + 0; d = a[3] + 0; H = a[4] + 0; M = a[5] + 0; S = int(a[6])
@@ -539,24 +559,59 @@ if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
           days = era * 146097 + doe - 719468
           return days * 86400 + H * 3600 + M * 60 + S
         }
+        # `supabase_<role>_<project>` → role；`edge_runtime`／`pg_meta` 會被切成 edge／pg，
+        # 但判準只用到 db／auth／storage／realtime／analytics／rest／kong，皆為單字 role。
+        function role(nm,   a) { split(nm, a, "_"); return a[2] }
+        BEGIN {
+          split("db auth storage realtime analytics", r, " ")
+          for (i in r) resetset[r[i]] = 1
+          split("rest kong db auth", f, " ")
+          for (i in f) focus[f[i]] = 1
+        }
         NF >= 2 {
-          name = $1; sub(/^\//, "", name)
+          nm = $1; sub(/^\//, "", nm)
           e = epoch($2)
           if (e < 0) next
-          n++
-          if (mn == "" || e < mn) { mn = e; mnn = name }
-          if (mx == "" || e > mx) { mx = e; mxn = name }
+          n++; names[n] = role(nm); epochs[n] = e; full[n] = nm
+          if (role(nm) in resetset) present_reset[role(nm)] = 1
+          if (role(nm) in focus) {
+            if (fmn == "" || e < fmn) { fmn = e; fmnn = nm }
+            if (fmx == "" || e > fmx) { fmx = e; fmxn = nm }
+          }
         }
-        END { if (n > 0) printf "%d\t%d\t%s\t%s\n", n, mx - mn, mnn, mxn }
+        END {
+          if (n == 0) exit 0
+          # 最新一批：以最大 epoch 為錨，差 <= batch 秒的都算同一批
+          top = 0
+          for (i = 1; i <= n; i++) if (epochs[i] > top) top = epochs[i]
+          nb = 0
+          for (i = 1; i <= n; i++) if (top - epochs[i] <= batch) { nb++; batchset[names[i]] = 1 }
+          # 形狀判定：最新一批的成員集合是否恰好等於「現存的 reset 群組」
+          shape = "other"
+          same = 1
+          for (r2 in present_reset) if (!(r2 in batchset)) same = 0
+          for (b in batchset) if (!(b in present_reset)) same = 0
+          if (same && nb > 0 && nb < n) shape = "db-reset"
+          if (nb == n) shape = "uniform"
+          printf "%d\t%d\t%s\t%s\t%s\n", n, (fmx == "" ? 0 : fmx - fmn), (fmnn == "" ? "-" : fmnn), (fmxn == "" ? "-" : fmxn), shape
+        }
       ')
       if [ -n "$supa_parsed" ]; then
         supa_containers=$(printf '%s' "$supa_parsed" | cut -f1)
         supa_skew_m=$(( $(printf '%s' "$supa_parsed" | cut -f2) / 60 ))
         supa_oldest=$(printf '%s' "$supa_parsed" | cut -f3)
         supa_newest=$(printf '%s' "$supa_parsed" | cut -f4)
-        SUPA_LINE="容器 ${supa_containers} 個，啟動時間最大差 ${supa_skew_m} 分（最舊 ${supa_oldest}／最新 ${supa_newest}；門檻 ${SUPA_SKEW_MIN} 分）"
-        if [ "$supa_skew_m" -gt "$SUPA_SKEW_MIN" ]; then
-          add_flag "[Supabase 容器] ⚠ 容器啟動時間不一致（最舊 ${supa_oldest} 與最新 ${supa_newest} 差 ${supa_skew_m} 分 > ${SUPA_SKEW_MIN}）——單獨重啟過的容器與其他容器不同步（LS-246 QA：auth／db 重啟、rest／kong 沒有 → REST 401、App 卡「伺服器發生問題」）。請在 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- supabase stop 之後 bash scripts/ops/supabase-lock.sh -- supabase start（LS-260）"
+        supa_shape=$(printf '%s' "$supa_parsed" | cut -f5)
+        case "$supa_shape" in
+          uniform)  supa_note="整組同一次啟動" ;;
+          db-reset) supa_note="最新一批＝db／auth／storage／realtime／analytics，形狀符合例行 supabase db reset，不掛旗標" ;;
+          *)        supa_note="最新一批不是 reset 群組" ;;
+        esac
+        SUPA_LINE="容器 ${supa_containers} 個，rest／kong／db／auth 之間最大差 ${supa_skew_m} 分（最舊 ${supa_oldest}／最新 ${supa_newest}；門檻 ${SUPA_SKEW_MIN} 分；${supa_note}）"
+        if [ "$supa_shape" != db-reset ] && [ "$supa_shape" != uniform ] && [ "$supa_skew_m" -gt "$SUPA_SKEW_MIN" ]; then
+          # LS-260 R2 m4：整組重啟包成**一次** lock（R1 拆成兩次獨立 lock，兩次之間別人可以合法取得
+          # lock 並看到整組是停的）；這個包法與 qa.md／`pretool.test.sh` H3b-s⑦ 認可的寫法一致。
+          add_flag "[Supabase 容器] ⚠ 容器啟動時間不一致（rest／kong／db／auth 之間最舊 ${supa_oldest} 與最新 ${supa_newest} 差 ${supa_skew_m} 分 > ${SUPA_SKEW_MIN}，且最新一批不是 db reset 的群組）——單獨重啟過的容器與其他容器不同步（LS-246 QA：auth／db 重啟、rest／kong 沒有 → REST 401、App 卡「伺服器發生問題」）。請在同一次 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"（LS-260）"
         fi
       else
         SUPA_LINE="（docker inspect 讀不到 StartedAt，略過）"
@@ -1109,7 +1164,7 @@ case "$MODE" in
     echo "== Supabase lock（本機容器序列化，scripts/ops/supabase-lock.sh；LS-70；⚠ tomb＝上次回收異常的殘留；持有者剩餘 >10 分且有等待者才會另印排隊提示，LS-207）"
     printf '%s\n' "$lock_line" | sed 's/^/  /'
     [ -n "$lock_queue_flag" ] && echo "  ${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
-    echo "== Supabase 容器啟動時間（LS-260；各 supabase_* 容器 .State.StartedAt 差 >${SUPA_SKEW_MIN} 分＝有人單獨重啟過某台，整組重啟排除，LS-246）"
+    echo "== Supabase 容器啟動時間（LS-260；先依 StartedAt 分批，最新一批若不是 db reset 的群組、且 rest／kong／db／auth 之間差 >${SUPA_SKEW_MIN} 分＝有人單獨重啟過某台，LS-246）"
     echo "  ${SUPA_LINE}"
     echo "== 近 ${REDS_DAYS} 日 CI 同類紅（LS-260；失敗測試名／失敗型別跨 run 聚合，同簽章 ≥2 個 run 即 ⚠ → §5-b 升 High）"
     [ -n "$reds_note" ] && echo "  ${reds_note}"
