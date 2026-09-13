@@ -310,6 +310,7 @@
 		B0FA3B419745F9D231E75C58 /* VideoTrimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E13DE0D017682C31FBABE1 /* VideoTrimmer.swift */; };
 		B1B5FCC8B7A31A61D4969EE3 /* AvatarPickerLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BECC7D79F1B9E53EABE6120 /* AvatarPickerLoader.swift */; };
 		B1C19A2319494642B99A46EB /* WelcomeView+PasswordSignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FB942E7809A7A51E7E182B9 /* WelcomeView+PasswordSignIn.swift */; };
+		B2440B7844509AC9B75634CF /* TapTargetGateHarness+DiaryDetailVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF160356D53B7385FF16C6C2 /* TapTargetGateHarness+DiaryDetailVideo.swift */; };
 		B3F22A9DBC8E0F21E14C26F1 /* StubCommentAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69091E685140B608F5F75E5 /* StubCommentAPIClient.swift */; };
 		B444B88CA39F26AA7C74C7A1 /* StubPushDeviceTokenAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A94E2A486BB54362C3343ED /* StubPushDeviceTokenAPIClient.swift */; };
 		B6F140BBE36A520831E94856 /* JoinCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B283C4309A804140F52F79A /* JoinCodeView.swift */; };
@@ -846,6 +847,7 @@
 		DC9F969B2673823F6B3CE0A7 /* TapTargetGateSelfTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapTargetGateSelfTests.swift; sourceTree = "<group>"; };
 		DD6715A7DC764D22744BD176 /* JoinRequestTimeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinRequestTimeFormatter.swift; sourceTree = "<group>"; };
 		DE38251D5D37CE4FF8269D50 /* DiaryAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryAPIClient.swift; sourceTree = "<group>"; };
+		DF160356D53B7385FF16C6C2 /* TapTargetGateHarness+DiaryDetailVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+DiaryDetailVideo.swift"; sourceTree = "<group>"; };
 		DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClientJoinTests.swift; sourceTree = "<group>"; };
 		E001ADD4BD2FAB3AAD8A3B8E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E01951470E7861A632283E1A /* ProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditView.swift; sourceTree = "<group>"; };
@@ -1358,6 +1360,7 @@
 				0B87EFC5D19454F29DAAFE38 /* TapTargetGateHarness+Content.swift */,
 				060BC7E72C5EC6ED52FB6E41 /* TapTargetGateHarness+DeleteAccount.swift */,
 				9E3D2F360EBF9E037628E69B /* TapTargetGateHarness+DiaryCardVideoBadges.swift */,
+				DF160356D53B7385FF16C6C2 /* TapTargetGateHarness+DiaryDetailVideo.swift */,
 				6BD7AE63A0EB0C80DA9C5851 /* TapTargetGateHarness+Family.swift */,
 				8451088ABF5E0779C2BFAFF2 /* TapTargetGateHarness+Legal.swift */,
 				70052DB9EED77AAB95731CAD /* TapTargetGateHarness+Push.swift */,
@@ -1991,6 +1994,7 @@
 				3346C2CA6BA85BDA157C164F /* TapTargetGateHarness+Content.swift in Sources */,
 				B8F948E8FFC79CFAD32A8411 /* TapTargetGateHarness+DeleteAccount.swift in Sources */,
 				764C8B42926AA6E94EC2C4CF /* TapTargetGateHarness+DiaryCardVideoBadges.swift in Sources */,
+				B2440B7844509AC9B75634CF /* TapTargetGateHarness+DiaryDetailVideo.swift in Sources */,
 				E5C587EDE37874F5FE29E05E /* TapTargetGateHarness+Family.swift in Sources */,
 				E59430960BE686522003EB58 /* TapTargetGateHarness+Legal.swift in Sources */,
 				A6AFA622D09D18E714E54D32 /* TapTargetGateHarness+Push.swift in Sources */,
