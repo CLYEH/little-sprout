@@ -21,8 +21,17 @@ struct CommentDeleteConfirmationSheet: View {
             headTitle: "要刪除這則留言嗎？",
             bodyText: "這則留言刪除後，家人就看不到了。這個動作目前無法在 App 內復原。",
             confirmLabel: "刪除這則留言",
-            confirmAction: { try await commentAPIClient.setCommentDeleted(commentID: commentID, deleted: true) },
+            confirmAction: performDelete,
             onSuccess: onDeleted
         )
+    }
+
+    /// LS-245（池 `38a3c74b`）：抽出 `confirmAction` 本體——讓「Owner 移除留言呼叫
+    /// `CommentAPIClient.setCommentDeleted(commentID:deleted:true)`」這條 wiring 可以脫離
+    /// `DeleteConfirmationSheet.confirmTapped()` 直接單元測試（同
+    /// `CommentsSheetView.syncCommentCountIfKnown()` 既有慣例：把要驗證的邏輯抽成具名方法，
+    /// 不依賴 View 是否掛在畫面階層上）。
+    func performDelete() async throws {
+        try await commentAPIClient.setCommentDeleted(commentID: commentID, deleted: true)
     }
 }

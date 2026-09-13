@@ -122,7 +122,15 @@ final class SettingsViewIPadTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
 
-        app.buttons["內容與安全"].tap()
+        // LS-245（池 `2c4bfc80`，merge-review LS-241 R2 `f71f5acc`）：09-13 ci-ipad run
+        // 103627867933 在這支測試「切到『內容與安全』後應該看得到『儲存空間』列」那一步紅過
+        // 一次、同 SHA 重跑綠——同檔另外兩支（`testFamilySectionInviteRowRegressionPushes
+        // AndBackReturns`／`testLegalSectionRowsOpenAndCloseLegalDocumentSheet`）已經在
+        // LS-237 `96734b7` 補過「tap 前先等真的可點」同步點，這支當時漏補：sidebar 切換到
+        // 「內容與安全」的轉場動畫還沒穩定時 tap 可能落空，後續等「儲存空間」列自然逾時。
+        let contentSafetyTab = app.buttons["內容與安全"]
+        XCTAssertTrue(waitForHittable(contentSafetyTab, timeout: 5), "「內容與安全」sidebar 列應該可點擊")
+        contentSafetyTab.tap()
         XCTAssertTrue(
             app.buttons[QAAccessibilityID.settingsStorageRow].waitForExistence(timeout: 5),
             "切到「內容與安全」後應該看得到「儲存空間」列"

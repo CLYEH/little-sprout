@@ -22,6 +22,10 @@ import SwiftUI
 /// 可互動元件」預設把命中的觸控交給階層最深的那個手勢辨識器，不是外層整片吃掉（同「相簿
 /// 摘要卡＋Like 按鈕」這類 feed 卡片在原生 App 的常見寫法），已在模擬器實測驗證（見 LS-216
 /// handoff「已驗證」）。
+///
+/// LS-245（池 `5824399c`）：非 AX3 態改用 `ViewThatFits` 在「留言」完整版與只留圖示＋計數的
+/// `commentButtonCompact` 之間自動挑選——容器不夠寬時（LS-241 R1 在 iPad 詳情頁窄欄重現的
+/// 截字問題）不再讓文字被硬截斷，見 `body`／`commentButtonCompact` 文件註解。
 struct InteractionRow: View {
     let kind: FeedKind
     let refId: UUID
@@ -52,9 +56,24 @@ struct InteractionRow: View {
                     commentButton
                 }
             } else {
-                HStack(spacing: AppSpacing.block) {
-                    heartGroup
-                    commentButton
+                // LS-245（池 `5824399c`，LS-241 R1 首次暴露）：`heartGroup` 兩顆固定寬度熱區
+                // （`likeToggleSize`／`countZoneSize`）在 `HStack` 裡不會被壓縮，容器不夠寬時
+                // 擠壓全部落在 `commentButton` 身上——它的「留言」文字沒有 `.lineLimit`／
+                // `.fixedSize`，先前只能眼睜睜被截字（LS-241 R1 在 iPad 詳情頁窄欄重現）。
+                // `ViewThatFits` 用真實文字量測（不是猜一個像素常數）挑「放得下就用完整版、
+                // 放不下換緊湊版」——比手動 `GeometryReader`＋門檻值更準：既有能放得下完整版的
+                // 寬度（LS-241 reviewer 實測 iPad mini／13" 時間軸卡片欄寬）不會被誤判成需要
+                // 降級，真的不夠寬（例如 iPad 分割視窗窄欄）才會退到 `commentButtonCompact`
+                // （只留圖示＋計數，a11y label 仍是完整的「留言，N 則」，見該 var 文件註解）。
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: AppSpacing.block) {
+                        heartGroup
+                        commentButton
+                    }
+                    HStack(spacing: AppSpacing.block) {
+                        heartGroup
+                        commentButtonCompact
+                    }
                 }
             }
         }
@@ -147,6 +166,28 @@ struct InteractionRow: View {
                     .frame(width: heartIconSize, height: heartIconSize)
                 Text("留言")
                     .appFont(.note)
+                Text("\(commentCount)")
+                    .appFont(.note, weight: .semibold)
+            }
+            .foregroundStyle(Color.lsPrintInkSecondary)
+            .padding(11)
+            .frame(minHeight: likeToggleSize.height)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(QAAccessibilityID.interactionRowElement(kind: kind.rawValue, element: "commentButton"))
+        .accessibilityLabel("留言，\(commentCount) 則")
+    }
+
+    /// LS-245：`ViewThatFits` 量不到空間放得下「留言」字樣時的退路——只留圖示＋計數，padding／
+    /// `minHeight`／`contentShape` 與完整版一致（票文範圍 1「熱區不變」），accessibility
+    /// identifier／label 也不變（VoiceOver 使用者不受視覺降級影響，仍唸出完整的「留言，N 則」）。
+    private var commentButtonCompact: some View {
+        Button(action: onOpenComments) {
+            HStack(spacing: AppSpacing.tight) {
+                Image(systemName: "message")
+                    .font(.system(size: heartIconSize))
+                    .frame(width: heartIconSize, height: heartIconSize)
                 Text("\(commentCount)")
                     .appFont(.note, weight: .semibold)
             }

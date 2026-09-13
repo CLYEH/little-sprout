@@ -123,8 +123,9 @@ enum TapTargetGateScreenName: String {
     // （真的 `@State` 綁定，不是 `.constant(true)`——見該檔文件註解，R2 informational-2
     // 訂正舊註解的錯誤描述）把 sheet 頂出來。
     case deleteDiaryConfirmation = "DeleteDiaryConfirmation"
-    // LS-190：刪除留言確認 sheet——留言 UI 本體（LS-22）／內容操作表（LS-189）皆尚未實作，
-    // 這是目前唯一能觸達 `CommentDeleteConfirmationSheet` 的入口，同上一個 case 的理由。
+    // LS-190：刪除留言確認 sheet——LS-245 訂正：真實產品入口現在是 LS-218
+    // `CommentsSheetView+Actions.swift` 留言列操作表的「刪除」；這支 host 是不依賴留言清單種子
+    // 資料、gate／UITest 可直接覆蓋的固定入口，同上一個 case 的理由。
     case deleteCommentConfirmation = "DeleteCommentConfirmation"
     // LS-190：票文驗收「首次登入 → EULA 出現 → 同意 → 進時間軸」——這個 case **不**用來做
     // 逐元件 tap target 量測（`TapTargetGateTests.swift` 沒有對應 test method，同 `.welcome`／

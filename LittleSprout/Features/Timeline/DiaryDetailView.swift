@@ -14,13 +14,42 @@ import SwiftUI
 /// LS-241：原本 LS-126 預留的留言區占位文案（`commentsPlaceholder`，票文驗收要求全 repo
 /// 0 hit，這裡不重複引用原字面）換成 LS-216 的
 /// `InteractionRow`（同一顆元件、同一份 `timelineStore` 存的愛心／留言計數，跟時間軸卡片共用
-/// 一套數字，不是各自一套）；`onOpenComments` 開 LS-218 的 `CommentsSheetView`（同
-/// `TimelineView+Comments.swift` 的 `.sheet` 呈現規則，這裡沒有多個 kind／refId 需要區分，
-/// 用 `Bool` 旗標而非 `CommentsSheetTarget` item 就夠）。`design/littlesprout.pen`
-/// 查無詳情頁專屬的互動列板（LS-177 只畫了三種卡片的規格板 `IgqGF`／`VZ0wV`／`Qzz3r`）——沿用
-/// 占位原本的位置（compact layout 仍在文字內容 `VStack` 裡），不新畫版面、只用 `InteractionRow`
-/// 自身的間距 token；iPad layout 見 `iPadLayout` 文件註解（merge-review R2 M1，位置與 compact
-/// 不同）。
+/// 一套數字，不是各自一套）；`onOpenComments` 開 LS-218 的 `CommentsSheetView`。
+/// `design/littlesprout.pen` 查無詳情頁專屬的互動列板（LS-177 只畫了三種卡片的規格板
+/// `IgqGF`／`VZ0wV`／`Qzz3r`）——沿用占位原本的位置（compact layout 仍在文字內容 `VStack`
+/// 裡），不新畫版面、只用 `InteractionRow` 自身的間距 token；iPad layout 見 `iPadLayout`
+/// 文件註解（merge-review R2 M1，位置與 compact 不同）。
+///
+/// LS-245（池 `7f77856c`，LS-241 R1 merge-review m1）：留言 sheet 原本用獨立的
+/// `showsCommentsSheet`（`Bool`）、「⋯」內容操作表原本用獨立的 `contentActionsContext`
+/// （item），兩個各自獨立的 `.sheet` 呈現來源——留言 sheet 與「⋯」的非同步
+/// `fetchContentAuthor` 完成窗口重疊時，第二個呈現會被系統丟棄，且 `contentActionsContext`
+/// 的 `id` 恆為 `diaryID`，卡在非 nil 之後再次觸發（同一個 id）不會被視為新的呈現而重新彈出
+/// ——「⋯」因此失效到退出重進才恢復。改成單一 `@State var activeSheet: DiaryDetailSheet?`
+/// （見該 enum 文件註解）：兩個來源共用同一個 `.sheet(item:)`，任何時刻只有一個 case 是「目前
+/// 要呈現的」，晚到的觸發直接覆蓋較早那個，不會卡住。內容操作表後續的確認鏈（檢舉／封鎖／
+/// Owner 移除／刪除，`DiaryDetailView+ContentActions.swift` 的 `contentActionsSheetHost`）
+/// 維持各自獨立的 `@State`：LS-190 R2 既有規約保證每一步都是「sheet 自己先 `dismiss()`，才
+/// 呼叫成功回呼」，彼此依序接力、沒有非同步窗口重疊的空間，不在這次收斂範圍內。
+///
+/// **範圍決定（不含 `.fullScreenCover(item: $playingVideo)`）**：影片播放用 `fullScreenCover`
+/// 而非 `sheet`——兩者是不同的呈現風格（全螢幕無 grabber vs. 可拖曳收合），把它併進同一個
+/// `sheet(item:)` 會連帶改變影片播放的呈現方式，不是本票要求的行為變更；票文本輪只收斂
+/// 「留言 sheet」與「⋯」內容操作表這兩個都用 `.sheet` 呈現的來源。影片與這兩者之間仍有相同
+/// 類型的非同步窗口重疊風險（`playVideo` 也是先 tap、簽名 URL 回來才設 `playingVideo`）——
+/// 未觀測到實際發生（不像 comments/contentActions 那組已有具體重現路徑），記入待辦池。
+enum DiaryDetailSheet: Identifiable {
+    case comments
+    case contentActions(DiaryContentActionsContext)
+
+    var id: String {
+        switch self {
+        case .comments: "comments"
+        case .contentActions(let context): "contentActions-\(context.id)"
+        }
+    }
+}
+
 struct DiaryDetailView: View {
     let diaryID: UUID
     let timelineStore: TimelineStore
@@ -51,16 +80,16 @@ struct DiaryDetailView: View {
     // LS-189：內容操作表整條流程的狀態，見 `DiaryDetailView+ContentActions.swift`——不標
     // `private`：跨檔案 extension 存取不到（同 `SettingsView.regularSelection` 既有理由）。
     @State var isResolvingContentActions = false
-    @State var contentActionsContext: DiaryContentActionsContext?
     @State var reportFlowTarget: ContentActionTarget?
     @State var showsReportSent = false
     @State var blockConfirmContext: DiaryBlockConfirmContext?
     @State var removeConfirmTarget: ContentActionTarget?
     @State var showsDeleteConfirmation = false
-    /// LS-241：`InteractionRow.onOpenComments` 開留言 sheet——這個畫面只綁定單一
-    /// `(kind: .diary, refId: diaryID)`，不像 `TimelineView`（多張卡片各自不同 kind／refId）
-    /// 需要 `CommentsSheetTarget` item，`Bool` 旗標就夠。
-    @State private var showsCommentsSheet = false
+    /// LS-245：留言 sheet／「⋯」內容操作表（05）的單一呈現來源，取代原本各自獨立的
+    /// `showsCommentsSheet`／`contentActionsContext`——見檔頭文件註解、`DiaryDetailSheet`。
+    /// 不標 `private`：`DiaryDetailView+ContentActions.swift`（跨檔案 extension）需要寫入
+    /// （同上面幾個內容操作表狀態的既有理由）。
+    @State var activeSheet: DiaryDetailSheet?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dismiss) var dismiss
 
@@ -103,12 +132,13 @@ struct DiaryDetailView: View {
         // 有實測記錄；改成一般內容區塊的按鈕才能穩定撐到 ≥44×44pt）。整條流程的 `.sheet` 鏈掛在
         // `.overlay`（不可見的 `EmptyView`）上，不是內容本身——`.sheet` 掛在樹上哪個節點不影響
         // 呈現，這樣可以把整串 `.sheet` 鏈搬到另一個檔案而不必重新拆 `body` 本體（同業界常見的
-        // 「用 overlay 集中多個 sheet modifier」寫法）。
+        // 「用 overlay 集中多個 sheet modifier」寫法）。這裡剩下的是內容操作表 05 之後的確認鏈
+        // （檢舉／封鎖／Owner 移除／刪除）——05 本身併進 `activeSheetHost`，見下一行與檔頭
+        // LS-245 文件註解。
         .overlay(contentActionsSheetHost)
-        // LS-241：留言 sheet——同上一行的「用 overlay 集中 sheet modifier」理由，獨立一個
-        // `.overlay` 而不是塞進 `contentActionsSheetHost`（那條是 `DiaryDetailView
-        // +ContentActions.swift` 的「⋯」操作表流程，跟留言是不同的呼叫來源）。
-        .overlay(commentsSheetHost)
+        // LS-245：留言 sheet／「⋯」內容操作表 05 的單一呈現來源（`activeSheet`）——同上一行
+        // 理由，獨立一個 `.overlay`。
+        .overlay(activeSheetHost)
         .task(id: diaryID) {
             loadState = .submitting
             do {
@@ -273,24 +303,32 @@ struct DiaryDetailView: View {
     private var interactionRow: some View {
         InteractionRow(
             kind: .diary, refId: diaryID, timelineStore: timelineStore,
-            onOpenComments: { showsCommentsSheet = true }
+            onOpenComments: { activeSheet = .comments }
         )
     }
 
-    /// 不可見的 `EmptyView`，掛留言 sheet 的 `.sheet`——同 `contentActionsSheetHost` 既有理由
-    /// （`.sheet` 掛在樹上哪個節點不影響呈現）。`familyStore.myFamily?.id` 還沒填好時（同
-    /// `isContentActionsReady` 的既有 guard 理由）不呈現內容——`interactionRow` 的 Comment
-    /// Button 沒有另外做 `.disabled`（同三種時間軸卡片既有行為一致：`familyID` 缺席時開出的
-    /// sheet 本來就是空的，不阻擋按鈕本身）。
-    private var commentsSheetHost: some View {
+    /// LS-245：留言 sheet／「⋯」內容操作表 05 的單一 `.sheet(item:)`——取代原本各自獨立的
+    /// `commentsSheetHost`／`contentActionsSheetHost` 開頭那個 `.sheet(item: $contentActionsContext)`
+    /// （見檔頭文件註解、`DiaryDetailSheet`）。`familyStore.myFamily?.id` 還沒填好時（同
+    /// `isContentActionsReady` 的既有 guard 理由）留言 sheet 不呈現內容——`interactionRow` 的
+    /// Comment Button 沒有另外做 `.disabled`（同三種時間軸卡片既有行為一致：`familyID` 缺席時
+    /// 開出的 sheet 本來就是空的，不阻擋按鈕本身）。
+    private var activeSheetHost: some View {
         EmptyView()
-            .sheet(isPresented: $showsCommentsSheet) {
-                if let familyID = familyStore.myFamily?.id {
-                    CommentsSheetView(
-                        kind: .diary, refId: diaryID, familyID: familyID, timelineStore: timelineStore,
-                        familyStore: familyStore, childrenStore: childrenStore,
-                        commentAPIClient: commentAPIClient, safetyAPIClient: safetyAPIClient
-                    )
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .comments:
+                    if let familyID = familyStore.myFamily?.id {
+                        CommentsSheetView(
+                            kind: .diary, refId: diaryID, familyID: familyID, timelineStore: timelineStore,
+                            familyStore: familyStore, childrenStore: childrenStore,
+                            commentAPIClient: commentAPIClient, safetyAPIClient: safetyAPIClient
+                        )
+                    }
+                case .contentActions(let context):
+                    ContentActionsSheet(headline: context.target.headline, actions: context.actions) { action in
+                        handleContentAction(action, context: context)
+                    }
                 }
             }
     }
