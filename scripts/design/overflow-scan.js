@@ -45,6 +45,11 @@
 //      tree_hash／total_nodes／ref_hits／unresolved 逐欄相同（.claude/evidence/LS-226/r1）。某批 `InternalError: interrupted`（間歇性）
 //      先原樣重試一次、再不行就把 `SCAN_BATCH_ROOTS` 切小重跑那一段。分批期間不得寫入文件（各批必須同一稿態，tree_hash 對不上 CI 就紅）；
 //      分批模式與 SCAN_HASH_ONLY／SCAN_SKIP_HASH 互斥、SCAN_BATCH 與 SCAN_BATCH_ROOTS 擇一。
+//      **每一批都要重送 snippet 全文**（LS-264，來源 LS-96 池項 `c1b67f93`／LS-247 VR R3 實測）：Pencil `execute` 的
+//      `edits`／`editId` **成功套用後即失效**（重用回 `Unknown editId`），它只在「上一次呼叫失敗」的重試視窗內有效——
+//      沒有「送一次全文、後面各批只帶 id」這種省法，分批的 token 成本＝本檔字元數 × 批數。取捨：要跑六支就只能送全文；
+//      若這一輪只需要 `tree_hash`（例如 VR 複核新鮮度、或 pen-read.sh exit 3 的自行複算），改送**極小的 hash-only
+//      snippet**便宜得多（LS-247 VR R3 實測 1.3k 字元 × 15 批，成本約送全文的 1/10）。
 //   2. node：`require` 本檔取得純函數（`scanAll` 與六支 `scan*`、`treeHash`／`treeHashLines`／`canonNode`、分批的 `batchRange`／
 //      `mergeBatches`／`compactScans`／`withResultHashes`），`scripts/design/overflow-scan.test.js` 用合成節點樹驗演算法、並以 python
 //      交叉驗 tree_hash／result_hash 同值；CI rules job 的自測 step 跑它。直接執行＝`--merge` CLI（見 1b；node 端環境變數
