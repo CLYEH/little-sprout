@@ -505,11 +505,12 @@ fi
 # ---- Supabase 容器啟動時間一致性（LS-260；來源 LS-96 池項 `b2947c3f`）----
 # LS-246 QA R2：本機 `supabase_auth`／`supabase_db` 曾被單獨重啟、`rest`／`kong` 沒有（uptime 差 7 天），
 # OTP 登入後 `GET /rest/v1/profiles` 回 401、App 卡「伺服器發生問題」，QA 以整組 `supabase stop` →
-# `supabase start` 排除，多花一段排障。查過 repo 內沒有任何腳本會單獨重啟單一容器——唯一會動容器生命
-# 週期的 `scripts/ci/db-reset-retry.sh` 只給 CI runner（本機呼叫在碰 supabase 之前就 exit 2），且走的是
-# 整組 `supabase stop --no-backup` → `supabase db start`；來源只可能是人工或外部操作。源頭修不了，就讓
-# 巡檢看得見結果：各 `supabase_*` 容器 `.State.StartedAt` 最大差超過 PATROL_SUPABASE_SKEW_MIN（預設
-# 60 分）就掛旗標並給整組重啟指令。docker 不在／沒有 supabase 容器在跑 → 靜默略過（fail-open，同 gh
+# `supabase start` 排除，多花一段排障。查過 repo 內沒有任何腳本會在**本機**單獨重啟單一容器——唯一會動
+# 容器生命週期的 `scripts/ci/db-reset-retry.sh` 走 `supabase stop --no-backup` → `supabase db start`，
+# 後者本身就是部分啟動（只起 db 群），但它以 `CI` 守門（`:26-28`）、本機呼叫在碰 supabase 之前就
+# exit 2，只有明示逃生口 `LS_DB_RESET_RETRY_ALLOW_LOCAL=1` 能繞過（**R2 i1 訂正**：R1 這段寫成
+# 「repo 內沒有腳本會單獨重啟」，略過了「CI 路徑本身是部分啟動、只是已被守門」這半句）。本機的來源
+# 因此只可能是人工或外部操作。源頭修不了，就讓巡檢看得見結果（判準見下方 R2 M2 的分批比形狀）。docker 不在／沒有 supabase 容器在跑 → 靜默略過（fail-open，同 gh
 # 未安裝的處理；巡檢本身不該因為沒開容器就變成「有異常」）。`docker ps`／`docker inspect` 是唯讀操作，
 # 不受 supabase-lock 規約管轄（LS-183 明列的例外）。PATROL_DOCKER 可換假身供自測。
 DOCKER_BIN=${PATROL_DOCKER:-docker}
@@ -647,6 +648,12 @@ REDS_CACHE=${PATROL_REDS_CACHE:-${TMPDIR:-/tmp}/patrol-reds-cache}
 # 「⚠ 同類紅 10 次」的假警報（內容是現行程式碼根本不會產生的字串）。路徑加一段版本，簽章規則
 # 變更就把常數往上跳，舊批整批自然失效（也不必手動清 /tmp）。
 REDS_CACHE_VER=v2   # R2 M3 加了 class: 簽章，簽章集合變了 → 跳號讓 v1 快取整批失效
+# LS-260 R2 i3（merge-review R1）：乾淨快取那一輪 reviewer 實測 15.2 s（序列 `gh run view`，其中
+# `--log-failed` 會抓整包 log），而 SessionStart hook 的預算是 30 s，本段原本沒有任何時間上界（只有
+# 「筆數」上限）。加一個純 deadline 比對的時間預算：每次要打網路前先看時間，超過就這輪不再抓、下一輪
+# 再補（不 fork 背景看門狗——同本檔對 gh 的既有慣例，也避免多一個要回收的子程序）。
+REDS_BUDGET_SEC=${PATROL_REDS_BUDGET_SEC:-20}
+case "$REDS_BUDGET_SEC" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_BUDGET_SEC 須為整數秒（得到「${REDS_BUDGET_SEC}」）" >&2; exit 2 ;; esac
 # LS-260 R2 M1：cancelled job 跑滿幾分鐘才算「撞 job timeout-minutes」（見下方分類邏輯的實測分離度）
 REDS_TIMEOUT_MIN=${PATROL_REDS_TIMEOUT_MIN:-30}
 case "$REDS_DAYS" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_DAYS 須為整數天（得到「${REDS_DAYS}」）" >&2; exit 2 ;; esac
@@ -676,7 +683,8 @@ else
     reds_cache_dir="${REDS_CACHE}/${REDS_CACHE_VER}"
     mkdir -p "$reds_cache_dir" 2>/dev/null
     find "$REDS_CACHE" -type f -mtime "+$((REDS_DAYS * 2))" -delete 2>/dev/null
-    reds_fetched=0; reds_sigs=
+    reds_fetched=0; reds_sigs=; reds_budget_hit=0
+    reds_deadline=$(( $(date +%s) + REDS_BUDGET_SEC ))
     while IFS=$'\t' read -r r_id r_concl r_branch r_created; do
       [ -n "$r_id" ] || continue
       reds_runs=$((reds_runs + 1))
@@ -687,6 +695,8 @@ else
         # 額度用完就先不算這個 run（不寫快取），下一輪再補——`cancelled` 那條雖然只查 JSON、比較便宜，
         # 但同樣是一次網路往返，一併受額度管，巡檢的單輪成本才有上界。
         [ "$reds_fetched" -ge "$REDS_MAX_FETCH" ] && continue
+        # i3：時間預算用完就跟筆數上限一樣「這輪先不算」，不寫快取、下一輪再補
+        if [ "$(date +%s)" -ge "$reds_deadline" ]; then reds_budget_hit=1; continue; fi
         if [ "$r_concl" = cancelled ]; then
           # cancelled 有兩種形狀，只有其中一種是事故：
           #   (a) 撞 job `timeout-minutes`（LS-257 的真事故，要計數）；
@@ -765,7 +775,8 @@ EOF
 $(printf '%s' "$reds_sigs" | sort | uniq -c | awk '$1 >= 2 { n = $1; $1 = ""; sub(/^ +/, ""); printf "%d\t%s\n", n, $0 }' | sort -rn)
 EOF
     fi
-    reds_note="近 ${REDS_DAYS} 日 failure／cancelled run ${reds_runs} 個（實際涵蓋到 ${reds_oldest:-?}；本輪新下載 log ${reds_fetched} 個，上限 ${REDS_MAX_FETCH}；快取 ${reds_cache_dir}）"
+    reds_budget_note=; [ "$reds_budget_hit" -eq 1 ] && reds_budget_note="；本輪時間預算 ${REDS_BUDGET_SEC} 秒用完，剩下的下一輪再算"
+    reds_note="近 ${REDS_DAYS} 日 failure／cancelled run ${reds_runs} 個（實際涵蓋到 ${reds_oldest:-?}；本輪新下載 log ${reds_fetched} 個，上限 ${REDS_MAX_FETCH}${reds_budget_note}；快取 ${reds_cache_dir}）"
   fi
 fi
 

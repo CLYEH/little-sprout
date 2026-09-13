@@ -1891,6 +1891,20 @@ out30f="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 has   '㉚f --no-pr → 略過、不掛旗標' "$out30f" '略過（--no-pr）'
 out30g="$(PATROL_GH="$work/no-such-gh-binary" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
 has   '㉚g gh 未安裝 → 略過（fail-soft）' "$out30g" 'gh 未安裝，略過'
+# ㉚k（R2 i3）：時間預算——乾淨快取那一輪 reviewer 實測 15.2 s，而 SessionStart hook 只有 30 s 預算，
+#      本段原本只有「筆數」上限、沒有時間上界。預算 0 秒 → 這輪一個 log 都不抓，並在人類段講明。
+calls30k="$work/gh-calls-k"; : > "$calls30k"
+out30k="$(PATROL_REDS_BUDGET_SEC=0 PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" FAKE_GH_CALLS="$calls30k" PATROL_REDS_CACHE="$work/reds-cache-k" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+has '㉚k 時間預算用完 → 本輪 0 個新下載＋人類段講明' "$out30k" '本輪新下載 log 0 個，上限 5；本輪時間預算 0 秒用完，剩下的下一輪再算'
+if [ "$(grep -c 'run view' "$calls30k")" -eq 0 ]; then
+  echo "✓ ㉚k 時間預算用完時真的一次 run view 都沒打（不是只印訊息）"
+else
+  echo "✗ ㉚k 預算用完仍打了 $(grep -c 'run view' "$calls30k") 次 run view" >&2
+  fail=1
+fi
+out30k2="$(PATROL_REDS_BUDGET_SEC=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+rc_is '㉚k2 PATROL_REDS_BUDGET_SEC 非整數 → exit 2' 2 "$?" "$out30k2"
+
 out30h="$(PATROL_REDS_DAYS=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 rc_is '㉚h PATROL_REDS_DAYS 非整數 → exit 2（fail closed，同既有 PATROL_* 慣例）' 2 "$?" "$out30h"
 
