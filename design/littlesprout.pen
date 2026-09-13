@@ -156848,7 +156848,7 @@
                     {
                       "type": "rectangle",
                       "id": "scpdc",
-                      "x": -0.06,
+                      "x": 0,
                       "y": 0,
                       "name": "Hero Photo",
                       "fill": {
@@ -156857,7 +156857,7 @@
                         "url": "appstore-photos/hero.jpg",
                         "mode": "fill"
                       },
-                      "width": 690.11,
+                      "width": 690,
                       "height": 380.2
                     }
                   ]
@@ -157118,7 +157118,7 @@
                     {
                       "type": "rectangle",
                       "id": "aD9EO",
-                      "x": -0.06,
+                      "x": 0,
                       "y": 0,
                       "name": "Hero Photo",
                       "fill": {
@@ -157127,7 +157127,7 @@
                         "url": "appstore-photos/join.jpg",
                         "mode": "fill"
                       },
-                      "width": 690.11,
+                      "width": 690,
                       "height": 380.2
                     }
                   ]
@@ -157690,7 +157690,7 @@
                     {
                       "type": "rectangle",
                       "id": "F92jh",
-                      "x": -0.06,
+                      "x": 0,
                       "y": 0,
                       "name": "Hero Photo",
                       "fill": {
@@ -157699,7 +157699,7 @@
                         "url": "appstore-photos/invite.jpg",
                         "mode": "fill"
                       },
-                      "width": 690.11,
+                      "width": 690,
                       "height": 380.2
                     }
                   ]
@@ -158101,7 +158101,7 @@
                     {
                       "type": "rectangle",
                       "id": "ayJoy",
-                      "x": -0.14,
+                      "x": 0,
                       "y": 0,
                       "name": "Hero Photo",
                       "fill": {
@@ -158110,7 +158110,7 @@
                         "url": "appstore-photos/hero.jpg",
                         "mode": "fill"
                       },
-                      "width": 1079.27,
+                      "width": 1079,
                       "height": 594.5
                     }
                   ]
@@ -158403,7 +158403,7 @@
                     {
                       "type": "rectangle",
                       "id": "j5Bns",
-                      "x": -0.14,
+                      "x": 0,
                       "y": 0,
                       "name": "Hero Photo",
                       "fill": {
@@ -158412,7 +158412,7 @@
                         "url": "appstore-photos/join.jpg",
                         "mode": "fill"
                       },
-                      "width": 1079.27,
+                      "width": 1079,
                       "height": 594.5
                     }
                   ]
@@ -158982,7 +158982,7 @@
                     {
                       "type": "rectangle",
                       "id": "yzfCx",
-                      "x": -0.14,
+                      "x": 0,
                       "y": 0,
                       "name": "Hero Photo",
                       "fill": {
@@ -158991,7 +158991,7 @@
                         "url": "appstore-photos/invite.jpg",
                         "mode": "fill"
                       },
-                      "width": 1079.27,
+                      "width": 1079,
                       "height": 594.5
                     }
                   ]
