@@ -388,8 +388,9 @@ $$;
 rollback;
 
 -- ===========================================================================
--- 6. list_growth_records：排序（measured_on desc, created_at desc）、p_before
---    分頁、p_limit 收斂。
+-- 6. list_growth_records：排序（measured_on desc, id desc）、真正的 2 元組
+--    keyset 分頁（p_before／p_before_id）、p_limit 收斂、半游標 LS022、
+--    **同日多筆跨頁邊界**（merge-review R1 M1 訂正的邊界——見下方獨立區塊）。
 -- ===========================================================================
 begin;
 
@@ -397,12 +398,9 @@ do $$
 declare
   v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
   v_child uuid := '2a000000-0000-4000-8000-000000000001';
-  v_ids uuid[];
-  v_rows public.growth_records[];
-  v_row public.growth_records;
   v_page1 date[];
   v_page2 date[];
-  v_i int := 1;
+  v_last public.growth_records;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
@@ -415,25 +413,126 @@ begin
 
   -- 第一頁 limit 2：應為 2026-03-01, 2026-02-01（measured_on desc）
   select array_agg(g.measured_on order by g.measured_on desc) into v_page1
-    from public.list_growth_records(v_child, 2, null) g;
+    from public.list_growth_records(v_child, 2, null, null) g;
   if v_page1 <> array[date '2026-03-01', date '2026-02-01'] then
     raise exception 'FAIL：list_growth_records 第一頁順序不符，實際 %', v_page1;
   end if;
 
-  -- 第二頁：p_before = 第一頁最後一筆的 measured_on，應只剩 2026-01-01
+  -- 第二頁：游標取第一頁最後一列的 (measured_on, id)，應只剩 2026-01-01
+  select g.* into v_last
+    from public.list_growth_records(v_child, 2, null, null) g
+   order by g.measured_on asc limit 1;
   select array_agg(g.measured_on order by g.measured_on desc) into v_page2
-    from public.list_growth_records(v_child, 2, date '2026-02-01') g;
+    from public.list_growth_records(v_child, 2, v_last.measured_on, v_last.id) g;
   if v_page2 <> array[date '2026-01-01'] then
-    raise exception 'FAIL：list_growth_records 第二頁（p_before=2026-02-01）不符，實際 %', v_page2;
+    raise exception 'FAIL：list_growth_records 第二頁（游標取第一頁最後一列）不符，實際 %', v_page2;
   end if;
 
   -- p_limit 收斂：傳 0 應至少回 1 筆（clamp 到下限 1），不是回 0 筆
-  if (select count(*) from public.list_growth_records(v_child, 0, null)) < 1 then
+  if (select count(*) from public.list_growth_records(v_child, 0, null, null)) < 1 then
     raise exception 'FAIL：p_limit=0 時 list_growth_records 竟然回傳 0 列（應 clamp 到下限 1）';
   end if;
 
+  -- 半游標：只給 p_before 不給 p_before_id（或反過來）一律 LS022
+  begin
+    perform public.list_growth_records(v_child, 2, date '2026-02-01', null);
+    raise exception 'FAIL：只給 p_before 不給 p_before_id 竟然沒有出錯';
+  exception when others then
+    if sqlstate <> 'LS022' then
+      raise exception 'FAIL：半游標應拿到 LS022，實際 %', sqlstate;
+    end if;
+  end;
+  begin
+    perform public.list_growth_records(v_child, 2, null, gen_random_uuid());
+    raise exception 'FAIL：只給 p_before_id 不給 p_before 竟然沒有出錯';
+  exception when others then
+    if sqlstate <> 'LS022' then
+      raise exception 'FAIL：半游標應拿到 LS022，實際 %', sqlstate;
+    end if;
+  end;
+
   reset role;
-  raise notice 'ok：list_growth_records 排序與 p_before 分頁正確，p_limit 下限 clamp 生效';
+  raise notice 'ok：list_growth_records 排序與游標分頁正確，p_limit 下限 clamp 生效，半游標拿 LS022';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 6b.（merge-review R1 M1，major）同日多筆跨頁邊界：4 筆——D1 單獨一天、
+--    D2a／D2b 同一天、D3 更早一天，`p_limit=2` 分頁必須合計走訪到全部 4 筆、
+--    無重複、無遺漏——reviewer 用這個確切情境（4 筆／limit=2）實跑重現過 R1
+--    版本（`measured_on < p_before` 單值游標）只走訪到 3 筆、漏掉頁尾同日的
+--    另一筆。
+--
+-- Mutation 自證（開發期間手動驗證，已改回原狀）：把
+-- `and (g.measured_on, g.id) < (p_before, p_before_id)` 暫時改回 R1 的
+-- `and g.measured_on < p_before`（拿掉 id 這個游標維度）後重跑本區塊，斷言由
+-- 綠轉紅（`FAIL：分頁走訪合計應為 4 筆，實際 3`，與 reviewer R1 review 實跑的
+-- 現象逐字相符）；改回 `(measured_on, id) < (p_before, p_before_id)` 後重跑
+-- 恢復綠。證明這個斷言真的在測 M1 修正本身，不是恆綠空案。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_child uuid := '2a000000-0000-4000-8000-000000000001';
+  v_d1 uuid;
+  v_d2a uuid;
+  v_d2b uuid;
+  v_d3 uuid;
+  v_page1 uuid[];
+  v_last public.growth_records;
+  v_page2 uuid[];
+  v_all uuid[];
+  v_distinct_count int;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  v_d1  := (public.upsert_growth_record(null, v_child, date '2026-05-10', 70.0, null, null, 'D1')).id;
+  v_d2a := (public.upsert_growth_record(null, v_child, date '2026-05-05', 71.0, null, null, 'D2a')).id;
+  v_d2b := (public.upsert_growth_record(null, v_child, date '2026-05-05', 72.0, null, null, 'D2b')).id;
+  v_d3  := (public.upsert_growth_record(null, v_child, date '2026-05-01', 73.0, null, null, 'D3')).id;
+
+  -- page1：limit=2，游標為空
+  select array_agg(g.id) into v_page1
+    from public.list_growth_records(v_child, 2, null, null) g;
+  if array_length(v_page1, 1) <> 2 then
+    raise exception 'FAIL：page1 應為 2 筆，實際 %', array_length(v_page1, 1);
+  end if;
+
+  -- 取 page1 最後一列（measured_on 最早的那筆）當下一頁游標
+  select g.* into v_last
+    from public.list_growth_records(v_child, 2, null, null) g
+   order by g.measured_on asc, g.id asc limit 1;
+
+  -- page2：游標接續，limit 給大一點（100）確保能拿到剩下全部
+  select array_agg(g.id) into v_page2
+    from public.list_growth_records(v_child, 100, v_last.measured_on, v_last.id) g;
+
+  select array_agg(distinct x) into v_all
+    from unnest(v_page1 || coalesce(v_page2, array[]::uuid[])) as x;
+  select array_length(v_all, 1) into v_distinct_count;
+
+  if v_distinct_count <> 4 then
+    raise exception 'FAIL：分頁走訪合計應為 4 筆，實際 %（page1=% page2=%）',
+      v_distinct_count, v_page1, v_page2;
+  end if;
+
+  if array_length(v_page1, 1) + coalesce(array_length(v_page2, 1), 0) <> v_distinct_count then
+    raise exception 'FAIL：分頁走訪出現重複（page1=% page2=% 但去重後只有 % 筆）',
+      v_page1, v_page2, v_distinct_count;
+  end if;
+
+  if not (v_d1 = any(v_all) and v_d2a = any(v_all) and v_d2b = any(v_all) and v_d3 = any(v_all)) then
+    raise exception 'FAIL：D1/D2a/D2b/D3 四筆沒有全部出現在分頁結果裡（實際 %）', v_all;
+  end if;
+
+  reset role;
+  raise notice 'ok：同日多筆（D2a／D2b）跨頁邊界正確——4 筆全部走訪到、無重複（M1 修正）';
 end;
 $$;
 
@@ -599,6 +698,168 @@ $$;
 
 rollback;
 
+-- ===========================================================================
+-- 8b.（merge-review R1 m1）owner 已軟刪的紀錄，作者跨交易再呼叫
+--    delete_growth_record 拿 LS027（既有碼，API.md 已補登記）——delete_growth_
+--    record 本身的授權檢查（owner 或「作者且仍是成員」）會放行作者，但底下的
+--    UPDATE 觸發共用 trigger 的還原鎖，擋下「不是自己軟刪的」再次觸碰。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_child uuid := '2a000000-0000-4000-8000-000000000001';
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_member uuid := 'a0000000-0000-4000-8000-000000000002';
+  v_id uuid;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  select (public.upsert_growth_record(null, v_child, current_date, 70.0, null, null, null)).id into v_id;
+  reset role;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.delete_growth_record(v_id);
+  reset role;
+
+  -- 跨交易：把 deleted_at 回填成更早的時間戳（同 §8 的既有手法），確保作者這次
+  -- 呼叫的 now() 與 owner 剛剛軟刪時不同，才踩得到 trigger 真正的還原鎖分支。
+  update public.growth_records set deleted_at = now() - interval '1 hour' where id = v_id;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.delete_growth_record(v_id);
+    raise exception 'FAIL：作者對 owner 已軟刪的紀錄再次呼叫 delete_growth_record 竟然沒有出錯';
+  exception when others then
+    if sqlstate <> 'LS027' then
+      raise exception 'FAIL：作者對 owner 已軟刪的紀錄再次呼叫應拿到 LS027，實際 %', sqlstate;
+    end if;
+  end;
+  reset role;
+
+  -- deleted_by 仍是 owner，沒有被這次失敗的呼叫動到
+  if (select deleted_by from public.growth_records where id = v_id) <> v_owner then
+    raise exception 'FAIL：LS027 擋下之後，deleted_by 竟然不再是 owner';
+  end if;
+  raise notice 'ok：owner 已軟刪的紀錄，作者跨交易再呼叫 delete_growth_record 拿 LS027（既有碼）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 8c.（merge-review R1 m2）已軟刪的孩子不能再被指定為新的成長紀錄——重用 LS-121
+--    的共用函式 private.enforce_child_not_deleted()，拋既有碼 LS044。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_child uuid;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  v_child := public.create_child(v_family, 'LS-255 m2 已軟刪孩子', date '2025-01-01', null);
+  perform public.set_child_deleted(v_child, true);
+
+  begin
+    perform public.upsert_growth_record(null, v_child, current_date, 70.0, null, null, null);
+    raise exception 'FAIL：已軟刪的孩子竟然還能被新增成長紀錄';
+  exception when others then
+    if sqlstate <> 'LS044' then
+      raise exception 'FAIL：已軟刪的孩子新增成長紀錄應拿到 LS044，實際 %', sqlstate;
+    end if;
+  end;
+
+  -- 正向對照：active 孩子完全不受影響
+  perform public.set_child_deleted(v_child, false);
+  perform public.upsert_growth_record(null, v_child, current_date, 70.0, null, null, null);
+
+  reset role;
+  raise notice 'ok：已軟刪的孩子新增成長紀錄拿 LS044；還原後（active）新增不受影響（正向對照）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 8d.（merge-review R1 m3）note 長度上限：超過 2000 字拋 23514；剛好 2000 字
+--    成功（邊界含）。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_child uuid := '2a000000-0000-4000-8000-000000000001';
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  begin
+    perform public.upsert_growth_record(null, v_child, current_date, 70.0, null, null, repeat('x', 2001));
+    raise exception 'FAIL：note 2001 字竟然新增成功';
+  exception when check_violation then
+    null;  -- ok
+  end;
+
+  perform public.upsert_growth_record(null, v_child, current_date, 70.0, null, null, repeat('x', 2000));
+
+  reset role;
+  raise notice 'ok：note 超過 2000 字拋 23514；剛好 2000 字成功（邊界含）';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
+-- 8e.（R1 informational i2）growth_records_deletion_guard／growth_records_
+--    not_suspended 兩支共用 guard trigger 掛載正確——結構性回歸保護：日後若這兩支
+--    trigger 被誤刪／改錯函式，這裡會直接抓到，不必等到帳號刪除過渡期／停權
+--    情境才發現。行為本身（LS051／LS052／LS053 各自的判斷邏輯）已由
+--    private.enforce_account_not_deletion_requested()／enforce_not_suspended()
+--    共用函式自己的既有測試（92_delete_account_edge_guard.sql／105_suspension_
+--    and_registrations.sql）逐路徑覆蓋，這裡不重複跑一次那些情境，只釘住
+--    「growth_records 有沒有掛上」這件事本身。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_def text;
+begin
+  select pg_get_triggerdef(t.oid) into v_def
+    from pg_trigger t
+   where t.tgrelid = 'public.growth_records'::regclass
+     and t.tgname = 'growth_records_deletion_guard';
+  if v_def is null or v_def !~ 'enforce_account_not_deletion_requested' or v_def !~ 'INSERT' then
+    raise exception 'FAIL：growth_records_deletion_guard 沒有正確掛上 private.enforce_account_not_deletion_requested()（BEFORE INSERT），實際：%', v_def;
+  end if;
+
+  select pg_get_triggerdef(t.oid) into v_def
+    from pg_trigger t
+   where t.tgrelid = 'public.growth_records'::regclass
+     and t.tgname = 'growth_records_not_suspended';
+  if v_def is null or v_def !~ 'enforce_not_suspended'
+     or v_def !~ 'INSERT' or v_def !~ 'UPDATE' or v_def !~ 'DELETE' then
+    raise exception 'FAIL：growth_records_not_suspended 沒有正確掛上 private.enforce_not_suspended()（BEFORE INSERT/UPDATE/DELETE），實際：%', v_def;
+  end if;
+
+  raise notice 'ok：growth_records_deletion_guard（LS051）／growth_records_not_suspended（LS052/LS053）兩支共用 guard trigger 皆正確掛載';
+end;
+$$;
+
+rollback;
 
 -- ===========================================================================
 -- 9. EXPLAIN 證據：growth_records_child_measured_idx 部分索引被實際選用。
@@ -690,11 +951,11 @@ declare
   -- 抓法，門檻給充足餘裕，這個資料量級離門檻應該還有一大截）。
   c_buffer_budget constant bigint := 60;
 begin
-  perform * from public.list_growth_records(v_child, 20, null);  -- 暖機（同 112_ 既有慣例：session 第一次呼叫 plpgsql 函式有一次性 parse/plan cache 成本）
+  perform * from public.list_growth_records(v_child, 20, null, null);  -- 暖機（同 112_ 既有慣例：session 第一次呼叫 plpgsql 函式有一次性 parse/plan cache 成本）
 
   for v_line in execute
     'explain (analyze, verbose, buffers) select * from public.list_growth_records(' ||
-    quote_literal(v_child::text) || '::uuid, 20, null)'
+    quote_literal(v_child::text) || '::uuid, 20, null, null)'
   loop
     v_plan := v_plan || v_line || E'\n';
   end loop;
@@ -732,7 +993,7 @@ begin
   for v_line in execute
     'explain (analyze, verbose, buffers) select g.* from public.growth_records g' ||
     ' where g.child_id = ' || quote_literal(v_child::text) || '::uuid' ||
-    ' order by g.measured_on desc, g.created_at desc limit 20'
+    ' order by g.measured_on desc, g.id desc limit 20'
   loop
     v_plan := v_plan || v_line || E'\n';
   end loop;
@@ -748,14 +1009,14 @@ $$;
 \echo ''
 \echo '=== EXPLAIN 證據：list_growth_records 100 筆同孩子（80 存活＋20 已刪）走部分索引（LS-255）==='
 explain (analyze, verbose, buffers)
-select * from public.list_growth_records(current_setting('ls255.explain_child_id')::uuid, 20, null);
+select * from public.list_growth_records(current_setting('ls255.explain_child_id')::uuid, 20, null, null);
 
 \echo ''
 \echo '=== EXPLAIN 證據：函式內部查詢文字（p_before is null 分支）逐字一致（LS-255）==='
 explain (analyze, verbose, buffers)
 select g.* from public.growth_records g
  where g.child_id = current_setting('ls255.explain_child_id')::uuid
- order by g.measured_on desc, g.created_at desc
+ order by g.measured_on desc, g.id desc
  limit 20;
 
 reset role;

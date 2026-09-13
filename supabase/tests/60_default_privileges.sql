@@ -510,7 +510,7 @@ declare
     'public.list_children(uuid)',
     'public.get_family_quota(uuid)',  -- LS-149：純讀取，依賴既有 families_select RLS
     -- LS-255：依賴 growth_records_select／_insert／_update 三條真 RLS，見 migration 檔頭第 0 段
-    'public.list_growth_records(uuid, integer, date)',
+    'public.list_growth_records(uuid, integer, date, uuid)',
     'public.upsert_growth_record(uuid, uuid, date, numeric, numeric, numeric, text)'
   ];
   -- v_service_role_rpcs（union，LS-151 R2／R3＋LS-153 R3——兩票各自新增這個
