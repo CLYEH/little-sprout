@@ -11,6 +11,8 @@ model: sonnet
 
 **長命令一律前景執行帶 timeout（LS-191／LS-236）**：`xcodebuild`／`run.sh` 等長命令一律前景 Bash 帶 timeout（單次 ≤10 分，即 Bash 工具上限 600000ms；預期超過 10 分鐘的測試以 `-only-testing` 分段跑）；**不使用背景 Bash**——需要並行時在 handoff／裁決 comment 回報 orchestrator 拆派，不自行背景化（LS-215 起 PreToolUse `background-bash-guard.sh` 對 `run_in_background:true` 與「背景化再等」命令文字慣用形狀一律 deny，找不到 agent 身分時 fail-open，見 COLLABORATION §3）。不得依賴截斷後的自動背景化——工具 timeout 截斷後子行程不會被殺掉，只是這一輪看不到輸出，會留下殘留行程與下一輪的 xcodebuild 搶模擬器（LS-166／LS-217；`scripts/gates/stale-xcodebuild-check.sh` 機械擋殘留）。
 
+**禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行；研究用 `Explore`（唯讀）——本定義 tools 白名單無 `Agent`，需要研究／並行一律回報 orchestrator 拆派；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
+
 ## 驗收流程
 1. 讀 ticket 的驗收條件（orchestrator 提供，或從 Linear ticket 取得）。
 2. Build 並跑全部測試：`xcodebuild test`（模擬器）。測試宿主啟動即 crash／runner 沒連上會讓 xcodebuild 0% CPU 掛住（LS-197）：看到 push gate 印「逾時」／「宿主 crash」（LS-199 看門狗會自動印 xcresult session log 尾與 `~/Library/Logs/DiagnosticReports/LittleSprout*.ips` 摘要），或自己的 xcodebuild 卡住／log 出現 `test runner hasn't connected`，先看那份摘要再決定：環境性 flake 就 `xcrun simctl erase <udid>` 後重跑，指向程式碼才判 FAIL；不要乾等。

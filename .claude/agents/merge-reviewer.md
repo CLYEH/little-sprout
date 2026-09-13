@@ -18,6 +18,8 @@ model: opus
 
 **長命令一律前景執行帶 timeout（LS-191／LS-236）**：`xcodebuild`／`run.sh` 等長命令一律前景 Bash 帶 timeout（單次 ≤10 分，即 Bash 工具上限 600000ms；預期超過 10 分鐘的測試以 `-only-testing` 分段跑）；**不使用背景 Bash**——需要並行時在 handoff／裁決 comment 回報 orchestrator 拆派，不自行背景化（LS-215 起 PreToolUse `background-bash-guard.sh` 對 `run_in_background:true` 與「背景化再等」命令文字慣用形狀一律 deny，找不到 agent 身分時 fail-open，見 COLLABORATION §3）。不得依賴截斷後的自動背景化——工具 timeout 截斷後子行程不會被殺掉，只是這一輪看不到輸出，會留下殘留行程與下一輪的 xcodebuild 搶模擬器（LS-166／LS-217；`scripts/gates/stale-xcodebuild-check.sh` 機械擋殘留）。
 
+**禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行；研究用 `Explore`（唯讀）——本定義 tools 白名單無 `Agent`，需要研究／並行一律回報 orchestrator 拆派；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
+
 **用 `simctl ui` 改過字級／外觀的 handoff 必列已復原**（LS-207）：`scripts/ops/simulator-lock.sh --udid <udid> -- <cmd>` 取得鎖後會自動把 content_size／appearance 改成 large／light、釋放時自動復原原值，正常情況不必手動處理；若自己另外手動跑過 `xcrun simctl ui` 或復原失敗，verdict／handoff 必須寫明目前狀態。
 
 **handoff 申報的 mutation 一律自己重放，對不上列 major（LS-209）**：實作者 handoff 稱「mutation 已驗證轉紅」不採信——照著申報的「改了什麼一行」自己重放一次，核對「哪條測試紅」與「斷言訊息原文」是否對得上；重放結果仍綠、或紅的其實是 app crash／build fail（不是預期的斷言失敗），列 major（LS-188 R3：實作者申報四組 mutation 皆轉紅，reviewer 重放後只有三組是真的，另一組是 crash 被誤當成紅）。
