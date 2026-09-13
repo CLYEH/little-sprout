@@ -140,7 +140,9 @@ extension TapTargetGateHarness {
                 let frame = frameCounter.withLock { $0 }
                 if frame >= frameCount {
                     input.markAsFinished()
-                    writer.finishWriting { Self.assertFinishedWriting(writer, done: done) }
+                    writer.finishWriting {
+                        Self.assertFinishedWriting(writer, url: url, appendedFrames: frame, done: done)
+                    }
                     return
                 }
                 guard Self.appendFrame(frame, to: adaptor, height: height, fps: fps, writer: writer) else {
@@ -162,12 +164,28 @@ extension TapTargetGateHarness {
     /// `AVPlayerViewController` 播放不了一支不完整的檔案，錯誤訊息離真正病灶（合成失敗）很遠。
     /// 明確失敗優於假綠（同 `appendFrame` 既有理由）。抽出成獨立函式單純是為了不讓
     /// `makeTestVideoURL` 超過 SwiftLint `function_body_length`，邏輯未變。
-    private static func assertFinishedWriting(_ writer: AVAssetWriter, done: DispatchSemaphore) {
+    ///
+    /// LS-263（池 `12d24b4e`，merge-review R1 i1）：`writer.status == .completed` 仍漏兩種
+    /// 假綠——(a) 輸出檔在 `finishWriting` 完成前被 unlink（`status` 只反映 writer 內部狀態機，
+    /// 不代表檔案這一刻還在磁碟上）；(b) 沒有任何畫格被 append（`appendedFrames == 0`，例如
+    /// `frameCount` 算出來是 0 或迴圈一進來就被跳過），此時 `status` 一樣可能是 `.completed`。
+    /// 兩種情況下游 `AVPlayerViewController` 都會拿到一支不存在或零長度的檔案，補上檔案存在＋
+    /// 大小 > 0＋`appendedFrames > 0` 三道 guard，明確失敗優於假綠。
+    private static func assertFinishedWriting(
+        _ writer: AVAssetWriter, url: URL, appendedFrames: Int, done: DispatchSemaphore
+    ) {
         guard writer.status == .completed else {
             preconditionFailure(
                 "LS-259 test harness：finishWriting 後 status 非 .completed（\(writer.status.rawValue)）："
                     + "\(writer.error?.localizedDescription ?? "unknown")"
             )
+        }
+        guard appendedFrames > 0 else {
+            preconditionFailure("LS-263 test harness：finishWriting 後 appendedFrames == 0（沒有任何畫格被 append）")
+        }
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int
+        guard FileManager.default.fileExists(atPath: url.path), let fileSize, fileSize > 0 else {
+            preconditionFailure("LS-263 test harness：finishWriting 後輸出檔不存在或大小為 0（\(url.path)）")
         }
         done.signal()
     }
