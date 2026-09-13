@@ -9,6 +9,7 @@ guard="${root}/scripts/hooks/fork-guard.sh"
 engine_py="${root}/scripts/hooks/fork_guard.py"
 fail=0
 n=0
+skipped=0   # LS-256：jq 缺席時少跑的組數，收工印 SKIP（不再靜默少跑仍印通過）
 ok() { echo "✓ $1"; n=$((n + 1)); }
 bad() { echo "✗ $1" >&2; fail=1; }
 esc() { printf '%s' "$1" | sed 's/[.[\*^$]/\\&/g'; }
@@ -201,12 +202,20 @@ if [ -n "$real_jq" ]; then
   case "$old2" in *main-checkout-guard.sh*) ok '⑤④ 既有 Bash|Write|Edit|MultiEdit|NotebookEdit（main-checkout-guard.sh）條目仍在' ;; *) bad "⑤④ main-checkout-guard.sh 條目消失（實得：${old2}）" ;; esac
   case "$old3" in *background-bash-guard.sh*) ok '⑤⑤ 既有 Bash（background-bash-guard.sh）條目仍在' ;; *) bad "⑤⑤ background-bash-guard.sh 條目消失（實得：${old3}）" ;; esac
   case "$old4" in *large-file-read-guard.sh*) ok '⑤⑥ 既有 Bash|Read（large-file-read-guard.sh）條目仍在' ;; *) bad "⑤⑥ large-file-read-guard.sh 條目消失（實得：${old4}）" ;; esac
+else
+  # LS-256（LS-96 池項 a7e9e910 i2）：jq 缺席不再靜默少跑——印 SKIP＋計數，收工總結帶出來
+  echo "SKIP 4 組（無 jq）：⑤③–⑤⑥ settings.json 既有四條 PreToolUse 接線斷言未跑"
+  skipped=$((skipped + 4))
 fi
 
 rm -rf "$work"
 trap - EXIT
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ fork-guard.sh 自測通過（${n} 組）"
+  if [ "$skipped" -gt 0 ]; then
+    echo "✓ fork-guard.sh 自測通過（${n} 組；SKIP ${skipped} 組（無 jq））"
+  else
+    echo "✓ fork-guard.sh 自測通過（${n} 組）"
+  fi
 fi
 exit "$fail"

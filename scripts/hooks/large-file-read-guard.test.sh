@@ -11,6 +11,7 @@ guard="${root}/scripts/hooks/large-file-read-guard.sh"
 engine_py="${root}/scripts/hooks/large_file_read_guard.py"
 fail=0
 n=0
+skipped=0   # LS-256：jq 缺席時少跑的組數，收工印 SKIP（不再靜默少跑仍印通過）
 ok() { echo "✓ $1"; n=$((n + 1)); }
 bad() { echo "✗ $1" >&2; fail=1; }
 esc() { printf '%s' "$1" | sed 's/[.[\*^$]/\\&/g'; }
@@ -399,12 +400,20 @@ if [ -n "$real_jq" ]; then
   case "$old1" in *pretool.sh*) ok '⑭③ 既有 Bash|Read|Grep（pretool.sh）條目仍在' ;; *) bad "⑭③ pretool.sh 條目消失（實得：${old1}）" ;; esac
   case "$old2" in *main-checkout-guard.sh*) ok '⑭④ 既有 Bash|Write|Edit|MultiEdit|NotebookEdit（main-checkout-guard.sh）條目仍在' ;; *) bad "⑭④ main-checkout-guard.sh 條目消失（實得：${old2}）" ;; esac
   case "$old3" in *background-bash-guard.sh*) ok '⑭⑤ 既有 Bash（background-bash-guard.sh）條目仍在' ;; *) bad "⑭⑤ background-bash-guard.sh 條目消失（實得：${old3}）" ;; esac
+else
+  # LS-256（LS-96 池項 a7e9e910 i2）：jq 缺席不再靜默少跑——印 SKIP＋計數，收工總結帶出來
+  echo "SKIP 3 組（無 jq）：⑭③–⑭⑤ settings.json 既有三條 PreToolUse 接線斷言未跑"
+  skipped=$((skipped + 3))
 fi
 
 rm -rf "$work"
 trap - EXIT
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ large-file-read-guard.sh 自測通過（${n} 組）"
+  if [ "$skipped" -gt 0 ]; then
+    echo "✓ large-file-read-guard.sh 自測通過（${n} 組；SKIP ${skipped} 組（無 jq））"
+  else
+    echo "✓ large-file-read-guard.sh 自測通過（${n} 組）"
+  fi
 fi
 exit "$fail"
