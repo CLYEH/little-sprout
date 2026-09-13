@@ -46,11 +46,16 @@ final class AlbumsStore {
 
     /// LS-237 修（池 `4fafaa19`(a)）：每本相簿下一個要用的 `sortOrder`，`.pending` 是「正在
     /// 打第一次 `fetchMaxSortOrder` 查詢、還不知道基底值」、`.ready` 是「已經知道基底，之後
-    /// 都是同步遞增」（`lastUsedAt` 見 `sortOrderCursorIdleTTL` 文件註解）——見
+    /// 都是同步遞增」（`acquiredAt` 見 `sortOrderCursorIdleTTL` 文件註解）——見
     /// `nextSortOrder(forAlbum:)` 文件註解。
+    ///
+    /// LS-246（票文範圍 3，池 `430a34a1` n1）：`.pending` 多帶一個 `id`——`nextSortOrder` 的
+    /// `catch` 收到失敗時，只有「現在字典裡的 `.pending` 仍然是自己剛才在等的那一筆」（id
+    /// 相符）才可以清空；只看 case 是不是 `.pending`（不核對是哪一個 `Task`）會誤清掉另一個
+    /// 交錯呼叫端剛建立、還在飛行中的全新查詢，見該方法文件註解。
     private enum SortOrderCursor {
-        case pending(Task<Int?, Error>)
-        case ready(next: Int, lastUsedAt: Date)
+        case pending(id: UUID, task: Task<Int?, Error>)
+        case ready(next: Int, acquiredAt: Date)
     }
     private var sortOrderCursors: [UUID: SortOrderCursor] = [:]
 
@@ -58,8 +63,15 @@ final class AlbumsStore {
     /// 同一個 app session 可能橫跨數小時——這段時間內若別的裝置也對同一本相簿加了照片，
     /// 這裡快取的基底沒有機會發現，下一次同步遞增算出的值可能跟別的裝置撞號（現查現算的
     /// 舊版每次都重新讀連結數，不會有這個問題）。改成「閒置超過這個秒數就視為這批上傳已經
-    /// 結束」：每次使用（讀或寫）都把 `lastUsedAt` 更新成現在，只有連續閒置超過 TTL 才會在
-    /// 下一次呼叫時重新查一次，同一批次（幾秒到幾十秒內接續上傳）內不受影響。
+    /// 結束」，下一次呼叫時重新查一次。
+    ///
+    /// LS-246（票文範圍 4，池 `430a34a1` n2）：TTL 改以**取得時刻**（`acquiredAt`，查到基底
+    /// 值那一刻，之後不再更新）判過期，不是原本 R2 版「使用時刻」（每次讀或寫都把時間戳更新成
+    /// 現在）——原本的寫法只要這本相簿在 60 秒內至少用過一次 cursor，時間戳就會一直被推遲，
+    /// 一段活躍但拖得很長（例如持續數分鐘、每隔幾秒加一張）的上傳過程會讓同一個基底值被沿用
+    /// 到超過原本設計的 60 秒視窗，別的裝置在這段期間加的照片依然偵測不到。改成固定從「查到
+    /// 基底值那一刻」算 60 秒，不管期間用了幾次，時間到了下一次呼叫就會重新查一次；同一批次
+    /// （幾秒到幾十秒內接續上傳）通常在 60 秒內就會結束，不受影響。
     private static let sortOrderCursorIdleTTL: TimeInterval = 60
     /// 可注入的時鐘——同 `UploadQueueStore.now` 既有先例，測試才能不真的等 60 秒就驗證 TTL。
     private let now: @MainActor () -> Date
@@ -247,38 +259,52 @@ final class AlbumsStore {
     /// （`isOwner == true`）把失敗往外拋；加入同一個查詢的其他呼叫端（`isOwner == false`）
     /// 不連坐，狀態已經被清空，遞迴呼叫會各自建立新查詢獨立重試一次。
     private func nextSortOrder(forAlbum albumID: UUID) async throws -> Int {
-        if case .ready(let next, let lastUsedAt) = sortOrderCursors[albumID],
-           now().timeIntervalSince(lastUsedAt) < Self.sortOrderCursorIdleTTL {
-            sortOrderCursors[albumID] = .ready(next: next + 1, lastUsedAt: now())
+        if case .ready(let next, let acquiredAt) = sortOrderCursors[albumID],
+           now().timeIntervalSince(acquiredAt) < Self.sortOrderCursorIdleTTL {
+            // LS-246 票文範圍 4：`acquiredAt` 原樣延續，不更新成 `now()`——見
+            // `sortOrderCursorIdleTTL` 文件註解，TTL 從「查到基底值那一刻」算，不是「每次用
+            // 到就延後」。
+            sortOrderCursors[albumID] = .ready(next: next + 1, acquiredAt: acquiredAt)
             return next
         }
         let task: Task<Int?, Error>
         let isOwner: Bool
-        if case .pending(let existing) = sortOrderCursors[albumID] {
+        // LS-246 票文範圍 3：`pendingID` 記下「自己這次是在等哪一個 `.pending`」——
+        // `isOwner == true` 時是自己剛建立的那個新 id；`isOwner == false` 時是讀到既有
+        // `.pending` 當下附帶的 id。下面 `catch` 清空前會核對這個 id 還在不在，見該處註解。
+        let pendingID: UUID
+        if case .pending(let existingID, let existing) = sortOrderCursors[albumID] {
             task = existing
+            pendingID = existingID
             isOwner = false
         } else {
+            let newID = UUID()
             let newTask = Task { try await self.apiClient.fetchMaxSortOrder(albumID: albumID) }
-            sortOrderCursors[albumID] = .pending(newTask)
+            sortOrderCursors[albumID] = .pending(id: newID, task: newTask)
             task = newTask
+            pendingID = newID
             isOwner = true
         }
         do {
             let maxOrder = try await task.value
             let resolvedAt = now()
-            if case .ready(let next, let lastUsedAt) = sortOrderCursors[albumID],
-               resolvedAt.timeIntervalSince(lastUsedAt) < Self.sortOrderCursorIdleTTL {
-                sortOrderCursors[albumID] = .ready(next: next + 1, lastUsedAt: resolvedAt)
+            if case .ready(let next, let acquiredAt) = sortOrderCursors[albumID],
+               resolvedAt.timeIntervalSince(acquiredAt) < Self.sortOrderCursorIdleTTL {
+                // 另一個交錯呼叫端已經搶先把狀態換成 `.ready`——沿用它的 `acquiredAt`（不是
+                // `resolvedAt`），理由同上面文件註解。
+                sortOrderCursors[albumID] = .ready(next: next + 1, acquiredAt: acquiredAt)
                 return next
             }
             let next = (maxOrder ?? -1) + 1
-            sortOrderCursors[albumID] = .ready(next: next + 1, lastUsedAt: resolvedAt)
+            sortOrderCursors[albumID] = .ready(next: next + 1, acquiredAt: resolvedAt)
             return next
         } catch {
-            // 查詢失敗——清掉 `.pending`，讓下一次呼叫可以重新查一次，不要讓一次失敗的
-            // `Task`（結果已定型，重複 `await` 只會拿到同一個錯誤）卡住這本相簿往後所有的
-            // 上傳。
-            if case .pending = sortOrderCursors[albumID] {
+            // LS-246（票文範圍 3，池 `430a34a1` n1）：只有「現在字典裡的 `.pending` 仍然是
+            // 自己剛才在等的那一筆」（`currentID == pendingID`）才清空——原本只看 case 是不是
+            // `.pending`（不核對是哪一個 `Task`），晚到才處理失敗的等待者可能把「另一個交錯
+            // 呼叫端剛建立、還在飛行中」的全新查詢誤清成 `nil`，代價是那個呼叫端的重試又白白
+            // 多打一次查詢（無正確性影響，見 merge-review `5be48b1e` n1）。
+            if case .pending(let currentID, _) = sortOrderCursors[albumID], currentID == pendingID {
                 sortOrderCursors[albumID] = nil
             }
             guard isOwner else { return try await nextSortOrder(forAlbum: albumID) }

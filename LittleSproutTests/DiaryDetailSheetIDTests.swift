@@ -26,6 +26,12 @@ import XCTest
 /// `DiaryDetailSheet` 兩個 case 的 `id` 命名空間不會相撞，即使底層的 `context.id` 剛好等於
 /// `diaryID`——舊版的 bug 之所以「卡住不再重新呈現」，一部分原因正是 `contentActionsContext`
 /// 重複觸發時 `id` 恆定（＝target.id＝diaryID）。
+///
+/// LS-246（票文範圍 1，池 `8a00311d` i3）：`.video(PlayingVideo)` 併入同一個 enum 後，下面
+/// 兩支測試延續同一套「id 命名空間不相撞」不變量，覆蓋新 case——理由同上：
+/// `DiaryDetailView.playVideo` 的非同步簽名回來時若留言 sheet／內容操作表恰好也在飛行中觸發，
+/// 三個來源共用 `activeSheet` 後，只有 id 命名空間互不相撞才能保證晚到的觸發被視為「新的
+/// 呈現」而不是被誤判成同一個 item。
 final class DiaryDetailSheetIDTests: XCTestCase {
     func test_commentsCase_and_contentActionsCase_neverCollideEvenWithSameUnderlyingID() {
         let diaryID = UUID()
@@ -57,5 +63,29 @@ final class DiaryDetailSheetIDTests: XCTestCase {
 
         XCTAssertEqual(firstID, secondID, "同一個 context 重複取 id 應該得到相同結果（純函式，無隨機成分）")
         XCTAssertTrue(firstID.hasPrefix("contentActions-"), "應該帶命名空間前綴，不能只是裸的 UUID 字串")
+    }
+
+    /// LS-246：`.video` 與另外兩個 case 的 id 命名空間不相撞——同
+    /// `test_commentsCase_and_contentActionsCase_neverCollideEvenWithSameUnderlyingID` 的
+    /// 理由，這裡多驗一組配對。
+    func test_videoCase_neverCollidesWithCommentsOrContentActions() {
+        let diaryID = UUID()
+        let context = DiaryContentActionsContext(
+            target: ContentActionTarget(type: .diary, id: diaryID, familyID: UUID(), headline: "測試日記內容"),
+            actions: [.report]
+        )
+        let video = DiaryDetailSheet.video(PlayingVideo(url: URL(string: "https://example.com/video.mp4")!))
+
+        XCTAssertNotEqual(video.id, DiaryDetailSheet.comments.id)
+        XCTAssertNotEqual(video.id, DiaryDetailSheet.contentActions(context).id)
+    }
+
+    /// mutation 對照：同 `test_diaryDetailSheetID_idsAreStableAndDistinctAcrossRepeatedConstruction`
+    /// 的理由——拿掉 `video-` 前綴（改成裸的 `video.id.absoluteString`）且巧合等於另一個 case
+    /// 的 id 字面時才會撞，這支測試釘住命名空間前綴本身。
+    func test_videoCaseID_hasNamespacePrefix() {
+        let id = DiaryDetailSheet.video(PlayingVideo(url: URL(string: "https://example.com/video.mp4")!)).id
+
+        XCTAssertTrue(id.hasPrefix("video-"), "應該帶命名空間前綴，不能只是裸的 URL 字串")
     }
 }

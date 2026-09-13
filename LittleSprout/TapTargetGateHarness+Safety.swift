@@ -25,6 +25,7 @@ extension TapTargetGateHarness {
         case .diaryDetail: diaryDetailHost
         case .diaryDetailOwnContent: diaryDetailOwnContentHost
         case .diaryDetailRoleNotReady: diaryDetailRoleNotReadyHost
+        case .diaryDetailWithVideo: diaryDetailWithVideoHost
         default:
             // 不會發生——呼叫端（`hostView(for:)`）只在 screen 屬於這八個 case 之一時才會
             // 轉呼叫這支函式；這裡仍需要窮舉分支讓編譯器接受，`fatalError` 讓誤用立刻爆炸
@@ -275,6 +276,56 @@ extension TapTargetGateHarness {
         return NavigationStack {
             DiaryDetailView(
                 diaryID: diaryID, timelineStore: timelineStore, childrenStore: ChildrenStore.preview(),
+                familyStore: familyStore, safetyAPIClient: PreviewSafetyAPIClient(authorID: UUID()),
+                diaryAPIClient: PreviewDiaryAPIClient(), commentAPIClient: PreviewCommentAPIClient()
+            )
+        }
+    }
+
+    /// LS-246（票文範圍 1）：同 `diaryDetailHost`，但瀑布流帶一支已經簽好名（`isPlayableVideo`
+    /// 判定為可播放）的影片格——`DiaryDetailVideoUITests` 用它驗證「留言 sheet 開著時點影片」
+    /// 「影片全螢幕關閉後點『⋯』」都正確併入單一 `activeSheet`（見 `DiaryDetailView` 檔頭文件
+    /// 註解、`TimelineStore.preview(diaryID:video:signedURL:)`）。`durationSeconds` 直接種好
+    /// （非 nil）——`TimelineStore.displayDuration` 因此不需要真的向 `signedURL` 讀
+    /// `AVURLAsset`（那必定對假 URL 失敗），accessibility label 穩定顯示「影片 0:05，點兩下
+    /// 播放」，不受 `loadVideoDuration` 非同步查表時序影響。`signDelayNanoseconds` 給 3 秒
+    /// ——`DiaryDetailVideoUITests` 的「留言 sheet 開著時點影片」需要在「點影片、簽名回來」
+    /// 之間有個穩定的窗口能再觸發留言鈕，不依賴真網路延遲的不確定時序（見該屬性文件註解）；
+    /// R1 實測：`waitForExistence`／`.tap()` 這類 XCUITest 動作本身單次就可能耗費 1–1.5 秒
+    /// （輪詢間隔＋IPC 往返），0.6 秒窗口太短，「點影片→確認留言鈕存在→點留言鈕」這三步
+    /// 加起來就可能超過視窗、讓影片先接手；3 秒留足這整串動作的餘裕，UITest 端仍是用
+    /// `waitForExistence` 而非固定 sleep 等待，不會因為機器快慢而變脆弱。
+    @MainActor
+    static var diaryDetailWithVideoHost: some View {
+        let diaryID = UUID()
+        let viewerUserID = UUID()
+        let familyStore = FamilyStore.preview()
+        familyStore.seedMyFamilyForPreview(
+            Family(id: UUID(), name: "陳家", createdBy: viewerUserID, createdAt: Date(), requireApproval: true),
+            ownerUserID: viewerUserID
+        )
+        let timelineStore = TimelineStore.preview(
+            diaryID: diaryID,
+            video: MediaRow(
+                id: UUID(), storagePath: "f/harness-video.mov", type: .video, width: 884, height: 1920,
+                thumbPath: nil, thumbWidth: nil, thumbHeight: nil, durationSeconds: 5
+            ),
+            signedURL: URL(string: "https://example.com/harness-video.mp4")!,
+            signDelayNanoseconds: 3_000_000_000
+        )
+        timelineStore.seedForPreview(entries: [
+            TimelineEntry(
+                kind: .diary, refId: diaryID, occurredAt: Date(), childIds: [],
+                content: .diary(DiaryContent(
+                    body: "今天在溜滑梯上玩得好開心。", entryDate: Date(), previewPhotos: [], totalPhotoCount: 1
+                ))
+            )
+        ])
+        let childrenStore = ChildrenStore.preview()
+        childrenStore.seedRoleForPreview(.owner)
+        return NavigationStack {
+            DiaryDetailView(
+                diaryID: diaryID, timelineStore: timelineStore, childrenStore: childrenStore,
                 familyStore: familyStore, safetyAPIClient: PreviewSafetyAPIClient(authorID: UUID()),
                 diaryAPIClient: PreviewDiaryAPIClient(), commentAPIClient: PreviewCommentAPIClient()
             )

@@ -84,7 +84,8 @@ enum TapTargetGateHarness {
         case .deleteAccountInProgress: deleteAccountInProgressHost
         case .contentActionsSheet, .reportReasonSheet, .reportReasonSheetTargetGone, .blockConfirmSheet,
              .ownerRemoveContentConfirmSheet, .blockList, .reportInbox, .reportInboxEmpty,
-             .reportInboxResolveError, .diaryDetail, .diaryDetailOwnContent, .diaryDetailRoleNotReady:
+             .reportInboxResolveError, .diaryDetail, .diaryDetailOwnContent, .diaryDetailRoleNotReady,
+             .diaryDetailWithVideo:
             // LS-189：十二個新 case 的分派抽到 `safetyHostView(for:)`（見
             // `TapTargetGateHarness+Safety.swift`）——直接列在這裡會讓這支函式再度超過
             // SwiftLint `function_body_length` 上限（同其餘 `*Host` computed var 抽檔的既有
