@@ -91,8 +91,12 @@
       `is_mutation_context` 兩個既有判準（比照 (a) 測試名候選）——原本只有 `is_command_invocation_candidate`
       一種，導致「這個白名單路徑不存在，gate 正確判紅」這類正確的否定／mutation 語境敘述本身會被
       誤判為引用（merge-review R1 `43e2f60e` F4：驗這支 gate 自己的 verdict 會踩到）。
-  (c) 命令——含 `xcodebuild`、`bash scripts/`、`gh run view` 或 `.xcresult` 子字串（R2 補後兩者：
-      merge-review verdict 常用 `gh run view --job --log` 核對 CI、`.xcresult` 是測試結果檔）。
+  (c) 命令——含 `xcodebuild`、`bash scripts/`、`gh run view`、`git merge-tree`、`git diff` 或 `.xcresult`
+      子字串（R2 補 `gh run view`／`.xcresult`：merge-review verdict 常用 `gh run view --job --log` 核對
+      CI、`.xcresult` 是測試結果檔；**LS-256（LS-96 池項 `b550a1e5`）補 `git merge-tree`／`git diff`**：
+      merge-reviewer verdict 慣用 `git merge-tree <base> <head>` 驗 PR 可乾淨併入、`git diff <base>..<head>
+      --stat` 對帳變更範圍，兩者都是「怎麼驗」的真實命令證據，此前不在白名單、reviewer 兩次被誤紅後以
+      說明取代改寫。只認這兩個子命令，`git log`／`git status` 之類只是看過、不是驗證，仍不算證據）。
 
 段落偵測（涵蓋三種實際慣例，見 LS-211 handoff 附的真實樣本與 merge-review R1 `b212dd78`）：
   - CLAUDE.md 的 ios-dev handoff 格式：字面「已驗證」開頭的段（`## 已驗證`／`**已驗證**`／純文字
@@ -171,7 +175,7 @@ PATH_ANCHOR_RE = re.compile(
     r"|scripts/(?:[\w.-]+/)+[\w.-]+(?<!\.test)\.sh"
     r"|\.github/workflows/[\w.-]+\.yml"
 )  # HANDOFF-PATH-ANCHOR
-COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|\.xcresult")  # HANDOFF-EVIDENCE-COMMAND
+COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|git merge-tree|git diff|\.xcresult")  # HANDOFF-EVIDENCE-COMMAND
 
 # ---- R2（merge-review R1 F1）：候選過濾——glob 形狀／同句否定詞／mutation 語境不驗存在性 ----
 NEGATION_WORDS = ("沒有", "無", "不存在", "未")
@@ -451,7 +455,7 @@ def run(path, repo):
                 "白名單目錄路徑（supabase/functions/**/*.ts、supabase/migrations/*.sql、"
                 "supabase/tests/*.sql、supabase/**/*.sh、docs/**/*.md、.claude/**/*.md、"
                 "scripts/**/*.sh、.github/workflows/*.yml），或 "
-                "xcodebuild／bash scripts/／gh run view／.xcresult 命令）" % line_no,
+                "xcodebuild／bash scripts/／gh run view／git merge-tree／git diff／.xcresult 命令）" % line_no,
                 file=sys.stderr,
             )
             ok = False
