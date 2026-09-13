@@ -88,7 +88,15 @@ begin
     from public.get_family_timeline(v_family, null, null, null, 20)
    where kind = 'diary' and ref_id = v_diary;
   if v_count is distinct from 2 then
-    raise exception 'FAIL comment_count（owner 封鎖 viewer 後）：預期 2（viewer 那則不計入；mutation：拿掉 v_blocked_ids 過濾這裡會紅、變回 3），實際 %', v_count;
+    -- merge-review R1 F2：這裡驗的是「RLS＋RPC 合成後的最終行為」，不是 RPC 本體那句
+    -- v_blocked_ids 單獨的承重性——get_family_timeline 是 security invoker，
+    -- comments_select policy（20260903091317_report_block_rpc.sql）本身已經帶同一道
+    -- 封鎖過濾，reviewer 實測拿掉 RPC 本體這句述詞這裡不會轉紅（同
+    -- 20260906124837_reactions_block_filter.sql 對 get_reaction_counts 已有的既有
+    -- 記載：invoker 函式的防禦性重複過濾，policy 才是真正生效的那一層）。保留這句
+    -- 述詞理由不變（自我文件化＋policy 被改壞時的第二道防線），這裡只更正斷言訊息
+    -- 裡失真的 mutation 宣稱。
+    raise exception 'FAIL comment_count（owner 封鎖 viewer 後）：預期 2（viewer 那則不計入），實際 %', v_count;
   end if;
   raise notice 'ok：comment_count（owner 封鎖 viewer 後）＝2';
 
@@ -209,6 +217,21 @@ rollback;
 -- 1 則存活＋1 則已刪留言）——證明「這一頁確實有留言要算」時 comment_count 依然
 -- 便宜，掃描量只跟頁面大小（v_limit）成正比，不是跟這個家庭的 feed 總量或留言
 -- 總量成正比。
+--
+-- merge-review R1 F1：VACUUM 放在這裡（`begin;` 之前，不能在交易內執行）——
+-- `run.sh` 依檔名排序（`sort -V`：50 < 112）先跑 50_rls_plan_no_percall_subquery.sql
+-- （灌 5 萬則留言／20 萬列 feed_items 又 rollback），這些列在交易 rollback 後是
+-- dead tuple，autovacuum 沒追上之前，下面對 comments／feed_items／diaries 的
+-- Index Scan 仍要走訪這些死頁才能判斷「不可見」，buffers 因此隨死列數量膨脹，
+-- 跟 comment_count 本身的成本無關。reviewer 實測：同一顆 DB 連跑兩次 run.sh，
+-- 第 2、3 次量到 buffers=2957（門檻 250 應聲炸開，錯誤訊息還會誤導成「comment_count
+-- 退化成 N+1」）；跑這裡的 VACUUM 之後量到 77，跟首次乾淨 reset 的結果一致。
+-- 不能只放寬門檻了事——把 comment_count 攤到整頁 200 列（不是本檔案這裡的 20 列
+-- 首頁）的真退化約 1160 buffers，門檻只要調到能吞下 2957 這種殘留污染，就連
+-- 真退化也測不出來了。
+vacuum (analyze) public.comments;
+vacuum (analyze) public.feed_items;
+vacuum (analyze) public.diaries;
 -- ===========================================================================
 begin;
 do $$
