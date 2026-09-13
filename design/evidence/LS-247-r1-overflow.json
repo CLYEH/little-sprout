@@ -1,0 +1,316 @@
+{
+  "ticket": "LS-247",
+  "round": 1,
+  "head_sha": "b90182c59286a1a72ea69078a316d32f6c861ad8",
+  "total_nodes": 10281,
+  "tree_hash": "97b22f53f1ff8411",
+  "scan_scope": "boards",
+  "scan_note": "不分批（單次 execute，10281 節點未觸發 InternalError）。第一趟 SCAN_HASH_ONLY 取得 tree_hash=97b22f53f1ff8411（SUMMARY-HASH total_nodes=10281）。第二趟 SCAN_SKIP_HASH（帶同一 SCAN_TREE_HASH）先以預設 scan_scope=document跑過一次全稿六支作為驗證：sibling_intersection=2117/row_overflow=560/cross_parent_collision=321 皆為與LS-247 無關的既有文件級舊債（角托元件內部拼接、印品與角托母題重疊等既有母題，散布全稿數十個板/元件），corner_anchor=6/48/0、document=231/1832/0、text_occlusion=0/0、board_clip=0/0 皆已在此趟確認為 0——證明本票六板＋Notes 板在全稿脈絡下同樣乾淨。因全稿三支 O(n²) 掃描的 classes 高達 301/58/183、屬跨越全站數十票累積的既有版面節奏（母題重疊、角托拼接等），與本票僅六個 Hero Photo 節點 fill／尺寸與一段 Notes 文字的變更範圍完全不相關、逐筆分類不具資訊量，故第三趟改用 SCAN_SCOPE=\"boards\" 把快照限縮到 SCAN_BOARDS（本票觸碰的六板＋Notes 板）重跑，作為本收據 scans 內容的正式來源——三趟之間全程零寫入操作（僅 Get／Print 唯讀呼叫），tree_hash 三趟一致（97b22f53f1ff8411），corner_anchor／text_occlusion／board_clip 在 boards 與 document 兩種 scope 下數字一致（0 mismatch／0 flagged），確認 scope 限縮沒有隱藏任何本票板內的問題。sibling_intersection 在 boards scope 下僅 51 筆（15 類），全數為 Corner／Print/Print Stage/Hero Print／Device Frame 既有母題結構重疊，node_a／node_b 皆不含本票改動的六個 Hero Photo 節點（scpdc/ayJoy/F92jh/yzfCx/aD9EO/j5Bns），確認與本輪圖片置換無關。SCAN_BOARDS = [\"c2yk3s\",\"Bm7Lx\",\"ZRyXL\",\"Vn4TL\",\"BnjqP\",\"b59DUk\",\"H73kPC\"]（本票 PR 對 .pen 頂層節點有變更的六板＋Notes 板，逐一核對 merge-base→head_sha 頂層 diff 無漏列）。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 51,
+      "classes": 15,
+      "flagged": [
+        {
+          "node_a": "gfP0F",
+          "node_b": "s1Kzm",
+          "name_a": "Device Frame",
+          "name_b": "Hero Print",
+          "parent": "c2yk3s",
+          "parent_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "overlap": [
+            632,
+            227.53
+          ],
+          "class": "Device Frame × Hero Print @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "手機／平板外框模型（Device Frame）與其內部畫面內容（Hero Print／Print Stage）既有版面重疊——外框本身框住畫面內容是合成模型既有設計；LS-247 未動 Device Frame 結構；同類 1 例）"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "Mt7RR",
+          "name_a": "Print",
+          "name_b": "Corner BL",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "overlap": [
+            47,
+            47
+          ],
+          "class": "Print × Corner BL @ Hero Print",
+          "count": 1,
+          "classification": "Hero Print 印品容器與其角托既有母題重疊（同上結構，屬 LS-234 既有印品母題設計；LS-247 只換 Hero Print 內 Hero Photo 底層照片，未動 Hero Print／角托幾何；同類 1 例）"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "k7LmU",
+          "name_a": "Print",
+          "name_b": "Corner BR",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "overlap": [
+            47,
+            47
+          ],
+          "class": "Print × Corner BR @ Hero Print",
+          "count": 1,
+          "classification": "Hero Print 印品容器與其角托既有母題重疊（同上結構，屬 LS-234 既有印品母題設計；LS-247 只換 Hero Print 內 Hero Photo 底層照片，未動 Hero Print／角托幾何；同類 1 例）"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "ASXNn",
+          "name_a": "Print",
+          "name_b": "Corner TL",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "overlap": [
+            47,
+            47
+          ],
+          "class": "Print × Corner TL @ Hero Print",
+          "count": 1,
+          "classification": "Hero Print 印品容器與其角托既有母題重疊（同上結構，屬 LS-234 既有印品母題設計；LS-247 只換 Hero Print 內 Hero Photo 底層照片，未動 Hero Print／角托幾何；同類 1 例）"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "KqlsB",
+          "name_a": "Print",
+          "name_b": "Corner TR",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "overlap": [
+            47,
+            47
+          ],
+          "class": "Print × Corner TR @ Hero Print",
+          "count": 1,
+          "classification": "Hero Print 印品容器與其角托既有母題重疊（同上結構，屬 LS-234 既有印品母題設計；LS-247 只換 Hero Print 內 Hero Photo 底層照片，未動 Hero Print／角托幾何；同類 1 例）"
+        },
+        {
+          "node_a": "Mt7RR/sD5Ma",
+          "node_b": "Mt7RR/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "Mt7RR",
+          "parent_name": "Corner BL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 6,
+          "classification": "cmp/Photo Corner 元件內部 Corner Shape／Corner Edge 向量拼接既有重疊（單一 icon 向量本身如此，非本票新增；LS-247 只改 Hero Photo 的 fill／width／height／x／y，未動角托元件本身；同類 6 例）"
+        },
+        {
+          "node_a": "k7LmU/sD5Ma",
+          "node_b": "k7LmU/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "k7LmU",
+          "parent_name": "Corner BR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 6,
+          "classification": "cmp/Photo Corner 元件內部 Corner Shape／Corner Edge 向量拼接既有重疊（單一 icon 向量本身如此，非本票新增；LS-247 只改 Hero Photo 的 fill／width／height／x／y，未動角托元件本身；同類 6 例）"
+        },
+        {
+          "node_a": "ASXNn/sD5Ma",
+          "node_b": "ASXNn/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "ASXNn",
+          "parent_name": "Corner TL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 6,
+          "classification": "cmp/Photo Corner 元件內部 Corner Shape／Corner Edge 向量拼接既有重疊（單一 icon 向量本身如此，非本票新增；LS-247 只改 Hero Photo 的 fill／width／height／x／y，未動角托元件本身；同類 6 例）"
+        },
+        {
+          "node_a": "KqlsB/sD5Ma",
+          "node_b": "KqlsB/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "KqlsB",
+          "parent_name": "Corner TR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 6,
+          "classification": "cmp/Photo Corner 元件內部 Corner Shape／Corner Edge 向量拼接既有重疊（單一 icon 向量本身如此，非本票新增；LS-247 只改 Hero Photo 的 fill／width／height／x／y，未動角托元件本身；同類 6 例）"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "TwhLp",
+          "name_a": "Print",
+          "name_b": "Corner BL",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "overlap": [
+            47,
+            47.2
+          ],
+          "class": "Print × Corner BL @ Print Stage",
+          "count": 5,
+          "classification": "Print Stage 舞台與其角托既有母題重疊（角托刻意壓在照片角落 corner-out 5pt，既有印品母題設計；LS-247 未動 Print Stage／角托結構；同類 5 例）"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "w1qgP0",
+          "name_a": "Print",
+          "name_b": "Corner BR",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "overlap": [
+            47,
+            47.2
+          ],
+          "class": "Print × Corner BR @ Print Stage",
+          "count": 5,
+          "classification": "Print Stage 舞台與其角托既有母題重疊（角托刻意壓在照片角落 corner-out 5pt，既有印品母題設計；LS-247 未動 Print Stage／角托結構；同類 5 例）"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "S4Bugn",
+          "name_a": "Print",
+          "name_b": "Corner TL",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "overlap": [
+            47,
+            47
+          ],
+          "class": "Print × Corner TL @ Print Stage",
+          "count": 5,
+          "classification": "Print Stage 舞台與其角托既有母題重疊（角托刻意壓在照片角落 corner-out 5pt，既有印品母題設計；LS-247 未動 Print Stage／角托結構；同類 5 例）"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "prDi7",
+          "name_a": "Print",
+          "name_b": "Corner TR",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "overlap": [
+            47,
+            47
+          ],
+          "class": "Print × Corner TR @ Print Stage",
+          "count": 5,
+          "classification": "Print Stage 舞台與其角托既有母題重疊（角托刻意壓在照片角落 corner-out 5pt，既有印品母題設計；LS-247 未動 Print Stage／角托結構；同類 5 例）"
+        },
+        {
+          "node_a": "QqTID",
+          "node_b": "N3mjp6",
+          "name_a": "Device Frame",
+          "name_b": "Print Stage",
+          "parent": "Vn4TL",
+          "parent_name": "App Store / iPad 13 / 01 時間軸",
+          "overlap": [
+            988,
+            501.91
+          ],
+          "class": "Device Frame × Print Stage @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "手機／平板外框模型（Device Frame）與其內部畫面內容（Hero Print／Print Stage）既有版面重疊——外框本身框住畫面內容是合成模型既有設計；LS-247 未動 Device Frame 結構；同類 1 例）"
+        },
+        {
+          "node_a": "ScEdE",
+          "node_b": "LWJUR",
+          "name_a": "Print Stage",
+          "name_b": "Device Frame",
+          "parent": "BnjqP",
+          "parent_name": "App Store / iPad 13 / 03 邀請加入",
+          "overlap": [
+            940,
+            68
+          ],
+          "class": "Print Stage × Device Frame @ App Store / iPad 13 / 03 邀請加入",
+          "count": 1,
+          "classification": "手機／平板外框模型（Device Frame）與其內部畫面內容（Hero Print／Print Stage）既有版面重疊——外框本身框住畫面內容是合成模型既有設計；LS-247 未動 Device Frame 結構；同類 1 例）"
+        }
+      ],
+      "result_hash": "f06b2f5f923f18cf"
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "ac84ed112397b699"
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "b240d029d064c892"
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "c2yk3s",
+        "Bm7Lx",
+        "ZRyXL",
+        "Vn4TL",
+        "BnjqP",
+        "b59DUk",
+        "H73kPC"
+      ],
+      "containers": 6,
+      "points": 48,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 24,
+      "ref_hits_defs": 0,
+      "document_containers": 6,
+      "document_points": 48,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": [],
+      "result_hash": "f02be883e13112c7"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "c2yk3s",
+        "Bm7Lx",
+        "ZRyXL",
+        "Vn4TL",
+        "BnjqP",
+        "b59DUk",
+        "H73kPC"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "64cb5f9f08491b47"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "c2yk3s",
+        "Bm7Lx",
+        "ZRyXL",
+        "Vn4TL",
+        "BnjqP",
+        "b59DUk",
+        "H73kPC"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "a81a61d0bdd70cc5"
+    }
+  }
+}
