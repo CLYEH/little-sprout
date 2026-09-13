@@ -12,8 +12,9 @@ extension TimelineStore {
         reactionStates[key] ?? .zero
     }
 
-    /// LS-216：`InteractionRow` 讀目前的留言計數——見 `commentCounts` 文件註解（目前恆為 0，
-    /// 待 LS-218 用 `setCommentCount` 同步真正筆數）。
+    /// LS-216：`InteractionRow` 讀目前的留言計數——見 `commentCounts` 文件註解（LS-243 起
+    /// `refresh`／`loadMore` 已用 `get_family_timeline` 的 `comment_count` 初始化，開留言
+    /// sheet 之後 `setCommentCount` 會再同步一次更精確的值）。
     func commentCount(forKey key: String) -> Int {
         commentCounts[key] ?? 0
     }
