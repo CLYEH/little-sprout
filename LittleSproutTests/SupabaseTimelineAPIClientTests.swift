@@ -34,7 +34,8 @@ final class SupabaseTimelineAPIClientTests: XCTestCase {
               "kind": "diary",
               "ref_id": "\(refID.uuidString)",
               "occurred_at": "2026-09-02T08:00:00Z",
-              "child_ids": []
+              "child_ids": [],
+              "comment_count": 3
             }]
             """.utf8))
         }
@@ -48,6 +49,8 @@ final class SupabaseTimelineAPIClientTests: XCTestCase {
         XCTAssertEqual(pointers[0].kind, .diary)
         XCTAssertEqual(pointers[0].refId, refID)
         XCTAssertEqual(pointers[0].childIds, [])
+        // LS-243：comment_count 要能從 RPC 回應解碼出來，不是本地端算的。
+        XCTAssertEqual(pointers[0].commentCount, 3)
     }
 
     func test_fetchTimelinePointers_withCursorAndChildID_sendsBothCursorKeysTogether() async throws {
