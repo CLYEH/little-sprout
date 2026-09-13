@@ -85,21 +85,35 @@
 -- 兩種寫法都在做同一件事」。
 --
 -- ---------------------------------------------------------------------------
--- 3. BREAKING：回傳形狀改變（`scripts/gates/migration-breaking-check.sh` B4：
---    CREATE OR REPLACE FUNCTION 對既有函式一律判 BREAKING，不分是否為 additive
---    變更）
+-- 3. DESTRUCTIVE＋BREAKING：回傳型別改變必須先 DROP FUNCTION，不能只
+--    CREATE OR REPLACE
 -- ---------------------------------------------------------------------------
 --
+-- 本機 `supabase db reset` 實測：`RETURNS TABLE (...)` 的欄位型別在 Postgres
+-- 裡是 OUT 參數的複合型別，`CREATE OR REPLACE FUNCTION` 不允許改變既有函式的
+-- OUT 參數型別（`ERROR: cannot change return type of existing function
+-- (SQLSTATE 42P13)`），只能先 `DROP FUNCTION` 再重建——跟
+-- `20260902011514_diary_album_multi_child_tags.sql` 第 9 段把 `child_id uuid`
+-- 改成 `child_ids uuid[]` 時踩過的同一個 Postgres 限制、同一套解法。
+-- `scripts/gates/migration-breaking-check.sh` 的 D1（DROP 任何物件）與 B4
+-- （CREATE OR REPLACE FUNCTION 對既有函式）因此對這兩支函式都同時命中——
+-- DESTRUCTIVE＋BREAKING 兩級都要（PR body 需要 owner 本人的
+-- `DESTRUCTIVE-APPROVED` 核可標記＋`BREAKING:` 摘要段，見
+-- `scripts/gates/destructive-approval-check.sh`／`breaking-section-check.sh`）。
 -- 兩支函式的參數簽章都沒變（`get_family_timeline(uuid, uuid, timestamptz, uuid,
 -- integer)`／`list_comments(uuid, text, uuid, timestamptz, uuid, integer)`，
 -- `60_default_privileges.sql`／`api_contract_check.py` 的白名單比對只看簽章，
--- 不需要跟著改）；回傳的 `returns table (...)` 各自多一欄（`comment_count`／
--- `total_count`），PostgREST 把 RPC 結果序列化成 JSON 物件陣列，Swift
--- `Decodable` 對多出來、呼叫端型別沒有宣告的 key 預設略過不報錯——現有兩支
--- 呼叫端（`TimelineFeedPointer`／`CommentRecord`）在這次改動落地前的舊 build
--- 不會因為伺服器多回一欄而解碼失敗。仍照 gate 指示標記 BREAKING（欄位新增本身
--- 對契約來說仍是「回傳形狀變了」，且 gate 的 B4 規則就是「既有函式一律 BREAKING，
--- 不分增量或替換」，不是這裡的裁量可以覆蓋的）。
+-- 不需要跟著改；`DROP FUNCTION` 後緊接 `CREATE OR REPLACE` 加回同簽章，沒有
+-- 「函式暫時不存在」以外的中間狀態），只有 `returns table (...)` 各自多一欄
+-- （`comment_count`／`total_count`）。PostgREST 把 RPC 結果序列化成 JSON 物件
+-- 陣列，Swift `Decodable` 對多出來、呼叫端型別沒有宣告的 key 預設略過不報錯
+-- ——現有兩支呼叫端（`TimelineFeedPointer`／`CommentRecord`）在這次改動落地前
+-- 的舊 build 不會因為伺服器多回一欄而解碼失敗，唯一的中斷風險是
+-- `DROP FUNCTION` 到 `CREATE OR REPLACE` 之間那個極短窗口（同一個 migration
+-- 檔內的連續兩句 DDL，套用時間是毫秒級，跟既有 LS-121 precedent 承擔的風險
+-- 相同）。
+
+drop function public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer);
 
 create or replace function public.get_family_timeline(
   p_family_id uuid,
@@ -480,6 +494,8 @@ revoke execute on function
 grant execute on function
   public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)
   to authenticated;
+
+drop function public.list_comments(uuid, text, uuid, timestamptz, uuid, integer);
 
 create or replace function public.list_comments(
   p_family_id uuid,
