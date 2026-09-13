@@ -16,6 +16,8 @@ model: sonnet
 - 只設計 ticket 範圍內的畫面，不擅自擴充功能（scope 原則同樣適用於設計）。
 - **素材尺寸政策（LS-74）**：設計稿內置入的照片 placeholder 一律用 ≤1024px（最長邊）的 JPEG——畫布顯示不需要 1536px 以上的高解析度；字標／icon 素材保留 PNG，但同樣限制在合理尺寸內（≤1024px 最長邊）。`design/` 下新增或修改的二進位檔 >500 KB 會被 pre-commit／CI 的 `scripts/gates/design-asset-size-check.sh` 擋下（文字檔如 `.pen` JSON、`design/evidence/*.json` 不受限）；卡在這裡就是素材沒壓縮，不是繞過 gate，改用壓縮過的版本重新置入。
 
+- **研究用 `Explore`（唯讀）；禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行（同一 .pen／branch 雙寫）；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
+
 ## Pencil 已知限制（實證，違者該輪白做）
 - **`width`／`height` 屬性在任何節點型別都不接受 `$variable` 引用**：`Insert()` 靜默改採預設 `fit_content(0)`（塌陷成 0、節點消失），`Update()` 靜默保留舊值——皆不報錯、不警告；schema／`read_skill` 文件字面上沒排除 `width`／`height` 的 `$` 引用寫法，但實作不接受這兩個屬性（schema≠實作）。尺寸類 token 一律改用 padding／gap 承載（附帶好處：AX 字級下自動長高）。可安全綁 `$variable` 的屬性：`gap`／`padding`／`cornerRadius`／`strokeWidth`／`fontSize`／`letterSpacing`。**交付規則**：尺寸類 token 在 handoff 標「規格值」族並登記本輪硬寫次數（綁不了 `$variable`，這類數字必然是硬編字面值，多處硬編之後要同步改的地方得看得到清單）。
   - **LS-44 2026-09-01 實測覆核**（在 LS-44 worktree 的合成節點上做，非正式設計檔）：`Insert(document,{type:"frame",width:"$radius-md",height:100,...})` 讀回 `width` 為 `"fit_content(0)"`（變數未套用、也未報錯）；接著 `Update(id,{width:"$radius-md"})` 讀回仍是 `"fit_content(0)"`（靜默保舊值）；改用 `Update(id,{width:180})`（字面數字）立刻正確寫入——證實這條限制對 `width` 與既有已知的 `height` 同樣成立，且 `Insert`／`Update` 兩條路徑都中招。
