@@ -393,22 +393,35 @@ fi
 # settings.json 接線（同 pretool.test.sh I6）：matcher 含五個工具、command 呼叫本 hook、帶 || exit 2
 # ============================================================
 settings_json="${root}/.claude/settings.json"
-w_cmd=$(jq -r '.hooks.PreToolUse[] | select(.matcher == "Bash|Write|Edit|MultiEdit|NotebookEdit") | .hooks[] | select(.type == "command") | .command' "$settings_json" 2>/dev/null)
-if [ -n "$w_cmd" ]; then
-  echo '✓ R1 settings.json 的 PreToolUse 有 matcher=Bash|Write|Edit|MultiEdit|NotebookEdit 的 command'
+# LS-260（LS-96 池項 `c67b65ca` i4）：jq 缺席時原本硬紅（`w_cmd` 空 → R1 判失敗），把「本機沒裝 jq」
+# 誤報成「settings.json 接線壞掉」。沿 LS-256 對 `fork-guard.test.sh` 立下的慣例改成 SKIP＋計數。
+real_jq=$(bash -c 'type -P jq' 2>/dev/null || true)
+w_skipped=0
+if [ -n "$real_jq" ]; then
+  w_cmd=$("$real_jq" -r '.hooks.PreToolUse[] | select(.matcher == "Bash|Write|Edit|MultiEdit|NotebookEdit") | .hooks[] | select(.type == "command") | .command' "$settings_json" 2>/dev/null)
+  if [ -n "$w_cmd" ]; then
+    echo '✓ R1 settings.json 的 PreToolUse 有 matcher=Bash|Write|Edit|MultiEdit|NotebookEdit 的 command'
+  else
+    echo "✗ R1 settings.json 找不到 matcher=Bash|Write|Edit|MultiEdit|NotebookEdit 的 PreToolUse command" >&2; fail=1
+  fi
+  case "$w_cmd" in
+    *main-checkout-guard.sh*) echo '✓ R2 command 呼叫 main-checkout-guard.sh' ;;
+    *) echo "✗ R2 command 沒有呼叫 main-checkout-guard.sh（實得：${w_cmd}）" >&2; fail=1 ;;
+  esac
+  case "$w_cmd" in
+    *'|| exit 2'*) echo '✓ R3 command 帶 || exit 2（wiring 層 fail-closed）' ;;
+    *) echo "✗ R3 command 沒有 || exit 2（實得：${w_cmd}）" >&2; fail=1 ;;
+  esac
 else
-  echo "✗ R1 settings.json 找不到 matcher=Bash|Write|Edit|MultiEdit|NotebookEdit 的 PreToolUse command" >&2; fail=1
+  echo "SKIP 3 組（無 jq）：R1–R3 settings.json PreToolUse 接線斷言未跑"
+  w_skipped=3
 fi
-case "$w_cmd" in
-  *main-checkout-guard.sh*) echo '✓ R2 command 呼叫 main-checkout-guard.sh' ;;
-  *) echo "✗ R2 command 沒有呼叫 main-checkout-guard.sh（實得：${w_cmd}）" >&2; fail=1 ;;
-esac
-case "$w_cmd" in
-  *'|| exit 2'*) echo '✓ R3 command 帶 || exit 2（wiring 層 fail-closed）' ;;
-  *) echo "✗ R3 command 沒有 || exit 2（實得：${w_cmd}）" >&2; fail=1 ;;
-esac
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ main-checkout-guard.sh 自測通過"
+  if [ "$w_skipped" -gt 0 ]; then
+    echo "✓ main-checkout-guard.sh 自測通過（SKIP ${w_skipped} 組（無 jq））"
+  else
+    echo "✓ main-checkout-guard.sh 自測通過"
+  fi
 fi
 exit "$fail"

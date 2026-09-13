@@ -7,6 +7,9 @@
 #                                   無檔名則讀 stdin
 #   migration-breaking-check.sh --base <rev>                            分級 <rev>...HEAD 在
 #                                   supabase/migrations/ 的新增行；既有函式清單與既有 enum 值集合自 <rev> 的 migrations 取
+#                                   LS-260：<rev> 一律先解析成 `git merge-base <rev> HEAD`——傳分支名（本機習慣的
+#                                   `--base origin/development`）與傳算好的 merge-base SHA（push-gate／CI 的呼叫形狀）
+#                                   從此完全等價，不會再出現「既有清單取 tip、變更集合取 merge-base」的異源比對
 # 輸出：每個命中一行 `<級別>\t<正規化後的敘述（截 160 bytes）>`，無命中則無輸出。同一句可同時命中兩級
 #   （各印一行；例：DROP FUNCTION <既有 RPC> ＝ DESTRUCTIVE＋BREAKING——PR #78 R1 M1 裁決）。
 #   B7（enum 加值）在 BREAKING 行之後再印機器可讀的消費端清單（LS-181）：
@@ -370,6 +373,28 @@ to_array() { paths=(); local f; while IFS= read -r f; do [ -n "$f" ] && paths+=(
 if [ -n "$base" ]; then
   cd "$(git rev-parse --show-toplevel)" || exit 1
   consumer_root=$(pwd)
+  # LS-260（LS-96 池項 `984e142c`）：`--base` 一律先解析成 `git merge-base <base> HEAD`，讓「本機直接
+  # 傳分支名」與「push-gate／CI 傳算好的 merge-base SHA」走同一條路徑。
+  #
+  # 為什麼是必要的：下面兩半**本來就取自不同的 commit**——既有函式／enum 清單來自 `ls-tree "$base"`
+  # （＝呼叫端給什麼就是什麼，傳分支名時是該分支的 **tip**），而變更集合來自 `git diff "$base...HEAD"`
+  # （三點語法，實際比的是 **merge-base**）。base 已經是 merge-base（push-gate.sh:223／ci.yml:408 的
+  # 呼叫形狀）時兩半同源、沒有問題；本機習慣傳 `origin/development` 而該分支又已前進時，「既有清單」
+  # 會含入別張票後來併進去的函式，「變更集合」卻仍以 merge-base 為準——同一次執行拿兩個不同稿態比，
+  # B4（既有函式 CREATE OR REPLACE）／B7（既有 enum 值）因此可能與 push-gate 通道判不一樣。
+  # merge-base 對 merge-base 取自己（冪等），所以 push-gate／CI 的行為完全不變。
+  #
+  # 附帶查證（LS-255 那次的實際根因，記錄在此免得後人重查）：把 LS-255 的 head 991b75a 對
+  # `--base origin/development`（當時 tip 541d030）與 `--base <merge-base 6c106a1b>` 各跑一次，兩者
+  # 輸出**逐字相同**（皆判 B4 `private.enforce_deletion_attribution`）；同樣兩個參數對 R1 head
+  # ac2a0a3 也**都**是無命中。也就是說那次「本機無命中、push-gate 判 B4」不是通道差異，而是時間差
+  # ——`create or replace function private.enforce_deletion_attribution()` 是 R2 修正（37f31f5）才加進
+  # migration 的，本機那次檢查跑在它存在之前。真正的通道不一致風險是上面那個「兩半異源」，這裡把它
+  # 關掉；自測 ㉔ 用合成 repo 直接重現「base 分支已前進」時舊寫法會漏判 B4。
+  base_mb=$(git merge-base "$base" HEAD 2>/dev/null) \
+    || { echo "✗ migration-breaking-check：git merge-base $base HEAD 失敗（$base 與 HEAD 無共同祖先？）" >&2; exit 1; }
+  [ -n "$base_mb" ] || { echo "✗ migration-breaking-check：git merge-base $base HEAD 無輸出" >&2; exit 1; }
+  base="$base_mb"
   known_file="$tmpdir/known_functions"
   # R3 G1：core.quotePath 預設會把非 ASCII 檔名輸出成加引號的 C-escape，餵回 pathspec 對不上 → 該檔靜默跳過；
   # 兩處「輸出路徑」的 git 指令都關掉（逐檔 diff／show 是「吃路徑」，不受影響）

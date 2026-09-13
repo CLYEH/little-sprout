@@ -267,7 +267,71 @@ else
   echo "✓ B7 不在 git repo 內且未給 --consumer-root → exit 1（不靜默印「無消費端」）"
 fi
 
+# ── LS-260（LS-96 池項 `984e142c`）：本機 `--base <分支名>` 與 push-gate／CI `--base <merge-base SHA>`
+#    必須完全等價 ────────────────────────────────────────────────────────────────────────────
+# 舊寫法的兩半取自不同 commit：既有函式清單走 `ls-tree "$base"`（傳分支名時＝該分支 **tip**），變更集合
+# 走 `git diff "$base...HEAD"`（三點＝**merge-base**）。base 分支在開票後又前進時，「別張票後來併進去的
+# 函式」會被算進本票的既有清單，於是本機多判一條 B4 而 push-gate 不會——同一份 diff 兩個答案。
+# 夾具：base 分支（`development`）在分歧點之後自己加了 `public.later_fn`；feature 分支從分歧點長出來，
+# 同時 `create or replace` 了「分歧點就存在的 `public.shared_fn`」與「只存在於 base tip 的 `public.later_fn`」。
+repo2="$work/repo2"
+git init -q -b development "$repo2"
+gitc2() { git -C "$repo2" -c user.name=t -c user.email=t@t -c core.hooksPath=/dev/null -c commit.gpgsign=false "$@"; }
+mkdir -p "$repo2/supabase/migrations"
+printf 'create function public.shared_fn() returns void language sql as $$ select 1 $$;\n' > "$repo2/supabase/migrations/001.sql"
+gitc2 add -A && gitc2 commit -qm m0
+gitc2 branch feature
+printf 'create function public.later_fn() returns void language sql as $$ select 1 $$;\n' > "$repo2/supabase/migrations/010.sql"
+gitc2 add -A && gitc2 commit -qm base-advanced
+gitc2 checkout -q feature
+printf 'create or replace function public.shared_fn() returns void language sql as $$ select 2 $$;\ncreate or replace function public.later_fn() returns void language sql as $$ select 2 $$;\n' > "$repo2/supabase/migrations/020.sql"
+gitc2 add -A && gitc2 commit -qm feature-work
+
+mb2=$(gitc2 merge-base development HEAD)
+out_branch="$(cd "$repo2" && bash "$check" --base development)"
+out_mb="$(cd "$repo2" && bash "$check" --base "$mb2")"
+if [ "$out_branch" = "$out_mb" ]; then
+  echo "✓ LS-260 兩通道等價：--base development 與 --base <merge-base SHA> 輸出逐字相同"
+else
+  echo "✗ LS-260 兩通道不等價（--base 分支名 vs merge-base SHA）" >&2
+  printf '  分支名：\n%s\n  merge-base：\n%s\n' "$out_branch" "$out_mb" | sed 's/^/    /' >&2
+  fail=1
+fi
+if printf '%s' "$out_branch" | grep -q '^BREAKING.*create or replace function public.shared_fn'; then
+  echo "✓ LS-260（票文指定格）既有函式 CREATE OR REPLACE 於本機 --base <分支名> 呼叫也命中 B4"
+else
+  echo "✗ LS-260 既有函式 public.shared_fn 的 CREATE OR REPLACE 未命中 B4" >&2
+  printf '%s\n' "$out_branch" | sed 's/^/    /' >&2
+  fail=1
+fi
+if printf '%s' "$out_branch" | grep -q 'public.later_fn'; then
+  echo "✗ LS-260 public.later_fn 只存在於 base tip（不在本分支 base），不該被算成既有函式" >&2
+  printf '%s\n' "$out_branch" | sed 's/^/    /' >&2
+  fail=1
+else
+  echo "✓ LS-260 只存在於 base tip 的函式不被算進既有清單（與 push-gate 通道一致）"
+fi
+
+# mutation：把 merge-base 解析拿掉（還原成舊寫法）→ --base <分支名> 必須重新出現 later_fn 的假 B4，
+# 證明上面三條綠是這段修正擋下來的，不是夾具本身就不會分歧。
+mut_mb="$work/migration-breaking-check.no-mergebase.sh"
+python3 - "$check" "$mut_mb" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+old = '  base="$base_mb"\n'
+assert src.count(old) == 1, "找不到 merge-base 解析賦值，mutation 樣板需同步"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, '  : "$base_mb"\n'))
+PY
+out_mut="$(cd "$repo2" && bash "$mut_mb" --base development)"
+if printf '%s' "$out_mut" | grep -q 'public.later_fn'; then
+  echo "✓ LS-260 mutation（拿掉 merge-base 解析）：--base <分支名> 重新多判一條 later_fn 的 B4"
+else
+  echo "✗ LS-260 mutation 未如預期翻轉——夾具可能沒真的造出分歧" >&2
+  printf '%s\n' "$out_mut" | sed 's/^/    /' >&2
+  fail=1
+fi
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ migration-breaking-check 自測通過（88 組樣本）"
+  echo "✓ migration-breaking-check 自測通過（88 組樣本＋LS-260 兩通道等價 4 組）"
 fi
 exit "$fail"

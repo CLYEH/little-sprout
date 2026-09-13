@@ -265,6 +265,46 @@ for sha in 938e854 ebe390a; do
   expect 1 "⑪⑫真實快照${sha}未patch轉紅列PushPrepromptView" "PushPrepromptView" "" --repo "$snap"
 done
 
+# ---- ⑬ 已處理標記寫在 `QADriver+*.swift`（非主檔）也要算數（LS-260）：判定規則 2 掃的是
+#      `QADriver*.swift` glob，但①～⑫的 fixture 一律只寫單一 `QADriver.swift`，「標記散在多個
+#      QADriver 檔」這條 glob 從沒被自測釘住過。LS-260 把「瀏覽」段搬到 `QADriver+Browse.swift`
+#      （同 LS-220 的 `QADriver+LoginLanding.swift`），未來也會繼續拆檔——這格確保拆檔不會讓
+#      gate 靜默漏看標記（漏看＝假紅，會擋住所有拆過檔的 PR）。
+#      ⑬b 是它的 mutation：同一份標記換成 glob 涵蓋不到的檔名（`QAHelpers.swift`）就必須轉紅，
+#      證明綠不是因為 gate 根本沒在看已處理清單。
+reset_repo
+cat > "$R/LittleSprout/Navigation/RootView.swift" <<'EOF'
+import SwiftUI
+struct AuthenticatedRootView: View {
+    var body: some View {
+        // QA-GATE: PushPrepromptView
+        Group { SectionTabView() }
+        .fullScreenCover(isPresented: $showsPushPreprompt) {
+            PushPrepromptView(onSkip: {})
+        }
+    }
+}
+EOF
+cat > "$R/LittleSproutUITests/QA/QADriver.swift" <<'EOF'
+import XCTest
+final class QADriver {
+    var timelineHeading: XCUIElement { app.staticTexts["時間軸"].firstMatch }
+}
+EOF
+cat > "$R/LittleSproutUITests/QA/QADriver+Browse.swift" <<'EOF'
+import XCTest
+extension QADriver {
+    func dismissPushPrepromptIfPresent() throws {
+        // QA-GATE-HANDLED: PushPrepromptView（標記寫在 QADriver+*.swift，不是主檔）
+        pushPrepromptSkipButton.tap()
+    }
+}
+EOF
+expect 0 "⑬標記在QADriver+Browse.swift也算數-綠" "皆已標記處理" "" --repo "$R"
+
+mv "$R/LittleSproutUITests/QA/QADriver+Browse.swift" "$R/LittleSproutUITests/QA/QAHelpers.swift"
+expect 1 "⑬b mutation：同一標記搬到 glob 外檔名（QAHelpers.swift）→ 轉紅" "PushPrepromptView" "" --repo "$R"
+
 if [ "$fail" -eq 0 ]; then
   echo "qa-driver-gate-check.test.sh：全部通過"
 else
