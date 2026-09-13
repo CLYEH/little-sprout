@@ -23,7 +23,8 @@
 #
 # LS-140 申報可驗證（來源 LS-96 池項 9f348e36／fd2fe81e：LS-125 R2 handoff 申報「記入 LS-96」四條實際一則沒寫、
 #   R3 申報「已修」但 commit 裡沒有該變更，都靠 merge-reviewer 逐條到 LS-96 查實才抓到）。檔頭段之外再對全 body 逐行掃：
-#   (a) 含 `LS-96`（整字）／「入池」／「待辦池」的行必須帶 ≥8 位小寫 hex 的 comment id（獨立英數 token；UUID 首段即可）；
+#   (a) 含 `LS-96`（整字）／「入池」／「待辦池」的行必須帶 ≥8 位小寫 hex 的 comment id（獨立英數 token；UUID 首段即可；
+#       **純數字 token 不算候選**——GitHub run id（`17654321987`）也是 ≥8 位 [0-9a-f]，LS-234 R7 被當成 comment id 反查，LS-256）；
 #   (b) 含「已修」的行必須帶 7–40 位小寫 hex 的 commit SHA，且只認**同一行「已修」之後的第一個 hex token**：「已修 `7c2ff80`」
 #       「**已修**（commit `7c2ff80`）」「已修：`7c2ff80`」「已修，改用 X。commit `7c2ff80`。」「| 已修：… | `7c2ff80` |」都算；
 #       「…`d87d4334` …皆已修」不算（hex 在「已修」之前）；「已修（comment `d87d4334`，commit `7c2ff80`）」--verify 紅（第一個
@@ -39,7 +40,9 @@
 #   形狀、打錯的 SHA）→ 紅「已修行需附 commit SHA 於『已修』之後」，是 commit 但非祖先 → 紅「不在 PR commits 內」（LS-186）。
 #   無 LINEAR_API_KEY → 印「反查略過」只驗格式＋git；另外逐行印 `⚠ 未反查（無 LINEAR_API_KEY）：第 n 行
 #   候選 <hex>`（LS-211，來源 LS-96 池項 df12be2e），讓 agent／orchestrator 看得見哪些行只驗了格式、靠
-#   CI 裁；exit 不變。本機沒 export LINEAR_API_KEY 但 repo 根有 .env 時，腳本自己（不經呼叫端 Bash 命令
+#   CI 裁；**LS-256（010d927d(2)）：有候選未反查時 exit 3**（不是 0——designer／VR 本機的「綠」曾等於 CI 綠，其實只驗了
+#   格式）；exit 3＝「本機未反查、CI 會反查」，**不是違規**（違規一律 1，且優先於 3：git 半段紅時仍 exit 1）；CI 有
+#   secrets.LINEAR_API_KEY 不會出現 3。本機沒 export LINEAR_API_KEY 但 repo 根有 .env 時，腳本自己（不經呼叫端 Bash 命令
 #   文字）grep `^LINEAR_API_KEY=` 這一個 key 名取值使用，不 source 整份 .env、不印值。
 #   LS-198（LS-186 R2 info-1／2）：格式模式分不出短 SHA 與純數字 token（CI run id、migration 檔名前綴 20260904212530 都是 7–40 位
 #   [0-9a-f]）——不帶 --verify 時對純數字候選印一行 ⚠ 警告、exit 不變（裁判仍是 --verify 的 git cat-file）；--verify 紅「不是本 repo
@@ -51,7 +54,9 @@
 #   reviewer 誤以為是 PR body 本身有問題。JSON 格式錯／GraphQL errors／回應不是本票 issue 這類「有回應但內容不對」不重試
 #   （不是連線問題，重試也不會變好），維持原本立即 die。
 # exit 0＝全過；1＝違規（空 body、模板未填、票號不在檔頭段、檔頭段是他票、LS-96 行缺 comment id、「已修」行缺 SHA、
-#   --verify 反查不到；最後一行 stdout 必為 `✗ pr-body-check：未通過…`）；2＝參數／分支／環境錯誤（fail closed）。
+#   --verify 反查不到；最後一行 stdout 必為 `✗ pr-body-check：未通過…`）；2＝參數／分支／環境錯誤（fail closed）；
+#   3＝--verify 但無 LINEAR_API_KEY 且 body 有 LS-96 候選未反查（本機未反查、CI 會；**不是違規**，LS-256）——本機沒 key 的
+#   agent 看到 3 時：格式與 git 半段都過了、只差 Linear 反查，可開 PR 讓 CI 裁，或 source .env 後重跑拿到 0。
 # 紅了之後：改 PR body 不會讓 CI 自動重跑（on: pull_request 不含 edited；gh run rerun 重放舊 payload），要 close/reopen PR
 #   或再 push 一個 commit——失敗輸出會提示（PR #93 review F1；LS-37 在 DESTRUCTIVE-APPROVED 踩過同坑，COLLABORATION §6）。
 set -uo pipefail
@@ -165,7 +170,9 @@ while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in *入池*|*待辦池*) is_pool=1 ;; esac
   if [ "$is_pool" -eq 0 ] && printf '%s' "$line" | grep -qE "(^|[^A-Za-z0-9])${pool}([^0-9]|$)"; then is_pool=1; fi
   if [ "$is_pool" -eq 1 ]; then
-    ids=$(hex_tokens "$line" 8 '')
+    # LS-256（010d927d(3)）：純數字 token（GitHub run id、行號）不是 comment id 候選——Linear comment id 是 UUID，首 8 位
+    # 全為數字的機率 (10/16)^8≈2.3%，寧可漏這 2.3% 也不讓 run id 冒充候選（冒充後格式綠、--verify 才紅在「找不到」）。
+    ids=$(hex_tokens "$line" 8 '' | tr , '\n' | grep -vE '^[0-9]+$' | paste -s -d, -)  # LS256-DIGIT-FILTER
     if [ -z "$ids" ]; then
       echo "✗ pr-body-check：第 ${n} 行提到 ${pool}／入池／待辦池，但沒有 comment id（≥8 位 hex）：" >&2
       echo "    | ${line}" >&2
@@ -213,7 +220,7 @@ fi
 # ---- --verify (b)：「已修」之後的第一個 hex 候選須是 commit object 且為 HEAD 祖先（需在 repo 內執行）----
 # 兩種紅分開講（LS-186）：候選不是 commit object（Linear comment id 形狀、打錯的 SHA）→「需附 commit SHA 於『已修』之後」；
 # 是 commit 但不是 HEAD 祖先（他分支、未 push）→「不在 PR commits 內」。LS-185 當時兩者混成一句，實作者照著找不存在的 commit。
-fail=0
+fail=0; unverified=0
 while read -r ln toks; do
   [ -n "$ln" ] || continue
   ok=; is_commit=
@@ -238,10 +245,11 @@ if [ -n "$pool_claims" ]; then
   if [ -z "${LINEAR_API_KEY:-}" ]; then
     echo "pr-body-check：反查略過（無 LINEAR_API_KEY）——${pool} comment id ${n_pool} 條只驗了格式；本機 source .env 後、CI 設 secrets.LINEAR_API_KEY 才會反查（LS-140）"
     # LS-211（df12be2e）：逐行點名哪些候選靠 CI 裁——本機無 key 時只印一句總結，agent／orchestrator
-    # 看不出「到底是哪幾行、哪個 hex」只驗了格式；exit 不變（仍是 --verify 反查略過，非違規）。
+    # 看不出「到底是哪幾行、哪個 hex」只驗了格式。LS-256：有候選未反查 → 收尾 exit 3（非違規，見檔頭 exit 表）。
     while read -r ln toks; do
       [ -n "$ln" ] || continue
       echo "⚠ 未反查（無 LINEAR_API_KEY）：第 ${ln} 行候選 ${toks}"
+      unverified=1
     done <<< "$pool_claims"
     if [ "${GITHUB_ACTIONS:-}" = true ]; then
       echo "::warning::pr-body-check：反查略過（無 LINEAR_API_KEY）——${pool} comment id 只驗了格式，請補 repo secret LINEAR_API_KEY（LS-140）"
@@ -367,6 +375,12 @@ fi
 
 if [ "$fail" -eq 1 ]; then
   red_exit
+fi
+# LS-256（010d927d(2)）：違規（exit 1）優先；沒違規但有池項候選未反查 → exit 3，訊息明寫「不是違規」——本機沒 key 的
+# agent 不要把 3 當成 body 有問題去改寫，也不要把它當 0 就宣稱「pr-body-check 綠」（CI 有 key 會真的反查）。
+if [ "$unverified" -eq 1 ]; then
+  echo "⚠ pr-body-check：本機未反查（無 LINEAR_API_KEY）——${pool} comment id ${n_pool} 條只驗了格式，CI 會反查；exit 3＝未反查，不是違規（格式與「已修」SHA 皆已驗過；要在本機拿到 0 請 source .env 後重跑，LS-256）"
+  exit 3
 fi
 echo "✓ 申報反查：${pool} 行 ${n_pool} 條、「已修」行 ${n_fix} 條"
 exit 0
