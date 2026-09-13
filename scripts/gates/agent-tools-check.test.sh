@@ -67,12 +67,17 @@ BGGATE='PreToolUse `background-bash-guard.sh`（LS-215）機械擋 run_in_backgr
 # LS-236：三份正文另須含「不得依賴截斷後的自動背景化」（工具 timeout 600000 截斷後子行程不會被殺掉，
 # 殘留會與下一輪 xcodebuild 搶模擬器，stale-xcodebuild-check.sh 機械擋殘留）
 NOBGXC='xcodebuild 一律前景、Bash timeout 600000（工具上限）；預期超過 10 分鐘的測試以 -only-testing 分段跑；不得依賴截斷後的自動背景化。'
-QA_BODY="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC}"
+# LS-254：五份（ios-dev／ui-designer／visual-reviewer／merge-reviewer／qa）正文另須含「禁派 fork」（fork 繼承整份派工單並平行
+# 執行整項任務；PreToolUse fork-guard.sh 機械擋非主 session 的 subagent_type: fork）；併進五份合法樣本
+NOFORK254='研究用 `Explore`（唯讀）；禁派 fork（LS-254）——fork 繼承整份派工單、會把它當自己的任務平行執行。'
+QA_BODY="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254}"
 # LS-180：ui-designer／visual-reviewer 正文須含「--kill 只在 orchestrator 明示時」（切檔不殺行程的規約句）
 KILL='切檔一律不殺行程；`pen-open.sh` 的 --force-reload／--kill 只在 orchestrator 明示時使用，用後必回報「需重連」。'
 # LS-180 裁決：ui-designer 正文另須含「收工 Pen 停在票檔」（不切回主 checkout）；合法的 ui-designer 樣本兩句都要有
 STAY='handoff 前不切回主 checkout：收工 Pen 停在票檔，handoff 註明路徑。'
-UI_BODY="${KILL} ${STAY}"
+UI_BODY="${KILL} ${STAY} ${NOFORK254}"
+# LS-254：visual-reviewer 合法樣本＝LS-180 的 --kill 句＋禁派 fork 句（不要求收工句，見 ⑧）
+VR_BODY="${KILL} ${NOFORK254}"
 # LS-186：ios-dev 正文另須含 CI 完整旗標的 PR body 驗證句；OLD_PRBODY 是 LS-186 之前的裸寫法（⑪ 的負樣本）
 PRBODY='`gh pr create/edit --body-file <f>` 之前先 `bash scripts/gates/pr-body-check.sh <f> --branch <分支> --verify`，直接看 exit code。'
 OLD_PRBODY='`gh pr create/edit --body-file <f>` 之前先 `bash scripts/gates/pr-body-check.sh <f>` 斷言檔頭段含本票票號。'
@@ -87,8 +92,8 @@ MUTPLAY='每支 mutation 必列三段：改了什麼一行 → 哪條測試紅 �
 REPLAYRULE='handoff 申報的 mutation 一律自己重放，對不上列 major。'
 # LS-232：ios-dev 正文另須含「新增登入後全屏 gate 必同 PR 更新 QADriver」（qa-driver-gate-check 機械化）
 QAGATE='新增登入後全屏 gate 必同 PR 更新 QADriver（`qa-driver-gate-check` 會擋）。'
-IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC}"
-MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC}"
+IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254}"
+MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254}"
 # LS-209：ios-dev 新增 tools: 白名單（移除 mcp__pencil__*）——取代舊的 `NONE`（無 tools: 行＝繼承全部工具，其中
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求
 # （Bash／Read／Edit／Write／Grep／Glob／Agent／三支 Linear 工具），這裡的乾淨清單須包含全部才能當合法基準。
@@ -108,7 +113,7 @@ reset() {
   mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_BODY"
   mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
   mk ui-designer NONE "$UI_BODY"
-  mk visual-reviewer NONE "$KILL"
+  mk visual-reviewer NONE "$VR_BODY"
   mk ios-dev "$IOS_TOOLS" "$IOS_BODY"
 }
 
@@ -147,7 +152,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（42 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 42 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（47 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 47 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -160,7 +165,7 @@ reset; mk ui-designer NONE "只寫 --kill 而沒有那句規約不算"; expect 1
 reset; expect 0 '⑧ LS-180 裁決：ui-designer 正文含「收工 Pen 停在票檔」→ 印「正文含」' 'ui-designer.md：正文含「收工 Pen 停在票檔」'
 reset; mk ui-designer NONE "$KILL"; expect 1 '⑧ LS-180 裁決：ui-designer 只有 --kill 句、缺收工句 → exit 1' 'ui-designer.md：正文缺「收工 Pen 停在票檔」' '' 'ui-designer.md：正文缺「--kill 只在 orchestrator 明示時」'
 reset; mk ui-designer NONE "${KILL} handoff 前切回主 checkout。"; expect 1 '⑧ LS-180 裁決：改回「切回主 checkout」而無收工句 → exit 1' 'ui-designer.md：正文缺「收工 Pen 停在票檔」'
-reset; mk visual-reviewer NONE "$KILL"; expect 0 '⑧ LS-180 裁決：visual-reviewer 不要求收工句 → 仍通過' '通過'
+reset; mk visual-reviewer NONE "$VR_BODY"; expect 0 '⑧ LS-180 裁決：visual-reviewer 不要求收工句 → 仍通過' '通過'
 # LS-183：ios-dev／merge-reviewer／qa 正文須含「本機容器操作同樣要在 lock 內」——只有 hold 句、H3b 句被刪即紅；三份都驗；工具齊全不救
 reset; expect 0 '⑨ LS-183：三份正文含 H3b 句 → 印「正文含」' 'ios-dev.md：正文含「本機容器操作同樣要在 lock 內」' 'qa.md：正文含「本機容器操作同樣要在 lock 內」'
 reset; mk ios-dev "$IOS_TOOLS" "$HOLD"; expect 1 '⑨ LS-183：ios-dev 只有 hold 句、缺 H3b 句 → exit 1' 'ios-dev.md：正文缺「本機容器操作同樣要在 lock 內」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
@@ -414,6 +419,25 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '不得依賴截斷後的
   ok '㉑ mutant：拿掉規則後「缺不得依賴截斷後自動背景化句」的負樣本變綠'
 else
   echo "✗ ㉑ mutant（不得依賴截斷後自動背景化句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ㉒ LS-254：五份正文須含「禁派 fork」（fork 繼承整份派工單並平行執行整項任務——LS-234 R7 同一 .pen／branch 雙寫、
+#        LS-188／LS-192 越權改檔；PreToolUse fork-guard.sh 機械擋非主 session 的 subagent_type: fork，這句是規約層前饋）----
+reset; expect 0 '㉒ 五份正文含禁派 fork 句 → 印「正文含」（ui-designer／visual-reviewer）' 'ui-designer.md：正文含「禁派 fork」' 'visual-reviewer.md：正文含「禁派 fork」'
+reset; expect 0 '㉒ 五份正文含禁派 fork 句 → 印「正文含」（ios-dev／qa）' 'ios-dev.md：正文含「禁派 fork」' 'qa.md：正文含「禁派 fork」'
+reset; expect 0 '㉒ 五份正文含禁派 fork 句 → 印「正文含」（merge-reviewer）' 'merge-reviewer.md：正文含「禁派 fork」'
+reset; mk ui-designer NONE "${KILL} ${STAY}"; expect 1 '㉒ ui-designer 缺該句 → exit 1，LS-180 兩句齊全不救' 'ui-designer.md：正文缺「禁派 fork」' '' 'ui-designer.md：正文缺「收工 Pen 停在票檔」'
+reset; mk visual-reviewer NONE "$KILL"; expect 1 '㉒ visual-reviewer 缺該句 → exit 1' 'visual-reviewer.md：正文缺「禁派 fork」'
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC}"; expect 1 '㉒ ios-dev 缺該句 → exit 1（LS-209 舊句「不得派 fork／subagent 改動任何檔案」在也不救——字樣不同）' 'ios-dev.md：正文缺「禁派 fork」' '' 'ios-dev.md：正文缺「不得派 fork／subagent 改動任何檔案」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC}"; expect 1 '㉒ qa 缺該句 → exit 1' 'qa.md：正文缺「禁派 fork」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC}"; expect 1 '㉒ merge-reviewer 缺該句 → exit 1' 'merge-reviewer.md：正文缺「禁派 fork」'
+reset; mk visual-reviewer NONE "${KILL} 禁派fork（無空白）"; expect 1 '㉒ 字樣須整句「禁派 fork」（含空白），「禁派fork」不算 → exit 1' 'visual-reviewer.md：正文缺「禁派 fork」'
+reset; mk visual-reviewer NONE "$KILL"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '禁派 fork'; then
+  ok '㉒ mutant：拿掉規則後「缺禁派 fork 句」的負樣本變綠'
+else
+  echo "✗ ㉒ mutant（禁派 fork 句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過

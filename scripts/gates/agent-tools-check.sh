@@ -87,6 +87,10 @@ ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 # agent 停在等背景通知（LS-210／LS-190 R2／LS-193），升機械 gate；正文那句被刪即紅（gate 本身仍會擋，這裡驗的是
 # 前饋文字沒有跟程式碼脫鉤）。
 BODY_RULES=
+# LS-254：五份（ios-dev／ui-designer／visual-reviewer／merge-reviewer／qa）正文須含「禁派 fork」——fork 繼承整份派工單、會把它當
+# 自己的任務平行執行（LS-234 R7 同一 .pen／branch 雙寫；LS-188／LS-192 越權改檔，三起皆為 worker 自己派的 fork）；PreToolUse
+# `scripts/hooks/fork-guard.sh` 是機械層（只擋非主 session 的 `subagent_type: fork`），這句是前饋（含「任何子 agent 不得寫檔／
+# commit／改 PR／貼 Linear」的規約層，機械層擋不到）；被刪即紅。
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold|LS-170：互動式本機驗證（模擬器對本機容器的多步驟操作）前先 supabase-lock.sh --hold，收工 --release
 ios-dev|pr-body-check.sh <f> --branch <分支> --verify|LS-186：gh pr create/edit 前先用完整旗標跑 pr-body-check.sh 並直接看 exit code
@@ -129,7 +133,12 @@ merge-reviewer|紅則逐條說明是誤判或補證據|LS-211 R2（merge-review 
 ios-dev|新增登入後全屏 gate 必同 PR 更新 QADriver|LS-232：RootView 新增登入後全屏 gate 必同 PR 用 // QA-GATE 標記＋更新 QADriver 的 // QA-GATE-HANDLED 標記，qa-driver-gate-check 機械擋（LS-190／LS-217 兩次事故）
 ios-dev|不得依賴截斷後的自動背景化|LS-236：xcodebuild 一律前景、Bash timeout 600000（工具上限），預期超過 10 分鐘的測試以 -only-testing 分段跑；工具 timeout 截斷後子行程不會被殺掉，殘留會與下一輪 xcodebuild 搶模擬器（LS-166／LS-217），scripts/gates/stale-xcodebuild-check.sh 機械擋殘留
 merge-reviewer|不得依賴截斷後的自動背景化|LS-236：審 PR 時同樣須留意 xcodebuild 一律前景、timeout 600000，那句被刪即紅
-qa|不得依賴截斷後的自動背景化|LS-236：驗收時同樣須留意 xcodebuild 一律前景、timeout 600000，那句被刪即紅"
+qa|不得依賴截斷後的自動背景化|LS-236：驗收時同樣須留意 xcodebuild 一律前景、timeout 600000，那句被刪即紅
+ios-dev|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；研究只派 Explore 唯讀，PreToolUse fork-guard.sh 機械擋非主 session 的 subagent_type: fork
+ui-designer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行（LS-234 R7 同一 .pen／branch 雙寫）；研究只派 Explore 唯讀，PreToolUse fork-guard.sh 機械擋
+visual-reviewer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；研究只派 Explore 唯讀，PreToolUse fork-guard.sh 機械擋
+merge-reviewer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派
+qa|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，

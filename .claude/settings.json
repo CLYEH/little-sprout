@@ -54,6 +54,16 @@
         ]
       },
       {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/hooks/fork-guard.sh\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "mcp__linear__save_issue",
         "hooks": [
           {
