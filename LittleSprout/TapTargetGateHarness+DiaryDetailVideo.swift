@@ -138,7 +138,7 @@ extension TapTargetGateHarness {
                 let frame = frameCounter.withLock { $0 }
                 if frame >= frameCount {
                     input.markAsFinished()
-                    writer.finishWriting { done.signal() }
+                    writer.finishWriting { Self.assertFinishedWriting(writer, done: done) }
                     return
                 }
                 guard Self.appendFrame(frame, to: adaptor, height: height, fps: fps, writer: writer) else {
@@ -152,6 +152,22 @@ extension TapTargetGateHarness {
             assertionFailure("LS-246 test harness：影片合成逾時（20 秒）")
         }
         return url
+    }
+
+    /// LS-259 第 2 項（merge-review R1 m1，`82724334`）：`finishWriting` 的 completion 只
+    /// signal，沒檢查 `writer.status`——合成若在這個階段才失敗（早於此的 `startWriting`／
+    /// `adaptor.append` guard 都沒攔到），會靜默把 `url` 交給呼叫端，下游
+    /// `AVPlayerViewController` 播放不了一支不完整的檔案，錯誤訊息離真正病灶（合成失敗）很遠。
+    /// 明確失敗優於假綠（同 `appendFrame` 既有理由）。抽出成獨立函式單純是為了不讓
+    /// `makeTestVideoURL` 超過 SwiftLint `function_body_length`，邏輯未變。
+    private static func assertFinishedWriting(_ writer: AVAssetWriter, done: DispatchSemaphore) {
+        guard writer.status == .completed else {
+            preconditionFailure(
+                "LS-259 test harness：finishWriting 後 status 非 .completed（\(writer.status.rawValue)）："
+                    + "\(writer.error?.localizedDescription ?? "unknown")"
+            )
+        }
+        done.signal()
     }
 
     /// `makeTestVideoURL` 逐格寫入抽出的一步——純色畫格，內容本身不重要（同 `makeTestImageURL`
