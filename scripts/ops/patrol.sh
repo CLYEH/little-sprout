@@ -502,6 +502,71 @@ if [ -n "$lock_path" ] && [ -d "${lock_path}.waiters" ]; then
   fi
 fi
 
+# ---- Supabase 容器啟動時間一致性（LS-260；來源 LS-96 池項 `b2947c3f`）----
+# LS-246 QA R2：本機 `supabase_auth`／`supabase_db` 曾被單獨重啟、`rest`／`kong` 沒有（uptime 差 7 天），
+# OTP 登入後 `GET /rest/v1/profiles` 回 401、App 卡「伺服器發生問題」，QA 以整組 `supabase stop` →
+# `supabase start` 排除，多花一段排障。查過 repo 內沒有任何腳本會單獨重啟單一容器——唯一會動容器生命
+# 週期的 `scripts/ci/db-reset-retry.sh` 只給 CI runner（本機呼叫在碰 supabase 之前就 exit 2），且走的是
+# 整組 `supabase stop --no-backup` → `supabase db start`；來源只可能是人工或外部操作。源頭修不了，就讓
+# 巡檢看得見結果：各 `supabase_*` 容器 `.State.StartedAt` 最大差超過 PATROL_SUPABASE_SKEW_MIN（預設
+# 60 分）就掛旗標並給整組重啟指令。docker 不在／沒有 supabase 容器在跑 → 靜默略過（fail-open，同 gh
+# 未安裝的處理；巡檢本身不該因為沒開容器就變成「有異常」）。`docker ps`／`docker inspect` 是唯讀操作，
+# 不受 supabase-lock 規約管轄（LS-183 明列的例外）。PATROL_DOCKER 可換假身供自測。
+DOCKER_BIN=${PATROL_DOCKER:-docker}
+SUPA_SKEW_MIN=${PATROL_SUPABASE_SKEW_MIN:-60}
+case "$SUPA_SKEW_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_SUPABASE_SKEW_MIN 須為整數分鐘（得到「${SUPA_SKEW_MIN}」）" >&2; exit 2 ;; esac
+SUPA_LINE=; supa_containers=0; supa_skew_m=0
+if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
+  supa_names=$("$DOCKER_BIN" ps --filter name=supabase_ --format '{{.Names}}' 2>/dev/null | tr '\n' ' ')
+  case "${supa_names// /}" in
+    '') SUPA_LINE="（無執行中的 supabase_* 容器）" ;;
+    *)
+      # 一次 inspect 全部容器（每台各 fork 一次 docker 在 SessionStart hook 的 30s 預算下太貴）。
+      # StartedAt 是 RFC3339 UTC；awk 內自己換算 epoch（days-from-civil），不碰 date -j／date -d
+      # ——同本檔開頭「時間一律用 epoch、不碰 date -j／date -d」的既有理由（GNU／BSD 旗標不同）。
+      # 精度到秒（小數秒丟棄）：門檻本來就是分鐘級；同一秒並列時「最舊／最新」取先出現的那台當代表，
+      # 差值不受影響。
+      supa_parsed=$("$DOCKER_BIN" inspect --format '{{.Name}} {{.State.StartedAt}}' $supa_names 2>/dev/null | awk '
+        function epoch(s,   a, y, m, d, H, M, S, yy, era, yoe, doy, doe, days) {
+          split(s, a, /[-T:]/)
+          y = a[1] + 0; m = a[2] + 0; d = a[3] + 0; H = a[4] + 0; M = a[5] + 0; S = int(a[6])
+          if (y < 1970 || m < 1 || m > 12) return -1
+          yy = y - (m <= 2 ? 1 : 0)
+          era = int((yy >= 0 ? yy : yy - 399) / 400)
+          yoe = yy - era * 400
+          doy = int((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5) + d - 1
+          doe = yoe * 365 + int(yoe / 4) - int(yoe / 100) + doy
+          days = era * 146097 + doe - 719468
+          return days * 86400 + H * 3600 + M * 60 + S
+        }
+        NF >= 2 {
+          name = $1; sub(/^\//, "", name)
+          e = epoch($2)
+          if (e < 0) next
+          n++
+          if (mn == "" || e < mn) { mn = e; mnn = name }
+          if (mx == "" || e > mx) { mx = e; mxn = name }
+        }
+        END { if (n > 0) printf "%d\t%d\t%s\t%s\n", n, mx - mn, mnn, mxn }
+      ')
+      if [ -n "$supa_parsed" ]; then
+        supa_containers=$(printf '%s' "$supa_parsed" | cut -f1)
+        supa_skew_m=$(( $(printf '%s' "$supa_parsed" | cut -f2) / 60 ))
+        supa_oldest=$(printf '%s' "$supa_parsed" | cut -f3)
+        supa_newest=$(printf '%s' "$supa_parsed" | cut -f4)
+        SUPA_LINE="容器 ${supa_containers} 個，啟動時間最大差 ${supa_skew_m} 分（最舊 ${supa_oldest}／最新 ${supa_newest}；門檻 ${SUPA_SKEW_MIN} 分）"
+        if [ "$supa_skew_m" -gt "$SUPA_SKEW_MIN" ]; then
+          add_flag "[Supabase 容器] ⚠ 容器啟動時間不一致（最舊 ${supa_oldest} 與最新 ${supa_newest} 差 ${supa_skew_m} 分 > ${SUPA_SKEW_MIN}）——單獨重啟過的容器與其他容器不同步（LS-246 QA：auth／db 重啟、rest／kong 沒有 → REST 401、App 卡「伺服器發生問題」）。請在 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- supabase stop 之後 bash scripts/ops/supabase-lock.sh -- supabase start（LS-260）"
+        fi
+      else
+        SUPA_LINE="（docker inspect 讀不到 StartedAt，略過）"
+      fi
+      ;;
+  esac
+else
+  SUPA_LINE="（docker 未安裝，略過）"
+fi
+
 # ---- Pencil 連線（LS-180）：有 design 分支 worktree（設計票在飛）時跑 scripts/ops/pen-status.sh——Pen 行程／目前路徑／
 #      MCP socket 探針一行；探針非 0（Pen 沒開／路徑讀不到／mcp-server 與 Pen 之間沒有 socket 連線）就 add_flag，指示
 #      orchestrator 派設計票前先請使用者在 Claude Code 執行 /mcp 重連 pencil。沒有 design worktree 不呼叫（探針會打
@@ -874,12 +939,12 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"supabase_containers":%s,"supabase_start_skew_minutes":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
-      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$(json_num "$lock_waiters")" "$(json_num "$lock_waiters_max_min")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
+      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$(json_num "$supa_containers")" "$(json_num "$supa_skew_m")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$(json_num "$lock_waiters")" "$(json_num "$lock_waiters_max_min")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
       "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
       "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_FLAGS"
     ;;
@@ -914,6 +979,8 @@ case "$MODE" in
     echo "== Supabase lock（本機容器序列化，scripts/ops/supabase-lock.sh；LS-70；⚠ tomb＝上次回收異常的殘留；持有者剩餘 >10 分且有等待者才會另印排隊提示，LS-207）"
     printf '%s\n' "$lock_line" | sed 's/^/  /'
     [ -n "$lock_queue_flag" ] && echo "  ${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
+    echo "== Supabase 容器啟動時間（LS-260；各 supabase_* 容器 .State.StartedAt 差 >${SUPA_SKEW_MIN} 分＝有人單獨重啟過某台，整組重啟排除，LS-246）"
+    echo "  ${SUPA_LINE}"
     echo "== Pencil 連線（LS-180；有 design 分支 worktree 時探：行程／目前路徑／MCP socket；✗ 先請使用者 /mcp 重連 pencil 再派設計票）"
     if [ "$pencil_ran" -eq 1 ]; then
       printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'

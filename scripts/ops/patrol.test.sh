@@ -28,6 +28,20 @@ export SUPABASE_LOCK_DIR="$work/lock"
 # ⑮～⑰（本票：驗 Booted 判定）各自在呼叫時明講 SIMCTL_LIST_JSON（⑭ 特意設成空字串讓它照舊落回
 # PATH 裡的 xcrun stub——patrol.sh 用 `${SIMCTL_LIST_JSON:-…}`，空字串與未設值同樣觸發預設值）。
 export SIMCTL_LIST_JSON='{"devices":{}}'
+# LS-260：Supabase 容器啟動時間段同款隔離——本機真的有 supabase 容器在跑時（開發機幾乎必然），
+# 啟動時間差超過門檻就會掛旗標，讓 ③／⑧ 這類「全正常無 ⚠」的既有斷言隨本機狀態偶發紅。預設餵一支
+# 「查不到任何容器」的假 docker；㉙ 自己在呼叫時覆寫成有內容的假身。
+mkdir -p "$work/bin"
+cat > "$work/fake-docker-empty" <<'FAKEDOCKEREMPTY'
+#!/bin/bash
+case "${1:-}" in
+  ps) exit 0 ;;
+  inspect) exit 0 ;;
+  *) exit 1 ;;
+esac
+FAKEDOCKEREMPTY
+chmod +x "$work/fake-docker-empty"
+export PATROL_DOCKER="$work/fake-docker-empty"
 # LS-176：磁碟水位段預設門檻 20 GB——CI runner／開發機當下可用空間可能真的低於 20 GB，不隔離的話 ⑧「全正常無 ⚠」
 # 這類既有斷言會隨機器狀態偶發紅。統一設成 0（永不觸發），㉑ 自己在呼叫時覆寫門檻與兩個目錄。
 export PATROL_DISK_MIN_GB=0
@@ -1661,6 +1675,66 @@ has   '㉘ mutant（m4／i5）：拿掉 try/catch → 907 的 not-a-date 項從�
 hasnt '㉘ mutant（m4／i5）：不再印出正確的 ?m 結果' "$l907m" 'CI 跑中 ?m'
 l906m4=$(row "$out28m4" 'feature/LS-906-realjq-normal')
 has   '㉘ mutant（m4／i5）對照：906（沒有 not-a-date、只有正常時間＋pass 零值）不受影響仍正確' "$l906m4" 'CI 跑中 17m（ci、ci-ipad）'
+
+# ---- ㉙（LS-260；來源 LS-96 池項 `b2947c3f`）：Supabase 容器啟動時間不一致偵測。
+#      LS-246 QA R2 實況：`auth`／`db` 被單獨重啟、`rest`／`kong` 沒有（uptime 差 7 天），OTP 登入後
+#      REST 401。假 docker 只回 `ps`／`inspect` 兩種輸出（patrol 只用這兩個唯讀子命令）。
+cat > "$work/fake-docker" <<'FAKEDOCKER'
+#!/bin/bash
+case "${1:-}" in
+  ps) cat "${FAKE_DOCKER_NAMES:?}" ;;
+  inspect) cat "${FAKE_DOCKER_INSPECT:?}" ;;
+  *) exit 1 ;;
+esac
+FAKEDOCKER
+chmod +x "$work/fake-docker"
+printf 'supabase_db_x\nsupabase_kong_x\nsupabase_auth_x\nsupabase_rest_x\n' > "$work/docker-names"
+
+# ㉙a 不一致（auth／db 7 天前重啟過，kong／rest 是 7 天前那批）→ 人類段印差值＋旗標行給整組重啟指令
+{
+  printf '/supabase_kong_x 2026-09-06T01:00:00.000000000Z\n'
+  printf '/supabase_rest_x 2026-09-06T01:00:01.000000000Z\n'
+  printf '/supabase_db_x 2026-09-13T01:00:00.000000000Z\n'
+  printf '/supabase_auth_x 2026-09-13T01:00:05.000000000Z\n'
+} > "$work/docker-inspect-skew"
+out29a="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙a 人類段印出容器數與最大差（7 天＝10080 分）' "$out29a" '容器 4 個，啟動時間最大差 10080 分（最舊 supabase_kong_x／最新 supabase_auth_x；門檻 60 分）'
+brief29a="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉙a 旗標行點名「容器啟動時間不一致」' "$brief29a" '[Supabase 容器] ⚠ 容器啟動時間不一致（最舊 supabase_kong_x 與最新 supabase_auth_x 差 10080 分 > 60）'
+has   '㉙a 旗標行給的是 lock 內整組重啟指令（不是單獨重啟某台）' "$brief29a" 'bash scripts/ops/supabase-lock.sh -- supabase stop 之後 bash scripts/ops/supabase-lock.sh -- supabase start'
+json29a="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>&1)"
+jq_ok '㉙a --json supabase_containers＝4' "$json29a" '.supabase_containers == 4'
+jq_ok '㉙a --json supabase_start_skew_minutes＝10080' "$json29a" '.supabase_start_skew_minutes == 10080'
+
+# ㉙b 一致（同一次 start，差 30 秒）→ 人類段照印，但不掛旗標（負向控制：門檻真的有在生效）
+{
+  printf '/supabase_kong_x 2026-09-13T01:00:00.000000000Z\n'
+  printf '/supabase_rest_x 2026-09-13T01:00:10.000000000Z\n'
+  printf '/supabase_db_x 2026-09-13T01:00:20.000000000Z\n'
+  printf '/supabase_auth_x 2026-09-13T01:00:30.000000000Z\n'
+} > "$work/docker-inspect-ok"
+brief29b="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-ok" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉙b 啟動時間一致 → 不掛旗標' "$brief29b" '[Supabase 容器]'
+out29b="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-ok" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙b 人類段仍印出差值（0 分）供人判讀' "$out29b" '容器 4 個，啟動時間最大差 0 分'
+
+# ㉙c 門檻可調：同一份 30 秒差的資料把門檻降到 0 分就必須轉紅（mutation——證明 ㉙b 的綠是門檻擋下來的，
+#     不是這段程式碼根本沒在比）
+brief29c="$(PATROL_SUPABASE_SKEW_MIN=0 PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-ok" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉙c 門檻 0 分：30 秒差不足 1 分鐘，仍不掛旗標（整數分鐘判定）' "$brief29c" '[Supabase 容器]'
+brief29c2="$(PATROL_SUPABASE_SKEW_MIN=0 PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉙c 門檻 0 分＋7 天差 → 照樣掛旗標（門檻參數真的有接線）' "$brief29c2" '差 10080 分 > 0'
+
+# ㉙d 沒有 supabase 容器在跑 → 靜默略過（fail-open，不當異常）；docker 不在同理
+out29d="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙d 無容器 → 人類段註明，不掛旗標' "$out29d" '（無執行中的 supabase_* 容器）'
+brief29d="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉙d 無容器 → 不掛旗標' "$brief29d" '[Supabase 容器]'
+out29e="$(PATROL_DOCKER="$work/no-such-docker-binary" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙e docker 未安裝 → 註明略過（fail-open）' "$out29e" '（docker 未安裝，略過）'
+out29f="$(PATROL_SUPABASE_SKEW_MIN=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+rc_is '㉙f PATROL_SUPABASE_SKEW_MIN 非整數 → exit 2（fail closed，同既有 PATROL_* 參數慣例）' 2 "$?" "$out29f"
+has   '㉙f 錯誤訊息點名參數名' "$out29f" 'PATROL_SUPABASE_SKEW_MIN 須為整數分鐘'
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
