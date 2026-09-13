@@ -29,6 +29,8 @@
 #   5. `supabase-lock.sh --hold "<票號> qa-e2e <情境>" --max-minutes 25`——整段 UI 操作期間其他 worktree 的
 #      db reset 排隊（LS-159／LS-170）；呼叫者已經持有（同 worktree，`--hold` 回專屬 exit 3）就沿用、不重複 hold、
 #      收工也不代釋放——判 exit code，不比對人類訊息（R1 N2）。
+#   5b. PostgREST 授權快取探針（LS-264）：在 hold 內以 service_role 打一次 `GET /rest/v1/profiles`，
+#      非 2xx 就發一次 `notify pgrst, 'reload schema'` 再探一次；仍非 2xx 才 exit 2（見該段註解）。
 #   6. `xcodebuild test -only-testing:LittleSproutUITests/QASmokeTests`，環境以 TEST_RUNNER_LS_QA_* 交給
 #      runner（xcodebuild 剝前綴），UI test 再經 launchEnvironment 注入 app（SupabaseClientFactory.qaOverride，DEBUG）。
 #   7. 證據：`.claude/evidence/<票號>/qa-e2e/<情境>-<時間>/`——xcodebuild.log、result.xcresult、
@@ -97,6 +99,7 @@ done
 env_value() { printf '%s\n' "$status" | sed -n "s/^$1=//p" | head -1 | tr -d '"'; }
 api_url=$(env_value API_URL)
 anon_key=$(env_value ANON_KEY)
+service_key=$(env_value SERVICE_ROLE_KEY)   # LS-264：PostgREST 授權快取探針用（本機 stack 的固定 demo 金鑰，執行期讀取、不進 repo）
 mailpit=${LS_QA_MAILPIT:-$(env_value MAILPIT_URL)}
 [ -n "$mailpit" ] || mailpit=http://127.0.0.1:54324
 if [ -z "$api_url" ] || [ -z "$anon_key" ]; then
@@ -162,6 +165,60 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 130' INT   # 同 supabase-lock.sh：訊號轉成帶碼的 exit，EXIT trap 一定跑到（釋放 hold、關自己 boot 的模擬器）
 trap 'exit 143' TERM
+
+# ---- 5b. PostgREST 授權快取自癒（LS-264；來源 LS-96 池項 `2ce0014f`(a)）----
+# LS-260 實測：登入後 app 打的第一個 `GET /rest/v1/app_settings` 連兩次回 401
+# `{"code":"42501","message":"permission denied for table …"}`（**決定性**，不是偶發），
+# 在 hold 內 `supabase db reset` 之後才通過。根因是 PostgREST 把 schema 與**角色權限**快取在
+# 記憶體裡：db 容器被重建／角色與 grant 被重新建立之後，rest 這邊的快取還是舊的，於是任何角色
+# 都拿 42501。`notify pgrst, 'reload schema'` 就是 PostgREST 官方的重載通道，比 reset 便宜得多
+# （也不會洗掉別人的測試資料）。
+#
+# 與票文的差異（reviewer 請覆核）：票文寫「登入後首個 REST 401 自動重試」——app 的那次請求發生在
+# XCUITest 行程內，腳本攔不到。這裡改成**開跑前先探一次**（已在 hold 內，探完才 xcodebuild）：
+# 同一個故障用同一帖藥，而且是在 app 撞上之前就修好，比事後重試更早止血；探測失敗仍 fail loud。
+# 探針用 service_role 打 `profiles`（本機健康時實測 200）——`app_settings` 不能當探針：它只 grant
+# 給 `authenticated`，健康狀態下 anon／service_role 本來就拿 42501，分不出好壞。
+# 沒有 SERVICE_ROLE_KEY（舊版 CLI／status 欄位改名）就略過探測、不擋（fail-soft）。
+rest_probe() { http_code -H "apikey: ${service_key}" -H "Authorization: Bearer ${service_key}" "${api_url}/rest/v1/profiles?select=id&limit=1"; }
+pgrst_reload() {   # 在 hold 內對 db 發 NOTIFY；印用到的通道（同 supabase/tests/run.sh 的「連線方式」慣例，LS-204）
+  local sql="notify pgrst, 'reload schema'" c
+  if command -v psql >/dev/null 2>&1; then
+    pgrst_channel="host psql → ${SUPABASE_DB_HOST:-127.0.0.1}:${SUPABASE_DB_PORT:-54322}/postgres"
+    PGPASSWORD="${PGPASSWORD:-postgres}" psql -h "${SUPABASE_DB_HOST:-127.0.0.1}" -p "${SUPABASE_DB_PORT:-54322}" \
+      -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q -c "$sql" >/dev/null 2>&1
+    return $?
+  fi
+  c=$(docker ps --filter name=supabase_db --format '{{.Names}}' 2>/dev/null | head -1)
+  [ -n "$c" ] || { pgrst_channel="（找不到 psql，也找不到 supabase_db 容器）"; return 1; }
+  pgrst_channel="docker exec ${c} psql"
+  docker exec "$c" psql -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q -c "$sql" >/dev/null 2>&1
+}
+pgrst_channel=
+if [ -z "$service_key" ]; then
+  echo "⚠ qa-e2e：supabase status 沒有 SERVICE_ROLE_KEY——略過 PostgREST 授權快取探測（LS-264）" >&2
+else
+  code=$(rest_probe)
+  case "$code" in
+    # 健康也印一行：不印的話「探針有沒有真的跑過」在 log 裡看不出來，handoff 也引用不到（LS-211）
+    200|206) echo "→ qa-e2e：REST 授權快取探針 HTTP ${code}（健康，未發 notify，LS-264）" ;;
+    *)
+      echo "→ qa-e2e：REST 探針回 HTTP ${code}（健康時為 200）——PostgREST 授權快取疑似過期（LS-260 同型），在 hold 內發一次 notify pgrst, 'reload schema' 後重試"
+      if ! pgrst_reload; then
+        echo "✗ qa-e2e：notify pgrst 失敗（通道：${pgrst_channel:-?}）——無法自癒，請在 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"（LS-264）" >&2
+        exit 2
+      fi
+      sleep 3
+      code=$(rest_probe)
+      case "$code" in
+        200|206) echo "→ qa-e2e：reload schema 後 REST 探針回 HTTP ${code}，已自癒（通道：${pgrst_channel}）" ;;
+        *)
+          echo "✗ qa-e2e：reload schema（通道：${pgrst_channel}）後 REST 探針仍回 HTTP ${code}——不是快取過期就是探針那張表的 grant 變了（探針＝service_role 讀 public.profiles）。請在 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"；仍不行就 bash scripts/ops/supabase-lock.sh -- supabase db reset（LS-264）" >&2
+          exit 2 ;;
+      esac
+      ;;
+  esac
+fi
 
 # ---- 6. 跑 ----
 stamp=$(date +%Y%m%d-%H%M%S)

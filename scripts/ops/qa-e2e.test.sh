@@ -26,6 +26,8 @@ cat > "$bin/supabase" <<'STUB'
 #!/bin/bash
 case "${FAKE_SUPABASE_MODE:-ok}" in
   ok) printf 'ANON_KEY="fake-anon"\nAPI_URL="http://127.0.0.1:54321"\nMAILPIT_URL="http://127.0.0.1:54324"\nSERVICE_ROLE_KEY="fake-service"\n' ;;
+  # LS-264：舊版 CLI／欄位改名的形狀——有 API_URL／ANON_KEY 但沒有 SERVICE_ROLE_KEY，探針該整段略過
+  nokey) printf 'ANON_KEY="fake-anon"\nAPI_URL="http://127.0.0.1:54321"\nMAILPIT_URL="http://127.0.0.1:54324"\n' ;;
   empty) ;;
   down) echo "failed to inspect container health" >&2; exit 1 ;;
 esac
@@ -37,8 +39,22 @@ url=; for a in "$@"; do case "$a" in http*) url=$a ;; esac; done
 case "$url" in
   */api/v1/info) [ "${FAKE_CURL_MAILPIT:-200}" = none ] || printf '%s' "${FAKE_CURL_MAILPIT:-200}" ;;
   */auth/v1/health) printf '%s' "${FAKE_CURL_AUTH:-200}" ;;
+  # LS-264：PostgREST 授權快取探針。FAKE_CURL_REST 可給逗號分隔序列（第 n 次呼叫取第 n 個，
+  # 用完沿用最後一個），用來模擬「第一次 401、reload 後 200」這種兩段式情境。
+  */rest/v1/*)
+    seq=${FAKE_CURL_REST:-200}
+    c=$(cat "$FAKE_WORK/rest-calls" 2>/dev/null || echo 0); c=$((c + 1)); printf '%s' "$c" > "$FAKE_WORK/rest-calls"
+    old=$IFS; IFS=,; set -- $seq; IFS=$old
+    [ "$c" -le $# ] || c=$#
+    eval "printf '%s' \"\${$c}\"" ;;
   *) printf '000' ;;
 esac
+STUB
+# LS-264：psql stub——記錄 notify 呼叫；FAKE_PSQL_RC 模擬失敗
+cat > "$bin/psql" <<'STUB'
+#!/bin/bash
+touch "$FAKE_WORK/INVOKED-psql"; echo "psql $*" >> "$FAKE_WORK/calls.log"
+exit "${FAKE_PSQL_RC:-0}"
 STUB
 # xcrun：預設（dumb）一律 exit 99；FAKE_XCRUN_MODE=sim 時扮演一台專屬機 LS-321-iPhone17Pro（狀態 FAKE_SIM_STATE）
 cat > "$bin/xcrun" <<'STUB'
@@ -110,7 +126,7 @@ no_tools() {   # 斷言 xcrun／xcodebuild／docker 都沒被叫到
   [ "$bad" -eq 0 ] && ok "${name}：未實跑 xcrun／xcodebuild／docker"
   reset_logs
 }
-reset_logs() { rm -f "$work"/INVOKED-* "$work/calls.log" "$work/lock.log"; : > "$work/calls.log"; : > "$work/lock.log"; }
+reset_logs() { rm -f "$work"/INVOKED-* "$work/calls.log" "$work/lock.log" "$work/rest-calls"; : > "$work/calls.log"; : > "$work/lock.log"; }
 log_has()   { if grep -qF -- "$3" "$work/$2"; then ok "$1"; else echo "✗ ${1}（${2} 應含「${3}」）" >&2; sed 's/^/    /' "$work/$2" >&2; fail=1; fi; }
 log_hasnt() { if grep -qF -- "$3" "$work/$2"; then echo "✗ ${1}（${2} 不應含「${3}」）" >&2; sed 's/^/    /' "$work/$2" >&2; fail=1; else ok "$1"; fi; }
 reset_logs
@@ -205,6 +221,34 @@ out=$(FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" publish); got=$?
 expect 2 '⑥f publish 缺 fixture（假 repo 沒有 QA/Fixtures）→ exit 2、不碰 lock／xcodebuild' "$got" "$out" '缺 fixture'
 log_hasnt '⑥f 缺 fixture 不 --hold' lock.log 'lock --hold'
 [ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑥f 不該跑 xcodebuild" >&2; fail=1; } || ok '⑥f 缺 fixture 不碰 xcodebuild'
+reset_logs
+
+# ---- ⑦ PostgREST 授權快取自癒（LS-264；來源 LS-96 池項 `2ce0014f`(a)）----
+#      LS-260 實測：登入後首個 REST 請求連兩次 401 permission denied（決定性），reset 後才過。
+#      這裡驗「探針 200 就什麼都不做／非 2xx 就 notify 一次再探／仍非 2xx 就 fail loud 不燒 xcodebuild」。
+out=$(FAKE_CURL_REST=200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 0 '⑦a REST 探針 200 → 印健康那行、不發 notify、照跑' "$got" "$out" 'REST 授權快取探針 HTTP 200（健康，未發 notify' '通過'
+log_hasnt '⑦a 探針健康時不碰 psql' calls.log 'notify pgrst'
+reset_logs
+out=$(FAKE_CURL_REST=401,200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 0 '⑦b 探針 401 → notify pgrst reload schema → 再探 200 → 自癒後照跑' "$got" "$out" \
+  'REST 探針回 HTTP 401' '已自癒' '通過'
+log_has '⑦b notify 走 psql 通道並帶 reload schema' calls.log "notify pgrst, 'reload schema'"
+reset_logs
+out=$(FAKE_CURL_REST=401,401 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 2 '⑦c 探針 reload 後仍 401 → exit 2（fail loud），並指向 lock 內整組重啟' "$got" "$out" \
+  '仍回 HTTP 401' 'supabase stop && supabase start'
+[ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑦c 探針沒救回來不該燒 xcodebuild" >&2; fail=1; } || ok '⑦c 探針沒救回來不跑 xcodebuild'
+log_has '⑦c 仍釋放自己取得的 hold（trap EXIT）' lock.log 'lock --release'
+reset_logs
+out=$(FAKE_CURL_REST=401 FAKE_PSQL_RC=1 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 2 '⑦d notify 本身失敗 → exit 2、印出用到的通道' "$got" "$out" 'notify pgrst 失敗' 'host psql'
+[ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑦d notify 失敗不該燒 xcodebuild" >&2; fail=1; } || ok '⑦d notify 失敗不跑 xcodebuild'
+reset_logs
+# 負控：SERVICE_ROLE_KEY 缺席時整段略過（fail-soft，不因為舊版 CLI 就擋住 QA）
+out=$(FAKE_SUPABASE_MODE=nokey FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 0 '⑦e 無 SERVICE_ROLE_KEY → 略過探測、不擋（fail-soft）' "$got" "$out" '略過 PostgREST 授權快取探測' '通過'
+log_hasnt '⑦e 略過時不碰 psql' calls.log 'notify pgrst'
 reset_logs
 
 if [ "$fail" -ne 0 ]; then echo "✗ qa-e2e 自測失敗" >&2; exit 1; fi
