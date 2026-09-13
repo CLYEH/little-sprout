@@ -157261,13 +157261,7 @@
           "id": "ZnMBA",
           "name": "Device Row",
           "width": "fill_container",
-          "padding": [
-            0,
-            60,
-            0,
-            0
-          ],
-          "justifyContent": "end",
+          "justifyContent": "center",
           "children": [
             {
               "type": "frame",
@@ -158598,13 +158592,7 @@
           "id": "iXXXX",
           "name": "Device Row",
           "width": "fill_container",
-          "padding": [
-            0,
-            90,
-            0,
-            0
-          ],
-          "justifyContent": "end",
+          "justifyContent": "center",
           "children": [
             {
               "type": "frame",
