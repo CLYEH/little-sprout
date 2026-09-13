@@ -156972,7 +156972,7 @@
           "type": "frame",
           "id": "hUNFn",
           "layoutPosition": "absolute",
-          "x": 314,
+          "x": 110,
           "y": 2268,
           "name": "Print Stage",
           "width": 786,
@@ -158257,7 +158257,7 @@
           "type": "frame",
           "id": "D2juW",
           "layoutPosition": "absolute",
-          "x": 743,
+          "x": 296,
           "y": 1823,
           "name": "Print Stage",
           "width": 1229,
@@ -159417,7 +159417,7 @@
               "id": "MbNO4",
               "name": "H",
               "fill": "$print-ink",
-              "content": "BL-3 修正：02 板（R2 序號，今新序 04＝`ZRyXL`／`b59DUk`）換真實留言／愛心畫面＋用詞改回「愛心」",
+              "content": "BL-3 修正：02 板換真實留言／愛心畫面＋用詞改回「愛心」",
               "fontFamily": "Noto Sans TC",
               "fontSize": 22,
               "fontWeight": "700"
@@ -160945,7 +160945,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "相片來源（誠實揭露，匯出前置 blocker，待使用者 D10 裁決：自有照片／Codex 生圖／授權圖庫）。海報層三張家庭照＝design/*.png（wordmark-brand.md 明文「設計佔位圖，不是出貨資產」）：hero-grandma.png 用於 scpdc（新序 01-iPhone print=s1Kzm「Hero Print」）、ayJoy（01-iPad print=N3mjp6「Print Stage」，R4 已升級為比例沖印品 1229×913，見 R4 MJ-10/15 段——VR R3 指出這裡曾誤標成「01-iPad Hero Print」，容器其實是尚未升級的 Print Stage；R4 升級後這個節點名稱差異已不再是問題，但容器名稱本身仍叫「Print Stage」不是「Hero Print」，純粹是命名沿革，不影響尺寸與位置）；invite-grandma.png 用於 F92jh（新序 03-iPhone print=ay53J）、yzfCx（03-iPad print=ScEdE）；join-parents.png 用於 aD9EO（新序 04-iPhone print=hUNFn）、j5Bns（04-iPad print=D2juW）。demo 帳號種子（scripts/ops/review-demo-seed.sh 第 303 行起）灌的正是同一批圖，代表截圖內＋demo 帳號內都含佔位相片，同一套誠實原則涵蓋兩處，不是海報層獨有的問題。R3 三張複合截圖（child-ipad-v2.jpg 仍在用；comments-iphone-v2.jpg／comments-ipad-v2.jpg 已於 R4 被 v3 取代，見下方 R4 BL-8 段）額外含 go7f9／JbTfv 既有時間軸／寶貝管理畫面中的其他既有設計佔位照片（非本票新增，沿用既有畫面既有素材）；R4 新的 v3 兩張改用 vzYXz／MjRcr 的既有日記詳情內容組裝，同樣沿用既有素材、未新增照片。替換時機：匯出送 App Store 前——這是本輪匯出清單的前置 blocker（見下方匯出步驟段）。替換後需重跑：上列 6 個 Hero Photo 節點所在的 6 塊板（新序 01／03／04，iPhone＋iPad）；child-ipad-v2.jpg 若連 JbTfv 本身的照片也一併換過，需重新執行 R3 BL-7 的複合截圖流程。",
+                  "content": "相片來源（誠實揭露，匯出前置 blocker，待使用者 D10 裁決：自有照片／Codex 生圖／授權圖庫）。海報層三張家庭照＝design/*.png（wordmark-brand.md 明文「設計佔位圖，不是出貨資產」）：hero-grandma.png 用於 scpdc（新序 01-iPhone print=s1Kzm「Hero Print」）、ayJoy（01-iPad print=N3mjp6「Print Stage」，R4 已升級為比例沖印品 1229×913，見 R4 MJ-10/15 段——VR R3 指出這裡曾誤標成「01-iPad Hero Print」，容器其實是尚未升級的 Print Stage；R4 升級後這個節點名稱差異已不再是問題，但容器名稱本身仍叫「Print Stage」不是「Hero Print」，純粹是命名沿革，不影響尺寸與位置）；invite-grandma.png 用於 F92jh（新序 03-iPhone print=ay53J）、yzfCx（03-iPad print=ScEdE）；join-parents.png 用於 aD9EO（新序 04-iPhone print=hUNFn）、j5Bns（04-iPad print=D2juW）。demo 帳號種子（scripts/ops/review-demo-seed.sh 第 303 行起）灌的正是同一批圖，代表截圖內＋demo 帳號內都含佔位相片，同一套誠實原則涵蓋兩處，不是海報層獨有的問題。R3 三張複合截圖（child-ipad-v2.jpg 仍在用；comments-iphone-v2.jpg／comments-ipad-v2.jpg 已於 R4 被 v3 取代，見下方 R4 BL-8 段）額外含 go7f9／JbTfv 既有時間軸／寶貝管理畫面中的其他既有設計佔位照片（非本票新增，沿用既有畫面既有素材）；R4 新的 v3 兩張改用 vzYXz／MjRcr 的既有日記詳情內容組裝，同樣沿用既有素材、未新增照片。替換時機：匯出送 App Store 前——這是本輪匯出清單的前置 blocker（見下方匯出步驟段）。替換後需重跑：上列 6 個 Hero Photo 節點所在的 6 塊板（新序 01／03／04，iPhone＋iPad）；child-ipad-v2.jpg 若連 JbTfv 本身的照片也一併換過，需重新執行 R3 BL-7 的複合截圖流程。R7 訂正（1b 裁決）：使用者 09-13 13:29 裁決 D10＝Codex 生圖（核可頁 8051b44e），置換工作另開 LS-247 執行、不在本票範圍；本票稿面上列 6 個 Hero Photo 節點本輪未換圖，仍為 LS-46 設計佔位圖，上述誠實揭露與匯出前置 blocker 維持有效直到 LS-247 完成置換。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -161789,7 +161789,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "R4 建立、R5 逐板複驗未破壞的既有規則（非本輪新增，記錄供後續參考）：六個沖印品實例（s1Kzm／ay53J／hUNFn／N3mjp6／ScEdE／D2juW）左緣探出裝置框的比例固定為 0.196×印品寬（iPhone 154pt／iPad 241pt），與板寬比例 59.5%（iPhone 786／1320、iPad 1229／2064）共同構成六板逐欄相同、零例外的構圖公式。R5 的 MJ-20／MJ-21 皆未改動印品幾何本身，僅改動印品「以外」的版面（padding-top／字級），此規則在 head 上維持不變（corner_anchor.mismatch=0、ref_hits=24，見 r5／r6 收據）。",
+                  "content": "R4 建立、R5 逐板複驗未破壞的既有規則（非本輪新增，記錄供後續參考）：六個沖印品實例（s1Kzm／ay53J／hUNFn／N3mjp6／ScEdE／D2juW）左緣探出裝置框的比例固定為 0.196×印品寬（iPhone 154pt／iPad 241pt），與板寬比例 59.5%（iPhone 786／1320、iPad 1229／2064）共同構成六板逐欄相同、零例外的構圖公式。R5 的 MJ-20／MJ-21 皆未改動印品幾何本身，僅改動印品「以外」的版面（padding-top／字級），此規則在 head 上維持不變（corner_anchor.mismatch=0、ref_hits=24，見 r5／r6 收據）。R8 訂正：R7 的 MJ-15（ZnMBA／iXXXX 改真置中）曾一度打斷本規則（ZRyXL／b59DUk 兩板 peek 分別變為 −50／−206），R8 已修正 hUNFn.x／D2juW.x 恢復零例外，見「R8 修訂重點」段。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -161851,7 +161851,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "ZRyXL（iPhone 04）Device Row ZnMBA 原 justifyContent:\"end\"＋padding[0,60,0,0]（左468/右60）、b59DUk（iPad 04）Device Row iXXXX 原[0,90,0,0]（左984/右90）——與 03 板 Bm7Lx／BnjqP 用 alignItems:center 直接置中的作法不同調，VR R5 指出兩板皆需處理（不只 b59DUk 一塊）。改為 ZnMBA／iXXXX 皆 padding[0,0,0,0]＋justifyContent:\"center\"，讓 Device Frame 在 Device Row 內置中，與 Bm7Lx／BnjqP 同一套邏輯。標語節點（KCL1o／j8jMxH）y／尺寸、六個 Print Stage 絕對錨點（iPhone y=2268／iPad y=1823）、0.196 peek 規則皆未觸碰。R7 用展開快照複驗左右空白：iPhone（JfAXu in ZnMBA）264.00／264.00（1320−792=528，左右各半）、iPad（nly6c in iXXXX）537.00／537.00（2064−990=1074，左右各半），逐位元對稱。",
+                  "content": "ZRyXL（iPhone 04）Device Row ZnMBA 原 justifyContent:\"end\"＋padding[0,60,0,0]（左468/右60）、b59DUk（iPad 04）Device Row iXXXX 原[0,90,0,0]（左984/右90）——與 03 板 Bm7Lx／BnjqP 用 alignItems:center 直接置中的作法不同調，VR R5 指出兩板皆需處理（不只 b59DUk 一塊）。改為 ZnMBA／iXXXX 皆 padding[0,0,0,0]＋justifyContent:\"center\"，讓 Device Frame 在 Device Row 內置中，與 Bm7Lx／BnjqP 同一套邏輯。標語節點（KCL1o／j8jMxH）y／尺寸、六個 Print Stage 絕對錨點（iPhone y=2268／iPad y=1823）、0.196 peek 規則皆未觸碰。R7 用展開快照複驗左右空白：iPhone（JfAXu in ZnMBA）264.00／264.00（1320−792=528，左右各半）、iPad（nly6c in iXXXX）537.00／537.00（2064−990=1074，左右各半），逐位元對稱。R8 訂正：上述「0.196 peek 規則皆未觸碰」不成立——ZnMBA／iXXXX 改為置中後，Device Frame 絕對 x 隨之改變（iPhone 264、iPad 537），但六個 Print Stage 的 x（含 hUNFn／D2juW）原本是配合舊 justifyContent:\"end\"＋padding 版面手算出的絕對值，未同步調整，導致 ZRyXL peek 變為 −50、b59DUk 變為 −206。已修正 hUNFn.x 314→110、D2juW.x 743→296（y 不動），六板 peek 複驗回到 iPhone 154.00／iPad 241.00，零例外，見下方「R8 修訂重點」段。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -162068,6 +162068,140 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "Notes SWAza（iPad 板清單）「02 相簿詳情…標語升級為 157pt」與實際節點 jU9lS.fontSize=156 不符（R4 四捨五入誤差 1pt，R5 已訂正節點值但 SWAza 文字未同步）。已將 SWAza 該處「157pt」訂正為「156pt」，並在段末追加訂正說明。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "bxMcn",
+          "name": "R8 修訂重點",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "VmaCM",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R8 修訂重點（BL-1／BL-2／MbNO4，取代／補充 R7 對應描述）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ahoFv",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dRBvz",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "qLKo4",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "head `0023614` 的 Notes `H7782`（D10 相片來源揭露段）少了 R7 已寫入 live Pencil 但未成功落地的「R7 訂正（1b 裁決）」段落（提及 `LS-247`）——R7 兩次 `pen-land.sh` 落地嘗試中，第一次落地使用的 `--marker \"KSBVb\"` 只證明「KSBVb 這批內容已落地」，但 H7782 的編輯發生在 KSBVb 之後，marker 選得太早、沒有鑑別力覆蓋到最後一筆編輯，導致 autosave 尚未追上 H7782 那筆變更就通過了落地。本輪已重跑 `pen-land.sh` 把 backup 領先落地檔的內容（含 H7782 的 R7 訂正段）落地，落地後 `grep -c \"LS-247\" design/littlesprout.pen` ≥1 確認，`python3 scripts/gates/design_tree_hash.py` 確認 committed 與 backup 無殘差。教訓：land 的 `--marker` 必須取「本輪最後一筆編輯」引入的獨特字串，不能取中途某個較早的 checkpoint。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PKsvh",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "iY6qB",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "W3pDuO",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R7 的 MJ-15（`ZnMBA`／`iXXXX` 由 `justifyContent:\"end\"`＋padding 改為置中）打斷了 0.196 peek 規則：`ZRyXL`（iPhone 04）peek 由 154 變 −50、`b59DUk`（iPad 04）peek 由 241 變 −206——原本的 `end`＋padding 60/90 版面其實同時承擔了兩個功能（裝置框橫向對齊＋讓 Print Stage 的絕對 x 與裝置框維持固定 peek 距離），R7 只修正了第一個功能，未同步調整六個 Print Stage 裡這兩個的 x。已修正：`hUNFn.x` 314→110、`D2juW.x` 743→296（y 不動，其餘四個 Print Stage 未變動）。六板 peek 展開快照複驗：`c2yk3s`＝214−60＝154.00、`Bm7Lx`＝294−140＝154.00、`ZRyXL`＝264−110＝154.00、`Vn4TL`＝462−221＝241.00、`BnjqP`＝562−321＝241.00、`b59DUk`＝537−296＝241.00——iPhone 三板皆 154.00、iPad 三板皆 241.00，零例外，與 R4 建立時的規則一致。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SMNJx",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "HUEKf",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MbNO4",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "n8J3H",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R7 收據記錄的 `row_overflow`（Notes `H73kPC` 內 `MbNO4`「H」標題節點因 MN-29 補序號標記單行溢出容器 270pt，VR R7 判為可接受、記入 LS-96 `0f32da5b`）本輪順手修掉：`MbNO4` 標題還原為原短句「BL-3 修正：02 板換真實留言／愛心畫面＋用詞改回「愛心」」，序號沿革說明已完整保留在緊接其後的 `AxRNB`（同一個 `X5WyV` 區塊內、同段落）——標題維持與整份 Notes 文件裡其餘同型 H 標題節點一致的單行 auto 寬慣例，不需要為這一格改用 `fixed-width`。row_overflow 複驗回到 0。LS-96 `0f32da5b` 該筆記錄的問題狀態改為「本輪已修」，池項本身保留作沿革記錄不刪除。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
