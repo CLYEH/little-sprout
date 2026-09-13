@@ -764,6 +764,14 @@ EOF
       # `sim_rt_mismatch`，只進 `SIM_LINES`（一律印出的細項）與下面的彙總數字，不影響「有無異常」。
       sim_rt_mismatch=$((sim_rt_mismatch + 1))
       SIM_LINES="${SIM_LINES}  ⚠ runtime ${sim_name}（${sim_udid}）iOS ${sim_rt} ≠ 釘住版 iOS ${sim_pinned_os}（提示不擋，不計入待清）"$'\n'
+      # LS-260（LS-96 池項 `1b7a0d5d`；orchestrator 09-14 裁決）：**在飛票**（worktree 仍在）的專屬機
+      # 另外進旗標行——LS-246 的一小時就花在「CI 紅、本機重現不出」，而 runtime 差異只寫在一律印出的
+      # 細項裡，orchestrator 派工時看不到。語意仍是「提示不擋」（patrol 本來就恆 exit 0、這裡也不計入
+      # `sim_flagged` 待清），只是讓它出現在 `--brief` 的 flag 清單上、附上該怎麼用這個訊號。
+      # worktree 已不在的（殘機）不掛：那台的可行動原因是 cleanup，runtime 差沒有任何人會去處理。
+      if [ -n "$sim_ticket" ] && ticket_has_worktree "$sim_ticket"; then
+        add_flag "[專屬模擬器 ${sim_name}] runtime iOS ${sim_rt} ≠ 釘住版 iOS ${sim_pinned_os}（${sim_ticket} 在飛中）——提示不擋；若 CI 紅而本機重現不出，先懷疑 runtime 差（LS-260）"
+      fi
     fi
     if [ -n "$sim_ticket" ]; then
       sim_why=; sim_reason=

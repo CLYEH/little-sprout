@@ -283,7 +283,9 @@ u13=$(id_of "$out13")
 if [ -n "$u13" ] && [ "$u13" != SHARED-UDID ]; then echo "✓ ⑬ 釘住版可用 → 建新專屬機（${u13}）"; else echo "✗ ⑬ 應建新機，實得 ${u13}" >&2; cat "$work/err13" >&2; fail=1; fi
 has '⑬ db 記到新建的 LS-111-iPhone17Pro 且 runtime＝釘住版 26.5（非 header_os 26.0）' "$(cat "$db13")" "$(printf 'LS-111-iPhone17Pro\t%s\t26.5' "$u13")"
 
-# ⑭ 釘住版本機沒裝（只有 26.0）→ fail-open：印 ⚠（含釘住版與現有版本）、退回 header_os 建機
+# ⑭ 釘住版本機沒裝（只有 26.0）→ fail-open：印 ⚠（含釘住版與現有版本）、用同 major 最接近的 26.0 建機
+#    （LS-260：同 major 只有 26.0 一個候選，結果與 LS-205 舊行為（退回 header_os 26.0）相同，
+#    差在 ⚠ 文案改成 orchestrator 09-14 裁決的形狀——見 ㉓～㉕ 對「同 major 有更好候選」的驗證）
 db14="$work/db14"
 printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\n' > "$db14"
 mkdir -p "$work/wt/LS-112"
@@ -292,7 +294,7 @@ out14=$(STUB_DB="$db14" run_in "$work/wt/LS-112" 2>"$work/err14")
 u14=$(id_of "$out14")
 if [ -n "$u14" ] && [ "$u14" != SHARED-UDID ]; then echo "✓ ⑭ 釘住版不可用仍建新機（fail-open，${u14}）"; else echo "✗ ⑭ 應建新機，實得 ${u14}" >&2; cat "$work/err14" >&2; fail=1; fi
 has '⑭ db 記到新建的 LS-112-iPhone17Pro 且 runtime 退回 header_os 26.0（非釘住版 26.2）' "$(cat "$db14")" "$(printf 'LS-112-iPhone17Pro\t%s\t26.0' "$u14")"
-has '⑭ stderr 印出 fail-open 警告（本機無釘住版、退回、CI 版本）' "$(cat "$work/err14")" '本機無 iOS 26.2 runtime（有：26.0），改用 iOS 26.0；CI 為 iOS 26.2'
+has '⑭ stderr 印出 fail-open 警告（LS-260 裁決文案：實際版 ≠ 釘住版、本機無釘住版、須揭露）' "$(cat "$work/err14")" 'runtime 26.0 ≠ 釘住 26.2（本機無 26.2；派工單／handoff 須揭露）'
 
 # ⑮ 既有專屬機（精確名稱命中）runtime ≠ 釘住版 → 印警告、不重建、UDID 不變
 db15="$work/db15"
@@ -422,6 +424,42 @@ else
   echo "✗ ㉒ mutant 未如預期翻轉（實得 exit ${rcm19}）" >&2; printf '%s\n' "$outm19" | sed 's/^/    /' >&2; fail=1
 fi
 : > "$STUB19_PGREP_OUT"; : > "$STUB19_PS_DB"
+
+# ---- ㉓～㉕（LS-260，LS-96 池項 `1b7a0d5d`）：釘住版沒裝時改挑「同 major 最接近」的可用 runtime，
+#      不再直接退回 header_os（＝清單第一台原廠機的分節，實務上常是最舊的那個——LS-246 就是本機
+#      26.0 對 CI 26.2）。㉔ 是 ㉓ 的反向控制（沒有 ≥ 釘住版的候選時取同 major 最新），㉕ 是邊界
+#      （同 major 一個都沒有 → 仍退回 header_os，維持 LS-83 行為）。
+
+# ㉓ 釘住 26.2 沒裝、同 major 有 26.0 與 26.5 → 建在 26.5（≥ 釘住版裡最接近），不是 header_os 26.0
+db23="$work/db23"
+printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\n' > "$db23"
+mkdir -p "$work/wt/LS-120"
+printf '26.2\n' > "$work/wt/LS-120/.ios-runtime"
+out23=$(STUB_DB="$db23" STUB_RUNTIMES=26.0,26.5 run_in "$work/wt/LS-120" 2>"$work/err23")
+u23=$(id_of "$out23")
+has '㉓ 建在同 major 最接近的 26.5（不是 header_os 26.0）' "$(cat "$db23")" "$(printf 'LS-120-iPhone17Pro\t%s\t26.5' "$u23")"
+has '㉓ stderr 印出 LS-260 裁決文案（實際版／釘住版／須揭露）' "$(cat "$work/err23")" 'runtime 26.5 ≠ 釘住 26.2（本機無 26.2；派工單／handoff 須揭露）'
+has '㉓ stderr 列出本機可用 runtime 清單' "$(cat "$work/err23")" '本機可用 iOS：26.0、26.5'
+
+# ㉔ 釘住 26.5 沒裝、同 major 只有比它舊的 26.0／26.2 → 取同 major 最新的 26.2（不是 header_os 26.0）
+db24="$work/db24"
+printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\n' > "$db24"
+mkdir -p "$work/wt/LS-121"
+printf '26.5\n' > "$work/wt/LS-121/.ios-runtime"
+out24=$(STUB_DB="$db24" STUB_RUNTIMES=26.0,26.2 run_in "$work/wt/LS-121" 2>"$work/err24")
+u24=$(id_of "$out24")
+has '㉔ 沒有 ≥ 釘住版的候選 → 取同 major 最新的 26.2（不是 header_os 26.0）' "$(cat "$db24")" "$(printf 'LS-121-iPhone17Pro\t%s\t26.2' "$u24")"
+has '㉔ stderr 同樣印出差異' "$(cat "$work/err24")" 'runtime 26.2 ≠ 釘住 26.5（本機無 26.5；派工單／handoff 須揭露）'
+
+# ㉕ 邊界：釘住 27.0、本機同 major 一台都沒有（只有 26.x）→ 退回 header_os 26.0（LS-83 原行為）＋仍印 ⚠
+db25="$work/db25"
+printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\n' > "$db25"
+mkdir -p "$work/wt/LS-122"
+printf '27.0\n' > "$work/wt/LS-122/.ios-runtime"
+out25=$(STUB_DB="$db25" STUB_RUNTIMES=26.0,26.5 run_in "$work/wt/LS-122" 2>"$work/err25")
+u25=$(id_of "$out25")
+has '㉕ 同 major 無候選 → 退回 header_os 26.0' "$(cat "$db25")" "$(printf 'LS-122-iPhone17Pro\t%s\t26.0' "$u25")"
+has '㉕ stderr 仍印出差異（不靜默）' "$(cat "$work/err25")" 'runtime 26.0 ≠ 釘住 27.0（本機無 27.0；派工單／handoff 須揭露）'
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ detect-simulator／simulator-lock 自測通過"

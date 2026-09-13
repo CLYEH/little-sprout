@@ -670,7 +670,11 @@ has   '⑭b runtime 不符釘住版標「⚠ runtime」細項（提示不擋，�
 hasnt '⑭b runtime 相符的那台不標' "$outRT" 'LS-201-iPhoneAir（SIM-RT-MATCH）iOS'
 briefRT="$(SIMCTL_LIST_JSON="$rt_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '⑭b（M1 訂正）--brief 表頭獨立顯示「runtime 不一致 1」（釘住版字樣）' "$briefRT" '· runtime 不一致 1（釘住 iOS 26.5，提示不擋） ·'
-hasnt '⑭b（M1 訂正）runtime 不一致不進 add_flag／flag 清單（不是「[專屬模擬器 …] runtime …」這種 flag 行）' "$briefRT" '[專屬模擬器 LS-201-iPhone17Pro] runtime'
+# LS-260（LS-96 池項 1b7a0d5d；orchestrator 09-14 裁決）：LS-205 M1 當時一律不掛 add_flag，現在改成
+# 「在飛票（worktree 仍在）的專屬機掛旗標，殘機不掛」——LS-201 的 worktree 上面剛用 `wt -b` 建好，
+# 屬在飛票，必須出現在 flag 清單；⑭c 的 LS-9999 沒有 worktree，那邊的 `hasnt` 仍然成立（見下）。
+has   '⑭b（LS-260）在飛票的專屬機 runtime 不一致進 flag 清單，附「先懷疑 runtime 差」處置' "$briefRT" '[專屬模擬器 LS-201-iPhone17Pro] runtime iOS 26.0 ≠ 釘住版 iOS 26.5（LS-201 在飛中）——提示不擋；若 CI 紅而本機重現不出，先懷疑 runtime 差（LS-260）'
+hasnt '⑭b（LS-260）runtime 相符的那台不掛旗標' "$briefRT" '[專屬模擬器 LS-201-iPhoneAir] runtime'
 has   '⑭b（M1 訂正）--brief 表頭「專屬模擬器待清」不受 runtime 不一致影響，仍是 0' "$briefRT" '專屬模擬器待清 0（殘機 0）'
 
 # ---- ⑭c（merge-review R1 M1 具體重現案例）：同一台機器**同時**是「殘機」（無 worktree）又「runtime
