@@ -32,8 +32,10 @@ extension TapTargetGateHarness {
         }
     }
 
-    /// `CommentDeleteConfirmationSheet` 目前沒有任何真實產品入口（留言 UI 本體／內容操作表都
-    /// 尚未實作，見該檔文件註解）——這是唯一能觸達它的入口，同上一個 host 的理由。
+    /// LS-245（池 `38a3c74b`）訂正：`CommentDeleteConfirmationSheet` 現在已有真實產品入口
+    /// （LS-218 `CommentsSheetView+Actions.swift` 留言列操作表的「刪除」，見該檔文件註解）——
+    /// 這支 host 是不依賴留言清單種子資料、gate／UITest 可直接覆蓋的固定入口，同
+    /// `deleteDiaryConfirmationHost` 的既有作法。
     @MainActor
     static var deleteCommentConfirmationHost: some View {
         DismissableSheetHost {
