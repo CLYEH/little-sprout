@@ -189,6 +189,68 @@ final class AlbumsStoreAttachUploadedMediaTests: XCTestCase {
         )
     }
 
+    /// LS-246（票文範圍 3，池 `430a34a1` n1）：`nextSortOrder` 的 `catch` 原本只看「現在是不是
+    /// 還有什麼 `.pending`」就清掉（`if case .pending = ...`），沒有核對是不是「自己剛才在等的
+    /// 那一筆」——晚到才處理失敗的等待者，可能把「另一個交錯呼叫端剛建立、還在飛行中」的全新
+    /// 查詢誤清成 `nil`，代價是那個呼叫端的重試又白白多打一次查詢（無正確性影響，見
+    /// merge-review `5be48b1e` n1；比對 pendingID 修正）。
+    ///
+    /// 重現手法：三個呼叫端（A 觸發、B／C 兩個等待者）共用第一次查詢並失敗——A 的 catch
+    /// 核對 id 相符後清空＋拋錯；B／C 各自的 catch 發現已清空，各自遞迴重試 `nextSortOrder`。
+    /// 若沒有 id 比對，B／C 兩邊的遞迴呼叫會互相清掉對方剛建立的第二輪 `.pending`，導致總共
+    /// 打了 3 次 `fetchMaxSortOrder`（1 次失敗＋2 次各自獨立的第二輪查詢）；修正後 B／C
+    /// 應該正確共用同一個第二輪查詢（single-flight），總共只打 2 次。
+    func test_attachUploadedMedia_failedQueryCatch_onlyClearsOwnPendingTask_notNewerOneFromAnotherCaller() async {
+        let stub = StubAlbumsAPIClient()
+        let albumID = UUID()
+        let gate1 = AsyncGate()
+        let gate2 = AsyncGate()
+        let invocationCount = OSAllocatedUnfairLock(initialState: 0)
+        stub.setFetchMaxSortOrderHandler { _ in
+            let index = invocationCount.withLock { count -> Int in
+                count += 1
+                return count
+            }
+            if index == 1 {
+                await gate1.wait()
+                throw AppError.network(message: "offline")
+            }
+            await gate2.wait()
+            return 9
+        }
+        let store = AlbumsStore(apiClient: stub)
+        let mediaA = UUID()
+        let mediaB = UUID()
+        let mediaC = UUID()
+
+        let taskA = Task { await store.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: mediaA) }
+        // 等到觸發查詢的那一次卡在網路 await——program-order 保證 B／C 加入的是同一個
+        // in-flight task（同既有 F2 測試寫法）。
+        await gate1.waitForWaiters(count: 1)
+        let taskB = Task { await store.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: mediaB) }
+        let taskC = Task { await store.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: mediaC) }
+        await Task.yield()
+        await Task.yield()
+
+        await gate1.open()
+        // 至少一次「第二輪」查詢已經卡住——不管 B／C 是否正確共用同一筆（修正後）或各自獨立
+        // 觸發（未修正），這裡只需要等到第一個到達，`gate2.open()` 之後 `isOpen` 恆為 true，
+        // 晚到的第二個（若有）呼叫 `wait()` 會立即通過，不需要另外處理。
+        await gate2.waitForWaiters(count: 1)
+        await gate2.open()
+        _ = await (taskA.value, taskB.value, taskC.value)
+
+        XCTAssertEqual(
+            stub.fetchMaxSortOrderCalls.count, 2,
+            "B／C 應該共用同一個第二輪查詢（single-flight）——只清自己那筆 pending，不該互相清掉對方剛建立的查詢"
+        )
+        let attachedMediaIDs = Set(stub.attachMediaCalls.map(\.mediaID))
+        XCTAssertTrue(
+            attachedMediaIDs.contains(mediaB) && attachedMediaIDs.contains(mediaC),
+            "B／C 的重試都應該成功——一個晚到的失敗處理不該波及另一個交錯呼叫端剛建立的查詢"
+        )
+    }
+
     // MARK: - sortOrder cursor TTL（LS-237 R2，merge-review R1 F3 minor）
 
     /// 池 `4fafaa19`(a) 的 `.ready` cursor 原本整個 app session 不失效——同一個 session 若
@@ -238,5 +300,42 @@ final class AlbumsStoreAttachUploadedMediaTests: XCTestCase {
 
         XCTAssertEqual(stub.fetchMaxSortOrderCalls.count, 1, "TTL 之內應該沿用快取，不重新查詢")
         XCTAssertEqual(stub.attachMediaCalls.map(\.sortOrder), [5, 6])
+    }
+
+    /// LS-246（票文範圍 4，池 `430a34a1` n2）：TTL 改以「取得時刻」判過期，不是「使用時刻」
+    /// ——見 `AlbumsStore.sortOrderCursorIdleTTL` 文件註解。這支測試的三次呼叫刻意讓「每次
+    /// 相鄰使用的間隔」都在 60 秒 TTL 之內（0→40 秒、40→70 秒），但「距離第一次取得基底值」
+    /// 累計已經超過 60 秒（70 秒）——若 TTL 是「使用時刻」判過期（每次用到就把時間戳延後），
+    /// 這裡會一直沿用第一次查到的基底，永遠不會重新查詢；「取得時刻」判過期則會在累計超過
+    /// 60 秒的第三次呼叫時正確重新查詢。
+    func test_attachUploadedMedia_cursorTTL_measuredFromAcquisitionTime_notFromEachUse() async {
+        let stub = StubAlbumsAPIClient()
+        let albumID = UUID()
+        let invocationCount = OSAllocatedUnfairLock(initialState: 0)
+        stub.setFetchMaxSortOrderHandler { _ in
+            invocationCount.withLock { count -> Int in
+                count += 1
+                // 第一次查到基底 4；第二次（累計超過 TTL 後重新查）代表期間別的裝置加了更多
+                // 照片，基底變成 20——不是延續第一次的快取值。
+                return count == 1 ? 4 : 20
+            }
+        }
+        var tick: TimeInterval = 0
+        let store = AlbumsStore(apiClient: stub, now: { Date(timeIntervalSince1970: tick) })
+
+        await store.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: UUID())
+        tick += 40 // 距離取得時刻 40 秒，< 60 秒 TTL，沿用快取
+        await store.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: UUID())
+        tick += 30 // 距離上一次使用只有 30 秒，但距離取得時刻已經累計 70 秒，> 60 秒 TTL
+        await store.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: UUID())
+
+        XCTAssertEqual(
+            stub.fetchMaxSortOrderCalls.count, 2,
+            "距離『取得基底值』已經過 70 秒（>60 秒 TTL），即使距離上一次『使用』只有 30 秒，也該視為過期重新查詢"
+        )
+        XCTAssertEqual(
+            stub.attachMediaCalls.map(\.sortOrder), [5, 6, 21],
+            "第三次應該重新查到基底 20、接續 21——不是沿用第一次快取（延續下去會是 7）"
+        )
     }
 }
