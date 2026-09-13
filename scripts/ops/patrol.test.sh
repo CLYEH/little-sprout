@@ -1756,6 +1756,54 @@ sed 's#^/supabase_analytics_x 2026-09-13.*#/supabase_analytics_x 2026-09-06T01:0
 brief29b3="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-reset-partial" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '㉙b3 最新一批是 reset 群組的真子集（analytics 沒跟著重啟）→ 轉紅' "$brief29b3" '[Supabase 容器] ⚠ 容器啟動時間不一致'
 
+# ㉙b4（LS-264 m2；來源 LS-96 池項 `fda1b06c`）：**慢 reset**——db 先重啟，migrations 跑 3 分鐘，其餘
+#     四台才跟上，群內跨度 187 秒 > 固定的 `SUPA_BATCH_SEC=120`。固定秒數分批會把 db 切出去 → 最新一批
+#     ≠ reset 群組 → 偽陽性旗標（LS-260 實測餘裕只剩 14 秒，本來就撐不住）。改讀 hold.log 的取鎖時間
+#     當視窗起點後，整段都在同一個視窗內 → 形狀仍判 db-reset。
+#     時區：hold.log 行首是本地時間、容器 StartedAt 是 UTC，patrol 自己算時差；自測用 TZ=UTC0 讓兩者
+#     直接對齊，夾具才能寫死時間字串。
+{
+  printf '/supabase_kong_x 2026-09-06T01:00:00.000000000Z\n'
+  printf '/supabase_rest_x 2026-09-06T01:00:01.000000000Z\n'
+  printf '/supabase_db_x 2026-09-13T01:00:00.000000000Z\n'
+  printf '/supabase_auth_x 2026-09-13T01:03:00.000000000Z\n'
+  printf '/supabase_storage_x 2026-09-13T01:03:05.000000000Z\n'
+  printf '/supabase_realtime_x 2026-09-13T01:03:06.000000000Z\n'
+  printf '/supabase_analytics_x 2026-09-13T01:03:07.000000000Z\n'
+} > "$work/docker-inspect-slow-reset"
+# 先證明「沒有 hold.log 可讀」時這份資料真的會偽陽性（負向控制：綠不是因為門檻沒接線）
+rm -f "$SUPABASE_LOCK_DIR.hold.log"
+brief29b4n="$(TZ=UTC0 PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-slow-reset" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉙b4 無 hold.log → 退回固定 120 秒分批，慢 reset 被判成不一致（偽陽性，正是 m2 要解的）' "$brief29b4n" '[Supabase 容器] ⚠ 容器啟動時間不一致'
+printf '2026-09-13 00:59:55 取得 pid=1 worktree=/x branch=b cmd=supabase\n' > "$SUPABASE_LOCK_DIR.hold.log"
+brief29b4="$(TZ=UTC0 PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-slow-reset" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉙b4 hold.log 取鎖時間當視窗起點 → 慢 reset 不再偽陽性' "$brief29b4" '[Supabase 容器]'
+out29b4="$(TZ=UTC0 PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-slow-reset" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙b4 人類段判成例行 db reset' "$out29b4" '形狀符合例行 supabase db reset，不掛旗標'
+# ㉙b5（m2 的上界）：取鎖時間離最新容器超過 `PATROL_SUPABASE_SKEW_MIN` 分就不採用——否則一條很舊的
+#     取鎖行會把所有容器併成一批（uniform），把 LS-246 那種真事故洗掉。把門檻壓到 1 分鐘，同一份
+#     hold.log 就該失效、退回固定秒數分批 → 偽陽性回來（證明上界真的有接線）。
+brief29b5="$(TZ=UTC0 PATROL_SUPABASE_SKEW_MIN=1 PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-slow-reset" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉙b5 取鎖時間離最新容器 > 門檻分鐘 → 不採用該視窗（上界有接線）' "$brief29b5" '[Supabase 容器] ⚠ 容器啟動時間不一致'
+rm -f "$SUPABASE_LOCK_DIR.hold.log"
+
+# ㉙b6（LS-264 m3；同池項）：形狀是例行 db reset，但**非 reset 群組內部**有落單重啟（kong 比 rest 晚
+#     5 天才被單獨重啟）。R2 版本對 db-reset 形狀整段靜音，這種差會被完全遮蔽；改成群組內各自再比一次
+#     之後，跨群組那段差仍被排除、群組內這段差照樣掛旗標。
+{
+  printf '/supabase_kong_x 2026-09-06T01:00:00.000000000Z\n'
+  printf '/supabase_rest_x 2026-09-01T01:00:00.000000000Z\n'
+  printf '/supabase_db_x 2026-09-13T01:00:00.000000000Z\n'
+  printf '/supabase_auth_x 2026-09-13T01:00:05.000000000Z\n'
+  printf '/supabase_storage_x 2026-09-13T01:00:06.000000000Z\n'
+  printf '/supabase_realtime_x 2026-09-13T01:00:07.000000000Z\n'
+  printf '/supabase_analytics_x 2026-09-13T01:00:08.000000000Z\n'
+} > "$work/docker-inspect-reset-straggler"
+brief29b6="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-reset-straggler" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉙b6 例行 reset 形狀下，非 reset 群組內落單重啟仍轉紅（m3：只排除跨群組差）' "$brief29b6" '[Supabase 容器] ⚠ 群組內啟動時間不一致（形狀符合例行 db reset，但同一群組內最舊 supabase_rest_x 與最新 supabase_kong_x 差 7200 分 > 60）'
+out29b6="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-reset-straggler" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙b6 人類段不再宣稱「不掛旗標」' "$out29b6" '形狀符合例行 supabase db reset，但群組內最大差 7200 分 > 60'
+
 # ㉙c 門檻可調：同一份 30 秒差的資料把門檻降到 0 分就必須轉紅（mutation——證明 ㉙b 的綠是門檻擋下來的，
 #     不是這段程式碼根本沒在比）
 brief29c="$(PATROL_SUPABASE_SKEW_MIN=0 PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-ok" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
@@ -1840,7 +1888,18 @@ reds_env() {   # 共用環境；$1＝快取目錄，其餘沿用預設
   PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" PATROL_REDS_CACHE="$1" "${@:2}"
 }
 cache30="$work/reds-cache-a"; rm -rf "$cache30"
-out30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+# LS-264（來源 LS-96 池項 `fda1b06c` m1）：這一輪原本沿用預設 `PATROL_REDS_MAX_FETCH=5`，而夾具共 7 個
+#      run——最後兩個 cancelled（34746493293／34746091627）根本沒被下載、沒被分類，㉚c2 的負向控制因此
+#      是空跑（斷言恆過，程式怎麼改都不會紅）。改帶 10，並**先斷言本輪真的打了 7 次 `run view`**：㉚c2
+#      之後才是在驗「分類邏輯把它們擋掉」，而不是「它們這輪沒被看過」。
+calls30a="$work/gh-calls-a"; : > "$calls30a"
+out30="$(PATROL_REDS_MAX_FETCH=10 FAKE_GH_CALLS="$calls30a" reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+if [ "$(grep -c 'run view' "$calls30a")" -eq 7 ]; then
+  echo "✓ ㉚c0 夾具 7 個 run 的 log 本輪全部下載過（㉚c2 的負向控制不是空跑）"
+else
+  echo "✗ ㉚c0 本輪只下載 $(grep -c 'run view' "$calls30a") 個 run（應為 7）——㉚c2 會變成空跑" >&2
+  fail=1
+fi
 has   '㉚a 同一支測試在 2 個 run 紅 → ⚠ 同類紅 2 次（測試名）' "$out30" "⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b 升票"
 hasnt '㉚b 只紅一次的測試不標（負向控制：門檻真的是 ≥2）' "$out30" 'testOnlyOnce'
 has   '㉚c 兩個真 timeout run（34760803165 2454 s／34764441663 1988 s）併成 timeout 型別計數' "$out30" '⚠ 同類紅 2 次（timeout（cancelled、無 failure／timed_out step、cancelled job ≥30 分——撞 job timeout-minutes））'
