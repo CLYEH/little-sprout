@@ -40,6 +40,9 @@ final class SettingsViewIPadTests: XCTestCase {
         )
         let backButton = app.navigationBars.buttons["BackButton"]
         XCTAssertTrue(backButton.waitForExistence(timeout: 5), "push 後應該出現系統返回鈕", file: file, line: line)
+        // LS-263（池 `4815eca0`，merge-review R2 新 minor）：本檔唯一沒有 hittable 同步點的
+        // tap——補齊同全檔其餘 tap 前的慣例。
+        XCTAssertTrue(backButton.waitForHittable(timeout: 5), "返回鈕應該可點擊", file: file, line: line)
 
         backButton.tap()
 
