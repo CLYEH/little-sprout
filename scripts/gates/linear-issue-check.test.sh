@@ -195,21 +195,30 @@ rm -rf "$work"
 # 刪掉／matcher 打錯／忘了 || exit 2，此前 CI 全綠、hook 已死也不會被抓到。
 # ============================================================
 settings_json="${root}/.claude/settings.json"
-wiring_cmd=$(jq -r '.hooks.PreToolUse[] | select(.matcher == "mcp__linear__save_issue") | .hooks[] | select(.type == "command") | .command' "$settings_json" 2>/dev/null)
-if [ -n "$wiring_cmd" ]; then
-  echo '✓ F1①：settings.json 的 PreToolUse matcher 含 mcp__linear__save_issue 且接著 command'
+# LS-260（LS-96 池項 `c67b65ca` i4）：jq 缺席時原本硬紅（`wiring_cmd` 空 → F1① 判失敗），把「本機沒裝
+# jq」誤報成「settings.json 接線壞掉」。沿 LS-256 對 `fork-guard.test.sh` 立下的慣例改成 SKIP＋計數。
+real_jq=$(bash -c 'type -P jq' 2>/dev/null || true)
+wiring_skipped=0
+if [ -n "$real_jq" ]; then
+  wiring_cmd=$("$real_jq" -r '.hooks.PreToolUse[] | select(.matcher == "mcp__linear__save_issue") | .hooks[] | select(.type == "command") | .command' "$settings_json" 2>/dev/null)
+  if [ -n "$wiring_cmd" ]; then
+    echo '✓ F1①：settings.json 的 PreToolUse matcher 含 mcp__linear__save_issue 且接著 command'
+  else
+    echo "✗ F1①：settings.json 找不到 matcher=mcp__linear__save_issue 的 PreToolUse command" >&2
+    fail=1
+  fi
+  case "$wiring_cmd" in
+    *linear-issue-check.sh*) echo '✓ F1②：command 確實呼叫 linear-issue-check.sh' ;;
+    *) echo "✗ F1②：command 沒有呼叫 linear-issue-check.sh（實得：${wiring_cmd}）" >&2; fail=1 ;;
+  esac
+  case "$wiring_cmd" in
+    *'|| exit 2'*) echo '✓ F1③：command 帶 || exit 2（腳本缺席／執行失敗時 wiring 層仍 fail-closed）' ;;
+    *) echo "✗ F1③：command 沒有 || exit 2（實得：${wiring_cmd}）" >&2; fail=1 ;;
+  esac
 else
-  echo "✗ F1①：settings.json 找不到 matcher=mcp__linear__save_issue 的 PreToolUse command" >&2
-  fail=1
+  echo "SKIP 3 組（無 jq）：F1①–F1③ settings.json PreToolUse 接線斷言未跑"
+  wiring_skipped=3
 fi
-case "$wiring_cmd" in
-  *linear-issue-check.sh*) echo '✓ F1②：command 確實呼叫 linear-issue-check.sh' ;;
-  *) echo "✗ F1②：command 沒有呼叫 linear-issue-check.sh（實得：${wiring_cmd}）" >&2; fail=1 ;;
-esac
-case "$wiring_cmd" in
-  *'|| exit 2'*) echo '✓ F1③：command 帶 || exit 2（腳本缺席／執行失敗時 wiring 層仍 fail-closed）' ;;
-  *) echo "✗ F1③：command 沒有 || exit 2（實得：${wiring_cmd}）" >&2; fail=1 ;;
-esac
 
 # ============================================================
 # LS-96 待辦池 F2：trap 移除 mutation 負控（同 pretool.test.sh F5 慣例）——把 trap 那行拿掉
@@ -296,12 +305,22 @@ awk '
 chmod +x "$norm_mut_dir/no-norm.sh"
 
 cycle_zero_payload=$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"Ready","cycle":0}')
+# LS-260（LS-96 池項 `c67b65ca` i4 同族，本輪實測補上）：這條負控只在 **jq 解析路徑**成立——
+# CYCLE-NORM 區塊當初就是為了修「jq 的 `// ""` 把數字 0 當真值、python3 的 `or ""` 當假值」這個
+# 兩路徑判決不一致（見 linear-issue-check.sh 檔頭「cycle 正規化」段）。拿掉正規化之後，jq 路徑會
+# 放行 cycle=0（負控成立），python3 備援路徑本來就會擋（負控不成立、但那不是回歸）。jq 缺席時改
+# 印 SKIP＋計數，不再硬紅——本檔在 LS-260 之前無 jq 就是紅在這裡與 F1①–③ 兩處。
+if [ -z "$real_jq" ]; then
+  echo "SKIP 1 組（無 jq）：F6 cycle 正規化 mutation 負控只在 jq 解析路徑成立，未跑"
+  wiring_skipped=$((wiring_skipped + 1))
+else
 out=$(printf '%s' "$cycle_zero_payload" | bash "$norm_mut_dir/no-norm.sh" 2>&1); got=$?
 if [ "$got" -eq 0 ] && [ -z "$out" ]; then
   echo '✓ F6：拿掉 cycle 正規化區塊後，cycle=0 改判 allow（證明正規化區塊確實是原因）'
 else
   echo "✗ F6：拿掉正規化區塊後仍非 allow（實得 exit ${got}：${out}）" >&2
   fail=1
+fi
 fi
 if grep -q "CYCLE-NORM-START" "$norm_mut_dir/no-norm.sh"; then
   echo "✗ F6：mutant 腳本裡仍看得到 CYCLE-NORM 區塊（awk 拿掉失敗，負控本身無效）" >&2
@@ -373,4 +392,8 @@ if [ "$fail" -ne 0 ]; then
   echo "FAIL：linear-issue-check.test.sh 有斷言未通過" >&2
   exit 1
 fi
-echo "PASS：linear-issue-check.test.sh 全數通過"
+if [ "${wiring_skipped:-0}" -gt 0 ]; then
+  echo "PASS：linear-issue-check.test.sh 全數通過（SKIP ${wiring_skipped} 組（無 jq））"
+else
+  echo "PASS：linear-issue-check.test.sh 全數通過"
+fi

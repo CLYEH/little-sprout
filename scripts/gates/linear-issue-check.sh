@@ -1,6 +1,14 @@
 #!/bin/bash
 # scripts/gates/linear-issue-check.sh（LS-77／LS-79）
 #
+# **PreToolUse fail-closed gate**（LS-260，LS-96 池項 `c67b65ca` i5——`scripts/hooks/README.md`
+# 「新增 hook 檢查表」第 1 條要求極性寫在檔頭第一句，本檔此前只把 fail-closed 寫在下面第 40 行左右，
+# 讀的人得翻到一半才知道這支壞掉時會擋還是會放）：`.claude/settings.json` 的 wiring 接 `|| exit 2`
+# （腳本壞掉＝deny），腳本內部亦 fail-closed（空 stdin／JSON 解析失敗／意外中止 → deny，見下）。
+# 選 fail-closed 的理由：這支擋的是**開票結構**，漏擋的票會少 project／milestone／lane／cycle，
+# 之後要靠人工回頭補（且 §5-b 的 lane WIP 與 cycle 對帳全都建立在這些欄位上）；而擋錯的代價只是
+# orchestrator 多送一次 `save_issue`，不會讓產線停擺——與 `fork-guard.sh` 的取捨正好相反。
+#
 # PreToolUse gate：matcher `mcp__linear__save_issue`（.claude/settings.json），讀 stdin 的
 # hook JSON（`tool_input` 即 save_issue 呼叫的參數）。規則 A-D 只在**建票**（tool_input 無
 # `id`）時生效，對應 docs/COLLABORATION.md §3「開票結構」／§5-b（LS-75 lane 標籤）：

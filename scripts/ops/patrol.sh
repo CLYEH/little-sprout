@@ -502,6 +502,284 @@ if [ -n "$lock_path" ] && [ -d "${lock_path}.waiters" ]; then
   fi
 fi
 
+# ---- Supabase 容器啟動時間一致性（LS-260；來源 LS-96 池項 `b2947c3f`）----
+# LS-246 QA R2：本機 `supabase_auth`／`supabase_db` 曾被單獨重啟、`rest`／`kong` 沒有（uptime 差 7 天），
+# OTP 登入後 `GET /rest/v1/profiles` 回 401、App 卡「伺服器發生問題」，QA 以整組 `supabase stop` →
+# `supabase start` 排除，多花一段排障。查過 repo 內沒有任何腳本會在**本機**單獨重啟單一容器——唯一會動
+# 容器生命週期的 `scripts/ci/db-reset-retry.sh` 走 `supabase stop --no-backup` → `supabase db start`，
+# 後者本身就是部分啟動（只起 db 群），但它以 `CI` 守門（`:26-28`）、本機呼叫在碰 supabase 之前就
+# exit 2，只有明示逃生口 `LS_DB_RESET_RETRY_ALLOW_LOCAL=1` 能繞過（**R2 i1 訂正**：R1 這段寫成
+# 「repo 內沒有腳本會單獨重啟」，略過了「CI 路徑本身是部分啟動、只是已被守門」這半句）。本機的來源
+# 因此只可能是人工或外部操作。源頭修不了，就讓巡檢看得見結果（判準見下方 R2 M2 的分批比形狀）。docker 不在／沒有 supabase 容器在跑 → 靜默略過（fail-open，同 gh
+# 未安裝的處理；巡檢本身不該因為沒開容器就變成「有異常」）。`docker ps`／`docker inspect` 是唯讀操作，
+# 不受 supabase-lock 規約管轄（LS-183 明列的例外）。PATROL_DOCKER 可換假身供自測。
+DOCKER_BIN=${PATROL_DOCKER:-docker}
+SUPA_SKEW_MIN=${PATROL_SUPABASE_SKEW_MIN:-60}
+case "$SUPA_SKEW_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_SUPABASE_SKEW_MIN 須為整數分鐘（得到「${SUPA_SKEW_MIN}」）" >&2; exit 2 ;; esac
+# LS-260 R2 M2：StartedAt 相差幾秒內算「同一次操作」（分批用）——`supabase db reset` 重啟那幾台
+# 實測落在數秒到數十秒內，120 秒有足夠餘裕又遠小於 60 分門檻。
+SUPA_BATCH_SEC=${PATROL_SUPABASE_BATCH_SEC:-120}
+case "$SUPA_BATCH_SEC" in ''|*[!0-9]*) echo "✗ patrol：PATROL_SUPABASE_BATCH_SEC 須為整數秒（得到「${SUPA_BATCH_SEC}」）" >&2; exit 2 ;; esac
+SUPA_LINE=; supa_containers=0; supa_skew_m=0; supa_shape=
+if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
+  supa_names=$("$DOCKER_BIN" ps --filter name=supabase_ --format '{{.Names}}' 2>/dev/null | tr '\n' ' ')
+  case "${supa_names// /}" in
+    '') SUPA_LINE="（無執行中的 supabase_* 容器）" ;;
+    *)
+      # 一次 inspect 全部容器（每台各 fork 一次 docker 在 SessionStart hook 的 30s 預算下太貴）。
+      # StartedAt 是 RFC3339 UTC；awk 內自己換算 epoch（days-from-civil），不碰 date -j／date -d
+      # ——同本檔開頭「時間一律用 epoch、不碰 date -j／date -d」的既有理由（GNU／BSD 旗標不同）。
+      # 精度到秒（小數秒丟棄）：門檻本來就是分鐘級。
+      #
+      # LS-260 R2 M2（merge-review R1 `870bf760`）：R1 版本對「全部容器的 max-min」設門檻，會被
+      # **例行的 `supabase db reset`** 觸發——reset 只重建／重啟 `db`／`auth`／`storage`／`realtime`
+      # ／`analytics`，`rest`／`kong`／`studio`／`vector`／`pg_meta`／`edge_runtime` 維持原 uptime。
+      # stack 常連續跑數小時到數天，任何 uptime > 門檻之後的 reset 都會掛旗標，並建議做一次有破壞性
+      # 的整組重啟（LS-184：起停共用容器會打斷持有者）。R1 handoff 申報的「84 分真實事故」經 reviewer
+      # 比對 `docker inspect .Created`／`.State.StartedAt` 與 hold.log 時間，正是本票實作者自己那次
+      # reset 造成的**偽陽性**（訂正見 R2 handoff）。
+      #
+      # 改判準（reviewer 建議 (a)＋(b) 的合成）：先把容器依 StartedAt **分批**（相差 ≤
+      # `SUPA_BATCH_SEC` 秒視為同一次操作），再看**最新那一批的成員集合**：
+      #   - 集合 == 現存的 reset 群組（`db`／`auth`／`storage`／`realtime`／`analytics` 取交集）
+      #     → 判為例行 `supabase db reset`，**不掛旗標**（human 段註明形狀）。
+      #   - 否則才看 `rest`／`kong`／`db`／`auth` 這四台之間的 skew（LS-246 症狀的直接關係人：
+      #     auth／db 重啟而 rest／kong 沒有 → REST 401），超過門檻才掛旗標。
+      # 為什麼不改讀 hold.log：`supabase-lock.sh` 只記 `cmd=` 的**第一個字**（實際內容是
+      # `cmd=supabase`），reset／stop／start／status 在 log 裡長得一模一樣，時間比對無從分辨。
+      supa_parsed=$("$DOCKER_BIN" inspect --format '{{.Name}} {{.State.StartedAt}}' $supa_names 2>/dev/null | awk -v batch="${SUPA_BATCH_SEC}" '
+        function epoch(s,   a, y, m, d, H, M, S, yy, era, yoe, doy, doe, days) {
+          split(s, a, /[-T:]/)
+          y = a[1] + 0; m = a[2] + 0; d = a[3] + 0; H = a[4] + 0; M = a[5] + 0; S = int(a[6])
+          if (y < 1970 || m < 1 || m > 12) return -1
+          yy = y - (m <= 2 ? 1 : 0)
+          era = int((yy >= 0 ? yy : yy - 399) / 400)
+          yoe = yy - era * 400
+          doy = int((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5) + d - 1
+          doe = yoe * 365 + int(yoe / 4) - int(yoe / 100) + doy
+          days = era * 146097 + doe - 719468
+          return days * 86400 + H * 3600 + M * 60 + S
+        }
+        # `supabase_<role>_<project>` → role；`edge_runtime`／`pg_meta` 會被切成 edge／pg，
+        # 但判準只用到 db／auth／storage／realtime／analytics／rest／kong，皆為單字 role。
+        function role(nm,   a) { split(nm, a, "_"); return a[2] }
+        BEGIN {
+          split("db auth storage realtime analytics", r, " ")
+          for (i in r) resetset[r[i]] = 1
+          split("rest kong db auth", f, " ")
+          for (i in f) focus[f[i]] = 1
+        }
+        NF >= 2 {
+          nm = $1; sub(/^\//, "", nm)
+          e = epoch($2)
+          if (e < 0) next
+          n++; names[n] = role(nm); epochs[n] = e; full[n] = nm
+          if (role(nm) in resetset) present_reset[role(nm)] = 1
+          if (role(nm) in focus) {
+            if (fmn == "" || e < fmn) { fmn = e; fmnn = nm }
+            if (fmx == "" || e > fmx) { fmx = e; fmxn = nm }
+          }
+        }
+        END {
+          if (n == 0) exit 0
+          # 最新一批：以最大 epoch 為錨，差 <= batch 秒的都算同一批
+          top = 0
+          for (i = 1; i <= n; i++) if (epochs[i] > top) top = epochs[i]
+          nb = 0
+          for (i = 1; i <= n; i++) if (top - epochs[i] <= batch) { nb++; batchset[names[i]] = 1 }
+          # 形狀判定：最新一批的成員集合是否恰好等於「現存的 reset 群組」
+          shape = "other"
+          same = 1
+          for (r2 in present_reset) if (!(r2 in batchset)) same = 0
+          for (b in batchset) if (!(b in present_reset)) same = 0
+          if (same && nb > 0 && nb < n) shape = "db-reset"
+          if (nb == n) shape = "uniform"
+          printf "%d\t%d\t%s\t%s\t%s\n", n, (fmx == "" ? 0 : fmx - fmn), (fmnn == "" ? "-" : fmnn), (fmxn == "" ? "-" : fmxn), shape
+        }
+      ')
+      if [ -n "$supa_parsed" ]; then
+        supa_containers=$(printf '%s' "$supa_parsed" | cut -f1)
+        supa_skew_m=$(( $(printf '%s' "$supa_parsed" | cut -f2) / 60 ))
+        supa_oldest=$(printf '%s' "$supa_parsed" | cut -f3)
+        supa_newest=$(printf '%s' "$supa_parsed" | cut -f4)
+        supa_shape=$(printf '%s' "$supa_parsed" | cut -f5)
+        case "$supa_shape" in
+          uniform)  supa_note="整組同一次啟動" ;;
+          db-reset) supa_note="最新一批＝db／auth／storage／realtime／analytics，形狀符合例行 supabase db reset，不掛旗標" ;;
+          *)        supa_note="最新一批不是 reset 群組" ;;
+        esac
+        SUPA_LINE="容器 ${supa_containers} 個，rest／kong／db／auth 之間最大差 ${supa_skew_m} 分（最舊 ${supa_oldest}／最新 ${supa_newest}；門檻 ${SUPA_SKEW_MIN} 分；${supa_note}）"
+        if [ "$supa_shape" != db-reset ] && [ "$supa_shape" != uniform ] && [ "$supa_skew_m" -gt "$SUPA_SKEW_MIN" ]; then
+          # LS-260 R2 m4：整組重啟包成**一次** lock（R1 拆成兩次獨立 lock，兩次之間別人可以合法取得
+          # lock 並看到整組是停的）；這個包法與 qa.md／`pretool.test.sh` H3b-s⑦ 認可的寫法一致。
+          add_flag "[Supabase 容器] ⚠ 容器啟動時間不一致（rest／kong／db／auth 之間最舊 ${supa_oldest} 與最新 ${supa_newest} 差 ${supa_skew_m} 分 > ${SUPA_SKEW_MIN}，且最新一批不是 db reset 的群組）——單獨重啟過的容器與其他容器不同步（LS-246 QA：auth／db 重啟、rest／kong 沒有 → REST 401、App 卡「伺服器發生問題」）。請在同一次 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"（LS-260）"
+        fi
+      else
+        SUPA_LINE="（docker inspect 讀不到 StartedAt，略過）"
+      fi
+      ;;
+  esac
+else
+  SUPA_LINE="（docker 未安裝，略過）"
+fi
+
+# ---- 近 N 日 CI 同類紅計數（LS-260；來源 LS-96 池項 `ec152d21`）----
+# §5-b 的「同類事故 ≥2 次升 High」此前靠 orchestrator 人工記憶計數：LS-253 是第 3 次 ci-ipad 同測試紅
+# 才開票、LS-257 是第 2 次 ci timeout 才開票，兩次都延遲。這裡把它機械化：近 `PATROL_REDS_DAYS` 天
+# （預設 7）conclusion 為 failure／cancelled 的 run，抽出「失敗的測試名」與「失敗型別」當簽章，同一個
+# 簽章出現在 ≥2 個 run 就掛旗標。
+#
+# 成本控制（這段會打網路，cron 每 26 分＋SessionStart hook 30s 預算都跑得到）：
+#   - `gh run list` 一次拿清單（含 conclusion），只對 conclusion=failure 的 run 下載失敗 job 的 log；
+#     conclusion=cancelled 的不下載（LS-257 那種「步驟全 success 卻 cancelled」＝撞 job timeout，型別
+#     本身就是簽章）。
+#   - **每個 run 的簽章只算一次並落盤快取**（`PATROL_REDS_CACHE`，預設 `$TMPDIR/patrol-reds-cache`）：
+#     已完成的 run 其失敗內容不會再變，穩態下每輪只需下載 0–2 個新 run 的 log。單輪新下載上限
+#     `PATROL_REDS_MAX_FETCH`（預設 5），超過的 run 這輪先不算、下一輪再補（寧可少報也不要拖垮巡檢）。
+#   - 快取檔超過 2×N 天自動清掉。
+# fail-soft：`--no-pr`（自測／離線）、gh 未安裝、`gh run list` 失敗（離線／未登入）一律只註記、不掛旗標
+# ——同本檔 PR 段對 gh 的既有處理，巡檢不該因為沒網路就變成「有異常」。
+GH_BIN=${PATROL_GH:-gh}
+REDS_DAYS=${PATROL_REDS_DAYS:-7}
+REDS_MAX_FETCH=${PATROL_REDS_MAX_FETCH:-5}
+REDS_CACHE=${PATROL_REDS_CACHE:-${TMPDIR:-/tmp}/patrol-reds-cache}
+# LS-260 R2 m1（merge-review R1）：快取以 run id 為 key、不帶簽章格式版本——簽章規則一改，舊檔
+# 照樣被讀進來。reviewer 實地重現過：用本 head 跑 patrol 時讀到更早草稿版寫下的快取，印出
+# 「⚠ 同類紅 10 次」的假警報（內容是現行程式碼根本不會產生的字串）。路徑加一段版本，簽章規則
+# 變更就把常數往上跳，舊批整批自然失效（也不必手動清 /tmp）。
+REDS_CACHE_VER=v2   # R2 M3 加了 class: 簽章，簽章集合變了 → 跳號讓 v1 快取整批失效
+# LS-260 R2 i3（merge-review R1）：乾淨快取那一輪 reviewer 實測 15.2 s（序列 `gh run view`，其中
+# `--log-failed` 會抓整包 log），而 SessionStart hook 的預算是 30 s，本段原本沒有任何時間上界（只有
+# 「筆數」上限）。加一個純 deadline 比對的時間預算：每次要打網路前先看時間，超過就這輪不再抓、下一輪
+# 再補（不 fork 背景看門狗——同本檔對 gh 的既有慣例，也避免多一個要回收的子程序）。
+REDS_BUDGET_SEC=${PATROL_REDS_BUDGET_SEC:-20}
+case "$REDS_BUDGET_SEC" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_BUDGET_SEC 須為整數秒（得到「${REDS_BUDGET_SEC}」）" >&2; exit 2 ;; esac
+# LS-260 R2 M1：cancelled job 跑滿幾分鐘才算「撞 job timeout-minutes」（見下方分類邏輯的實測分離度）
+REDS_TIMEOUT_MIN=${PATROL_REDS_TIMEOUT_MIN:-30}
+case "$REDS_DAYS" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_DAYS 須為整數天（得到「${REDS_DAYS}」）" >&2; exit 2 ;; esac
+case "$REDS_MAX_FETCH" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_MAX_FETCH 須為整數（得到「${REDS_MAX_FETCH}」）" >&2; exit 2 ;; esac
+case "$REDS_TIMEOUT_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_TIMEOUT_MIN 須為整數分鐘（得到「${REDS_TIMEOUT_MIN}」）" >&2; exit 2 ;; esac
+REDS_LINES=; reds_note=; J_REDS=; reds_flagged=0; reds_runs=0; reds_oldest=
+if [ "$DO_PR" -ne 1 ]; then
+  reds_note="略過（--no-pr）"
+elif ! command -v "$GH_BIN" >/dev/null 2>&1; then
+  reds_note="gh 未安裝，略過"
+else
+  # LS-260 R2 M3（merge-review R1）：R1 用 `--limit 40` 再由 jq 過濾 7 日——reviewer 實測那 40 筆
+  # 只涵蓋約 **19 小時**（近 7 日 failure／cancelled 共 63 個，40 筆內只有 13 個），人類段卻照樣
+  # 印「近 7 日 … 13 個」，數字不實；而票文要解的正是「同類紅間距常跨數十個 run」（實測近 7 日兩次
+  # `ci-ipad` 紅只有一次落在 40 筆窗內）。改成：`--created` 讓 GitHub 端就按日期過濾（成本仍是一次
+  # API 呼叫）＋ `--limit 200` 拉高上限；日期字串用 BSD／GNU 兩種寫法試，兩種都不行就不帶
+  # `--created`、退回純 `--limit 200`＋jq 過濾（fail-soft，不因為 date 旗標差異就整段停擺）。
+  # 另外把 `createdAt` 也取回來，人類段才印得出「實際涵蓋到哪一筆」，不再空口宣稱 7 日。
+  reds_since=$(date -u -v-"${REDS_DAYS}"d +%F 2>/dev/null) \
+    || reds_since=$(date -u -d "${REDS_DAYS} days ago" +%F 2>/dev/null) || reds_since=
+  reds_list=$(cd "$ROOT" && "$GH_BIN" run list --limit 200 ${reds_since:+--created ">=${reds_since}"} \
+    --json databaseId,headBranch,createdAt,conclusion \
+    --jq ".[] | select(.conclusion == \"failure\" or .conclusion == \"cancelled\") | select((.createdAt | fromdateiso8601) > (now - ${REDS_DAYS} * 86400)) | [.databaseId, .conclusion, .headBranch, .createdAt] | @tsv" 2>/dev/null)
+  if [ -z "$reds_list" ]; then
+    reds_note="近 ${REDS_DAYS} 日無 failure／cancelled 的 run（或 gh 查詢失敗／未登入，fail-soft 不擋）"
+  else
+    reds_cache_dir="${REDS_CACHE}/${REDS_CACHE_VER}"
+    mkdir -p "$reds_cache_dir" 2>/dev/null
+    find "$REDS_CACHE" -type f -mtime "+$((REDS_DAYS * 2))" -delete 2>/dev/null
+    reds_fetched=0; reds_sigs=; reds_budget_hit=0
+    reds_deadline=$(( $(date +%s) + REDS_BUDGET_SEC ))
+    while IFS=$'\t' read -r r_id r_concl r_branch r_created; do
+      [ -n "$r_id" ] || continue
+      reds_runs=$((reds_runs + 1))
+      # gh 回傳是新到舊，最後一筆即最舊；直接覆寫，不另外比對字串
+      [ -n "$r_created" ] && reds_oldest=$r_created
+      cache_f="${reds_cache_dir}/${r_id}"
+      if [ ! -f "$cache_f" ]; then
+        # 額度用完就先不算這個 run（不寫快取），下一輪再補——`cancelled` 那條雖然只查 JSON、比較便宜，
+        # 但同樣是一次網路往返，一併受額度管，巡檢的單輪成本才有上界。
+        [ "$reds_fetched" -ge "$REDS_MAX_FETCH" ] && continue
+        # i3：時間預算用完就跟筆數上限一樣「這輪先不算」，不寫快取、下一輪再補
+        if [ "$(date +%s)" -ge "$reds_deadline" ]; then reds_budget_hit=1; continue; fi
+        if [ "$r_concl" = cancelled ]; then
+          # cancelled 有兩種形狀，只有其中一種是事故：
+          #   (a) 撞 job `timeout-minutes`（LS-257 的真事故，要計數）；
+          #   (b) 被 `concurrency: cancel-in-progress` 取消的過期 run／人工取消——每次連續 push 都會
+          #       產生一個，計進去會變成一條永遠亮著的假警報。
+          #
+          # LS-260 R2 M1（merge-review R1 `870bf760`）：本段原本用「步驟全 success」判 (a)，那正是
+          # LS-257 R1 merge-review 已經**推翻**的形狀——`scripts/ops/promote-follow.sh:75-80` 檔頭寫明
+          # 「撞 timeout 那一刻正在跑的步驟會被 GitHub 記成 cancelled，這個更嚴格的條件反而漏掉票要
+          # 解決的主場景」。reviewer 對近 7 日 38 個 cancelled run 逐一實測：舊判準命中 **0/38**
+          # （timeout 簽章永遠產生不出來，項 4 對 LS-257 那類事故完全無效）。
+          #
+          # 改成兩條件並用：
+          #   1. 無任何 step 是 `failure`／`timed_out`——與 `promote-follow.sh` 的 `no_failure_steps()`
+          #      同一判準（Rule 6：兩個相衝突的判準取較新且經 review 修正的那個）。單獨用太鬆
+          #      （reviewer 實測 36/38），所以再加第 2 條。
+          #   2. 存在 `conclusion=cancelled` 的 job，其 `completedAt-startedAt` ≥
+          #      `PATROL_REDS_TIMEOUT_MIN`（預設 30 分）——真正撞 timeout 的 job 一定跑很久，
+          #      被 concurrency 取代的過期 run 通常幾十秒到十幾分鐘就被砍。
+          # 本機對近 7 日 cancelled run 實測的分離度（`<有無 failure step>／<最久 cancelled job 秒數>`）：
+          # 真 timeout 2454／2132／1988，concurrency 取消 1554／1321／1303／1187／1091／1002／571／
+          # 333／56，有 failure step 的 2 個（55／340）另被條件 1 擋掉——1800 秒把兩群切得很開。
+          # 判準用 `--json jobs`（純 JSON，比 `--log-failed` 下載整包 log 便宜得多），同樣進快取。
+          reds_fetched=$((reds_fetched + 1))
+          r_shape=$(cd "$ROOT" && "$GH_BIN" run view "$r_id" --json jobs --jq \
+            '[.jobs[].steps[]?.conclusion] as $sc | ([.jobs[] | select(.conclusion == "cancelled" and .startedAt != null and .completedAt != null) | ((.completedAt | fromdateiso8601) - (.startedAt | fromdateiso8601))] | max // 0) as $d | "\(if ($sc | any(. == "failure" or . == "timed_out")) then 1 else 0 end)\t\($d)"' 2>/dev/null)
+          r_hasfail=$(printf '%s' "$r_shape" | cut -f1); r_cansec=$(printf '%s' "$r_shape" | cut -f2)
+          case "${r_hasfail}|${r_cansec}" in
+            0\|*[!0-9]*|0\|) : > "$cache_f" ;;   # 秒數解析不出來（gh 失敗／欄位缺）→ 空簽章，不臆測
+            0\|*)
+              if [ "$r_cansec" -ge $((REDS_TIMEOUT_MIN * 60)) ]; then
+                printf 'timeout（cancelled、無 failure／timed_out step、cancelled job ≥%s 分——撞 job timeout-minutes）\n' "$REDS_TIMEOUT_MIN" > "$cache_f"
+              else
+                : > "$cache_f"                   # (b) 過期／人工取消：日常，不計數
+              fi
+              ;;
+            *) : > "$cache_f" ;;                 # 有 failure／timed_out step，或整段讀不到 → 不計數
+          esac
+        else
+          reds_fetched=$((reds_fetched + 1))
+          reds_log=$(cd "$ROOT" && "$GH_BIN" run view "$r_id" --log-failed 2>/dev/null)
+          reds_tests=$(printf '%s\n' "$reds_log" | grep -oE "Test Case '[^']+' failed" \
+            | sed -E "s/^Test Case '//; s/' failed\$//" | sort -u)
+          {
+            [ -n "$reds_tests" ] && printf '%s\n' "$reds_tests"
+            # LS-260 R2 M3 附帶（merge-review R1 informational）：簽章只用**測試方法名**時，同一個
+            # 測試類別的不同方法不會聚合——reviewer 實測近 7 日兩次 `ci-ipad` 紅正是
+            # `SettingsViewIPadTests` 的兩個不同方法，§5-b 的「同類」實務上是類別／根因層級。
+            # 方法名之外再記一條 `class:<模組.類別>`，兩種粒度各自計數（類別層級的門檻自然更容易到，
+            # 這正是要的：LS-253 那種「同一個測試檔反覆紅」會提早被看見）。
+            [ -n "$reds_tests" ] && printf '%s\n' "$reds_tests" \
+              | sed -nE 's/^-\[([^][[:space:]]+)[[:space:]].*\]$/class:\1/p' | sort -u
+            case "$reds_log" in
+              *"has exceeded the maximum execution time"*|*"timed out"*|*"Timed out"*) printf 'timeout（步驟逾時）\n' ;;
+            esac
+          } > "$cache_f"
+        fi
+      fi
+      # 同一個 run 內同名測試重複出現只算一次（`sort -u` 已在寫入時做過；cancelled 那條只有一行）
+      while IFS= read -r sig; do
+        [ -n "$sig" ] || continue
+        reds_sigs="${reds_sigs}${sig}"$'\n'
+      done < "$cache_f"
+    done <<EOF
+$reds_list
+EOF
+    if [ -n "$reds_sigs" ]; then
+      while IFS= read -r line; do
+        [ -n "$line" ] || continue
+        r_n=${line%%$'\t'*}; r_sig=${line#*$'\t'}
+        reds_flagged=$((reds_flagged + 1))
+        REDS_LINES="${REDS_LINES}  ⚠ 同類紅 ${r_n} 次（${r_sig}）→ 依 §5-b 升票"$'\n'
+        J_REDS="${J_REDS:+${J_REDS},}{\"signature\":$(json_str "$r_sig"),\"runs\":${r_n}}"
+        add_flag "[CI 同類紅] ⚠ 同類紅 ${r_n} 次（${r_sig}）→ 依 §5-b「同類事故 ≥2 次升 High」開票，別再靠人工記憶計數（LS-260）"
+      done <<EOF
+$(printf '%s' "$reds_sigs" | sort | uniq -c | awk '$1 >= 2 { n = $1; $1 = ""; sub(/^ +/, ""); printf "%d\t%s\n", n, $0 }' | sort -rn)
+EOF
+    fi
+    reds_budget_note=; [ "$reds_budget_hit" -eq 1 ] && reds_budget_note="；本輪時間預算 ${REDS_BUDGET_SEC} 秒用完，剩下的下一輪再算"
+    reds_note="近 ${REDS_DAYS} 日 failure／cancelled run ${reds_runs} 個（實際涵蓋到 ${reds_oldest:-?}；本輪新下載 log ${reds_fetched} 個，上限 ${REDS_MAX_FETCH}${reds_budget_note}；快取 ${reds_cache_dir}）"
+  fi
+fi
+
 # ---- Pencil 連線（LS-180）：有 design 分支 worktree（設計票在飛）時跑 scripts/ops/pen-status.sh——Pen 行程／目前路徑／
 #      MCP socket 探針一行；探針非 0（Pen 沒開／路徑讀不到／mcp-server 與 Pen 之間沒有 socket 連線）就 add_flag，指示
 #      orchestrator 派設計票前先請使用者在 Claude Code 執行 /mcp 重連 pencil。沒有 design worktree 不呼叫（探針會打
@@ -699,6 +977,14 @@ EOF
       # `sim_rt_mismatch`，只進 `SIM_LINES`（一律印出的細項）與下面的彙總數字，不影響「有無異常」。
       sim_rt_mismatch=$((sim_rt_mismatch + 1))
       SIM_LINES="${SIM_LINES}  ⚠ runtime ${sim_name}（${sim_udid}）iOS ${sim_rt} ≠ 釘住版 iOS ${sim_pinned_os}（提示不擋，不計入待清）"$'\n'
+      # LS-260（LS-96 池項 `1b7a0d5d`；orchestrator 09-14 裁決）：**在飛票**（worktree 仍在）的專屬機
+      # 另外進旗標行——LS-246 的一小時就花在「CI 紅、本機重現不出」，而 runtime 差異只寫在一律印出的
+      # 細項裡，orchestrator 派工時看不到。語意仍是「提示不擋」（patrol 本來就恆 exit 0、這裡也不計入
+      # `sim_flagged` 待清），只是讓它出現在 `--brief` 的 flag 清單上、附上該怎麼用這個訊號。
+      # worktree 已不在的（殘機）不掛：那台的可行動原因是 cleanup，runtime 差沒有任何人會去處理。
+      if [ -n "$sim_ticket" ] && ticket_has_worktree "$sim_ticket"; then
+        add_flag "[專屬模擬器 ${sim_name}] runtime iOS ${sim_rt} ≠ 釘住版 iOS ${sim_pinned_os}（${sim_ticket} 在飛中）——提示不擋；若 CI 紅而本機重現不出，先懷疑 runtime 差（LS-260）"
+      fi
     fi
     if [ -n "$sim_ticket" ]; then
       sim_why=; sim_reason=
@@ -874,14 +1160,14 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"supabase_containers":%s,"supabase_start_skew_minutes":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"repeat_failures":[%s],"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
-      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$(json_num "$lock_waiters")" "$(json_num "$lock_waiters_max_min")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
+      "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$(json_num "$supa_containers")" "$(json_num "$supa_skew_m")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$(json_num "$lock_waiters")" "$(json_num "$lock_waiters_max_min")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
       "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
-      "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_FLAGS"
+      "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_REDS" "$J_FLAGS"
     ;;
   brief)
     sim_rt_note=; [ "$sim_rt_mismatch" -gt 0 ] && sim_rt_note="（釘住 iOS ${sim_pinned_os}，提示不擋）"
@@ -914,6 +1200,11 @@ case "$MODE" in
     echo "== Supabase lock（本機容器序列化，scripts/ops/supabase-lock.sh；LS-70；⚠ tomb＝上次回收異常的殘留；持有者剩餘 >10 分且有等待者才會另印排隊提示，LS-207）"
     printf '%s\n' "$lock_line" | sed 's/^/  /'
     [ -n "$lock_queue_flag" ] && echo "  ${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
+    echo "== Supabase 容器啟動時間（LS-260；先依 StartedAt 分批，最新一批若不是 db reset 的群組、且 rest／kong／db／auth 之間差 >${SUPA_SKEW_MIN} 分＝有人單獨重啟過某台，LS-246）"
+    echo "  ${SUPA_LINE}"
+    echo "== 近 ${REDS_DAYS} 日 CI 同類紅（LS-260；失敗測試名／失敗型別跨 run 聚合，同簽章 ≥2 個 run 即 ⚠ → §5-b 升 High）"
+    [ -n "$reds_note" ] && echo "  ${reds_note}"
+    if [ -n "$REDS_LINES" ]; then printf '%s' "$REDS_LINES"; else echo "  （無同簽章重複 ≥2 次的紅）"; fi
     echo "== Pencil 連線（LS-180；有 design 分支 worktree 時探：行程／目前路徑／MCP socket；✗ 先請使用者 /mcp 重連 pencil 再派設計票）"
     if [ "$pencil_ran" -eq 1 ]; then
       printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'

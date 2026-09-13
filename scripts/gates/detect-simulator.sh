@@ -78,6 +78,34 @@ branch=$(git -C "$toplevel" symbolic-ref --short -q HEAD 2>/dev/null || true)
 pinned_os=
 [ -f "${toplevel}/.ios-runtime" ] && pinned_os=$(tr -d '[:space:]' < "${toplevel}/.ios-runtime")
 
+# LS-260（LS-96 池項 `1b7a0d5d`）：$1＝釘住版；印出「同一個 major 裡最接近釘住版的已安裝 runtime」
+# ——優先 ≥ 釘住版裡最小的那個，沒有更新的才取同 major 裡最新的（兩段式選法同
+# `pick-ipad-runtime.sh`，LS-211 I-b 已驗證過的形狀）；同 major 一個都沒有就印空字串，呼叫端退回
+# `header_os`（LS-83 原行為）。版本比較走零填補的 key，不做字串比較（26.10 > 26.9）。
+nearest_same_major_runtime() {
+  xcrun simctl list runtimes 2>/dev/null | awk -v pin="$1" '
+    function verkey(v,   n, a, i, key) {
+      n = split(v, a, ".")
+      key = ""
+      for (i = 1; i <= 4; i++) key = key sprintf("%06d.", (i <= n ? a[i] + 0 : 0))
+      return key
+    }
+    BEGIN { pk = verkey(pin); split(pin, qv, ".") }
+    /^iOS / {
+      v = $2
+      split(v, pv, ".")
+      if (pv[1] + 0 != qv[1] + 0) next
+      k = verkey(v)
+      if (k >= pk) { if (ge_k == "" || k < ge_k) { ge_k = k; ge = v } }
+      else         { if (lt_k == "" || k > lt_k) { lt_k = k; lt = v } }
+    }
+    END {
+      if (ge != "") { print ge; exit }
+      if (lt != "") { print lt }
+    }
+  '
+}
+
 os_of_udid() {   # $1＝UDID；印出該裝置所在的 OS 分節標題（找不到印空字串）
   xcrun simctl list devices available 2>/dev/null | awk -v u="$1" '
     /^-- iOS / { os = $0; sub(/^-- iOS /, "", os); sub(/ --$/, "", os); next }
@@ -154,13 +182,9 @@ create_dedicated() {   # 成功印新 UDID、exit 0；失敗印訊息到 stderr�
   local devicetype_id runtime_id created avail
   devicetype_id=$(xcrun simctl list devicetypes 2>/dev/null | grep -F "${name} (" \
     | sed -E 's/.*\(([^()]+)\)[[:space:]]*$/\1/' | head -1)
-  # LS-205 R2：建在共用的 `target_os`（上方已算好——優先釘住版，本機沒裝該版時已退回 header_os）；
-  # `target_os != pinned_os` 代表「有釘住但本機裝不到」，這裡才印一次 fail-open 警告，不重算一次
-  # runtime 是否命中（避免對 M2 的共用解析結果各吹各的號）。
-  if [ -n "$pinned_os" ] && [ "$target_os" != "$pinned_os" ]; then
-    avail=$(xcrun simctl list runtimes 2>/dev/null | awk '/^iOS /{print $2}' | paste -sd '、' -)
-    echo "⚠ detect-simulator：本機無 iOS ${pinned_os} runtime（有：${avail:-無}），改用 iOS ${target_os}；CI 為 iOS ${pinned_os}，tap-target／版面量測可能不一致" >&2
-  fi
+  # LS-205 R2：建在共用的 `target_os`（上方已算好——優先釘住版，本機沒裝該版時已挑同 major 最接近者）。
+  # LS-260：「本機沒有釘住版」的 ⚠ 從這裡搬到 `target_os` 解析處印一次——重用既有專屬機那條路徑
+  # 根本不會走到 create_dedicated()，警告掛在這裡等於一整類呼叫都看不到（正是 LS-246 的情形）。
   runtime_id=$(xcrun simctl list runtimes 2>/dev/null | grep -m1 "^iOS ${target_os} " \
     | sed -E 's/.* - (com\.apple\.[^[:space:]]+)[[:space:]]*$/\1/')
   if [ -z "$devicetype_id" ] || [ -z "$runtime_id" ]; then
@@ -186,9 +210,31 @@ else
   #      （`simctl list runtimes` 命中）才採用；沒有釘住或本機沒裝該版就退回 header_os（原 LS-83 行為，
   #      fail-open）。CI=true 分支完全用不到這個值卻原本無條件算過一次（多一次 xcrun simctl list runtimes），
   #      挪到這個 else 分支裡才算——CI 分支的呼叫點不再付這個成本。
+  #      LS-260（LS-96 池項 `1b7a0d5d`，orchestrator 09-14 裁決——覆寫票文字面的「缺 runtime 就
+  #      exit 非 0」）：釘住版本機沒裝時不再直接退回 `header_os`（＝清單第一台原廠機的分節，實務上
+  #      常是**最舊**的那個 runtime——LS-246 正是本機 26.0 對 CI 26.2，iOS 26.2 特有的
+  #      `AVPlayerViewController` 自動收起在本機重現不出，fix 多花約一小時），改成先挑同一個 major
+  #      裡最接近釘住版的已裝 runtime（`nearest_same_major_runtime`），同 major 一個都沒有才退回
+  #      `header_os`。仍然 fail-open、不擋：iOS 26.2 runtime Apple 已不提供下載（LS-261 實測、LS-253
+  #      前幾支 agent 同樣撞到），擋下去等於本機完全跑不了 UITest；改成每次都把差異印在 stderr，
+  #      派工單／handoff 依此揭露。
   target_os="$header_os"
-  if [ -n "$pinned_os" ] && xcrun simctl list runtimes 2>/dev/null | grep -q "^iOS ${pinned_os} "; then
-    target_os="$pinned_os"
+  if [ -n "$pinned_os" ]; then
+    picked_os=$(nearest_same_major_runtime "$pinned_os")
+    [ -n "$picked_os" ] && target_os="$picked_os"
+    if [ "$target_os" != "$pinned_os" ]; then
+      # LS-260 R2 B1：串接用 awk，**不可**用 `paste -sd '、' -`——`paste -d` 的分隔字串在 GNU
+      # coreutils 是逐「位元組」取用，3 bytes 的 `、` 在 Linux 只會吐出第一個位元組（U+FFFD），
+      # macOS 的 BSD paste 才會整個字元輸出。本機（BSD）綠、CI `rules` job（ubuntu）紅，正是本票
+      # 項 3 要消滅的那種形狀。實測 `printf 'iOS 26.0\niOS 26.5\n'` 經本行：BSD 與 ubuntu:24.04
+      # 皆輸出同樣 12 bytes（`26.0` ＋ `343 200 201` ＋ `26.5` ＋ `\n`）；空輸入兩邊皆空輸出。
+      avail=$(xcrun simctl list runtimes 2>/dev/null | awk '/^iOS /{printf "%s%s", (n++ ? "、" : ""), $2} END{if (n) print ""}')
+      # LS-260 R2 m3（merge-review R1）：這裡印的 `target_os` 是「這次**要建**的 runtime」，重用既有
+      # 專屬機時實際跑的是那台機器自己的版本（可能更舊，由下方 `warn_runtime_mismatch` 另行點名）。
+      # 照抄這一行寫進 handoff 會揭露錯的版本——權威來源是 `push-gate.sh` 取自實機的
+      # `simulator: <name> <udid> iOS <ver>（pinned <ver>）`，所以這裡明講「新建時」並指去那一行。
+      echo "⚠ detect-simulator：runtime ${target_os} ≠ 釘住 ${pinned_os}（本機無 ${pinned_os}；派工單／handoff 須揭露）——本機可用 iOS：${avail:-無}；${target_os} 是**新建專屬機**時採用的版本，重用既有機時以 push-gate 印的 \`simulator: … iOS <ver>\` 為準；CI 跑 iOS ${pinned_os}，本機重現不出 CI 紅時先懷疑 runtime 差（LS-260）" >&2
+    fi
   fi
   # DETECT_SIMULATOR_SHARED=1：強制走共用，連本 worktree 專屬模擬器是否已存在都不查
   # （這支旗標本身就是「不要用專屬模擬器」的手動逃生口／自測用）。

@@ -28,6 +28,20 @@ export SUPABASE_LOCK_DIR="$work/lock"
 # ⑮～⑰（本票：驗 Booted 判定）各自在呼叫時明講 SIMCTL_LIST_JSON（⑭ 特意設成空字串讓它照舊落回
 # PATH 裡的 xcrun stub——patrol.sh 用 `${SIMCTL_LIST_JSON:-…}`，空字串與未設值同樣觸發預設值）。
 export SIMCTL_LIST_JSON='{"devices":{}}'
+# LS-260：Supabase 容器啟動時間段同款隔離——本機真的有 supabase 容器在跑時（開發機幾乎必然），
+# 啟動時間差超過門檻就會掛旗標，讓 ③／⑧ 這類「全正常無 ⚠」的既有斷言隨本機狀態偶發紅。預設餵一支
+# 「查不到任何容器」的假 docker；㉙ 自己在呼叫時覆寫成有內容的假身。
+mkdir -p "$work/bin"
+cat > "$work/fake-docker-empty" <<'FAKEDOCKEREMPTY'
+#!/bin/bash
+case "${1:-}" in
+  ps) exit 0 ;;
+  inspect) exit 0 ;;
+  *) exit 1 ;;
+esac
+FAKEDOCKEREMPTY
+chmod +x "$work/fake-docker-empty"
+export PATROL_DOCKER="$work/fake-docker-empty"
 # LS-176：磁碟水位段預設門檻 20 GB——CI runner／開發機當下可用空間可能真的低於 20 GB，不隔離的話 ⑧「全正常無 ⚠」
 # 這類既有斷言會隨機器狀態偶發紅。統一設成 0（永不觸發），㉑ 自己在呼叫時覆寫門檻與兩個目錄。
 export PATROL_DISK_MIN_GB=0
@@ -656,7 +670,11 @@ has   '⑭b runtime 不符釘住版標「⚠ runtime」細項（提示不擋，�
 hasnt '⑭b runtime 相符的那台不標' "$outRT" 'LS-201-iPhoneAir（SIM-RT-MATCH）iOS'
 briefRT="$(SIMCTL_LIST_JSON="$rt_json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '⑭b（M1 訂正）--brief 表頭獨立顯示「runtime 不一致 1」（釘住版字樣）' "$briefRT" '· runtime 不一致 1（釘住 iOS 26.5，提示不擋） ·'
-hasnt '⑭b（M1 訂正）runtime 不一致不進 add_flag／flag 清單（不是「[專屬模擬器 …] runtime …」這種 flag 行）' "$briefRT" '[專屬模擬器 LS-201-iPhone17Pro] runtime'
+# LS-260（LS-96 池項 1b7a0d5d；orchestrator 09-14 裁決）：LS-205 M1 當時一律不掛 add_flag，現在改成
+# 「在飛票（worktree 仍在）的專屬機掛旗標，殘機不掛」——LS-201 的 worktree 上面剛用 `wt -b` 建好，
+# 屬在飛票，必須出現在 flag 清單；⑭c 的 LS-9999 沒有 worktree，那邊的 `hasnt` 仍然成立（見下）。
+has   '⑭b（LS-260）在飛票的專屬機 runtime 不一致進 flag 清單，附「先懷疑 runtime 差」處置' "$briefRT" '[專屬模擬器 LS-201-iPhone17Pro] runtime iOS 26.0 ≠ 釘住版 iOS 26.5（LS-201 在飛中）——提示不擋；若 CI 紅而本機重現不出，先懷疑 runtime 差（LS-260）'
+hasnt '⑭b（LS-260）runtime 相符的那台不掛旗標' "$briefRT" '[專屬模擬器 LS-201-iPhoneAir] runtime'
 has   '⑭b（M1 訂正）--brief 表頭「專屬模擬器待清」不受 runtime 不一致影響，仍是 0' "$briefRT" '專屬模擬器待清 0（殘機 0）'
 
 # ---- ⑭c（merge-review R1 M1 具體重現案例）：同一台機器**同時**是「殘機」（無 worktree）又「runtime
@@ -1661,6 +1679,234 @@ has   '㉘ mutant（m4／i5）：拿掉 try/catch → 907 的 not-a-date 項從�
 hasnt '㉘ mutant（m4／i5）：不再印出正確的 ?m 結果' "$l907m" 'CI 跑中 ?m'
 l906m4=$(row "$out28m4" 'feature/LS-906-realjq-normal')
 has   '㉘ mutant（m4／i5）對照：906（沒有 not-a-date、只有正常時間＋pass 零值）不受影響仍正確' "$l906m4" 'CI 跑中 17m（ci、ci-ipad）'
+
+# ---- ㉙（LS-260；來源 LS-96 池項 `b2947c3f`）：Supabase 容器啟動時間不一致偵測。
+#      LS-246 QA R2 實況：`auth`／`db` 被單獨重啟、`rest`／`kong` 沒有（uptime 差 7 天），OTP 登入後
+#      REST 401。假 docker 只回 `ps`／`inspect` 兩種輸出（patrol 只用這兩個唯讀子命令）。
+#      R2 M2：容器清單擴成六台（多了 storage／realtime／analytics），因為判準改成「先依 StartedAt
+#      分批、看最新一批是不是恰好等於 db reset 的群組」——`supabase db reset` 只重啟
+#      db／auth／storage／realtime／analytics，要分辨它與 LS-246 的「只有 auth／db 被重啟」，夾具就
+#      必須把兩種群組都表示得出來。㉙b2 是 R1 偽陽性的回歸防線。
+cat > "$work/fake-docker" <<'FAKEDOCKER'
+#!/bin/bash
+case "${1:-}" in
+  ps) cat "${FAKE_DOCKER_NAMES:?}" ;;
+  inspect) cat "${FAKE_DOCKER_INSPECT:?}" ;;
+  *) exit 1 ;;
+esac
+FAKEDOCKER
+chmod +x "$work/fake-docker"
+printf 'supabase_db_x\nsupabase_kong_x\nsupabase_auth_x\nsupabase_rest_x\nsupabase_storage_x\nsupabase_realtime_x\nsupabase_analytics_x\n' > "$work/docker-names"
+
+# ㉙a LS-246 形狀：**只有** auth／db 被重啟（7 天後），storage／realtime／analytics 與 kong／rest
+#     都還留在舊批次 → 最新一批 ≠ reset 群組 → 掛旗標
+{
+  printf '/supabase_kong_x 2026-09-06T01:00:00.000000000Z\n'
+  printf '/supabase_rest_x 2026-09-06T01:00:01.000000000Z\n'
+  printf '/supabase_storage_x 2026-09-06T01:00:02.000000000Z\n'
+  printf '/supabase_realtime_x 2026-09-06T01:00:03.000000000Z\n'
+  printf '/supabase_analytics_x 2026-09-06T01:00:04.000000000Z\n'
+  printf '/supabase_db_x 2026-09-13T01:00:00.000000000Z\n'
+  printf '/supabase_auth_x 2026-09-13T01:00:05.000000000Z\n'
+} > "$work/docker-inspect-skew"
+out29a="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙a 人類段印出容器數、focus 四台的最大差（7 天＝10080 分）與形狀判定' "$out29a" '容器 7 個，rest／kong／db／auth 之間最大差 10080 分（最舊 supabase_kong_x／最新 supabase_auth_x；門檻 60 分；最新一批不是 reset 群組）'
+brief29a="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉙a 旗標行點名「容器啟動時間不一致」且說明最新一批不是 reset 群組' "$brief29a" '[Supabase 容器] ⚠ 容器啟動時間不一致（rest／kong／db／auth 之間最舊 supabase_kong_x 與最新 supabase_auth_x 差 10080 分 > 60，且最新一批不是 db reset 的群組）'
+has   '㉙a（R2 m4）旗標行的整組重啟包成一次 lock（不是兩次獨立 lock）' "$brief29a" 'bash scripts/ops/supabase-lock.sh -- bash -c "supabase stop && supabase start"'
+json29a="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>&1)"
+jq_ok '㉙a --json supabase_containers＝7' "$json29a" '.supabase_containers == 7'
+jq_ok '㉙a --json supabase_start_skew_minutes＝10080' "$json29a" '.supabase_start_skew_minutes == 10080'
+
+# ㉙b 一致（同一次 start，差 30 秒）→ 人類段照印，但不掛旗標（負向控制：門檻真的有在生效）
+{
+  printf '/supabase_kong_x 2026-09-13T01:00:00.000000000Z\n'
+  printf '/supabase_rest_x 2026-09-13T01:00:10.000000000Z\n'
+  printf '/supabase_storage_x 2026-09-13T01:00:12.000000000Z\n'
+  printf '/supabase_realtime_x 2026-09-13T01:00:14.000000000Z\n'
+  printf '/supabase_analytics_x 2026-09-13T01:00:16.000000000Z\n'
+  printf '/supabase_db_x 2026-09-13T01:00:20.000000000Z\n'
+  printf '/supabase_auth_x 2026-09-13T01:00:30.000000000Z\n'
+} > "$work/docker-inspect-ok"
+brief29b="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-ok" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉙b 啟動時間一致 → 不掛旗標' "$brief29b" '[Supabase 容器]'
+out29b="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-ok" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙b 人類段仍印出差值（0 分）與「整組同一次啟動」形狀' "$out29b" '容器 7 個，rest／kong／db／auth 之間最大差 0 分（最舊 supabase_kong_x／最新 supabase_auth_x；門檻 60 分；整組同一次啟動）'
+
+# ㉙b2（R2 M2 的核心回歸防線）：**例行 `supabase db reset` 的形狀**——rest／kong 維持 7 天前的
+#     uptime，db／auth／storage／realtime／analytics 剛剛被 reset 重啟。R1 版本會把它判成「容器啟動
+#     時間不一致 10080 分」並建議做一次有破壞性的整組重啟（R1 handoff 申報的「84 分真實事故」就是
+#     這個偽陽性）。修法後最新一批恰好等於 reset 群組 → 不掛旗標，人類段註明形狀。
+{
+  printf '/supabase_kong_x 2026-09-06T01:00:00.000000000Z\n'
+  printf '/supabase_rest_x 2026-09-06T01:00:01.000000000Z\n'
+  printf '/supabase_db_x 2026-09-13T01:00:00.000000000Z\n'
+  printf '/supabase_auth_x 2026-09-13T01:00:05.000000000Z\n'
+  printf '/supabase_storage_x 2026-09-13T01:00:06.000000000Z\n'
+  printf '/supabase_realtime_x 2026-09-13T01:00:07.000000000Z\n'
+  printf '/supabase_analytics_x 2026-09-13T01:00:08.000000000Z\n'
+} > "$work/docker-inspect-reset"
+brief29b2="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-reset" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉙b2 例行 db reset 形狀 → 不掛旗標（R1 偽陽性的回歸防線）' "$brief29b2" '[Supabase 容器]'
+out29b2="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-reset" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙b2 人類段照印差值但註明形狀符合例行 db reset' "$out29b2" '最新一批＝db／auth／storage／realtime／analytics，形狀符合例行 supabase db reset，不掛旗標'
+# ㉙b3（負向控制）：同一份 reset 形狀的資料，只要 analytics 沒跟著重啟（最新一批變成 reset 群組的
+#     真子集＝有人單獨動了某幾台），就必須轉紅——證明「不掛旗標」是形狀比對的結果，不是門檻失效。
+sed 's#^/supabase_analytics_x 2026-09-13.*#/supabase_analytics_x 2026-09-06T01:00:02.000000000Z#' "$work/docker-inspect-reset" > "$work/docker-inspect-reset-partial"
+brief29b3="$(PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-reset-partial" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉙b3 最新一批是 reset 群組的真子集（analytics 沒跟著重啟）→ 轉紅' "$brief29b3" '[Supabase 容器] ⚠ 容器啟動時間不一致'
+
+# ㉙c 門檻可調：同一份 30 秒差的資料把門檻降到 0 分就必須轉紅（mutation——證明 ㉙b 的綠是門檻擋下來的，
+#     不是這段程式碼根本沒在比）
+brief29c="$(PATROL_SUPABASE_SKEW_MIN=0 PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-ok" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉙c 門檻 0 分：30 秒差不足 1 分鐘，仍不掛旗標（整數分鐘判定）' "$brief29c" '[Supabase 容器]'
+brief29c2="$(PATROL_SUPABASE_SKEW_MIN=0 PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-skew" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉙c 門檻 0 分＋7 天差 → 照樣掛旗標（門檻參數真的有接線）' "$brief29c2" '差 10080 分 > 0'
+
+# ㉙d 沒有 supabase 容器在跑 → 靜默略過（fail-open，不當異常）；docker 不在同理
+out29d="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙d 無容器 → 人類段註明，不掛旗標' "$out29d" '（無執行中的 supabase_* 容器）'
+brief29d="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉙d 無容器 → 不掛旗標' "$brief29d" '[Supabase 容器]'
+out29e="$(PATROL_DOCKER="$work/no-such-docker-binary" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉙e docker 未安裝 → 註明略過（fail-open）' "$out29e" '（docker 未安裝，略過）'
+out29f="$(PATROL_SUPABASE_SKEW_MIN=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+rc_is '㉙f PATROL_SUPABASE_SKEW_MIN 非整數 → exit 2（fail closed，同既有 PATROL_* 參數慣例）' 2 "$?" "$out29f"
+has   '㉙f 錯誤訊息點名參數名' "$out29f" 'PATROL_SUPABASE_SKEW_MIN 須為整數分鐘'
+
+# ---- ㉚（LS-260；來源 LS-96 池項 `ec152d21`）：近 N 日 CI 同類紅計數。
+#      `gh run list` 那一路的假身直接回「已經過濾好的 TSV」——`--limit`／`--created`／`--jq` 的過濾是
+#      gh 端執行的，這裡不模擬。**`gh run view --json jobs --jq` 那一路則是真的跑 jq**（R2 M1：
+#      merge-review R1 指出原本的假身直接 `printf '0'`，等於把「假設的形狀」當事實餵給斷言，Rule 8），
+#      fixture 用**真實事故 run 的 jobs JSON**（欄位子集，產生指令見下），所以 patrol 裡那條 jq 表達式
+#      本身也在受測。本組驗：簽章抽取、跨 run 聚合、cancelled 三種形狀的分流、兩個判準各自的接線、
+#      快取與單輪下載額度、fail-soft。
+gh_dir="$work/fake-gh-data"; mkdir -p "$gh_dir"
+cat > "$work/fake-gh" <<'FAKEGH'
+#!/bin/bash
+[ -n "${FAKE_GH_CALLS:-}" ] && printf '%s\n' "$*" >> "$FAKE_GH_CALLS"
+case "${2:-}" in
+  list) cat "${FAKE_GH_RUNS:?}" ;;
+  view)
+    id=$3
+    for a in "$@"; do
+      if [ "$a" = --log-failed ]; then cat "${FAKE_GH_DIR:?}/${id}.log" 2>/dev/null; exit 0; fi
+    done
+    # `--json jobs --jq '<expr>'`：對真實 run 的 jobs JSON 實跑 patrol 自己那條 jq（R2 M1）
+    expr=; prev=
+    for a in "$@"; do
+      [ "$prev" = --jq ] && expr=$a
+      prev=$a
+    done
+    [ -n "$expr" ] || exit 1
+    jq -r "$expr" "${FAKE_GH_DIR:?}/${id}.jobs.json" 2>/dev/null
+    ;;
+  *) exit 1 ;;
+esac
+FAKEGH
+chmod +x "$work/fake-gh"
+# 兩個 run 紅在同一支測試（真實 xcodebuild 行形狀，含 GitHub Actions 的時間戳前綴），第三個 run 紅在
+# 另一支（只出現一次，不該被標）。
+printf '%s\n' \
+  "2026-09-13T07:31:07.1234567Z Test Case '-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]' failed (12.345 seconds)." \
+  "2026-09-13T07:31:08.1234567Z ** TEST FAILED **" > "$gh_dir/9001.log"
+cp "$gh_dir/9001.log" "$gh_dir/9002.log"
+# R2 M3 附帶：9003 換成**同一個類別的另一個方法**——方法層級只出現一次（不該標），
+# 類別層級則與 9001／9002 合併成 3 次（正是 reviewer 舉的 SettingsViewIPadTests 兩個不同方法的形狀）。
+printf '%s\n' \
+  "2026-09-13T07:31:07.1234567Z Test Case '-[LittleSproutUITests.SettingsViewIPadTests testOnlyOnce]' failed (1.0 seconds)." > "$gh_dir/9003.log"
+# cancelled 的三種真實形狀——fixture 取自本 repo 的真實 run（R2 M1；產生指令：
+#   gh run view <id> --json jobs --jq '{jobs: [.jobs[] | {name, conclusion, startedAt, completedAt,
+#     steps: [.steps[]? | {conclusion}]}]}' | jq -c .
+# 只留判準會讀到的欄位，其餘原樣）：
+#   34760803165：development push run，`ci` job cancelled、跑 2454 s（40.9 分），無 failure／timed_out step ＝ 真 timeout
+#   34764441663：同型，`ci` job cancelled、跑 1988 s（33.1 分） ＝ 真 timeout（兩個才湊得到 §5-b 的 ≥2）
+#   34746493293：`ci` job cancelled、只跑 333 s ＝ concurrency: cancel-in-progress 取代的過期 run（日常，不計數）
+#   34746091627：有 step 是 failure／timed_out（且 cancelled job 只跑 55 s）＝ 真的有東西壞了，不算 timeout 型別
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T14:38:07Z","conclusion":"success","name":"ci-ipad","startedAt":"2026-09-13T14:29:47Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T15:10:41Z","conclusion":"cancelled","name":"ci","startedAt":"2026-09-13T14:29:47Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T13:51:42Z","conclusion":"success","name":"db","startedAt":"2026-09-13T13:47:54Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T13:48:12Z","conclusion":"success","name":"lint","startedAt":"2026-09-13T13:47:58Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T13:54:50Z","conclusion":"success","name":"rules","startedAt":"2026-09-13T13:47:54Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]}]}' > "$gh_dir/34760803165.jobs.json"
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T15:11:39Z","conclusion":"success","name":"rules","startedAt":"2026-09-13T15:03:58Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T15:44:41Z","conclusion":"cancelled","name":"ci","startedAt":"2026-09-13T15:11:33Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T15:10:59Z","conclusion":"success","name":"lint","startedAt":"2026-09-13T15:10:47Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T15:07:44Z","conclusion":"success","name":"db","startedAt":"2026-09-13T15:03:58Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T15:17:31Z","conclusion":"success","name":"ci-ipad","startedAt":"2026-09-13T15:11:05Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]}]}' > "$gh_dir/34764441663.jobs.json"
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T08:01:57Z","conclusion":"cancelled","name":"rules","startedAt":"2026-09-13T07:58:27Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T08:03:52Z","conclusion":"cancelled","name":"ci","startedAt":"2026-09-13T07:58:32Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:58:46Z","conclusion":"success","name":"lint","startedAt":"2026-09-13T07:58:32Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T08:04:05Z","conclusion":"cancelled","name":"ci-ipad","startedAt":"2026-09-13T07:58:32Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T08:02:03Z","conclusion":"cancelled","name":"db","startedAt":"2026-09-13T07:58:27Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]}]}' > "$gh_dir/34746493293.jobs.json"
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T07:48:29Z","conclusion":"cancelled","name":"ci","startedAt":"2026-09-13T07:47:39Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:48:28Z","conclusion":"cancelled","name":"db","startedAt":"2026-09-13T07:47:35Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:48:29Z","conclusion":"cancelled","name":"rules","startedAt":"2026-09-13T07:47:34Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"failure"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:47:49Z","conclusion":"success","name":"ci-ipad","startedAt":"2026-09-13T07:47:39Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:48:06Z","conclusion":"success","name":"lint","startedAt":"2026-09-13T07:47:54Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]}]}' > "$gh_dir/34746091627.jobs.json"
+printf '%s\n' \
+  $'9001\tfailure\tfeature/LS-1-a\t2026-09-13T07:31:00Z' \
+  $'9002\tfailure\tfeature/LS-2-b\t2026-09-13T06:31:00Z' \
+  $'9003\tfailure\tfeature/LS-3-c\t2026-09-12T07:31:00Z' \
+  $'34760803165\tcancelled\tdevelopment\t2026-09-12T06:31:00Z' \
+  $'34764441663\tcancelled\tdevelopment\t2026-09-11T07:31:00Z' \
+  $'34746493293\tcancelled\tfeature/LS-4-d\t2026-09-10T07:31:00Z' \
+  $'34746091627\tcancelled\tfeature/LS-5-e\t2026-09-09T07:31:00Z' > "$work/gh-runs"
+
+reds_env() {   # 共用環境；$1＝快取目錄，其餘沿用預設
+  PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" PATROL_REDS_CACHE="$1" "${@:2}"
+}
+cache30="$work/reds-cache-a"; rm -rf "$cache30"
+out30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+has   '㉚a 同一支測試在 2 個 run 紅 → ⚠ 同類紅 2 次（測試名）' "$out30" "⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b 升票"
+hasnt '㉚b 只紅一次的測試不標（負向控制：門檻真的是 ≥2）' "$out30" 'testOnlyOnce'
+has   '㉚c 兩個真 timeout run（34760803165 2454 s／34764441663 1988 s）併成 timeout 型別計數' "$out30" '⚠ 同類紅 2 次（timeout（cancelled、無 failure／timed_out step、cancelled job ≥30 分——撞 job timeout-minutes））'
+hasnt '㉚c2 concurrency 取代的過期 run（34746493293，333 s）與有 failure step 的（34746091627）都不計數（timeout 簽章仍是 2 次，不是 3／4 次）' "$out30" '同類紅 3 次（timeout'
+# ㉚c3／㉚c4 都把單輪下載上限提高到 10：夾具共 7 個 run，預設上限 5 會讓最後兩個 cancelled 這一輪還
+#      沒被分類（上限本身由 ㉚e 專測）。
+# ㉚c3（判準 2 的接線）：門檻拉到 45 分，兩個真 timeout（40.9／33.1 分）就都不該再算——證明「cancelled
+#      job 跑多久」這一半真的有在比，不是任何 cancelled 都算。
+out30c3="$(PATROL_REDS_TIMEOUT_MIN=45 PATROL_REDS_MAX_FETCH=10 reds_env "$work/reds-cache-c3" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+hasnt '㉚c3 門檻 45 分 → 40.9／33.1 分的兩個 run 不再算 timeout（判準 2 有接線）' "$out30c3" 'timeout（cancelled、無 failure'
+# ㉚c4（判準 1 的接線）：門檻降到 0 分，四個 cancelled run 全部通過「時長」這一半，只剩「無 failure／
+#      timed_out step」在擋——34746091627 有 failure step，所以應該是 3 次而不是 4 次。
+out30c4="$(PATROL_REDS_TIMEOUT_MIN=0 PATROL_REDS_MAX_FETCH=10 reds_env "$work/reds-cache-c4" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+has   '㉚c4 門檻 0 分 → 3 次（有 failure step 的 34746091627 仍被判準 1 擋掉，不是 4 次）' "$out30c4" '⚠ 同類紅 3 次（timeout（cancelled、無 failure／timed_out step、cancelled job ≥0 分'
+brief30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch --brief "$STALE" 2>&1)"
+has   '㉚a2 旗標行指向 §5-b 升票（不是只印在人類段）' "$brief30" '[CI 同類紅] ⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b「同類事故 ≥2 次升 High」開票'
+json30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch --json "$STALE" 2>&1)"
+jq_ok '㉚a3 --json repeat_failures 三筆（方法名 2 次、class 3 次、timeout 2 次）' "$json30" '(.repeat_failures | length) == 3 and ([.repeat_failures[].runs] | sort) == [2,2,3]'
+# ㉚i（R2 M3 附帶）：類別層級簽章——9001／9002／9003 是同一個測試類別的兩個不同方法，方法層級聚不起來，
+#      類別層級要聚成 3 次（§5-b 的「同類」實務上是類別／根因層級）。
+has   '㉚i 類別層級簽章聚合成 3 次（方法名不同也算同類）' "$out30" '⚠ 同類紅 3 次（class:LittleSproutUITests.SettingsViewIPadTests）'
+# ㉚j（R2 M3）：人類段不再空口宣稱 7 日，要印出實際涵蓋到哪一筆（gh 回傳新到舊，最後一筆最舊）。
+has   '㉚j 人類段印出實際涵蓋到的最舊 run 時間' "$out30" '實際涵蓋到 2026-09-09T07:31:00Z'
+
+# ㉚d 快取：第二輪對同一批 run 不再打任何 `run view`（只剩一次 `run list`）
+calls30="$work/gh-calls"; : > "$calls30"
+PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" FAKE_GH_CALLS="$calls30" PATROL_REDS_CACHE="$cache30" bash "$patrol" --repo "$repo" --no-fetch "$STALE" >/dev/null 2>&1
+if [ "$(grep -c 'run view' "$calls30")" -eq 0 ] && [ "$(grep -c 'run list' "$calls30")" -eq 1 ]; then
+  echo "✓ ㉚d 快取命中：第二輪只打一次 run list、零次 run view"
+else
+  echo "✗ ㉚d 快取未命中（run list $(grep -c 'run list' "$calls30") 次、run view $(grep -c 'run view' "$calls30") 次）" >&2
+  fail=1
+fi
+
+# ㉚e 單輪下載額度：全新快取＋上限 2 → 只打 2 次 run view，聚合結果因此還湊不到 2 次（下一輪才補齊）
+cache30b="$work/reds-cache-b"; rm -rf "$cache30b"; : > "$calls30"
+out30e="$(PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" FAKE_GH_CALLS="$calls30" PATROL_REDS_CACHE="$cache30b" PATROL_REDS_MAX_FETCH=2 bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+if [ "$(grep -c 'run view' "$calls30")" -eq 2 ]; then
+  echo "✓ ㉚e 單輪下載額度 2 → 只打 2 次 run view（巡檢單輪成本有上界）"
+else
+  echo "✗ ㉚e 額度未生效（run view $(grep -c 'run view' "$calls30") 次）" >&2
+  fail=1
+fi
+has '㉚e2 額度訊息印出本輪下載數與上限' "$out30e" '本輪新下載 log 2 個，上限 2'
+
+# ㉚f fail-soft 與參數檢查
+out30f="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉚f --no-pr → 略過、不掛旗標' "$out30f" '略過（--no-pr）'
+out30g="$(PATROL_GH="$work/no-such-gh-binary" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+has   '㉚g gh 未安裝 → 略過（fail-soft）' "$out30g" 'gh 未安裝，略過'
+# ㉚k（R2 i3）：時間預算——乾淨快取那一輪 reviewer 實測 15.2 s，而 SessionStart hook 只有 30 s 預算，
+#      本段原本只有「筆數」上限、沒有時間上界。預算 0 秒 → 這輪一個 log 都不抓，並在人類段講明。
+calls30k="$work/gh-calls-k"; : > "$calls30k"
+out30k="$(PATROL_REDS_BUDGET_SEC=0 PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" FAKE_GH_CALLS="$calls30k" PATROL_REDS_CACHE="$work/reds-cache-k" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+has '㉚k 時間預算用完 → 本輪 0 個新下載＋人類段講明' "$out30k" '本輪新下載 log 0 個，上限 5；本輪時間預算 0 秒用完，剩下的下一輪再算'
+if [ "$(grep -c 'run view' "$calls30k")" -eq 0 ]; then
+  echo "✓ ㉚k 時間預算用完時真的一次 run view 都沒打（不是只印訊息）"
+else
+  echo "✗ ㉚k 預算用完仍打了 $(grep -c 'run view' "$calls30k") 次 run view" >&2
+  fail=1
+fi
+out30k2="$(PATROL_REDS_BUDGET_SEC=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+rc_is '㉚k2 PATROL_REDS_BUDGET_SEC 非整數 → exit 2' 2 "$?" "$out30k2"
+
+out30h="$(PATROL_REDS_DAYS=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+rc_is '㉚h PATROL_REDS_DAYS 非整數 → exit 2（fail closed，同既有 PATROL_* 慣例）' 2 "$?" "$out30h"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"

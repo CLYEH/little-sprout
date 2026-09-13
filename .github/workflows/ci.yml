@@ -120,10 +120,16 @@ jobs:
       # LS-140：同一支腳本再對全 body 逐行驗「申報可驗證」——含 LS-96／入池／待辦池 的行必帶 ≥8 位 hex comment id、含
       # 「已修」的行必帶 7–40 位 hex SHA；`--verify` 反查：SHA 須 `git cat-file -e` 且為 HEAD（PR merge ref）祖先（fetch-depth 0
       # 已含 PR 全部 commit）；comment id 以 LINEAR_API_KEY 列 LS-96 全部 comment 做前綴比對（`comment(id:)` 不吃 8 位前綴）。
-      # 無 secrets.LINEAR_API_KEY 時腳本印「反查略過」（＋::warning::）只驗格式＋git——repo 尚未設此 secret（2026-09-03
-      # `gh secret list` 為空；LS-103 patrol-linear 自測也不需要），補上即自動生效，不必改 workflow。
+      # secrets.LINEAR_API_KEY 已設（2026-09-04 起）；缺席／失效時 pr-body-check `--verify` 回 exit 3 →
+      # 這一步紅 → rules 紅（fail-closed，LS-256 minor `b979335c`：orchestrator 裁定接受 fail-closed，
+      # 「secret 已在、失效即該紅」）。LS-260 改本註解：此前寫的「repo 尚未設此 secret」是 2026-09-03 的
+      # 狀態，早已過期，照著讀會誤以為 Linear 反查在 CI 從來沒真的跑過。
+      # LS-260（LS-96 池項 `c67b65ca` i3）：本步驟自己也補 `!cancelled()`——LS-256 只補了它**之後**的 14 步，
+      # 這步仍被前三步（PR direction／branch naming／branch-ticket）連坐 skip。前三步是「PR 形狀本身」的
+      # gate，紅了代表 PR 不該存在，維持連坐；但它們紅的時候「body 檔頭段／申報是否可驗證」仍然驗得動，
+      # 而且正是下一輪修 PR 時最需要先知道的事（LS-234 R7／R8 兩次都在這條連坐鏈上白跑一輪）。
       - name: PR body 檔頭段含本票票號＋申報可驗證（pr-body-check，LS-63／LS-140）
-        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
+        if: ${{ !cancelled() && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')) }}
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
         run: |

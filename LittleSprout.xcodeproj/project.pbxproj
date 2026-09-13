@@ -136,6 +136,7 @@
 		436172C28A928E0E3A10A848 /* EditAlbumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2891A7543CE21E976FD0230D /* EditAlbumView.swift */; };
 		43621C7CFEA05589A089468C /* AlbumDetailView+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B3A90CF3954DCB0BDF70BD /* AlbumDetailView+Actions.swift */; };
 		445CCD7D25B4D867E0CFB4E9 /* FamilyStore+Invite.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC5A903489F554F9E012A50 /* FamilyStore+Invite.swift */; };
+		44C357BA4C7DCAC0714533C9 /* QADriver+Browse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2715027B36DF1738FEBE4F59 /* QADriver+Browse.swift */; };
 		4555637044E82521E0F26A7D /* SafetyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291ED26F4607951FB92E77F /* SafetyModels.swift */; };
 		45E3F0D63DCD005FFB7E050D /* PushPrepromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B922E8AD56E1EF2150FE2B /* PushPrepromptView.swift */; };
 		461C75A20A501B88C1BD57B5 /* StubSafetyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656EEB0F20DEDA8B21C3A883 /* StubSafetyAPIClient.swift */; };
@@ -528,6 +529,7 @@
 		241E93FAAAD79FEF6D2138E2 /* AlbumDetailStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailStoreTests.swift; sourceTree = "<group>"; };
 		265ECDE8A6FEEB9D93E92AE4 /* SupabaseMediaUploadServiceCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaUploadServiceCleanupTests.swift; sourceTree = "<group>"; };
 		267EACE4E1129F9AEA336AB0 /* privacy-policy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "privacy-policy.md"; sourceTree = "<group>"; };
+		2715027B36DF1738FEBE4F59 /* QADriver+Browse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "QADriver+Browse.swift"; sourceTree = "<group>"; };
 		278A962343297A6DC3C456F7 /* CreateChildView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateChildView.swift; sourceTree = "<group>"; };
 		283015CC749C2FA945FE395B /* AlbumsModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsModels.swift; sourceTree = "<group>"; };
 		2891A7543CE21E976FD0230D /* EditAlbumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditAlbumView.swift; sourceTree = "<group>"; };
@@ -1546,6 +1548,7 @@
 			isa = PBXGroup;
 			children = (
 				AA1EFC1792C4BB1EA62606E2 /* QADriver.swift */,
+				2715027B36DF1738FEBE4F59 /* QADriver+Browse.swift */,
 				8935226D375AB85EFBC17CC3 /* QADriver+LoginLanding.swift */,
 				985785A57F53FA7B6C2252FA /* QASmokeTests.swift */,
 				7006BAF63356FF9EA95F7134 /* QASupport.swift */,
@@ -2065,6 +2068,7 @@
 				AC8A8F9C1879FC34779A78E6 /* PasswordSignInUITests.swift in Sources */,
 				DB02391F5C7C742DA21005B2 /* PushPrepromptUITests.swift in Sources */,
 				92FEF23707CA351E42C25C02 /* QAAccessibilityID.swift in Sources */,
+				44C357BA4C7DCAC0714533C9 /* QADriver+Browse.swift in Sources */,
 				0C26B811F96F8122199B4E8A /* QADriver+LoginLanding.swift in Sources */,
 				31A49F9904E6C7D2143C5CA4 /* QADriver.swift in Sources */,
 				0B8A0DB73C4423B756633874 /* QASmokeTests.swift in Sources */,
