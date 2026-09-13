@@ -77,6 +77,7 @@
     "row_overflow": { "scope": "boards", "document_count": 0, "result_hash": "7365a25e1fa24148", "flagged": [] },
     "cross_parent_collision": { "scope": "boards", "document_count": 0, "result_hash": "79218576cc6f5341", "flagged": [] },
     "corner_anchor": {
+      "scope": "boards", "document_count": 0,
       "boards": ["c2yk3s", "Bm7Lx", "ZRyXL", "Vn4TL", "BnjqP", "b59DUk", "H73kPC"],
       "containers": 6, "points": 48, "mismatch": 0,
       "flagged": [],
