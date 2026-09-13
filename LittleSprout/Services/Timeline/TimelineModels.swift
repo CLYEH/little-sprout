@@ -18,14 +18,8 @@ struct TimelineFeedPointer: Decodable, Sendable, Equatable {
     let occurredAt: Date
     let childIds: [UUID]
     /// LS-243：`comment_count`——未刪除、排除呼叫者已封鎖的作者的留言數（見
-    /// `docs/API.md` 對這支 RPC 的說明）。預設 `0`：`Decodable` 解碼真正的 RPC 回應時一律
-    /// 會有這個欄位（NOT NULL），預設值只給測試直接建構 `TimelineFeedPointer(...)` 時不必
-    /// 逐一補這個新參數（同 `childIds` 之於既有測試呼叫端的既有慣例）。**刻意是 `var`
-    /// 不是 `let`**：Swift 的合成 memberwise initializer 只有 `var` 搭配預設值才會在
-    /// initializer 產生「可省略、也可覆寫」的參數——`let` 搭配預設值會讓該參數整個從
-    /// initializer 消失、變成永遠固定的值，無法在建構時覆寫（本機實測：`extra argument
-    /// 'commentCount' in call`），不是本票要的效果。
-    var commentCount: Int = 0
+    /// `docs/API.md` 對這支 RPC 的說明）。
+    let commentCount: Int
 
     enum CodingKeys: String, CodingKey {
         case kind
@@ -33,6 +27,38 @@ struct TimelineFeedPointer: Decodable, Sendable, Equatable {
         case occurredAt = "occurred_at"
         case childIds = "child_ids"
         case commentCount = "comment_count"
+    }
+
+    /// 手寫 memberwise 初始化（取代合成版）——只給 `commentCount` 一個預設值，讓既有測試
+    /// 呼叫端（`TimelineFeedPointer(kind:refId:occurredAt:childIds:)`）不必逐一補這個新
+    /// 參數，同 `childIds` 之於更早既有呼叫端的既有慣例。寫了這支之後 Swift 就不會再合成
+    /// 免費的 memberwise init，兩者只能二選一——這裡選手寫版本，因為下面 `init(from:)`
+    /// 也是手寫的（`decodeIfPresent` 需要自訂解碼邏輯，合成的 `Decodable` 版本做不到）。
+    init(kind: FeedKind, refId: UUID, occurredAt: Date, childIds: [UUID], commentCount: Int = 0) {
+        self.kind = kind
+        self.refId = refId
+        self.occurredAt = occurredAt
+        self.childIds = childIds
+        self.commentCount = commentCount
+    }
+
+    /// merge-review R1 i1：`comment_count` 用 `decodeIfPresent(...) ?? 0`，不是合成
+    /// `Decodable` 那種「key 不存在就整個解碼失敗」——這支 app build 可能先於本票 migration
+    /// 推上某個環境（例如 QA 在 `test` branch 用真後端驗收，若當下 `development`／`test`
+    /// 資料庫還沒套用這支 migration），舊 DB 的 `get_family_timeline` 回應不會有
+    /// `comment_count` 這個 key，若當成必要欄位，整批 `fetchTimelinePointers` 會直接
+    /// throw、時間軸整頁變 `.failure`（不是「少顯示一個數字」這麼輕微）。`decodeIfPresent`
+    /// 讓舊 DB＋新 app 這個部署順序組合退化成「留言計數暫時看不到（顯示 0）」，不是整頁
+    /// 打不開；新 DB＋新 app（正常情況）解到真正的值。反向（舊 app＋新 DB）本來就安全
+    /// （多出來、未宣告的 key 被忽略，不受這裡影響）。見
+    /// `SupabaseTimelineAPIClientTests.test_fetchTimelinePointers_missingCommentCountKey_decodesToZero`。
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try container.decode(FeedKind.self, forKey: .kind)
+        refId = try container.decode(UUID.self, forKey: .refId)
+        occurredAt = try container.decode(Date.self, forKey: .occurredAt)
+        childIds = try container.decode([UUID].self, forKey: .childIds)
+        commentCount = try container.decodeIfPresent(Int.self, forKey: .commentCount) ?? 0
     }
 }
 
