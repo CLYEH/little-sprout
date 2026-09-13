@@ -221,6 +221,19 @@ else
 fi
 rm -rf "$result_bundle"
 
+# ⑮ LS-257：GITHUB_ACTIONS 設定時，成功也要保留 result bundle——ci.yml 在「點擊目標 gate」步驟
+#    之後新增一步讀這份 bundle 印 LittleSproutUITests 耗時，需要它撐到那一步；本機（GITHUB_ACTIONS
+#    未設定，見 ⑬）仍照舊清掉，避免 push-gate.sh 反覆呼叫堆垃圾在工作目錄。不用 run()（它固定
+#    unset GITHUB_ACTIONS，見該函式註解），直接呼叫才能測到 CI 分支。
+out=$(cd "$R" && GITHUB_ACTIONS=true PATH="$bin:$PATH" FAKE_XCODEBUILD_MODE=pass bash "$checker" UDID SCHEME 2>&1); got=$?
+if [ "$got" -eq 0 ] && [ -e "$result_bundle" ]; then
+  echo "✓ ⑮ GITHUB_ACTIONS 設定時，成功也保留 xcresult（供 ci.yml 耗時列印步驟讀取，LS-257）"
+else
+  echo "✗ ⑮ GITHUB_ACTIONS 設定時，成功應保留 xcresult（實得 exit ${got}，是否存在：$([ -e "$result_bundle" ] && echo 是 || echo 否)）" >&2
+  fail=1
+fi
+rm -rf "$result_bundle"
+
 # ⑨ LS-158：QA e2e（LittleSproutUITests/QA/QASmokeTests）需要本機容器，CI 的這支 gate 不得跑到它。
 #    `-only-testing` 對 `-skip-testing` 有優先權（man xcodebuild），所以必須是純 -skip-testing 組合：
 #    跳過 unit test target＋QASmokeTests，且不得再帶任何 -only-testing（帶了 skip 就失效、QA 會在 CI 假紅）。
