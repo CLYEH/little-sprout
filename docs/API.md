@@ -373,12 +373,30 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   `private.enforce_account_not_deletion_requested()`（`BEFORE INSERT`，`LS051`）
   與 `private.enforce_not_suspended()`（`BEFORE INSERT/UPDATE/DELETE`，
   `LS052`／`LS053`），見 §2 與 §5。
+- **已軟刪的孩子不能再被指定為新內容（LS-255 R2，merge-review R1 m2 登記）**：
+  `BEFORE INSERT/UPDATE` 掛了 LS-121 的共用函式 `private.enforce_child_not_
+  deleted()`（沿系統性規則，不新開碼）——`upsert_growth_record` 的新增分支若
+  `p_child_id` 指向一個已軟刪的孩子，拋既有碼 `LS044`；更新分支從不改
+  `child_id`（欄位級 grant 未開放），這支 trigger 對更新分支恆為 no-op（「既有
+  內容不動」，同 `diaries`／`albums`）。
 - **CHECK 約束**：三項量測（`height_cm`／`weight_kg`／`head_cm`）至少一項非空
   （`growth_records_measurement_required`）；每一項若有填必須是正值
-  （`growth_records_height_positive`／`_weight_positive`／`_head_positive`）——
+  （`growth_records_height_positive`／`_weight_positive`／`_head_positive`）；
+  `note` 若有填必須是 1–2000 字（`btrim` 後，`growth_records_note_length`，
+  LS-255 R2 merge-review R1 m3 登記，沿 `comments.body` 同量級的既有慣例）——
   違反皆為標準碼 `23514`。
 - **同一孩子同一天允許多筆**：`measured_on` 沒有唯一約束，「同一天多筆時 UI 只
-  取最後一筆」由呼叫端（LS-252 核可稿的規則）處理，後端不去重。
+  取最後一筆」由呼叫端（LS-252 核可稿的規則）處理，後端不去重；
+  `list_growth_records` 的分頁保證回傳每一筆（見 §4，R2 修過 M1 的跨頁邊界
+  漏筆問題）。
+- **owner 對別人的紀錄直接 `.update()` 內容欄位是靜默 0 列，不是 `42501`
+  （R1 informational i5）**：`growth_records_update` 的 `USING` 只有作者本人這
+  一個分支，owner 對別人的列下 `.update()` 這幾個內容欄位時，那一列根本不在
+  `USING` 比對得到的範圍內，Postgres 對「比對不上 USING 的列」的標準反應是直接
+  排除、不觸發任何錯誤——跟 `media`／`albums` 已記載的同一種形狀（見 §2「例外」
+  段）。owner 想對別人的紀錄做事，唯一有意義的操作是移除，要呼叫
+  `delete_growth_record` RPC——這支失敗時**會**丟出明確的 `42501`，不會有「靜默
+  0 列」這種模稜兩可的結果。
 
 ### `media`
 - `storage_path` 必須符合 `{family_id}/{yyyy}/{mm}/{media_id}.{ext}`（見 §6），且有
@@ -1612,16 +1630,27 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **錯誤碼**：無自訂碼；未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
-### `list_growth_records(p_child_id uuid, p_limit integer default 50, p_before date default null) -> setof growth_records`（LS-255）
+### `list_growth_records(p_child_id uuid, p_limit integer default 50, p_before date default null, p_before_id uuid default null) -> setof growth_records`（LS-255；R2 加 `p_before_id`，見下）
 - **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭、未刪的成長紀錄——
   `p_child_id` 傳一個自己不屬於的家庭的孩子不會報錯，只會回傳 0 列
   （`security invoker`，完全依賴 `growth_records_select` RLS，同 `list_children`
   的既有慣例）。
-- **用途**：依 `child_id` 列出成長紀錄，`measured_on desc, created_at desc` 排序。
-  `p_before` 是簡化游標——`NULL` 取第一頁；帶值時只回傳 `measured_on` 早於這個
-  日期的列（不是嚴格的 tuple keyset，見 migration 檔頭第 5 段說明：跨頁邊界剛好
-  卡在同一天的極端情況不在本票範圍）。`p_limit` 收斂在 1–200 之間（預設 50）。
-- **錯誤碼**：無自訂碼；未登入或不屬於的家庭，配合 RLS 自然回傳 0 列。
+- **用途**：依 `child_id` 列出成長紀錄，`measured_on desc, id desc` 排序（**R2
+  訂正**：原本是 `created_at desc`，M1 修正後改用 `id` 當同一天的 tie-break，理由
+  見下）。真正的 2 元組 keyset 分頁：`p_before`／`p_before_id` 要嘛同時提供、要嘛
+  同時省略（半游標拿 `LS022`，同 `get_family_timeline`／`list_comments` 既有慣例，
+  不是新碼）——`NULL`＝取第一頁；帶值時回傳 `(measured_on, id) < (p_before,
+  p_before_id)` 的列（呼叫端從上一頁**最後一列**的 `measured_on`／`id` 組游標）。
+  `p_limit` 收斂在 1–200 之間（預設 50）。
+  **R1 曾經是單值游標 `measured_on < p_before`（merge-review R1 M1，major）**：
+  同一 child 同日多筆時，卡在頁尾的同日紀錄會被靜默漏掉（實跑重現：4 筆中同一天
+  2 筆，`p_limit=2` 分頁只走訪得到 3 筆）——票面「同日多筆取最後由讀端處理」的
+  前提是讀端看得到該日全部列，單值游標無法保證這件事。修法：改用 `id`（結構上
+  保證唯一）取代 `created_at` 當第二個游標欄位——沒有選 `created_at` 是因為同一
+  交易內連續呼叫 `upsert_growth_record` 會拿到同一個 `now()`（transaction_
+  timestamp 語意），`created_at` 在這種情況下不保證唯一，`id` 沒有這個風險。
+- **錯誤碼**：`p_before`／`p_before_id` 只給一個 `LS022`；其餘無自訂碼；未登入或
+  不屬於的家庭，配合 RLS 自然回傳 0 列。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
 ### `upsert_growth_record(p_id uuid, p_child_id uuid, p_measured_on date, p_height_cm numeric, p_weight_kg numeric, p_head_cm numeric, p_note text) -> growth_records`（LS-255）
@@ -1635,17 +1664,26 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   不存在或指向呼叫者不屬於的家庭時，`family_id` 解析為 `NULL`，`INSERT` 撞
   `growth_records_insert` 的 `WITH CHECK`（`NULL in (...)` 求值為非 `TRUE`）得到
   `42501`——**本機實測結果**：PostgreSQL 對 INSERT 先評估 RLS 的 `WITH CHECK`
-  才輪到 `NOT NULL` 約束，不會是原本可能猜測的 `23502`。更新分支是整組替換
-  （PUT 語意）五個內容欄位，`updated_at` 一併寫入 `now()`。
+  才輪到 `NOT NULL` 約束，不會是原本可能猜測的 `23502`。新增分支若 `p_child_id`
+  指向一個已軟刪的孩子，`BEFORE INSERT` trigger（`private.enforce_child_not_
+  deleted()`，LS-255 R2 merge-review R1 m2 登記）拋既有碼 `LS044`（沿 LS-121 的
+  系統性規則，見 §3／§5）。更新分支是整組替換（PUT 語意）五個內容欄位，
+  `updated_at` 一併寫入 `now()`——**`p_child_id` 在更新分支完全被忽略**（R1
+  informational i4）：`SET` 子句沒有 `child_id`，也不驗證 `p_child_id` 與該列是否
+  相符，呼叫端傳錯 `p_child_id` 不會報錯。這是安全的（`child_id` 是不可變欄位、
+  沒有直接寫入 grant），但呼叫端不該依賴更新分支的 `p_child_id` 參數有任何效果
+  ——它只在新增分支（`p_id is null`）有意義。
 - **回傳**：整列（`growth_records` 的所有欄位，含 `id`／`created_at` 等呼叫端
   可能需要的欄位）。
 - **錯誤碼**：未登入 `42501`；`p_id` 非 `NULL` 但更新命中 0 列（不存在，或不是
   這筆的作者，或已不是該家庭 owner/member）`42501`；`p_child_id` 不存在或不屬於
-  呼叫者任何家庭（新增分支，RLS 違反）`42501`；三項量測全空或任一項非正值
+  呼叫者任何家庭（新增分支，RLS 違反）`42501`；`p_child_id` 指向已軟刪的孩子
+  （新增分支）`LS044`；三項量測全空、任一項非正值、或 `note` 超過 2000 字
   `23514`。**刻意不開自訂 `LSnnn` 碼**——本票是純後端票，不動 `LittleSprout/
   Errors/AppError.swift`，`error-codes-check.sh` 要求新碼須同一 PR 登記
   API.md／Swift 兩處；若日後 iOS 實作票需要對「找不到孩子」與「一般 RLS 拒絕」
-  給不同文案，屆時可另開自訂碼並同步補 Swift enum。
+  給不同文案，屆時可另開自訂碼並同步補 Swift enum（`LS044` 是既有碼，不受此
+  限制，見上）。
 - **併發**：新增分支是純 `INSERT`，無鎖需求；更新分支是單一 `UPDATE ... RETURNING`
   陳述式，授權判斷（RLS）與寫入在同一個原子操作內完成，不像 `create_diary_entry`
   那類 `SECURITY DEFINER` RPC 需要先 `SELECT ... FOR UPDATE` 讀出目前狀態再手動
@@ -1666,8 +1704,12 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   DEFINER` 直接 `UPDATE`，LS-57 的 `private.enforce_deletion_attribution()`
   還原鎖已經就位，不需要重新設計（見 migration 檔頭第 4 段）。
 - **錯誤碼**：未登入 `42501`；紀錄不存在 `42501`；不是作者本人（或雖是作者但
-  已離開家庭）且不是該家庭 owner `42501`。同上，刻意不開自訂碼（理由同
-  `upsert_growth_record`）。
+  已離開家庭）且不是該家庭 owner `42501`；**`LS027`（LS-255 R2，merge-review R1
+  m1 登記，既有碼、非新增）**——owner 已軟刪這筆紀錄之後，作者（跨交易，`now()`
+  不同）再呼叫這支 RPC，函式本身的授權檢查會放行（仍是作者、仍是家庭成員），但
+  底下的 `UPDATE` 觸發共用 trigger `private.enforce_deletion_attribution()` 的
+  還原鎖，拋 `LS027`「這筆成長紀錄已被家庭管理者移除，只有管理者能還原」（見
+  migration 檔頭第 4 段、§5）。其餘刻意不開自訂碼（理由同 `upsert_growth_record`）。
 - **併發**：對目標列用 `FOR UPDATE` 鎖住再讀 `family_id`／`author_id` 做授權判斷
   （LS-52 既定規則：RPC 授權判斷讀到的列都要先鎖住，防 TOCTOU）。
 
@@ -2023,16 +2065,16 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS017` | 邀請碼參數不合法（到期時間或可用次數超出範圍） | `create_invite` |
 | `LS020` | 日記不存在，或（`update_diary_entry` 情境）已被軟刪除須先還原 | `update_diary_entry`／`set_diary_deleted` |
 | `LS021` | 不是作者本人，或雖是作者但已不是該家庭 owner/member | `update_diary_entry` |
-| `LS022` | keyset 分頁的游標參數只給了一半（兩個游標參數要嘛都給、要嘛都不給） | `get_family_timeline`／`list_comments`（游標都是呼叫端自己組的，不是使用者輸入——使用者沒有東西可換，原地重試不會成功；Swift 端 `AppError`／`LSErrorCode.Tier` 把它歸在 `rejected` 層，不是 `validationRetryable`，見 LS-55 PR #77 R1 裁決） |
+| `LS022` | keyset 分頁的游標參數只給了一半（兩個游標參數要嘛都給、要嘛都不給） | `get_family_timeline`／`list_comments`／`list_growth_records`（LS-255 R2，merge-review R1 M1 修正——`p_before`／`p_before_id` 同一組游標）（游標都是呼叫端自己組的，不是使用者輸入——使用者沒有東西可換，原地重試不會成功；Swift 端 `AppError`／`LSErrorCode.Tier` 把它歸在 `rejected` 層，不是 `validationRetryable`，見 LS-55 PR #77 R1 裁決） |
 | `LS023` | 相簿不存在 | `set_album_deleted` |
 | `LS024` | 留言不存在 | `update_comment`／`set_comment_deleted` |
 | `LS025` | 不是留言作者本人，或雖是作者但已離開該家庭 | `update_comment` |
 | `LS026` | 留言／按讚／檢舉的 target 存在，但屬於別的家庭 | `create_comment`／`toggle_reaction`／`report_content`（LS-149，同一種目標歸屬檢查，見 §4） |
-| `LS027` | 這篇日記／這本相簿／這則留言已被家庭管理者移除，只有管理者能還原 | `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted`（還原方向或重新軟刪方向皆可能；albums 的建立者直接 `.update()` 路徑也會撞到；由 `private.enforce_deletion_attribution()` trigger 統一 raise，LS-57，PR #98 review 擴大到重新軟刪方向並涵蓋 `deleted_by` 為 `NULL` 的情況） |
+| `LS027` | 這篇日記／這本相簿／這則留言／這筆成長紀錄已被家庭管理者移除，只有管理者能還原 | `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted`／`delete_growth_record`（LS-255 R2，merge-review R1 m1 登記——owner 已軟刪的紀錄，作者跨交易再呼叫 `delete_growth_record` 會撞到，由共用 trigger 統一 raise；`v_label` 補了 `growth_records` 分支，訊息主詞正確顯示「這筆成長紀錄」，不是掉到泛稱）（還原方向或重新軟刪方向皆可能；albums 的建立者直接 `.update()` 路徑也會撞到；由 `private.enforce_deletion_attribution()` trigger 統一 raise，LS-57，PR #98 review 擴大到重新軟刪方向並涵蓋 `deleted_by` 為 `NULL` 的情況） |
 | `LS041` | 孩子檔案不存在，或（`update_child` 情境）已被軟刪除須先還原 | `update_child`／`set_child_deleted` |
 | `LS042` | 不是仍是該家庭 owner/member 的成員，無法編輯孩子檔案 | `update_child` |
 | `LS043` | 孩子檔案已被移除超過 30 天，無法還原 | `set_child_deleted`（`p_deleted = false`） |
-| `LS044` | 寶貝已移除，無法歸屬新內容 | `diary_children`／`album_children` 的 `BEFORE INSERT` trigger（LS-121 起搬到連結表；原本掛在 `diaries`／`albums` 本體，見 §8）——`create_diary_entry`／`update_diary_entry`／`set_album_children`（`p_child_ids` 任一元素指向已軟刪的孩子）皆可能撞到，這是這支 trigger 唯一會被觸發的路徑（`diary_children`／`album_children` 對 `authenticated` 沒有任何直接寫入 grant，見 §2／§3，不存在繞過三支 RPC 直接撞到這個碼的呼叫端路徑）；只在真的要新增一列標記時才會觸發，不影響既有標記繼續存在、既有內容繼續軟刪／還原／編輯自己（見 §8） |
+| `LS044` | 寶貝已移除，無法歸屬新內容 | `diary_children`／`album_children` 的 `BEFORE INSERT` trigger（LS-121 起搬到連結表；原本掛在 `diaries`／`albums` 本體，見 §8）——`create_diary_entry`／`update_diary_entry`／`set_album_children`（`p_child_ids` 任一元素指向已軟刪的孩子）皆可能撞到，這是這支 trigger 唯一會被觸發的路徑（`diary_children`／`album_children` 對 `authenticated` 沒有任何直接寫入 grant，見 §2／§3，不存在繞過三支 RPC 直接撞到這個碼的呼叫端路徑）；只在真的要新增一列標記時才會觸發，不影響既有標記繼續存在、既有內容繼續軟刪／還原／編輯自己（見 §8）。**`growth_records`（LS-255 R2，merge-review R1 m2 登記）**：`growth_records` 的 `BEFORE INSERT/UPDATE` 也掛了同一支共用函式 `private.enforce_child_not_deleted()`——`upsert_growth_record` 的新增分支若 `p_child_id` 指向已軟刪的孩子會撞到；更新分支從不改 `child_id`（欄位級 grant 未開放），這支 trigger 對更新分支恆為 no-op |
 | `LS045` | 不是相簿建立者本人，或雖是建立者但已不是該家庭 owner/member，無法設定寶貝標記 | `set_album_children`（LS-121） |
 | `LS050` | 你是家庭的唯一 owner，且家庭還有其他成員，須先轉移 owner 身份才能刪除帳號——`DETAIL` 帶 JSON 陣列列出全部需要轉移的家庭（`[{"family_id","family_name"}, ...]`），見 §4 `delete_my_account` | `delete_my_account`（LS-143） |
 | `LS051` | 帳號已請求刪除（`deletion_requested_at` 非 `NULL`），過渡期間不能再建立新資料——沒有輸入可換，只能等 Edge Function `delete-account` 完成刪除 | `families`／`family_members`／`media`／`diaries`／`albums`／`children`／`comments` 的 `BEFORE INSERT` trigger（`private.enforce_account_not_deletion_requested()`，LS-151），涵蓋直接 `.insert()` 與 `create_child`／`create_diary_entry`／`create_comment`／`approve_join`／建立新家庭自動寫入 owner 等 RPC 路徑，見 §2「過渡期擋寫」 |
@@ -2753,7 +2795,7 @@ get_my_join_request()
 get_reaction_counts(uuid, text, uuid[])
 list_children(uuid)
 list_comments(uuid, text, uuid, timestamptz, uuid, integer)
-list_growth_records(uuid, integer, date)
+list_growth_records(uuid, integer, date, uuid)
 list_join_requests()
 notification_recipients(uuid[])
 purge_storage_classify_orphan_paths(text[])
