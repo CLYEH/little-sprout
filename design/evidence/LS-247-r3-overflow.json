@@ -1,7 +1,7 @@
 {
   "ticket": "LS-247",
   "round": 3,
-  "head_sha": "26d74d8",
+  "head_sha": "26d74d86ad14d40db7ff6808f557241c455b1c9b",
   "total_nodes": 10281,
   "tree_hash": "fb3f366aeea53947",
   "scan_scope": "boards",
