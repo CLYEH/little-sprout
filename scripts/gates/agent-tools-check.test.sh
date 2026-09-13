@@ -8,6 +8,8 @@
 # 同一 mutant 下負樣本變綠。
 # LS-186（⑪）：ios-dev 正文的 PR body 驗證句須為 `pr-body-check.sh <f> --branch <分支> --verify`——改回裸 `pr-body-check.sh <f>` 即紅；
 # merge-reviewer／qa 不要求；同一 mutant 下負樣本變綠。
+# LS-256（㉓）：dead-code-sweeper 正文須含「禁派 fork」（LS-254 只釘五份，sweeper 是第六份）——缺即紅、工具齊全不救；同一 mutant 下負樣本變綠；
+#   正文必含字樣總數 47→48。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -111,7 +113,7 @@ reset() {
   rm -rf "$agents"; mkdir -p "$agents"
   mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_BODY"
   mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_BODY"
-  mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
+  mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "$NOFORK254"
   mk ui-designer NONE "$UI_BODY"
   mk visual-reviewer NONE "$VR_BODY"
   mk ios-dev "$IOS_TOOLS" "$IOS_BODY"
@@ -152,7 +154,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（47 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 47 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（48 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 48 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -438,6 +440,19 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '禁派 fork'; then
   ok '㉒ mutant：拿掉規則後「缺禁派 fork 句」的負樣本變綠'
 else
   echo "✗ ㉒ mutant（禁派 fork 句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ㉓ LS-256（LS-96 池項 a7e9e910 i1／e4155ed8(1)）：dead-code-sweeper 是六份定義中原唯一未釘「禁派 fork」的（LS-254 票文只列五份）
+#        ——補釘同一條規則；tools 白名單無 Agent，與 merge-reviewer／qa 同型（需要並行回報 orchestrator 拆派）。----
+reset; expect 0 '㉓ dead-code-sweeper 正文含禁派 fork 句 → 印「正文含」（總數 48 條）' 'dead-code-sweeper.md：正文含「禁派 fork」' '正文必含字樣 48 條）'
+reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '㉓ dead-code-sweeper 缺該句 → exit 1，工具齊全不救（regression：LS-254 前這份無正文規則、任何正文都過）' 'dead-code-sweeper.md：正文缺「禁派 fork」' '' 'dead-code-sweeper.md：tools: 缺'
+reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "禁派fork（無空白）"; expect 1 '㉓ 字樣須整句「禁派 fork」（含空白）→ exit 1' 'dead-code-sweeper.md：正文缺「禁派 fork」'
+reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '禁派 fork'; then
+  ok '㉓ mutant：拿掉規則後「sweeper 缺禁派 fork 句」的負樣本變綠'
+else
+  echo "✗ ㉓ mutant（sweeper 禁派 fork 句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過

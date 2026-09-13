@@ -130,20 +130,29 @@ jobs:
           printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-check.txt"
           bash scripts/gates/pr-body-check.sh --branch "$HEAD" --verify "$RUNNER_TEMP/pr-body-check.txt"
 
+      # LS-256（LS-96 池項 010d927d(1)）：從這一步起到 job 結尾的每個 gate step 都帶 `!cancelled()`——GitHub Actions 的
+      # step 預設只在前面全綠時跑，上面的 pr-body-check 一紅（body 文案問題），後面 14 支彼此獨立的 gate（evidence-path／
+      # design-asset-size／brand-skill／agent-tools／privacy-manifest／ax-launch／qa-driver-gate／error-codes／tracked-ignored／
+      # Migration rules／Design gate／.pen 三支）全部 skipped，head 的 .pen 收據在 CI 從未驗過（LS-234 R7／R8 兩次）。
+      # 沿 LS-207 R2（fd783f6c I2）的 `!cancelled()` 而非 `always()`：job 被取消（撞 timeout-minutes）時不硬跑；
+      # 各 step 原本的事件／分支條件保留在 `&& (…)` 內，失敗仍各自紅（step 級 conclusion 不變，job 仍 failed）。
+      # 不拆獨立 job：required checks 是 job 名，拆 job 要同步改 branch protection（repo 外設定）、且 promote.sh 認的
+      # 四個 check 名也要跟著動——step 級 `if` 改動最小、風險最低。pr-body-check 之前的三步（PR direction／branch
+      # naming／branch-ticket）是 PR 形狀本身的 gate，紅了代表 PR 不該存在，維持連坐不動。
       # LS-69：evidence-path-check 原本只在本機 pre-commit 跑（看 --cached／staged），`--no-verify` 繞過後
       # CI 沒有兜底——PR 上 commit-msg／secrets 都有伺服器端兜底、唯獨這條沒有（R1 I10）。這裡用新增的
       # `--base` 模式對 `origin/$BASE...HEAD`（PR merge ref 相對 base 的全部新增／改名路徑）重跑同一套規則；
       # 所有 PR 方向都跑（不像 branch-ticket-check 只在工作分支 head 執行）：development／test／main 都可能是
       # PR 的 base（PR direction matrix 允許 test→main、development→test 等走 PR），取證形狀不分方向都要擋。
       - name: 審查取證不進版控（PR diff 對帳，evidence-path-check --base，LS-69）
-        if: github.event_name == 'pull_request'
+        if: ${{ !cancelled() && (github.event_name == 'pull_request') }}
         run: bash scripts/gates/evidence-path-check.sh --base "origin/$BASE"
 
       # LS-74：design-asset-size-check 原本只在本機 pre-commit 跑（看 --cached／staged），`--no-verify`
       # 繞過後 CI 沒有兜底（同 LS-69 evidence-path-check 的坑）。這裡用同一套 `--base` 模式對
       # `origin/$BASE...HEAD` 重跑同一套規則。所有 PR 方向都跑，理由同上一步。
       - name: design/ 大檔二進位體積（PR diff 對帳，design-asset-size-check --base，LS-74）
-        if: github.event_name == 'pull_request'
+        if: ${{ !cancelled() && (github.event_name == 'pull_request') }}
         run: bash scripts/gates/design-asset-size-check.sh --base "origin/$BASE"
 
       # LS-45／LS-41／LS-54／LS-53／LS-50／LS-63：gate 腳本自己的負向測試——每個 PR 都跑，確保「標記獨佔一行才
@@ -241,12 +250,14 @@ jobs:
       # frontmatter name／description 齊、SKILL.md 引用的 references/*.md 都在、兩份 agent 定義仍含必載指示。
       # 純檔案比對、不依賴 PR body，所有 PR 都跑（同 secrets 掃描／tracked-ignored）。
       - name: 品牌 skill 接線（brand-skill-check，LS-30）
+        if: ${{ !cancelled() }}
         run: bash scripts/gates/brand-skill-check.sh
 
       # LS-87 R3 F2：agent 定義 tools: 白名單——qa／merge-reviewer「裁決必貼 status」靠 Bash、讀票寫 comment 靠 Linear 三支、
       # qa 視覺驗收對設計稿路徑靠 pencil get_app_state、ui-designer／visual-reviewer 靠 pencil execute；白名單是窮舉的，漏列即
       # 靜默不可執行（CI 四項全綠、下一次派工才發現）。驗 frontmatter tools: 含必要工具（整字比對；無 tools: 行＝繼承全部、放行）。
       - name: Agent 定義工具白名單（agent-tools-check，LS-87）
+        if: ${{ !cancelled() }}
         run: bash scripts/gates/agent-tools-check.sh
 
       # LS-145：Privacy Manifest／用途字串／出口合規旗標——App Store Connect 上傳前置的機械 gate（PLAN
@@ -254,6 +265,7 @@ jobs:
       # ITSAppUsesNonExemptEncryption 是否為 false），不依賴 PR body 或分支名，所有 PR／push 皆跑（同
       # 品牌 skill 接線／agent 工具白名單）。
       - name: Privacy Manifest／用途字串／出口合規旗標（privacy-manifest-check，LS-145）
+        if: ${{ !cancelled() }}
         run: bash scripts/gates/privacy-manifest-check.sh
 
       # LS-211 範圍 7（來源 LS-210 merge-review R1 `24fc12db` i3、LS-96 池項 `b63b274a` (a)）：
@@ -262,6 +274,7 @@ jobs:
       # allowlist（`TapTargetMeasurement.swift`，見腳本檔頭）現況會通過；LS-190 併主換成 launchArguments
       # 後應移除該 allowlist 項。
       - name: AX 字級啟動參數 gate（ax-launch-check，LS-211）
+        if: ${{ !cancelled() }}
         run: bash scripts/gates/ax-launch-check.sh
 
       # LS-232（來源 LS-96 池項 `f2c2100f`(4)；兩起事故 LS-190 EULA、LS-217 推播前置頁）：
@@ -269,6 +282,7 @@ jobs:
       # `// QA-GATE-HANDLED:` 標記（已處理清單），差集非空即紅——新增全屏 gate 沒同步更新
       # QADriver 會讓 qa-e2e.sh browse／publish 對新帳號卡住。純檔案內容比對，所有 PR／push 皆跑。
       - name: QADriver 全屏 gate 對帳（qa-driver-gate-check，LS-232）
+        if: ${{ !cancelled() }}
         run: bash scripts/gates/qa-driver-gate-check.sh
 
       # LS-71：ops 腳本自測——patrol.sh（巡檢）用合成 repo（file:// 裸 origin＋七個 worktree）驗各停滯型態判定的
@@ -342,6 +356,7 @@ jobs:
       # errcode 三方雙向對帳（本機 push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、
       # 不依賴 PR body 標記，沒有 promote／back-merge 誤擋的問題（同 secrets 掃描）。
       - name: 錯誤碼三方對帳（docs/API.md §5 ↔ LSErrorCode ↔ migrations errcode，LS-54／LS-56）
+        if: ${{ !cancelled() }}
         run: bash scripts/gates/error-codes-check.sh
 
       # LS-51：設計畫布（design-canvas*/）執行產物由根 .gitignore 統一 ignore，但 ignore 規則
@@ -352,6 +367,7 @@ jobs:
       # （獨立 step 而不併進上面「Gate 腳本自測」，是為了避開同時在飛的 LS-53 改同一 step；
       #   LS-53 併入後可併回去，維持「一個地方跑所有 gate 自測」。）
       - name: 已追蹤檔不得命中 .gitignore（tracked-ignored-check，LS-51）
+        if: ${{ !cancelled() }}
         run: |
           bash scripts/gates/tracked-ignored-check.test.sh
           bash scripts/gates/tracked-ignored-check.sh
@@ -364,7 +380,7 @@ jobs:
       # PR #10 promote 實測撞過 Design gate）。secrets 掃描沒有這個問題
       # （掃描本身不依賴 PR body 標記），維持對全部 PR 執行。
       - name: Migration rules
-        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
+        if: ${{ !cancelled() && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')) }}
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           mig=$(git diff --name-only "$base_sha"...HEAD -- supabase/migrations/ || true)
@@ -422,7 +438,7 @@ jobs:
           fi
 
       - name: Design gate（新增 SwiftUI View 需附設計稿標記）
-        if: startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')
+        if: ${{ !cancelled() && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')) }}
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           # 掃所有變更 Swift 檔的「新增行」，涵蓋新檔與寫進既有檔的新 View；
@@ -437,7 +453,7 @@ jobs:
       # LS-26：.pen 落地結構兜底（本機 commit-gate 的伺服器端對應；
       # 無 --expect-nodes——「落地比記憶體舊」的深度驗證靠收工程序＋handoff 證據）
       - name: .pen 落地結構檢查
-        if: github.event_name == 'pull_request'
+        if: ${{ !cancelled() && (github.event_name == 'pull_request') }}
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           pens=$(git -c core.quotePath=false diff --name-only --diff-filter=ACM "$base_sha"...HEAD -- '*.pen' || true)
@@ -461,7 +477,7 @@ jobs:
       # .pen 偵測與 gate 都用 merge-base(origin/$BASE, head.sha)..head.sha；fetch-depth: 0 已含 PR head（合併 commit 的第二親，
       # ^1 是 base tip——所以從 HEAD --first-parent 走下去是 base 側，不是解法）。
       - name: .pen 掃描收據 gate（LS-68）
-        if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/'))
+        if: ${{ !cancelled() && (github.event_name == 'pull_request' && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/'))) }}
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
@@ -482,7 +498,7 @@ jobs:
       # head 已無）的 id 若仍被 Notes 現在式引用即紅，同子句帶沿革標記者放行（design-notes-check.sh 檔頭）。觸發條件同上一
       # step（.pen 有變更的 feature|fix|hotfix PR；同樣以 PR head sha 為終點，LS-127）；不需票號。
       - name: .pen Notes 節點 id gate（LS-168）
-        if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/'))
+        if: ${{ !cancelled() && (github.event_name == 'pull_request' && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/'))) }}
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |

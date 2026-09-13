@@ -10,6 +10,9 @@
 #   `（commit `sha`）`／逗號句／表格別欄四種 repo 常見形狀為正樣本。
 # LS-198（⑧）：格式模式對「已修」後第一個 hex 為純數字（migration 檔名前綴／CI run id）印 ⚠ 警告、exit 仍 0——拿掉警告即紅；非純數字不得印警告；
 #   --verify 紅「不是本 repo 的 commit」時 deny 訊息須含「檔名／行號裡的數字也算 hex token」——刪掉那半句即紅。
+# LS-256（⑩；LS-96 池項 010d927d(2)(3)）：(a) LS-96 行的純數字 token（GitHub run id）不算 comment id 候選——只有 run id 的池項行格式紅、
+#   run id 與真 id 並列時候選清單不含 run id；退回「純數字也算候選」即紅。(b) --verify 無 LINEAR_API_KEY 且有池項候選未反查 → exit 3
+#   （訊息含「exit 3＝未反查，不是違規」）、無池項候選 → 0、git 半段紅 → 仍 1（違規優先）；退回 exit 0 即紅（⑥a／⑥a2 同步改期望 3）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -204,14 +207,14 @@ vexpect() {
 both="${H}- m1：已修 \`${sha_in}\`"$'\n'"- i1：記入 LS-96 \`9f348e36\`"$'\n'
 
 : > "$CURL_STUB_LOG"
-vexpect 0 '⑥a 無 LINEAR_API_KEY → 反查略過、exit 0' '反查略過（無 LINEAR_API_KEY）' '' "$both"
+vexpect 3 '⑥a 無 LINEAR_API_KEY 且有池項候選 → 反查略過、exit 3（LS-256：未反查不是違規、與 1 區分，曾是 0）' '反查略過（無 LINEAR_API_KEY）' '' "$both"
 if [ -s "$CURL_STUB_LOG" ]; then echo "✗ ⑥a 略過時不應呼叫 curl" >&2; sed 's/^/    /' "$CURL_STUB_LOG" >&2; fail=1; else echo "✓ ⑥a 略過時不呼叫 curl"; fi
-vexpect 0 '⑥a 無 key 時 git 半段仍跑（SHA 在 PR 內）' "SHA ${sha_in} 在 PR commits 內" '' "$both"
+vexpect 3 '⑥a 無 key 時 git 半段仍跑（SHA 在 PR 內；池項候選未反查故 exit 3）' "SHA ${sha_in} 在 PR commits 內" '' "$both"
 vexpect 1 '⑥a 無 key 時 git 半段仍擋（SHA 不存在——LS-186 起與「非祖先」分開講：不是 commit object）' '不是本 repo 的 commit（候選：abcdef1）' '' "${H}- m1：已修 \`abcdef1\`"$'\n'
 
 # ⑥a2（LS-211，來源 LS-96 池項 df12be2e）：無 key 時逐行點名哪些候選只驗了格式，不只印一句總結。
 # $both 的 LS-96 行是第 5 行（H 佔 1-3 行、m1 已修行第 4、i1 記入行第 5）。
-vexpect 0 '⑥a2 無 key：逐行印 ⚠ 未反查，第 5 行候選 9f348e36' '⚠ 未反查（無 LINEAR_API_KEY）：第 5 行候選 9f348e36' '' "$both"
+vexpect 3 '⑥a2 無 key：逐行印 ⚠ 未反查，第 5 行候選 9f348e36（exit 3，LS-256）' '⚠ 未反查（無 LINEAR_API_KEY）：第 5 行候選 9f348e36' '' "$both"
 printf '%s' "${H}- m1：已修 \`${sha_in}\`"$'\n' > "$work/vbody"
 if run_v '' --verify "$work/vbody" 2>&1 | grep -qF '⚠ 未反查'; then
   echo "✗ ⑥a2 沒有 LS-96 行卻印了 ⚠ 未反查（應該只在真的有池項候選行時才印）" >&2; fail=1
@@ -358,6 +361,47 @@ expect 0 '⑧-a 已修 `20260904212530_x.sql` `<sha>`：格式模式仍綠、但
 absent '⑧-a 已修 `<sha>` `20260904212530_x.sql`（SHA 在前）→ 不印純數字警告' '是純數字' "${H}- m1：已修 \`7c2ff80\` \`20260904212530_suspension.sql\`"$'\n' --branch "$B"
 vexpect 1 '⑧-b --verify：migration 檔名前綴排在 SHA 之前 → 紅，deny 訊息指出檔名／行號裡的數字也算 hex token、把 SHA 放『已修』後第一個' '檔名／行號裡的數字也算 hex token' '' "${H}- m1：已修 \`20260904212530_suspension.sql\` \`${sha_in}\`"$'\n'
 
+# ⑩ LS-256（LS-96 池項 010d927d(2)(3)）：
+#   (a) 規則 (a) 的候選排除純數字 token——LS-234 R7 PR body 的 GitHub run id（11 位純數字）被當 comment id 候選，格式綠、--verify 才紅在
+#       「找不到」且候選清單裡混著 run id。只有 run id 的池項行 → 格式紅「沒有 comment id」；run id＋未知 id → --verify 紅但候選只列 hex；
+#       run id＋真 id → 綠。
+#   (b) --verify 無 LINEAR_API_KEY：有池項候選未反查 → exit 3（訊息「exit 3＝未反查，不是違規」）；無池項候選 → 0；git 半段紅 → 1（違規優先）。
+expect 1 '⑩a LS-96 行只有純數字 token（GitHub run id）→ 不算候選，格式紅「沒有 comment id」' '沒有 comment id' "${H}- i1：記入 LS-96（run 17654321987）"$'\n' --branch "$B"
+expect 0 '⑩a 純數字 token 與真 id 並列 → 格式綠' '皆帶 comment id' "${H}- i1：記入 LS-96（run 17654321987）\`9f348e36\`"$'\n' --branch "$B"
+vexpect 1 '⑩a --verify：run id 與未知 id 並列 → 紅，候選清單不含 run id' '候選：deadbeef00；' 'test-token-not-real' "${H}- i1：記入 LS-96 17654321987 \`deadbeef00\`"$'\n'
+vexpect 0 '⑩a --verify：run id 與真 id 並列 → 綠' '9f348e36 存在' 'test-token-not-real' "${H}- i1：記入 LS-96（run 17654321987）\`9f348e36\`"$'\n'
+expect 0 '⑩a 純數字排除只作用在 LS-96 行：「已修」行的純數字候選仍走 LS-198 警告（不紅）' '是純數字' "${H}- m1：已修 \`20260904212530_suspension.sql\` \`7c2ff80\`"$'\n' --branch "$B"
+vexpect 3 '⑩b 無 key、有池項候選 → exit 3 且訊息明寫「exit 3＝未反查，不是違規」' 'exit 3＝未反查，不是違規' '' "$both"
+vexpect 0 '⑩b 無 key、無池項候選（只有「已修」行）→ exit 0（沒有東西需要反查）' '「已修」行 1 條' '' "${H}- m1：已修 \`${sha_in}\`"$'\n'
+vexpect 1 '⑩b 無 key、有池項候選但 git 半段紅 → 仍 exit 1（違規優先於未反查）' '不是本 repo 的 commit（候選：abcdef1）' '' "${H}- m1：已修 \`abcdef1\`"$'\n'"- i1：記入 LS-96 \`9f348e36\`"$'\n'
+vexpect 0 '⑩b 有 key → 真的反查、exit 0（CI 不受影響）' '9f348e36 存在' 'test-token-not-real' "$both"
+printf '%s' "$both" > "$work/vbody"
+if run_v 'test-token-not-real' --verify "$work/vbody" 2>&1 | grep -qF 'exit 3＝未反查'; then
+  echo "✗ ⑩b 有 key 時不該印「exit 3＝未反查」" >&2; fail=1
+else
+  echo "✓ ⑩b 有 key 時不印「exit 3＝未反查」"
+fi
+# 不帶 --verify 時池項行只驗格式、從來不反查也不該印 exit 3 訊息（exit 0）
+expect 0 '⑩b 不帶 --verify → 仍 exit 0、不印「exit 3＝未反查」（未反查是 --verify 才有的狀態）' '--verify 才反查' "$both" --branch "$B"
+absent '⑩b 不帶 --verify 不印「exit 3＝未反查」' 'exit 3＝未反查' "$both" --branch "$B"
+# mutation：把純數字過濾拿掉（ids 直接用 hex_tokens 原始輸出）→ ⑩a 第一格「只有 run id」必須變綠，證明紅是這條過濾造成的
+mut10="$work/pr-body-check.no-digit-filter.sh"
+LS256_REPL=$'    ids=$(hex_tokens "$line" 8 \'\')' awk '
+  index($0, "# LS256-DIGIT-FILTER") > 0 { print ENVIRON["LS256_REPL"]; next }
+  { print }
+' "$check" > "$mut10"
+if grep -qF 'LS256-DIGIT-FILTER' "$mut10" || ! grep -qF 'LS256-DIGIT-FILTER' "$check"; then
+  echo "✗ ⑩ mutate：找不到 LS256-DIGIT-FILTER 標記或過濾仍在，負控本身無效" >&2; fail=1
+else
+  printf '%s' "${H}- i1：記入 LS-96（run 17654321987）"$'\n' > "$work/body"
+  out10="$(bash "$mut10" --branch "$B" "$work/body" 2>&1)"; got10=$?
+  if [ "$got10" -eq 0 ]; then
+    echo "✓ ⑩ mutant（拿掉純數字過濾）：只有 run id 的池項行改判綠——證明⑩a 的紅是這條過濾造成的"
+  else
+    echo "✗ ⑩ mutant 應 exit 0（實得 ${got10}）" >&2; printf '%s\n' "$out10" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
 # ⑨ mutation（LS-211）：拿掉逐行印 ⚠ 未反查 的迴圈 → ⑥a2 的正樣本必須消失，證明是這段迴圈在印。
 mut9="$work/pr-body-check.no-warn-loop.sh"
 awk '
@@ -379,6 +423,6 @@ else
 fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pr-body-check 自測通過（106 組樣本）"
+  echo "✓ pr-body-check 自測通過（119 組樣本）"
 fi
 exit "$fail"

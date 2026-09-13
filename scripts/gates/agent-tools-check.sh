@@ -90,7 +90,8 @@ BODY_RULES=
 # LS-254：五份（ios-dev／ui-designer／visual-reviewer／merge-reviewer／qa）正文須含「禁派 fork」——fork 繼承整份派工單、會把它當
 # 自己的任務平行執行（LS-234 R7 同一 .pen／branch 雙寫；LS-188／LS-192 越權改檔，三起皆為 worker 自己派的 fork）；PreToolUse
 # `scripts/hooks/fork-guard.sh` 是機械層（只擋非主 session 的 `subagent_type: fork`），這句是前饋（含「任何子 agent 不得寫檔／
-# commit／改 PR／貼 Linear」的規約層，機械層擋不到）；被刪即紅。
+# commit／改 PR／貼 Linear」的規約層，機械層擋不到）；被刪即紅。LS-256（LS-96 池項 a7e9e910 i1）：第六份 dead-code-sweeper 補釘
+# （LS-254 票文只列五份，sweeper 是六份定義中唯一未釘的；tools 無 Agent，與 merge-reviewer／qa 同型）。
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold|LS-170：互動式本機驗證（模擬器對本機容器的多步驟操作）前先 supabase-lock.sh --hold，收工 --release
 ios-dev|pr-body-check.sh <f> --branch <分支> --verify|LS-186：gh pr create/edit 前先用完整旗標跑 pr-body-check.sh 並直接看 exit code
@@ -138,7 +139,8 @@ ios-dev|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的�
 ui-designer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行（LS-234 R7 同一 .pen／branch 雙寫）；研究只派 Explore 唯讀，PreToolUse fork-guard.sh 機械擋
 visual-reviewer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；研究只派 Explore 唯讀，PreToolUse fork-guard.sh 機械擋
 merge-reviewer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派
-qa|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派"
+qa|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派
+dead-code-sweeper|禁派 fork|LS-254／LS-256：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派（六份定義中原唯一未釘的一份）"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，

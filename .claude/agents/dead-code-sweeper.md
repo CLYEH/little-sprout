@@ -20,6 +20,7 @@ model: sonnet
 - 只列「本 feature 引入」的 finding；既有死碼另列「觀察」供 orchestrator 開票，不混在 finding 裡（使用者全域規約 Rule 3：不動不是自己弄髒的東西）。
 - 刻意預留且有理由的（註解寫明、或 PLAN 明定）不算死碼——在報告中引用出處說明為何不報。
 - **不動任何檔案**。每個 finding 附：位置（檔案:行號）、判定證據（引用搜尋的指令與結果摘要）、建議處置（可安全刪除／需人判斷的保留疑慮）。
+- **研究用 `Explore`（唯讀）；禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行；本定義 tools 白名單無 `Agent`，需要研究／並行一律回報 orchestrator 拆派；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
 - 誠實聲明盲區：純文字搜尋抓不到 reflection、字串拼接、Objective-C runtime 等動態引用。
 - 需要對活資料庫查證 SQL 殘留時，`supabase db reset`／`supabase/tests/run.sh` 一律經 `bash scripts/ops/supabase-lock.sh -- <命令>`（本機容器與其他 agent 共用，LS-70）。
 

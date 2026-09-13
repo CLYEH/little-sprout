@@ -4,6 +4,8 @@
 # 「逐條驗收」抓不到）、每項證據判定被拿掉、或「測試名存在」驗證被拿掉（假測試名矇混過關），這裡
 # 會紅。另附兩個真實樣本（LS-191 QA comment c541cd06 應紅、LS-192 QA comment 88fb24bc 應綠）——
 # 來源見 LS-96 池項 1ff7b8d8／LS-211 票文驗收條件。
+# LS-256（①af／①ag／②m；LS-96 池項 b550a1e5）：(c) 命令白名單補 `git merge-tree`／`git diff`（merge-reviewer verdict
+# 慣用，此前兩次誤紅）——拿掉即 ①af／①ag 紅；白名單不得放寬到任意 `git `（`git log` 只是看過不是驗證）——放寬即 ②m 紅。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -326,6 +328,18 @@ expect 0 '①ae（R5，LS-228 R2，F4）白名單路徑候選在 mutation 語境
 - 條件 1：mutation 樣本 `supabase/tests/99_nonexistent_mutant.sql` → 紅
 '
 
+# LS-256（LS-96 池項 b550a1e5）：merge-reviewer verdict 慣用的兩個 git 子命令算 (c) 命令證據——
+# `git merge-tree` 驗 PR 可乾淨併入、`git diff <base>..<head> --stat` 對帳變更範圍（此前不在白名單，reviewer 兩次誤紅）。
+expect 0 '①af（LS-256）git merge-tree 命令證據' '' \
+'## 逐條查實
+- 範圍 1：`git merge-tree origin/main origin/feature/x` 無衝突輸出，PR 可乾淨併入
+'
+
+expect 0 '①ag（LS-256）git diff 命令證據' '' \
+'## 已驗證
+- 範圍 2：`git diff 6a5db27..b5f87b9 --stat` 34 檔皆在票文範圍內、無 migration
+'
+
 # ==== ② 負樣本（≥4）====
 expect 1 '②a 列項缺任何證據（無測試名／路徑／命令）' '缺『怎麼驗』證據' \
 '## 已驗證
@@ -387,6 +401,12 @@ expect 1 '②k（R5，LS-228 R2，F5）候選用 `..` 逃出 --repo——即使�
 expect 1 '②l（R5，LS-228 R2，F1 新增類別）supabase/**/*.sh 白名單路徑引用不存在的檔案 → 紅，訊息點名哪個路徑' '`supabase/tests/does-not-exist.sh`' \
 '## 已驗證
 - 條件 1：核對過 `supabase/tests/does-not-exist.sh` 的內容
+'
+
+# LS-256：白名單只補 merge-tree／diff 兩個子命令，不是任意 `git `——`git log`／`git status` 只是看過、不是驗證，仍缺證據
+expect 1 '②m（LS-256）git log 不在命令白名單（只補 merge-tree／diff，不放寬到任意 git）→ 紅' '缺『怎麼驗』證據' \
+'## 已驗證
+- 條件 1：`git log --oneline -5` 看過 commit 都在
 '
 
 # ==== ③ --help／參數 ====
