@@ -1,3 +1,4 @@
+import CryptoKit
 import XCTest
 
 /// LS-158：`QASmokeTests` 三個情境共用的 app 驅動步驟——啟動（注入本機容器的 URL／anon key）、
@@ -10,6 +11,12 @@ final class QADriver {
     let env: QAEnvironment
     private let testCase: XCTestCase
     private var stepIndex = 0
+    /// LS-260「畫面沒前進」自診斷用：上一張截圖的摘要與連續相同的張數（見 `snap(_:)`）。
+    private var lastScreenshotDigest = ""
+    private var sameScreenshotStreak = 0
+    /// 連續幾張截圖完全相同就判定卡住。取 3 而非 2：同一畫面連拍兩張是正常的（`assertLandedAfterLogin`
+    /// 的 `landed-timeline` 之後 `ensureFamily` 會再拍一張 `timeline`），連三張才代表真的沒動。
+    private static let stuckScreenshotStreak = 3
 
     init(env: QAEnvironment, testCase: XCTestCase) {
         self.env = env
@@ -32,12 +39,27 @@ final class QADriver {
 
     /// 每步一張，名稱 `<情境>-<序號>-<步驟>`；`qa-e2e.sh` 依 xcresult manifest 的
     /// `suggestedHumanReadableName` 把匯出的 PNG 改回這個名字。
+    ///
+    /// LS-260（LS-96 池項 `6b87b252`）：順手做「畫面沒前進」自診斷——連續 `stuckScreenshotStreak`
+    /// 張截圖的 PNG 逐字元相同＝驅動在原地打轉，直接 `XCTFail`（`continueAfterFailure = false`，測試
+    /// 就停在這裡）。截圖本身已 `.keepAlways` 附在 xcresult、`qa-e2e.sh` 會匯出成 PNG，所以「保留
+    /// 截圖」不必另外做，這裡只多存一個 SHA256 摘要做比對。來源：`browse` 兩次決定性卡在同一步，
+    /// 失敗訊息停在最後一個 `require` 的逾時上，看不出「畫面根本沒動過」。
     func snap(_ name: String) {
         stepIndex += 1
-        let attachment = XCTAttachment(screenshot: app.screenshot())
+        let screenshot = app.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = String(format: "%@-%02d-%@", env.scenario.rawValue, stepIndex, name)
         attachment.lifetime = .keepAlways
         testCase.add(attachment)
+        let digest = SHA256.hash(data: screenshot.pngRepresentation).map { String(format: "%02x", $0) }.joined()
+        sameScreenshotStreak = (digest == lastScreenshotDigest) ? sameScreenshotStreak + 1 : 1
+        lastScreenshotDigest = digest
+        guard sameScreenshotStreak >= Self.stuckScreenshotStreak else { return }
+        XCTFail(
+            "步驟 \(stepIndex)（\(name)）：連續 \(sameScreenshotStreak) 張截圖內容完全相同"
+            + "（SHA256 \(digest.prefix(12))）——畫面沒有前進，判定卡住；截圖已附在 xcresult"
+        )
     }
 
     func attachHierarchy(reason: String) {
@@ -270,7 +292,7 @@ final class QADriver {
         target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
 
-    private func attachText(_ text: String, name: String) {
+    func attachText(_ text: String, name: String) {
         let attachment = XCTAttachment(string: text)
         attachment.name = "\(env.scenario.rawValue)-\(name)"
         attachment.lifetime = .keepAlways
@@ -299,49 +321,6 @@ final class QADriver {
             "Add", "加入", "Done", "完成"
         )
         return app.buttons.matching(predicate).firstMatch
-    }
-
-    // MARK: - 瀏覽
-
-    /// 時間軸沒有任何日記卡（空狀態）就先發一篇純文字日記當瀏覽對象——`browse` 不依賴先跑過 `publish`。
-    func seedDiaryIfTimelineEmpty() throws {
-        if diaryCards.firstMatch.waitForExistence(timeout: 10) { return }
-        try openEditor()
-        let body = "LS-158 browse seed \(Self.stamp())"
-        try typeDiaryBody(body)
-        try publishAndWaitForCard(body: body)
-    }
-
-    /// 日記卡→詳情（內文＋照片牆）→返回→相簿分頁→時間軸分頁。
-    func browseDetailAndAlbums() throws {
-        let card = try require(diaryCards.firstMatch, "時間軸日記卡", timeout: 20)
-        // LS-220 實測踩到：`publish` 留下的影片＋照片＋日記三張卡讓日記卡排到最後，卡片幾何中心會落在
-        // 浮動 Tab Bar 範圍內，`isHittable == true` 但 `.tap()` 誤點成「寶貝」分頁鈕（card.frame＝
-        // (18.7, 690.3, 365.0, 225.3)、tabBarFrame＝(112, 782, 88, 52)，中心 y=803 落在 782–834）。
-        // merge-review R2 m3：改成算出來的安全 y——卡片中心落進 Tab Bar 範圍（留 24pt 緩衝）才往上移，
-        // 且不會移到卡片頂端以上（留 8pt 緩衝）；`withOffset` 直接點算出來的絕對座標。點擊前把座標與
-        // Tab Bar frame 存成 xcresult 附件，下次排查同款誤點不用再臨時加診斷程式碼。
-        let cardFrame = card.frame
-        // merge-review R2 n4：讀 `.frame` 前先 `require`，同函式後面 `app.buttons["相簿"]` 的既有慣例。
-        let tabBarFrame = try require(app.buttons["相簿"], "Tab Bar「相簿」（讀 frame 算避開浮動 Tab Bar 的點擊 y）").frame
-        let tapY = max(cardFrame.minY + 8, min(cardFrame.midY, tabBarFrame.minY - 24))
-        attachText(
-            "card.frame=\(cardFrame) tabBar.frame=\(tabBarFrame) tapPoint=(\(cardFrame.midX), \(tapY))",
-            name: "diary-card-tap-coordinates"
-        )
-        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: cardFrame.midX, dy: tapY)).tap()
-        try require(app.staticTexts[QAAccessibilityID.diaryDetailBody], "日記詳情內文", timeout: 20)
-        // 照片牆是非同步簽名＋下載——有附照的日記等它畫出來再截（純文字日記本來就沒有，等 10 秒放行）。
-        _ = app.images.firstMatch.waitForExistence(timeout: 10)
-        snap("detail")
-        app.navigationBars.buttons.firstMatch.tap()
-        try require(timelineHeading, "返回時間軸", timeout: 15)
-        try require(app.buttons["相簿"], "Tab Bar「相簿」").tap()
-        try require(app.navigationBars["相簿"], "相簿頁", timeout: 15)
-        snap("albums")
-        try require(app.buttons["時間軸"], "Tab Bar「時間軸」").tap()
-        try require(timelineHeading, "回到時間軸", timeout: 15)
-        snap("timeline-again")
     }
 }
 
