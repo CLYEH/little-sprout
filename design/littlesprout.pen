@@ -156596,6 +156596,5622 @@
           "alignItems": "center"
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "c2yk3s",
+      "x": 23388,
+      "y": -2428,
+      "name": "App Store / iPhone 6.9 / 01 時間軸",
+      "clip": true,
+      "width": 1320,
+      "height": 2868,
+      "fill": "#EDD3D6",
+      "layout": "vertical",
+      "padding": [
+        130,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ApQ59",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 520,
+          "height": 247.98
+        },
+        {
+          "type": "frame",
+          "id": "of19H",
+          "name": "Spacer 32",
+          "width": 1,
+          "height": 32,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "kSVMC",
+          "name": "Tagline",
+          "fill": "#2B141C",
+          "textGrowth": "fixed-width",
+          "width": 1160,
+          "content": "只有家人看得到",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 100,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "y4Oi5y",
+          "name": "Spacer 40",
+          "width": 1,
+          "height": 40,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "gfP0F",
+          "name": "Device Frame",
+          "width": 892,
+          "height": 1900.55,
+          "fill": "#2B141C",
+          "cornerRadius": 123.5,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#2B141C2E",
+            "offset": {
+              "x": 10,
+              "y": 20
+            },
+            "blur": 48
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "I8kSPC",
+              "x": 16,
+              "y": 16,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 860,
+              "height": 1868.55,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/timeline-iphone.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 107.5,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "s1Kzm",
+          "layoutPosition": "absolute",
+          "x": 60,
+          "y": 2268,
+          "name": "Hero Print",
+          "width": 786,
+          "height": 584,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "FKjPv",
+              "x": 32,
+              "y": 10,
+              "name": "Print",
+              "width": 722,
+              "fill": [
+                "#FBEBEC",
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.494,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "#B5828D",
+                      "position": 0
+                    },
+                    {
+                      "color": "#B5828D00",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.288,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "#B5828D",
+                      "position": 0
+                    },
+                    {
+                      "color": "#B5828D00",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.36,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "#B5828D",
+                      "position": 0
+                    },
+                    {
+                      "color": "#B5828D00",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 1
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.236,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "#B5828D",
+                      "position": 0
+                    },
+                    {
+                      "color": "#B5828D00",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 1
+                  }
+                }
+              ],
+              "stroke": "#FFF7F8",
+              "strokeWidth": 2,
+              "strokeAlignment": "outer",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#2B141C2E",
+                "offset": {
+                  "x": 0,
+                  "y": 6
+                },
+                "blur": 24
+              },
+              "layout": "vertical",
+              "gap": 14,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XkEUh",
+                  "name": "Photo Wrap",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 380.2,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "scpdc",
+                      "x": 0,
+                      "y": -168,
+                      "name": "Hero Photo",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "hero-grandma.png",
+                        "mode": "fill"
+                      },
+                      "width": 690,
+                      "height": 1030
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "y3uytp",
+                  "name": "Imprint Row",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "AUlK1",
+                      "name": "Lab Imprint",
+                      "fill": "#553040",
+                      "content": "LITTLE SPROUT",
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 24,
+                      "fontWeight": "600",
+                      "letterSpacing": 7
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "Mt7RR",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BL",
+              "x": 27,
+              "y": 424.2,
+              "width": 52,
+              "height": 52
+            },
+            {
+              "id": "k7LmU",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BR",
+              "x": 707,
+              "y": 424.2,
+              "width": 52,
+              "height": 52
+            },
+            {
+              "id": "ASXNn",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TL",
+              "x": 27,
+              "y": 5,
+              "width": 52,
+              "height": 52
+            },
+            {
+              "id": "KqlsB",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TR",
+              "x": 707,
+              "y": 5,
+              "width": 52,
+              "height": 52
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ZRyXL",
+      "x": 27948,
+      "y": -2428,
+      "name": "App Store / iPhone 6.9 / 04 日記詳情",
+      "clip": true,
+      "width": 1320,
+      "height": 2868,
+      "fill": "#EDD3D6",
+      "layout": "vertical",
+      "padding": [
+        130,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "KCL1o",
+          "name": "Tagline",
+          "fill": "#2B141C",
+          "textGrowth": "fixed-width",
+          "width": 1160,
+          "content": "留言愛心，滿滿的愛",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 88,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "iyQwO",
+          "name": "Spacer 32",
+          "width": 1,
+          "height": 32,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "hUNFn",
+          "layoutPosition": "absolute",
+          "x": 110,
+          "y": 2268,
+          "name": "Print Stage",
+          "width": 786,
+          "height": 584,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "k4Tyqi",
+              "x": 32,
+              "y": 10,
+              "name": "Print",
+              "width": 722,
+              "fill": [
+                "$print-paper",
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.494,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.288,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.36,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 1
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.236,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 1
+                  }
+                }
+              ],
+              "stroke": "$paper-edge",
+              "strokeWidth": 1,
+              "strokeAlignment": "outer",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 3
+                },
+                "blur": 12
+              },
+              "layout": "vertical",
+              "gap": 14,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "s0OmUy",
+                  "name": "Photo Wrap",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 380.2,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "aD9EO",
+                      "x": 0,
+                      "y": -168,
+                      "name": "Hero Photo",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "join-parents.png",
+                        "mode": "fill"
+                      },
+                      "width": 690,
+                      "height": 1030
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Qcb0x",
+                  "name": "Imprint Row",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "a9faRG",
+                      "name": "Lab Imprint",
+                      "fill": "$print-ink-secondary",
+                      "content": "LITTLE SPROUT",
+                      "fontFamily": "$font",
+                      "fontSize": 24,
+                      "fontWeight": "600",
+                      "letterSpacing": 7
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "TwhLp",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BL",
+              "x": 27,
+              "y": 424,
+              "width": 52,
+              "height": 52,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 26 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            },
+            {
+              "id": "w1qgP0",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BR",
+              "x": 707,
+              "y": 424,
+              "width": 52,
+              "height": 52,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 26 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "S4Bugn",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TL",
+              "x": 27,
+              "y": 5,
+              "width": 52,
+              "height": 52,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 0 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "prDi7",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TR",
+              "x": 707,
+              "y": 5,
+              "width": 52,
+              "height": 52,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 0 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Ir3kn",
+          "name": "Spacer 40",
+          "width": 1,
+          "height": 40,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "ZnMBA",
+          "name": "Device Row",
+          "width": "fill_container",
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "JfAXu",
+              "name": "Device Frame",
+              "width": 792,
+              "height": 1683.27,
+              "fill": "#2B141C",
+              "cornerRadius": 111,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#2B141C2E",
+                "offset": {
+                  "x": 10,
+                  "y": 20
+                },
+                "blur": 48
+              },
+              "layout": "none",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "bArC2",
+                  "x": 16,
+                  "y": 16,
+                  "name": "slot/screenshot",
+                  "clip": true,
+                  "width": 760,
+                  "height": 1651.27,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "appstore-slots/comments-iphone-v3.jpg",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 95,
+                  "layout": "none"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "y9r9Fq",
+      "x": 24908,
+      "y": -2428,
+      "name": "App Store / iPhone 6.9 / 02 相簿詳情",
+      "clip": true,
+      "width": 1320,
+      "height": 2868,
+      "fill": "#EDD3D6",
+      "layout": "vertical",
+      "padding": [
+        90,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "v4MxF",
+          "name": "Device Frame",
+          "width": 1152,
+          "height": 2465.45,
+          "fill": "#2B141C",
+          "cornerRadius": 156,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#2B141C2E",
+            "offset": {
+              "x": 10,
+              "y": 20
+            },
+            "blur": 48
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "F5775",
+              "x": 16,
+              "y": 16,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 1120,
+              "height": 2433.45,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/album-iphone.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 140,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "F1cMlC",
+          "name": "Spacer 40",
+          "width": 1,
+          "height": 40,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "KvbrL",
+          "name": "Tagline",
+          "fill": "#2B141C",
+          "textGrowth": "fixed-width",
+          "width": 1160,
+          "content": "回憶好好收藏",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 100,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "tEOCL",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Q9Zw3f",
+      "x": 29468,
+      "y": -2428,
+      "name": "App Store / iPhone 6.9 / 05 寶貝",
+      "clip": true,
+      "width": 1320,
+      "height": 2868,
+      "fill": "#EDD3D6",
+      "layout": "vertical",
+      "padding": [
+        110,
+        0,
+        0,
+        0
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "G2WDFb",
+          "name": "Tagline",
+          "fill": "#2B141C",
+          "textGrowth": "fixed-width",
+          "width": 1160,
+          "content": "陪伴孩子每一步成長",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 88,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "sEA6S",
+          "name": "Spacer 20",
+          "width": 1,
+          "height": 20,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "e6RBo",
+          "name": "Subtitle",
+          "fill": "#553040",
+          "textGrowth": "fixed-width",
+          "width": 1160,
+          "content": "為每個寶貝留下成長足跡",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 56,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "CYefz",
+          "name": "Spacer 44",
+          "width": 1,
+          "height": 44,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "WD4dI",
+          "name": "Device Frame",
+          "width": 850,
+          "height": 1809.29,
+          "fill": "#2B141C",
+          "cornerRadius": 118.25,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#2B141C2E",
+            "offset": {
+              "x": 10,
+              "y": 20
+            },
+            "blur": 48
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "hZH2Y",
+              "x": 16,
+              "y": 16,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 818,
+              "height": 1777.29,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/child-iphone.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 102.25,
+              "layout": "none"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Bm7Lx",
+      "x": 26428,
+      "y": -2428,
+      "name": "App Store / iPhone 6.9 / 03 邀請加入",
+      "clip": true,
+      "width": 1320,
+      "height": 2868,
+      "fill": "#EDD3D6",
+      "layout": "vertical",
+      "padding": [
+        130,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "dsJxd",
+          "name": "Tagline",
+          "fill": "#2B141C",
+          "textGrowth": "fixed-width",
+          "width": 1160,
+          "content": "阿公阿嬤也能輕鬆使用",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 104,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "BR3Hi",
+          "name": "Spacer 24",
+          "width": 1,
+          "height": 24,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "FUK3u",
+          "name": "Subtitle",
+          "fill": "#553040",
+          "textGrowth": "fixed-width",
+          "width": 1160,
+          "content": "邀請家人一起加入",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 48,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "akSr2",
+          "name": "Spacer 48",
+          "width": 1,
+          "height": 48,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "ay53J",
+          "layoutPosition": "absolute",
+          "x": 140,
+          "y": 2268,
+          "name": "Print Stage",
+          "width": 786,
+          "height": 584,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "kJVts",
+              "x": 32,
+              "y": 10,
+              "name": "Print",
+              "width": 722,
+              "fill": [
+                "$print-paper",
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.494,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.288,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.36,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 1
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.236,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 1
+                  }
+                }
+              ],
+              "stroke": "$paper-edge",
+              "strokeWidth": 1,
+              "strokeAlignment": "outer",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 3
+                },
+                "blur": 12
+              },
+              "layout": "vertical",
+              "gap": 14,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "yY2YM",
+                  "name": "Photo Wrap",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 380.2,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "F92jh",
+                      "x": 0,
+                      "y": -168,
+                      "name": "Hero Photo",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "invite-grandma.png",
+                        "mode": "fill"
+                      },
+                      "width": 690,
+                      "height": 1030
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Uy1sL",
+                  "name": "Imprint Row",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ktBZg",
+                      "name": "Lab Imprint",
+                      "fill": "$print-ink-secondary",
+                      "content": "LITTLE SPROUT",
+                      "fontFamily": "$font",
+                      "fontSize": 24,
+                      "fontWeight": "600",
+                      "letterSpacing": 7
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "b1tzd",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BL",
+              "x": 27,
+              "y": 424,
+              "width": 52,
+              "height": 52,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 26 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            },
+            {
+              "id": "sq4d8",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BR",
+              "x": 707,
+              "y": 424,
+              "width": 52,
+              "height": 52,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 26 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "a0idhX",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TL",
+              "x": 27,
+              "y": 5,
+              "width": 52,
+              "height": 52,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 0 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "g4uiV",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TR",
+              "x": 707,
+              "y": 5,
+              "width": 52,
+              "height": 52,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 0 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "A6elVl",
+          "name": "Spacer 40",
+          "width": 1,
+          "height": 40,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "kNKe8",
+          "name": "Device Frame",
+          "width": 732,
+          "height": 1552.91,
+          "fill": "#2B141C",
+          "cornerRadius": 103.5,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#2B141C2E",
+            "offset": {
+              "x": 10,
+              "y": 20
+            },
+            "blur": 48
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "k9dES",
+              "x": 16,
+              "y": 16,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 700,
+              "height": 1520.91,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/invite-iphone.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 87.5,
+              "layout": "none"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Vn4TL",
+      "x": 30988,
+      "y": -2428,
+      "name": "App Store / iPad 13 / 01 時間軸",
+      "clip": true,
+      "width": 2064,
+      "height": 2752,
+      "fill": "#EDD3D6",
+      "layout": "vertical",
+      "padding": [
+        160,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "CUMBS",
+          "name": "Wordmark",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "mengya-diary-crayon-v3.png",
+            "mode": "fit"
+          },
+          "width": 680,
+          "height": 324.24
+        },
+        {
+          "type": "frame",
+          "id": "gp7Te",
+          "name": "Spacer 48",
+          "width": 1,
+          "height": 48,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "nuAC7",
+          "name": "Tagline",
+          "fill": "#2B141C",
+          "textGrowth": "fixed-width",
+          "width": 1700,
+          "content": "只有家人看得到",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 156,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "aSAuY",
+          "name": "Spacer 60",
+          "width": 1,
+          "height": 60,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "QqTID",
+          "name": "Device Frame",
+          "width": 1140,
+          "height": 1506.67,
+          "fill": "#2B141C",
+          "cornerRadius": 52.01,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#2B141C2E",
+            "offset": {
+              "x": 12,
+              "y": 24
+            },
+            "blur": 56
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "h2080",
+              "x": 20,
+              "y": 20,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 1100,
+              "height": 1466.67,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/timeline-ipad.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 32.01,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "N3mjp6",
+          "layoutPosition": "absolute",
+          "x": 221,
+          "y": 1823,
+          "name": "Print Stage",
+          "width": 1229,
+          "height": 913,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "JyHDo",
+              "x": 50,
+              "y": 16,
+              "name": "Print",
+              "width": 1129,
+              "fill": [
+                "$print-paper",
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.494,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.288,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.36,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 1
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.236,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 1
+                  }
+                }
+              ],
+              "stroke": "$paper-edge",
+              "strokeWidth": 1,
+              "strokeAlignment": "outer",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 3
+                },
+                "blur": 12
+              },
+              "layout": "vertical",
+              "gap": 22,
+              "padding": 25,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "lBVso",
+                  "name": "Photo Wrap",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 594.5,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "ayJoy",
+                      "x": 0,
+                      "y": -262.7,
+                      "name": "Hero Photo",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "hero-grandma.png",
+                        "mode": "fill"
+                      },
+                      "width": 1079,
+                      "height": 1610.6
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "huOqC",
+                  "name": "Imprint Row",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "GnmAc",
+                      "name": "Lab Imprint",
+                      "fill": "$print-ink-secondary",
+                      "content": "LITTLE SPROUT",
+                      "fontFamily": "$font",
+                      "fontSize": 37.5,
+                      "fontWeight": "600",
+                      "letterSpacing": 10.9
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "ugNXv",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BL",
+              "x": 45,
+              "y": 661,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 26 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            },
+            {
+              "id": "sISpf",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BR",
+              "x": 1103,
+              "y": 661,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 26 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "CIxhg",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TL",
+              "x": 45,
+              "y": 11,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 0 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "w0qZ1n",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TR",
+              "x": 1103,
+              "y": 11,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 0 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "b59DUk",
+      "x": 37780,
+      "y": -2428,
+      "name": "App Store / iPad 13 / 04 日記詳情",
+      "clip": true,
+      "width": 2064,
+      "height": 2752,
+      "fill": "#EDD3D6",
+      "layout": "vertical",
+      "padding": [
+        160,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "j8jMxH",
+          "name": "Tagline",
+          "fill": "#2B141C",
+          "textGrowth": "fixed-width",
+          "width": 1700,
+          "content": "留言愛心，滿滿的愛",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 138,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "TUcyy",
+          "name": "Spacer 48",
+          "width": 1,
+          "height": 48,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "D2juW",
+          "layoutPosition": "absolute",
+          "x": 296,
+          "y": 1823,
+          "name": "Print Stage",
+          "width": 1229,
+          "height": 913,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "cNSP8",
+              "x": 50,
+              "y": 16,
+              "name": "Print",
+              "width": 1129,
+              "fill": [
+                "$print-paper",
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.494,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.288,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.36,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 1
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.236,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 1
+                  }
+                }
+              ],
+              "stroke": "$paper-edge",
+              "strokeWidth": 1,
+              "strokeAlignment": "outer",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 3
+                },
+                "blur": 12
+              },
+              "layout": "vertical",
+              "gap": 22,
+              "padding": 25,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "iWjMR",
+                  "name": "Photo Wrap",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 594.5,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "j5Bns",
+                      "x": 0,
+                      "y": -262.7,
+                      "name": "Hero Photo",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "join-parents.png",
+                        "mode": "fill"
+                      },
+                      "width": 1079,
+                      "height": 1610.6
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "JV4e8",
+                  "name": "Imprint Row",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "xKMAQ",
+                      "name": "Lab Imprint",
+                      "fill": "$print-ink-secondary",
+                      "content": "LITTLE SPROUT",
+                      "fontFamily": "$font",
+                      "fontSize": 37.5,
+                      "fontWeight": "600",
+                      "letterSpacing": 10.9
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "v4d4K",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BL",
+              "x": 45,
+              "y": 661,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 26 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            },
+            {
+              "id": "nsmGs",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BR",
+              "x": 1103,
+              "y": 661,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 26 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "dfu62",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TL",
+              "x": 45,
+              "y": 11,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 0 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "WZo9U",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TR",
+              "x": 1103,
+              "y": 11,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 0 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LDQjW",
+          "name": "Spacer 60",
+          "width": 1,
+          "height": 60,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "iXXXX",
+          "name": "Device Row",
+          "width": "fill_container",
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "nly6c",
+              "name": "Device Frame",
+              "width": 990,
+              "height": 1306.67,
+              "fill": "#2B141C",
+              "cornerRadius": 47.645,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#2B141C2E",
+                "offset": {
+                  "x": 12,
+                  "y": 24
+                },
+                "blur": 56
+              },
+              "layout": "none",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "tIcZW",
+                  "x": 20,
+                  "y": 20,
+                  "name": "slot/screenshot",
+                  "clip": true,
+                  "width": 950,
+                  "height": 1266.67,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "appstore-slots/comments-ipad-v3.jpg",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 27.645,
+                  "layout": "none"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "mWZy3",
+      "x": 33252,
+      "y": -2428,
+      "name": "App Store / iPad 13 / 02 相簿詳情",
+      "clip": true,
+      "width": 2064,
+      "height": 2752,
+      "fill": "#EDD3D6",
+      "layout": "vertical",
+      "padding": [
+        100,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "NQb4s",
+          "name": "Device Frame",
+          "width": 1690,
+          "height": 2240,
+          "fill": "#2B141C",
+          "cornerRadius": 68.015,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#2B141C2E",
+            "offset": {
+              "x": 12,
+              "y": 24
+            },
+            "blur": 56
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "mz0F2",
+              "x": 20,
+              "y": 20,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 1650,
+              "height": 2200,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/album-ipad.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 48.015,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cwSXL",
+          "name": "Spacer 60",
+          "width": 1,
+          "height": 60,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "jU9lS",
+          "name": "Tagline",
+          "fill": "#2B141C",
+          "textGrowth": "fixed-width",
+          "width": 1700,
+          "content": "回憶好好收藏",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 156,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "AQI3r",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ak7RI",
+      "x": 40044,
+      "y": -2428,
+      "name": "App Store / iPad 13 / 05 寶貝",
+      "clip": true,
+      "width": 2064,
+      "height": 2752,
+      "fill": "#EDD3D6",
+      "layout": "vertical",
+      "padding": [
+        130,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "nU4oR",
+          "name": "Tagline",
+          "fill": "#2B141C",
+          "textGrowth": "fixed-width",
+          "width": 1700,
+          "content": "陪伴孩子每一步成長",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 138,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "RKH8q",
+          "name": "Spacer 28",
+          "width": 1,
+          "height": 28,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "j34uK",
+          "name": "Subtitle",
+          "fill": "#553040",
+          "textGrowth": "fixed-width",
+          "width": 1700,
+          "content": "為每個寶貝留下成長足跡",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 88,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "jZRLQ",
+          "name": "Spacer 60",
+          "width": 1,
+          "height": 60,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "rrRJ7",
+          "name": "Device Frame",
+          "width": 1540,
+          "height": 2040,
+          "fill": "#2B141C",
+          "cornerRadius": 63.65,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#2B141C2E",
+            "offset": {
+              "x": 12,
+              "y": 24
+            },
+            "blur": 56
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "m1U1Ke",
+              "x": 20,
+              "y": 20,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 1500,
+              "height": 2000,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/child-ipad-v2.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 43.65,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "QDXvI",
+          "name": "Spacer Bottom",
+          "width": 1,
+          "height": "fill_container",
+          "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "BnjqP",
+      "x": 35516,
+      "y": -2428,
+      "name": "App Store / iPad 13 / 03 邀請加入",
+      "clip": true,
+      "width": 2064,
+      "height": 2752,
+      "fill": "#EDD3D6",
+      "layout": "vertical",
+      "padding": [
+        160,
+        0,
+        0,
+        0
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "D2R5Ji",
+          "name": "Tagline",
+          "fill": "#2B141C",
+          "textGrowth": "fixed-width",
+          "width": 1700,
+          "content": "阿公阿嬤也能輕鬆使用",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 163,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "Gbxwy",
+          "name": "Spacer 32",
+          "width": 1,
+          "height": 32,
+          "layout": "none"
+        },
+        {
+          "type": "text",
+          "id": "tfL68",
+          "name": "Subtitle",
+          "fill": "#553040",
+          "textGrowth": "fixed-width",
+          "width": 1700,
+          "content": "邀請家人一起加入",
+          "textAlign": "center",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 75,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "b4CoBz",
+          "name": "Spacer 60",
+          "width": 1,
+          "height": 60,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "ScEdE",
+          "layoutPosition": "absolute",
+          "x": 321,
+          "y": 1823,
+          "name": "Print Stage",
+          "width": 1229,
+          "height": 913,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "DjJsT",
+              "x": 50,
+              "y": 16,
+              "name": "Print",
+              "width": 1129,
+              "fill": [
+                "$print-paper",
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.494,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.288,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 0
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.36,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 0,
+                    "y": 1
+                  }
+                },
+                {
+                  "type": "gradient",
+                  "gradientType": "radial",
+                  "enabled": true,
+                  "opacity": 0.236,
+                  "rotation": 0,
+                  "size": {
+                    "width": 0.43213296398891965,
+                    "height": 0.4642857142857143
+                  },
+                  "colors": [
+                    {
+                      "color": "$mount-pool",
+                      "position": 0
+                    },
+                    {
+                      "color": "$mount-pool-0",
+                      "position": 1
+                    }
+                  ],
+                  "center": {
+                    "x": 1,
+                    "y": 1
+                  }
+                }
+              ],
+              "stroke": "$paper-edge",
+              "strokeWidth": 1,
+              "strokeAlignment": "outer",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 3
+                },
+                "blur": 12
+              },
+              "layout": "vertical",
+              "gap": 22,
+              "padding": 25,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "V3mlZ",
+                  "name": "Photo Wrap",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 594.5,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "yzfCx",
+                      "x": 0,
+                      "y": -262.7,
+                      "name": "Hero Photo",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "invite-grandma.png",
+                        "mode": "fill"
+                      },
+                      "width": 1079,
+                      "height": 1610.6
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "rCNPT",
+                  "name": "Imprint Row",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "d3Mt3T",
+                      "name": "Lab Imprint",
+                      "fill": "$print-ink-secondary",
+                      "content": "LITTLE SPROUT",
+                      "fontFamily": "$font",
+                      "fontSize": 37.5,
+                      "fontWeight": "600",
+                      "letterSpacing": 10.9
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "uqtFw",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BL",
+              "x": 45,
+              "y": 661,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 26 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            },
+            {
+              "id": "eIw7g",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner BR",
+              "x": 1103,
+              "y": 661,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 26 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "zfSA0",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TL",
+              "x": 45,
+              "y": 11,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M0 0 L26 0 L0 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M26 0 L0 26"
+                }
+              }
+            },
+            {
+              "id": "VlKCM",
+              "type": "ref",
+              "ref": "GEBcf",
+              "name": "Corner TR",
+              "x": 1103,
+              "y": 11,
+              "width": 81,
+              "height": 81,
+              "descendants": {
+                "sD5Ma": {
+                  "geometry": "M26 0 L0 0 L26 26 Z"
+                },
+                "DhOiK": {
+                  "geometry": "M0 0 L26 26"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "MakpY",
+          "name": "Spacer 54",
+          "width": 1,
+          "height": 54,
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "LWJUR",
+          "name": "Device Frame",
+          "width": 940,
+          "height": 1240,
+          "fill": "#2B141C",
+          "cornerRadius": 46.19,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#2B141C2E",
+            "offset": {
+              "x": 12,
+              "y": 24
+            },
+            "blur": 56
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "uGuJD",
+              "x": 20,
+              "y": 20,
+              "name": "slot/screenshot",
+              "clip": true,
+              "width": 900,
+              "height": 1200,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "appstore-slots/family-ipad.jpg",
+                "mode": "fill"
+              },
+              "cornerRadius": 26.19,
+              "layout": "none"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "H73kPC",
+      "x": 42308,
+      "y": -2428,
+      "name": "App Store / LS-234",
+      "width": 900,
+      "fill": "$print-paper",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 44,
+      "children": [
+        {
+          "type": "text",
+          "id": "Vmb4I",
+          "name": "NT",
+          "fill": "$print-ink",
+          "content": "LS-234 / App Store 截圖版型 · 實作註記",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 34,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "dvxGk",
+          "name": "NS",
+          "fill": "$print-ink-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "iPhone 6.9\"（1320×2868）與 iPad 13\"（2064×2752）各 5 張；R2 依 visual-reviewer R1 verdict（4 BLOCKER＋9 MAJOR＋7 MINOR）全面重做：11 板重新落位、加入沖印品母題、五板各有版面節奏、移除 Dynamic Island、修正 iPad 板底裁切、02／iPad05 換真實畫面內容。",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "pT2s4",
+          "name": "N R4 板清單（新順序；root／裝置框／截圖槽／沖印品 id 對照）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "pCSYd",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R4 板清單（沖印品尺寸／04 槽內容更新，取代 R3 舊描述）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "n9xluK",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nrMc0",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R4",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "QDkLV",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPhone 6.9\"（新順序）：01 時間軸 root=c2yk3s／device=gfP0F(892×1900.55,r=123.5)／slot=I8kSPC(860×1868.55,r=107.5)／print=s1Kzm「Hero Print」(786×584，R4 四角托改回 ref:cmp/Photo Corner 實例、底緣距板底 16pt，hero-grandma.png)。02 相簿詳情（原 03） root=y9r9Fq／device=v4MxF(1152×2465.45,r=156)／slot=F5775(1120×2433.45,r=140)／無沖印品／R4 標語升級為 100pt（依新槽位重定，見 MN-9 段）。03 邀請加入（原 05） root=Bm7Lx／device=kNKe8(732×1552.91,r=103.5)／slot=k9dES(700×1520.91,r=87.5)／print=ay53J「Print Stage」(R4 改比例沖印品 786×584，疊裝置框左下角，invite-grandma.png)。04 日記詳情（原 02） root=ZRyXL／device=JfAXu(792×1683.27,r=111，Device Row 內偏右)／slot=bArC2(760×1651.27,r=95，appstore-slots/comments-iphone-v3.jpg＝R4 重建：以 FiBvh（LS-177 留言 sheet）為底、插入 vzYXz 日記內容＋IgqGF「已按讚」互動列，狀態列／導覽列／完整日期錨點齊全，取代 R3 v2 那張開頭截句、無狀態列的合成圖，見 BL-8 段)／print=hUNFn「Print Stage」(R4 改比例沖印品 786×584，join-parents.png)。05 寶貝（原 04） root=Q9Zw3f／device=WD4dI(850×1809.29,r=118.25，R3 MN-5 縮小取代原 1082×2313.36)／slot=hZH2Y(818×1777.29,r=102.25)／無沖印品。裝置框／槽圓角值依 MJ-11 公式 slotR=slotW×0.125、bezelR=slotR+16（R3 訂定，本輪未變）；沖印品尺寸另見下方 MJ-10 段公式。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "U1QVDq",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "A2Hhh",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R4",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "SWAza",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPad 13\"（新順序）：01 時間軸 root=Vn4TL／device=QqTID(1140×1506.67,r=52.01)／slot=h2080(1100×1466.67,r=32.01)／print=N3mjp6「Print Stage」(R4 改比例沖印品 1229×913，疊裝置框左下角，取代原 393×292 絕對值，hero-grandma.png)。02 相簿詳情（原 03） root=mWZy3／device=NQb4s(1690×2240,r=68.015)／slot=mz0F2(1650×2200,r=48.015)／無沖印品／R4 標語升級為 156pt（依板寬比例，見 MN-9 段）。03 邀請加入（原 05） root=BnjqP／device=LWJUR(940×1240,r=46.19)／slot=uGuJD(900×1200,r=26.19，appstore-slots/family-ipad.jpg＝yJvj7 裁至 1112pt)／print=ScEdE「Print Stage」(R4 改比例沖印品 1229×913，invite-grandma.png)。04 日記詳情（原 02） root=b59DUk／device=nly6c(990×1306.67,r=47.645，Device Row 偏右)／slot=tIcZW(950×1266.67,r=27.645，appstore-slots/comments-ipad-v3.jpg＝R4 重建：以 wY7f8（LS-177 留言 sheet iPad，LS-133 R3 核可置中卡片幾何）為底、插入 MjRcr 日記詳情內容＋IgqGF「已按讚」互動列，peek 內容落在右欄時間軸區域內、不再貼在狀態列，取代 R3 v2 那張把日記卡貼在狀態列上的合成圖，見 BL-8 段)／print=D2juW「Print Stage」(R4 改比例沖印品 1229×913，join-parents.png)。05 寶貝（原 04） root=ak7RI／device=rrRJ7(1540×2040,r=63.65)／slot=m1U1Ke(1500×2000,r=43.65，appstore-slots/child-ipad-v2.jpg＝R3 BL-7 修正：來源 JbTfv 裁切窗由[0,1112]移至[62,1174]（跳過 62pt Status Bar），本輪未動)。裝置框／槽圓角值依 MJ-11 公式 slotR=slotW×0.0291、bezelR=slotR+20（R3 訂定，本輪未變）；沖印品尺寸另見下方 MJ-10 段公式。R7 訂正（minor-3）：本段「156pt」原 R4 誤植為「157」（四捨五入誤差 1pt），R5 已把實際節點 fontSize（jU9lS）訂正為 156，本段文字同步更正，不再與 head 互打。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "sTxIt",
+          "name": "N BL-1 修正：11 板重新落位（document scope root 級 AABB 全量比對＝0）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "kyrhk",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "BL-1 修正：11 板重新落位（document scope root 級 AABB 全量比對＝0）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "R476M",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fzYca",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "iPqcc",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 用 Update() 手填座標把 10 板搬到「不重疊彼此」的位置，但沒有對照既有 231 個 root——結果疊在既有畫面群與 20/27 個 cmp/* 元件定義正上方。R2 改用 FindEmptySpace({width,height,padding:200,direction:\"right\",nodeId:<前一塊>}) 鏈式配置全部 11 塊新板（10 板＋Notes），對 242 個 root 做一次全量 AABB 交集掃描（scan_scope=document 語意，非收據的 scope=boards），確認新板與既有 231 個 root 交集面積皆為 0——證據見 design/evidence/LS-234-r2-overflow.json 的 document_root_check 欄位與本輪 handoff。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "G9OMiL",
+          "name": "N BL-2 修正：iPad 堆疊重算（Device Frame 底緣 ≤ 2752）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "n2l9U",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "BL-2 修正：iPad 堆疊重算（Device Frame 底緣 ≤ 2752）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ssYME",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "V5B9YC",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "piZ1n",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 iPad 堆疊總和 2762.98 > 板高 2752，溢出 10.98pt，且用 Spacer Bottom h=1 這種倒推餘數掩蓋（實際已經算不出空間）。R2 五塊 iPad 板逐板實測 Spacer Bottom：01=119.09／02=753.33／03=222／04=234／05=673，皆為正值且非湊整餘數——是先選定裝置框尺寸與間距後量出來的空間，不是倒推。五板裝置框底緣（padding-top + 之前所有元素高度 + 裝置框高度）皆 < 2752，逐板數字見上「板清單」與下方各節推導。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "X5WyV",
+          "name": "N BL-3 修正：02 板換真實留言／愛心畫面＋用詞改回「愛心」",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "MbNO4",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "BL-3 修正：02 板換真實留言／愛心畫面＋用詞改回「愛心」",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "Wwzip",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fqauY",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "pIuvI",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 的 02 槽用 vzYXz（日記詳情）裁至 852pt，裁切線正好切在 Comments Section 之前，槽裡看不到任何留言。R2 改用 FiBvh（LS-177 留言 sheet iPhone，393×852，剛好整板不需裁切）／iPad 改用 wY7f8（LS-177 留言 sheet iPad，裁至 1112pt）——兩個來源都是真實的留言串（含頭像、名字、時間、輸入列），槽內容與標語現在對得上。標語文字把「按讚」改成「愛心」（app 內 IgqGF 互動列的實際用詞是「愛心 3」「已按愛心」，「按讚」是 Facebook 詞彙、與私密家庭定位衝突）：",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "z2k2ry",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "s0bCeK",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "AxRNB",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPhone 02（R2 序號，今新序 04＝`ZRyXL`）＝「留言愛心，滿滿的愛」；iPad 02（今新序 04＝`b59DUk`）同標語。這個配對（02＝留言愛心主題，今新序 04）現在有真實畫面內容支撐，02 日記詳情（今新序 04）這個來源畫面本身承載留言／愛心的理由不再自我否定。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tCMlg",
+          "name": "N BL-4 修正：iPad 05 換真實 iPad 畫面，不再 letterbox",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "ZYJh9",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "BL-4 修正：iPad 05 換真實 iPad 畫面，不再 letterbox",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "bfqJg",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ussCB",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "XJGIb",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 用 invite-iphone.jpg（472×1024，iPhone 比例）以 mode:\"fit\" 塞進 1500×2000 的 iPad 槽，左右各出現 289pt 的 $print-paper 柱狀留白——讀起來像 render 壞掉，且手機螢幕圓角疊在 iPad bezel 裡形成兩層裝置輪廓。R2 裁定：iPad 組不必跟 iPhone 組畫面一一對應（Apple 允許各裝置類別放不同截圖）。iPad 05 改用 yJvj7（LS-152 家庭成員 iPad，裁至 1112pt，appstore-slots/family-ipad.jpg），槽的 mode 改回單一 image／\"fill\"，不再有底色陣列或 letterbox。標語同時升級為「阿公阿嬤也能輕鬆使用」（見 MJ-8 修正段），「邀請家人一起加入」降為副標——家庭成員畫面（誰已經在這個家庭裡）與「邀請家人」的語意銜接：這是你未來會看到的家人列表。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "P6sNh",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "kyYz0",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "eXOfG",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已知限制（誠實保留，非本票修復範圍）：家庭成員畫面本身不是「邀請家人」流程的畫面，是最接近的既有 iPad 內容；若日後有原生的 iPad 邀請家人設計稿，應直接替換 slot=uGuJD 與標語搭配的內容判斷。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "pfdC6",
+          "name": "N MJ-1／MJ-2 修正：五板各有版面節奏，字標只留 01",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "VJ6Dm",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MJ-1／MJ-2 修正：五板各有版面節奏，字標只留 01",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "zYMUE",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "eyBIs",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "zdeED",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 十板共用同一組版面數字（padding/gap/字級/裝置尺寸/字標位置全部相同），只有文字與槽圖不同，是同一模板複製五次。R2 五塊 iPhone 板逐板換了任務與版式：01 身分（字標＋裝置框最大、標語置中）／02 人味（無字標、標語置中但裝置偏右 Device Row justifyContent:end、沖印品放在裝置之前）／03 照片牆（裝置框最大 1152pt 寬、標語縮到底部一行 72pt 小字、無字標無副標）／04 成長（無字標、標語與副標皆改 textAlign:left 貼版心、裝置置中）／05 長輩（無字標、標語升到全組最大 104pt、裝置縮到全組最小 732pt 寬）。字標（Wordmark）依 MJ-2 建議只留在 01（iPhone 520×247.98／iPad 680×324.24），02–05 拿掉，省下的高度分給標語與裝置。iPad 五板比照同一套任務分工（同一標語、同一相對尺寸關係），只有絕對數字依 2064×2752 畫布重新推算。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "M8zg1m",
+          "name": "N MJ-3 修正：沖印品／台紙語彙加入海報層",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "SalAt",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MJ-3 修正：沖印品／台紙語彙加入海報層",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "UaqOV",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TIDXZ",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "tnB79",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 海報層零白邊、零角托、零壓印行、零染料池；槽內截圖裡雖然有既有畫面自己的角托，但縮進裝置框後在瀏覽尺寸下等於不存在。R2 在 01／02／05（iPhone 與 iPad 各三板）加入一個完整的沖印品元件（直接沿用 svedU 歡迎頁 Print Stage 的結構：白邊 padding $print-edge/$print-edge-bottom、四角托 corner-out 5pt、四角染料池、$paper-edge 1pt 亮邊、$paper-shadow 落影、Imprint Row 印「LITTLE SPROUT」——沿用而非重畫，確保與品牌定案的沖印品規格完全一致），內容用素材庫既有的家人合照（hero-grandma.png／join-parents.png／invite-grandma.png），原生尺寸 393×292、無旋轉、置於版面中的獨立位置（不裱在裝置螢幕截圖上——裝置框裡是 UI 截圖，角托三段規則③零角托，這個判斷 R1 是對的、R2 沒有改變；沖印品是海報層另外放的一張『真的』家人照片）。03／04 兩板不加沖印品（裝置本身已是視覺主角，見 MJ-1 的任務分工），這是刻意的留白，非遺漏。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ixx86",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "HeQP5",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "H2gOl",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "\"LITTLE SPROUT\" 印在沖印品壓印行合乎品牌規則例外條款——wordmark-brand.md「其他任何 UI 不得再出現英文名；橫式鎖版與 App Store 素材另計」，App Store 素材明確排除在限制之外。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "RqIM9",
+          "name": "N MJ-4 修正：iPhone 槽比例對齊實機（含推導）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "W2rDai",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MJ-4 修正：iPhone 槽比例對齊實機（含推導）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "HxGPd",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Y7KXb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LhCIp",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 槽 948×2056.68（比例 2.169494）是照著占位 JPEG（472×1024，本身是舊版裁切縮放的產物）反推出來的，不是照著裝置比例算的——真機 2868÷1320=2.172727，w=948 時正確高度應為 2059.75，短少 3.07pt 會在 LS-147 塞入真截圖時被裁掉。R2 全部槽尺寸改為直接用 RATIO_IPHONE=2868/1320=2.1727272727272725 乘算：slotH=round(slotW×RATIO_IPHONE, 2)。五板各自的 slotW／slotH 見上「板清單」節，皆可用這個公式反查驗算（例如 01：860×2.1727272727=1868.55 ✓）。iPad 沿用 4:3＝2064:2752 精確比例（R1 已經是對的，R2 沒有改變這個比例，只是各板 slotW 不同）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "b0edcf",
+          "name": "N MJ-5 修正：裝置框落影是真的了",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "ZGFyP",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MJ-5 修正：裝置框落影是真的了",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "qgJDA",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Gah5O",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Q0Rnwx",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 的 Notes 宣稱裝置框有 $paper-shadow 落影，但實測 0 個節點——是沒有兌現的宣稱（slop-forbidden #7／#18）。R2 每個 Device Frame 節點都帶 effect:{type:\"shadow\",shadowType:\"outer\",offset:{x:10,y:20}（iPhone）／{x:12,y:24}（iPad），blur:48／56，color:\"#2B141C2E\"}，方向右下、光源左上，與全 app 唯一窗光慣例一致——已用 Get(deviceFrameId,{depth:0}).effect 逐板讀回確認非空（本輪 c2yk3s 讀回範例：{\"type\":\"shadow\",...,\"offset\":{\"x\":10,\"y\":20}}），10 板全數比照。落影顏色與 Print Stage 內部使用同一個 $paper-shadow 十六進位值（#2B141C2E）但寫成字面值——見下「MN-2」段的理由。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "pMpiu",
+          "name": "N MJ-6 裁定執行：Dynamic Island 已刪除",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "eAWoM",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MJ-6 裁定執行：Dynamic Island 已刪除",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "kaftX",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "SOC1K",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "TlRhc",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "使用者／visual-reviewer 裁定 Dynamic Island 裝飾尺寸只有實機換算值的 45%、解剖位置錯、且 LS-147 實拍截圖本身已含系統繪製的膠囊、疊上去會變雙重。R2 五塊 iPhone 裝置框已移除該節點，Device Frame 現在只有純 bezel（fill #2B141C＋圓角＋落影）＋slot/screenshot 兩層，無任何裝飾疊加物。收據的 sibling_intersection 因此從 R1 的 5（Dynamic Island × slot）歸零。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "RyZe8",
+          "name": "N MJ-7 修正：標語字數上限依板個別聲明，不再套單一「≤14 字」",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "KxhFx",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MJ-7 修正：標語字數上限依板個別聲明，不再套單一「≤14 字」",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "gl279",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Cfu7p",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "MHKd4",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 用單一「繁中 ≤14 字」規則但 tagline 框在 fs=88／w=1120 下的實際單行上限是 12 字（中日韓 1em advance），13–14 字會換行造成裝置框被裁——宣稱與版面互斥。R2 五板 tagline 字級各不相同，改為逐板列出（依當時 R2 序）：01 fs=100/w=1160→上限 11 字；02 fs=88/w=1160→上限 13 字；03 fs=72/w=1160→上限 16 字；04 fs=88/w=1160→上限 13 字；05 fs=104/w=1160→上限 11 字。iPad 五板同理：01 fs=130/w=1700→13 字；02 fs=112/w=1700→15 字；03 fs=90/w=1700→18 字；04 fs=112/w=1700→15 字；05 fs=130/w=1700→13 字。R5 訂正：歷經 R3 MJ-14 重排、R4 MN-9、R5 MJ-21 統一 1.563636× 倍率後，字級與板序全部改變，上限模型不變（floor(tagline 寬 / fontSize)），依現序（01–05）重算：iPhone（w=1160）01 fs=100→上限11字（本板『只有家人看得到』7字）；02 fs=100→上限11字（本板『回憶好好收藏』6字）；03 fs=104→上限11字（本板『阿公阿嬤也能輕鬆使用』10字，餘裕僅1字）；04 fs=88→上限13字（本板『留言愛心，滿滿的愛』9字）；05 fs=88→上限13字（本板『陪伴孩子每一步成長』9字）。iPad（w=1700）01 fs=156→上限10字（本板7字）；02 fs=156→上限10字（本板6字）；03 fs=163→上限10字（本板10字，零餘裕——現文案已達上限，任何加字都會換行、把 Tagline 區塊增高、往下擠壓裝置與絕對定位的 Print Stage）；04 fs=138→上限12字（本板9字）；05 fs=138→上限12字（本板9字）。任何未來換標語文案都要對照對應板現值重算，不是套用單一數字或 R2 舊表；iPad 03 尤其注意零餘裕。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "sWvRr",
+          "name": "N MJ-8 裁定執行：長輩賣點升格為標語",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "oZl12",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MJ-8 裁定執行：長輩賣點升格為標語",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "U0oVb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "M5biG",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "h0GRy",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "05 板（R2 序號，今新序 03＝`Bm7Lx`／`BnjqP`，iPhone／iPad 皆同）的主標語改為「阿公阿嬤也能輕鬆使用」（fs=104/130，全組最大字級），原本的「邀請家人一起加入」降為副標（fs=48/64）。這是產品定位裡最具體、只有這個 app 說得出口的差異點（PLAN 長輩優先定位＋品牌 a11y 硬約束皆為它存在），不該被壓在瀏覽縮圖看不見的副標字級。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "XdFbD",
+          "name": "N MJ-9 修正：副標數量與字級",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "U6aC2h",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MJ-9 修正：副標數量與字級",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "WxZnb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Q2zDsU",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "nXrPN",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 十板皆帶副標，fs=44，換算 200pt 縮圖只剩 6.7pt、不可讀。R2 只有 04（成長）與 05（長輩）保留副標，01／02／03 拿掉；保留的兩處字級提升到 fs=56（iPhone 04）／64（iPad 04）／48（iPhone 05）／64（iPad 05），200pt 縮圖換算約 8.5–9.7pt，仍偏小但已是本版面比例下能負擔的上限——若要進一步提升可靠度，建議之後在 LS-147 實拍階段直接對照 200pt 縮圖再次覆核（本輪未做這個額外覆核，記為待辦）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "mTEkB",
+          "name": "N MN-1 修正：Spacer 不再是倒推餘數",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "jMQcT",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MN-1 修正：Spacer 不再是倒推餘數",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "m5wzc",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "hqJuy",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "NvEfj",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "每板結尾用 Spacer Bottom（height:\"fill_container\"）取代寫死的餘數值——R1 的 Spacer Bottom h=1（iPad）／72.97（iPhone）是算不出空間硬湊的訊號。R2 十板逐一用 Get 讀回 Spacer Bottom 實際高度確認皆為正值（iPhone 01=44.47／02=583.73／03=168.55／04=172.64／05=590.09；iPad 01=119.09／02=753.33／03=222／04=234／05=673），這些不是刻意湊整的數字，是先選定其餘元素尺寸與間距後量出來的剩餘空間——大小差異本身就反映各板『內容多寡』的節奏（02／05 的沖印品+文字區塊本身占比較少、剩餘空間自然較大，不是缺陷）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vRjMB",
+          "name": "N MN-2 修正：板背景與文字改用字面色值，不掛 theme",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "EaBtm",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MN-2 修正：板背景與文字改用字面色值，不掛 theme",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "qcpo5",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "F8a9s",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "P1pEO0",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 用 $bg／$text-primary／$text-secondary（皆 theme-aware token）。R2 曾改十板為三色交錯（依當時序：01/03=#EDD3D6、02/04=#F5E1E3、05=#F6DDE2）；MJ-14 重排後三色的分佈規則跟著板走、序列讀不出任何漸進或交錯意圖（ΔE 2.6–5.0，不上不下），R4 MJ-19 改為 10 板統一單一底色 #EDD3D6（三色中原本用最多板的既有值，改動面最小）——不用維護「哪個位置該用哪色」的規則，也不會因為之後再調順序又要重新決定一次。標語／副標文字仍用 #2B141C（＝$text-primary 淺色值）／#553040（＝$text-secondary 淺色值）字面色值，理由同 R2：PNG 匯出不依賴 renderer 當下 theme 狀態，這批文字與 App Store 素材本身無主題切換需求（票文「深色版不做」）一致。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "aYiwY",
+          "name": "N MN-3／MN-4：iPad 槽密度與圓角推導（記錄，未逐板精算）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "w1N4B",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MN-3／MN-4：iPad 槽密度與圓角推導（記錄，未逐板精算）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "BaBkC",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "S2tk7",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "f0v5bD",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPad 槽內容來源皆為 iPad 11\"（834pt 寬）設計稿，放大到本輪各板槽寬（900–1650pt 不等）與真實 13\" 裝置（logical 寬約 1032pt）的縮放倍率不同，因此文字與控件的視覺密度會比 LS-147 實際擷取的 13\" 真機截圖略大（如 1500pt 槽對 834pt 來源＝1.799×，真機比例應為 1032→1.4535×，密度約多 24%）——這是既有限制，LS-147 拿到真截圖後對比 mock 時不要誤判成「要修的密度落差」。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "l2JEXP",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "a3Ybeb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "PvScX",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "裝置框圓角固定：iPhone bezel=150／slot=134；iPad bezel=64／slot=44（後者依 iPad Pro M4 實機圓角約 30pt、以 1500pt 槽寬對 1032pt logical 寬的縮放倍率 1.4535 換算＝43.6，取整 44）。**已知簡化，誠實記錄**：五板實際裝置框寬度不同（iPhone 732–1152pt、iPad 940–1690pt），若要求每板圓角都依「自己的實際渲染寬度」精確按比例換算，數字應各自不同——本輪為求版面視覺一致性，十板圓角維持固定值而非逐板精算，這是刻意的簡化取捨，不是遺漏；若之後要精確化，換算公式已在此列出，逐板代入寬度即可。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "CQ6FX",
+          "name": "N MN-6 修正：顯示級標點",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "R2P0XN",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MN-6 修正：顯示級標點",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "a459u",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Uri0E",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "W6e34G",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "02 板（R2 序號，今新序 04＝`ZRyXL`／`b59DUk`）標語原「留言按讚，滿滿的愛」在 88pt 全形逗號會打出視覺空洞，R2 改詞後為「留言愛心，滿滿的愛」——同樣有全形逗號但字數與節奏改變後實測（見上方 R2 板清單截圖）已不構成明顯視覺空洞；01/03/04/05 標語皆為單一短句無逗號。若後續換其他標語文案含全形逗號，展示級字重下建議改用空格或另起一行，不要留全形逗號。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "K7afio",
+          "name": "N MN-7：1:1 未縮放占位板（不採納，理由）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "U2t1Ca",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "MN-7：1:1 未縮放占位板（不採納，理由）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "fm25U",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O1ukHv",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "e4aXC",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "VR 建議留一塊板放 1:1 占位供審查時不受模糊干擾地判斷幾何——這是給審查流程用的輔助工具，不是上架交付物的一部分；R2 選擇不新增這塊板，改以本 Notes 逐板列出精確的 slotW/slotH 數字與推導公式，讓審查者可以直接核對數字而不需要額外一塊板。若下一輪審查仍需要視覺化的 1:1 對照，請在 R2 verdict 中明確要求，R3 會補上。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "wbrqA",
+          "name": "N 其他：溢出掃描盲區的 harness 建議（供 orchestrator 參考）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "PQkTY",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "其他：溢出掃描盲區的 harness 建議（供 orchestrator 參考）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "Gvu2y",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "pqfGE",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "i4PBq",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R1 verdict 指出 scan_scope=boards 對「新板壓在既有稿上」與 board_clip 只認可見葉節點對「帶子節點的純色 frame 溢出板外」兩類結構性盲區——本輪已用手動全量 document-scope root AABB 比對彌補第一類（見 BL-1 節），第二類本輪透過人工核對 Device Frame 底緣座標（非葉節點但有非透明 fill）彌補。兩者皆屬 harness 改善建議，不在本票範圍內修 overflow-scan.js 本身。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qOgJ5",
+          "name": "N 匯出步驟（Pen 匯出 PNG 1x；R3 新增前置 blocker）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "QDCfC",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "匯出步驟（Pen 匯出 PNG 1x；R3 新增前置 blocker）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "nHuaR",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "WyXCR",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-5 R3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Yqagr",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "匯出前置 blocker（第 0 步，優先於下列所有步驟）：海報層 6 個 Hero Photo 節點（scpdc／ayJoy／F92jh／yzfCx／aD9EO／j5Bns，見上「BL-5 相片來源」段）目前皆為 LS-46 設計佔位圖，非出貨資產。正式匯出上架素材前，先確認使用者已就 D10（自有照片／Codex 生圖／授權圖庫）拍板並完成置換，否則不得執行下方匯出步驟。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KgGtp",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oNX5S",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "WUjfA",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "最終上架用素材一律用 scale:1 匯出（板尺寸本身已等於目標像素，不可再乘 2x）：Export([<board id>], \"png\", \"<輸出目錄>\", {scale:1})。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "xiLgy",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "IB6uS",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "d2A5u",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "appstore-slots/*.jpg 是 scale:2 匯出後再壓縮成 ≤1024px JPEG（LS-74），只給 Pencil 畫布內部預覽用，非上架素材。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "hFRXC",
+          "name": "N 6.5\" 縮放做法（沿用 R1，未變）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "W2osdO",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "6.5\" 縮放做法（沿用 R1，未變）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "DdTfL",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "C3uvK",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "CBW1j",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Apple 6.5\" 規格＝1242×2688px。不要縮放匯出的點陣圖；另開 1242×2688 board 套用相同版型參數（本輪 R2 的五套任務分工與尺寸推導公式），重新計算各板數字。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "fSpuX",
+          "name": "N 槽替換方法（LS-147 讀這裡，id 已更新為 R3）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "CdSIc",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "槽替換方法（LS-147 讀這裡，R4 改為逐板可執行步驟）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "v6SB5",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "gqqEa",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R4",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "x6VSkl",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "共同步驟：Update(slotId, {fill:{type:\"image\", url:\"appstore-final/<新檔名>.png\", mode:\"fill\"}})，把下面每一格對應的 slot id 換成真機／模擬器截圖。10 個 slot id 見上「R4 板清單」節。多數槽（01／02／03／05，共 8 格）截圖方式單純：照下方「各槽拍攝步驟」導覽到指定畫面直接截圖即可，畫面本身不需要疊加任何東西。04 兩格（bArC2／tIcZW）不一樣——它們現在的畫布預覽（appstore-slots/comments-iphone-v3.jpg／comments-ipad-v3.jpg）不是隨便截一張留言畫面就好，是刻意組出「狀態列在、日記內容從頂端自然接續、留言介面疊在有內容的畫面上」這個構圖，LS-147 拍攝時必須重現同一個構圖（見下方 04 專屬步驟），單純「打開任何一則留言」拍到的畫面可能狀態列被系統手勢列擋住、或留言列表在空白畫面上，達不到同樣效果——這正是 BL-8 要修的問題，拍攝時請對照 04 步驟的每一項核對點。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "wGsoX",
+              "name": "l",
+              "fill": "$print-ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "04 專屬步驟（iPhone，對應 bArC2＝appstore-slots/comments-iphone-v3.jpg）：①用 LS-146 核准的審核用 demo 帳號登入。②導覽到時間軸，找到 8/31（今天）小安（2歲3個月）那則日記——內容「今天在滑滑梯上玩得好開心，還交了一個新朋友！」，已有 4 個愛心、2 則留言（若 demo 資料沒有這則，比照建立一則：文字同上、對小安記錄、按 4 次愛心、留 2 則留言）。③點進日記詳情畫面（此時應可見狀態列、上方導覽列「時間軸」返回鍵、完整日期錨點、日記全文、簽名列「🖍 小安 · 2歲3個月」、互動列「♥ 已按愛心 4」「◯ 留言 2」）。④點「留言」按鈕開啟留言 sheet——sheet 用中等高度 detent（不是最大高度），讓上方日記內容（含互動列）仍有部分露出、不被 sheet 完全蓋住。⑤核對露出範圍：狀態列在最上方可見、日期錨點與日記文字可見、互動列（愛心與留言數字）可見，這幾項缺一即代表 sheet 拉太高，需切換到較低的 detent 再拍。⑥截圖，Update 進 bArC2 的 fill。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "U41QBM",
+              "name": "l",
+              "fill": "$print-ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "04 專屬步驟（iPad，對應 tIcZW＝appstore-slots/comments-ipad-v3.jpg）：①同一個 demo 帳號、同一則日記，在 iPad 上開啟日記詳情畫面（左欄應可見相片格線、右欄可見日期＋日記文字＋簽名＋互動列，與 iPhone 版內容一致）。②點「留言」按鈕——iPad 上留言是置中彈出的卡片 modal（不是從底部滑起的 sheet，沿用 LS-133 R3 核可的置中卡片幾何），不要誤觸/誤用其他手勢讓它變成貼齊畫面邊緣或狀態列的樣式。③核對：背景（左欄相片格線、右欄部分日記內容）在 modal 四周仍隱約可見（modal 不佔滿全螢幕）、狀態列維持在畫面最上緣、modal 本身沒有任何一角超出畫面或壓在狀態列列上。④截圖，Update 進 tIcZW 的 fill。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "zH02P",
+              "name": "l",
+              "fill": "$print-ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "各槽拍攝步驟（01／02／03／05，共 8 格，皆用 LS-146 demo 帳號，登入後直接導覽，畫面本身不需疊加）：01 時間軸（I8kSPC／h2080）——首頁時間軸預設狀態（不下拉更新、不捲動），可見小安／小軒近期日記與相片卡。02 相簿詳情（F5775／mz0F2）——打開「阿公阿嬤家過年」相簿（34 張相片），顯示相片格線頂部。03 邀請加入（k9dES／uGuJD）——邀請家人畫面，顯示範例邀請碼 K7M 2FD 與現有成員列表。05 寶貝（hZH2Y／m1U1Ke）——寶貝列表畫面，顯示小安（2歲3個月）／小軒（6個月大）兩筆卡片。iPad 03（uGuJD）若日後有原生邀請家人 iPad 設計，直接替換這個 slot 即可，不需要調整外層結構。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "IEpLx",
+          "name": "N 每張對應的 LS-146 示範家庭資料狀態",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "inf2Y",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "每張對應的 LS-146 示範家庭資料狀態",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "L9GWZ3",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O26Sw",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-234 R4",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "VPVz5",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "槽內容示範資料：時間軸／寶貝＝小安（2歲3個月）／小軒（6個月大）；日記詳情＋留言槽（04）示範日記為小安 8/31（今天）「今天在滑滑梯上玩得好開心，還交了一個新朋友！」、已有 4 個愛心／2 則留言，留言內容為「陳志明」「林美玲」「陳志明」三則對話（R4 沿用同一則日記＋同一組留言，iPhone／iPad 共用，見上方「04 專屬步驟」段）；相簿詳情＝「阿公阿嬤家過年」相簿 34 張；邀請家人＝範例邀請碼 K7M 2FD；iPad 05 家庭成員畫面示範「陳美玲（我）」「陳志明」「李美琪」「陳小軒」四位成員。LS-147 正式擷取時應改用 LS-146 核准的審核用 demo 帳號資料，不得使用真實使用者姓名／照片。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "WmCiz",
+          "name": "N R3 修訂重點（BL-5～BL-7／MJ-10～14／MN-5，取代／補充 R2 對應描述）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "Qjwqz",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R3 修訂重點（BL-5～BL-7／MJ-10～14／MN-5，2026-09-13）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "bAdzq",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Gtfeq",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "H7782",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "相片來源（誠實揭露，匯出前置 blocker，待使用者 D10 裁決：自有照片／Codex 生圖／授權圖庫）。海報層三張家庭照＝design/*.png（wordmark-brand.md 明文「設計佔位圖，不是出貨資產」）：hero-grandma.png 用於 scpdc（新序 01-iPhone print=s1Kzm「Hero Print」）、ayJoy（01-iPad print=N3mjp6「Print Stage」，R4 已升級為比例沖印品 1229×913，見 R4 MJ-10/15 段——VR R3 指出這裡曾誤標成「01-iPad Hero Print」，容器其實是尚未升級的 Print Stage；R4 升級後這個節點名稱差異已不再是問題，但容器名稱本身仍叫「Print Stage」不是「Hero Print」，純粹是命名沿革，不影響尺寸與位置）；invite-grandma.png 用於 F92jh（新序 03-iPhone print=ay53J）、yzfCx（03-iPad print=ScEdE）；join-parents.png 用於 aD9EO（新序 04-iPhone print=hUNFn）、j5Bns（04-iPad print=D2juW）。demo 帳號種子（scripts/ops/review-demo-seed.sh 第 303 行起）灌的正是同一批圖，代表截圖內＋demo 帳號內都含佔位相片，同一套誠實原則涵蓋兩處，不是海報層獨有的問題。R3 三張複合截圖（child-ipad-v2.jpg 仍在用；comments-iphone-v2.jpg／comments-ipad-v2.jpg 已於 R4 被 v3 取代，見下方 R4 BL-8 段）額外含 go7f9／JbTfv 既有時間軸／寶貝管理畫面中的其他既有設計佔位照片（非本票新增，沿用既有畫面既有素材）；R4 新的 v3 兩張改用 vzYXz／MjRcr 的既有日記詳情內容組裝，同樣沿用既有素材、未新增照片。替換時機：匯出送 App Store 前——這是本輪匯出清單的前置 blocker（見下方匯出步驟段）。替換後需重跑：上列 6 個 Hero Photo 節點所在的 6 塊板（新序 01／03／04，iPhone＋iPad）；child-ipad-v2.jpg 若連 JbTfv 本身的照片也一併換過，需重新執行 R3 BL-7 的複合截圖流程。R7 訂正（1b 裁決）：使用者 09-13 13:29 裁決 D10＝Codex 生圖（核可頁 8051b44e），置換工作另開 LS-247 執行、不在本票範圍；本票稿面上列 6 個 Hero Photo 節點本輪未換圖，仍為 LS-46 設計佔位圖，上述誠實揭露與匯出前置 blocker 維持有效直到 LS-247 完成置換。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PdUnx",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fmK6I",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-6",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "f4H6D",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPad04（今新序，日記詳情）槽 tIcZW 的 appstore-slots/comments-ipad.jpg 換成 comments-ipad-v2.jpg：用暫存 frame 組合 go7f9（LS-21/11-iPad 時間軸，真實 NavigationSplitView 側邊導覽＋日期章＋日記卡＋相簿卡）為底、疊 cmp/Card Diary『已按愛心』peek card（見 MJ-13）、再疊 wY7f8 的 Scrim＋Card Wrap（置中留言 modal），取代原本 wY7f8 單獨的暗底 scrim（背後無任何內容，佔槽高約 88% 空白）。做法對照 VR R2 給的路徑 (b)：同一個 sheet 疊在有時間軸內容的板上，不修改 go7f9／wY7f8 本體。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "iVBaz",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KiFmS",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-7",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Bwpif",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "iPad05（今新序，寶貝）槽 m1U1Ke 的 appstore-slots/child-ipad.jpg 換成 child-ipad-v2.jpg：來源 JbTfv 原裁切窗 [0,1112]（JbTfv 原生 834×1194）會讓 Sidebar『新增寶貝』（絕對 y 1080–1136）與 Footer『儲存變更』（絕對 y 1076–1136）兩顆按鈕在裁切線 1112 處被腰斬，唯一完整可讀的是『移除這個寶貝』（y 1020–1064，安全在線上方）。R3 裁切窗改為 [62,1174]（跳過頂部 62pt Status Bar，剛好在 Split 內容起點 y=62 落刀，是乾淨邊界、無任何元素跨越；底部 1174 也在 Home Indicator 裝飾線 y=1174.5 之前，同樣無元素跨越），三顆按鈕與說明文字全數完整可讀。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PCdXR",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Q2JgX",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-10",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "JOpCE",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "沖印品當主角：新序 01 板（c2yk3s）新建 Hero Print（s1Kzm，786×584，hero-grandma.png），是舊 Z0AZA（393×292 Print Stage）整體 2× 等比例放大後的重製——所有幾何屬性（padding／gap／corner 尺寸／字級／letterSpacing／strokeWidth／effect offset／blur）皆乘以 2，但角托 corner-out 外擴量維持規格值 5pt 不變（相對紙緣的固定物理常數，不隨縮放；角托本身尺寸 52×52 才是縮放後的值）。位置 x=60,y=2268（R4 由 2275.53 調整，底緣距板底改為明確的 16pt，取代原本殘留的 8.47pt），layoutPosition=absolute，與 Device Frame（gfP0F, y=594.98–2495.53）重疊約 228pt，並在 x 軸偏左（Hero Print x60–846 vs 裝置 x214–1106），讓照片一角探出裝置左側，是『相片斜靠在手機旁』的實體場景，不是上下堆疊的兩個獨立物件。原 Z0AZA 與其所在的 Spacer 36／Spacer Bottom 已刪除重建。R4 把這個 2×放大＋疊裝置的構圖，依板寬比例公式推廣到其餘 5 個沖印品實例（03／04 iPhone+iPad、01-iPad），見下方 R4「MJ-10/15」段——本段這顆（s1Kzm）本身幾何未變，只有四角托在 R4 MJ-16 換成 cmp/Photo Corner 元件實例（原本是刪除重建時手繪的裸 frame，脫離元件庫）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Kz1B9",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OSb0a",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-11",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "VdV9f",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "圓角比例公式（取代 R2 固定值 150/134 iPhone、64/44 iPad）：iPhone slotR=slotW×0.125、bezelR=slotR+16（bezel 厚度）；iPad slotR=slotW×0.0291、bezelR=slotR+20。10 塊板（5 iPhone＋5 iPad）的 Device Frame／slot cornerRadius 已全數依各自實際 slotW 重算，數值見上方 R3 板清單段逐板 r= 標註。量化驗證：新序 03 板（原邀請加入，slotW=700）改前 r=134 在距槽底 20pt 處內縮 134−√(134²−114²)=63.6pt、底部說明文字『名額不退還，需要更多名額請重新產生。』左內距約 42.7pt 會被切；改後 r=87.5 內縮 31.8pt，不再遮字。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gy78L",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QuLqO",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-12",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "KokPM",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "底部留白改為決定值（R3）：原 02（今新序 04，日記詳情/留言愛心）與原 05（今新序 03，邀請加入）四塊板（ZRyXL／b59DUk／Bm7Lx／BnjqP）皆移除 Spacer Bottom（fill_container 倒推餘數）並在板根加 justifyContent:\"center\"，讓固定高度內容（標語／副標／印品／裝置）整體在剩餘垂直空間置中，取代原本『上緣小留白＋下緣一大塊死空間（20–27% 槽高）』的失衡版面。四板改後上下邊距：iPhone04 上401.9/下291.9、iPad04 上506.7/下376.7、iPhone03 上395.0/下295.0、iPad03 上456.5/下336.5（由板高／內容高／padding-top 反推，非目測）。R5 訂正：R4 把 Print Stage 改為 layoutPosition:\"absolute\" 後，這個 justifyContent:\"center\" 反而把死空間從底部搬到頂端（四板一致 +146pt＝舊 Print Stage 高度 292 的一半，上邊距變成 541.0／547.9／602.5／652.7），是倒推餘數的簽名。R5 改為移除 justifyContent（回到預設 flex-start）、板根 padding 明確設為 [130,0,0,0]（iPhone：Bm7Lx／ZRyXL）／[160,0,0,0]（iPad：BnjqP／b59DUk），與 c2yk3s／Vn4TL 既有規格共用同一組常數；VR R5 用展開快照複驗四板板頂到第一個可見元素為 130.00／130.00／160.00／160.00，逐位元對齊 padding 值。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Fp0qN",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Q1qfJ",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-13",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "YNqk6",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "愛心可見：新序 04 兩塊板複合截圖皆疊入 cmp/Card Diary『已按愛心』instance（原型 TEX4L，來自 LS-177/互動列規格板 IgqGF）——Interaction Row 含實心愛心 icon（$accent 填色）＋『已按愛心 4』＋『留言 2』，取代 R2 只有留言列表、標語承諾『愛心』卻一個愛心圖示都沒有的版本。R3 版本（comments-iphone-v2.jpg／comments-ipad-v2.jpg）是用暫存 frame 手拼合成，VR R3 指出這兩張是「真機拍不出來的畫面」（iPhone 版開頭截句、無狀態列；iPad 版把日記卡貼在狀態列那一排），已於 R4 整個重做為 v3（appstore-slots/comments-iphone-v3.jpg／comments-ipad-v3.jpg），改用既有真實實作板（FiBvh／vzYXz／wY7f8／MjRcr）組裝＋IgqGF 互動列 Replace 進真實 Signature 節點，不再是手拼——狀態列、導覽列、完整日期錨點齊全，iPad 版的 peek 內容落在右欄時間軸區域而非狀態列，詳見下方 R4「BL-8」段。此段（R3）保留作歷史記錄，v2 檔案已刪除。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HvyC3",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "H0Jn0x",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-14",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "v7QRb",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "順序重排（VR R2 MJ-14；待使用者核可，稿面已先照建議排列，可退回原序）。現況（R2）→建議（R3 已套用）：①私密（時間軸）→①私密（不變，唯一具體差異化文案，理應開場）。②留言愛心（日記詳情）→②相簿（原③，VR 指出相簿是全組視覺最強畫面──照片牆、看得到人臉──應搶第 2 槽高曝光位）。③相簿（相簿詳情）→③邀請加入（原⑤，『阿公阿嬤也能輕鬆使用』是全組最不可複製的主張，趁還有人在看時講出來，不留到沒人滑到的第 5 槽）。④成長（寶貝）→④留言愛心（原②，已補 MJ-13 愛心畫面，但仍非全組最強，往後移）。⑤邀請加入（長輩）→⑤成長（原④，全組相對最弱的表單感畫面，退到最後一槽）。每槽已在板名（frame name 的 01–05 數字）與 x 座標同步更新為新序；標語／文案內容本身不變，只有槽位對調。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "xVDun",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Oae6a",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "PoV1I",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "04 寶貝槽（今新序 05，Q9Zw3f）408pt 空白帶：真修，不再引用『範圍排除改既有板』（該理由套不上──VR 從未要求改 gpSsR 本體）。改法：Device Frame WD4dI 由 1082×2313.36 縮小為 850×1809.29（縮小 21.4%，slotR/bezelR 依 MJ-11 公式同步重算），並移除 Spacer Bottom、加 justifyContent:\"center\"（同 MJ-12 手法）。gpSsR 本體『Top 區塊結束於 y439→Footer 起於 y636』的內部留白（197pt，源自既有寶貝管理畫面自身版面，非本票可改動範圍）沒有消失，但縮小手機後留白的絕對像素隨之縮小，且畫面不再是海報上唯一巨大的空焦點──這是『把手機縮小讓文字扛』（VR 原話）的直接實作，不是文字理由。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "M1CUk",
+          "name": "N R4 修訂重點（BL-8／MJ-10,15,16／MN-9／MJ-19／Notes 沿革，2026-09-13）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "pP6Vg",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R4 修訂重點（BL-8／MJ-10,15,16／MN-9／MJ-19，取代／補充 R3 對應描述）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "Y5aWe",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Ny927",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-8",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "N5gn6",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "兩塊 04（留言）板的複合截圖是真機拍不出來的畫面：ZRyXL（iPhone）開頭截句、無狀態列；b59DUk（iPad）把日記卡貼在狀態列那一排。且原本 LS-147 匯出指示是「直接覆寫 slot fill」——一旦換真實截圖，BL-6（有內容背景）與 MJ-13（愛心可見）兩個修復會一起蒸發，因為它們只存在於手拼的 v2 合成圖裡。改法：不再手拼，改用既有真實實作板組裝後匯出（見下方逐板說明），並把 LS-147 匯出步驟從「覆寫 fill」改成「用 demo 帳號在指定畫面＋指定狀態截圖」的可執行操作，見下方「槽替換方法」段 R4 更新。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hnWwx",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "mhS8d",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-8 iPhone",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "pQXxX",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "appstore-slots/comments-iphone-v3.jpg：以 FiBvh（LS-177 留言 sheet iPhone，Status Bar Backdrop＋Scrim＋Sheet Wrap 既有結構）為底 Copy 一份，在 Scrim 之前插入真實日記內容（Nav Back＋Date Anchor＋Diary Note，取自 vzYXz）：日記文字改短為一句話（避免撐爆可露出高度）、Signature 整節點 Replace 成 LS-177 互動列規格板（IgqGF）的「已按讚」版本（含 Heart Group「已按愛心 4」／Comment Button「留言 2」），並縮小 Comment List 高度使 Sheet 上緣落在日記內容下方——狀態列、導覽列「時間軸」、完整日期錨點「8月31日（今天）」、日記文字、互動列全部在 Sheet 之上可見，Sheet 本身顯示「留言」標題＋1 則真實留言＋輸入列，沒有任何一眼可辨的合成痕跡。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "wxV0V",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Y4PdOQ",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-8 iPad",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "X3dow5",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "appstore-slots/comments-ipad-v3.jpg：以 wY7f8（LS-177 留言 sheet iPad，LS-133 R3 核可的置中卡片幾何——Scrim＋Card Wrap 置中 modal，不是底部抽屜）為底 Copy 一份，在 Scrim 之前插入 MjRcr（LS-21/13-iPad 日記詳情）的 Nav Back＋Body（左欄相片格線／右欄日記內容），Signature 同樣 Replace 成「已按讚」版本。peek 內容（相片格線＋部分日記文字）落在畫面左側與右上角，是真實時間軸／內容區域的一部分，不再貼在狀態列那一排；留言 modal 置中顯示「留言」＋2 則真實留言。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "YvFAS",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "aJ6KT",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-8 尺寸",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LlBf1",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "兩張圖皆用 Export 直接從 Pencil 畫布匯出（scale 校正到長邊 ≈1024px，符合 LS-74 素材尺寸政策：472×1023／716×1025），非手動拼貼截圖後製；舊版 comments-iphone-v2.jpg／comments-ipad-v2.jpg 已刪除（design/appstore-slots/ 內不再存在，且 .pen 內無任何節點引用）。R5 訂正：comments-ipad-v3.jpg 的 716×1025（比例 0.6985）與 tIcZW 槽比例 0.75 不符，fill:cover 會裁掉頂端 35.17px、恰好吃掉整條狀態列——改用 PIL 對原圖等比例 resize（非裁切）為 768×1024（與其餘 4 張 iPad 槽圖同規格，比例誤差 0），原圖內容（狀態列／導覽列／日期章／日記卡／留言 sheet）全部保留、僅 7.3% 水平拉伸。comments-iphone-v3.jpg 維持 472×1023 不變（槽比例誤差 <0.3%，視覺無感，MN-30 待處理）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WXpCB",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "p5sVUL",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-16",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "v5yH39",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "s1Kzm（Hero Print，01-iPhone）的四顆角托原為 R3「刪除重建」時手繪的裸 frame（type=frame，無 ref），脫離 cmp/Photo Corner 元件庫，導致：①未來元件修改不會傳播到它；②第四支溢出掃描的 ref 判準對它完全失效（ref_hits 貢獻 0），只靠名稱備援驗到。改法：Delete 四顆舊 frame，Insert 四顆 ref:GEBcf（cmp/Photo Corner）實例，沿用原座標（corner-out 5pt 常數不變）、width/height override 52×52（字面數字，Pencil 已知限制：這兩個屬性綁不了 $variable）。幾何零變動，只換節點型別。順手把 s1Kzm 底緣距板底的殘留 8.47pt（MN-23，既非貼齊也不在節奏上）改為明確的 16pt（y: 2275.53→2268）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SHrDB",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "kOpi7",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-10/15",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ZqQ4L",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R3 只有 s1Kzm（01-iPhone）把沖印品放大疊裝置成主角，其餘 5 個沖印品實例（N3mjp6／ay53J／hUNFn／ScEdE／D2juW，01-iPad／03/04 iPhone+iPad）仍是絕對值 393×292——iPad 01 在 300px 商店卡上只剩 57px、77.6% 是平底粉色，卻是 iPad 組曝光最高的第一槽。改法（六個實例統一公式，依板寬）：printStageW = round(板寬 × 786/1320)，scale = printStageW/393，Print／PhotoWrap／corners／Imprint Row 的 x／y／width／height／padding／gap／fontSize／letterSpacing 全部依 scale 縮放，corner-out 維持 5pt 常數不隨 scale 放大（沿用 s1Kzm 已驗證正確的規則）。iPhone scale=2.0（786×584，與 s1Kzm 原值相同）；iPad scale≈3.127（1229×913）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "d9jJ7",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "VOGes",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-10/15 位置",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "M3ibG",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "5 個沖印品全部轉 layoutPosition:absolute，疊裝置框下緣（沿用 s1Kzm「照片一角探出裝置外側」構圖比例，peek fraction ≈0.196＝154/786），底緣距板底統一 16pt（不出血——board_clip 掃描要求本票觸碰板 flagged=0）。Bm7Lx／BnjqP（03 板）原本 Print Stage 在 Device Frame「之前」（justifyContent:center 置中排版），抽離流版位置後裝置框自動回中，改疊在裝置框「之後」（下緣），與其餘板構圖一致；四顆角托手算複驗全部 <0.6pt 誤差內。R7 訂正（MN-26）：「底緣距板底統一 16pt」量的是 stage frame 本身的空框邊界，不是讀稿的人會看到的視覺下緣——Print Stage frame 內紙面＋角托下方另有留白（iPhone 107.8／iPad 171.0，源自 stage 高度 584／913 與角托可視下緣 476.2／742 的差），實際可見下緣（角托底）距板底為 iPhone 123.8pt／iPad 187.0pt（分別占板高 4.3%／6.8%，兩裝置不相等）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "F5LC0",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "mcvBC",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-9",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "QCE55",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "MJ-14 把相簿（02，y9r9Fq／mWZy3）從第 3 槽搬到第 2 槽（曝光僅次於 01），但字級沒跟著調整，仍是全套最小（iPhone 72／iPad 90，換算 200pt 瀏覽寬僅 10.9／8.7pt）。改為 iPhone 100（比照 01 板 kSVMC 的 100pt）、iPad 157（依板寬比例 2064/1320=1.5636 換算，不再沿用 MJ-17 指出有問題的「字標 1.3x」方法）。板本身維持既有「裝置優先、標語壓底」的構圖（與 01/03 的「標語優先」構圖不同、屬於已核可的五種真版式之一），未加字標——只調字級。R5 訂正：100×1.563636＝156.36，R4 的「157」是四捨五入誤差 1pt；R5 把五張 iPad 板統一改用精確倍率 1.563636…（＝2064/1320）重算，本板訂正為 156（jU9lS fontSize），與其餘四張 iPad 板共用同一個常數，見「R5 修訂重點」段。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "da8t7",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "u6UnY",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-19",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "oNBxr",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "重排後三種板底色（EDD3D6／F6DDE2／F5E1E3，ΔE 2.6–5.0）序列不成立，不是遞進也不是交錯，付了「看得出不一樣」的代價卻沒有可讀的意圖。採用 VR 建議選項(a)：10 板統一為單一底色 #EDD3D6（三色中原本用最多板的既有值，改動面最小）。P1pEO0 段（MN-2）已同步更新。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "EvBvv",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OCocA",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-21",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "buKRx",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Notes 板（本板）的 gap 在 R3 fork 修 layout cache 時從 24 改成 10，commit 訊息寫「已還原」但實際留在 head——10 不在 8/16/24/44 節奏上，也沒有具名豁免。R4 已改回 24 並重新量測相鄰間距全數 ≥0（無負值重疊）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "zobbK",
+          "name": "N R5 修訂重點（BL-9／MJ-20／MJ-21，取代／補充 R4 對應描述）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "ShiPb",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R5 修訂重點（BL-9／MJ-20／MJ-21，取代／補充 R4 對應描述）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "Kmk8Q",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vJdTB",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-9",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "BDvp0",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "comments-ipad-v3.jpg 原 716×1025（比例 0.6985）在 0.75 比例的 tIcZW 槽以 fill:cover 裁掉頂端 35.17px、吃掉整條狀態列——R4 稿面的 x6VSkl／U41QBM 兩處敘述「狀態列在」與成品互打。改用 PIL 對原圖等比例 resize（非裁切）為 768×1024（與其餘 4 張 iPad 槽圖同規格，比例誤差 0），狀態列／導覽列／日期章／日記卡／留言 sheet 全部保留，僅 7.3% 水平拉伸。詳見上方「BL-8 尺寸」段（LlBf1）R5 訂正。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qzrNF",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "F7Ips0",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-20",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "fTDic",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R4 的 justifyContent:\"center\" 疊加 absolute Print Stage 後，把死空間從底部搬到頂端（Bm7Lx／ZRyXL／BnjqP／b59DUk 四板一致 +146pt＝舊 Print Stage 高度 292 的一半，倒推餘數簽名）。改為移除 justifyContent、板根 padding 明確設為 [130,0,0,0]（iPhone）／[160,0,0,0]（iPad），與 c2yk3s（130）／Vn4TL（160）共用同一組常數；Print Stage 維持既有裝置類型固定錨點（iPhone y=2268／iPad y=1823）不動。VR R5 用展開快照複驗四板板頂到第一個可見元素為 130.00／130.00／160.00／160.00。詳見上方「MJ-12」段（KokPM）R5 訂正。殘餘：b59DUk／ZRyXL 的 Device Row 是 justifyContent:\"end\"＋右 padding 90／60（裝置貼右、標語置中），左側各留 984／468pt 死空——這是縱向 padding 動不到的橫向佈局問題（R3 MJ-15 已指出，VR R5 附條件列為後續票，且擴大範圍涵蓋 ZRyXL 與 b59DUk 兩塊），不在本輪範圍。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "f79lcN",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "iyIcq",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-21",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "p8n1F",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R4 只修相簿（02）一格到板寬倍率 1.5636×，其餘四格（01／03／04／05）標語與兩個副標仍是 ~1.27–1.33× 的舊「字標 1.3x」殘留，形成 4 比 1 的內部不一致。R5 把五張 iPad 板標語與兩個副標統一改用精確倍率 1.563636…（＝2064/1320，與 iPhone 板寬同權）重算：01/02 標語 100→156、03 標語 104→163、04/05 標語 88→138、03 副標 48→75、05 副標 56→88。十格（5 標語+2 副標×2 裝置）現在同一套比例常數（誤差 <0.5pt）。詳見上方「MN-9」段（QCE55）R5 訂正與「MJ-7」段（MHKd4）R5 訂正的上限表重算。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "j30Wu",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dxish",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "0.196 peek",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "XfyEX",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R4 建立、R5 逐板複驗未破壞的既有規則（非本輪新增，記錄供後續參考）：六個沖印品實例（s1Kzm／ay53J／hUNFn／N3mjp6／ScEdE／D2juW）左緣探出裝置框的比例固定為 0.196×印品寬（iPhone 154pt／iPad 241pt），與板寬比例 59.5%（iPhone 786／1320、iPad 1229／2064）共同構成六板逐欄相同、零例外的構圖公式。R5 的 MJ-20／MJ-21 皆未改動印品幾何本身，僅改動印品「以外」的版面（padding-top／字級），此規則在 head 上維持不變（corner_anchor.mismatch=0、ref_hits=24，見 r5／r6 收據）。R8 訂正：R7 的 MJ-15（ZnMBA／iXXXX 改真置中）曾一度打斷本規則（ZRyXL／b59DUk 兩板 peek 分別變為 −50／−206），R8 已修正 hUNFn.x／D2juW.x 恢復零例外，見「R8 修訂重點」段。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "KSBVb",
+          "name": "R7 修訂重點",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "T1Obn",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R7 修訂重點（MJ-15／MN-26～30／minor-3，取代／補充 R5 對應描述）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "qdcTM",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oIXGu",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-15",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Vnrpn",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "ZRyXL（iPhone 04）Device Row ZnMBA 原 justifyContent:\"end\"＋padding[0,60,0,0]（左468/右60）、b59DUk（iPad 04）Device Row iXXXX 原[0,90,0,0]（左984/右90）——與 03 板 Bm7Lx／BnjqP 用 alignItems:center 直接置中的作法不同調，VR R5 指出兩板皆需處理（不只 b59DUk 一塊）。改為 ZnMBA／iXXXX 皆 padding[0,0,0,0]＋justifyContent:\"center\"，讓 Device Frame 在 Device Row 內置中，與 Bm7Lx／BnjqP 同一套邏輯。標語節點（KCL1o／j8jMxH）y／尺寸、六個 Print Stage 絕對錨點（iPhone y=2268／iPad y=1823）、0.196 peek 規則皆未觸碰。R7 用展開快照複驗左右空白：iPhone（JfAXu in ZnMBA）264.00／264.00（1320−792=528，左右各半）、iPad（nly6c in iXXXX）537.00／537.00（2064−990=1074，左右各半），逐位元對稱。R8 訂正：上述「0.196 peek 規則皆未觸碰」不成立——ZnMBA／iXXXX 改為置中後，Device Frame 絕對 x 隨之改變（iPhone 264、iPad 537），但六個 Print Stage 的 x（含 hUNFn／D2juW）原本是配合舊 justifyContent:\"end\"＋padding 版面手算出的絕對值，未同步調整，導致 ZRyXL peek 變為 −50、b59DUk 變為 −206。已修正 hUNFn.x 314→110、D2juW.x 743→296（y 不動），六板 peek 複驗回到 iPhone 154.00／iPad 241.00，零例外，見下方「R8 修訂重點」段。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "QX9FB",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "V3jPvs",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-26",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "kZ1XN",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Notes M3ibG「底緣距板底統一 16pt」量的是 stage frame 本身的空框邊界，非讀稿者會看到的視覺下緣——已於 M3ibG 本體追加訂正：紙面＋角托下方另有留白（iPhone 107.8／iPad 171.0），實際可見下緣（角托底）距板底為 iPhone 123.8pt／iPad 187.0pt（占板高 4.3%／6.8%，兩裝置不相等），詳見上方「MJ-10/15」段（M3ibG）R7 訂正。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zDceX",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oRqc4",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-27",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "tDCF7",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "c2yk3s／Bm7Lx／ZRyXL／Vn4TL／BnjqP／b59DUk 六個 Photo Wrap 內各一顆 Night Dim 矩形（fSfSa／M8NQr／lPKlO／cmC6L／Kj4ME／ihzcA），fill 皆為全透明 #FFFFFF00，票文明寫「深色版不做」故永遠不會有值——已全數刪除（皆在 layout:\"none\" 的 Photo Wrap 內，刪除前後同板其餘節點 bounds 逐值比對＝0，非塌縮或推擠）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OaVEC",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ZjJ3N",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-28",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "WdTBq",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Vn4TL（iPad 01）j4dL1（Spacer 54）與 dXSZF（Spacer Bottom，fill_container，VR R5 實測 411.09）皆已刪除——兩者皆位於 layoutPosition:absolute 的 N3mjp6 Print Stage 之後，Print Stage 不佔流版高度，這兩個 spacer 早已不承擔任何排版功能。刪除前後 Vn4TL 全樹展開 bounds 逐值比對＝0（含 CUMBS／nuAC7／QqTID／N3mjp6 皆未位移）。R3 MN-22 既有的 tEOCL／AQI3r／QDXvI 三個節點不在本項範圍，維持既有處置不動。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zp8Hg",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ab0Zi",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-29",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LVNcF",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Notes 四段仍用 R2 舊序號指涉板，且指錯（MJ-14 重排後未同步）：MbNO4／AxRNB／W6e34G 原寫「02 板」，實際今新序 04（ZRyXL／b59DUk）；h0GRy 原寫「05 板」，實際今新序 03（Bm7Lx／BnjqP，字級 104/130 對、序號錯）。四段已各補「（R2 序號，今新序 0X＝<frame id>）」標記，寫法比照 P1pEO0 的沿革慣例。順手訂正 pT2s4 frame 名稱「N R3 板清單」與其標題文字「R4 板清單」的不一致（改為 N R4 板清單，圖層名不影響匯出 PNG）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mpgD8",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "v9iWfU",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-30",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "mmylM",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "comments-iphone-v3.jpg 472×1023（比例 0.46139）與槽 bArC2 比例 0.46025 差 0.25%。VR R5 建議精確值 472×1026（＝472/0.46025）；本輪改依 orchestrator 09-13 裁決：與其餘四張 iPhone 槽圖（album／child／invite／timeline，皆 472×1024）同規格，改為 472×1024（PIL 等比例 resize 非裁切，整張縮放非裁剪像素）。非零裁切：472×1024 比例 0.460938，與槽比例 0.46025 仍差 0.15%，cover 後水平裁切量極小（<0.2 槽點）、狀態列與導覽列文字完整、視覺無感；換取的是 5 張 iPhone 槽圖尺寸完全一致（皆 1024 高），對 LS-147 真機截圖替換與依賴「槽圖統一規格」的檢查更穩定。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lppuS",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RvjVu",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "minor-3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "x2A37K",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Notes SWAza（iPad 板清單）「02 相簿詳情…標語升級為 157pt」與實際節點 jU9lS.fontSize=156 不符（R4 四捨五入誤差 1pt，R5 已訂正節點值但 SWAza 文字未同步）。已將 SWAza 該處「157pt」訂正為「156pt」，並在段末追加訂正說明。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "bxMcn",
+          "name": "R8 修訂重點",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "VmaCM",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R8 修訂重點（BL-1／BL-2／MbNO4，取代／補充 R7 對應描述）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ahoFv",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dRBvz",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "qLKo4",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "head `0023614` 的 Notes `H7782`（D10 相片來源揭露段）少了 R7 已寫入 live Pencil 但未成功落地的「R7 訂正（1b 裁決）」段落（提及 `LS-247`）——R7 兩次 `pen-land.sh` 落地嘗試中，第一次落地使用的 `--marker \"KSBVb\"` 只證明「KSBVb 這批內容已落地」，但 H7782 的編輯發生在 KSBVb 之後，marker 選得太早、沒有鑑別力覆蓋到最後一筆編輯，導致 autosave 尚未追上 H7782 那筆變更就通過了落地。本輪已重跑 `pen-land.sh` 把 backup 領先落地檔的內容（含 H7782 的 R7 訂正段）落地，落地後 `grep -c \"LS-247\" design/littlesprout.pen` ≥1 確認，`python3 scripts/gates/design_tree_hash.py` 確認 committed 與 backup 無殘差。教訓：land 的 `--marker` 必須取「本輪最後一筆編輯」引入的獨特字串，不能取中途某個較早的 checkpoint。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PKsvh",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "iY6qB",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "W3pDuO",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R7 的 MJ-15（`ZnMBA`／`iXXXX` 由 `justifyContent:\"end\"`＋padding 改為置中）打斷了 0.196 peek 規則：`ZRyXL`（iPhone 04）peek 由 154 變 −50、`b59DUk`（iPad 04）peek 由 241 變 −206——原本的 `end`＋padding 60/90 版面其實同時承擔了兩個功能（裝置框橫向對齊＋讓 Print Stage 的絕對 x 與裝置框維持固定 peek 距離），R7 只修正了第一個功能，未同步調整六個 Print Stage 裡這兩個的 x。已修正：`hUNFn.x` 314→110、`D2juW.x` 743→296（y 不動，其餘四個 Print Stage 未變動）。六板 peek 展開快照複驗：`c2yk3s`＝214−60＝154.00、`Bm7Lx`＝294−140＝154.00、`ZRyXL`＝264−110＝154.00、`Vn4TL`＝462−221＝241.00、`BnjqP`＝562−321＝241.00、`b59DUk`＝537−296＝241.00——iPhone 三板皆 154.00、iPad 三板皆 241.00，零例外，與 R4 建立時的規則一致。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SMNJx",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "HUEKf",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MbNO4",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "n8J3H",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R7 收據記錄的 `row_overflow`（Notes `H73kPC` 內 `MbNO4`「H」標題節點因 MN-29 補序號標記單行溢出容器 270pt，VR R7 判為可接受、記入 LS-96 `0f32da5b`）本輪順手修掉：`MbNO4` 標題還原為原短句「BL-3 修正：02 板換真實留言／愛心畫面＋用詞改回「愛心」」，序號沿革說明已完整保留在緊接其後的 `AxRNB`（同一個 `X5WyV` 區塊內、同段落）——標題維持與整份 Notes 文件裡其餘同型 H 標題節點一致的單行 auto 寬慣例，不需要為這一格改用 `fixed-width`。row_overflow 複驗回到 0。LS-96 `0f32da5b` 該筆記錄的問題狀態改為「本輪已修」，池項本身保留作沿革記錄不刪除。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {

@@ -1,0 +1,722 @@
+{
+  "ticket": "LS-234",
+  "round": 3,
+  "head_sha": "a10829a44fa76d6bfeca373c69af6f1e0c5049d8",
+  "total_nodes": 10214,
+  "tree_hash": "85dd1916adff2dc4",
+  "scan_scope": "boards",
+  "scan_note": "R3 修正 BL-6/BL-7/MJ-10~14/MN-5 後，用正典腳本 scripts/design/overflow-scan.js 對本票觸碰的 11 塊板（10 板+Notes，root 序 [231,242)，與 R1/R2 相同批次範圍）跑 SCAN_BATCH_ROOTS=[231,242]+SCAN_SCOPE=\"boards\"，單批一次成功（無需重試分批）；SCAN_BOARDS 已含新序全部 10 板 id 與 Notes（H73kPC）。掃描本身在跑完後，發現 Notes 板因大量文字內容更新（R3 前段對既有段落 Update/Replace）觸發 Pencil 即時 session 的 vertical layout 快取未正確重算後續兄弟節點座標，造成 3 對段落文字視覺重疊——這不是掃描抓到的既有品牌結構問題，而是 R3 這一輪自己在 Notes 板引入的新缺陷；已於同一輪內修正（把受影響的 24 個子節點整批 Delete 再依原順序 Insert 重建，id 全數改變、內容與順序不變）並重跑掃描確認清零，詳見 commit a10829a 訊息。修正後 sibling_intersection 從 58 降到 55（Notes 板 3 筆重疊消失）、row_overflow 從 1 降到 0（g6VHN 段標題文字過長改短）。tree_hash 用 scripts/gates/design_tree_hash.py 對 head_sha 該版 .pen 獨立複驗一致（85dd1916adff2dc4）。六支 result_hash 為 sibling_intersection/cross_parent_collision 兩支 O(n²) 用「原始未壓縮 flagged 陣列的 result_hash_part（Pencil execute 內 compactScans 壓縮前算出）」+ scan/scope/tree_hash 三行組成，非對本收據已壓縮的代表陣列重算（後者對零重複的 cross_parent_collision 恰好同值、但對有壓縮的 sibling_intersection 會不同值，已用 Python 直接以 hex64(sumLines([...三行], hexToLimbs(result_hash_part))) 算出正確值）；其餘四支 flagged/unresolved 皆為空陣列，兩種算法自然同值。scan_scope=boards：containers/points/mismatch 與 flagged 只算本票 11 板，document_* 同為 boards 限縮值（未另跑 document scope 全稿版）。document scope root 級 AABB 全量比對（11 新/改板 vs 全稿 242 root）延續 R1/R2 已確認的 0 交集，本輪未變更任何板的 x/y 落位（僅 MJ-14 在既有 5+5 個既定位置間互換 x，未产生新交集），未重跑。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 55,
+      "classes": 14,
+      "flagged": [
+        {
+          "node_a": "gfP0F",
+          "node_b": "s1Kzm",
+          "name_a": "Device Frame",
+          "name_b": "Hero Print",
+          "parent": "c2yk3s",
+          "parent_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "overlap": [
+            632,
+            220
+          ],
+          "class": "Device Frame × Hero Print @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意設計（MJ-10）：沖印品當主角，Hero Print 與 Device Frame 重疊 220pt 是本輪新增的視覺重疊——照片一角探出裝置外側，兩者共構同一物理場景，不是缺陷，見 Notes「R3 修訂重點 · MJ-10」段。"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "Z0Lxx",
+          "name_a": "Print",
+          "name_b": "Corner BL",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "overlap": [
+            47,
+            47
+          ],
+          "class": "Print × Corner BL @ Hero Print",
+          "count": 1,
+          "classification": "角托三段規則：角托一律壓過紙緣 corner-out 5pt，Print（紙面）與角托本就要重疊——Hero Print 是既有 svedU 歡迎頁 Print Stage 結構整體 2× 等比放大（MJ-10），沿用品牌定案結構，非新增缺陷。"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "nAC3A",
+          "name_a": "Print",
+          "name_b": "Corner BR",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "overlap": [
+            47,
+            47
+          ],
+          "class": "Print × Corner BR @ Hero Print",
+          "count": 1,
+          "classification": "同上（BR 角托）。"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "WwLom",
+          "name_a": "Print",
+          "name_b": "Corner TL",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "overlap": [
+            47,
+            47
+          ],
+          "class": "Print × Corner TL @ Hero Print",
+          "count": 1,
+          "classification": "同上（TL 角托）。"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "nwqNz",
+          "name_a": "Print",
+          "name_b": "Corner TR",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "overlap": [
+            47,
+            47
+          ],
+          "class": "Print × Corner TR @ Hero Print",
+          "count": 1,
+          "classification": "同上（TR 角托）。"
+        },
+        {
+          "node_a": "scpdc",
+          "node_b": "fSfSa",
+          "name_a": "Hero Photo",
+          "name_b": "Night Dim",
+          "parent": "XkEUh",
+          "parent_name": "Photo Wrap",
+          "overlap": [
+            690,
+            380.2
+          ],
+          "class": "Hero Photo × Night Dim @ Photo Wrap",
+          "count": 6,
+          "classification": "同 R2 分類延續：Night Dim（深色模式相片調暗罩）與 Hero Photo 本就疊在同一個 Photo Wrap 容器內，沿用品牌定案結構；6 個沖印品實例（01/03/04，iPhone×iPad）各一次，含本輪新建的 Hero Print（01-iPhone，690×380.2 為 2× 放大值）。"
+        },
+        {
+          "node_a": "QIZ89",
+          "node_b": "Ny9ct",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "Z0Lxx",
+          "parent_name": "Corner BL",
+          "overlap": [
+            52,
+            52
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 6,
+          "classification": "同一顆角托的兩層 path（實色形狀＋描邊線），本就同尺寸疊合，角托三段規則的既定結構；6 個沖印品實例（含 Hero Print 的 52×52 放大角托）各一次。"
+        },
+        {
+          "node_a": "ErLRq",
+          "node_b": "uw62J",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "nAC3A",
+          "parent_name": "Corner BR",
+          "overlap": [
+            52,
+            52
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 6,
+          "classification": "同上（BR 角托）。"
+        },
+        {
+          "node_a": "t5yP2b",
+          "node_b": "t7yS3X",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "WwLom",
+          "parent_name": "Corner TL",
+          "overlap": [
+            52,
+            52
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 6,
+          "classification": "同上（TL 角托）。"
+        },
+        {
+          "node_a": "sKwge",
+          "node_b": "sXkDn",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "nwqNz",
+          "parent_name": "Corner TR",
+          "overlap": [
+            52,
+            52
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 6,
+          "classification": "同上（TR 角托）。"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "TwhLp",
+          "name_a": "Print",
+          "name_b": "Corner BL",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "overlap": [
+            21,
+            21
+          ],
+          "class": "Print × Corner BL @ Print Stage",
+          "count": 5,
+          "classification": "同 R2 分類延續：角托三段規則的既定結構；本輪未套用 Hero Print 放大處理的 5 個小尺寸 Print Stage 實例（01-iPad／03 iPhone+iPad／04 iPhone+iPad）各一次。"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "w1qgP0",
+          "name_a": "Print",
+          "name_b": "Corner BR",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "overlap": [
+            21,
+            21
+          ],
+          "class": "Print × Corner BR @ Print Stage",
+          "count": 5,
+          "classification": "同上（BR 角托）。"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "S4Bugn",
+          "name_a": "Print",
+          "name_b": "Corner TL",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "overlap": [
+            21,
+            21
+          ],
+          "class": "Print × Corner TL @ Print Stage",
+          "count": 5,
+          "classification": "同上（TL 角托）。"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "prDi7",
+          "name_a": "Print",
+          "name_b": "Corner TR",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "overlap": [
+            21,
+            21
+          ],
+          "class": "Print × Corner TR @ Print Stage",
+          "count": 5,
+          "classification": "同上（TR 角托）。"
+        }
+      ],
+      "result_hash": "5bf1611aee7fb65b"
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "51b6327e0e1c4e12"
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 24,
+      "classes": 24,
+      "flagged": [
+        {
+          "node_a": "scpdc",
+          "node_b": "Z0Lxx",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "XkEUh",
+          "parent_b": "s1Kzm",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "overlap": [
+            31,
+            52
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "scpdc",
+          "node_b": "nAC3A",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "XkEUh",
+          "parent_b": "s1Kzm",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "overlap": [
+            31,
+            52
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "scpdc",
+          "node_b": "WwLom",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "XkEUh",
+          "parent_b": "s1Kzm",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "overlap": [
+            31,
+            52
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "scpdc",
+          "node_b": "nwqNz",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "XkEUh",
+          "parent_b": "s1Kzm",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "overlap": [
+            31,
+            52
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "TwhLp",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "s0OmUy",
+          "parent_b": "hUNFn",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 04 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPhone 6.9 / 04 日記詳情",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "w1qgP0",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "s0OmUy",
+          "parent_b": "hUNFn",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 04 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPhone 6.9 / 04 日記詳情",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "S4Bugn",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "s0OmUy",
+          "parent_b": "hUNFn",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 04 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPhone 6.9 / 04 日記詳情",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "prDi7",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "s0OmUy",
+          "parent_b": "hUNFn",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 04 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPhone 6.9 / 04 日記詳情",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "b1tzd",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "yY2YM",
+          "parent_b": "ay53J",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 03 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPhone 6.9 / 03 邀請加入",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "sq4d8",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "yY2YM",
+          "parent_b": "ay53J",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 03 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPhone 6.9 / 03 邀請加入",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "a0idhX",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "yY2YM",
+          "parent_b": "ay53J",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 03 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPhone 6.9 / 03 邀請加入",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "g4uiV",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "yY2YM",
+          "parent_b": "ay53J",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 03 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPhone 6.9 / 03 邀請加入",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "ugNXv",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "lBVso",
+          "parent_b": "N3mjp6",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "sISpf",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "lBVso",
+          "parent_b": "N3mjp6",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "CIxhg",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "lBVso",
+          "parent_b": "N3mjp6",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "w0qZ1n",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "lBVso",
+          "parent_b": "N3mjp6",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "v4d4K",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "iWjMR",
+          "parent_b": "D2juW",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 04 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPad 13 / 04 日記詳情",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "nsmGs",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "iWjMR",
+          "parent_b": "D2juW",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 04 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPad 13 / 04 日記詳情",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "dfu62",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "iWjMR",
+          "parent_b": "D2juW",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 04 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPad 13 / 04 日記詳情",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "WZo9U",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "iWjMR",
+          "parent_b": "D2juW",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 04 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPad 13 / 04 日記詳情",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "uqtFw",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "V3mlZ",
+          "parent_b": "ScEdE",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 03 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPad 13 / 03 邀請加入",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "eIw7g",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "V3mlZ",
+          "parent_b": "ScEdE",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 03 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPad 13 / 03 邀請加入",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "zfSA0",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "V3mlZ",
+          "parent_b": "ScEdE",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 03 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPad 13 / 03 邀請加入",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "VlKCM",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "V3mlZ",
+          "parent_b": "ScEdE",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 03 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPad 13 / 03 邀請加入",
+          "count": 1,
+          "classification": "角托三段規則的必然幾何結果：角托（Corner）與 Hero Photo（沖印品照片本體）在同一板內、不同 parent（角托掛在 Print Stage／Hero Print 層、與 Photo Wrap 內的 Hero Photo 是跨層兄弟），沿用 R2 同類分類（Hero Photo×4 角托×6 個沖印品實例，本輪含放大後的 Hero Print 01-iPhone）。"
+        }
+      ],
+      "result_hash": "94daa043c8b5d5eb"
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "c2yk3s",
+        "ZRyXL",
+        "y9r9Fq",
+        "Q9Zw3f",
+        "Bm7Lx",
+        "Vn4TL",
+        "b59DUk",
+        "mWZy3",
+        "ak7RI",
+        "BnjqP",
+        "H73kPC"
+      ],
+      "containers": 6,
+      "points": 48,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 20,
+      "ref_hits_defs": 0,
+      "document_containers": 6,
+      "document_points": 48,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": [],
+      "result_hash": "955d2df0cbb5aa40"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "c2yk3s",
+        "ZRyXL",
+        "y9r9Fq",
+        "Q9Zw3f",
+        "Bm7Lx",
+        "Vn4TL",
+        "b59DUk",
+        "mWZy3",
+        "ak7RI",
+        "BnjqP",
+        "H73kPC"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "09fca50bf2cdb2c0"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "c2yk3s",
+        "ZRyXL",
+        "y9r9Fq",
+        "Q9Zw3f",
+        "Bm7Lx",
+        "Vn4TL",
+        "b59DUk",
+        "mWZy3",
+        "ak7RI",
+        "BnjqP",
+        "H73kPC"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "4d4ba73da85ba43e"
+    }
+  }
+}

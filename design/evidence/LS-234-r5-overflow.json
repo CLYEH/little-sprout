@@ -1,0 +1,562 @@
+{
+  "ticket": "LS-234",
+  "round": 5,
+  "head_sha": "1e80bfd1c33d51bb5b83f530bdb7c09e6884be54",
+  "total_nodes": 10241,
+  "tree_hash": "1edba5fa3effb3a8",
+  "scan_scope": "boards",
+  "scan_note": "R5 聚焦輪（orchestrator 依 LS-68 裁定，只修 BL-9/MJ-20/MJ-21 三項）。SCAN_BOARDS 為本 PR（merge-base..head_sha，涵蓋 R1-R5 全部輪次）對 .pen 頂層節點有變更的完整 11 塊板（c2yk3s／y9r9Fq／Bm7Lx／ZRyXL／Q9Zw3f／Vn4TL／mWZy3／BnjqP／b59DUk／ak7RI／H73kPC，與 R1-R4 收據同一份清單——本輪 R5 實際編輯的節點只落在其中 7 塊 Bm7Lx／ZRyXL／BnjqP／b59DUk／Vn4TL／mWZy3／ak7RI，其餘 4 塊是本輪之前就已存在的頂層節點變更，因本收據是本 PR 目前輪次最高者，boards 依規則須覆蓋整個 merge-base..head_sha 範圍的變更板，不只本輪自己動過的板）。用正典腳本 scripts/design/overflow-scan.js 的 1b 分批模式，SCAN_SCOPE=\"boards\"，SCAN_BATCH_ROOTS=[231,241]（與 R1-R4 相同批次範圍）單批一次成功（total_nodes(本批)=342／scanned_nodes=390，roots_hash_walk 約 1.1-1.8s）——11 塊板的 root 序號全落在 [231,242) 這單一批次內，scan_scope=boards 已把快照限縮到 SCAN_BOARDS 子樹再跑六支，此批次即為六支在本 PR 完整範圍的結果，無跨批配對需要合併。total_nodes／tree_hash 改用 scripts/gates/design_tree_hash.py 對「已落地」的 .pen 檔獨立計算（先以 pen-land.sh --expect-nodes 10241 落地，落地報告逐一列出本輪 11 個屬性變更節點＝Bm7Lx/ZRyXL/BnjqP/b59DUk 的 justifyContent+padding、以及 D2R5Ji/j34uK/j8jMxH/jU9lS/nU4oR/nuAC7/tfL68 的 fontSize，與本輪實際編輯完全吻合，無漂移）——本機嘗試以 Pencil 分批雜湊覆蓋全稿 242 個 root 時，[0,232) 區間在 25～60 root 級距反覆 InternalError: interrupted（間歇性，同一 snippet 原樣重送有時成功有時不成功），改走本地 python 腳本一次到位、不受 Pencil 沙盒逾時影響。六支 result_hash：corner_anchor／text_occlusion／board_clip 三支用 scripts/gates/design_tree_hash.py --result-hash 對一份含相同（空）flagged/unresolved 陣列＋本收據 tree_hash 的合成收據獨立重算，確認與 CI 重算路徑一致；sibling_intersection／row_overflow／cross_parent_collision 三支（CI 不重算，只驗格式）用 Pencil 批次輸出內建的 result_hash_part（對完整 flagged 陣列算出、壓成代表前）＋本收據 tree_hash，以 hex64(sumLines([\"scan=\",\"scope=\",\"tree_hash=\"], hexToLimbs(result_hash_part))) 算出，同一份 python 模組函式（design_tree_hash.fnv1a64/MASK64）驗算。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 59,
+      "result_hash": "2a326603d7177aed",
+      "flagged": [
+        {
+          "node_a": "gfP0F",
+          "node_b": "s1Kzm",
+          "name_a": "Device Frame",
+          "name_b": "Hero Print",
+          "parent": "c2yk3s",
+          "parent_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "class": "Device Frame × Hero Print @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意設計（R3/R4 既有，本輪未變動）：Hero Print 疊裝置框左下角、照片一角探出裝置外側，是「相片斜靠在手機旁」的實體場景，非缺陷。"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "Mt7RR",
+          "name_a": "Print",
+          "name_b": "Corner BL",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "class": "Print × Corner BL @ Hero Print",
+          "count": 1,
+          "classification": "角托三段規則：角托一律壓過紙緣 corner-out 5pt，既有品牌定案結構（tokens.md corner-out=5），本輪未變動。"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "k7LmU",
+          "name_a": "Print",
+          "name_b": "Corner BR",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "class": "Print × Corner BR @ Hero Print",
+          "count": 1,
+          "classification": "同上（BR 角托，corner-out 5pt 規則），本輪未變動。"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "ASXNn",
+          "name_a": "Print",
+          "name_b": "Corner TL",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "class": "Print × Corner TL @ Hero Print",
+          "count": 1,
+          "classification": "同上（TL 角托，corner-out 5pt 規則），本輪未變動。"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "KqlsB",
+          "name_a": "Print",
+          "name_b": "Corner TR",
+          "parent": "s1Kzm",
+          "parent_name": "Hero Print",
+          "class": "Print × Corner TR @ Hero Print",
+          "count": 1,
+          "classification": "同上（TR 角托，corner-out 5pt 規則），本輪未變動。"
+        },
+        {
+          "node_a": "scpdc",
+          "node_b": "fSfSa",
+          "name_a": "Hero Photo",
+          "name_b": "Night Dim",
+          "parent": "XkEUh",
+          "parent_name": "Photo Wrap",
+          "class": "Hero Photo × Night Dim @ Photo Wrap",
+          "count": 6,
+          "classification": "Night Dim 為深色模式調暗層、與相片同尺寸疊放（R4 起全透明佔位，MN-27 池項待處理），既有結構，本輪未變動。"
+        },
+        {
+          "node_a": "Mt7RR/sD5Ma",
+          "node_b": "Mt7RR/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "Mt7RR",
+          "parent_name": "Corner BL",
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 6,
+          "classification": "cmp/Photo Corner 元件定義本身的內部圖層疊層（形狀＋邊緣），元件級既有結構，非本輪範圍。"
+        },
+        {
+          "node_a": "k7LmU/sD5Ma",
+          "node_b": "k7LmU/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "k7LmU",
+          "parent_name": "Corner BR",
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 6,
+          "classification": "同上，元件內部結構，非本輪範圍。"
+        },
+        {
+          "node_a": "ASXNn/sD5Ma",
+          "node_b": "ASXNn/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "ASXNn",
+          "parent_name": "Corner TL",
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 6,
+          "classification": "同上，元件內部結構，非本輪範圍。"
+        },
+        {
+          "node_a": "KqlsB/sD5Ma",
+          "node_b": "KqlsB/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "KqlsB",
+          "parent_name": "Corner TR",
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 6,
+          "classification": "同上，元件內部結構，非本輪範圍。"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "TwhLp",
+          "name_a": "Print",
+          "name_b": "Corner BL",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "class": "Print × Corner BL @ Print Stage",
+          "count": 5,
+          "classification": "沖印品母題：角托一律壓過紙緣 corner-out 5pt（tokens.md corner-out=5），既有設計、本輪未變動。"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "w1qgP0",
+          "name_a": "Print",
+          "name_b": "Corner BR",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "class": "Print × Corner BR @ Print Stage",
+          "count": 5,
+          "classification": "同上（BR），既有設計、本輪未變動。"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "S4Bugn",
+          "name_a": "Print",
+          "name_b": "Corner TL",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "class": "Print × Corner TL @ Print Stage",
+          "count": 5,
+          "classification": "同上（TL），既有設計、本輪未變動。"
+        },
+        {
+          "node_a": "k4Tyqi",
+          "node_b": "prDi7",
+          "name_a": "Print",
+          "name_b": "Corner TR",
+          "parent": "hUNFn",
+          "parent_name": "Print Stage",
+          "class": "Print × Corner TR @ Print Stage",
+          "count": 5,
+          "classification": "同上（TR），既有設計、本輪未變動。"
+        },
+        {
+          "node_a": "QqTID",
+          "node_b": "N3mjp6",
+          "name_a": "Device Frame",
+          "name_b": "Print Stage",
+          "parent": "Vn4TL",
+          "parent_name": "App Store / iPad 13 / 01 時間軸",
+          "class": "Device Frame × Print Stage @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "本輪 MJ-21 把 01 板 iPad 標語字級由 130 拉到 156（1.5636× 板寬倍率），Tagline 增高把 Device Frame 往下推，Print Stage 為固定裝置類型錨點（y=1823，未動），重疊由既有量增至 501.91pt——與 c2yk3s 的 Hero Print 疊壓裝置邊緣是同一構圖語彙的延伸，非缺陷。"
+        },
+        {
+          "node_a": "j4dL1",
+          "node_b": "N3mjp6",
+          "name_a": "Spacer 54",
+          "name_b": "Print Stage",
+          "parent": "Vn4TL",
+          "parent_name": "App Store / iPad 13 / 01 時間軸",
+          "class": "Spacer 54 × Print Stage @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "R3 MN-28 既有遺留 spacer（VR R4 comment 已指出，未清理），與本輪 MJ-20/MJ-21 範圍無關，不在本輪聚焦輪處置範圍（orchestrator 已限定本輪只修三項）。"
+        },
+        {
+          "node_a": "N3mjp6",
+          "node_b": "dXSZF",
+          "name_a": "Print Stage",
+          "name_b": "Spacer Bottom",
+          "parent": "Vn4TL",
+          "parent_name": "App Store / iPad 13 / 01 時間軸",
+          "class": "Print Stage × Spacer Bottom @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "同上，R3 MN-28 既有遺留 spacer，非本輪範圍。"
+        },
+        {
+          "node_a": "ScEdE",
+          "node_b": "LWJUR",
+          "name_a": "Print Stage",
+          "name_b": "Device Frame",
+          "parent": "BnjqP",
+          "parent_name": "App Store / iPad 13 / 03 邀請加入",
+          "class": "Print Stage × Device Frame @ App Store / iPad 13 / 03 邀請加入",
+          "count": 1,
+          "classification": "本輪 MJ-21 把 03 板 iPad 標語 130→163、副標 64→75，Tagline/Subtitle 增高使 Device Frame 下移，Print Stage 為固定錨點（y=1823，未動），重疊由 R4 的 ~4pt（近乎貼齊）增至 68pt，屬印品疊壓裝置邊緣構圖延伸，非缺陷。"
+        }
+      ]
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "ae1068d90b6e08b3",
+      "flagged": []
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 24,
+      "result_hash": "e4e67cbb3cb76725",
+      "flagged": [
+        {
+          "node_a": "scpdc",
+          "node_b": "Mt7RR",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "class": "Hero Photo × Corner BL @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "沖印品母題：Hero Photo 與角托是兄弟關係（Hero Print 底下），角托跨 parent 咬住相片四角，BLEED_RE 命中 Corner 類別為預期跨界重疊，既有設計、本輪未變動幾何。"
+        },
+        {
+          "node_a": "scpdc",
+          "node_b": "k7LmU",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "class": "Hero Photo × Corner BR @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "同上（BR），既有設計。"
+        },
+        {
+          "node_a": "scpdc",
+          "node_b": "ASXNn",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "class": "Hero Photo × Corner TL @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "同上（TL），既有設計。"
+        },
+        {
+          "node_a": "scpdc",
+          "node_b": "KqlsB",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "class": "Hero Photo × Corner TR @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "同上（TR），既有設計。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "TwhLp",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 04 日記詳情",
+          "class": "Hero Photo × Corner BL @ App Store / iPhone 6.9 / 04 日記詳情",
+          "count": 1,
+          "classification": "同上（BL），既有設計。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "w1qgP0",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 04 日記詳情",
+          "class": "Hero Photo × Corner BR @ App Store / iPhone 6.9 / 04 日記詳情",
+          "count": 1,
+          "classification": "同上（BR），既有設計。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "S4Bugn",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 04 日記詳情",
+          "class": "Hero Photo × Corner TL @ App Store / iPhone 6.9 / 04 日記詳情",
+          "count": 1,
+          "classification": "同上（TL），既有設計。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "prDi7",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 04 日記詳情",
+          "class": "Hero Photo × Corner TR @ App Store / iPhone 6.9 / 04 日記詳情",
+          "count": 1,
+          "classification": "同上（TR），既有設計。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "b1tzd",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 03 邀請加入",
+          "class": "Hero Photo × Corner BL @ App Store / iPhone 6.9 / 03 邀請加入",
+          "count": 1,
+          "classification": "同上（BL），既有設計。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "sq4d8",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 03 邀請加入",
+          "class": "Hero Photo × Corner BR @ App Store / iPhone 6.9 / 03 邀請加入",
+          "count": 1,
+          "classification": "同上（BR），既有設計。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "a0idhX",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 03 邀請加入",
+          "class": "Hero Photo × Corner TL @ App Store / iPhone 6.9 / 03 邀請加入",
+          "count": 1,
+          "classification": "同上（TL），既有設計。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "g4uiV",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 03 邀請加入",
+          "class": "Hero Photo × Corner TR @ App Store / iPhone 6.9 / 03 邀請加入",
+          "count": 1,
+          "classification": "同上（TR），既有設計。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "ugNXv",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "class": "Hero Photo × Corner BL @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "同上（BL），既有設計。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "sISpf",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "class": "Hero Photo × Corner BR @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "同上（BR），既有設計。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "CIxhg",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "class": "Hero Photo × Corner TL @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "同上（TL），既有設計。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "w0qZ1n",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "class": "Hero Photo × Corner TR @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "同上（TR），既有設計。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "v4d4K",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 04 日記詳情",
+          "class": "Hero Photo × Corner BL @ App Store / iPad 13 / 04 日記詳情",
+          "count": 1,
+          "classification": "同上（BL），既有設計。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "nsmGs",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 04 日記詳情",
+          "class": "Hero Photo × Corner BR @ App Store / iPad 13 / 04 日記詳情",
+          "count": 1,
+          "classification": "同上（BR），既有設計。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "dfu62",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 04 日記詳情",
+          "class": "Hero Photo × Corner TL @ App Store / iPad 13 / 04 日記詳情",
+          "count": 1,
+          "classification": "同上（TL），既有設計。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "WZo9U",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 04 日記詳情",
+          "class": "Hero Photo × Corner TR @ App Store / iPad 13 / 04 日記詳情",
+          "count": 1,
+          "classification": "同上（TR），既有設計。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "uqtFw",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 03 邀請加入",
+          "class": "Hero Photo × Corner BL @ App Store / iPad 13 / 03 邀請加入",
+          "count": 1,
+          "classification": "同上（BL），既有設計。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "eIw7g",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 03 邀請加入",
+          "class": "Hero Photo × Corner BR @ App Store / iPad 13 / 03 邀請加入",
+          "count": 1,
+          "classification": "同上（BR），既有設計。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "zfSA0",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 03 邀請加入",
+          "class": "Hero Photo × Corner TL @ App Store / iPad 13 / 03 邀請加入",
+          "count": 1,
+          "classification": "同上（TL），既有設計。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "VlKCM",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 03 邀請加入",
+          "class": "Hero Photo × Corner TR @ App Store / iPad 13 / 03 邀請加入",
+          "count": 1,
+          "classification": "同上（TR），既有設計。"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "boards": [
+        "c2yk3s",
+        "y9r9Fq",
+        "Bm7Lx",
+        "ZRyXL",
+        "Q9Zw3f",
+        "Vn4TL",
+        "mWZy3",
+        "BnjqP",
+        "b59DUk",
+        "ak7RI",
+        "H73kPC"
+      ],
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "f1b7644bc90764e1",
+      "containers": 6,
+      "points": 48,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 24,
+      "document_containers": 6,
+      "document_points": 48,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": []
+    },
+    "text_occlusion": {
+      "boards": [
+        "c2yk3s",
+        "y9r9Fq",
+        "Bm7Lx",
+        "ZRyXL",
+        "Q9Zw3f",
+        "Vn4TL",
+        "mWZy3",
+        "BnjqP",
+        "b59DUk",
+        "ak7RI",
+        "H73kPC"
+      ],
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "6656db66f01f6d61",
+      "flagged": [],
+      "document_flagged": []
+    },
+    "board_clip": {
+      "boards": [
+        "c2yk3s",
+        "y9r9Fq",
+        "Bm7Lx",
+        "ZRyXL",
+        "Q9Zw3f",
+        "Vn4TL",
+        "mWZy3",
+        "BnjqP",
+        "b59DUk",
+        "ak7RI",
+        "H73kPC"
+      ],
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "a9a5dd98a5ad5edf",
+      "flagged": [],
+      "document_flagged": []
+    }
+  }
+}

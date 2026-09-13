@@ -1,0 +1,642 @@
+{
+  "ticket": "LS-234",
+  "round": 2,
+  "head_sha": "a8bdfffba0d067124a73dfaeb05e306b0540b44b",
+  "total_nodes": 10181,
+  "tree_hash": "757aa51aa1a0e461",
+  "scan_scope": "boards",
+  "scan_note": "R2 全面重建 11 板（10 板＋Notes）後，13 批（SCAN_BATCH_ROOTS，每批 20 root、末批 2 root，覆蓋全稿 root [0,242)）跑正典腳本 scripts/design/overflow-scan.js，node --merge 合併。batch-01～11（root 0-219，本票未觸碰的既有 220 板）內容與 R1 收據完全相同（root 0-19 獨立重跑驗證 hash_part=1c4f9092c3d2edad，與 LS-234-r1-overflow.json 附帶的批次逐位元一致），沿用 R1 批次檔（僅更新其中的 boards 中繼資料欄位為 R2 新 id，內容數值未變）；batch-12（root 220-239）與 batch-13（root 240-241，含本票全部 11 個新板）重新執行，反映 R2 重建後的狀態。R2 額外做了 document scope 的 root 級 AABB 全量比對（獨立於本收據的 scope=boards）：對 242 個 root 兩兩比對，確認 11 個新板與既有 231 個 root 之間交集面積皆為 0（回應 visual-reviewer R1 BL-1：11 板曾因 Replace() 未帶 x/y 疊在既有稿正上方；本輪改用 FindEmptySpace 鏈式落位，此 document-scope 檢查證明修正生效，證據見本輪 handoff 貼文，不在本 JSON 收據的 scope=boards 六支數字內）。六支合併後 tree_hash 經 scripts/gates/design_tree_hash.py 對 head_sha 該版 .pen 複驗逐位元一致（757aa51aa1a0e461）。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 54,
+      "result_hash": "b30b6ecb95fb6dbf",
+      "flagged": [
+        {
+          "node_a": "Q8CZU",
+          "node_b": "KVLfe",
+          "name_a": "Print",
+          "name_b": "Corner BL",
+          "parent": "Z0AZA",
+          "parent_name": "Print Stage",
+          "overlap": [
+            21,
+            21
+          ],
+          "class": "Print × Corner BL @ Print Stage",
+          "count": 6,
+          "classification": "刻意設計：角托三段規則「角托一律壓過紙緣 corner-out 5pt」，Print（沖印品紙面）與四顆角托本來就要重疊——此結構直接沿用品牌定案的 svedU 歡迎頁 Print Stage（HqrJw），非本輪新增缺陷。01/02/05（iPhone×3＋iPad×3＝6 個沖印品實例）各一次，同類 6 例。"
+        },
+        {
+          "node_a": "Q8CZU",
+          "node_b": "NfSWa",
+          "name_a": "Print",
+          "name_b": "Corner BR",
+          "parent": "Z0AZA",
+          "parent_name": "Print Stage",
+          "overlap": [
+            21,
+            21
+          ],
+          "class": "Print × Corner BR @ Print Stage",
+          "count": 6,
+          "classification": "同上（BR 角托）。"
+        },
+        {
+          "node_a": "Q8CZU",
+          "node_b": "Lse60",
+          "name_a": "Print",
+          "name_b": "Corner TL",
+          "parent": "Z0AZA",
+          "parent_name": "Print Stage",
+          "overlap": [
+            21,
+            21
+          ],
+          "class": "Print × Corner TL @ Print Stage",
+          "count": 6,
+          "classification": "同上（TL 角托）。"
+        },
+        {
+          "node_a": "Q8CZU",
+          "node_b": "JBa5G",
+          "name_a": "Print",
+          "name_b": "Corner TR",
+          "parent": "Z0AZA",
+          "parent_name": "Print Stage",
+          "overlap": [
+            21,
+            21
+          ],
+          "class": "Print × Corner TR @ Print Stage",
+          "count": 6,
+          "classification": "同上（TR 角托）。"
+        },
+        {
+          "node_a": "u85BvP",
+          "node_b": "AlLHV",
+          "name_a": "Hero Photo",
+          "name_b": "Night Dim",
+          "parent": "X64aJ",
+          "parent_name": "Photo Wrap",
+          "overlap": [
+            345,
+            190.1
+          ],
+          "class": "Hero Photo × Night Dim @ Photo Wrap",
+          "count": 6,
+          "classification": "刻意設計：Night Dim 是深色模式用的相片罩層（$photo-dim，淺色模式為透明 #FFFFFF00），與 Hero Photo 疊在同一個 Photo Wrap 內是既有 Print Stage 結構的一部分，本輪海報一律淺色渲染，Night Dim 視覺上無效果。6 個沖印品實例各一次。"
+        },
+        {
+          "node_a": "KVLfe/sD5Ma",
+          "node_b": "KVLfe/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "KVLfe",
+          "parent_name": "Corner BL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 6,
+          "classification": "刻意設計：cmp/Photo Corner 元件內部結構——角托本體（Corner Shape 填色三角形）與角托摺光邊（Corner Edge 線條）本來就是同一顆角托的兩層，是既有全域元件 GEBcf 的既定結構，非本輪新增。6 個沖印品實例各一次。"
+        },
+        {
+          "node_a": "NfSWa/sD5Ma",
+          "node_b": "NfSWa/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "NfSWa",
+          "parent_name": "Corner BR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 6,
+          "classification": "同上（BR 角托）。"
+        },
+        {
+          "node_a": "Lse60/sD5Ma",
+          "node_b": "Lse60/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "Lse60",
+          "parent_name": "Corner TL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 6,
+          "classification": "同上（TL 角托）。"
+        },
+        {
+          "node_a": "JBa5G/sD5Ma",
+          "node_b": "JBa5G/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "JBa5G",
+          "parent_name": "Corner TR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 6,
+          "classification": "同上（TR 角托）。"
+        }
+      ]
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "9bf7db973ec962a9",
+      "flagged": []
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 24,
+      "result_hash": "0afd655917cf20aa",
+      "flagged": [
+        {
+          "node_a": "u85BvP",
+          "node_b": "KVLfe",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "X64aJ",
+          "parent_b": "Z0AZA",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "u85BvP",
+          "node_b": "NfSWa",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "X64aJ",
+          "parent_b": "Z0AZA",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "u85BvP",
+          "node_b": "Lse60",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "X64aJ",
+          "parent_b": "Z0AZA",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "u85BvP",
+          "node_b": "JBa5G",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "X64aJ",
+          "parent_b": "Z0AZA",
+          "board": "c2yk3s",
+          "board_name": "App Store / iPhone 6.9 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "TwhLp",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "s0OmUy",
+          "parent_b": "hUNFn",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 02 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPhone 6.9 / 02 日記詳情",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "w1qgP0",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "s0OmUy",
+          "parent_b": "hUNFn",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 02 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPhone 6.9 / 02 日記詳情",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "S4Bugn",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "s0OmUy",
+          "parent_b": "hUNFn",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 02 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPhone 6.9 / 02 日記詳情",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "aD9EO",
+          "node_b": "prDi7",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "s0OmUy",
+          "parent_b": "hUNFn",
+          "board": "ZRyXL",
+          "board_name": "App Store / iPhone 6.9 / 02 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPhone 6.9 / 02 日記詳情",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "b1tzd",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "yY2YM",
+          "parent_b": "ay53J",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 05 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPhone 6.9 / 05 邀請加入",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "sq4d8",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "yY2YM",
+          "parent_b": "ay53J",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 05 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPhone 6.9 / 05 邀請加入",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "a0idhX",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "yY2YM",
+          "parent_b": "ay53J",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 05 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPhone 6.9 / 05 邀請加入",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "F92jh",
+          "node_b": "g4uiV",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "yY2YM",
+          "parent_b": "ay53J",
+          "board": "Bm7Lx",
+          "board_name": "App Store / iPhone 6.9 / 05 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPhone 6.9 / 05 邀請加入",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "ugNXv",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "lBVso",
+          "parent_b": "N3mjp6",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "sISpf",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "lBVso",
+          "parent_b": "N3mjp6",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "CIxhg",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "lBVso",
+          "parent_b": "N3mjp6",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "ayJoy",
+          "node_b": "w0qZ1n",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "lBVso",
+          "parent_b": "N3mjp6",
+          "board": "Vn4TL",
+          "board_name": "App Store / iPad 13 / 01 時間軸",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "v4d4K",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "iWjMR",
+          "parent_b": "D2juW",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 02 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPad 13 / 02 日記詳情",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "nsmGs",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "iWjMR",
+          "parent_b": "D2juW",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 02 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPad 13 / 02 日記詳情",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "dfu62",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "iWjMR",
+          "parent_b": "D2juW",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 02 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPad 13 / 02 日記詳情",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "j5Bns",
+          "node_b": "WZo9U",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "iWjMR",
+          "parent_b": "D2juW",
+          "board": "b59DUk",
+          "board_name": "App Store / iPad 13 / 02 日記詳情",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPad 13 / 02 日記詳情",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "uqtFw",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BL",
+          "parent_a": "V3mlZ",
+          "parent_b": "ScEdE",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 05 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BL @ App Store / iPad 13 / 05 邀請加入",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "eIw7g",
+          "name_a": "Hero Photo",
+          "name_b": "Corner BR",
+          "parent_a": "V3mlZ",
+          "parent_b": "ScEdE",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 05 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner BR @ App Store / iPad 13 / 05 邀請加入",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "zfSA0",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TL",
+          "parent_a": "V3mlZ",
+          "parent_b": "ScEdE",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 05 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TL @ App Store / iPad 13 / 05 邀請加入",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        },
+        {
+          "node_a": "yzfCx",
+          "node_b": "VlKCM",
+          "name_a": "Hero Photo",
+          "name_b": "Corner TR",
+          "parent_a": "V3mlZ",
+          "parent_b": "ScEdE",
+          "board": "BnjqP",
+          "board_name": "App Store / iPad 13 / 05 邀請加入",
+          "overlap": [
+            13,
+            26
+          ],
+          "class": "Hero Photo × Corner TR @ App Store / iPad 13 / 05 邀請加入",
+          "count": 1,
+          "classification": "刻意設計：角托母題「corner-out 5pt」規則要求角托壓過紙緣，Hero Photo（Photo Wrap 內的相片）與角托（Print Stage 內、不同 parent）因此跨 parent 交集，是角托三段規則的必然幾何結果，與品牌定案的既有沖印品結構（如 svedU 歡迎頁）完全一致。本輪 6 個沖印品實例 × 4 顆角托 = 24 筆，每筆對應一個板／一個角。"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "c2yk3s",
+        "ZRyXL",
+        "y9r9Fq",
+        "Q9Zw3f",
+        "Bm7Lx",
+        "Vn4TL",
+        "b59DUk",
+        "mWZy3",
+        "ak7RI",
+        "BnjqP",
+        "H73kPC"
+      ],
+      "containers": 6,
+      "points": 48,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 6,
+      "document_points": 48,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "ref_hits": 24,
+      "unresolved": [],
+      "result_hash": "df9ed709fc62bed7"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "c2yk3s",
+        "ZRyXL",
+        "y9r9Fq",
+        "Q9Zw3f",
+        "Bm7Lx",
+        "Vn4TL",
+        "b59DUk",
+        "mWZy3",
+        "ak7RI",
+        "BnjqP",
+        "H73kPC"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "543e4e25237ac757"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "c2yk3s",
+        "ZRyXL",
+        "y9r9Fq",
+        "Q9Zw3f",
+        "Bm7Lx",
+        "Vn4TL",
+        "b59DUk",
+        "mWZy3",
+        "ak7RI",
+        "BnjqP",
+        "H73kPC"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "978d5056d908b8d5"
+    }
+  }
+}
