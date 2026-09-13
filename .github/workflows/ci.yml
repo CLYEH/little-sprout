@@ -309,7 +309,7 @@ jobs:
       # 退回只看 dirty／Pen 讀不到一律放行 → 對應樣本紅。
       # LS-207（8af1c2bc）：同上——不因前面步驟（如 pr-body-check）紅而被 skip。R2（fd783f6c I2）：用 !cancelled()
       # 不用 always()，job 被取消（撞 timeout-minutes）時不必再硬跑一輪。
-      - name: Ops 腳本自測（patrol／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged／prod-purge-health／review-demo-seed，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207／LS-235／LS-240）
+      - name: Ops 腳本自測（patrol／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged／prod-purge-health／review-demo-seed／prod-storage-verify，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207／LS-235／LS-240／LS-244）
         if: ${{ !cancelled() }}
         run: |
           rc=0
@@ -331,6 +331,8 @@ jobs:
           bash scripts/ops/prod-purge-health.test.sh || rc=1
           # LS-240：Storage 上傳重試／--storage-only 續傳／psql 偵測 libpq 候選路徑（全假身化，不連線任何真正的 Supabase 專案）
           bash scripts/ops/review-demo-seed.test.sh || rc=1
+          # LS-244：正式站 Storage 部署驗證腳本自測（PLAN §5 三條，全 fixture 化，不連線任何真正的 Supabase 專案）
+          bash scripts/ops/prod-storage-verify.test.sh || rc=1
           exit "$rc"
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
