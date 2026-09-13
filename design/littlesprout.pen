@@ -160586,7 +160586,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "匯出前置 blocker（第 0 步，優先於下列所有步驟）：海報層 6 個 Hero Photo 節點（scpdc／ayJoy／F92jh／yzfCx／aD9EO／j5Bns，見上「BL-5 相片來源」段）目前皆為 LS-46 設計佔位圖，非出貨資產。正式匯出上架素材前，先確認使用者已就 D10（自有照片／Codex 生圖／授權圖庫）拍板並完成置換，否則不得執行下方匯出步驟。\n\nLS-247 R2 訂正（VR R1 MJ-4：本段才是真正的「第 0 步 blocker」，R1 誤只在 H7782 段追加）：六個 Hero Photo 節點已於 2026-09-13 置換為 Codex 生圖，不再是 LS-46 設計佔位圖。hero（scpdc／ayJoy）與 invite（F92jh／yzfCx）已依 R2 判準定稿（圖源與選圖判準見 design/appstore-photos/SELECTION.md）。join（aD9EO／j5Bns）目前仍是 R1 候選 join-2、經 VR R1 MJ-1 判定帶 AI 生成手部異常缺陷，待重生後才是合格定稿——匯出前必須再次確認 join 節點已完成置換，現狀不得作為出貨資產匯出。",
+                  "content": "匯出前置 blocker（第 0 步，優先於下列所有步驟）：海報層 6 個 Hero Photo 節點（scpdc／ayJoy／F92jh／yzfCx／aD9EO／j5Bns，見上「BL-5 相片來源」段）目前皆為 LS-46 設計佔位圖，非出貨資產。正式匯出上架素材前，先確認使用者已就 D10（自有照片／Codex 生圖／授權圖庫）拍板並完成置換，否則不得執行下方匯出步驟。\n\nLS-247 R2 訂正（VR R1 MJ-4：本段才是真正的「第 0 步 blocker」，R1 誤只在 H7782 段追加）：六個 Hero Photo 節點已於 2026-09-13 置換為 Codex 生圖，不再是 LS-46 設計佔位圖。hero（scpdc／ayJoy）與 invite（F92jh／yzfCx）已依 R2 判準定稿（圖源與選圖判準見 design/appstore-photos/SELECTION.md）。join（aD9EO／j5Bns）目前仍是 R1 候選 join-2、經 VR R1 MJ-1 判定帶 AI 生成手部異常缺陷，待重生後才是合格定稿——匯出前必須再次確認 join 節點已完成置換，現狀不得作為出貨資產匯出。\n\nLS-247 R3 訂正：join（aD9EO／j5Bns）已於本輪置換為 join-r2-4（重生後候選，見 design/appstore-photos/SELECTION.md「join R3 候選」段，CIEDE2000 四角 min=38.23，判準 3 五指齊全可逐指驗證，東亞面孔）。六個 Hero Photo 節點（hero／invite／join）現在皆為定稿圖，本 blocker 解除。**唯一剩餘的未定事項**：invite（F92jh／yzfCx）目前仍是 R2 選定的 invite-3，VR R2 MJ-A／MJ-D 指出其裁切切到阿公老花眼鏡且未符合 BRIEF §1(b) 特寫規格，orchestrator 已派 Codex 重生 invite-r2 候選，R3 下一輪可能再次置換 invite——匯出前務必確認 invite 節點是否已改為最終版本。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
