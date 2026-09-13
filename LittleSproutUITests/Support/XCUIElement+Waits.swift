@@ -39,8 +39,13 @@ extension XCUIElement {
     /// `isHittable`——`frame` 在轉場中段可能暫時是零大小或含 NaN／Infinite 分量，此時讀
     /// `isHittable` 就是 LS-265 觸發框架硬失敗的路徑。
     private var isSafelyHittable: Bool {
-        guard exists else { return false }
-        let candidateFrame = frame
+        // merge-review R1 M1：`XCUIElement.exists`／`.frame` 都是會 raise 的 resolve 變體——
+        // 元素在兩次查詢之間消失就直接框架硬失敗（實測：對不存在元素讀 `.frame` 拋
+        // "Failed to get matching snapshot: No matches found"，exit 65），新 guard 這樣寫等
+        // 於自己開一條 R1 想避免的硬失敗路徑。改用 `try? snapshot()`（不會 raise 的版本，
+        // 解析不到就回 nil）一次拿到快照，exists／frame 都從同一份快照讀，不再各自單獨呼叫。
+        guard let elementSnapshot = try? snapshot() else { return false }
+        let candidateFrame = elementSnapshot.frame
         guard
             candidateFrame.width > 0, candidateFrame.height > 0,
             candidateFrame.origin.x.isFinite, candidateFrame.origin.y.isFinite,
