@@ -38,7 +38,7 @@ final class DiaryDetailVideoUITests: XCTestCase {
 
         let videoTile = app.buttons["影片 0:05，點兩下播放"]
         XCTAssertTrue(videoTile.waitForExistence(timeout: 10), "詳情頁瀑布流應該有一支可播放的影片格")
-        XCTAssertTrue(waitForHittable(videoTile, timeout: 5), "影片格應該是可點擊狀態，不只是存在")
+        XCTAssertTrue(videoTile.waitForHittable(timeout: 5), "影片格應該是可點擊狀態，不只是存在")
         videoTile.tap()
 
         // 影片簽名仍在飛行中（harness 種了 3 秒延遲，見 `diaryDetailWithVideoHost` 文件註解）
@@ -56,7 +56,7 @@ final class DiaryDetailVideoUITests: XCTestCase {
         // （跟背景元素在 `fullScreenCover` 蓋上後仍持續 `exists` 不同，見檔頭 R2 補充）。
         // timeout 8 秒：留給 3 秒延遲＋前面幾步 XCUITest 動作本身的耗時餘裕。
         XCTAssertTrue(
-            waitForNonExistence(emptyStateText, timeout: 8), "影片簽名回來後應該把留言 sheet 收起，換成影片全螢幕"
+            emptyStateText.waitForNonExistence(timeout: 8), "影片簽名回來後應該把留言 sheet 收起，換成影片全螢幕"
         )
 
         // 進一步確認「收起的是換成影片全螢幕」而不是其他非預期狀態——有界重試找系統原生
@@ -74,7 +74,7 @@ final class DiaryDetailVideoUITests: XCTestCase {
 
         let videoTile = app.buttons["影片 0:05，點兩下播放"]
         XCTAssertTrue(videoTile.waitForExistence(timeout: 10), "詳情頁瀑布流應該有一支可播放的影片格")
-        XCTAssertTrue(waitForHittable(videoTile, timeout: 5), "影片格應該是可點擊狀態，不只是存在")
+        XCTAssertTrue(videoTile.waitForHittable(timeout: 5), "影片格應該是可點擊狀態，不只是存在")
         videoTile.tap()
 
         // `videoTile` 點下後仍要等 harness 種的 3 秒延遲（見 `diaryDetailWithVideoHost` 文件
@@ -108,21 +108,5 @@ final class DiaryDetailVideoUITests: XCTestCase {
             if attempt < maxAttempts { center.tap() }
         }
         return false
-    }
-
-    /// `XCTNSPredicateExpectation` 等「停止存在」——同 `SettingsViewIPadTests`／
-    /// `DiaryDetailCommentsUITests` 既有的 `waitForNonExistence` helper（LS-237 第 8 項教訓：
-    /// 一次性 `.exists` 快照在關閉動畫還沒跑完的瞬間可能誤判成「還在」）。
-    private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
-        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
-    }
-
-    /// 同 `SettingsViewIPadTests` 既有的 `waitForHittable` helper——`.exists` 只確認元素在
-    /// accessibility tree 上，不保證真的可點；點影片鈕前確認 `hittable` 才是同真實使用者操作
-    /// 對齊的同步點。
-    private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: element)
-        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 }

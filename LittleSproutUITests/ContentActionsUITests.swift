@@ -316,7 +316,7 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertTrue(headline.waitForExistence(timeout: 5), "應該先呈現內容操作表")
 
         app.buttons["取消"].tap()
-        XCTAssertTrue(waitForNonExistence(headline, timeout: 5), "內容操作表應該已經關閉")
+        XCTAssertTrue(headline.waitForNonExistence(timeout: 5), "內容操作表應該已經關閉")
 
         let commentButton = app.buttons[
             QAAccessibilityID.interactionRowElement(kind: "diary", element: "commentButton")
@@ -328,13 +328,5 @@ final class ContentActionsUITests: XCTestCase {
             app.staticTexts["還沒有人留言"].waitForExistence(timeout: 10),
             "接著觸發留言鈕應該正確呈現留言 sheet——不應該因為剛才內容操作表用過同一個 activeSheet 而卡住"
         )
-    }
-
-    /// `XCTNSPredicateExpectation` 等「停止存在」——同 `SettingsViewIPadTests` 既有的
-    /// `waitForNonExistence` helper（LS-237 第 8 項教訓：一次性 `.exists` 快照在關閉動畫還沒
-    /// 跑完的瞬間可能誤判成「還在」）。
-    private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
-        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 }
