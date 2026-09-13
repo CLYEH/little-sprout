@@ -98,7 +98,13 @@ final class SettingsViewIPadTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
 
-        app.buttons["家庭"].tap()
+        // LS-253（LS-96 i1，sweeper `6c406b6a`）：LS-237 `96734b7` 只在共用 helper
+        // `assertPushThenBackReturnsToList` 的入口列 tap 加了「tap 前先等真的可點」同步點，
+        // 這裡「家庭」sidebar 切換 tap 當時仍是裸 tap——切換轉場動畫還沒穩定時 tap 可能落空，
+        // 後續等「邀請家人」列自然逾時。補上同一套 `waitForHittable` 同步點。
+        let familyTab = app.buttons["家庭"]
+        XCTAssertTrue(waitForHittable(familyTab, timeout: 5), "「家庭」sidebar 列應該可點擊")
+        familyTab.tap()
         XCTAssertTrue(
             app.buttons[QAAccessibilityID.settingsInviteRow].waitForExistence(timeout: 5),
             "切到「家庭」後應該看得到「邀請家人」列"
@@ -124,10 +130,13 @@ final class SettingsViewIPadTests: XCTestCase {
 
         // LS-245（池 `2c4bfc80`，merge-review LS-241 R2 `f71f5acc`）：09-13 ci-ipad run
         // 103627867933 在這支測試「切到『內容與安全』後應該看得到『儲存空間』列」那一步紅過
-        // 一次、同 SHA 重跑綠——同檔另外兩支（`testFamilySectionInviteRowRegressionPushes
-        // AndBackReturns`／`testLegalSectionRowsOpenAndCloseLegalDocumentSheet`）已經在
-        // LS-237 `96734b7` 補過「tap 前先等真的可點」同步點，這支當時漏補：sidebar 切換到
-        // 「內容與安全」的轉場動畫還沒穩定時 tap 可能落空，後續等「儲存空間」列自然逾時。
+        // 一次、同 SHA 重跑綠：sidebar 切換到「內容與安全」的轉場動畫還沒穩定時 tap 可能落空，
+        // 後續等「儲存空間」列自然逾時。LS-237 `96734b7` 實際只在共用 helper
+        // `assertPushThenBackReturnsToList` 的入口列 tap 加了「tap 前先等真的可點」同步點——
+        // 同檔另外兩支（`testFamilySectionInviteRowRegressionPushesAndBackReturns`／
+        // `testLegalSectionRowsOpenAndCloseLegalDocumentSheet`）的 sidebar 切換 tap（分別是
+        // `app.buttons["家庭"]`／`app.buttons["法律"]`）並未涵蓋在內，當時仍是裸 tap，由
+        // LS-253 補上（見該兩處同步點；LS-96 i1，sweeper `6c406b6a`）。
         let contentSafetyTab = app.buttons["內容與安全"]
         XCTAssertTrue(waitForHittable(contentSafetyTab, timeout: 5), "「內容與安全」sidebar 列應該可點擊")
         contentSafetyTab.tap()
@@ -182,7 +191,11 @@ final class SettingsViewIPadTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
 
-        app.buttons["法律"].tap()
+        // LS-253（同上，家庭／法律兩處 sidebar 切換 tap 當時漏補，見上方訂正）：補上同一套
+        // `waitForHittable` 同步點。
+        let legalTab = app.buttons["法律"]
+        XCTAssertTrue(waitForHittable(legalTab, timeout: 5), "「法律」sidebar 列應該可點擊")
+        legalTab.tap()
         let termsRow = app.buttons["使用條款"]
         XCTAssertTrue(termsRow.waitForExistence(timeout: 5), "切到「法律」後應該看得到「使用條款」列")
         termsRow.tap()
