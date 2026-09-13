@@ -22,7 +22,7 @@ extension XCUIElement {
     /// 不變，呼叫端零改動。
     ///
     /// `pollInterval` 只給測試用（重現／驗證用），正常呼叫一律用預設值。
-    func waitForHittable(timeout: TimeInterval, pollInterval: TimeInterval = 0.25) -> Bool {
+    func waitForHittable(timeout: TimeInterval, pollInterval: TimeInterval = 0.5) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while true {
             if isSafelyHittable {
