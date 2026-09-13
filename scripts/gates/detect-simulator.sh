@@ -223,7 +223,12 @@ else
     picked_os=$(nearest_same_major_runtime "$pinned_os")
     [ -n "$picked_os" ] && target_os="$picked_os"
     if [ "$target_os" != "$pinned_os" ]; then
-      avail=$(xcrun simctl list runtimes 2>/dev/null | awk '/^iOS /{print $2}' | paste -sd '、' -)
+      # LS-260 R2 B1：串接用 awk，**不可**用 `paste -sd '、' -`——`paste -d` 的分隔字串在 GNU
+      # coreutils 是逐「位元組」取用，3 bytes 的 `、` 在 Linux 只會吐出第一個位元組（U+FFFD），
+      # macOS 的 BSD paste 才會整個字元輸出。本機（BSD）綠、CI `rules` job（ubuntu）紅，正是本票
+      # 項 3 要消滅的那種形狀。實測 `printf 'iOS 26.0\niOS 26.5\n'` 經本行：BSD 與 ubuntu:24.04
+      # 皆輸出同樣 12 bytes（`26.0` ＋ `343 200 201` ＋ `26.5` ＋ `\n`）；空輸入兩邊皆空輸出。
+      avail=$(xcrun simctl list runtimes 2>/dev/null | awk '/^iOS /{printf "%s%s", (n++ ? "、" : ""), $2} END{if (n) print ""}')
       echo "⚠ detect-simulator：runtime ${target_os} ≠ 釘住 ${pinned_os}（本機無 ${pinned_os}；派工單／handoff 須揭露）——本機可用 iOS：${avail:-無}；CI 跑 iOS ${pinned_os}，本機重現不出 CI 紅時先懷疑 runtime 差（LS-260）" >&2
     fi
   fi
