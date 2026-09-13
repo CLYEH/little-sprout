@@ -1740,6 +1740,89 @@ out29f="$(PATROL_SUPABASE_SKEW_MIN=abc bash "$patrol" --repo "$repo" --no-pr --n
 rc_is '㉙f PATROL_SUPABASE_SKEW_MIN 非整數 → exit 2（fail closed，同既有 PATROL_* 參數慣例）' 2 "$?" "$out29f"
 has   '㉙f 錯誤訊息點名參數名' "$out29f" 'PATROL_SUPABASE_SKEW_MIN 須為整數分鐘'
 
+# ---- ㉚（LS-260；來源 LS-96 池項 `ec152d21`）：近 N 日 CI 同類紅計數。
+#      假 gh 直接回「已經過濾好的 TSV」——`--limit`／`--json`／`--jq`（日期與 conclusion 過濾）是 gh 端
+#      執行的，這裡不模擬；本組驗的是 patrol 這一側：簽章抽取、跨 run 聚合、cancelled 兩種形狀的分流、
+#      快取與單輪下載額度、fail-soft。
+gh_dir="$work/fake-gh-data"; mkdir -p "$gh_dir"
+cat > "$work/fake-gh" <<'FAKEGH'
+#!/bin/bash
+[ -n "${FAKE_GH_CALLS:-}" ] && printf '%s\n' "$*" >> "$FAKE_GH_CALLS"
+case "${2:-}" in
+  list) cat "${FAKE_GH_RUNS:?}" ;;
+  view)
+    id=$3
+    for a in "$@"; do
+      if [ "$a" = --log-failed ]; then cat "${FAKE_GH_DIR:?}/${id}.log" 2>/dev/null; exit 0; fi
+    done
+    cat "${FAKE_GH_DIR:?}/${id}.jobs" 2>/dev/null
+    ;;
+  *) exit 1 ;;
+esac
+FAKEGH
+chmod +x "$work/fake-gh"
+# 兩個 run 紅在同一支測試（真實 xcodebuild 行形狀，含 GitHub Actions 的時間戳前綴），第三個 run 紅在
+# 另一支（只出現一次，不該被標）。
+printf '%s\n' \
+  "2026-09-13T07:31:07.1234567Z Test Case '-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]' failed (12.345 seconds)." \
+  "2026-09-13T07:31:08.1234567Z ** TEST FAILED **" > "$gh_dir/9001.log"
+cp "$gh_dir/9001.log" "$gh_dir/9002.log"
+printf '%s\n' \
+  "2026-09-13T07:31:07.1234567Z Test Case '-[LittleSproutTests.SomeOtherTests testOnlyOnce]' failed (1.0 seconds)." > "$gh_dir/9003.log"
+printf '0\n' > "$gh_dir/9101.jobs"   # cancelled 但步驟全 success＝撞 timeout-minutes（LS-257 真事故）
+printf '0\n' > "$gh_dir/9102.jobs"
+printf '7\n' > "$gh_dir/9103.jobs"   # cancelled 且有步驟不是 success＝concurrency 取消的過期 run（日常）
+printf '%s\n' \
+  $'9001\tfailure\tfeature/LS-1-a' \
+  $'9002\tfailure\tfeature/LS-2-b' \
+  $'9003\tfailure\tfeature/LS-3-c' \
+  $'9101\tcancelled\tdevelopment' \
+  $'9102\tcancelled\tmain' \
+  $'9103\tcancelled\tfeature/LS-4-d' > "$work/gh-runs"
+
+reds_env() {   # 共用環境；$1＝快取目錄，其餘沿用預設
+  PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" PATROL_REDS_CACHE="$1" "${@:2}"
+}
+cache30="$work/reds-cache-a"; rm -rf "$cache30"
+out30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+has   '㉚a 同一支測試在 2 個 run 紅 → ⚠ 同類紅 2 次（測試名）' "$out30" "⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b 升票"
+hasnt '㉚b 只紅一次的測試不標（負向控制：門檻真的是 ≥2）' "$out30" 'testOnlyOnce'
+has   '㉚c cancelled 但步驟全 success（2 個）→ 併成 timeout 型別計數（LS-257 形狀）' "$out30" '⚠ 同類紅 2 次（timeout（步驟全 success 卻 cancelled，撞 job timeout-minutes））'
+hasnt '㉚c2 cancelled 且有步驟非 success（concurrency 取消的過期 run）不計數' "$out30" '同類紅 3 次'
+brief30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch --brief "$STALE" 2>&1)"
+has   '㉚a2 旗標行指向 §5-b 升票（不是只印在人類段）' "$brief30" '[CI 同類紅] ⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b「同類事故 ≥2 次升 High」開票'
+json30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch --json "$STALE" 2>&1)"
+jq_ok '㉚a3 --json repeat_failures 兩筆、runs 皆 2' "$json30" '(.repeat_failures | length) == 2 and ([.repeat_failures[].runs] | unique) == [2]'
+
+# ㉚d 快取：第二輪對同一批 run 不再打任何 `run view`（只剩一次 `run list`）
+calls30="$work/gh-calls"; : > "$calls30"
+PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" FAKE_GH_CALLS="$calls30" PATROL_REDS_CACHE="$cache30" bash "$patrol" --repo "$repo" --no-fetch "$STALE" >/dev/null 2>&1
+if [ "$(grep -c 'run view' "$calls30")" -eq 0 ] && [ "$(grep -c 'run list' "$calls30")" -eq 1 ]; then
+  echo "✓ ㉚d 快取命中：第二輪只打一次 run list、零次 run view"
+else
+  echo "✗ ㉚d 快取未命中（run list $(grep -c 'run list' "$calls30") 次、run view $(grep -c 'run view' "$calls30") 次）" >&2
+  fail=1
+fi
+
+# ㉚e 單輪下載額度：全新快取＋上限 2 → 只打 2 次 run view，聚合結果因此還湊不到 2 次（下一輪才補齊）
+cache30b="$work/reds-cache-b"; rm -rf "$cache30b"; : > "$calls30"
+out30e="$(PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" FAKE_GH_CALLS="$calls30" PATROL_REDS_CACHE="$cache30b" PATROL_REDS_MAX_FETCH=2 bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+if [ "$(grep -c 'run view' "$calls30")" -eq 2 ]; then
+  echo "✓ ㉚e 單輪下載額度 2 → 只打 2 次 run view（巡檢單輪成本有上界）"
+else
+  echo "✗ ㉚e 額度未生效（run view $(grep -c 'run view' "$calls30") 次）" >&2
+  fail=1
+fi
+has '㉚e2 額度訊息印出本輪下載數與上限' "$out30e" '本輪新下載 log 2 個，上限 2'
+
+# ㉚f fail-soft 與參數檢查
+out30f="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㉚f --no-pr → 略過、不掛旗標' "$out30f" '略過（--no-pr）'
+out30g="$(PATROL_GH="$work/no-such-gh-binary" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+has   '㉚g gh 未安裝 → 略過（fail-soft）' "$out30g" 'gh 未安裝，略過'
+out30h="$(PATROL_REDS_DAYS=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+rc_is '㉚h PATROL_REDS_DAYS 非整數 → exit 2（fail closed，同既有 PATROL_* 慣例）' 2 "$?" "$out30h"
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol／session-start 自測通過"
 fi

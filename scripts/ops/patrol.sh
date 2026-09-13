@@ -567,6 +567,101 @@ else
   SUPA_LINE="（docker 未安裝，略過）"
 fi
 
+# ---- 近 N 日 CI 同類紅計數（LS-260；來源 LS-96 池項 `ec152d21`）----
+# §5-b 的「同類事故 ≥2 次升 High」此前靠 orchestrator 人工記憶計數：LS-253 是第 3 次 ci-ipad 同測試紅
+# 才開票、LS-257 是第 2 次 ci timeout 才開票，兩次都延遲。這裡把它機械化：近 `PATROL_REDS_DAYS` 天
+# （預設 7）conclusion 為 failure／cancelled 的 run，抽出「失敗的測試名」與「失敗型別」當簽章，同一個
+# 簽章出現在 ≥2 個 run 就掛旗標。
+#
+# 成本控制（這段會打網路，cron 每 26 分＋SessionStart hook 30s 預算都跑得到）：
+#   - `gh run list` 一次拿清單（含 conclusion），只對 conclusion=failure 的 run 下載失敗 job 的 log；
+#     conclusion=cancelled 的不下載（LS-257 那種「步驟全 success 卻 cancelled」＝撞 job timeout，型別
+#     本身就是簽章）。
+#   - **每個 run 的簽章只算一次並落盤快取**（`PATROL_REDS_CACHE`，預設 `$TMPDIR/patrol-reds-cache`）：
+#     已完成的 run 其失敗內容不會再變，穩態下每輪只需下載 0–2 個新 run 的 log。單輪新下載上限
+#     `PATROL_REDS_MAX_FETCH`（預設 5），超過的 run 這輪先不算、下一輪再補（寧可少報也不要拖垮巡檢）。
+#   - 快取檔超過 2×N 天自動清掉。
+# fail-soft：`--no-pr`（自測／離線）、gh 未安裝、`gh run list` 失敗（離線／未登入）一律只註記、不掛旗標
+# ——同本檔 PR 段對 gh 的既有處理，巡檢不該因為沒網路就變成「有異常」。
+GH_BIN=${PATROL_GH:-gh}
+REDS_DAYS=${PATROL_REDS_DAYS:-7}
+REDS_MAX_FETCH=${PATROL_REDS_MAX_FETCH:-5}
+REDS_CACHE=${PATROL_REDS_CACHE:-${TMPDIR:-/tmp}/patrol-reds-cache}
+case "$REDS_DAYS" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_DAYS 須為整數天（得到「${REDS_DAYS}」）" >&2; exit 2 ;; esac
+case "$REDS_MAX_FETCH" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_MAX_FETCH 須為整數（得到「${REDS_MAX_FETCH}」）" >&2; exit 2 ;; esac
+REDS_LINES=; reds_note=; J_REDS=; reds_flagged=0; reds_runs=0
+if [ "$DO_PR" -ne 1 ]; then
+  reds_note="略過（--no-pr）"
+elif ! command -v "$GH_BIN" >/dev/null 2>&1; then
+  reds_note="gh 未安裝，略過"
+else
+  reds_list=$(cd "$ROOT" && "$GH_BIN" run list --limit 40 \
+    --json databaseId,headBranch,createdAt,conclusion \
+    --jq ".[] | select(.conclusion == \"failure\" or .conclusion == \"cancelled\") | select((.createdAt | fromdateiso8601) > (now - ${REDS_DAYS} * 86400)) | [.databaseId, .conclusion, .headBranch] | @tsv" 2>/dev/null)
+  if [ -z "$reds_list" ]; then
+    reds_note="近 ${REDS_DAYS} 日無 failure／cancelled 的 run（或 gh 查詢失敗／未登入，fail-soft 不擋）"
+  else
+    mkdir -p "$REDS_CACHE" 2>/dev/null
+    find "$REDS_CACHE" -type f -mtime "+$((REDS_DAYS * 2))" -delete 2>/dev/null
+    reds_fetched=0; reds_sigs=
+    while IFS=$'\t' read -r r_id r_concl r_branch; do
+      [ -n "$r_id" ] || continue
+      reds_runs=$((reds_runs + 1))
+      cache_f="${REDS_CACHE}/${r_id}"
+      if [ ! -f "$cache_f" ]; then
+        # 額度用完就先不算這個 run（不寫快取），下一輪再補——`cancelled` 那條雖然只查 JSON、比較便宜，
+        # 但同樣是一次網路往返，一併受額度管，巡檢的單輪成本才有上界。
+        [ "$reds_fetched" -ge "$REDS_MAX_FETCH" ] && continue
+        if [ "$r_concl" = cancelled ]; then
+          # cancelled 有兩種形狀，只有其中一種是事故（LS-257 N1／池項 `ed86ae9e` 已經釐清過）：
+          #   (a) **步驟全 success 卻 cancelled**＝撞 job `timeout-minutes`（LS-257 的真事故，要計數）；
+          #   (b) 有步驟不是 success＝被 `concurrency: cancel-in-progress` 取消的過期 run，或人工取消
+          #       ——這是日常（每次連續 push 都會產生一個），計進去會變成一條永遠亮著的假警報。
+          # 判準用 `--json jobs`（純 JSON，比 `--log-failed` 下載整包 log 便宜得多），同樣進快取。
+          reds_fetched=$((reds_fetched + 1))
+          r_bad=$(cd "$ROOT" && "$GH_BIN" run view "$r_id" --json jobs \
+            --jq '[.jobs[].steps[] | select(.conclusion != "success")] | length' 2>/dev/null)
+          case "$r_bad" in
+            0) printf 'timeout（步驟全 success 卻 cancelled，撞 job timeout-minutes）\n' > "$cache_f" ;;
+            ''|*[!0-9]*) : > "$cache_f" ;;   # 查不到 jobs（gh 失敗）→ 空簽章，不臆測
+            *) : > "$cache_f" ;;             # (b) 過期／人工取消：日常，不計數
+          esac
+        else
+          reds_fetched=$((reds_fetched + 1))
+          reds_log=$(cd "$ROOT" && "$GH_BIN" run view "$r_id" --log-failed 2>/dev/null)
+          {
+            printf '%s\n' "$reds_log" | grep -oE "Test Case '[^']+' failed" \
+              | sed -E "s/^Test Case '//; s/' failed\$//" | sort -u
+            case "$reds_log" in
+              *"has exceeded the maximum execution time"*|*"timed out"*|*"Timed out"*) printf 'timeout（步驟逾時）\n' ;;
+            esac
+          } > "$cache_f"
+        fi
+      fi
+      # 同一個 run 內同名測試重複出現只算一次（`sort -u` 已在寫入時做過；cancelled 那條只有一行）
+      while IFS= read -r sig; do
+        [ -n "$sig" ] || continue
+        reds_sigs="${reds_sigs}${sig}"$'\n'
+      done < "$cache_f"
+    done <<EOF
+$reds_list
+EOF
+    if [ -n "$reds_sigs" ]; then
+      while IFS= read -r line; do
+        [ -n "$line" ] || continue
+        r_n=${line%%$'\t'*}; r_sig=${line#*$'\t'}
+        reds_flagged=$((reds_flagged + 1))
+        REDS_LINES="${REDS_LINES}  ⚠ 同類紅 ${r_n} 次（${r_sig}）→ 依 §5-b 升票"$'\n'
+        J_REDS="${J_REDS:+${J_REDS},}{\"signature\":$(json_str "$r_sig"),\"runs\":${r_n}}"
+        add_flag "[CI 同類紅] ⚠ 同類紅 ${r_n} 次（${r_sig}）→ 依 §5-b「同類事故 ≥2 次升 High」開票，別再靠人工記憶計數（LS-260）"
+      done <<EOF
+$(printf '%s' "$reds_sigs" | sort | uniq -c | awk '$1 >= 2 { n = $1; $1 = ""; sub(/^ +/, ""); printf "%d\t%s\n", n, $0 }' | sort -rn)
+EOF
+    fi
+    reds_note="近 ${REDS_DAYS} 日 failure／cancelled run ${reds_runs} 個（本輪新下載 log ${reds_fetched} 個，上限 ${REDS_MAX_FETCH}；快取 ${REDS_CACHE}）"
+  fi
+fi
+
 # ---- Pencil 連線（LS-180）：有 design 分支 worktree（設計票在飛）時跑 scripts/ops/pen-status.sh——Pen 行程／目前路徑／
 #      MCP socket 探針一行；探針非 0（Pen 沒開／路徑讀不到／mcp-server 與 Pen 之間沒有 socket 連線）就 add_flag，指示
 #      orchestrator 派設計票前先請使用者在 Claude Code 執行 /mcp 重連 pencil。沒有 design worktree 不呼叫（探針會打
@@ -947,14 +1042,14 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"supabase_containers":%s,"supabase_start_skew_minutes":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"supabase_containers":%s,"supabase_start_skew_minutes":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"repeat_failures":[%s],"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
       "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$(json_num "$supa_containers")" "$(json_num "$supa_skew_m")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$(json_num "$lock_waiters")" "$(json_num "$lock_waiters_max_min")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
       "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
-      "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_FLAGS"
+      "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_REDS" "$J_FLAGS"
     ;;
   brief)
     sim_rt_note=; [ "$sim_rt_mismatch" -gt 0 ] && sim_rt_note="（釘住 iOS ${sim_pinned_os}，提示不擋）"
@@ -989,6 +1084,9 @@ case "$MODE" in
     [ -n "$lock_queue_flag" ] && echo "  ${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
     echo "== Supabase 容器啟動時間（LS-260；各 supabase_* 容器 .State.StartedAt 差 >${SUPA_SKEW_MIN} 分＝有人單獨重啟過某台，整組重啟排除，LS-246）"
     echo "  ${SUPA_LINE}"
+    echo "== 近 ${REDS_DAYS} 日 CI 同類紅（LS-260；失敗測試名／失敗型別跨 run 聚合，同簽章 ≥2 個 run 即 ⚠ → §5-b 升 High）"
+    [ -n "$reds_note" ] && echo "  ${reds_note}"
+    if [ -n "$REDS_LINES" ]; then printf '%s' "$REDS_LINES"; else echo "  （無同簽章重複 ≥2 次的紅）"; fi
     echo "== Pencil 連線（LS-180；有 design 分支 worktree 時探：行程／目前路徑／MCP socket；✗ 先請使用者 /mcp 重連 pencil 再派設計票）"
     if [ "$pencil_ran" -eq 1 ]; then
       printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'
