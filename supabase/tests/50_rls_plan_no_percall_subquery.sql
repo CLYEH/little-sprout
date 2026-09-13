@@ -785,8 +785,19 @@ declare
   v_family constant uuid := 'fc000000-0000-4000-8000-000000000001';
   v_deep_cursor constant timestamptz := now() - interval '49900 minutes';
   v_max_uuid constant uuid := 'ffffffff-ffff-ffff-ffff-ffffffffffff';
-  -- 同一套暖機後穩定成本邏輯與門檻取法，見上方 get_family_timeline 段落的 N2 說明。
-  c_buffer_budget constant bigint := 60;
+  -- LS-243：list_comments 加 total_count 之後，門檻從 60 調整為 1200——total_count
+  -- 是一句獨立的 `select count(*) into v_total_count from comments where ...`（同
+  -- 主查詢的過濾條件），對這個 target 底下符合條件的留言**全部**（本檔案的壓力
+  -- 測試資料集固定灌 5 萬則）逐一計數，成本天生是 O(該 target 的留言總數)，不是
+  -- O(limit)——這是「精確總數」這個需求本身的代價，不是退化（v_total_count 每次
+  -- 呼叫只算一次，不是逐頁重算 N 次；分頁本身仍是 O(limit)，見主查詢子句未變）。
+  -- 本機實測（`supabase db reset` 後乾淨量測，未受先前失敗回滾殘留的表／索引膨脹
+  -- 污染）：分支 1（無游標）928 buffers、分支 2（有游標）938 buffers，兩者幾乎
+  -- 相等——證明成本確實只跟著 total_count 那句聚合查詢走（與游標無關），不是分頁
+  -- 查詢本身退化。1200 留約 28% 餘裕（同 v_has_blocks=true 那組門檻 2500 相對於
+  -- 實測 1911 的餘裕比例），仍遠低於「掃全表」等級（5 萬則留言的 comments 表整體
+  -- 遠不止 1200 個 8KB 頁）。
+  c_buffer_budget constant bigint := 1200;
   q record;
 begin
   for q in
