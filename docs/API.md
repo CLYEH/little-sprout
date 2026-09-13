@@ -872,7 +872,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   | `reactions_select` | RLS policy `NOT EXISTS` | LS-225 |
   | `get_family_timeline`（時間軸） | RPC 內建 `NOT EXISTS`（`v_has_blocks` 分支） | LS-149 |
   | `get_reaction_counts` | RPC 內建 `NOT EXISTS` | LS-225 |
-  | `list_comments` | RPC 內建 `NOT EXISTS` | LS-149 |
+  | `list_comments` | RPC 內建（`v_blocked_ids` 陣列成員檢查；LS-243 前是 `NOT EXISTS`，見該支 `total_count` 說明的取捨） | LS-149 |
 
 ### `join_requests`
 - 完全沒有直接寫入路徑（`grant` 只給了 `SELECT`），一律透過 §4 的 RPC 操作。
@@ -1315,11 +1315,30 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `p_family_id` 想收回別家的反應會直接拿到 `LS026`，`DELETE` 完全不會執行。殘餘
   情況只剩 `target_id` 完全查不到（孤兒）時——細節見 §3「reactions」段。
 
-### `list_comments(p_family_id uuid, p_target_type text, p_target_id uuid, p_cursor_created_at timestamptz default null, p_cursor_id uuid default null, p_limit integer default 20) -> table(id uuid, author_id uuid, author_display_name text, author_avatar_url text, body text, created_at timestamptz)`
+### `list_comments(p_family_id uuid, p_target_type text, p_target_id uuid, p_cursor_created_at timestamptz default null, p_cursor_id uuid default null, p_limit integer default 20) -> table(id uuid, author_id uuid, author_display_name text, author_avatar_url text, body text, created_at timestamptz, total_count bigint)`
+- **BREAKING（LS-243）**：回傳列加 `total_count`——這個 target 底下**全部**符合
+  條件（未刪除、排除呼叫者已封鎖的作者）的留言數，跟目前這一頁用哪個游標無關，
+  每一列都帶同一個值（呼叫端讀任一列即可，或用 `max(total_count)`）。回傳型別
+  改變必須先 `DROP FUNCTION` 才能 `CREATE`（Postgres 限制，見 migration 檔頭），
+  參數簽章不變。PostgREST 把結果序列化成 JSON 物件陣列，Swift `Decodable`
+  對舊 client 沒宣告的欄位預設略過，舊 build 不會因為多一欄而解碼失敗；但欄位
+  新增仍照 gate 規則標記 BREAKING。**完全沒有任何留言的 target**：回傳 0 列
+  （不是一列 `total_count=0` 的列）——`RETURNS TABLE` 對「沒有任何列」的既有
+  語意，呼叫端要把「0 列」本身當成 `total_count=0`，見 `supabase/tests/
+  112_comment_count.sql`。
 - **誰能呼叫**：該家庭任一角色的成員；非本家庭成員呼叫會拿到明確的 `42501`
   （`security definer`，函式內部手動檢查成員資格——見下方「為什麼不是 invoker」）。
 - **用途**：單一 target 的留言分頁（keyset），含軟刪過濾（`deleted_at is null`）與
   作者顯示名／頭像（join `profiles`，避免呼叫端逐則留言各查一次作者資料的 N+1）。
+- **`total_count` 的封鎖過濾與效能取捨**：跟主查詢用同一個 `v_blocked_ids`
+  陣列（呼叫者在這個家庭封鎖過的所有人，函式最外層算一次），不是逐列呼叫
+  `private.blocked_pairs()`——兩條分頁分支既有的 `NOT EXISTS (... blocked_
+  pairs() ...)` 也一併換成同一個陣列成員檢查（語意不變）。`total_count` 本身是
+  一句獨立的 `count(*)`聚合查詢，成本是 O(該 target 底下符合條件的留言數)，不是
+  O(limit)——這是「精確總數」這個需求本身的代價，**不是** N+1（不是逐列查詢，
+  是每次呼叫額外付一次聚合查詢，跟分頁本身查幾頁無關）。效能回歸見
+  `supabase/tests/50_rls_plan_no_percall_subquery.sql`（5 萬則留言壓力測試，
+  本機實測兩條分支各 928／938 buffers，門檻 1200）。
 - **為什麼是 `security definer`，不是像 `get_family_timeline` 那樣選 invoker**：
   本機用 5 萬則留言（單一 target）實測，`security invoker`（仰賴 `comments_select`／
   `profiles_select` 既有 RLS）版本即使 `comments_target_idx` 完整存在，
@@ -1373,10 +1392,28 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   配合 RLS 自然回傳空集合（同 `get_family_timeline` 的未登入行為），不 raise。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
-### `get_family_timeline(p_family_id uuid, p_child_id uuid default null, p_cursor_occurred_at timestamptz default null, p_cursor_ref_id uuid default null, p_limit integer default 20) -> table(kind public.feed_kind, ref_id uuid, occurred_at timestamptz, child_ids uuid[])`
+### `get_family_timeline(p_family_id uuid, p_child_id uuid default null, p_cursor_occurred_at timestamptz default null, p_cursor_ref_id uuid default null, p_limit integer default 20) -> table(kind public.feed_kind, ref_id uuid, occurred_at timestamptz, child_ids uuid[], comment_count bigint)`
 - **BREAKING（LS-121）**：回傳欄從 `child_id uuid` 改成 `child_ids uuid[]`——參數
   簽章沒變（還是同一組 5 個參數），但回傳形狀對呼叫端是真實的破壞性變更。舊呼叫端
   若解析 `child_id`（單一 uuid）會直接壞掉，必須改讀 `child_ids`（陣列）。
+- **BREAKING（LS-243）**：回傳列再加 `comment_count`——這個項目未刪除、排除呼叫者
+  已封鎖的作者的留言數（`media`／`diary`／`album` 三種 kind 皆適用，`media`
+  類項目的留言也計入，同 `LikersListSheet`／`CommentsSheetView` 三種卡片皆能開
+  留言 sheet 的既有事實）。沒有任何留言時是 `0`，不是 `NULL`。跟 LS-121 那次
+  一樣，回傳型別改變必須先 `DROP FUNCTION` 才能 `CREATE`（Postgres 限制，
+  `RETURNS TABLE` 的欄位型別是 OUT 參數，`CREATE OR REPLACE` 不允許改變，見
+  migration 檔頭），參數簽章不變、PostgREST 序列化成 JSON 物件、Swift
+  `Decodable` 對多出來的欄位預設略過不報錯，欄位新增仍照 gate 規則標記
+  BREAKING。**效能取捨**：`comment_count` 用 correlated 子查詢（口語「lateral
+  count」），不是維護計數欄——命中 `comments_target_idx (family_id, target_type,
+  target_id, created_at) where deleted_at is null` 的前三欄，只在已被 `LIMIT`
+  收斂到 ≤`p_limit`（上限 100）列的候選集合上逐列跑一次，跟 `child_ids` 的
+  `array_agg` 子查詢同一個時機與心智模型，不是對整個 feed 的 N+1。封鎖過濾
+  用函式最外層算一次的 `v_blocked_ids` 陣列（呼叫者在這個家庭封鎖過的所有人），
+  不是逐列呼叫 `private.blocked_pairs()`——同 `list_comments.total_count` 的
+  取捨，見該支說明與 migration 檔頭。效能回歸見
+  `supabase/tests/112_comment_count.sql`（200 筆真實 feed＋留言的 EXPLAIN
+  (ANALYZE, BUFFERS) 原文，本機實測 buffers=116，門檻 250）。
 - **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭的資料——`p_family_id` 傳一個
   自己不屬於的家庭不會報錯，只會回傳 0 列（`security invoker`，完全依賴 `feed_items`
   既有的 `feed_items_select` RLS policy，見 §3）。
