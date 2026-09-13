@@ -17,12 +17,22 @@ struct TimelineFeedPointer: Decodable, Sendable, Equatable {
     let refId: UUID
     let occurredAt: Date
     let childIds: [UUID]
+    /// LS-243：`comment_count`——未刪除、排除呼叫者已封鎖的作者的留言數（見
+    /// `docs/API.md` 對這支 RPC 的說明）。預設 `0`：`Decodable` 解碼真正的 RPC 回應時一律
+    /// 會有這個欄位（NOT NULL），預設值只給測試直接建構 `TimelineFeedPointer(...)` 時不必
+    /// 逐一補這個新參數（同 `childIds` 之於既有測試呼叫端的既有慣例）。**刻意是 `var`
+    /// 不是 `let`**：Swift 的合成 memberwise initializer 只有 `var` 搭配預設值才會在
+    /// initializer 產生「可省略、也可覆寫」的參數——`let` 搭配預設值會讓該參數整個從
+    /// initializer 消失、變成永遠固定的值，無法在建構時覆寫（本機實測：`extra argument
+    /// 'commentCount' in call`），不是本票要的效果。
+    var commentCount: Int = 0
 
     enum CodingKeys: String, CodingKey {
         case kind
         case refId = "ref_id"
         case occurredAt = "occurred_at"
         case childIds = "child_ids"
+        case commentCount = "comment_count"
     }
 }
 
@@ -221,6 +231,13 @@ struct TimelineEntry: Equatable, Sendable, Identifiable {
     let refId: UUID
     let occurredAt: Date
     let childIds: [UUID]
+    /// LS-243：`get_family_timeline` 回傳的 `comment_count`（未刪除、排除呼叫者已封鎖的
+    /// 作者的留言數）——`TimelineContentAssembler.buildEntries` 原樣帶過來，
+    /// `TimelineStore.refresh`／`loadMore` 用它初始化 `commentCounts`（開留言 sheet 之前
+    /// 互動列就顯示伺服器算好的計數，不再恆為 0，見 `commentCounts` 文件註解）。預設 `0`：
+    /// 同 `TimelineFeedPointer.commentCount` 的既有理由，測試直接建構 `TimelineEntry(...)`
+    /// 不必逐一補這個新參數。
+    var commentCount: Int = 0
     /// 該筆內容組裝失敗（例如批次查詢那一支剛好失敗）時為 nil——呼叫端跳過渲染這一列，
     /// 不讓整頁因單一項目失敗而整批消失（見 `TimelineContentAssembler`）。
     let content: Content?
