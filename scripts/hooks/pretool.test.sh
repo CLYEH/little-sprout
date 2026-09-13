@@ -285,21 +285,35 @@ expect 'I1⑥ wc -l .env（deny）' 2 "$(bash_json 'wc -l .env')"
 # matcher 漏列 Grep／忘了 `|| exit 2` 之前 CI 全綠，這裡補上直接讀 settings.json 斷言。
 # ============================================================
 settings_json="${root}/.claude/settings.json"
-i6_cmd=$(jq -r '.hooks.PreToolUse[] | select(.matcher == "Bash|Read|Grep") | .hooks[] | select(.type == "command") | .command' "$settings_json" 2>/dev/null)
-if [ -n "$i6_cmd" ]; then
+# LS-260（LS-96 池項 `c67b65ca` i4）：jq 缺席時原本是硬紅（`i6_cmd` 空 → I6① 判失敗），把「本機沒裝 jq」
+# 誤報成「settings.json 接線壞掉」。沿 LS-256 對 `fork-guard.test.sh` 立下的慣例改成 SKIP＋計數，收工
+# 總結帶出來——不靜默少跑、也不假紅。本檔上面已有 `real_jq`（fail-closed 案例用），直接沿用同一個值。
+i6_skipped=0
+if [ -n "$real_jq" ]; then
+  i6_cmd=$("$real_jq" -r '.hooks.PreToolUse[] | select(.matcher == "Bash|Read|Grep") | .hooks[] | select(.type == "command") | .command' "$settings_json" 2>/dev/null)
+else
+  i6_cmd=
+  echo "SKIP 3 組（無 jq）：I6①–I6③ settings.json PreToolUse 接線斷言未跑"
+  i6_skipped=3
+fi
+if [ "$i6_skipped" -ne 0 ]; then
+  :
+elif [ -n "$i6_cmd" ]; then
   echo '✓ I6①：settings.json 的 PreToolUse matcher 含 Bash|Read|Grep 且接著 command'
 else
   echo "✗ I6①：settings.json 找不到 matcher=Bash|Read|Grep 的 PreToolUse command" >&2
   fail=1
 fi
-case "$i6_cmd" in
-  *pretool.sh*) echo '✓ I6②：command 確實呼叫 pretool.sh' ;;
-  *) echo "✗ I6②：command 沒有呼叫 pretool.sh（實得：${i6_cmd}）" >&2; fail=1 ;;
-esac
-case "$i6_cmd" in
-  *'|| exit 2'*) echo '✓ I6③：command 帶 || exit 2（I4，腳本缺席／執行失敗時 wiring 層仍 fail-closed）' ;;
-  *) echo "✗ I6③：command 沒有 || exit 2（實得：${i6_cmd}）" >&2; fail=1 ;;
-esac
+if [ "$i6_skipped" -eq 0 ]; then
+  case "$i6_cmd" in
+    *pretool.sh*) echo '✓ I6②：command 確實呼叫 pretool.sh' ;;
+    *) echo "✗ I6②：command 沒有呼叫 pretool.sh（實得：${i6_cmd}）" >&2; fail=1 ;;
+  esac
+  case "$i6_cmd" in
+    *'|| exit 2'*) echo '✓ I6③：command 帶 || exit 2（I4，腳本缺席／執行失敗時 wiring 層仍 fail-closed）' ;;
+    *) echo "✗ I6③：command 沒有 || exit 2（實得：${i6_cmd}）" >&2; fail=1 ;;
+  esac
+fi
 
 # ============================================================
 # R1 F5（major）：自測完全沒有覆蓋 trap——把 trap 那行拿掉重跑，31 組原本全綠（票文驗收「腳本
@@ -622,6 +636,10 @@ expect 'H3b-s⑩ echo 引號內字面 supabase stop（allow）' 0 "$(bash_json "
 rm -rf "$ls184_work"
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pretool.sh 自測通過"
+  if [ "${i6_skipped:-0}" -gt 0 ]; then
+    echo "✓ pretool.sh 自測通過（SKIP ${i6_skipped} 組（無 jq））"
+  else
+    echo "✓ pretool.sh 自測通過"
+  fi
 fi
 exit "$fail"
