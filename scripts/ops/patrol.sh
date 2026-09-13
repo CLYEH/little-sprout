@@ -587,8 +587,11 @@ GH_BIN=${PATROL_GH:-gh}
 REDS_DAYS=${PATROL_REDS_DAYS:-7}
 REDS_MAX_FETCH=${PATROL_REDS_MAX_FETCH:-5}
 REDS_CACHE=${PATROL_REDS_CACHE:-${TMPDIR:-/tmp}/patrol-reds-cache}
+# LS-260 R2 M1：cancelled job 跑滿幾分鐘才算「撞 job timeout-minutes」（見下方分類邏輯的實測分離度）
+REDS_TIMEOUT_MIN=${PATROL_REDS_TIMEOUT_MIN:-30}
 case "$REDS_DAYS" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_DAYS 須為整數天（得到「${REDS_DAYS}」）" >&2; exit 2 ;; esac
 case "$REDS_MAX_FETCH" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_MAX_FETCH 須為整數（得到「${REDS_MAX_FETCH}」）" >&2; exit 2 ;; esac
+case "$REDS_TIMEOUT_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_TIMEOUT_MIN 須為整數分鐘（得到「${REDS_TIMEOUT_MIN}」）" >&2; exit 2 ;; esac
 REDS_LINES=; reds_note=; J_REDS=; reds_flagged=0; reds_runs=0
 if [ "$DO_PR" -ne 1 ]; then
   reds_note="略過（--no-pr）"
@@ -613,18 +616,42 @@ else
         # 但同樣是一次網路往返，一併受額度管，巡檢的單輪成本才有上界。
         [ "$reds_fetched" -ge "$REDS_MAX_FETCH" ] && continue
         if [ "$r_concl" = cancelled ]; then
-          # cancelled 有兩種形狀，只有其中一種是事故（LS-257 N1／池項 `ed86ae9e` 已經釐清過）：
-          #   (a) **步驟全 success 卻 cancelled**＝撞 job `timeout-minutes`（LS-257 的真事故，要計數）；
-          #   (b) 有步驟不是 success＝被 `concurrency: cancel-in-progress` 取消的過期 run，或人工取消
-          #       ——這是日常（每次連續 push 都會產生一個），計進去會變成一條永遠亮著的假警報。
+          # cancelled 有兩種形狀，只有其中一種是事故：
+          #   (a) 撞 job `timeout-minutes`（LS-257 的真事故，要計數）；
+          #   (b) 被 `concurrency: cancel-in-progress` 取消的過期 run／人工取消——每次連續 push 都會
+          #       產生一個，計進去會變成一條永遠亮著的假警報。
+          #
+          # LS-260 R2 M1（merge-review R1 `870bf760`）：本段原本用「步驟全 success」判 (a)，那正是
+          # LS-257 R1 merge-review 已經**推翻**的形狀——`scripts/ops/promote-follow.sh:75-80` 檔頭寫明
+          # 「撞 timeout 那一刻正在跑的步驟會被 GitHub 記成 cancelled，這個更嚴格的條件反而漏掉票要
+          # 解決的主場景」。reviewer 對近 7 日 38 個 cancelled run 逐一實測：舊判準命中 **0/38**
+          # （timeout 簽章永遠產生不出來，項 4 對 LS-257 那類事故完全無效）。
+          #
+          # 改成兩條件並用：
+          #   1. 無任何 step 是 `failure`／`timed_out`——與 `promote-follow.sh` 的 `no_failure_steps()`
+          #      同一判準（Rule 6：兩個相衝突的判準取較新且經 review 修正的那個）。單獨用太鬆
+          #      （reviewer 實測 36/38），所以再加第 2 條。
+          #   2. 存在 `conclusion=cancelled` 的 job，其 `completedAt-startedAt` ≥
+          #      `PATROL_REDS_TIMEOUT_MIN`（預設 30 分）——真正撞 timeout 的 job 一定跑很久，
+          #      被 concurrency 取代的過期 run 通常幾十秒到十幾分鐘就被砍。
+          # 本機對近 7 日 cancelled run 實測的分離度（`<有無 failure step>／<最久 cancelled job 秒數>`）：
+          # 真 timeout 2454／2132／1988，concurrency 取消 1554／1321／1303／1187／1091／1002／571／
+          # 333／56，有 failure step 的 2 個（55／340）另被條件 1 擋掉——1800 秒把兩群切得很開。
           # 判準用 `--json jobs`（純 JSON，比 `--log-failed` 下載整包 log 便宜得多），同樣進快取。
           reds_fetched=$((reds_fetched + 1))
-          r_bad=$(cd "$ROOT" && "$GH_BIN" run view "$r_id" --json jobs \
-            --jq '[.jobs[].steps[] | select(.conclusion != "success")] | length' 2>/dev/null)
-          case "$r_bad" in
-            0) printf 'timeout（步驟全 success 卻 cancelled，撞 job timeout-minutes）\n' > "$cache_f" ;;
-            ''|*[!0-9]*) : > "$cache_f" ;;   # 查不到 jobs（gh 失敗）→ 空簽章，不臆測
-            *) : > "$cache_f" ;;             # (b) 過期／人工取消：日常，不計數
+          r_shape=$(cd "$ROOT" && "$GH_BIN" run view "$r_id" --json jobs --jq \
+            '[.jobs[].steps[]?.conclusion] as $sc | ([.jobs[] | select(.conclusion == "cancelled" and .startedAt != null and .completedAt != null) | ((.completedAt | fromdateiso8601) - (.startedAt | fromdateiso8601))] | max // 0) as $d | "\(if ($sc | any(. == "failure" or . == "timed_out")) then 1 else 0 end)\t\($d)"' 2>/dev/null)
+          r_hasfail=$(printf '%s' "$r_shape" | cut -f1); r_cansec=$(printf '%s' "$r_shape" | cut -f2)
+          case "${r_hasfail}|${r_cansec}" in
+            0\|*[!0-9]*|0\|) : > "$cache_f" ;;   # 秒數解析不出來（gh 失敗／欄位缺）→ 空簽章，不臆測
+            0\|*)
+              if [ "$r_cansec" -ge $((REDS_TIMEOUT_MIN * 60)) ]; then
+                printf 'timeout（cancelled、無 failure／timed_out step、cancelled job ≥%s 分——撞 job timeout-minutes）\n' "$REDS_TIMEOUT_MIN" > "$cache_f"
+              else
+                : > "$cache_f"                   # (b) 過期／人工取消：日常，不計數
+              fi
+              ;;
+            *) : > "$cache_f" ;;                 # 有 failure／timed_out step，或整段讀不到 → 不計數
           esac
         else
           reds_fetched=$((reds_fetched + 1))

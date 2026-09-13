@@ -1741,8 +1741,11 @@ rc_is '㉙f PATROL_SUPABASE_SKEW_MIN 非整數 → exit 2（fail closed，同既
 has   '㉙f 錯誤訊息點名參數名' "$out29f" 'PATROL_SUPABASE_SKEW_MIN 須為整數分鐘'
 
 # ---- ㉚（LS-260；來源 LS-96 池項 `ec152d21`）：近 N 日 CI 同類紅計數。
-#      假 gh 直接回「已經過濾好的 TSV」——`--limit`／`--json`／`--jq`（日期與 conclusion 過濾）是 gh 端
-#      執行的，這裡不模擬；本組驗的是 patrol 這一側：簽章抽取、跨 run 聚合、cancelled 兩種形狀的分流、
+#      `gh run list` 那一路的假身直接回「已經過濾好的 TSV」——`--limit`／`--created`／`--jq` 的過濾是
+#      gh 端執行的，這裡不模擬。**`gh run view --json jobs --jq` 那一路則是真的跑 jq**（R2 M1：
+#      merge-review R1 指出原本的假身直接 `printf '0'`，等於把「假設的形狀」當事實餵給斷言，Rule 8），
+#      fixture 用**真實事故 run 的 jobs JSON**（欄位子集，產生指令見下），所以 patrol 裡那條 jq 表達式
+#      本身也在受測。本組驗：簽章抽取、跨 run 聚合、cancelled 三種形狀的分流、兩個判準各自的接線、
 #      快取與單輪下載額度、fail-soft。
 gh_dir="$work/fake-gh-data"; mkdir -p "$gh_dir"
 cat > "$work/fake-gh" <<'FAKEGH'
@@ -1755,7 +1758,14 @@ case "${2:-}" in
     for a in "$@"; do
       if [ "$a" = --log-failed ]; then cat "${FAKE_GH_DIR:?}/${id}.log" 2>/dev/null; exit 0; fi
     done
-    cat "${FAKE_GH_DIR:?}/${id}.jobs" 2>/dev/null
+    # `--json jobs --jq '<expr>'`：對真實 run 的 jobs JSON 實跑 patrol 自己那條 jq（R2 M1）
+    expr=; prev=
+    for a in "$@"; do
+      [ "$prev" = --jq ] && expr=$a
+      prev=$a
+    done
+    [ -n "$expr" ] || exit 1
+    jq -r "$expr" "${FAKE_GH_DIR:?}/${id}.jobs.json" 2>/dev/null
     ;;
   *) exit 1 ;;
 esac
@@ -1769,16 +1779,26 @@ printf '%s\n' \
 cp "$gh_dir/9001.log" "$gh_dir/9002.log"
 printf '%s\n' \
   "2026-09-13T07:31:07.1234567Z Test Case '-[LittleSproutTests.SomeOtherTests testOnlyOnce]' failed (1.0 seconds)." > "$gh_dir/9003.log"
-printf '0\n' > "$gh_dir/9101.jobs"   # cancelled 但步驟全 success＝撞 timeout-minutes（LS-257 真事故）
-printf '0\n' > "$gh_dir/9102.jobs"
-printf '7\n' > "$gh_dir/9103.jobs"   # cancelled 且有步驟不是 success＝concurrency 取消的過期 run（日常）
+# cancelled 的三種真實形狀——fixture 取自本 repo 的真實 run（R2 M1；產生指令：
+#   gh run view <id> --json jobs --jq '{jobs: [.jobs[] | {name, conclusion, startedAt, completedAt,
+#     steps: [.steps[]? | {conclusion}]}]}' | jq -c .
+# 只留判準會讀到的欄位，其餘原樣）：
+#   34760803165：development push run，`ci` job cancelled、跑 2454 s（40.9 分），無 failure／timed_out step ＝ 真 timeout
+#   34764441663：同型，`ci` job cancelled、跑 1988 s（33.1 分） ＝ 真 timeout（兩個才湊得到 §5-b 的 ≥2）
+#   34746493293：`ci` job cancelled、只跑 333 s ＝ concurrency: cancel-in-progress 取代的過期 run（日常，不計數）
+#   34746091627：有 step 是 failure／timed_out（且 cancelled job 只跑 55 s）＝ 真的有東西壞了，不算 timeout 型別
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T14:38:07Z","conclusion":"success","name":"ci-ipad","startedAt":"2026-09-13T14:29:47Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T15:10:41Z","conclusion":"cancelled","name":"ci","startedAt":"2026-09-13T14:29:47Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T13:51:42Z","conclusion":"success","name":"db","startedAt":"2026-09-13T13:47:54Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T13:48:12Z","conclusion":"success","name":"lint","startedAt":"2026-09-13T13:47:58Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T13:54:50Z","conclusion":"success","name":"rules","startedAt":"2026-09-13T13:47:54Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]}]}' > "$gh_dir/34760803165.jobs.json"
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T15:11:39Z","conclusion":"success","name":"rules","startedAt":"2026-09-13T15:03:58Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T15:44:41Z","conclusion":"cancelled","name":"ci","startedAt":"2026-09-13T15:11:33Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T15:10:59Z","conclusion":"success","name":"lint","startedAt":"2026-09-13T15:10:47Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T15:07:44Z","conclusion":"success","name":"db","startedAt":"2026-09-13T15:03:58Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T15:17:31Z","conclusion":"success","name":"ci-ipad","startedAt":"2026-09-13T15:11:05Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]}]}' > "$gh_dir/34764441663.jobs.json"
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T08:01:57Z","conclusion":"cancelled","name":"rules","startedAt":"2026-09-13T07:58:27Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T08:03:52Z","conclusion":"cancelled","name":"ci","startedAt":"2026-09-13T07:58:32Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:58:46Z","conclusion":"success","name":"lint","startedAt":"2026-09-13T07:58:32Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T08:04:05Z","conclusion":"cancelled","name":"ci-ipad","startedAt":"2026-09-13T07:58:32Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T08:02:03Z","conclusion":"cancelled","name":"db","startedAt":"2026-09-13T07:58:27Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]}]}' > "$gh_dir/34746493293.jobs.json"
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T07:48:29Z","conclusion":"cancelled","name":"ci","startedAt":"2026-09-13T07:47:39Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:48:28Z","conclusion":"cancelled","name":"db","startedAt":"2026-09-13T07:47:35Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:48:29Z","conclusion":"cancelled","name":"rules","startedAt":"2026-09-13T07:47:34Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"failure"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:47:49Z","conclusion":"success","name":"ci-ipad","startedAt":"2026-09-13T07:47:39Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:48:06Z","conclusion":"success","name":"lint","startedAt":"2026-09-13T07:47:54Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]}]}' > "$gh_dir/34746091627.jobs.json"
 printf '%s\n' \
   $'9001\tfailure\tfeature/LS-1-a' \
   $'9002\tfailure\tfeature/LS-2-b' \
   $'9003\tfailure\tfeature/LS-3-c' \
-  $'9101\tcancelled\tdevelopment' \
-  $'9102\tcancelled\tmain' \
-  $'9103\tcancelled\tfeature/LS-4-d' > "$work/gh-runs"
+  $'34760803165\tcancelled\tdevelopment' \
+  $'34764441663\tcancelled\tdevelopment' \
+  $'34746493293\tcancelled\tfeature/LS-4-d' \
+  $'34746091627\tcancelled\tfeature/LS-5-e' > "$work/gh-runs"
 
 reds_env() {   # 共用環境；$1＝快取目錄，其餘沿用預設
   PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" PATROL_REDS_CACHE="$1" "${@:2}"
@@ -1787,8 +1807,18 @@ cache30="$work/reds-cache-a"; rm -rf "$cache30"
 out30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
 has   '㉚a 同一支測試在 2 個 run 紅 → ⚠ 同類紅 2 次（測試名）' "$out30" "⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b 升票"
 hasnt '㉚b 只紅一次的測試不標（負向控制：門檻真的是 ≥2）' "$out30" 'testOnlyOnce'
-has   '㉚c cancelled 但步驟全 success（2 個）→ 併成 timeout 型別計數（LS-257 形狀）' "$out30" '⚠ 同類紅 2 次（timeout（步驟全 success 卻 cancelled，撞 job timeout-minutes））'
-hasnt '㉚c2 cancelled 且有步驟非 success（concurrency 取消的過期 run）不計數' "$out30" '同類紅 3 次'
+has   '㉚c 兩個真 timeout run（34760803165 2454 s／34764441663 1988 s）併成 timeout 型別計數' "$out30" '⚠ 同類紅 2 次（timeout（cancelled、無 failure／timed_out step、cancelled job ≥30 分——撞 job timeout-minutes））'
+hasnt '㉚c2 concurrency 取代的過期 run（34746493293，333 s）與有 failure step 的（34746091627）都不計數' "$out30" '同類紅 3 次'
+# ㉚c3／㉚c4 都把單輪下載上限提高到 10：夾具共 7 個 run，預設上限 5 會讓最後兩個 cancelled 這一輪還
+#      沒被分類（上限本身由 ㉚e 專測）。
+# ㉚c3（判準 2 的接線）：門檻拉到 45 分，兩個真 timeout（40.9／33.1 分）就都不該再算——證明「cancelled
+#      job 跑多久」這一半真的有在比，不是任何 cancelled 都算。
+out30c3="$(PATROL_REDS_TIMEOUT_MIN=45 PATROL_REDS_MAX_FETCH=10 reds_env "$work/reds-cache-c3" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+hasnt '㉚c3 門檻 45 分 → 40.9／33.1 分的兩個 run 不再算 timeout（判準 2 有接線）' "$out30c3" 'timeout（cancelled、無 failure'
+# ㉚c4（判準 1 的接線）：門檻降到 0 分，四個 cancelled run 全部通過「時長」這一半，只剩「無 failure／
+#      timed_out step」在擋——34746091627 有 failure step，所以應該是 3 次而不是 4 次。
+out30c4="$(PATROL_REDS_TIMEOUT_MIN=0 PATROL_REDS_MAX_FETCH=10 reds_env "$work/reds-cache-c4" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
+has   '㉚c4 門檻 0 分 → 3 次（有 failure step 的 34746091627 仍被判準 1 擋掉，不是 4 次）' "$out30c4" '⚠ 同類紅 3 次（timeout（cancelled、無 failure／timed_out step、cancelled job ≥0 分'
 brief30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch --brief "$STALE" 2>&1)"
 has   '㉚a2 旗標行指向 §5-b 升票（不是只印在人類段）' "$brief30" '[CI 同類紅] ⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b「同類事故 ≥2 次升 High」開票'
 json30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch --json "$STALE" 2>&1)"
