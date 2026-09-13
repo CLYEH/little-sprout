@@ -217,6 +217,10 @@ jobs:
           # LS-215：擋 agent 背景 Bash（run_in_background:true）與「背景化再等」命令文字慣用形狀
           # （正負樣本＋fail-closed 三種＋settings.json 接線＋mutation：拿掉 run_in_background／身分判斷）
           bash scripts/hooks/background-bash-guard.test.sh || rc=1
+          # LS-239 範圍 2：擋 orchestrator（主 session）直接 Read／Bash 讀取 tasks/*.output 或超過
+          # 約 4 KB 又無 offset／limit 的檔案（正負樣本＋fail-closed 三種＋mutation：拿掉 tasks 判斷／
+          # 大檔判斷／身分判斷）
+          bash scripts/hooks/large-file-read-guard.test.sh || rc=1
           bash scripts/gates/linear-issue-check.test.sh || rc=1
           bash scripts/gates/privacy-manifest-check.test.sh || rc=1
           # LS-211：handoff「已驗證」逐項證據 gate 自測（正負樣本＋兩個真實 QA comment 樣本＋mutation）
