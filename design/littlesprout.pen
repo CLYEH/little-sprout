@@ -160080,7 +160080,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "R1 用單一「繁中 ≤14 字」規則但 tagline 框在 fs=88／w=1120 下的實際單行上限是 12 字（中日韓 1em advance），13–14 字會換行造成裝置框被裁——宣稱與版面互斥。R2 五板 tagline 字級各不相同，改為逐板列出：01 fs=100/w=1160→上限 11 字（本板 7 字）；02 fs=88/w=1160→上限 13 字（本板 9 字）；03 fs=72/w=1160→上限 16 字（本板 6 字）；04 fs=88/w=1160→上限 13 字（本板 9 字，含左對齊不影響單行寬度判斷）；05 fs=104/w=1160→上限 11 字（本板 10 字，最貼近上限，若未來要換字需注意）。iPad 五板同理：01 fs=130/w=1700→13 字；02 fs=112/w=1700→15 字；03 fs=90/w=1700→18 字；04 fs=112/w=1700→15 字；05 fs=130/w=1700→13 字（本板 10 字）。任何未來換標語文案都要對照對應板的上限，不是套用單一數字。",
+                  "content": "R1 用單一「繁中 ≤14 字」規則但 tagline 框在 fs=88／w=1120 下的實際單行上限是 12 字（中日韓 1em advance），13–14 字會換行造成裝置框被裁——宣稱與版面互斥。R2 五板 tagline 字級各不相同，改為逐板列出（依當時 R2 序）：01 fs=100/w=1160→上限 11 字；02 fs=88/w=1160→上限 13 字；03 fs=72/w=1160→上限 16 字；04 fs=88/w=1160→上限 13 字；05 fs=104/w=1160→上限 11 字。iPad 五板同理：01 fs=130/w=1700→13 字；02 fs=112/w=1700→15 字；03 fs=90/w=1700→18 字；04 fs=112/w=1700→15 字；05 fs=130/w=1700→13 字。R5 訂正：歷經 R3 MJ-14 重排、R4 MN-9、R5 MJ-21 統一 1.563636× 倍率後，字級與板序全部改變，上限模型不變（floor(tagline 寬 / fontSize)），依現序（01–05）重算：iPhone（w=1160）01 fs=100→上限11字（本板『只有家人看得到』7字）；02 fs=100→上限11字（本板『回憶好好收藏』6字）；03 fs=104→上限11字（本板『阿公阿嬤也能輕鬆使用』10字，餘裕僅1字）；04 fs=88→上限13字（本板『留言愛心，滿滿的愛』9字）；05 fs=88→上限13字（本板『陪伴孩子每一步成長』9字）。iPad（w=1700）01 fs=156→上限10字（本板7字）；02 fs=156→上限10字（本板6字）；03 fs=163→上限10字（本板10字，零餘裕——現文案已達上限，任何加字都會換行、把 Tagline 區塊增高、往下擠壓裝置與絕對定位的 Print Stage）；04 fs=138→上限12字（本板9字）；05 fs=138→上限12字（本板9字）。任何未來換標語文案都要對照對應板現值重算，不是套用單一數字或 R2 舊表；iPad 03 尤其注意零餘裕。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -161213,7 +161213,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "底部留白改為決定值：原 02（今新序 04，日記詳情/留言愛心）與原 05（今新序 03，邀請加入）四塊板（ZRyXL／b59DUk／Bm7Lx／BnjqP）皆移除 Spacer Bottom（fill_container 倒推餘數）並在板根加 justifyContent:\"center\"，讓固定高度內容（標語／副標／印品／裝置）整體在剩餘垂直空間置中，取代原本『上緣小留白＋下緣一大塊死空間（20–27% 槽高）』的失衡版面。四板改後上下邊距：iPhone04 上401.9/下291.9、iPad04 上506.7/下376.7、iPhone03 上395.0/下295.0、iPad03 上456.5/下336.5（由板高／內容高／padding-top 反推，非目測）。",
+                  "content": "底部留白改為決定值（R3）：原 02（今新序 04，日記詳情/留言愛心）與原 05（今新序 03，邀請加入）四塊板（ZRyXL／b59DUk／Bm7Lx／BnjqP）皆移除 Spacer Bottom（fill_container 倒推餘數）並在板根加 justifyContent:\"center\"，讓固定高度內容（標語／副標／印品／裝置）整體在剩餘垂直空間置中，取代原本『上緣小留白＋下緣一大塊死空間（20–27% 槽高）』的失衡版面。四板改後上下邊距：iPhone04 上401.9/下291.9、iPad04 上506.7/下376.7、iPhone03 上395.0/下295.0、iPad03 上456.5/下336.5（由板高／內容高／padding-top 反推，非目測）。R5 訂正：R4 把 Print Stage 改為 layoutPosition:\"absolute\" 後，這個 justifyContent:\"center\" 反而把死空間從底部搬到頂端（四板一致 +146pt＝舊 Print Stage 高度 292 的一半，上邊距變成 541.0／547.9／602.5／652.7），是倒推餘數的簽名。R5 改為移除 justifyContent（回到預設 flex-start）、板根 padding 明確設為 [130,0,0,0]（iPhone：Bm7Lx／ZRyXL）／[160,0,0,0]（iPad：BnjqP／b59DUk），與 c2yk3s／Vn4TL 既有規格共用同一組常數；VR R5 用展開快照複驗四板板頂到第一個可見元素為 130.00／130.00／160.00／160.00，逐位元對齊 padding 值。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -161491,7 +161491,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "兩張圖皆用 Export 直接從 Pencil 畫布匯出（scale 校正到長邊 ≈1024px，符合 LS-74 素材尺寸政策：472×1023／716×1025），非手動拼貼截圖後製；舊版 comments-iphone-v2.jpg／comments-ipad-v2.jpg 已刪除（design/appstore-slots/ 內不再存在，且 .pen 內無任何節點引用）。",
+                  "content": "兩張圖皆用 Export 直接從 Pencil 畫布匯出（scale 校正到長邊 ≈1024px，符合 LS-74 素材尺寸政策：472×1023／716×1025），非手動拼貼截圖後製；舊版 comments-iphone-v2.jpg／comments-ipad-v2.jpg 已刪除（design/appstore-slots/ 內不再存在，且 .pen 內無任何節點引用）。R5 訂正：comments-ipad-v3.jpg 的 716×1025（比例 0.6985）與 tIcZW 槽比例 0.75 不符，fill:cover 會裁掉頂端 35.17px、恰好吃掉整條狀態列——改用 PIL 對原圖等比例 resize（非裁切）為 768×1024（與其餘 4 張 iPad 槽圖同規格，比例誤差 0），原圖內容（狀態列／導覽列／日期章／日記卡／留言 sheet）全部保留、僅 7.3% 水平拉伸。comments-iphone-v3.jpg 維持 472×1023 不變（槽比例誤差 <0.3%，視覺無感，MN-30 待處理）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -161635,7 +161635,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "MJ-14 把相簿（02，y9r9Fq／mWZy3）從第 3 槽搬到第 2 槽（曝光僅次於 01），但字級沒跟著調整，仍是全套最小（iPhone 72／iPad 90，換算 200pt 瀏覽寬僅 10.9／8.7pt）。改為 iPhone 100（比照 01 板 kSVMC 的 100pt）、iPad 157（依板寬比例 2064/1320=1.5636 換算，不再沿用 MJ-17 指出有問題的「字標 1.3x」方法）。板本身維持既有「裝置優先、標語壓底」的構圖（與 01/03 的「標語優先」構圖不同、屬於已核可的五種真版式之一），未加字標——只調字級。",
+                  "content": "MJ-14 把相簿（02，y9r9Fq／mWZy3）從第 3 槽搬到第 2 槽（曝光僅次於 01），但字級沒跟著調整，仍是全套最小（iPhone 72／iPad 90，換算 200pt 瀏覽寬僅 10.9／8.7pt）。改為 iPhone 100（比照 01 板 kSVMC 的 100pt）、iPad 157（依板寬比例 2064/1320=1.5636 換算，不再沿用 MJ-17 指出有問題的「字標 1.3x」方法）。板本身維持既有「裝置優先、標語壓底」的構圖（與 01/03 的「標語優先」構圖不同、屬於已核可的五種真版式之一），未加字標——只調字級。R5 訂正：100×1.563636＝156.36，R4 的「157」是四捨五入誤差 1pt；R5 把五張 iPad 板統一改用精確倍率 1.563636…（＝2064/1320）重算，本板訂正為 156（jU9lS fontSize），與其餘四張 iPad 板共用同一個常數，見「R5 修訂重點」段。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -161708,6 +161708,176 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "Notes 板（本板）的 gap 在 R3 fork 修 layout cache 時從 24 改成 10，commit 訊息寫「已還原」但實際留在 head——10 不在 8/16/24/44 節奏上，也沒有具名豁免。R4 已改回 24 並重新量測相鄰間距全數 ≥0（無負值重疊）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "zobbK",
+          "name": "N R5 修訂重點（BL-9／MJ-20／MJ-21，取代／補充 R4 對應描述）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "ShiPb",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R5 修訂重點（BL-9／MJ-20／MJ-21，取代／補充 R4 對應描述）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "Kmk8Q",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vJdTB",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-9",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "BDvp0",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "comments-ipad-v3.jpg 原 716×1025（比例 0.6985）在 0.75 比例的 tIcZW 槽以 fill:cover 裁掉頂端 35.17px、吃掉整條狀態列——R4 稿面的 x6VSkl／U41QBM 兩處敘述「狀態列在」與成品互打。改用 PIL 對原圖等比例 resize（非裁切）為 768×1024（與其餘 4 張 iPad 槽圖同規格，比例誤差 0），狀態列／導覽列／日期章／日記卡／留言 sheet 全部保留，僅 7.3% 水平拉伸。詳見上方「BL-8 尺寸」段（LlBf1）R5 訂正。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qzrNF",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "F7Ips0",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-20",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "fTDic",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R4 的 justifyContent:\"center\" 疊加 absolute Print Stage 後，把死空間從底部搬到頂端（Bm7Lx／ZRyXL／BnjqP／b59DUk 四板一致 +146pt＝舊 Print Stage 高度 292 的一半，倒推餘數簽名）。改為移除 justifyContent、板根 padding 明確設為 [130,0,0,0]（iPhone）／[160,0,0,0]（iPad），與 c2yk3s（130）／Vn4TL（160）共用同一組常數；Print Stage 維持既有裝置類型固定錨點（iPhone y=2268／iPad y=1823）不動。VR R5 用展開快照複驗四板板頂到第一個可見元素為 130.00／130.00／160.00／160.00。詳見上方「MJ-12」段（KokPM）R5 訂正。殘餘：b59DUk／ZRyXL 的 Device Row 是 justifyContent:\"end\"＋右 padding 90／60（裝置貼右、標語置中），左側各留 984／468pt 死空——這是縱向 padding 動不到的橫向佈局問題（R3 MJ-15 已指出，VR R5 附條件列為後續票，且擴大範圍涵蓋 ZRyXL 與 b59DUk 兩塊），不在本輪範圍。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "f79lcN",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "iyIcq",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-21",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "p8n1F",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R4 只修相簿（02）一格到板寬倍率 1.5636×，其餘四格（01／03／04／05）標語與兩個副標仍是 ~1.27–1.33× 的舊「字標 1.3x」殘留，形成 4 比 1 的內部不一致。R5 把五張 iPad 板標語與兩個副標統一改用精確倍率 1.563636…（＝2064/1320，與 iPhone 板寬同權）重算：01/02 標語 100→156、03 標語 104→163、04/05 標語 88→138、03 副標 48→75、05 副標 56→88。十格（5 標語+2 副標×2 裝置）現在同一套比例常數（誤差 <0.5pt）。詳見上方「MN-9」段（QCE55）R5 訂正與「MJ-7」段（MHKd4）R5 訂正的上限表重算。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "j30Wu",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dxish",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "0.196 peek",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "XfyEX",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R4 建立、R5 逐板複驗未破壞的既有規則（非本輪新增，記錄供後續參考）：六個沖印品實例（s1Kzm／ay53J／hUNFn／N3mjp6／ScEdE／D2juW）左緣探出裝置框的比例固定為 0.196×印品寬（iPhone 154pt／iPad 241pt），與板寬比例 59.5%（iPhone 786／1320、iPad 1229／2064）共同構成六板逐欄相同、零例外的構圖公式。R5 的 MJ-20／MJ-21 皆未改動印品幾何本身，僅改動印品「以外」的版面（padding-top／字級），此規則在 head 上維持不變（corner_anchor.mismatch=0、ref_hits=24，見 r5／r6 收據）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
