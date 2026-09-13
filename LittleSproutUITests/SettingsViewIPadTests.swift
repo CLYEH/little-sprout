@@ -73,6 +73,24 @@ final class SettingsViewIPadTests: XCTestCase {
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
+    /// LS-261：四處「切換 sidebar 分頁 → 等目標列出現」原本各自手刻、timeout 不一致（5s），
+    /// 統一成同一個 helper 變體。切分頁本身（`waitForHittable` 那一步）維持既有 5s——真正反覆
+    /// 紅過的是「切完分頁後等目標列出現」這一步（09-13 內容與安全、09-14 帳號區「刪除帳號」列
+    /// 同一種失敗：忙碌 runner 上單次 accessibility snapshot 偏慢，5s 只夠輪詢 1–2 次），對齊全檔
+    /// 「轉場後等待」的 10s 慣例（同 `assertPushThenBackReturnsToList` 的 back 相關等待）。
+    private func switchSidebarTab(
+        app: XCUIApplication, tabLabel: String, expectedRow: XCUIElement, rowDescription: String,
+        file: StaticString = #filePath, line: UInt = #line
+    ) {
+        let tab = app.buttons[tabLabel]
+        XCTAssertTrue(waitForHittable(tab, timeout: 5), "「\(tabLabel)」sidebar 列應該可點擊", file: file, line: line)
+        tab.tap()
+        XCTAssertTrue(
+            expectedRow.waitForExistence(timeout: 10),
+            "切到「\(tabLabel)」後應該看得到「\(rowDescription)」列", file: file, line: line
+        )
+    }
+
     /// 預設選取＝個人（`SettingsView.regularSelection` 初值），不需要先點 sidebar。對應
     /// reviewer 原始複現「點『個人』列（`qa.settings.profileRow`）→ 畫面完全沒變」。
     ///
@@ -102,12 +120,10 @@ final class SettingsViewIPadTests: XCTestCase {
         // `assertPushThenBackReturnsToList` 的入口列 tap 加了「tap 前先等真的可點」同步點，
         // 這裡「家庭」sidebar 切換 tap 當時仍是裸 tap——切換轉場動畫還沒穩定時 tap 可能落空，
         // 後續等「邀請家人」列自然逾時。補上同一套 `waitForHittable` 同步點。
-        let familyTab = app.buttons["家庭"]
-        XCTAssertTrue(waitForHittable(familyTab, timeout: 5), "「家庭」sidebar 列應該可點擊")
-        familyTab.tap()
-        XCTAssertTrue(
-            app.buttons[QAAccessibilityID.settingsInviteRow].waitForExistence(timeout: 5),
-            "切到「家庭」後應該看得到「邀請家人」列"
+        // LS-261：改走統一的 `switchSidebarTab` helper，等待目標列出現的 timeout 由 5s 對齊 10s。
+        switchSidebarTab(
+            app: app, tabLabel: "家庭",
+            expectedRow: app.buttons[QAAccessibilityID.settingsInviteRow], rowDescription: "邀請家人"
         )
 
         assertPushThenBackReturnsToList(
@@ -137,12 +153,11 @@ final class SettingsViewIPadTests: XCTestCase {
         // `testLegalSectionRowsOpenAndCloseLegalDocumentSheet`）的 sidebar 切換 tap（分別是
         // `app.buttons["家庭"]`／`app.buttons["法律"]`）並未涵蓋在內，當時仍是裸 tap，由
         // LS-253 補上（見該兩處同步點；LS-96 i1，sweeper `6c406b6a`）。
-        let contentSafetyTab = app.buttons["內容與安全"]
-        XCTAssertTrue(waitForHittable(contentSafetyTab, timeout: 5), "「內容與安全」sidebar 列應該可點擊")
-        contentSafetyTab.tap()
-        XCTAssertTrue(
-            app.buttons[QAAccessibilityID.settingsStorageRow].waitForExistence(timeout: 5),
-            "切到「內容與安全」後應該看得到「儲存空間」列"
+        // LS-261：改走統一的 `switchSidebarTab` helper，等待目標列出現的 timeout 由 5s 對齊 10s——
+        // 這正是 LS-245 池 `2c4bfc80` 紅過的那一步（忙碌 runner 上輪詢次數不夠）。
+        switchSidebarTab(
+            app: app, tabLabel: "內容與安全",
+            expectedRow: app.buttons[QAAccessibilityID.settingsStorageRow], rowDescription: "儲存空間"
         )
 
         assertPushThenBackReturnsToList(
@@ -197,11 +212,9 @@ final class SettingsViewIPadTests: XCTestCase {
 
         // LS-253（同上，家庭／法律兩處 sidebar 切換 tap 當時漏補，見上方訂正）：補上同一套
         // `waitForHittable` 同步點。
-        let legalTab = app.buttons["法律"]
-        XCTAssertTrue(waitForHittable(legalTab, timeout: 5), "「法律」sidebar 列應該可點擊")
-        legalTab.tap()
+        // LS-261：改走統一的 `switchSidebarTab` helper，等待目標列出現的 timeout 由 5s 對齊 10s。
         let termsRow = app.buttons["使用條款"]
-        XCTAssertTrue(termsRow.waitForExistence(timeout: 5), "切到「法律」後應該看得到「使用條款」列")
+        switchSidebarTab(app: app, tabLabel: "法律", expectedRow: termsRow, rowDescription: "使用條款")
         termsRow.tap()
 
         let closeButton = app.buttons["關閉"]
@@ -225,8 +238,10 @@ final class SettingsViewIPadTests: XCTestCase {
             waitForNonExistence(closeButton, timeout: 10), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）"
         )
 
+        // LS-261：關閉 sheet 後「回到列表」這一步與 `assertPushThenBackReturnsToList` 的 back
+        // 相關等待同性質，timeout 由 5s 對齊 10s。
         let privacyRow = app.buttons["隱私權政策"]
-        XCTAssertTrue(privacyRow.waitForExistence(timeout: 5), "關閉後應回到「法律」列表，看得到「隱私權政策」列")
+        XCTAssertTrue(privacyRow.waitForExistence(timeout: 10), "關閉後應回到「法律」列表，看得到「隱私權政策」列")
         privacyRow.tap()
         XCTAssertTrue(app.buttons["關閉"].waitForExistence(timeout: 5), "點擊「隱私權政策」列應開啟 LegalDocumentSheet（Footer「關閉」鈕可見）")
         XCTAssertEqual(
