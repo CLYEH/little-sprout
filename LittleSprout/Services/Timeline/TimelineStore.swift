@@ -46,11 +46,14 @@ final class TimelineStore {
     /// R4：不再是 `private(set)`——寫入方法拆去 `TimelineStore+Reactions.swift`，理由同上方
     /// `apiClient` 的存取層級註解。
     var reactionStates: [String: ReactionState] = [:]
-    /// LS-216 票文 scope 2：`get_family_timeline`／`list_comments` 都沒有回留言計數欄位
-    /// （已查 docs/API.md 確認，記入 handoff informational＋LS-96 池項）——這裡先恆為 0，
-    /// 留一個 `setCommentCount` 寫入口給 LS-218（留言 sheet 讀到真正筆數後同步回這裡，
-    /// 「計數同步來自互動列」，見 LS-218 票文依賴段）。R4：不再是 `private(set)`，理由同
-    /// `reactionStates`。
+    /// LS-243：`refresh`／`loadMore` 用 `get_family_timeline` 回傳的 `comment_count`
+    /// 初始化（`syncCommentCounts(from:)`），開留言 sheet 之前互動列就顯示伺服器算好的
+    /// 計數，不再恆為 0（LS-216 票文 scope 2 的既有缺口，記在 LS-96 池項 `f74e3a88`，本票
+    /// 補上）。留言 sheet 讀到真正筆數後仍會用 `setCommentCount` 覆寫回這裡（「計數同步
+    /// 來自互動列」，見 LS-218 票文依賴段）——兩個寫入口不衝突：`syncCommentCounts` 只在
+    /// `refresh`／`loadMore` 換頁時寫，`setCommentCount` 只在留言 sheet 載入後寫，後者
+    /// 時間點較晚、值更精確（sheet 用 `total_count`，見 `CommentsStore`）。R4：不再是
+    /// `private(set)`，理由同 `reactionStates`。
     var commentCounts: [String: Int] = [:]
 
     /// LS-216（改動）：原本是純 `private`（只給 `refreshWithCurrentFilter()` 內部沿用）——
@@ -124,6 +127,9 @@ final class TimelineStore {
             entries = newEntries
             hasMorePages = pointers.count == Self.pageSize
             refreshState = .success
+            // LS-243：留言計數隨這一頁的指標一起回來，不必等網路請求，跟 `entries` 同一刻
+            // 寫入即可（見 `syncCommentCounts` 文件註解）。
+            syncCommentCounts(from: newEntries)
             // LS-216 R2（merge-review R1 M1）：計數載入**不**擋在 `refreshState = .success`
             // 之前——`refreshState` 代表「畫面內容本身」是否就緒，愛心是次要資訊，不該讓使用者
             // 多等一輪網路請求才看到時間軸；`@Observable` 賦值當下就通知觀察者，這裡 `await`
@@ -187,6 +193,9 @@ final class TimelineStore {
             entries.append(contentsOf: newEntries)
             hasMorePages = pointers.count == Self.pageSize
             loadMoreState = .success
+            // LS-243：同 `refresh` 的既有理由——只補新追加這批的留言計數（已經在 `entries`
+            // 裡的舊資料不重查），見 `syncCommentCounts` 文件註解。
+            syncCommentCounts(from: newEntries)
             // LS-216 R2（merge-review R1 M1）：同 `refresh` 的既有理由——只補新追加這批的
             // 愛心計數（已經在 `entries` 裡的舊資料不重查），且不擋在 `loadMoreState = .success`
             // 之前，見 `loadReactionCounts` 文件註解。

@@ -785,8 +785,19 @@ declare
   v_family constant uuid := 'fc000000-0000-4000-8000-000000000001';
   v_deep_cursor constant timestamptz := now() - interval '49900 minutes';
   v_max_uuid constant uuid := 'ffffffff-ffff-ffff-ffff-ffffffffffff';
-  -- 同一套暖機後穩定成本邏輯與門檻取法，見上方 get_family_timeline 段落的 N2 說明。
-  c_buffer_budget constant bigint := 60;
+  -- LS-243：list_comments 加 total_count 之後，門檻從 60 調整為 1200——total_count
+  -- 是一句獨立的 `select count(*) into v_total_count from comments where ...`（同
+  -- 主查詢的過濾條件），對這個 target 底下符合條件的留言**全部**（本檔案的壓力
+  -- 測試資料集固定灌 5 萬則）逐一計數，成本天生是 O(該 target 的留言總數)，不是
+  -- O(limit)——這是「精確總數」這個需求本身的代價，不是退化（v_total_count 每次
+  -- 呼叫只算一次，不是逐頁重算 N 次；分頁本身仍是 O(limit)，見主查詢子句未變）。
+  -- 本機實測（`supabase db reset` 後乾淨量測，未受先前失敗回滾殘留的表／索引膨脹
+  -- 污染）：分支 1（無游標）928 buffers、分支 2（有游標）938 buffers，兩者幾乎
+  -- 相等——證明成本確實只跟著 total_count 那句聚合查詢走（與游標無關），不是分頁
+  -- 查詢本身退化。1200 留約 28% 餘裕（同 v_has_blocks=true 那組門檻 2500 相對於
+  -- 實測 1911 的餘裕比例），仍遠低於「掃全表」等級（5 萬則留言的 comments 表整體
+  -- 遠不止 1200 個 8KB 頁）。
+  c_buffer_budget constant bigint := 1200;
   q record;
 begin
   for q in
@@ -824,6 +835,102 @@ begin
     raise notice 'ok 效能：list_comments %（分支 %） buffers=%（hit=% read=%，門檻 ≤%）',
       q.label, q.idx, v_buffers, v_hit, v_read, c_buffer_budget;
   end loop;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- list_comments 分頁子查詢單獨量測（merge-review R1 F3）
+--
+-- 上面「整支 RPC」的 928/938 buffers 門檻（1200）裡，~98% 是 total_count 那句
+-- O(該 target 底下留言數) 的聚合查詢（reviewer 實測拆解：C3 total_count 843
+-- buffers、C2 純分頁子查詢只有 5 buffers）——LS-48 F1 原本要守的「分頁本身不隨
+-- 這個 target 的留言總量退化」在 1200 這個額度下已經測不太到了：分頁若退化成
+-- 掃全部 5 萬則（約 170 buffers），仍遠低於 1200，不會觸發上面那組門檻。
+--
+-- 這裡直接對分頁子查詢本身（不含 total_count／LEFT JOIN profiles）量 buffers，
+-- 恢復鑑別力。**這是 migration 內 list_comments 分頁子查詢的字面副本**（family_id／
+-- target_type／target_id／deleted_at／封鎖過濾／order by／limit，逐字對照
+-- 20260913010217_comment_count.sql）——明知這違反本檔案別處奉行的「不留手抄 SQL
+-- 副本，一律呼叫真正的函式」（見上方 N1 說明），這裡是特例：plpgsql 函式對 EXPLAIN
+-- 是不透明的黑盒，沒有辦法只對函式內某一句單獨量測，若要保留「分頁子查詢不隨總量
+-- 退化」這個獨立信號，複製這幾行是唯一辦法。風險自我節制：(a) 這段只是**補充**
+-- 信號，不是唯一防線——上面「整支 RPC」928/938 buffers 那組門檻仍會兜底抓到
+-- total_count 或分頁任一邊的真退化（兩者共用同一組 filter，任一邊變慢都會反映在
+-- 整支 RPC 的 buffers 上）；(b) 之後改 migration 內這段查詢時，記得同步這裡的字面
+-- 副本，否則這裡測的就不是真正在跑的查詢——但即使忘了同步，(a) 的兜底仍在。
+-- 封鎖過濾用跟真正函式一樣的手法：先用 `private.blocked_pairs()` 現查一次陣列（這個
+-- 效能帳號在 fc 家已經封鎖過 c1000000...001，見上面 get_family_timeline v_has_blocks
+-- 段落），再把算好的陣列當**字面常數**代入下面的查詢——不是把子查詢表達式直接寫進
+-- WHERE 子句（見下方 `v_blocked_ids` 宣告的教訓）。
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_line text;
+  v_plan text := '';
+  v_hit bigint;
+  v_read bigint;
+  v_buffers bigint;
+  v_target constant uuid := '3c000000-0000-4000-8000-000000000001';
+  v_family constant uuid := 'fc000000-0000-4000-8000-000000000001';
+  -- 先算好陣列再當常數字面值塞進查詢——不是內嵌成子查詢表達式。第一版（R2 初稿）
+  -- 直接把 `array(select ... private.blocked_pairs() ...)` 寫在 WHERE 子句裡，本機
+  -- 實測 buffers 飆到 2771：真正的函式在 plpgsql 變數宣告階段就把陣列算完、當成
+  -- 一個已知常數傳進主查詢，規劃器看到的是一個定值；這裡若改成內嵌子查詢表達式，
+  -- 規劃器看到的是「查詢裡多一個子計畫」，足以擾亂 Index Scan Backward + LIMIT
+  -- 的選擇——恰好是這段字面副本原本要避免的那種「副本長得像、行為不像」的落差，
+  -- 印證了本檔別處對手抄副本的既有戒心（見上方 N1）。改成這裡的寫法（先求值、
+  -- 再當字面陣列常數代入）才是對真正函式行為的忠實複製。
+  v_blocked_ids uuid[];
+  -- reviewer 實測 5 buffers；60 留超過 10 倍餘裕，仍遠低於「退化成掃全表」的量級
+  -- （5 萬則留言的 comments 表遠不止 60 個 8KB 頁）。
+  c_buffer_budget constant bigint := 60;
+begin
+  -- 這裡必須跟真正的 list_comments 一樣繞過 RLS（該函式是 security definer，執行時
+  -- 用 owner／postgres 的權限，預設繞過 RLS——這正是它「為什麼不是 invoker」的既有
+  -- 理由：`comments_select` policy 自己也帶一份 blocked_pairs 過濾＋
+  -- `family_id in (select private.family_ids())` 的 hashed SubPlan，疊上這裡自己的
+  -- WHERE 子句會讓規劃器選擇 Seq Scan，不是 Index Scan Backward）。R2 初稿忘了切换
+  -- 角色、用 authenticated 身分跑這段裸 SELECT，本機實測 RLS 疊加把 buffers 推到
+  -- 2763（跟 F1 修好之前的假紅是同一種「查詢被額外的東西拖慢，不是 comment_count／
+  -- 分頁邏輯本身變慢」教訓，只是這次的額外的東西是 RLS 而不是死列）。
+  reset role;
+  set local role postgres;
+
+  select array(select bp.blocked_id from private.blocked_pairs() bp where bp.family_id = v_family)
+    into v_blocked_ids;
+
+  for v_line in execute format(
+    $q$explain (analyze, buffers)
+       select cm.id, cm.author_id, cm.body, cm.created_at
+         from public.comments cm
+        where cm.family_id = %L::uuid
+          and cm.target_type = 'media'::public.content_target_type
+          and cm.target_id = %L::uuid
+          and cm.deleted_at is null
+          and not coalesce(cm.author_id = any(%L::uuid[]), false)
+        order by cm.created_at desc, cm.id desc
+        limit 20$q$,
+    v_family, v_target, v_blocked_ids
+  )
+  loop
+    v_plan := v_plan || v_line || E'\n';
+  end loop;
+
+  select coalesce(sum((x[1])::bigint), 0) into v_hit
+    from regexp_matches(v_plan, 'shared hit=([0-9]+)', 'g') as x;
+  select coalesce(sum((x[1])::bigint), 0) into v_read
+    from regexp_matches(v_plan, E'read=([0-9]+)', 'g') as x;
+  v_buffers := v_hit + v_read;
+
+  if v_buffers > c_buffer_budget then
+    raise exception E'FAIL 效能：list_comments 分頁子查詢（獨立量測，字面副本）buffers=%（hit=% read=%，門檻 %）—— 分頁本身疑似退化成與這個 target 的留言總量成正比，不是與 limit 成正比（LS-48 F1 教訓）\n%',
+      v_buffers, v_hit, v_read, c_buffer_budget, v_plan;
+  end if;
+
+  raise notice 'ok 效能：list_comments 分頁子查詢（獨立量測） buffers=%（hit=% read=%，門檻 ≤%）',
+    v_buffers, v_hit, v_read, c_buffer_budget;
+
+  reset role;
 end;
 $$;
 

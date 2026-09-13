@@ -12,8 +12,9 @@ extension TimelineStore {
         reactionStates[key] ?? .zero
     }
 
-    /// LS-216：`InteractionRow` 讀目前的留言計數——見 `commentCounts` 文件註解（目前恆為 0，
-    /// 待 LS-218 用 `setCommentCount` 同步真正筆數）。
+    /// LS-216：`InteractionRow` 讀目前的留言計數——見 `commentCounts` 文件註解（LS-243 起
+    /// `refresh`／`loadMore` 已用 `get_family_timeline` 的 `comment_count` 初始化，開留言
+    /// sheet 之後 `setCommentCount` 會再同步一次更精確的值）。
     func commentCount(forKey key: String) -> Int {
         commentCounts[key] ?? 0
     }
@@ -22,6 +23,18 @@ extension TimelineStore {
     /// `commentCounts` 文件註解「計數同步來自互動列」）。
     func setCommentCount(_ count: Int, forKey key: String) {
         commentCounts[key] = count
+    }
+
+    /// LS-243：`refresh`／`loadMore` 組好一頁（或新追加的一段）`entries` 之後呼叫——把
+    /// `get_family_timeline` 已經算好的 `comment_count` 寫進 `commentCounts`，開留言 sheet
+    /// 之前互動列就顯示伺服器的真正計數，不再恆為 0。不是 `async`（跟 `loadReactionCounts`
+    /// 不同）：計數已經隨這一頁的指標一起回來，不需要另一趟網路請求，直接同步寫入即可。
+    /// 只寫 `newEntries` 這一批（`loadMore` 場景不動已經在 `entries` 裡的舊資料）——同
+    /// `loadReactionCounts` 的既有分工。
+    func syncCommentCounts(from newEntries: [TimelineEntry]) {
+        for entry in newEntries {
+            commentCounts[entry.id] = entry.commentCount
+        }
     }
 
     /// 切換單一 target 的愛心——樂觀更新＋失敗回滾＋連點去重（LS-216 票文 scope 2）。

@@ -71,7 +71,7 @@ enum TimelineContentAssembler {
             }
             return TimelineEntry(
                 kind: pointer.kind, refId: pointer.refId, occurredAt: pointer.occurredAt,
-                childIds: pointer.childIds, content: content
+                childIds: pointer.childIds, commentCount: pointer.commentCount, content: content
             )
         }
     }

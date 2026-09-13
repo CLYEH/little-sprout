@@ -17,12 +17,48 @@ struct TimelineFeedPointer: Decodable, Sendable, Equatable {
     let refId: UUID
     let occurredAt: Date
     let childIds: [UUID]
+    /// LS-243：`comment_count`——未刪除、排除呼叫者已封鎖的作者的留言數（見
+    /// `docs/API.md` 對這支 RPC 的說明）。
+    let commentCount: Int
 
     enum CodingKeys: String, CodingKey {
         case kind
         case refId = "ref_id"
         case occurredAt = "occurred_at"
         case childIds = "child_ids"
+        case commentCount = "comment_count"
+    }
+
+    /// 手寫 memberwise 初始化（取代合成版）——只給 `commentCount` 一個預設值，讓既有測試
+    /// 呼叫端（`TimelineFeedPointer(kind:refId:occurredAt:childIds:)`）不必逐一補這個新
+    /// 參數，同 `childIds` 之於更早既有呼叫端的既有慣例。寫了這支之後 Swift 就不會再合成
+    /// 免費的 memberwise init，兩者只能二選一——這裡選手寫版本，因為下面 `init(from:)`
+    /// 也是手寫的（`decodeIfPresent` 需要自訂解碼邏輯，合成的 `Decodable` 版本做不到）。
+    init(kind: FeedKind, refId: UUID, occurredAt: Date, childIds: [UUID], commentCount: Int = 0) {
+        self.kind = kind
+        self.refId = refId
+        self.occurredAt = occurredAt
+        self.childIds = childIds
+        self.commentCount = commentCount
+    }
+
+    /// merge-review R1 i1：`comment_count` 用 `decodeIfPresent(...) ?? 0`，不是合成
+    /// `Decodable` 那種「key 不存在就整個解碼失敗」——這支 app build 可能先於本票 migration
+    /// 推上某個環境（例如 QA 在 `test` branch 用真後端驗收，若當下 `development`／`test`
+    /// 資料庫還沒套用這支 migration），舊 DB 的 `get_family_timeline` 回應不會有
+    /// `comment_count` 這個 key，若當成必要欄位，整批 `fetchTimelinePointers` 會直接
+    /// throw、時間軸整頁變 `.failure`（不是「少顯示一個數字」這麼輕微）。`decodeIfPresent`
+    /// 讓舊 DB＋新 app 這個部署順序組合退化成「留言計數暫時看不到（顯示 0）」，不是整頁
+    /// 打不開；新 DB＋新 app（正常情況）解到真正的值。反向（舊 app＋新 DB）本來就安全
+    /// （多出來、未宣告的 key 被忽略，不受這裡影響）。見
+    /// `SupabaseTimelineAPIClientTests.test_fetchTimelinePointers_missingCommentCountKey_decodesToZero`。
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try container.decode(FeedKind.self, forKey: .kind)
+        refId = try container.decode(UUID.self, forKey: .refId)
+        occurredAt = try container.decode(Date.self, forKey: .occurredAt)
+        childIds = try container.decode([UUID].self, forKey: .childIds)
+        commentCount = try container.decodeIfPresent(Int.self, forKey: .commentCount) ?? 0
     }
 }
 
@@ -221,6 +257,13 @@ struct TimelineEntry: Equatable, Sendable, Identifiable {
     let refId: UUID
     let occurredAt: Date
     let childIds: [UUID]
+    /// LS-243：`get_family_timeline` 回傳的 `comment_count`（未刪除、排除呼叫者已封鎖的
+    /// 作者的留言數）——`TimelineContentAssembler.buildEntries` 原樣帶過來，
+    /// `TimelineStore.refresh`／`loadMore` 用它初始化 `commentCounts`（開留言 sheet 之前
+    /// 互動列就顯示伺服器算好的計數，不再恆為 0，見 `commentCounts` 文件註解）。預設 `0`：
+    /// 同 `TimelineFeedPointer.commentCount` 的既有理由，測試直接建構 `TimelineEntry(...)`
+    /// 不必逐一補這個新參數。
+    var commentCount: Int = 0
     /// 該筆內容組裝失敗（例如批次查詢那一支剛好失敗）時為 nil——呼叫端跳過渲染這一列，
     /// 不讓整頁因單一項目失敗而整批消失（見 `TimelineContentAssembler`）。
     let content: Content?
