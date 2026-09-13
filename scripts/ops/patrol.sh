@@ -646,21 +646,30 @@ REDS_CACHE=${PATROL_REDS_CACHE:-${TMPDIR:-/tmp}/patrol-reds-cache}
 # 照樣被讀進來。reviewer 實地重現過：用本 head 跑 patrol 時讀到更早草稿版寫下的快取，印出
 # 「⚠ 同類紅 10 次」的假警報（內容是現行程式碼根本不會產生的字串）。路徑加一段版本，簽章規則
 # 變更就把常數往上跳，舊批整批自然失效（也不必手動清 /tmp）。
-REDS_CACHE_VER=v1
+REDS_CACHE_VER=v2   # R2 M3 加了 class: 簽章，簽章集合變了 → 跳號讓 v1 快取整批失效
 # LS-260 R2 M1：cancelled job 跑滿幾分鐘才算「撞 job timeout-minutes」（見下方分類邏輯的實測分離度）
 REDS_TIMEOUT_MIN=${PATROL_REDS_TIMEOUT_MIN:-30}
 case "$REDS_DAYS" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_DAYS 須為整數天（得到「${REDS_DAYS}」）" >&2; exit 2 ;; esac
 case "$REDS_MAX_FETCH" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_MAX_FETCH 須為整數（得到「${REDS_MAX_FETCH}」）" >&2; exit 2 ;; esac
 case "$REDS_TIMEOUT_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_TIMEOUT_MIN 須為整數分鐘（得到「${REDS_TIMEOUT_MIN}」）" >&2; exit 2 ;; esac
-REDS_LINES=; reds_note=; J_REDS=; reds_flagged=0; reds_runs=0
+REDS_LINES=; reds_note=; J_REDS=; reds_flagged=0; reds_runs=0; reds_oldest=
 if [ "$DO_PR" -ne 1 ]; then
   reds_note="略過（--no-pr）"
 elif ! command -v "$GH_BIN" >/dev/null 2>&1; then
   reds_note="gh 未安裝，略過"
 else
-  reds_list=$(cd "$ROOT" && "$GH_BIN" run list --limit 40 \
+  # LS-260 R2 M3（merge-review R1）：R1 用 `--limit 40` 再由 jq 過濾 7 日——reviewer 實測那 40 筆
+  # 只涵蓋約 **19 小時**（近 7 日 failure／cancelled 共 63 個，40 筆內只有 13 個），人類段卻照樣
+  # 印「近 7 日 … 13 個」，數字不實；而票文要解的正是「同類紅間距常跨數十個 run」（實測近 7 日兩次
+  # `ci-ipad` 紅只有一次落在 40 筆窗內）。改成：`--created` 讓 GitHub 端就按日期過濾（成本仍是一次
+  # API 呼叫）＋ `--limit 200` 拉高上限；日期字串用 BSD／GNU 兩種寫法試，兩種都不行就不帶
+  # `--created`、退回純 `--limit 200`＋jq 過濾（fail-soft，不因為 date 旗標差異就整段停擺）。
+  # 另外把 `createdAt` 也取回來，人類段才印得出「實際涵蓋到哪一筆」，不再空口宣稱 7 日。
+  reds_since=$(date -u -v-"${REDS_DAYS}"d +%F 2>/dev/null) \
+    || reds_since=$(date -u -d "${REDS_DAYS} days ago" +%F 2>/dev/null) || reds_since=
+  reds_list=$(cd "$ROOT" && "$GH_BIN" run list --limit 200 ${reds_since:+--created ">=${reds_since}"} \
     --json databaseId,headBranch,createdAt,conclusion \
-    --jq ".[] | select(.conclusion == \"failure\" or .conclusion == \"cancelled\") | select((.createdAt | fromdateiso8601) > (now - ${REDS_DAYS} * 86400)) | [.databaseId, .conclusion, .headBranch] | @tsv" 2>/dev/null)
+    --jq ".[] | select(.conclusion == \"failure\" or .conclusion == \"cancelled\") | select((.createdAt | fromdateiso8601) > (now - ${REDS_DAYS} * 86400)) | [.databaseId, .conclusion, .headBranch, .createdAt] | @tsv" 2>/dev/null)
   if [ -z "$reds_list" ]; then
     reds_note="近 ${REDS_DAYS} 日無 failure／cancelled 的 run（或 gh 查詢失敗／未登入，fail-soft 不擋）"
   else
@@ -668,9 +677,11 @@ else
     mkdir -p "$reds_cache_dir" 2>/dev/null
     find "$REDS_CACHE" -type f -mtime "+$((REDS_DAYS * 2))" -delete 2>/dev/null
     reds_fetched=0; reds_sigs=
-    while IFS=$'\t' read -r r_id r_concl r_branch; do
+    while IFS=$'\t' read -r r_id r_concl r_branch r_created; do
       [ -n "$r_id" ] || continue
       reds_runs=$((reds_runs + 1))
+      # gh 回傳是新到舊，最後一筆即最舊；直接覆寫，不另外比對字串
+      [ -n "$r_created" ] && reds_oldest=$r_created
       cache_f="${reds_cache_dir}/${r_id}"
       if [ ! -f "$cache_f" ]; then
         # 額度用完就先不算這個 run（不寫快取），下一輪再補——`cancelled` 那條雖然只查 JSON、比較便宜，
@@ -717,9 +728,17 @@ else
         else
           reds_fetched=$((reds_fetched + 1))
           reds_log=$(cd "$ROOT" && "$GH_BIN" run view "$r_id" --log-failed 2>/dev/null)
+          reds_tests=$(printf '%s\n' "$reds_log" | grep -oE "Test Case '[^']+' failed" \
+            | sed -E "s/^Test Case '//; s/' failed\$//" | sort -u)
           {
-            printf '%s\n' "$reds_log" | grep -oE "Test Case '[^']+' failed" \
-              | sed -E "s/^Test Case '//; s/' failed\$//" | sort -u
+            [ -n "$reds_tests" ] && printf '%s\n' "$reds_tests"
+            # LS-260 R2 M3 附帶（merge-review R1 informational）：簽章只用**測試方法名**時，同一個
+            # 測試類別的不同方法不會聚合——reviewer 實測近 7 日兩次 `ci-ipad` 紅正是
+            # `SettingsViewIPadTests` 的兩個不同方法，§5-b 的「同類」實務上是類別／根因層級。
+            # 方法名之外再記一條 `class:<模組.類別>`，兩種粒度各自計數（類別層級的門檻自然更容易到，
+            # 這正是要的：LS-253 那種「同一個測試檔反覆紅」會提早被看見）。
+            [ -n "$reds_tests" ] && printf '%s\n' "$reds_tests" \
+              | sed -nE 's/^-\[([^][[:space:]]+)[[:space:]].*\]$/class:\1/p' | sort -u
             case "$reds_log" in
               *"has exceeded the maximum execution time"*|*"timed out"*|*"Timed out"*) printf 'timeout（步驟逾時）\n' ;;
             esac
@@ -746,7 +765,7 @@ EOF
 $(printf '%s' "$reds_sigs" | sort | uniq -c | awk '$1 >= 2 { n = $1; $1 = ""; sub(/^ +/, ""); printf "%d\t%s\n", n, $0 }' | sort -rn)
 EOF
     fi
-    reds_note="近 ${REDS_DAYS} 日 failure／cancelled run ${reds_runs} 個（本輪新下載 log ${reds_fetched} 個，上限 ${REDS_MAX_FETCH}；快取 ${reds_cache_dir}）"
+    reds_note="近 ${REDS_DAYS} 日 failure／cancelled run ${reds_runs} 個（實際涵蓋到 ${reds_oldest:-?}；本輪新下載 log ${reds_fetched} 個，上限 ${REDS_MAX_FETCH}；快取 ${reds_cache_dir}）"
   fi
 fi
 

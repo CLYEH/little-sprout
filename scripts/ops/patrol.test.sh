@@ -1811,8 +1811,10 @@ printf '%s\n' \
   "2026-09-13T07:31:07.1234567Z Test Case '-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]' failed (12.345 seconds)." \
   "2026-09-13T07:31:08.1234567Z ** TEST FAILED **" > "$gh_dir/9001.log"
 cp "$gh_dir/9001.log" "$gh_dir/9002.log"
+# R2 M3 附帶：9003 換成**同一個類別的另一個方法**——方法層級只出現一次（不該標），
+# 類別層級則與 9001／9002 合併成 3 次（正是 reviewer 舉的 SettingsViewIPadTests 兩個不同方法的形狀）。
 printf '%s\n' \
-  "2026-09-13T07:31:07.1234567Z Test Case '-[LittleSproutTests.SomeOtherTests testOnlyOnce]' failed (1.0 seconds)." > "$gh_dir/9003.log"
+  "2026-09-13T07:31:07.1234567Z Test Case '-[LittleSproutUITests.SettingsViewIPadTests testOnlyOnce]' failed (1.0 seconds)." > "$gh_dir/9003.log"
 # cancelled 的三種真實形狀——fixture 取自本 repo 的真實 run（R2 M1；產生指令：
 #   gh run view <id> --json jobs --jq '{jobs: [.jobs[] | {name, conclusion, startedAt, completedAt,
 #     steps: [.steps[]? | {conclusion}]}]}' | jq -c .
@@ -1826,13 +1828,13 @@ printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T15:11:39Z","conclusion":"succ
 printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T08:01:57Z","conclusion":"cancelled","name":"rules","startedAt":"2026-09-13T07:58:27Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T08:03:52Z","conclusion":"cancelled","name":"ci","startedAt":"2026-09-13T07:58:32Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:58:46Z","conclusion":"success","name":"lint","startedAt":"2026-09-13T07:58:32Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T08:04:05Z","conclusion":"cancelled","name":"ci-ipad","startedAt":"2026-09-13T07:58:32Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T08:02:03Z","conclusion":"cancelled","name":"db","startedAt":"2026-09-13T07:58:27Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]}]}' > "$gh_dir/34746493293.jobs.json"
 printf '%s\n' '{"jobs":[{"completedAt":"2026-09-13T07:48:29Z","conclusion":"cancelled","name":"ci","startedAt":"2026-09-13T07:47:39Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:48:28Z","conclusion":"cancelled","name":"db","startedAt":"2026-09-13T07:47:35Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:48:29Z","conclusion":"cancelled","name":"rules","startedAt":"2026-09-13T07:47:34Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"failure"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"cancelled"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:47:49Z","conclusion":"success","name":"ci-ipad","startedAt":"2026-09-13T07:47:39Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"skipped"},{"conclusion":"success"},{"conclusion":"success"}]},{"completedAt":"2026-09-13T07:48:06Z","conclusion":"success","name":"lint","startedAt":"2026-09-13T07:47:54Z","steps":[{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"},{"conclusion":"success"}]}]}' > "$gh_dir/34746091627.jobs.json"
 printf '%s\n' \
-  $'9001\tfailure\tfeature/LS-1-a' \
-  $'9002\tfailure\tfeature/LS-2-b' \
-  $'9003\tfailure\tfeature/LS-3-c' \
-  $'34760803165\tcancelled\tdevelopment' \
-  $'34764441663\tcancelled\tdevelopment' \
-  $'34746493293\tcancelled\tfeature/LS-4-d' \
-  $'34746091627\tcancelled\tfeature/LS-5-e' > "$work/gh-runs"
+  $'9001\tfailure\tfeature/LS-1-a\t2026-09-13T07:31:00Z' \
+  $'9002\tfailure\tfeature/LS-2-b\t2026-09-13T06:31:00Z' \
+  $'9003\tfailure\tfeature/LS-3-c\t2026-09-12T07:31:00Z' \
+  $'34760803165\tcancelled\tdevelopment\t2026-09-12T06:31:00Z' \
+  $'34764441663\tcancelled\tdevelopment\t2026-09-11T07:31:00Z' \
+  $'34746493293\tcancelled\tfeature/LS-4-d\t2026-09-10T07:31:00Z' \
+  $'34746091627\tcancelled\tfeature/LS-5-e\t2026-09-09T07:31:00Z' > "$work/gh-runs"
 
 reds_env() {   # 共用環境；$1＝快取目錄，其餘沿用預設
   PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs" FAKE_GH_DIR="$gh_dir" PATROL_REDS_CACHE="$1" "${@:2}"
@@ -1842,7 +1844,7 @@ out30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2
 has   '㉚a 同一支測試在 2 個 run 紅 → ⚠ 同類紅 2 次（測試名）' "$out30" "⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b 升票"
 hasnt '㉚b 只紅一次的測試不標（負向控制：門檻真的是 ≥2）' "$out30" 'testOnlyOnce'
 has   '㉚c 兩個真 timeout run（34760803165 2454 s／34764441663 1988 s）併成 timeout 型別計數' "$out30" '⚠ 同類紅 2 次（timeout（cancelled、無 failure／timed_out step、cancelled job ≥30 分——撞 job timeout-minutes））'
-hasnt '㉚c2 concurrency 取代的過期 run（34746493293，333 s）與有 failure step 的（34746091627）都不計數' "$out30" '同類紅 3 次'
+hasnt '㉚c2 concurrency 取代的過期 run（34746493293，333 s）與有 failure step 的（34746091627）都不計數（timeout 簽章仍是 2 次，不是 3／4 次）' "$out30" '同類紅 3 次（timeout'
 # ㉚c3／㉚c4 都把單輪下載上限提高到 10：夾具共 7 個 run，預設上限 5 會讓最後兩個 cancelled 這一輪還
 #      沒被分類（上限本身由 ㉚e 專測）。
 # ㉚c3（判準 2 的接線）：門檻拉到 45 分，兩個真 timeout（40.9／33.1 分）就都不該再算——證明「cancelled
@@ -1856,7 +1858,12 @@ has   '㉚c4 門檻 0 分 → 3 次（有 failure step 的 34746091627 仍被判
 brief30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch --brief "$STALE" 2>&1)"
 has   '㉚a2 旗標行指向 §5-b 升票（不是只印在人類段）' "$brief30" '[CI 同類紅] ⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b「同類事故 ≥2 次升 High」開票'
 json30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch --json "$STALE" 2>&1)"
-jq_ok '㉚a3 --json repeat_failures 兩筆、runs 皆 2' "$json30" '(.repeat_failures | length) == 2 and ([.repeat_failures[].runs] | unique) == [2]'
+jq_ok '㉚a3 --json repeat_failures 三筆（方法名 2 次、class 3 次、timeout 2 次）' "$json30" '(.repeat_failures | length) == 3 and ([.repeat_failures[].runs] | sort) == [2,2,3]'
+# ㉚i（R2 M3 附帶）：類別層級簽章——9001／9002／9003 是同一個測試類別的兩個不同方法，方法層級聚不起來，
+#      類別層級要聚成 3 次（§5-b 的「同類」實務上是類別／根因層級）。
+has   '㉚i 類別層級簽章聚合成 3 次（方法名不同也算同類）' "$out30" '⚠ 同類紅 3 次（class:LittleSproutUITests.SettingsViewIPadTests）'
+# ㉚j（R2 M3）：人類段不再空口宣稱 7 日，要印出實際涵蓋到哪一筆（gh 回傳新到舊，最後一筆最舊）。
+has   '㉚j 人類段印出實際涵蓋到的最舊 run 時間' "$out30" '實際涵蓋到 2026-09-09T07:31:00Z'
 
 # ㉚d 快取：第二輪對同一批 run 不再打任何 `run view`（只剩一次 `run list`）
 calls30="$work/gh-calls"; : > "$calls30"
