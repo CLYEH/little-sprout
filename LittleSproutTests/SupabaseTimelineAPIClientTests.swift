@@ -53,6 +53,33 @@ final class SupabaseTimelineAPIClientTests: XCTestCase {
         XCTAssertEqual(pointers[0].commentCount, 3)
     }
 
+    /// merge-review R1 i1：部署順序問題——app 這個 build 可能先於 LS-243 migration 推上
+    /// 某個環境（例如 QA 在 `test` branch 用真後端驗收，那裡的 DB 還沒套用這支
+    /// migration），舊 DB 的 `get_family_timeline` 回應完全不會有 `comment_count` 這個
+    /// key。若當成必要欄位解碼，整批 `fetchTimelinePointers` 會直接失敗、時間軸整頁
+    /// 變 `.failure`；`TimelineFeedPointer.init(from:)` 用 `decodeIfPresent(...) ?? 0`
+    /// 讓這個情境退化成「留言計數暫時看不到（0）」，不是整頁打不開。
+    func test_fetchTimelinePointers_missingCommentCountKey_decodesToZero() async throws {
+        let client = TestSupabaseClient.make { [refID] _ in
+            MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [{
+              "kind": "diary",
+              "ref_id": "\(refID.uuidString)",
+              "occurred_at": "2026-09-02T08:00:00Z",
+              "child_ids": []
+            }]
+            """.utf8))
+        }
+        let apiClient = SupabaseTimelineAPIClient(client: client)
+
+        let pointers = try await apiClient.fetchTimelinePointers(
+            familyID: familyID, childID: nil, cursor: nil, limit: 20
+        )
+
+        XCTAssertEqual(pointers.count, 1, "缺 comment_count 這個 key 不該讓整批解碼失敗")
+        XCTAssertEqual(pointers[0].commentCount, 0)
+    }
+
     func test_fetchTimelinePointers_withCursorAndChildID_sendsBothCursorKeysTogether() async throws {
         let cursorRefID = UUID(uuidString: "66666666-6666-6666-6666-666666666666")!
         let client = TestSupabaseClient.make { [familyID, childID, cursorRefID] request in
