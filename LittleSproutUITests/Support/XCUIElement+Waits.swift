@@ -11,15 +11,33 @@ extension XCUIElement {
     /// accessibility tree 上，不保證此刻真的可點；tap 前用這個當同步點比較貼近真實使用者操作
     /// （LS-237 第 8 項教訓）。
     ///
-    /// LS-265：原本用 `XCTNSPredicateExpectation(predicate: "hittable == true")` 交給
-    /// XCTest 內建輪詢——某次取樣恰好落在 nav 轉場中段、元素 `frame` 暫時無效時，XCUITest
-    /// 對 `hittable` 求值會直接框架硬失敗（"Activation point invalid and no suggested hit
-    /// points based on element frame"），不會像正常情況一樣回 `false` 讓 expectation 繼續等，
-    /// 造成「非 timeout」的硬紅（iPad settings push→back 系列同類紅第 6 次）。改成自己控制的
-    /// 輪詢迴圈：每次取樣先看 `exists`、再看 `frame` 是否有效（非零大小、非 NaN／非 Infinite），
-    /// 都通過才去讀 `isHittable`——避免在 frame 暫時無效的瞬間去觸發那個框架內部求值路徑；任一
-    /// 步不成立就當作「尚未就緒」，留到下一次取樣，直到 timeout。回傳型別與預設 timeout 語意
-    /// 不變，呼叫端零改動。
+    /// LS-265（merge-review R1 m1 訂正根因敘述）：某次取樣恰好落在 nav 轉場中段、元素
+    /// `frame` 暫時無效時會框架硬失敗（"Activation point invalid and no suggested hit
+    /// points based on element frame"），不回 `false` 讓輪詢繼續（iPad settings
+    /// push→back 系列同類紅第 6 次）。**真正的根因在 `-[XCUIElement isHittable]` 這個
+    /// getter 自己內部**：它會呼叫 `hitPoint:`，算不出來就自行記錄硬失敗——原本用
+    /// `XCTNSPredicateExpectation(predicate: "hittable == true")` 只是透過 KVC 打到同一個
+    /// getter，換掉 expectation、改手寫迴圈本身不是修法重點；真正有效的是「呼叫
+    /// `isHittable` 前先驗過 frame 有效」（見 `isSafelyHittable`）——改手寫迴圈只是為了能
+    /// 插入這個前置檢查，`XCTNSPredicateExpectation` 沒有插入前置條件的入口。任一步不成立
+    /// 就當作「尚未就緒」，留到下一次取樣，直到 timeout。回傳型別與預設 timeout 語意不變，
+    /// 呼叫端（`SettingsViewIPadTests` 7 處、`DiaryDetailVideoUITests` 2 處、
+    /// `SettingsViewTests` 2 處，共 3 檔 11 處）零改動。
+    ///
+    /// 已知風險（merge-review R1 M2，未在本票處理）：CI 慢 runner 上量到單次
+    /// `isSafelyHittable` 取樣（快照＋`isHittable`）可能吃掉 4.5s，所有呼叫點的 timeout
+    /// 皆為 5s／8s／10s——那種 runner 上，本輪迴圈仍可能連一輪完整取樣都做不完就
+    /// timeout，把「框架硬失敗」換成「逾時斷言紅」而非變綠。這是呼叫端 timeout 預算問題，
+    /// 票文明訂「呼叫點改動不在本票」，此處只記錄風險，不動呼叫點。
+    ///
+    /// i2（merge-review R1 informational，評估後不採用）：曾考慮要求連續兩次取樣 frame
+    /// 都有效才問 `isHittable`，理論上能再降低「snapshot 驗完、緊接著呼叫 `isHittable`
+    /// 之間又消失」的窗口。不採用的理由：(1) 這個窗口本來就已經被本票的 `try? snapshot()`
+    /// 前置檢查收斂到「同一輪迴圈內」，殘餘窗口是 `isHittable` 自己的獨立呼叫，i2 對它的
+    /// 保護是機率性、不是保證；(2) i2 會讓每次呼叫至少多付一個 `pollInterval` 的延遲——即
+    /// 使元素從一開始就已經可點，也要等到第二次取樣才會回真——這不是「語意不變」該有的行
+    /// 為，且與 merge-review R1 M2 要求的「降低取樣成本」方向相反。若之後同型故障仍伴隨
+    /// TOCTOU（而非本次的 `frame` 恆為 `CGRectNull`）再評估。
     ///
     /// `pollInterval` 只給測試用（重現／驗證用），正常呼叫一律用預設值。
     func waitForHittable(timeout: TimeInterval, pollInterval: TimeInterval = 0.5) -> Bool {
