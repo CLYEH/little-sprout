@@ -217,8 +217,12 @@ final class SettingsViewIPadTests: XCTestCase {
         // LS-253（同上，家庭／法律兩處 sidebar 切換 tap 當時漏補，見上方訂正）：補上同一套
         // `waitForHittable` 同步點。
         // LS-261：改走統一的 `switchSidebarTab` helper，等待目標列出現的 timeout 由 5s 對齊 10s。
+        // merge-review R1 m2：`switchSidebarTab` 只保證 `termsRow` 的 `exists`，tap 前還缺
+        // 「真的可點」同步點——同一互動在 iPhone 版 `SettingsViewTests.swift`（LS-259 `2f88874`）
+        // 已補過，iPad 版原本反而少一道，這裡補齊。
         let termsRow = app.buttons["使用條款"]
         switchSidebarTab(app: app, tabLabel: "法律", expectedRow: termsRow, rowDescription: "使用條款")
+        XCTAssertTrue(waitForHittable(termsRow, timeout: 5), "「使用條款」列應該可點擊")
         termsRow.tap()
 
         let closeButton = app.buttons["關閉"]
@@ -227,6 +231,9 @@ final class SettingsViewIPadTests: XCTestCase {
             app.staticTexts.matching(NSPredicate(format: "label == %@", "使用條款")).count, 2,
             "應同時看到「使用條款」列與 Doc Title 兩個「使用條款」文字元件——只剩 1 個代表開錯文件"
         )
+        // merge-review R1 m2：關閉鈕同樣補 tap 前的 hittable 同步點——sheet 開闔轉場尚未穩定時
+        // tap 落空，下一行等「隱私權政策」列自然逾時，同型於 LS-253／LS-259 修過的失敗模式。
+        XCTAssertTrue(waitForHittable(closeButton, timeout: 5), "「關閉」鈕應該可點擊")
         closeButton.tap()
         // LS-237 第 8 項（coordinator 追加，09-13 run 34707282145 flake）：`XCTAssertFalse
         // (closeButton.waitForExistence(timeout: 3), ...)` 用的是「等開始存在」的 API 驗證
@@ -246,6 +253,8 @@ final class SettingsViewIPadTests: XCTestCase {
         // 相關等待同性質，timeout 由 5s 對齊 10s。
         let privacyRow = app.buttons["隱私權政策"]
         XCTAssertTrue(privacyRow.waitForExistence(timeout: 10), "關閉後應回到「法律」列表，看得到「隱私權政策」列")
+        // merge-review R1 m2：與 termsRow／closeButton 同型，tap 前補 hittable 同步點。
+        XCTAssertTrue(waitForHittable(privacyRow, timeout: 5), "「隱私權政策」列應該可點擊")
         privacyRow.tap()
         XCTAssertTrue(app.buttons["關閉"].waitForExistence(timeout: 5), "點擊「隱私權政策」列應開啟 LegalDocumentSheet（Footer「關閉」鈕可見）")
         XCTAssertEqual(
