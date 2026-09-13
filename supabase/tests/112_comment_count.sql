@@ -218,6 +218,23 @@ rollback;
 -- 便宜，掃描量只跟頁面大小（v_limit）成正比，不是跟這個家庭的 feed 總量或留言
 -- 總量成正比。
 --
+-- LS-258（清倉 1，項 1）：CI（PR #392）一次量到 951（同 SHA rerun 卻只有 74 級），
+-- `vacuum (analyze)` 當時只涵蓋 comments／feed_items／diaries 三張表。`run.sh`
+-- 依檔名排序在 112_ 之前還會跑到觸碰 albums／media 的測試檔（例如
+-- `86_albums_comments_owner_scope.sql`／`98_media_thumbnails.sql`／`99_media_
+-- duration.sql`，皆各自 `begin;/rollback;`），同樣會在這兩張表留下 dead tuple，
+-- autovacuum 時序若沒追上就會讓 `get_family_timeline` 內部對 album 目標的 EXISTS
+-- 探測（見下方 §3 主查詢的目標判斷）多走訪幾頁死頁——這裡補上這兩張表的
+-- `vacuum (analyze)`，涵蓋面比照本檔 §3 開頭原本三張表的理由。
+--
+-- 即便涵蓋面補齊，跨測試檔的殘留污染仍可能在單次量測裡偶發偏高（autovacuum 是
+-- 背景程序，不保證這裡的顯式 VACUUM 之後不會有新的殘留）——下面的量測邏輯改成
+-- 「第一次量測超標才重測一次，取兩次的小值」，**不放寬門檻本身**：真退化（例如
+-- comment_count 退化成 N+1）兩次量測都會超標，殘留污染通常只影響其中一次；連續
+-- 兩次呼叫同一段查詢，第二次也會受益於 Postgres 對死列的 opportunistic pruning
+-- （第一次讀取頁面時，可見度檢查順便清掉已確認不可見的版本），單純重跑就可能量到
+-- 更低的 buffers，不代表門檻本身失去鑑別力。
+--
 -- merge-review R1 F1：VACUUM 放在這裡（`begin;` 之前，不能在交易內執行）——
 -- `run.sh` 依檔名排序（`sort -V`：50 < 112）先跑 50_rls_plan_no_percall_subquery.sql
 -- （灌 5 萬則留言／20 萬列 feed_items 又 rollback），這些列在交易 rollback 後是
@@ -232,6 +249,8 @@ rollback;
 vacuum (analyze) public.comments;
 vacuum (analyze) public.feed_items;
 vacuum (analyze) public.diaries;
+vacuum (analyze) public.albums;
+vacuum (analyze) public.media;
 -- ===========================================================================
 begin;
 do $$
@@ -288,6 +307,9 @@ declare
   v_hit bigint;
   v_read bigint;
   v_buffers bigint;
+  v_buffers_retry bigint;
+  v_plan_final text;
+  v_attempt int;
   -- 200 筆 feed、第一頁 20 列，其中每一列都要對 diary_children（空）＋comments
   -- （20 列各有 1 則存活留言，命中 comments_target_idx 前三欄）各跑一次 correlated
   -- 子查詢——量級應與 50_ 檔案「不篩 child、無游標」分支（真實接近，75-80 buffers）
@@ -296,25 +318,40 @@ declare
 begin
   perform * from public.get_family_timeline('fe000000-0000-4000-8000-000000000003'::uuid, null, null, null, 1); -- warm-up
 
-  for v_line in execute
-    'explain (analyze, verbose, buffers) select * from public.get_family_timeline(' ||
-    quote_literal('fe000000-0000-4000-8000-000000000003') || '::uuid, null, null, null, 20)'
-  loop
-    v_plan := v_plan || v_line || E'\n';
+  -- LS-258：第一次量測若超標，重測一次取小值（見上方 §3 檔頭第二段的理由），
+  -- 不放寬 c_buffer_budget 本身。
+  for v_attempt in 1..2 loop
+    v_plan := '';
+    for v_line in execute
+      'explain (analyze, verbose, buffers) select * from public.get_family_timeline(' ||
+      quote_literal('fe000000-0000-4000-8000-000000000003') || '::uuid, null, null, null, 20)'
+    loop
+      v_plan := v_plan || v_line || E'\n';
+    end loop;
+
+    select coalesce(sum((x[1])::bigint), 0) into v_hit
+      from regexp_matches(v_plan, 'shared hit=([0-9]+)', 'g') as x;
+    select coalesce(sum((x[1])::bigint), 0) into v_read
+      from regexp_matches(v_plan, E'read=([0-9]+)', 'g') as x;
+
+    if v_attempt = 1 then
+      v_buffers := v_hit + v_read;
+      v_plan_final := v_plan;
+      exit when v_buffers <= c_buffer_budget;
+    else
+      v_buffers_retry := v_hit + v_read;
+      v_plan_final := v_plan;
+    end if;
   end loop;
 
-  select coalesce(sum((x[1])::bigint), 0) into v_hit
-    from regexp_matches(v_plan, 'shared hit=([0-9]+)', 'g') as x;
-  select coalesce(sum((x[1])::bigint), 0) into v_read
-    from regexp_matches(v_plan, E'read=([0-9]+)', 'g') as x;
-  v_buffers := v_hit + v_read;
-
-  if v_buffers > c_buffer_budget then
-    raise exception E'FAIL 效能：get_family_timeline（200 筆 feed，含留言）buffers=%（hit=% read=%，門檻 %）—— comment_count 疑似退化成跟 feed 總量或留言總量成正比\n%',
-      v_buffers, v_hit, v_read, c_buffer_budget, v_plan;
+  if v_buffers <= c_buffer_budget then
+    raise notice 'ok 效能：get_family_timeline（200 筆 feed，含留言）buffers=%（第一次量測即過關，門檻 ≤%）', v_buffers, c_buffer_budget;
+  elsif v_buffers_retry <= c_buffer_budget then
+    raise notice 'ok 效能：get_family_timeline（200 筆 feed，含留言）buffers=%（第一次 % 超標，重測取小值過關，門檻 ≤%，LS-258）', v_buffers_retry, v_buffers, c_buffer_budget;
+  else
+    raise exception E'FAIL 效能：get_family_timeline（200 筆 feed，含留言）兩次量測皆超標（第一次 buffers=%、重測 buffers=%，門檻 %）—— comment_count 疑似退化成跟 feed 總量或留言總量成正比\n%',
+      v_buffers, v_buffers_retry, c_buffer_budget, v_plan_final;
   end if;
-
-  raise notice 'ok 效能：get_family_timeline（200 筆 feed，含留言）buffers=%（hit=% read=%，門檻 ≤%）', v_buffers, v_hit, v_read, c_buffer_budget;
 end;
 $$;
 
