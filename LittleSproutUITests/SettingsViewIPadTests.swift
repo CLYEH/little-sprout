@@ -98,7 +98,13 @@ final class SettingsViewIPadTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
 
-        app.buttons["家庭"].tap()
+        // LS-253（LS-96 i1，sweeper `6c406b6a`）：LS-237 `96734b7` 只在共用 helper
+        // `assertPushThenBackReturnsToList` 的入口列 tap 加了「tap 前先等真的可點」同步點，
+        // 這裡「家庭」sidebar 切換 tap 當時仍是裸 tap——切換轉場動畫還沒穩定時 tap 可能落空，
+        // 後續等「邀請家人」列自然逾時。補上同一套 `waitForHittable` 同步點。
+        let familyTab = app.buttons["家庭"]
+        XCTAssertTrue(waitForHittable(familyTab, timeout: 5), "「家庭」sidebar 列應該可點擊")
+        familyTab.tap()
         XCTAssertTrue(
             app.buttons[QAAccessibilityID.settingsInviteRow].waitForExistence(timeout: 5),
             "切到「家庭」後應該看得到「邀請家人」列"
@@ -124,10 +130,13 @@ final class SettingsViewIPadTests: XCTestCase {
 
         // LS-245（池 `2c4bfc80`，merge-review LS-241 R2 `f71f5acc`）：09-13 ci-ipad run
         // 103627867933 在這支測試「切到『內容與安全』後應該看得到『儲存空間』列」那一步紅過
-        // 一次、同 SHA 重跑綠——同檔另外兩支（`testFamilySectionInviteRowRegressionPushes
-        // AndBackReturns`／`testLegalSectionRowsOpenAndCloseLegalDocumentSheet`）已經在
-        // LS-237 `96734b7` 補過「tap 前先等真的可點」同步點，這支當時漏補：sidebar 切換到
-        // 「內容與安全」的轉場動畫還沒穩定時 tap 可能落空，後續等「儲存空間」列自然逾時。
+        // 一次、同 SHA 重跑綠：sidebar 切換到「內容與安全」的轉場動畫還沒穩定時 tap 可能落空，
+        // 後續等「儲存空間」列自然逾時。LS-237 `96734b7` 實際只在共用 helper
+        // `assertPushThenBackReturnsToList` 的入口列 tap 加了「tap 前先等真的可點」同步點——
+        // 同檔另外兩支（`testFamilySectionInviteRowRegressionPushesAndBackReturns`／
+        // `testLegalSectionRowsOpenAndCloseLegalDocumentSheet`）的 sidebar 切換 tap（分別是
+        // `app.buttons["家庭"]`／`app.buttons["法律"]`）並未涵蓋在內，當時仍是裸 tap，由
+        // LS-253 補上（見該兩處同步點；LS-96 i1，sweeper `6c406b6a`）。
         let contentSafetyTab = app.buttons["內容與安全"]
         XCTAssertTrue(waitForHittable(contentSafetyTab, timeout: 5), "「內容與安全」sidebar 列應該可點擊")
         contentSafetyTab.tap()
@@ -155,7 +164,11 @@ final class SettingsViewIPadTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
 
-        app.buttons["帳號"].tap()
+        // LS-253 R2（merge-review R1 m1）：與家庭／內容與安全／法律同類，「帳號」sidebar 切換
+        // tap 也補上 waitForHittable 同步點——同一種轉場競速風險，同檔其餘四處都已補過。
+        let accountTab = app.buttons["帳號"]
+        XCTAssertTrue(waitForHittable(accountTab, timeout: 5), "「帳號」sidebar 列應該可點擊")
+        accountTab.tap()
         XCTAssertTrue(app.buttons["刪除帳號"].waitForExistence(timeout: 5), "切到「帳號」後應該看得到「刪除帳號」列")
 
         assertPushThenBackReturnsToList(
@@ -182,7 +195,11 @@ final class SettingsViewIPadTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
 
-        app.buttons["法律"].tap()
+        // LS-253（同上，家庭／法律兩處 sidebar 切換 tap 當時漏補，見上方訂正）：補上同一套
+        // `waitForHittable` 同步點。
+        let legalTab = app.buttons["法律"]
+        XCTAssertTrue(waitForHittable(legalTab, timeout: 5), "「法律」sidebar 列應該可點擊")
+        legalTab.tap()
         let termsRow = app.buttons["使用條款"]
         XCTAssertTrue(termsRow.waitForExistence(timeout: 5), "切到「法律」後應該看得到「使用條款」列")
         termsRow.tap()
@@ -199,8 +216,13 @@ final class SettingsViewIPadTests: XCTestCase {
         // 「不存在」——tap 後 dismiss 動畫還沒跑完的那個瞬間，第一次輪詢就可能量到「還存在」，
         // `waitForExistence` 因此立刻回傳 `true`（不會等滿 3 秒看它會不會消失），斷言就此
         // 誤判失敗。改用真正等「停止存在」的 `waitForNonExistence`。
+        // LS-253 R2（merge-review R1 M1）：timeout 由 3s 拉到 10s——run 34741136505 attempt 1
+        // 證實 sheet 其實有關掉（下一行馬上點到「隱私權政策」），純粹是忙碌 runner 上單次
+        // accessibility snapshot 就吃掉 2.3s，3s 只夠輪詢 1–2 次；3s 也是全 repo
+        // `waitForNonExistence` 呼叫裡唯一的離群值（本檔 L51 用 10、`ContentActionsUITests.swift`／
+        // `DiaryDetailCommentsUITests.swift` 用 5），對齊本檔 L51 同類「轉場後等消失」情境。
         XCTAssertTrue(
-            waitForNonExistence(closeButton, timeout: 3), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）"
+            waitForNonExistence(closeButton, timeout: 10), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）"
         )
 
         let privacyRow = app.buttons["隱私權政策"]
@@ -236,7 +258,13 @@ final class SettingsViewIPadTests: XCTestCase {
 
         XCTAssertEqual(selectedLabels(), ["個人"], "預設應該恰好一列帶「已選取」訊號，且是「個人」")
 
-        app.buttons["家庭"].tap()
+        // LS-253 R2（merge-review R1 m1）：這裡 tap 後直接同步讀 `selectedLabels()`，本檔最脆的
+        // 一行——tap 前補 `waitForHittable` 同步點；tap 後讀值前先確認「家庭」列本身仍在
+        // accessibility tree 裡（`waitForExistence`）才讀取它的 value，避免轉場瞬間讀到過渡態。
+        let familyTab = app.buttons["家庭"]
+        XCTAssertTrue(waitForHittable(familyTab, timeout: 5), "「家庭」sidebar 列應該可點擊")
+        familyTab.tap()
+        XCTAssertTrue(familyTab.waitForExistence(timeout: 5), "點擊「家庭」後該列應仍存在，才能讀取其 accessibility value")
         XCTAssertEqual(selectedLabels(), ["家庭"], "點擊「家庭」後「已選取」訊號應該恰好移到「家庭」，其餘四列都不再帶")
     }
 }
