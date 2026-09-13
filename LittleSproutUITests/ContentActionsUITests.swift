@@ -298,4 +298,43 @@ final class ContentActionsUITests: XCTestCase {
             "失敗不應該把卡片從清單移除——內容其實還在 pending"
         )
     }
+
+    // MARK: - LS-245：連續觸發兩個 sheet 來源（票文範圍 2，池 `7f77856c`）
+
+    /// 留言 sheet 與「⋯」內容操作表原本各自用獨立的 `@State` 呈現——收斂成單一
+    /// `DiaryDetailView.activeSheet` 之後，這裡驗證反過來的觸發順序：先觸發「⋯」、取消，再觸發
+    /// 留言鈕，留言 sheet 要能正確呈現。同一組情境的另一個方向見
+    /// `DiaryDetailCommentsUITests.testCommentButton_thenMoreButton_bothPresentCorrectly`。
+    func testDiaryDetail_moreButton_thenCommentButton_bothPresentCorrectly() {
+        let app = TapTargetMeasurement.launch(.diaryDetail)
+        TapTargetMeasurement.assertScreenRendered(.diaryDetail, in: app)
+
+        let moreButton = app.buttons["更多操作"]
+        XCTAssertTrue(moreButton.waitForExistence(timeout: 5))
+        moreButton.tap()
+        let headline = app.staticTexts["「今天在溜滑梯上玩得好開心。」"]
+        XCTAssertTrue(headline.waitForExistence(timeout: 5), "應該先呈現內容操作表")
+
+        app.buttons["取消"].tap()
+        XCTAssertTrue(waitForNonExistence(headline, timeout: 5), "內容操作表應該已經關閉")
+
+        let commentButton = app.buttons[
+            QAAccessibilityID.interactionRowElement(kind: "diary", element: "commentButton")
+        ]
+        XCTAssertTrue(commentButton.waitForExistence(timeout: 10), "內容操作表關閉後應該回到詳情頁、看得到留言鈕")
+        commentButton.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["還沒有人留言"].waitForExistence(timeout: 10),
+            "接著觸發留言鈕應該正確呈現留言 sheet——不應該因為剛才內容操作表用過同一個 activeSheet 而卡住"
+        )
+    }
+
+    /// `XCTNSPredicateExpectation` 等「停止存在」——同 `SettingsViewIPadTests` 既有的
+    /// `waitForNonExistence` helper（LS-237 第 8 項教訓：一次性 `.exists` 快照在關閉動畫還沒
+    /// 跑完的瞬間可能誤判成「還在」）。
+    private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+    }
 }

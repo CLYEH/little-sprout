@@ -26,6 +26,7 @@
 		0754150D65EACBAE3CC44A30 /* InteractionRowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E715D59C5D776BF6611E5E33 /* InteractionRowUITests.swift */; };
 		0783F95A1496D17C21C9305E /* KeyboardHeightObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A9887FF91CF65FB62A256E /* KeyboardHeightObserverTests.swift */; };
 		08CCDFE903AB9F89F47A149C /* AlbumThicknessTierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E311904EB7885960AF830E /* AlbumThicknessTierTests.swift */; };
+		08E2C4433BFD3E5DEC7DFF47 /* DiaryDetailSheetIDTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D07A1233EF216E629B32629 /* DiaryDetailSheetIDTests.swift */; };
 		08EA70433C9FFE03998E1074 /* TapTargetMeasurement.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8613F9B6DA141E7F034F153 /* TapTargetMeasurement.swift */; };
 		09102D647E56F4244D66E8AD /* TimelineStoreVideoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C86411F014B2DEBB3EF70F2 /* TimelineStoreVideoTests.swift */; };
 		0993EF1E7C8B36337E4FFD3E /* FamilyMemberActionVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = B953E2D0F652452A92AA6639 /* FamilyMemberActionVisibility.swift */; };
@@ -649,6 +650,7 @@
 		6A8630C948451C3739D8A263 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		6BD7AE63A0EB0C80DA9C5851 /* TapTargetGateHarness+Family.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Family.swift"; sourceTree = "<group>"; };
 		6C7E229440047D04B81BCE30 /* ChildrenStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenStoreTests.swift; sourceTree = "<group>"; };
+		6D07A1233EF216E629B32629 /* DiaryDetailSheetIDTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDetailSheetIDTests.swift; sourceTree = "<group>"; };
 		6D35DF8C6C4A6D967A2E4055 /* SupabaseAlbumsAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAlbumsAPIClient.swift; sourceTree = "<group>"; };
 		6F661C1D17CB2CBE46884126 /* DiaryDeleteConfirmationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDeleteConfirmationSheet.swift; sourceTree = "<group>"; };
 		6FDC40A75E4ED58DECBBE351 /* AlbumDetailViewPartitionPickedItemsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailViewPartitionPickedItemsTests.swift; sourceTree = "<group>"; };
@@ -1108,6 +1110,7 @@
 				4731B4832AABBF59324EDBC8 /* DiaryComposerStoreTests.swift */,
 				B13A37E8CC8794D85456D566 /* DiaryDateFormatTests.swift */,
 				06DCE924A2746DCCAF6CA4B5 /* DiaryDeleteConfirmationCopyTests.swift */,
+				6D07A1233EF216E629B32629 /* DiaryDetailSheetIDTests.swift */,
 				8C7ACE26EA3E828F870C6BB9 /* DiaryDurationFormatTests.swift */,
 				B65A9E81D3E3B5D92B0B6BDE /* DiaryEditorViewLifecycleTests.swift */,
 				0694D8B3FF373E24A5D98E12 /* DiaryPhotoReorderMathTests.swift */,
@@ -2100,6 +2103,7 @@
 				41F32D3B2C6BA0F84DAEEA49 /* DiaryComposerStoreTests.swift in Sources */,
 				BF0DA22255D22BCE9AAEC439 /* DiaryDateFormatTests.swift in Sources */,
 				B9853BAED2D457FC7FE55DA8 /* DiaryDeleteConfirmationCopyTests.swift in Sources */,
+				08E2C4433BFD3E5DEC7DFF47 /* DiaryDetailSheetIDTests.swift in Sources */,
 				E714FA8B1BBAA5D64425BB5C /* DiaryDurationFormatTests.swift in Sources */,
 				D0AF78E3C840FDAE433B1A61 /* DiaryEditorViewLifecycleTests.swift in Sources */,
 				C649CAC4FC01FF528483B208 /* DiaryPhotoReorderMathTests.swift in Sources */,

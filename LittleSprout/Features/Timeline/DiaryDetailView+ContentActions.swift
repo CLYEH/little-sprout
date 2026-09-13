@@ -49,15 +49,13 @@ extension DiaryDetailView {
             && familyStore.ownerUserID != nil && childrenStore.myRole != nil
     }
 
-    /// 不可見的 `EmptyView`，掛整條流程的 `.sheet` 鏈——`.sheet` 掛在樹上哪個節點不影響呈現
-    /// （見 `DiaryDetailView.body` 的 `.overlay` 呼叫端註解）。
+    /// 不可見的 `EmptyView`，掛內容操作表 05 之後的確認鏈（檢舉／封鎖／Owner 移除／刪除）——
+    /// `.sheet` 掛在樹上哪個節點不影響呈現（見 `DiaryDetailView.body` 的 `.overlay` 呼叫端
+    /// 註解）。05 本身（`ContentActionsSheet`）已併進 `DiaryDetailView.activeSheetHost`
+    /// （LS-245，見該檔檔頭文件註解）——這條確認鏈本來就沒有非同步窗口重疊的問題（LS-190 R2
+    /// 既有規約：每一步 sheet 自己先 `dismiss()` 才呼叫成功回呼，彼此依序接力），不在收斂範圍。
     var contentActionsSheetHost: some View {
         EmptyView()
-            .sheet(item: $contentActionsContext) { context in
-                ContentActionsSheet(headline: context.target.headline, actions: context.actions) { action in
-                    handleContentAction(action, context: context)
-                }
-            }
             .sheet(item: $reportFlowTarget) { target in
                 ReportReasonSheet(
                     familyName: familyStore.myFamily?.name ?? "", familyID: target.familyID,
@@ -109,11 +107,16 @@ extension DiaryDetailView {
                 for: target, viewerRole: viewerRole, viewerUserID: viewerUserID,
                 authorID: authorID, authorDisplayName: authorDisplayName
             )
-            contentActionsContext = DiaryContentActionsContext(target: target, actions: actions)
+            // LS-245：改寫共用的 `activeSheet`（不再是獨立的 `contentActionsContext`）——見
+            // `DiaryDetailView` 檔頭文件註解、`DiaryDetailSheet`。
+            activeSheet = .contentActions(DiaryContentActionsContext(target: target, actions: actions))
         }
     }
 
-    private func handleContentAction(_ action: ContentAction, context: DiaryContentActionsContext) {
+    // LS-245：不標 `private`——`DiaryDetailView.activeSheetHost`（`DiaryDetailView.swift`，跨
+    // 檔案 extension）現在也需要呼叫這支（05 的 `.sheet` 本體併過去了，見該檔檔頭文件註解），
+    // 同檔其餘幾個內容操作表狀態的既有理由。
+    func handleContentAction(_ action: ContentAction, context: DiaryContentActionsContext) {
         switch action {
         case .report:
             reportFlowTarget = context.target
