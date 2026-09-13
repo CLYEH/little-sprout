@@ -336,6 +336,7 @@ jobs:
           # 真正的 simulator-lock.sh 複製進合成 repo），這裡只補新參數
           bash scripts/ops/simulator-lock.test.sh || rc=1
           bash scripts/ops/promote.test.sh || rc=1
+          bash scripts/ops/promote-follow.test.sh || rc=1
           bash scripts/ops/post-status.test.sh || rc=1
           bash scripts/ops/pen-open.test.sh || rc=1
           bash scripts/ops/pen-read.test.sh || rc=1
