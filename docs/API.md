@@ -2194,6 +2194,15 @@ Edge Function 完成刪除）。`LS052`／`LS053`／`LS054`（LS-179 補齊，�
 - `allowed_mime_types`：`image/jpeg`、`image/png`、`image/heic`、`image/heif`、
   `video/mp4`、`video/quicktime`（`.mov`）。其他型別在 Storage 層就會被拒絕，不會走到
   `media` 表。
+- **影片壓縮與長度建議（LS-279，客戶端契約）**：日記編輯器的影片**一律**先經
+  `VideoTrimmer.compressedForUpload`（`AVAssetExportPreset1920x1080`，只保留前 60 秒）
+  壓成 1080p 再上傳，不再像 LS-125 那樣只有「超過 60 秒」才壓——一支 40 秒的 4K 原檔
+  就有 100 MB 上下，必定撞上面那條 50 MiB 上限。壓完仍超過 50 MiB 時**不上傳**，編輯器
+  直接回話請使用者裁到 **40 秒**內（`MediaUploadLimits.suggestedVideoSeconds`）：以 1080p
+  H.264 常見位元率約 10 Mbps 估算，50 MiB ≈ 42 秒，取 40 留餘裕。實測位元率隨畫面內容
+  差異極大（LS-279 量到低動態漸層 2.4 Mbps、純雜訊 47.9 Mbps），所以 40 秒是建議值不是
+  保證。**相簿上傳佇列（`UploadQueueStore`）不走這條路徑**，影片仍以原檔上傳、超限時由
+  Storage 回 413。
 
 ### 路徑規約
 ```
