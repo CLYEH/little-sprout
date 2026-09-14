@@ -376,7 +376,8 @@ jobs:
           # 也白紙黑字寫「掛 CI rules job」並標 ✅，但它從來沒被列進這兩個自測 step——`ci.yml` 列舉的 55 支與 repo 內
           # 實際的 57 支取差集，少的就是它與下面那支。「宣稱有 gate、其實沒有」比沒 gate 更危險：LS-264 新增的
           # ⑦a–⑦e（PostgREST 授權快取自癒）十格原本 CI 永遠跑不到。全 PATH shim、不碰模擬器／容器，
-          # reviewer 與實作者各在 `ubuntu:24.04`（只裝 git＋curl）實跑 58 組全綠。
+          # reviewer 與實作者各在 `ubuntu:24.04`（只裝 git＋curl）實跑全綠（LS-264 當時 58 組；LS-267 加
+          # `LS_QA_PSQL_BIN` seam 後 ⑦f 不再 SKIP、另加 ⑦g，現為 63 組——這行數字以實跑輸出為準）。
           bash scripts/ops/qa-e2e.test.sh || rc=1
           exit "$rc"
 
