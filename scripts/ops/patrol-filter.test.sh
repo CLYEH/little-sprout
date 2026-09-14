@@ -75,6 +75,22 @@ else
   line=$(sed -n "${tmpl}p" "$doc")
   has   '⑤ §4-b 模板呼叫 patrol-filter.sh' "$line" 'bash scripts/ops/patrol-filter.sh'
   hasnt '⑤ §4-b 模板不再複製樣式字面（樣式唯一定義在腳本）' "$line" "grep -E '⚠"
+  # R3 i2：過濾器是下游、看不到上游 exit code——模板必須自己帶 pipefail，patrol.sh 的 exit 2 才不會被吃掉
+  has   '⑤ §4-b 模板帶 set -o pipefail（上游非零不被管線末端蓋掉）' "$line" 'set -o pipefail'
+fi
+
+# ---- ⑤b（R3 i2）pipefail 下上游非零真的傳得出來（模板那一行的行為，不是只有文字）----
+out5b=$(set -o pipefail; bash "$patrol" --bogus-arg 2>&1 | bash "$pf" 2>&1); rc5b=$?
+if [ "$rc5b" -ne 0 ]; then
+  echo "✓ ⑤b pipefail 下 patrol.sh 參數錯 → 整條管線非零（exit ${rc5b}），不被過濾器的 0 蓋掉"
+else
+  echo "✗ ⑤b pipefail 下上游非零仍被蓋成 0（模板的 pipefail 失效？）" >&2; printf '%s\n' "$out5b" | sed 's/^/    /' >&2; fail=1
+fi
+out5c=$(set +o pipefail; bash "$patrol" --bogus-arg 2>&1 | bash "$pf" 2>&1); rc5c=$?   # 本檔自己開著 pipefail，對照組要在子 shell 關掉
+if [ "$rc5c" -eq 0 ]; then
+  echo "✓ ⑤b 對照：沒有 pipefail 時同一條管線回 0——證明 ⑤b 的非零來自 pipefail 本身"
+else
+  echo "✗ ⑤b 對照組不該非零（實得 ${rc5c}）" >&2; fail=1
 fi
 
 # ---- ⑥ patrol.sh 的退化分支（gh 不可用 → PR 半段整段沒巡）：結論行必須通過過濾 ----
@@ -113,6 +129,6 @@ file_has '⑧ patrol_linear.py：狀態對照行由渲染端統一前置 ⚠（�
 file_has '⑧ patrol_linear.py：cycle 對帳 (c)(d) 訊息帶 ⚠' "${root}/scripts/ops/patrol_linear.py" '"  (c) ⚠ %s"'
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ patrol-filter 自測通過（8 組樣本）"
+  echo "✓ patrol-filter 自測通過（9 組樣本）"
 fi
 exit "$fail"

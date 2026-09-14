@@ -20,8 +20,14 @@
 # 這個前提由 `scripts/ops/patrol-filter.test.sh`（夾具逐分支）＋`patrol.test.sh` ㉛／`patrol-linear.test.sh` ⑪ 守住。
 #
 # 用法：
-#   <patrol 輸出> | bash patrol-filter.sh      過濾（永遠 exit 0；過濾後空無一行會印 ⚠ 提醒，不靜默）
+#   <patrol 輸出> | bash patrol-filter.sh      過濾（過濾後空無一行會印 ⚠ 提醒，不靜默）
 #   bash patrol-filter.sh --pattern            只印樣式本身（給自測／文件引用）
+#
+# **exit code 的語意（R3 i2，merge-review R2）**：本腳本是管線的**下游**，看不到 `patrol.sh` 的 exit code，
+# 也不打算猜——它只回報「過濾這件事本身」：0＝過濾完成（有沒有留下行都算完成，留 0 行另印 ⚠ 提醒）、
+# 2＝參數錯。上游的成敗改由**模板自己顯化**：§4-b 的 cron 一行開頭帶 `set -o pipefail`，`patrol.sh` 的
+# exit 2（參數／環境錯）才不會被管線末端的 0 蓋掉。另外 `patrol.sh` 失敗時印的訊息本身帶 ✗／⚠，
+# 會通過這道過濾進到 context——不是靜默失敗。
 set -uo pipefail
 
 PATTERN='⚠|✗|⏳|→|lane:|current cycle|無異常'
