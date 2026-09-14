@@ -99,6 +99,13 @@ extension TapTargetGateHarness {
         guard seconds.isFinite, seconds >= 0 else {
             preconditionFailure("LS-269 harness：-LSVideoSignDelaySeconds 非法值 \(raw)")
         }
+        // LS-272（池 `3d2b2ffe` (2)）：`isFinite`／`>= 0` 沒有上界——`1e30` 這類極端值仍會通過這道
+        // guard，進到呼叫端 `UInt64(seconds * 1_000_000_000)` 才因整數溢位 trap，錯誤訊息指向
+        // 一個跟真正病灶（不合理的命令列參數）對不上的地方。這裡的等待窗口設計上不會有測試需要
+        // 超過 60 秒的簽名延遲，明確擋在這一層、訊息帶原始字串，直接指向 harness。
+        guard seconds <= 60 else {
+            preconditionFailure("LS-272 harness：-LSVideoSignDelaySeconds 非法值 \(raw)（上限 60 秒）")
+        }
         return seconds
     }
 
