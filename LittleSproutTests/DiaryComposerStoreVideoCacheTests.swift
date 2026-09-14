@@ -40,7 +40,7 @@ final class DiaryComposerStoreVideoCacheTests: XCTestCase {
     /// I3：上傳失敗重試，同一支影片不該重新呼叫 `videoPreparer`（正式路徑是真的
     /// `AVAssetExportSession.compressedForUpload`，40 秒 4K 在模擬器上約 20 秒——重試每次都重
     /// 壓一次會讓使用者在網路不穩時越試越久）。
-    func test_publish_videoUploadFailureThenRetry_reusesCachedCompressedOutput_doesNotReexport() async {
+    func test_publish_videoUploadFailureThenRetry_reusesCachedCompressedOutput_doesNotReexport() async throws {
         let diaryClient = StubDiaryAPIClient()
         let mediaService = StubMediaUploadService()
         diaryClient.setCreateHandler { _, _, _, _ in UUID() }
@@ -54,7 +54,9 @@ final class DiaryComposerStoreVideoCacheTests: XCTestCase {
             if attempt == 1 { throw AppError.network(message: "dropped mid-upload") }
             return videoMediaID
         }
-        let compressedURL = URL(fileURLWithPath: "/tmp/retry-video-1080p-\(UUID().uuidString).mp4")
+        // R2 i2：快取命中要求檔案還在，這裡寫一份真的檔案進共用暫存目錄，不是虛構路徑。
+        let compressedURL = try MediaDraftTempStorage.newFileURL(extension: "mp4")
+        try Data([0x03]).write(to: compressedURL)
         let videoPreparerCalls = OSAllocatedUnfairLock<Int>(initialState: 0)
         let store = makeStore(
             diaryAPIClient: diaryClient, mediaUploadService: mediaService,

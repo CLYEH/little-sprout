@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import os
 
 /// 影片裁切／壓縮（LS-125 票文 Scope 3，**LS-279 取消長度門檻**）：發佈前一律用
 /// `AVAssetExportSession` 壓到 1080p、只保留前 60 秒再上傳。
@@ -28,6 +29,16 @@ enum VideoTrimmer {
         case missingFileSize
     }
 
+    /// LS-283 R2（merge-review R1 B1）：`compressedForUpload` 用鎖保護的狀態機，確保
+    /// `exportSession.cancelExport()` 絕不會打在一支還沒呼叫過 `exportAsynchronously` 的
+    /// session 上（那會讓 AVFoundation 丟未捕捉的 `NSInternalInconsistencyException`，見該函式
+    /// 文件註解）。
+    private enum ExportLifecycleState: Equatable {
+        case idle
+        case started
+        case cancelledBeforeStart
+    }
+
     /// 壓成 1080p／前 60 秒，回傳真正要拿去上傳的暫存檔。
     ///
     /// `maxByteSize` 預設是 Storage `media` bucket 的單檔上限（`docs/API.md` §6）——export
@@ -52,26 +63,55 @@ enum VideoTrimmer {
         // LS-283（I1，源自 LS-279 merge-review R1 `5cd2b2ae`）：`withTaskCancellationHandler`
         // 讓取消 Task 真的停下 export——`AVAssetExportSession` 不會自己聽 Swift 的取消信號，
         // 沒有這層包裝的話，使用者取消（或未來任何 `Task.cancel()` 來源）不會讓匯出停止，會
-        // 繼續跑完整支並留下沒有回收者的輸出暫存檔。`cancelExport()` 會讓
-        // `exportAsynchronously` 的 completion handler以 `.cancelled` 狀態被呼叫，continuation
-        // 走下面的 `else` 分支丟錯；這裡額外用 `try?` 直接清掉輸出檔，不依賴呼叫端後續的
-        // 清理路徑（那條路徑在丟錯時根本不會被執行到）。`nonisolated(unsafe)`：`cancelExport()`
-        // 依 Apple 文件可以從任何執行緒呼叫，這裡只是把已存在的區域變數重新綁定給 `@Sendable`
-        // 的 `onCancel` 閉包捕捉，不是引入新的跨執行緒可變狀態。
+        // 繼續跑完整支並留下沒有回收者的輸出暫存檔。
+        //
+        // **R2（merge-review R1 B1）**：取消若落在「這裡之前」（`AVURLAsset` 建立、
+        // `newFileURL`、上面 `await exportDuration`——皆有真的 IO／suspension）、`operation`
+        // 還沒真的呼叫 `exportAsynchronously` 之前，`onCancel` 會**立刻**執行；若那時候直接
+        // `cancelExport()`，AVFoundation 會把 session 標成「已經開始過」，`operation` 接著才呼叫
+        // `exportAsynchronously` 就會丟未捕捉的 `NSInternalInconsistencyException`（reviewer 實跑
+        // 重現 test host crash）。`lifecycle` 這顆鎖保護的旗標把兩條路徑序列化：`operation`
+        // 呼叫 `exportAsynchronously` 前先在鎖裡確認沒有搶先被取消、標成 `.started` 才真的呼叫；
+        // `onCancel` 只在已經 `.started` 時才 `cancelExport()`，否則只記 `.cancelledBeforeStart`，
+        // `operation` 讀到就直接丟 `CancellationError()`、完全不碰 session。
+        //
+        // **i1**：輸出檔刪除只留在下面唯一的 completion handler（成功／失敗互斥的同一個
+        // `if/else`），`onCancel` 本身不碰檔案——避免「取消觸發的刪檔」與「AVFoundation 自己
+        // 寫完檔案」兩個動作競爭同一份檔案（先前的版本兩邊都會刪，競合時 `checkWithinSizeLimit`
+        // 會撞到裸的 `attributesOfItem` NSError，而不是乾淨的 `AppError`）。
+        //
+        // `nonisolated(unsafe)`：`cancelExport()` 依 Apple 文件可以從任何執行緒呼叫，這裡只是把
+        // 已存在的區域變數重新綁定給 `@Sendable` 的 `onCancel` 閉包捕捉，不是引入新的跨執行緒
+        // 可變狀態；`lifecycle` 本身用鎖保護，是唯一真正共享的可變狀態。
         nonisolated(unsafe) let cancellableSession = exportSession
+        let lifecycle = OSAllocatedUnfairLock<ExportLifecycleState>(initialState: .idle)
         try await withTaskCancellationHandler {
+            let shouldExport = lifecycle.withLock { state -> Bool in
+                guard state == .idle else { return false }
+                state = .started
+                return true
+            }
+            guard shouldExport else { throw CancellationError() }
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                exportSession.exportAsynchronously {
-                    if exportSession.status == .completed {
+                cancellableSession.exportAsynchronously {
+                    if cancellableSession.status == .completed {
                         continuation.resume()
                     } else {
-                        continuation.resume(throwing: exportSession.error ?? TrimmerError.exportFailed)
+                        try? FileManager.default.removeItem(at: outputURL)
+                        continuation.resume(throwing: cancellableSession.error ?? TrimmerError.exportFailed)
                     }
                 }
             }
         } onCancel: {
-            cancellableSession.cancelExport()
-            try? FileManager.default.removeItem(at: outputURL)
+            let shouldCancelExport = lifecycle.withLock { state -> Bool in
+                switch state {
+                case .started: return true
+                case .idle: state = .cancelledBeforeStart
+                case .cancelledBeforeStart: break
+                }
+                return false
+            }
+            if shouldCancelExport { cancellableSession.cancelExport() }
         }
         try await checkWithinSizeLimit(outputURL, maxByteSize: maxByteSize)
         let outputPixelSize = await pixelSize(ofFirstVideoTrackIn: AVURLAsset(url: outputURL))

@@ -75,7 +75,8 @@ final class VideoTrimmerTests: XCTestCase {
 
     /// LS-283（I1，源自 LS-279 merge-review R1 `5cd2b2ae`）：取消 Task 要讓 export 真的停下、
     /// 不留輸出暫存檔。`Task.sleep` 讓 export 先真的開始跑（`exportAsynchronously` 已被呼叫）
-    /// 再取消，才驗得到「取消中途的 export」而不是「還沒開始就取消」這種對本題無鑑別力的情境。
+    /// 再取消，驗的是「export 中途取消」這個窗口——`test_compressedForUpload_taskCancelledImmediately
+    /// _...` 驗的是另一個窗口（取消早於 export 啟動），兩者合起來才覆蓋 R2 B1 修的那顆鎖。
     func test_compressedForUpload_taskCancelled_cancelsExportAndLeavesNoOutputFile() async throws {
         let sourceURL = try await makeSyntheticVideo(seconds: 10)
         let temporaryFilesBefore = try mediaDraftTempFileCount()
@@ -89,6 +90,29 @@ final class VideoTrimmerTests: XCTestCase {
         XCTAssertEqual(
             try mediaDraftTempFileCount(), temporaryFilesBefore,
             "取消後輸出暫存檔要清掉，不留沒有回收者的孤兒檔"
+        )
+    }
+
+    /// LS-283 R2（merge-review R1 B1）：取消落在「進入 `compressedForUpload` 之後、
+    /// `exportAsynchronously` 真的被呼叫之前」這個窗口——`AVURLAsset` 建立、`newFileURL`、
+    /// `await exportDuration` 都是真的 IO／suspension，reviewer 拿掉上面那條測試的
+    /// `Task.sleep` 就實測重現 test host crash（`NSInternalInconsistencyException`：
+    /// `cancelExport()` 打在還沒呼叫過 `exportAsynchronously` 的 session 上）。這裡不 sleep、
+    /// 建立 Task 後立刻同步呼叫 `cancel()`——Task 尚未被排程執行，取消旗標必定搶在
+    /// `exportAsynchronously` 之前生效。修好後應該乾淨丟錯（`CancellationError`），不 crash、
+    /// 不留輸出檔。
+    func test_compressedForUpload_taskCancelledImmediately_throwsWithoutStartingExportOrCrashing() async throws {
+        let sourceURL = try await makeSyntheticVideo(seconds: 10)
+        let temporaryFilesBefore = try mediaDraftTempFileCount()
+
+        let task = Task { try await VideoTrimmer.compressedForUpload(fileURL: sourceURL) }
+        task.cancel()
+        let result = try? await task.value
+
+        XCTAssertNil(result, "建 Task 後立刻取消，export 不該啟動、不該回傳可上傳的壓縮結果")
+        XCTAssertEqual(
+            try mediaDraftTempFileCount(), temporaryFilesBefore,
+            "取消早於 export 啟動時不該留下任何輸出暫存檔"
         )
     }
 

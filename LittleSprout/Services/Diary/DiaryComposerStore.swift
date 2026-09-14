@@ -101,7 +101,7 @@ final class DiaryComposerStore {
     private var pendingOrphanMediaIDs: Set<UUID> = []
 
     /// 草稿 id → 已壓縮好、還沒上傳成功的 `UploadSource`（LS-283 I2／I3）：重試不重新呼叫
-    /// `videoPreparer`；成功後在 `uploadSingle` 移除，草稿被移除時 `cleanupRemovedDrafts` 清掉。
+    /// `videoPreparer`；`uploadSingle`／`cleanupRemovedDrafts` 收尾清掉，見那兩處註解。
     private var compressedVideoCache: [UUID: VideoTrimmer.UploadSource] = [:]
 
     /// 影片上傳前的 1080p 壓縮步驟（LS-279）——抽成可注入閉包，同
@@ -227,7 +227,6 @@ final class DiaryComposerStore {
             if case .video(let fileURL, _, _) = draft.kind {
                 try? FileManager.default.removeItem(at: fileURL)
             }
-            // LS-283 I2／I3：一併清掉留著的快取輸出，否則沒有其他回收者。
             if let cached = compressedVideoCache.removeValue(forKey: draft.id) {
                 try? FileManager.default.removeItem(at: cached.fileURL)
             }
@@ -370,10 +369,11 @@ final class DiaryComposerStore {
                 familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: draft.pixelSize
             )
         case .video(let fileURL, _, _):
-            // LS-279 不再依時長分流，每支影片都先壓成 1080p；LS-283 I2／I3 重試時沿用上一輪已
-            // 壓過的輸出（`compressedVideoCache`），不重新呼叫 `videoPreparer`，上傳成功才清掉。
+            // LS-279 每支影片先壓成 1080p；LS-283 I2／I3 重試沿用 `compressedVideoCache`。
             let source: VideoTrimmer.UploadSource
-            if let cached = compressedVideoCache[draft.id] {
+            let cached = compressedVideoCache[draft.id]
+            // R2 i2：命中但檔案已不在（低儲存空間清了 tmp）當未命中，重壓一次。
+            if let cached, FileManager.default.fileExists(atPath: cached.fileURL.path) {
                 source = cached
             } else {
                 source = try await videoPreparer(fileURL)
