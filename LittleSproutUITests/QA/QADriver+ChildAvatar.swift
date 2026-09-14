@@ -38,10 +38,13 @@ extension QADriver {
         let childName = "QA avatar \(Self.stamp())"
         try createChild(named: childName)
         let row = try require(childRow(named: childName), "寶貝列表上的「\(childName)」列", timeout: 30)
+        // R2 B3：先捲到看得見再量 digest——`XCUIElement.screenshot()` 只截元素 frame，被 Tab Bar 蓋住
+        // 或落在畫面外時截到的是裁切結果，前後比對會假紅／假綠。
+        scrollUntilHittable(row)
         let rowBefore = elementDigest(row)
         snap("children-list-before")
 
-        row.tap()
+        try tapWhenHittable(row, "寶貝列表上的「\(childName)」列", timeout: 30)
         try require(app.staticTexts["編輯寶貝資料"], "編輯寶貝資料頁")
         let avatarBefore = elementDigest(try require(avatarPickerButton, "頭像欄（「換張照片」）"))
         snap("edit-before")
@@ -58,14 +61,16 @@ extension QADriver {
         // merge-review R1 m4：重啟**前**先量一次同一列，讓「同 session 沒刷新」這件事有機械紀錄。
         // 這個值等於 `rowBefore` ＝ app 缺口仍在（LS-96 `126f7201`(1)）；哪天它等於 `rowAfter`，
         // 就是把下面那段重啟換回「同 session 直接比對」嚴格版的訊號（見 relaunchAndOpenChildrenTab 註解）。
-        let rowBeforeRelaunch = elementDigest(
-            try require(childRow(named: childName), "存檔後列表上「\(childName)」那一列", timeout: 30)
-        )
+        let rowAfterSave = try require(childRow(named: childName), "存檔後列表上「\(childName)」那一列", timeout: 30)
+        scrollUntilHittable(rowAfterSave)
+        let rowBeforeRelaunch = elementDigest(rowAfterSave)
         snap("children-list-after-save")
 
         // 重新啟動再驗，理由見下面 `relaunchAndOpenChildrenTab()` 的文件註解（同一 session 內
         // 存檔後那一列不會立刻換圖，是 app 端的已知缺口，不是本情境要守的東西）。
         try await relaunchAndOpenChildrenTab()
+        // 同上：比對前先讓那一列真的落在畫面內（R2 B3）。
+        scrollUntilHittable(try require(childRow(named: childName), "重啟後列表上「\(childName)」那一列", timeout: 30))
         let rowAfter = try await waitUntilSnapshotChanges(
             childRow(named: childName), from: rowBefore,
             what: "重新啟動後寶貝列表上「\(childName)」那一列的頭像（應是剛存的照片，不是姓名縮寫圓）",
@@ -148,11 +153,9 @@ extension QADriver {
     /// 刪不掉就大聲失敗——靜默略過等於把累積問題留給下一輪，正是這條要修的東西。跑到這裡時本情境的
     /// 斷言都已經過了，所以這裡的紅只會是「收尾刪除」本身，訊息分得開。
     private func deleteChild(named name: String) throws {
-        try require(childRow(named: name), "收尾：寶貝列表上的「\(name)」列", timeout: 30).tap()
+        try tapWhenHittable(childRow(named: name), "收尾：寶貝列表上的「\(name)」列", timeout: 30)
         try require(app.staticTexts["編輯寶貝資料"], "收尾：編輯寶貝資料頁")
-        let removeButton = try require(app.buttons["移除這個寶貝"], "收尾：「移除這個寶貝」（編輯頁最下方）", timeout: 20)
-        scrollUntilHittable(removeButton)
-        removeButton.tap()
+        try tapWhenHittable(app.buttons["移除這個寶貝"], "收尾：「移除這個寶貝」（編輯頁最下方）", timeout: 20)
         try require(app.buttons["移除，30 天內可還原"], "收尾：移除確認 sheet 的確認鈕", timeout: 20).tap()
         try require(childrenHeading, "收尾：移除後回到寶貝列表", timeout: 60)
         guard childRow(named: name).waitForNonExistence(timeout: 30) else {
@@ -167,13 +170,80 @@ extension QADriver {
         snap("children-list-cleaned")
     }
 
-    /// 編輯頁是 `ScrollView`，「移除這個寶貝」在最下方——小螢幕／大字級時初始不在畫面內。
-    /// 捲到可命中為止（同 `DeleteConfirmationAX3UITests` 的既有做法：迴圈捲、捲不動就放棄交給 tap 自己試）。
-    private func scrollUntilHittable(_ element: XCUIElement, maxSwipes: Int = 5) {
+    /// 捲到該元素可命中為止（捲不動就提早收工，交給 `tapWhenHittable` 的斷言大聲失敗）。
+    ///
+    /// merge-review R2 B3：`deleteChild` 軟刪之後，寶貝列表永遠多一列「已移除的寶貝（N）」，把「新增寶貝」
+    /// 主鈕推到自訂 Tab Bar（`RootView` 的 `.safeAreaInset` 膠囊）底下——reviewer 全新模擬器實跑 2/2 紅：
+    /// 鈕中心 (201, 790.5) 落在 Tab Bar 的 y 782–834 內，`tap()` 打在 Tab Bar 上，建檔頁永遠不出現。
+    /// 所以列表上的關鍵點擊一律先捲，而且是**捲那個 ScrollView**（對 `app` 揮可能被 Tab Bar 吃掉）。
+    private func scrollUntilHittable(_ element: XCUIElement, maxSwipes: Int = 6) {
+        var lastFrame = CGRect.null
         for _ in 0..<maxSwipes {
-            if element.isHittable { return }
-            app.swipeUp()
+            if isTappable(element) { return }
+            guard element.exists else { return }
+            let frame = element.frame
+            if frame == lastFrame { return }   // 捲不動了（已到底）——再揮也沒用
+            lastFrame = frame
+            scrollContainer.swipeUp()
         }
+    }
+
+    /// 「點得到」的判準：存在、`isHittable`，**而且點擊中心不落在 Tab Bar 膠囊的範圍內**。
+    ///
+    /// R3 實測（`.claude/evidence/LS-270/qa-e2e/child-avatar-20260914-210523/`）：只用 `isHittable` 不夠——
+    /// 「新增寶貝」被 Tab Bar 蓋住（鈕 762–819、Tab Bar 782–834）時 `isHittable` 仍回 true，`tap()` 打在
+    /// 兩顆 tab 鈕之間的空隙上（x=201 落在 112–200 與 202–290 中間），什麼都沒發生，紅在下一步。改用
+    /// 幾何判準：鈕的中心必須在 Tab Bar 上緣之上。Tab Bar 只存在於 tab-root（push 之後消失），找不到就視為無遮擋。
+    private func isTappable(_ element: XCUIElement) -> Bool {
+        guard element.exists, element.isHittable else { return false }
+        guard let tabBarTop = tabBarTopY else { return true }
+        return element.frame.midY < tabBarTop
+    }
+
+    /// Tab Bar 膠囊的上緣；目前畫面沒有 Tab Bar（push 進編輯頁之後）就回 nil。
+    ///
+    /// 只認**畫面下緣四分之一內**的分頁鈕——不能單看 label：push 之後的返回鈕 label 也是「寶貝」
+    /// （R3 實測：`child-avatar-20260914-210810` 的 `child-avatar-hierarchy-not-hittable.txt:17`，
+    /// `BackButton` 在 y=62），拿它當上緣會讓編輯頁上的每個元素都被判成「點不到」。
+    private var tabBarTopY: CGFloat? {
+        let windowHeight = app.windows.firstMatch.frame.height
+        guard windowHeight > 0 else { return nil }
+        let bottomZone = windowHeight * 0.75
+        let tops = ["時間軸", "相簿", "寶貝", "設定"]
+            .map { app.buttons.matching(NSPredicate(format: "label == %@", $0)).firstMatch }
+            .filter { $0.exists && $0.frame.minY > bottomZone }
+            .map(\.frame.minY)
+        return tops.min()
+    }
+
+    /// 內容捲動容器：畫面有 `ScrollView` 就揮它，沒有才退回整個 app。
+    private var scrollContainer: XCUIElement {
+        let scrollView = app.scrollViews.firstMatch
+        return scrollView.exists ? scrollView : app
+    }
+
+    /// 關鍵點擊：等元素出現 → 捲到可命中 → 再點。
+    ///
+    /// `require()` 只驗 `exists`；SwiftUI 的元素被 Tab Bar 蓋住時 `exists` 仍是 true，`tap()` 會靜默打在
+    /// 別人身上，紅在**下一步**（R2 B3 那兩次紅的訊息是「15 秒內沒等到『寶貝建檔頁』」，病灶其實在上一步的
+    /// tap 落點，排查成本很高）。這裡把「點得到」變成當場的斷言，訊息直接指向病灶。
+    @discardableResult
+    private func tapWhenHittable(
+        _ element: XCUIElement, _ what: String, timeout: TimeInterval = 15
+    ) throws -> XCUIElement {
+        let target = try require(element, what, timeout: timeout)
+        scrollUntilHittable(target)
+        guard isTappable(target) else {
+            attachHierarchy(reason: "not-hittable")
+            snap("fail-not-hittable")
+            XCTFail(
+                "\(what)存在但捲動後仍點不到（frame \(target.frame)）——多半是被 Tab Bar 膠囊蓋住"
+                + "（merge-review R2 B3：「已移除的寶貝」列會把主鈕往下推）；a11y 階層與截圖已附在 xcresult"
+            )
+            throw QAFailure.screen(what)
+        }
+        target.tap()
+        return target
     }
 
     private func openChildrenTab() throws {
@@ -183,7 +253,8 @@ extension QADriver {
     }
 
     private func createChild(named name: String) throws {
-        try require(app.buttons["新增寶貝"], "寶貝管理頁「新增寶貝」").tap()
+        // R2 B3：這顆主鈕在列表長一點時（尤其有「已移除的寶貝」列）會落到 Tab Bar 底下——先捲再點。
+        try tapWhenHittable(app.buttons["新增寶貝"], "寶貝管理頁「新增寶貝」")
         try require(app.staticTexts["幫寶貝建立檔案"], "寶貝建檔頁")
         // 建檔頁（compact）只有一個輸入欄（姓名或暱稱）；`LabeledTextField` 沒掛 identifier，同
         // `CreateChildView` 其餘元素的明碼慣例，這裡用 firstMatch。
