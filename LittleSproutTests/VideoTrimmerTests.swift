@@ -73,6 +73,49 @@ final class VideoTrimmerTests: XCTestCase {
         )
     }
 
+    /// LS-283（I1，源自 LS-279 merge-review R1 `5cd2b2ae`）：取消 Task 要讓 export 真的停下、
+    /// 不留輸出暫存檔。`Task.sleep` 讓 export 先真的開始跑（`exportAsynchronously` 已被呼叫）
+    /// 再取消，驗的是「export 中途取消」這個窗口——`test_compressedForUpload_taskCancelledImmediately
+    /// _...` 驗的是另一個窗口（取消早於 export 啟動），兩者合起來才覆蓋 R2 B1 修的那顆鎖。
+    func test_compressedForUpload_taskCancelled_cancelsExportAndLeavesNoOutputFile() async throws {
+        let sourceURL = try await makeSyntheticVideo(seconds: 10)
+        let temporaryFilesBefore = try mediaDraftTempFileCount()
+
+        let task = Task { try await VideoTrimmer.compressedForUpload(fileURL: sourceURL) }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        task.cancel()
+        let result = try? await task.value
+
+        XCTAssertNil(result, "Task 被取消後 export 不該完成、不該回傳可上傳的壓縮結果")
+        XCTAssertEqual(
+            try mediaDraftTempFileCount(), temporaryFilesBefore,
+            "取消後輸出暫存檔要清掉，不留沒有回收者的孤兒檔"
+        )
+    }
+
+    /// LS-283 R2（merge-review R1 B1）：取消落在「進入 `compressedForUpload` 之後、
+    /// `exportAsynchronously` 真的被呼叫之前」這個窗口——`AVURLAsset` 建立、`newFileURL`、
+    /// `await exportDuration` 都是真的 IO／suspension，reviewer 拿掉上面那條測試的
+    /// `Task.sleep` 就實測重現 test host crash（`NSInternalInconsistencyException`：
+    /// `cancelExport()` 打在還沒呼叫過 `exportAsynchronously` 的 session 上）。這裡不 sleep、
+    /// 建立 Task 後立刻同步呼叫 `cancel()`——Task 尚未被排程執行，取消旗標必定搶在
+    /// `exportAsynchronously` 之前生效。修好後應該乾淨丟錯（`CancellationError`），不 crash、
+    /// 不留輸出檔。
+    func test_compressedForUpload_taskCancelledImmediately_throwsWithoutStartingExportOrCrashing() async throws {
+        let sourceURL = try await makeSyntheticVideo(seconds: 10)
+        let temporaryFilesBefore = try mediaDraftTempFileCount()
+
+        let task = Task { try await VideoTrimmer.compressedForUpload(fileURL: sourceURL) }
+        task.cancel()
+        let result = try? await task.value
+
+        XCTAssertNil(result, "建 Task 後立刻取消，export 不該啟動、不該回傳可上傳的壓縮結果")
+        XCTAssertEqual(
+            try mediaDraftTempFileCount(), temporaryFilesBefore,
+            "取消早於 export 啟動時不該留下任何輸出暫存檔"
+        )
+    }
+
     /// 建議秒數的算法本身（純函式）：以實際輸出的平均位元率回推、乘 0.9 餘裕。
     /// 本票模擬器實測的那支 65 秒素材壓完是 ~78.6 MB／60 秒 → 建議 36 秒，而不是先前寫死的
     /// 40 秒（寫死的話會出現「40 秒的影片請裁到 40 秒內」這種自相矛盾的回話）。
@@ -104,6 +147,11 @@ final class VideoTrimmerTests: XCTestCase {
         return try FileManager.default.contentsOfDirectory(atPath: directory.path).count
     }
 
+    /// LS-283（I8，源自 LS-279 merge-review R1 `5cd2b2ae`）：`makeSyntheticVideo` 生測試資產失敗
+    /// 時丟這個，不是 `XCTSkip`——`XCTSkip` 會讓呼叫它的兩條核心驗收測試變成 skip 而非紅，CI
+    /// 照樣綠，違反 Rule 11「fail loud」。
+    private struct SyntheticVideoAssetGenerationFailure: Error {}
+
     /// 4K、每秒一格、內容是隨格數移動的漸層（記憶體填色，不進 CoreGraphics）——只要是能被
     /// `AVAssetExportSession` 讀進來的真資產就夠，不需要像真實影片那樣的高位元率內容。
     private func makeSyntheticVideo(seconds: Int) async throws -> URL {
@@ -132,10 +180,16 @@ final class VideoTrimmerTests: XCTestCase {
 
         for frame in 0..<seconds {
             while !input.isReadyForMoreMediaData { try await Task.sleep(nanoseconds: 1_000_000) }
-            guard let pool = adaptor.pixelBufferPool else { throw XCTSkip("取不到 pixel buffer pool") }
+            guard let pool = adaptor.pixelBufferPool else {
+                XCTFail("取不到 pixel buffer pool——測試資產生不出來，核心驗收測試不該被靜默 skip")
+                throw SyntheticVideoAssetGenerationFailure()
+            }
             var pixelBuffer: CVPixelBuffer?
             CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pixelBuffer)
-            guard let buffer = pixelBuffer else { throw XCTSkip("取不到 pixel buffer") }
+            guard let buffer = pixelBuffer else {
+                XCTFail("取不到 pixel buffer——測試資產生不出來，核心驗收測試不該被靜默 skip")
+                throw SyntheticVideoAssetGenerationFailure()
+            }
             fill(buffer, height: height, frame: frame)
             XCTAssertTrue(
                 adaptor.append(buffer, withPresentationTime: CMTime(value: CMTimeValue(frame), timescale: 1)),

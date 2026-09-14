@@ -100,6 +100,10 @@ final class DiaryComposerStore {
     /// 寬限期），已記入待辦池（LS-96 comment `c2050d43`），與 `996220e9` 是兩支不同的查詢。
     private var pendingOrphanMediaIDs: Set<UUID> = []
 
+    /// 草稿 id → 已壓縮好、還沒上傳成功的 `UploadSource`（LS-283 I2／I3）：重試不重新呼叫
+    /// `videoPreparer`；`uploadSingle`／`cleanupRemovedDrafts` 收尾清掉，見那兩處註解。
+    private var compressedVideoCache: [UUID: VideoTrimmer.UploadSource] = [:]
+
     /// 影片上傳前的 1080p 壓縮步驟（LS-279）——抽成可注入閉包，同
     /// `SupabaseMediaUploadService.durationLoader` 的理由：正式路徑固定是
     /// `VideoTrimmer.compressedForUpload`，但測試要能在不準備真影片檔的前提下釘住
@@ -222,6 +226,9 @@ final class DiaryComposerStore {
         for draft in removed {
             if case .video(let fileURL, _, _) = draft.kind {
                 try? FileManager.default.removeItem(at: fileURL)
+            }
+            if let cached = compressedVideoCache.removeValue(forKey: draft.id) {
+                try? FileManager.default.removeItem(at: cached.fileURL)
             }
         }
         let newOrphanMediaIDs = removed.compactMap { uploadedMediaByDraftID.removeValue(forKey: $0.id) }
@@ -362,14 +369,22 @@ final class DiaryComposerStore {
                 familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: draft.pixelSize
             )
         case .video(let fileURL, _, _):
-            // LS-279：不再依時長分流，每支影片都先壓成 1080p（壓完仍超過單檔上限會在這裡丟錯，
-            // 下面的 `uploadVideo` 不會被呼叫到——註定拿 413 的檔案不進上傳）。
-            let source = try await videoPreparer(fileURL)
+            // LS-279 每支影片先壓成 1080p；LS-283 I2／I3 重試沿用 `compressedVideoCache`。
+            let source: VideoTrimmer.UploadSource
+            let cached = compressedVideoCache[draft.id]
+            // R2 i2：命中但檔案已不在（低儲存空間清了 tmp）當未命中，重壓一次。
+            if let cached, FileManager.default.fileExists(atPath: cached.fileURL.path) {
+                source = cached
+            } else {
+                source = try await videoPreparer(fileURL)
+                compressedVideoCache[draft.id] = source
+            }
             // merge-review R1 m7：用輸出的實際像素尺寸；量不到才沿用草稿原本量到的。
             let id = try await mediaUploadService.uploadVideo(
                 familyID: familyID, fileURL: source.fileURL, fileExtension: source.fileExtension,
                 pixelSize: source.pixelSize ?? draft.pixelSize
             )
+            compressedVideoCache.removeValue(forKey: draft.id)
             Self.cleanupVideoTempFiles(originalURL: fileURL, uploadedURL: source.fileURL)
             return id
         }
