@@ -518,9 +518,18 @@ SUPA_SKEW_MIN=${PATROL_SUPABASE_SKEW_MIN:-60}
 case "$SUPA_SKEW_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_SUPABASE_SKEW_MIN 須為整數分鐘（得到「${SUPA_SKEW_MIN}」）" >&2; exit 2 ;; esac
 # LS-260 R2 M2：StartedAt 相差幾秒內算「同一次操作」（分批用）——`supabase db reset` 重啟那幾台
 # 實測落在數秒到數十秒內，120 秒有足夠餘裕又遠小於 60 分門檻。
+# LS-264（來源 LS-96 池項 `fda1b06c` m2）：120 秒是固定常數，而它要涵蓋的是「db 重啟 → 跑完 migrations
+# → 其餘幾台重啟」這整段——LS-260 實測餘裕只剩 14 秒，migration 一多就會超過，reset 偽陽性整個回來。
+# 本輪改成**優先由 `supabase-lock.sh` 的 `hold.log` 推導 reset 時窗**（見下方 awk 的 winstart），
+# 這個常數退居沒有 hold.log 可讀時的退路。
 SUPA_BATCH_SEC=${PATROL_SUPABASE_BATCH_SEC:-120}
 case "$SUPA_BATCH_SEC" in ''|*[!0-9]*) echo "✗ patrol：PATROL_SUPABASE_BATCH_SEC 須為整數秒（得到「${SUPA_BATCH_SEC}」）" >&2; exit 2 ;; esac
-SUPA_LINE=; supa_containers=0; supa_skew_m=0; supa_shape=
+# hold.log 路徑由 supabase-lock.sh 自己推（`--path` 已在上面取過 lock_path）；讀不到就退回 SUPA_BATCH_SEC。
+supa_hold_log=; [ -n "${lock_path:-}" ] && [ -f "${lock_path}.hold.log" ] && supa_hold_log="${lock_path}.hold.log"
+# hold.log 的行首時間是**本地時間**，容器 StartedAt 是 UTC。一次 date 同時取 epoch 與本地時間字串，
+# 讓 awk 自己算時差（同本檔「不碰 date -j／date -d」的既有理由：GNU／BSD 旗標不同）。
+supa_now_pair=$(date '+%s %Y-%m-%dT%H:%M:%S')
+SUPA_LINE=; supa_containers=0; supa_skew_m=0; supa_shape=; supa_intra_m=0; supa_intra_oldest=-; supa_intra_newest=-
 if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
   supa_names=$("$DOCKER_BIN" ps --filter name=supabase_ --format '{{.Names}}' 2>/dev/null | tr '\n' ' ')
   case "${supa_names// /}" in
@@ -545,9 +554,24 @@ if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
       #     → 判為例行 `supabase db reset`，**不掛旗標**（human 段註明形狀）。
       #   - 否則才看 `rest`／`kong`／`db`／`auth` 這四台之間的 skew（LS-246 症狀的直接關係人：
       #     auth／db 重啟而 rest／kong 沒有 → REST 401），超過門檻才掛旗標。
-      # 為什麼不改讀 hold.log：`supabase-lock.sh` 只記 `cmd=` 的**第一個字**（實際內容是
-      # `cmd=supabase`），reset／stop／start／status 在 log 裡長得一模一樣，時間比對無從分辨。
-      supa_parsed=$("$DOCKER_BIN" inspect --format '{{.Name}} {{.State.StartedAt}}' $supa_names 2>/dev/null | awk -v batch="${SUPA_BATCH_SEC}" '
+      #
+      # LS-264 m2（來源 LS-96 池項 `fda1b06c`）：分批視窗改由 `hold.log` 推導，`SUPA_BATCH_SEC` 退為退路。
+      # R2 當時寫「為什麼不改讀 hold.log：`supabase-lock.sh` 只記 `cmd=` 的第一個字（`cmd=supabase`），
+      # reset／stop／start／status 長得一模一樣」——那句話對「分辨是哪個子命令」成立，但這裡根本不需要
+      # 分辨：要的只是**那一次容器操作是幾點開始的**。hold.log 每次取鎖都留一行帶時間的 `取得`（`--`
+      # 包裝與 `--hold` 都有），取「不晚於最新容器 StartedAt 的最近一次取鎖時間」當視窗起點，凡在其後
+      # 啟動的容器都算同一次操作——migrations 跑 5 分鐘也涵蓋得住，不必猜一個固定秒數。
+      # 兩道保險：(1) 視窗起點離最新容器超過 `SUPA_SKEW_MIN` 分就不採用（太舊的取鎖與這次重啟無關，
+      # 硬採會把所有容器併成一批、反而把 LS-246 那種真事故洗成 uniform）；(2) 沒有 hold.log／解析不出
+      # 時間（新機器、/tmp 被清）就退回 `SUPA_BATCH_SEC` 的固定秒數分批，行為與 LS-260 相同。
+      #
+      # LS-264 m3（同池項）：形狀判為 db-reset 時，R2 版本整段靜音——「非 reset 群組裡有人落單重啟」
+      # （例如 kong 比 rest 晚 5 天才被單獨重啟）會被例行 reset 完全遮蔽。改成只排除**跨群組**那段差：
+      # 最新一批（reset 群組）內部、其餘容器內部各自再比一次 focus skew，任一超過門檻照樣掛旗標。
+      supa_parsed=$( { "$DOCKER_BIN" inspect --format '{{.Name}} {{.State.StartedAt}}' $supa_names 2>/dev/null | sed 's/^/C /'
+                       [ -n "$supa_hold_log" ] && grep -a '取得' "$supa_hold_log" 2>/dev/null | tail -n 100 | sed 's/^/H /'
+                       true
+                     } | awk -v batch="${SUPA_BATCH_SEC}" -v maxwin="$((SUPA_SKEW_MIN * 60))" -v nowpair="$supa_now_pair" '
         function epoch(s,   a, y, m, d, H, M, S, yy, era, yoe, doy, doe, days) {
           split(s, a, /[-T:]/)
           y = a[1] + 0; m = a[2] + 0; d = a[3] + 0; H = a[4] + 0; M = a[5] + 0; S = int(a[6])
@@ -568,10 +592,21 @@ if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
           for (i in r) resetset[r[i]] = 1
           split("rest kong db auth", f, " ")
           for (i in f) focus[f[i]] = 1
+          # hold.log 是本地時間、容器 StartedAt 是 UTC：用「同一次 date 取到的 epoch 與本地時間字串」
+          # 反推時差（本地字串當 UTC 解出來的 epoch − 真 epoch）。
+          split(nowpair, np, " ")
+          tzoff = (np[2] == "" ? 0 : epoch(np[2]) - (np[1] + 0))
+          winstart = -1
         }
-        NF >= 2 {
-          nm = $1; sub(/^\//, "", nm)
-          e = epoch($2)
+        # hold.log 的取鎖行：`YYYY-MM-DD HH:MM:SS … 取得 …`（`--` 包裝與 `--hold` 兩種都是這個行首）
+        $1 == "H" && NF >= 3 {
+          he = epoch($2 "T" $3)
+          if (he >= 0) { nh++; holds[nh] = he - tzoff }
+          next
+        }
+        $1 == "C" && NF >= 3 {
+          nm = $2; sub(/^\//, "", nm)
+          e = epoch($3)
           if (e < 0) next
           n++; names[n] = role(nm); epochs[n] = e; full[n] = nm
           if (role(nm) in resetset) present_reset[role(nm)] = 1
@@ -582,11 +617,19 @@ if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
         }
         END {
           if (n == 0) exit 0
-          # 最新一批：以最大 epoch 為錨，差 <= batch 秒的都算同一批
           top = 0
           for (i = 1; i <= n; i++) if (epochs[i] > top) top = epochs[i]
+          # m2：視窗起點＝不晚於 top 的最近一次取鎖時間（離 top 超過 maxwin 秒就不採用）；
+          #     取不到就退回「以 top 為錨、差 <= batch 秒算同一批」的固定秒數分批。
+          for (i = 1; i <= nh; i++)
+            if (holds[i] <= top && holds[i] > winstart) winstart = holds[i]
+          if (winstart >= 0 && top - winstart > maxwin) winstart = -1
           nb = 0
-          for (i = 1; i <= n; i++) if (top - epochs[i] <= batch) { nb++; batchset[names[i]] = 1 }
+          for (i = 1; i <= n; i++) {
+            inb = (winstart >= 0) ? (epochs[i] >= winstart) : (top - epochs[i] <= batch)
+            grp[i] = inb ? 1 : 0
+            if (inb) { nb++; batchset[names[i]] = 1 }
+          }
           # 形狀判定：最新一批的成員集合是否恰好等於「現存的 reset 群組」
           shape = "other"
           same = 1
@@ -594,7 +637,21 @@ if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
           for (b in batchset) if (!(b in present_reset)) same = 0
           if (same && nb > 0 && nb < n) shape = "db-reset"
           if (nb == n) shape = "uniform"
-          printf "%d\t%d\t%s\t%s\t%s\n", n, (fmx == "" ? 0 : fmx - fmn), (fmnn == "" ? "-" : fmnn), (fmxn == "" ? "-" : fmxn), shape
+          # m3：群組內 focus skew（最新一批內部、其餘容器內部各算一次，取較大的那組）——
+          #     只有「跨群組」那段差被排除，群組內落單重啟仍看得見。
+          intra = 0; intraold = "-"; intranew = "-"
+          for (i = 1; i <= n; i++) {
+            if (!(names[i] in focus)) continue
+            g = grp[i]
+            if (gmn[g] == "" || epochs[i] < gmn[g]) { gmn[g] = epochs[i]; gmnn[g] = full[i] }
+            if (gmx[g] == "" || epochs[i] > gmx[g]) { gmx[g] = epochs[i]; gmxn[g] = full[i] }
+          }
+          for (g = 0; g <= 1; g++) {
+            if (gmn[g] == "") continue
+            d = gmx[g] - gmn[g]
+            if (d > intra) { intra = d; intraold = gmnn[g]; intranew = gmxn[g] }
+          }
+          printf "%d\t%d\t%s\t%s\t%s\t%d\t%s\t%s\n", n, (fmx == "" ? 0 : fmx - fmn), (fmnn == "" ? "-" : fmnn), (fmxn == "" ? "-" : fmxn), shape, intra, intraold, intranew
         }
       ')
       if [ -n "$supa_parsed" ]; then
@@ -603,9 +660,18 @@ if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
         supa_oldest=$(printf '%s' "$supa_parsed" | cut -f3)
         supa_newest=$(printf '%s' "$supa_parsed" | cut -f4)
         supa_shape=$(printf '%s' "$supa_parsed" | cut -f5)
+        supa_intra_m=$(( $(printf '%s' "$supa_parsed" | cut -f6) / 60 ))
+        supa_intra_oldest=$(printf '%s' "$supa_parsed" | cut -f7)
+        supa_intra_newest=$(printf '%s' "$supa_parsed" | cut -f8)
         case "$supa_shape" in
           uniform)  supa_note="整組同一次啟動" ;;
-          db-reset) supa_note="最新一批＝db／auth／storage／realtime／analytics，形狀符合例行 supabase db reset，不掛旗標" ;;
+          db-reset)
+            if [ "$supa_intra_m" -gt "$SUPA_SKEW_MIN" ]; then
+              supa_note="最新一批＝db／auth／storage／realtime／analytics，形狀符合例行 supabase db reset，但群組內最大差 ${supa_intra_m} 分 > ${SUPA_SKEW_MIN}"
+            else
+              supa_note="最新一批＝db／auth／storage／realtime／analytics，形狀符合例行 supabase db reset，不掛旗標（群組內最大差 ${supa_intra_m} 分）"
+            fi
+            ;;
           *)        supa_note="最新一批不是 reset 群組" ;;
         esac
         SUPA_LINE="容器 ${supa_containers} 個，rest／kong／db／auth 之間最大差 ${supa_skew_m} 分（最舊 ${supa_oldest}／最新 ${supa_newest}；門檻 ${SUPA_SKEW_MIN} 分；${supa_note}）"
@@ -613,6 +679,10 @@ if command -v "$DOCKER_BIN" >/dev/null 2>&1; then
           # LS-260 R2 m4：整組重啟包成**一次** lock（R1 拆成兩次獨立 lock，兩次之間別人可以合法取得
           # lock 並看到整組是停的）；這個包法與 qa.md／`pretool.test.sh` H3b-s⑦ 認可的寫法一致。
           add_flag "[Supabase 容器] ⚠ 容器啟動時間不一致（rest／kong／db／auth 之間最舊 ${supa_oldest} 與最新 ${supa_newest} 差 ${supa_skew_m} 分 > ${SUPA_SKEW_MIN}，且最新一批不是 db reset 的群組）——單獨重啟過的容器與其他容器不同步（LS-246 QA：auth／db 重啟、rest／kong 沒有 → REST 401、App 卡「伺服器發生問題」）。請在同一次 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"（LS-260）"
+        elif [ "$supa_shape" = db-reset ] && [ "$supa_intra_m" -gt "$SUPA_SKEW_MIN" ]; then
+          # LS-264 m3：例行 reset 只解釋得了「跨群組」那段差；群組內部（reset 群組內、或其餘容器內）
+          # 還差這麼多，代表有人單獨重啟過其中一台——正是 LS-246 要抓的形狀，不能被 reset 遮蔽。
+          add_flag "[Supabase 容器] ⚠ 群組內啟動時間不一致（形狀符合例行 db reset，但同一群組內最舊 ${supa_intra_oldest} 與最新 ${supa_intra_newest} 差 ${supa_intra_m} 分 > ${SUPA_SKEW_MIN}）——跨群組差已排除，這段差只可能是單獨重啟（LS-246 QA：auth／db 重啟、rest／kong 沒有 → REST 401、App 卡「伺服器發生問題」）。請在同一次 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"（LS-264）"
         fi
       else
         SUPA_LINE="（docker inspect 讀不到 StartedAt，略過）"
@@ -1200,7 +1270,7 @@ case "$MODE" in
     echo "== Supabase lock（本機容器序列化，scripts/ops/supabase-lock.sh；LS-70；⚠ tomb＝上次回收異常的殘留；持有者剩餘 >10 分且有等待者才會另印排隊提示，LS-207）"
     printf '%s\n' "$lock_line" | sed 's/^/  /'
     [ -n "$lock_queue_flag" ] && echo "  ${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
-    echo "== Supabase 容器啟動時間（LS-260；先依 StartedAt 分批，最新一批若不是 db reset 的群組、且 rest／kong／db／auth 之間差 >${SUPA_SKEW_MIN} 分＝有人單獨重啟過某台，LS-246）"
+    echo "== Supabase 容器啟動時間（LS-260／LS-264；先依 StartedAt 分批（視窗起點取 supabase-lock hold.log 的最近一次取鎖，取不到才退回固定秒數），最新一批若不是 db reset 的群組、且 rest／kong／db／auth 之間差 >${SUPA_SKEW_MIN} 分＝有人單獨重啟過某台；形狀是 db reset 時改比群組內差，LS-246）"
     echo "  ${SUPA_LINE}"
     echo "== 近 ${REDS_DAYS} 日 CI 同類紅（LS-260；失敗測試名／失敗型別跨 run 聚合，同簽章 ≥2 個 run 即 ⚠ → §5-b 升 High）"
     [ -n "$reds_note" ] && echo "  ${reds_note}"

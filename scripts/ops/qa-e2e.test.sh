@@ -26,6 +26,8 @@ cat > "$bin/supabase" <<'STUB'
 #!/bin/bash
 case "${FAKE_SUPABASE_MODE:-ok}" in
   ok) printf 'ANON_KEY="fake-anon"\nAPI_URL="http://127.0.0.1:54321"\nMAILPIT_URL="http://127.0.0.1:54324"\nSERVICE_ROLE_KEY="fake-service"\n' ;;
+  # LS-264：舊版 CLI／欄位改名的形狀——有 API_URL／ANON_KEY 但沒有 SERVICE_ROLE_KEY，探針該整段略過
+  nokey) printf 'ANON_KEY="fake-anon"\nAPI_URL="http://127.0.0.1:54321"\nMAILPIT_URL="http://127.0.0.1:54324"\n' ;;
   empty) ;;
   down) echo "failed to inspect container health" >&2; exit 1 ;;
 esac
@@ -37,8 +39,22 @@ url=; for a in "$@"; do case "$a" in http*) url=$a ;; esac; done
 case "$url" in
   */api/v1/info) [ "${FAKE_CURL_MAILPIT:-200}" = none ] || printf '%s' "${FAKE_CURL_MAILPIT:-200}" ;;
   */auth/v1/health) printf '%s' "${FAKE_CURL_AUTH:-200}" ;;
+  # LS-264：PostgREST 授權快取探針。FAKE_CURL_REST 可給逗號分隔序列（第 n 次呼叫取第 n 個，
+  # 用完沿用最後一個），用來模擬「第一次 401、reload 後 200」這種兩段式情境。
+  */rest/v1/*)
+    seq=${FAKE_CURL_REST:-200}
+    c=$(cat "$FAKE_WORK/rest-calls" 2>/dev/null || echo 0); c=$((c + 1)); printf '%s' "$c" > "$FAKE_WORK/rest-calls"
+    old=$IFS; IFS=,; set -- $seq; IFS=$old
+    [ "$c" -le $# ] || c=$#
+    eval "printf '%s' \"\${$c}\"" ;;
   *) printf '000' ;;
 esac
+STUB
+# LS-264：psql stub——記錄 notify 呼叫；FAKE_PSQL_RC 模擬失敗
+cat > "$bin/psql" <<'STUB'
+#!/bin/bash
+touch "$FAKE_WORK/INVOKED-psql"; echo "psql $*" >> "$FAKE_WORK/calls.log"
+exit "${FAKE_PSQL_RC:-0}"
 STUB
 # xcrun：預設（dumb）一律 exit 99；FAKE_XCRUN_MODE=sim 時扮演一台專屬機 LS-321-iPhone17Pro（狀態 FAKE_SIM_STATE）
 cat > "$bin/xcrun" <<'STUB'
@@ -110,7 +126,7 @@ no_tools() {   # 斷言 xcrun／xcodebuild／docker 都沒被叫到
   [ "$bad" -eq 0 ] && ok "${name}：未實跑 xcrun／xcodebuild／docker"
   reset_logs
 }
-reset_logs() { rm -f "$work"/INVOKED-* "$work/calls.log" "$work/lock.log"; : > "$work/calls.log"; : > "$work/lock.log"; }
+reset_logs() { rm -f "$work"/INVOKED-* "$work/calls.log" "$work/lock.log" "$work/rest-calls"; : > "$work/calls.log"; : > "$work/lock.log"; }
 log_has()   { if grep -qF -- "$3" "$work/$2"; then ok "$1"; else echo "✗ ${1}（${2} 應含「${3}」）" >&2; sed 's/^/    /' "$work/$2" >&2; fail=1; fi; }
 log_hasnt() { if grep -qF -- "$3" "$work/$2"; then echo "✗ ${1}（${2} 不應含「${3}」）" >&2; sed 's/^/    /' "$work/$2" >&2; fail=1; else ok "$1"; fi; }
 reset_logs
@@ -205,6 +221,83 @@ out=$(FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" publish); got=$?
 expect 2 '⑥f publish 缺 fixture（假 repo 沒有 QA/Fixtures）→ exit 2、不碰 lock／xcodebuild' "$got" "$out" '缺 fixture'
 log_hasnt '⑥f 缺 fixture 不 --hold' lock.log 'lock --hold'
 [ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑥f 不該跑 xcodebuild" >&2; fail=1; } || ok '⑥f 缺 fixture 不碰 xcodebuild'
+reset_logs
+
+# ---- ⑦ PostgREST 授權快取自癒（LS-264；來源 LS-96 池項 `2ce0014f`(a)；R2 m1 改成無條件先 reload）----
+#      LS-260 實測：登入後首個 REST 請求連兩次 401 permission denied（決定性），reset 後才過。
+#      R1 版本是「先探、非 2xx 才 reload」，但探針（service_role／`profiles`）與原事故
+#      （`authenticated`／`app_settings`）角色與表都不同，角色特定故障探不到＝自癒沒接上（merge-review R1 m1）。
+#      R2 改成：先無條件 `notify pgrst, 'reload schema'`（與角色無關），探針退化成 reload 後的 fail-loud
+#      健康檢查。本段驗：健康也要 reload、reload 後仍紅要再 reload 一次、兩次仍紅才 exit 2 且不燒 xcodebuild、
+#      reload 打不出去只 ⚠ 不擋、沒有 SERVICE_ROLE_KEY 仍然 reload。
+out=$(FAKE_CURL_REST=200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 0 '⑦a 探針 200 → 仍無條件 reload 過一次、印健康那行、照跑' "$got" "$out" \
+  "已在 hold 內發 notify pgrst, 'reload schema'" 'REST 授權快取探針 HTTP 200（reload 後健康' '通過'
+log_has '⑦a（R2 m1）健康路徑也真的發了 notify（不再「健康就不碰」）' calls.log "notify pgrst, 'reload schema'"
+reset_logs
+out=$(FAKE_CURL_REST=401,200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 0 '⑦b 探針 401 → 等 3 秒再 reload 一次 → 再探 200 → 自癒後照跑' "$got" "$out" \
+  'REST 探針回 HTTP 401' '第二次 reload schema 後' '已自癒' '通過'
+if [ "$(grep -c "notify pgrst, 'reload schema'" "$work/calls.log")" -eq 2 ]; then
+  ok '⑦b 非 2xx 路徑一共發兩次 notify（無條件那次＋重試那次）'
+else
+  echo "✗ ⑦b 應發兩次 notify（實得 $(grep -c "notify pgrst, 'reload schema'" "$work/calls.log") 次）" >&2
+  sed 's/^/    /' "$work/calls.log" >&2; fail=1
+fi
+reset_logs
+out=$(FAKE_CURL_REST=401,401 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 2 '⑦c 兩次 reload 後仍 401 → exit 2（fail loud），並指向 lock 內整組重啟' "$got" "$out" \
+  '兩次後 REST 探針仍回 HTTP 401' 'supabase stop && supabase start'
+[ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑦c 探針沒救回來不該燒 xcodebuild" >&2; fail=1; } || ok '⑦c 探針沒救回來不跑 xcodebuild'
+log_has '⑦c 仍釋放自己取得的 hold（trap EXIT）' lock.log 'lock --release'
+reset_logs
+# R2 m1：reload 打不出去不再直接 exit 2（PR 前根本沒有這一步，failure 代表「沒修成」不是「更差」）——
+# 只 ⚠ 並繼續探；探針健康就照跑，探針紅才 fail loud（下一格）。
+out=$(FAKE_CURL_REST=200 FAKE_PSQL_RC=1 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 0 '⑦d notify 發不出去但探針健康 → ⚠ 不擋、照跑（fail-soft 邊界）' "$got" "$out" \
+  'notify pgrst 發不出去' 'host psql' '通過'
+reset_logs
+out=$(FAKE_CURL_REST=401,401 FAKE_PSQL_RC=1 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 2 '⑦d2 notify 發不出去且探針紅 → exit 2、不燒 xcodebuild' "$got" "$out" 'notify pgrst 發不出去' '仍回 HTTP 401'
+[ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑦d2 不該燒 xcodebuild" >&2; fail=1; } || ok '⑦d2 notify 失敗且探針紅時不跑 xcodebuild'
+reset_logs
+# 負控：SERVICE_ROLE_KEY 缺席時只略過「探測」，reload 照發（reload 不需要任何金鑰）
+out=$(FAKE_SUPABASE_MODE=nokey FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 0 '⑦e 無 SERVICE_ROLE_KEY → 只略過探測、不擋（fail-soft）' "$got" "$out" '略過 PostgREST 授權快取探測' '通過'
+log_has '⑦e（R2 m1）缺金鑰仍然 reload 過（自癒不靠探針觸發）' calls.log "notify pgrst, 'reload schema'"
+reset_logs
+# ⑦f（LS-264 R2 m2；merge-review R1 m2）：`pgrst_reload` 的 **docker exec 分支**——本機沒有 host `psql`，
+#      實跑走的就是這條，但上面每一格的 PATH 都有 psql stub，等於零覆蓋：容器名前綴或 `docker exec` 參數
+#      日後改動，自測全綠、真跑時 notify 靜默失敗，而 exit 2 的訊息還會把人指去「整組重啟」。
+#      做法：另備一個「除了 psql 以外的 stub 都在」的 bin 目錄（shim 之外若系統真的裝了 psql 就 SKIP，
+#      同本 repo 對無 jq 的既有慣例），docker stub 回一個容器名，斷言 calls.log 出現 docker exec … psql … notify。
+bin_nopsql="$work/bin-nopsql"; mkdir -p "$bin_nopsql"
+for f in "$bin"/*; do
+  case "${f##*/}" in psql) continue ;; esac
+  ln -sf "$f" "$bin_nopsql/${f##*/}"
+done
+cat > "$bin_nopsql/docker" <<'STUB'
+#!/bin/bash
+touch "$FAKE_WORK/INVOKED-docker"; echo "docker $*" >> "$FAKE_WORK/calls.log"
+# `docker ps --filter name=supabase_db --format {{.Names}}` → 回容器名；其餘（exec／logs）只記錄。
+# 真的比對 filter 值：filter 打錯（例如容器名前綴改掉）就回空，讓 ⑦f 轉紅——不比對的話這格是空跑。
+if [ "$1" = ps ]; then
+  for a in "$@"; do
+    case "$a" in name=supabase_db) echo "supabase_db_little-sprout" ;; esac
+  done
+fi
+exit 0
+STUB
+chmod +x "$bin_nopsql/docker"
+if PATH="$bin_nopsql:$PATH" command -v psql >/dev/null 2>&1; then
+  echo "SKIP 2 組（系統路徑上有真的 psql）：⑦f docker exec 分支無法在本機隔離"
+else
+  out=$( cd "$wt" && PATH="$bin_nopsql:$PATH" FAKE_XCRUN_MODE=sim LS_LOCK_SH="$bin/lock-stub.sh" \
+         FAKE_CURL_REST=200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass bash "$script" login 2>&1 ); got=$?
+  expect 0 '⑦f 無 host psql → 走 docker exec 分支、印該通道、照跑' "$got" "$out" \
+    'docker exec supabase_db_little-sprout psql' '通過'
+  log_has '⑦f docker exec 真的帶了 psql 與 notify pgrst, reload schema' calls.log "docker exec supabase_db_little-sprout psql -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q -c notify pgrst, 'reload schema'"
+fi
 reset_logs
 
 if [ "$fail" -ne 0 ]; then echo "✗ qa-e2e 自測失敗" >&2; exit 1; fi

@@ -77,9 +77,12 @@ QA_BODY="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGA
 KILL='切檔一律不殺行程；`pen-open.sh` 的 --force-reload／--kill 只在 orchestrator 明示時使用，用後必回報「需重連」。'
 # LS-180 裁決：ui-designer 正文另須含「收工 Pen 停在票檔」（不切回主 checkout）；合法的 ui-designer 樣本兩句都要有
 STAY='handoff 前不切回主 checkout：收工 Pen 停在票檔，handoff 註明路徑。'
-UI_BODY="${KILL} ${STAY} ${NOFORK254}"
+# LS-264（LS-96 池項 c1b67f93）：ui-designer／visual-reviewer 正文另須含「editId 成功套用後即失效」
+# （Pencil execute 的 edits/editId 成功後不能再用，分批每批都要重送 snippet 全文）；併進兩份合法樣本
+EDITID='`execute` 的 editId 成功套用後即失效，分批每批都要重送 snippet 全文。'
+UI_BODY="${KILL} ${STAY} ${NOFORK254} ${EDITID}"
 # LS-254：visual-reviewer 合法樣本＝LS-180 的 --kill 句＋禁派 fork 句（不要求收工句，見 ⑧）
-VR_BODY="${KILL} ${NOFORK254}"
+VR_BODY="${KILL} ${NOFORK254} ${EDITID}"
 # LS-186：ios-dev 正文另須含 CI 完整旗標的 PR body 驗證句；OLD_PRBODY 是 LS-186 之前的裸寫法（⑪ 的負樣本）
 PRBODY='`gh pr create/edit --body-file <f>` 之前先 `bash scripts/gates/pr-body-check.sh <f> --branch <分支> --verify`，直接看 exit code。'
 OLD_PRBODY='`gh pr create/edit --body-file <f>` 之前先 `bash scripts/gates/pr-body-check.sh <f>` 斷言檔頭段含本票票號。'
@@ -154,7 +157,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（48 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 48 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（50 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 50 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -444,7 +447,7 @@ fi
 
 # ---- ㉓ LS-256（LS-96 池項 a7e9e910 i1／e4155ed8(1)）：dead-code-sweeper 是六份定義中原唯一未釘「禁派 fork」的（LS-254 票文只列五份）
 #        ——補釘同一條規則；tools 白名單無 Agent，與 merge-reviewer／qa 同型（需要並行回報 orchestrator 拆派）。----
-reset; expect 0 '㉓ dead-code-sweeper 正文含禁派 fork 句 → 印「正文含」（總數 48 條）' 'dead-code-sweeper.md：正文含「禁派 fork」' '正文必含字樣 48 條）'
+reset; expect 0 '㉓ dead-code-sweeper 正文含禁派 fork 句 → 印「正文含」（總數 50 條）' 'dead-code-sweeper.md：正文含「禁派 fork」' '正文必含字樣 50 條）'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '㉓ dead-code-sweeper 缺該句 → exit 1，工具齊全不救（regression：LS-254 前這份無正文規則、任何正文都過）' 'dead-code-sweeper.md：正文缺「禁派 fork」' '' 'dead-code-sweeper.md：tools: 缺'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "禁派fork（無空白）"; expect 1 '㉓ 字樣須整句「禁派 fork」（含空白）→ exit 1' 'dead-code-sweeper.md：正文缺「禁派 fork」'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
@@ -454,6 +457,19 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '禁派 fork'; then
 else
   echo "✗ ㉓ mutant（sweeper 禁派 fork 句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
+
+# ---- ㉔ LS-264（LS-96 池項 `c1b67f93`）：ui-designer／visual-reviewer 正文須含「editId 成功套用後即失效」
+#      （Pencil `execute` 的 `edits`／`editId` 成功後即失效，分批掃描每批都要重送 snippet 全文；LS-247 VR R3 實測）
+reset; mk ui-designer NONE "${KILL} ${STAY} ${NOFORK254}"; expect 1 '㉔ ui-designer 缺 editId 句 → exit 1（其他必含字樣齊全不救）' 'ui-designer.md：正文缺「editId 成功套用後即失效」'
+reset; mk visual-reviewer NONE "${KILL} ${NOFORK254}"; expect 1 '㉔ visual-reviewer 缺 editId 句 → exit 1' 'visual-reviewer.md：正文缺「editId 成功套用後即失效」'
+reset; mk ui-designer NONE "${KILL} ${STAY} ${NOFORK254}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'editId 成功套用後即失效'; then
+  ok '㉔ mutant：拿掉 BODY_RULES 區塊後「ui-designer 缺 editId 句」的負樣本變綠'
+else
+  echo "✗ ㉔ mutant（ui-designer editId 句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset
 
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過
 mut3="$work/agent-tools-check.body-not-subset.sh"
