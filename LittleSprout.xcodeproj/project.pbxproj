@@ -215,6 +215,7 @@
 		70A9A544D42C882AAF8E01BC /* BirthdayFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD928203A33BAF4F43BDB5D /* BirthdayFormatTests.swift */; };
 		723D9BF3536E69706CDB5FFC /* EULAStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369CBDFE007B61C9401815AE /* EULAStore.swift */; };
 		7329308266E6C8D0966F82FE /* InviteFamilyView+PendingApprovals.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF7806F951789DC6E905A8FA /* InviteFamilyView+PendingApprovals.swift */; };
+		743E06DCB634D775FB5F8D62 /* ChildAvatarViewStructureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E854A344C6B7C3A322E9BB7B /* ChildAvatarViewStructureTests.swift */; };
 		74E602F347273C1919B3B01A /* TimelineView+Comments.swift in Sources */ = {isa = PBXBuildFile; fileRef = B382FF9798D526E3A1B37E63 /* TimelineView+Comments.swift */; };
 		75C2E68E2A23BFC610922AD1 /* PushNotificationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F7B424F9E6558EAD1AB844F /* PushNotificationStore.swift */; };
 		764C8B42926AA6E94EC2C4CF /* TapTargetGateHarness+DiaryCardVideoBadges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3D2F360EBF9E037628E69B /* TapTargetGateHarness+DiaryCardVideoBadges.swift */; };
@@ -869,6 +870,7 @@
 		E466449A44696816AA484F94 /* OTPVerificationModelRateLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModelRateLimitTests.swift; sourceTree = "<group>"; };
 		E60A9F24D8B2759B3E482F5E /* CommentsSheetView+Footer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommentsSheetView+Footer.swift"; sourceTree = "<group>"; };
 		E715D59C5D776BF6611E5E33 /* InteractionRowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionRowUITests.swift; sourceTree = "<group>"; };
+		E854A344C6B7C3A322E9BB7B /* ChildAvatarViewStructureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildAvatarViewStructureTests.swift; sourceTree = "<group>"; };
 		E8938E753539C18541CF4360 /* DiaryDateFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDateFormat.swift; sourceTree = "<group>"; };
 		E8EFE62F69B6F11D9FEEB069 /* TimelineStore+Reactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimelineStore+Reactions.swift"; sourceTree = "<group>"; };
 		EA3125FFF130EA4599D70FFD /* AlbumSignatureFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumSignatureFormatter.swift; sourceTree = "<group>"; };
@@ -1120,6 +1122,7 @@
 				7FD928203A33BAF4F43BDB5D /* BirthdayFormatTests.swift */,
 				AC1EF5E70745F2D0DCAA3405 /* ChildAgeFormatterTests.swift */,
 				63669E8DAD14B79A6DCAD9FD /* ChildAvatarInitialTests.swift */,
+				E854A344C6B7C3A322E9BB7B /* ChildAvatarViewStructureTests.swift */,
 				5E699460134CBD4E0FE83B9A /* ChildFilterLayoutTests.swift */,
 				C9C8D00E975B4DE5DC111D3D /* ChildrenStoreAvatarListRefreshTests.swift */,
 				33A580FB25AD23E59B1A979C /* ChildrenStoreAvatarTests.swift */,
@@ -2127,6 +2130,7 @@
 				70A9A544D42C882AAF8E01BC /* BirthdayFormatTests.swift in Sources */,
 				88A188770092CA21AD9CC704 /* ChildAgeFormatterTests.swift in Sources */,
 				575E3F2F213D7274D1D10C68 /* ChildAvatarInitialTests.swift in Sources */,
+				743E06DCB634D775FB5F8D62 /* ChildAvatarViewStructureTests.swift in Sources */,
 				8D8794877BA169209A1BB4ED /* ChildFilterLayoutTests.swift in Sources */,
 				F20F691FBACD89A57DFE187C /* ChildrenStoreAvatarListRefreshTests.swift in Sources */,
 				B0D70EB20B4074F89886D5B5 /* ChildrenStoreAvatarTests.swift in Sources */,
