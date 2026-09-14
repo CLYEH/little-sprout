@@ -1,7 +1,7 @@
 import CryptoKit
 import XCTest
 
-/// LS-158：`QASmokeTests` 三個情境共用的 app 驅動步驟——啟動（注入本機容器的 URL／anon key）、
+/// LS-158：`QASmokeTests` 四個情境共用的 app 驅動步驟——啟動（注入本機容器的 URL／anon key）、
 /// 每步截圖、等元素（等不到就附 a11y 階層＋截圖再 `XCTFail`）、登入／建家庭／編輯器／相簿選圖
 /// ／瀏覽。按鈕沿用可見 label（同 `SectionTabBarPushRegressionTests` 慣例），輸入欄與卡片用
 /// `QAAccessibilityID`（文案會隨對稿改，identifier 不會）。
@@ -281,7 +281,9 @@ final class QADriver {
     /// 不是時間順序（最後一個是 2009 年的內建樣本），不能拿 index 當「最新」。遠端 view 的格子一律回報
     /// `isHittable == false`（格子明明在畫面中央），`tap()` 會拒絕——改用座標 tap。每次把候選格的
     /// label＋座標附進 xcresult（`<情境>-picker-cells-<kind>`），挑錯時看得出是哪個規則沒對上。
-    private func tapNewestPickerCell(kinds: [String], what: String) throws {
+    /// LS-270：`private` 拿掉改成預設 `internal`（同 LS-260 對 `attachText` 的處理）——
+    /// `QADriver+ChildAvatar.swift` 的單選頭像 picker 沿用同一套「挑最新一格」規則，不再抄一份。
+    func tapNewestPickerCell(kinds: [String], what: String) throws {
         let clauses = kinds.map { _ in "label BEGINSWITH %@" }.joined(separator: " OR ")
         let query = app.images.matching(NSPredicate(format: clauses, argumentArray: kinds))
         try require(query.firstMatch, what, timeout: 20)

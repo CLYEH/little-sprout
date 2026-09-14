@@ -1,20 +1,32 @@
 #!/bin/bash
 # QA 端到端情境驅動（LS-158）：不依賴 mobile-mcp，用 `LittleSproutUITests/QA/QASmokeTests`（XCUITest）
-# 對本機 Supabase 容器實跑「登入／發佈／瀏覽」三條多步驟路徑，截圖與 Storage log 落地成驗收證據。
+# 對本機 Supabase 容器實跑「登入／發佈／瀏覽／寶貝頭像」四條多步驟路徑，截圖與 Storage log 落地成驗收證據。
 #
-# 來源：LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED——mobile-mcp 每次互動把模擬器前景重設回主畫面，
-# 多步驟操作做不了；同一 build 用 `xcodebuild test -only-testing:LittleSproutUITests` 可正常驅動。
+# 來源：LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED——QA 沒辦法多步驟操作 app。當時記成「mobile-mcp
+# 每次互動把模擬器前景重設回主畫面（WDA session reset）」，**LS-270 (b) 查明那是誤判**：真因是票 worktree
+# 沒有 gitignored 的 `Config/Secrets.xcconfig`，Debug build 一啟動就撞上 `Config/SupabaseClientFactory.swift:36`
+# 那道佔位值 assert → `SIGTRAP` 當場死掉、SpringBoard 自然留在主畫面，**與 mobile-mcp 無關**（不經 mobile-mcp
+# 的 `xcrun simctl launch` 一樣死）。繞法：從有該檔的 worktree 複製一份過來重建，或用
+# `SIMCTL_CHILD_LS_QA_API_URL=<API_URL> SIMCTL_CHILD_LS_QA_ANON_KEY=<ANON_KEY> xcrun simctl launch …` 啟動
+# （值取自 `supabase status -o env`，走 `SupabaseClientFactory.qaOverride`）。完整敘述見 `.claude/agents/qa.md`
+# 與 `LittleSproutUITests/QA/QADriver+ChildAvatar.swift` 檔頭。
+# 同一 build 用 `xcodebuild test -only-testing:LittleSproutUITests` 一路正常——那道 assert 對 XCTest 行程放行。
 #
-# 用法：qa-e2e.sh <login|publish|browse> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]
+# 用法：qa-e2e.sh <login|publish|browse|child-avatar> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]
 #   login    歡迎頁 → Email → Mailpit 取 6 碼 → 確認登入 → 落點（三岔路或時間軸）
 #   publish  先 `simctl addmedia` LittleSproutUITests/QA/Fixtures 的照片＋影片 →（登入／建家庭）→ 新增回憶 → 相簿選圖 → 發佈 → 卡片出現
 #   browse   （登入／建家庭）→ 日記卡 → 詳情 → 返回 → 相簿分頁 → 時間軸（時間軸空的話先發一篇純文字當對象）
+#   child-avatar 先 `simctl addmedia` fixture 照片 →（登入／建家庭）→ 寶貝分頁 → 新增一隻帶時戳的寶貝 →
+#            點進編輯 → PhotosPicker（單選）挑那張照片 → 儲存 → 回列表，斷言那一列的畫面內容真的變了
+#            （頭像刷新）。LS-270（LS-96 池項 `66d55e5d`）：QA 三次（LS-129／130／266）做不了這段多步驟
+#            複驗——真因見上面「來源」段（缺 `Config/Secrets.xcconfig`，不是 mobile-mcp），這條情境就是
+#            它的腳本通道。
 #   每個情境都先 `simctl keychain reset`、從未登入狀態開始、各自 OTP 登入同一帳號——不沿用上一個情境留在 Keychain 的
 #   session：共用容器隨時可能被他票 reset（本票實測：browse 沿用 login 的 session，中間 QA 冒煙 reset 過，建家庭被後端拒），
 #   舊 session 對應的使用者已不存在會把環境問題誤報成 app 缺陷；OTP 一次 ~10 秒、`max_frequency = "1s"`，重登不貴。
 #   --sim     指定既有模擬器（名稱須精確）；預設 `<票號>-iPhone17Pro`，不存在就建（iPhone 17 Pro、最新 iOS runtime）
 #   --ticket  票號；預設從目前 worktree 目錄名推（`.claude/worktrees/LS-<n>`），推不出就要求明給
-#   --email   三個情境共用的測試帳號（預設 qa-e2e@ls.test；同一帳號才讓 browse 看得到 publish 剛發的那篇）
+#   --email   四個情境共用的測試帳號（預設 qa-e2e@ls.test；同一帳號才讓 browse 看得到 publish 剛發的那篇）
 #   **只准在票 worktree 內跑**（merge-review R1 N1）：hold 的持有者判定看 worktree（LS-170 §6），從主 checkout 取得的 hold
 #   會讓主 checkout 上的 orchestrator／reviewer 全部直通、鎖形同虛設——主 checkout（git-dir＝git-common-dir）一律 exit 2。
 # 環境變數：LS_QA_MAILPIT 覆寫 Mailpit URL（預設讀 `supabase status` 的 MAILPIT_URL，再退 http://127.0.0.1:54324）；
@@ -45,7 +57,7 @@
 set -uo pipefail
 
 usage() {
-  echo "用法：qa-e2e.sh <login|publish|browse> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]"
+  echo "用法：qa-e2e.sh <login|publish|browse|child-avatar> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]"
 }
 
 scenario=; sim_name=; sim_given=0; ticket=; email=
@@ -69,8 +81,8 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$scenario" ] || { echo "✗ qa-e2e：缺情境名" >&2; usage >&2; exit 2; }
 case "$scenario" in
-  login|publish|browse) ;;
-  *) echo "✗ qa-e2e：情境「${scenario}」不存在，只接受 login|publish|browse" >&2; exit 2 ;;
+  login|publish|browse|child-avatar) ;;
+  *) echo "✗ qa-e2e：情境「${scenario}」不存在，只接受 login|publish|browse|child-avatar" >&2; exit 2 ;;
 esac
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -143,10 +155,18 @@ fi
 # ---- 4. 情境前置（每個情境都從未登入狀態開始，理由見檔頭）----
 fixtures="${root}/LittleSproutUITests/QA/Fixtures"
 xcrun simctl keychain "$udid" reset >/dev/null 2>&1 || { echo "✗ qa-e2e：simctl keychain reset 失敗——情境要從未登入狀態開始" >&2; exit 2; }
-if [ "$scenario" = publish ]; then
-  [ -f "$fixtures/qa-photo.jpg" ] && [ -f "$fixtures/qa-video.mp4" ] || { echo "✗ qa-e2e：缺 fixture（${fixtures}/qa-photo.jpg／qa-video.mp4）" >&2; exit 2; }
-  xcrun simctl addmedia "$udid" "$fixtures/qa-photo.jpg" "$fixtures/qa-video.mp4" || { echo "✗ qa-e2e：simctl addmedia 失敗" >&2; exit 2; }
-fi
+case "$scenario" in
+  publish)
+    [ -f "$fixtures/qa-photo.jpg" ] && [ -f "$fixtures/qa-video.mp4" ] || { echo "✗ qa-e2e：缺 fixture（${fixtures}/qa-photo.jpg／qa-video.mp4）" >&2; exit 2; }
+    xcrun simctl addmedia "$udid" "$fixtures/qa-photo.jpg" "$fixtures/qa-video.mp4" || { echo "✗ qa-e2e：simctl addmedia 失敗" >&2; exit 2; }
+    ;;
+  child-avatar)
+    # LS-270：頭像只吃照片（`PhotosPicker(matching: .images)`），不必也不該把影片灌進相簿——
+    # 多一個影片格只會讓「挑最新一格」多一個候選。
+    [ -f "$fixtures/qa-photo.jpg" ] || { echo "✗ qa-e2e：缺 fixture（${fixtures}/qa-photo.jpg）" >&2; exit 2; }
+    xcrun simctl addmedia "$udid" "$fixtures/qa-photo.jpg" || { echo "✗ qa-e2e：simctl addmedia 失敗" >&2; exit 2; }
+    ;;
+esac
 
 # ---- 5. 持有 lock（LS-159／LS-170）----
 lock_sh=${LS_LOCK_SH:-$here/supabase-lock.sh}   # R1 N2：自測以 stub 覆寫，涵蓋取得／沿用／失敗與 cleanup 三條路徑

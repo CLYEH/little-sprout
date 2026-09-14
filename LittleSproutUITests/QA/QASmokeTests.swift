@@ -2,9 +2,11 @@ import XCTest
 
 /// LS-158：QA 端到端情境驅動——不依賴 mobile-mcp。
 ///
-/// 來源：LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED——mobile-mcp 每次互動把模擬器前景重設回
-/// 主畫面（WebDriverAgent session 未沿用），QA 無法多步驟操作 app；同一 build 用 `xcodebuild test
-/// -only-testing:LittleSproutUITests` 可正常驅動，證明是工具層。這裡把 QA 最常需要的三條多步驟
+/// 來源：LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED——QA 無法多步驟操作 app（當時記成
+/// 「mobile-mcp 每次互動把模擬器前景重設回主畫面」，LS-270 (b) 查明是票 worktree 缺
+/// `Config/Secrets.xcconfig` 導致 Debug build 啟動時撞 `SupabaseClientFactory` 的 assert 而 SIGTRAP，
+/// 見 `QADriver+ChildAvatar.swift` 檔頭）；同一 build 用 `xcodebuild test
+/// -only-testing:LittleSproutUITests` 可正常驅動——那道 assert 對 XCTest 行程放行。這裡把 QA 最常需要的四條多步驟
 /// 路徑寫成可重放的 XCUITest，對**真的本機 Supabase 容器**跑（不是 `TapTargetGateHarness` 那種
 /// mock store）：
 ///
@@ -12,8 +14,11 @@ import XCTest
 /// - `publish`：（必要時登入／建立家庭）→ 新增回憶 → 內文 → 相簿選 fixture 照片＋影片 → 發佈 →
 ///   時間軸出現那張卡。fixture 由 `qa-e2e.sh` 先 `simctl addmedia` 進模擬器相簿。
 /// - `browse`：（必要時登入／建立家庭／先發一篇純文字）→ 開日記詳情 → 返回 → 相簿分頁 → 時間軸。
+/// - `child-avatar`（LS-270，來源 LS-96 池項 `66d55e5d`）：（登入／建家庭）→ 寶貝分頁 → 新增一隻帶時戳的
+///   寶貝 → 點進編輯 → `PhotosPicker` 選 fixture 照片 → 儲存 → 回列表，斷言那一列的畫面內容真的變了
+///   （頭像刷新）。見 `QADriver+ChildAvatar.swift` 檔頭。
 ///
-/// 怎麼跑：一律 `bash scripts/ops/qa-e2e.sh <login|publish|browse>`（讀 `supabase status`、
+/// 怎麼跑：一律 `bash scripts/ops/qa-e2e.sh <login|publish|browse|child-avatar>`（讀 `supabase status`、
 /// 持 `supabase-lock.sh --hold`、`-only-testing:LittleSproutUITests/QASmokeTests`、匯出截圖到
 /// `.claude/evidence/<票號>/qa-e2e/`、收 Storage log）。直接 `xcodebuild test` 沒帶 `LS_QA_*`
 /// 會紅（`QAEnvironment.load`），這是刻意的；CI 只編譯不跑（`tap-target-check.sh` 以
@@ -39,11 +44,13 @@ final class QASmokeTests: XCTestCase {
             try await driver.runPublish()
         case .browse:
             try await driver.runBrowse()
+        case .childAvatar:
+            try await driver.runChildAvatar()
         }
     }
 }
 
-// MARK: - 三個情境
+// MARK: - 四個情境
 
 extension QADriver {
     /// `login` 必須從未登入狀態開始——`qa-e2e.sh` 對每個情境都先 `simctl keychain <udid> reset`

@@ -92,6 +92,13 @@ BODY_RULES=
 # `scripts/hooks/fork-guard.sh` 是機械層（只擋非主 session 的 `subagent_type: fork`），這句是前饋（含「任何子 agent 不得寫檔／
 # commit／改 PR／貼 Linear」的規約層，機械層擋不到）；被刪即紅。LS-256（LS-96 池項 a7e9e910 i1）：第六份 dead-code-sweeper 補釘
 # （LS-254 票文只列五份，sweeper 是六份定義中唯一未釘的；tools 無 Agent，與 merge-reviewer／qa 同型）。
+# LS-270（LS-96 池項 `d4c1add5`(c)）：merge-reviewer 正文須含「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」——BSD-GNU 差異
+# 有一整類是機率性的（LS-267 R2 B1：`pipefail` 下的 `grep -q` 管線在 ubuntu 20 次紅 14 次、macOS 永遠綠），跑 1 次很可能
+# 剛好抽到綠；那句被刪即紅。
+# LS-270（LS-96 池項 `3e9347c4`(5)／`8a946ea2`(3)）：merge-reviewer 的 mutation 段另須含兩句——「UITest mutation 重放要看
+# 失敗點／時間軸是否隨 mutation 改變」（`xcodebuild` 可能沒把改動編進 UITest bundle，只看 exit code 會把舊 bundle 的紅或
+# 假綠當成重放結果）與「macOS 沒有 timeout 指令」（`timeout 600 xcodebuild …` 在 macOS exit 127＝整個測試沒跑過，LS-266 R2
+# 實際發生）；兩句被刪即紅。
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold|LS-170：互動式本機驗證（模擬器對本機容器的多步驟操作）前先 supabase-lock.sh --hold，收工 --release
 ios-dev|pr-body-check.sh <f> --branch <分支> --verify|LS-186：gh pr create/edit 前先用完整旗標跑 pr-body-check.sh 並直接看 exit code
@@ -142,7 +149,10 @@ merge-reviewer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自
 qa|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派
 dead-code-sweeper|禁派 fork|LS-254／LS-256：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派（六份定義中原唯一未釘的一份）
 ui-designer|editId 成功套用後即失效|LS-264（LS-96 池項 c1b67f93）：Pencil execute 的 edits/editId 只在上一次呼叫失敗的重試視窗內有效，分批每批都要重送 snippet 全文；只要 tree_hash 的輪次改送 hash-only snippet
-visual-reviewer|editId 成功套用後即失效|LS-264（LS-96 池項 c1b67f93）：Pencil execute 的 edits/editId 只在上一次呼叫失敗的重試視窗內有效，分批重掃每批都要重送 snippet 全文；只要 tree_hash 的輪次改送 hash-only snippet"
+visual-reviewer|editId 成功套用後即失效|LS-264（LS-96 池項 c1b67f93）：Pencil execute 的 edits/editId 只在上一次呼叫失敗的重試視窗內有效，分批重掃每批都要重送 snippet 全文；只要 tree_hash 的輪次改送 hash-only snippet
+merge-reviewer|shell 自測在 ubuntu:24.04 通道跑 ≥10 次|LS-270（LS-96 池項 d4c1add5(c)）：BSD-GNU 差異有一整類是機率性的（pipefail 下的 grep -q 管線在 ubuntu 20 次紅 14 次、macOS 永遠綠），macOS 跑一次綠不算驗過，重放要在 ubuntu:24.04 容器跑 ≥10 次並記錄紅幾次
+merge-reviewer|UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變|LS-270（LS-96 池項 3e9347c4(5)）：xcodebuild 可能沒把改動編進 UITest bundle，只看 exit code 會把舊 bundle 的紅／假綠當成重放結果，要比對 xcresult 的失敗方法／行號／時間軸有沒有跟著 mutation 移動
+merge-reviewer|macOS 沒有 timeout 指令|LS-270（LS-96 池項 8a946ea2(3)）：timeout 600 xcodebuild … 在 macOS exit 127＝整個測試沒跑過，卻容易被讀成「跑完沒事」（LS-266 R2 實例）；改用 gtimeout（先 command -v 確認）或 XCTest 看門狗"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，
@@ -253,7 +263,11 @@ while IFS='|' read -r agent literal hint; do
   f="${dir}/${agent}.md"
   [ -r "$f" ] || continue
   body=$(awk '{ sub(/\r$/, "") } NR == 1 && $0 == "---" { fm = 1; next } fm && $0 == "---" { fm = 0; b = 1; next } b { print }' "$f")
-  if printf '%s' "$body" | grep -qF -- "$literal"; then
+  # here-string 而不是 `printf … | grep -qF`（LS-270 R2 B2）：後者在 `set -o pipefail` 下，GNU grep
+  # 命中即退出、printf 收 SIGPIPE 以 141 結束，整條管線判紅——`$body` 最大 36 KB（ui-designer.md），
+  # merge-review R1 在 ubuntu:24.04 實測 30 次紅 2 次（訊息是「正文缺某句」但那句明明在），改成
+  # here-string 後 30 次 0 紅。macOS 的 BSD grep 讀完才退出，所以本機永遠看不到。
+  if grep -qF -- "$literal" <<<"$body"; then
     echo "  ${agent}.md：正文含「${literal}」"
   else
     hits+="    ${agent}.md：正文缺「${literal}」（${hint:-規約段被刪或未寫}；frontmatter 內出現不算）"$'\n'
