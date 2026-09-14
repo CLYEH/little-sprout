@@ -74,8 +74,10 @@ final class TimelineStore {
     /// `MasonryPhotoWallView`），這裡的集合是給其他真正失敗的情況（檔案格式看不懂、網路失敗
     /// 等既有情境）通用的硬化，兩者互補、不互斥。
     private var failedDurations: Set<UUID> = []
-    /// 世代計數器（merge-review R1 M1／M2；R2-M1 修正）：每次 `refresh` 呼叫都遞增並記下
-    /// 自己的世代號，await 回來要寫回 `entries`／`hasMorePages`／`refreshState`（或
+    /// 世代計數器（merge-review R1 M1／M2；R2-M1 修正；LS-266 R2 訂正遞增位置）：**發起**
+    /// 一輪的 `refresh` 呼叫才遞增並記下自己的世代號（`refresh` 內 `generation += 1`）——
+    /// 合流（`join`）的呼叫者拿現有那輪的世代號、不重新遞增（見下方 `InFlightRefresh` 文件
+    /// 註解）。await 回來要寫回 `entries`／`hasMorePages`／`refreshState`（或
     /// `loadMoreState`）前先確認世代號仍等於目前最新——不等於就代表這次呼叫已經被更新的
     /// 一次 `refresh` 取代，安靜丟棄結果，不寫回過期資料，也不誤把「被取代」寫成 `.failure`。
     ///
@@ -100,8 +102,10 @@ final class TimelineStore {
     /// LS-266（池 `d351af55`，merge-review LS-126 R2 r2-m1；R2 訂正 merge-review R1
     /// `443e910f` B1／M1）：`refresh` 同一組篩選參數（`familyID`／`childID`）在 `.task(id:)`
     /// 與 `.refreshable` 幾乎同時觸發時，同 key 的重入改成合流，只真的發一次請求。**不動
-    /// 世代號機制本身**：世代號仍在 `performRefresh` 裡遞增與比對，去重只是讓「該不該真的
-    /// 發一次請求」多一層判斷，跟世代號回答的「該不該寫回結果」是兩個互不影響的問題。
+    /// 世代號機制本身要回答的問題**：世代號的遞增已經搬到 `refresh`（只有發起者才遞增，
+    /// 見上方 `generation` 文件註解），`performRefresh` 只剩比對（`myGeneration == generation`）
+    /// ——去重只是讓「該不該真的發一次請求」多一層判斷，跟世代號回答的「該不該寫回結果」
+    /// 是兩個互不影響的問題。
     ///
     /// R1 B1：R1 版的合流只看 key 有沒有在飛、不看世代號——A→B→A 快速切換時，第三次呼叫
     /// （切回 A）會合流到第一次呼叫（世代號已經被 B 的呼叫淘汰的舊 Task），那個舊 Task
@@ -113,8 +117,12 @@ final class TimelineStore {
     /// 篩選條件變了、畫面消失）的取消不會傳進去——舊組裝一定跑完、`guard !Task.isCancelled`
     /// 變死碼，還拉長 B1 的危險視窗。R2 修法（reviewer 建議的結構化方案）：**發起**一輪的
     /// 呼叫者直接在自己的呼叫環境跑 `performRefresh`，不再包 Task——取消自然沿呼叫鏈傳進
-    /// `apiClient`。同 key **加入**（非發起）者改用 `withCheckedContinuation` 排隊等結果；
-    /// 加入者自己的取消不需要傳給發起者（它們本來就不是發起請求的那個呼叫）。
+    /// `apiClient`。同 key **加入**（非發起）者改用 `withCheckedContinuation` 排隊等結果。
+    /// 完整取消語意（LS-268，池 `8a946ea2`，補齊原本只寫一半的說明）：加入者自己的取消
+    /// 不需要傳給發起者、也**不會**讓它提早返回（`withCheckedContinuation` 不感知取消，
+    /// 一定等發起者那輪結束才 resume）；反過來，發起者被取消時，所有加入者跟著拿到
+    /// `false`（`performRefresh` 的 `catch` 分支 `guard !Task.isCancelled`、`refreshState`
+    /// 落回 `.idle`），不會自己重跑——比 R1（本就無法區分取消與其他失敗）沒有變差。
     ///
     /// `InFlightRefresh` 刻意用 **class**：即使這個 key 的登記中途被更新的一輪覆蓋（B1），
     /// 發起者仍持有自己這個物件的直接參照，完成後一定會 resume 自己收到的 `waiters`——不會
