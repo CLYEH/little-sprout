@@ -76,6 +76,22 @@ extension QADriver {
             what: "重新啟動後寶貝列表上「\(childName)」那一列的頭像（應是剛存的照片，不是姓名縮寫圓）",
             timeout: 60
         )
+        // LS-274：LS-273 已修同 session 存檔後不刷新的缺口，「重啟前」那一列現在應已離開存檔前的
+        // 縮寫圓佔位態——換回嚴格版斷言，不再只是 attachText 訊號。
+        //
+        // **不比「重啟前」與「重啟後」兩個 digest 是否逐位元相同**（曾誤用 `XCTAssertEqual(rowBeforeRelaunch,
+        // rowAfter, …)`，本機實測 4 輪：2 紅 2 綠，紅的兩輪 `rowBeforeRelaunch` 皆已是第三個相異值——
+        // 不是停在縮寫圓、也不是原封不動變成 `rowAfter`，截圖／DIAG 重捲＋settle 皆確認頭像早已換成同一張
+        // 照片，純粹是 `elementDigest` 對漸層 fixture 的 GPU 算繪雜訊敏感，逐位元雜湊全等不是穩定判準——
+        // 假紅會讓下一個人誤判缺口沒修好）。改用與 `rowAfter`（`waitUntilSnapshotChanges` 內部）同一套
+        // 判準：「digest 是否已不同於存檔前的 `rowBefore`（縮寫圓佔位態）」——差異夠大（縮寫文字 vs.
+        // 漸層照片）時 SHA256 才是可靠訊號，且與底下 `rowAfter` 的等待條件完全一致，不需要另外比較兩個
+        // 獨立擷取的照片渲染結果。mutation（`ChildAvatarView` 包回 `if let avatarURL`）下 `rowBeforeRelaunch`
+        // 與 `rowBefore` 逐位元相同，這條斷言仍會紅。
+        XCTAssertNotEqual(
+            rowBeforeRelaunch, rowBefore,
+            "重啟前那一列 digest 仍等於存檔前的縮寫圓狀態（\(rowBefore)）——LS-273 修好後同 session 存檔應立即離開佔位態"
+        )
         attachText(
             """
             child=\(childName)
