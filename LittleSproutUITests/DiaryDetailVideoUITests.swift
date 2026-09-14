@@ -42,15 +42,21 @@ final class DiaryDetailVideoUITests: XCTestCase {
     func testVideoTap_whileCommentsSheetOpen_videoTakesOverCorrectly() {
         // LS-268：8 秒延遲（預設 3 秒），慢 CI runner 上排程延遲（如「wait for app to idle」）
         // 才不會吃光緩衝視窗（見檔頭 LS-268 補充）。
+        // LS-269（池 `3e9347c4` (2) m2）：`signDelaySeconds` 連清單縮圖簽名也一起睡，所以延遲
+        // 拉大會把 `videoTile` 第一次出現的時間等比往後推——固定 10 s timeout 因此隨延遲增加而
+        // 被吃掉緩衝（延遲 3→8 s 時餘裕從 8.9 s 縮到 3.9 s）。改成「基準 7 s（原本 10 s 對應
+        // 預設 3 s 延遲的餘裕）＋延遲秒數」，timeout 隨延遲等比放大、餘裕維持恆定。
+        let signDelaySeconds = 8
+        let videoTileTimeout = TimeInterval(7 + signDelaySeconds)
         let app = TapTargetMeasurement.launch(
             .diaryDetailWithVideo, contentSizeCategory: "UICTContentSizeCategoryL",
-            extraLaunchArguments: ["-LSVideoSignDelaySeconds", "8"]
+            extraLaunchArguments: ["-LSVideoSignDelaySeconds", String(signDelaySeconds)]
         )
         TapTargetMeasurement.assertScreenRendered(.diaryDetailWithVideo, in: app)
 
         let videoTile = app.buttons["影片 0:05，點兩下播放"]
-        XCTAssertTrue(videoTile.waitForExistence(timeout: 10), "詳情頁瀑布流應該有一支可播放的影片格")
-        XCTAssertTrue(videoTile.waitForHittable(timeout: 10), "影片格應該是可點擊狀態，不只是存在")
+        XCTAssertTrue(videoTile.waitForExistence(timeout: videoTileTimeout), "詳情頁瀑布流應該有一支可播放的影片格")
+        XCTAssertTrue(videoTile.waitForHittable(timeout: videoTileTimeout), "影片格應該是可點擊狀態，不只是存在")
         videoTile.tap()
 
         // 影片簽名仍在飛行中（harness 種了 8 秒延遲，見本檔 LS-268 補充）——這時候還沒有任何
