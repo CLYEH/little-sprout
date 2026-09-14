@@ -30,7 +30,7 @@ final class SettingsViewIPadTests: XCTestCase {
         // tree，不保證這一刻真的可點——sidebar 切換到「家庭」的轉場動畫還沒完全穩定時
         // `tap()` 可能落空（沒有真的 push），後續等 `pushedSentinel` 自然逾時。tap 前多等
         // 一次「真的可點」當同步點。
-        XCTAssertTrue(entry.waitForHittable(timeout: 5), "入口列應該可點擊", file: file, line: line)
+        XCTAssertTrue(entry.waitForHittable(timeout: 10), "入口列應該可點擊", file: file, line: line)
         entry.tap()
 
         XCTAssertTrue(
@@ -42,7 +42,7 @@ final class SettingsViewIPadTests: XCTestCase {
         XCTAssertTrue(backButton.waitForExistence(timeout: 5), "push 後應該出現系統返回鈕", file: file, line: line)
         // LS-263（池 `4815eca0`，merge-review R2 新 minor）：本檔唯一沒有 hittable 同步點的
         // tap——補齊同全檔其餘 tap 前的慣例。
-        XCTAssertTrue(backButton.waitForHittable(timeout: 5), "返回鈕應該可點擊", file: file, line: line)
+        XCTAssertTrue(backButton.waitForHittable(timeout: 10), "返回鈕應該可點擊", file: file, line: line)
 
         backButton.tap()
 
@@ -71,7 +71,7 @@ final class SettingsViewIPadTests: XCTestCase {
         file: StaticString = #filePath, line: UInt = #line
     ) {
         let tab = app.buttons[tabLabel]
-        XCTAssertTrue(tab.waitForHittable(timeout: 5), "「\(tabLabel)」sidebar 列應該可點擊", file: file, line: line)
+        XCTAssertTrue(tab.waitForHittable(timeout: 10), "「\(tabLabel)」sidebar 列應該可點擊", file: file, line: line)
         tab.tap()
         XCTAssertTrue(
             expectedRow.waitForExistence(timeout: 10),
@@ -210,7 +210,7 @@ final class SettingsViewIPadTests: XCTestCase {
         // 已補過，iPad 版原本反而少一道，這裡補齊。
         let termsRow = app.buttons["使用條款"]
         switchSidebarTab(app: app, tabLabel: "法律", expectedRow: termsRow, rowDescription: "使用條款")
-        XCTAssertTrue(termsRow.waitForHittable(timeout: 5), "「使用條款」列應該可點擊")
+        XCTAssertTrue(termsRow.waitForHittable(timeout: 10), "「使用條款」列應該可點擊")
         termsRow.tap()
 
         let closeButton = app.buttons["關閉"]
@@ -221,7 +221,7 @@ final class SettingsViewIPadTests: XCTestCase {
         )
         // merge-review R1 m2：關閉鈕同樣補 tap 前的 hittable 同步點——sheet 開闔轉場尚未穩定時
         // tap 落空，下一行等「隱私權政策」列自然逾時，同型於 LS-253／LS-259 修過的失敗模式。
-        XCTAssertTrue(closeButton.waitForHittable(timeout: 5), "「關閉」鈕應該可點擊")
+        XCTAssertTrue(closeButton.waitForHittable(timeout: 10), "「關閉」鈕應該可點擊")
         closeButton.tap()
         // LS-237 第 8 項（coordinator 追加，09-13 run 34707282145 flake）：`XCTAssertFalse
         // (closeButton.waitForExistence(timeout: 3), ...)` 用的是「等開始存在」的 API 驗證
@@ -242,7 +242,7 @@ final class SettingsViewIPadTests: XCTestCase {
         let privacyRow = app.buttons["隱私權政策"]
         XCTAssertTrue(privacyRow.waitForExistence(timeout: 10), "關閉後應回到「法律」列表，看得到「隱私權政策」列")
         // merge-review R1 m2：與 termsRow／closeButton 同型，tap 前補 hittable 同步點。
-        XCTAssertTrue(privacyRow.waitForHittable(timeout: 5), "「隱私權政策」列應該可點擊")
+        XCTAssertTrue(privacyRow.waitForHittable(timeout: 10), "「隱私權政策」列應該可點擊")
         privacyRow.tap()
         XCTAssertTrue(app.buttons["關閉"].waitForExistence(timeout: 5), "點擊「隱私權政策」列應開啟 LegalDocumentSheet（Footer「關閉」鈕可見）")
         XCTAssertEqual(
@@ -286,7 +286,7 @@ final class SettingsViewIPadTests: XCTestCase {
         // `XCTAssertEqual` 斷言恆真（等到成立才斷言成立）。保留這個寫法（等一個正交屬性）是
         // 刻意的取捨，不是疏漏。
         let familyTab = app.buttons["家庭"]
-        XCTAssertTrue(familyTab.waitForHittable(timeout: 5), "「家庭」sidebar 列應該可點擊")
+        XCTAssertTrue(familyTab.waitForHittable(timeout: 10), "「家庭」sidebar 列應該可點擊")
         familyTab.tap()
         XCTAssertTrue(familyTab.waitForExistence(timeout: 5), "借輪詢延遲讓「已選取」轉場沉澱，才讀取 accessibility value")
         XCTAssertEqual(selectedLabels(), ["家庭"], "點擊「家庭」後「已選取」訊號應該恰好移到「家庭」，其餘四列都不再帶")

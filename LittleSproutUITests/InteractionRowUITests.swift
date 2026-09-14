@@ -215,7 +215,7 @@ final class InteractionRowUITests: XCTestCase {
         )
     }
 
-    // MARK: - Helpers（同 `ContentActionsAX3UITests` 既有寫法，不同 target 無法共用 private 方法）
+    // MARK: - Helpers
 
     private func scrollUntilAllHittable(_ elements: [XCUIElement], in app: XCUIApplication, maxAttempts: Int = 6) {
         var previousYs: [CGFloat] = []
@@ -228,18 +228,5 @@ final class InteractionRowUITests: XCTestCase {
         }
     }
 
-    private func assertNoOverlap(_ elements: [XCUIElement], file: StaticString = #filePath, line: UInt = #line) {
-        let visible = elements.filter(\.isHittable)
-        for firstIndex in 0..<visible.count {
-            for secondIndex in (firstIndex + 1)..<visible.count {
-                let first = visible[firstIndex]
-                let second = visible[secondIndex]
-                XCTAssertFalse(
-                    first.frame.intersects(second.frame),
-                    "AX3 下「\(first.label)」與「\(second.label)」不應該重疊：\(first.frame) vs \(second.frame)",
-                    file: file, line: line
-                )
-            }
-        }
-    }
+    // `assertNoOverlap` 抽到 `Support/AssertNoOverlap.swift`（LS-268，池 `f07c26d1`）。
 }

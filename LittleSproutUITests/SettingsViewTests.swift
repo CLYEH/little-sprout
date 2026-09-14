@@ -98,7 +98,7 @@ final class SettingsViewTests: XCTestCase {
 
         let termsRow = app.buttons["使用條款"]
         XCTAssertTrue(termsRow.waitForExistence(timeout: 5), "設定頁「法律」區應有可點擊的「使用條款」列")
-        XCTAssertTrue(termsRow.waitForHittable(timeout: 5), "「使用條款」列應該可點擊")
+        XCTAssertTrue(termsRow.waitForHittable(timeout: 10), "「使用條款」列應該可點擊")
         termsRow.tap()
 
         let closeButton = app.buttons["關閉"]
@@ -122,7 +122,7 @@ final class SettingsViewTests: XCTestCase {
 
         let privacyRow = app.buttons["隱私權政策"]
         XCTAssertTrue(privacyRow.waitForExistence(timeout: 5), "設定頁「法律」區應有可點擊的「隱私權政策」列")
-        XCTAssertTrue(privacyRow.waitForHittable(timeout: 5), "「隱私權政策」列應該可點擊")
+        XCTAssertTrue(privacyRow.waitForHittable(timeout: 10), "「隱私權政策」列應該可點擊")
         privacyRow.tap()
 
         XCTAssertTrue(

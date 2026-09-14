@@ -7,13 +7,20 @@ import XCTest
 /// 1. 「留言 sheet 開著時點影片」——`playVideo()` 先 tap、簽名 URL 回來才設狀態；如果簽名
 ///    回來時留言 sheet 恰好也已經被觸發開啟，晚到的影片必須正確接手（把留言 sheet 收起、換成
 ///    全螢幕播放器），不是被系統忽略或兩者同時呈現。`.diaryDetailWithVideo` harness（見
-///    `TapTargetGateHarness+DiaryDetailVideo.swift`）用 `signDelayNanoseconds: 3_000_000_000`
-///    讓「點影片、簽名回來」之間有個穩定的窗口——這裡先點影片（啟動非同步簽名）、緊接著點留言
+///    `TapTargetGateHarness+DiaryDetailVideo.swift`）用可控的簽名延遲（預設 3 秒，情境 1 覆寫
+///    為 8 秒，見下方 LS-268 補充）讓「點影片、簽名回來」之間有個穩定的窗口——這裡先點影片
+///    （啟動非同步簽名）、緊接著點留言
 ///    鈕（此時還沒有任何東西呈現，留言鈕點得到），留言 sheet 應該先正確開啟；接著等簽名回來，
 ///    畫面應該換成影片全螢幕。
 /// 2. 「影片全螢幕關閉後點『⋯』」——AVKit 播放器本身有系統原生的「關閉」鈕，關閉後應該正確
 ///    回到 `DiaryDetailView` 並且「⋯」仍能正確開出內容操作表，不會因為剛才影片用過同一個
 ///    `activeSheet` 而卡住。
+///
+/// **LS-268（池 `0d0005c4`，CI xcresult 時間軸查證 `99fb1019`）**：情境 1 原本吃 harness 預設的
+/// 3 秒簽名延遲，慢 CI runner 上「wait for app to idle」異常耗時（實測 2.46 秒）會吃掉緩衝
+/// 視窗，讓存在性檢查前簽名已到期、假紅。改用 `-LSVideoSignDelaySeconds 8`（見
+/// `TapTargetGateHarness+DiaryDetailVideo.swift`）把這個情境的窗口拉大到 8 秒，留給慢機餘裕；
+/// 情境 2 不依賴這個窗口內完成互動，維持預設 3 秒。
 ///
 /// **R2（dev CI run `34743983632` FAIL 根因修正，非猜測——逐行核對 xcresult
 /// `test-results activities` 時間軸）**：R1 版本 `signedURL` 指向假的
@@ -33,16 +40,21 @@ import XCTest
 @MainActor
 final class DiaryDetailVideoUITests: XCTestCase {
     func testVideoTap_whileCommentsSheetOpen_videoTakesOverCorrectly() {
-        let app = TapTargetMeasurement.launch(.diaryDetailWithVideo)
+        // LS-268：8 秒延遲（預設 3 秒），慢 CI runner 上排程延遲（如「wait for app to idle」）
+        // 才不會吃光緩衝視窗（見檔頭 LS-268 補充）。
+        let app = TapTargetMeasurement.launch(
+            .diaryDetailWithVideo, contentSizeCategory: "UICTContentSizeCategoryL",
+            extraLaunchArguments: ["-LSVideoSignDelaySeconds", "8"]
+        )
         TapTargetMeasurement.assertScreenRendered(.diaryDetailWithVideo, in: app)
 
         let videoTile = app.buttons["影片 0:05，點兩下播放"]
         XCTAssertTrue(videoTile.waitForExistence(timeout: 10), "詳情頁瀑布流應該有一支可播放的影片格")
-        XCTAssertTrue(videoTile.waitForHittable(timeout: 5), "影片格應該是可點擊狀態，不只是存在")
+        XCTAssertTrue(videoTile.waitForHittable(timeout: 10), "影片格應該是可點擊狀態，不只是存在")
         videoTile.tap()
 
-        // 影片簽名仍在飛行中（harness 種了 3 秒延遲，見 `diaryDetailWithVideoHost` 文件註解）
-        // ——這時候還沒有任何東西呈現，留言鈕點得到，留言 sheet 應該正確開啟。
+        // 影片簽名仍在飛行中（harness 種了 8 秒延遲，見本檔 LS-268 補充）——這時候還沒有任何
+        // 東西呈現，留言鈕點得到，留言 sheet 應該正確開啟。
         let commentButton = app.buttons[
             QAAccessibilityID.interactionRowElement(kind: "diary", element: "commentButton")
         ]
@@ -54,9 +66,9 @@ final class DiaryDetailVideoUITests: XCTestCase {
 
         // 等影片簽名回來接手——`.sheet` 真的 dismiss 後內容確實從 accessibility tree 消失
         // （跟背景元素在 `fullScreenCover` 蓋上後仍持續 `exists` 不同，見檔頭 R2 補充）。
-        // timeout 8 秒：留給 3 秒延遲＋前面幾步 XCUITest 動作本身的耗時餘裕。
+        // timeout 10 秒：留給 8 秒延遲＋前面幾步 XCUITest 動作本身的耗時餘裕。
         XCTAssertTrue(
-            emptyStateText.waitForNonExistence(timeout: 8), "影片簽名回來後應該把留言 sheet 收起，換成影片全螢幕"
+            emptyStateText.waitForNonExistence(timeout: 10), "影片簽名回來後應該把留言 sheet 收起，換成影片全螢幕"
         )
 
         // 進一步確認「收起的是換成影片全螢幕」而不是其他非預期狀態——有界重試找系統原生
@@ -74,7 +86,7 @@ final class DiaryDetailVideoUITests: XCTestCase {
 
         let videoTile = app.buttons["影片 0:05，點兩下播放"]
         XCTAssertTrue(videoTile.waitForExistence(timeout: 10), "詳情頁瀑布流應該有一支可播放的影片格")
-        XCTAssertTrue(videoTile.waitForHittable(timeout: 5), "影片格應該是可點擊狀態，不只是存在")
+        XCTAssertTrue(videoTile.waitForHittable(timeout: 10), "影片格應該是可點擊狀態，不只是存在")
         videoTile.tap()
 
         // `videoTile` 點下後仍要等 harness 種的 3 秒延遲（見 `diaryDetailWithVideoHost` 文件
