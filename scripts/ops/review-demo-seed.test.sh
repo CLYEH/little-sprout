@@ -63,9 +63,12 @@ MEDIA1_ORIG="${FAMILY_ID}/${SEED_YM}/d3000000-0000-4000-8000-000000000001.jpg"
 MEDIA1_THUMB="${FAMILY_ID}/${SEED_YM}/d3000000-0000-4000-8000-000000000001_thumb.jpg"
 
 # 本輪 40 個固定路徑（20 media × 原檔＋縮圖）——手算對齊 review-demo-seed.sh 的公式
-# （photo_sources 5 個來源，副檔名依序 jpg,jpg,png,png,png；i<=18 為照片、19-20 為影片），
+# （photo_sources 5 個來源，副檔名依序 jpg,jpg,jpg,jpg,jpg；i<=18 為照片、19-20 為影片），
 # 供假 curl 的 list 端點組「全部存在」的回應用（m2：一次列出整個資料夾）。
-PHOTO_EXT_BY_IDX=(jpg jpg png png png)
+# LS-248：後三個來源從 LS-46 佔位圖（*.png）換成 LS-247 定稿（design/appstore-photos/*.jpg），
+# 副檔名連帶從 png 變 jpg——這串常數是「storage_path＝{media_id}.{ext}」的手算對照，來源清單
+# 改了這裡就得跟著改（實測：只改腳本不改這裡，B1／B2／L1 三組會因為 10 條路徑對不上而轉紅）。
+PHOTO_EXT_BY_IDX=(jpg jpg jpg jpg jpg)
 ALL_MEDIA_PATHS=()
 for i in $(seq 1 20); do
   id=$(printf 'd3000000-0000-4000-8000-%012x' "$i")
@@ -613,6 +616,26 @@ expect 2 'D3 仍安全中止於找不到 .env' "$got" "$out" '找不到' '.env'
 reset_fakes
 
 echo "--- D 組完成 ---"
+
+# =============================================================================
+# E 組（LS-248）：資產清單本身——demo 家庭灌的照片必須是 LS-247 定稿，不得再是 LS-46
+# 佔位圖。為什麼要一組直接讀來源清單的斷言，而不是靠 A／B／L 組的路徑對照間接釘住：
+# 那些組只看得到副檔名（storage_path＝{media_id}.{ext}），把 hero-grandma.png 換成任何
+# 一張別的 .jpg 都不會讓它們轉紅——但送審截圖裡出現的就是非出貨資產（LS-234 決定 1b
+# 附條件①正是為了擋這件事）。這裡直接讀 photo_sources 陣列的字面。
+# =============================================================================
+sources_block=$(sed -n '/^photo_sources=(/,/^)/p' "$script")
+has 'E1 photo_sources 含 LS-247 定稿 hero' "$sources_block" 'design/appstore-photos/hero.jpg'
+has 'E1 photo_sources 含 LS-247 定稿 invite' "$sources_block" 'design/appstore-photos/invite.jpg'
+has 'E1 photo_sources 含 LS-247 定稿 join' "$sources_block" 'design/appstore-photos/join.jpg'
+hasnt 'E2 photo_sources 不得再含 LS-46 佔位圖 hero-grandma' "$sources_block" 'hero-grandma'
+hasnt 'E2 photo_sources 不得再含 LS-46 佔位圖 invite-grandma' "$sources_block" 'invite-grandma'
+hasnt 'E2 photo_sources 不得再含 LS-46 佔位圖 join-parents' "$sources_block" 'join-parents'
+for asset in design/appstore-photos/hero.jpg design/appstore-photos/invite.jpg design/appstore-photos/join.jpg; do
+  if [ -f "$root/$asset" ]; then ok "E3 資產存在於 repo：$asset"
+  else echo "✗ E3 資產不存在於 repo：$asset（photo_sources 指到的檔案被改名／刪除，正式站種子會在素材檢查就中止）" >&2; fail=1; fi
+done
+echo "--- E 組完成 ---"
 
 # =============================================================================
 # Mutation 對照組（同 prod-purge-health.test.sh／queue_retry.test.sh 慣例：不在這裡自動

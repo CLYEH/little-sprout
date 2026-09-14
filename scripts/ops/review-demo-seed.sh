@@ -372,12 +372,21 @@ photo_ext_for() {  # $1=素材來源路徑 → 印出副檔名（png｜jpg）；
     *) echo jpg ;;
   esac
 }
+# LS-248：後三個來源原本是 LS-46 佔位圖（design/hero-grandma.png／invite-grandma.png／
+# join-parents.png），跟 App Store 海報用的是同一批——LS-234 決定 1b 改用 Codex 生圖
+# 之後，海報已換成 LS-247 三張定稿，demo 家庭若還灌舊佔位圖，LS-147 拿 demo 帳號拍的
+# 送審截圖裡就還是非出貨資產。這裡改指同一批定稿（design/appstore-photos/*.jpg，
+# 2160×1190、JPEG q90、各 <500 KB，選圖與判準見 design/appstore-photos/SELECTION.md）。
+# 前兩個來源（design-canvas／design-canvas-d 的 family.jpg）不是 LS-46 佔位圖，維持不動。
+# 副檔名連帶從 .png 變成 .jpg：storage_path 是 {media_id}.{ext}，所以這三個來源對應的
+# 10 筆 media（i=3,4,5,8,9,10,13,14,15,18，src_idx=(i-1)%5∈{2,3,4}）路徑也跟著換，舊
+# .png 物件由既有批次清理（下方「清理既有 Storage 物件」列舉四種副檔名）收掉。
 photo_sources=(
   "$ROOT/design-canvas/family.jpg"
   "$ROOT/design-canvas-d/family.jpg"
-  "$ROOT/design/hero-grandma.png"
-  "$ROOT/design/invite-grandma.png"
-  "$ROOT/design/join-parents.png"
+  "$ROOT/design/appstore-photos/hero.jpg"
+  "$ROOT/design/appstore-photos/invite.jpg"
+  "$ROOT/design/appstore-photos/join.jpg"
 )
 for f in "${photo_sources[@]}"; do
   [ -f "$f" ] || { echo "✗ review-demo-seed：找不到照片素材 $f" >&2; exit 1; }
