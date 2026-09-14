@@ -56,6 +56,11 @@ final class UploadQueueStore {
     /// 性注入；預設空閉包，不影響 `UploadQueueStoreTests`／`UploadQueueStoreDefensiveTests`
     /// 既有呼叫端（皆未帶這個參數）。
     private let onUploadSucceeded: @MainActor (_ id: UUID, _ mediaID: UUID) -> Void
+    /// LS-284：影片項目上傳前的壓縮步驟，注入點同 `DiaryComposerStore.videoPreparer`——正式
+    /// 路徑預設呼叫 `VideoTrimmer.compressedForUpload`，測試才需要在不準備真影片檔的前提下
+    /// 釘住「壓縮結果（含壓完仍超限的錯誤）怎麼往下接」。壓縮本身的行為由 `VideoTrimmerTests`
+    /// 覆蓋，這裡不重複測。
+    private let videoPreparer: @Sendable (URL) async throws -> VideoTrimmer.UploadSource
     private var entries: [UUID: Entry] = [:]
     /// 插入順序——`entries` 是字典（用 id 查找／更新方便），排序另外靠這份陣列記住「先進
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
@@ -68,13 +73,17 @@ final class UploadQueueStore {
     init(
         familyID: UUID, mediaUploadService: MediaUploadService, maxConcurrentUploads: Int = 3,
         now: @escaping @MainActor () -> Date = Date.init,
-        onUploadSucceeded: @escaping @MainActor (_ id: UUID, _ mediaID: UUID) -> Void = { _, _ in }
+        onUploadSucceeded: @escaping @MainActor (_ id: UUID, _ mediaID: UUID) -> Void = { _, _ in },
+        videoPreparer: @escaping @Sendable (URL) async throws -> VideoTrimmer.UploadSource = { fileURL in
+            try await VideoTrimmer.compressedForUpload(fileURL: fileURL)
+        }
     ) {
         self.familyID = familyID
         self.mediaUploadService = mediaUploadService
         self.maxConcurrentUploads = maxConcurrentUploads
         self.now = now
         self.onUploadSucceeded = onUploadSucceeded
+        self.videoPreparer = videoPreparer
     }
 
     // MARK: - 讀取（View／測試用）
@@ -243,16 +252,37 @@ final class UploadQueueStore {
         }
     }
 
+    /// 影片一律先用 `VideoTrimmer` 壓成 1080p（LS-284，沿 `DiaryComposerStore.uploadSingle`
+    /// 既有作法）——壓完仍超過單檔上限會在 `videoPreparer` 這裡丟 `AppError`（`UploadFailureReason
+    /// .from(_:)` 認得出這個碼），下面的 `uploadVideo` 不會被呼叫到；壓縮輸出暫存檔本身在那個
+    /// 分支已經被 `VideoTrimmer.checkWithinSizeLimit` 清掉了，這裡不用再清一次。
     private func performUpload(_ payload: PendingUpload.Kind, pixelSize: PixelSize) async throws -> UUID {
         switch payload {
         case .photo(let data, let fileExtension):
             return try await mediaUploadService.uploadPhoto(
                 familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize
             )
-        case .video(let fileURL, let fileExtension):
-            return try await mediaUploadService.uploadVideo(
-                familyID: familyID, fileURL: fileURL, fileExtension: fileExtension, pixelSize: pixelSize
+        case .video(let fileURL, _):
+            let source = try await videoPreparer(fileURL)
+            // 用輸出的實際像素尺寸；量不到才沿用選片當下量到的（同 `DiaryComposerStore
+            // .uploadSingle` merge-review R1 m7）。
+            let id = try await mediaUploadService.uploadVideo(
+                familyID: familyID, fileURL: source.fileURL, fileExtension: source.fileExtension,
+                pixelSize: source.pixelSize ?? pixelSize
             )
+            Self.cleanupVideoTempFiles(originalURL: fileURL, uploadedURL: source.fileURL)
+            return id
+        }
+    }
+
+    /// best-effort：清不掉不影響上傳結果，本來就是暫存檔衛生問題（同
+    /// `DiaryComposerStore.cleanupVideoTempFiles` merge-review R1 m9）——只在上傳成功、這支
+    /// 影片真的離開佇列的作用中流程時呼叫；`originalURL` 是 `PickedItemLoader` 產生的選片暫存
+    /// 複本，`uploadedURL` 是壓縮輸出，兩者不同檔案。
+    private static func cleanupVideoTempFiles(originalURL: URL, uploadedURL: URL) {
+        try? FileManager.default.removeItem(at: originalURL)
+        if uploadedURL != originalURL {
+            try? FileManager.default.removeItem(at: uploadedURL)
         }
     }
 
