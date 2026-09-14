@@ -109,22 +109,5 @@ final class ContentActionsAX3UITests: XCTestCase {
         }
     }
 
-    /// 用 frame 交集判斷任兩個元素是否重疊——同 `DeleteConfirmationAX3UITests
-    /// .assertButtonsReachableAndDoNotOverlap` 的既有手法，比單純比較 y 座標更不受版面假設
-    /// 影響。只比對真的 hittable（在畫面上）的元素，捲動裁掉、不在畫面上的元素本來就不該納入
-    /// 重疊判斷。
-    private func assertNoOverlap(_ elements: [XCUIElement], file: StaticString = #filePath, line: UInt = #line) {
-        let visible = elements.filter(\.isHittable)
-        for firstIndex in 0..<visible.count {
-            for secondIndex in (firstIndex + 1)..<visible.count {
-                let first = visible[firstIndex]
-                let second = visible[secondIndex]
-                XCTAssertFalse(
-                    first.frame.intersects(second.frame),
-                    "AX3 下「\(first.label)」與「\(second.label)」不應該重疊：\(first.frame) vs \(second.frame)",
-                    file: file, line: line
-                )
-            }
-        }
-    }
+    // `assertNoOverlap` 抽到 `Support/AssertNoOverlap.swift`（LS-268，池 `f07c26d1`）。
 }

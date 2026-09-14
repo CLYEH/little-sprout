@@ -196,6 +196,7 @@
 		68BF98264D823CA18400AE39 /* EULAStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B132DF653BFCE2A50058F737 /* EULAStoreTests.swift */; };
 		696E57E24140F0E0DC261A04 /* SettingsPushRowCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520AF87D9CED8414F39B70E9 /* SettingsPushRowCompositionTests.swift */; };
 		69B5EF4869EB3BE9144F0B4C /* MediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE2BD7F1D83D2C316B63293 /* MediaUploadService.swift */; };
+		69D8B95DDE12890F9F6F7987 /* AssertNoOverlap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 215A4C89A62254227DDB8953 /* AssertNoOverlap.swift */; };
 		6AB6E1BF7C0D28EC4C5C74E9 /* AlbumCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 524D9602B81A34EF7565AC3C /* AlbumCardView.swift */; };
 		6B047AD54D66A273C432CC0F /* DeleteConfirmationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F97BDDD344600BC1DFCF3BC /* DeleteConfirmationUITests.swift */; };
 		6B3117EB1911BB872DA62AC4 /* ReportInboxAssembler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23FABDDFED802022946EB16 /* ReportInboxAssembler.swift */; };
@@ -526,6 +527,7 @@
 		1F8B30A3E8C7388E178BD32E /* DiaryDurationFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDurationFormat.swift; sourceTree = "<group>"; };
 		20FC8388D99E9D7882AF0207 /* AsyncGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncGate.swift; sourceTree = "<group>"; };
 		211BD68F4C6453D2D071BDE3 /* TimelineStoreRefreshDedupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreRefreshDedupTests.swift; sourceTree = "<group>"; };
+		215A4C89A62254227DDB8953 /* AssertNoOverlap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssertNoOverlap.swift; sourceTree = "<group>"; };
 		216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableFillView.swift; sourceTree = "<group>"; };
 		226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInModelTests.swift; sourceTree = "<group>"; };
 		22BFD6279DC28E05BAC6A829 /* InviteCodeParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeParser.swift; sourceTree = "<group>"; };
@@ -1018,6 +1020,7 @@
 		2D13780586B138765F4E5CEF /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				215A4C89A62254227DDB8953 /* AssertNoOverlap.swift */,
 				3BA76C163AC1B48771D0C701 /* XCUIElement+Waits.swift */,
 			);
 			path = Support;
@@ -2056,6 +2059,7 @@
 				62880BAED51D6DE7D9EC30FF /* AlbumDetailViewTests.swift in Sources */,
 				3FCA5C7F27DFB77A097EB8D8 /* AlbumsViewTests.swift in Sources */,
 				DFB91365F67833D989932DB0 /* AppSection.swift in Sources */,
+				69D8B95DDE12890F9F6F7987 /* AssertNoOverlap.swift in Sources */,
 				49BC33F5FBCF4915902DE976 /* CommentsSheetUITests.swift in Sources */,
 				309B18EC6D3EE73BE4B49FF4 /* ContentActionsAX3UITests.swift in Sources */,
 				621539C5A36B700A14491FBF /* ContentActionsUITests.swift in Sources */,
