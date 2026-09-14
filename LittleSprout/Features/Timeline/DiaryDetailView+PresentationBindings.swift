@@ -18,11 +18,18 @@ extension DiaryDetailView {
                 case .video, .none: nil
                 }
             },
+            // LS-266 R2 m1（merge-review R1 `443e910f`）：`.video` 時原碼是完全不碰 @State 的
+            // 空分支——R1 版把它改成 `activeSheet = activeSheetAfterSheetBindingCleared(...)`，
+            // `.video` 時等於 `activeSheet = activeSheet` 自我賦值，不是真的零改變
+            // （`DiaryDetailSheet` 只 conform `Identifiable`，SwiftUI 不會對非 Equatable 的
+            // @State 做相等去重，這行會多觸發一次 invalidation）。改成只在「真的需要清空」
+            // （純函式回傳 nil）才寫，`.video` 時整段跳過、完全不碰 @State，語意與抽函式前
+            // 逐位相同；純函式本體與既有測試都不用動。
             set: { newValue in
                 if let newValue {
                     activeSheet = newValue
-                } else {
-                    activeSheet = Self.activeSheetAfterSheetBindingCleared(currentActiveSheet: activeSheet)
+                } else if Self.activeSheetAfterSheetBindingCleared(currentActiveSheet: activeSheet) == nil {
+                    activeSheet = nil
                 }
             }
         )
