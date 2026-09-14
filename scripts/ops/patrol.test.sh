@@ -242,17 +242,19 @@ if [ -z "$lost31" ]; then
 else
   echo "✗ ㉛a 有帶標記的行被過濾掉：" >&2; printf '%s\n' "$lost31" | sed 's/^/    /' >&2; fail=1
 fi
-# (c) --brief 的旗標行（`[段] …`）一律含 ⚠ 或 ✗（add_flag 的保證，LS-267）
+# (c) --brief 的旗標行（`[段] …`）一律含 ⚠／✗／→ 其中之一（R2 i2：判準對齊 `add_flag` 的實際保證——
+#     它也放行「只帶 →」的旗標，如 Booted「用完沒關 → xcrun simctl shutdown …」，而過濾式本來就收 →；
+#     R1 寫成「必含 ⚠ 或 ✗」比保證嚴，夾具日後產生只帶 → 的旗標會假紅）
 brief31="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 flags31=$(printf '%s\n' "$brief31" | grep '^\[')
 if [ -z "$flags31" ]; then
   echo "✗ ㉛a --brief 沒有任何旗標行，(c) 空跑" >&2; fail=1
 else
-  bad31=$(printf '%s\n' "$flags31" | grep -vE '⚠|✗')
+  bad31=$(printf '%s\n' "$flags31" | grep -vE '⚠|✗|→')
   if [ -z "$bad31" ]; then
-    echo "✓ ㉛a --brief 的 $(printf '%s\n' "$flags31" | wc -l | tr -d ' ') 條旗標行全部含 ⚠ 或 ✗"
+    echo "✓ ㉛a --brief 的 $(printf '%s\n' "$flags31" | wc -l | tr -d ' ') 條旗標行全部含 ⚠／✗／→"
   else
-    echo "✗ ㉛a 有旗標行既無 ⚠ 也無 ✗（會被 §4-b 過濾式丟掉）：" >&2; printf '%s\n' "$bad31" | sed 's/^/    /' >&2; fail=1
+    echo "✗ ㉛a 有旗標行不含 ⚠／✗／→ 任一（會被 §4-b 過濾式丟掉）：" >&2; printf '%s\n' "$bad31" | sed 's/^/    /' >&2; fail=1
   fi
 fi
 # (d) 段落標題行本身含 ⚠／✗ 字樣，但不算旗標行——模板第二道 grep -v 會濾掉
@@ -285,9 +287,9 @@ if ! grep -q '^    \*) ;;$' "$mut31c"; then
   echo "✗ ㉛c mutant 沒被正確合成（add_flag 的 case 形狀變了）" >&2; fail=1
 else
   brief31c="$(bash "$mut31c" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
-  bad31c=$(printf '%s\n' "$brief31c" | grep '^\[' | grep -vE '⚠|✗')
+  bad31c=$(printf '%s\n' "$brief31c" | grep '^\[' | grep -vE '⚠|✗|→')
   if [ -n "$bad31c" ]; then
-    echo "✓ ㉛c mutant（拿掉 add_flag 補標記）：出現既無 ⚠ 也無 ✗ 的旗標行（如「$(printf '%s' "$bad31c" | head -1 | cut -c1-60)…」）——證明 (c) 的綠來自那段保證"
+    echo "✓ ㉛c mutant（拿掉 add_flag 補標記）：出現 ⚠／✗／→ 全無的旗標行（如「$(printf '%s' "$bad31c" | head -1 | cut -c1-60)…」）——證明 (c) 的綠來自那段保證"
   else
     echo "✗ ㉛c mutant 未如預期翻轉——add_flag 的補標記可能已零覆蓋" >&2; fail=1
   fi
