@@ -318,6 +318,7 @@
 		B444B88CA39F26AA7C74C7A1 /* StubPushDeviceTokenAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A94E2A486BB54362C3343ED /* StubPushDeviceTokenAPIClient.swift */; };
 		B6F140BBE36A520831E94856 /* JoinCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B283C4309A804140F52F79A /* JoinCodeView.swift */; };
 		B6F6E333A886376E31C29D17 /* DeleteAccountFlowView+Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25D6169D65B86B668496E26 /* DeleteAccountFlowView+Status.swift */; };
+		B7AB598F9EB2343223F806C8 /* QADriver+ChildAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96554E7D52DB8936526D7353 /* QADriver+ChildAvatar.swift */; };
 		B83A86E61A18F083F22C5D89 /* PreviewSafetyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D15D7407095F945AC0EC40E /* PreviewSafetyAPIClient.swift */; };
 		B8F8BE27E4E503916384E97E /* InviteFamilyView+ActionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FFB8F471134452A808BD4E /* InviteFamilyView+ActionBar.swift */; };
 		B8F948E8FFC79CFAD32A8411 /* TapTargetGateHarness+DeleteAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 060BC7E72C5EC6ED52FB6E41 /* TapTargetGateHarness+DeleteAccount.swift */; };
@@ -735,6 +736,7 @@
 		96073B8EE43A7B538080DA3B /* DeleteAccountStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountStep.swift; sourceTree = "<group>"; };
 		96263CE935C656C186FDEC99 /* InMemoryAuthLocalStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryAuthLocalStorage.swift; sourceTree = "<group>"; };
 		962EAB3D4E7C6E203A5790AE /* TapTargetGateScreenName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapTargetGateScreenName.swift; sourceTree = "<group>"; };
+		96554E7D52DB8936526D7353 /* QADriver+ChildAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "QADriver+ChildAvatar.swift"; sourceTree = "<group>"; };
 		97311DDE6C054CCCF5694A29 /* LittleSproutUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LittleSproutUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9795ABABAFD0B3104AB74A21 /* AlbumRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumRoute.swift; sourceTree = "<group>"; };
 		97A194D1ACDE962DD7F63736 /* FamilyOnboardingRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyOnboardingRoute.swift; sourceTree = "<group>"; };
@@ -1558,6 +1560,7 @@
 			children = (
 				AA1EFC1792C4BB1EA62606E2 /* QADriver.swift */,
 				2715027B36DF1738FEBE4F59 /* QADriver+Browse.swift */,
+				96554E7D52DB8936526D7353 /* QADriver+ChildAvatar.swift */,
 				8935226D375AB85EFBC17CC3 /* QADriver+LoginLanding.swift */,
 				985785A57F53FA7B6C2252FA /* QASmokeTests.swift */,
 				7006BAF63356FF9EA95F7134 /* QASupport.swift */,
@@ -2079,6 +2082,7 @@
 				DB02391F5C7C742DA21005B2 /* PushPrepromptUITests.swift in Sources */,
 				92FEF23707CA351E42C25C02 /* QAAccessibilityID.swift in Sources */,
 				44C357BA4C7DCAC0714533C9 /* QADriver+Browse.swift in Sources */,
+				B7AB598F9EB2343223F806C8 /* QADriver+ChildAvatar.swift in Sources */,
 				0C26B811F96F8122199B4E8A /* QADriver+LoginLanding.swift in Sources */,
 				31A49F9904E6C7D2143C5CA4 /* QADriver.swift in Sources */,
 				0B8A0DB73C4423B756633874 /* QASmokeTests.swift in Sources */,

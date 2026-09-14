@@ -184,7 +184,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -259,6 +259,9 @@ jobs:
           # LS-267（LS-96 池項 `c8215a9e`）：UITest 跨檔重複 private func 偵測自己的自測（夾具正負樣本＋
           # 兩個 mutation：拿掉去空白正規化／門檻退成 ≥1）
           bash scripts/gates/uitest-dup-helper-check.test.sh || rc=1
+          # LS-270（LS-96 池項 `d4c1add5`／`e850cb7f`(3)）：`pipefail` ＋ `| grep -q` 偵測自己的自測（夾具正負
+          # 各一——票文指定的 mutation 就是「拿掉 set -o pipefail → 無 ⚠」；另含純註解行不算／非 *.test.sh 不掃）
+          bash scripts/gates/pipefail-grep-q-check.test.sh || rc=1
           exit "$rc"
 
       # LS-267（LS-96 池項 `c0d883e1`；根因來自 LS-264 merge-review R1 M1）：上面兩個自測 step 列舉的清單與
@@ -276,6 +279,15 @@ jobs:
       - name: UITest 重複 helper 偵測（uitest-dup-helper-check，LS-267，informational 不擋）
         if: ${{ !cancelled() }}
         run: bash scripts/gates/uitest-dup-helper-check.sh
+
+      # LS-270（LS-96 池項 `d4c1add5`／`e850cb7f`(3)）：`set -o pipefail` ＋ `<上游> | grep -q` 在 GNU grep 上
+      # 是「命中即退出 → 上游 SIGPIPE → 管線 141」，上游輸出超過 Linux pipe buffer（≈64 KB）就會紅，而 macOS 的
+      # BSD grep 讀完才退出、本機永遠綠（LS-267 head `c360589` 的 rules job 20 次紅 14 次）。這支把「用了這個構造」
+      # 變成 CI log 裡看得見的一行——**informational、一律 exit 0 不擋**：輸入多大靜態測不出來，全 repo 現存四百多處
+      # 都在門檻內，擋下來只會逼人把安全的寫法改成更囉嗦的版本（同 uitest-dup-helper-check 的取捨）。
+      - name: pipefail ＋ grep -q 管線偵測（pipefail-grep-q-check，LS-270，informational 不擋）
+        if: ${{ !cancelled() }}
+        run: bash scripts/gates/pipefail-grep-q-check.sh
 
       # LS-30：品牌 skill 接線——前饋是 ui-designer／visual-reviewer 定義「開工先載入 little-sprout-brand」，載入動作
       # 發生在 subagent 內部、repo 側驗不到；這裡驗它的前提：.claude/skills/little-sprout-brand/SKILL.md 存在且

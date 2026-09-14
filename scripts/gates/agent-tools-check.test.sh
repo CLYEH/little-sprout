@@ -95,10 +95,19 @@ NOFORK='不得派 fork／subagent 改動任何檔案。'
 # 正文另須含「handoff 申報的 mutation 一律自己重放，對不上列 major」
 MUTPLAY='每支 mutation 必列三段：改了什麼一行 → 哪條測試紅 → 斷言訊息原文。'
 REPLAYRULE='handoff 申報的 mutation 一律自己重放，對不上列 major。'
+# LS-270（LS-96 池項 d4c1add5(c)）：merge-reviewer 正文另須含「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」
+# （BSD-GNU 差異有一整類是機率性的，macOS 跑一次綠不算驗過）；併進 merge-reviewer 的合法樣本
+UBUNTU10='shell 自測在 ubuntu:24.04 通道跑 ≥10 次並記錄紅幾次，macOS 跑一次綠不算驗過。'
+UBUNTU1='shell 自測在 ubuntu:24.04 通道跑一次確認。'
+# LS-270（LS-96 池項 3e9347c4(5)／8a946ea2(3)）：merge-reviewer 的 mutation 段另須含兩句——UITest mutation
+# 重放的判準（xcodebuild 可能沒把改動編進 bundle → 只看 exit code 是假綠）與「macOS 沒有 timeout 指令」
+# （timeout 600 xcodebuild … exit 127＝根本沒跑）；併進 merge-reviewer 的合法樣本
+UITESTMUT='UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變，不能只看 exit code。'
+NOTIMEOUT='macOS 沒有 timeout 指令，exit 127＝整個測試沒跑過；改用 gtimeout 或 XCTest 看門狗。'
 # LS-232：ios-dev 正文另須含「新增登入後全屏 gate 必同 PR 更新 QADriver」（qa-driver-gate-check 機械化）
 QAGATE='新增登入後全屏 gate 必同 PR 更新 QADriver（`qa-driver-gate-check` 會擋）。'
 IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254}"
-MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254}"
+MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${UBUNTU10} ${UITESTMUT} ${NOTIMEOUT}"
 # LS-209：ios-dev 新增 tools: 白名單（移除 mcp__pencil__*）——取代舊的 `NONE`（無 tools: 行＝繼承全部工具，其中
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求
 # （Bash／Read／Edit／Write／Grep／Glob／Agent／三支 Linear 工具），這裡的乾淨清單須包含全部才能當合法基準。
@@ -157,7 +166,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（50 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 50 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（53 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 53 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -447,7 +456,7 @@ fi
 
 # ---- ㉓ LS-256（LS-96 池項 a7e9e910 i1／e4155ed8(1)）：dead-code-sweeper 是六份定義中原唯一未釘「禁派 fork」的（LS-254 票文只列五份）
 #        ——補釘同一條規則；tools 白名單無 Agent，與 merge-reviewer／qa 同型（需要並行回報 orchestrator 拆派）。----
-reset; expect 0 '㉓ dead-code-sweeper 正文含禁派 fork 句 → 印「正文含」（總數 50 條）' 'dead-code-sweeper.md：正文含「禁派 fork」' '正文必含字樣 50 條）'
+reset; expect 0 '㉓ dead-code-sweeper 正文含禁派 fork 句 → 印「正文含」（總數 53 條）' 'dead-code-sweeper.md：正文含「禁派 fork」' '正文必含字樣 53 條）'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '㉓ dead-code-sweeper 缺該句 → exit 1，工具齊全不救（regression：LS-254 前這份無正文規則、任何正文都過）' 'dead-code-sweeper.md：正文缺「禁派 fork」' '' 'dead-code-sweeper.md：tools: 缺'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "禁派fork（無空白）"; expect 1 '㉓ 字樣須整句「禁派 fork」（含空白）→ exit 1' 'dead-code-sweeper.md：正文缺「禁派 fork」'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
@@ -468,6 +477,40 @@ if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'editId 成功套用後�
   ok '㉔ mutant：拿掉 BODY_RULES 區塊後「ui-designer 缺 editId 句」的負樣本變綠'
 else
   echo "✗ ㉔ mutant（ui-designer editId 句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset
+
+# ---- ㉕ LS-270（LS-96 池項 `d4c1add5`(c)）：merge-reviewer 正文須含「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」
+#      （BSD-GNU 差異有一整類是機率性的——LS-267 R2 B1 的 pipefail ＋ grep -q 管線在 ubuntu 20 次紅 14 次、
+#      macOS 永遠綠，跑 1 次很可能剛好抽到綠）。「≥10 次」是規則的重點，只寫「跑一次」不算。----
+MR_BASE="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254}"
+MR_NO_UBUNTU="${MR_BASE} ${UITESTMUT} ${NOTIMEOUT}"
+reset; expect 0 '㉕ merge-reviewer 正文含 ubuntu ≥10 次句 → 印「正文含」（總數 53 條）' 'merge-reviewer.md：正文含「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」' '正文必含字樣 53 條）'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_NO_UBUNTU"; expect 1 '㉕ merge-reviewer 缺該句 → exit 1（其餘必含字樣齊全不救）' 'merge-reviewer.md：正文缺「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」' '' 'merge-reviewer.md：正文缺「禁派 fork」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_NO_UBUNTU} ${UBUNTU1}"; expect 1 '㉕ 只寫「跑一次確認」不算（次數是規則的重點）→ exit 1' 'merge-reviewer.md：正文缺「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_NO_UBUNTU"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'shell 自測在 ubuntu:24.04 通道跑 ≥10 次'; then
+  ok '㉕ mutant：拿掉 BODY_RULES 區塊後「merge-reviewer 缺 ubuntu ≥10 次句」的負樣本變綠'
+else
+  echo "✗ ㉕ mutant（merge-reviewer ubuntu ≥10 次句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset
+
+# ---- ㉖ LS-270（LS-96 池項 `3e9347c4`(5)／`8a946ea2`(3)）：merge-reviewer 的 mutation 段須含兩句——
+#      「UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變」（xcodebuild 可能沒把改動編進 UITest
+#      bundle，只看 exit code 會把舊 bundle 的紅或假綠當成重放結果）與「macOS 沒有 timeout 指令」
+#      （`timeout 600 xcodebuild …` exit 127＝整個測試沒跑過，LS-266 R2 實際發生）。兩句各自獨立缺席都要紅。----
+reset; expect 0 '㉖ merge-reviewer 正文含兩句 → 印「正文含」（總數 53 條）' 'merge-reviewer.md：正文含「UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變」' '正文必含字樣 53 條）'
+reset; expect 0 '㉖ merge-reviewer 正文含 macOS 無 timeout 句 → 印「正文含」' 'merge-reviewer.md：正文含「macOS 沒有 timeout 指令」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_BASE} ${UBUNTU10} ${NOTIMEOUT}"; expect 1 '㉖ 缺 UITest mutation 判準句 → exit 1（LS-209 舊的「一律自己重放」句在也不救）' 'merge-reviewer.md：正文缺「UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變」' '' 'merge-reviewer.md：正文缺「handoff 申報的 mutation 一律自己重放，對不上列 major」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_BASE} ${UBUNTU10} ${UITESTMUT}"; expect 1 '㉖ 缺 macOS 無 timeout 句 → exit 1（另一句在也不救）' 'merge-reviewer.md：正文缺「macOS 沒有 timeout 指令」' '' 'merge-reviewer.md：正文缺「UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_BASE} ${UBUNTU10}"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'macOS 沒有 timeout 指令'; then
+  ok '㉖ mutant：拿掉 BODY_RULES 區塊後「merge-reviewer 缺兩句」的負樣本變綠'
+else
+  echo "✗ ㉖ mutant（merge-reviewer mutation 段兩句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 reset
 
