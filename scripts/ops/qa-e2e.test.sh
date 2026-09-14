@@ -289,15 +289,21 @@ fi
 exit 0
 STUB
 chmod +x "$bin_nopsql/docker"
-if PATH="$bin_nopsql:$PATH" command -v psql >/dev/null 2>&1; then
-  echo "SKIP 2 組（系統路徑上有真的 psql）：⑦f docker exec 分支無法在本機隔離"
-else
-  out=$( cd "$wt" && PATH="$bin_nopsql:$PATH" FAKE_XCRUN_MODE=sim LS_LOCK_SH="$bin/lock-stub.sh" \
-         FAKE_CURL_REST=200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass bash "$script" login 2>&1 ); got=$?
-  expect 0 '⑦f 無 host psql → 走 docker exec 分支、印該通道、照跑' "$got" "$out" \
-    'docker exec supabase_db_little-sprout psql' '通過'
-  log_has '⑦f docker exec 真的帶了 psql 與 notify pgrst, reload schema' calls.log "docker exec supabase_db_little-sprout psql -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q -c notify pgrst, 'reload schema'"
-fi
+# LS-267（LS-96 池項 `488ded1c` n1）：改用 `LS_QA_PSQL_BIN` seam 指向一個不存在的路徑，穩定走 docker exec
+# 分支——原本的 SKIP 條件看宿主 PATH 有沒有真的 psql，GitHub runner 有，於是這格在唯一的自動通道上永遠
+# 不跑、該分支零覆蓋。seam 之外仍保留 bin_nopsql（PATH 上也沒有 psql），兩層都不指望宿主環境。
+out=$( cd "$wt" && PATH="$bin_nopsql:$PATH" LS_QA_PSQL_BIN="$work/no-such-psql" FAKE_XCRUN_MODE=sim LS_LOCK_SH="$bin/lock-stub.sh" \
+       FAKE_CURL_REST=200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass bash "$script" login 2>&1 ); got=$?
+expect 0 '⑦f 無 host psql（LS_QA_PSQL_BIN seam）→ 走 docker exec 分支、印該通道、照跑' "$got" "$out" \
+  'docker exec supabase_db_little-sprout psql' '通過'
+log_has '⑦f docker exec 真的帶了 psql 與 notify pgrst, reload schema' calls.log "docker exec supabase_db_little-sprout psql -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q -c notify pgrst, 'reload schema'"
+# ⑦g（LS-267）：seam 指向假 psql → 回到 host psql 分支，證明 seam 本身兩邊都通（不是「永遠走 docker」）
+reset_logs
+out=$( cd "$wt" && PATH="$bin_nopsql:$PATH" LS_QA_PSQL_BIN="$bin/psql" FAKE_XCRUN_MODE=sim LS_LOCK_SH="$bin/lock-stub.sh" \
+       FAKE_CURL_REST=200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass bash "$script" login 2>&1 ); got=$?
+expect 0 '⑦g LS_QA_PSQL_BIN 指向可執行的 psql → 走 host psql 分支' "$got" "$out" \
+  'host psql → 127.0.0.1:54322/postgres' '通過'
+log_has '⑦g 真的呼叫了 seam 指到的那支 psql（不是 docker）' calls.log "psql -h 127.0.0.1 -p 54322 -U postgres"
 reset_logs
 
 if [ "$fail" -ne 0 ]; then echo "✗ qa-e2e 自測失敗" >&2; exit 1; fi
