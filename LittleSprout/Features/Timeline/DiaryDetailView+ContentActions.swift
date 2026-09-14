@@ -121,8 +121,14 @@ extension DiaryDetailView {
         case .report:
             reportFlowTarget = context.target
         case .block(let memberID, let memberName):
+            // LS-266（池 `8b817461`，QA `689f5ae`）：`memberName` 可能是 `openContentActions()`
+            // 當下 `familyStore.members` 還沒載入完成時退回的泛稱快照，見
+            // `resolvedMemberDisplayName` 文件註解——這裡用當下最新的 `members` 重新查一次。
+            let liveMemberName = resolvedMemberDisplayName(
+                members: familyStore.members, userID: memberID, fallback: memberName
+            )
             blockConfirmContext = DiaryBlockConfirmContext(
-                familyID: context.target.familyID, memberID: memberID, memberName: memberName
+                familyID: context.target.familyID, memberID: memberID, memberName: liveMemberName
             )
         case .removeAsOwner:
             removeConfirmTarget = context.target
