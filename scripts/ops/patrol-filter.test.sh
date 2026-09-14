@@ -17,8 +17,16 @@ fail=0
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-has() { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✓ $1"; else echo "✗ ${1}（輸出應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
-hasnt() { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✗ ${1}（輸出不應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; else echo "✓ $1"; fi; }
+# R3 B1（merge-review R2 blocker）：**不要用 `printf … | grep -q`**。`set -o pipefail` 下，GNU grep `-q`
+# 命中就立刻退出，寫入端的 printf 收到 SIGPIPE 回 141 → 整條管線 141 → 斷言假紅；內容越大、命中位置越
+# 靠前就越容易觸發（reviewer 在 ubuntu:24.04 實測：同一份輸入 20 次有 14 次回 141，本檔在容器內 8/8 紅）。
+# macOS 的 BSD grep 會把輸入讀完才退出，所以本機永遠看不到——這是最糟的形狀：本機綠、CI 紅、每次紅的格子還不同。
+# 改用 here-string（無管線、無 SIGPIPE）；比對整個檔案時用下面的 `file_has()` 讓 grep 直接吃檔案。
+has() { if grep -qF -- "$3" <<<"$2"; then echo "✓ $1"; else echo "✗ ${1}（輸出應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
+hasnt() { if grep -qF -- "$3" <<<"$2"; then echo "✗ ${1}（輸出不應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; else echo "✓ $1"; fi; }
+# file_has <名稱> <檔案路徑> <字面>：grep 直接讀檔，不經 shell 變數、不經管線（⑧ 的四格原本把 100 KB 的
+# patrol.sh／patrol_linear.py 讀進變數再灌管線，正是 B1 的觸發點）。
+file_has() { if grep -qF -- "$3" "$2"; then echo "✓ $1"; else echo "✗ ${1}（${2} 應含「${3}」）" >&2; fail=1; fi; }
 rc_is() { if [ "$3" -eq "$2" ]; then echo "✓ $1"; else echo "✗ ${1}（期望 exit ${2}，實得 ${3}）" >&2; printf '%s\n' "$4" | sed 's/^/    /' >&2; fail=1; fi; }
 
 # ---- ① --pattern：印出樣式本身（文件與其他自測都引用它，不再各自抄字面）----
@@ -86,7 +94,8 @@ if ! grep -q 'echo "  PR：略過（${pr_skip}）"' "${mut}/ops/patrol.sh"; then
   echo "✗ ⑦ mutant 沒被正確合成（PR 略過行形狀變了）" >&2; fail=1
 else
   out7=$(PATROL_GH="$work/no-such-gh" bash "${mut}/ops/patrol.sh" --repo "$repo" --no-fetch 30 2>&1)
-  if printf '%s\n' "$out7" | bash "$pf" 2>/dev/null | grep -qF 'PR：略過（gh '; then
+  keep7=$(printf '%s\n' "$out7" | bash "$pf" 2>/dev/null)
+  if grep -qF 'PR：略過（gh ' <<<"$keep7"; then
     echo "✗ ⑦ mutant（拿掉 ⚠）仍通過過濾——⑥ 的綠不是來自標記" >&2; fail=1
   else
     echo "✓ ⑦ mutant（拿掉 PR 略過行的 ⚠）：該行被過濾吞掉——證明 ⑥ 釘的正是那個標記"
@@ -94,12 +103,12 @@ else
 fi
 
 # ---- ⑧ 其餘退化分支的標記（原始碼字面對帳；這些分支要在真機／真 Linear 才觸發得到）----
-has '⑧ patrol.sh：df 讀不到可用空間的略過行帶 ⚠' "$(cat "$patrol")" '⚠ （df 讀不到可用空間，略過'
-has '⑧ patrol.sh：Pen lane 查詢失敗分支帶 ⚠' "$(cat "$patrol")" 'PEN_WRONG_LINE="⚠ Pen：目前開在'
+file_has '⑧ patrol.sh：df 讀不到可用空間的略過行帶 ⚠' "$patrol" '⚠ （df 讀不到可用空間，略過'
+file_has '⑧ patrol.sh：Pen lane 查詢失敗分支帶 ⚠' "$patrol" 'PEN_WRONG_LINE="⚠ Pen：目前開在'
 has '⑧ patrol-linear.sh：無 LINEAR_API_KEY 三種模式都帶 ⚠' \
   "$(grep -c '⚠ 巡檢（Linear 半段）' "${root}/scripts/ops/patrol-linear.sh")" '3'
-has '⑧ patrol_linear.py：QA 讀不到帶 ⚠' "$(cat "${root}/scripts/ops/patrol_linear.py")" '⚠ %s QA：origin/development 不存在或讀不到'
-has '⑧ patrol_linear.py：cycle 對帳 (c)(d) 訊息帶 ⚠' "$(cat "${root}/scripts/ops/patrol_linear.py")" '"  (c) ⚠ %s"'
+file_has '⑧ patrol_linear.py：QA 讀不到帶 ⚠' "${root}/scripts/ops/patrol_linear.py" '⚠ %s QA：origin/development 不存在或讀不到'
+file_has '⑧ patrol_linear.py：cycle 對帳 (c)(d) 訊息帶 ⚠' "${root}/scripts/ops/patrol_linear.py" '"  (c) ⚠ %s"'
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ patrol-filter 自測通過（8 組樣本）"
