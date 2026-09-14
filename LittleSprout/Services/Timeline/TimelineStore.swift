@@ -97,20 +97,40 @@ final class TimelineStore {
     /// 註解。
     var generation = 0
 
-    /// LS-266（池 `d351af55`，merge-review LS-126 R2 r2-m1）：`refresh` 同一組篩選參數
-    /// （`familyID`／`childID`）在 `.task(id:)` 與 `.refreshable` 幾乎同時觸發時，原本各自
-    /// 跑完整組裝（1 RPC＋3 支批次查詢＋簽名 URL），只有世代號最新的那次結果被採用、另一次
-    /// 白做——這個字典讓同參數的重入直接 `await` 既有那個 `Task`，不發第二次請求。同
-    /// `PendingAccountDeletionResumer.inFlightTasks` 的 task-coalescing 寫法（見該檔）。
-    /// **不動世代號機制本身**：真正組裝工作搬進 `performRefresh`，世代號仍在那支方法裡遞增與
-    /// 比對，去重只是讓「該不該真的發一次請求」多一層判斷，跟世代號回答的「該不該寫回結果」
-    /// 是兩個互不影響的問題。
+    /// LS-266（池 `d351af55`，merge-review LS-126 R2 r2-m1；R2 訂正 merge-review R1
+    /// `443e910f` B1／M1）：`refresh` 同一組篩選參數（`familyID`／`childID`）在 `.task(id:)`
+    /// 與 `.refreshable` 幾乎同時觸發時，同 key 的重入改成合流，只真的發一次請求。**不動
+    /// 世代號機制本身**：世代號仍在 `performRefresh` 裡遞增與比對，去重只是讓「該不該真的
+    /// 發一次請求」多一層判斷，跟世代號回答的「該不該寫回結果」是兩個互不影響的問題。
+    ///
+    /// R1 B1：R1 版的合流只看 key 有沒有在飛、不看世代號——A→B→A 快速切換時，第三次呼叫
+    /// （切回 A）會合流到第一次呼叫（世代號已經被 B 的呼叫淘汰的舊 Task），那個舊 Task
+    /// 回來時被世代號 guard 靜默丟棄，畫面停在 B、不會自我修復。R2 修法：合流前比對
+    /// `existing.generation == generation`（目前最新世代號）——已經落後就不合流、直接另開
+    /// 一輪（覆蓋 registry 裡這個 key 的登記，舊那輪的結果反正不會被採用）。
+    ///
+    /// R1 M1：R1 版一律把 `performRefresh` 包進 unstructured `Task {}`，呼叫端（`.task(id:)`
+    /// 篩選條件變了、畫面消失）的取消不會傳進去——舊組裝一定跑完、`guard !Task.isCancelled`
+    /// 變死碼，還拉長 B1 的危險視窗。R2 修法（reviewer 建議的結構化方案）：**發起**一輪的
+    /// 呼叫者直接在自己的呼叫環境跑 `performRefresh`，不再包 Task——取消自然沿呼叫鏈傳進
+    /// `apiClient`。同 key **加入**（非發起）者改用 `withCheckedContinuation` 排隊等結果；
+    /// 加入者自己的取消不需要傳給發起者（它們本來就不是發起請求的那個呼叫）。
+    ///
+    /// `InFlightRefresh` 刻意用 **class**：即使這個 key 的登記中途被更新的一輪覆蓋（B1），
+    /// 發起者仍持有自己這個物件的直接參照，完成後一定會 resume 自己收到的 `waiters`——不會
+    /// 因為字典裡的值換了就忘掉，造成 `CheckedContinuation` 洩漏（必須被 resume 恰好一次）。
     private struct RefreshKey: Hashable {
         let familyID: UUID
         let childID: UUID?
     }
 
-    private var inFlightRefreshTasks: [RefreshKey: Task<Bool, Never>] = [:]
+    private final class InFlightRefresh {
+        let generation: Int
+        var waiters: [CheckedContinuation<Bool, Never>] = []
+        init(generation: Int) { self.generation = generation }
+    }
+
+    private var inFlightRefreshes: [RefreshKey: InFlightRefresh] = [:]
 
     init(
         apiClient: TimelineAPIClient,
@@ -126,29 +146,39 @@ final class TimelineStore {
     /// （見上方 `generation` 文件註解）：多個呼叫可以同時在飛，`self.familyID`／
     /// `self.childID` 一律立即記錄，只有世代號最新的那一次的結果會被寫回
     /// `entries`／`hasMorePages`／`refreshState`。
+    /// `force`（LS-266 R2 i1，merge-review R1 `443e910f`）：`true` 時永遠另開一輪、不合流
+    /// ——`refreshWithCurrentFilter()` 用，見該方法文件註解。一般呼叫端（`.task(id:)`／
+    /// `.refreshable`）留用預設 `false`。
     @discardableResult
-    func refresh(familyID: UUID, childID: UUID?) async -> Bool {
-        await refreshTask(familyID: familyID, childID: childID).value
-    }
-
-    /// 見上方 `inFlightRefreshTasks` 文件註解——同參數已有在飛的 `Task` 就直接回傳同一個
-    /// 實例（呼叫端各自 `await` 它），沒有的話才真的建立一個新的並登記。
-    private func refreshTask(familyID: UUID, childID: UUID?) -> Task<Bool, Never> {
+    func refresh(familyID: UUID, childID: UUID?, force: Bool = false) async -> Bool {
         let key = RefreshKey(familyID: familyID, childID: childID)
-        if let existing = inFlightRefreshTasks[key] {
-            return existing
+        // B1：只有「同 key 且該輪的世代號仍是目前最新」才合流，見上方 `InFlightRefresh`
+        // 文件註解。
+        if !force, let existing = inFlightRefreshes[key], existing.generation == generation {
+            return await withCheckedContinuation { continuation in
+                existing.waiters.append(continuation)
+            }
         }
-        let task = Task {
-            defer { inFlightRefreshTasks[key] = nil }
-            return await performRefresh(familyID: familyID, childID: childID)
-        }
-        inFlightRefreshTasks[key] = task
-        return task
-    }
-
-    private func performRefresh(familyID: UUID, childID: UUID?) async -> Bool {
+        // M1：發起者直接在這裡（自己的呼叫環境）`await performRefresh`，不包 Task——見上方
+        // `InFlightRefresh` 文件註解。
         generation += 1
         let myGeneration = generation
+        let inFlight = InFlightRefresh(generation: myGeneration)
+        inFlightRefreshes[key] = inFlight
+        let result = await performRefresh(familyID: familyID, childID: childID, generation: myGeneration)
+        // i2：完成後一定要把自己這輪的登記清掉——只有「字典裡目前這個 key 仍指向自己這個
+        // 物件」才清（`===` 身分比對），避免誤清掉已經覆蓋自己的新一輪（B1）。不論是否清得掉
+        // 字典，`inFlight.waiters`（class 參照，見上方文件註解）都一定要 resume，不能洩漏。
+        if inFlightRefreshes[key] === inFlight {
+            inFlightRefreshes[key] = nil
+        }
+        for waiter in inFlight.waiters {
+            waiter.resume(returning: result)
+        }
+        return result
+    }
+
+    private func performRefresh(familyID: UUID, childID: UUID?, generation myGeneration: Int) async -> Bool {
         self.familyID = familyID
         self.childID = childID
         refreshState = .submitting
@@ -191,10 +221,16 @@ final class TimelineStore {
     /// no-op（同 `loadMore` 對 `familyID` 缺失的既有處理）——`block_user`／`unblock_user` 生效
     /// 範圍是 `get_family_timeline`／留言／相簿三處查詢（`docs/API.md` §4），這裡只負責讓
     /// client 端已經拿到的快取跟上，不是後端要求的動作。
+    /// i1（LS-266 R2，merge-review R1 `443e910f`）：呼叫端（封鎖／解除封鎖成功後）明確要
+    /// 「這次一定要重新打 `get_family_timeline`」，不能合流到一個發起於伺服器狀態改變**之前**
+    /// 、還在飛的舊一輪——B1 的世代號比對解決的是「合流到已被淘汰的舊世代」，解決不了「同一
+    /// 世代、但發起時間早於這次伺服器端狀態改變」這個情境（兩者世代號相同，B1 的檢查不會
+    /// 擋下這次合流）。固定傳 `force: true`，永遠另開一輪、不合流，才能保證拿到的是封鎖
+    /// 生效之後的資料。
     @discardableResult
     func refreshWithCurrentFilter() async -> Bool {
         guard let familyID else { return false }
-        return await refresh(familyID: familyID, childID: childID)
+        return await refresh(familyID: familyID, childID: childID, force: true)
     }
 
     /// 捲到底載入下一頁——沿用 `refresh` 記下的 `familyID`／`childID`，游標取自目前最後一筆
@@ -314,6 +350,16 @@ final class TimelineStore {
         self.familyID = familyID
         refreshState = .success
         hasMorePages = false
+    }
+
+    /// LS-266 R2 i2（merge-review R1 `443e910f`）：測試專用——`refresh` 完成後是否還登記著
+    /// 這組參數的 in-flight 狀態。`performRefresh` 完成後應該一定清空（見 `refresh` 內
+    /// `inFlightRefreshes[key] === inFlight` 那段），不然下一次同參數呼叫會誤判成「還在飛」
+    /// 而永遠合流到一個早已解決、不會再 resume 任何人的舊登記——用直接狀態斷言（不用
+    /// `withCheckedContinuation`／timeout 猜時間），mutation（拿掉那段清理）會讓這裡從
+    /// `false` 變 `true`，乾淨紅，不會卡死測試。
+    func hasInFlightRefresh(familyID: UUID, childID: UUID?) -> Bool {
+        inFlightRefreshes[RefreshKey(familyID: familyID, childID: childID)] != nil
     }
     #endif
 
