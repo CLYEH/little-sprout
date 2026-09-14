@@ -1000,6 +1000,73 @@ PYEOF
 printf '%s\n' "$py_neg"
 if printf '%s' "$py_neg" | tail -1 | grep -qx OK; then :; else fail=1; fi
 
+# ---- ⑪（LS-267／LS-239 R3）§4-b cron 模板的過濾式必須留得住動作清單／lane 表／cycle 一行 ----
+# orchestrator 巡檢改成自己直接跑 `patrol.sh 40 --linear` 再過濾進 context；樣式**直接從
+# docs/COLLABORATION.md 讀出來**餵給斷言，模板與實際輸出任一邊漂移這裡就紅。
+doc11="${root}/docs/COLLABORATION.md"
+filter11=$(grep -o "patrol\.sh 40 --linear 2>&1 | grep -E '[^']*'" "$doc11" | head -1 | sed "s/.*grep -E '//; s/'$//")
+if [ -z "$filter11" ]; then
+  echo "✗ ⑪ 讀不到 §4-b cron 模板的過濾樣式（模板形狀變了？斷言失去意義，fail loud）" >&2; fail=1
+else
+  echo "✓ ⑪ 取得 §4-b 過濾樣式：${filter11}"
+fi
+out11="$(bash "$plsh" --repo "$repo" 2>&1)"
+keep11=$(printf '%s\n' "$out11" | grep -E "$filter11" | grep -v '^== ')
+
+# (a) 動作清單段的每一行都含 →（模板靠它留下整段；行首 → 是慣例，行中的也算）
+act11=$(printf '%s\n' "$out11" | sed -n '/^== 動作清單/,$p' | sed '1d' | grep -v '^[[:space:]]*$')
+if [ -z "$act11" ]; then
+  act11=$(printf '%s\n' "$out11" | sed -n '/動作清單/,$p' | sed '1d' | grep -v '^[[:space:]]*$')
+fi
+if [ -z "$act11" ]; then
+  echo "✗ ⑪(a) 找不到動作清單段，斷言會空跑" >&2; fail=1
+else
+  bad11=$(printf '%s\n' "$act11" | grep -vF '→' | grep -v '（無待執行動作）')
+  if [ -z "$bad11" ]; then
+    echo "✓ ⑪(a) 動作清單 $(printf '%s\n' "$act11" | wc -l | tr -d ' ') 行全部含 →（過濾式留得住）"
+  else
+    echo "✗ ⑪(a) 動作清單有行不含 →（會被 §4-b 過濾式丟掉）：" >&2; printf '%s\n' "$bad11" | sed 's/^/    /' >&2; fail=1
+  fi
+  miss11=$(printf '%s\n' "$act11" | while IFS= read -r l; do printf '%s\n' "$keep11" | grep -qF -- "$l" || printf '%s\n' "$l"; done)
+  if [ -z "$miss11" ]; then
+    echo "✓ ⑪(a) 動作清單每一行實際通過過濾"
+  else
+    echo "✗ ⑪(a) 動作清單有行被過濾掉：" >&2; printf '%s\n' "$miss11" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
+# (b) lane 狀態表每一行含 `lane:`；(c) cycle 一行含 `current cycle`
+lane11=$(printf '%s\n' "$out11" | grep -F '上限' | grep -F '在飛')
+if [ -z "$lane11" ]; then
+  echo "✗ ⑪(b) 找不到 lane 狀態表，斷言會空跑" >&2; fail=1
+elif printf '%s\n' "$lane11" | grep -qv 'lane:'; then
+  echo "✗ ⑪(b) lane 狀態表有行不含 lane:（會被過濾掉）：" >&2; printf '%s\n' "$lane11" | grep -v 'lane:' | sed 's/^/    /' >&2; fail=1
+else
+  echo "✓ ⑪(b) lane 狀態表 $(printf '%s\n' "$lane11" | wc -l | tr -d ' ') 行全部含 lane:，且過濾後仍在（$(printf '%s\n' "$keep11" | grep -cF '上限') 行）"
+fi
+if printf '%s\n' "$keep11" | grep -qF 'current cycle'; then
+  echo "✓ ⑪(c) cycle 一行含 current cycle、過濾後仍在"
+else
+  echo "✗ ⑪(c) cycle 一行沒通過過濾" >&2; printf '%s\n' "$out11" | grep -F 'cycle' | sed 's/^/    /' >&2; fail=1
+fi
+
+# (d) mutation：拿掉動作清單行首的 `→ ` → (a) 轉紅（證明 (a) 釘的正是這個標記）
+mutdir11="$work/mut11"
+rm -rf "$mutdir11"; mkdir -p "$mutdir11"
+cp -R "${root}/scripts" "$mutdir11/scripts"
+sed 's/"→ save_issue /"save_issue /' "${root}/scripts/ops/patrol_linear.py" > "$mutdir11/scripts/ops/patrol_linear.py"
+if ! grep -q '"save_issue ' "$mutdir11/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑪(d) mutant 沒被正確合成（save_issue 動作字串形狀變了）" >&2; fail=1
+else
+  out11d="$(bash "$mutdir11/scripts/ops/patrol-linear.sh" --repo "$repo" 2>&1)"
+  act11d=$(printf '%s\n' "$out11d" | sed -n '/動作清單/,$p' | sed '1d' | grep -v '^[[:space:]]*$')
+  if printf '%s\n' "$act11d" | grep -q '^save_issue '; then
+    echo "✓ ⑪(d) mutant（動作行拿掉 →）：出現不含 → 的動作行——證明 (a) 的綠來自那個標記，過濾式會把它丟掉"
+  else
+    echo "✗ ⑪(d) mutant 未如預期翻轉——(a) 可能零覆蓋" >&2; printf '%s\n' "$act11d" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2
   exit 1

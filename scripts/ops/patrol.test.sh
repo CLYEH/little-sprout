@@ -207,6 +207,92 @@ jq_ok '③ PR 略過原因與空陣列' "$json" '.prs_skipped == "--no-pr" and .
 jq_ok '③ flags 彙總七筆（LS-1／2／4／5／7／8＋主 checkout）' "$json" '.flags | length == 7'
 jq_ok '③ hooks 欄位：path .githooks、flag 空' "$json" '.hooks.path == ".githooks" and .hooks.flag == ""'
 
+# ---- ㉛（LS-267／LS-239 R3）旗標行格式：§4-b cron 模板的過濾式必須留得住每一條警示 ----
+# orchestrator 巡檢改成自己直接跑 patrol.sh、再用模板裡那道 grep 過濾進 context；**樣式直接從
+# docs/COLLABORATION.md 讀出來**餵給下面的斷言——改了模板而 patrol 輸出沒跟上（或反之）這裡就紅，
+# 不會兩邊各自漂移。模板第二道 `grep -v '^== '` 濾掉段落標題（標題文字本身含 ⚠／✗ 字樣，不是旗標）。
+doc31="${root}/docs/COLLABORATION.md"
+filter31=$(grep -o "patrol\.sh 40 --linear 2>&1 | grep -E '[^']*'" "$doc31" | head -1 | sed "s/.*grep -E '//; s/'$//")
+if [ -z "$filter31" ]; then
+  echo "✗ ㉛ 讀不到 §4-b cron 模板的過濾樣式（模板形狀變了？斷言失去意義，fail loud）" >&2; fail=1
+else
+  echo "✓ ㉛ 取得 §4-b 過濾樣式：${filter31}"
+fi
+keep31() { printf '%s\n' "$1" | grep -E "$filter31" | grep -v '^== '; }
+
+out31="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+kept31="$(keep31 "$out31")"
+# (a) 具名樣本：夾具刻意造出來的停滯型態，過濾後必須還在（獨立於「行裡有沒有標記」的判斷，
+#     所以作者把 ⚠ 寫成別的字時這裡會紅——見 ㉛b mutation）
+for probe31 in 'feature/LS-1-ahead' 'feature/LS-2-dirty' 'feature/LS-5-idle' 'feature/LS-8-gone'; do
+  line31=$(row "$out31" "$probe31")
+  if [ -z "$line31" ]; then
+    echo "✗ ㉛a 夾具 ${probe31} 不在本輪輸出（前面的案例改了夾具？斷言會空跑）" >&2; fail=1; continue
+  fi
+  if printf '%s\n' "$kept31" | grep -qF -- "$probe31"; then
+    echo "✓ ㉛a ${probe31} 的警示行通過 §4-b 過濾式"
+  else
+    echo "✗ ㉛a ${probe31} 的警示行被過濾掉了（樣式 ${filter31}）：${line31}" >&2; fail=1
+  fi
+done
+# (b) 全稱：任何帶標記（⚠／✗／⏳／✅）的非標題行都不能被濾掉
+lost31=$(printf '%s\n' "$out31" | grep -v '^== ' | grep -E '⚠|✗|⏳|✅' | grep -vE "$filter31")
+if [ -z "$lost31" ]; then
+  echo "✓ ㉛a 全稱：所有帶 ⚠／✗／⏳／✅ 的非標題行都通過過濾"
+else
+  echo "✗ ㉛a 有帶標記的行被過濾掉：" >&2; printf '%s\n' "$lost31" | sed 's/^/    /' >&2; fail=1
+fi
+# (c) --brief 的旗標行（`[段] …`）一律含 ⚠ 或 ✗（add_flag 的保證，LS-267）
+brief31="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+flags31=$(printf '%s\n' "$brief31" | grep '^\[')
+if [ -z "$flags31" ]; then
+  echo "✗ ㉛a --brief 沒有任何旗標行，(c) 空跑" >&2; fail=1
+else
+  bad31=$(printf '%s\n' "$flags31" | grep -vE '⚠|✗')
+  if [ -z "$bad31" ]; then
+    echo "✓ ㉛a --brief 的 $(printf '%s\n' "$flags31" | wc -l | tr -d ' ') 條旗標行全部含 ⚠ 或 ✗"
+  else
+    echo "✗ ㉛a 有旗標行既無 ⚠ 也無 ✗（會被 §4-b 過濾式丟掉）：" >&2; printf '%s\n' "$bad31" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+# (d) 段落標題行本身含 ⚠／✗ 字樣，但不算旗標行——模板第二道 grep -v 會濾掉
+if printf '%s\n' "$out31" | grep -E '^== ' | grep -q '⚠'; then
+  if printf '%s\n' "$kept31" | grep -q '^== '; then
+    echo "✗ ㉛a 段落標題行沒被 grep -v '^== ' 濾掉" >&2; fail=1
+  else
+    echo "✓ ㉛a 段落標題行（含 ⚠／✗ 字樣）被模板第二道 grep -v '^== ' 濾掉，不佔 context"
+  fi
+fi
+
+# ㉛b mutation（票文指定形狀）：把「領先 remote」旗標的 ⚠ 改成「注意」→ (a) 的 LS-1 樣本應被過濾掉
+mut31b="$work/patrol-mut31b.sh"
+sed 's/⚠ 領先 remote/注意 領先 remote/' "$patrol" > "$mut31b"
+if ! grep -q '注意 領先 remote' "$mut31b"; then
+  echo "✗ ㉛b mutant 沒被正確合成（旗標字串形狀變了）" >&2; fail=1
+else
+  out31b="$(bash "$mut31b" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+  if keep31 "$out31b" | grep -qF 'feature/LS-1-ahead'; then
+    echo "✗ ㉛b mutant（⚠ 改成「注意」）：LS-1 的警示行仍通過過濾——(a) 的綠不是來自 ⚠ 標記，這條斷言沒有牙" >&2; fail=1
+  else
+    echo "✓ ㉛b mutant（⚠ 改成「注意」）：LS-1 的警示行被過濾掉了——證明 (a) 釘的正是「警示行必含標記」"
+  fi
+fi
+
+# ㉛c mutation：拿掉 add_flag 的「沒標記就補 ⚠」保證 → (c) 的 ⏳ 旗標失去 ⚠、應轉紅
+mut31c="$work/patrol-mut31c.sh"
+sed 's/^    \*⚠\*|\*✗\*|\*→\*) ;;$/    *) ;;/' "$patrol" > "$mut31c"
+if ! grep -q '^    \*) ;;$' "$mut31c"; then
+  echo "✗ ㉛c mutant 沒被正確合成（add_flag 的 case 形狀變了）" >&2; fail=1
+else
+  brief31c="$(bash "$mut31c" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+  bad31c=$(printf '%s\n' "$brief31c" | grep '^\[' | grep -vE '⚠|✗')
+  if [ -n "$bad31c" ]; then
+    echo "✓ ㉛c mutant（拿掉 add_flag 補標記）：出現既無 ⚠ 也無 ✗ 的旗標行（如「$(printf '%s' "$bad31c" | head -1 | cut -c1-60)…」）——證明 (c) 的綠來自那段保證"
+  else
+    echo "✗ ㉛c mutant 未如預期翻轉——add_flag 的補標記可能已零覆蓋" >&2; fail=1
+  fi
+fi
+
 # ---- ④ gh 不可用（未裝、或 origin 不是 GitHub）→ 略過並標示，不炸 ----
 out4="$(bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"; rc=$?
 rc_is '④ gh 失敗仍 exit 0' 0 "$rc" "$out4"
@@ -687,7 +773,7 @@ has   '⑭b（M1 訂正）--brief 表頭獨立顯示「runtime 不一致 1」（
 # LS-260（LS-96 池項 1b7a0d5d；orchestrator 09-14 裁決）：LS-205 M1 當時一律不掛 add_flag，現在改成
 # 「在飛票（worktree 仍在）的專屬機掛旗標，殘機不掛」——LS-201 的 worktree 上面剛用 `wt -b` 建好，
 # 屬在飛票，必須出現在 flag 清單；⑭c 的 LS-9999 沒有 worktree，那邊的 `hasnt` 仍然成立（見下）。
-has   '⑭b（LS-260）在飛票的專屬機 runtime 不一致進 flag 清單，附「先懷疑 runtime 差」處置' "$briefRT" '[專屬模擬器 LS-201-iPhone17Pro] runtime iOS 26.0 ≠ 釘住版 iOS 26.5（LS-201 在飛中）——提示不擋；若 CI 紅而本機重現不出，先懷疑 runtime 差（LS-260）'
+has   '⑭b（LS-260）在飛票的專屬機 runtime 不一致進 flag 清單，附「先懷疑 runtime 差」處置' "$briefRT" '[專屬模擬器 LS-201-iPhone17Pro] ⚠ runtime iOS 26.0 ≠ 釘住版 iOS 26.5（LS-201 在飛中）——提示不擋；若 CI 紅而本機重現不出，先懷疑 runtime 差（LS-260）'
 hasnt '⑭b（LS-260）runtime 相符的那台不掛旗標' "$briefRT" '[專屬模擬器 LS-201-iPhoneAir] runtime'
 has   '⑭b（M1 訂正）--brief 表頭「專屬模擬器待清」不受 runtime 不一致影響，仍是 0' "$briefRT" '專屬模擬器待清 0（殘機 0）'
 
@@ -855,7 +941,7 @@ out20="$(PATROL_LINEAR_SH="$fake_plsh" bash "$patrol" --repo "$repo" --no-pr --n
 has   '⑳ human 模式印出 Linear 半段失敗（exit 7）' "$out20" 'Linear 半段失敗（exit 7）'
 brief20="$(PATROL_LINEAR_SH="$fake_plsh" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief --linear "$STALE" 2>&1)"
 hasnt '⑳ --brief 不得再宣稱「巡檢：無異常」（Linear 段已失敗）' "$brief20" '巡檢：無異常'
-has   '⑳ --brief 摘要行含 [Linear] 段失敗 flag' "$brief20" '[Linear] 段失敗（exit 7）'
+has   '⑳ --brief 摘要行含 [Linear] 段失敗 flag' "$brief20" '[Linear] ⚠ 段失敗（exit 7）'
 json20_out="$(PATROL_LINEAR_SH="$fake_plsh" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json --linear "$STALE" 2>/dev/null)"
 if printf '%s' "$json20_out" | python3 -c 'import json,sys; json.load(sys.stdin)' 2>/dev/null; then
   echo "✓ ⑳ --json（與 --linear 合併時）仍是合法 JSON——json 模式本就不跑 Linear 段，不受影響"
@@ -1151,7 +1237,7 @@ rc_is '㉖(a) 非 design 票 worktree 仍 exit 0（異常在輸出）' 0 "$rc" "
 has   '㉖(a) human 有「Pen 開錯檔偵測」段並印 ⚠' "$out26a" '⚠ Pen 開錯檔（實作票 LS-777）'
 brief26a="$(PATROL_PEN_STATUS_SH="$fake_ps_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:backend' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '㉖(a) --brief 印 ⚠ 行' "$brief26a" '⚠ Pen 開錯檔（實作票 LS-777）'
-has   '㉖(a) --brief 掛 [Pen] flag（lane 帶進訊息）' "$brief26a" '[Pen] 開錯檔（實作票 LS-777；lane=lane:backend，非 lane:design'
+has   '㉖(a) --brief 掛 [Pen] flag（lane 帶進訊息）' "$brief26a" '[Pen] ⚠ 開錯檔（實作票 LS-777；lane=lane:backend，非 lane:design'
 
 out26b="$(PATROL_PEN_STATUS_SH="$fake_ps_design" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 hasnt '㉖(b) lane:design 票 worktree → 不印 ⚠（正常設計票工作流）' "$out26b" '⚠ Pen 開錯檔'

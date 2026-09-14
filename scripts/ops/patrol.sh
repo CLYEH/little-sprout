@@ -82,7 +82,20 @@ json_str() {  # JSON 字串（含引號）
 }
 json_num() { case "$1" in ''|*[!0-9]*) printf 'null' ;; *) printf '%s' "$1" ;; esac; }
 FLAGS=; J_FLAGS=
-add_flag() { FLAGS="${FLAGS}${1}"$'\n'; J_FLAGS="${J_FLAGS:+${J_FLAGS},}$(json_str "$1")"; }
+# LS-267（LS-239 R3）：orchestrator 巡檢改成自己直接跑本腳本、再用 `grep -E '⚠|✗|→|lane:|current cycle|無異常'`
+# 過濾進 context（§4-b cron 模板）——**旗標行沒有任何一個標記就會被整行濾掉、等於沒巡到**。既有旗標裡有好
+# 幾支只帶 ⏳（等待型：dirty 停滯、尚未開工、已 push 無 PR）或純敘述（`[Pen] 開錯檔`、`[Linear] 段失敗`、
+# runtime 不一致、Booted「鎖中——勿關」），所以這裡統一補：沒有 ⚠／✗／→ 的旗標一律在 `[段]` 之後補一個 ⚠，
+# 維持既有 `[段] …` 開頭格式（`--json` 的 flags 與人類段同一份字串，兩邊一致）。自測 patrol.test.sh ㉛a／㉛b。
+add_flag() {
+  local m=$1
+  case "$m" in
+    *⚠*|*✗*|*→*) ;;
+    "["*"] "*) m="${m%%] *}] ⚠ ${m#*] }" ;;
+    *) m="⚠ ${m}" ;;
+  esac
+  FLAGS="${FLAGS}${m}"$'\n'; J_FLAGS="${J_FLAGS:+${J_FLAGS},}$(json_str "$m")"
+}
 
 # ---- fetch（看門狗：逾時／失敗只警告，退回本機 origin/* 續巡；PR #99 R1）----
 # macOS 沒有 coreutils timeout：背景跑 git fetch、另一個背景 sleep 到期就 kill 它；被 SIGTERM 的 git 回 143 → 視為逾時。
