@@ -25,10 +25,17 @@ final class SettingsViewIPadTests: XCTestCase {
     /// 可能取到錯的那個。改掃 `app.navigationBars` 全部，判準改成「任一 navbar 的 `buttons`
     /// 是否含 `BackButton`」（放在字串最前面，是這支診斷真正要回答的問題：目的地那一層還在不
     /// 在）；`navBar=` 的識別碼清單只當輔助資訊、供人眼核對是哪一層。
+    ///
+    /// LS-275（池 `931cb70f` i1，merge-review LS-272 R1 `7d78c994`）：`compactMap { try?
+    /// $0.snapshot() }` 靜默丟掉失效 bar 時，`hasBackButton=false` 分不清「真沒返回鈕」與
+    /// 「snapshot 失敗」。先存 `bars`，字串帶解析成敗比
+    /// `(\(snapshots.count)/\(bars.count) bar)`。
     private static func navigationSignature(_ app: XCUIApplication) -> String {
-        let snapshots = app.navigationBars.allElementsBoundByIndex.compactMap { try? $0.snapshot() }
+        let bars = app.navigationBars.allElementsBoundByIndex
+        let snapshots = bars.compactMap { try? $0.snapshot() }
+        let parseRatio = "(\(snapshots.count)/\(bars.count) bar)"
         guard !snapshots.isEmpty else {
-            return "hasBackButton=<解析不到>／appState=\(app.state.rawValue)"
+            return "hasBackButton=<解析不到>／\(parseRatio)／appState=\(app.state.rawValue)"
         }
         let perBar = snapshots.map { bar -> (identifier: String, buttons: [String]) in
             let buttonLabels = bar.children
@@ -38,7 +45,7 @@ final class SettingsViewIPadTests: XCTestCase {
         }
         let hasBackButton = perBar.contains { $0.buttons.contains("BackButton") }
         let detail = perBar.map { "navBar=\($0.identifier)／buttons=\($0.buttons)" }.joined(separator: "、")
-        return "hasBackButton=\(hasBackButton)／\(detail)／appState=\(app.state.rawValue)"
+        return "hasBackButton=\(hasBackButton)／\(detail)／\(parseRatio)／appState=\(app.state.rawValue)"
     }
 
     /// push 後系統返回鈕的 identifier 恆為 `"BackButton"`（label 會沿用上一頁的
