@@ -92,6 +92,9 @@ BODY_RULES=
 # `scripts/hooks/fork-guard.sh` 是機械層（只擋非主 session 的 `subagent_type: fork`），這句是前饋（含「任何子 agent 不得寫檔／
 # commit／改 PR／貼 Linear」的規約層，機械層擋不到）；被刪即紅。LS-256（LS-96 池項 a7e9e910 i1）：第六份 dead-code-sweeper 補釘
 # （LS-254 票文只列五份，sweeper 是六份定義中唯一未釘的；tools 無 Agent，與 merge-reviewer／qa 同型）。
+# LS-270（LS-96 池項 `d4c1add5`(c)）：merge-reviewer 正文須含「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」——BSD-GNU 差異
+# 有一整類是機率性的（LS-267 R2 B1：`pipefail` 下的 `grep -q` 管線在 ubuntu 20 次紅 14 次、macOS 永遠綠），跑 1 次很可能
+# 剛好抽到綠；那句被刪即紅。
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold|LS-170：互動式本機驗證（模擬器對本機容器的多步驟操作）前先 supabase-lock.sh --hold，收工 --release
 ios-dev|pr-body-check.sh <f> --branch <分支> --verify|LS-186：gh pr create/edit 前先用完整旗標跑 pr-body-check.sh 並直接看 exit code
@@ -142,7 +145,8 @@ merge-reviewer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自
 qa|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派
 dead-code-sweeper|禁派 fork|LS-254／LS-256：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派（六份定義中原唯一未釘的一份）
 ui-designer|editId 成功套用後即失效|LS-264（LS-96 池項 c1b67f93）：Pencil execute 的 edits/editId 只在上一次呼叫失敗的重試視窗內有效，分批每批都要重送 snippet 全文；只要 tree_hash 的輪次改送 hash-only snippet
-visual-reviewer|editId 成功套用後即失效|LS-264（LS-96 池項 c1b67f93）：Pencil execute 的 edits/editId 只在上一次呼叫失敗的重試視窗內有效，分批重掃每批都要重送 snippet 全文；只要 tree_hash 的輪次改送 hash-only snippet"
+visual-reviewer|editId 成功套用後即失效|LS-264（LS-96 池項 c1b67f93）：Pencil execute 的 edits/editId 只在上一次呼叫失敗的重試視窗內有效，分批重掃每批都要重送 snippet 全文；只要 tree_hash 的輪次改送 hash-only snippet
+merge-reviewer|shell 自測在 ubuntu:24.04 通道跑 ≥10 次|LS-270（LS-96 池項 d4c1add5(c)）：BSD-GNU 差異有一整類是機率性的（pipefail 下的 grep -q 管線在 ubuntu 20 次紅 14 次、macOS 永遠綠），macOS 跑一次綠不算驗過，重放要在 ubuntu:24.04 容器跑 ≥10 次並記錄紅幾次"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，
