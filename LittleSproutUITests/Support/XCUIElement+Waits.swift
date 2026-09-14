@@ -40,9 +40,10 @@ extension XCUIElement {
     /// 合法（寬高 >0、非 NaN／Infinite）但整塊被父容器或螢幕邊界裁切到不可視（例如捲動超出
     /// `visibleFrame`），這個前置檢查仍會放行去問 `isHittable`，而 XCUITest 對「frame 合法
     /// 但被完全裁切」的元素呼叫 `isHittable` 一樣可能撞上與 LS-265 同款的框架硬失敗（`hitPoint:`
-    /// 算不出來）。目前 11 處呼叫端皆搭配捲動到可視範圍的既有邏輯（`scrollUntilAllHittable`
-    /// 一類），實務未觀察到這個缺口被觸發，記錄於此供下次同型故障排查時參考，不在本票新增
-    /// `visibleFrame` 檢查（未被要求的防禦性程式碼，CLAUDE.md Rule 2）。
+    /// 算不出來）。**LS-269（池 `3e9347c4` (3)，刪「11 處皆搭配 scrollUntilAllHittable」句
+    /// ——與碼不符，三檔呼叫端 `grep "swipe|scroll"` 命中 0）**：實務未觀察到這個缺口被觸發，
+    /// 記錄於此供下次同型故障排查時參考，不在本票新增 `visibleFrame` 檢查（未被要求的防禦性
+    /// 程式碼，CLAUDE.md Rule 2）。
     ///
     /// i2（merge-review R1 informational，評估後不採用）：曾考慮要求連續兩次取樣 frame
     /// 都有效才問 `isHittable`，理論上能再降低「snapshot 驗完、緊接著呼叫 `isHittable`
