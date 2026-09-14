@@ -49,14 +49,29 @@ enum VideoTrimmer {
         exportSession.timeRange = CMTimeRange(
             start: .zero, duration: await exportDuration(of: asset)
         )
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            exportSession.exportAsynchronously {
-                if exportSession.status == .completed {
-                    continuation.resume()
-                } else {
-                    continuation.resume(throwing: exportSession.error ?? TrimmerError.exportFailed)
+        // LS-283（I1，源自 LS-279 merge-review R1 `5cd2b2ae`）：`withTaskCancellationHandler`
+        // 讓取消 Task 真的停下 export——`AVAssetExportSession` 不會自己聽 Swift 的取消信號，
+        // 沒有這層包裝的話，使用者取消（或未來任何 `Task.cancel()` 來源）不會讓匯出停止，會
+        // 繼續跑完整支並留下沒有回收者的輸出暫存檔。`cancelExport()` 會讓
+        // `exportAsynchronously` 的 completion handler以 `.cancelled` 狀態被呼叫，continuation
+        // 走下面的 `else` 分支丟錯；這裡額外用 `try?` 直接清掉輸出檔，不依賴呼叫端後續的
+        // 清理路徑（那條路徑在丟錯時根本不會被執行到）。`nonisolated(unsafe)`：`cancelExport()`
+        // 依 Apple 文件可以從任何執行緒呼叫，這裡只是把已存在的區域變數重新綁定給 `@Sendable`
+        // 的 `onCancel` 閉包捕捉，不是引入新的跨執行緒可變狀態。
+        nonisolated(unsafe) let cancellableSession = exportSession
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                exportSession.exportAsynchronously {
+                    if exportSession.status == .completed {
+                        continuation.resume()
+                    } else {
+                        continuation.resume(throwing: exportSession.error ?? TrimmerError.exportFailed)
+                    }
                 }
             }
+        } onCancel: {
+            cancellableSession.cancelExport()
+            try? FileManager.default.removeItem(at: outputURL)
         }
         try await checkWithinSizeLimit(outputURL, maxByteSize: maxByteSize)
         let outputPixelSize = await pixelSize(ofFirstVideoTrackIn: AVURLAsset(url: outputURL))

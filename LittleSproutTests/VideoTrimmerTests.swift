@@ -73,6 +73,25 @@ final class VideoTrimmerTests: XCTestCase {
         )
     }
 
+    /// LS-283（I1，源自 LS-279 merge-review R1 `5cd2b2ae`）：取消 Task 要讓 export 真的停下、
+    /// 不留輸出暫存檔。`Task.sleep` 讓 export 先真的開始跑（`exportAsynchronously` 已被呼叫）
+    /// 再取消，才驗得到「取消中途的 export」而不是「還沒開始就取消」這種對本題無鑑別力的情境。
+    func test_compressedForUpload_taskCancelled_cancelsExportAndLeavesNoOutputFile() async throws {
+        let sourceURL = try await makeSyntheticVideo(seconds: 10)
+        let temporaryFilesBefore = try mediaDraftTempFileCount()
+
+        let task = Task { try await VideoTrimmer.compressedForUpload(fileURL: sourceURL) }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        task.cancel()
+        let result = try? await task.value
+
+        XCTAssertNil(result, "Task 被取消後 export 不該完成、不該回傳可上傳的壓縮結果")
+        XCTAssertEqual(
+            try mediaDraftTempFileCount(), temporaryFilesBefore,
+            "取消後輸出暫存檔要清掉，不留沒有回收者的孤兒檔"
+        )
+    }
+
     /// 建議秒數的算法本身（純函式）：以實際輸出的平均位元率回推、乘 0.9 餘裕。
     /// 本票模擬器實測的那支 65 秒素材壓完是 ~78.6 MB／60 秒 → 建議 36 秒，而不是先前寫死的
     /// 40 秒（寫死的話會出現「40 秒的影片請裁到 40 秒內」這種自相矛盾的回話）。
