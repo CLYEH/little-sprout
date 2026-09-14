@@ -10,7 +10,13 @@ set -uo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 post="${root}/scripts/ops/post-status.sh"
 fail=0
-command -v jq >/dev/null 2>&1 || { echo "✗ post-status 自測需要 jq（stub gh 用它跑 --jq）" >&2; exit 1; }
+# LS-267（LS-96 池項 `123fe082`）：無 jq 時不再硬紅——本檔的 stub gh 用真 jq 把 `-f key=value` 組回 JSON、
+# 並把 `--jq` 交給它跑（驗的正是 post-status.sh 自己的表達式），沒有 jq 就整支跑不了。照 LS-260 的慣例
+# 印 SKIP＋組數後 exit 0，不假裝跑得動、也不假紅。CI 的 ubuntu runner 內建 jq。
+if ! command -v jq >/dev/null 2>&1; then
+  echo "SKIP 8 組（無 jq）：stub gh 需要 jq 跑 --jq 表達式，post-status 自測整支未跑"
+  exit 0
+fi
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT

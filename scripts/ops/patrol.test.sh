@@ -16,7 +16,13 @@ hook="${root}/scripts/ops/session-start.sh"
 settings="${root}/.claude/settings.json"
 fail=0
 
-command -v jq >/dev/null 2>&1 || { echo "✗ patrol 自測需要 jq（驗 --json 與 hook 輸出）" >&2; exit 1; }
+# LS-267（LS-96 池項 `123fe082`）：無 jq 時不再第一行硬紅——`patrol.sh`／`session-start.sh` 本身不依賴 jq
+# （見 patrol.sh:74），只有「驗 --json／hook JSON」這類斷言需要它，缺席就 SKIP＋計數（沿 LS-260 對
+# `pretool.test.sh` 的既有慣例），其餘樣本照跑。CI 的 ubuntu runner 內建 jq，`rules` job 不受影響。
+jq_skipped=0
+if ! command -v jq >/dev/null 2>&1; then
+  echo "⚠ 本機無 jq：--json／hook JSON 斷言全部 SKIP（收工總結計數），其餘樣本照跑"
+fi
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -70,7 +76,13 @@ STALE=30
 has()   { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✓ $1"; else echo "✗ ${1}（輸出應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
 hasnt() { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✗ ${1}（輸出不應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; else echo "✓ $1"; fi; }
 row()   { printf '%s' "$1" | grep -F -- "$2"; }   # 取含某字串的行
-jq_ok() { if printf '%s' "$2" | jq -e "$3" >/dev/null 2>&1; then echo "✓ $1"; else echo "✗ ${1}（jq -e '${3}' 不成立）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
+jq_ok() { if ! command -v jq >/dev/null 2>&1; then jq_skipped=$((jq_skipped + 1)); return 0; fi
+          if printf '%s' "$2" | jq -e "$3" >/dev/null 2>&1; then echo "✓ $1"; else echo "✗ ${1}（jq -e '${3}' 不成立）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
+# LS-267：需要「真 jq」的樣本專用——㉘ 906／907 的假 gh 把 `-q` 交給真 jq 跑 patrol 自己那條運算式、
+# ㉚c 系列的 `run view --json jobs --jq` 同理。無 jq 時假 gh 會 exit 127，這些斷言不是「驗到判準」而是
+# 退化成查詢失敗（其中幾格甚至會因此假綠），一律 SKIP＋計數，不假裝跑過。
+has_jq()   { if ! command -v jq >/dev/null 2>&1; then jq_skipped=$((jq_skipped + 1)); return 0; fi; has "$@"; }
+hasnt_jq() { if ! command -v jq >/dev/null 2>&1; then jq_skipped=$((jq_skipped + 1)); return 0; fi; hasnt "$@"; }
 rc_is() { if [ "$3" -eq "$2" ]; then echo "✓ $1"; else echo "✗ ${1}（期望 exit ${2}，實得 ${3}）" >&2; printf '%s\n' "$4" | sed 's/^/    /' >&2; fail=1; fi; }
 
 # ---- 合成 repo ----
@@ -321,7 +333,9 @@ has   '⑧ 全正常 → 末行「巡檢：無異常」' "$brief3" '巡檢：無
 hasnt '⑧ 全正常 → 無 ⚠' "$brief3" '⚠'
 
 # ---- ⑨ .claude/settings.json 有把 hook 掛上（update-config skill 的 jq -e 驗法）----
-if jq -e '.hooks.SessionStart[].hooks[] | select(.type == "command") | .command' "$settings" 2>/dev/null | grep -q 'scripts/ops/session-start.sh'; then
+if ! command -v jq >/dev/null 2>&1; then
+  jq_skipped=$((jq_skipped + 1))
+elif jq -e '.hooks.SessionStart[].hooks[] | select(.type == "command") | .command' "$settings" 2>/dev/null | grep -q 'scripts/ops/session-start.sh'; then
   echo "✓ ⑨ .claude/settings.json 的 SessionStart hook 指向 scripts/ops/session-start.sh"
 else
   echo "✗ ⑨ .claude/settings.json 沒有掛 SessionStart → scripts/ops/session-start.sh（或 JSON 壞了）" >&2; fail=1
@@ -1567,12 +1581,12 @@ hasnt '㉘ m1：不誤判成純 CI 跑中（fail 沒被吞）' "$l904" '⏳ CI �
 l905=$(row "$out28" 'feature/LS-905-pending-no-started')
 has   '㉘ m2 負控：pending 缺 startedAt → 印 ?m（不是 0 或空字串）' "$l905" 'CI 跑中 ?m（ci）'
 l906=$(row "$out28" 'feature/LS-906-realjq-normal')
-has   '㉘ i4：真 jq 通道，正常時間 → 取最早開始者（ci 17 分前 ＞ ci-ipad 5 分前）' "$l906" 'CI 跑中 17m（ci、ci-ipad）'
-hasnt '㉘ i4：pass bucket 的 Go 零值 startedAt 不觸發查詢失敗（if/then/else 短路，只有 pending 才求值）' "$l906" '查詢失敗'
+has_jq '㉘ i4：真 jq 通道，正常時間 → 取最早開始者（ci 17 分前 ＞ ci-ipad 5 分前）' "$l906" 'CI 跑中 17m（ci、ci-ipad）'
+hasnt_jq '㉘ i4：pass bucket 的 Go 零值 startedAt 不觸發查詢失敗（if/then/else 短路，只有 pending 才求值）' "$l906" '查詢失敗'
 l907=$(row "$out28" 'feature/LS-907-realjq-zerodate')
-has   '㉘ m4（真 jq 通道）：pending 項 startedAt 是 Go 零值 → 視同缺值印 ?m，不再讓整條查詢中止' "$l907" 'CI 跑中 ?m（merge-review、ci）'
-hasnt '㉘ m4：不再印查詢失敗' "$l907" '查詢失敗'
-has   '㉘ i5：pending 項 startedAt 是完全不合格式的垃圾值（not-a-date）→ try/catch 接住、同樣印 ?m' "$l907" 'ci'
+has_jq '㉘ m4（真 jq 通道）：pending 項 startedAt 是 Go 零值 → 視同缺值印 ?m，不再讓整條查詢中止' "$l907" 'CI 跑中 ?m（merge-review、ci）'
+hasnt_jq '㉘ m4：不再印查詢失敗' "$l907" '查詢失敗'
+has_jq '㉘ i5：pending 項 startedAt 是完全不合格式的垃圾值（not-a-date）→ try/catch 接住、同樣印 ?m' "$l907" 'ci'
 brief28="$(PATH="$work/bin:$PATH" bash "$patrol" --repo "$repo" --no-fetch --brief 10 2>&1)"
 has   '㉘ --brief 同步分流：CI 跑中' "$brief28" '⏳ CI 跑中'
 has   '㉘ --brief 同步分流：缺必要 status' "$brief28" '缺必要 status'
@@ -1656,8 +1670,8 @@ open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
 PY
 out28m4a="$(PATH="$work/bin:$PATH" bash "$mut_pr_m4a" --repo "$repo" --no-fetch 10 2>&1)"
 l907m4a=$(row "$out28m4a" 'feature/LS-907-realjq-zerodate')
-has   '㉘ mutant（拿掉零值前綴守門，留 try/catch）：仍走 pending 分支印「CI 跑中」（不斷言分鐘值——macOS 印 ?、glibc 印垃圾數字，兩者都對）' "$l907m4a" 'CI 跑中'
-hasnt '㉘ mutant（拿掉零值前綴守門，留 try/catch）：不應退回查詢失敗（macOS try/catch 兜底、glibc 根本不拋錯，兩者皆不會查詢失敗）' "$l907m4a" '查詢失敗'
+has_jq '㉘ mutant（拿掉零值前綴守門，留 try/catch）：仍走 pending 分支印「CI 跑中」（不斷言分鐘值——macOS 印 ?、glibc 印垃圾數字，兩者都對）' "$l907m4a" 'CI 跑中'
+hasnt_jq '㉘ mutant（拿掉零值前綴守門，留 try/catch）：不應退回查詢失敗（macOS try/catch 兜底、glibc 根本不拋錯，兩者皆不會查詢失敗）' "$l907m4a" '查詢失敗'
 
 # mutation（m4，merge-review R3 delta i5，主要證據）：拿掉 try/catch（退回只有前綴守門的舊寫法）——
 # 907 的 ci 項（startedAt="not-a-date"，strptime 格式比對失敗，不是範圍驗證，**所有** jq 版本都一致
@@ -1675,10 +1689,10 @@ open(sys.argv[2], "w", encoding="utf-8").write(src.replace(old, new))
 PY
 out28m4="$(PATH="$work/bin:$PATH" bash "$mut_pr_m4" --repo "$repo" --no-fetch 10 2>&1)"
 l907m=$(row "$out28m4" 'feature/LS-907-realjq-zerodate')
-has   '㉘ mutant（m4／i5）：拿掉 try/catch → 907 的 not-a-date 項從「?m」退回「查詢失敗」（證明 try/catch 是這段程式碼造成的，且用可攜的 not-a-date 而非平台相依的零值）' "$l907m" '查詢失敗'
-hasnt '㉘ mutant（m4／i5）：不再印出正確的 ?m 結果' "$l907m" 'CI 跑中 ?m'
+has_jq '㉘ mutant（m4／i5）：拿掉 try/catch → 907 的 not-a-date 項從「?m」退回「查詢失敗」（證明 try/catch 是這段程式碼造成的，且用可攜的 not-a-date 而非平台相依的零值）' "$l907m" '查詢失敗'
+hasnt_jq '㉘ mutant（m4／i5）：不再印出正確的 ?m 結果' "$l907m" 'CI 跑中 ?m'
 l906m4=$(row "$out28m4" 'feature/LS-906-realjq-normal')
-has   '㉘ mutant（m4／i5）對照：906（沒有 not-a-date、只有正常時間＋pass 零值）不受影響仍正確' "$l906m4" 'CI 跑中 17m（ci、ci-ipad）'
+has_jq '㉘ mutant（m4／i5）對照：906（沒有 not-a-date、只有正常時間＋pass 零值）不受影響仍正確' "$l906m4" 'CI 跑中 17m（ci、ci-ipad）'
 
 # ---- ㉙（LS-260；來源 LS-96 池項 `b2947c3f`）：Supabase 容器啟動時間不一致偵測。
 #      LS-246 QA R2 實況：`auth`／`db` 被單獨重啟、`rest`／`kong` 沒有（uptime 差 7 天），OTP 登入後
@@ -1922,18 +1936,18 @@ else
 fi
 has   '㉚a 同一支測試在 2 個 run 紅 → ⚠ 同類紅 2 次（測試名）' "$out30" "⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b 升票"
 hasnt '㉚b 只紅一次的測試不標（負向控制：門檻真的是 ≥2）' "$out30" 'testOnlyOnce'
-has   '㉚c 兩個真 timeout run（34760803165 2454 s／34764441663 1988 s）併成 timeout 型別計數' "$out30" '⚠ 同類紅 2 次（timeout（cancelled、無 failure／timed_out step、cancelled job ≥30 分——撞 job timeout-minutes））'
-hasnt '㉚c2 concurrency 取代的過期 run（34746493293，333 s）與有 failure step 的（34746091627）都不計數（timeout 簽章仍是 2 次，不是 3／4 次）' "$out30" '同類紅 3 次（timeout'
+has_jq '㉚c 兩個真 timeout run（34760803165 2454 s／34764441663 1988 s）併成 timeout 型別計數' "$out30" '⚠ 同類紅 2 次（timeout（cancelled、無 failure／timed_out step、cancelled job ≥30 分——撞 job timeout-minutes））'
+hasnt_jq '㉚c2 concurrency 取代的過期 run（34746493293，333 s）與有 failure step 的（34746091627）都不計數（timeout 簽章仍是 2 次，不是 3／4 次）' "$out30" '同類紅 3 次（timeout'
 # ㉚c3／㉚c4 都把單輪下載上限提高到 10：夾具共 7 個 run，預設上限 5 會讓最後兩個 cancelled 這一輪還
 #      沒被分類（上限本身由 ㉚e 專測）。
 # ㉚c3（判準 2 的接線）：門檻拉到 45 分，兩個真 timeout（40.9／33.1 分）就都不該再算——證明「cancelled
 #      job 跑多久」這一半真的有在比，不是任何 cancelled 都算。
 out30c3="$(PATROL_REDS_TIMEOUT_MIN=45 PATROL_REDS_MAX_FETCH=10 reds_env "$work/reds-cache-c3" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
-hasnt '㉚c3 門檻 45 分 → 40.9／33.1 分的兩個 run 不再算 timeout（判準 2 有接線）' "$out30c3" 'timeout（cancelled、無 failure'
+hasnt_jq '㉚c3 門檻 45 分 → 40.9／33.1 分的兩個 run 不再算 timeout（判準 2 有接線）' "$out30c3" 'timeout（cancelled、無 failure'
 # ㉚c4（判準 1 的接線）：門檻降到 0 分，四個 cancelled run 全部通過「時長」這一半，只剩「無 failure／
 #      timed_out step」在擋——34746091627 有 failure step，所以應該是 3 次而不是 4 次。
 out30c4="$(PATROL_REDS_TIMEOUT_MIN=0 PATROL_REDS_MAX_FETCH=10 reds_env "$work/reds-cache-c4" bash "$patrol" --repo "$repo" --no-fetch "$STALE" 2>&1)"
-has   '㉚c4 門檻 0 分 → 3 次（有 failure step 的 34746091627 仍被判準 1 擋掉，不是 4 次）' "$out30c4" '⚠ 同類紅 3 次（timeout（cancelled、無 failure／timed_out step、cancelled job ≥0 分'
+has_jq '㉚c4 門檻 0 分 → 3 次（有 failure step 的 34746091627 仍被判準 1 擋掉，不是 4 次）' "$out30c4" '⚠ 同類紅 3 次（timeout（cancelled、無 failure／timed_out step、cancelled job ≥0 分'
 brief30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch --brief "$STALE" 2>&1)"
 has   '㉚a2 旗標行指向 §5-b 升票（不是只印在人類段）' "$brief30" '[CI 同類紅] ⚠ 同類紅 2 次（-[LittleSproutUITests.SettingsViewIPadTests testAccountSectionDeleteRowPushesAndBackReturns]）→ 依 §5-b「同類事故 ≥2 次升 High」開票'
 json30="$(reds_env "$cache30" bash "$patrol" --repo "$repo" --no-fetch --json "$STALE" 2>&1)"
@@ -1988,6 +2002,10 @@ out30h="$(PATROL_REDS_DAYS=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch 
 rc_is '㉚h PATROL_REDS_DAYS 非整數 → exit 2（fail closed，同既有 PATROL_* 慣例）' 2 "$?" "$out30h"
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ patrol／session-start 自測通過"
+  if [ "$jq_skipped" -gt 0 ]; then
+    echo "✓ patrol／session-start 自測通過（SKIP ${jq_skipped} 組（無 jq））"
+  else
+    echo "✓ patrol／session-start 自測通過"
+  fi
 fi
 exit "$fail"

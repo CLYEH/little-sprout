@@ -33,7 +33,13 @@ set -uo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 script="${root}/scripts/ops/promote-follow.sh"
 fail=0
-command -v jq >/dev/null 2>&1 || { echo "✗ promote-follow 自測需要 jq（stub gh 用它跑 --jq）" >&2; exit 1; }
+# LS-267（LS-96 池項 `123fe082`）：無 jq 時不再硬紅——本檔的 stub gh 把 `run list --jq <expr>` 交給真 jq
+# 對罐頭 JSON 跑（驗的正是 promote-follow.sh 自己的 jq 表達式），沒有 jq 就整支跑不了。照 LS-260 的
+# 慣例印 SKIP＋組數後 exit 0，不假裝跑得動、也不假紅。CI 的 ubuntu runner 內建 jq。
+if ! command -v jq >/dev/null 2>&1; then
+  echo "SKIP 6 組（無 jq）：stub gh 需要 jq 跑 --jq 表達式，promote-follow 自測整支未跑"
+  exit 0
+fi
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
