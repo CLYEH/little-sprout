@@ -97,6 +97,21 @@ final class TimelineStore {
     /// 註解。
     var generation = 0
 
+    /// LS-266（池 `d351af55`，merge-review LS-126 R2 r2-m1）：`refresh` 同一組篩選參數
+    /// （`familyID`／`childID`）在 `.task(id:)` 與 `.refreshable` 幾乎同時觸發時，原本各自
+    /// 跑完整組裝（1 RPC＋3 支批次查詢＋簽名 URL），只有世代號最新的那次結果被採用、另一次
+    /// 白做——這個字典讓同參數的重入直接 `await` 既有那個 `Task`，不發第二次請求。同
+    /// `PendingAccountDeletionResumer.inFlightTasks` 的 task-coalescing 寫法（見該檔）。
+    /// **不動世代號機制本身**：真正組裝工作搬進 `performRefresh`，世代號仍在那支方法裡遞增與
+    /// 比對，去重只是讓「該不該真的發一次請求」多一層判斷，跟世代號回答的「該不該寫回結果」
+    /// 是兩個互不影響的問題。
+    private struct RefreshKey: Hashable {
+        let familyID: UUID
+        let childID: UUID?
+    }
+
+    private var inFlightRefreshTasks: [RefreshKey: Task<Bool, Never>] = [:]
+
     init(
         apiClient: TimelineAPIClient,
         durationLoader: @escaping @Sendable (URL) async throws -> CMTime = { url in
@@ -113,6 +128,25 @@ final class TimelineStore {
     /// `entries`／`hasMorePages`／`refreshState`。
     @discardableResult
     func refresh(familyID: UUID, childID: UUID?) async -> Bool {
+        await refreshTask(familyID: familyID, childID: childID).value
+    }
+
+    /// 見上方 `inFlightRefreshTasks` 文件註解——同參數已有在飛的 `Task` 就直接回傳同一個
+    /// 實例（呼叫端各自 `await` 它），沒有的話才真的建立一個新的並登記。
+    private func refreshTask(familyID: UUID, childID: UUID?) -> Task<Bool, Never> {
+        let key = RefreshKey(familyID: familyID, childID: childID)
+        if let existing = inFlightRefreshTasks[key] {
+            return existing
+        }
+        let task = Task {
+            defer { inFlightRefreshTasks[key] = nil }
+            return await performRefresh(familyID: familyID, childID: childID)
+        }
+        inFlightRefreshTasks[key] = task
+        return task
+    }
+
+    private func performRefresh(familyID: UUID, childID: UUID?) async -> Bool {
         generation += 1
         let myGeneration = generation
         self.familyID = familyID
