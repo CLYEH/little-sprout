@@ -184,7 +184,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -253,7 +253,18 @@ jobs:
           # 備援掃描未標記候選轉紅（R2）＋QA-GATE-EXEMPT 豁免＋多 gate 獨立判定＋參數 fail closed＋
           # 真 repo 驗證＋真實歷史快照回歸）
           bash scripts/gates/qa-driver-gate-check.test.sh || rc=1
+          # LS-267（LS-96 池項 `c0d883e1`）：自測清單對帳 gate 自己的自測（夾具正負樣本＋allowlist＋
+          # 「註解提及不算掛」＋對真 ci.yml 的 mutation：拿掉 qa-e2e.test.sh 那一行即紅）
+          bash scripts/gates/selftest-wiring-check.test.sh || rc=1
           exit "$rc"
+
+      # LS-267（LS-96 池項 `c0d883e1`；根因來自 LS-264 merge-review R1 M1）：上面兩個自測 step 列舉的清單與
+      # repo 內實際的 `scripts/**/*.test.sh`／`scripts/design/*.test.js` 取雙向差集，非空即紅。`qa-e2e.test.sh`
+      # （自 LS-158）與 `stale-xcodebuild-check.test.sh`（自 LS-236）就是靠 reviewer 手動 `comm` 才發現躺了好幾個月
+      # 沒在 CI 跑過——自測是 gate 的 gate，沒被執行就等於不存在，文件卻還宣稱它在跑。純檔案比對，所有 PR／push 皆跑。
+      - name: 自測清單對帳（selftest-wiring-check，LS-267）
+        if: ${{ !cancelled() }}
+        run: bash scripts/gates/selftest-wiring-check.sh
 
       # LS-30：品牌 skill 接線——前饋是 ui-designer／visual-reviewer 定義「開工先載入 little-sprout-brand」，載入動作
       # 發生在 subagent 內部、repo 側驗不到；這裡驗它的前提：.claude/skills/little-sprout-brand/SKILL.md 存在且
