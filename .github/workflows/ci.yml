@@ -184,7 +184,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -213,6 +213,10 @@ jobs:
           bash scripts/gates/pick-ipad-runtime.test.sh || rc=1
           bash scripts/gates/detect-simulator.test.sh || rc=1
           bash scripts/gates/push-gate.test.sh || rc=1
+          # LS-264 M1 的第二個差集（同 `ece3dc5b`）：`stale-xcodebuild-check.test.sh`（LS-236，13 組含 mutation）
+          # 同樣只存在於 repo、沒被列進來。它 fixture 化 `pgrep`／`ps`，⑫／⑬ 另用真 `pgrep`／`ps` 驗 pattern
+          # 自我誤判，兩者在 `ubuntu:24.04` 皆可跑（實測全綠），不需 Xcode 或模擬器。
+          bash scripts/gates/stale-xcodebuild-check.test.sh || rc=1
           bash scripts/gates/tap-target-check.test.sh || rc=1
           bash scripts/gates/tap-target-registry-check.test.sh || rc=1
           bash scripts/gates/ui-test-trigger.test.sh || rc=1
@@ -332,7 +336,7 @@ jobs:
       # 退回只看 dirty／Pen 讀不到一律放行 → 對應樣本紅。
       # LS-207（8af1c2bc）：同上——不因前面步驟（如 pr-body-check）紅而被 skip。R2（fd783f6c I2）：用 !cancelled()
       # 不用 always()，job 被取消（撞 timeout-minutes）時不必再硬跑一輪。
-      - name: Ops 腳本自測（patrol／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged／prod-purge-health／review-demo-seed／prod-storage-verify，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207／LS-235／LS-240／LS-244）
+      - name: Ops 腳本自測（patrol／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged／prod-purge-health／review-demo-seed／prod-storage-verify／qa-e2e，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207／LS-235／LS-240／LS-244／LS-158）
         if: ${{ !cancelled() }}
         run: |
           rc=0
@@ -357,6 +361,12 @@ jobs:
           bash scripts/ops/review-demo-seed.test.sh || rc=1
           # LS-244：正式站 Storage 部署驗證腳本自測（PLAN §5 三條，全 fixture 化，不連線任何真正的 Supabase 專案）
           bash scripts/ops/prod-storage-verify.test.sh || rc=1
+          # LS-264 M1（merge-review R1 `ece3dc5b`）：`qa-e2e.test.sh` 自 LS-158 起就存在、`docs/COLLABORATION.md` §7
+          # 也白紙黑字寫「掛 CI rules job」並標 ✅，但它從來沒被列進這兩個自測 step——`ci.yml` 列舉的 55 支與 repo 內
+          # 實際的 57 支取差集，少的就是它與下面那支。「宣稱有 gate、其實沒有」比沒 gate 更危險：LS-264 新增的
+          # ⑦a–⑦e（PostgREST 授權快取自癒）十格原本 CI 永遠跑不到。全 PATH shim、不碰模擬器／容器，
+          # reviewer 與實作者各在 `ubuntu:24.04`（只裝 git＋curl）實跑 58 組全綠。
+          bash scripts/ops/qa-e2e.test.sh || rc=1
           exit "$rc"
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations

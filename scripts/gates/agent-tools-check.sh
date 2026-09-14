@@ -140,7 +140,9 @@ ui-designer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己
 visual-reviewer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；研究只派 Explore 唯讀，PreToolUse fork-guard.sh 機械擋
 merge-reviewer|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派
 qa|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派
-dead-code-sweeper|禁派 fork|LS-254／LS-256：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派（六份定義中原唯一未釘的一份）"
+dead-code-sweeper|禁派 fork|LS-254／LS-256：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派（六份定義中原唯一未釘的一份）
+ui-designer|editId 成功套用後即失效|LS-264（LS-96 池項 c1b67f93）：Pencil execute 的 edits/editId 只在上一次呼叫失敗的重試視窗內有效，分批每批都要重送 snippet 全文；只要 tree_hash 的輪次改送 hash-only snippet
+visual-reviewer|editId 成功套用後即失效|LS-264（LS-96 池項 c1b67f93）：Pencil execute 的 edits/editId 只在上一次呼叫失敗的重試視窗內有效，分批重掃每批都要重送 snippet 全文；只要 tree_hash 的輪次改送 hash-only snippet"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，

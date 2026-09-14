@@ -47,13 +47,29 @@ if ! grep -qF -- "$PORT_RACE" "$log"; then
   echo "✗ db-reset-retry：supabase db reset 失敗（exit ${rc}）且不是 54322 port 綁定競態——不重試，錯誤見上（LS-186）" >&2
   exit "$rc"
 fi
-echo "db-reset-retry：偵測到「${PORT_RACE}」（54322 port 綁定競態，LS-96 305a9279）——supabase stop --no-backup → sleep 10 → supabase db start → 重試一次 supabase db reset"
+# LS-264（來源 LS-96 池項 `2ce0014f`(a)）：重啟哪些容器依呼叫端分流。
+#   CI runner：`supabase db start`（只起 db 群）——`db` job 只用 db，rest／kong 根本沒被查詢過，
+#     整組 `supabase start` 會白起一票容器拖慢 job；runner 是一次性的，不存在「rest 停在舊快照」的問題。
+#   本機逃生口（`LS_DB_RESET_RETRY_ALLOW_LOCAL=1`）：改成整組 `supabase start`——本機 stack 是所有
+#     worktree 共用的，只起 db 群會留下 `rest`／`kong` 仍停在重啟前的狀態，正是 LS-246 QA 那次
+#     「auth／db 重啟、rest／kong 沒有 → REST 401、App 卡伺服器發生問題」的形狀（patrol 的容器啟動
+#     時間段也會因此掛旗標）。`supabase start` 對已在跑的容器是冪等的，不會多停一次。
+if [ "${GITHUB_ACTIONS:-}" = true ] || [ "${CI:-}" = true ]; then
+  start_cmd_desc="supabase db start（CI：db job 只用 db 群）"
+else
+  start_cmd_desc="supabase start（本機逃生口：整組起，避免 rest／kong 停在舊狀態，LS-264）"
+fi
+echo "db-reset-retry：偵測到「${PORT_RACE}」（54322 port 綁定競態，LS-96 305a9279）——supabase stop --no-backup → sleep 10 → ${start_cmd_desc} → 重試一次 supabase db reset"
 supabase stop --no-backup || true
 sleep 10
 # 不用 `if ! cmd; then rc=$?`——`!` 之後 $? 是否定後的 0，原 exit code 會丟（自測 ⑥ 抓到）
-supabase db start; rc=$?
+if [ "${GITHUB_ACTIONS:-}" = true ] || [ "${CI:-}" = true ]; then
+  supabase db start; rc=$?
+else
+  supabase start; rc=$?
+fi
 if [ "$rc" -ne 0 ]; then
-  echo "✗ db-reset-retry：重試前 supabase db start 失敗（exit ${rc}）——不重試 reset（LS-186）" >&2
+  echo "✗ db-reset-retry：重試前 ${start_cmd_desc} 失敗（exit ${rc}）——不重試 reset（LS-186）" >&2
   exit "$rc"
 fi
 run_reset "$log"; rc=$?

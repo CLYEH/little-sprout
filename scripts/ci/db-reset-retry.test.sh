@@ -43,7 +43,8 @@ case "$*" in
   'stop --no-backup')
     if [ "${FAKE_MODE:?}" = stop_fails ]; then echo 'stub: stop failed' >&2; exit 1; fi
     exit 0 ;;
-  'db start')
+  'db start'|'start')
+    # LS-264：CI 走 `db start`（只起 db 群）、本機逃生口走整組 `start`——兩條都認，序列斷言分辨得出來
     if [ "${FAKE_MODE:?}" = start_fails ]; then echo 'stub: start failed' >&2; exit 5; fi
     exit 0 ;;
 esac
@@ -78,9 +79,10 @@ if [ "$rc" -eq 0 ] && seq_is 'db reset'; then ok '⓪ CI=true 放行'; else bad 
 run ok
 if [ "$rc" -eq 0 ] && seq_is 'db reset'; then ok '① 首次成功 → exit 0、只呼叫一次 db reset'; else bad "① 首次成功應 exit 0 且只呼叫一次（實得 exit ${rc}）"; fi
 
-# ② 54322 port 競態一次 → stop --no-backup → sleep 10 → db start → 重試一次 → 綠
+# ② 54322 port 競態一次 → stop --no-backup → sleep 10 → start → 重試一次 → 綠
+#   （LS-264：本機逃生口這條路走整組 `supabase start`；CI 那條仍是 `supabase db start`，見 ⑧）
 run flake_once
-if [ "$rc" -eq 0 ] && seq_is 'db reset|stop --no-backup|sleep 10|db start|db reset'; then ok '② port 競態一次 → 序列 reset→stop→sleep 10→db start→reset、exit 0'; else bad "② port 競態一次應重試一次並 exit 0（實得 exit ${rc}）"; fi
+if [ "$rc" -eq 0 ] && seq_is 'db reset|stop --no-backup|sleep 10|start|db reset'; then ok '② port 競態一次 → 序列 reset→stop→sleep 10→start（整組）→reset、exit 0'; else bad "② port 競態一次應重試一次並 exit 0（實得 exit ${rc}）"; fi
 if out_has 'address already in use' && out_has 'Error: failed to start containers: c8863dc6'; then ok '② 第一次失敗的 stderr 原樣串流到輸出'; else bad '② 第一次失敗的錯誤輸出應原樣出現'; fi
 if out_has '54322 port 綁定競態' && out_has 'Finished supabase db reset.'; then ok '② 印出重試原因、第二次成功輸出也在'; else bad '② 應印重試原因與第二次輸出'; fi
 
@@ -92,21 +94,32 @@ if ! grep -q '^sleep' "$FAKE_LOG" && ! grep -q '^stop' "$FAKE_LOG" && ! grep -q 
 
 # ④ 重試仍是 port 競態：只重試一次（reset 恰兩次）、exit 非 0
 run flake_twice
-if [ "$rc" -eq 1 ] && seq_is 'db reset|stop --no-backup|sleep 10|db start|db reset'; then ok '④ 重試仍失敗 → reset 恰兩次（不再重試）、exit 1'; else bad "④ 重試仍失敗應恰兩次 reset 且 exit 1（實得 exit ${rc}）"; fi
+if [ "$rc" -eq 1 ] && seq_is 'db reset|stop --no-backup|sleep 10|start|db reset'; then ok '④ 重試仍失敗 → reset 恰兩次（不再重試）、exit 1'; else bad "④ 重試仍失敗應恰兩次 reset 且 exit 1（實得 exit ${rc}）"; fi
 if out_has '重試一次後 supabase db reset 仍失敗'; then ok '④ 印出「重試一次後仍失敗」'; else bad '④ 應印出重試後仍失敗'; fi
 
 # ⑤ stop 失敗不影響（|| true）：序列與 ② 相同、仍綠
 run stop_fails
-if [ "$rc" -eq 0 ] && seq_is 'db reset|stop --no-backup|sleep 10|db start|db reset'; then ok '⑤ stop --no-backup 失敗不影響重試、exit 0'; else bad "⑤ stop 失敗不應影響（實得 exit ${rc}）"; fi
+if [ "$rc" -eq 0 ] && seq_is 'db reset|stop --no-backup|sleep 10|start|db reset'; then ok '⑤ stop --no-backup 失敗不影響重試、exit 0'; else bad "⑤ stop 失敗不應影響（實得 exit ${rc}）"; fi
 
-# ⑥ 重試前 db start 失敗：不再跑第二次 reset、以 db start 的 exit code 結束
+# ⑥ 重試前 start 失敗：不再跑第二次 reset、以 start 的 exit code 結束
 run start_fails
-if [ "$rc" -eq 5 ] && seq_is 'db reset|stop --no-backup|sleep 10|db start'; then ok '⑥ 重試前 db start 失敗 → 不跑第二次 reset、exit 5（原 exit code）'; else bad "⑥ db start 失敗應 exit 5 且不跑第二次 reset（實得 exit ${rc}）"; fi
-if out_has '重試前 supabase db start 失敗'; then ok '⑥ 印出 db start 失敗'; else bad '⑥ 應印出 db start 失敗'; fi
+if [ "$rc" -eq 5 ] && seq_is 'db reset|stop --no-backup|sleep 10|start'; then ok '⑥ 重試前 start 失敗 → 不跑第二次 reset、exit 5（原 exit code）'; else bad "⑥ start 失敗應 exit 5 且不跑第二次 reset（實得 exit ${rc}）"; fi
+if out_has '重試前 supabase start'; then ok '⑥ 印出 start 失敗'; else bad '⑥ 應印出 start 失敗'; fi
 
 # ⑦ port 錯誤印在 stdout（不是 stderr）也認得：偵測看合併輸出
 run flake_stdout
-if [ "$rc" -eq 0 ] && seq_is 'db reset|stop --no-backup|sleep 10|db start|db reset'; then ok '⑦ port 錯誤在 stdout 也觸發重試'; else bad "⑦ stdout 的 port 錯誤也應重試（實得 exit ${rc}）"; fi
+if [ "$rc" -eq 0 ] && seq_is 'db reset|stop --no-backup|sleep 10|start|db reset'; then ok '⑦ port 錯誤在 stdout 也觸發重試'; else bad "⑦ stdout 的 port 錯誤也應重試（實得 exit ${rc}）"; fi
+
+# ⑧ LS-264（LS-96 池項 `2ce0014f`(a)）：重啟範圍依呼叫端分流——CI runner 只起 db 群（`supabase db start`），
+#    本機逃生口起整組（`supabase start`，見 ②）。本機那條若退回 `db start`，就會留下 `rest`／`kong` 停在
+#    重啟前的狀態＝LS-246 QA 那次 REST 401 的形狀；CI 那條若改成整組，會白起一票 db job 用不到的容器。
+#    兩條各釘一格，序列字面就分辨得出來。
+run_ci() { export FAKE_MODE=$1; : > "$FAKE_LOG"; env GITHUB_ACTIONS=true CI= LS_DB_RESET_RETRY_ALLOW_LOCAL= bash "$script" > "$work/out" 2>&1; rc=$?; }
+run_ci flake_once
+if [ "$rc" -eq 0 ] && seq_is 'db reset|stop --no-backup|sleep 10|db start|db reset'; then ok '⑧ CI（GITHUB_ACTIONS=true）走 supabase db start（只起 db 群，不白起整組）'; else bad "⑧ CI 應走 db start（實得 exit ${rc}）"; fi
+if out_has 'supabase db start（CI：db job 只用 db 群）'; then ok '⑧ CI 分支的訊息講明只起 db 群'; else bad '⑧ CI 分支應印出「只用 db 群」的理由'; fi
+run flake_once
+if out_has 'supabase start（本機逃生口：整組起'; then ok '⑧ 本機分支的訊息講明整組起與理由'; else bad '⑧ 本機分支應印出「整組起」的理由'; fi
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ db-reset-retry 自測失敗" >&2

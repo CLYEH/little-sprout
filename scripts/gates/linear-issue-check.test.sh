@@ -328,6 +328,36 @@ if grep -q "CYCLE-NORM-START" "$norm_mut_dir/no-norm.sh"; then
 else
   echo '✓ F6：mutant 腳本確實已拿掉 CYCLE-NORM 區塊'
 fi
+
+# ------------------------------------------------------------
+# F6b（LS-264，來源 LS-96 池項 `2ce0014f`(b)）：**備援解析路徑的負控格**。上面的 F6 用 `cycle:0`
+# （JSON 數字）當樣本，那只在 jq 路徑成立（jq 的 `// ""` 把 0 當真值），python3 備援路徑的
+# `or ""` 本來就把 0 當假值——所以 jq 缺席時整條 F6 只能 SKIP，CYCLE-NORM 區塊在備援路徑上
+# **沒有任何 mutation 覆蓋**（改壞了測試照樣綠）。備援路徑上真正靠正規化擋下的是字面 `"0"`
+# 與純空白字串（python3 看來都是真值）：同一份 mutant 在 py-only PATH 下必須把 `cycle:"0"`
+# 改判 allow，未 mutate 的本尊則仍 deny（E14 在 jq 路徑已釘，這裡補備援路徑那一格）。
+pyonly_dir=$(mktemp -d); _tmp_dirs+=("$pyonly_dir")
+mkdir -p "$pyonly_dir/bin"
+[ -n "$real_python3" ] && ln -sf "$real_python3" "$pyonly_dir/bin/python3"
+cycle_str_zero_payload=$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"Ready","cycle":"0"}')
+if [ -n "$real_python3" ]; then
+  out=$(printf '%s' "$cycle_str_zero_payload" | env PATH="$pyonly_dir/bin" "$bash_bin" "$gate" 2>&1); got=$?
+  if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+    echo '✓ F6b：備援路徑（jq 缺、python3）下 cycle="0" 仍 deny（正控）'
+  else
+    echo "✗ F6b：備援路徑下 cycle=\"0\" 應 deny（實得 exit ${got}：${out}）" >&2
+    fail=1
+  fi
+  out=$(printf '%s' "$cycle_str_zero_payload" | env PATH="$pyonly_dir/bin" "$bash_bin" "$norm_mut_dir/no-norm.sh" 2>&1); got=$?
+  if [ "$got" -eq 0 ] && [ -z "$out" ]; then
+    echo '✓ F6b：備援路徑下拿掉 CYCLE-NORM 區塊後 cycle="0" 改判 allow（備援路徑的負控格，不再只在 jq 路徑成立）'
+  else
+    echo "✗ F6b：備援路徑下拿掉正規化區塊後仍非 allow（實得 exit ${got}：${out}）" >&2
+    fail=1
+  fi
+else
+  echo '⚠ 略過 F6b 備援路徑負控（本機找不到 python3）'
+fi
 rm -rf "$norm_mut_dir"
 
 # ============================================================
@@ -372,6 +402,37 @@ run_mutant "$mut_dir/mutant-d.sh" "D（無 lane 標籤）" "$(payload '{"project
 
 build_mutant E "$mut_dir/mutant-e.sh"
 run_mutant "$mut_dir/mutant-e.sh" "E（state=Ready 無 cycle）" "$(payload '{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"Ready"}')"
+
+# LS-264（LS-96 池項 `2ce0014f`(b)）：上面五組跑在**環境現有**的解析路徑上——開發機與 CI ubuntu 都有
+# jq，所以它們實際只覆蓋 jq 路徑。同一組樣本在 py-only PATH（jq 缺、python3 在）下再跑一次：未 mutate
+# 的本尊須 deny、mutant 須 allow，備援路徑的欄位抽取＋五條規則才同樣有 mutation 覆蓋。
+if [ -n "$real_python3" ]; then
+  while IFS='|' read -r letter label pl; do
+    [ -n "$letter" ] || continue
+    out=$(printf '%s' "$(payload "$pl")" | env PATH="$pyonly_dir/bin" "$bash_bin" "$gate" 2>&1); got=$?
+    if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+      echo "✓ 備援路徑 mutant ${letter}（${label}）：未 mutate 的本尊仍 deny（正控）"
+    else
+      echo "✗ 備援路徑 mutant ${letter}（${label}）：本尊應 deny（實得 exit ${got}：${out}）" >&2
+      fail=1
+    fi
+    out=$(printf '%s' "$(payload "$pl")" | env PATH="$pyonly_dir/bin" "$bash_bin" "${mut_dir}/mutant-$(printf '%s' "$letter" | tr 'A-Z' 'a-z').sh" 2>&1); got=$?
+    if [ "$got" -eq 0 ] && [ -z "$out" ]; then
+      echo "✓ 備援路徑 mutant ${letter}（${label}）：拿掉規則後改判 allow（備援路徑也有負控，不再只在 jq 路徑成立）"
+    else
+      echo "✗ 備援路徑 mutant ${letter}（${label}）：拿掉規則後仍非 allow（實得 exit ${got}：${out}）" >&2
+      fail=1
+    fi
+  done <<EOF
+A|缺 project|{"title":"Foo","labels":["lane:harness"]}
+B|Phase 缺 milestone|{"project":"Phase 1","title":"Foo","labels":["lane:harness"]}
+C|Task 缺 parentId|{"project":"Harness 與協作基建","title":"Task：LS-1 foo","labels":["lane:harness"]}
+D|無 lane 標籤|{"project":"Harness 與協作基建","title":"Foo","labels":[]}
+E|state=Ready 無 cycle|{"project":"Harness 與協作基建","title":"Foo","labels":["lane:harness"],"state":"Ready"}
+EOF
+else
+  echo '⚠ 略過備援路徑 A–E mutation 負控（本機找不到 python3）'
+fi
 
 # 反向確認：mutant 腳本裡真的看不到被拿掉的那段文字（避免 awk pattern 打錯字、其實整份原封不動
 # 複製過去，讓上面「改判 allow」是因為別的原因湊巧 allow，而非規則真的被移除）。

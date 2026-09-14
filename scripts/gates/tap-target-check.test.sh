@@ -147,6 +147,18 @@ expect 2 '④ 不在 git repo 內 → exit 2' "$got" "$out" '不在 git repo 內
 out=$(run pass UDID SCHEME); got=$?
 expect 0 '⑤ xcodebuild 全綠 → exit 0' "$got" "$out" '✓ tap-target-check'
 
+# ⑤b（LS-264；來源 LS-96 池項 `1f104ac1`(a)）：成功那行的「已量測畫面」清單用多位元組分隔符 `、`
+#     串接。原本是 `paste -sd '、' -`——GNU coreutils 逐**位元組**取分隔字串，3 bytes 的 `、` 在
+#     Linux 只吐第一個位元組（U+FFFD），macOS 的 BSD paste 才正常。這支自測在 CI `rules` job
+#     （ubuntu）跑，所以它就是那條通道的反饋：改回 `paste -d` 會在 CI 紅、本機仍綠。
+mkdir -p "$R/LittleSprout"
+printf 'enum TapTargetGateScreenName: String {\n    case a = "AlphaView"\n    case b = "BetaView"\n}\n' \
+  > "$R/LittleSprout/TapTargetGateScreenName.swift"
+out=$(run pass UDID SCHEME); got=$?
+expect 0 '⑤b 已量測畫面清單以完整的「、」串接（多位元組分隔符，GNU／BSD 皆須一致）' "$got" "$out" \
+  '已量測畫面（AlphaView、BetaView）'
+rm -rf "$R/LittleSprout"
+
 # ⑥ xcodebuild 失敗、輸出含 1 個 TAP-TARGET-FAIL → exit 1、點名該元件
 out=$(run fail_with_violation UDID SCHEME); got=$?
 expect 1 '⑥ 1 個違規 → exit 1、點名元件與 frame' "$got" "$out" \

@@ -86,8 +86,12 @@ if xcodebuild test \
   # merge-review R1 M1：不印「所有量測畫面」這種聽起來像全域覆蓋的措辭——目前只有
   # LittleSprout/TapTargetGateScreenName.swift 註冊的畫面會被實際量到（其餘 Features 畫面見
   # scripts/gates/tap-target-exemptions.txt 具名排除，或尚待補進註冊表），明確點名以免誤導。
+  # LS-264（來源 LS-96 池項 `1f104ac1`(a)）：串接用 awk，**不可**用 `paste -sd '、' -`——`paste -d`
+  # 的分隔字串在 GNU coreutils 是逐「位元組」取用，3 bytes 的 `、` 在 Linux 只吐得出第一個位元組
+  # （渲染成 U+FFFD），macOS 的 BSD paste 才會整個字元輸出。本檔的自測在 CI `rules` job（ubuntu）
+  # 跑，這行過去只在 macOS 被執行到才沒炸；同型見 `detect-simulator.sh` 的 LS-260 R2 B1。
   checked=$(grep -oE '= "[A-Za-z0-9]+View"' "$(git rev-parse --show-toplevel)/LittleSprout/TapTargetGateScreenName.swift" \
-    | sed -E 's/= "(.*)"/\1/' | paste -sd '、' -)
+    | sed -E 's/= "(.*)"/\1/' | awk '{printf "%s%s", (n++ ? "、" : ""), $0} END{if (n) print ""}')
   echo "✓ tap-target-check：已量測畫面（${checked:-無}）的 Button／tappable 元件皆 ≥44×44pt（一般字級 content_size large 量測）；其餘 Features 畫面覆蓋見 tap-target-exemptions.txt"
   exit 0
 fi
