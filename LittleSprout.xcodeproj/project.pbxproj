@@ -250,6 +250,7 @@
 		8B1480EC9DAD0F2F17939ECC /* SettingsIconsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42EC894F62DC55A74654ED99 /* SettingsIconsTests.swift */; };
 		8C28191049D2D6F723A9CE2B /* DeleteAccountStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96073B8EE43A7B538080DA3B /* DeleteAccountStep.swift */; };
 		8CD42A33A7D04F52D172819D /* AlbumsContentAssemblerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07A1CE61F80D184428D957F /* AlbumsContentAssemblerTests.swift */; };
+		8D05F64CBBAECB05BA9C76A4 /* DiaryComposerStoreVideoCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE98D01D44B247A280103769 /* DiaryComposerStoreVideoCacheTests.swift */; };
 		8D31CF3B331A5CF24123DC90 /* Pill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D16770ED55A8DF1FD527425 /* Pill.swift */; };
 		8D8794877BA169209A1BB4ED /* ChildFilterLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E699460134CBD4E0FE83B9A /* ChildFilterLayoutTests.swift */; };
 		8F83F2C0B186737A2A575D7A /* PreviewFamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C0777CD557C2FE037CDA135 /* PreviewFamilyAPIClient.swift */; };
@@ -910,6 +911,7 @@
 		FD964BECBC2322D792D6B3C0 /* AlbumPhotoGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumPhotoGridView.swift; sourceTree = "<group>"; };
 		FE72EFF54C56748BD2A9AAC3 /* BirthdayFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayFormat.swift; sourceTree = "<group>"; };
 		FE80483D9C4D2806145D4CE1 /* LittleSprout.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LittleSprout.entitlements; sourceTree = "<group>"; };
+		FE98D01D44B247A280103769 /* DiaryComposerStoreVideoCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStoreVideoCacheTests.swift; sourceTree = "<group>"; };
 		FF3F18D213D33204A82A0BEE /* InviteFamilyView+Role.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "InviteFamilyView+Role.swift"; sourceTree = "<group>"; };
 		FFBB1C1A417258050587E1F8 /* DiaryDetailVideoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDetailVideoUITests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1149,6 +1151,7 @@
 				715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */,
 				451694C23C0044D0DCDD0356 /* DiaryComposerStorePublishTests.swift */,
 				4731B4832AABBF59324EDBC8 /* DiaryComposerStoreTests.swift */,
+				FE98D01D44B247A280103769 /* DiaryComposerStoreVideoCacheTests.swift */,
 				B13A37E8CC8794D85456D566 /* DiaryDateFormatTests.swift */,
 				06DCE924A2746DCCAF6CA4B5 /* DiaryDeleteConfirmationCopyTests.swift */,
 				92463C497E79C1E1108BD80C /* DiaryDetailPresentationBindingsTests.swift */,
@@ -2160,6 +2163,7 @@
 				AE349DC5C77A050FEB6B3158 /* DiaryComposerStorePublishRetryTests.swift in Sources */,
 				65C40F1D88260A5EE89C8AAF /* DiaryComposerStorePublishTests.swift in Sources */,
 				41F32D3B2C6BA0F84DAEEA49 /* DiaryComposerStoreTests.swift in Sources */,
+				8D05F64CBBAECB05BA9C76A4 /* DiaryComposerStoreVideoCacheTests.swift in Sources */,
 				BF0DA22255D22BCE9AAEC439 /* DiaryDateFormatTests.swift in Sources */,
 				B9853BAED2D457FC7FE55DA8 /* DiaryDeleteConfirmationCopyTests.swift in Sources */,
 				F1FFE704E0C50F3418A04669 /* DiaryDetailPresentationBindingsTests.swift in Sources */,
