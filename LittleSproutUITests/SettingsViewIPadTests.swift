@@ -9,6 +9,26 @@ import XCTest
 /// `horizontalSizeClass = .regular`，見 `TapTargetGateScreenName.swift`）。
 @MainActor
 final class SettingsViewIPadTests: XCTestCase {
+    /// LS-271：返回鈕 tap 的總次數上限（首次＋最多 2 次補點）。丟失一次點擊是機率事件，
+    /// 補點兩次就足以把它壓到可忽略；再多只會在真的壞掉時拖長失敗回饋時間。
+    private static let maxBackTapAttempts = 3
+
+    /// LS-271（merge-review R1 M1 的追蹤鉤子）：把「現在站在哪一層導覽」壓成一行字，補點時
+    /// 記進 `XCTContext` activity。下次同類紅時看這一行就能分辨兩種成因：導覽列仍是目的地那
+    /// 一層（還有 `BackButton`）＝ pop 根本沒發生、要查 app 側；導覽列已經換成清單那一層＝
+    /// pop 發生了、是測試端等待或 sentinel 的問題。
+    /// 用 `try? snapshot()` 而不是 `.label`／`.frame` 這類 accessor——後者解析不到會框架硬
+    /// 失敗（LS-265 merge-review R1 M1 實測），診斷用的程式碼不該自己把測試打紅。
+    private static func navigationSignature(_ app: XCUIApplication) -> String {
+        guard let navigationBar = try? app.navigationBars.firstMatch.snapshot() else {
+            return "navBar=<解析不到>／appState=\(app.state.rawValue)"
+        }
+        let buttonLabels = navigationBar.children
+            .filter { $0.elementType == .button }
+            .map { "\($0.identifier.isEmpty ? $0.label : $0.identifier)" }
+        return "navBar=\(navigationBar.identifier)／buttons=\(buttonLabels)／appState=\(app.state.rawValue)"
+    }
+
     /// push 後系統返回鈕的 identifier 恆為 `"BackButton"`（label 會沿用上一頁的
     /// `.navigationTitle`，因區塊而異）——同 `SectionTabBarPushRegressionTests` 的既有理由，
     /// 不用 label 字串比對以免跟畫面上其他文字撞名。
@@ -44,15 +64,81 @@ final class SettingsViewIPadTests: XCTestCase {
         // tap——補齊同全檔其餘 tap 前的慣例。
         XCTAssertTrue(backButton.waitForHittable(timeout: 10), "返回鈕應該可點擊", file: file, line: line)
 
-        backButton.tap()
-
         // LS-237 第 8 項：先等目的地畫面的 sentinel 真的消失（`waitUntilGone`——
         // `.exists` 一次性快照在返回轉場動畫還沒跑完時可能誤判成「還在」），確定返回轉場已經
         // 開始收尾，再等入口列重新出現；比原本「entry 先、pushedSentinel 用一次性快照」的
         // 順序更貼近「返回」這個轉場動畫實際發生的先後。
+        //
+        // LS-271（同類紅第 8 次，run `34820517480` attempt 1／2）：兩份 xcresult 排除掉三個
+        // 候選，但**成因至今未定**，以下只寫證據撐得住的部分（merge-review R1 M1 訂正：R1 版
+        // 這裡寫「runner 丟失一次點擊」，與自己引用的證據牴觸）。
+        //
+        // 證據（兩個 attempt 形狀一致）：
+        //  - 不是「判斷方式太粗」——目的地消失那一步早就是輪詢（`waitUntilGone` 10s），兩次
+        //    失敗各實際輪詢 10／11 次、每次都拿到「還在」。
+        //  - 不是「tap 落點錯」——合成事件 plist 記的是 down（`eventType 1`）＋ up
+        //    （`eventType 3`，間隔 0.05s）、座標 `(32, 54)`，正好是返回鈕
+        //    `{{10, 32}, {44, 44}}` 的正中心（window 820×1180）。
+        //  - 不是「pop 動畫還沒跑完」——錄影在 tap 後 20 秒逐張像素差 0.000%，失敗當下的
+        //    App UI hierarchy 仍是完整的目的地畫面（`BackButton` 還在、label 是上一層標題）。
+        //  - **返回鈕確實收到了完整的一下 tap**：錄影裡玻璃圓鈕在 tap 當下轉亮、隨後復原
+        //    （pressed → normal 走完），同時段每次 accessibility 快照只要 50–100ms，app 主
+        //    執行緒是活的。
+        // 也就是說證據只到「按鈕收到完整 tap、導航沒有 pop」；成因可能在事件層，**也可能在
+        // app／SwiftUI 導航層**，兩者都還在候選內（本檔 :3-6 記的 R1 B1 就是這個畫面真的出過
+        // iPad 導航 bug 的前例）。順帶訂正：「runner 異常慢」與時間軸不符——慢的是 tap 之前
+        // 那 20–30 秒，pop 沒發生的那一刻兩次都在每秒一輪的正常節奏上。
+        //
+        // app 側機制假說（LS-271 R2 評估，尚未證實）：`SettingsView` 的每一個入口都是「即時
+        // destination」的 `NavigationLink { … } label: { … }`（`SettingsView.swift:236`／
+        // `:260`／`:277`／`:285`／`:316`／`SettingsView+Account.swift:19`），沒有任何
+        // `NavigationPath` 綁定或 `navigationDestination`，pop 全交給 `NavigationStack` 內部
+        // 狀態。而四個會紅的目的地共同點是**進場就對共用 store 發 async 寫入**
+        // （`InviteFamilyView.onAppear → refreshLatestInvite()`、`StorageUsageView.task →
+        // refreshQuota()`、`DeleteAccountFlowView` 的 model／resumer、`SettingsView` 自己四支
+        // `.task(id:)`）——這些寫入回到 main actor 時會讓推它出去的 `SettingsView.body` 重新
+        // 求值、`NavigationLink` 子樹跟著重建。假說：某次重建若與返回鈕的 pop 落在同一個
+        // transaction，`NavigationStack` 可能把內部路徑重新校正回「已 push」，畫面因此零變動
+        // 地留在目的地。**本機未重現**（R2 用 harness churn 20Hz／50Hz 兩種、單次 tap 模式共
+        // 12 次執行全綠），所以只記為假說；若之後 CI 再現、且下面的追蹤鉤子顯示 tap 後導覽列
+        // 仍是目的地，就該轉去查 production 的 pop 路徑（另票）。
+        //
+        // 對策：把「點返回鈕」做成可重試的收斂迴圈——每點一次就輪詢目的地是否消失，沒消失就
+        // 再補點（總計上限 `maxBackTapAttempts` 次，每次補點都記一筆 activity，xcresult 時間軸
+        // 與 xcodebuild console 都看得到補了幾次）。純粹加長 timeout 不會有幫助（LS-268 已做
+        // 過，且這裡的 10s 內已經輪詢了 10 次以上），所以不再往上加。**這是測試端的韌性措施，
+        // 不是根因修復**：綠但有補點＝同一個現象還在發生。
+        //
+        // 已知殘餘窗口（merge-review R1 i2，PLAUSIBLE、未重現）：若 pop 恰好在下方 guard 的
+        // `waitForHittable` 回 true 之後、下一次 `backButton.tap()` 重新解析元素之前完成，
+        // 第 2／3 次 tap 會落在清單頁的 `(32, 54)`，或因元素已消失讓 `tap()` 變成框架硬失敗
+        // （訊息不再是本 helper 的斷言文字）。窗口毫秒級、任何重試設計皆然，記錄不處理。
+        var backTapCount = 0
+        var destinationGone = false
+        while !destinationGone && backTapCount < Self.maxBackTapAttempts {
+            backTapCount += 1
+            if backTapCount > 1 {
+                XCTContext.runActivity(named: "LS-271：第 \(backTapCount) 次補點返回鈕（前一次 tap 未生效）") { _ in }
+            }
+            backButton.tap()
+            destinationGone = pushedSentinel.waitUntilGone(timeout: 10)
+            if !destinationGone {
+                // 追蹤鉤子（merge-review R1 M1）：tap 後導覽列還是不是目的地那一層，是分辨
+                // 「app 側沒 pop」與「測試側等太短」的唯一線索，下次 CI 紅時 job log 直接看得到。
+                XCTContext.runActivity(
+                    named: "LS-271 追蹤：第 \(backTapCount) 次 tap 後目的地仍在——\(Self.navigationSignature(app))"
+                ) { _ in }
+            }
+            // 返回鈕自己也不見了＝pop 其實發生了，只是目的地內容還在收尾——這時再補點會點到
+            // 上一層畫面的別的東西（返回鈕的位置在清單頁是別的元件），改成再給一次完整等待。
+            if !destinationGone && !backButton.waitForHittable(timeout: 5) {
+                destinationGone = pushedSentinel.waitUntilGone(timeout: 10)
+                break
+            }
+        }
         XCTAssertTrue(
-            pushedSentinel.waitUntilGone(timeout: 10),
-            "返回後不該還看得到目的地畫面的內容", file: file, line: line
+            destinationGone,
+            "返回後不該還看得到目的地畫面的內容（已點返回鈕 \(backTapCount) 次）", file: file, line: line
         )
         XCTAssertTrue(
             entry.waitForExistence(timeout: 10),
