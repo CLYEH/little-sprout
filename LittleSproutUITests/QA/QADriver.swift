@@ -1,7 +1,7 @@
 import CryptoKit
 import XCTest
 
-/// LS-158：`QASmokeTests` 三個情境共用的 app 驅動步驟——啟動（注入本機容器的 URL／anon key）、
+/// LS-158：`QASmokeTests` 四個情境共用的 app 驅動步驟——啟動（注入本機容器的 URL／anon key）、
 /// 每步截圖、等元素（等不到就附 a11y 階層＋截圖再 `XCTFail`）、登入／建家庭／編輯器／相簿選圖
 /// ／瀏覽。按鈕沿用可見 label（同 `SectionTabBarPushRegressionTests` 慣例），輸入欄與卡片用
 /// `QAAccessibilityID`（文案會隨對稿改，identifier 不會）。

@@ -23,7 +23,7 @@ struct QAEnvironment {
     static let anonKeyKey = "LS_QA_ANON_KEY"
     static let mailpitKey = "LS_QA_MAILPIT"
     static let emailKey = "LS_QA_EMAIL"
-    /// 三個情境共用同一個帳號（`browse` 才看得到 `publish` 剛發的那篇），但**每個情境各自 OTP 登入**：
+    /// 四個情境共用同一個帳號（`browse` 才看得到 `publish` 剛發的那篇），但**每個情境各自 OTP 登入**：
     /// `qa-e2e.sh` 跑前一律 `simctl keychain reset`——沿用上一情境的 session 在共用容器被他票 reset 後會
     /// 變成「使用者已不存在」的假缺陷（本票實測），重登只多 ~10 秒。
     static let defaultEmail = "qa-e2e@ls.test"

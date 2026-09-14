@@ -6,7 +6,7 @@ import XCTest
 /// 「mobile-mcp 每次互動把模擬器前景重設回主畫面」，LS-270 (b) 查明是票 worktree 缺
 /// `Config/Secrets.xcconfig` 導致 Debug build 啟動時撞 `SupabaseClientFactory` 的 assert 而 SIGTRAP，
 /// 見 `QADriver+ChildAvatar.swift` 檔頭）；同一 build 用 `xcodebuild test
-/// -only-testing:LittleSproutUITests` 可正常驅動——那道 assert 對 XCTest 行程放行。這裡把 QA 最常需要的三條多步驟
+/// -only-testing:LittleSproutUITests` 可正常驅動——那道 assert 對 XCTest 行程放行。這裡把 QA 最常需要的四條多步驟
 /// 路徑寫成可重放的 XCUITest，對**真的本機 Supabase 容器**跑（不是 `TapTargetGateHarness` 那種
 /// mock store）：
 ///
@@ -50,7 +50,7 @@ final class QASmokeTests: XCTestCase {
     }
 }
 
-// MARK: - 三個情境
+// MARK: - 四個情境
 
 extension QADriver {
     /// `login` 必須從未登入狀態開始——`qa-e2e.sh` 對每個情境都先 `simctl keychain <udid> reset`
