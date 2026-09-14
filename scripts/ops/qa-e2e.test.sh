@@ -223,32 +223,48 @@ log_hasnt '⑥f 缺 fixture 不 --hold' lock.log 'lock --hold'
 [ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑥f 不該跑 xcodebuild" >&2; fail=1; } || ok '⑥f 缺 fixture 不碰 xcodebuild'
 reset_logs
 
-# ---- ⑦ PostgREST 授權快取自癒（LS-264；來源 LS-96 池項 `2ce0014f`(a)）----
+# ---- ⑦ PostgREST 授權快取自癒（LS-264；來源 LS-96 池項 `2ce0014f`(a)；R2 m1 改成無條件先 reload）----
 #      LS-260 實測：登入後首個 REST 請求連兩次 401 permission denied（決定性），reset 後才過。
-#      這裡驗「探針 200 就什麼都不做／非 2xx 就 notify 一次再探／仍非 2xx 就 fail loud 不燒 xcodebuild」。
+#      R1 版本是「先探、非 2xx 才 reload」，但探針（service_role／`profiles`）與原事故
+#      （`authenticated`／`app_settings`）角色與表都不同，角色特定故障探不到＝自癒沒接上（merge-review R1 m1）。
+#      R2 改成：先無條件 `notify pgrst, 'reload schema'`（與角色無關），探針退化成 reload 後的 fail-loud
+#      健康檢查。本段驗：健康也要 reload、reload 後仍紅要再 reload 一次、兩次仍紅才 exit 2 且不燒 xcodebuild、
+#      reload 打不出去只 ⚠ 不擋、沒有 SERVICE_ROLE_KEY 仍然 reload。
 out=$(FAKE_CURL_REST=200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
-expect 0 '⑦a REST 探針 200 → 印健康那行、不發 notify、照跑' "$got" "$out" 'REST 授權快取探針 HTTP 200（健康，未發 notify' '通過'
-log_hasnt '⑦a 探針健康時不碰 psql' calls.log 'notify pgrst'
+expect 0 '⑦a 探針 200 → 仍無條件 reload 過一次、印健康那行、照跑' "$got" "$out" \
+  "已在 hold 內發 notify pgrst, 'reload schema'" 'REST 授權快取探針 HTTP 200（reload 後健康' '通過'
+log_has '⑦a（R2 m1）健康路徑也真的發了 notify（不再「健康就不碰」）' calls.log "notify pgrst, 'reload schema'"
 reset_logs
 out=$(FAKE_CURL_REST=401,200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
-expect 0 '⑦b 探針 401 → notify pgrst reload schema → 再探 200 → 自癒後照跑' "$got" "$out" \
-  'REST 探針回 HTTP 401' '已自癒' '通過'
-log_has '⑦b notify 走 psql 通道並帶 reload schema' calls.log "notify pgrst, 'reload schema'"
+expect 0 '⑦b 探針 401 → 等 3 秒再 reload 一次 → 再探 200 → 自癒後照跑' "$got" "$out" \
+  'REST 探針回 HTTP 401' '第二次 reload schema 後' '已自癒' '通過'
+if [ "$(grep -c "notify pgrst, 'reload schema'" "$work/calls.log")" -eq 2 ]; then
+  ok '⑦b 非 2xx 路徑一共發兩次 notify（無條件那次＋重試那次）'
+else
+  echo "✗ ⑦b 應發兩次 notify（實得 $(grep -c "notify pgrst, 'reload schema'" "$work/calls.log") 次）" >&2
+  sed 's/^/    /' "$work/calls.log" >&2; fail=1
+fi
 reset_logs
 out=$(FAKE_CURL_REST=401,401 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
-expect 2 '⑦c 探針 reload 後仍 401 → exit 2（fail loud），並指向 lock 內整組重啟' "$got" "$out" \
-  '仍回 HTTP 401' 'supabase stop && supabase start'
+expect 2 '⑦c 兩次 reload 後仍 401 → exit 2（fail loud），並指向 lock 內整組重啟' "$got" "$out" \
+  '兩次後 REST 探針仍回 HTTP 401' 'supabase stop && supabase start'
 [ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑦c 探針沒救回來不該燒 xcodebuild" >&2; fail=1; } || ok '⑦c 探針沒救回來不跑 xcodebuild'
 log_has '⑦c 仍釋放自己取得的 hold（trap EXIT）' lock.log 'lock --release'
 reset_logs
-out=$(FAKE_CURL_REST=401 FAKE_PSQL_RC=1 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
-expect 2 '⑦d notify 本身失敗 → exit 2、印出用到的通道' "$got" "$out" 'notify pgrst 失敗' 'host psql'
-[ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑦d notify 失敗不該燒 xcodebuild" >&2; fail=1; } || ok '⑦d notify 失敗不跑 xcodebuild'
+# R2 m1：reload 打不出去不再直接 exit 2（PR 前根本沒有這一步，failure 代表「沒修成」不是「更差」）——
+# 只 ⚠ 並繼續探；探針健康就照跑，探針紅才 fail loud（下一格）。
+out=$(FAKE_CURL_REST=200 FAKE_PSQL_RC=1 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 0 '⑦d notify 發不出去但探針健康 → ⚠ 不擋、照跑（fail-soft 邊界）' "$got" "$out" \
+  'notify pgrst 發不出去' 'host psql' '通過'
 reset_logs
-# 負控：SERVICE_ROLE_KEY 缺席時整段略過（fail-soft，不因為舊版 CLI 就擋住 QA）
+out=$(FAKE_CURL_REST=401,401 FAKE_PSQL_RC=1 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 2 '⑦d2 notify 發不出去且探針紅 → exit 2、不燒 xcodebuild' "$got" "$out" 'notify pgrst 發不出去' '仍回 HTTP 401'
+[ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑦d2 不該燒 xcodebuild" >&2; fail=1; } || ok '⑦d2 notify 失敗且探針紅時不跑 xcodebuild'
+reset_logs
+# 負控：SERVICE_ROLE_KEY 缺席時只略過「探測」，reload 照發（reload 不需要任何金鑰）
 out=$(FAKE_SUPABASE_MODE=nokey FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
-expect 0 '⑦e 無 SERVICE_ROLE_KEY → 略過探測、不擋（fail-soft）' "$got" "$out" '略過 PostgREST 授權快取探測' '通過'
-log_hasnt '⑦e 略過時不碰 psql' calls.log 'notify pgrst'
+expect 0 '⑦e 無 SERVICE_ROLE_KEY → 只略過探測、不擋（fail-soft）' "$got" "$out" '略過 PostgREST 授權快取探測' '通過'
+log_has '⑦e（R2 m1）缺金鑰仍然 reload 過（自癒不靠探針觸發）' calls.log "notify pgrst, 'reload schema'"
 reset_logs
 
 if [ "$fail" -ne 0 ]; then echo "✗ qa-e2e 自測失敗" >&2; exit 1; fi

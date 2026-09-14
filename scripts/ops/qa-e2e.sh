@@ -29,8 +29,9 @@
 #   5. `supabase-lock.sh --hold "<票號> qa-e2e <情境>" --max-minutes 25`——整段 UI 操作期間其他 worktree 的
 #      db reset 排隊（LS-159／LS-170）；呼叫者已經持有（同 worktree，`--hold` 回專屬 exit 3）就沿用、不重複 hold、
 #      收工也不代釋放——判 exit code，不比對人類訊息（R1 N2）。
-#   5b. PostgREST 授權快取探針（LS-264）：在 hold 內以 service_role 打一次 `GET /rest/v1/profiles`，
-#      非 2xx 就發一次 `notify pgrst, 'reload schema'` 再探一次；仍非 2xx 才 exit 2（見該段註解）。
+#   5b. PostgREST 授權快取自癒（LS-264；R2 m1 改成無條件先修）：在 hold 內先發一次
+#      `notify pgrst, 'reload schema'`（與角色無關），再以 service_role 打一次 `GET /rest/v1/profiles`
+#      當健康檢查；非 2xx 就等 3 秒、再 reload 一次、再探，仍非 2xx 才 exit 2（見該段註解）。
 #   6. `xcodebuild test -only-testing:LittleSproutUITests/QASmokeTests`，環境以 TEST_RUNNER_LS_QA_* 交給
 #      runner（xcodebuild 剝前綴），UI test 再經 launchEnvironment 注入 app（SupabaseClientFactory.qaOverride，DEBUG）。
 #   7. 證據：`.claude/evidence/<票號>/qa-e2e/<情境>-<時間>/`——xcodebuild.log、result.xcresult、
@@ -175,11 +176,24 @@ trap 'exit 143' TERM
 # （也不會洗掉別人的測試資料）。
 #
 # 與票文的差異（reviewer 請覆核）：票文寫「登入後首個 REST 401 自動重試」——app 的那次請求發生在
-# XCUITest 行程內，腳本攔不到。這裡改成**開跑前先探一次**（已在 hold 內，探完才 xcodebuild）：
-# 同一個故障用同一帖藥，而且是在 app 撞上之前就修好，比事後重試更早止血；探測失敗仍 fail loud。
-# 探針用 service_role 打 `profiles`（本機健康時實測 200）——`app_settings` 不能當探針：它只 grant
-# 給 `authenticated`，健康狀態下 anon／service_role 本來就拿 42501，分不出好壞。
-# 沒有 SERVICE_ROLE_KEY（舊版 CLI／status 欄位改名）就略過探測、不擋（fail-soft）。
+# XCUITest 行程內，腳本攔不到。這裡改成**開跑前先修**（已在 hold 內，修完才 xcodebuild）：
+# 同一個故障用同一帖藥，而且是在 app 撞上之前就修好，比事後重試更早止血。
+#
+# **LS-264 R2 m1（merge-review R1 `ece3dc5b`）：改成「無條件先 reload 一次，再探」**。
+# R1 版本是「先探、非 2xx 才 reload」，而探針是 service_role 打 `profiles`，與原事故
+# （`authenticated` 打 `app_settings` 回 42501）在**角色**與**表**兩個維度都不同：若故障是角色特定的
+# （LS-260 觀察到的 42501 正好只發生在 `authenticated` 的授權上），service_role（public 全表有 grant、
+# 又繞過 RLS）會回 200 → 判健康 → 不發 notify → xcodebuild 照燒數分鐘後以同一個 401 失敗，
+# 自癒等於沒接上。採 reviewer 建議 (a) 而非 (b)（補 authenticated 探針）的理由：
+#   - `notify pgrst, 'reload schema'` 便宜（一次 NOTIFY，~50 ms）、冪等、且**與角色無關**——它重載的就是
+#     整份 schema／權限快取，不論故障落在哪個角色都一起修好，不必猜對探針角色。
+#   - (b) 要在 shell 裡跑完 OTP 登入拿 `authenticated` JWT（Mailpit 取碼、token 交換），比被測流程本身還脆，
+#     而且探針帳號的 RLS 可見度又是另一組變因。
+# 探針因此退化成**事後的 fail-loud 健康檢查**（reload 之後仍壞就別燒 xcodebuild），不再是自癒的觸發條件；
+# 它仍只能證明 service_role／`profiles` 這條路徑健康，這個限制寫在失敗訊息裡。
+# 探針不用 `app_settings`：它只 grant 給 `authenticated`，健康狀態下 anon／service_role 本來就拿 42501
+# （本機實測 401／403），分不出好壞。沒有 SERVICE_ROLE_KEY（舊版 CLI／status 欄位改名）就只 reload、
+# 略過探測、不擋（fail-soft）——reload 本身不需要任何金鑰。
 rest_probe() { http_code -H "apikey: ${service_key}" -H "Authorization: Bearer ${service_key}" "${api_url}/rest/v1/profiles?select=id&limit=1"; }
 pgrst_reload() {   # 在 hold 內對 db 發 NOTIFY；印用到的通道（同 supabase/tests/run.sh 的「連線方式」慣例，LS-204）
   local sql="notify pgrst, 'reload schema'" c
@@ -195,25 +209,30 @@ pgrst_reload() {   # 在 hold 內對 db 發 NOTIFY；印用到的通道（同 su
   docker exec "$c" psql -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q -c "$sql" >/dev/null 2>&1
 }
 pgrst_channel=
+# ① 無條件 reload 一次（與角色無關的那一帖藥）。reload 打不出去只 ⚠、不擋——PR 前根本沒有這一步，
+#    這裡失敗代表「沒修成」而不是「環境比以前差」；真的壞掉由下面的探針 fail loud。
+if pgrst_reload; then
+  echo "→ qa-e2e：已在 hold 內發 notify pgrst, 'reload schema'（通道：${pgrst_channel}，LS-264 R2 m1：無條件先重載，不猜探針角色）"
+else
+  echo "⚠ qa-e2e：notify pgrst 發不出去（通道：${pgrst_channel:-?}）——授權快取沒重載過，若下面的探針紅請在 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"（LS-264）" >&2
+fi
+# ② 探針：reload 之後的健康檢查。健康也印一行——不印的話「探針有沒有真的跑過」在 log 裡看不出來（LS-211）。
 if [ -z "$service_key" ]; then
-  echo "⚠ qa-e2e：supabase status 沒有 SERVICE_ROLE_KEY——略過 PostgREST 授權快取探測（LS-264）" >&2
+  echo "⚠ qa-e2e：supabase status 沒有 SERVICE_ROLE_KEY——略過 PostgREST 授權快取探測（reload 仍已發，LS-264）" >&2
 else
   code=$(rest_probe)
   case "$code" in
-    # 健康也印一行：不印的話「探針有沒有真的跑過」在 log 裡看不出來，handoff 也引用不到（LS-211）
-    200|206) echo "→ qa-e2e：REST 授權快取探針 HTTP ${code}（健康，未發 notify，LS-264）" ;;
+    200|206) echo "→ qa-e2e：REST 授權快取探針 HTTP ${code}（reload 後健康，LS-264）" ;;
     *)
-      echo "→ qa-e2e：REST 探針回 HTTP ${code}（健康時為 200）——PostgREST 授權快取疑似過期（LS-260 同型），在 hold 內發一次 notify pgrst, 'reload schema' 後重試"
-      if ! pgrst_reload; then
-        echo "✗ qa-e2e：notify pgrst 失敗（通道：${pgrst_channel:-?}）——無法自癒，請在 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"（LS-264）" >&2
-        exit 2
-      fi
+      # PostgREST 處理 NOTIFY 是非同步的：再給它 3 秒、再 reload 一次、再探一次才判死。
+      echo "→ qa-e2e：REST 探針回 HTTP ${code}（健康時為 200）——reload 可能還沒生效，等 3 秒再 reload 一次後重探"
       sleep 3
+      pgrst_reload || true
       code=$(rest_probe)
       case "$code" in
-        200|206) echo "→ qa-e2e：reload schema 後 REST 探針回 HTTP ${code}，已自癒（通道：${pgrst_channel}）" ;;
+        200|206) echo "→ qa-e2e：第二次 reload schema 後 REST 探針回 HTTP ${code}，已自癒（通道：${pgrst_channel}）" ;;
         *)
-          echo "✗ qa-e2e：reload schema（通道：${pgrst_channel}）後 REST 探針仍回 HTTP ${code}——不是快取過期就是探針那張表的 grant 變了（探針＝service_role 讀 public.profiles）。請在 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"；仍不行就 bash scripts/ops/supabase-lock.sh -- supabase db reset（LS-264）" >&2
+          echo "✗ qa-e2e：reload schema（通道：${pgrst_channel:-?}）兩次後 REST 探針仍回 HTTP ${code}——不是快取過期就是探針那張表的 grant 變了（探針＝service_role 讀 public.profiles；它證明不了 authenticated 那條路徑）。請在 lock 內整組重啟：bash scripts/ops/supabase-lock.sh -- bash -c \"supabase stop && supabase start\"；仍不行就 bash scripts/ops/supabase-lock.sh -- supabase db reset（LS-264）" >&2
           exit 2 ;;
       esac
       ;;
