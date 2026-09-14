@@ -22,29 +22,30 @@ final class SettingsViewIPadTests: XCTestCase {
     ///
     /// LS-272（池 `960a50bb` i2）：原本只讀 `app.navigationBars.firstMatch`——split view 下
     /// 樹上可能同時存在多個 navigation bar，`firstMatch` 取到哪一個依樹序而定，日後排版變動
-    /// 可能取到錯的那個。改掃 `app.navigationBars` 全部，判準改成「任一 navbar 的 `buttons`
-    /// 是否含 `BackButton`」（放在字串最前面，是這支診斷真正要回答的問題：目的地那一層還在不
-    /// 在）；`navBar=` 的識別碼清單只當輔助資訊、供人眼核對是哪一層。
+    /// 可能取到錯的那個。改掃 `app.navigationBars.allElementsBoundByIndex` 全部（判準見下）。
     ///
     /// LS-275（池 `931cb70f` i1，merge-review LS-272 R1 `7d78c994`）：`compactMap { try?
     /// $0.snapshot() }` 靜默丟掉失效 bar 時，`hasBackButton=false` 分不清「真沒返回鈕」與
     /// 「snapshot 失敗」。先存 `bars`，字串帶解析成敗比
     /// `(\(snapshots.count)/\(bars.count) bar)`。
+    ///
+    /// LS-275（同池 i2）：`hasBackButton` 原本靠 `bar.children` 比對，與 `:73` 真正取返回鈕的
+    /// query `app.navigationBars.buttons["BackButton"]` 不同源，某 runtime 若把返回鈕包進一層
+    /// 容器就會誤判。改直接用同一條 query 的 `.exists`，`snapshots` 只留給人眼輔助的 `detail`。
     private static func navigationSignature(_ app: XCUIApplication) -> String {
         let bars = app.navigationBars.allElementsBoundByIndex
         let snapshots = bars.compactMap { try? $0.snapshot() }
         let parseRatio = "(\(snapshots.count)/\(bars.count) bar)"
+        let hasBackButton = app.navigationBars.buttons["BackButton"].exists
         guard !snapshots.isEmpty else {
-            return "hasBackButton=<解析不到>／\(parseRatio)／appState=\(app.state.rawValue)"
+            return "hasBackButton=\(hasBackButton)／\(parseRatio)／appState=\(app.state.rawValue)"
         }
-        let perBar = snapshots.map { bar -> (identifier: String, buttons: [String]) in
+        let detail = snapshots.map { bar -> String in
             let buttonLabels = bar.children
                 .filter { $0.elementType == .button }
                 .map { "\($0.identifier.isEmpty ? $0.label : $0.identifier)" }
-            return (bar.identifier, buttonLabels)
-        }
-        let hasBackButton = perBar.contains { $0.buttons.contains("BackButton") }
-        let detail = perBar.map { "navBar=\($0.identifier)／buttons=\($0.buttons)" }.joined(separator: "、")
+            return "navBar=\(bar.identifier)／buttons=\(buttonLabels)"
+        }.joined(separator: "、")
         return "hasBackButton=\(hasBackButton)／\(detail)／\(parseRatio)／appState=\(app.state.rawValue)"
     }
 
