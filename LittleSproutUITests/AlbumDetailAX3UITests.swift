@@ -25,9 +25,12 @@ final class AlbumDetailAX3UITests: XCTestCase {
 
     /// 用 frame 交集判斷任兩個元素是否重疊——同 `Support/AssertNoOverlap.swift` 既有手法
     /// （LS-269，池 `3e9347c4` (4)：原註解指向已被搬走的 `ContentActionsAX3UITests
-    /// .assertNoOverlap`，且「跨檔案不可共用」已被 LS-268 推翻）。本體與共用版不同——這裡
-    /// 刻意不篩 `isHittable`，故不併入共用版（`private func` 會覆蓋同名全域函式，見該檔檔頭
-    /// 說明）。
+    /// .assertNoOverlap`，且「跨檔案不可共用」已被 LS-268 推翻）。**LS-272（池 `3d2b2ffe` (4)）**：
+    /// 保留這份本體不同的私有版是測試意圖使然——這支測試要驗證的是 Nav Row 兩顆按鈕的 frame
+    /// 在 AX3 下是否重疊，這個判斷不應該受「當下是不是 hittable」左右；共用版只比對
+    /// `isHittable` 的元素是它自己的設計目的（捲動裁掉、不在畫面上的元素本來就不該納入判斷），
+    /// 套用在這裡反而會篩掉本來就要測的情境，兩者服務不同的測試目的，因此不併入共用版
+    /// （`private func` 會覆蓋同名全域函式，見該檔檔頭說明）。
     private func assertNoOverlap(_ elements: [XCUIElement], file: StaticString = #filePath, line: UInt = #line) {
         for firstIndex in 0..<elements.count {
             for secondIndex in (firstIndex + 1)..<elements.count {
