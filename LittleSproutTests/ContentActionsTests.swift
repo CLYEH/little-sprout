@@ -144,4 +144,27 @@ final class ContentActionsTests: XCTestCase {
         )
         XCTAssertFalse(actions.contains(.removeAsOwner))
     }
+
+    // MARK: - LS-266 池 `8b817461`：resolvedMemberDisplayName（封鎖確認文案 members 延遲載入）
+
+    /// 核心釘樁：members 清單裡已經有這個 `userID`，即使呼叫端傳入的 `fallback` 是泛稱（模擬
+    /// `openContentActions()` 當下 `familyStore.members` 還沒載入完成時算出的舊快照），也應該
+    /// 回傳清單裡的真實名字，不是那個泛稱快照。mutation（把 `.first { … }?.displayName ??
+    /// fallback` 改成恆回 `fallback`）會讓這支測試轉紅。
+    func test_resolvedMemberDisplayName_memberFound_returnsLiveNameNotFallback() {
+        let memberID = UUID()
+        let members = [FamilyMember(userID: memberID, role: .member, displayName: "陳志明", avatarURL: nil)]
+
+        let name = resolvedMemberDisplayName(members: members, userID: memberID, fallback: "這位成員")
+
+        XCTAssertEqual(name, "陳志明", "members 已經載入時，不該還停在呼叫端傳入的泛稱快照")
+    }
+
+    /// 對照組：查不到（例如作者已離開家庭、`members` 仍是空陣列）時安全退回呼叫端提供的
+    /// `fallback`，不炸不回傳空字串。
+    func test_resolvedMemberDisplayName_memberNotFound_returnsFallback() {
+        let name = resolvedMemberDisplayName(members: [], userID: UUID(), fallback: "這位成員")
+
+        XCTAssertEqual(name, "這位成員")
+    }
 }

@@ -355,6 +355,7 @@
 		CAE996836C268FC827365DD9 /* SupabaseAlbumsAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D35DF8C6C4A6D967A2E4055 /* SupabaseAlbumsAPIClient.swift */; };
 		CB8CF24ABEB5FA5604FB027C /* MasonryPhotoWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E24DD1C9B8256B87B5B076C /* MasonryPhotoWallView.swift */; };
 		CBA9D2C85CD2AF5A690473F2 /* WelcomeView+Legal.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03234039D326BAF0DA3B08 /* WelcomeView+Legal.swift */; };
+		CC64619A176860EA247A36AE /* TimelineStoreRefreshDedupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 211BD68F4C6453D2D071BDE3 /* TimelineStoreRefreshDedupTests.swift */; };
 		CCBD3BF36B2ADF0FDDF37424 /* ChildrenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCCD7822AD9EF5695A8FAFB /* ChildrenStore.swift */; };
 		CCBD8777C2CA27A78CAFA495 /* FamilyStoreJoinRequestsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086B33CB190B330C4C1D8455 /* FamilyStoreJoinRequestsTests.swift */; };
 		CD759E5CAF9723A921102789 /* FamilyMemberActionVisibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57716F1201E8A0FC450FD158 /* FamilyMemberActionVisibilityTests.swift */; };
@@ -417,6 +418,7 @@
 		EC02D246C2D6898E7F55215E /* EditChildView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE3353D44311219CE17B533 /* EditChildView.swift */; };
 		EC24364AE168AD94B8795267 /* VideoDurationFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610553A99DBEBF3A5A73E479 /* VideoDurationFormatTests.swift */; };
 		F13AD1A73B09DDC419EAC93B /* ReportInboxAssemblerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD82679EDD789F70A8A8999 /* ReportInboxAssemblerTests.swift */; };
+		F1FFE704E0C50F3418A04669 /* DiaryDetailPresentationBindingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92463C497E79C1E1108BD80C /* DiaryDetailPresentationBindingsTests.swift */; };
 		F20F691FBACD89A57DFE187C /* ChildrenStoreAvatarListRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C8D00E975B4DE5DC111D3D /* ChildrenStoreAvatarListRefreshTests.swift */; };
 		F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */; };
 		F346107C7C4ED65779715E73 /* JoinCodePhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604B48C433197767C7EAA5D6 /* JoinCodePhaseTests.swift */; };
@@ -523,6 +525,7 @@
 		1EFD1FF4DE88B8A84B28A7C2 /* CommentAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentAPIClient.swift; sourceTree = "<group>"; };
 		1F8B30A3E8C7388E178BD32E /* DiaryDurationFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDurationFormat.swift; sourceTree = "<group>"; };
 		20FC8388D99E9D7882AF0207 /* AsyncGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncGate.swift; sourceTree = "<group>"; };
+		211BD68F4C6453D2D071BDE3 /* TimelineStoreRefreshDedupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreRefreshDedupTests.swift; sourceTree = "<group>"; };
 		216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableFillView.swift; sourceTree = "<group>"; };
 		226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInModelTests.swift; sourceTree = "<group>"; };
 		22BFD6279DC28E05BAC6A829 /* InviteCodeParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeParser.swift; sourceTree = "<group>"; };
@@ -719,6 +722,7 @@
 		8FD268EF45ACA8D3FE3F11E2 /* PhotoCornerShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCornerShape.swift; sourceTree = "<group>"; };
 		90B3A90CF3954DCB0BDF70BD /* AlbumDetailView+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AlbumDetailView+Actions.swift"; sourceTree = "<group>"; };
 		90C0E7B83A1C6FD1BC4C91E8 /* CommentsErrorPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentsErrorPresentationTests.swift; sourceTree = "<group>"; };
+		92463C497E79C1E1108BD80C /* DiaryDetailPresentationBindingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDetailPresentationBindingsTests.swift; sourceTree = "<group>"; };
 		92ED03903EDAE73BC50EC0C8 /* StubAccountAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubAccountAPIClient.swift; sourceTree = "<group>"; };
 		93A0ED71C407A29B4944732E /* SupabaseAccountAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAccountAPIClient.swift; sourceTree = "<group>"; };
 		942E474356C1903582E00247 /* PreviewAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewAuthService.swift; sourceTree = "<group>"; };
@@ -1132,6 +1136,7 @@
 				4731B4832AABBF59324EDBC8 /* DiaryComposerStoreTests.swift */,
 				B13A37E8CC8794D85456D566 /* DiaryDateFormatTests.swift */,
 				06DCE924A2746DCCAF6CA4B5 /* DiaryDeleteConfirmationCopyTests.swift */,
+				92463C497E79C1E1108BD80C /* DiaryDetailPresentationBindingsTests.swift */,
 				6D07A1233EF216E629B32629 /* DiaryDetailSheetIDTests.swift */,
 				8C7ACE26EA3E828F870C6BB9 /* DiaryDurationFormatTests.swift */,
 				B65A9E81D3E3B5D92B0B6BDE /* DiaryEditorViewLifecycleTests.swift */,
@@ -1212,6 +1217,7 @@
 				BDC172B024E0A7F8F373D603 /* TimelineStoreDeleteDiaryTests.swift */,
 				4B64D96ADE299BAA5D4FE329 /* TimelineStoreReactionTests.swift */,
 				D2F9F3FB9139CAE156CCD645 /* TimelineStoreReactorsTests.swift */,
+				211BD68F4C6453D2D071BDE3 /* TimelineStoreRefreshDedupTests.swift */,
 				74C5672CE61BE2296C5EA787 /* TimelineStoreTests.swift */,
 				03AC550771E9C98F572DEE18 /* TimelineStoreToggleReactionTests.swift */,
 				5C86411F014B2DEBB3EF70F2 /* TimelineStoreVideoTests.swift */,
@@ -2134,6 +2140,7 @@
 				41F32D3B2C6BA0F84DAEEA49 /* DiaryComposerStoreTests.swift in Sources */,
 				BF0DA22255D22BCE9AAEC439 /* DiaryDateFormatTests.swift in Sources */,
 				B9853BAED2D457FC7FE55DA8 /* DiaryDeleteConfirmationCopyTests.swift in Sources */,
+				F1FFE704E0C50F3418A04669 /* DiaryDetailPresentationBindingsTests.swift in Sources */,
 				08E2C4433BFD3E5DEC7DFF47 /* DiaryDetailSheetIDTests.swift in Sources */,
 				E714FA8B1BBAA5D64425BB5C /* DiaryDurationFormatTests.swift in Sources */,
 				D0AF78E3C840FDAE433B1A61 /* DiaryEditorViewLifecycleTests.swift in Sources */,
@@ -2232,6 +2239,7 @@
 				6231319895327822C90C4541 /* TimelineStoreDeleteDiaryTests.swift in Sources */,
 				A32CCA725D57371D04861B00 /* TimelineStoreReactionTests.swift in Sources */,
 				DE783F8E8B2C8B18F49DBA29 /* TimelineStoreReactorsTests.swift in Sources */,
+				CC64619A176860EA247A36AE /* TimelineStoreRefreshDedupTests.swift in Sources */,
 				206A1B32B7EF93F3805932C5 /* TimelineStoreTests.swift in Sources */,
 				21D4D505A709F1ED3CCAF4A6 /* TimelineStoreToggleReactionTests.swift in Sources */,
 				09102D647E56F4244D66E8AD /* TimelineStoreVideoTests.swift in Sources */,

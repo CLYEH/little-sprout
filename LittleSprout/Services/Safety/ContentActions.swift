@@ -107,3 +107,16 @@ func contentActions(
     }
     return actions
 }
+
+/// LS-266（池 `8b817461`，來源 LS-189 QA `689f5ae` informational）：依 `userID` 在目前已知的
+/// 家庭成員清單裡查顯示名稱，查不到時退回呼叫端提供的 `fallback`——純函式方便直接單元測試
+/// （同 `contentActions(for:...)` 的既有理由，不需要建構完整 View／Store）。
+///
+/// 用途：`ContentAction.block` 帶的 `memberName` 是查作者當下（`openContentActions()` 的
+/// `Task`）就地算好的一次性快照，若那個時間點 `familyStore.members` 還沒載入完成，快照就會是
+/// 呼叫端傳入的泛稱、且此後不會再更新（`activeSheet` 是一次性賦值）。呼叫端在使用者真的點下
+/// 「封鎖」那一刻（比 `openContentActions()` 觸發時晚，`members` 通常已經到位）用這支函式重新
+/// 查一次，查不到才維持原本的快照值。
+func resolvedMemberDisplayName(members: [FamilyMember], userID: UUID, fallback: String) -> String {
+    members.first { $0.userID == userID }?.displayName ?? fallback
+}
