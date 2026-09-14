@@ -21,13 +21,23 @@ extension DiaryDetailView {
             set: { newValue in
                 if let newValue {
                     activeSheet = newValue
-                } else if case .video = activeSheet {
-                    // 影片正在播放（見上方文件註解），不是這個 binding 該清的狀態。
                 } else {
-                    activeSheet = nil
+                    activeSheet = Self.activeSheetAfterSheetBindingCleared(currentActiveSheet: activeSheet)
                 }
             }
         )
+    }
+
+    /// LS-266（池 `7858d2fc` i1，來源 LS-246 merge-review R1 `fc5bc56f`）：`sheetBinding` setter
+    /// 收到 `nil`（sheet 自己的 dismiss 手勢）時該不該真的清空 `activeSheet` 的判斷，抽成
+    /// `static` 純函式方便直接單元測試（不需要建構完整 `DiaryDetailView` 去戳 `Binding`）——
+    /// 目前是 `.video`（影片正在播放，不是這個 binding 該清的狀態，見 `sheetBinding` 文件註解）
+    /// 就原封不動傳回去，其餘情況才真的清空。
+    static func activeSheetAfterSheetBindingCleared(currentActiveSheet: DiaryDetailSheet?) -> DiaryDetailSheet? {
+        if case .video = currentActiveSheet {
+            return currentActiveSheet
+        }
+        return nil
     }
 
     /// LS-246：`.fullScreenCover(item:)` 只認 `activeSheet == .video(...)` 的時刻，鏡射
