@@ -54,6 +54,12 @@ extension QADriver {
 
         try require(app.buttons["儲存變更"], "儲存變更").tap()
         try require(childrenHeading, "存檔後回到寶貝列表", timeout: 60)
+        // merge-review R1 m4：重啟**前**先量一次同一列，讓「同 session 沒刷新」這件事有機械紀錄。
+        // 這個值等於 `rowBefore` ＝ app 缺口仍在（LS-96 `126f7201`(1)）；哪天它等於 `rowAfter`，
+        // 就是把下面那段重啟換回「同 session 直接比對」嚴格版的訊號（見 relaunchAndOpenChildrenTab 註解）。
+        let rowBeforeRelaunch = elementDigest(
+            try require(childRow(named: childName), "存檔後列表上「\(childName)」那一列", timeout: 30)
+        )
         snap("children-list-after-save")
 
         // 重新啟動再驗，理由見下面 `relaunchAndOpenChildrenTab()` 的文件註解（同一 session 內
@@ -65,7 +71,14 @@ extension QADriver {
             timeout: 60
         )
         attachText(
-            "child=\(childName)\nrow digest before = \(rowBefore)\nrow digest after  = \(rowAfter)",
+            """
+            child=\(childName)
+            row digest before          = \(rowBefore)
+            row digest before relaunch = \(rowBeforeRelaunch)
+            row digest after           = \(rowAfter)
+            「before relaunch」＝存檔返回列表、重啟前的同一列：等於 before ⇒ 同 session 沒刷新（app 缺口
+            LS-96 `126f7201`(1) 仍在）；等於 after ⇒ 缺口已修，可把重啟那段換回同 session 嚴格版。
+            """,
             name: "child-row-digest"
         )
         snap("children-list-after")
