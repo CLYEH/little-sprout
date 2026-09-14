@@ -7,6 +7,11 @@
 # - legal/eula-addendum.md：整份是要貼入 App Store Connect 授權合約欄位的文字＋內部使用說明，
 #   不是要公開瀏覽的頁面。
 # docs/legal/index.md 補上真正該公開的 /legal/ 首頁（只列隱私權政策／使用條款兩個連結）。
+#
+# LS-276 R2：archive/ 排除整個目錄——Jekyll 對 docs/archive/linear/LS-220.md 內票文字面
+# `{{x, 782}` 當成 Liquid 標籤解析、拋 Exception 讓整站建置失敗；封存票本就是內部文件、
+# 不該被 Pages 公開渲染。
 exclude:
   - legal/README.md
   - legal/eula-addendum.md
+  - archive/
