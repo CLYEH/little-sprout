@@ -2,8 +2,15 @@
 # QA 端到端情境驅動（LS-158）：不依賴 mobile-mcp，用 `LittleSproutUITests/QA/QASmokeTests`（XCUITest）
 # 對本機 Supabase 容器實跑「登入／發佈／瀏覽／寶貝頭像」四條多步驟路徑，截圖與 Storage log 落地成驗收證據。
 #
-# 來源：LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED——mobile-mcp 每次互動把模擬器前景重設回主畫面，
-# 多步驟操作做不了；同一 build 用 `xcodebuild test -only-testing:LittleSproutUITests` 可正常驅動。
+# 來源：LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED——QA 沒辦法多步驟操作 app。當時記成「mobile-mcp
+# 每次互動把模擬器前景重設回主畫面（WDA session reset）」，**LS-270 (b) 查明那是誤判**：真因是票 worktree
+# 沒有 gitignored 的 `Config/Secrets.xcconfig`，Debug build 一啟動就撞上 `Config/SupabaseClientFactory.swift:36`
+# 那道佔位值 assert → `SIGTRAP` 當場死掉、SpringBoard 自然留在主畫面，**與 mobile-mcp 無關**（不經 mobile-mcp
+# 的 `xcrun simctl launch` 一樣死）。繞法：從有該檔的 worktree 複製一份過來重建，或用
+# `SIMCTL_CHILD_LS_QA_API_URL=<API_URL> SIMCTL_CHILD_LS_QA_ANON_KEY=<ANON_KEY> xcrun simctl launch …` 啟動
+# （值取自 `supabase status -o env`，走 `SupabaseClientFactory.qaOverride`）。完整敘述見 `.claude/agents/qa.md`
+# 與 `LittleSproutUITests/QA/QADriver+ChildAvatar.swift` 檔頭。
+# 同一 build 用 `xcodebuild test -only-testing:LittleSproutUITests` 一路正常——那道 assert 對 XCTest 行程放行。
 #
 # 用法：qa-e2e.sh <login|publish|browse|child-avatar> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]
 #   login    歡迎頁 → Email → Mailpit 取 6 碼 → 確認登入 → 落點（三岔路或時間軸）
@@ -11,8 +18,9 @@
 #   browse   （登入／建家庭）→ 日記卡 → 詳情 → 返回 → 相簿分頁 → 時間軸（時間軸空的話先發一篇純文字當對象）
 #   child-avatar 先 `simctl addmedia` fixture 照片 →（登入／建家庭）→ 寶貝分頁 → 新增一隻帶時戳的寶貝 →
 #            點進編輯 → PhotosPicker（單選）挑那張照片 → 儲存 → 回列表，斷言那一列的畫面內容真的變了
-#            （頭像刷新）。LS-270（LS-96 池項 `66d55e5d`）：mobile-mcp 每次互動把模擬器重設回主畫面，
-#            QA 做不了這段多步驟複驗（LS-129／130／266 三次被擋），這條情境就是它的腳本通道。
+#            （頭像刷新）。LS-270（LS-96 池項 `66d55e5d`）：QA 三次（LS-129／130／266）做不了這段多步驟
+#            複驗——真因見上面「來源」段（缺 `Config/Secrets.xcconfig`，不是 mobile-mcp），這條情境就是
+#            它的腳本通道。
 #   每個情境都先 `simctl keychain reset`、從未登入狀態開始、各自 OTP 登入同一帳號——不沿用上一個情境留在 Keychain 的
 #   session：共用容器隨時可能被他票 reset（本票實測：browse 沿用 login 的 session，中間 QA 冒煙 reset 過，建家庭被後端拒），
 #   舊 session 對應的使用者已不存在會把環境問題誤報成 app 缺陷；OTP 一次 ~10 秒、`max_frequency = "1s"`，重登不貴。
