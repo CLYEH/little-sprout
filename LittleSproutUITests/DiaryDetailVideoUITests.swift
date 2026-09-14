@@ -50,7 +50,7 @@ final class DiaryDetailVideoUITests: XCTestCase {
 
         let videoTile = app.buttons["影片 0:05，點兩下播放"]
         XCTAssertTrue(videoTile.waitForExistence(timeout: 10), "詳情頁瀑布流應該有一支可播放的影片格")
-        XCTAssertTrue(videoTile.waitForHittable(timeout: 5), "影片格應該是可點擊狀態，不只是存在")
+        XCTAssertTrue(videoTile.waitForHittable(timeout: 10), "影片格應該是可點擊狀態，不只是存在")
         videoTile.tap()
 
         // 影片簽名仍在飛行中（harness 種了 8 秒延遲，見本檔 LS-268 補充）——這時候還沒有任何
@@ -86,7 +86,7 @@ final class DiaryDetailVideoUITests: XCTestCase {
 
         let videoTile = app.buttons["影片 0:05，點兩下播放"]
         XCTAssertTrue(videoTile.waitForExistence(timeout: 10), "詳情頁瀑布流應該有一支可播放的影片格")
-        XCTAssertTrue(videoTile.waitForHittable(timeout: 5), "影片格應該是可點擊狀態，不只是存在")
+        XCTAssertTrue(videoTile.waitForHittable(timeout: 10), "影片格應該是可點擊狀態，不只是存在")
         videoTile.tap()
 
         // `videoTile` 點下後仍要等 harness 種的 3 秒延遲（見 `diaryDetailWithVideoHost` 文件

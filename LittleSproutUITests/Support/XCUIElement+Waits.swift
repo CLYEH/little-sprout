@@ -20,15 +20,29 @@ extension XCUIElement {
     /// getter，換掉 expectation、改手寫迴圈本身不是修法重點；真正有效的是「呼叫
     /// `isHittable` 前先驗過 frame 有效」（見 `isSafelyHittable`）——改手寫迴圈只是為了能
     /// 插入這個前置檢查，`XCTNSPredicateExpectation` 沒有插入前置條件的入口。任一步不成立
-    /// 就當作「尚未就緒」，留到下一次取樣，直到 timeout。回傳型別與預設 timeout 語意不變，
+    /// 就當作「尚未就緒」，留到下一次取樣，直到 timeout。回傳型別與 timeout 語意不變，
     /// 呼叫端（`SettingsViewIPadTests` 7 處、`DiaryDetailVideoUITests` 2 處、
-    /// `SettingsViewTests` 2 處，共 3 檔 11 處）零改動。
+    /// `SettingsViewTests` 2 處，共 3 檔 11 處）零改動——**LS-268 例外**：11 處呼叫點的
+    /// timeout 值本身從 5s 升到 10s（見下方風險段訂正），呼叫語法不動。
+    ///
+    /// **LS-268（池 `e6ce0b1b` i2，merge-review R2 informational）**：CI 單次
+    /// accessibility 快照實測 ~4.5s，5s 的 timeout 只取得約 2 次樣本、餘裕太薄——11 處呼叫點
+    /// 已全部從 5s 升到 10s（風險段以下訂正為實數）。
     ///
     /// 已知風險（merge-review R1 M2，未在本票處理）：CI 慢 runner 上量到單次
-    /// `isSafelyHittable` 取樣（快照＋`isHittable`）可能吃掉 4.5s，所有呼叫點的 timeout
-    /// 皆為 5s／8s／10s——那種 runner 上，本輪迴圈仍可能連一輪完整取樣都做不完就
+    /// `isSafelyHittable` 取樣（快照＋`isHittable`）可能吃掉 4.5s，11 處呼叫點的 timeout
+    /// 現皆為 10s——那種 runner 上，本輪迴圈仍可能連一輪完整取樣都做不完就
     /// timeout，把「框架硬失敗」換成「逾時斷言紅」而非變綠。這是呼叫端 timeout 預算問題，
     /// 票文明訂「呼叫點改動不在本票」，此處只記錄風險，不動呼叫點。
+    ///
+    /// **LS-268（池 `e6ce0b1b` m1，`visibleFrame` 缺口）**：`isSafelyHittable` 只驗證
+    /// `frame` 非空、座標為有限值，不驗證元素是否落在螢幕／可視範圍內——若元素 `frame` 本身
+    /// 合法（寬高 >0、非 NaN／Infinite）但整塊被父容器或螢幕邊界裁切到不可視（例如捲動超出
+    /// `visibleFrame`），這個前置檢查仍會放行去問 `isHittable`，而 XCUITest 對「frame 合法
+    /// 但被完全裁切」的元素呼叫 `isHittable` 一樣可能撞上與 LS-265 同款的框架硬失敗（`hitPoint:`
+    /// 算不出來）。目前 11 處呼叫端皆搭配捲動到可視範圍的既有邏輯（`scrollUntilAllHittable`
+    /// 一類），實務未觀察到這個缺口被觸發，記錄於此供下次同型故障排查時參考，不在本票新增
+    /// `visibleFrame` 檢查（未被要求的防禦性程式碼，CLAUDE.md Rule 2）。
     ///
     /// i2（merge-review R1 informational，評估後不採用）：曾考慮要求連續兩次取樣 frame
     /// 都有效才問 `isHittable`，理論上能再降低「snapshot 驗完、緊接著呼叫 `isHittable`
