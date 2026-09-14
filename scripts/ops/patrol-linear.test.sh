@@ -1000,6 +1000,166 @@ PYEOF
 printf '%s\n' "$py_neg"
 if printf '%s' "$py_neg" | tail -1 | grep -qx OK; then :; else fail=1; fi
 
+# ---- ⑪（LS-267／LS-239 R3）§4-b cron 模板的過濾式必須留得住動作清單／lane 表／cycle 一行 ----
+# orchestrator 巡檢改成自己直接跑 `patrol.sh 40 --linear` 再過濾進 context；樣式**直接從
+# docs/COLLABORATION.md 讀出來**餵給斷言，模板與實際輸出任一邊漂移這裡就紅。
+pfilter11="${root}/scripts/ops/patrol-filter.sh"
+filter11=$(bash "$pfilter11" --pattern)
+if [ -z "$filter11" ]; then
+  echo "✗ ⑪ 讀不到 patrol-filter.sh --pattern 的樣式（斷言失去意義，fail loud）" >&2; fail=1
+else
+  echo "✓ ⑪ 取得過濾樣式（patrol-filter.sh --pattern）：${filter11}"
+fi
+out11="$(bash "$plsh" --repo "$repo" 2>&1)"
+keep11=$(printf '%s\n' "$out11" | bash "$pfilter11" 2>/dev/null)
+
+# (a) 動作清單段的每一行都含 →（模板靠它留下整段；行首 → 是慣例，行中的也算）
+act11=$(printf '%s\n' "$out11" | sed -n '/^== 動作清單/,$p' | sed '1d' | grep -v '^[[:space:]]*$')
+if [ -z "$act11" ]; then
+  act11=$(printf '%s\n' "$out11" | sed -n '/動作清單/,$p' | sed '1d' | grep -v '^[[:space:]]*$')
+fi
+if [ -z "$act11" ]; then
+  echo "✗ ⑪(a) 找不到動作清單段，斷言會空跑" >&2; fail=1
+else
+  bad11=$(printf '%s\n' "$act11" | grep -vF '→' | grep -v '（無待執行動作）')
+  if [ -z "$bad11" ]; then
+    echo "✓ ⑪(a) 動作清單 $(printf '%s\n' "$act11" | wc -l | tr -d ' ') 行全部含 →（過濾式留得住）"
+  else
+    echo "✗ ⑪(a) 動作清單有行不含 →（會被 §4-b 過濾式丟掉）：" >&2; printf '%s\n' "$bad11" | sed 's/^/    /' >&2; fail=1
+  fi
+  miss11=$(printf '%s\n' "$act11" | while IFS= read -r l; do printf '%s\n' "$keep11" | grep -qF -- "$l" || printf '%s\n' "$l"; done)
+  if [ -z "$miss11" ]; then
+    echo "✓ ⑪(a) 動作清單每一行實際通過過濾"
+  else
+    echo "✗ ⑪(a) 動作清單有行被過濾掉：" >&2; printf '%s\n' "$miss11" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
+# (b) lane 狀態表每一行含 `lane:`；(c) cycle 一行含 `current cycle`
+lane11=$(printf '%s\n' "$out11" | grep -F '上限' | grep -F '在飛')
+if [ -z "$lane11" ]; then
+  echo "✗ ⑪(b) 找不到 lane 狀態表，斷言會空跑" >&2; fail=1
+elif printf '%s\n' "$lane11" | grep -qv 'lane:'; then
+  echo "✗ ⑪(b) lane 狀態表有行不含 lane:（會被過濾掉）：" >&2; printf '%s\n' "$lane11" | grep -v 'lane:' | sed 's/^/    /' >&2; fail=1
+else
+  echo "✓ ⑪(b) lane 狀態表 $(printf '%s\n' "$lane11" | wc -l | tr -d ' ') 行全部含 lane:，且過濾後仍在（$(printf '%s\n' "$keep11" | grep -cF '上限') 行）"
+fi
+if printf '%s\n' "$keep11" | grep -qF 'current cycle'; then
+  echo "✓ ⑪(c) cycle 一行含 current cycle、過濾後仍在"
+else
+  echo "✗ ⑪(c) cycle 一行沒通過過濾" >&2; printf '%s\n' "$out11" | grep -F 'cycle' | sed 's/^/    /' >&2; fail=1
+fi
+
+# (e) R2 M1 全稱：human 段的每一條**結論行**只要不是「：無」／「ok」／「（無…）」這種「沒事」的行，
+#     就必須通過過濾——R1 只釘了動作行／lane 表／cycle 行三種，對「壓根沒有標記的異常行」（cycle 對帳
+#     (a)(b)、開票結構 (a)-(e)、QA 讀不到…）在定義上無感，reviewer R1 M1 實跑抓到整段被吞。
+lost11=$(printf '%s\n' "$out11" | grep -v '^== ' | grep -v '^[[:space:]]*$' \
+  | grep -vE '：無$|：ok$|（無異常）|（無待執行動作）|（無候補）' \
+  | while IFS= read -r l; do printf '%s\n' "$keep11" | grep -qF -- "$l" || printf '%s\n' "$l"; done)
+if [ -z "$lost11" ]; then
+  echo "✓ ⑪(e) 全稱：human 段所有「非『無／ok』結論行」都通過過濾（$(printf '%s\n' "$out11" | grep -v '^== ' | grep -vE '：無$|：ok$|（無異常）|（無待執行動作）|（無候補）|^[[:space:]]*$' | wc -l | tr -d ' ') 行）"
+else
+  echo "✗ ⑪(e) 以下結論行會被 §4-b 過濾式吞掉（缺 ⚠／✗／→ 標記）：" >&2; printf '%s\n' "$lost11" | sed 's/^/    /' >&2; fail=1
+fi
+
+# (e2) R2 M1 mutation：拿掉 `mark()` 補的 ⚠（cycle 對帳 (a)(b)／開票結構 (a)-(e) 的異常行）→ (e) 轉紅
+mutdir11e="$work/mut11e"
+rm -rf "$mutdir11e"; mkdir -p "$mutdir11e"
+cp -R "${root}/scripts" "$mutdir11e/scripts"
+sed 's|return "%s%s%s" % (prefix, "⚠ " if items else "", text)|return "%s%s" % (prefix, text)|' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir11e/scripts/ops/patrol_linear.py"
+if ! grep -q 'return "%s%s" % (prefix, text)' "$mutdir11e/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑪(e2) mutant 沒被正確合成（mark() 形狀變了）" >&2; fail=1
+else
+  out11e="$(bash "$mutdir11e/scripts/ops/patrol-linear.sh" --repo "$repo" 2>&1)"
+  keep11e=$(printf '%s\n' "$out11e" | bash "$pfilter11" 2>/dev/null)
+  lost11e=$(printf '%s\n' "$out11e" | grep -v '^== ' | grep -v '^[[:space:]]*$' \
+    | grep -vE '：無$|：ok$|（無異常）|（無待執行動作）|（無候補）' \
+    | while IFS= read -r l; do printf '%s\n' "$keep11e" | grep -qF -- "$l" || printf '%s\n' "$l"; done)
+  if [ -n "$lost11e" ]; then
+    echo "✓ ⑪(e2) mutant（mark() 不補 ⚠）：出現被過濾吞掉的結論行（如「$(printf '%s' "$lost11e" | head -1 | cut -c1-56)…」）——證明 (e) 的綠來自 mark()"
+  else
+    echo "✗ ⑪(e2) mutant 未如預期翻轉——(e) 可能零覆蓋（夾具沒有任何非空的對帳結果？）" >&2; fail=1
+  fi
+fi
+
+# (f) R2 M1 逐分支夾具：無 LINEAR_API_KEY 時的「略過」結論行必須帶標記、通過過濾
+#     （失敗情境：.env 過期／換機沒帶 → Linear 半段整段沒跑，orchestrator 卻只看到 git 半段，靜默停擺）
+out11f="$(bash "$plsh" --repo "$repo_no_token" 2>&1)"
+keep11f=$(printf '%s\n' "$out11f" | bash "$pfilter11" 2>/dev/null)
+if printf '%s\n' "$keep11f" | grep -qF '略過（無 LINEAR_API_KEY）'; then
+  echo "✓ ⑪(f) 無 LINEAR_API_KEY 的略過行通過過濾（不會整段靜默消失）"
+else
+  echo "✗ ⑪(f) 無 LINEAR_API_KEY 的略過行被過濾掉了——Linear 半段沒跑卻沒有任何訊號" >&2
+  printf '%s\n' "$out11f" | sed 's/^/    原始：/' >&2; fail=1
+fi
+
+# (g) R2 M1 mutation：把 (f) 那行的 ⚠ 拿掉 → (f) 轉紅（證明綠來自標記本身）
+mutdir11g="$work/mut11g"
+rm -rf "$mutdir11g"; mkdir -p "$mutdir11g"
+cp -R "${root}/scripts" "$mutdir11g/scripts"
+sed 's/echo "⚠ 巡檢（Linear 半段）：略過（無 LINEAR_API_KEY）/echo "巡檢（Linear 半段）：略過（無 LINEAR_API_KEY）/' \
+  "${root}/scripts/ops/patrol-linear.sh" > "$mutdir11g/scripts/ops/patrol-linear.sh"
+out11g="$(bash "$mutdir11g/scripts/ops/patrol-linear.sh" --repo "$repo_no_token" 2>&1)"
+if printf '%s\n' "$out11g" | bash "$pfilter11" 2>/dev/null | grep -qF '略過（無 LINEAR_API_KEY）'; then
+  echo "✗ ⑪(g) mutant（拿掉略過行的 ⚠）仍通過過濾——(f) 的綠不是來自標記，斷言沒有牙" >&2; fail=1
+else
+  echo "✓ ⑪(g) mutant（拿掉略過行的 ⚠）：該行被過濾掉——證明 (f) 釘的正是那個標記"
+fi
+
+# (d) mutation：拿掉動作清單行首的 `→ ` → (a) 轉紅（證明 (a) 釘的正是這個標記）
+mutdir11="$work/mut11"
+rm -rf "$mutdir11"; mkdir -p "$mutdir11"
+cp -R "${root}/scripts" "$mutdir11/scripts"
+sed 's/"→ save_issue /"save_issue /' "${root}/scripts/ops/patrol_linear.py" > "$mutdir11/scripts/ops/patrol_linear.py"
+if ! grep -q '"save_issue ' "$mutdir11/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑪(d) mutant 沒被正確合成（save_issue 動作字串形狀變了）" >&2; fail=1
+else
+  out11d="$(bash "$mutdir11/scripts/ops/patrol-linear.sh" --repo "$repo" 2>&1)"
+  act11d=$(printf '%s\n' "$out11d" | sed -n '/動作清單/,$p' | sed '1d' | grep -v '^[[:space:]]*$')
+  if printf '%s\n' "$act11d" | grep -q '^save_issue '; then
+    echo "✓ ⑪(d) mutant（動作行拿掉 →）：出現不含 → 的動作行——證明 (a) 的綠來自那個標記，過濾式會把它丟掉"
+  else
+    echo "✗ ⑪(d) mutant 未如預期翻轉——(a) 可能零覆蓋" >&2; printf '%s\n' "$act11d" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
+# ---- ⑫（R3 m1）狀態對照行**恰好一個 ⚠**：`format_human()` 已對每條 state_crosscheck 行前置 `  ⚠ `，
+#      產生端（`state_crosscheck()`）不可以自己再加一個，否則渲染成 `⚠ ⚠ …`（R2 對 QA「讀不到」那條就多加了）。
+py_qa="$(ROOT_DIR="$root" python3 - <<'PYEOF'
+import importlib.util, os
+
+spec = importlib.util.spec_from_file_location("pl", os.environ["ROOT_DIR"] + "/scripts/ops/patrol_linear.py")
+pl = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(pl)
+
+report = {
+    "generated_at": "2026-09-14T00:00:00Z",
+    "current_cycle": None,
+    "state_crosscheck": ["LS-275 QA：origin/development 不存在或讀不到，略過對照"],
+    "cycle_check": {"a": [], "b": [], "c": [], "d": []},
+    "lanes": {},
+    "structure": {k: [] for k in ("a", "b", "c", "d", "e")},
+    "booted_simulator_flags": [],
+    "actions": [],
+}
+for line in pl.format_human(report).split("\n"):
+    if "QA：origin/development 不存在或讀不到" in line:
+        print("%d|%s" % (line.count("⚠"), line))
+PYEOF
+)"
+case "$py_qa" in
+  1\|*)
+    echo "✓ ⑫ 狀態對照行恰好一個 ⚠（不是雙標）：${py_qa#1|}"
+    if printf '%s\n' "${py_qa#1|}" | bash "$pfilter11" 2>/dev/null | grep -qF 'QA：origin/development 不存在或讀不到'; then
+      echo "✓ ⑫ 該行仍通過 §4-b 過濾（渲染端的 ⚠ 就夠）"
+    else
+      echo "✗ ⑫ 該行沒通過過濾" >&2; fail=1
+    fi ;;
+  '') echo "✗ ⑫ 渲染不出狀態對照行（format_human 形狀變了？）" >&2; fail=1 ;;
+  *)  echo "✗ ⑫ 狀態對照行的 ⚠ 個數不是 1：${py_qa}" >&2; fail=1 ;;
+esac
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2
   exit 1

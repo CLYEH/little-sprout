@@ -35,6 +35,18 @@
 # scripts/ops/simulator-lock.sh 檔頭理由——它也因此另外顯式接 INT／TERM 成 exit，不只靠裸 EXIT
 # trap），所以這裡不模擬真的送訊號中斷，改用靜態接線斷言（同 detect-simulator.test.sh 的 ⑨）釘住
 # 「trap 設定的順序在 xcodebuild test 真正執行之前」這件事——這才是訊號中斷也關得掉的機制本身。
+#
+# LS-267（LS-96 池項 `aa692c5e`）間歇紅的查因紀錄：LS-264 R1 在「無 jq 的 PATH 鏡像」那一輪見過本檔紅
+# 一次、同 tip 連兩次重跑皆綠，當次輸出沒留下。本票在同一台機器對同一份 tip 各跑 3 輪（有 jq／無 jq，
+# 共 6 輪）全綠、103/103，兩組輸出逐行 diff 只差三處與判定無關的可變值（㉚／㉛ 的耗時秒數 2s↔3s、㊱ 的
+# 晚生孫行程 pid），**未能重現、根因未定位**。下次再遇到請把當次完整輸出貼回 LS-96 該則累積樣本；
+# 已知的環境相依面（下次查因的起點，本輪都在上限內：括號為本輪六輪實測值 vs 上限）：
+#   - 看門狗耗時上限斷言 ㉘／㉙（4s／25s）、㉚／㉛（2–3s／15s）、㊱（6–7s／25s）——讀真實掛鐘，
+#     機器被其他 worktree 的 xcodebuild 壓住時可能逼近上限。
+#   - ⑧ 兩個 worktree 併發退回共用 UDID：真的跑 `simulator-lock.sh` 與真實排程時序。
+#   - ㊲ 別人持有中的鎖：`ps`／`kill -0` 對真實 pid 的存活判定（假身只截 stale-xcodebuild-check 的
+#     呼叫形狀，其餘 passthrough 給系統 `ps`／`pgrep`）。
+#   - ㊱ 晚生孫行程收集：依賴 fork 時機。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

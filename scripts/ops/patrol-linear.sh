@@ -73,9 +73,9 @@ fi
 if [ -z "${LINEAR_API_KEY:-}" ]; then
   case "$MODE" in
     json) echo '{"skipped":true,"reason":"no LINEAR_API_KEY"}' ;;
-    closed) echo "巡檢（Linear 半段）：--closed 略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會查票狀態" >&2; exit 3 ;;
-    lane) echo "巡檢（Linear 半段）：--lane 略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會查 lane" >&2; exit 3 ;;
-    *) echo "巡檢（Linear 半段）：略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會打 GraphQL，見 docs/COLLABORATION.md §7" ;;
+    closed) echo "⚠ 巡檢（Linear 半段）：--closed 略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會查票狀態" >&2; exit 3 ;;
+    lane) echo "⚠ 巡檢（Linear 半段）：--lane 略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會查 lane" >&2; exit 3 ;;
+    *) echo "⚠ 巡檢（Linear 半段）：略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會打 GraphQL，見 docs/COLLABORATION.md §7" ;;
   esac
   exit 0
 fi

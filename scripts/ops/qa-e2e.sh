@@ -18,7 +18,9 @@
 #   **只准在票 worktree 內跑**（merge-review R1 N1）：hold 的持有者判定看 worktree（LS-170 §6），從主 checkout 取得的 hold
 #   會讓主 checkout 上的 orchestrator／reviewer 全部直通、鎖形同虛設——主 checkout（git-dir＝git-common-dir）一律 exit 2。
 # 環境變數：LS_QA_MAILPIT 覆寫 Mailpit URL（預設讀 `supabase status` 的 MAILPIT_URL，再退 http://127.0.0.1:54324）；
-#   LS_LOCK_SH 覆寫 supabase-lock.sh 路徑（只給自測塞 stub 用，R1 N2）。
+#   LS_LOCK_SH 覆寫 supabase-lock.sh 路徑（只給自測塞 stub 用，R1 N2）；LS_QA_PSQL_BIN 覆寫 `pgrst_reload` 用的
+#   psql 執行檔（同樣只給自測塞用，LS-267／LS-96 池項 `488ded1c`：指向一個不存在的路徑即可穩定走 docker exec 分支，
+#   不必看宿主 PATH 上有沒有真的 psql——GitHub runner 有，該分支在唯一的自動通道上原本零覆蓋）。
 #
 # 做的事（順序即防線）：
 #   1. 情境名／票號檢查（錯即 exit 2，不碰任何工具）。
@@ -197,9 +199,10 @@ trap 'exit 143' TERM
 rest_probe() { http_code -H "apikey: ${service_key}" -H "Authorization: Bearer ${service_key}" "${api_url}/rest/v1/profiles?select=id&limit=1"; }
 pgrst_reload() {   # 在 hold 內對 db 發 NOTIFY；印用到的通道（同 supabase/tests/run.sh 的「連線方式」慣例，LS-204）
   local sql="notify pgrst, 'reload schema'" c
-  if command -v psql >/dev/null 2>&1; then
+  local psql_bin=${LS_QA_PSQL_BIN:-psql}   # LS-267：測試 seam（同 LS_LOCK_SH 先例），正式呼叫就是 psql
+  if command -v "$psql_bin" >/dev/null 2>&1; then
     pgrst_channel="host psql → ${SUPABASE_DB_HOST:-127.0.0.1}:${SUPABASE_DB_PORT:-54322}/postgres"
-    PGPASSWORD="${PGPASSWORD:-postgres}" psql -h "${SUPABASE_DB_HOST:-127.0.0.1}" -p "${SUPABASE_DB_PORT:-54322}" \
+    PGPASSWORD="${PGPASSWORD:-postgres}" "$psql_bin" -h "${SUPABASE_DB_HOST:-127.0.0.1}" -p "${SUPABASE_DB_PORT:-54322}" \
       -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q -c "$sql" >/dev/null 2>&1
     return $?
   fi

@@ -718,6 +718,8 @@ def state_crosscheck(root, issues):
         elif name == "QA":
             shas = commits_for_ticket(root, n)
             if shas is None:
+                # LS-267 R3 m1：這裡**不**自己加 ⚠——`format_human()` 對每一條 state_crosscheck 行都已經
+                # 前置 `  ⚠ `（見該函式的「== 1. 狀態對照」段），R2 多加一個會渲染成 `⚠ ⚠ …`（雙標）。
                 lines.append("%s QA：origin/development 不存在或讀不到，略過對照" % issue["identifier"])
             elif not shas:
                 lines.append("%s QA：origin/development 找不到對應 commit（票號比對失敗？）→ 人工確認" % issue["identifier"])
@@ -978,6 +980,12 @@ def format_lane_line(lane, entry):
     )
 
 
+def mark(prefix, items, text):
+    """LS-267 R2 M1：對帳結果非空＝有異常，結論行必須帶 ⚠ 才過得了 §4-b 的巡檢過濾
+    （`scripts/ops/patrol-filter.sh`，唯一定義處）；空（「：無」／ok）的行不需要標記、也不該佔 context。"""
+    return "%s%s%s" % (prefix, "⚠ " if items else "", text)
+
+
 def format_human(report, brief=False):
     lines = []
     cc = report["current_cycle"]
@@ -1005,14 +1013,14 @@ def format_human(report, brief=False):
 
     lines.append("== 2. Cycle 對帳")
     ck = report["cycle_check"]
-    lines.append("  (a) active 票不在本 cycle：%s" % (", ".join(ck["a"]) if ck["a"] else "無"))
-    lines.append("  (b) cycle 內 Backlog／Spec blockedBy 未解（規劃錯誤）：%s" % (", ".join(ck["b"]) if ck["b"] else "無"))
+    lines.append(mark("  (a) ", ck["a"], "active 票不在本 cycle：%s" % (", ".join(ck["a"]) if ck["a"] else "無")))
+    lines.append(mark("  (b) ", ck["b"], "cycle 內 Backlog／Spec blockedBy 未解（規劃錯誤）：%s" % (", ".join(ck["b"]) if ck["b"] else "無")))
     for msg in ck["c"]:
-        lines.append("  (c) %s" % msg)
+        lines.append("  (c) ⚠ %s" % msg)
     if not ck["c"]:
         lines.append("  (c) 規劃 Document：ok")
     for msg in ck["d"]:
-        lines.append("  (d) %s" % msg)
+        lines.append("  (d) ⚠ %s" % msg)
     if not ck["d"]:
         lines.append("  (d) 剩餘時間：ok")
 
@@ -1026,7 +1034,7 @@ def format_human(report, brief=False):
     st = report["structure"]
     labels = {"a": "無 project", "b": "Phase 專案缺 milestone", "c": "Task：標題缺 parent", "d": "無 lane 標籤", "e": "lane:harness 缺 size"}
     for key in ("a", "b", "c", "d", "e"):
-        lines.append("  (%s) %s：%s" % (key, labels[key], ", ".join(st[key]) if st[key] else "無"))
+        lines.append(mark("  (%s) " % key, st[key], "%s：%s" % (labels[key], ", ".join(st[key]) if st[key] else "無")))
 
     lines.append("== 5. Booted 模擬器（沿用 patrol.sh）")
     if report["booted_simulator_flags"]:
