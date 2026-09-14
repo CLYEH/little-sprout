@@ -401,6 +401,19 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
 ### `media`
 - `storage_path` 必須符合 `{family_id}/{yyyy}/{mm}/{media_id}.{ext}`（見 §6），且有
   `CHECK` 強制前綴＝`family_id`。
+- **`taken_at`（EXIF 原始拍攝時間，nullable，LS-262 補強）**：client 上傳時可選擇
+  回填（欄位級 UPDATE grant 早已開放，見上方表格；INSERT 沒有欄位限制，可與
+  `storage_path`／`byte_size` 等一起一次寫入）；無 EXIF 或尚未回填留 `NULL`。
+  **邊界 CHECK（`media_taken_at_range_check`）**：`taken_at is null or (taken_at
+  between '1970-01-01' and now() + interval '1 day')`——早於 1970 或晚於「現在
+  ＋1 天」一律 `23514`（`+1 天` 是裝置時鐘與伺服器時鐘飄移的容忍緩衝，不是允許
+  「排程未來拍攝」）。**跟 `occurred_at` 的語意分工**：`taken_at` 是原始值（給
+  `get_family_timeline` 回傳，見 §4，供呼叫端判斷「有沒有 EXIF」）；
+  `feed_items.occurred_at`（時間軸排序鍵，既有行為，本票未改）是
+  `coalesce(taken_at, created_at)`——沒有 EXIF 時退回上傳時間，見 §3
+  「`feed_items` 維護」既有說明。**不存在 `captured_at` 欄位**——LS-262 原票文一度
+  誤寫成新增這個欄位，開工前查 schema 發現 `taken_at`已是同語意欄位，訂正為補強
+  既有欄位，詳見該票 comment。
 - **縮圖三欄（`thumb_path`／`thumb_width`／`thumb_height`，LS-128）**：皆 nullable，
   三欄同為 `NULL` 或同為非 `NULL`（`media_thumb_dimensions_consistency` `CHECK`）——
   沒有縮圖的過渡期列（既有資料、縮圖產生失敗）三欄留空即可，讀取端退回原圖
@@ -1469,7 +1482,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   配合 RLS 自然回傳空集合（同 `get_family_timeline` 的未登入行為），不 raise。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 
-### `get_family_timeline(p_family_id uuid, p_child_id uuid default null, p_cursor_occurred_at timestamptz default null, p_cursor_ref_id uuid default null, p_limit integer default 20) -> table(kind public.feed_kind, ref_id uuid, occurred_at timestamptz, child_ids uuid[], comment_count bigint)`
+### `get_family_timeline(p_family_id uuid, p_child_id uuid default null, p_cursor_occurred_at timestamptz default null, p_cursor_ref_id uuid default null, p_limit integer default 20) -> table(kind public.feed_kind, ref_id uuid, occurred_at timestamptz, taken_at timestamptz, child_ids uuid[], comment_count bigint)`
 - **BREAKING（LS-121）**：回傳欄從 `child_id uuid` 改成 `child_ids uuid[]`——參數
   簽章沒變（還是同一組 5 個參數），但回傳形狀對呼叫端是真實的破壞性變更。舊呼叫端
   若解析 `child_id`（單一 uuid）會直接壞掉，必須改讀 `child_ids`（陣列）。
@@ -1491,6 +1504,19 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   取捨，見該支說明與 migration 檔頭。效能回歸見
   `supabase/tests/112_comment_count.sql`（200 筆真實 feed＋留言的 EXPLAIN
   (ANALYZE, BUFFERS) 原文，本機實測 buffers=116，門檻 250）。
+- **BREAKING（LS-262）**：回傳列再加 `taken_at`——**只有 `kind='media'` 有值**（來源
+  `media.taken_at`，見 §3「media」小節），`kind='diary'`／`kind='album'` 恆為
+  `NULL`（沒有這個概念，CASE 無 ELSE 分支的既有語意）。跟 `occurred_at` 的差別：
+  `occurred_at` 對 `media` 項目是既有的 `coalesce(taken_at, created_at)`（排序鍵，
+  本票未改），`taken_at` 是**原始值**（可能是 `NULL`，代表這張照片沒有 EXIF 拍攝
+  時間或尚未回填）——呼叫端要判斷「這張照片有沒有 EXIF」必須讀這個獨立欄位，不能
+  從 `occurred_at` 反推（`occurred_at` 在沒有 EXIF 時已經退回 `created_at`，看不出
+  差異）。同 LS-121／LS-243 的既有先例：回傳型別改變（`RETURNS TABLE` 多一欄）
+  必須先 `DROP FUNCTION` 才能 `CREATE OR REPLACE`（Postgres 限制，見 migration
+  檔頭），參數簽章不變、PostgREST 序列化成 JSON 物件、Swift `Decodable` 對多出來
+  的欄位預設略過不報錯，欄位新增仍照 gate 規則標記 BREAKING。**排序規則本票不動**
+  ——是否改依 `taken_at` 排序是 LS-251 設計裁決點，另票處理。測試見
+  `supabase/tests/115_media_taken_at.sql`。
 - **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭的資料——`p_family_id` 傳一個
   自己不屬於的家庭不會報錯，只會回傳 0 列（`security invoker`，完全依賴 `feed_items`
   既有的 `feed_items_select` RLS policy，見 §3）。
@@ -2096,7 +2122,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | 碼 | 常見觸發情境 |
 |---|---|
 | `23502`（`not_null_violation`） | 必填欄位留空，例如 `children.birthday`、`media.byte_size` |
-| `23514`（`check_violation`） | 違反欄位 `CHECK`，例如 `families.name` 長度、`media.width/height > 0`、`diaries.body` 長度 |
+| `23514`（`check_violation`） | 違反欄位 `CHECK`，例如 `families.name` 長度、`media.width/height > 0`、`diaries.body` 長度、`media.taken_at` 邊界（早於 1970 或晚於 now()+1 天，`media_taken_at_range_check`，LS-262） |
 | `22P02`（`invalid_text_representation`） | enum 欄位傳了不合法的字串（例如 `role` 不是 `owner/member/viewer`） |
 | `23505`（`unique_violation`） | 例如 `blocked_users` 重複封鎖同一人（`reactions` 自 LS-58 起不會了——直接 INSERT 已被 revoke，`toggle_reaction` 用 advisory lock 序列化，不會撞這個碼） |
 | `23503`（`foreign_key_violation`） | 例如 `albums.child_id` 指到別家的孩子（複合外鍵擋下） |
