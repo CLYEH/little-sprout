@@ -97,6 +97,19 @@ out=$(run_fix "${work}/ci-extra.yml"); rc=$?
 expect_rc '④ allowlist 不放行反方向差集（ci.yml 有、repo 沒有仍紅）' 1 "$rc" "$out"
 rm -f "${fix}/scripts/gates/selftest-wiring-allowlist.txt"
 
+# ---- ④b（R2 m3）單行 `run:`／`- run:` 形式也算有掛（ci.yml 兩種寫法並存）----
+cat > "${work}/ci-runline.yml" <<'YML'
+      - name: Gate 自測
+        run: |
+          bash scripts/gates/a.test.sh || rc=1
+      - run: bash scripts/gates/b.test.sh
+      - name: 設計掃描自測
+        run: node scripts/design/x.test.js
+YML
+out=$(run_fix "${work}/ci-runline.yml"); rc=$?
+expect_rc '④b 單行 `- run: bash …`／`run: node …` 算有掛 → exit 0' 0 "$rc" "$out"
+has '④b 三支都認得' "$out" '3 支自測全部掛在 ci.yml'
+
 # ---- ⑤ 註解提及不算「有在跑」（假綠防線）----
 out=$(run_fix "${work}/ci-comment.yml"); rc=$?
 expect_rc '⑤ 只在註解被提到 → 仍算沒掛，exit 1' 1 "$rc" "$out"
@@ -135,6 +148,6 @@ out=$(bash "$check" --wat 2>&1); rc=$?
 expect_rc '⑨ 未知參數 → exit 2' 2 "$rc" "$out"
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ selftest-wiring-check 自測通過（9 組樣本）"
+  echo "✓ selftest-wiring-check 自測通過（10 組樣本）"
 fi
 exit "$fail"

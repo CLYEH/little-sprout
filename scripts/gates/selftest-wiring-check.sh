@@ -10,7 +10,10 @@
 #
 # 判準：
 #   repo 側＝`find scripts -name '*.test.sh' -o -name '*.test.js'`（相對 repo root 的路徑）。
-#   ci.yml 側＝**實際的呼叫行**（行首空白後以 `bash`／`node` 起手），不是註解裡的提及——註解常引用自測
+#   ci.yml 側＝**實際的呼叫行**：行首空白後以 `bash`／`node` 起手（`run: |` 區塊內的縮排行），或單行
+#     `run: bash scripts/x.test.sh`／`- run: bash scripts/x.test.sh`（R2 m3，merge-review R1：本 PR 自己新增的
+#     兩個 gate step 就是單行 `run:` 形式，只是被呼叫的不是 `*.test.sh` 才沒撞上——照那個樣式寫的自測會被
+#     誤判成「沒掛」而假紅）。**註解裡的提及不算**——註解常引用自測
 #     檔名（例如 ci.yml:216 那段 LS-264 的說明），整檔 grep 會把「被提到」誤判成「有在跑」，那正是本
 #     gate 要防的假綠。
 #   差集兩個方向都擋：repo 有 ci.yml 沒有（新增自測忘了掛）、ci.yml 有 repo 沒有（改名／刪檔忘了同步，
@@ -43,7 +46,7 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 ( cd "$root" && find scripts \( -name '*.test.sh' -o -name '*.test.js' \) -type f 2>/dev/null ) | sort -u > "${work}/repo.txt"
-grep -hE '^[[:space:]]*(bash|node)[[:space:]]+scripts/[^[:space:]]+\.test\.(sh|js)' "$ci" \
+grep -hE '^[[:space:]]*(-[[:space:]]+)?(run:[[:space:]]*)?(bash|node)[[:space:]]+scripts/[^[:space:]]+\.test\.(sh|js)' "$ci" \
   | grep -oE 'scripts/[^[:space:]]+\.test\.(sh|js)' | sort -u > "${work}/ci.txt"
 
 allow="${root}/scripts/gates/selftest-wiring-allowlist.txt"
