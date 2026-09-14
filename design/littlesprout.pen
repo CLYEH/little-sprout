@@ -42184,63 +42184,45 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "AnVfy",
+                              "id": "G5hRJ",
                               "name": "Thumb",
-                              "metadata": {
-                                "type": "unsplash",
-                                "username": "brookebalentine",
-                                "link": "https://unsplash.com/@brookebalentine",
-                                "author": "Brooke Balentine"
-                              },
                               "clip": true,
                               "width": "fill_container",
                               "height": 120,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
-                                "url": "https://images.unsplash.com/photo-1774641373821-1fc8fdec8e68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODc2NzA1NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                                "url": "appstore-photos/demo-thumb-hero.jpg",
                                 "mode": "fill"
                               },
                               "cornerRadius": "$radius-md"
                             },
                             {
                               "type": "frame",
-                              "id": "JA9ZA",
+                              "id": "aEIpO",
                               "name": "Thumb",
-                              "metadata": {
-                                "type": "unsplash",
-                                "username": "ovidiugruescu",
-                                "link": "https://unsplash.com/@ovidiugruescu",
-                                "author": "Gruescu Ovidiu"
-                              },
                               "clip": true,
                               "width": "fill_container",
                               "height": 120,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
-                                "url": "https://images.unsplash.com/photo-1760128294835-1217f4cb97e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODc2NzA1NDd8&ixlib=rb-4.1.0&q=80&w=1080",
+                                "url": "appstore-photos/demo-thumb-invite.jpg",
                                 "mode": "fill"
                               },
                               "cornerRadius": "$radius-md"
                             },
                             {
                               "type": "frame",
-                              "id": "Xp2nv",
+                              "id": "uT4lA",
                               "name": "Thumb",
-                              "metadata": {
-                                "type": "unsplash",
-                                "username": "nci",
-                                "link": "https://unsplash.com/@nci",
-                                "author": "National Cancer Institute"
-                              },
                               "clip": true,
                               "width": "fill_container",
                               "height": 120,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
-                                "url": "https://images.unsplash.com/photo-1577897113051-1a0395bfc3e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODc2NzA1NDh8&ixlib=rb-4.1.0&q=80&w=1080",
+                                "url": "appstore-photos/demo-thumb-join.jpg",
                                 "mode": "fill"
                               },
                               "cornerRadius": "$radius-md"
@@ -54283,8 +54265,63 @@
                           "name": "Card Photo 1",
                           "width": "fill_container",
                           "descendants": {
-                            "sIJPp": {
-                              "enabled": true
+                            "bjq5n": {
+                              "type": "frame",
+                              "id": "h5llRn",
+                              "name": "Photo Wrap",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 184,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-timeline.jpg",
+                                "mode": "fill"
+                              },
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "CaA67",
+                                  "layoutPosition": "absolute",
+                                  "x": 239,
+                                  "y": 155,
+                                  "name": "Video Badge",
+                                  "fill": "#2B141CBF",
+                                  "cornerRadius": "$radius-full",
+                                  "gap": "$sp-tight",
+                                  "padding": [
+                                    2,
+                                    "$sp-tight"
+                                  ],
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "e3pNL1",
+                                      "name": "Play Icon",
+                                      "width": 12,
+                                      "height": 12,
+                                      "icon": "play",
+                                      "library": "lucide",
+                                      "fill": "$on-photo"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "wt1RO",
+                                      "name": "Duration Label",
+                                      "fill": "$on-photo",
+                                      "content": "影片 0:32",
+                                      "fontFamily": "$font",
+                                      "fontSize": 12,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "VywUw": {
+                              "content": "小安摸阿嬤的臉 · 2 歲 3 個月"
                             }
                           }
                         },
@@ -56364,8 +56401,64 @@
                                   "name": "Card Photo 1",
                                   "width": "fill_container",
                                   "descendants": {
+                                    "bjq5n": {
+                                      "type": "frame",
+                                      "id": "PvNqq",
+                                      "name": "Photo Wrap",
+                                      "clip": true,
+                                      "width": "fill_container",
+                                      "height": 184,
+                                      "fill": {
+                                        "type": "image",
+                                        "enabled": true,
+                                        "url": "appstore-photos/demo-timeline.jpg",
+                                        "mode": "fill"
+                                      },
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "iyAKw",
+                                          "layoutPosition": "absolute",
+                                          "x": 239,
+                                          "y": 155,
+                                          "name": "Video Badge",
+                                          "enabled": false,
+                                          "fill": "#2B141CBF",
+                                          "cornerRadius": "$radius-full",
+                                          "gap": "$sp-tight",
+                                          "padding": [
+                                            2,
+                                            "$sp-tight"
+                                          ],
+                                          "justifyContent": "center",
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "icon",
+                                              "id": "r3gHL",
+                                              "name": "Play Icon",
+                                              "width": 12,
+                                              "height": 12,
+                                              "icon": "play",
+                                              "library": "lucide",
+                                              "fill": "$on-photo"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "AlSAK",
+                                              "name": "Duration Label",
+                                              "fill": "$on-photo",
+                                              "content": "影片 0:32",
+                                              "fontFamily": "$font",
+                                              "fontSize": 12,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
                                     "VywUw": {
-                                      "content": "小安在公園盪鞦韆 · 2 歲 3 個月"
+                                      "content": "小安摸阿嬤的臉 · 2 歲 3 個月"
                                     },
                                     "O6ami": {
                                       "x": 233.5
@@ -162202,6 +162295,320 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "R7 收據記錄的 `row_overflow`（Notes `H73kPC` 內 `MbNO4`「H」標題節點因 MN-29 補序號標記單行溢出容器 270pt，VR R7 判為可接受、記入 LS-96 `0f32da5b`）本輪順手修掉：`MbNO4` 標題還原為原短句「BL-3 修正：02 板換真實留言／愛心畫面＋用詞改回「愛心」」，序號沿革說明已完整保留在緊接其後的 `AxRNB`（同一個 `X5WyV` 區塊內、同段落）——標題維持與整份 Notes 文件裡其餘同型 H 標題節點一致的單行 auto 寬慣例，不需要為這一格改用 `fixed-width`。row_overflow 複驗回到 0。LS-96 `0f32da5b` 該筆記錄的問題狀態改為「本輪已修」，池項本身保留作沿革記錄不刪除。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "twQQz",
+          "name": "N LS-280 R1 修訂：示範照片同捲底片盤點與統一",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "z9eSZP",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "LS-280 R1 修訂：裝置畫面內示範照片盤點與統一底片（回應 LS-247 VR R3 MN-3，comment `f8fcd736`）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "Ik6FV",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O4MTx",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "盤點-1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "vZsZx",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "11 塊 `App Store /` 板（`c2yk3s`／`ZRyXL`／`y9r9Fq`／`Q9Zw3f`／`Bm7Lx`／`Vn4TL`／`b59DUk`／`mWZy3`／`ak7RI`／`BnjqP`／本 Notes 板 `H73kPC`）內裝置畫面的內容，皆為既有畫面板的靜態渲染複合圖（10 個 `slot/screenshot` 節點，非即時連動）：iPhone｜`I8kSPC`=timeline-iphone.jpg、`bArC2`=comments-iphone-v3.jpg、`F5775`=album-iphone.jpg、`hZH2Y`=child-iphone.jpg、`k9dES`=invite-iphone.jpg；iPad｜`h2080`=timeline-ipad.jpg、`tIcZW`=comments-ipad-v3.jpg、`mz0F2`=album-ipad.jpg、`m1U1Ke`=child-ipad-v2.jpg、`uGuJD`=family-ipad.jpg。另 6 個 `Hero Photo` 節點（`scpdc`／`ayJoy`／`F92jh`／`yzfCx`／`aD9EO`／`j5Bns`，LS-247 三張定稿 hero／invite／join.jpg）獨立於 slot 之外，非本票範圍。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ni5st",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "w9Lueb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "盤點-2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "n2x2O",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "10 個 slot 的來源畫面板：01 時間軸＝`yXSht`(iPhone)／`go7f9`(iPad)；02 相簿詳情＝`pVSXP`(iPhone)／`rFiLJ`(iPad)；03 邀請加入＝`kcGJa`(iPhone)，iPad 無對應原生邀請加入設計、`uGuJD`＝既有佔位渲染；04 日記詳情＝`vzYXz`＋`FiBvh`(留言 sheet)合成(iPhone)／`MjRcr`＋`wY7f8`合成(iPad)；05 寶貝＝`gpSsR`(iPhone，無最近照片列)／`JbTfv`(iPad，有「最近的照片」列)。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "g2w4p",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "tVdhp",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "定位",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "b8gPLS",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "VR R3 MN-3 指出 `c2yk3s` 截圖同一塊板上，手機畫面裡的時間軸照片冷綠戶外（公園溜滑梯）vs 底下 Hero Print 暖橘室內；`JbTfv` 最近照片列同款（草地、黃雨衣）。逐節點核對：冷綠內容來源＝`yXSht`「Card Photo 1」(`xrCoj`，Photo Wrap 原 id `bjq5n`) 與 `go7f9` 對應節點(`hQEOk`，原 id 同名 `bjq5n`)，皆為 Unsplash `photo-1638339972126`（遊樂場滑梯）；`JbTfv`「Thumb Row」(`yIhDj`，屬「Recent Photos」`BypKM`) 下 3 個 `Thumb`（原 id `AnVfy`／`JA9ZA`／`Xp2nv`）分別為 Unsplash `photo-1774641373821`／`photo-1760128294835`／`photo-1577897113051`（草地、戶外場景）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "iAnG7",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "M3j6Lt",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "決策",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "bdwVf",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "依票文選 (b)（size:S 預設）：把上述 5 個節點的 image fill 改為 LS-247 三張定稿的裁切變體，不新生圖。新落地裁切檔（皆 ≤120 KB，遠低於 500 KB 門檻）：`design/appstore-photos/demo-timeline.jpg`（自 `hero.jpg` 裁 `(0,40,2160,1088)`，比例 2.061，供 iPhone／iPad 時間軸首圖共用，image fill `mode:\"fill\"` 依各自框架比例再自動裁切一次）、`demo-thumb-hero.jpg`（自 `hero.jpg` 裁 `(316,40,1694,1088)`）、`demo-thumb-invite.jpg`（自 `invite.jpg` 裁 `(499,0,1877,1190)`）、`demo-thumb-join.jpg`（自 `join.jpg` 裁 `(283,0,1661,1190)`）——三個 thumb 各出自三張定稿的不同題，比例皆 1.158（對應 Thumb Row 139:120），讓「最近的照片」讀起來像同一個家庭跨場合的相簿，而非同一張照片重複貼。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FEZYb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "V4K1En",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "節點沿革",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "g2PvdB",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "本輪 `Replace()` 對 image fill 節點一律生成新 id（原 id 因而停用，沿革記法）：原 `xrCoj/bjq5n` → 現 `h5llRn`（`yXSht`，指向 `demo-timeline.jpg`）；原 `hQEOk/bjq5n` → 現 `PvNqq`（`go7f9`，同圖）；原 `AnVfy` → 現 `G5hRJ`（`JbTfv`，`demo-thumb-hero.jpg`）；原 `JA9ZA` → 現 `aEIpO`（`demo-thumb-invite.jpg`）；原 `Xp2nv` → 現 `uT4lA`（`demo-thumb-join.jpg`）。連動 `Update` 文字（未變 id）：`xrCoj/VywUw` 與 `hQEOk/VywUw` 的 caption「小安在公園盪鞦韆．2 歲 3 個月」→「小安摸阿嬤的臉．2 歲 3 個月」——caption 必須與新照片內容一致（新照片是阿嬤在廚房抱著小安、小安伸手摸阿嬤的臉），否則會產生換圖前沒有的新圖文矛盾；`sIJPp`／`hQEOk/sIJPp` 影片徽章覆蓋層原樣保留（iPhone enabled、iPad `enabled:false`，此既有差異非本票範圍）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TZOfs",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "sJp59",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "重渲染",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "j5xokD",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`timeline-iphone.jpg`／`timeline-ipad.jpg`／`child-ipad-v2.jpg` 三個 slot 檔是既有畫面板的靜態複合渲染、非即時連動，節點換圖後需重新渲染覆蓋同路徑檔才會反映在 App Store 海報板上。沿用 LS-234 既有 recipe（Notes 原文：「臨時裁切 wrapper(clip:true,裁至單一裝置視窗高度)→Export→sips 壓成≤1024px JPEG→刪除臨時節點」）：iPhone（`yXSht` 本身即 393×852 單一裝置窗，免裁切）`Export` scale2→786×1704→縮至長邊 1024→**472×1024**；iPad（`go7f9`／`JbTfv` 834×1194 全板，臨時裁切 wrapper 取頂部 834×1112＝比例 0.75）`Export` scale2→1668×2224→縮至長邊 1024→**768×1024**。三檔輸出尺寸與換圖前既有檔案逐一比對（472×1024／768×1024／768×1024）完全吻合，證明沿用同一 recipe、非另一套裁切邏輯。臨時裁切節點（`c6iX7`／`Q1oKEx`）已於匯出後 `Delete`，不殘留於文件。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "kJChy",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dWbFY",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "色溫證據",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "T59ni",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "ΔE76（sRGB→線性RGB(D65)→XYZ(D65)→Lab，全圖像素均值，管線同 LS-247 CIEDE2000 之色彩轉換，惟本輪比對整圖平均色而非四角取樣，因目的是內容色溫一致性而非邊緣融合度）：①01 時間軸首圖 vs Hero Print(`hero.jpg`)——換圖前 ΔE=10.74（Lab=[48.33,−1.57,8.21] vs [45.5,6.71,14.44]，a 軸負值＝偏綠、hero 正值＝偏暖粉）；換圖後 ΔE=0.86（Lab=[46.29,6.53,14.15]，兩者色溫幾乎相同，因裁自同一來源照片）。②`JbTfv` 最近照片列 3 張 vs 三張定稿家族平均 Lab([38.44,8.28,11.83])——換圖前 ΔE=32.72／14.18／30.94（三張皆嚴重偏離）；換圖後改比對各自對應定稿：ΔE=2.53（vs hero）／2.19（vs invite）／1.62（vs join），未達 0 是因裁切位置不同、非色偏。③`ak7RI`（05 寶貝海報板）本身無 Hero Print 節點可供同板比對（僅 01／03／04 三類板配有沖印品），②項數值即為本板色溫一致性的替代證據。完整量測值存 `.claude/evidence/LS-280/r1/measure/lab-measurements.json`（gitignored，供本輪覆核，數值摘要已列於上）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Ek3OJ",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "il50g",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "未動範圍",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "tLFc4",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "誠實列出本輪未處理、仍維持原冷色調示範照的節點，供後續票參考：02 相簿詳情（`y9r9Fq`／`mWZy3`，來源 `pVSXP`／`rFiLJ`，各 5 個 `Photo Wrap` 皆 Unsplash 花園／戶外照片）、03 邀請加入（`Bm7Lx`／`BnjqP`）、04 日記詳情（`ZRyXL`／`b59DUk`）、05 寶貝 iPhone（`Q9Zw3f`，來源 `gpSsR` 無最近照片列功能，故本題僅 iPad 版需要修）。本票 size:S 範圍依票文 (b) 選項「至少」二字僅覆蓋 01 時間軸首圖與 `JbTfv` 最近照片列，其餘是否統一另待後續票裁決（不在本票 (b) 選項的最低要求內）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
