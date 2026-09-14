@@ -671,53 +671,61 @@ ALBUM_ID_T=d8000000-0000-4000-8000-000000000001
 ALBUM_TITLE_T=阿公阿嬤家過年
 COVER_ID_T=d3000000-0000-4000-8000-000000000003   # i=3 → src_idx=(3-1)%5=2 → photo_sources[2]＝hero.jpg
 
+# 斷言直接對 psql-sql.log 這個**檔案**下 grep，不走 `printf … | grep -qF`（既有 has()
+# 的形狀）：本檔開頭是 set -uo pipefail，而產出的 SQL 有十幾 KB——GNU grep 命中就立刻
+# 退出、上游 printf 收 SIGPIPE 以 141 結束，pipefail 讓整條管線判紅，macOS 的 BSD grep
+# 讀完才退所以本機永遠看不到（LS-270 R2 B2 在 ubuntu:24.04 實測 30 次紅 2 次；
+# COLLABORATION §「第三型分歧」）。既有 has() 餵的是幾 KB 的腳本輸出，不在這裡一併改。
+has_sql() {   # has_sql <名稱> <必含字串>
+  if grep -qF -- "$2" "$work/psql-sql.log"; then ok "$1"
+  else echo "✗ ${1}（產出的 SQL 應含「${2}」）" >&2; fail=1; fi
+}
+
 out=$(run); got=$?
 expect 0 'F0 帶相簿的全流程仍綠' "$got" "$out" '✓ review-demo-seed 完成'
 has 'F0 計畫列出相簿' "$out" "相簿：1（「${ALBUM_TITLE_T}」，封面取 hero；20 筆 media 全數掛進 album_media，sort_order 0–19）"
-sql1=$(cat "$work/psql-sql.log")
 
-has 'F1 SQL 建相簿（固定 id／封面 hero／created_by owner）' "$sql1" \
+has_sql 'F1 SQL 建相簿（固定 id／封面 hero／created_by owner）' \
   "values ('${ALBUM_ID_T}', '${FAMILY_ID}', '${ALBUM_TITLE_T}', '${COVER_ID_T}', '${OWNER_ID_T}')"
-has 'F2 冪等以「同 family＋同 title＋未軟刪」查找既有相簿' "$sql1" \
+has_sql 'F2 冪等以「同 family＋同 title＋未軟刪」查找既有相簿' \
   "where family_id = '${FAMILY_ID}' and title = '${ALBUM_TITLE_T}' and deleted_at is null;"
-has 'F2 查得到就沿用、不重建' "$sql1" 'if v_album_id is null then'
-has 'F2 連結重複執行不報錯' "$sql1" 'on conflict (album_id, media_id) do nothing;'
+has_sql 'F2 查得到就沿用、不重建' 'if v_album_id is null then'
+has_sql 'F2 連結重複執行不報錯' 'on conflict (album_id, media_id) do nothing;'
 
 # F3：20 筆連結、sort_order 0–19 連續，且順序＝media_ids 順序（＝photo_sources 輪替順序）。
 f3_bad=0
 for i in $(seq 1 20); do
   mid=$(printf 'd3000000-0000-4000-8000-%012x' "$i")
-  printf '%s' "$sql1" | grep -qF -- "('${mid}'::uuid, $((i - 1)))" || {
+  grep -qF -- "('${mid}'::uuid, $((i - 1)))" "$work/psql-sql.log" || {
     echo "✗ F3 album_media 缺 media #${i}（${mid}）或 sort_order 不是 $((i - 1))" >&2; f3_bad=1; }
 done
 if [ "$f3_bad" -eq 0 ]; then ok 'F3 album_media 20 筆、sort_order 0–19 連續且依 media_ids 順序'
 else fail=1; fi
-f3_n=$(printf '%s' "$sql1" | grep -cF -- "'::uuid, " || true)
-if [ "${f3_n:-0}" -eq 20 ]; then ok 'F3 恰好 20 筆連結（沒有多掛）'
-else echo "✗ F3 album_media 連結列應為 20，實得 ${f3_n:-0}" >&2; fail=1; fi
+count_is 'F3 恰好 20 筆連結（沒有多掛）' 20 "$work/psql-sql.log" "'::uuid, "
 
 # F4：自我檢查條文——這三條是「今天綠、明天被 03:30 排程洗掉」的唯一機械防線。
-has 'F4 自我檢查斷言 albums=1' "$sql1" 'if n_albums <> 1 then'
-has 'F4 自我檢查斷言 album_media=20' "$sql1" 'if n_album_media <> 20 then'
-has 'F4 自我檢查斷言未連結 live media=0' "$sql1" 'if n_unlinked <> 0 then'
-has 'F4 未連結計數逐字對齊 LS-213 判準（diary_media）' "$sql1" \
+has_sql 'F4 自我檢查斷言 albums=1' 'if n_albums <> 1 then'
+has_sql 'F4 自我檢查斷言 album_media=20' 'if n_album_media <> 20 then'
+has_sql 'F4 自我檢查斷言未連結 live media=0' 'if n_unlinked <> 0 then'
+has_sql 'F4 未連結計數逐字對齊 LS-213 判準（diary_media）' \
   'and not exists (select 1 from public.diary_media dm'
-has 'F4 未連結計數逐字對齊 LS-213 判準（album_media）' "$sql1" \
+has_sql 'F4 未連結計數逐字對齊 LS-213 判準（album_media）' \
   'and not exists (select 1 from public.album_media am'
-has 'F4 feed_items 期望值隨相簿改成 26' "$sql1" \
-  "if n_feed <> 26 then"
-has 'F4 完成 NOTICE 列出新計數' "$sql1" 'albums=1 album_media=20 unlinked_media=0'
+has_sql 'F4 feed_items 期望值隨相簿改成 26' 'if n_feed <> 26 then'
+has_sql 'F4 完成 NOTICE 列出新計數' 'albums=1 album_media=20 unlinked_media=0'
 
 # F5：冪等——重跑產生的相簿段 SQL 與第一次逐字元相同（不因重跑多建一本、也不換 id）。
-album_section() { printf '%s' "$1" | sed -n '/select id into v_album_id/,/on conflict (album_id, media_id) do nothing;/p'; }
-sec1=$(album_section "$sql1")
+album_section() {   # album_section <SQL 檔>（sed 會把輸入讀完，沒有 grep -q 的 SIGPIPE 問題）
+  sed -n '/select id into v_album_id/,/on conflict (album_id, media_id) do nothing;/p' "$1"
+}
+sec1=$(album_section "$work/psql-sql.log")
+count_is 'F5 單次執行只建一本相簿' 1 "$work/psql-sql.log" 'insert into public.albums'
 reset_fakes
 out=$(run); got=$?
 expect 0 'F5 第二次重跑仍綠' "$got" "$out" '✓ review-demo-seed 完成'
-sec2=$(album_section "$(cat "$work/psql-sql.log")")
+sec2=$(album_section "$work/psql-sql.log")
 if [ "$sec1" = "$sec2" ] && [ -n "$sec1" ]; then ok 'F5 重跑產生的相簿段 SQL 逐字元相同（冪等）'
-else echo "✗ F5 重跑產生的相簿段 SQL 不同（或抓不到）" >&2; diff <(printf '%s' "$sec1") <(printf '%s' "$sec2") >&2 || true; fail=1; fi
-count_is 'F5 單次執行只建一本相簿' 1 "$work/psql-sql.log" 'insert into public.albums'
+else echo "✗ F5 重跑產生的相簿段 SQL 不同（或抓不到）" >&2; diff <(printf '%s\n' "$sec1") <(printf '%s\n' "$sec2") >&2 || true; fail=1; fi
 reset_fakes
 
 echo "--- F 組完成 ---"
