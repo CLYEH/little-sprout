@@ -23,8 +23,11 @@ final class AlbumDetailAX3UITests: XCTestCase {
         XCTAssertTrue(backButton.isHittable && moreButton.isHittable, "Nav Row 兩顆按鈕在 AX3 下都要可觸達")
     }
 
-    /// 用 frame 交集判斷任兩個元素是否重疊——同 `ContentActionsAX3UITests.assertNoOverlap`
-    /// 既有手法（`private`，跨檔案不可共用，這裡另寫一份最小版）。
+    /// 用 frame 交集判斷任兩個元素是否重疊——同 `Support/AssertNoOverlap.swift` 既有手法
+    /// （LS-269，池 `3e9347c4` (4)：原註解指向已被搬走的 `ContentActionsAX3UITests
+    /// .assertNoOverlap`，且「跨檔案不可共用」已被 LS-268 推翻）。本體與共用版不同——這裡
+    /// 刻意不篩 `isHittable`，故不併入共用版（`private func` 會覆蓋同名全域函式，見該檔檔頭
+    /// 說明）。
     private func assertNoOverlap(_ elements: [XCUIElement], file: StaticString = #filePath, line: UInt = #line) {
         for firstIndex in 0..<elements.count {
             for secondIndex in (firstIndex + 1)..<elements.count {
