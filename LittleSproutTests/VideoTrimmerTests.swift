@@ -104,6 +104,11 @@ final class VideoTrimmerTests: XCTestCase {
         return try FileManager.default.contentsOfDirectory(atPath: directory.path).count
     }
 
+    /// LS-283（I8，源自 LS-279 merge-review R1 `5cd2b2ae`）：`makeSyntheticVideo` 生測試資產失敗
+    /// 時丟這個，不是 `XCTSkip`——`XCTSkip` 會讓呼叫它的兩條核心驗收測試變成 skip 而非紅，CI
+    /// 照樣綠，違反 Rule 11「fail loud」。
+    private struct SyntheticVideoAssetGenerationFailure: Error {}
+
     /// 4K、每秒一格、內容是隨格數移動的漸層（記憶體填色，不進 CoreGraphics）——只要是能被
     /// `AVAssetExportSession` 讀進來的真資產就夠，不需要像真實影片那樣的高位元率內容。
     private func makeSyntheticVideo(seconds: Int) async throws -> URL {
@@ -132,10 +137,16 @@ final class VideoTrimmerTests: XCTestCase {
 
         for frame in 0..<seconds {
             while !input.isReadyForMoreMediaData { try await Task.sleep(nanoseconds: 1_000_000) }
-            guard let pool = adaptor.pixelBufferPool else { throw XCTSkip("取不到 pixel buffer pool") }
+            guard let pool = adaptor.pixelBufferPool else {
+                XCTFail("取不到 pixel buffer pool——測試資產生不出來，核心驗收測試不該被靜默 skip")
+                throw SyntheticVideoAssetGenerationFailure()
+            }
             var pixelBuffer: CVPixelBuffer?
             CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pixelBuffer)
-            guard let buffer = pixelBuffer else { throw XCTSkip("取不到 pixel buffer") }
+            guard let buffer = pixelBuffer else {
+                XCTFail("取不到 pixel buffer——測試資產生不出來，核心驗收測試不該被靜默 skip")
+                throw SyntheticVideoAssetGenerationFailure()
+            }
             fill(buffer, height: height, frame: frame)
             XCTAssertTrue(
                 adaptor.append(buffer, withPresentationTime: CMTime(value: CMTimeValue(frame), timescale: 1)),
