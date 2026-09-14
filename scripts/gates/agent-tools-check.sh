@@ -263,7 +263,11 @@ while IFS='|' read -r agent literal hint; do
   f="${dir}/${agent}.md"
   [ -r "$f" ] || continue
   body=$(awk '{ sub(/\r$/, "") } NR == 1 && $0 == "---" { fm = 1; next } fm && $0 == "---" { fm = 0; b = 1; next } b { print }' "$f")
-  if printf '%s' "$body" | grep -qF -- "$literal"; then
+  # here-string 而不是 `printf … | grep -qF`（LS-270 R2 B2）：後者在 `set -o pipefail` 下，GNU grep
+  # 命中即退出、printf 收 SIGPIPE 以 141 結束，整條管線判紅——`$body` 最大 36 KB（ui-designer.md），
+  # merge-review R1 在 ubuntu:24.04 實測 30 次紅 2 次（訊息是「正文缺某句」但那句明明在），改成
+  # here-string 後 30 次 0 紅。macOS 的 BSD grep 讀完才退出，所以本機永遠看不到。
+  if grep -qF -- "$literal" <<<"$body"; then
     echo "  ${agent}.md：正文含「${literal}」"
   else
     hits+="    ${agent}.md：正文缺「${literal}」（${hint:-規約段被刪或未寫}；frontmatter 內出現不算）"$'\n'
