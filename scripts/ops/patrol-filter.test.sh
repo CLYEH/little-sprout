@@ -107,7 +107,9 @@ file_has '⑧ patrol.sh：df 讀不到可用空間的略過行帶 ⚠' "$patrol"
 file_has '⑧ patrol.sh：Pen lane 查詢失敗分支帶 ⚠' "$patrol" 'PEN_WRONG_LINE="⚠ Pen：目前開在'
 has '⑧ patrol-linear.sh：無 LINEAR_API_KEY 三種模式都帶 ⚠' \
   "$(grep -c '⚠ 巡檢（Linear 半段）' "${root}/scripts/ops/patrol-linear.sh")" '3'
-file_has '⑧ patrol_linear.py：QA 讀不到帶 ⚠' "${root}/scripts/ops/patrol_linear.py" '⚠ %s QA：origin/development 不存在或讀不到'
+# R3 m1：QA「讀不到」那格移除——`format_human()` 的渲染端已經對每條 state_crosscheck 行前置 ⚠，
+# 產生端不該再加（R2 加了會變 `⚠ ⚠`）。該路徑改由 `patrol-linear.test.sh` ⑫ 驗「恰好一個 ⚠ 且通過過濾」。
+file_has '⑧ patrol_linear.py：狀態對照行由渲染端統一前置 ⚠（產生端不重複加）' "${root}/scripts/ops/patrol_linear.py" '"  ⚠ %s" % line'
 file_has '⑧ patrol_linear.py：cycle 對帳 (c)(d) 訊息帶 ⚠' "${root}/scripts/ops/patrol_linear.py" '"  (c) ⚠ %s"'
 
 if [ "$fail" -eq 0 ]; then

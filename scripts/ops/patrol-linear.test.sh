@@ -1124,6 +1124,42 @@ else
   fi
 fi
 
+# ---- ⑫（R3 m1）狀態對照行**恰好一個 ⚠**：`format_human()` 已對每條 state_crosscheck 行前置 `  ⚠ `，
+#      產生端（`state_crosscheck()`）不可以自己再加一個，否則渲染成 `⚠ ⚠ …`（R2 對 QA「讀不到」那條就多加了）。
+py_qa="$(ROOT_DIR="$root" python3 - <<'PYEOF'
+import importlib.util, os
+
+spec = importlib.util.spec_from_file_location("pl", os.environ["ROOT_DIR"] + "/scripts/ops/patrol_linear.py")
+pl = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(pl)
+
+report = {
+    "generated_at": "2026-09-14T00:00:00Z",
+    "current_cycle": None,
+    "state_crosscheck": ["LS-275 QA：origin/development 不存在或讀不到，略過對照"],
+    "cycle_check": {"a": [], "b": [], "c": [], "d": []},
+    "lanes": {},
+    "structure": {k: [] for k in ("a", "b", "c", "d", "e")},
+    "booted_simulator_flags": [],
+    "actions": [],
+}
+for line in pl.format_human(report).split("\n"):
+    if "QA：origin/development 不存在或讀不到" in line:
+        print("%d|%s" % (line.count("⚠"), line))
+PYEOF
+)"
+case "$py_qa" in
+  1\|*)
+    echo "✓ ⑫ 狀態對照行恰好一個 ⚠（不是雙標）：${py_qa#1|}"
+    if printf '%s\n' "${py_qa#1|}" | bash "$pfilter11" 2>/dev/null | grep -qF 'QA：origin/development 不存在或讀不到'; then
+      echo "✓ ⑫ 該行仍通過 §4-b 過濾（渲染端的 ⚠ 就夠）"
+    else
+      echo "✗ ⑫ 該行沒通過過濾" >&2; fail=1
+    fi ;;
+  '') echo "✗ ⑫ 渲染不出狀態對照行（format_human 形狀變了？）" >&2; fail=1 ;;
+  *)  echo "✗ ⑫ 狀態對照行的 ⚠ 個數不是 1：${py_qa}" >&2; fail=1 ;;
+esac
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2
   exit 1

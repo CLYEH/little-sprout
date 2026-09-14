@@ -718,8 +718,9 @@ def state_crosscheck(root, issues):
         elif name == "QA":
             shas = commits_for_ticket(root, n)
             if shas is None:
-                # LS-267 R2 M1：讀不到＝這張票的 QA 對照整條沒跑，必須帶 ⚠ 才過得了 §4-b 的巡檢過濾
-                lines.append("⚠ %s QA：origin/development 不存在或讀不到，略過對照" % issue["identifier"])
+                # LS-267 R3 m1：這裡**不**自己加 ⚠——`format_human()` 對每一條 state_crosscheck 行都已經
+                # 前置 `  ⚠ `（見該函式的「== 1. 狀態對照」段），R2 多加一個會渲染成 `⚠ ⚠ …`（雙標）。
+                lines.append("%s QA：origin/development 不存在或讀不到，略過對照" % issue["identifier"])
             elif not shas:
                 lines.append("%s QA：origin/development 找不到對應 commit（票號比對失敗？）→ 人工確認" % issue["identifier"])
             else:
