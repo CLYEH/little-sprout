@@ -72,9 +72,12 @@ final class DiaryDetailVideoUITests: XCTestCase {
 
         // 等影片簽名回來接手——`.sheet` 真的 dismiss 後內容確實從 accessibility tree 消失
         // （跟背景元素在 `fullScreenCover` 蓋上後仍持續 `exists` 不同，見檔頭 R2 補充）。
-        // timeout 10 秒：留給 8 秒延遲＋前面幾步 XCUITest 動作本身的耗時餘裕。
+        // LS-272（池 `3d2b2ffe` (1)）：原本固定 10 秒沒有隨 `signDelaySeconds` 放大——延遲拉大時
+        // 這一支反而變成最緊的約束（8 秒延遲下餘裕僅 ≈4 秒，`signDelaySeconds` 可調上限僅
+        // ≈12 秒）。沿用 `videoTileTimeout`（同一個「基準 7 s＋延遲秒數」公式，:47），讓兩個
+        // 跟延遲耦合的等待維持相同餘裕、一起隨延遲放大。
         XCTAssertTrue(
-            emptyStateText.waitUntilGone(timeout: 10), "影片簽名回來後應該把留言 sheet 收起，換成影片全螢幕"
+            emptyStateText.waitUntilGone(timeout: videoTileTimeout), "影片簽名回來後應該把留言 sheet 收起，換成影片全螢幕"
         )
 
         // 進一步確認「收起的是換成影片全螢幕」而不是其他非預期狀態——有界重試找系統原生
