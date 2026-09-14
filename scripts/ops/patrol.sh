@@ -919,7 +919,7 @@ if [ -n "$pen_wt_ticket" ]; then
     pen_lane=$(bash "$plsh_lane" --lane "${pen_wt_ticket#LS-}" --repo "$ROOT" 2>/dev/null); lane_rc=$?
   fi
   if [ "$lane_rc" -ne 0 ]; then
-    PEN_WRONG_LINE="Pen：目前開在 ${pen_wt_ticket} worktree，lane ?（查詢失敗，不擋）"
+    PEN_WRONG_LINE="⚠ Pen：目前開在 ${pen_wt_ticket} worktree，lane ?（查詢失敗，不擋）"
   elif [ "$pen_lane" != "lane:design" ]; then
     PEN_WRONG_LINE="⚠ Pen 開錯檔（實作票 ${pen_wt_ticket}）"
     add_flag "[Pen] 開錯檔（實作票 ${pen_wt_ticket}；lane=${pen_lane:-無}，非 lane:design——不得在實作票 worktree 開 Pen，見 ios-dev.md 硬規則）"
@@ -1266,7 +1266,10 @@ case "$MODE" in
     echo "== 巡檢 ${stamp}（stale ≥${STALE}m；root ${ROOT}）"
     [ -n "$fetch_warn" ] && echo "  ${fetch_warn}"
     echo "== PR（open）"
-    if [ -n "$pr_skip" ]; then echo "  PR：略過（${pr_skip}）"; elif [ "$pr_total" -eq 0 ]; then echo "  （無 open PR）"; else printf '%s' "$PR_LINES"; fi
+    # LS-267 R2 M1：`--no-pr` 是刻意略過（不標）；gh 未安裝／gh 失敗是退化——PR 半段整段沒巡，帶 ⚠ 才過得了 §4-b 過濾
+    if [ -n "$pr_skip" ]; then
+      case "$pr_skip" in --no-pr) echo "  PR：略過（${pr_skip}）" ;; *) echo "  ⚠ PR：略過（${pr_skip}）——PR 半段這輪沒巡" ;; esac
+    elif [ "$pr_total" -eq 0 ]; then echo "  （無 open PR）"; else printf '%s' "$PR_LINES"; fi
     echo "== 三分支（祖先鏈 test ⊂ development、main ⊂ development；晉升 promote.sh＝FF push，LS-85）"
     echo "  dev 落後 main: ${dev_main}  test 落後 main: ${test_main}  test 落後 dev: ${test_dev}  test 不在 dev: ${dev_test}"
     if [ -n "$drift_flag" ]; then echo "  ${drift_flag}"
@@ -1306,7 +1309,7 @@ case "$MODE" in
     echo "== 磁碟水位（LS-176；可用 <${DISK_MIN_GB} GB 標 ⚠ 並列 Devices／DerivedData 體積；PATROL_DISK_MIN_GB 可調）"
     if [ -n "$disk_flag" ]; then echo "  ${disk_flag}"
     elif [ -n "$disk_avail_gb" ]; then echo "  可用 ${disk_avail_gb} GB，LS-* 專屬模擬器 ${disk_dedicated} 台  ok"
-    else echo "  （df 讀不到可用空間，略過）"; fi
+    else echo "  ⚠ （df 讀不到可用空間，略過——磁碟水位這輪沒查）"; fi
     echo "== Linear（需 orchestrator 用 MCP 對照：Ready 無人接／In Progress 無 worktree／QA 但 test 未含）"
     echo "  → list_issues state in (Ready, In Progress, In Review, QA)，對照上表 worktree／PR"
     ;;

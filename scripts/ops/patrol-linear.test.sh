@@ -1003,15 +1003,15 @@ if printf '%s' "$py_neg" | tail -1 | grep -qx OK; then :; else fail=1; fi
 # ---- ⑪（LS-267／LS-239 R3）§4-b cron 模板的過濾式必須留得住動作清單／lane 表／cycle 一行 ----
 # orchestrator 巡檢改成自己直接跑 `patrol.sh 40 --linear` 再過濾進 context；樣式**直接從
 # docs/COLLABORATION.md 讀出來**餵給斷言，模板與實際輸出任一邊漂移這裡就紅。
-doc11="${root}/docs/COLLABORATION.md"
-filter11=$(grep -o "patrol\.sh 40 --linear 2>&1 | grep -E '[^']*'" "$doc11" | head -1 | sed "s/.*grep -E '//; s/'$//")
+pfilter11="${root}/scripts/ops/patrol-filter.sh"
+filter11=$(bash "$pfilter11" --pattern)
 if [ -z "$filter11" ]; then
-  echo "✗ ⑪ 讀不到 §4-b cron 模板的過濾樣式（模板形狀變了？斷言失去意義，fail loud）" >&2; fail=1
+  echo "✗ ⑪ 讀不到 patrol-filter.sh --pattern 的樣式（斷言失去意義，fail loud）" >&2; fail=1
 else
-  echo "✓ ⑪ 取得 §4-b 過濾樣式：${filter11}"
+  echo "✓ ⑪ 取得過濾樣式（patrol-filter.sh --pattern）：${filter11}"
 fi
 out11="$(bash "$plsh" --repo "$repo" 2>&1)"
-keep11=$(printf '%s\n' "$out11" | grep -E "$filter11" | grep -v '^== ')
+keep11=$(printf '%s\n' "$out11" | bash "$pfilter11" 2>/dev/null)
 
 # (a) 動作清單段的每一行都含 →（模板靠它留下整段；行首 → 是慣例，行中的也算）
 act11=$(printf '%s\n' "$out11" | sed -n '/^== 動作清單/,$p' | sed '1d' | grep -v '^[[:space:]]*$')
@@ -1048,6 +1048,63 @@ if printf '%s\n' "$keep11" | grep -qF 'current cycle'; then
   echo "✓ ⑪(c) cycle 一行含 current cycle、過濾後仍在"
 else
   echo "✗ ⑪(c) cycle 一行沒通過過濾" >&2; printf '%s\n' "$out11" | grep -F 'cycle' | sed 's/^/    /' >&2; fail=1
+fi
+
+# (e) R2 M1 全稱：human 段的每一條**結論行**只要不是「：無」／「ok」／「（無…）」這種「沒事」的行，
+#     就必須通過過濾——R1 只釘了動作行／lane 表／cycle 行三種，對「壓根沒有標記的異常行」（cycle 對帳
+#     (a)(b)、開票結構 (a)-(e)、QA 讀不到…）在定義上無感，reviewer R1 M1 實跑抓到整段被吞。
+lost11=$(printf '%s\n' "$out11" | grep -v '^== ' | grep -v '^[[:space:]]*$' \
+  | grep -vE '：無$|：ok$|（無異常）|（無待執行動作）|（無候補）' \
+  | while IFS= read -r l; do printf '%s\n' "$keep11" | grep -qF -- "$l" || printf '%s\n' "$l"; done)
+if [ -z "$lost11" ]; then
+  echo "✓ ⑪(e) 全稱：human 段所有「非『無／ok』結論行」都通過過濾（$(printf '%s\n' "$out11" | grep -v '^== ' | grep -vE '：無$|：ok$|（無異常）|（無待執行動作）|（無候補）|^[[:space:]]*$' | wc -l | tr -d ' ') 行）"
+else
+  echo "✗ ⑪(e) 以下結論行會被 §4-b 過濾式吞掉（缺 ⚠／✗／→ 標記）：" >&2; printf '%s\n' "$lost11" | sed 's/^/    /' >&2; fail=1
+fi
+
+# (e2) R2 M1 mutation：拿掉 `mark()` 補的 ⚠（cycle 對帳 (a)(b)／開票結構 (a)-(e) 的異常行）→ (e) 轉紅
+mutdir11e="$work/mut11e"
+rm -rf "$mutdir11e"; mkdir -p "$mutdir11e"
+cp -R "${root}/scripts" "$mutdir11e/scripts"
+sed 's|return "%s%s%s" % (prefix, "⚠ " if items else "", text)|return "%s%s" % (prefix, text)|' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir11e/scripts/ops/patrol_linear.py"
+if ! grep -q 'return "%s%s" % (prefix, text)' "$mutdir11e/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑪(e2) mutant 沒被正確合成（mark() 形狀變了）" >&2; fail=1
+else
+  out11e="$(bash "$mutdir11e/scripts/ops/patrol-linear.sh" --repo "$repo" 2>&1)"
+  keep11e=$(printf '%s\n' "$out11e" | bash "$pfilter11" 2>/dev/null)
+  lost11e=$(printf '%s\n' "$out11e" | grep -v '^== ' | grep -v '^[[:space:]]*$' \
+    | grep -vE '：無$|：ok$|（無異常）|（無待執行動作）|（無候補）' \
+    | while IFS= read -r l; do printf '%s\n' "$keep11e" | grep -qF -- "$l" || printf '%s\n' "$l"; done)
+  if [ -n "$lost11e" ]; then
+    echo "✓ ⑪(e2) mutant（mark() 不補 ⚠）：出現被過濾吞掉的結論行（如「$(printf '%s' "$lost11e" | head -1 | cut -c1-56)…」）——證明 (e) 的綠來自 mark()"
+  else
+    echo "✗ ⑪(e2) mutant 未如預期翻轉——(e) 可能零覆蓋（夾具沒有任何非空的對帳結果？）" >&2; fail=1
+  fi
+fi
+
+# (f) R2 M1 逐分支夾具：無 LINEAR_API_KEY 時的「略過」結論行必須帶標記、通過過濾
+#     （失敗情境：.env 過期／換機沒帶 → Linear 半段整段沒跑，orchestrator 卻只看到 git 半段，靜默停擺）
+out11f="$(bash "$plsh" --repo "$repo_no_token" 2>&1)"
+keep11f=$(printf '%s\n' "$out11f" | bash "$pfilter11" 2>/dev/null)
+if printf '%s\n' "$keep11f" | grep -qF '略過（無 LINEAR_API_KEY）'; then
+  echo "✓ ⑪(f) 無 LINEAR_API_KEY 的略過行通過過濾（不會整段靜默消失）"
+else
+  echo "✗ ⑪(f) 無 LINEAR_API_KEY 的略過行被過濾掉了——Linear 半段沒跑卻沒有任何訊號" >&2
+  printf '%s\n' "$out11f" | sed 's/^/    原始：/' >&2; fail=1
+fi
+
+# (g) R2 M1 mutation：把 (f) 那行的 ⚠ 拿掉 → (f) 轉紅（證明綠來自標記本身）
+mutdir11g="$work/mut11g"
+rm -rf "$mutdir11g"; mkdir -p "$mutdir11g"
+cp -R "${root}/scripts" "$mutdir11g/scripts"
+sed 's/echo "⚠ 巡檢（Linear 半段）：略過（無 LINEAR_API_KEY）/echo "巡檢（Linear 半段）：略過（無 LINEAR_API_KEY）/' \
+  "${root}/scripts/ops/patrol-linear.sh" > "$mutdir11g/scripts/ops/patrol-linear.sh"
+out11g="$(bash "$mutdir11g/scripts/ops/patrol-linear.sh" --repo "$repo_no_token" 2>&1)"
+if printf '%s\n' "$out11g" | bash "$pfilter11" 2>/dev/null | grep -qF '略過（無 LINEAR_API_KEY）'; then
+  echo "✗ ⑪(g) mutant（拿掉略過行的 ⚠）仍通過過濾——(f) 的綠不是來自標記，斷言沒有牙" >&2; fail=1
+else
+  echo "✓ ⑪(g) mutant（拿掉略過行的 ⚠）：該行被過濾掉——證明 (f) 釘的正是那個標記"
 fi
 
 # (d) mutation：拿掉動作清單行首的 `→ ` → (a) 轉紅（證明 (a) 釘的正是這個標記）

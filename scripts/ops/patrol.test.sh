@@ -208,17 +208,17 @@ jq_ok '③ flags 彙總七筆（LS-1／2／4／5／7／8＋主 checkout）' "$js
 jq_ok '③ hooks 欄位：path .githooks、flag 空' "$json" '.hooks.path == ".githooks" and .hooks.flag == ""'
 
 # ---- ㉛（LS-267／LS-239 R3）旗標行格式：§4-b cron 模板的過濾式必須留得住每一條警示 ----
-# orchestrator 巡檢改成自己直接跑 patrol.sh、再用模板裡那道 grep 過濾進 context；**樣式直接從
-# docs/COLLABORATION.md 讀出來**餵給下面的斷言——改了模板而 patrol 輸出沒跟上（或反之）這裡就紅，
-# 不會兩邊各自漂移。模板第二道 `grep -v '^== '` 濾掉段落標題（標題文字本身含 ⚠／✗ 字樣，不是旗標）。
-doc31="${root}/docs/COLLABORATION.md"
-filter31=$(grep -o "patrol\.sh 40 --linear 2>&1 | grep -E '[^']*'" "$doc31" | head -1 | sed "s/.*grep -E '//; s/'$//")
+# orchestrator 巡檢改成自己直接跑 patrol.sh、再接 `scripts/ops/patrol-filter.sh` 過濾進 context；
+# **過濾一律呼叫那支腳本本尊**（R2 M1：樣式唯一定義處，文件與自測都引用它，不再各自抄字面——R1 版
+# 抄了三處、其中 patrol.sh 的註解就漏了 `⏳`）。第二道 `grep -v '^== '` 在腳本內，濾掉段落標題。
+pfilter31="${root}/scripts/ops/patrol-filter.sh"
+filter31=$(bash "$pfilter31" --pattern)
 if [ -z "$filter31" ]; then
-  echo "✗ ㉛ 讀不到 §4-b cron 模板的過濾樣式（模板形狀變了？斷言失去意義，fail loud）" >&2; fail=1
+  echo "✗ ㉛ 讀不到 patrol-filter.sh --pattern 的樣式（腳本形狀變了？斷言失去意義，fail loud）" >&2; fail=1
 else
-  echo "✓ ㉛ 取得 §4-b 過濾樣式：${filter31}"
+  echo "✓ ㉛ 取得過濾樣式（patrol-filter.sh --pattern）：${filter31}"
 fi
-keep31() { printf '%s\n' "$1" | grep -E "$filter31" | grep -v '^== '; }
+keep31() { printf '%s\n' "$1" | bash "$pfilter31" 2>/dev/null; }
 
 out31="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 kept31="$(keep31 "$out31")"

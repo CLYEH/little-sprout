@@ -358,11 +358,14 @@ jobs:
       # 退回只看 dirty／Pen 讀不到一律放行 → 對應樣本紅。
       # LS-207（8af1c2bc）：同上——不因前面步驟（如 pr-body-check）紅而被 skip。R2（fd783f6c I2）：用 !cancelled()
       # 不用 always()，job 被取消（撞 timeout-minutes）時不必再硬跑一輪。
-      - name: Ops 腳本自測（patrol／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged／prod-purge-health／review-demo-seed／prod-storage-verify／qa-e2e，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207／LS-235／LS-240／LS-244／LS-158）
+      - name: Ops 腳本自測（patrol／patrol-filter／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged／prod-purge-health／review-demo-seed／prod-storage-verify／qa-e2e，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207／LS-235／LS-240／LS-244／LS-158）
         if: ${{ !cancelled() }}
         run: |
           rc=0
           bash scripts/ops/patrol.test.sh || rc=1
+          # LS-267 R2 M1：巡檢輸出過濾（§4-b cron 模板唯一定義處）自測——過濾行為本身＋「異常／略過／
+          # 讀不到結論行都帶得動標記」的配套前提（逐分支夾具＋兩個 mutation）
+          bash scripts/ops/patrol-filter.test.sh || rc=1
           bash scripts/ops/supabase-lock.test.sh || rc=1
           # LS-207（c18ef27f）：--udid 字級／外觀自動調整＋復原；push-gate.test.sh 另外覆蓋核心互斥／逾時邏輯（把
           # 真正的 simulator-lock.sh 複製進合成 repo），這裡只補新參數
