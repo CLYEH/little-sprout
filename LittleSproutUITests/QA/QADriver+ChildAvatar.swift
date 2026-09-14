@@ -21,7 +21,8 @@ import XCTest
 // 列表那一列的畫面內容必須改變。fixture 只有一張 `qa-photo.jpg`，若沿用既有寶貝，第二次跑時它的頭像
 // 已經就是這張圖，存檔後逐像素不變、斷言會假紅。每次建一隻帶時戳的新寶貝（縮寫圓 → 照片）才有確定的
 // 前後差異；同 `publish`／`browse` 各自 seed 自己的日記的既有慣例。建檔仍是走列表的「新增寶貝」入口，
-// 所以「寶貝管理 → 列表 → 編輯頁」這段導覽路徑一樣被走過。
+// 所以「寶貝管理 → 列表 → 編輯頁」這段導覽路徑一樣被走過。**收工會把它刪掉**（`deleteChild`，
+// merge-review R1 m3）——列表是非 lazy 的 `VStack`，留著會一輪一輪累積。
 //
 // **選圖走真的 `PhotosPicker`**（fixture 由 `qa-e2e.sh` 先 `simctl addmedia` 進模擬器相簿），不另外做
 // launch argument 注入：`publish` 已經證明這條路可驅動（`tapNewestPickerCell`），而且沿用它代表**零 app
@@ -82,6 +83,8 @@ extension QADriver {
             name: "child-row-digest"
         )
         snap("children-list-after")
+
+        try deleteChild(named: childName)
     }
 
     // MARK: - 畫面元素
@@ -133,6 +136,44 @@ extension QADriver {
         try require(timelineHeading, "重新啟動後的時間軸", timeout: 30)
         try dismissPushPrepromptIfPresent()
         try openChildrenTab()
+    }
+
+    /// 收工把本情境建的那隻寶貝刪掉（merge-review R1 m3）。
+    ///
+    /// `ChildrenManagementView.childrenCard` 的 `ForEach` 包在**非 lazy 的 `VStack`** 裡，列數只增不減：
+    /// 每跑一次留一隻，累積到超過一屏之後 `row.tap()` 會點到畫面外、`elementDigest(row)`（只截元素 frame）
+    /// 也可能兩次都截到被裁切的同一塊而假紅。共用容器確實常被他票 `db reset`，但那不是本情境控制得了的變數。
+    ///
+    /// 刪除走 app 自己的路徑（編輯頁 →「移除這個寶貝」→ sheet 確認，軟刪 `deleted_at`），不開測試後門；
+    /// 刪不掉就大聲失敗——靜默略過等於把累積問題留給下一輪，正是這條要修的東西。跑到這裡時本情境的
+    /// 斷言都已經過了，所以這裡的紅只會是「收尾刪除」本身，訊息分得開。
+    private func deleteChild(named name: String) throws {
+        try require(childRow(named: name), "收尾：寶貝列表上的「\(name)」列", timeout: 30).tap()
+        try require(app.staticTexts["編輯寶貝資料"], "收尾：編輯寶貝資料頁")
+        let removeButton = try require(app.buttons["移除這個寶貝"], "收尾：「移除這個寶貝」（編輯頁最下方）", timeout: 20)
+        scrollUntilHittable(removeButton)
+        removeButton.tap()
+        try require(app.buttons["移除，30 天內可還原"], "收尾：移除確認 sheet 的確認鈕", timeout: 20).tap()
+        try require(childrenHeading, "收尾：移除後回到寶貝列表", timeout: 60)
+        guard childRow(named: name).waitForNonExistence(timeout: 30) else {
+            attachHierarchy(reason: "cleanup-child-still-listed")
+            snap("fail-cleanup")
+            XCTFail(
+                "收尾刪除「\(name)」之後那一列仍在寶貝列表上——每跑一次就多留一隻，"
+                + "列表是非 lazy 的 VStack，累積下去會讓下一輪 tap／digest 對到畫面外的元素（merge-review R1 m3）"
+            )
+            throw QAFailure.screen("收尾刪除")
+        }
+        snap("children-list-cleaned")
+    }
+
+    /// 編輯頁是 `ScrollView`，「移除這個寶貝」在最下方——小螢幕／大字級時初始不在畫面內。
+    /// 捲到可命中為止（同 `DeleteConfirmationAX3UITests` 的既有做法：迴圈捲、捲不動就放棄交給 tap 自己試）。
+    private func scrollUntilHittable(_ element: XCUIElement, maxSwipes: Int = 5) {
+        for _ in 0..<maxSwipes {
+            if element.isHittable { return }
+            app.swipeUp()
+        }
     }
 
     private func openChildrenTab() throws {
