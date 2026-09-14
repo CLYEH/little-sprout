@@ -39,11 +39,13 @@ extension TapTargetGateHarness {
     /// （非 nil）——`TimelineStore.displayDuration` 因此不需要真的向 `signedURL` 讀
     /// `AVURLAsset`（那是另一支查表機制，不影響這裡合成的真實檔案本身能否播放），accessibility
     /// label 穩定顯示「影片 0:05，點兩下播放」，不受 `loadVideoDuration` 非同步查表時序影響。
-    /// `signDelayNanoseconds` 給 3 秒——`DiaryDetailVideoUITests` 的「留言 sheet 開著時點影片」
-    /// 需要在「點影片、簽名回來」之間有個穩定的窗口能再觸發留言鈕，不依賴真網路延遲的不確定
-    /// 時序（見該屬性文件註解）；R1 實測：`waitForExistence`／`.tap()` 這類 XCUITest 動作本身
-    /// 單次就可能耗費 1–1.5 秒（輪詢間隔＋IPC 往返），0.6 秒窗口太短，「點影片→確認留言鈕
-    /// 存在→點留言鈕」這三步加起來就可能超過視窗、讓影片先接手；3 秒留足這整串動作的餘裕，
+    /// `signDelayNanoseconds` 需要在「點影片、簽名回來」之間有個穩定的窗口能再觸發留言鈕，
+    /// 不依賴真網路延遲的不確定時序（見該屬性文件註解）；R1 實測：`waitForExistence`／`.tap()`
+    /// 這類 XCUITest 動作本身單次就可能耗費 1–1.5 秒（輪詢間隔＋IPC 往返），0.6 秒窗口太短，
+    /// 「點影片→確認留言鈕存在→點留言鈕」這三步加起來就可能超過視窗、讓影片先接手；預設 3 秒
+    /// 留足這整串動作的餘裕。**LS-268（池 `0d0005c4`）**：固定值在慢 CI runner 上仍可能被
+    /// 排程延遲（如「wait for app to idle」異常耗時，見 `99fb1019` xcresult 時間軸查證）吃掉
+    /// 緩衝——改由 `videoSignDelaySeconds`（見下方文件）讀命令列參數，測試端可依情境加大窗口；
     /// UITest 端仍是用 `waitForExistence` 而非固定 sleep 等待，不會因為機器快慢而變脆弱。
     @MainActor
     static var diaryDetailWithVideoHost: some View {
@@ -61,7 +63,7 @@ extension TapTargetGateHarness {
                 thumbPath: nil, thumbWidth: nil, thumbHeight: nil, durationSeconds: 5
             ),
             signedURL: harnessVideoURL,
-            signDelayNanoseconds: 3_000_000_000
+            signDelayNanoseconds: UInt64(videoSignDelaySeconds * 1_000_000_000)
         )
         timelineStore.seedForPreview(entries: [
             TimelineEntry(
@@ -80,6 +82,20 @@ extension TapTargetGateHarness {
                 diaryAPIClient: PreviewDiaryAPIClient(), commentAPIClient: PreviewCommentAPIClient()
             )
         }
+    }
+
+    /// LS-268（池 `0d0005c4`）：簽名延遲改由測試端可控——讀命令列參數
+    /// `-LSVideoSignDelaySeconds <秒數>`（同 `TapTargetMeasurement.launch(_:contentSizeCategory:)`
+    /// 既有的 `-KEY VALUE` 命令列參數慣例：`XCUIApplication.launchArguments` 原樣傳給啟動的
+    /// 行程，這裡直接讀 `ProcessInfo.processInfo.arguments`，不需要走 `NSArgumentDomain`）；
+    /// 沒帶這個參數（一般手動操作、其餘沒指定的測試）維持原本行為，預設 3 秒。
+    private static var videoSignDelaySeconds: Double {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "-LSVideoSignDelaySeconds"), index + 1 < arguments.count,
+              let seconds = Double(arguments[index + 1]) else {
+            return 3
+        }
+        return seconds
     }
 
     /// R1（merge-review 同款教訓，`+DiaryCardVideoBadges.swift` `photoTestImageURL` 既有先例）：

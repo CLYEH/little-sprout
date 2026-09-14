@@ -27,9 +27,18 @@ enum TapTargetMeasurement {
     /// 傳給啟動的行程，UIKit 在啟動時直接讀命令列參數寫入 `NSArgumentDomain`，這是系統
     /// 支援命令列覆寫使用者設定的既有機制，不需要 app 自己的程式碼配合解析。
     static func launch(_ screen: TapTargetGateScreenName, contentSizeCategory: String) -> XCUIApplication {
+        launch(screen, contentSizeCategory: contentSizeCategory, extraLaunchArguments: [])
+    }
+
+    /// LS-268（池 `0d0005c4`）：`DiaryDetailVideoUITests` 需要覆寫
+    /// `-LSVideoSignDelaySeconds`（見 `TapTargetGateHarness+DiaryDetailVideo.swift`）——加一個
+    /// 帶額外命令列參數的通道，預設空陣列，既有兩個呼叫端行為不變。
+    static func launch(
+        _ screen: TapTargetGateScreenName, contentSizeCategory: String, extraLaunchArguments: [String]
+    ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["LS_TAP_TARGET_GATE_SCREEN"] = screen.rawValue
-        app.launchArguments += ["-UIPreferredContentSizeCategoryName", contentSizeCategory]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", contentSizeCategory] + extraLaunchArguments
         app.launch()
         return app
     }
