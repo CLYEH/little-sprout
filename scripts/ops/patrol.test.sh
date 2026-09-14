@@ -1787,6 +1787,26 @@ brief29b5="$(TZ=UTC0 PATROL_SUPABASE_SKEW_MIN=1 PATROL_DOCKER="$work/fake-docker
 has   '㉙b5 取鎖時間離最新容器 > 門檻分鐘 → 不採用該視窗（上界有接線）' "$brief29b5" '[Supabase 容器] ⚠ 容器啟動時間不一致'
 rm -f "$SUPABASE_LOCK_DIR.hold.log"
 
+# ㉙b4tz（LS-264 R2 m3；merge-review R1 m3）：**本地時間 → UTC 的換算符號**。hold.log 的行首是本地時間、
+#      容器 StartedAt 是 UTC，patrol 用 `tzoff = epoch(nowlocal) - nowepoch` 反推時差再 `he - tzoff`。
+#      上面 ㉙b4／b5／b6 一律 TZ=UTC0（CI 也是 UTC），tzoff 恆為 0 ＝這條線零覆蓋：reviewer 實測把
+#      `he - tzoff` 改成 `he + tzoff`，repo 現有夾具**全綠**——而唯一真的會跑 patrol 的那台機器是 UTC+8。
+#      這裡複製一份 ㉙b4 的 TZ=Asia/Taipei 變體：同一個 UTC 瞬間（容器 00:59:55Z）在台北是 08:59:55，
+#      hold.log 照本地時間寫；符號對才推得回同一個視窗起點、才不掛旗標。
+#      沒有 tzdata（精簡容器）時 TZ 會靜默退回 UTC，那樣這格會變成空跑——先驗 `date +%z` 真的是 +0800，
+#      不是就 SKIP 並講明（同本 repo 對無 jq 的既有慣例，不假裝跑過）。
+tz_probe=$(TZ=Asia/Taipei date +%z 2>/dev/null || echo '+0000')
+if [ "$tz_probe" = '+0800' ]; then
+  printf '2026-09-13 08:59:55 取得 pid=1 worktree=/x branch=b cmd=supabase\n' > "$SUPABASE_LOCK_DIR.hold.log"
+  brief29b4tz="$(TZ=Asia/Taipei PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-slow-reset" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+  hasnt '㉙b4tz TZ=Asia/Taipei＋本地時間 hold 行 → 換算回同一個視窗起點，慢 reset 仍不掛旗標（換算符號有接線）' "$brief29b4tz" '[Supabase 容器]'
+  out29b4tz="$(TZ=Asia/Taipei PATROL_DOCKER="$work/fake-docker" FAKE_DOCKER_NAMES="$work/docker-names" FAKE_DOCKER_INSPECT="$work/docker-inspect-slow-reset" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+  has   '㉙b4tz 人類段同樣判成例行 db reset' "$out29b4tz" '形狀符合例行 supabase db reset，不掛旗標'
+  rm -f "$SUPABASE_LOCK_DIR.hold.log"
+else
+  echo "SKIP 2 組（本機無 Asia/Taipei 時區資料，date +%z 得到 ${tz_probe}）：㉙b4tz 本地時間→UTC 換算符號未覆蓋"
+fi
+
 # ㉙b6（LS-264 m3；同池項）：形狀是例行 db reset，但**非 reset 群組內部**有落單重啟（kong 比 rest 晚
 #     5 天才被單獨重啟）。R2 版本對 db-reset 形狀整段靜音，這種差會被完全遮蔽；改成群組內各自再比一次
 #     之後，跨群組那段差仍被排除、群組內這段差照樣掛旗標。
