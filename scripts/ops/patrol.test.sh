@@ -235,10 +235,13 @@ for probe31 in 'feature/LS-1-ahead' 'feature/LS-2-dirty' 'feature/LS-5-idle' 'fe
     echo "✗ ㉛a ${probe31} 的警示行被過濾掉了（樣式 ${filter31}）：${line31}" >&2; fail=1
   fi
 done
-# (b) 全稱：任何帶標記（⚠／✗／⏳／✅）的非標題行都不能被濾掉
-lost31=$(printf '%s\n' "$out31" | grep -v '^== ' | grep -E '⚠|✗|⏳|✅' | grep -vE "$filter31")
+# (b) 全稱：任何帶標記的非標題行都不能被濾掉。「哪些行算帶標記」＝`patrol-filter.sh --markers`
+#     （R3 i3：原本手寫 `⚠|✗|⏳|✅`，與樣式沒有機械關聯；改成從單一來源取，樣式日後加標記這裡自動跟上）
+#     ＋`✅`（「CLEAN 且已 APPROVE → 可併」那種完成型標記，不在過濾樣式裡、但也是要看見的結論）。
+sel31="$(bash "$pfilter31" --markers)|✅"
+lost31=$(printf '%s\n' "$out31" | grep -v '^== ' | grep -E "$sel31" | grep -vE "$filter31")
 if [ -z "$lost31" ]; then
-  echo "✓ ㉛a 全稱：所有帶 ⚠／✗／⏳／✅ 的非標題行都通過過濾"
+  echo "✓ ㉛a 全稱：所有帶標記（${sel31}）的非標題行都通過過濾"
 else
   echo "✗ ㉛a 有帶標記的行被過濾掉：" >&2; printf '%s\n' "$lost31" | sed 's/^/    /' >&2; fail=1
 fi

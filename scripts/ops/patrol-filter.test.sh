@@ -35,6 +35,11 @@ rc_is '① --pattern exit 0' 0 "$rc" "$pat"
 for tok in '⚠' '✗' '⏳' '→' 'lane:' 'current cycle' '無異常'; do
   has "① 樣式含 ${tok}" "$pat" "$tok"
 done
+# R3 i3：`--markers` 是「帶標記」的子集合（`patrol.test.sh` ㉛a 的輸入選擇器從這裡取），必須是 PATTERN 的前綴子集
+mk=$(bash "$pf" --markers); rc=$?
+rc_is '① --markers exit 0' 0 "$rc" "$mk"
+has   '① --markers 是 --pattern 的子集合（同一份定義切出來）' "$pat" "$mk"
+hasnt '① --markers 不含結構行選擇器（lane:）' "$mk" 'lane:'
 
 # ---- ② 留什麼、丟什麼 ----
 sample=$(printf '%s\n' \
