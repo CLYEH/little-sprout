@@ -394,6 +394,11 @@ photo_ext_for() {  # $1=素材來源路徑 → 印出副檔名（png｜jpg）；
 # 副檔名連帶從 .png 變成 .jpg：storage_path 是 {media_id}.{ext}，所以這三個來源對應的
 # 10 筆 media（i=3,4,5,8,9,10,13,14,15,18，src_idx=(i-1)%5∈{2,3,4}）路徑也跟著換，舊
 # .png 物件由既有批次清理（下方「清理既有 Storage 物件」列舉四種副檔名）收掉。
+# LS-281（LS-248 merge-review R1 i3）：上一句只對**完整流程**成立——`--storage-only`
+# 明文略過那段批次清理（見下方「4. Storage」段的 if 分支），所以「換素材副檔名」這種
+# 改動一定要跑完整流程，不要只跑 `--storage-only`：後者只會補上傳新副檔名的物件，舊
+# 副檔名的物件原地變成沒有 media 列指向的孤兒，得等 24 小時後才由 purge-storage 的
+# 孤兒掃描（LS-213 範圍 2）收掉。
 photo_sources=(
   "$ROOT/design-canvas/family.jpg"
   "$ROOT/design-canvas-d/family.jpg"

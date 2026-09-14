@@ -641,10 +641,18 @@ has 'E1 photo_sources 含 LS-247 定稿 join' "$sources_block" 'design/appstore-
 hasnt 'E2 photo_sources 不得再含 LS-46 佔位圖 hero-grandma' "$sources_block" 'hero-grandma'
 hasnt 'E2 photo_sources 不得再含 LS-46 佔位圖 invite-grandma' "$sources_block" 'invite-grandma'
 hasnt 'E2 photo_sources 不得再含 LS-46 佔位圖 join-parents' "$sources_block" 'join-parents'
-for asset in design/appstore-photos/hero.jpg design/appstore-photos/invite.jpg design/appstore-photos/join.jpg; do
+# E3：資產存在性。LS-281（LS-248 merge-review R1 i4）：清單不再硬寫，直接從上面抓到的
+# photo_sources 區塊解析出每一個來源路徑（去掉 $ROOT/ 前綴與引號）——原本硬寫三個路徑是
+# 跟 photo_sources 平行維護的第二份清單，改指第四張資產時它不會跟著驗存在性。
+e3_assets=$(printf '%s\n' "$sources_block" | sed -n 's/^[[:space:]]*"\$ROOT\/\(.*\)"[[:space:]]*$/\1/p')
+if [ -z "$e3_assets" ]; then
+  echo "✗ E3 從 photo_sources 解析不到任何來源路徑（陣列格式改了？）" >&2; fail=1
+fi
+while IFS= read -r asset; do
+  [ -n "$asset" ] || continue
   if [ -f "$root/$asset" ]; then ok "E3 資產存在於 repo：$asset"
   else echo "✗ E3 資產不存在於 repo：$asset（photo_sources 指到的檔案被改名／刪除，正式站種子會在素材檢查就中止）" >&2; fail=1; fi
-done
+done <<< "$e3_assets"
 echo "--- E 組完成 ---"
 
 # =============================================================================
