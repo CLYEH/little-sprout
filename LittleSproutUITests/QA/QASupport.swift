@@ -13,6 +13,9 @@ struct QAEnvironment {
         case login
         case publish
         case browse
+        /// LS-270（LS-96 池項 `66d55e5d`）：寶貝管理 → 建檔 → 編輯頭像 → 儲存 → 回列表看刷新。
+        /// rawValue 帶連字號，與 `qa-e2e.sh` 的情境名、證據目錄前綴逐字一致。
+        case childAvatar = "child-avatar"
     }
 
     static let scenarioKey = "LS_QA_SCENARIO"

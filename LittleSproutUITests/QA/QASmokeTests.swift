@@ -12,8 +12,11 @@ import XCTest
 /// - `publish`：（必要時登入／建立家庭）→ 新增回憶 → 內文 → 相簿選 fixture 照片＋影片 → 發佈 →
 ///   時間軸出現那張卡。fixture 由 `qa-e2e.sh` 先 `simctl addmedia` 進模擬器相簿。
 /// - `browse`：（必要時登入／建立家庭／先發一篇純文字）→ 開日記詳情 → 返回 → 相簿分頁 → 時間軸。
+/// - `child-avatar`（LS-270，來源 LS-96 池項 `66d55e5d`）：（登入／建家庭）→ 寶貝分頁 → 新增一隻帶時戳的
+///   寶貝 → 點進編輯 → `PhotosPicker` 選 fixture 照片 → 儲存 → 回列表，斷言那一列的畫面內容真的變了
+///   （頭像刷新）。見 `QADriver+ChildAvatar.swift` 檔頭。
 ///
-/// 怎麼跑：一律 `bash scripts/ops/qa-e2e.sh <login|publish|browse>`（讀 `supabase status`、
+/// 怎麼跑：一律 `bash scripts/ops/qa-e2e.sh <login|publish|browse|child-avatar>`（讀 `supabase status`、
 /// 持 `supabase-lock.sh --hold`、`-only-testing:LittleSproutUITests/QASmokeTests`、匯出截圖到
 /// `.claude/evidence/<票號>/qa-e2e/`、收 Storage log）。直接 `xcodebuild test` 沒帶 `LS_QA_*`
 /// 會紅（`QAEnvironment.load`），這是刻意的；CI 只編譯不跑（`tap-target-check.sh` 以
@@ -39,6 +42,8 @@ final class QASmokeTests: XCTestCase {
             try await driver.runPublish()
         case .browse:
             try await driver.runBrowse()
+        case .childAvatar:
+            try await driver.runChildAvatar()
         }
     }
 }

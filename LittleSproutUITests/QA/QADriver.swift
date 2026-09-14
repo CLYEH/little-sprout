@@ -281,7 +281,9 @@ final class QADriver {
     /// 不是時間順序（最後一個是 2009 年的內建樣本），不能拿 index 當「最新」。遠端 view 的格子一律回報
     /// `isHittable == false`（格子明明在畫面中央），`tap()` 會拒絕——改用座標 tap。每次把候選格的
     /// label＋座標附進 xcresult（`<情境>-picker-cells-<kind>`），挑錯時看得出是哪個規則沒對上。
-    private func tapNewestPickerCell(kinds: [String], what: String) throws {
+    /// LS-270：`private` 拿掉改成預設 `internal`（同 LS-260 對 `attachText` 的處理）——
+    /// `QADriver+ChildAvatar.swift` 的單選頭像 picker 沿用同一套「挑最新一格」規則，不再抄一份。
+    func tapNewestPickerCell(kinds: [String], what: String) throws {
         let clauses = kinds.map { _ in "label BEGINSWITH %@" }.joined(separator: " OR ")
         let query = app.images.matching(NSPredicate(format: clauses, argumentArray: kinds))
         try require(query.firstMatch, what, timeout: 20)

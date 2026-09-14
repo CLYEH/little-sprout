@@ -135,7 +135,7 @@ reset_logs
 out=$(run "$wt"); got=$?
 expect 2 '① 無參數 → exit 2、印用法' "$got" "$out" '用法：qa-e2e.sh'
 out=$(run "$wt" fly); got=$?
-expect 2 '② 情境名錯 → exit 2、列出合法集合' "$got" "$out" '情境「fly」不存在' 'login|publish|browse'
+expect 2 '② 情境名錯 → exit 2、列出合法集合' "$got" "$out" '情境「fly」不存在' 'login|publish|browse|child-avatar'
 no_tools '②'
 out=$(run "$wt" login browse); got=$?
 expect 2 '② 兩個情境 → exit 2' "$got" "$out" '多餘參數'
@@ -304,6 +304,27 @@ out=$( cd "$wt" && PATH="$bin_nopsql:$PATH" LS_QA_PSQL_BIN="$bin/psql" FAKE_XCRU
 expect 0 '⑦g LS_QA_PSQL_BIN 指向可執行的 psql → 走 host psql 分支' "$got" "$out" \
   'host psql → 127.0.0.1:54322/postgres' '通過'
 log_has '⑦g 真的呼叫了 seam 指到的那支 psql（不是 docker）' calls.log "psql -h 127.0.0.1 -p 54322 -U postgres"
+reset_logs
+
+# ---- ⑧ child-avatar 情境（LS-270，來源 LS-96 池項 `66d55e5d`）----
+#      只吃照片 fixture（頭像 picker 是 `matching: .images`），不灌影片；缺 fixture 一樣在碰 lock／
+#      xcodebuild 之前 fail closed（同 ⑥f publish 的防線）。放在最後跑：這格會在假 worktree 裡建出
+#      qa-photo.jpg，先跑會讓 ⑥f「publish 缺 fixture」失去負樣本（publish 要照片＋影片兩個都在才算齊）。
+out=$(FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" child-avatar); got=$?
+expect 2 '⑧a child-avatar 缺 fixture → exit 2、點名 qa-photo.jpg' "$got" "$out" '缺 fixture' 'qa-photo.jpg'
+log_hasnt '⑧a 缺 fixture 不 --hold' lock.log 'lock --hold'
+[ -e "$work/INVOKED-xcodebuild" ] && { echo "✗ ⑧a 不該跑 xcodebuild" >&2; fail=1; } || ok '⑧a 缺 fixture 不碰 xcodebuild'
+reset_logs
+mkdir -p "$wt/LittleSproutUITests/QA/Fixtures"; : > "$wt/LittleSproutUITests/QA/Fixtures/qa-photo.jpg"
+out=$(FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" child-avatar); got=$?
+expect 0 '⑧b child-avatar 有照片 fixture → 走完、exit 0、證據落 child-avatar-<時間>/' "$got" "$out" \
+  '通過' 'held pid=1 label=LS-321 qa-e2e child-avatar' '/qa-e2e/child-avatar-'
+# 路徑只比對相對尾段：`$wt` 是 /var/folders/…，腳本內的 root 走 git rev-parse 解成 /private/var/folders/…（macOS symlink）
+log_has   '⑧b addmedia 對的是本機專屬機' calls.log 'simctl addmedia FAKE-UDID-0001 '
+log_has   '⑧b addmedia 加的是照片 fixture' calls.log '/LittleSproutUITests/QA/Fixtures/qa-photo.jpg'
+log_hasnt '⑧b 不把影片灌進相簿（頭像 picker 只吃照片）' calls.log 'qa-video.mp4'
+log_has   '⑧b lock label 帶情境名' lock.log 'lock --hold LS-321 qa-e2e child-avatar --max-minutes 25'
+log_has   '⑧b 仍只跑 QASmokeTests' calls.log '-only-testing:LittleSproutUITests/QASmokeTests'
 reset_logs
 
 if [ "$fail" -ne 0 ]; then echo "✗ qa-e2e 自測失敗" >&2; exit 1; fi
