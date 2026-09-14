@@ -47,8 +47,7 @@ enum VideoTrimmer {
         exportSession.outputURL = outputURL
         exportSession.outputFileType = .mp4
         exportSession.timeRange = CMTimeRange(
-            start: .zero,
-            duration: CMTime(seconds: DiaryDurationFormat.maxPublishDuration, preferredTimescale: 600)
+            start: .zero, duration: await exportDuration(of: asset)
         )
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             exportSession.exportAsynchronously {
@@ -62,6 +61,20 @@ enum VideoTrimmer {
         try await checkWithinSizeLimit(outputURL, maxByteSize: maxByteSize)
         let outputPixelSize = await pixelSize(ofFirstVideoTrackIn: AVURLAsset(url: outputURL))
         return UploadSource(fileURL: outputURL, fileExtension: "mp4", pixelSize: outputPixelSize)
+    }
+
+    /// 匯出要保留的長度＝「來源長度與 60 秒上限取小的那個」。
+    ///
+    /// **為什麼要夾**（LS-279 模擬器實測）：`timeRange` 直接寫死 60 秒時，一支 30 秒的來源
+    /// 匯出後的檔案長度是 **60 秒**（後半段是靜止畫面），`media.duration_seconds` 也跟著寫成
+    /// 60，而且多出來的那 30 秒照樣佔位元組——實測一支 40 秒的 4K 影片因此被撐過 50 MiB 上限
+    /// 而遭退回。LS-125 不會踩到：那時只有「超過 60 秒」的影片才會走到 export，`timeRange`
+    /// 永遠短於來源。讀不到來源長度（`.duration` 失敗／非數值）時退回 60 秒上限，行為與
+    /// 修這條之前一致。
+    private static func exportDuration(of asset: AVAsset) async -> CMTime {
+        let cap = CMTime(seconds: DiaryDurationFormat.maxPublishDuration, preferredTimescale: 600)
+        guard let assetDuration = try? await asset.load(.duration), assetDuration.isNumeric else { return cap }
+        return min(assetDuration, cap)
     }
 
     /// 壓完仍超過單檔上限（極高位元率的長片）：丟一個畫面看得懂的錯誤，並先清掉這份沒人會用

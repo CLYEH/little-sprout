@@ -39,6 +39,11 @@ final class VideoTrimmerTests: XCTestCase {
         XCTAssertEqual(
             result.pixelSize, PixelSize(width: 1920, height: 1080), "壓縮輸出必須是 1080p，寫進 media 的尺寸才對得上"
         )
+        let exportedSeconds = try await AVURLAsset(url: result.fileURL).load(.duration).seconds
+        XCTAssertEqual(
+            exportedSeconds, 30, accuracy: 1.5,
+            "輸出長度要跟來源一樣是 30 秒——60 秒的 timeRange 套在比它短的資產上不得把輸出撐到 60 秒"
+        )
         try? FileManager.default.removeItem(at: result.fileURL)
     }
 
