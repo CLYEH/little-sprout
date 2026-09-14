@@ -15,9 +15,15 @@ final class DiaryComposerStorePublishTests: XCTestCase {
 
     private func makeStore(
         diaryAPIClient: StubDiaryAPIClient = StubDiaryAPIClient(),
-        mediaUploadService: StubMediaUploadService = StubMediaUploadService()
+        mediaUploadService: StubMediaUploadService = StubMediaUploadService(),
+        videoPreparer: @escaping @Sendable (URL) async throws -> VideoTrimmer.UploadSource = { fileURL in
+            VideoTrimmer.UploadSource(fileURL: fileURL, fileExtension: "mp4", pixelSize: nil)
+        }
     ) -> DiaryComposerStore {
-        DiaryComposerStore(familyID: familyID, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService)
+        DiaryComposerStore(
+            familyID: familyID, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+            videoPreparer: videoPreparer
+        )
     }
 
     @discardableResult
@@ -89,21 +95,32 @@ final class DiaryComposerStorePublishTests: XCTestCase {
     /// 順手項（LS-125／126 收尾 dead-code-sweeper，comment 52289daf）：`StubMediaUploadService`
     /// 的 `uploadVideoCalls`／`setUploadVideoHandler` 先前沒有任何呼叫端——`publish()` 對影片
     /// 草稿只餵過 `uploadPhoto` 的整合測試，沒有測過影片這條路徑真的會呼叫 `uploadVideo`、
-    /// 參數對不對得上。12 秒（60 秒內）不會被 `VideoTrimmer` 裁切（`trimmedIfNeeded` 早退
-    /// 分支，見該檔文件註解），沿用草稿原始檔案路徑／尺寸——不需要真的影片檔案就能驗證整條
-    /// 路徑接得對。
-    func test_publish_withVideoDraft_callsUploadVideoWithDraftParameters() async {
+    /// 參數對不對得上。
+    ///
+    /// **LS-279**：12 秒的影片先前走 `trimmedIfNeeded` 的早退分支、原樣上傳，這條測試因此斷言
+    /// 「沿用草稿原始路徑／尺寸」。門檻取消後**每支影片都會先壓成 1080p**，真正拿去上傳的是
+    /// 壓縮輸出——改成斷言 `uploadVideo` 收到的是 `videoPreparer` 的輸出（路徑與尺寸皆來自
+    /// 壓縮結果，不是草稿原值）。壓縮本身對真資產的行為由 `VideoTrimmerTests` 驗。
+    func test_publish_withVideoDraft_uploadsCompressedOutputNotDraftOriginal() async {
         let diaryClient = StubDiaryAPIClient()
         let mediaService = StubMediaUploadService()
         let videoMediaID = UUID()
         mediaService.setUploadVideoHandler { _, _, _, _ in videoMediaID }
         diaryClient.setCreateHandler { _, _, _, _ in UUID() }
-        let store = makeStore(diaryAPIClient: diaryClient, mediaUploadService: mediaService)
+        let compressedURL = URL(fileURLWithPath: "/tmp/publish-video-1080p-\(UUID().uuidString).mp4")
+        let store = makeStore(
+            diaryAPIClient: diaryClient, mediaUploadService: mediaService,
+            videoPreparer: { _ in
+                VideoTrimmer.UploadSource(
+                    fileURL: compressedURL, fileExtension: "mp4", pixelSize: PixelSize(width: 1920, height: 1080)
+                )
+            }
+        )
         store.body = "今天拍了一段影片"
         let videoURL = URL(fileURLWithPath: "/tmp/publish-video-\(UUID().uuidString).mp4")
         store.addVideo(
             fileURL: videoURL, fileExtension: "mp4", duration: 12,
-            pixelSize: PixelSize(width: 1920, height: 1080), previewImage: nil
+            pixelSize: PixelSize(width: 3840, height: 2160), previewImage: nil
         )
 
         let result = await store.publish()
@@ -115,10 +132,50 @@ final class DiaryComposerStorePublishTests: XCTestCase {
         }
         XCTAssertEqual(mediaService.uploadVideoCalls.count, 1)
         XCTAssertEqual(call.familyID, familyID)
-        XCTAssertEqual(call.fileURL, videoURL, "60 秒內未裁切，應該沿用草稿原始檔案路徑")
+        XCTAssertEqual(call.fileURL, compressedURL, "12 秒的影片也要上傳 1080p 壓縮輸出，不是草稿原始檔案")
         XCTAssertEqual(call.fileExtension, "mp4")
-        XCTAssertEqual(call.pixelSize, PixelSize(width: 1920, height: 1080), "未裁切應該沿用草稿原本量到的尺寸")
+        XCTAssertEqual(
+            call.pixelSize, PixelSize(width: 1920, height: 1080), "尺寸要來自壓縮輸出，不是草稿量到的 4K 原始尺寸"
+        )
         XCTAssertEqual(diaryClient.attachMediaCalls.first?.mediaIDs, [videoMediaID])
+    }
+
+    /// LS-279 驗收 2：壓縮後仍超過單檔上限時，這支影片**不進上傳**——`uploadVideo` 一次都不
+    /// 該被呼叫（沒打過網路，413 也就不會發生），畫面拿到的是「請裁短」那句專屬文案，不是
+    /// 通用失敗句。`videoPreparer` 直接丟 `VideoTrimmer.compressedForUpload` 在超限時丟的那個
+    /// `AppError`（同一個 code），不必為了測這條路徑準備一支真的超過 50 MiB 的影片。
+    func test_publish_videoTooLargeAfterCompression_failsWithoutUploading() async {
+        let diaryClient = StubDiaryAPIClient()
+        let mediaService = StubMediaUploadService()
+        let store = makeStore(
+            diaryAPIClient: diaryClient, mediaUploadService: mediaService,
+            videoPreparer: { _ in
+                throw AppError.validationRetryable(
+                    message: "1080p 壓縮後仍有 60000000 bytes／60.0 秒，超過單檔 52428800 bytes 上限",
+                    code: DiaryMediaErrorCode.videoTooLargeAfterExport(suggestedSeconds: 47)
+                )
+            }
+        )
+        store.body = "這支影片太長了"
+        store.addVideo(
+            fileURL: URL(fileURLWithPath: "/tmp/publish-video-\(UUID().uuidString).mp4"), fileExtension: "mp4",
+            duration: 55, pixelSize: PixelSize(width: 3840, height: 2160), previewImage: nil
+        )
+
+        let result = await store.publish()
+
+        XCTAssertFalse(result)
+        XCTAssertEqual(mediaService.uploadVideoCalls.count, 0, "壓完仍超限的影片不該被送上 Storage")
+        XCTAssertEqual(diaryClient.createCalls.count, 0, "上傳這一步就失敗了，不該建立日記")
+        XCTAssertEqual(diaryClient.attachMediaCalls.count, 0)
+        XCTAssertEqual(store.photos.count, 1, "失敗不清空草稿，使用者才能自己裁短後重試")
+        guard case .failure(let error) = store.publishState else {
+            return XCTFail("應該進失敗態，實際是 \(store.publishState)")
+        }
+        XCTAssertEqual(
+            DiaryPublishErrorMessage.displayText(for: error),
+            "影片太長，壓縮後仍超過 50MB 上限，請裁到 47 秒內再試一次。"
+        )
     }
 
     func test_publish_unspecifiedChild_sendsEmptyChildIDs() async {

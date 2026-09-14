@@ -331,6 +331,7 @@
 		BA9894A590C79F2FDA2FB85D /* ApprovalStatusRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1154E2337B7278510C8971B1 /* ApprovalStatusRow.swift */; };
 		BB12C06995D331D1D4B2453C /* AvatarLoadCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC634C1AC693267EBF2A0A6 /* AvatarLoadCoordinatorTests.swift */; };
 		BB2352EE2A36E552094AE5A5 /* PasswordSignInModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55ABA1362A5D5A948083DC7B /* PasswordSignInModel.swift */; };
+		BB88105C2DD7C0CC1F500705 /* VideoTrimmerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A01A57459C021E561433E6 /* VideoTrimmerTests.swift */; };
 		BBF2A4728043485B0CA020BE /* SupabaseChildAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BBCF08BF3732C55DD08ABD /* SupabaseChildAPIClient.swift */; };
 		BC3FB92A8F2F032CC1F8797B /* StubFamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CC227F2B168D39029462E5 /* StubFamilyAPIClient.swift */; };
 		BCCC6A1B7C284C355C6509FF /* DeleteAccountFlowModelResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6B2DBBC978E2E01973D4FE /* DeleteAccountFlowModelResumeTests.swift */; };
@@ -797,6 +798,7 @@
 		B5C569AB8BA23817265C5402 /* SettingsView+Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsView+Profile.swift"; sourceTree = "<group>"; };
 		B5F87BF57597ACB46BC0AC7B /* SupabaseCommentAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseCommentAPIClientTests.swift; sourceTree = "<group>"; };
 		B65A9E81D3E3B5D92B0B6BDE /* DiaryEditorViewLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryEditorViewLifecycleTests.swift; sourceTree = "<group>"; };
+		B6A01A57459C021E561433E6 /* VideoTrimmerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoTrimmerTests.swift; sourceTree = "<group>"; };
 		B6B922E8AD56E1EF2150FE2B /* PushPrepromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushPrepromptView.swift; sourceTree = "<group>"; };
 		B7011C61D613644C595C9208 /* LittleSproutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LittleSproutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8D1271C2CC39AA7D7D71E59 /* CommentRowActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentRowActions.swift; sourceTree = "<group>"; };
@@ -1236,6 +1238,7 @@
 				73E829FD28258F900CECEAF4 /* UploadQueueStoreDefensiveTests.swift */,
 				3426D48B93D0809933E05622 /* UploadQueueStoreTests.swift */,
 				610553A99DBEBF3A5A73E479 /* VideoDurationFormatTests.swift */,
+				B6A01A57459C021E561433E6 /* VideoTrimmerTests.swift */,
 				459A0B1D845C2292804A8309 /* Support */,
 			);
 			path = LittleSproutTests;
@@ -2263,6 +2266,7 @@
 				A583A6F5F73A5469EF67DC23 /* UploadQueueStoreDefensiveTests.swift in Sources */,
 				EB9C272DC720C2345B620849 /* UploadQueueStoreTests.swift in Sources */,
 				EC24364AE168AD94B8795267 /* VideoDurationFormatTests.swift in Sources */,
+				BB88105C2DD7C0CC1F500705 /* VideoTrimmerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

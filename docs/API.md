@@ -2194,6 +2194,18 @@ Edge Function 完成刪除）。`LS052`／`LS053`／`LS054`（LS-179 補齊，�
 - `allowed_mime_types`：`image/jpeg`、`image/png`、`image/heic`、`image/heif`、
   `video/mp4`、`video/quicktime`（`.mov`）。其他型別在 Storage 層就會被拒絕，不會走到
   `media` 表。
+- **影片壓縮與長度建議（LS-279，客戶端契約）**：日記編輯器的影片**一律**先經
+  `VideoTrimmer.compressedForUpload`（`AVAssetExportPreset1920x1080`，只保留前 60 秒）
+  壓成 1080p 再上傳，不再像 LS-125 那樣只有「超過 60 秒」才壓——一支 40 秒的 4K 原檔
+  就有 100 MB 上下，必定撞上面那條 50 MiB 上限。壓完仍超過 50 MiB 時**不上傳**，編輯器
+  直接回話請使用者裁到 **N 秒**內；**N 是每支影片各自算的**（`VideoTrimmer
+  .suggestedSeconds`：用這支影片壓完的平均位元率 `byteSize ÷ duration` 回推「多長剛好塞得
+  進 50 MiB」，再乘 0.9 留餘裕，下限 5 秒）。刻意不用固定秒數：1080p 匯出的位元率隨畫面
+  內容差一個數量級（LS-279 實測低動態漸層 2.4 Mbps、純雜訊 47.9 Mbps；且 iOS 的編碼器比
+  macOS 同內容更耗位元），寫死的值會出現「一支 40 秒的影片被要求裁到 40 秒內」這種自相
+  矛盾的回話（本票模擬器實測撞到）。只有壓縮輸出的時長讀不到時才退回後備常數
+  `MediaUploadLimits.suggestedVideoSeconds`（20 秒）。**相簿上傳佇列（`UploadQueueStore`）
+  不走這條路徑**，影片仍以原檔上傳、超限時由 Storage 回 413。
 
 ### 路徑規約
 ```

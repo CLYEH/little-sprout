@@ -100,10 +100,23 @@ final class DiaryComposerStore {
     /// 寬限期），已記入待辦池（LS-96 comment `c2050d43`），與 `996220e9` 是兩支不同的查詢。
     private var pendingOrphanMediaIDs: Set<UUID> = []
 
-    init(familyID: UUID, diaryAPIClient: DiaryAPIClient, mediaUploadService: MediaUploadService) {
+    /// 影片上傳前的 1080p 壓縮步驟（LS-279）——抽成可注入閉包，同
+    /// `SupabaseMediaUploadService.durationLoader` 的理由：正式路徑固定是
+    /// `VideoTrimmer.compressedForUpload`，但測試要能在不準備真影片檔的前提下釘住
+    /// 「壓縮結果（含壓完仍超限的錯誤）怎麼往下接」。壓縮本身的行為由 `VideoTrimmerTests`
+    /// 對真的資產驗。
+    private let videoPreparer: @Sendable (URL) async throws -> VideoTrimmer.UploadSource
+
+    init(
+        familyID: UUID, diaryAPIClient: DiaryAPIClient, mediaUploadService: MediaUploadService,
+        videoPreparer: @escaping @Sendable (URL) async throws -> VideoTrimmer.UploadSource = { fileURL in
+            try await VideoTrimmer.compressedForUpload(fileURL: fileURL)
+        }
+    ) {
         self.familyID = familyID
         self.diaryAPIClient = diaryAPIClient
         self.mediaUploadService = mediaUploadService
+        self.videoPreparer = videoPreparer
     }
 
     // MARK: - 佇列容量
@@ -325,7 +338,7 @@ final class DiaryComposerStore {
     /// 依佇列順序逐張上傳（刻意序列、不平行：20 張上限下平行上傳省下的時間有限，序列化換來
     /// 「失敗時只有一張正在傳、容易對應到是哪一張」的除錯簡單性，見 handoff／merge-review R1
     /// m2 已知取捨）。已經上傳成功過的草稿（`uploadedMediaByDraftID` 有記錄）直接沿用舊 id、
-    /// 不重傳（M2）。影片超過 60 秒先用 `VideoTrimmer` 裁切壓縮，回傳的暫存檔才是真正拿去
+    /// 不重傳（M2）。影片一律先用 `VideoTrimmer` 壓成 1080p（LS-279），回傳的暫存檔才是真正拿去
     /// 上傳的那份；上傳成功後清掉本機暫存檔（merge-review R1 m9：先前上傳完全不清，選幾支
     /// 影片試玩幾次就會在 tmp 目錄累積數百 MB）。
     private func uploadAllMedia() async throws -> [UUID] {
@@ -348,11 +361,11 @@ final class DiaryComposerStore {
             return try await mediaUploadService.uploadPhoto(
                 familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: draft.pixelSize
             )
-        case .video(let fileURL, let fileExtension, let duration):
-            let source = try await VideoTrimmer.trimmedIfNeeded(
-                fileURL: fileURL, fileExtension: fileExtension, duration: duration
-            )
-            // merge-review R1 m7：裁切過的話用輸出的實際像素尺寸；未裁切則沿用草稿原本量到的。
+        case .video(let fileURL, _, _):
+            // LS-279：不再依時長分流，每支影片都先壓成 1080p（壓完仍超過單檔上限會在這裡丟錯，
+            // 下面的 `uploadVideo` 不會被呼叫到——註定拿 413 的檔案不進上傳）。
+            let source = try await videoPreparer(fileURL)
+            // merge-review R1 m7：用輸出的實際像素尺寸；量不到才沿用草稿原本量到的。
             let id = try await mediaUploadService.uploadVideo(
                 familyID: familyID, fileURL: source.fileURL, fileExtension: source.fileExtension,
                 pixelSize: source.pixelSize ?? draft.pixelSize
