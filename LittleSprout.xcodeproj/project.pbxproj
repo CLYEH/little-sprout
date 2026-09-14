@@ -332,6 +332,7 @@
 		BB12C06995D331D1D4B2453C /* AvatarLoadCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC634C1AC693267EBF2A0A6 /* AvatarLoadCoordinatorTests.swift */; };
 		BB2352EE2A36E552094AE5A5 /* PasswordSignInModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55ABA1362A5D5A948083DC7B /* PasswordSignInModel.swift */; };
 		BB88105C2DD7C0CC1F500705 /* VideoTrimmerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A01A57459C021E561433E6 /* VideoTrimmerTests.swift */; };
+		6DBAC114BA2E490096AE5F39 /* DiaryComposerStoreVideoCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6465FEC03E404B94BA64B1 /* DiaryComposerStoreVideoCacheTests.swift */; };
 		BBF2A4728043485B0CA020BE /* SupabaseChildAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BBCF08BF3732C55DD08ABD /* SupabaseChildAPIClient.swift */; };
 		BC3FB92A8F2F032CC1F8797B /* StubFamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CC227F2B168D39029462E5 /* StubFamilyAPIClient.swift */; };
 		BCCC6A1B7C284C355C6509FF /* DeleteAccountFlowModelResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6B2DBBC978E2E01973D4FE /* DeleteAccountFlowModelResumeTests.swift */; };
@@ -602,6 +603,7 @@
 		468EF1C61FA7C2B35E756487 /* TestSupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupabaseClient.swift; sourceTree = "<group>"; };
 		46DA9003B46883C47C678BA1 /* CreateChildAvatarFieldUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateChildAvatarFieldUITests.swift; sourceTree = "<group>"; };
 		4731B4832AABBF59324EDBC8 /* DiaryComposerStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStoreTests.swift; sourceTree = "<group>"; };
+		AE6465FEC03E404B94BA64B1 /* DiaryComposerStoreVideoCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStoreVideoCacheTests.swift; sourceTree = "<group>"; };
 		4765EF6D4F14332FC2ED3B3B /* SupabaseMediaSoftDeleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaSoftDeleteTests.swift; sourceTree = "<group>"; };
 		47FFB8F471134452A808BD4E /* InviteFamilyView+ActionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "InviteFamilyView+ActionBar.swift"; sourceTree = "<group>"; };
 		48C785FE3D7CCF80C7870997 /* EmailDisplayNameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailDisplayNameTests.swift; sourceTree = "<group>"; };
@@ -1147,6 +1149,7 @@
 				715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */,
 				451694C23C0044D0DCDD0356 /* DiaryComposerStorePublishTests.swift */,
 				4731B4832AABBF59324EDBC8 /* DiaryComposerStoreTests.swift */,
+				AE6465FEC03E404B94BA64B1 /* DiaryComposerStoreVideoCacheTests.swift */,
 				B13A37E8CC8794D85456D566 /* DiaryDateFormatTests.swift */,
 				06DCE924A2746DCCAF6CA4B5 /* DiaryDeleteConfirmationCopyTests.swift */,
 				92463C497E79C1E1108BD80C /* DiaryDetailPresentationBindingsTests.swift */,
@@ -2157,6 +2160,7 @@
 				AE349DC5C77A050FEB6B3158 /* DiaryComposerStorePublishRetryTests.swift in Sources */,
 				65C40F1D88260A5EE89C8AAF /* DiaryComposerStorePublishTests.swift in Sources */,
 				41F32D3B2C6BA0F84DAEEA49 /* DiaryComposerStoreTests.swift in Sources */,
+				6DBAC114BA2E490096AE5F39 /* DiaryComposerStoreVideoCacheTests.swift in Sources */,
 				BF0DA22255D22BCE9AAEC439 /* DiaryDateFormatTests.swift in Sources */,
 				B9853BAED2D457FC7FE55DA8 /* DiaryDeleteConfirmationCopyTests.swift in Sources */,
 				F1FFE704E0C50F3418A04669 /* DiaryDetailPresentationBindingsTests.swift in Sources */,
