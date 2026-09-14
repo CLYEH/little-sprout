@@ -266,6 +266,39 @@ out=$(FAKE_SUPABASE_MODE=nokey FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "
 expect 0 '⑦e 無 SERVICE_ROLE_KEY → 只略過探測、不擋（fail-soft）' "$got" "$out" '略過 PostgREST 授權快取探測' '通過'
 log_has '⑦e（R2 m1）缺金鑰仍然 reload 過（自癒不靠探針觸發）' calls.log "notify pgrst, 'reload schema'"
 reset_logs
+# ⑦f（LS-264 R2 m2；merge-review R1 m2）：`pgrst_reload` 的 **docker exec 分支**——本機沒有 host `psql`，
+#      實跑走的就是這條，但上面每一格的 PATH 都有 psql stub，等於零覆蓋：容器名前綴或 `docker exec` 參數
+#      日後改動，自測全綠、真跑時 notify 靜默失敗，而 exit 2 的訊息還會把人指去「整組重啟」。
+#      做法：另備一個「除了 psql 以外的 stub 都在」的 bin 目錄（shim 之外若系統真的裝了 psql 就 SKIP，
+#      同本 repo 對無 jq 的既有慣例），docker stub 回一個容器名，斷言 calls.log 出現 docker exec … psql … notify。
+bin_nopsql="$work/bin-nopsql"; mkdir -p "$bin_nopsql"
+for f in "$bin"/*; do
+  case "${f##*/}" in psql) continue ;; esac
+  ln -sf "$f" "$bin_nopsql/${f##*/}"
+done
+cat > "$bin_nopsql/docker" <<'STUB'
+#!/bin/bash
+touch "$FAKE_WORK/INVOKED-docker"; echo "docker $*" >> "$FAKE_WORK/calls.log"
+# `docker ps --filter name=supabase_db --format {{.Names}}` → 回容器名；其餘（exec／logs）只記錄。
+# 真的比對 filter 值：filter 打錯（例如容器名前綴改掉）就回空，讓 ⑦f 轉紅——不比對的話這格是空跑。
+if [ "$1" = ps ]; then
+  for a in "$@"; do
+    case "$a" in name=supabase_db) echo "supabase_db_little-sprout" ;; esac
+  done
+fi
+exit 0
+STUB
+chmod +x "$bin_nopsql/docker"
+if PATH="$bin_nopsql:$PATH" command -v psql >/dev/null 2>&1; then
+  echo "SKIP 2 組（系統路徑上有真的 psql）：⑦f docker exec 分支無法在本機隔離"
+else
+  out=$( cd "$wt" && PATH="$bin_nopsql:$PATH" FAKE_XCRUN_MODE=sim LS_LOCK_SH="$bin/lock-stub.sh" \
+         FAKE_CURL_REST=200 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass bash "$script" login 2>&1 ); got=$?
+  expect 0 '⑦f 無 host psql → 走 docker exec 分支、印該通道、照跑' "$got" "$out" \
+    'docker exec supabase_db_little-sprout psql' '通過'
+  log_has '⑦f docker exec 真的帶了 psql 與 notify pgrst, reload schema' calls.log "docker exec supabase_db_little-sprout psql -U postgres -d postgres -v ON_ERROR_STOP=1 --no-psqlrc -q -c notify pgrst, 'reload schema'"
+fi
+reset_logs
 
 if [ "$fail" -ne 0 ]; then echo "✗ qa-e2e 自測失敗" >&2; exit 1; fi
 echo "✓ qa-e2e 自測通過（${n} 組樣本）"
