@@ -5,7 +5,7 @@ import Foundation
 /// （`TransferableVideoFile` 複製檔／`VideoTrimmer` 裁切輸出）不會被清」）。
 ///
 /// `TransferableVideoFile.importing`（`PickedItemLoader.swift`）與 `VideoTrimmer
-/// .trimmedIfNeeded` 的暫存檔都寫進這個專屬子目錄，不是散落在 `.temporaryDirectory` 根目錄
+/// .compressedForUpload` 的暫存檔都寫進這個專屬子目錄，不是散落在 `.temporaryDirectory` 根目錄
 /// 跟其他子系統（例如 `URLSession` 背景下載自己的暫存檔）混在一起——`purgeStaleFiles()` 才能
 /// 安全地整批清空這個目錄，不會誤刪不相干的暫存檔。
 ///

@@ -1,9 +1,14 @@
 import AVFoundation
 import Foundation
 
-/// 影片裁切／壓縮（LS-125 票文 Scope 3）：選到的影片若超過 60 秒，發佈前用
-/// `AVAssetExportSession` 裁前 60 秒並壓到 1080p 再上傳；不超過就原樣上傳，不做無謂的
-/// 重新編碼（省時間、也不因為轉檔動到不需要動的檔案品質）。
+/// 影片裁切／壓縮（LS-125 票文 Scope 3，**LS-279 取消長度門檻**）：發佈前一律用
+/// `AVAssetExportSession` 壓到 1080p、只保留前 60 秒再上傳。
+///
+/// **為什麼不再分流**（LS-279，來源 LS-96 池項 `d8634a08` ＝ LS-125 merge-review R1 I2）：
+/// 先前只有「超過 60 秒」才走 export，60 秒內原樣上傳。但 iPhone 4K30 原檔約 170 MB/分，
+/// 一支 40 秒的 4K 影片原檔就有 110 MB 左右，必定撞上 Storage 的 50 MiB 單檔上限（413），
+/// 而畫面上沒有任何補救路徑——「不做無謂的重新編碼」省下的時間，換來的是一整類短影片
+/// 根本傳不上去。現在所有影片都經過同一條 1080p 路徑，短片多花幾秒轉檔，但傳得上去。
 ///
 /// 部署目標 iOS 17：用傳統的 `exportAsynchronously(completionHandler:)` 包成
 /// `withCheckedThrowingContinuation`，不是新版 `export() async throws`（那支要 iOS 18+）。
@@ -11,24 +16,27 @@ enum VideoTrimmer {
     struct UploadSource {
         let fileURL: URL
         let fileExtension: String
-        /// 裁切／壓縮後實際輸出的像素尺寸；未裁切（≤60 秒原樣上傳）時是 `nil`，呼叫端沿用
-        /// 草稿原本量到的尺寸即可——裁切才需要重新量，因為輸出解析度跟輸入不同
-        /// （merge-review R1 m7：之前一律沿用裁切前尺寸，寫進 `media.width/height` 的值跟
-        /// 實際上傳的影片對不上）。
+        /// 壓縮後實際輸出的像素尺寸；讀不到輸出檔的視訊軌時是 `nil`，呼叫端沿用草稿原本量到
+        /// 的尺寸（merge-review R1 m7：之前一律沿用裁切前尺寸，寫進 `media.width/height`
+        /// 的值跟實際上傳的影片對不上）。
         let pixelSize: PixelSize?
     }
 
     enum TrimmerError: Error {
         case exportSessionUnavailable
         case exportFailed
+        case missingFileSize
     }
 
-    static func trimmedIfNeeded(
-        fileURL: URL, fileExtension: String, duration: TimeInterval
+    /// 壓成 1080p／前 60 秒，回傳真正要拿去上傳的暫存檔。
+    ///
+    /// `maxByteSize` 預設是 Storage `media` bucket 的單檔上限（`docs/API.md` §6）——export
+    /// 完成後先在本機量一次檔案大小，超過就丟 `AppError`（見 `DiaryMediaErrorCode
+    /// .videoTooLargeAfterExport`），不把註定拿 413 的檔案送上網路。參數化只為了讓測試能用
+    /// 一支短影片覆蓋這條分支，正式路徑不傳。
+    static func compressedForUpload(
+        fileURL: URL, maxByteSize: Int = MediaUploadLimits.maxObjectByteSize
     ) async throws -> UploadSource {
-        guard DiaryDurationFormat.exceedsMaxPublishDuration(duration) else {
-            return UploadSource(fileURL: fileURL, fileExtension: fileExtension, pixelSize: nil)
-        }
         let asset = AVURLAsset(url: fileURL)
         guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPreset1920x1080) else {
             throw TrimmerError.exportSessionUnavailable
@@ -51,8 +59,28 @@ enum VideoTrimmer {
                 }
             }
         }
+        try checkWithinSizeLimit(outputURL, maxByteSize: maxByteSize)
         let outputPixelSize = await pixelSize(ofFirstVideoTrackIn: AVURLAsset(url: outputURL))
         return UploadSource(fileURL: outputURL, fileExtension: "mp4", pixelSize: outputPixelSize)
+    }
+
+    /// 壓完仍超過單檔上限（極高位元率的長片）：丟一個畫面看得懂的錯誤，並先清掉這份沒人會用
+    /// 的輸出暫存檔——呼叫端的 `cleanupVideoTempFiles` 只在成功路徑上跑得到，這裡不清就是
+    /// 一個沒有回收者的孤兒檔（LS-279）。
+    ///
+    /// 丟 `AppError`（不是 `TrimmerError`）跟 `SupabaseMediaUploadService.mapUploadError` 把
+    /// Storage 413 映射成 `AppError` 是同一個慣例：這是使用者要看懂、要能自己處置的失敗，
+    /// 不是內部技術錯誤；`message` 只供 log／除錯，畫面上的字由
+    /// `DiaryPublishErrorMessage.displayText(for:)` 依 `code` 決定（`AppError.swift` 檔頭契約）。
+    private static func checkWithinSizeLimit(_ url: URL, maxByteSize: Int) throws {
+        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        guard let byteSize = attributes[.size] as? Int else { throw TrimmerError.missingFileSize }
+        guard byteSize > maxByteSize else { return }
+        try? FileManager.default.removeItem(at: url)
+        throw AppError.validationRetryable(
+            message: "1080p 壓縮後仍有 \(byteSize) bytes，超過單檔 \(maxByteSize) bytes 上限",
+            code: DiaryMediaErrorCode.videoTooLargeAfterExport
+        )
     }
 
     /// 影片第一條視訊軌「已套用旋轉」後的實際像素尺寸——`naturalSize` 本身不含裝置拍攝方向，

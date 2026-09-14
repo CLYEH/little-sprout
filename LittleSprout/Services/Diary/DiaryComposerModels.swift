@@ -26,6 +26,21 @@ enum DiaryPhotoQueueLayout {
 /// `LS[0-9]{3}` 形狀的碼，這個字面值不會被誤認成漏登記的後端自訂碼（merge-review R1 m3）。
 enum DiaryMediaErrorCode {
     static let payloadTooLarge = "client_storage_413"
+    /// LS-279：影片壓成 1080p 之後**本機量到**仍超過單檔上限——跟 `payloadTooLarge` 的差別
+    /// 是它在上傳之前就發生（沒有打過網路），而且處置建議不同（不是「換一個小一點的檔案」，
+    /// 而是「把這支影片裁短」），所以另給一個碼、另給一句文案。同樣是 client 合成的
+    /// sentinel，不是後端錯誤碼，`client_` 前綴的理由見上。
+    static let videoTooLargeAfterExport = "client_video_too_large_after_export"
+}
+
+/// 上傳大小相關的客戶端常數——跟 Storage `media` bucket 的 `file_size_limit` 對齊
+/// （`docs/API.md` §6、`supabase/migrations/20260823030000_storage_policies.sql`）。
+enum MediaUploadLimits {
+    /// 單檔 50 MiB。超過這個大小的 PUT 會被 Storage 以 413 擋下。
+    static let maxObjectByteSize = 50 * 1024 * 1024
+    /// 壓縮後仍超限時，回話請使用者裁到的秒數（`docs/API.md` §6「影片壓縮與長度建議」）。
+    /// 由 1080p H.264 匯出的常見位元率（約 10 Mbps）除 50 MiB 估算得 ≈42 秒，取保守的 40。
+    static let suggestedVideoSeconds = 40
 }
 
 /// 12c 失敗態螢幕上實際顯示的文案——依 `AppError.code` 分流（同 `JoinCodePhase.swift` 對
@@ -47,6 +62,10 @@ enum DiaryPublishErrorMessage {
     static func displayText(for error: AppError) -> String {
         if case .validationRetryable(_, let code) = error, code == DiaryMediaErrorCode.payloadTooLarge {
             return "檔案超過 50MB 上限，請選擇較小的照片或影片再試一次。"
+        }
+        // LS-279：壓縮後仍超限走這一句——上傳根本沒發生，請使用者裁短是唯一有效的處置。
+        if case .validationRetryable(_, let code) = error, code == DiaryMediaErrorCode.videoTooLargeAfterExport {
+            return "影片太長，壓縮後仍超過 50MB 上限，請裁到 \(MediaUploadLimits.suggestedVideoSeconds) 秒內再試一次。"
         }
         if case .network = error {
             return "發佈失敗，請檢查網路連線後再試一次。"
