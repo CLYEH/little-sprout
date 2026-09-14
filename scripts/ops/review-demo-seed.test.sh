@@ -266,13 +266,22 @@ chmod +x "$bin"/*
 
 # psql 假身內容（供直接裝在 $bin，或裝到 libpq 候選路徑）：吃掉 -f 之外的 stdin（docker-exec
 # 分支用 stdin 餵檔），記錄呼叫，依 FAKE_PSQL_EXIT 決定成敗。
+# LS-281：另外把 `-f <檔>` 的 SQL 原文抄一份到 $FAKE_WORK/psql-sql.log——F 組要斷言的是
+# 「腳本真的產出了哪些 SQL」（相簿、20 筆 album_media 連結、自我檢查條文），不是腳本原始碼
+# 的字面（那種斷言改個變數名就過得去）。種子的 SQL 檔是 mktemp 的暫存檔、跑完就被 trap
+# 清掉，只有在這裡攔得到。
 write_fake_psql() {
   mkdir -p "$(dirname "$1")"
   cat > "$1" <<'STUB'
 #!/bin/bash
 echo "psql $*" >> "$FAKE_WORK/psql.log"
 has_f=0
-for a in "$@"; do [ "$a" = -f ] && has_f=1; done
+prev=""
+for a in "$@"; do
+  [ "$a" = -f ] && has_f=1
+  [ "$prev" = -f ] && [ -f "$a" ] && cat "$a" >> "$FAKE_WORK/psql-sql.log"
+  prev="$a"
+done
 [ "$has_f" -eq 1 ] || cat > /dev/null
 exit "${FAKE_PSQL_EXIT:-0}"
 STUB
@@ -329,6 +338,7 @@ run_prod_plan() {   # run_prod_plan [額外參數…]：--target prod 不帶 --y
 reset_fakes() {
   rm -rf "$work/attempts" "$work/lock" "$work/INVOKED-sips" "$work/INVOKED-swift"
   : > "$work/curl.log"; : > "$work/sleep.log"; : > "$work/psql.log"; : > "$work/docker.log"
+  : > "$work/psql-sql.log"
   unset FAKE_CURL_FLAKY_PATH FAKE_CURL_FLAKY_MODE FAKE_CURL_ALWAYS_FAIL_PATH FAKE_CURL_ALWAYS_FAIL_MODE
   unset FAKE_CURL_MISSING_PATHS FAKE_CURL_DELETE_EXIT FAKE_DOCKER_MODE FAKE_PSQL_EXIT SEED_PSQL_CANDIDATES
   unset FAKE_CURL_DUP_PATH FAKE_CURL_LIST_FAIL_MODE FAKE_CURL_LIST_ALWAYS_FAIL
@@ -631,11 +641,94 @@ has 'E1 photo_sources 含 LS-247 定稿 join' "$sources_block" 'design/appstore-
 hasnt 'E2 photo_sources 不得再含 LS-46 佔位圖 hero-grandma' "$sources_block" 'hero-grandma'
 hasnt 'E2 photo_sources 不得再含 LS-46 佔位圖 invite-grandma' "$sources_block" 'invite-grandma'
 hasnt 'E2 photo_sources 不得再含 LS-46 佔位圖 join-parents' "$sources_block" 'join-parents'
-for asset in design/appstore-photos/hero.jpg design/appstore-photos/invite.jpg design/appstore-photos/join.jpg; do
+# E3：資產存在性。LS-281（LS-248 merge-review R1 i4）：清單不再硬寫，直接從上面抓到的
+# photo_sources 區塊解析出每一個來源路徑（去掉 $ROOT/ 前綴與引號）——原本硬寫三個路徑是
+# 跟 photo_sources 平行維護的第二份清單，改指第四張資產時它不會跟著驗存在性。
+e3_assets=$(printf '%s\n' "$sources_block" | sed -n 's/^[[:space:]]*"\$ROOT\/\(.*\)"[[:space:]]*$/\1/p')
+if [ -z "$e3_assets" ]; then
+  echo "✗ E3 從 photo_sources 解析不到任何來源路徑（陣列格式改了？）" >&2; fail=1
+fi
+while IFS= read -r asset; do
+  [ -n "$asset" ] || continue
   if [ -f "$root/$asset" ]; then ok "E3 資產存在於 repo：$asset"
   else echo "✗ E3 資產不存在於 repo：$asset（photo_sources 指到的檔案被改名／刪除，正式站種子會在素材檢查就中止）" >&2; fail=1; fi
-done
+done <<< "$e3_assets"
 echo "--- E 組完成 ---"
+
+# =============================================================================
+# F 組（LS-281）：相簿「阿公阿嬤家過年」＋ album_media 連結。
+#
+# 為什麼要有這一組：`private.soft_delete_unreferenced_media()`（LS-213，pg_cron 每日
+# 19:30 UTC＝台北 03:30）軟刪「deleted_at is null＋超過 24h＋不掛在任何 diary_media／
+# album_media」的 media——種子在 LS-281 之前一本相簿都不建、一條連結都不掛，20 筆 media
+# 天生符合那個條件，正式站 2026-09-13 03:30 已經真的被全部軟刪過一次（LS-248 R1／R2）。
+# A／B／L 組只看 Storage 路徑，完全看不到 DB 內容；E 組讀的是腳本原始碼字面。這一組驗的是
+# 「腳本產給 psql 的 SQL 原文」（假 psql 把 -f 的檔案抄進 psql-sql.log），所以連
+# sort_order 連不連續、自我檢查有沒有真的把「未連結 live media」數出來都釘得住。
+# =============================================================================
+OWNER_ID_T=d1000000-0000-4000-8000-000000000001
+ALBUM_ID_T=d8000000-0000-4000-8000-000000000001
+ALBUM_TITLE_T=阿公阿嬤家過年
+COVER_ID_T=d3000000-0000-4000-8000-000000000003   # i=3 → src_idx=(3-1)%5=2 → photo_sources[2]＝hero.jpg
+
+# 斷言直接對 psql-sql.log 這個**檔案**下 grep，不走 `printf … | grep -qF`（既有 has()
+# 的形狀）：本檔開頭是 set -uo pipefail，而產出的 SQL 有十幾 KB——GNU grep 命中就立刻
+# 退出、上游 printf 收 SIGPIPE 以 141 結束，pipefail 讓整條管線判紅，macOS 的 BSD grep
+# 讀完才退所以本機永遠看不到（LS-270 R2 B2 在 ubuntu:24.04 實測 30 次紅 2 次；
+# COLLABORATION §「第三型分歧」）。既有 has() 餵的是幾 KB 的腳本輸出，不在這裡一併改。
+has_sql() {   # has_sql <名稱> <必含字串>
+  if grep -qF -- "$2" "$work/psql-sql.log"; then ok "$1"
+  else echo "✗ ${1}（產出的 SQL 應含「${2}」）" >&2; fail=1; fi
+}
+
+out=$(run); got=$?
+expect 0 'F0 帶相簿的全流程仍綠' "$got" "$out" '✓ review-demo-seed 完成'
+has 'F0 計畫列出相簿' "$out" "相簿：1（「${ALBUM_TITLE_T}」，封面取 hero；20 筆 media 全數掛進 album_media，sort_order 0–19）"
+
+has_sql 'F1 SQL 建相簿（固定 id／封面 hero／created_by owner）' \
+  "values ('${ALBUM_ID_T}', '${FAMILY_ID}', '${ALBUM_TITLE_T}', '${COVER_ID_T}', '${OWNER_ID_T}')"
+has_sql 'F2 冪等以「同 family＋同 title＋未軟刪」查找既有相簿' \
+  "where family_id = '${FAMILY_ID}' and title = '${ALBUM_TITLE_T}' and deleted_at is null;"
+has_sql 'F2 查得到就沿用、不重建' 'if v_album_id is null then'
+has_sql 'F2 連結重複執行不報錯' 'on conflict (album_id, media_id) do nothing;'
+
+# F3：20 筆連結、sort_order 0–19 連續，且順序＝media_ids 順序（＝photo_sources 輪替順序）。
+f3_bad=0
+for i in $(seq 1 20); do
+  mid=$(printf 'd3000000-0000-4000-8000-%012x' "$i")
+  grep -qF -- "('${mid}'::uuid, $((i - 1)))" "$work/psql-sql.log" || {
+    echo "✗ F3 album_media 缺 media #${i}（${mid}）或 sort_order 不是 $((i - 1))" >&2; f3_bad=1; }
+done
+if [ "$f3_bad" -eq 0 ]; then ok 'F3 album_media 20 筆、sort_order 0–19 連續且依 media_ids 順序'
+else fail=1; fi
+count_is 'F3 恰好 20 筆連結（沒有多掛）' 20 "$work/psql-sql.log" "'::uuid, "
+
+# F4：自我檢查條文——這三條是「今天綠、明天被 03:30 排程洗掉」的唯一機械防線。
+has_sql 'F4 自我檢查斷言 albums=1' 'if n_albums <> 1 then'
+has_sql 'F4 自我檢查斷言 album_media=20' 'if n_album_media <> 20 then'
+has_sql 'F4 自我檢查斷言未連結 live media=0' 'if n_unlinked <> 0 then'
+has_sql 'F4 未連結計數逐字對齊 LS-213 判準（diary_media）' \
+  'and not exists (select 1 from public.diary_media dm'
+has_sql 'F4 未連結計數逐字對齊 LS-213 判準（album_media）' \
+  'and not exists (select 1 from public.album_media am'
+has_sql 'F4 feed_items 期望值隨相簿改成 26' 'if n_feed <> 26 then'
+has_sql 'F4 完成 NOTICE 列出新計數' 'albums=1 album_media=20 unlinked_media=0'
+
+# F5：冪等——重跑產生的相簿段 SQL 與第一次逐字元相同（不因重跑多建一本、也不換 id）。
+album_section() {   # album_section <SQL 檔>（sed 會把輸入讀完，沒有 grep -q 的 SIGPIPE 問題）
+  sed -n '/select id into v_album_id/,/on conflict (album_id, media_id) do nothing;/p' "$1"
+}
+sec1=$(album_section "$work/psql-sql.log")
+count_is 'F5 單次執行只建一本相簿' 1 "$work/psql-sql.log" 'insert into public.albums'
+reset_fakes
+out=$(run); got=$?
+expect 0 'F5 第二次重跑仍綠' "$got" "$out" '✓ review-demo-seed 完成'
+sec2=$(album_section "$work/psql-sql.log")
+if [ "$sec1" = "$sec2" ] && [ -n "$sec1" ]; then ok 'F5 重跑產生的相簿段 SQL 逐字元相同（冪等）'
+else echo "✗ F5 重跑產生的相簿段 SQL 不同（或抓不到）" >&2; diff <(printf '%s\n' "$sec1") <(printf '%s\n' "$sec2") >&2 || true; fail=1; fi
+reset_fakes
+
+echo "--- F 組完成 ---"
 
 # =============================================================================
 # Mutation 對照組（同 prod-purge-health.test.sh／queue_retry.test.sh 慣例：不在這裡自動

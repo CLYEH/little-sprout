@@ -179,6 +179,18 @@ MEMBER_ID=d1000000-0000-4000-8000-000000000002
 CHILD1_ID=d2000000-0000-4000-8000-000000000001
 CHILD2_ID=d2000000-0000-4000-8000-000000000002
 INVITE_ID=d4000000-0000-4000-8000-000000000001
+# LS-281：審核家庭的相簿。沒有相簿＋沒有 album_media 連結，20 筆種子 media 就完全符合
+# private.soft_delete_unreferenced_media()（LS-213，pg_cron 每日 19:30 UTC＝台北 03:30）
+# 的軟刪條件「deleted_at is null＋created_at 超過 24h＋不掛在任何 diary_media／album_media」
+# ——正式站 2026-09-13 03:30 已經真的把 20 筆全部軟刪過一次（LS-248 handoff R1／R2）。
+# 這裡建一本相簿並把 20 筆 media 全掛進 album_media，讓種子資料天生不符合那個條件；
+# 同時補上 LS-147 送審截圖需要的相簿分頁內容（原本是空狀態）。
+ALBUM_ID=d8000000-0000-4000-8000-000000000001
+# 相簿標題同時是冪等查找鍵（見下方 albums 段的 do 區塊）：正式站套用不走整份種子重灌
+# （那會刪掉並重建整個家庭），而是只補這一本相簿＋連結，靠「同 family_id＋同 title＋
+# 未軟刪」查得到就不重建。標題含單引號會破壞直寫 SQL 字面，這是寫死的常數、不是參數，
+# 不需要 validate_email 那種健檢。
+ALBUM_TITLE=阿公阿嬤家過年
 # 這串碼是要印在 App Review Notes 給人照抄的（merge-review R1 i2）：原本 LSDEMO 含字母
 # 'O'，跟 create_invite RPC 產碼字母表 23456789ABCDEFGHJKLMNPQRSTUVWXYZ（排除
 # 0/O/1/I 以免長輩手抄誤認，20260825070627_invite_code_6.sql）刻意要避開的歧義字元同一類
@@ -230,6 +242,7 @@ PLAN
   帳號：owner ${OWNER_EMAIL}（密碼登入，方案 B）／member ${MEMBER_EMAIL}（Email OTP 登入）
   孩子檔案：2（${CHILD1_ID}／${CHILD2_ID}）
   media：20（18 張照片＋2 支影片，縮圖三欄＋duration_seconds 皆補齊）
+  相簿：1（「${ALBUM_TITLE}」，封面取 hero；20 筆 media 全數掛進 album_media，sort_order 0–19）
   日記：5（含多寶貝標記：其中 2 篇同時標 2 個孩子）
   留言／愛心：各 4
   邀請碼：${INVITE_CODE}（直寫 expires_at=now()+3年，繞過 create_invite RPC 的 30 天上限）
@@ -381,6 +394,11 @@ photo_ext_for() {  # $1=素材來源路徑 → 印出副檔名（png｜jpg）；
 # 副檔名連帶從 .png 變成 .jpg：storage_path 是 {media_id}.{ext}，所以這三個來源對應的
 # 10 筆 media（i=3,4,5,8,9,10,13,14,15,18，src_idx=(i-1)%5∈{2,3,4}）路徑也跟著換，舊
 # .png 物件由既有批次清理（下方「清理既有 Storage 物件」列舉四種副檔名）收掉。
+# LS-281（LS-248 merge-review R1 i3）：上一句只對**完整流程**成立——`--storage-only`
+# 明文略過那段批次清理（見下方「4. Storage」段的 if 分支），所以「換素材副檔名」這種
+# 改動一定要跑完整流程，不要只跑 `--storage-only`：後者只會補上傳新副檔名的物件，舊
+# 副檔名的物件原地變成沒有 media 列指向的孤兒，得等 24 小時後才由 purge-storage 的
+# 孤兒掃描（LS-213 範圍 2）收掉。
 photo_sources=(
   "$ROOT/design-canvas/family.jpg"
   "$ROOT/design-canvas-d/family.jpg"
@@ -688,6 +706,55 @@ SQL
   done
 } >> "$sql_file"
 
+# ---- albums（1 本）＋ album_media（20 筆連結，sort_order 0–19）----
+# LS-281。三件事值得寫下來：
+#   1. 位置：必須排在 media insert 之後——albums_cover_same_family_fkey 是
+#      (family_id, cover_media_id) → public.media (family_id, id) 的複合外鍵，封面那筆
+#      media 不存在就建不起來；album_media 的兩條複合外鍵同理。
+#   2. 順序：sort_order 直接取 media_ids 的順序（0–19）。media_ids 是
+#      printf 'd3000000-…-%012x' i 依 i=1..20 產生的，而照片素材是
+#      src_idx=(i-1)%5 逐一輪替 photo_sources——所以「media_ids 的順序」就是票文說的
+#      「photo_sources 順序」，相簿裡照片的排列與時間軸的種子順序一致，不另外排序。
+#   3. 冪等：以「同 family_id＋同 title＋未軟刪」查找既有相簿，查得到就沿用它的 id、
+#      不重建（不是靠 ALBUM_ID 主鍵衝突）——整份種子重跑時家庭已被刪掉、這裡一定是
+#      新建；但正式站補資料走的是「只補相簿＋連結、不重灌家庭」的路徑（見
+#      .claude/evidence/LS-281/ 的套用 SQL，與這段同一個形狀），那裡相簿可能已經存在，
+#      查找式冪等讓同一段 SQL 兩條路徑都安全。album_media 的 on conflict do nothing
+#      則讓連結本身可重複執行；已經被 diary_media（或本表）引用過的 media 不會因此多出
+#      第二筆連結列。
+# 為什麼要有這本相簿：見上方 ALBUM_ID 常數的註解（LS-213 每日軟刪排程）。
+{
+  cat <<SQL
+do \$\$
+declare
+  v_album_id uuid;
+begin
+  select id into v_album_id
+    from public.albums
+   where family_id = '${FAMILY_ID}' and title = '${ALBUM_TITLE}' and deleted_at is null;
+
+  if v_album_id is null then
+    insert into public.albums (id, family_id, title, cover_media_id, created_by)
+    values ('${ALBUM_ID}', '${FAMILY_ID}', '${ALBUM_TITLE}', '${media_ids[2]}', '${OWNER_ID}')
+    returning id into v_album_id;
+  end if;
+
+  insert into public.album_media (album_id, media_id, family_id, sort_order)
+  select v_album_id, s.media_id, '${FAMILY_ID}', s.sort_order
+    from (values
+SQL
+  for i in $(seq 1 20); do
+    sep=$([ "$i" -lt 20 ] && echo "," || echo "")
+    printf "      ('%s'::uuid, %s)%s\n" "${media_ids[$((i-1))]}" "$((i - 1))" "$sep"
+  done
+  cat <<SQL
+    ) as s(media_id, sort_order)
+  on conflict (album_id, media_id) do nothing;
+end;
+\$\$;
+SQL
+} >> "$sql_file"
+
 # ---- diaries（5 則；author 交替 owner/member）＋ diary_children（多寶貝標記：#3、#5 同時標兩個孩子）----
 diary_bodies=(
   "今天小樹自己在客廳走了好幾步，笑得好開心。"
@@ -742,6 +809,7 @@ do \$\$
 declare
   n_members int; n_children int; n_media int; n_diaries int; n_diary_children int;
   n_comments int; n_reactions int; n_invites int; n_feed int; used bigint;
+  n_albums int; n_album_media int; n_unlinked int;
 begin
   select count(*) into n_members from public.family_members where family_id = '${FAMILY_ID}';
   select count(*) into n_children from public.children where family_id = '${FAMILY_ID}';
@@ -753,6 +821,23 @@ begin
   select count(*) into n_invites from public.invites where family_id = '${FAMILY_ID}';
   select count(*) into n_feed from public.feed_items where family_id = '${FAMILY_ID}';
   select storage_used_bytes into used from public.families where id = '${FAMILY_ID}';
+  select count(*) into n_albums from public.albums
+   where family_id = '${FAMILY_ID}' and deleted_at is null;
+  select count(*) into n_album_media from public.album_media where family_id = '${FAMILY_ID}';
+  -- LS-281 的核心保證：這個數字只要不是 0，明天凌晨 03:30 的
+  -- private.soft_delete_unreferenced_media() 就會把這些列軟刪掉（判準逐字對齊
+  -- 20260906050606_soft_delete_unreferenced_media.sql：deleted_at is null＋
+  -- type in ('photo','video')＋不掛在任何 diary_media／album_media；那支函式另有
+  -- created_at 超過 24h 的寬限期，這裡刻意**不**加寬限期條件——種子剛寫入的列在寬限期
+  -- 內看起來還是安全的，但 24 小時後就不是了，自我檢查要抓的正是這種「今天綠、明天被洗掉」。
+  select count(*) into n_unlinked from public.media m
+   where m.family_id = '${FAMILY_ID}'
+     and m.deleted_at is null
+     and m.type in ('photo', 'video')
+     and not exists (select 1 from public.diary_media dm
+                      where dm.family_id = m.family_id and dm.media_id = m.id)
+     and not exists (select 1 from public.album_media am
+                      where am.family_id = m.family_id and am.media_id = m.id);
 
   -- families 的 AFTER INSERT trigger（add_creator_as_owner）會把 owner 自己也寫進
   -- family_members（同 00_fixtures.sql 的既有慣例：owner 不是額外角色，是這張表裡的
@@ -765,10 +850,15 @@ begin
   if n_comments <> 4 then raise exception 'SEED FAIL：comments 應為 4，實際 %', n_comments; end if;
   if n_reactions <> 4 then raise exception 'SEED FAIL：reactions 應為 4，實際 %', n_reactions; end if;
   if n_invites <> 1 then raise exception 'SEED FAIL：invites 應為 1，實際 %', n_invites; end if;
-  if n_feed <> 25 then raise exception 'SEED FAIL：feed_items 應為 25（20 media + 5 diary），實際 %', n_feed; end if;
+  -- LS-281：feed_items 從 25 變 26——albums_feed_insert（20260822120100_triggers.sql
+  -- 第 2 段的 private.feed_sync_albums()）會替新相簿補一列 kind='album' 的時間軸項目。
+  if n_feed <> 26 then raise exception 'SEED FAIL：feed_items 應為 26（20 media + 5 diary + 1 album），實際 %', n_feed; end if;
   if used <= 0 then raise exception 'SEED FAIL：storage_used_bytes 應 > 0，實際 %', used; end if;
+  if n_albums <> 1 then raise exception 'SEED FAIL：albums 應為 1（${ALBUM_TITLE}），實際 %', n_albums; end if;
+  if n_album_media <> 20 then raise exception 'SEED FAIL：album_media 應為 20（20 筆 media 全數掛進相簿），實際 %', n_album_media; end if;
+  if n_unlinked <> 0 then raise exception 'SEED FAIL：未掛任何 diary_media／album_media 的未刪 media 應為 0（否則會被 LS-213 每日 03:30 排程軟刪），實際 %', n_unlinked; end if;
 
-  raise notice 'ok review-demo-seed：members(owner+member)=2 children=2 media=20 diaries=5 diary_children=7 comments=4 reactions=4 invites=1 feed_items=25 storage_used_bytes=%', used;
+  raise notice 'ok review-demo-seed：members(owner+member)=2 children=2 media=20 albums=1 album_media=20 unlinked_media=0 diaries=5 diary_children=7 comments=4 reactions=4 invites=1 feed_items=26 storage_used_bytes=%', used;
 end;
 \$\$;
 SQL
