@@ -1,0 +1,92 @@
+{
+  "ticket": "LS-247",
+  "round": 3,
+  "head_sha": "26d74d86ad14d40db7ff6808f557241c455b1c9b",
+  "total_nodes": 10281,
+  "tree_hash": "fb3f366aeea53947",
+  "scan_scope": "boards",
+  "scan_note": "分批模式（LS-226）：SCAN_BOARDS=[c2yk3s,Bm7Lx,ZRyXL,Vn4TL,BnjqP,b59DUk,H73kPC]（六板＋Notes板）、scan_scope=boards；14 批 SCAN_BATCH_ROOTS 覆蓋 [0,242)（[0,12) [12,24) [24,36) [36,48) [48,60) [60,84) [84,108) [108,120) [120,132) [132,144) [144,168) [168,192) [192,216) [216,242)，中間兩批因穩定放寬到 size=24），各批之間全程零 .pen 寫入（本輪唯一寫入是 R3 join/invite 置換與 Notes 追記，皆發生在本次掃描 execute 序列開始之前的落地 commit 26d74d8，掃描期間未再寫入）；批次輸出存 .claude/evidence/LS-247/r3/batch-1.txt..batch-14.txt（原文逐批貼），用 `node scripts/design/overflow-scan.js --merge .claude/evidence/LS-247/r3/batch-*.txt --out /tmp/ls247-r3-merged.json` 合併，本收據逐鍵照抄合併輸出。tree_hash 已用 `git show 26d74d8:design/littlesprout.pen | 存檔 → python3 scripts/gates/design_tree_hash.py <file>` 獨立重算，結果 fb3f366aeea53947 與合併輸出的 tree_hash 逐字元相同，證明收據對應的正是 head_sha=26d74d8 那份 .pen 快照（回應 VR R2 對 R2 收據 hash 手改風險的核心質疑）。sibling_intersection 51 筆全數為母題設計已知的角托／裝置外框刻意重疊（見各筆 classification），非缺陷；其餘五支零命中。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 51,
+      "result_hash": "b74be4ac8e49a37e",
+      "flagged": [
+        {
+          "node_a": "gfP0F", "node_b": "s1Kzm", "class": "Device Frame × Hero Print @ App Store / iPhone 6.9 / 01 時間軸", "count": 1,
+          "classification": "刻意重疊——iPhone 裝置外框（Device Frame）疊在 Hero Print 母題上方作為展示模擬外殼，設計即需要外框壓在內容之上，非碰撞缺陷"
+        },
+        {
+          "node_a": "FKjPv", "node_b": "Mt7RR", "class": "Print × Corner BL @ Hero Print", "count": 1,
+          "classification": "刻意重疊——同類 4 例（TL/TR/BL/BR 各 1，Hero Print 容器）。角托依 tokens.md corner-out=5pt 規格外緣壓過紙緣，corner_anchor 掃描已核對全部 48 個錨點座標、mismatch=0，確認位置精確符合規格"
+        },
+        {
+          "node_a": "FKjPv", "node_b": "k7LmU", "class": "Print × Corner BR @ Hero Print", "count": 1,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Hero Print 說明"
+        },
+        {
+          "node_a": "FKjPv", "node_b": "ASXNn", "class": "Print × Corner TL @ Hero Print", "count": 1,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Hero Print 說明"
+        },
+        {
+          "node_a": "FKjPv", "node_b": "KqlsB", "class": "Print × Corner TR @ Hero Print", "count": 1,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Hero Print 說明"
+        },
+        {
+          "node_a": "Mt7RR/sD5Ma", "node_b": "Mt7RR/DhOiK", "class": "Corner Shape × Corner Edge @ Corner BL", "count": 6,
+          "classification": "刻意重疊——同類 24 例（TL/TR/BL/BR 各 6，對應 corner_anchor ref_hits=24 個角托實例）。cmp/Photo Corner 元件定義內部 Corner Shape 與 Corner Edge 兩層本就同尺寸疊放構成單一角托的立體邊緣效果，屬元件內部結構，非跨節點碰撞"
+        },
+        {
+          "node_a": "k7LmU/sD5Ma", "node_b": "k7LmU/DhOiK", "class": "Corner Shape × Corner Edge @ Corner BR", "count": 6,
+          "classification": "刻意重疊——同類，見 Corner Shape × Corner Edge @ Corner BL 說明"
+        },
+        {
+          "node_a": "ASXNn/sD5Ma", "node_b": "ASXNn/DhOiK", "class": "Corner Shape × Corner Edge @ Corner TL", "count": 6,
+          "classification": "刻意重疊——同類，見 Corner Shape × Corner Edge @ Corner BL 說明"
+        },
+        {
+          "node_a": "KqlsB/sD5Ma", "node_b": "KqlsB/DhOiK", "class": "Corner Shape × Corner Edge @ Corner TR", "count": 6,
+          "classification": "刻意重疊——同類，見 Corner Shape × Corner Edge @ Corner BL 說明"
+        },
+        {
+          "node_a": "k4Tyqi", "node_b": "TwhLp", "class": "Print × Corner BL @ Print Stage", "count": 5,
+          "classification": "刻意重疊——同類 20 例（TL/TR/BL/BR 各 5，對應 5 個 Print Stage 容器實例：join／invite 等題的印品母題板）。角托 corner-out=5pt 規格重疊，corner_anchor 已核對 mismatch=0"
+        },
+        {
+          "node_a": "k4Tyqi", "node_b": "w1qgP0", "class": "Print × Corner BR @ Print Stage", "count": 5,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Print Stage 說明"
+        },
+        {
+          "node_a": "k4Tyqi", "node_b": "S4Bugn", "class": "Print × Corner TL @ Print Stage", "count": 5,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Print Stage 說明"
+        },
+        {
+          "node_a": "k4Tyqi", "node_b": "prDi7", "class": "Print × Corner TR @ Print Stage", "count": 5,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Print Stage 說明"
+        },
+        {
+          "node_a": "QqTID", "node_b": "N3mjp6", "class": "Device Frame × Print Stage @ App Store / iPad 13 / 01 時間軸", "count": 1,
+          "classification": "刻意重疊——iPad 裝置外框疊在 Print Stage 母題上方，展示模擬外殼設計本就需要外框壓在內容之上"
+        },
+        {
+          "node_a": "ScEdE", "node_b": "LWJUR", "class": "Print Stage × Device Frame @ App Store / iPad 13 / 03 邀請加入", "count": 1,
+          "classification": "刻意重疊——同上，iPad 邀請加入板的裝置外框壓在 Print Stage 母題上方"
+        }
+      ]
+    },
+    "row_overflow": { "scope": "boards", "document_count": 0, "result_hash": "7365a25e1fa24148", "flagged": [] },
+    "cross_parent_collision": { "scope": "boards", "document_count": 0, "result_hash": "79218576cc6f5341", "flagged": [] },
+    "corner_anchor": {
+      "scope": "boards", "document_count": 0,
+      "boards": ["c2yk3s", "Bm7Lx", "ZRyXL", "Vn4TL", "BnjqP", "b59DUk", "H73kPC"],
+      "containers": 6, "points": 48, "mismatch": 0,
+      "flagged": [],
+      "document_containers": 6, "document_points": 48, "document_mismatch": 0, "document_flagged": [],
+      "ref_hits": 24,
+      "unresolved": [],
+      "result_hash": "b70c9dd0dd3b9d76"
+    },
+    "text_occlusion": { "scope": "boards", "document_count": 0, "result_hash": "2bac14ec0453a5f6", "flagged": [], "document_flagged": [] },
+    "board_clip": { "scope": "boards", "document_count": 0, "result_hash": "6efb171db9e19774", "flagged": [], "document_flagged": [] }
+  }
+}
