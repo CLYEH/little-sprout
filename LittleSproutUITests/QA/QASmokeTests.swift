@@ -2,9 +2,11 @@ import XCTest
 
 /// LS-158：QA 端到端情境驅動——不依賴 mobile-mcp。
 ///
-/// 來源：LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED——mobile-mcp 每次互動把模擬器前景重設回
-/// 主畫面（WebDriverAgent session 未沿用），QA 無法多步驟操作 app；同一 build 用 `xcodebuild test
-/// -only-testing:LittleSproutUITests` 可正常驅動，證明是工具層。這裡把 QA 最常需要的三條多步驟
+/// 來源：LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED——QA 無法多步驟操作 app（當時記成
+/// 「mobile-mcp 每次互動把模擬器前景重設回主畫面」，LS-270 (b) 查明是票 worktree 缺
+/// `Config/Secrets.xcconfig` 導致 Debug build 啟動時撞 `SupabaseClientFactory` 的 assert 而 SIGTRAP，
+/// 見 `QADriver+ChildAvatar.swift` 檔頭）；同一 build 用 `xcodebuild test
+/// -only-testing:LittleSproutUITests` 可正常驅動——那道 assert 對 XCTest 行程放行。這裡把 QA 最常需要的三條多步驟
 /// 路徑寫成可重放的 XCUITest，對**真的本機 Supabase 容器**跑（不是 `TapTargetGateHarness` 那種
 /// mock store）：
 ///

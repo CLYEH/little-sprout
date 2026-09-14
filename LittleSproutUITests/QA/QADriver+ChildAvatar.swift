@@ -3,10 +3,19 @@ import XCTest
 
 // MARK: - 寶貝頭像（LS-270，來源 LS-96 池項 `66d55e5d`；獨立成 extension 檔，同 QADriver+Browse.swift 慣例）
 //
-// 背景：mobile-mcp 對本 build 每次互動都把模擬器前景重設回主畫面（WebDriverAgent session 未沿用），
-// QA 因此沒辦法自己做「寶貝管理 → 選寶貝 → 編輯頭像 → 儲存 → 回列表看刷新」這種多步驟複驗——
-// LS-129／LS-130／LS-266 三次被擋，最後一次只能採信 ios-dev 的截圖。這條情境把那段路徑寫成
-// 可重放的 XCUITest，讓「頭像刷新」這類驗收有腳本通道。
+// 背景：QA 三次（LS-129／LS-130／LS-266）沒辦法自己做「寶貝管理 → 選寶貝 → 編輯頭像 → 儲存 →
+// 回列表看刷新」這種多步驟複驗，最後一次只能採信 ios-dev 的截圖。這條情境把那段路徑寫成可重放的
+// XCUITest，讓「頭像刷新」這類驗收有腳本通道。
+//
+// **當時記成「mobile-mcp 每次互動把模擬器重設回主畫面（WDA session reset）」是誤判**（LS-270 (b)
+// 查因）：真正的原因是**票 worktree 沒有 gitignored 的 `Config/Secrets.xcconfig`**，於是 Debug build
+// 的 `SupabaseClientFactory.makeClient()`（`Config/SupabaseClientFactory.swift:36`）在啟動時就撞上
+// 「佔位值 `placeholder.supabase.co`」那道 `assert` → `EXC_BREAKPOINT`／`SIGTRAP` 當場死掉，
+// SpringBoard 自然留在主畫面。那道 assert 只對 XCTest 行程與 tap-target gate 放行，所以
+// `xcodebuild test` 一路正常、**單獨啟動 app 必死**——與 mobile-mcp 無關（實測：不經 mobile-mcp 的
+// `xcrun simctl launch` 一樣死，`~/Library/Logs/DiagnosticReports/LittleSprout-*.ips` 三份堆疊皆
+// 指向同一行；補上 `LS_QA_API_URL`／`LS_QA_ANON_KEY` 兩個環境變數繞過 assert 之後，mobile-mcp
+// 連續四次互動全部留在 app 內）。詳見 LS-96 待辦池與本票 handoff。
 //
 // **為什麼自己建一個新寶貝，而不是「選列表第一個」**：本情境要斷言的是「頭像**真的**換了」——存檔後
 // 列表那一列的畫面內容必須改變。fixture 只有一張 `qa-photo.jpg`，若沿用既有寶貝，第二次跑時它的頭像
