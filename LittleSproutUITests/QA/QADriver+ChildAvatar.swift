@@ -141,6 +141,14 @@ extension QADriver {
         try require(timelineHeading, "重新啟動後的時間軸", timeout: 30)
         try dismissPushPrepromptIfPresent()
         try openChildrenTab()
+        // LS-282：relaunch 後畫面本來就穩定（LS-273 修好後，重啟前後同一列已經是同一張照片）——
+        // 剛拍的 `children-tab`（上面 `openChildrenTab()` 那張）跟重啟前的 `children-list-after-save`
+        // 逐位元相同是正常的，不該延續進 LS-260 的通用「連續 3 張＝卡住」凍結偵測（`QADriver.swift:59`）。
+        // 在這裡歸零，讓接下來 `runChildAvatar()` 拍的 `children-list-after` 只從這裡重新起算——
+        // 就算它跟 `children-tab` 仍相同也只湊 2 張，到不了門檻。QA 三次 0/3 紅的根因與證據見
+        // LS-274 comment `8f6f9061`（`children-list-after-save`→`children-tab`→`children-list-after`
+        // 三張逐位元相同）。
+        resetScreenStreak()
     }
 
     /// 收工把本情境建的那隻寶貝刪掉（merge-review R1 m3）。

@@ -62,9 +62,11 @@ final class QADriver {
         )
     }
 
-    /// LS-260 R2 m2：讓「同一段流程自己的截圖才互相比」——`safeCardTapPoint` 的捲動重試迴圈進場時
-    /// 呼叫，避免迴圈外累積的 streak（例如 `landed-timeline` → `timeline` 兩張相同）在第一次
-    /// attempt 就湊滿門檻而誤判成卡住。
+    /// LS-260 R2 m2／LS-282：讓「同一段流程自己的截圖才互相比」——歸零上一段落累積的 streak，供任何
+    /// 「跨段落邊界後前後截圖天生容易相同」的路徑呼叫：`safeCardTapPoint` 的捲動重試迴圈進場時呼叫
+    /// （避免迴圈外累積的 streak，例如 `landed-timeline` → `timeline` 兩張相同，在第一次 attempt 就
+    /// 湊滿門檻而誤判成卡住）；`QADriver+ChildAvatar.swift` 的 `relaunchAndOpenChildrenTab()` 結束時
+    /// 呼叫（避免 relaunch 前後畫面本來就穩定不變時被誤判成卡住，見該函式文件註解）。
     func resetScreenStreak() {
         lastScreenshotDigest = ""
         sameScreenshotStreak = 0
