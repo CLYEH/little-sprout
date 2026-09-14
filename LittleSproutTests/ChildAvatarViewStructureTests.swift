@@ -29,7 +29,12 @@ import XCTest
 /// `…_OverlayModifier<_ConditionalContent<AsyncImage<…>, …>>`，提到外面之後
 /// `AsyncImage` 之前不再有 `_ConditionalContent`。`AsyncImage` 的 content closure 自己也有
 /// 一個 `if case .success` 分支（型別在 `AsyncImage<…>` 的**內部**），所以判準不是「整串沒有
-/// `_ConditionalContent`」，而是「`AsyncImage` **之前**沒有」。
+/// `_ConditionalContent`」。
+///
+/// LS-275（池 `f8c5941c` i2，merge-review LS-273 R1 `498c8e5a`）：判準原本是「`AsyncImage`
+/// 之前沒有」，對無關的頂層條件式（例如 body 外層加 `if isDimmed { … } else { … }`）也會假
+/// 紅——收窄成「`_OverlayModifier<` 之後到 `AsyncImage` 之間不得有 `_ConditionalContent`」，
+/// 只釘住 overlay 段本身。
 ///
 /// **未來任何想在這個元件加 `.id()`／強制身分重建的修法，都必須先讀
 /// `ChildrenStoreAvatarListRefreshTests` 的檔頭**（LS-174 實測：`.id()` 會放大這個 race）。
@@ -38,11 +43,16 @@ final class ChildAvatarViewStructureTests: XCTestCase {
     func test_body_asyncImageIsNotWrappedInConditionalBranch() {
         let typeName = String(describing: type(of: ChildAvatarView(name: "陳小安").body))
 
-        guard let asyncImageStart = typeName.range(of: "AsyncImage")?.lowerBound else {
-            return XCTFail("ChildAvatarView.body 的型別裡找不到 AsyncImage：\(typeName)")
+        guard let overlayStart = typeName.range(of: "_OverlayModifier<")?.upperBound else {
+            return XCTFail("ChildAvatarView.body 的型別裡找不到 _OverlayModifier<：\(typeName)")
+        }
+        guard let asyncImageStart = typeName.range(
+            of: "AsyncImage", range: overlayStart..<typeName.endIndex
+        )?.lowerBound else {
+            return XCTFail("ChildAvatarView.body 的型別裡（_OverlayModifier< 之後）找不到 AsyncImage：\(typeName)")
         }
         XCTAssertFalse(
-            typeName[..<asyncImageStart].contains("_ConditionalContent"),
+            typeName[overlayStart..<asyncImageStart].contains("_ConditionalContent"),
             "AsyncImage 被包在條件分支裡（多半是 `if let avatarURL`）——avatarURL 由 nil 變成非 nil 時 "
                 + "SwiftUI 會新建 AsyncImage，這次新建落在導覽 pop 動畫上就會讓下載 task 在送出 GET 之前"
                 + "被取消且不重試（LS-273：第一次設定頭像後列表 30 秒不換圖、Storage 完全沒有 GET）。"
