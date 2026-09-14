@@ -12,8 +12,10 @@
 #   - 起點＝含 `private func` 的行（含 `private static func`）；以該行之後第一個 `{` 起算大括號配對，配平即為區塊結束。
 #   - 正規化＝去掉 `//` 行尾註解與**全部空白**後的整段文字（含宣告行）——同名同本體才算同一份複本，
 #     只是本體湊巧相同、名字不同的兩支不算（那通常是不同意圖）。
-#   - 大括號配對是純文字計數，字串字面或註解裡的 `{`／`}` 會被算進去；偵測失準的後果只是少報／多報一條
-#     informational，不值得為此引進 Swift 解析器（同 repo 內其他 grep 型 gate 的取捨）。
+#   - 大括號配對是純文字計數：字串字面或註解裡的 `{`／`}` 會被算進去（去註解用的 `sub(/\/\/.*$/,…)` 同樣
+#     會切掉字串裡的 `//`，例如 URL）。**失準的後果侷限在該檔案**——每換一個檔案就重置抽取狀態
+#     （`FNR == 1`，R2 m2；在那之前狀態跨檔延續，一個配不平的檔會讓其後所有檔案的偵測全部失效），
+#     該檔可能少報／多報一條 informational，不值得為此引進 Swift 解析器（同 repo 內其他 grep 型 gate 的取捨）。
 #
 # 用法：bash uitest-dup-helper-check.sh [<掃描根目錄>]（預設 repo 的 LittleSproutUITests/）
 # 自測：scripts/gates/uitest-dup-helper-check.test.sh
@@ -38,6 +40,10 @@ fi
 # awk：逐檔抽 private func 區塊 → key=正規化後全文，值累積「檔名:行號」；收工列出出現 ≥2 次的 key。
 dups=$(awk '
 function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
+# LS-267 R2 m2（merge-review R1 m2）：每換一個檔案就重置抽取狀態。`in_func`／`depth` 原本跨檔延續，
+# 只要有一個檔的大括號因字串字面／註解裡的 `{` 配不平，`in_func` 會一直是 1，**其後所有檔案**都被
+# 當成同一個區塊的 body 累加，整個掃描的剩餘部分失效（reviewer 以兩檔夾具實測重現漏報）。
+FNR == 1 { in_func = 0; opened = 0; depth = 0; body = "" }
 {
   line = $0
   sub(/\/\/.*$/, "", line)                      # 去行尾註解

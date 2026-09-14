@@ -73,6 +73,19 @@ out=$(bash "$check" "$d4" 2>&1); rc=$?
 has '④ 只差縮排／註解仍判為同一份複本' "$out" '⚠ 重複 helper：'
 rc_is '④ 仍 exit 0' 0 "$rc" "$out"
 
+# ---- ④b（R2 m2）檔 A 的字串字面含落單的 `{`（大括號配不平）→ **不得影響其後檔案**的偵測 ----
+#      A.swift 的 `brace()` 因為 `"{"` 永遠配不平；`FNR == 1` 重置之前，B／C 的內容會被當成 A 那個
+#      區塊的 body 一路累加，兩份 byte-identical 的 `dup()` 就此漏報（reviewer R1 m2 實測重現）。
+d4b="${work}/unbalanced"; mkdir -p "$d4b"
+printf 'import XCTest\n\nfinal class A: XCTestCase {\n    private func brace() -> String {\n        return "{" + "{"\n    }\n}\n' > "${d4b}/AUITests.swift"
+mk_helper "${d4b}/BUITests.swift" dup "$BODY"
+mk_helper "${d4b}/CUITests.swift" dup "$BODY"
+out=$(bash "$check" "$d4b" 2>&1); rc=$?
+rc_is '④b 仍 exit 0' 0 "$rc" "$out"
+has '④b 前一檔大括號配不平，後續檔案的複本照樣抓到' "$out" 'private func dup(_ element: XCUIElement) -> Bool'
+has '④b 點名 B 檔' "$out" 'BUITests.swift:6'
+has '④b 點名 C 檔' "$out" 'CUITests.swift:6'
+
 # ---- ⑤ 掃描目錄不存在／沒有 .swift → 略過、exit 0 ----
 out=$(bash "$check" "${work}/nope" 2>&1); rc=$?
 rc_is '⑤ 目錄不存在 → exit 0 略過' 0 "$rc" "$out"
@@ -100,6 +113,21 @@ fi
 out=$(bash "$mut" "$d1" 2>&1)
 has '⑦ mutant 對照：完全相同的兩份（①）仍被抓到，證明 mutant 只動到正規化' "$out" '⚠ 重複 helper：'
 
+# ---- ⑦b（R2 m2）mutant：拿掉 `FNR == 1` 的跨檔重置 → ④b 的複本漏報 ----
+mut3="${work}/mut-fnr.sh"
+grep -v '^FNR == 1 { in_func = 0; opened = 0; depth = 0; body = "" }$' "$check" > "$mut3"
+if grep -q '^FNR == 1' "$mut3"; then
+  echo "✗ ⑦b mutant 沒被正確合成（FNR 重置那行的形狀變了）" >&2; fail=1
+else
+  out=$(bash "$mut3" "$d4b" 2>&1)
+  if printf '%s' "$out" | grep -qF '⚠'; then
+    echo "✗ ⑦b mutant（拿掉跨檔重置）仍抓得到 ④b 的複本——④b 的綠不是來自重置，斷言沒有牙" >&2
+    printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+  else
+    echo "✓ ⑦b mutant（拿掉 FNR==1 跨檔重置）：④b 的複本漏報——證明重置是它被抓到的原因"
+  fi
+fi
+
 # ---- ⑧ mutant：門檻退成 ≥1 → ② 的單份也被報（證明「≥2 才報」這條判準有覆蓋）----
 mut2="${work}/mut-threshold.sh"
 sed 's|if (count\[b\] >= 2)|if (count[b] >= 1)|' "$check" > "$mut2"
@@ -107,6 +135,6 @@ out=$(bash "$mut2" "$d2" 2>&1)
 has '⑧ mutant（門檻改 ≥1）：② 的單份被誤報——證明 ② 的綠來自 ≥2 門檻' "$out" '⚠ 重複 helper：'
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ uitest-dup-helper-check 自測通過（8 組樣本）"
+  echo "✓ uitest-dup-helper-check 自測通過（10 組樣本）"
 fi
 exit "$fail"
