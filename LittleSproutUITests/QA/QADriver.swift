@@ -14,8 +14,9 @@ final class QADriver {
     /// LS-260「畫面沒前進」自診斷用：上一張截圖的摘要與連續相同的張數（見 `snap(_:)`）。
     private var lastScreenshotDigest = ""
     private var sameScreenshotStreak = 0
-    /// 連續幾張截圖完全相同就判定卡住。取 3 而非 2：同一畫面連拍兩張是正常的（`assertLandedAfterLogin`
-    /// 的 `landed-timeline` 之後 `ensureFamily` 會再拍一張 `timeline`），連三張才代表真的沒動。
+    /// 連續幾張截圖完全相同就判定卡住。取 3 而非 2，留一點安全邊際——已知會合法重複的「登陸型」快照
+    /// （`snap(_:freezeCheck:)` 的 `freezeCheck: false`）已經不計入這個累計，3 是給其餘一般快照的門檻，
+    /// 不是為了容忍特定某一對重複而挑的數字（LS-282 R2：門檻數字本身不是這次要動的東西）。
     private static let stuckScreenshotStreak = 3
 
     init(env: QAEnvironment, testCase: XCTestCase) {
@@ -41,11 +42,24 @@ final class QADriver {
     /// `suggestedHumanReadableName` 把匯出的 PNG 改回這個名字。
     ///
     /// LS-260（LS-96 池項 `6b87b252`）：順手做「畫面沒前進」自診斷——連續 `stuckScreenshotStreak`
-    /// 張截圖的 PNG 逐字元相同＝驅動在原地打轉，直接 `XCTFail`（`continueAfterFailure = false`，測試
-    /// 就停在這裡）。截圖本身已 `.keepAlways` 附在 xcresult、`qa-e2e.sh` 會匯出成 PNG，所以「保留
-    /// 截圖」不必另外做，這裡只多存一個 SHA256 摘要做比對。來源：`browse` 兩次決定性卡在同一步，
-    /// 失敗訊息停在最後一個 `require` 的逾時上，看不出「畫面根本沒動過」。
-    func snap(_ name: String) {
+    /// 張截圖的 PNG 逐字元相同＝驅動在原地打轉，直接 `XCTFail`。`XCTFail` 只標記這個測試方法失敗，
+    /// 不會讓程式碼跳出——這一行之後的敘述照常往下跑到底（除非接著真的 `throw`，同 `require()` 那類
+    /// 主動丟錯的路徑）；`continueAfterFailure = false`（`QASmokeTests`）管的是「這個測試方法本身」
+    /// 標記失敗、不讓下一個測試方法接著跑同一個已知壞掉的 app 狀態，不是「這一行之後馬上停」（LS-282
+    /// R1 merge-review n1：舊註解「測試就停在這裡」與實測不符，mutation 跑 `044114` 紅在這裡之後仍
+    /// 照跑到 `deleteChild`）。截圖本身已 `.keepAlways` 附在 xcresult、`qa-e2e.sh` 會匯出成 PNG，
+    /// 所以「保留截圖」不必另外做，這裡只多存一個 SHA256 摘要做比對。來源：`browse` 兩次決定性卡在
+    /// 同一步，失敗訊息停在最後一個 `require` 的逾時上，看不出「畫面根本沒動過」。
+    ///
+    /// LS-282 R2：`freezeCheck: false`——某些「登陸型」快照本來就可能跟前一張逐位元相同（不是卡住，
+    /// 是這一步本身沒有新東西可畫），例如剛切到分頁／剛跳出的可選覆蓋層還沒真的畫出來。這種快照仍然
+    /// 拍照存證、仍然更新摘要，但**不參與**卡住累計——直接把這張自己的摘要當新基準（streak 重置成
+    /// 1），不跟前一張比、也不會讓自己觸發 `XCTFail`；下一張正常快照則是跟「這張」比，不會拖著更早
+    /// 之前的舊 streak。取代逐點在呼叫端外部補 `resetScreenStreak()`（R1 那樣，會漏、下一個新情境
+    /// 又撞——R1 merge-review B1 就是同一機制第二次咬人：`landed-timeline`／`timeline`／
+    /// `push-preprompt` 三張登陸型快照連續逐位元相同，凍結偵測在 `push-preprompt` 開火）：呼叫端
+    /// 直接在自己已知「這張可能合法重複」的那個 `snap()` 呼叫上標記，語意留在呼叫點旁邊，好找也好核。
+    func snap(_ name: String, freezeCheck: Bool = true) {
         stepIndex += 1
         let screenshot = app.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)
@@ -53,6 +67,11 @@ final class QADriver {
         attachment.lifetime = .keepAlways
         testCase.add(attachment)
         let digest = SHA256.hash(data: screenshot.pngRepresentation).map { String(format: "%02x", $0) }.joined()
+        guard freezeCheck else {
+            lastScreenshotDigest = digest
+            sameScreenshotStreak = 1
+            return
+        }
         sameScreenshotStreak = (digest == lastScreenshotDigest) ? sameScreenshotStreak + 1 : 1
         lastScreenshotDigest = digest
         guard sameScreenshotStreak >= Self.stuckScreenshotStreak else { return }
@@ -62,11 +81,10 @@ final class QADriver {
         )
     }
 
-    /// LS-260 R2 m2／LS-282：讓「同一段流程自己的截圖才互相比」——歸零上一段落累積的 streak，供任何
-    /// 「跨段落邊界後前後截圖天生容易相同」的路徑呼叫：`safeCardTapPoint` 的捲動重試迴圈進場時呼叫
-    /// （避免迴圈外累積的 streak，例如 `landed-timeline` → `timeline` 兩張相同，在第一次 attempt 就
-    /// 湊滿門檻而誤判成卡住）；`QADriver+ChildAvatar.swift` 的 `relaunchAndOpenChildrenTab()` 結束時
-    /// 呼叫（避免 relaunch 前後畫面本來就穩定不變時被誤判成卡住，見該函式文件註解）。
+    /// LS-260 R2 m2：讓「同一段流程自己的截圖才互相比」——`safeCardTapPoint` 的捲動重試迴圈進場時
+    /// 呼叫，避免迴圈外累積的 streak（例如 `landed-timeline` → `timeline` 兩張相同）在第一次
+    /// attempt 就湊滿門檻而誤判成卡住。單一 `snap()` 呼叫要達到同樣效果，改用 `freezeCheck: false`
+    /// （LS-282 R2）；這支留給「一段迴圈要整段歸零」的情境用。
     func resetScreenStreak() {
         lastScreenshotDigest = ""
         sameScreenshotStreak = 0
@@ -211,7 +229,9 @@ final class QADriver {
             try require(app.buttons["之後再說"], "寶貝建檔頁（可跳過）——建立家庭後應彈出", timeout: 30).tap()
         }
         try require(timelineHeading, "時間軸", timeout: 30)
-        snap("timeline")
+        // LS-282 R2：這張跟上面 `assertLandedAfterLogin` 剛拍的 `landed-timeline` 本來就常常逐位元
+        // 相同（同一個時間軸、中間沒有新東西可畫）——`freezeCheck: false`，不參與卡住累計。
+        snap("timeline", freezeCheck: false)
         try dismissPushPrepromptIfPresent()
     }
 
@@ -229,7 +249,11 @@ final class QADriver {
         // QA-GATE-HANDLED: PushPrepromptView（LS-232：對應 `RootView.swift` 的
         // `// QA-GATE: PushPrepromptView` 標記——這裡點「稍後再說」再等一次時間軸就是處理方式）。
         guard pushPrepromptSkipButton.waitForExistence(timeout: 10) else { return }
-        snap("push-preprompt")
+        // LS-282 R2 B1：`waitForExistence` 只驗 a11y tree 命中，覆蓋層當下常常還沒真的畫出來——這張
+        // 常跟前面的 `timeline` 逐位元相同（merge-review 全新模擬器實跑重現：`landed-timeline`＝
+        // `timeline`＝`push-preprompt` 三張相同，在這裡撞上凍結偵測）。`freezeCheck: false`，不參與
+        // 卡住累計，也不會被前面兩張「登陸型」快照拖著一起觸發。
+        snap("push-preprompt", freezeCheck: false)
         pushPrepromptSkipButton.tap()
         try require(timelineHeading, "推播前置頁關閉後的時間軸", timeout: 15)
         snap("landed-push-preprompt-dismissed")

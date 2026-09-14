@@ -135,20 +135,18 @@ extension QADriver {
     /// 本情境要守的是**端到端有沒有真的換成功**：選圖 → 上傳 → 寫回 → 重新取回 → 畫出來。重啟後再比對
     /// 同一列的畫面內容，證明的正是這條完整路徑，而且不會被上面那個重繪缺口綁架成長紅（長紅的情境
     /// 等於沒有情境）。等那個缺口修掉，把這段換回「存檔後直接在同一 session 比對」會是更嚴格的版本。
+    /// relaunch 後畫面本來就穩定（LS-273 修好後，重啟前後同一列已經是同一張照片）——剛拍的
+    /// `children-tab`（`openChildrenTab()` 那張）跟重啟前的 `children-list-after-save` 逐位元相同
+    /// 是正常的。R1 曾在這裡呼叫 `resetScreenStreak()` 處理；R2 改成在 `openChildrenTab()` 自己的
+    /// `snap()` 呼叫上標 `freezeCheck: false`（見該函式），效果相同但不必每個呼叫端各自記得歸零，
+    /// 這裡不需要再做什麼。QA 三次 0/3 紅的根因與證據見 LS-274 comment `8f6f9061`
+    /// （`children-list-after-save`→`children-tab`→`children-list-after` 三張逐位元相同）。
     private func relaunchAndOpenChildrenTab() async throws {
         app.terminate()
         launch()
         try require(timelineHeading, "重新啟動後的時間軸", timeout: 30)
         try dismissPushPrepromptIfPresent()
         try openChildrenTab()
-        // LS-282：relaunch 後畫面本來就穩定（LS-273 修好後，重啟前後同一列已經是同一張照片）——
-        // 剛拍的 `children-tab`（上面 `openChildrenTab()` 那張）跟重啟前的 `children-list-after-save`
-        // 逐位元相同是正常的，不該延續進 LS-260 的通用「連續 3 張＝卡住」凍結偵測（`QADriver.swift:59`）。
-        // 在這裡歸零，讓接下來 `runChildAvatar()` 拍的 `children-list-after` 只從這裡重新起算——
-        // 就算它跟 `children-tab` 仍相同也只湊 2 張，到不了門檻。QA 三次 0/3 紅的根因與證據見
-        // LS-274 comment `8f6f9061`（`children-list-after-save`→`children-tab`→`children-list-after`
-        // 三張逐位元相同）。
-        resetScreenStreak()
     }
 
     /// 收工把本情境建的那隻寶貝刪掉（merge-review R1 m3）。
@@ -257,7 +255,11 @@ extension QADriver {
     private func openChildrenTab() throws {
         try require(childrenTab, "Tab Bar「寶貝」").tap()
         try require(childrenHeading, "寶貝管理頁", timeout: 20)
-        snap("children-tab")
+        // LS-282 R2：relaunch 後（`relaunchAndOpenChildrenTab()`）這張常跟重啟前最後一張
+        // `children-list-after-save` 逐位元相同——LS-273 修好頭像刷新後，重啟前後同一列已是同一張
+        // 照片，畫面本來就穩定不變（不是卡住）。`freezeCheck: false`，不參與卡住累計；首次進場（非
+        // relaunch）呼叫同一顆函式時這張本就跟前一張（時間軸）不同，標記不影響那條路徑的偵測能力。
+        snap("children-tab", freezeCheck: false)
     }
 
     private func createChild(named name: String) throws {
