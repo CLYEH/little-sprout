@@ -95,6 +95,10 @@ extension TapTargetGateHarness {
               let seconds = Double(arguments[index + 1]) else {
             return 3
         }
+        let raw = arguments[index + 1]
+        guard seconds.isFinite, seconds >= 0 else {
+            preconditionFailure("LS-269 harness：-LSVideoSignDelaySeconds 非法值 \(raw)")
+        }
         return seconds
     }
 

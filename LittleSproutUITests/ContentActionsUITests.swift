@@ -316,7 +316,7 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertTrue(headline.waitForExistence(timeout: 5), "應該先呈現內容操作表")
 
         app.buttons["取消"].tap()
-        XCTAssertTrue(headline.waitForNonExistence(timeout: 5), "內容操作表應該已經關閉")
+        XCTAssertTrue(headline.waitUntilGone(timeout: 5), "內容操作表應該已經關閉")
 
         let commentButton = app.buttons[
             QAAccessibilityID.interactionRowElement(kind: "diary", element: "commentButton")

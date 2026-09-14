@@ -89,7 +89,7 @@ final class SettingsViewTests: XCTestCase {
     ///    「開錯文件」這種 mutation（只判斷存在性，兩種情況下「使用條款」都查得到，測不出來，
     ///    實測驗證過）。
     /// LS-259 第 1 項（沿 LS-253 `7b493a8` 同一 helper／寫法）：`waitForHittable` 讓 tap
-    /// 前多一個「真的可點」同步點，`waitForNonExistence` 用輪詢取代一次性 `.exists` 快照
+    /// 前多一個「真的可點」同步點，`waitUntilGone` 用輪詢取代一次性 `.exists` 快照
     /// （避免轉場動畫尚未跑完時誤判）；兩處 sheet 斷言的 timeout 對齊 10s（同
     /// `SettingsViewIPadTests` 的 `pushedSentinel`／legal 用值），不再用 5s／3s。
     func testTappingTermsRowOpensLegalDocumentSheet_thenCloses() {
@@ -109,12 +109,12 @@ final class SettingsViewTests: XCTestCase {
         )
 
         closeButton.tap()
-        XCTAssertTrue(closeButton.waitForNonExistence(timeout: 10), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）")
+        XCTAssertTrue(closeButton.waitUntilGone(timeout: 10), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）")
     }
 
     /// 同上，換「隱私權政策」列，驗證開的是對應文件（不是誤開使用條款）——理由與數量比對手法
     /// 見上一支測試文件註解。LS-259 第 1 項：本測試沒有關閉步驟（只驗開啟），故只補
-    /// `waitForHittable`＋開啟斷言 timeout 對齊 10s，不新增關閉／`waitForNonExistence`——
+    /// `waitForHittable`＋開啟斷言 timeout 對齊 10s，不新增關閉／`waitUntilGone`——
     /// 關閉行為已由上一支 `testTappingTermsRowOpensLegalDocumentSheet_thenCloses` 涵蓋。
     func testTappingPrivacyRowOpensCorrectLegalDocumentSheet() {
         let app = TapTargetMeasurement.launch(.settings)

@@ -55,7 +55,7 @@ final class DiaryDetailCommentsUITests: XCTestCase {
         XCTAssertTrue(sheetTitle.waitForExistence(timeout: 5), "留言 sheet 應該有標題可以當拖曳起點")
         let dragStart = sheetTitle.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         dragStart.press(forDuration: 0.05, thenDragTo: dragStart.withOffset(CGVector(dx: 0, dy: 500)))
-        XCTAssertTrue(emptyStateText.waitForNonExistence(timeout: 5), "留言 sheet 應該已經關閉")
+        XCTAssertTrue(emptyStateText.waitUntilGone(timeout: 5), "留言 sheet 應該已經關閉")
 
         let moreButton = app.buttons["更多操作"]
         XCTAssertTrue(moreButton.waitForExistence(timeout: 5), "留言 sheet 關閉後應該回到詳情頁、看得到「更多操作」")
