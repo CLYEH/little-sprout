@@ -19,14 +19,26 @@ final class SettingsViewIPadTests: XCTestCase {
     /// pop 發生了、是測試端等待或 sentinel 的問題。
     /// 用 `try? snapshot()` 而不是 `.label`／`.frame` 這類 accessor——後者解析不到會框架硬
     /// 失敗（LS-265 merge-review R1 M1 實測），診斷用的程式碼不該自己把測試打紅。
+    ///
+    /// LS-272（池 `960a50bb` i2）：原本只讀 `app.navigationBars.firstMatch`——split view 下
+    /// 樹上可能同時存在多個 navigation bar，`firstMatch` 取到哪一個依樹序而定，日後排版變動
+    /// 可能取到錯的那個。改掃 `app.navigationBars` 全部，判準改成「任一 navbar 的 `buttons`
+    /// 是否含 `BackButton`」（放在字串最前面，是這支診斷真正要回答的問題：目的地那一層還在不
+    /// 在）；`navBar=` 的識別碼清單只當輔助資訊、供人眼核對是哪一層。
     private static func navigationSignature(_ app: XCUIApplication) -> String {
-        guard let navigationBar = try? app.navigationBars.firstMatch.snapshot() else {
-            return "navBar=<解析不到>／appState=\(app.state.rawValue)"
+        let snapshots = app.navigationBars.allElementsBoundByIndex.compactMap { try? $0.snapshot() }
+        guard !snapshots.isEmpty else {
+            return "hasBackButton=<解析不到>／appState=\(app.state.rawValue)"
         }
-        let buttonLabels = navigationBar.children
-            .filter { $0.elementType == .button }
-            .map { "\($0.identifier.isEmpty ? $0.label : $0.identifier)" }
-        return "navBar=\(navigationBar.identifier)／buttons=\(buttonLabels)／appState=\(app.state.rawValue)"
+        let perBar = snapshots.map { bar -> (identifier: String, buttons: [String]) in
+            let buttonLabels = bar.children
+                .filter { $0.elementType == .button }
+                .map { "\($0.identifier.isEmpty ? $0.label : $0.identifier)" }
+            return (bar.identifier, buttonLabels)
+        }
+        let hasBackButton = perBar.contains { $0.buttons.contains("BackButton") }
+        let detail = perBar.map { "navBar=\($0.identifier)／buttons=\($0.buttons)" }.joined(separator: "、")
+        return "hasBackButton=\(hasBackButton)／\(detail)／appState=\(app.state.rawValue)"
     }
 
     /// push 後系統返回鈕的 identifier 恆為 `"BackButton"`（label 會沿用上一頁的
