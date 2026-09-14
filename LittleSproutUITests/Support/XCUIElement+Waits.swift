@@ -1,7 +1,7 @@
 import XCTest
 
 /// LS-263（池 `11494a69`，merge-review R1 m1／R2 復核）：`waitForHittable`／
-/// `waitForNonExistence` 原本在 `ContentActionsUITests`／`DiaryDetailCommentsUITests`／
+/// `waitUntilGone` 原本在 `ContentActionsUITests`／`DiaryDetailCommentsUITests`／
 /// `SettingsViewIPadTests`／`DiaryDetailVideoUITests`／`SettingsViewTests` 五個檔案各自複製
 /// 一份（LS-253／259／261 三票各自照抄）——逐字比對過全部複本，實作完全相同（無 timeout
 /// 預設值、同一套 `XCTNSPredicateExpectation` + `XCTWaiter().wait` 輪詢寫法，沿 LS-253
@@ -100,7 +100,7 @@ extension XCUIElement {
     /// LS-265 風險評估：`exists` 只查 accessibility tree 上有沒有這個節點，不像 `hittable`
     /// 需要框架另外算 activation point／hit-test，沒有觀察到、也沒有理論上的同型「frame 暫時
     /// 無效就框架硬失敗」風險，維持原本的 `XCTNSPredicateExpectation` 寫法不動。
-    func waitForNonExistence(timeout: TimeInterval) -> Bool {
+    func waitUntilGone(timeout: TimeInterval) -> Bool {
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: self)
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }

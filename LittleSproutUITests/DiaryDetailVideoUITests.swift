@@ -74,7 +74,7 @@ final class DiaryDetailVideoUITests: XCTestCase {
         // （跟背景元素在 `fullScreenCover` 蓋上後仍持續 `exists` 不同，見檔頭 R2 補充）。
         // timeout 10 秒：留給 8 秒延遲＋前面幾步 XCUITest 動作本身的耗時餘裕。
         XCTAssertTrue(
-            emptyStateText.waitForNonExistence(timeout: 10), "影片簽名回來後應該把留言 sheet 收起，換成影片全螢幕"
+            emptyStateText.waitUntilGone(timeout: 10), "影片簽名回來後應該把留言 sheet 收起，換成影片全螢幕"
         )
 
         // 進一步確認「收起的是換成影片全螢幕」而不是其他非預期狀態——有界重試找系統原生

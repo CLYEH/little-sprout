@@ -46,12 +46,12 @@ final class SettingsViewIPadTests: XCTestCase {
 
         backButton.tap()
 
-        // LS-237 第 8 項：先等目的地畫面的 sentinel 真的消失（`waitForNonExistence`——
+        // LS-237 第 8 項：先等目的地畫面的 sentinel 真的消失（`waitUntilGone`——
         // `.exists` 一次性快照在返回轉場動畫還沒跑完時可能誤判成「還在」），確定返回轉場已經
         // 開始收尾，再等入口列重新出現；比原本「entry 先、pushedSentinel 用一次性快照」的
         // 順序更貼近「返回」這個轉場動畫實際發生的先後。
         XCTAssertTrue(
-            pushedSentinel.waitForNonExistence(timeout: 10),
+            pushedSentinel.waitUntilGone(timeout: 10),
             "返回後不該還看得到目的地畫面的內容", file: file, line: line
         )
         XCTAssertTrue(
@@ -227,14 +227,14 @@ final class SettingsViewIPadTests: XCTestCase {
         // (closeButton.waitForExistence(timeout: 3), ...)` 用的是「等開始存在」的 API 驗證
         // 「不存在」——tap 後 dismiss 動畫還沒跑完的那個瞬間，第一次輪詢就可能量到「還存在」，
         // `waitForExistence` 因此立刻回傳 `true`（不會等滿 3 秒看它會不會消失），斷言就此
-        // 誤判失敗。改用真正等「停止存在」的 `waitForNonExistence`。
+        // 誤判失敗。改用真正等「停止存在」的 `waitUntilGone`。
         // LS-253 R2（merge-review R1 M1）：timeout 由 3s 拉到 10s——run 34741136505 attempt 1
         // 證實 sheet 其實有關掉（下一行馬上點到「隱私權政策」），純粹是忙碌 runner 上單次
         // accessibility snapshot 就吃掉 2.3s，3s 只夠輪詢 1–2 次；3s 也是全 repo
-        // `waitForNonExistence` 呼叫裡唯一的離群值（本檔 L51 用 10、`ContentActionsUITests.swift`／
+        // `waitUntilGone` 呼叫裡唯一的離群值（本檔 L51 用 10、`ContentActionsUITests.swift`／
         // `DiaryDetailCommentsUITests.swift` 用 5），對齊本檔 L51 同類「轉場後等消失」情境。
         XCTAssertTrue(
-            closeButton.waitForNonExistence(timeout: 10), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）"
+            closeButton.waitUntilGone(timeout: 10), "點擊關閉後 sheet 應消失（Footer「關閉」鈕不應再存在）"
         )
 
         // LS-261：關閉 sheet 後「回到列表」這一步與 `assertPushThenBackReturnsToList` 的 back
