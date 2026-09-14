@@ -59,7 +59,7 @@ enum VideoTrimmer {
                 }
             }
         }
-        try checkWithinSizeLimit(outputURL, maxByteSize: maxByteSize)
+        try await checkWithinSizeLimit(outputURL, maxByteSize: maxByteSize)
         let outputPixelSize = await pixelSize(ofFirstVideoTrackIn: AVURLAsset(url: outputURL))
         return UploadSource(fileURL: outputURL, fileExtension: "mp4", pixelSize: outputPixelSize)
     }
@@ -72,15 +72,28 @@ enum VideoTrimmer {
     /// Storage 413 映射成 `AppError` 是同一個慣例：這是使用者要看懂、要能自己處置的失敗，
     /// 不是內部技術錯誤；`message` 只供 log／除錯，畫面上的字由
     /// `DiaryPublishErrorMessage.displayText(for:)` 依 `code` 決定（`AppError.swift` 檔頭契約）。
-    private static func checkWithinSizeLimit(_ url: URL, maxByteSize: Int) throws {
+    private static func checkWithinSizeLimit(_ url: URL, maxByteSize: Int) async throws {
         let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
         guard let byteSize = attributes[.size] as? Int else { throw TrimmerError.missingFileSize }
         guard byteSize > maxByteSize else { return }
+        let seconds = (try? await AVURLAsset(url: url).load(.duration).seconds) ?? 0
+        let suggested = suggestedSeconds(forByteSize: byteSize, duration: seconds, maxByteSize: maxByteSize)
         try? FileManager.default.removeItem(at: url)
         throw AppError.validationRetryable(
-            message: "1080p 壓縮後仍有 \(byteSize) bytes，超過單檔 \(maxByteSize) bytes 上限",
-            code: DiaryMediaErrorCode.videoTooLargeAfterExport
+            message: "1080p 壓縮後仍有 \(byteSize) bytes／\(seconds) 秒，超過單檔 \(maxByteSize) bytes 上限",
+            code: DiaryMediaErrorCode.videoTooLargeAfterExport(suggestedSeconds: suggested)
         )
+    }
+
+    /// 「這支影片裁到幾秒才塞得進上限」——用它自己壓完的平均位元率（`byteSize / duration`）
+    /// 回推，再乘 0.9 留餘裕（重新裁切後的那一段位元率不會跟整支一模一樣，估太滿會讓使用者
+    /// 照著裁完還是失敗）。刻意不用全域常數：1080p 匯出的位元率隨畫面內容差一個數量級
+    /// （LS-279 實測 2.4–47.9 Mbps），寫死的秒數對一半的影片都是錯的——本票在模擬器上就撞到
+    /// 「40 秒的影片被要求裁到 40 秒內」。時長讀不到（0）時退回
+    /// `MediaUploadLimits.suggestedVideoSeconds`；下限 5 秒，不給出「裁到 0 秒」這種廢話。
+    static func suggestedSeconds(forByteSize byteSize: Int, duration: Double, maxByteSize: Int) -> Int {
+        guard duration > 0, byteSize > 0 else { return MediaUploadLimits.suggestedVideoSeconds }
+        return max(5, Int(duration * Double(maxByteSize) / Double(byteSize) * 0.9))
     }
 
     /// 影片第一條視訊軌「已套用旋轉」後的實際像素尺寸——`naturalSize` 本身不含裝置拍攝方向，

@@ -57,11 +57,38 @@ final class VideoTrimmerTests: XCTestCase {
             guard case .validationRetryable(_, let code) = error else {
                 return XCTFail("應該是 validationRetryable，實際是 \(error)")
             }
-            XCTAssertEqual(code, DiaryMediaErrorCode.videoTooLargeAfterExport)
+            guard let seconds = DiaryMediaErrorCode.videoTooLargeSuggestedSeconds(fromCode: code) else {
+                return XCTFail("碼要帶得出建議秒數，實際是 \(code ?? "nil")")
+            }
+            XCTAssertGreaterThan(seconds, 0, "建議秒數要是正數，畫面才顯示得出「請裁到 N 秒內」")
         }
 
         XCTAssertEqual(
             try mediaDraftTempFileCount(), temporaryFilesBefore, "超限的輸出要自己清掉，否則是沒有回收者的孤兒暫存檔"
+        )
+    }
+
+    /// 建議秒數的算法本身（純函式）：以實際輸出的平均位元率回推、乘 0.9 餘裕。
+    /// 本票模擬器實測的那支 65 秒素材壓完是 ~78.6 MB／60 秒 → 建議 36 秒，而不是先前寫死的
+    /// 40 秒（寫死的話會出現「40 秒的影片請裁到 40 秒內」這種自相矛盾的回話）。
+    func test_suggestedSeconds_scalesWithMeasuredBitrateAndFallsBackWhenDurationUnknown() {
+        let limit = MediaUploadLimits.maxObjectByteSize
+
+        XCTAssertEqual(
+            VideoTrimmer.suggestedSeconds(forByteSize: 78_615_103, duration: 60, maxByteSize: limit), 36,
+            "60 秒壓成 78.6 MB → 50 MiB 大約裝得下 40 秒，打九折餘裕後 36 秒"
+        )
+        XCTAssertEqual(
+            VideoTrimmer.suggestedSeconds(forByteSize: 157_230_206, duration: 60, maxByteSize: limit), 18,
+            "同樣長度、兩倍位元率，建議秒數要跟著減半——不能是固定值"
+        )
+        XCTAssertEqual(
+            VideoTrimmer.suggestedSeconds(forByteSize: 78_615_103, duration: 0, maxByteSize: limit),
+            MediaUploadLimits.suggestedVideoSeconds, "時長讀不到才退回後備常數"
+        )
+        XCTAssertEqual(
+            VideoTrimmer.suggestedSeconds(forByteSize: 1_000_000_000, duration: 60, maxByteSize: limit), 5,
+            "極端位元率也不給「裁到 0 秒」這種廢話，下限 5 秒"
         )
     }
 

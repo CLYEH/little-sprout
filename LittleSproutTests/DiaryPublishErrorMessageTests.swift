@@ -17,19 +17,27 @@ final class DiaryPublishErrorMessageTests: XCTestCase {
     }
 
     /// LS-279：壓縮後仍超限跟 Storage 413 是兩種不同的處置建議（裁短 vs 換一個小一點的檔案），
-    /// 因此是兩個碼、兩句文案——這條釘住「螢幕上出現的是裁短那句、而且帶得出建議秒數」，
-    /// mutation 若把新分支刪掉會退回 413 之外的通用句而紅。
+    /// 因此是兩個碼、兩句文案——這條釘住「螢幕上出現的是裁短那句」。
     func test_videoTooLargeAfterExport_showsTrimToSecondsMessage() {
         let error = AppError.validationRetryable(
-            message: "log only, not shown", code: DiaryMediaErrorCode.videoTooLargeAfterExport
+            message: "log only, not shown", code: DiaryMediaErrorCode.videoTooLargeAfterExport(suggestedSeconds: 36)
         )
 
         let text = DiaryPublishErrorMessage.displayText(for: error)
 
-        XCTAssertEqual(text, "影片太長，壓縮後仍超過 50MB 上限，請裁到 40 秒內再試一次。")
-        XCTAssertTrue(
-            text.contains("\(MediaUploadLimits.suggestedVideoSeconds) 秒"), "要告訴使用者裁到幾秒，不是只說太大"
+        XCTAssertEqual(text, "影片太長，壓縮後仍超過 50MB 上限，請裁到 36 秒內再試一次。")
+    }
+
+    /// 秒數是**每支影片各自算**的（LS-279 模擬器實測：寫死 40 秒時，一支 40 秒的影片被要求
+    /// 「裁到 40 秒內」）——同一個碼帶不同 payload 就要顯示不同秒數，這條釘住那件事。
+    func test_videoTooLargeAfterExport_secondsComeFromErrorCodePayload() {
+        let text = DiaryPublishErrorMessage.displayText(
+            for: .validationRetryable(
+                message: "log only", code: DiaryMediaErrorCode.videoTooLargeAfterExport(suggestedSeconds: 12)
+            )
         )
+
+        XCTAssertEqual(text, "影片太長，壓縮後仍超過 50MB 上限，請裁到 12 秒內再試一次。")
     }
 
     func test_otherValidationRetryable_fallsBackToGenericUserFacingMessage() {

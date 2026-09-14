@@ -30,7 +30,24 @@ enum DiaryMediaErrorCode {
     /// 是它在上傳之前就發生（沒有打過網路），而且處置建議不同（不是「換一個小一點的檔案」，
     /// 而是「把這支影片裁短」），所以另給一個碼、另給一句文案。同樣是 client 合成的
     /// sentinel，不是後端錯誤碼，`client_` 前綴的理由見上。
-    static let videoTooLargeAfterExport = "client_video_too_large_after_export"
+    ///
+    /// **碼帶一個數值 payload**（`client_video_too_large_after_export:36`）＝建議裁到幾秒。
+    /// 這個秒數是對**這一支**影片算出來的（`VideoTrimmer.suggestedSeconds`：用它自己壓完的
+    /// 平均位元率回推），不是全域常數——實測 1080p 匯出的位元率隨畫面內容差了一個數量級
+    /// （LS-279 量到 2.4–47.9 Mbps），寫死一個秒數會出現「一支 40 秒的影片被要求裁到 40 秒
+    /// 內」這種自相矛盾的回話（本票模擬器實測撞到）。走 `code` 而不是 `message`：`message`
+    /// 依 `AppError.swift` 檔頭契約只供 log／除錯，不進畫面。
+    static let videoTooLargeAfterExportPrefix = "client_video_too_large_after_export:"
+
+    static func videoTooLargeAfterExport(suggestedSeconds: Int) -> String {
+        "\(videoTooLargeAfterExportPrefix)\(suggestedSeconds)"
+    }
+
+    /// 從 `code` 取回建議秒數；不是這個碼（或 payload 壞掉）回 `nil`，呼叫端走其他分支。
+    static func videoTooLargeSuggestedSeconds(fromCode code: String?) -> Int? {
+        guard let code, code.hasPrefix(videoTooLargeAfterExportPrefix) else { return nil }
+        return Int(code.dropFirst(videoTooLargeAfterExportPrefix.count))
+    }
 }
 
 /// 上傳大小相關的客戶端常數——跟 Storage `media` bucket 的 `file_size_limit` 對齊
@@ -38,9 +55,11 @@ enum DiaryMediaErrorCode {
 enum MediaUploadLimits {
     /// 單檔 50 MiB。超過這個大小的 PUT 會被 Storage 以 413 擋下。
     static let maxObjectByteSize = 50 * 1024 * 1024
-    /// 壓縮後仍超限時，回話請使用者裁到的秒數（`docs/API.md` §6「影片壓縮與長度建議」）。
-    /// 由 1080p H.264 匯出的常見位元率（約 10 Mbps）除 50 MiB 估算得 ≈42 秒，取保守的 40。
-    static let suggestedVideoSeconds = 40
+    /// 算不出「這支影片該裁到幾秒」時的後備建議秒數（`docs/API.md` §6「影片壓縮與長度
+    /// 建議」）——只有在壓縮輸出的時長讀不到時才會用到，正常路徑是
+    /// `VideoTrimmer.suggestedSeconds` 依實際位元率現算。值取 20 秒：1080p 匯出實測位元率
+    /// 2.4–47.9 Mbps（LS-279），中高位元率（約 20 Mbps）下 50 MiB ≈ 21 秒，取 20 當保守後備。
+    static let suggestedVideoSeconds = 20
 }
 
 /// 12c 失敗態螢幕上實際顯示的文案——依 `AppError.code` 分流（同 `JoinCodePhase.swift` 對
@@ -63,9 +82,11 @@ enum DiaryPublishErrorMessage {
         if case .validationRetryable(_, let code) = error, code == DiaryMediaErrorCode.payloadTooLarge {
             return "檔案超過 50MB 上限，請選擇較小的照片或影片再試一次。"
         }
-        // LS-279：壓縮後仍超限走這一句——上傳根本沒發生，請使用者裁短是唯一有效的處置。
-        if case .validationRetryable(_, let code) = error, code == DiaryMediaErrorCode.videoTooLargeAfterExport {
-            return "影片太長，壓縮後仍超過 50MB 上限，請裁到 \(MediaUploadLimits.suggestedVideoSeconds) 秒內再試一次。"
+        // LS-279：壓縮後仍超限走這一句——上傳根本沒發生，請使用者裁短是唯一有效的處置；
+        // 秒數由碼的 payload 帶進來（見 `DiaryMediaErrorCode`），每支影片各自算。
+        if case .validationRetryable(_, let code) = error,
+           let seconds = DiaryMediaErrorCode.videoTooLargeSuggestedSeconds(fromCode: code) {
+            return "影片太長，壓縮後仍超過 50MB 上限，請裁到 \(seconds) 秒內再試一次。"
         }
         if case .network = error {
             return "發佈失敗，請檢查網路連線後再試一次。"

@@ -151,8 +151,8 @@ final class DiaryComposerStorePublishTests: XCTestCase {
             diaryAPIClient: diaryClient, mediaUploadService: mediaService,
             videoPreparer: { _ in
                 throw AppError.validationRetryable(
-                    message: "1080p 壓縮後仍有 60000000 bytes，超過單檔 52428800 bytes 上限",
-                    code: DiaryMediaErrorCode.videoTooLargeAfterExport
+                    message: "1080p 壓縮後仍有 60000000 bytes／60.0 秒，超過單檔 52428800 bytes 上限",
+                    code: DiaryMediaErrorCode.videoTooLargeAfterExport(suggestedSeconds: 47)
                 )
             }
         )
@@ -174,7 +174,7 @@ final class DiaryComposerStorePublishTests: XCTestCase {
         }
         XCTAssertEqual(
             DiaryPublishErrorMessage.displayText(for: error),
-            "影片太長，壓縮後仍超過 50MB 上限，請裁到 40 秒內再試一次。"
+            "影片太長，壓縮後仍超過 50MB 上限，請裁到 47 秒內再試一次。"
         )
     }
 

@@ -2198,11 +2198,14 @@ Edge Function 完成刪除）。`LS052`／`LS053`／`LS054`（LS-179 補齊，�
   `VideoTrimmer.compressedForUpload`（`AVAssetExportPreset1920x1080`，只保留前 60 秒）
   壓成 1080p 再上傳，不再像 LS-125 那樣只有「超過 60 秒」才壓——一支 40 秒的 4K 原檔
   就有 100 MB 上下，必定撞上面那條 50 MiB 上限。壓完仍超過 50 MiB 時**不上傳**，編輯器
-  直接回話請使用者裁到 **40 秒**內（`MediaUploadLimits.suggestedVideoSeconds`）：以 1080p
-  H.264 常見位元率約 10 Mbps 估算，50 MiB ≈ 42 秒，取 40 留餘裕。實測位元率隨畫面內容
-  差異極大（LS-279 量到低動態漸層 2.4 Mbps、純雜訊 47.9 Mbps），所以 40 秒是建議值不是
-  保證。**相簿上傳佇列（`UploadQueueStore`）不走這條路徑**，影片仍以原檔上傳、超限時由
-  Storage 回 413。
+  直接回話請使用者裁到 **N 秒**內；**N 是每支影片各自算的**（`VideoTrimmer
+  .suggestedSeconds`：用這支影片壓完的平均位元率 `byteSize ÷ duration` 回推「多長剛好塞得
+  進 50 MiB」，再乘 0.9 留餘裕，下限 5 秒）。刻意不用固定秒數：1080p 匯出的位元率隨畫面
+  內容差一個數量級（LS-279 實測低動態漸層 2.4 Mbps、純雜訊 47.9 Mbps；且 iOS 的編碼器比
+  macOS 同內容更耗位元），寫死的值會出現「一支 40 秒的影片被要求裁到 40 秒內」這種自相
+  矛盾的回話（本票模擬器實測撞到）。只有壓縮輸出的時長讀不到時才退回後備常數
+  `MediaUploadLimits.suggestedVideoSeconds`（20 秒）。**相簿上傳佇列（`UploadQueueStore`）
+  不走這條路徑**，影片仍以原檔上傳、超限時由 Storage 回 413。
 
 ### 路徑規約
 ```
