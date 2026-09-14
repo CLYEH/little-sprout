@@ -167,24 +167,6 @@ final class SettingsViewIPadTests: XCTestCase {
         )
     }
 
-    /// LS-261：四處「切換 sidebar 分頁 → 等目標列出現」原本各自手刻、timeout 不一致（5s），
-    /// 統一成同一個 helper 變體。切分頁本身（`waitForHittable` 那一步）維持既有 5s——真正反覆
-    /// 紅過的是「切完分頁後等目標列出現」這一步（09-13 內容與安全、09-14 帳號區「刪除帳號」列
-    /// 同一種失敗：忙碌 runner 上單次 accessibility snapshot 偏慢，5s 只夠輪詢 1–2 次），對齊全檔
-    /// 「轉場後等待」的 10s 慣例（同 `assertPushThenBackReturnsToList` 的 back 相關等待）。
-    private func switchSidebarTab(
-        app: XCUIApplication, tabLabel: String, expectedRow: XCUIElement, rowDescription: String,
-        file: StaticString = #filePath, line: UInt = #line
-    ) {
-        let tab = app.buttons[tabLabel]
-        XCTAssertTrue(tab.waitForHittable(timeout: 10), "「\(tabLabel)」sidebar 列應該可點擊", file: file, line: line)
-        tab.tap()
-        XCTAssertTrue(
-            expectedRow.waitForExistence(timeout: 10),
-            "切到「\(tabLabel)」後應該看得到「\(rowDescription)」列", file: file, line: line
-        )
-    }
-
     /// 預設選取＝個人（`SettingsView.regularSelection` 初值），不需要先點 sidebar。對應
     /// reviewer 原始複現「點『個人』列（`qa.settings.profileRow`）→ 畫面完全沒變」。
     ///
@@ -373,7 +355,9 @@ final class SettingsViewIPadTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.settingsRegular)
         TapTargetMeasurement.assertScreenRendered(.settingsRegular, in: app)
 
-        let labels = ["個人", "家庭", "內容與安全", "法律", "帳號"]
+        // LS-277：清單改引用型別層的 `sidebarTabLabels`（追蹤鉤子 `sidebarSelectionSignature`
+        // 也要同一份，兩邊各留一份字面量會漂移）。內容與順序不變。
+        let labels = Self.sidebarTabLabels
         func selectedLabels() -> [String] {
             labels.filter { (app.buttons[$0].value as? String) == "已選取" }
         }
