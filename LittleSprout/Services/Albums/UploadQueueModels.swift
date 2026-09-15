@@ -43,8 +43,8 @@ enum UploadItemState: Equatable {
     case failed(UploadFailureReason)
 }
 
-/// 上傳失敗的三分支（`design/littlesprout.pen` Handoff Notes `kfLYA`，LS-96 `f960d843`
-/// 教訓「先講發生什麼再講怎麼辦」——三句文案都是「發生了什麼」開頭，動作另外用按鈕／連結
+/// 上傳失敗的四分支（`design/littlesprout.pen` Handoff Notes `kfLYA`，LS-96 `f960d843`
+/// 教訓「先講發生什麼再講怎麼辦」——文案都是「發生了什麼」開頭，動作另外用按鈕／連結
 /// 承載，不是文案本身兼職）。
 enum UploadFailureReason: Equatable {
     /// `URLError`（`.notConnectedToInternet`／`.networkConnectionLost` 等）。
@@ -55,29 +55,51 @@ enum UploadFailureReason: Equatable {
     /// LS002（`storage_quota_bytes` 已滿）——`tier` 是 `.rejected`：重試同一次呼叫不會
     /// 成功，稿面刻意不提供「重試」，只給「查看儲存空間」出路。
     case quota
+    /// LS-284：影片壓成 1080p 之後在本機量到仍超過單檔上限（`VideoTrimmer
+    /// .checkWithinSizeLimit` 丟出的 `DiaryMediaErrorCode.videoTooLargeAfterExport`）——
+    /// 上傳根本沒有發生。跟 `.quota` 同一類道理：重試同一支原始檔案只會再壓出同樣大小的
+    /// 結果，不給「重試」，使用者得先自己把影片裁短再重新選取上傳（沒有 `.quota` 那種
+    /// 「查看儲存空間」式的出路可以連，本票不新增畫面／連結，沿用既有失敗列樣式只換文案）。
+    /// `suggestedSeconds` 是對這一支影片現算的（`VideoTrimmer.suggestedSeconds`），沿用
+    /// `DiaryPublishErrorMessage.displayText` 已驗證過的同一句文案（LS-279），不同畫面共用
+    /// 同一份措辭。
+    case videoTooLarge(suggestedSeconds: Int)
 
     var title: String {
         switch self {
         case .network: "連線中斷，請檢查網路連線。"
         case .server: "伺服器忙碌，請稍後再試。"
         case .quota: "相簿容量已滿，這張沒有上傳。"
+        case .videoTooLarge(let suggestedSeconds):
+            "影片太長，壓縮後仍超過 50MB 上限，請裁到 \(suggestedSeconds) 秒內再試一次。"
         }
     }
 
-    /// 稿面 kfLYA：LS002 不提供「重試」——換一次呼叫不會變出空間，使用者得先去騰出空間。
-    var isRetryable: Bool { self != .quota }
+    /// 稿面 kfLYA：LS002 不提供「重試」——換一次呼叫不會變出空間，使用者得先去騰出空間；
+    /// `.videoTooLarge` 同理（LS-284：換一次呼叫不會讓同一支影片變小）。
+    var isRetryable: Bool {
+        switch self {
+        case .quota, .videoTooLarge: false
+        case .network, .server: true
+        }
+    }
 
     /// 稿面 hD3dH（MJ-5）：只有 LS002 這一列多一個「查看儲存空間」連結出路。
     var showsQuotaLink: Bool { self == .quota }
 
-    /// `AppError` → 三分支的對應。**已知不完美之處**（設計稿只定義三句文案，沒有第四句）：
-    /// `.validationRetryable`（例如 `MediaUploadService.mapUploadError` 的 Storage 413
-    /// payload-too-large）與非 LS002 的 `.rejected`（例如帳號／家庭停權中途發生）都落在
+    /// `AppError` → 四分支的對應。**已知不完美之處**（設計稿只定義三句文案，沒有涵蓋所有
+    /// 情境）：`.validationRetryable`（例如 `MediaUploadService.mapUploadError` 的 Storage
+    /// 413 payload-too-large）與非 LS002 的 `.rejected`（例如帳號／家庭停權中途發生）都落在
     /// `.server` 這個桶——顯示「伺服器忙碌，請稍後再試」＋可重試，但這兩種情況重試同一份
-    /// 位元組永遠不會成功。真正的邊界修法需要設計補第四句文案，這裡先用最保守（不會誤導
-    /// 成「無法挽回」、頂多讓使用者多按一次無效的重試）的桶接住，未在本票新增第四句文案
-    /// ——記入 handoff「未完成」。
+    /// 位元組永遠不會成功。真正的邊界修法需要設計補文案，這裡先用最保守（不會誤導成「無法
+    /// 挽回」、頂多讓使用者多按一次無效的重試）的桶接住，未在本票新增文案——記入 handoff
+    /// 「未完成」。`.videoTooLarge` 是例外：它有明確、每支影片各自現算的建議秒數可以講，
+    /// 不需要落到這個模糊桶。
     static func from(_ error: AppError) -> UploadFailureReason {
+        if case .validationRetryable(_, let code) = error,
+           let suggestedSeconds = DiaryMediaErrorCode.videoTooLargeSuggestedSeconds(fromCode: code) {
+            return .videoTooLarge(suggestedSeconds: suggestedSeconds)
+        }
         switch error {
         case .network:
             return .network
