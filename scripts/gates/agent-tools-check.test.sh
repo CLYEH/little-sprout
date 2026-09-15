@@ -17,6 +17,8 @@ checker="${root}/scripts/gates/agent-tools-check.sh"
 fail=0
 n=0
 ok() { echo "✓ $1"; n=$((n+1)); }
+# has <文字> <子字串>：here-string 比對，避免 `printf | grep -q` 在 pipefail 下的 SIGPIPE 誤判（LS-295）。
+has() { grep -qF -- "$2" <<<"$1"; }
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -27,9 +29,9 @@ expect() {
   local want=$1 name=$2 must=$3 must2=${4:-} mustnot=${5:-} out got
   out="$(bash "$checker" "$agents" 2>&1)"
   got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; } \
-     && { [ -z "$must2" ] || printf '%s' "$out" | grep -qF -- "$must2"; } \
-     && { [ -z "$mustnot" ] || ! printf '%s' "$out" | grep -qF -- "$mustnot"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; } \
+     && { [ -z "$must2" ] || has "$out" "$must2"; } \
+     && { [ -z "$mustnot" ] || ! has "$out" "$mustnot"; }; then
     ok "${name}"
   else
     echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}${must2:+、「${must2}」}${mustnot:+、不含「${mustnot}」}，實得 ${got}）" >&2
@@ -211,14 +213,14 @@ reset; mk ios-dev "Read" ; mk merge-reviewer "Read"; expect 1 '⑤ 工具缺與�
 # 同一份負樣本必須變綠——證明紅是這條規則造成的，不是別條規則湊巧命中；先驗 mutant 確實不含區塊，否則負控本身無效。
 mut="$work/agent-tools-check.no-body-rules.sh"
 awk 'index($0, "LS170-BODY-RULES-START") > 0 { skip = 1 } skip != 1 { print } index($0, "LS170-BODY-RULES-END") > 0 { skip = 0 }' "$checker" > "$mut"
-if grep -q 'LS170-BODY-RULES-START' "$mut" || grep -q 'ios-dev|supabase-lock.sh --hold' "$mut"; then
+if grep -q -e 'LS170-BODY-RULES-START' -e 'ios-dev|supabase-lock.sh --hold' "$mut"; then
   echo "✗ ⑤ mutant 仍含正文規則區塊（awk 拿掉失敗，負控本身無效）" >&2; fail=1
 else
   ok '⑤ mutant 確實已拿掉正文規則區塊'
 fi
 reset; mk ios-dev "$IOS_TOOLS"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '✓ agent-tools gate 通過' && ! printf '%s' "$out" | grep -qF '正文缺'; then
+if [ "$got" -eq 0 ] && grep -qF '✓ agent-tools gate 通過' <<<"$out" && ! grep -qF '正文缺' <<<"$out"; then
   ok '⑤ mutant：拿掉規則後同一份負樣本變綠（證明規則區塊確實是原因）'
 else
   echo "✗ ⑤ mutant 應 exit 0 且不印「正文缺」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -226,7 +228,7 @@ fi
 # LS-183 負控：同一個 mutant（規則區塊整段拿掉）下，上面 ⑨「只有 hold 句、缺 H3b 句」的負樣本也必須變綠——證明 ⑨ 的紅來自規則表的 H3b 行
 reset; mk ios-dev "$IOS_TOOLS" "$HOLD"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '本機容器操作同樣要在 lock 內'; then
+if [ "$got" -eq 0 ] && ! grep -qF '本機容器操作同樣要在 lock 內' <<<"$out"; then
   ok '⑨ mutant：拿掉規則後「只有 hold 句」的負樣本變綠（H3b 行確實是原因）'
 else
   echo "✗ ⑨ mutant 應 exit 0 且不印 H3b 字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -234,7 +236,7 @@ fi
 # LS-184 負控：同一個 mutant 下，上面 ⑩「裸 --hold（無 cd 同鏈）」的負樣本也必須變綠——證明 ⑩ 的紅來自規則表的 LS-184 行
 reset; mk ios-dev "$IOS_TOOLS" "${BARE_HOLD} ${H3B}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'cd <worktree> &&'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'cd <worktree> &&' <<<"$out"; then
   ok '⑩ mutant：拿掉規則後「裸 --hold」的負樣本變綠（LS-184 行確實是原因）'
 else
   echo "✗ ⑩ mutant 應 exit 0 且不印 cd <worktree> && 字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -242,7 +244,7 @@ fi
 # LS-186 負控：同一個 mutant 下，上面 ⑪「裸 pr-body-check.sh <f>」的負樣本也必須變綠——證明 ⑪ 的紅來自規則表的 LS-186 行
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${OLD_PRBODY}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'pr-body-check.sh <f> --branch'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'pr-body-check.sh <f> --branch' <<<"$out"; then
   ok '⑪ mutant：拿掉規則後「裸 pr-body-check.sh <f>」的負樣本變綠（LS-186 行確實是原因）'
 else
   echo "✗ ⑪ mutant 應 exit 0 且不印 pr-body-check.sh <f> --branch 字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -259,14 +261,14 @@ reset; expect 0 '⑫ qa 不要求這兩句 → 仍通過' '通過'
 # mutation 負控：同一個「拿掉 LS170-BODY-RULES 區塊」mutant 下，⑫ 的兩份負樣本也必須變綠
 reset; mk ios-dev "$IOS_TOOLS" "$LOCK_BODY ${PRBODY} ${SHEETUI}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'DB 測試 handoff 必附通道'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'DB 測試 handoff 必附通道' <<<"$out"; then
   ok '⑫ mutant：拿掉規則後「缺 DB 通道句」的負樣本變綠'
 else
   echo "✗ ⑫ mutant（DB 通道）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 reset; mk ios-dev "$IOS_TOOLS" "$LOCK_BODY ${PRBODY} ${DBCHAN}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'minHeight ≥48'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'minHeight ≥48' <<<"$out"; then
   ok '⑫ mutant：拿掉規則後「缺 sheet UITest 句」的負樣本變綠'
 else
   echo "✗ ⑫ mutant（sheet UITest）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -279,7 +281,7 @@ reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mc
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${HOLD} ${H3B} ${DBCHAN} ${SHEETUI}"; expect 1 '⑬ merge-reviewer 缺長命令前景 timeout 句 → exit 1' 'merge-reviewer.md：正文缺「等長命令一律前景 Bash 帶 timeout」'
 reset; mk ios-dev "$IOS_TOOLS" "${HOLD} ${H3B} ${PRBODY} ${DBCHAN} ${SHEETUI}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '等長命令一律前景 Bash 帶 timeout'; then
+if [ "$got" -eq 0 ] && ! grep -qF '等長命令一律前景 Bash 帶 timeout' <<<"$out"; then
   ok '⑬ mutant：拿掉規則後「缺長命令前景 timeout 句」的負樣本變綠'
 else
   echo "✗ ⑬ mutant 應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -292,7 +294,7 @@ reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DB
 reset; expect 0 'ios-dev 不要求 simctl ui 復原句 → 仍通過' '通過'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'simctl ui'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'simctl ui' <<<"$out"; then
   echo '✓ mutant：拿掉規則後「缺 simctl ui 復原句」的負樣本變綠'
 else
   echo "✗ mutant（simctl ui）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -303,7 +305,7 @@ reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mc
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI_MEDIUM}"; expect 1 '⑭-b merge-reviewer 復原句寫 medium → exit 1' 'merge-reviewer.md：正文缺「content_size／appearance 改成 large」' '' 'merge-reviewer.md：正文缺「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI_MEDIUM}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'content_size／appearance 改成 large'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'content_size／appearance 改成 large' <<<"$out"; then
   echo '✓ ⑭-b mutant：拿掉規則後「復原句寫 medium」的負樣本變綠（新數值規則確實是原因）'
 else
   echo "✗ ⑭-b mutant 應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -325,14 +327,14 @@ else
 fi
 reset; mk ios-dev "${IOS_TOOLS}, mcp__pencil__execute" "$IOS_BODY"
 out="$(bash "$mut_forbid" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '含被禁工具'; then
+if [ "$got" -eq 0 ] && ! grep -qF '含被禁工具' <<<"$out"; then
   ok '⑮ mutant：清空 FORBIDDEN_RULES 後「tools: 含 mcp__pencil__execute」的負樣本變綠（禁止工具規則確實是原因）'
 else
   echo "✗ ⑮ mutant 應 exit 0 且不印「含被禁工具」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 reset; mk ios-dev NONE "$IOS_BODY"
 out="$(bash "$mut_forbid" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '隱含含有禁止工具'; then
+if [ "$got" -eq 0 ] && ! grep -qF '隱含含有禁止工具' <<<"$out"; then
   ok '⑮ mutant：清空 FORBIDDEN_RULES 後「無 tools: 行」的負樣本也變綠（同一條規則造成兩種樣本的紅）'
 else
   echo "✗ ⑮ mutant 應 exit 0 且不印「隱含含有禁止工具」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -346,14 +348,14 @@ reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NO
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI}"; expect 1 '⑯ merge-reviewer 缺重放句 → exit 1' 'merge-reviewer.md：正文缺「handoff 申報的 mutation 一律自己重放，對不上列 major」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '斷言訊息原文'; then
+if [ "$got" -eq 0 ] && ! grep -qF '斷言訊息原文' <<<"$out"; then
   ok '⑯ mutant：拿掉規則後「缺 mutation 三段式句」的負樣本變綠'
 else
   echo "✗ ⑯ mutant（mutation 三段式）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '一律自己重放'; then
+if [ "$got" -eq 0 ] && ! grep -qF '一律自己重放' <<<"$out"; then
   ok '⑯ mutant：拿掉規則後「缺重放句」的負樣本變綠'
 else
   echo "✗ ⑯ mutant（重放句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -368,14 +370,14 @@ reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mc
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM}"; expect 1 '⑰ merge-reviewer 有逐項對應句但缺 handoff-evidence-check.sh 命令句 → exit 1' 'merge-reviewer.md：正文缺「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」' '' 'merge-reviewer.md：正文缺「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '逐項對應派工單'; then
+if [ "$got" -eq 0 ] && ! grep -qF '逐項對應派工單' <<<"$out"; then
   ok '⑰ mutant：拿掉規則後「缺逐項對應句」的負樣本變綠'
 else
   echo "✗ ⑰ mutant（逐項對應句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'handoff-evidence-check.sh'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'handoff-evidence-check.sh' <<<"$out"; then
   ok '⑰ mutant：拿掉規則後「缺 handoff-evidence-check.sh 命令句」的負樣本變綠'
 else
   echo "✗ ⑰ mutant（handoff-evidence-check.sh 命令句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -389,7 +391,7 @@ reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mc
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN_CMD}"; expect 1 '⑱ merge-reviewer 只有 handoff-evidence-check.sh 命令句、缺「紅則逐條說明」→ exit 1' 'merge-reviewer.md：正文缺「紅則逐條說明是誤判或補證據」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN_CMD}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '紅則逐條說明'; then
+if [ "$got" -eq 0 ] && ! grep -qF '紅則逐條說明' <<<"$out"; then
   ok '⑱ mutant：拿掉規則後「缺紅則逐條說明句」的負樣本變綠'
 else
   echo "✗ ⑱ mutant（紅則逐條說明句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -403,7 +405,7 @@ reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mc
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN}"; expect 1 '⑲ merge-reviewer 缺 background-bash-guard.sh → exit 1' 'merge-reviewer.md：正文缺「background-bash-guard.sh」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'background-bash-guard.sh'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'background-bash-guard.sh' <<<"$out"; then
   ok '⑲ mutant：拿掉規則後「缺 background-bash-guard.sh」的負樣本變綠'
 else
   echo "✗ ⑲ mutant（background-bash-guard.sh）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -415,7 +417,7 @@ reset; expect 0 '⑳ ios-dev 正文含新增全屏 gate 規約句 → 印「正�
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE}"; expect 1 '⑳ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「新增登入後全屏 gate 必同 PR 更新 QADriver」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '新增登入後全屏 gate 必同 PR 更新 QADriver'; then
+if [ "$got" -eq 0 ] && ! grep -qF '新增登入後全屏 gate 必同 PR 更新 QADriver' <<<"$out"; then
   ok '⑳ mutant：拿掉規則後「缺新增全屏 gate 規約句」的負樣本變綠'
 else
   echo "✗ ⑳ mutant（新增全屏 gate 規約句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -429,7 +431,7 @@ reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mc
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE}"; expect 1 '㉑ merge-reviewer 缺該句 → exit 1' 'merge-reviewer.md：正文缺「不得依賴截斷後的自動背景化」'
 reset
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '不得依賴截斷後的自動背景化'; then
+if [ "$got" -eq 0 ] && ! grep -qF '不得依賴截斷後的自動背景化' <<<"$out"; then
   ok '㉑ mutant：拿掉規則後「缺不得依賴截斷後自動背景化句」的負樣本變綠'
 else
   echo "✗ ㉑ mutant（不得依賴截斷後自動背景化句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -448,7 +450,7 @@ reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DB
 reset; mk visual-reviewer NONE "${KILL} 禁派fork（無空白）"; expect 1 '㉒ 字樣須整句「禁派 fork」（含空白），「禁派fork」不算 → exit 1' 'visual-reviewer.md：正文缺「禁派 fork」'
 reset; mk visual-reviewer NONE "$KILL"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '禁派 fork'; then
+if [ "$got" -eq 0 ] && ! grep -qF '禁派 fork' <<<"$out"; then
   ok '㉒ mutant：拿掉規則後「缺禁派 fork 句」的負樣本變綠'
 else
   echo "✗ ㉒ mutant（禁派 fork 句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -461,7 +463,7 @@ reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '㉓ 
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "禁派fork（無空白）"; expect 1 '㉓ 字樣須整句「禁派 fork」（含空白）→ exit 1' 'dead-code-sweeper.md：正文缺「禁派 fork」'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '禁派 fork'; then
+if [ "$got" -eq 0 ] && ! grep -qF '禁派 fork' <<<"$out"; then
   ok '㉓ mutant：拿掉規則後「sweeper 缺禁派 fork 句」的負樣本變綠'
 else
   echo "✗ ㉓ mutant（sweeper 禁派 fork 句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -473,7 +475,7 @@ reset; mk ui-designer NONE "${KILL} ${STAY} ${NOFORK254}"; expect 1 '㉔ ui-desi
 reset; mk visual-reviewer NONE "${KILL} ${NOFORK254}"; expect 1 '㉔ visual-reviewer 缺 editId 句 → exit 1' 'visual-reviewer.md：正文缺「editId 成功套用後即失效」'
 reset; mk ui-designer NONE "${KILL} ${STAY} ${NOFORK254}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'editId 成功套用後即失效'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'editId 成功套用後即失效' <<<"$out"; then
   ok '㉔ mutant：拿掉 BODY_RULES 區塊後「ui-designer 缺 editId 句」的負樣本變綠'
 else
   echo "✗ ㉔ mutant（ui-designer editId 句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -490,7 +492,7 @@ reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_NO_UBUNTU"; e
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_NO_UBUNTU} ${UBUNTU1}"; expect 1 '㉕ 只寫「跑一次確認」不算（次數是規則的重點）→ exit 1' 'merge-reviewer.md：正文缺「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_NO_UBUNTU"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'shell 自測在 ubuntu:24.04 通道跑 ≥10 次'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'shell 自測在 ubuntu:24.04 通道跑 ≥10 次' <<<"$out"; then
   ok '㉕ mutant：拿掉 BODY_RULES 區塊後「merge-reviewer 缺 ubuntu ≥10 次句」的負樣本變綠'
 else
   echo "✗ ㉕ mutant（merge-reviewer ubuntu ≥10 次句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -507,7 +509,7 @@ reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_BASE} ${UBUN
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_BASE} ${UBUNTU10} ${UITESTMUT}"; expect 1 '㉖ 缺 macOS 無 timeout 句 → exit 1（另一句在也不救）' 'merge-reviewer.md：正文缺「macOS 沒有 timeout 指令」' '' 'merge-reviewer.md：正文缺「UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_BASE} ${UBUNTU10}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF 'macOS 沒有 timeout 指令'; then
+if [ "$got" -eq 0 ] && ! grep -qF 'macOS 沒有 timeout 指令' <<<"$out"; then
   ok '㉖ mutant：拿掉 BODY_RULES 區塊後「merge-reviewer 缺兩句」的負樣本變綠'
 else
   echo "✗ ㉖ mutant（merge-reviewer mutation 段兩句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -520,13 +522,13 @@ awk '{ print } /^BODY_RULES="ios-dev\|/ { print "nobody|x" }' "$checker" > "$mut
 if grep -q '^nobody|x$' "$mut3"; then ok '⑤ I-3 mutant 已插入不在工具表的 agent'; else echo "✗ ⑤ I-3 mutant 插入失敗（負控本身無效）" >&2; fail=1; fi
 reset
 out="$(bash "$mut3" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF 'nobody 不在工具規則表'; then ok '⑤ I-3：正文規則表 ⊄ 工具表 → exit 2 並點名'; else echo "✗ ⑤ I-3 應 exit 2 並點名 nobody（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+if [ "$got" -eq 2 ] && grep -qF 'nobody 不在工具規則表' <<<"$out"; then ok '⑤ I-3：正文規則表 ⊄ 工具表 → exit 2 並點名'; else echo "✗ ⑤ I-3 應 exit 2 並點名 nobody（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
 # ---- ④ 參數 ----
 out="$(bash "$checker" "$work/nope" 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '找不到目錄'; then ok '④ 目錄不存在 → exit 2'; else echo "✗ ④ 目錄不存在應 exit 2（實得 ${got}）" >&2; fail=1; fi
+if [ "$got" -eq 2 ] && grep -qF '找不到目錄' <<<"$out"; then ok '④ 目錄不存在 → exit 2'; else echo "✗ ④ 目錄不存在應 exit 2（實得 ${got}）" >&2; fail=1; fi
 out="$(bash "$checker" "$agents" extra 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '只接受一個'; then ok '④ 多參數 → exit 2'; else echo "✗ ④ 多參數應 exit 2（實得 ${got}）" >&2; fail=1; fi
+if [ "$got" -eq 2 ] && grep -qF '只接受一個' <<<"$out"; then ok '④ 多參數 → exit 2'; else echo "✗ ④ 多參數應 exit 2（實得 ${got}）" >&2; fail=1; fi
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ agent-tools-check 自測失敗" >&2
