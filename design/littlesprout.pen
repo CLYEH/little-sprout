@@ -42249,7 +42249,7 @@
                                       "fill": "$on-photo",
                                       "content": "還有 2 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-note",
+                                      "fontSize": "$fs-imprint",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -53243,7 +53243,7 @@
                       "fill": "$on-photo",
                       "content": "還有 2 張",
                       "fontFamily": "$font",
-                      "fontSize": "$fs-note",
+                      "fontSize": "$fs-imprint",
                       "fontWeight": "700"
                     }
                   ]
@@ -64676,7 +64676,7 @@
                                       "fill": "$on-photo",
                                       "content": "還有 2 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-note",
+                                      "fontSize": "$fs-imprint",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -164430,7 +164430,7 @@
               "fill": "$surface",
               "content": "安",
               "fontFamily": "$font",
-              "fontSize": 13,
+              "fontSize": "$fs-meta",
               "fontWeight": "700"
             }
           ]
@@ -164546,7 +164546,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -164725,7 +164724,7 @@
                               "fill": "$text-secondary",
                               "content": "+20",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -164758,6 +164757,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小軒",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -164865,233 +164867,61 @@
                 },
                 {
                   "type": "frame",
-                  "id": "SjJSH",
-                  "name": "Date Group Card",
+                  "id": "m6SYwI",
+                  "name": "Date Group Card · Skipped",
                   "width": "fill_container",
-                  "fill": "$surface",
-                  "cornerRadius": "$radius-lg",
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "layout": "vertical",
-                  "gap": "$sp-item",
-                  "padding": "$inset-card",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    12,
+                    20
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "dfYiF",
-                      "name": "Top Row",
-                      "width": "fill_container",
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "id": "n6pG1u",
-                          "type": "ref",
-                          "ref": "oLN0e",
-                          "name": "Date Stamp",
-                          "width": "fit_content",
-                          "descendants": {
-                            "VDOco": {
-                              "content": "9月8日"
-                            },
-                            "ci8cq": {
-                              "content": "9月8日"
-                            }
-                          }
-                        },
-                        {
-                          "id": "MJr9L",
-                          "type": "ref",
-                          "ref": "AqN3F",
-                          "name": "Count Pill",
-                          "descendants": {
-                            "KR7zN": {
-                              "icon": "images"
-                            },
-                            "g7Fnj": {
-                              "content": "8 張"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "FjVBF",
-                      "name": "Thumb Row",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "K1kmeh",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 64,
-                          "height": 64,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "iIxta",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 64,
-                          "height": 64,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "XHp6P",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 64,
-                          "height": 64,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "f1VkfI",
-                          "name": "More Cell",
-                          "width": 64,
-                          "height": 64,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "CP035",
-                              "name": "More Count",
-                              "fill": "$text-secondary",
-                              "content": "+5",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "gLfmf",
-                      "name": "Babies Row",
+                      "id": "xixNk",
+                      "name": "Skipped Info",
                       "gap": "$sp-tight",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "UWSM6",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小安",
-                          "descendants": {
-                            "VHw9O": {
-                              "content": "安"
-                            },
-                            "h1A3w": {
-                              "content": "小安"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "OOhuQ",
-                      "name": "Album Row",
-                      "width": "fill_container",
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$sp-group",
-                        "$inset-card"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "u6pDP",
-                          "name": "Album Left",
-                          "gap": "$sp-label",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "k50ovd",
-                              "name": "Album Icon",
-                              "width": 18,
-                              "height": 18,
-                              "icon": "image",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "e1eLA",
-                              "name": "Album Label",
-                              "fill": "$text-primary",
-                              "content": "陳小安的相簿",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
                           "type": "icon",
-                          "id": "r46XhQ",
-                          "name": "Chevron",
+                          "id": "iBweJ",
+                          "name": "Skipped Icon",
                           "width": 18,
                           "height": 18,
-                          "icon": "chevron-right",
+                          "icon": "eye-off",
                           "library": "lucide",
                           "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "qDrRt",
+                          "name": "Skipped Label",
+                          "fill": "$text-secondary",
+                          "content": "9月8日・8 張已略過",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
                     {
-                      "type": "frame",
-                      "id": "MFiA2",
-                      "name": "Skip Row",
-                      "width": "fill_container",
-                      "justifyContent": "end",
-                      "children": [
-                        {
-                          "id": "ds9Cu",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Skip Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "x"
-                            },
-                            "hIhVd": {
-                              "content": "略過這群"
-                            }
-                          }
+                      "id": "JcmKV",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Undo Skip Button",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "rotate-ccw"
+                        },
+                        "hIhVd": {
+                          "content": "取消略過"
                         }
-                      ]
+                      }
                     }
                   ]
                 },
@@ -165217,7 +165047,7 @@
                               "fill": "$text-secondary",
                               "content": "+2",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -165236,6 +165066,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -165264,6 +165097,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小軒",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -165286,6 +165122,38 @@
                               "enabled": false
                             }
                           }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "m7YnbH",
+                      "name": "Assign Notice",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "IWuQL",
+                          "name": "Assign Notice Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "W2ZOu",
+                          "name": "Assign Notice Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這群還沒有指定寶寶",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -165412,7 +165280,7 @@
                       "icon": "upload"
                     },
                     "w7CUP": {
-                      "content": "開始匯入 36 張"
+                      "content": "開始匯入 28 張"
                     }
                   }
                 }
@@ -165519,7 +165387,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -165698,7 +165565,7 @@
                               "fill": "$text-secondary",
                               "content": "+20",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -165731,6 +165598,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小軒",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -165838,233 +165708,61 @@
                 },
                 {
                   "type": "frame",
-                  "id": "jG52P",
-                  "name": "Date Group Card",
+                  "id": "BaDXd",
+                  "name": "Date Group Card · Skipped",
                   "width": "fill_container",
-                  "fill": "$surface",
-                  "cornerRadius": "$radius-lg",
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "layout": "vertical",
-                  "gap": "$sp-item",
-                  "padding": "$inset-card",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    12,
+                    20
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "wXhAP",
-                      "name": "Top Row",
-                      "width": "fill_container",
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "id": "tKIQ0",
-                          "type": "ref",
-                          "ref": "oLN0e",
-                          "name": "Date Stamp",
-                          "width": "fit_content",
-                          "descendants": {
-                            "VDOco": {
-                              "content": "9月8日"
-                            },
-                            "ci8cq": {
-                              "content": "9月8日"
-                            }
-                          }
-                        },
-                        {
-                          "id": "qKDQH",
-                          "type": "ref",
-                          "ref": "AqN3F",
-                          "name": "Count Pill",
-                          "descendants": {
-                            "KR7zN": {
-                              "icon": "images"
-                            },
-                            "g7Fnj": {
-                              "content": "8 張"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "JWQlk",
-                      "name": "Thumb Row",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "GtfDM",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 64,
-                          "height": 64,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "E05Qb2",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 64,
-                          "height": 64,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "Sd41H",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 64,
-                          "height": 64,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "ce61m",
-                          "name": "More Cell",
-                          "width": 64,
-                          "height": 64,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "W4TyC",
-                              "name": "More Count",
-                              "fill": "$text-secondary",
-                              "content": "+5",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "p1WpB",
-                      "name": "Babies Row",
+                      "id": "Nk7vA",
+                      "name": "Skipped Info",
                       "gap": "$sp-tight",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "o0v1Ur",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小安",
-                          "descendants": {
-                            "VHw9O": {
-                              "content": "安"
-                            },
-                            "h1A3w": {
-                              "content": "小安"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "TttEI",
-                      "name": "Album Row",
-                      "width": "fill_container",
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$sp-group",
-                        "$inset-card"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "qTHyu",
-                          "name": "Album Left",
-                          "gap": "$sp-label",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "Oxfsq",
-                              "name": "Album Icon",
-                              "width": 18,
-                              "height": 18,
-                              "icon": "image",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "J8kQU",
-                              "name": "Album Label",
-                              "fill": "$text-primary",
-                              "content": "陳小安的相簿",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
                           "type": "icon",
-                          "id": "dr6xi",
-                          "name": "Chevron",
+                          "id": "VAsvB",
+                          "name": "Skipped Icon",
                           "width": 18,
                           "height": 18,
-                          "icon": "chevron-right",
+                          "icon": "eye-off",
                           "library": "lucide",
                           "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "YSl9I",
+                          "name": "Skipped Label",
+                          "fill": "$text-secondary",
+                          "content": "9月8日・8 張已略過",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
                     {
-                      "type": "frame",
-                      "id": "STHIz",
-                      "name": "Skip Row",
-                      "width": "fill_container",
-                      "justifyContent": "end",
-                      "children": [
-                        {
-                          "id": "GRVbv",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Skip Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "x"
-                            },
-                            "hIhVd": {
-                              "content": "略過這群"
-                            }
-                          }
+                      "id": "jBNhh",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Undo Skip Button",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "rotate-ccw"
+                        },
+                        "hIhVd": {
+                          "content": "取消略過"
                         }
-                      ]
+                      }
                     }
                   ]
                 },
@@ -166190,7 +165888,7 @@
                               "fill": "$text-secondary",
                               "content": "+2",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -166209,6 +165907,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -166237,6 +165938,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小軒",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -166259,6 +165963,38 @@
                               "enabled": false
                             }
                           }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kUJaB",
+                      "name": "Assign Notice",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "r3tS34",
+                          "name": "Assign Notice Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Uet0f",
+                          "name": "Assign Notice Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這群還沒有指定寶寶",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -166385,7 +166121,7 @@
                       "icon": "upload"
                     },
                     "w7CUP": {
-                      "content": "開始匯入 36 張"
+                      "content": "開始匯入 28 張"
                     }
                   }
                 }
@@ -166492,7 +166228,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -166675,7 +166410,7 @@
                               "fill": "$text-secondary",
                               "content": "+20",
                               "fontFamily": "$font",
-                              "fontSize": 12,
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -166709,6 +166444,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小軒",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -166818,240 +166556,61 @@
                 },
                 {
                   "type": "frame",
-                  "id": "eFNAe",
-                  "name": "Date Group Card",
+                  "id": "utT5Q",
+                  "name": "Date Group Card · Skipped",
                   "width": "fill_container",
-                  "fill": "$surface",
-                  "cornerRadius": "$radius-lg",
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "layout": "vertical",
-                  "gap": "$sp-item",
-                  "padding": "$inset-card",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    12,
+                    20
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "VEdVo",
-                      "name": "Top Row",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "justifyContent": "space_between",
-                      "children": [
-                        {
-                          "id": "FWa59",
-                          "type": "ref",
-                          "ref": "oLN0e",
-                          "name": "Date Stamp",
-                          "width": "fit_content",
-                          "descendants": {
-                            "OCYqN": {
-                              "width": 152
-                            },
-                            "VDOco": {
-                              "content": "9月8日"
-                            },
-                            "ci8cq": {
-                              "content": "9月8日"
-                            }
-                          }
-                        },
-                        {
-                          "id": "qG8qz",
-                          "type": "ref",
-                          "ref": "AqN3F",
-                          "name": "Count Pill",
-                          "descendants": {
-                            "KR7zN": {
-                              "icon": "images"
-                            },
-                            "g7Fnj": {
-                              "content": "8 張"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "qADzE",
-                      "name": "Thumb Row",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "dfxUk",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 64,
-                          "height": 64,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "mQcHq",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 64,
-                          "height": 64,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "jUxlV",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 64,
-                          "height": 64,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "lEm8d",
-                          "name": "More Cell",
-                          "width": 64,
-                          "height": 64,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "MN2nM",
-                              "name": "More Count",
-                              "fill": "$text-secondary",
-                              "content": "+5",
-                              "fontFamily": "$font",
-                              "fontSize": 12,
-                              "fontWeight": "700"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "yBDKt",
-                      "name": "Babies Row",
-                      "layout": "vertical",
+                      "id": "eVHxw",
+                      "name": "Skipped Info",
                       "gap": "$sp-tight",
                       "alignItems": "center",
                       "children": [
-                        {
-                          "id": "neUfU",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小安",
-                          "descendants": {
-                            "VHw9O": {
-                              "content": "安"
-                            },
-                            "h1A3w": {
-                              "content": "小安"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "ror3r",
-                      "name": "Album Row",
-                      "width": "fill_container",
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$sp-group",
-                        "$inset-card"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "DDSgG",
-                          "name": "Album Left",
-                          "gap": "$sp-label",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "q3jVcN",
-                              "name": "Album Icon",
-                              "width": 18,
-                              "height": 18,
-                              "icon": "image",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "F3dRDr",
-                              "name": "Album Label",
-                              "fill": "$text-primary",
-                              "textGrowth": "fixed-width",
-                              "width": 200,
-                              "content": "陳小安的相簿",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
                         {
                           "type": "icon",
-                          "id": "lxyaj",
-                          "name": "Chevron",
+                          "id": "d2hsM",
+                          "name": "Skipped Icon",
                           "width": 18,
                           "height": 18,
-                          "icon": "chevron-right",
+                          "icon": "eye-off",
                           "library": "lucide",
                           "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ocAAi",
+                          "name": "Skipped Label",
+                          "fill": "$text-secondary",
+                          "content": "9月8日・8 張已略過",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
                     {
-                      "type": "frame",
-                      "id": "n7Sj3w",
-                      "name": "Skip Row",
-                      "width": "fill_container",
-                      "justifyContent": "end",
-                      "children": [
-                        {
-                          "id": "Bx5V5",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Skip Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "x"
-                            },
-                            "hIhVd": {
-                              "content": "略過這群"
-                            }
-                          }
+                      "id": "qPcc8",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Undo Skip Button",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "rotate-ccw"
+                        },
+                        "hIhVd": {
+                          "content": "取消略過"
                         }
-                      ]
+                      }
                     }
                   ]
                 },
@@ -167181,7 +166740,7 @@
                               "fill": "$text-secondary",
                               "content": "+2",
                               "fontFamily": "$font",
-                              "fontSize": 12,
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -167201,6 +166760,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -167229,6 +166791,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小軒",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -167251,6 +166816,38 @@
                               "enabled": false
                             }
                           }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "axUEE",
+                      "name": "Assign Notice",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "SiCoz",
+                          "name": "Assign Notice Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "I7ePV",
+                          "name": "Assign Notice Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這群還沒有指定寶寶",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -167379,7 +166976,7 @@
                       "icon": "upload"
                     },
                     "w7CUP": {
-                      "content": "開始匯入 36 張"
+                      "content": "開始匯入 28 張"
                     }
                   }
                 }
@@ -167692,7 +167289,7 @@
                               "fill": "$text-secondary",
                               "content": "+18",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -167725,6 +167322,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小軒",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -167832,263 +167432,61 @@
                 },
                 {
                   "type": "frame",
-                  "id": "ND4qd",
-                  "name": "Date Group Card",
+                  "id": "MVkhx",
+                  "name": "Date Group Card · Skipped",
                   "width": "fill_container",
-                  "fill": "$surface",
-                  "cornerRadius": "$radius-lg",
-                  "stroke": "$border",
-                  "strokeWidth": 1,
-                  "layout": "vertical",
-                  "gap": "$sp-item",
-                  "padding": "$inset-card",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    12,
+                    20
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "ld4ht",
-                      "name": "Top Row",
-                      "width": "fill_container",
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "id": "J7hb1",
-                          "type": "ref",
-                          "ref": "oLN0e",
-                          "name": "Date Stamp",
-                          "width": "fit_content",
-                          "descendants": {
-                            "VDOco": {
-                              "content": "9月8日"
-                            },
-                            "ci8cq": {
-                              "content": "9月8日"
-                            }
-                          }
-                        },
-                        {
-                          "id": "LGwpr",
-                          "type": "ref",
-                          "ref": "AqN3F",
-                          "name": "Count Pill",
-                          "descendants": {
-                            "KR7zN": {
-                              "icon": "images"
-                            },
-                            "g7Fnj": {
-                              "content": "8 張"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "rHiDX",
-                      "name": "Thumb Row",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "M1F9d",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "wHw4v",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "iTD1w",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "c4seL",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "WqZed",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "Y7THT7",
-                          "name": "More Cell",
-                          "width": 88,
-                          "height": 88,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "U1fv5",
-                              "name": "More Count",
-                              "fill": "$text-secondary",
-                              "content": "+3",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "700"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "f57zj",
-                      "name": "Babies Row",
+                      "id": "txm7i",
+                      "name": "Skipped Info",
                       "gap": "$sp-tight",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "A7uzgW",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小安",
-                          "descendants": {
-                            "VHw9O": {
-                              "content": "安"
-                            },
-                            "h1A3w": {
-                              "content": "小安"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "LIFYp",
-                      "name": "Album Row",
-                      "width": "fill_container",
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$sp-group",
-                        "$inset-card"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "NHURL",
-                          "name": "Album Left",
-                          "gap": "$sp-label",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "BtEuM",
-                              "name": "Album Icon",
-                              "width": 18,
-                              "height": 18,
-                              "icon": "image",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "IWd5S",
-                              "name": "Album Label",
-                              "fill": "$text-primary",
-                              "content": "陳小安的相簿",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
                           "type": "icon",
-                          "id": "Ulq8O",
-                          "name": "Chevron",
+                          "id": "xRDgE",
+                          "name": "Skipped Icon",
                           "width": 18,
                           "height": 18,
-                          "icon": "chevron-right",
+                          "icon": "eye-off",
                           "library": "lucide",
                           "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "O8Xb24",
+                          "name": "Skipped Label",
+                          "fill": "$text-secondary",
+                          "content": "9月8日・8 張已略過",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
                     {
-                      "type": "frame",
-                      "id": "rBWDP",
-                      "name": "Skip Row",
-                      "width": "fill_container",
-                      "justifyContent": "end",
-                      "children": [
-                        {
-                          "id": "sDVAE",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Skip Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "x"
-                            },
-                            "hIhVd": {
-                              "content": "略過這群"
-                            }
-                          }
+                      "id": "IYRYD",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Undo Skip Button",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "rotate-ccw"
+                        },
+                        "hIhVd": {
+                          "content": "取消略過"
                         }
-                      ]
+                      }
                     }
                   ]
                 },
@@ -168244,7 +167642,7 @@
                               "fill": "$text-secondary",
                               "content": "+0",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -168263,6 +167661,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -168291,6 +167692,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小軒",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -168313,6 +167717,38 @@
                               "enabled": false
                             }
                           }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "C4ZWG",
+                      "name": "Assign Notice",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "a3k52",
+                          "name": "Assign Notice Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "J7P6v3",
+                          "name": "Assign Notice Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這群還沒有指定寶寶",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -168439,7 +167875,7 @@
                       "icon": "upload"
                     },
                     "w7CUP": {
-                      "content": "開始匯入 36 張"
+                      "content": "開始匯入 28 張"
                     }
                   }
                 }
@@ -168543,7 +167979,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -168777,7 +168212,7 @@
                               "fill": "$text-secondary",
                               "content": "+2",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -168796,6 +168231,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -168818,6 +168256,38 @@
                               "enabled": false
                             }
                           }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "s1VGGR",
+                      "name": "Assign Notice",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "lueDG",
+                          "name": "Assign Notice Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xaxCE",
+                          "name": "Assign Notice Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這群還沒有指定寶寶",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -169023,7 +168493,7 @@
                               "fill": "$text-secondary",
                               "content": "+4",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -169294,7 +168764,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -169304,7 +168773,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "yX0ji",
+              "id": "fcUOQ",
               "name": "Header",
               "width": "fill_container",
               "layout": "vertical",
@@ -169312,7 +168781,7 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "RqRC3",
+                  "id": "LgeFs",
                   "name": "Title",
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
@@ -169324,7 +168793,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "B2GxUK",
+                  "id": "IW4NK",
                   "name": "Subtitle",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -169333,8 +168802,27 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "yv1uK",
+                  "name": "Rules Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "影片最長 1 分鐘。HEIC 相片會轉成一般照片；Live Photo 會保留照片與短片。",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "axJv5",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
             },
             {
               "type": "frame",
@@ -169511,7 +168999,7 @@
                               "fill": "$text-secondary",
                               "content": "+28",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -169743,7 +169231,7 @@
                               "fill": "$text-secondary",
                               "content": "+23",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -169866,19 +169354,6 @@
                       ]
                     }
                   ]
-                },
-                {
-                  "type": "text",
-                  "id": "r1pUH0",
-                  "name": "Remaining Groups Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "其餘 5 個日期群往下捲動可見",
-                  "textAlign": "center",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
                 }
               ]
             }
@@ -169912,18 +169387,6 @@
                 "$screen-pad"
               ],
               "children": [
-                {
-                  "type": "text",
-                  "id": "tseo3",
-                  "name": "Rules Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "影片最長 1 分鐘、HEIC 與即時預覽相片（Live Photo）會各保留一張靜態圖與一段短片。",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                },
                 {
                   "id": "afrul",
                   "type": "ref",
@@ -170042,7 +169505,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -170276,7 +169738,7 @@
                               "fill": "$text-secondary",
                               "content": "+2",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -170295,6 +169757,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -170317,6 +169782,38 @@
                               "enabled": false
                             }
                           }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fG4mh",
+                      "name": "Assign Notice",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "J1LAk",
+                          "name": "Assign Notice Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "EhTxV",
+                          "name": "Assign Notice Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這群還沒有指定寶寶",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -170522,7 +170019,7 @@
                               "fill": "$text-secondary",
                               "content": "+4",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -170796,7 +170293,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -170806,7 +170302,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "eSWS2",
+              "id": "NBQBn",
               "name": "Header",
               "width": "fill_container",
               "layout": "vertical",
@@ -170814,7 +170310,7 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "Uu07H",
+                  "id": "D4UYp",
                   "name": "Title",
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
@@ -170826,7 +170322,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "IS3pX",
+                  "id": "eavNQ",
                   "name": "Subtitle",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -170835,8 +170331,27 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "RNzJi",
+                  "name": "Rules Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "影片最長 1 分鐘。HEIC 相片會轉成一般照片；Live Photo 會保留照片與短片。",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "fnw9I",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
             },
             {
               "type": "frame",
@@ -171013,7 +170528,7 @@
                               "fill": "$text-secondary",
                               "content": "+28",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -171245,7 +170760,7 @@
                               "fill": "$text-secondary",
                               "content": "+23",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -171368,19 +170883,6 @@
                       ]
                     }
                   ]
-                },
-                {
-                  "type": "text",
-                  "id": "IviFn",
-                  "name": "Remaining Groups Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "其餘 5 個日期群往下捲動可見",
-                  "textAlign": "center",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
                 }
               ]
             }
@@ -171414,18 +170916,6 @@
                 "$screen-pad"
               ],
               "children": [
-                {
-                  "type": "text",
-                  "id": "e6cET",
-                  "name": "Rules Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "影片最長 1 分鐘、HEIC 與即時預覽相片（Live Photo）會各保留一張靜態圖與一段短片。",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                },
                 {
                   "id": "X9NsLw",
                   "type": "ref",
@@ -171544,7 +171034,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -171782,7 +171271,7 @@
                               "fill": "$text-secondary",
                               "content": "+2",
                               "fontFamily": "$font",
-                              "fontSize": 12,
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -171802,6 +171291,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -171824,6 +171316,38 @@
                               "enabled": false
                             }
                           }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "o5GQhT",
+                      "name": "Assign Notice",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "k84BaB",
+                          "name": "Assign Notice Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "iVlOW",
+                          "name": "Assign Notice Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這群還沒有指定寶寶",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -172035,7 +171559,7 @@
                               "fill": "$text-secondary",
                               "content": "+4",
                               "fontFamily": "$font",
-                              "fontSize": 12,
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -172312,7 +171836,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -172322,7 +171845,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "QZPDN",
+              "id": "I4NzL",
               "name": "Header",
               "width": "fill_container",
               "layout": "vertical",
@@ -172330,7 +171853,7 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "QLFqx",
+                  "id": "IgPw1",
                   "name": "Title",
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
@@ -172342,7 +171865,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "sZqjA",
+                  "id": "s4HT7a",
                   "name": "Subtitle",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -172351,8 +171874,27 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "yv84H",
+                  "name": "Rules Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "影片最長 1 分鐘。HEIC 相片會轉成一般照片；Live Photo 會保留照片與短片。",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "M2Vrn",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
             },
             {
               "type": "frame",
@@ -172533,7 +172075,7 @@
                               "fill": "$text-secondary",
                               "content": "+28",
                               "fontFamily": "$font",
-                              "fontSize": 12,
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -172772,7 +172314,7 @@
                               "fill": "$text-secondary",
                               "content": "+23",
                               "fontFamily": "$font",
-                              "fontSize": 12,
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -172898,19 +172440,6 @@
                       ]
                     }
                   ]
-                },
-                {
-                  "type": "text",
-                  "id": "pbeF1",
-                  "name": "Remaining Groups Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "其餘 5 個日期群往下捲動可見",
-                  "textAlign": "center",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
                 }
               ]
             }
@@ -172944,18 +172473,6 @@
                 "$screen-pad"
               ],
               "children": [
-                {
-                  "type": "text",
-                  "id": "i6BFEl",
-                  "name": "Rules Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "影片最長 1 分鐘、HEIC 與即時預覽相片（Live Photo）會各保留一張靜態圖與一段短片。",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
-                },
                 {
                   "id": "V3AfS",
                   "type": "ref",
@@ -173335,7 +172852,7 @@
                               "fill": "$text-secondary",
                               "content": "+0",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -173354,6 +172871,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -173376,6 +172896,38 @@
                               "enabled": false
                             }
                           }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ldLlP",
+                      "name": "Assign Notice",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "dNRle",
+                          "name": "Assign Notice Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xIwo7",
+                          "name": "Assign Notice Text",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這群還沒有指定寶寶",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -173611,7 +173163,7 @@
                               "fill": "$text-secondary",
                               "content": "+2",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -174129,7 +173681,7 @@
                               "fill": "$text-secondary",
                               "content": "+26",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -174391,7 +173943,7 @@
                               "fill": "$text-secondary",
                               "content": "+21",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -174514,19 +174066,6 @@
                       ]
                     }
                   ]
-                },
-                {
-                  "type": "text",
-                  "id": "HlTXe",
-                  "name": "Remaining Groups Note",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "其餘 5 個日期群往下捲動可見",
-                  "textAlign": "center",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
                 }
               ]
             }
@@ -174658,18 +174197,6 @@
           "alignItems": "center",
           "children": [
             {
-              "id": "upDi2",
-              "type": "ref",
-              "ref": "W6qTyS",
-              "name": "Nav Back",
-              "width": "fit_content",
-              "descendants": {
-                "VCU41": {
-                  "content": "在背景繼續"
-                }
-              }
-            },
-            {
               "id": "xw63Q",
               "type": "ref",
               "ref": "qe9yS",
@@ -174691,7 +174218,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -174710,6 +174236,13 @@
               "fontFamily": "$font",
               "fontSize": "$fs-display",
               "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ib0mf",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
             },
             {
               "type": "frame",
@@ -174747,7 +174280,7 @@
                       "id": "R6uKPj",
                       "name": "Progress Count",
                       "fill": "$text-secondary",
-                      "content": "42／128 張",
+                      "content": "已處理 42／128 張",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
                       "fontWeight": "700"
@@ -174893,18 +174426,31 @@
                               ]
                             },
                             {
-                              "id": "w4lqsQ",
-                              "type": "ref",
-                              "ref": "qe9yS",
-                              "name": "Retry Button",
-                              "descendants": {
-                                "breqI": {
-                                  "icon": "refresh-cw"
+                              "type": "frame",
+                              "id": "Lg6F6",
+                              "name": "Quota Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Q1ikO",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "查看儲存空間",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
                                 },
-                                "hIhVd": {
-                                  "content": "重試"
+                                {
+                                  "type": "rectangle",
+                                  "id": "s6wCM",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": 102,
+                                  "height": 1
                                 }
-                              }
+                              ]
                             }
                           ]
                         }
@@ -174974,7 +174520,7 @@
                                   "fill": "$danger",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "連線中斷，請稍後重試。",
+                                  "content": "連線中斷，請檢查網路連線。",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
                                   "fontWeight": "600"
@@ -174996,6 +174542,38 @@
                               }
                             }
                           ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "t1WMH",
+                      "name": "Retry All Bar",
+                      "width": "fill_container",
+                      "fill": "$accent-soft",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-group",
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "id": "xwzLo",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Retry All Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "refresh-cw"
+                            },
+                            "yxwnz": {
+                              "content": "全部重試（2 張）"
+                            }
+                          }
                         }
                       ]
                     }
@@ -175638,18 +175216,6 @@
           "alignItems": "center",
           "children": [
             {
-              "id": "WG6Hj",
-              "type": "ref",
-              "ref": "W6qTyS",
-              "name": "Nav Back",
-              "width": "fit_content",
-              "descendants": {
-                "VCU41": {
-                  "content": "在背景繼續"
-                }
-              }
-            },
-            {
               "id": "LQuMX",
               "type": "ref",
               "ref": "qe9yS",
@@ -175671,7 +175237,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -175690,6 +175255,13 @@
               "fontFamily": "$font",
               "fontSize": "$fs-display",
               "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "aTBxa",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
             },
             {
               "type": "frame",
@@ -175727,7 +175299,7 @@
                       "id": "e6bIBX",
                       "name": "Progress Count",
                       "fill": "$text-secondary",
-                      "content": "42／128 張",
+                      "content": "已處理 42／128 張",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
                       "fontWeight": "700"
@@ -175873,18 +175445,31 @@
                               ]
                             },
                             {
-                              "id": "J7zcd",
-                              "type": "ref",
-                              "ref": "qe9yS",
-                              "name": "Retry Button",
-                              "descendants": {
-                                "breqI": {
-                                  "icon": "refresh-cw"
+                              "type": "frame",
+                              "id": "K8wAZ",
+                              "name": "Quota Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "lKeGS",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "查看儲存空間",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
                                 },
-                                "hIhVd": {
-                                  "content": "重試"
+                                {
+                                  "type": "rectangle",
+                                  "id": "ijcVm",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": 102,
+                                  "height": 1
                                 }
-                              }
+                              ]
                             }
                           ]
                         }
@@ -175954,7 +175539,7 @@
                                   "fill": "$danger",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "連線中斷，請稍後重試。",
+                                  "content": "連線中斷，請檢查網路連線。",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
                                   "fontWeight": "600"
@@ -175976,6 +175561,38 @@
                               }
                             }
                           ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b0ojt",
+                      "name": "Retry All Bar",
+                      "width": "fill_container",
+                      "fill": "$accent-soft",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-group",
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "id": "gZmFQ",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Retry All Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "refresh-cw"
+                            },
+                            "yxwnz": {
+                              "content": "全部重試（2 張）"
+                            }
+                          }
                         }
                       ]
                     }
@@ -176448,18 +176065,6 @@
           "justifyContent": "space_between",
           "children": [
             {
-              "id": "tPQnn",
-              "type": "ref",
-              "ref": "W6qTyS",
-              "name": "Nav Back",
-              "width": "fit_content",
-              "descendants": {
-                "VCU41": {
-                  "content": "在背景繼續"
-                }
-              }
-            },
-            {
               "id": "aBAvl",
               "type": "ref",
               "ref": "qe9yS",
@@ -176481,7 +176086,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -176500,6 +176104,13 @@
               "fontFamily": "$font",
               "fontSize": "$fs-display",
               "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "hOiMy",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
             },
             {
               "type": "frame",
@@ -176538,7 +176149,7 @@
                       "id": "e5zccv",
                       "name": "Progress Count",
                       "fill": "$text-secondary",
-                      "content": "42／128 張",
+                      "content": "已處理 42／128 張",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
                       "fontWeight": "700"
@@ -176765,7 +176376,7 @@
                                   "fill": "$danger",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "連線中斷，請稍後重試。",
+                                  "content": "連線中斷，請檢查網路連線。",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
                                   "fontWeight": "600"
@@ -176787,6 +176398,38 @@
                               }
                             }
                           ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "A2zXVe",
+                      "name": "Retry All Bar",
+                      "width": "fill_container",
+                      "fill": "$accent-soft",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-group",
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "id": "W6gMl",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Retry All Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "refresh-cw"
+                            },
+                            "yxwnz": {
+                              "content": "全部重試（2 張）"
+                            }
+                          }
                         }
                       ]
                     }
@@ -177275,7 +176918,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -177310,7 +176952,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "9月10日、9月8日、8月22日 共 3 個日期群",
+                  "content": "9月10日、9月8日、8月22日等 7 個日期群",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -177319,92 +176961,94 @@
             },
             {
               "type": "frame",
-              "id": "adrhx",
+              "id": "Lk8ru",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
+              "id": "OyEke",
               "name": "Stats Card",
               "width": "fill_container",
               "fill": "$surface",
               "cornerRadius": "$radius-lg",
               "stroke": "$border",
               "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-item",
               "padding": "$inset-card",
-              "justifyContent": "space_between",
               "children": [
                 {
                   "type": "frame",
-                  "id": "f0Aveq",
+                  "id": "S3CdzD",
                   "name": "Stat 成功",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
+                  "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "Kaxoz",
+                      "id": "n44EFF",
                       "name": "Stat Icon",
-                      "width": 26,
-                      "height": 26,
-                      "icon": "check-circle",
+                      "width": 32,
+                      "height": 32,
+                      "icon": "circle-check",
                       "library": "lucide",
                       "fill": "$success"
                     },
                     {
-                      "type": "text",
-                      "id": "LtZHb",
-                      "name": "Stat Count",
-                      "fill": "$text-primary",
-                      "content": "34 張",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "Am1Hm",
-                      "name": "Stat Label",
-                      "fill": "$text-secondary",
-                      "content": "成功",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
+                      "type": "frame",
+                      "id": "P4Krk",
+                      "name": "Stat 成功 Text",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Pl2xf",
+                          "name": "Stat Count",
+                          "fill": "$text-primary",
+                          "content": "126 張",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "nsLsH",
+                          "name": "Stat Label",
+                          "fill": "$text-secondary",
+                          "content": "已成功匯入",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
                   "type": "frame",
-                  "id": "pGBpH",
+                  "id": "N138e",
                   "name": "Stat 失敗",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
+                  "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "sAoiI",
+                      "id": "r8NvOw",
                       "name": "Stat Icon",
-                      "width": 26,
-                      "height": 26,
+                      "width": 18,
+                      "height": 18,
                       "icon": "circle-alert",
                       "library": "lucide",
                       "fill": "$danger"
                     },
                     {
                       "type": "text",
-                      "id": "xlPsp",
-                      "name": "Stat Count",
-                      "fill": "$text-primary",
-                      "content": "2 張",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "wYLMP",
-                      "name": "Stat Label",
+                      "id": "qF9xV",
+                      "name": "Stat Count Inline",
                       "fill": "$text-secondary",
-                      "content": "失敗",
+                      "content": "2 張沒有成功",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
@@ -177510,18 +177154,31 @@
                           ]
                         },
                         {
-                          "id": "X2gSu3",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Retry Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "refresh-cw"
+                          "type": "frame",
+                          "id": "KakY3",
+                          "name": "Quota Link",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "AtYuE",
+                              "name": "Link Label",
+                              "fill": "$text-primary",
+                              "content": "查看儲存空間",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             },
-                            "hIhVd": {
-                              "content": "重試"
+                            {
+                              "type": "rectangle",
+                              "id": "a0UWe",
+                              "name": "Link Underline",
+                              "fill": "$text-primary",
+                              "width": 102,
+                              "height": 1
                             }
-                          }
+                          ]
                         }
                       ]
                     }
@@ -177591,7 +177248,7 @@
                               "fill": "$danger",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "連線中斷，請稍後重試。",
+                              "content": "連線中斷，請檢查網路連線。",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
                               "fontWeight": "600"
@@ -177656,10 +177313,10 @@
                   "width": "fill_container",
                   "descendants": {
                     "s9bME2": {
-                      "icon": "image"
+                      "icon": "clock"
                     },
                     "w7CUP": {
-                      "content": "查看相簿"
+                      "content": "回到時間軸"
                     }
                   }
                 },
@@ -177781,7 +177438,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -177816,7 +177472,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "9月10日、9月8日、8月22日 共 3 個日期群",
+                  "content": "9月10日、9月8日、8月22日等 7 個日期群",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -177825,92 +177481,94 @@
             },
             {
               "type": "frame",
-              "id": "n2Vl71",
+              "id": "GQ9qm",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
+              "id": "ohYKm",
               "name": "Stats Card",
               "width": "fill_container",
               "fill": "$surface",
               "cornerRadius": "$radius-lg",
               "stroke": "$border",
               "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-item",
               "padding": "$inset-card",
-              "justifyContent": "space_between",
               "children": [
                 {
                   "type": "frame",
-                  "id": "komzr",
+                  "id": "oCjM6",
                   "name": "Stat 成功",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
+                  "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "g9fEu",
+                      "id": "i8ZEs",
                       "name": "Stat Icon",
-                      "width": 26,
-                      "height": 26,
-                      "icon": "check-circle",
+                      "width": 32,
+                      "height": 32,
+                      "icon": "circle-check",
                       "library": "lucide",
                       "fill": "$success"
                     },
                     {
-                      "type": "text",
-                      "id": "f6mUHp",
-                      "name": "Stat Count",
-                      "fill": "$text-primary",
-                      "content": "34 張",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "xzAHj",
-                      "name": "Stat Label",
-                      "fill": "$text-secondary",
-                      "content": "成功",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
+                      "type": "frame",
+                      "id": "wpEeH",
+                      "name": "Stat 成功 Text",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "CerVz",
+                          "name": "Stat Count",
+                          "fill": "$text-primary",
+                          "content": "126 張",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "n3FBw",
+                          "name": "Stat Label",
+                          "fill": "$text-secondary",
+                          "content": "已成功匯入",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
                   "type": "frame",
-                  "id": "E2fhb",
+                  "id": "n27Zg",
                   "name": "Stat 失敗",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
+                  "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "Vq14E",
+                      "id": "CgCcn",
                       "name": "Stat Icon",
-                      "width": 26,
-                      "height": 26,
+                      "width": 18,
+                      "height": 18,
                       "icon": "circle-alert",
                       "library": "lucide",
                       "fill": "$danger"
                     },
                     {
                       "type": "text",
-                      "id": "MNSDX",
-                      "name": "Stat Count",
-                      "fill": "$text-primary",
-                      "content": "2 張",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "qiwt6",
-                      "name": "Stat Label",
+                      "id": "mbPYn",
+                      "name": "Stat Count Inline",
                       "fill": "$text-secondary",
-                      "content": "失敗",
+                      "content": "2 張沒有成功",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
@@ -178016,18 +177674,31 @@
                           ]
                         },
                         {
-                          "id": "j6Oh6",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Retry Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "refresh-cw"
+                          "type": "frame",
+                          "id": "tDiJu",
+                          "name": "Quota Link",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CRKTW",
+                              "name": "Link Label",
+                              "fill": "$text-primary",
+                              "content": "查看儲存空間",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             },
-                            "hIhVd": {
-                              "content": "重試"
+                            {
+                              "type": "rectangle",
+                              "id": "Z3kVx3",
+                              "name": "Link Underline",
+                              "fill": "$text-primary",
+                              "width": 102,
+                              "height": 1
                             }
-                          }
+                          ]
                         }
                       ]
                     }
@@ -178097,7 +177768,7 @@
                               "fill": "$danger",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "連線中斷，請稍後重試。",
+                              "content": "連線中斷，請檢查網路連線。",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
                               "fontWeight": "600"
@@ -178162,10 +177833,10 @@
                   "width": "fill_container",
                   "descendants": {
                     "s9bME2": {
-                      "icon": "image"
+                      "icon": "clock"
                     },
                     "w7CUP": {
-                      "content": "查看相簿"
+                      "content": "回到時間軸"
                     }
                   }
                 },
@@ -178287,7 +177958,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -178322,7 +177992,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "9月10日、9月8日、8月22日 共 3 個日期群",
+                  "content": "9月10日、9月8日、8月22日等 7 個日期群",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -178331,92 +178001,94 @@
             },
             {
               "type": "frame",
-              "id": "ICDJw",
+              "id": "eQnzd",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
+              "id": "W9mb4l",
               "name": "Stats Card",
               "width": "fill_container",
               "fill": "$surface",
               "cornerRadius": "$radius-lg",
               "stroke": "$border",
               "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-item",
               "padding": "$inset-card",
-              "justifyContent": "space_between",
               "children": [
                 {
                   "type": "frame",
-                  "id": "UMurw",
+                  "id": "ffBOq",
                   "name": "Stat 成功",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
+                  "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "Wiruo",
+                      "id": "AZsuh",
                       "name": "Stat Icon",
-                      "width": 26,
-                      "height": 26,
-                      "icon": "check-circle",
+                      "width": 32,
+                      "height": 32,
+                      "icon": "circle-check",
                       "library": "lucide",
                       "fill": "$success"
                     },
                     {
-                      "type": "text",
-                      "id": "C2MDe",
-                      "name": "Stat Count",
-                      "fill": "$text-primary",
-                      "content": "34 張",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "TXM9k",
-                      "name": "Stat Label",
-                      "fill": "$text-secondary",
-                      "content": "成功",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
+                      "type": "frame",
+                      "id": "BHRIP",
+                      "name": "Stat 成功 Text",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Fg1Fp",
+                          "name": "Stat Count",
+                          "fill": "$text-primary",
+                          "content": "126 張",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "VUicF",
+                          "name": "Stat Label",
+                          "fill": "$text-secondary",
+                          "content": "已成功匯入",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
                   "type": "frame",
-                  "id": "WaLev",
+                  "id": "oWmXW",
                   "name": "Stat 失敗",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
+                  "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "C1aYKX",
+                      "id": "qmXk7",
                       "name": "Stat Icon",
-                      "width": 26,
-                      "height": 26,
+                      "width": 18,
+                      "height": 18,
                       "icon": "circle-alert",
                       "library": "lucide",
                       "fill": "$danger"
                     },
                     {
                       "type": "text",
-                      "id": "z47fGC",
-                      "name": "Stat Count",
-                      "fill": "$text-primary",
-                      "content": "2 張",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "n3ccH",
-                      "name": "Stat Label",
+                      "id": "u54pKB",
+                      "name": "Stat Count Inline",
                       "fill": "$text-secondary",
-                      "content": "失敗",
+                      "content": "2 張沒有成功",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
@@ -178603,7 +178275,7 @@
                               "fill": "$danger",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "連線中斷，請稍後重試。",
+                              "content": "連線中斷，請檢查網路連線。",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
                               "fontWeight": "600"
@@ -178668,10 +178340,10 @@
                   "width": "fill_container",
                   "descendants": {
                     "s9bME2": {
-                      "icon": "image"
+                      "icon": "clock"
                     },
                     "w7CUP": {
-                      "content": "查看相簿"
+                      "content": "回到時間軸"
                     }
                   }
                 },
@@ -178773,18 +178445,6 @@
           "alignItems": "center",
           "children": [
             {
-              "id": "s2ioI",
-              "type": "ref",
-              "ref": "W6qTyS",
-              "name": "Nav Back",
-              "width": "fit_content",
-              "descendants": {
-                "VCU41": {
-                  "content": "在背景繼續"
-                }
-              }
-            },
-            {
               "id": "u5fTZ",
               "type": "ref",
               "ref": "qe9yS",
@@ -178862,7 +178522,7 @@
                       "id": "g7EcDV",
                       "name": "Progress Count",
                       "fill": "$text-secondary",
-                      "content": "42／128 張",
+                      "content": "已處理 42／128 張",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
                       "fontWeight": "700"
@@ -179008,18 +178668,31 @@
                               ]
                             },
                             {
-                              "id": "W0lKM",
-                              "type": "ref",
-                              "ref": "qe9yS",
-                              "name": "Retry Button",
-                              "descendants": {
-                                "breqI": {
-                                  "icon": "refresh-cw"
+                              "type": "frame",
+                              "id": "tDpX1",
+                              "name": "Quota Link",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "dNjb2",
+                                  "name": "Link Label",
+                                  "fill": "$text-primary",
+                                  "content": "查看儲存空間",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
                                 },
-                                "hIhVd": {
-                                  "content": "重試"
+                                {
+                                  "type": "rectangle",
+                                  "id": "qfcHH",
+                                  "name": "Link Underline",
+                                  "fill": "$text-primary",
+                                  "width": 102,
+                                  "height": 1
                                 }
-                              }
+                              ]
                             }
                           ]
                         }
@@ -179089,7 +178762,7 @@
                                   "fill": "$danger",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "連線中斷，請稍後重試。",
+                                  "content": "連線中斷，請檢查網路連線。",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
                                   "fontWeight": "600"
@@ -179111,6 +178784,38 @@
                               }
                             }
                           ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DGtQJ",
+                      "name": "Retry All Bar",
+                      "width": "fill_container",
+                      "fill": "$accent-soft",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-group",
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "id": "bdq3p",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Retry All Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "refresh-cw"
+                            },
+                            "yxwnz": {
+                              "content": "全部重試（2 張）"
+                            }
+                          }
                         }
                       ]
                     }
@@ -179634,7 +179339,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "9月10日、9月8日、8月22日 共 3 個日期群",
+                  "content": "9月10日、9月8日、8月22日等 7 個日期群",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -179643,92 +179348,87 @@
             },
             {
               "type": "frame",
-              "id": "Js3yQ",
+              "id": "aH41O",
               "name": "Stats Card",
               "width": "fill_container",
               "fill": "$surface",
               "cornerRadius": "$radius-lg",
               "stroke": "$border",
               "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-item",
               "padding": "$inset-card",
-              "justifyContent": "space_between",
               "children": [
                 {
                   "type": "frame",
-                  "id": "W1kFmm",
+                  "id": "m6ZFJ4",
                   "name": "Stat 成功",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
+                  "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "Wv2VH",
+                      "id": "cf8HG",
                       "name": "Stat Icon",
-                      "width": 26,
-                      "height": 26,
-                      "icon": "check-circle",
+                      "width": 32,
+                      "height": 32,
+                      "icon": "circle-check",
                       "library": "lucide",
                       "fill": "$success"
                     },
                     {
-                      "type": "text",
-                      "id": "G1iEAU",
-                      "name": "Stat Count",
-                      "fill": "$text-primary",
-                      "content": "34 張",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "XNpaj",
-                      "name": "Stat Label",
-                      "fill": "$text-secondary",
-                      "content": "成功",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
+                      "type": "frame",
+                      "id": "lmpax",
+                      "name": "Stat 成功 Text",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "V3ZS4A",
+                          "name": "Stat Count",
+                          "fill": "$text-primary",
+                          "content": "126 張",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "S5H3U",
+                          "name": "Stat Label",
+                          "fill": "$text-secondary",
+                          "content": "已成功匯入",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
                   "type": "frame",
-                  "id": "iNc7C",
+                  "id": "ZXidY",
                   "name": "Stat 失敗",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight",
+                  "gap": "$sp-label",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "J0Ws7Y",
+                      "id": "AFozk",
                       "name": "Stat Icon",
-                      "width": 26,
-                      "height": 26,
+                      "width": 18,
+                      "height": 18,
                       "icon": "circle-alert",
                       "library": "lucide",
                       "fill": "$danger"
                     },
                     {
                       "type": "text",
-                      "id": "LzuZU",
-                      "name": "Stat Count",
-                      "fill": "$text-primary",
-                      "content": "2 張",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "scugk",
-                      "name": "Stat Label",
+                      "id": "zepYQ",
+                      "name": "Stat Count Inline",
                       "fill": "$text-secondary",
-                      "content": "失敗",
+                      "content": "2 張沒有成功",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
@@ -179834,18 +179534,31 @@
                           ]
                         },
                         {
-                          "id": "mM6i9",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Retry Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "refresh-cw"
+                          "type": "frame",
+                          "id": "KMcOJ",
+                          "name": "Quota Link",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "X0Bhj",
+                              "name": "Link Label",
+                              "fill": "$text-primary",
+                              "content": "查看儲存空間",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             },
-                            "hIhVd": {
-                              "content": "重試"
+                            {
+                              "type": "rectangle",
+                              "id": "JgqVb",
+                              "name": "Link Underline",
+                              "fill": "$text-primary",
+                              "width": 102,
+                              "height": 1
                             }
-                          }
+                          ]
                         }
                       ]
                     }
@@ -179915,7 +179628,7 @@
                               "fill": "$danger",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "連線中斷，請稍後重試。",
+                              "content": "連線中斷，請檢查網路連線。",
                               "fontFamily": "$font",
                               "fontSize": "$fs-note",
                               "fontWeight": "600"
@@ -179980,10 +179693,10 @@
                   "width": 280,
                   "descendants": {
                     "s9bME2": {
-                      "icon": "image"
+                      "icon": "clock"
                     },
                     "w7CUP": {
-                      "content": "查看相簿"
+                      "content": "回到時間軸"
                     }
                   }
                 },
@@ -180102,7 +179815,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -180146,10 +179858,17 @@
             },
             {
               "type": "frame",
+              "id": "UB1UN",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
               "id": "I37t61",
               "name": "Limited Library Banner",
               "width": "fill_container",
-              "fill": "$surface",
+              "fill": "$surface-2",
               "cornerRadius": "$radius-md",
               "stroke": "$border",
               "strokeWidth": 1,
@@ -180173,7 +179892,7 @@
                       "height": 22,
                       "icon": "images",
                       "library": "lucide",
-                      "fill": "$text-secondary"
+                      "fill": "$text-primary"
                     },
                     {
                       "type": "text",
@@ -180353,7 +180072,7 @@
                               "fill": "$text-secondary",
                               "content": "+11",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -180585,7 +180304,7 @@
                               "fill": "$text-secondary",
                               "content": "+3",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -180604,6 +180323,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -181075,7 +180797,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -181119,10 +180840,17 @@
             },
             {
               "type": "frame",
+              "id": "o2M3lq",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
               "id": "T9Mz3L",
               "name": "Limited Library Banner",
               "width": "fill_container",
-              "fill": "$surface",
+              "fill": "$surface-2",
               "cornerRadius": "$radius-md",
               "stroke": "$border",
               "strokeWidth": 1,
@@ -181146,7 +180874,7 @@
                       "height": 22,
                       "icon": "images",
                       "library": "lucide",
-                      "fill": "$text-secondary"
+                      "fill": "$text-primary"
                     },
                     {
                       "type": "text",
@@ -181326,7 +181054,7 @@
                               "fill": "$text-secondary",
                               "content": "+11",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -181558,7 +181286,7 @@
                               "fill": "$text-secondary",
                               "content": "+3",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -181577,6 +181305,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -182051,7 +181782,6 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad",
@@ -182095,10 +181825,17 @@
             },
             {
               "type": "frame",
+              "id": "X8qVIj",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
               "id": "UippA",
               "name": "Limited Library Banner",
               "width": "fill_container",
-              "fill": "$surface",
+              "fill": "$surface-2",
               "cornerRadius": "$radius-md",
               "stroke": "$border",
               "strokeWidth": 1,
@@ -182122,7 +181859,7 @@
                       "height": 22,
                       "icon": "images",
                       "library": "lucide",
-                      "fill": "$text-secondary"
+                      "fill": "$text-primary"
                     },
                     {
                       "type": "text",
@@ -182311,7 +182048,7 @@
                               "fill": "$text-secondary",
                               "content": "+11",
                               "fontFamily": "$font",
-                              "fontSize": 12,
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -182549,7 +182286,7 @@
                               "fill": "$text-secondary",
                               "content": "+3",
                               "fontFamily": "$font",
-                              "fontSize": 12,
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -182568,6 +182305,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
@@ -183088,7 +182828,7 @@
               "id": "YcVFD",
               "name": "Limited Library Banner",
               "width": "fill_container",
-              "fill": "$surface",
+              "fill": "$surface-2",
               "cornerRadius": "$radius-md",
               "stroke": "$border",
               "strokeWidth": 1,
@@ -183112,7 +182852,7 @@
                       "height": 22,
                       "icon": "images",
                       "library": "lucide",
-                      "fill": "$text-secondary"
+                      "fill": "$text-primary"
                     },
                     {
                       "type": "text",
@@ -183324,7 +183064,7 @@
                               "fill": "$text-secondary",
                               "content": "+9",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -183586,7 +183326,7 @@
                               "fill": "$text-secondary",
                               "content": "+1",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-note",
+                              "fontSize": "$fs-imprint",
                               "fontWeight": "700"
                             }
                           ]
@@ -183605,6 +183345,9 @@
                           "type": "ref",
                           "ref": "o9Brs1",
                           "name": "Baby Chip 小安",
+                          "fill": "$surface",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
                           "descendants": {
                             "RMRjC": {
                               "fill": "$accent-soft"
