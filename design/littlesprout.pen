@@ -184880,6 +184880,41 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "GhvOz",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jie4o",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-251 R5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Fg3FW",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R5 收尾（VR R4 APPROVE 附條件 0750949e）：C-1 修 Rfl9n（04b AX3 root）——原座標 (8176, 129360.01) 與 Notes 板 X6iCY (8176, 125478.01, 900×5480) 完全重疊、蓋住 15 個 Notes 文字節點，移至 (8609, 107376.76)（緊鄰 04b iPhone 版 nMVqp 右側，同一 04b 家族列，40pt 間距）；與全稿所有 root 逐一 AABB 核對零重疊。C-2 重掃 sibling_intersection 已無任何「… @ root」類。INF-11／INF-13 記入 LS-96 池，未改 Notes。INF-12：Liyz5／LcJBU 抄錯只出現在 R4 Linear handoff comment 的表格裡，Notes 本身（sYma1／hauno／M22uCT 節點 id 對照）從未載入這兩個錯字，故此處無需訂正，僅記於 Linear 回覆。",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -185460,8 +185495,8 @@
     {
       "type": "frame",
       "id": "Rfl9n",
-      "x": 8176,
-      "y": 129360.0069081836,
+      "x": 8609,
+      "y": 107376.75769836412,
       "name": "A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
