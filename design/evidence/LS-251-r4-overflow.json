@@ -252,10 +252,15 @@
           "count": 4,
           "classification": "Empty Print Corner BR 角托 corner-out 5pt 意圖右緣溢出（設計預期，同類 4 例：izt0E/hBF60/aKXJ1/X2cnQ 各 1 顆）"
         }
-      ]
+      ],
+      "scope": "boards",
+      "document_count": 4
     },
     "cross_parent_collision": {
-      "flagged": []
+      "flagged": [],
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "295793e95f8e7a15"
     },
     "corner_anchor": {
       "boards": [
@@ -301,15 +306,24 @@
       "document_mismatch": 0,
       "document_flagged": [],
       "ref_hits": 8,
-      "unresolved": []
+      "unresolved": [],
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "6742ac43705ac44a"
     },
     "text_occlusion": {
       "flagged": [],
-      "document_flagged": []
+      "document_flagged": [],
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "dbe2235e9772ccca"
     },
     "board_clip": {
       "flagged": [],
-      "document_flagged": []
+      "document_flagged": [],
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "1f3125904d00be48"
     }
   }
 }
