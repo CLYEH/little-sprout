@@ -86,6 +86,63 @@ final class DiaryComposerStoreVideoCacheTests: XCTestCase {
         XCTAssertEqual(mediaService.uploadVideoCalls.last?.fileURL, compressedURL)
     }
 
+    /// n2（LS-286，源自 LS-283 merge-review R2 informational `ce5d0837`）：R2 的 `fileExists`
+    /// 守門（`DiaryComposerStore.swift:374` 附近，快取命中前先確認壓縮輸出還在磁碟上，不在
+    /// 就當未命中重壓）當時零測試覆蓋——上面那條測試只證明「檔案還在時沿用快取」，沒有任何
+    /// 測試釘住「檔案被刪之後真的會重壓」這個新行為本身。第一次發佈失敗後把快取的壓縮輸出
+    /// 檔案直接刪掉（模擬低儲存空間被系統清掉 tmp），再發佈一次：`videoPreparer` 應該被呼叫
+    /// 第 2 次，不是誤用一份已經不存在的檔案路徑。
+    func test_publish_retryAfterCachedFileDeleted_reexportsInsteadOfReusingMissingFile() async throws {
+        let diaryClient = StubDiaryAPIClient()
+        let mediaService = StubMediaUploadService()
+        diaryClient.setCreateHandler { _, _, _, _ in UUID() }
+        let videoMediaID = UUID()
+        let uploadAttempts = OSAllocatedUnfairLock<Int>(initialState: 0)
+        mediaService.setUploadVideoHandler { _, _, _, _ in
+            let attempt = uploadAttempts.withLock { state in
+                state += 1
+                return state
+            }
+            if attempt == 1 { throw AppError.network(message: "dropped mid-upload") }
+            return videoMediaID
+        }
+        let videoPreparerCalls = OSAllocatedUnfairLock<Int>(initialState: 0)
+        let store = makeStore(
+            diaryAPIClient: diaryClient, mediaUploadService: mediaService,
+            videoPreparer: { _ in
+                videoPreparerCalls.withLock { $0 += 1 }
+                let compressedURL = try MediaDraftTempStorage.newFileURL(extension: "mp4")
+                try Data([0x03]).write(to: compressedURL)
+                return VideoTrimmer.UploadSource(
+                    fileURL: compressedURL, fileExtension: "mp4", pixelSize: PixelSize(width: 1920, height: 1080)
+                )
+            }
+        )
+        store.body = "快取檔被刪要重壓"
+        store.addVideo(
+            fileURL: URL(fileURLWithPath: "/tmp/deleted-cache-video-\(UUID().uuidString).mp4"), fileExtension: "mp4",
+            duration: 12, pixelSize: PixelSize(width: 3840, height: 2160), previewImage: nil
+        )
+
+        let firstResult = await store.publish()
+        XCTAssertFalse(firstResult)
+        XCTAssertEqual(videoPreparerCalls.withLock { $0 }, 1, "測試前置：第一次發佈要呼叫過一次 videoPreparer")
+
+        // 模擬低儲存空間時系統把快取的壓縮輸出檔案清掉——命中前的 fileExists 應該判成未命中。
+        let directory = try MediaDraftTempStorage.makeDirectoryIfNeeded()
+        for file in try FileManager.default.contentsOfDirectory(atPath: directory.path) {
+            try? FileManager.default.removeItem(at: directory.appendingPathComponent(file))
+        }
+
+        let secondResult = await store.publish()
+        XCTAssertTrue(secondResult)
+
+        XCTAssertEqual(
+            videoPreparerCalls.withLock { $0 }, 2,
+            "快取檔案已經不在磁碟上，命中判斷要當作未命中重壓，不是誤用一份不存在的檔案"
+        )
+    }
+
     /// I2：影片壓完、上傳失敗，使用者接著放棄草稿（`discardDraft`）——快取的壓縮輸出要跟原始
     /// 暫存檔一起清掉，`MediaDraftTempStorage` 的目錄不能留下沒有回收者的孤兒檔（先前只有
     /// App 重啟時的 `purgeStaleFiles()` 會清）。這裡寫真的檔案進共用目錄，直接驗目錄清空這件
