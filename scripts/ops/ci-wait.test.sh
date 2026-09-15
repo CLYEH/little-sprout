@@ -7,6 +7,10 @@
 # （空白分隔的罐頭 JSON 檔案路徑清單）回對應一份，序列用完後停在最後一份（同 promote-follow.test.sh 既有
 # 手法）；`$GH_FAIL_CALLS`（逗號分隔的呼叫序號清單）命中的那幾次呼叫直接 `exit 1`、不印任何 JSON，模擬
 # `gh` 本身失敗（curl 逾時之類）。真正呼叫 gh 的其餘引數只記一筆 log，不驗。
+# R2（merge-review R1 B1）另 PATH 前置一支假 `date`：只在設了 `$DATE_SEQUENCE` 且引數恰為 `+%s` 時接管
+# （依呼叫次數回對應的模擬秒數，序列用完停在最後一份），其餘一律 passthrough 給真 `date`——ci-wait.sh
+# 只在兩處呼叫 `date +%s`（`start_ts`／每輪迴圈開頭的逾時檢查），這讓我們能用極短的真實執行時間模擬
+# 「跨好幾輪 gh 失敗、模擬時鐘卻已經走了很久」的節奏，不必真的等待整支腳本的 `--interval`／`--max-minutes`。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -16,7 +20,7 @@ n=0
 ok() { echo "✓ $1"; n=$((n + 1)); }
 
 if ! command -v jq >/dev/null 2>&1; then
-  echo "SKIP 9 組＋mutation（無 jq）：stub gh 需要 jq 跑 --json 表達式，ci-wait 自測整支未跑"
+  echo "SKIP 22 組＋mutation（無 jq）：stub gh 需要 jq 跑 --json 表達式，ci-wait 自測整支未跑"
   exit 0
 fi
 
@@ -52,17 +56,52 @@ case "$1 $2" in
 esac
 EOF
 chmod +x "$bin/gh"
-export PATH="$bin:$PATH"
-export GH_LOG="$work/gh.log" GH_STATE_DIR="$work/state"
 
-has() { grep -qF -- "$2" <<<"$1"; }
+real_date=$(command -v date)
+cat > "$bin/date" <<EOF
+#!/bin/bash
+if [ "\$1" = "+%s" ] && [ -n "\${DATE_SEQUENCE:-}" ]; then
+  cnt_file="\${DATE_STATE_DIR:?}/datecount"
+  n=0
+  [ -f "\$cnt_file" ] && n=\$(cat "\$cnt_file")
+  n=\$((n + 1))
+  echo "\$n" > "\$cnt_file"
+  chosen=""
+  i=0
+  for v in \${DATE_SEQUENCE}; do
+    i=\$((i + 1))
+    chosen="\$v"
+    [ "\$i" -ge "\$n" ] && break
+  done
+  echo "\$chosen"
+  exit 0
+fi
+exec "${real_date}" "\$@"
+EOF
+chmod +x "$bin/date"
+export PATH="$bin:$PATH"
+export GH_LOG="$work/gh.log" GH_STATE_DIR="$work/state" DATE_STATE_DIR="$work/state"
+
+# has <label> <text> <substr>：斷言 <text> 含 <substr>（here-string 比對，避免 pipefail 下的 SIGPIPE 誤判，
+# LS-270）；找到即計入 ok()，找不到印 ✗＋原文並 fail=1——R2（merge-review R1 自我複查）：舊版只回傳布林
+# 值、呼叫端沒接判斷式，8 處斷言全是靜默無效的裝飾，改成這個版本才會真的讓測試紅。
+has() {
+  if grep -qF -- "$3" <<<"$2"; then
+    ok "$1"
+  else
+    echo "✗ $1（應含「$3」，實得）" >&2
+    printf '%s\n' "$2" | sed 's/^/    /' >&2
+    fail=1
+  fi
+}
 reset_all() {
   : > "$GH_LOG"; rm -rf "$GH_STATE_DIR"; mkdir -p "$GH_STATE_DIR"
-  unset GH_FAIL_CALLS GH_RUN_JSON_SEQUENCE
+  unset GH_FAIL_CALLS GH_RUN_JSON_SEQUENCE DATE_SEQUENCE
 }
 # fx <名稱> <JSON> → 落一個罐頭檔，印路徑
 fx() { printf '%s' "$2" > "$work/fixtures/$1.json"; echo "$work/fixtures/$1.json"; }
 viewcalls() { cat "${GH_STATE_DIR}/viewcount" 2>/dev/null || echo 0; }
+datecalls() { cat "${DATE_STATE_DIR}/datecount" 2>/dev/null || echo 0; }
 
 # ---- ① 缺參數 → exit 2、不呼叫 gh ----
 reset_all
@@ -118,6 +157,49 @@ has '⑥ 印失敗訊息' "$out" '連續失敗 3 次'
 reset_all
 out="$(GH_FAIL_CALLS="1,2" GH_RUN_JSON_SEQUENCE="$s" bash "$script" 2007 --interval 0 2>&1)"; rc=$?
 if [ "$rc" -eq 0 ]; then ok "⑦ gh 失敗兩次後恢復 → 不誤判，照常 exit 0"; else echo "✗ ⑦ 應 exit 0（實得 ${rc}）——連續失敗計數可能沒有在成功時歸零" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+
+# ---- ⑧ B1（merge-review R1，major，已修）：「失敗、失敗、成功」節奏——逾時檢查在每一輪迴圈最前面
+#        都要先比對 elapsed，不論這一輪是要重試還是要查詢完成度；修前只有成功分支會檢查，連續失敗的
+#        迭代完全跳過逾時檢查，elapsed 一路累積到下一次成功呼叫才重新比對，逾時退出點可能晚於
+#        --max-minutes 好幾個 --interval（reviewer 實測 71s／60s 預算，超出 18%）。
+#        用假 `date`（`$DATE_SEQUENCE`）把「模擬時鐘」與真實 sleep 脫鉤：budget＝1 分鐘（60s），
+#        模擬時鐘每次 `date +%s` 呼叫走 25s——call#1＝start_ts=0；iter1 逾時檢查（call#2）＝25＜60→
+#        呼叫 gh（第 1 次，GH_FAIL_CALLS 命中失敗）；iter2 逾時檢查（call#3）＝50＜60→呼叫 gh（第 2
+#        次，失敗）；iter3 逾時檢查（call#4）＝75≥60→應立刻 exit 3，不再多打第 3 次 gh。----
+reset_all
+d8_r=$(fx r2-running '{"status":"in_progress","conclusion":null,"jobs":[{"name":"rules","status":"in_progress","conclusion":null,"steps":[]}]}')
+out="$(GH_FAIL_CALLS="1,2" GH_RUN_JSON_SEQUENCE="$d8_r" DATE_SEQUENCE="0 25 50 75 100 125" bash "$script" 2008 --max-minutes 1 --interval 0 2>&1)"; rc=$?
+if [ "$rc" -eq 3 ]; then ok "⑧ 失敗、失敗、逾時 → exit 3（失敗分支也先比對 elapsed，不多繞一輪）"; else echo "✗ ⑧ 應 exit 3（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+has '⑧ 印已耗時 1 分 15 秒（75s＝budget 60s＋恰好一輪的模擬時鐘步進，不是好幾輪）' "$out" '已耗時 1 分 15 秒'
+d8_calls=$(viewcalls)
+if [ "$d8_calls" = 2 ]; then ok "⑧ gh 只被呼叫 2 次（逾時後沒有多打第 3 次，證明失敗分支確實先比對 elapsed 才決定要不要再呼叫 gh）"; else echo "✗ ⑧ gh 呼叫次數應為 2（實得 ${d8_calls}）——逾時後可能多打了一次 gh" >&2; fail=1; fi
+
+# ---- ⑧ mutation：把逾時判斷式改成「只在 fail_streak 歸零（上一輪沒有失敗）時才生效」——重現修前的
+#        缺陷形狀（失敗分支的迭代完全跳過逾時檢查的『後果』：即使已經逾時，只要還在連續失敗中就不退出）。
+#        同一份「失敗、失敗、成功」節奏夾具下（第 3 次 gh 呼叫改為成功、回「仍在跑」，讓迴圈撐過修前
+#        會漏檢的那兩輪失敗），mutant 應該撐到模擬時鐘 100s（1 分 40 秒）才退出——比原版的 75s 多墊了
+#        整整一輪（多打了一次原本不該打的 gh call），證明這段判斷式就是 B1 修法的來源。----
+anchor_b1='if [ "$elapsed" -ge "$max_seconds" ]; then'
+mut_b1="$work/ci-wait-mutant-b1.sh"
+if ! grep -qF "$anchor_b1" "$script"; then
+  echo "✗ ⑧ mutation 錨點（逾時判斷式）不在 ci-wait.sh，mutation 測試無法成立：${anchor_b1}" >&2; fail=1
+else
+  sed "s/$(printf '%s' "$anchor_b1" | sed 's/[.[\*^$]/\\&/g')/if [ \"\$fail_streak\" -eq 0 ] \&\& [ \"\$elapsed\" -ge \"\$max_seconds\" ]; then/" "$script" > "$mut_b1"
+  chmod +x "$mut_b1"
+  if diff -q "$script" "$mut_b1" >/dev/null 2>&1; then
+    echo "✗ ⑧ mutant 與原始檔完全相同（sed 未命中，mutation 測試本身無效）" >&2; fail=1
+  else
+    reset_all
+    d8b_r=$(fx r2b-running '{"status":"in_progress","conclusion":null,"jobs":[{"name":"rules","status":"in_progress","conclusion":null,"steps":[]}]}')
+    out="$(GH_FAIL_CALLS="1,2" GH_RUN_JSON_SEQUENCE="$d8b_r" DATE_SEQUENCE="0 25 50 75 100 125" bash "$mut_b1" 2009 --max-minutes 1 --interval 0 2>&1)"; rc=$?
+    d8b_calls=$(viewcalls)
+    if [ "$rc" -eq 3 ] && grep -qF '已耗時 1 分 40 秒' <<<"$out" && [ "$d8b_calls" = 3 ]; then
+      ok "⑧ mutant：逾時判斷只在 fail_streak 歸零時才生效後，同一份夾具撐到 100s（1 分 40 秒、多打了第 3 次 gh）才退出——比原版多墊一輪，證明 B1 的修法（失敗分支也要先比對 elapsed）就是原版只墊 75s／2 次 gh 呼叫的原因"
+    else
+      echo "✗ ⑧ mutant 應在 elapsed=100（1 分 40 秒、gh 呼叫 3 次）才 exit 3（實得 exit ${rc}，gh 呼叫 ${d8b_calls} 次）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+    fi
+  fi
+fi
 
 # ---- mutation：拿掉 ci-wait.sh 的 MUTATION-TIMEOUT 區塊（逾時退出邏輯）→「仍在跑」夾具陷入無窮迴圈 ----
 # 先切出 mutant，斷言區塊真的被拿掉；再用「仍在跑」夾具＋--max-minutes 0 對照：原版立刻 exit 3，
