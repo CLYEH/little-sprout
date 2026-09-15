@@ -167664,29 +167664,6 @@
                                     "mode": "fill"
                                   },
                                   "cornerRadius": "$radius-md"
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "SEqEs",
-                                  "name": "More Cell",
-                                  "width": 84,
-                                  "height": 84,
-                                  "fill": "$surface-2",
-                                  "cornerRadius": "$radius-md",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "dInuW",
-                                      "name": "More Count",
-                                      "fill": "$text-secondary",
-                                      "content": "+0",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
-                                      "fontWeight": "700"
-                                    }
-                                  ]
                                 }
                               ]
                             },
@@ -172716,26 +172693,18 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "tplXJ",
-                                  "name": "More Cell",
+                                  "id": "e4Px1u",
+                                  "name": "Thumb",
+                                  "clip": true,
                                   "width": 84,
                                   "height": 84,
-                                  "fill": "$surface-2",
-                                  "cornerRadius": "$radius-md",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "W2fWW",
-                                      "name": "More Count",
-                                      "fill": "$text-secondary",
-                                      "content": "+0",
-                                      "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
-                                      "fontWeight": "700"
-                                    }
-                                  ]
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1638339972126-fbf92a92dd74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjQ1Mzl8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
                                 }
                               ]
                             },
@@ -173251,6 +173220,7 @@
                 "$screen-pad-lg"
               ],
               "justifyContent": "center",
+              "alignItems": "center",
               "children": [
                 {
                   "id": "HgCfy",
@@ -179735,6 +179705,7 @@
                 "$sp-item",
                 "$screen-pad-lg"
               ],
+              "alignItems": "center",
               "children": [
                 {
                   "id": "H0sqI",
