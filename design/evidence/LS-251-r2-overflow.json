@@ -1,16 +1,16 @@
 {
   "ticket": "LS-251",
   "round": 2,
-  "head_sha": "968ac058d9315d3da9060cb5c36347c4320619c3",
+  "head_sha": "f6e117adf470afe4c7003bb7b43762c27803d957",
   "total_nodes": 12152,
-  "tree_hash": "e41e6b98777fd7de",
+  "tree_hash": "1ba986d34a3b7039",
   "scan_scope": "boards",
-  "scan_note": "LS-289 唯讀快照法：scripts/design/pen-snapshot-dump.js 全稿 dump（19241 rows，129 SNAP 批，一次 execute 成功）→ node scripts/design/overflow-scan.js --from-snapshot --tree-hash e41e6b98777fd7de --total-nodes 12152 --boards <31 個 id（29 畫面板 + 本票新增 04b AX3 板 Rfl9n + cmp/Baby Chip 元件 o9Brs1 + Notes X6iCY）> 跑未修改的 scanAll 六支。tree_hash 用 scripts/gates/design_tree_hash.py 對落地後（head_sha=968ac05）的 .pen 離線重算，掃描與雜湊皆對同一稿態（掃描前最後一次 execute 是純讀取，無寫入）。此為 R2 收工前最後一次掃描；三支 BLOCKER（corner_anchor.mismatch／text_occlusion.flagged／board_clip.flagged）皆為 0——過程中發現並修正了兩類真實缺陷：(a) Pencil 長時間互動 session 對『早期子節點長高後，同容器內較晚的兄弟節點』的 Get bounds 有快取失真（多輪 Replace 強制重算後才消失，證據見下方 sibling_intersection／corner_anchor 舊值 vs 新值對照，已記入 Pencil 踩雷記錄），(b) MN-13/MN-12/SH-3/SH-4 新增內容在 AX3 40pt 下的真實溢出（06b AX3 板高不足、01 AX3 略過列文字未換行、03/06a-iPad 縮圖 88pt 在 560pt 窄欄放不下、04 進度計數與『全部重試』文字未設 textGrowth）——皆已修正，本收據為修正後的乾淨結果。",
+  "scan_note": "LS-289 唯讀快照法：scripts/design/pen-snapshot-dump.js 全稿 dump（19241 rows，193 SNAP 批，一次 execute 成功）→ node scripts/design/overflow-scan.js --from-snapshot --tree-hash 1ba986d34a3b7039 --total-nodes 12152 --boards <31 個 id（29 畫面板 + 本票新增 04b AX3 板 Rfl9n + cmp/Baby Chip 元件 o9Brs1 + Notes X6iCY）> 跑未修改的 scanAll 六支。tree_hash 用 scripts/gates/design_tree_hash.py 對落地後（head_sha=f6e117a）的 .pen 離線重算，掃描與雜湊皆對同一稿態（掃描前最後一次 execute 是純讀取，無寫入）。此為 R2 收工前最後一次掃描；三支 BLOCKER（corner_anchor.mismatch／text_occlusion.flagged／board_clip.flagged）皆為 0——過程中發現並修正了三類真實問題：(a) Pencil 長時間互動 session 對『早期子節點長高後，同容器內較晚的兄弟節點』的 Get bounds 有快取失真（多輪 Replace 強制重算後才消失，已記入 Pencil 踩雷記錄），(b) MN-13/MN-12/SH-3/SH-4 新增內容在 AX3 40pt 下的真實溢出（06b AX3 板高不足、01 AX3 略過列文字未換行、03/06a-iPad 縮圖 88pt 在 560pt 窄欄放不下、04 進度計數與『全部重試』文字未設 textGrowth）——皆已修正；(c) MN-2 的 More Count fontSize 全文檔 Get 搜尋未限定 Import 板範圍，誤改到 LS-47/09-iPad、cmp/Card Diary、LS-21/13-iPad 三個本票未觸碰節點的 fontSize，已於同一輪內復原（$fs-note），確認復原後這三個板已不在 git diff 範圍內。本收據為以上修正後的乾淨結果。",
   "scans": {
     "sibling_intersection": {
       "scope": "boards",
       "document_count": 64,
-      "result_hash": "813a3ea93c857492",
+      "result_hash": "9bcb9ec3a215dff2",
       "flagged": [
         {
           "node_a": "t0fzsA/tBi8u",
@@ -136,7 +136,7 @@
     "row_overflow": {
       "scope": "boards",
       "document_count": 6,
-      "result_hash": "569f4dc082af3617",
+      "result_hash": "7130addae83fa177",
       "flagged": [
         {
           "node": "n3wSKz",
@@ -155,10 +155,12 @@
     "cross_parent_collision": {
       "scope": "boards",
       "document_count": 0,
-      "result_hash": "753c766553dba1de",
+      "result_hash": "8fcdd67fb96c0d3e",
       "flagged": []
     },
     "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
       "boards": ["m7ZCDg", "VrvV5", "e0S0TW", "k3jwB", "wL5FG", "EcgUO", "eweX7", "YSShl", "mWiBG", "gkS1Q", "Q8jHEZ", "y0FLsZ", "YfOUJ", "y2Qsy", "Fgezb", "vOgRq", "nMVqp", "Rfl9n", "L6zy2", "qGUTt", "CDlkK", "C09ZI", "A721Zq", "DnRLA", "jENvo", "O3WN3", "PFvEX", "Gxjee", "iOZ0V", "d6bTWC", "o9Brs1", "X6iCY"],
       "containers": 3,
       "points": 24,
@@ -170,17 +172,21 @@
       "document_flagged": [],
       "ref_hits": 12,
       "unresolved": [],
-      "result_hash": "b3278ebf64a7ec13"
+      "result_hash": "cdb8eed9ca385773"
     },
     "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
       "flagged": [],
       "document_flagged": [],
-      "result_hash": "27c705da8bbff493"
+      "result_hash": "425865f4f1505ff3"
     },
     "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
       "flagged": [],
       "document_flagged": [],
-      "result_hash": "6b16080c414de611"
+      "result_hash": "85a76826a6de5171"
     }
   }
 }
