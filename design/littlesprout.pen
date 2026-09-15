@@ -184920,6 +184920,264 @@
         },
         {
           "type": "frame",
+          "id": "sOjOa",
+          "name": "畫面級屬性",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "q6qjl",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "畫面級屬性清單（板名｜隱藏 Tab Bar｜標題｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大，LS-300 回填）",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "kgdyq",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "A7jYpH",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-251 R6",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Si9vP",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "content": "Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無（整理態尚未上傳，無失敗情境）｜深色 VrvV5：色彩 token 隨主題切換，版面/角托/字標幾何不變｜AX3 e0S0TW：Info Row（相簿 chip＋略過鈕）與 Babies Row（寶貝 chip）皆改 layout:vertical 直式堆疊避免碰撞；縮圖「+N」徽章與 chip 姓名縮寫維持 $fs-imprint 12 不隨放大｜iPad k3jwB：560pt 置中欄＋44pt 章節斷點，群卡縮圖改 2×3 grid（96×96，Left Col 304）",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WynFc",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dlM9J",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-251 R6",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "K8n0o2",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "content": "Import / 02 日期不明群 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無｜深色 EcgUO：同 01，色彩隨主題、版面不變｜AX3 eweX7：同 01（Info Row／Babies Row 改直式堆疊、$fs-imprint 12 徽章字）｜iPad YSShl：560pt 置中欄，群卡縮圖 2×3 grid（96×96）",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "t14X5J",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OOkwA",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-251 R6",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "hors9",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "content": "Import / 03 上限與規則提示 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無（達上限為資訊提示非錯誤，circle-alert 非 danger）｜深色 gkS1Q：同 01，Limit Banner 維持 $surface-2＋$text-primary＋circle-alert｜AX3 Q8jHEZ：同 01（Info Row／Babies Row 改直式堆疊、$fs-imprint 12 徽章字）｜iPad y0FLsZ：560pt 置中欄，群卡縮圖 2×3 grid（96×96）",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "UIYas",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "mtI4Z",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-251 R6",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LfFR3",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "content": "Import / 04 匯入進度 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 77pt｜失敗文案鍵 LS002／URLError 連線／5xx 伺服器（三分支，沿用 LS-142 kHDk4 既有定義：「連線中斷，請檢查網路連線。」／「伺服器忙碌，請稍後再試。」／「相簿容量已滿，這張沒有上傳。」）｜深色 y2Qsy：色彩隨主題，Queue Row 分組/進度卡版面不變｜AX3 Fgezb：Action Bar 純文字 Dismiss Button 改 textGrowth:fixed-width 320 置中換行避免橫向溢出；Progress Count「已處理 42/128 張」$fs-lead 22 與標籤分階對比色｜iPad vOgRq：754pt 滿版欄（非群卡類 560 置中欄，INF-10 具名理由），Queue Row 橫向鋪開；縮圖 84→96",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VS62O",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CYfSt",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-251 R6",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "PzalQ",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "content": "Import / 04b 匯入進度 · 取消整批確認 (iPhone)｜隱藏 Tab Bar ✓（sheet 覆蓋於 04 上）｜標題 自訂（系統 alert 樣式仿製，非 navigationTitle）｜釘底動作帶 無（「繼續匯入」/「取消匯入」雙鈕內建於 Alert Card，非畫面底部釘底列）｜失敗文案鍵 無｜深色 未另畫（範圍取捨 HPqKA：系統 alert 配色的直接延伸，無版面決策，豁免）｜AX3 Rfl9n：已補（VR MN-14），雙動態數字長句在 40pt 下實測 305pt 寬 Alert Card 未溢出｜iPad 未另畫（範圍取捨 HPqKA：系統風格置中對話框與畫面寬度無關，內容恆定，豁免）",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Klub5",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "VYR5G",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-251 R6",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "K3X3iL",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "content": "Import / 05 完成摘要 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 157pt（含成功/失敗統計摘要行，較其他板高）｜失敗文案鍵 LS002／URLError 連線／5xx 伺服器（同 04，Failed Section 逐列顯示）｜深色 qGUTt：色彩隨主題；成功統計 icon 改用 circle-check（避開本機 check-circle 渲染成問號的既有 bug）｜AX3 CDlkK：成功統計數字改用 $fs-display 34（與失敗統計不對稱設計，R2 訂正）｜iPad C09ZI：754pt 滿版欄（同 04，INF-10），Stat Card 橫向鋪開",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zaZ9Z",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "X5yFuO",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-251 R6",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "akKNQ",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "content": "Import / 06a 權限態 · Limited Library (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無｜深色 DnRLA：Limited Library Banner 維持 $surface-2＋$text-primary＋circle-alert（與 03 上限橫幅同語意，非 danger）｜AX3 jENvo：同 01/02/03（Info Row／Babies Row 改直式堆疊、$fs-imprint 12 徽章字）｜iPad O3WN3：560pt 置中欄，群卡縮圖 2×3 grid（96×96）",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "N8RFIR",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oK57q",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-251 R6",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "GnY2g",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "content": "Import / 06b 權限態 · 拒絕權限（空狀態） (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 無（主動作鈕在 Empty Center Wrap 內置中，非釘底列）｜失敗文案鍵 無｜深色 Gxjee：色彩隨主題；Empty Print 母題角托對角兩顆（TL+BR，R3 訂正非四顆）｜AX3 iOZ0V：文案與按鈕縱向堆疊撐高版面（height 1020，無橫向溢出）｜iPad d6bTWC：834pt 寬，Empty Print 置中母題",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
           "id": "spegP",
           "name": "裁決點清單（送核可頁時列出）",
           "width": "fill_container",
