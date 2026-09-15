@@ -163562,6 +163562,140 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "X0LwE",
+          "name": "N LS-280 R5 修訂：MJ-10 留言可見＋MN-11 零孤兒＋MN-12 入鏡",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "LcAT5",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "LS-280 R5 修訂（VR R4 ITERATE `cae800f1`，orchestrator 聚焦輪裁定）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "R48gZU",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "y3mCk",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-10 修正",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "U0XfE",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R4 的 medium detent 手法把 `z20bG/yeWtr`（Comment List，底下 3 個留言子節點）`height` 設 0，導致海報上「留言 / 3 則留言」標題下方一則留言都看不到（計數與內容矛盾），且與日記卡互動列「留言 2」的計數不一致（兩個數字第一次同框卻對不上）。修正：`yeWtr.height` 0→**120**（`clip:true` 不變，第一則留言完整可見、第二三則仍被裁掉不可見）；合成 recipe 在 `Copy(\"HPxRL\", ...)` 時新增 `descendants:{MoKee:{content:\"3\"}}` 覆寫 Comment Count，與 `z20bG` 既有 `B1WGR`「3 則留言」對齊為同一個數（3，即 sheet 的真實留言數）。重出 `comments-iphone-v3.jpg`：同一張截圖現在同時看得到「❤已按愛心 4／💬留言 3」與第一則 R3 改寫留言（陳志明「好可愛喔！阿公這張笑得眼睛都瞇起來了…」）全文。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Rpgtq",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ZPnjh",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-11 修正",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ELywV",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`JbTfv` 三格 R4 改用 `demo-hero-portrait.jpg`／`demo-hero-toddler.jpg`／`demo-timeline-v2.jpg` 後，`demo-thumb-hero.jpg`（56 KB）／`demo-thumb-hero-v2.jpg`（60 KB）／`demo-thumb-hero-v3.jpg`（56 KB）共 166 KB 的 image-fill 引用歸零，R4 未接續處理——本輪 `git rm` 三個檔案；`design/appstore-photos/*` 其餘檔案逐一複驗引用數：`demo-album-cover.jpg`=1、`demo-grid-hero.jpg`=2、`demo-grid-invite.jpg`=3、`demo-grid-join.jpg`=3、`demo-hero-portrait.jpg`=2、`demo-hero-toddler.jpg`=2、`demo-timeline-v2.jpg`=3，皆 ≥1（`hero.jpg`／`invite.jpg`／`join.jpg` 是 LS-247 母片，非 image-fill 直接引用，保留供未來裁切用，非孤兒）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "wsB9z",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PYViC",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-12 修正",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Ki8kK",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`demo-hero-portrait.jpg` 裁切窗右移 65px：`hero.jpg` `(480,30,980,780)`→**`(545,30,1045,780)`**，讓小安摸阿嬤臉頰的手指入鏡（原窗只剩阿嬤獨照側臉，容易被讀成『小安的最近照片＝一張阿嬤特寫』）。與 `demo-hero-toddler.jpg`（`(1050,20,1550,700)`）維持 5px 淨空、0% 重疊不變。此檔同時被 `WitwS/SBo3L`（`c2yk3s` 首格）與 `JbTfv/G5hRJ`（`ak7RI` 最近的照片首格）引用，兩處同步生效；`timeline-iphone.jpg`／`child-ipad-v2.jpg` 兩張 slot 合成圖已重新 Export＋PIL 重生。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -163711,7 +163845,7 @@
                 {
                   "type": "frame",
                   "id": "yeWtr",
-                  "name": "Comment List R5touch7k2m",
+                  "name": "Comment List",
                   "clip": true,
                   "width": "fill_container",
                   "height": 120,
