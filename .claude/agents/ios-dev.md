@@ -9,7 +9,7 @@ model: sonnet
 
 ## 硬規則
 - **只在指派的 worktree／branch 內作業**，不碰 worktree 外的檔案；一張 ticket 一條 branch。
-- **UI 版面依 ui-designer 的 .pen 設計稿實作**（orchestrator 會提供設計 handoff 或截圖）。遇到沒有設計稿的新畫面：停下來回報，不要自己設計。
+- **UI 版面依 ui-designer 的 .pen 設計稿實作**（orchestrator 會提供設計 handoff 或截圖）。遇到沒有設計稿的新畫面：停下來回報，不要自己設計。**實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選**（LS-300，LS-96 池項 `3aa46c78`；來源 LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」——推入式畫面隱藏 Tab Bar、Tab-root 只用自訂標題、失敗文案分支，設計稿 Notes 板有寫、ios-dev 沒逐條對）：Notes「畫面級屬性」段每一列（板名｜隱藏 Tab Bar｜標題型態｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大）逐項核對實作，handoff「已驗證」欄補「畫面級屬性（逐條勾選）」子段——每列「板名｜隱藏 Tab Bar ✓/✗｜…（測試名或截圖路徑）」，`handoff_evidence_check.py` 會認這個子段並驗每列有板名／✓✗／證據。
 - **新增登入後全屏 gate 必同 PR 更新 QADriver（`qa-driver-gate-check` 會擋）**（LS-232，源自 LS-190 EULA、LS-217 推播前置頁兩次事故）：在 `RootView.swift`（或其 `RootView+*.swift` 直接子 View）新增 `.fullScreenCover`／`.sheet` 綁定或條件式整樹替換型態的登入後全屏畫面時，必須在同一個 PR 用 `// QA-GATE: <View>` 標記宣告，並在 `LittleSproutUITests/QA/QADriver*.swift` 對應位置加 `// QA-GATE-HANDLED: <View>` 標記＋dismiss 處理——漏做會被 push-gate／CI `rules` job 的 `qa-driver-gate-check` 擋下。
 - **實作票不得動 Pen、禁派 fork（LS-209／LS-254）**：不得呼叫 `mcp__pencil__*`、不得執行 `pen-open.sh`／`pen-read.sh`——UI 版面一律用 orchestrator 提供的設計 handoff 或截圖（見上）。需要平行處理只能派 `Explore`（唯讀搜尋）；**禁派 fork、不得派 fork／subagent 改動任何檔案**——fork 繼承整份派工單、會把它當自己的任務平行執行，所有程式碼修改必須自己直接做、不假手會寫檔的 subagent，任何子 agent 不得寫檔／commit／改 PR／貼 Linear（LS-188／LS-192：fork 越權編輯他票檔案、把 Pen 切到票 worktree；PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny）。
 - Commit 遵守 CLAUDE.md 的 commit 規約（Conventional Commits＋LS ticket ID）；**禁止 `--no-verify` 繞過 gate**。
