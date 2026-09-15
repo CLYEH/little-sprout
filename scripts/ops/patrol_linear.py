@@ -506,6 +506,26 @@ def lane_candidates(issues, lane, current_cycle_number):
     return [], outside_ok, bool(outside_ok)
 
 
+def ready_dispatch_candidate(issues, lane, current_cycle_number, worktrees):
+    """LS-298 scope 4：lane 內若有 Ready（本 cycle）且 `.claude/worktrees/LS-<n>` 已建的票——已被派工、
+    worktree 建好但 Linear 狀態還沒推進到 In Progress，這種票不算在飛（WIP_STATES 不含 Ready）也不算候補
+    （classify_candidate() 只認 Backlog／Spec 狀態），是既有盲區：lane 表印「在飛 0、候補只有下一張」，
+    動作清單因此誤要求再拉一張、超過 lane 上限（LS-251 事故，連兩輪）。回傳該票 identifier（同 lane 多張
+    取 sort_key 排序後第一張）或 None（無此情況，或 current_cycle_number 未知不判定）。"""
+    if current_cycle_number is None:
+        return None
+    cands = [
+        i for i in issues
+        if lane_of(i) == lane and i["state"]["name"] == "Ready"
+        and cycle_number_of(i) == current_cycle_number
+        and ticket_number(i["identifier"]) in worktrees
+    ]
+    if not cands:
+        return None
+    cands.sort(key=sort_key)
+    return cands[0]["identifier"]
+
+
 def lane_pending(issues, lane):
     """R1 F1：classify_candidate() 算出的 'spec'／'structure' 排除原因之前只用來丟棄候補，沒有輸出
     出口——票文缺「## 驗收」或缺 project／Phase 票缺 milestone 的票會靜默停滯，沒人知道要去補。
@@ -1043,17 +1063,28 @@ def build_report(token, root, team_key, team_id, sim_lines):
 
     lanes = {}
     lane_actions = []
+    worktrees = worktree_tickets(root)
     for lane, limit in LANE_LIMITS.items():
         wip = lane_wip(issues, lane, root=root, script_dir=SCRIPT_DIR)
-        in_cycle_ok, all_ok, needs_scope = lane_candidates(
-            issues, lane, current["number"] if current else None
-        )
+        # LS-298 scope 4：Ready（本 cycle）且 worktree 已建的票——已被派工，佔候補首位，lane_candidates()
+        # 不再往下算（避免同時選中另一張候補、超過 lane 上限，LS-251 事故）。
+        ready_dispatch = ready_dispatch_candidate(issues, lane, current["number"] if current else None, worktrees)
+        if ready_dispatch:
+            candidates_shown = []
+            needs_scope = False
+            cand_display = [ready_dispatch]
+        else:
+            in_cycle_ok, all_ok, needs_scope = lane_candidates(
+                issues, lane, current["number"] if current else None
+            )
+            candidates_shown = in_cycle_ok if in_cycle_ok else all_ok
+            cand_display = [i["identifier"] for i in candidates_shown]
         pending = lane_pending(issues, lane)
-        candidates_shown = in_cycle_ok if in_cycle_ok else all_ok
         entry = {
             "limit": limit,
             "wip": wip,
-            "candidates": [i["identifier"] for i in candidates_shown],
+            "candidates": cand_display,
+            "ready_dispatch": ready_dispatch,
             "chosen": None,
             "needs_scope_plus": needs_scope,
             "pending_spec": pending["spec"],
@@ -1082,7 +1113,8 @@ def build_report(token, root, team_key, team_id, sim_lines):
         # LS-144 開票責任：在飛 0 且無可派候補（無候補或候補全被擋）→ 印「→ 開票」並列來源候選；
         # 連續空輪數存 .claude/patrol-state.json（每 lane 一個計數；有在飛或有候補即歸零），≥2 輪升 ⚠。
         # 不看 current 是否可判定——lane 空著就是停擺，與能不能派工（需 cycle）是兩件事。
-        if wip == 0 and not candidates_shown:
+        # LS-298 scope 4：ready_dispatch 有值時 lane 其實被佔用（worktree 已建、待派），不算「空」，不印開票。
+        if wip == 0 and not candidates_shown and not ready_dispatch:
             rounds = int(streaks.get(lane) or 0) + 1
             blocked = []
             if pending["hold"]:
@@ -1151,7 +1183,10 @@ def format_lane_line(lane, entry):
     """R1 F1／I2：五欄——上限／在飛／候補／待 Spec／待結構；候補全部來自 cycle 外（scope+）時標明
     並只印前 3 張，避免誤以為 cycle 內現成有這麼多候補（I2：真實跑過 12 張全 cycle 外的案例）。"""
     cand_list = entry["candidates"]
-    if entry.get("needs_scope_plus") and cand_list:
+    if entry.get("ready_dispatch"):
+        # LS-298 scope 4：Ready＋worktree 已建的票佔候補首位，標記待派、不再往下印別的候補（cap）。
+        cand = "%s（worktree 已建，待派）" % entry["ready_dispatch"]
+    elif entry.get("needs_scope_plus") and cand_list:
         shown = cand_list[:3]
         more = "…" if len(cand_list) > 3 else ""
         cand = "%s%s（cycle 外，取第一張需 scope+）" % (", ".join(shown), more)
