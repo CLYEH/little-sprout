@@ -152,8 +152,9 @@
 板名，不驗 ios-dev 實作時真的逐條對過；這支再認一個**可選**子段——標題含「畫面級屬性」（如「**畫面級屬性（逐條
 勾選）**：」，用既有 `find_section_by_keyword`／`is_heading_line` 同一套判定，故這個子段本身在文件裡會被當成
 獨立標題、不是「已驗證」段落的內文，見 `is_heading_line` 對粗體行的既有語意）。段落存在時，逐 `-` 列點驗三件事：
-(1) 板名——`-` 之後、第一個全形 `｜` 之前的非空文字；(2) 至少一個 ✓／✗；(3) 沿用既有 `has_evidence`（測試名／
-路徑／指令，同「已驗證」段的證據規則）。三者缺一即紅，指名缺的是哪一種。**段落不存在時完全不驗**（回傳
+(1) 板名——`-` 之後、第一個分隔符（全形 `｜` 或半形 `|`，R2／merge-review R1 i1：規約訂全形，但半形手誤不該
+誤判「缺板名」）之前的非空文字；(2) 至少一個 ✓／✗；(3) 沿用既有 `has_evidence`（測試名／路徑／指令，同「已驗證」
+段的證據規則）。三者缺一即紅，指名缺的是哪一種。**段落不存在時完全不驗**（回傳
 `ok=True`、無訊息）——舊 handoff（LS-300 之前的既有樣本，票文範圍 3 第三條夾具）不因為沒寫這個新子段而被
 追溯判紅。已知限制：只驗格式（有沒有板名／勾選符號／證據），不驗板名是否真的對應 Notes 板名子字串（那是
 `design-notes-check.sh` 的職責、發生在設計 PR 而非本 handoff 上）、也不驗勾選的 ✓／✗ 是否符合實際實作（同 N9）。
@@ -239,7 +240,10 @@ MUTATION_CONTEXT_RE = re.compile(r"mutation|mutant|改回|→\s*紅", re.IGNOREC
 # ---- LS-300：「畫面級屬性（逐條勾選）」子段判定 ----
 SCREEN_ATTR_KEYWORD_RE = re.compile(r"畫面級屬性")  # HANDOFF-SCREEN-ATTR-KEYWORD
 SCREEN_ATTR_CHECKMARK_RE = re.compile(r"[✓✗]")
-SCREEN_ATTR_SEP_RE = re.compile(r"｜")
+# R2（merge-review R1 i1）：規約三處（ui-designer.md／ios-dev.md／COLLABORATION.md）皆訂全形「｜」，但
+# ios-dev 手誤打成半形「|」時，原版只認全形會誤判「缺板名」（fail-closed 方向，不誤放行，風險本來就低）——
+# 這裡放寬成兩者皆認，減少這種手誤造成的假紅。
+SCREEN_ATTR_SEP_RE = re.compile(r"[｜|]")
 
 
 def fail(msg):
@@ -326,7 +330,7 @@ def split_items(lines, start, end):
 def check_screen_attrs(lines):
     """LS-300：可選子段「畫面級屬性（逐條勾選）」——標題含「畫面級屬性」（`SCREEN_ATTR_KEYWORD_RE`）。
     子段不存在時回傳 `(True, [])`（不影響舊 handoff，票文範圍 3 第三條夾具）。存在時逐 `-` 列點（沿用
-    `split_items` 的 dash 分項邏輯）驗三件事：板名（`-` 之後、第一個「｜」之前的非空文字）、至少一個
+    `split_items` 的 dash 分項邏輯）驗三件事：板名（`-` 之後、第一個分隔符「｜」或「|」之前的非空文字）、至少一個
     ✓／✗（`SCREEN_ATTR_CHECKMARK_RE`）、`has_evidence`（沿用「已驗證」段既有的測試名／路徑／指令規則，
     見 (a)/(b)/(b2)/(c)）。回傳 `(ok, messages)`——`messages` 逐項印 ✓／✗，供 `run()` 併入輸出。"""
     section = find_section_by_keyword(lines, SCREEN_ATTR_KEYWORD_RE)
@@ -345,7 +349,7 @@ def check_screen_attrs(lines):
         board_name = stripped[:sep_m.start()].strip() if sep_m else ""
         missing = []
         if not board_name:
-            missing.append("板名（`-` 後、第一個「｜」前的文字）")
+            missing.append("板名（`-` 後、第一個分隔符「｜」或「|」前的文字）")
         if not SCREEN_ATTR_CHECKMARK_RE.search(block):
             missing.append("✓／✗")
         if not has_evidence(block):
