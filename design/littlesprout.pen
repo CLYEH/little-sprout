@@ -163714,8 +163714,10 @@
             {
               "type": "text",
               "id": "j5CsQS",
-              "name": "H",
+              "name": "H R6fixwrap9x2q",
               "fill": "$print-ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
               "content": "LS-280 R6 修訂（VR R5 APPROVE 附 C 項 `f8cedf88`，orchestrator 裁 C5b `804d3c21`）",
               "fontFamily": "Noto Sans TC",
               "fontSize": 22,
