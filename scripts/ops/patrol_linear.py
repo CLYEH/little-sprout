@@ -70,6 +70,7 @@ POOL_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P([1-4])\s*·")  # 行首�
 POOL_ANNOUNCE_RE = re.compile(r"銷除|銷案|已升票")
 BACKEND_KEYWORDS = ("RPC", "RLS", "migration", "schema", "後端", "Supabase", "資料表", "trigger", "policy", "SQL", "Edge Function", "bucket")
 STATE_FILE_REL = os.path.join(".claude", "patrol-state.json")  # 連續空輪計數（gitignored）
+BACKTICK_TOKEN_RE = re.compile(r"`([^`\n]{2,80})`")  # LS-298 scope 2：Story 票文反引號 token（表名／RPC 名／檔名）
 # LS-298 scope 3：docs/archive/linear/LS-<n>.md（LS-276 `linear-archive.py` 匯出格式）的欄位——首行 `# LS-<n> <標題>`，
 # 表格列 `| 狀態 | Done（completed） |`／`| 標籤 | a, b |`／可選 `| 父票 | LS-<m> <標題> |`。
 ARCHIVE_DIR_REL = os.path.join("docs", "archive", "linear")
@@ -546,23 +547,76 @@ def design_tickets_for(story_ident, all_issues):
     ]
 
 
-def design_gate_sources(open_issues, all_issues):
+def extract_backtick_tokens(text):
+    """LS-298 scope 2：抽 Story 標題／票文中的反引號 token（表名／RPC 名／檔名等技術詞），依出現順序去重。"""
+    seen = []
+    for m in BACKTICK_TOKEN_RE.finditer(text or ""):
+        tok = m.group(1).strip()
+        if tok and tok not in seen:
+            seen.append(tok)
+    return seen
+
+
+def repo_landed_tokens(root, tokens):
+    """LS-298 scope 2：沿用 repo_landed_pool_items()（LS-287）的批次 `git grep -n -F` 手法，對 Story 抽出
+    的反引號 token 查整個 repo（token 是表名／RPC 名／檔名，可能出現在 migrations／Sources／docs 任何位置，
+    不像池項 id 限定在少數路徑）。回傳 {token: "檔:行"}（同一 token 多處命中取第一筆）；沒有 token 或查無
+    命中都回空字典——這層只是提示，查不到就維持原措辭（fail-open，不影響候選正確性）。"""
+    if not tokens:
+        return {}
+    args = ["grep", "-n", "-F"]
+    for t in tokens:
+        args += ["-e", t]
+    res = git(root, *args)
+    landed = {}
+    for line in res.stdout.splitlines():
+        path, sep, rest = line.partition(":")
+        if not sep:
+            continue
+        lineno, sep2, content = rest.partition(":")
+        if not sep2:
+            continue
+        for t in tokens:
+            if t not in landed and t in content:
+                landed[t] = "%s:%s" % (path, lineno)
+    return landed
+
+
+def with_landed_note(issue, entry, root):
+    """LS-298 scope 2：對候選附 repo 已落地提示——命中附「已落地：<token> → <檔:行>（疑已有子票）」；
+    root 為 None（degraded_lane_sources() 只算 uncertain 候選、結果本來就要丟棄時）或零命中都維持原 why。"""
+    if root is None:
+        return entry
+    text = (issue.get("title") or "") + "\n" + (issue.get("description") or "")
+    tokens = extract_backtick_tokens(text)
+    landed = repo_landed_tokens(root, tokens)
+    if not landed:
+        return entry
+    tok = next(t for t in tokens if t in landed)
+    entry = dict(entry)
+    entry["why"] = entry["why"] + "；已落地：%s → %s（疑已有子票）" % (tok, landed[tok])
+    return entry
+
+
+def design_gate_sources(open_issues, all_issues, root=None):
     """(a) design／ui：Backlog 中票文含正典粗體標記 `**UI 票：需 Design gate**`（needs_design_gate()）、且尚無任何
-    lane:design 票承接者。"""
+    lane:design 票承接者。LS-298 scope 2：root 給定時，每個候選再附 repo 已落地提示（with_landed_note()）。"""
     out = []
     for i in open_issues:
         if i["state"]["name"] not in BACKLOG_STATES or not needs_design_gate(i):
             continue
         if design_tickets_for(i["identifier"], all_issues):
             continue
-        out.append({"id": i["identifier"], "title": i.get("title") or "", "why": "需 Design gate、尚無設計票（先開 lane:design）"})
+        entry = {"id": i["identifier"], "title": i.get("title") or "", "why": "需 Design gate、尚無設計票（先開 lane:design）"}
+        out.append(with_landed_note(i, entry, root))
     out.sort(key=lambda s: ticket_number(s["id"]) or 0)
     return out
 
 
-def backend_sources(open_issues, all_issues):
+def backend_sources(open_issues, all_issues, root=None):
     """(c) backend：Backlog Story 票文含後端關鍵字、且尚無任何 lane:backend 子票（open 或已結案）者。
-    關鍵字啟發式——只列出、由 orchestrator 判斷可否拆「後端先行（不需 Design gate）」。"""
+    關鍵字啟發式——只列出、由 orchestrator 判斷可否拆「後端先行（不需 Design gate）」。LS-298 scope 2：
+    root 給定時，每個候選再附 repo 已落地提示（with_landed_note()）。"""
     out = []
     for i in open_issues:
         if i["state"]["name"] not in BACKLOG_STATES or not is_story(i):
@@ -574,10 +628,11 @@ def backend_sources(open_issues, all_issues):
         ident = i["identifier"]
         if any(lane_of(c) == "lane:backend" and (c.get("parent") or {}).get("identifier") == ident for c in all_issues):
             continue
-        out.append({
+        entry = {
             "id": ident, "title": i.get("title") or "",
             "why": "Story 含後端關鍵字 %s、尚無 lane:backend 子票——可拆後端先行？" % "／".join(hits[:3]),
-        })
+        }
+        out.append(with_landed_note(i, entry, root))
     out.sort(key=lambda s: ticket_number(s["id"]) or 0)
     return out
 
@@ -978,8 +1033,8 @@ def build_report(token, root, team_key, team_id, sim_lines):
             notes.extend(degraded_notes)
             return [], notes
         if lane == "lane:backend":
-            return backend_sources(issues, alls), notes
-        return design_gate_sources(issues, alls), notes  # lane:design／lane:ui 共用同一份來源
+            return backend_sources(issues, alls, root=root), notes
+        return design_gate_sources(issues, alls, root=root), notes  # lane:design／lane:ui 共用同一份來源
 
     state = load_state(root)
     streaks = state.get("open_ticket_empty_rounds")
