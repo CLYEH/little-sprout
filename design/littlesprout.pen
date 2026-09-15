@@ -164475,8 +164475,8 @@
     {
       "type": "frame",
       "id": "m7ZCDg",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 30021,
       "name": "Import / 01 匯入整理頁 (iPhone)",
       "clip": true,
       "width": 393,
@@ -165445,8 +165445,8 @@
     {
       "type": "frame",
       "id": "VrvV5",
-      "x": 0,
-      "y": 14324,
+      "x": 8176,
+      "y": 31674.192137382455,
       "name": "Import / 01 匯入整理頁 · 深色",
       "theme": {
         "mode": "dark"
@@ -166418,8 +166418,8 @@
     {
       "type": "frame",
       "id": "e0S0TW",
-      "x": 0,
-      "y": 15947.192137382453,
+      "x": 8176,
+      "y": 33327.38427476491,
       "name": "A11y / 01 匯入整理頁 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -166577,6 +166577,9 @@
                           "name": "Date Stamp",
                           "width": "fit_content",
                           "descendants": {
+                            "OCYqN": {
+                              "width": 176
+                            },
                             "VDOco": {
                               "content": "9月10日"
                             },
@@ -166838,6 +166841,9 @@
                           "name": "Date Stamp",
                           "width": "fit_content",
                           "descendants": {
+                            "OCYqN": {
+                              "width": 152
+                            },
                             "VDOco": {
                               "content": "9月8日"
                             },
@@ -167071,6 +167077,9 @@
                           "name": "Date Stamp",
                           "width": "fit_content",
                           "descendants": {
+                            "OCYqN": {
+                              "width": 176
+                            },
                             "VDOco": {
                               "content": "8月22日"
                             },
@@ -167394,8 +167403,8 @@
     {
       "type": "frame",
       "id": "k3jwB",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 35711.56510213789,
       "name": "Import / 01-iPad 匯入整理頁 (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -168454,8 +168463,8 @@
     {
       "type": "frame",
       "id": "wL5FG",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 37436.75723952034,
       "name": "Import / 02 日期不明群 (iPhone)",
       "clip": true,
       "width": 393,
@@ -169205,8 +169214,8 @@
     {
       "type": "frame",
       "id": "mWiBG",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 43776.23818487064,
       "name": "Import / 03 上限與規則提示 (iPhone)",
       "clip": true,
       "width": 393,
@@ -169950,8 +169959,8 @@
     {
       "type": "frame",
       "id": "EcgUO",
-      "x": 0,
-      "y": 18301.37296475543,
+      "x": 8176,
+      "y": 38845.29606682858,
       "name": "Import / 02 日期不明群 · 深色",
       "theme": {
         "mode": "dark"
@@ -170704,8 +170713,8 @@
     {
       "type": "frame",
       "id": "gkS1Q",
-      "x": 0,
-      "y": 19679.911792063667,
+      "x": 8176,
+      "y": 45288.4979862839,
       "name": "Import / 03 上限與規則提示 · 深色",
       "theme": {
         "mode": "dark"
@@ -171452,8 +171461,8 @@
     {
       "type": "frame",
       "id": "eweX7",
-      "x": 0,
-      "y": 21162.17159347693,
+      "x": 8176,
+      "y": 40253.834894136824,
       "name": "A11y / 02 日期不明群 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -171611,6 +171620,9 @@
                           "name": "Date Stamp",
                           "width": "fit_content",
                           "descendants": {
+                            "OCYqN": {
+                              "width": 185
+                            },
                             "VDOco": {
                               "content": "日期不明"
                             },
@@ -171913,6 +171925,9 @@
                           "name": "Date Stamp",
                           "width": "fit_content",
                           "descendants": {
+                            "OCYqN": {
+                              "width": 176
+                            },
                             "VDOco": {
                               "content": "9月10日"
                             },
@@ -172208,8 +172223,8 @@
     {
       "type": "frame",
       "id": "Q8jHEZ",
-      "x": 0,
-      "y": 23147.036056902518,
+      "x": 8176,
+      "y": 46800.75778769716,
       "name": "A11y / 03 上限與規則提示 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -172405,6 +172420,9 @@
                           "name": "Date Stamp",
                           "width": "fit_content",
                           "descendants": {
+                            "OCYqN": {
+                              "width": 176
+                            },
                             "VDOco": {
                               "content": "9月14日"
                             },
@@ -172638,6 +172656,9 @@
                           "name": "Date Stamp",
                           "width": "fit_content",
                           "descendants": {
+                            "OCYqN": {
+                              "width": 176
+                            },
                             "VDOco": {
                               "content": "9月13日"
                             },
@@ -172958,8 +172979,8 @@
     {
       "type": "frame",
       "id": "YSShl",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 42344.69935756241,
       "name": "Import / 02-iPad 日期不明群 (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -173769,8 +173790,8 @@
     {
       "type": "frame",
       "id": "y0FLsZ",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 49325.99444285905,
       "name": "Import / 03-iPad 上限與規則提示 (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -174562,8 +174583,8 @@
     {
       "type": "frame",
       "id": "YfOUJ",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 50778.25424427231,
       "name": "Import / 04 匯入進度 (iPhone)",
       "clip": true,
       "width": 393,
@@ -175368,8 +175389,8 @@
     {
       "type": "frame",
       "id": "nMVqp",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 57270.25424427231,
       "name": "Import / 04b 匯入進度 · 取消整批確認 (iPhone)",
       "clip": true,
       "width": 393,
@@ -175539,8 +175560,8 @@
     {
       "type": "frame",
       "id": "y2Qsy",
-      "x": 0,
-      "y": 25642.27271206441,
+      "x": 8176,
+      "y": 52137.25424427231,
       "name": "Import / 04 匯入進度 · 深色",
       "theme": {
         "mode": "dark"
@@ -176348,8 +176369,8 @@
     {
       "type": "frame",
       "id": "Fgezb",
-      "x": 0,
-      "y": 26971.27271206441,
+      "x": 8176,
+      "y": 53496.25424427231,
       "name": "A11y / 04 匯入進度 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -177160,8 +177181,8 @@
     {
       "type": "frame",
       "id": "L6zy2",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 58272.25424427231,
       "name": "Import / 05 完成摘要 (iPhone)",
       "clip": true,
       "width": 393,
@@ -177663,8 +177684,8 @@
     {
       "type": "frame",
       "id": "qGUTt",
-      "x": 0,
-      "y": 29356.27271206441,
+      "x": 8176,
+      "y": 59327.25424427231,
       "name": "Import / 05 完成摘要 · 深色",
       "theme": {
         "mode": "dark"
@@ -178169,8 +178190,8 @@
     {
       "type": "frame",
       "id": "CDlkK",
-      "x": 0,
-      "y": 30381.27271206441,
+      "x": 8176,
+      "y": 60382.25424427231,
       "name": "A11y / 05 完成摘要 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -178675,8 +178696,8 @@
     {
       "type": "frame",
       "id": "vOgRq",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 55911.25424427231,
       "name": "Import / 04-iPad 匯入進度 (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -179482,8 +179503,8 @@
     {
       "type": "frame",
       "id": "C09ZI",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 62185.25424427231,
       "name": "Import / 05-iPad 完成摘要 (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -179987,8 +180008,8 @@
     {
       "type": "frame",
       "id": "A721Zq",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 63240.25424427231,
       "name": "Import / 06a 權限態 · Limited Library (iPhone)",
       "clip": true,
       "width": 393,
@@ -180741,8 +180762,8 @@
     {
       "type": "frame",
       "id": "PFvEX",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 70211.5034540918,
       "name": "Import / 06b 權限態 · 拒絕權限（空狀態） (iPhone)",
       "clip": true,
       "width": 393,
@@ -180957,8 +180978,8 @@
     {
       "type": "frame",
       "id": "DnRLA",
-      "x": 0,
-      "y": 32154.27271206441,
+      "x": 8176,
+      "y": 64757.81648094814,
       "name": "Import / 06a 權限態 · Limited Library · 深色",
       "theme": {
         "mode": "dark"
@@ -181714,8 +181735,8 @@
     {
       "type": "frame",
       "id": "Gxjee",
-      "x": 0,
-      "y": 33641.83494874023,
+      "x": 8176,
+      "y": 71213.5034540918,
       "name": "Import / 06b 權限態 · 拒絕權限 · 深色",
       "theme": {
         "mode": "dark"
@@ -181933,8 +181954,8 @@
     {
       "type": "frame",
       "id": "jENvo",
-      "x": 0,
-      "y": 34613.83494874023,
+      "x": 8176,
+      "y": 66275.37871762396,
       "name": "A11y / 06a 權限態 · Limited Library · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -182117,7 +182138,10 @@
                       "icon": "settings-2"
                     },
                     "yxwnz": {
-                      "content": "管理可存取的照片"
+                      "content": "管理可存取的照片",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "textAlign": "center"
                     }
                   }
                 }
@@ -182166,6 +182190,9 @@
                           "name": "Date Stamp",
                           "width": "fit_content",
                           "descendants": {
+                            "OCYqN": {
+                              "width": 176
+                            },
                             "VDOco": {
                               "content": "9月10日"
                             },
@@ -182398,6 +182425,9 @@
                           "name": "Date Stamp",
                           "width": "fit_content",
                           "descendants": {
+                            "OCYqN": {
+                              "width": 152
+                            },
                             "VDOco": {
                               "content": "9月8日"
                             },
@@ -182692,8 +182722,8 @@
     {
       "type": "frame",
       "id": "iOZ0V",
-      "x": 0,
-      "y": 36888.39744853226,
+      "x": 8176,
+      "y": 72215.5034540918,
       "name": "A11y / 06b 權限態 · 拒絕權限 · Dynamic Type AX3（body 40pt）",
       "theme": {
         "size": "ax3"
@@ -182911,8 +182941,8 @@
     {
       "type": "frame",
       "id": "O3WN3",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 68695.94121741598,
       "name": "Import / 06a-iPad 權限態 · Limited Library (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -183727,8 +183757,8 @@
     {
       "type": "frame",
       "id": "d6bTWC",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 73217.5034540918,
       "name": "Import / 06b-iPad 權限態 · 拒絕權限（空狀態） (iPad 11\")",
       "clip": true,
       "width": 834,
@@ -183943,8 +183973,8 @@
     {
       "type": "frame",
       "id": "X6iCY",
-      "x": 0,
-      "y": 0,
+      "x": 8176,
+      "y": 74561.5034540918,
       "name": "Import / 實作註記 · Handoff Notes (ios-dev)",
       "width": 900,
       "fill": "#FBEBEC",
