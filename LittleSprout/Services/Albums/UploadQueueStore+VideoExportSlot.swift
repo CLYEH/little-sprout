@@ -69,7 +69,17 @@ extension UploadQueueStore {
     /// `preparerTaskRef` 用鎖保護是因為 `onCancel` 閉包可能在任意執行緒上並發執行（不像
     /// `acquireVideoExportSlot()` 的 `onCancel` 需要跳回 MainActor 改陣列，這裡只是呼叫
     /// `Task.cancel()`，本身執行緒安全，不需要跳轉，只需要鎖保護這個參照本身的讀寫）。
-    func runVideoPreparer(_ fileURL: URL) async throws -> VideoTrimmer.UploadSource {
+    ///
+    /// **LS-290 i2**：`preparerTask` 完成（成功或失敗）後呼叫 `timeoutTask.cancel()`——原本逾時
+    /// Task 不論 `preparer` 有沒有已經完成都會睡滿整段 `timeout`（預設 10 分鐘），一批影片就是
+    /// 一批白留著的常駐 MainActor Task。`timeoutTask` 宣告在 `preparerTask` 之前，讓
+    /// `preparerTask` 的閉包可以直接捕捉它，不需要額外的鎖／參照。`sleepForTimeout` 預設呼叫
+    /// 真正的 `Task.sleep`；測試才需要換成輪詢 `Task.isCancelled` 的版本，觀察
+    /// `timeoutTask.cancel()` 是否真的被呼叫（見 `debugRunVideoPreparer`）。
+    func runVideoPreparer(
+        _ fileURL: URL,
+        sleepForTimeout: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
+    ) async throws -> VideoTrimmer.UploadSource {
         let preparer = videoPreparer
         let timeout = videoExportTimeout
         let preparerTaskRef = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
@@ -85,19 +95,20 @@ extension UploadQueueStore {
                     guard shouldResume else { return }
                     continuation.resume(with: result)
                 }
+                let timeoutTask = Task {
+                    try? await sleepForTimeout(timeout)
+                    preparerTaskRef.withLock { $0 }?.cancel()
+                    resumeOnce(.failure(VideoExportTimeoutError()))
+                }
                 let preparerTask = Task {
                     do {
                         resumeOnce(.success(try await preparer(fileURL)))
                     } catch {
                         resumeOnce(.failure(error))
                     }
+                    timeoutTask.cancel()
                 }
                 preparerTaskRef.withLock { $0 = preparerTask }
-                Task {
-                    try? await Task.sleep(for: timeout)
-                    preparerTaskRef.withLock { $0 }?.cancel()
-                    resumeOnce(.failure(VideoExportTimeoutError()))
-                }
             }
         } onCancel: {
             preparerTaskRef.withLock { $0 }?.cancel()
@@ -118,10 +129,14 @@ extension UploadQueueStore {
 
     var debugVideoExportWaiterCount: Int { videoExportWaiters.count }
 
-    /// 測試用途（LS-290 i1）：直接呼叫 `runVideoPreparer(_:)`，不經過完整 `enqueue`／
-    /// `performUpload` 流程，讓測試能精準控制「外層 Task 何時取消」。
-    func debugRunVideoPreparer(_ fileURL: URL) async throws -> VideoTrimmer.UploadSource {
-        try await runVideoPreparer(fileURL)
+    /// 測試用途（LS-290 i1／i2）：直接呼叫 `runVideoPreparer(_:sleepForTimeout:)`，不經過完整
+    /// `enqueue`／`performUpload` 流程，讓測試能精準控制「外層 Task 何時取消」與「看門狗的
+    /// sleep 換成什麼實作」。
+    func debugRunVideoPreparer(
+        _ fileURL: URL,
+        sleepForTimeout: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
+    ) async throws -> VideoTrimmer.UploadSource {
+        try await runVideoPreparer(fileURL, sleepForTimeout: sleepForTimeout)
     }
     #endif
 }

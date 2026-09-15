@@ -198,4 +198,55 @@ final class UploadQueueStoreVideoExportSlotTests: XCTestCase {
             "取消後 runVideoPreparer 應該以 CancellationError 結束，實際 \(String(describing: resultBox.withLock { $0 }))"
         )
     }
+
+    // MARK: - export 逾時看門狗在 preparer 完成後自我取消（mutation：拿掉 timeoutTask.cancel()）
+
+    /// LS-290 i2（LS-288 merge-review R1 informational `9e0e0a51`）：`runVideoPreparer(_:)` 內部
+    /// 的逾時看門狗 Task 原本不論 `preparer` 是否已經成功完成都會睡滿整個 `videoExportTimeout`
+    /// （預設 10 分鐘）——一批 50 支影片就是 50 個白留著的常駐 MainActor Task。用可注入的
+    /// `sleepForTimeout` 換掉真正的 `Task.sleep`，改成短間隔輪詢 `Task.isCancelled` 的探針：
+    /// preparer 很快就成功完成，斷言看門狗真的提早被 `timeoutTask.cancel()` 取消，不是睡滿整段
+    /// 逾時（2 秒）才自然醒來——若拿掉那行 cancel，探針永遠等不到 `Task.isCancelled` 翻真，
+    /// `waitUntil` 的預設 1 秒逾時會先讓這支測試紅。
+    func test_runVideoPreparer_watchdogCancelledAfterPreparerSucceeds() async throws {
+        let fileURL = makeTempFile()
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        let watchdogCancelledEarly = OSAllocatedUnfairLock(initialState: false)
+        let watchdogProbeFinished = OSAllocatedUnfairLock(initialState: false)
+        let store = UploadQueueStore(
+            familyID: familyID, mediaUploadService: StubMediaUploadService(), videoExportTimeout: .seconds(2),
+            videoPreparer: { url in
+                try await Task.sleep(for: .milliseconds(20))
+                return VideoTrimmer.UploadSource(fileURL: url, fileExtension: "mp4", pixelSize: nil)
+            }
+        )
+
+        let source = try await store.debugRunVideoPreparer(fileURL) { duration in
+            let deadline = ContinuousClock.now + duration
+            while ContinuousClock.now < deadline {
+                if Task.isCancelled {
+                    watchdogCancelledEarly.withLock { $0 = true }
+                    watchdogProbeFinished.withLock { $0 = true }
+                    throw CancellationError()
+                }
+                do {
+                    // `Task.sleep` 本身也會在等待中途因為取消而拋錯——不能只靠上面迴圈開頭那次
+                    // 檢查，取消可能發生在這次 5ms 小睡中間。
+                    try await Task.sleep(for: .milliseconds(5))
+                } catch {
+                    watchdogCancelledEarly.withLock { $0 = true }
+                    watchdogProbeFinished.withLock { $0 = true }
+                    throw error
+                }
+            }
+            watchdogProbeFinished.withLock { $0 = true }
+        }
+
+        XCTAssertEqual(source.fileURL, fileURL, "preparer 應該正常成功，逾時取消是看門狗自己的事，不影響回傳結果")
+        await waitUntil { watchdogProbeFinished.withLock { $0 } }
+        XCTAssertTrue(
+            watchdogCancelledEarly.withLock { $0 },
+            "preparer 成功後看門狗應該被 timeoutTask.cancel() 提早取消，不是睡滿整段逾時才自然結束"
+        )
+    }
 }
