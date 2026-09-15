@@ -2208,7 +2208,11 @@ Edge Function 完成刪除）。`LS052`／`LS053`／`LS054`（LS-179 補齊，�
   （20 秒）。兩處呼叫端的失敗呈現不同：日記編輯器走 `DiaryPublishErrorMessage.displayText`
   的 inline 訊息；相簿上傳佇列走 `UploadFailureReason.videoTooLarge(suggestedSeconds:)`，
   該筆在佇列 Failed 群顯示同一句文案、標記不可重試（同一支原始檔案重試不會壓出更小的
-  結果），不擋佇列其餘項目。
+  結果），不擋佇列其餘項目。**上傳（非壓縮）失敗的重試語意兩處一致**（LS-283 I2／I3、
+  LS-284 merge-review R1 B1）：`compressedVideoCache`（草稿／entry id → 已壓縮好的
+  `VideoTrimmer.UploadSource`）讓「壓縮成功但上傳失敗」後的重試直接重用同一份輸出、不
+  重新呼叫 `videoPreparer`（不重新 export）；終局狀態（上傳成功，或不可重試失敗如
+  LS002／`videoTooLarge`）才清掉快取與本機暫存檔，避免累積孤兒檔。
 
 ### 路徑規約
 ```
