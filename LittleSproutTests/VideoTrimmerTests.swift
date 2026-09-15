@@ -11,17 +11,27 @@ import XCTest
 /// 4K 影片」，不必真的編碼 900 格。壓縮路徑看的是解析度與時長，跟來源的格率無關。
 final class VideoTrimmerTests: XCTestCase {
     private var temporaryDirectory: URL!
+    /// `compressedForUpload` 的輸出寫進 `MediaDraftTempStorage`，指向自己的 `mktemp` 子目錄
+    /// （LS-293），不再共用行程層級的 `.temporaryDirectory` 路徑——`DiaryComposerStoreVideoCacheTests`／
+    /// `MediaDraftTempStorageTests` 平行跑也不會互刪暫存檔；`tearDown` 只刪自己那份 `mediaDraftTempRoot`。
+    private var mediaDraftTempRoot: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
         temporaryDirectory = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("LS-279-VideoTrimmerTests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
+        mediaDraftTempRoot = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("LS-293-VideoTrimmerTests-\(UUID().uuidString)", isDirectory: true)
+        MediaDraftTempStorage.root = mediaDraftTempRoot
     }
 
     override func tearDownWithError() throws {
         try? FileManager.default.removeItem(at: temporaryDirectory)
         temporaryDirectory = nil
+        try? FileManager.default.removeItem(at: mediaDraftTempRoot)
+        MediaDraftTempStorage.root = FileManager.default.temporaryDirectory
+        mediaDraftTempRoot = nil
         try super.tearDownWithError()
     }
 

@@ -18,8 +18,17 @@ import Foundation
 enum MediaDraftTempStorage {
     private static let directoryName = "ls-media-drafts"
 
+    /// 暫存根目錄，預設 `FileManager.default.temporaryDirectory`——產品路徑不變。測試可覆寫成
+    /// 各自的 `mktemp` 子目錄，讓 `DiaryComposerStoreVideoCacheTests`／`VideoTrimmerTests`／
+    /// `MediaDraftTempStorageTests` 在 `-parallel-testing-enabled YES` 下不再共用同一個行程層級
+    /// 路徑而互刪暫存檔（LS-293，源自 LS-283 R1 i3／LS-96 池 `699a9c4d`）。`nonisolated(unsafe)`：
+    /// 只有測試的 `setUp`／`tearDown` 會寫入，跟正式路徑（單一行程、無平行寫入者）一樣不存在
+    /// 真正跨執行緒的競爭；每個測試檔案在同一個 worker 行程裡仍是序列執行，同
+    /// `VideoTrimmer.swift` `cancellableSession` 的取捨。
+    nonisolated(unsafe) static var root: URL = FileManager.default.temporaryDirectory
+
     static var directory: URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent(directoryName, isDirectory: true)
+        root.appendingPathComponent(directoryName, isDirectory: true)
     }
 
     /// 呼叫端在寫入前確保目錄存在——`FileManager.copyItem`／`AVAssetExportSession.outputURL`

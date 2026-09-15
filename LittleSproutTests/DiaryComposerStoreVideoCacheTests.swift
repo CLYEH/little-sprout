@@ -12,15 +12,23 @@ import XCTest
 final class DiaryComposerStoreVideoCacheTests: XCTestCase {
     private let familyID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
 
-    /// 這兩條測試會真的把檔案寫進 `MediaDraftTempStorage`（要驗「暫存目錄清空」這件事本身），
-    /// 前後各清一次，理由同 `MediaDraftTempStorageTests`：這是行程層級的共用目錄。
+    /// 這三條測試會真的把檔案寫進 `MediaDraftTempStorage`（要驗「暫存目錄清空」這件事本身）。
+    /// 把 `MediaDraftTempStorage.root` 指向自己的 `mktemp` 子目錄（LS-293），不再共用行程層級
+    /// 的 `.temporaryDirectory` 路徑——`VideoTrimmerTests`／`MediaDraftTempStorageTests` 平行跑
+    /// 也不會互刪暫存檔；`tearDown` 只刪自己那份 `testRoot`。
+    private var testRoot: URL!
+
     override func setUp() {
         super.setUp()
-        MediaDraftTempStorage.purgeStaleFiles()
+        testRoot = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("LS-293-DiaryComposerStoreVideoCacheTests-\(UUID().uuidString)", isDirectory: true)
+        MediaDraftTempStorage.root = testRoot
     }
 
     override func tearDown() {
-        MediaDraftTempStorage.purgeStaleFiles()
+        try? FileManager.default.removeItem(at: testRoot)
+        MediaDraftTempStorage.root = FileManager.default.temporaryDirectory
+        testRoot = nil
         super.tearDown()
     }
 
