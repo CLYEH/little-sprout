@@ -213,26 +213,41 @@ final class UploadQueueStoreVideoCompressionTests: XCTestCase {
 
     // MARK: - 影片 export 專屬並行上限 1（mutation：拿掉 acquire／releaseVideoExportSlot）
 
-    /// i2（LS-286，源自 LS-284 merge-review R1 informational `39ce890a`）：`maxConcurrentUploads`
+    /// i2（LS-286，源自 LS-284 merge-review R1 informational `39ce890a`；**LS-288 i2** 改交錯序
+    /// 抬鑑別力，源自 LS-286 merge-review R1 informational `dc010dd7`）：`maxConcurrentUploads`
     /// 預設 3 時，3 支影片同時進佇列會有 3 個 `AVAssetExportSession` 同時做 4K→1080p 轉檔、吃滿
     /// 全部名額，排在後面的照片要等。加了 export 專屬並行上限 1 之後，任何時刻同時在跑
-    /// `videoPreparer` 的數量不該超過 1；兩張照片先進佇列，驗證它們最先完成——不需要等任何一支
-    /// 影片 export 完才輪得到它們（`maxConcurrentUploads` 本身沒變，照片走自己的上傳名額，跟
-    /// export 專屬鎖無關）。
-    func test_video_exportConcurrency_cappedAtOne_photosNotBlockedByVideoExports() async {
+    /// `videoPreparer` 的數量不該超過 1，兩張照片不會被擋住。
+    ///
+    /// **LS-288 i2**：舊版把兩張照片排在 3 支影片**前面**入佇列——`advance()` 只依 `order` 裡
+    /// 先進先出挑前 `maxConcurrentUploads` 筆還在等候的項目來開始，照片排最前面時，不管有沒有
+    /// export 專屬鎖，照片本來就會被 `advance()` 排進最先的那批 `.uploading`，對「拿掉 slot
+    /// gate」這個 mutation 沒有鑑別力（見 `maxObservedConcurrentExports` 以外那兩條斷言：拿掉
+    /// gate 照片一樣先完成）。這裡改成**影片先入佇列、照片後入**，並把 `maxConcurrentUploads`
+    /// 開大到 5（＝全部項目數），讓 5 筆一開始就同時進入 `.uploading`（不被 `advance()` 的容量
+    /// 卡住）——這樣「兩張照片有沒有搶到自己的上傳名額」只取決於 export 專屬鎖擋不擋得住後面
+    /// 的影片，不取決於入佇列順序本身：有鎖時第 2 支影片要等第 1 支釋放名額才開始 export，這段
+    /// 空檔剛好夠兩張照片各自完成；拿掉鎖後 3 支影片會一起搶著開始 export，跟兩張照片同時起跑，
+    /// 兩張照片不再穩定早於第 2 支影片開始 export。
+    func test_video_exportConcurrency_cappedAtOne_interleavedOrder_photosCompleteBeforeSecondVideoExportStarts() async {
         let videoURLs = (0..<3).map { _ in makeTempFile() }
         defer { for url in videoURLs { try? FileManager.default.removeItem(at: url) } }
-        let concurrentExports = OSAllocatedUnfairLock(initialState: 0)
         let maxObservedConcurrentExports = OSAllocatedUnfairLock(initialState: 0)
+        let concurrentExports = OSAllocatedUnfairLock(initialState: 0)
+        let exportStartOrder = OSAllocatedUnfairLock(initialState: [(url: URL, at: Date)]())
         let mediaService = StubMediaUploadService()
         mediaService.setUploadVideoHandler { _, _, _, _ in UUID() }
-        let completionOrder = OSAllocatedUnfairLock(initialState: [UUID]())
+        let photoCompletedAt = OSAllocatedUnfairLock(initialState: [UUID: Date]())
         let photoID1 = UUID()
         let photoID2 = UUID()
         let store = UploadQueueStore(
-            familyID: familyID, mediaUploadService: mediaService,
-            onUploadSucceeded: { id, _ in completionOrder.withLock { $0.append(id) } },
+            familyID: familyID, mediaUploadService: mediaService, maxConcurrentUploads: 5,
+            onUploadSucceeded: { id, _ in
+                guard id == photoID1 || id == photoID2 else { return }
+                photoCompletedAt.withLock { $0[id] = Date() }
+            },
             videoPreparer: { fileURL in
+                exportStartOrder.withLock { $0.append((fileURL, Date())) }
                 let current = concurrentExports.withLock { state -> Int in
                     state += 1
                     return state
@@ -244,20 +259,30 @@ final class UploadQueueStoreVideoCompressionTests: XCTestCase {
             }
         )
 
-        let uploads = [makePhotoUpload(tag: "a", id: photoID1), makePhotoUpload(tag: "b", id: photoID2)]
-            + videoURLs.map { makeVideoUpload(fileURL: $0) }
+        let uploads = videoURLs.map { makeVideoUpload(fileURL: $0) }
+            + [makePhotoUpload(tag: "a", id: photoID1), makePhotoUpload(tag: "b", id: photoID2)]
         store.enqueue(uploads)
 
         await waitUntil(timeoutSeconds: 3) { store.remainingCount == 0 }
 
         XCTAssertEqual(mediaService.uploadPhotoCalls.count, 2, "兩張照片應該都完成，不被影片 export 卡住")
-        XCTAssertEqual(
-            Set(completionOrder.withLock { $0 }.prefix(2)), Set([photoID1, photoID2]),
-            "兩張照片應該最先完成——不需要排在任何一支影片 export 完成之後"
-        )
         XCTAssertLessThanOrEqual(
             maxObservedConcurrentExports.withLock { $0 }, 1, "任何時刻同時在跑的 videoPreparer（export）數量不該超過 1"
         )
+        let exports = exportStartOrder.withLock { $0 }
+        guard exports.count == 3 else {
+            return XCTFail("應該有 3 次 videoPreparer 呼叫，實際 \(exports.count)")
+        }
+        let secondVideoExportStartedAt = exports[1].at
+        let photoTimes = photoCompletedAt.withLock { $0 }
+        for photoID in [photoID1, photoID2] {
+            guard let completedAt = photoTimes[photoID] else {
+                return XCTFail("照片 \(photoID) 應該完成")
+            }
+            XCTAssertLessThan(
+                completedAt, secondVideoExportStartedAt, "照片應該在第 2 支影片開始 export 之前就完成，不被前面的影片擋住"
+            )
+        }
     }
 
     // MARK: - 成功後清掉本機暫存檔
