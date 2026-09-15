@@ -56464,11 +56464,11 @@
                                       "x": 233.5
                                     },
                                     "SNbd8": {
-                                      "y": 236
+                                      "y": 211
                                     },
                                     "P15GB": {
                                       "x": 233.5,
-                                      "y": 236
+                                      "y": 211
                                     }
                                   }
                                 },
@@ -162323,7 +162323,7 @@
               "id": "z9eSZP",
               "name": "H",
               "fill": "$print-ink",
-              "content": "LS-280 R1 修訂：裝置畫面內示範照片盤點與統一底片（回應 LS-247 VR R3 MN-3，comment `f8fcd736`）",
+              "content": "LS-280 R1 修訂：裝置畫面內示範照片盤點與統一底片（MN-3 f8fcd736）",
               "fontFamily": "Noto Sans TC",
               "fontSize": 22,
               "fontWeight": "700"
