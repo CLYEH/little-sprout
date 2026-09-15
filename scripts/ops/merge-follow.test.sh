@@ -115,8 +115,17 @@ case "$1 $2" in
     apply_q "$f" "$@"
     ;;
   "pr checks")
-    f=$(seq_pick_file checkscount "${GH_PR_CHECKS_SEQUENCE:?}")
-    cat "$f"
+    # merge-review R1 B1：分辨呼叫是否帶 --required——沒帶且有設 GH_PR_CHECKS_UNFILTERED_JSON
+    # 時回「未過濾」罐頭（含非必要 check 的 fail），用來證明腳本真的有傳 --required（見夾具 (e)）；
+    # 其餘情境（未設該變數、或有帶 --required）照舊用 GH_PR_CHECKS_SEQUENCE 序列。
+    has_required=0
+    for a in "$@"; do [ "$a" = "--required" ] && has_required=1; done
+    if [ "$has_required" -eq 0 ] && [ -n "${GH_PR_CHECKS_UNFILTERED_JSON:-}" ]; then
+      cat "${GH_PR_CHECKS_UNFILTERED_JSON}"
+    else
+      f=$(seq_pick_file checkscount "${GH_PR_CHECKS_SEQUENCE:?}")
+      cat "$f"
+    fi
     ;;
   "pr merge")
     exit "${GH_PR_MERGE_EXIT:-0}"
@@ -155,9 +164,9 @@ empty() { if [ -s "$2" ]; then echo "✗ ${1}（${2} 應為空但非空）" >&2;
 reset_all() {
   : > "$GH_LOG"; : > "$POST_STATUS_LOG"; : > "$PR_BODY_CHECK_LOG"; : > "$PROMOTE_FOLLOW_LOG"
   rm -rf "$GH_STATE_DIR"; mkdir -p "$GH_STATE_DIR"
-  unset GH_PR_VIEW_SEQUENCE GH_PR_CHECKS_SEQUENCE GH_PR_MERGE_EXIT GH_RUN_LIST_JSON GH_RUN_VIEW_JSON \
-        GH_RUN_RERUN_EXIT GH_PR_LIST_JSON GH_PR_CREATE_OUTPUT GH_PR_CREATE_EXIT POST_STATUS_EXIT \
-        PR_BODY_CHECK_EXIT PROMOTE_FOLLOW_EXIT
+  unset GH_PR_VIEW_SEQUENCE GH_PR_CHECKS_SEQUENCE GH_PR_CHECKS_UNFILTERED_JSON GH_PR_MERGE_EXIT \
+        GH_RUN_LIST_JSON GH_RUN_VIEW_JSON GH_RUN_RERUN_EXIT GH_PR_LIST_JSON GH_PR_CREATE_OUTPUT \
+        GH_PR_CREATE_EXIT POST_STATUS_EXIT PR_BODY_CHECK_EXIT PROMOTE_FOLLOW_EXIT
 }
 fx() { printf '%s' "$2" > "$work/fixtures/$1.json"; echo "$work/fixtures/$1.json"; }
 
@@ -263,12 +272,29 @@ if grep -q '^pr create' "$GH_LOG"; then echo "✗ (d2) 不應重開 back-merge P
 has '(d2) 沿用 #602 併入' "$(cat "$GH_LOG")" 'pr merge 602 --merge'
 has '(d2) 摘要印沿用既有 PR' "$out" '沿用既有 back-merge PR #602'
 
-# ---- (e) --then-promote：兩支併入完成後 exec promote-follow.sh ----
+# ---- (e) merge-review R1 B1：非必要 check fail＋必要 check 全綠（`gh pr checks --required` 篩過只
+#    看得到必要清單、mergeStateStatus 停在 UNSTABLE）→ 仍視為就緒併入；mutation：拿掉 --required
+#    （見下方 mutation 段）此夾具轉紅，證明腳本真的把 --required 傳給 gh，不是巧合綠 ----
+reset_all
+v_blocked=$(fx e-view-blocked '{"state":"OPEN","mergeStateStatus":"BLOCKED","baseRefName":"development","headRefName":"fix/LS-9-p","headRefOid":"9999999999999999999999999999999999999a","mergeCommit":null}')
+v_unstable=$(fx e-view-unstable '{"state":"OPEN","mergeStateStatus":"UNSTABLE","baseRefName":"development","headRefName":"fix/LS-9-p","headRefOid":"9999999999999999999999999999999999999a","mergeCommit":null}')
+v_e_after=$(fx e-view-after '{"state":"MERGED","mergeStateStatus":"UNSTABLE","baseRefName":"development","headRefName":"fix/LS-9-p","headRefOid":"9999999999999999999999999999999999999a","mergeCommit":{"oid":"1111111111111111111111111111111111aaaa"}}')
+c_required_pass=$(fx e-checks-required-pass '[{"name":"ci","bucket":"pass"},{"name":"lint","bucket":"pass"},{"name":"rules","bucket":"pass"},{"name":"db","bucket":"pass"},{"name":"merge-review","bucket":"pass"}]')
+c_unfiltered_fail=$(fx e-checks-unfiltered-fail '[{"name":"ci","bucket":"pass"},{"name":"lint","bucket":"pass"},{"name":"rules","bucket":"pass"},{"name":"db","bucket":"pass"},{"name":"merge-review","bucket":"pass"},{"name":"deploy","bucket":"fail"},{"name":"report-build-status","bucket":"fail"}]')
+out="$(GH_PR_VIEW_SEQUENCE="$v_blocked $v_blocked $v_blocked $v_unstable $v_e_after" \
+      GH_PR_CHECKS_SEQUENCE="$c_required_pass" GH_PR_CHECKS_UNFILTERED_JSON="$c_unfiltered_fail" \
+      bash "$script" 509 --note "unstable note" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ (e) UNSTABLE（必要綠、非必要紅）→ 仍併入 → exit 0"; else echo "✗ (e) 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+has '(e) 有帶 --required 呼叫 gh pr checks 509' "$(cat "$GH_LOG")" 'pr checks 509 --required --json name,bucket'
+has '(e) 有呼叫 gh pr merge 509' "$(cat "$GH_LOG")" 'pr merge 509 --merge'
+if grep -q '^run rerun' "$GH_LOG"; then echo "✗ (e) 不應呼叫 gh run rerun（必要 check 全綠不該進 cancel／fail 分支）" >&2; fail=1; else echo "✓ (e) 不呼叫 gh run rerun"; fi
+
+# ---- (f) --then-promote：兩支併入完成後 exec promote-follow.sh ----
 reset_all
 out="$(GH_PR_VIEW_SEQUENCE="$v_open $v_open $v_clean $v_after" GH_PR_CHECKS_SEQUENCE="$c_pass" \
       bash "$script" 506 --note x --then-promote development test 2>&1)"; rc=$?
-if [ "$rc" -eq 0 ]; then echo "✓ (e) --then-promote → exit 0（假 promote-follow.sh 回 0）"; else echo "✗ (e) 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
-has '(e) 有呼叫 promote-follow.sh development test' "$(cat "$PROMOTE_FOLLOW_LOG")" 'development test'
+if [ "$rc" -eq 0 ]; then echo "✓ (f) --then-promote → exit 0（假 promote-follow.sh 回 0）"; else echo "✗ (f) 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+has '(f) 有呼叫 promote-follow.sh development test' "$(cat "$PROMOTE_FOLLOW_LOG")" 'development test'
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ merge-follow.test.sh 全部通過"

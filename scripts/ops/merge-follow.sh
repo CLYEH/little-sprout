@@ -4,12 +4,17 @@
 # job 實際 38–50 分，逾時後只能再手 sed 一支 `bm-follow.sh` 人工接續一輪；池 `be35b840`(2)）。
 #
 # 做什麼（依 §2「裁決 status 貼在哪個 SHA」表的手動步驟機械化）：
-#   1. 等 PR <pr> 的 `mergeStateStatus`：CLEAN → 進 2；DIRTY → exit 4（衝突，需人工解）；
-#      其餘狀態持續等，**無固定上限**（每 30s 印一次進度）；checks 全部跑完（無 pending）後看 bucket：
-#      有 `fail` → exit 3（RED，印名單）；有 `cancel` 且沒有 `fail` → 找該 head SHA 的 `pull_request`
-#      事件 run，套用與 `promote-follow.sh` `no_failure_steps()` 相同判準（沒有任何 `failure`／
-#      `timed_out` 步驟）——是就 `gh run rerun <run> --failed` 一次再等，不是（真的有失敗步驟）就當
-#      RED 退出；**只 rerun 一次**，rerun 過後再撞 cancel／fail 一律當 RED 退出（LS-257 判準見該檔）。
+#   1. 等 PR <pr> 的 `mergeStateStatus`：CLEAN／`UNSTABLE`（merge-review R1 B1：必要 check 皆綠、只有
+#      非必要 check 未過——GitHub 語意上可併，跟 CLEAN 同視為就緒；本 repo 開著 Pages，`main` tip 帶
+#      `deploy`／`report-build-status`／`build` 這類自動 check-run，不在 branch protection 必要清單內，
+#      過去曾在 back-merge #424／#431 被誤判 UNSTABLE=擋） → 進 2；DIRTY → exit 4（衝突，需人工解）；
+#      其餘狀態持續等，**無固定上限**（每 30s 印一次進度）；checks（`gh pr checks --required`，只看
+#      branch protection 必要清單內的 check，非必要的紅／cancel 不影響判斷）全部跑完（無 pending）後
+#      看 bucket：有 `fail` → exit 3（RED，印名單）；有 `cancel` 且沒有 `fail` → 找該 head SHA 的
+#      `pull_request` 事件 run，套用與 `promote-follow.sh` `no_failure_steps()` 相同判準（沒有任何
+#      `failure`／`timed_out` 步驟）——是就 `gh run rerun <run> --failed` 一次再等，不是（真的有失敗
+#      步驟）就當 RED 退出；**只 rerun 一次**，rerun 過後再撞 cancel／fail 一律當 RED 退出（LS-257
+#      判準見該檔）。
 #   2. `gh pr merge <pr> --merge`（PR 若已是 MERGED 狀態＝續接重跑，略過本步）。
 #   3. `git fetch`，核對 base tip＝這次 merge 的 commit（否則有人先併／base 已前進，status 不貼、
 #      exit 6）；`post-status.sh <tip> merge-review success "<desc>" --expect <tip>`——`<desc>` 優先用
@@ -93,8 +98,11 @@ pr_body_check_sh() { bash "${PR_BODY_CHECK_SH:-${root}/scripts/gates/pr-body-che
 pr_view() {
   gh pr view "$1" --json state,mergeStateStatus,baseRefName,headRefName,headRefOid,mergeCommit 2>/dev/null
 }
-# pr_checks <pr> → JSON array [{name,bucket}]（可能為空字串／`[]`）
-pr_checks() { gh pr checks "$1" --json name,bucket 2>/dev/null; }
+# pr_checks <pr> → JSON array [{name,bucket}]（可能為空字串／`[]`）。`--required` 只回 branch
+# protection `required_status_checks.contexts` 內的 check（merge-review R1 B1）：本 repo 開著 Pages，
+# `main` tip 會帶自動產生的 `deploy`／`report-build-status`／`build` check-run，不在必要清單內——不篩
+# 就可能把非必要 check 的紅／cancel 誤判成 RED（LS-276 back-merge #424／#431 UNSTABLE 撞過）。
+pr_checks() { gh pr checks "$1" --required --json name,bucket 2>/dev/null; }
 # find_pr_run <headref> <sha> → 印該 head sha 在該分支上最新一筆 pull_request 事件 run id（找不到印空字串）
 find_pr_run() {
   local headref=$1 sha=$2
@@ -126,7 +134,9 @@ wait_and_merge() {
     pj=$(pr_view "$prnum") || true
     [ -n "$pj" ] || { echo "✗ merge-follow：gh pr view #${prnum} 失敗" >&2; return 2; }
     ms=$(printf '%s' "$pj" | jq -r '.mergeStateStatus // empty')
-    if [ "$ms" = CLEAN ]; then break; fi
+    # UNSTABLE＝必要 check 皆綠、只有非必要 check 未過（GitHub 語意：可併），跟 CLEAN 一樣視為就緒
+    # （merge-review R1 B1；不然這裡會永遠等不到 CLEAN，因為非必要 check 可能永遠不會轉綠）。
+    if [ "$ms" = CLEAN ] || [ "$ms" = UNSTABLE ]; then break; fi
     if [ "$ms" = DIRTY ]; then
       echo "✗ merge-follow：#${prnum} DIRTY（衝突），需先解衝突再重跑本腳本" >&2
       return 4
