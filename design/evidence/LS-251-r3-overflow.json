@@ -1,11 +1,11 @@
 {
   "ticket": "LS-251",
   "round": 3,
-  "head_sha": "d3e1e86594683b5042f3aac2329bbc651ba2b33e",
+  "head_sha": "dd4feb45c4576c72ab727a7e712198b2ac2148e9",
   "total_nodes": 12155,
-  "tree_hash": "2dd4dafcfed1aff3",
+  "tree_hash": "092abb2cbe867d00",
   "scan_scope": "boards",
-  "scan_note": "LS-289 唯讀快照法：scripts/design/pen-snapshot-dump.js 全稿 dump（19230 rows，49 SNAP 批，一次 execute 成功，Pencil 回應超過單次上限自動落檔、原樣讀回貼進 dump 檔）→ node scripts/design/overflow-scan.js --from-snapshot --tree-hash 2dd4dafcfed1aff3 --total-nodes 12155 --boards <31 個 id，與 R1/R2 同一組——本輪未新增觸碰板> 跑未修改的 scanAll 六支。tree_hash 用 scripts/gates/design_tree_hash.py 對落地後（head_sha=d3e1e863，即 PR 對本 .pen 最後一次 commit d3e1e86）的 .pen 離線重算，掃描與雜湊皆對同一稿態（掃描前最後一次寫入是 d3e1e86 落地，其後只有唯讀 execute）。三支 BLOCKER（corner_anchor.mismatch／text_occlusion.flagged／board_clip.flagged）皆為 0。sibling_intersection 15 類中 3 類（ios-dev 抄值表×裁決點清單、狀態機×LS-142 邊界、i×i）為 Notes 板內部分節框 Get bounds 快取失真——TakeScreenshot(X6iCY) 複驗渲染正常、文字段落清楚分隔，非真實版面問題（Pencil 已知限制，見 agent 定義「Get 回傳的 bounds／ctx.problems 會快取失真」段）。",
+  "scan_note": "LS-289 唯讀快照法：scripts/design/pen-snapshot-dump.js 全稿 dump（19230 rows，49 SNAP 批，一次 execute 成功（多次因稿態龐大 InternalError: interrupted，以相同 editId 重試至成功——沒有修改 snippet 邏輯），Pencil 回應超過單次上限自動落檔、原樣讀回貼進 dump 檔）→ node scripts/design/overflow-scan.js --from-snapshot --tree-hash 092abb2cbe867d00 --total-nodes 12155 --boards <32 個 id，與 merge-base→head_sha 頂層 diff 逐一核對相符> 跑未修改的 scanAll 六支。tree_hash 用 scripts/gates/design_tree_hash.py 對落地後（head_sha=dd4feb45，即 PR 對本 .pen 最後一次 commit dd4feb4，含 R3 第一次掃描後發現的 SH-15 scope 越界復原）的 .pen 離線重算，掃描與雜湊皆對同一稿態（掃描前最後一次寫入是 dd4feb4 落地，其後只有唯讀 execute）。三支 BLOCKER（corner_anchor.mismatch／text_occlusion.flagged／board_clip.flagged）皆為 0。sibling_intersection 15 類中 3 類（ios-dev 抄值表×裁決點清單、狀態機×LS-142 邊界、i×i）為 Notes 板內部分節框 Get bounds 快取失真——TakeScreenshot(X6iCY) 複驗渲染正常、文字段落清楚分隔，非真實版面問題（Pencil 已知限制，見 agent 定義「Get 回傳的 bounds／ctx.problems 會快取失真」段）。",
   "scans": {
     "sibling_intersection": {
       "scope": "boards",
@@ -238,7 +238,7 @@
           "classification": "04b modal 標準 Scrim×Alert 疊層（同類 1 例）"
         }
       ],
-      "result_hash": "c12609c86c0d4043"
+      "result_hash": "955635455d452a82"
     },
     "row_overflow": {
       "scope": "boards",
@@ -256,14 +256,14 @@
           "classification": "Empty Print Corner BR 角托 corner-out 5pt 意圖右緣溢出（設計預期，同類 4 例：izt0E/hBF60/aKXJ1/X2cnQ 各 1 顆）"
         }
       ],
-      "result_hash": "a12b90152f1a5ed0"
+      "result_hash": "755bbb922052490f"
     },
     "cross_parent_collision": {
       "scope": "boards",
       "document_count": 0,
       "classes": 0,
       "flagged": [],
-      "result_hash": "f7404f0ca766692d"
+      "result_hash": "cb707a89989e536c"
     },
     "corner_anchor": {
       "scope": "boards",
@@ -314,7 +314,7 @@
       "document_mismatch": 0,
       "document_flagged": [],
       "document_unresolved": [],
-      "result_hash": "352b6766b832b362"
+      "result_hash": "095b92e3a96a9da1"
     },
     "text_occlusion": {
       "scope": "boards",
@@ -355,7 +355,7 @@
       ],
       "flagged": [],
       "document_flagged": [],
-      "result_hash": "a9cade81df4abbe2"
+      "result_hash": "7dfb09fed082a621"
     },
     "board_clip": {
       "scope": "boards",
@@ -396,7 +396,7 @@
       ],
       "flagged": [],
       "document_flagged": [],
-      "result_hash": "ed19e0b394d8ad60"
+      "result_hash": "c14a0c308610979f"
     }
   }
 }
