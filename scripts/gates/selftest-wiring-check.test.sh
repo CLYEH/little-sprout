@@ -147,7 +147,55 @@ expect_rc '⑨ --repo-root 不是目錄 → exit 2' 2 "$rc" "$out"
 out=$(bash "$check" --wat 2>&1); rc=$?
 expect_rc '⑨ 未知參數 → exit 2' 2 "$rc" "$out"
 
+# ---- ⑩ LS-301（範圍 4）：自測檔內自行定義 has()／expect() 且未 source 共用庫 → 印 ⚠（informational，
+#        不擋，exit 仍 0）；已 source 的不列；沒有 has()／expect() 的也不列。獨立於上面的 $fix／ci-*.yml，
+#        避免 c/d/e 這三支干擾既有 missing／extra 差集斷言（那些測項假設 $fix 剛好只有 a/b/x 三支）。----
+fix2="${work}/fixrepo2"
+mkdir -p "${fix2}/scripts/gates"
+printf 'has() { grep -qF -- "$2" <<<"$1"; }\n' > "${fix2}/scripts/gates/c.test.sh"
+printf 'expect() { :; }\nsource "${root}/scripts/gates/lib/selftest-helpers.sh"\n' > "${fix2}/scripts/gates/d.test.sh"
+printf 'echo no has or expect here\n' > "${fix2}/scripts/gates/e.test.sh"
+cat > "${work}/ci-fix2.yml" <<'YML'
+      - name: Gate 自測
+        run: |
+          rc=0
+          bash scripts/gates/c.test.sh || rc=1
+          bash scripts/gates/d.test.sh || rc=1
+          bash scripts/gates/e.test.sh || rc=1
+          exit "$rc"
+YML
+out=$(bash "$check" --repo-root "$fix2" --ci "${work}/ci-fix2.yml" 2>&1); rc=$?
+expect_rc '⑩ 夾具本身 missing／extra 差集為空 → exit 0（informational 不影響 rc）' 0 "$rc" "$out"
+has '⑩ 未 source 的 c.test.sh 被點名' "$out" 'scripts/gates/c.test.sh'
+if grep -qF 'scripts/gates/d.test.sh' <<<"$out"; then
+  echo "✗ ⑩ 已 source 共用庫的 d.test.sh 不應被點名" >&2; fail=1
+else
+  echo "✓ ⑩ 已 source 共用庫的 d.test.sh 不被點名"
+fi
+if grep -qF 'scripts/gates/e.test.sh' <<<"$out"; then
+  echo "✗ ⑩ 沒有 has()／expect() 的 e.test.sh 不應被點名" >&2; fail=1
+else
+  echo "✓ ⑩ 沒有 has()／expect() 的 e.test.sh 不被點名"
+fi
+has '⑩ 印出 informational 字樣（不擋）' "$out" 'informational，不擋'
+
+# ---- ⑪ mutation：拿掉「未 source 才列」的排除條件（改成只要有 has()／expect() 就列）→ d.test.sh
+#        （已 source）也被誤點名，證明 ⑩ 對 d.test.sh 的放行確實來自這條排除判斷 ----
+mut10="${work}/mut-unwired.sh"
+sed "s#grep -q 'selftest-helpers\\\\.sh' \"\${root}/\${f}\" 2>/dev/null \&\& continue#true \&\& false#" "$check" > "$mut10"
+if grep -qF "grep -q 'selftest-helpers\\.sh'" "$mut10"; then
+  echo "✗ ⑪ mutant 沒被正確合成（selftest-wiring-check.sh 的排除判斷形狀變了）" >&2; fail=1
+else
+  out=$(bash "$mut10" --repo-root "$fix2" --ci "${work}/ci-fix2.yml" 2>&1); rc=$?
+  if [ "$rc" -eq 0 ] && grep -qF 'scripts/gates/d.test.sh' <<<"$out"; then
+    echo "✓ ⑪ mutant（拿掉未 source 才列的排除條件）：已 source 的 d.test.sh 也被誤點名——證明 ⑩ 的排除判斷確實是原因"
+  else
+    echo "✗ ⑪ mutant 應仍 exit 0 且點名 d.test.sh（實得 exit ${rc}）" >&2
+    printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ selftest-wiring-check 自測通過（10 組樣本）"
+  echo "✓ selftest-wiring-check 自測通過（16 組樣本）"
 fi
 exit "$fail"
