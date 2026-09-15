@@ -42249,7 +42249,7 @@
                                       "fill": "$on-photo",
                                       "content": "還有 2 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -53243,7 +53243,7 @@
                       "fill": "$on-photo",
                       "content": "還有 2 張",
                       "fontFamily": "$font",
-                      "fontSize": "$fs-imprint",
+                      "fontSize": "$fs-note",
                       "fontWeight": "700"
                     }
                   ]
@@ -64676,7 +64676,7 @@
                                       "fill": "$on-photo",
                                       "content": "還有 2 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
