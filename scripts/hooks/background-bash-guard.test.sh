@@ -205,6 +205,22 @@ expect '②c-遞迴1 qa 用 bash -c 包住 gh run watch（deny）' 2 \
   "$(bash_json_agent_norb '"qa"' 'bash -c \"gh run watch 123456 --exit-status\"')"
 expect '②c-遞迴2 qa 用 $(...) 包住 gh run watch（deny）' 2 \
   "$(bash_json_agent_norb '"qa"' 'x=$(gh run watch 123456 --exit-status)')"
+# 負夾具：`;`／`&&`／`|` 等分隔符之後的命令位置一樣要擋——不是只有「整句從頭開始」才算
+expect '②c-負1 qa 前景裸 gh run watch 123（deny）' 2 \
+  "$(bash_json_agent_norb '"qa"' 'gh run watch 123')"
+expect '②c-負2 qa cd x && gh run watch …（deny，&& 之後的命令位置）' 2 \
+  "$(bash_json_agent_norb '"qa"' 'cd x && gh run watch 123 --exit-status')"
+
+# R2（merge-review R1 B2，major，已修）：規則 (c) 原本對未經引號遮蔽的文字做字面比對，會誤擋單純
+# 「提及」該字串而非真的執行的合法命令——reviewer 實測下列三條皆會誤 deny，修法改成只在「命令位置」
+# （tokenize_segments 分段的前三個 token 逐一是未加引號的 gh／run／watch）才判定，引號內文本身是單一
+# token、天然不會命中。
+expect '②c-B2-1 qa echo 訊息字串提及 gh run watch（allow，非真的執行）' 0 \
+  "$(bash_json_agent_norb '"qa"' 'echo \"已改用 ci-wait.sh，不再用 gh run watch\"')"
+expect '②c-B2-2 merge-reviewer grep 盤點 gh run watch 殘留用法（allow，非真的執行）' 0 \
+  "$(bash_json_agent_norb '"merge-reviewer"' 'grep \"gh run watch\" scripts/ops/ci-wait.sh')"
+expect '②c-B2-3 ios-dev git commit -m 訊息提及 gh run watch（allow，非真的執行）' 0 \
+  "$(bash_json_agent_norb '"ios-dev"' 'git commit -m \"fix(ops): stop using gh run watch, use ci-wait.sh\"')"
 
 # 非 Bash 工具不受影響
 expect '③ 非 Bash 工具（Write，allow）' 0 '{"tool_name":"Write","agent_type":"ios-dev","tool_input":{"file_path":"foo.txt"}}'
@@ -417,7 +433,7 @@ rm -rf "$mut4"
 # ============================================================
 mut5=$(mktemp -d)
 cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut5/"
-anchor_c='identity in BLOCKED_AGENTS and GH_RUN_WATCH_RE.search(keyword_text):'
+anchor_c='identity in BLOCKED_AGENTS and _gh_run_watch_command_position(stripped):'
 if ! grep -qF "$anchor_c" "$engine_py"; then
   bad "⑨ mutation 錨點（gh run watch 偵測）不在 background_bash_guard.py，mutation 測試無法成立：${anchor_c}"
 else
@@ -441,6 +457,48 @@ else
   fi
 fi
 rm -rf "$mut5"
+
+# ============================================================
+# ⑩ R2（merge-review R1 B2，major）mutation：把「命令位置」判定退回成對整段文字做字面 regex 比對
+# （修前的形狀）→ ②c-B2-1/2/3 三組正樣本（單純提及、非真的執行）必須翻紅（deny）——證明 allow 確由
+# `_gh_run_watch_command_position` 的 tokenize 判定造成，不是巧合；同一個 mutant 下 ②c-負1/2（真的
+# 執行）仍要維持 deny，證明兩者是同一套判定、不是「乾脆放行所有 gh run watch」這種退化。
+# ============================================================
+mut6=$(mktemp -d)
+cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut6/"
+anchor_b2='if identity in BLOCKED_AGENTS and _gh_run_watch_command_position(stripped):'
+if ! grep -qF "$anchor_b2" "$engine_py"; then
+  bad "⑩ mutation 錨點（規則 c 呼叫點）不在 background_bash_guard.py，mutation 測試無法成立：${anchor_b2}"
+else
+  sed "s/$(printf '%s' "$anchor_b2" | sed 's/[.[\*^$]/\\&/g')/if identity in BLOCKED_AGENTS and \"gh run watch\" in stripped:/" "$engine_py" > "$mut6/background_bash_guard.py"
+  if ! diff -q "$engine_py" "$mut6/background_bash_guard.py" >/dev/null 2>&1; then
+    all_flipped=1
+    for payload in \
+      "$(bash_json_agent_norb '"qa"' 'echo \"已改用 ci-wait.sh，不再用 gh run watch\"')" \
+      "$(bash_json_agent_norb '"merge-reviewer"' 'grep \"gh run watch\" scripts/ops/ci-wait.sh')" \
+      "$(bash_json_agent_norb '"ios-dev"' 'git commit -m \"fix(ops): stop using gh run watch, use ci-wait.sh\"')"
+    do
+      out=$(printf '%s' "$payload" | "$bash_bin" "$mut6/background-bash-guard.sh" 2>/dev/null); got=$?
+      if [ "$got" -ne 2 ] || ! case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+        all_flipped=0
+        bad "⑩ mutant 應把「②c-B2」正樣本翻成 deny（實得 exit ${got}：${out}）——allow 不是靠命令位置判定？"
+      fi
+    done
+    if [ "$all_flipped" -eq 1 ]; then
+      ok '⑩ mutant：命令位置判定退回字面 regex 後，②c-B2 三組正樣本（單純提及）全部變成 deny（原本的 allow 確由 tokenize 判定造成）'
+    fi
+    # 對照：真的執行 gh run watch（命令位置）同一個 mutant 下仍要 deny
+    out=$(printf '%s' "$(bash_json_agent_norb '"qa"' 'cd x && gh run watch 123 --exit-status')" | "$bash_bin" "$mut6/background-bash-guard.sh" 2>/dev/null); got=$?
+    if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+      ok '⑩-對照 mutant：命令位置判定退回字面 regex 後，②c-負2（真的執行）仍維持 deny——不是退化成「放行所有 gh run watch」'
+    else
+      bad "⑩-對照 mutant 應仍 deny ②c-負2（實得 exit ${got}：${out}）"
+    fi
+  else
+    bad '⑩ mutant 與原始檔完全相同（awk 未命中，mutation 測試本身無效）'
+  fi
+fi
+rm -rf "$mut6"
 
 rm -rf "$work"
 trap - EXIT
