@@ -70,6 +70,13 @@ POOL_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P([1-4])\s*·")  # 行首�
 POOL_ANNOUNCE_RE = re.compile(r"銷除|銷案|已升票")
 BACKEND_KEYWORDS = ("RPC", "RLS", "migration", "schema", "後端", "Supabase", "資料表", "trigger", "policy", "SQL", "Edge Function", "bucket")
 STATE_FILE_REL = os.path.join(".claude", "patrol-state.json")  # 連續空輪計數（gitignored）
+# LS-298 scope 3：docs/archive/linear/LS-<n>.md（LS-276 `linear-archive.py` 匯出格式）的欄位——首行 `# LS-<n> <標題>`，
+# 表格列 `| 狀態 | Done（completed） |`／`| 標籤 | a, b |`／可選 `| 父票 | LS-<m> <標題> |`。
+ARCHIVE_DIR_REL = os.path.join("docs", "archive", "linear")
+ARCHIVE_TITLE_RE = re.compile(r"^#\s+(LS-\d+)\s")
+ARCHIVE_STATUS_RE = re.compile(r"^\|\s*狀態\s*\|\s*(\S+)")
+ARCHIVE_LABELS_RE = re.compile(r"^\|\s*標籤\s*\|\s*(.*?)\s*\|\s*$")
+ARCHIVE_PARENT_RE = re.compile(r"^\|\s*父票\s*\|\s*(LS-\d+)")
 
 ISSUES_QUERY = """
 query($after: String, $teamKey: String!) {
@@ -575,6 +582,73 @@ def backend_sources(open_issues, all_issues):
     return out
 
 
+def read_archive_issue(path):
+    """LS-298 scope 3：讀單一 docs/archive/linear/LS-<n>.md（LS-276 `linear-archive.py` 匯出格式）。回傳
+    {"id","title","done","labels","parent"} 或 None（讀不到／首行不符格式，fail-soft，不擋主流程）。"""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            lines = fh.read().splitlines()
+    except OSError:
+        return None
+    if not lines:
+        return None
+    m = ARCHIVE_TITLE_RE.match(lines[0])
+    if not m:
+        return None
+    info = {"id": m.group(1), "title": lines[0][m.end():].strip(), "done": False, "labels": set(), "parent": None}
+    for line in lines:
+        sm = ARCHIVE_STATUS_RE.match(line)
+        if sm:
+            info["done"] = sm.group(1).startswith("Done")
+        lm = ARCHIVE_LABELS_RE.match(line)
+        if lm:
+            info["labels"] = {t.strip() for t in lm.group(1).split(",") if t.strip() and t.strip() != "—"}
+        pm = ARCHIVE_PARENT_RE.match(line)
+        if pm:
+            info["parent"] = pm.group(1)
+    return info
+
+
+def archive_done_child(root, story_ident, lane_label, match_title=False):
+    """LS-298 scope 3：已結案 API 查詢失敗時的退回路徑——讀 docs/archive/linear/*.md（LS-276 本機匯出）
+    純字串比對找 lane_label 的 Done 子票（父票欄＝story_ident，或 match_title 時標題整字提到 story_ident，
+    同 design_tickets_for() 的兩種承接判定）。回傳命中票 identifier，或 None（沒有／讀不到目錄都 fail-soft，
+    不打 API）。"""
+    archive_dir = os.path.join(root, ARCHIVE_DIR_REL)
+    try:
+        names = sorted(os.listdir(archive_dir))
+    except OSError:
+        return None
+    for name in names:
+        if not name.endswith(".md"):
+            continue
+        info = read_archive_issue(os.path.join(archive_dir, name))
+        if not info or not info["done"] or lane_label not in info["labels"]:
+            continue
+        if info["parent"] == story_ident or (match_title and references(info["title"], story_ident)):
+            return info["id"]
+    return None
+
+
+def degraded_lane_sources(uncertain, lane, root):
+    """LS-298 scope 1＋3：已結案票查詢失敗時，design_gate_sources()／backend_sources() 只看得到 open 票，
+    無法確認「尚無子票」是否為真（LS-297 事故：closed 查詢失敗當下仍印出「尚無 lane:backend 子票」，
+    orchestrator 據此開出重複票）。對只用 open 票判斷出的候選（uncertain，可能是假陰性——真正的子票是
+    Done、只是查不到）逐一退回讀 docs/archive/linear/*.md 反查（scope 3）：命中視為已落地、印
+    「已落地／已有 Done 子票 LS-<n>」；查無仍不列入候選，但印「子票有無不可判（已結案查詢失敗）」
+    （scope 1：寧可不列，也不能誤稱「尚無子票」誘導重複開票）。回傳 (候選清單＝恆空, 逐項 notes)。"""
+    lane_label = "lane:backend" if lane == "lane:backend" else "lane:design"
+    notes = []
+    for s in uncertain:
+        ident = s["id"]
+        hit = archive_done_child(root, ident, lane_label, match_title=(lane_label == "lane:design"))
+        if hit:
+            notes.append("%s：已落地／已有 Done 子票 %s（本機封存索引）" % (ident, hit))
+        else:
+            notes.append("%s：子票有無不可判（已結案查詢失敗）" % ident)
+    return [], notes
+
+
 def is_pool_announcement(comment):
     """池內公告（銷除／銷案／已升票）：只看 body 前 2 行（R2 N3 不錨開頭；只看前 2 行是避免正文提到字樣的真池項被當公告）。"""
     return POOL_ANNOUNCE_RE.search("\n".join((comment.get("body") or "").splitlines()[:2])) is not None
@@ -896,6 +970,13 @@ def build_report(token, root, team_key, team_id, sim_lines):
         alls, err = all_issues()
         if err:
             notes.append(err)
+            # LS-298 scope 1＋3：已結案查詢失敗——不能只用 open 票判斷「尚無子票」（可能是假陰性），
+            # 先算出只用 open 票看到的候選（uncertain），再逐一退回讀本機封存索引（degraded_lane_sources()）；
+            # 兩者查無結果的一律不列入來源候選，只印說明。
+            uncertain = backend_sources(issues, issues) if lane == "lane:backend" else design_gate_sources(issues, issues)
+            _, degraded_notes = degraded_lane_sources(uncertain, lane, root)
+            notes.extend(degraded_notes)
+            return [], notes
         if lane == "lane:backend":
             return backend_sources(issues, alls), notes
         return design_gate_sources(issues, alls), notes  # lane:design／lane:ui 共用同一份來源
