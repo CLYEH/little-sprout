@@ -59,8 +59,9 @@ final class UploadQueueStore {
     /// LS-284：影片項目上傳前的壓縮步驟，注入點同 `DiaryComposerStore.videoPreparer`——正式
     /// 路徑預設呼叫 `VideoTrimmer.compressedForUpload`，測試才需要在不準備真影片檔的前提下
     /// 釘住「壓縮結果（含壓完仍超限的錯誤）怎麼往下接」。壓縮本身的行為由 `VideoTrimmerTests`
-    /// 覆蓋，這裡不重複測。
-    private let videoPreparer: @Sendable (URL) async throws -> VideoTrimmer.UploadSource
+    /// 覆蓋，這裡不重複測。非 `private`：`UploadQueueStore+VideoExportSlot.swift` 的
+    /// `runVideoPreparer(_:)` 要讀（理由同 `videoExportInFlight` 文件註解）。
+    let videoPreparer: @Sendable (URL) async throws -> VideoTrimmer.UploadSource
     /// entry id → 已壓縮好、還沒上傳成功的 `UploadSource`（LS-284 merge-review R1 B1，沿
     /// `DiaryComposerStore.compressedVideoCache` 語意）：可重試失敗後 `retry(_:)`／
     /// `retryAllRetryable()` 只是把狀態翻回 `.waiting`、不清這份快取，`performUpload` 重跑時
@@ -80,6 +81,9 @@ final class UploadQueueStore {
     /// 同型別的 `private` 成員限同一個檔案）。
     var videoExportInFlight = false
     var videoExportWaiters: [(id: UUID, continuation: CheckedContinuation<Void, Error>)] = []
+    /// LS-288 i3：`acquireVideoExportSlot()` 拿到名額之後、實際呼叫 `videoPreparer` 的逾時
+    /// 看門狗上限，見 `UploadQueueStore+VideoExportSlot.swift` 的 `runVideoPreparer(_:)`。
+    let videoExportTimeout: Duration
     private var entries: [UUID: Entry] = [:]
     /// 插入順序——`entries` 是字典（用 id 查找／更新方便），排序另外靠這份陣列記住「先進
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
@@ -93,6 +97,7 @@ final class UploadQueueStore {
         familyID: UUID, mediaUploadService: MediaUploadService, maxConcurrentUploads: Int = 3,
         now: @escaping @MainActor () -> Date = Date.init,
         onUploadSucceeded: @escaping @MainActor (_ id: UUID, _ mediaID: UUID) -> Void = { _, _ in },
+        videoExportTimeout: Duration = .seconds(600),
         videoPreparer: @escaping @Sendable (URL) async throws -> VideoTrimmer.UploadSource = { fileURL in
             try await VideoTrimmer.compressedForUpload(fileURL: fileURL)
         }
@@ -102,6 +107,7 @@ final class UploadQueueStore {
         self.maxConcurrentUploads = maxConcurrentUploads
         self.now = now
         self.onUploadSucceeded = onUploadSucceeded
+        self.videoExportTimeout = videoExportTimeout
         self.videoPreparer = videoPreparer
     }
 
@@ -244,6 +250,10 @@ final class UploadQueueStore {
                 // 順序但同樣理由：這裡呼叫端不會讓這個 store 消失，不需要那個順序保護。
                 self.onUploadSucceeded(id, mediaID)
                 self.finish(id, state: .completed)
+            } catch is VideoExportTimeoutError {
+                // LS-288 i3：跟 `.quota`／`.videoTooLarge` 一樣不落 `AppError.map` 的
+                // `.server` 桶——那個桶是可重試的，但卡住的 export 重試大機率卡在同一個地方。
+                self.finish(id, state: .failed(.videoExportTimedOut))
             } catch let error as AppError {
                 self.finish(id, state: .failed(.from(error)))
             } catch {
@@ -307,7 +317,7 @@ final class UploadQueueStore {
             } else {
                 try await acquireVideoExportSlot()
                 defer { releaseVideoExportSlot() }
-                source = try await videoPreparer(fileURL)
+                source = try await runVideoPreparer(fileURL)
                 compressedVideoCache[id] = source
             }
             // 用輸出的實際像素尺寸；量不到才沿用選片當下量到的（同 `DiaryComposerStore

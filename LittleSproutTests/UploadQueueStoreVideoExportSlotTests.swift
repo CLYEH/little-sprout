@@ -92,4 +92,52 @@ final class UploadQueueStoreVideoExportSlotTests: XCTestCase {
         XCTAssertTrue(waiter3GotSlot.withLock { $0 }, "第 3 個等待者應該在第 1 個釋放後立即取得名額，不被已取消的第 2 個卡住")
         XCTAssertEqual(store.debugVideoExportWaiterCount, 0, "佇列應該清空")
     }
+
+    // MARK: - export 逾時看門狗（mutation：拿掉看門狗）
+
+    /// i3（LS-286 R1 informational `dc010dd7`）：`videoPreparer` 卡住不回應時（`AVAssetExportSession`
+    /// 停住），沒有看門狗的話這一筆會永遠佔著 export 名額，連帶卡住佇列裡其他所有影片。注入
+    /// 50ms 逾時＋永不返回、不理會取消信號的 preparer（用 `withCheckedContinuation` 永遠不
+    /// resume，模擬真的卡住的 `AVAssetExportSession`——`Task.sleep` 本身會回應取消，測不出「不
+    /// 理會取消信號」這個最壞情況）——逾時後這一筆要標成專屬失敗原因、不可重試，下一支影片要能
+    /// 立刻取得名額並被呼叫。
+    func test_video_exportWatchdog_timesOut_failsRetryableFalseAndReleasesSlotForNextVideo() async {
+        let stuckURL = makeTempFile()
+        let okURL = makeTempFile()
+        defer {
+            try? FileManager.default.removeItem(at: stuckURL)
+            try? FileManager.default.removeItem(at: okURL)
+        }
+        let mediaService = StubMediaUploadService()
+        mediaService.setUploadVideoHandler { _, _, _, _ in UUID() }
+        let okPreparerCalls = OSAllocatedUnfairLock(initialState: 0)
+        let store = UploadQueueStore(
+            familyID: familyID, mediaUploadService: mediaService, videoExportTimeout: .milliseconds(50),
+            videoPreparer: { fileURL in
+                if fileURL == stuckURL {
+                    return await withCheckedContinuation { (_: CheckedContinuation<VideoTrimmer.UploadSource, Never>) in
+                        // 故意永遠不 resume——模擬卡住、不理會取消信號的 AVAssetExportSession。
+                    }
+                }
+                okPreparerCalls.withLock { $0 += 1 }
+                return VideoTrimmer.UploadSource(fileURL: okURL, fileExtension: "mp4", pixelSize: nil)
+            }
+        )
+
+        store.enqueue([makeVideoUpload(fileURL: stuckURL), makeVideoUpload(fileURL: okURL)])
+
+        // 不能等 `remainingCount == 0`——失敗列本身也算「還沒完成」（見 `remainingCount` 文件
+        // 註解），卡住那支逾時後仍是失敗列，`remainingCount` 永遠不會歸零；改等兩筆都離開
+        // `.waiting`／`.uploading`（各自到達失敗或完成的終局狀態）。
+        await waitUntil(timeoutSeconds: 3) { store.waitingCount == 0 && store.uploadingCount == 0 }
+
+        XCTAssertEqual(okPreparerCalls.withLock { $0 }, 1, "第一支卡住逾時後，第二支應該取得名額並被呼叫")
+        XCTAssertEqual(mediaService.uploadVideoCalls.count, 1, "只有第二支影片真正上傳")
+        guard let failedRow = store.sections.first(where: { $0.kind == .failed })?.rows.first else {
+            return XCTFail("卡住逾時的那支應該落在失敗態")
+        }
+        guard case .failed(let reason) = failedRow.state else { return XCTFail("預期失敗態") }
+        XCTAssertEqual(reason, .videoExportTimedOut, "逾時要標成專屬的失敗原因，不是通用的伺服器忙碌")
+        XCTAssertFalse(reason.isRetryable, "同一支卡住的原始檔案重試大機率再次卡住同一個地方，不該提供重試")
+    }
 }
