@@ -73,9 +73,13 @@ final class UploadQueueStore {
     /// （export 專屬上限 1），不動 `maxConcurrentUploads` 本身——名額照樣同時被佔用（正在等
     /// export 的那筆也算一個名額），但同時只有一個真正在轉檔，其餘等候的名額可以是照片，照片
     /// 上傳不受影響。`videoExportInFlight`／`videoExportWaiters` 只在 MainActor 上讀寫（同整支
-    /// store 的隔離模型，見檔頭文件註解），先進先出用陣列即可，不需要額外的鎖。
-    private var videoExportInFlight = false
-    private var videoExportWaiters: [CheckedContinuation<Void, Never>] = []
+    /// store 的隔離模型，見檔頭文件註解），先進先出用陣列即可，不需要額外的鎖。`id` 是 LS-288
+    /// i1 加的——取消時要能從陣列中間精準移除這一個等待者，不是只能動頭尾。操作這兩個屬性的
+    /// 方法搬到 `UploadQueueStore+VideoExportSlot.swift`（理由同 `TimelineStore+Reactions.swift`
+    /// 檔頭：本檔逼近 SwiftLint `file_length` 上限），因此不能是 `private`（extension 存取
+    /// 同型別的 `private` 成員限同一個檔案）。
+    var videoExportInFlight = false
+    var videoExportWaiters: [(id: UUID, continuation: CheckedContinuation<Void, Error>)] = []
     private var entries: [UUID: Entry] = [:]
     /// 插入順序——`entries` 是字典（用 id 查找／更新方便），排序另外靠這份陣列記住「先進
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
@@ -301,7 +305,7 @@ final class UploadQueueStore {
             if let cached, FileManager.default.fileExists(atPath: cached.fileURL.path) {
                 source = cached
             } else {
-                await acquireVideoExportSlot()
+                try await acquireVideoExportSlot()
                 defer { releaseVideoExportSlot() }
                 source = try await videoPreparer(fileURL)
                 compressedVideoCache[id] = source
@@ -329,28 +333,8 @@ final class UploadQueueStore {
         }
     }
 
-    /// LS-286 i2：拿到名額就立刻標記並返回；沒有就排進等候佇列，等 `releaseVideoExportSlot()`
-    /// 叫醒。呼叫端與 `releaseVideoExportSlot()` 都在 MainActor 上執行，不會有兩個呼叫同時看到
-    /// `videoExportInFlight == false` 而都拿到名額的競態。
-    private func acquireVideoExportSlot() async {
-        if !videoExportInFlight {
-            videoExportInFlight = true
-            return
-        }
-        await withCheckedContinuation { continuation in
-            videoExportWaiters.append(continuation)
-        }
-    }
-
-    /// 佇列裡還有人等就直接把名額轉給排最前面的那個（`videoExportInFlight` 維持 `true`，名額
-    /// 沒有被釋放又重新搶過），沒人等才真的把名額放掉。
-    private func releaseVideoExportSlot() {
-        if videoExportWaiters.isEmpty {
-            videoExportInFlight = false
-        } else {
-            videoExportWaiters.removeFirst().resume()
-        }
-    }
+    // `acquireVideoExportSlot()`／`releaseVideoExportSlot()`／`runVideoPreparer(_:)` 見
+    // `UploadQueueStore+VideoExportSlot.swift`。
 
     #if DEBUG
     /// 只給 `#Preview`／`TapTargetGateHarness`／UITest 用——直接灌狀態，不經過真正的上傳
@@ -389,5 +373,7 @@ final class UploadQueueStore {
     func debugForcePayloadNil(_ id: UUID) {
         entries[id]?.payload = nil
     }
+    // `debugAcquireVideoExportSlot()`／`debugReleaseVideoExportSlot()`／
+    // `debugVideoExportWaiterCount` 見 `UploadQueueStore+VideoExportSlot.swift`。
     #endif
 }
