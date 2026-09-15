@@ -196,7 +196,7 @@ g checkout -q -b ls300-partial "$base_ref"
 pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" "$(board ImpB1 'Import / 01 匯入整理頁 (iPhone)' '')" "$(board ImpB2 'Import / 02 日期不明群 (iPhone)' '')" "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
 commit_pen 'design(pen): LS-300 r1 兩塊新板，Notes 只列了 01'
 out="$(cd "$R" && bash "$check" design/littlesprout.pen --base "$base_ref" 2>&1)"; got=$?
-if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '✗ 畫面級屬性缺列：板 ImpB2（Import / 02 日期不明群 (iPhone)）' && ! printf '%s' "$out" | grep -qF '✗ 畫面級屬性缺列：板 ImpB1'; then
+if [ "$got" -eq 1 ] && grep -qF '✗ 畫面級屬性缺列：板 ImpB2（Import / 02 日期不明群 (iPhone)）' <<<"$out" && ! grep -qF '✗ 畫面級屬性缺列：板 ImpB1' <<<"$out"; then
   echo "✓ ⑲ 段落只提到 01，只有 02（ImpB2）被點名缺列、01（ImpB1）不誤點"
 else
   echo "✗ ⑲ 應只點名 ImpB2、不誤點 ImpB1（實得 exit ${got}）" >&2
