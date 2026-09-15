@@ -51,6 +51,16 @@ final class UploadQueueModelsTests: XCTestCase {
         XCTAssertFalse(UploadFailureReason.server.showsQuotaLink)
     }
 
+    /// LS-290 i5（LS-288 merge-review R1 informational `9e0e0a51`）：`.videoExportTimedOut` 的
+    /// `title` 文案沒有單元測試釘住——其他 case 都有（見上面幾支），跟 `.quota`／`.videoTooLarge`
+    /// 同一類道理不可重試，`showsQuotaLink` 沒有「查看儲存空間」出路。
+    func test_videoExportTimedOut_title_isNotRetryable_andDoesNotShowStorageLink() {
+        let reason = UploadFailureReason.videoExportTimedOut
+        XCTAssertEqual(reason.title, "影片處理逾時，請確認影片檔案正常後重新選取上傳。")
+        XCTAssertFalse(reason.isRetryable, "同一支卡住的原始檔案重試大機率再次卡在同一個地方，不該提供重試")
+        XCTAssertFalse(reason.showsQuotaLink, "逾時跟容量無關，不該出現查看儲存空間連結")
+    }
+
     // MARK: - UploadQueueGrouping：分群
 
     func test_sections_splitsByStateIntoThreeGroups() {
