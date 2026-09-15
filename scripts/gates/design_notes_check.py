@@ -40,20 +40,27 @@ base（merge-base）快照裡（同 NBSP 的 `touched_roots` 判斷新增/變更
 
 **R2（merge-review R1 M1）正典畫面歸併**：深色／AX3／iPad（含編號後綴 `-iPad`）這類同一畫面的裝置／外觀變體，原版把每個變體板各自
 當一塊「新畫面板」，對 LS-251 分支（六畫面、實測 30 個新增板）逼出 30 行缺列——但票文「畫面級屬性」欄位本身就含「深色特例」「AX3
-特例」「iPad 重排 vs 放大」，設計意圖是**一個畫面一行、深色/AX3/iPad 差異記在該行的欄位裡**，不是要求每個變體各自成行。`canonicalize_screen_name()`
-把板名去掉群組前綴（`A11y`／`Stress` 這類衍生群組與其對應的基準群組同編號即視為同一正典畫面）與已知裝飾字樣（`DERIVED_SUFFIX_RE`：
-` · 深色`、` · Dynamic Type AX3（…）`、編號後綴 `-iPad`、`(iPhone)`／`(iPad …)`／`（不裁切）` 這類裝置註記）後算出 canonical_id——有
-板編號（`[0-9]+[A-Za-z]?`，如 `01`／`04b`／`06a`）的畫面只取編號本身當 id（忽略其餘描述文字），沒有編號的名稱型畫面則退回去裝飾後的
-描述文字當 id（LS-251 實測：30 個變體板 → 8 個正典畫面 `01／02／03／04／04b／05／06a／06b`，與 merge-review R1 M1 預期一致）。
+特例」「iPad 重排 vs 放大」，設計意圖是**一個畫面一行、深色/AX3/iPad 差異記在該行的欄位裡**，不是要求每個變體各自成行。
+
+**R3（merge-review R2 M2）正典鍵改含基底群，不再無條件丟棄群組前綴**：R2 版 `canonicalize_screen_name()` 把「/」之前的群組前綴整段
+丟棄，只憑編號（或去裝飾名）歸併——導致同一個 PR 裡 `Import / 01 …` 與 `Growth / 01 …` 這種語意完全不同、只是恰好都從 01 開始編號的
+畫面被誤併成同一個正典畫面，Notes 只寫其中一個、另一個完全沒寫也判過（reviewer 端對端重放證實，major）。正典鍵改成
+**「基底群 ＋（編號或去裝飾名）」**：`new_screen_boards()` 先用 `screen_key_and_display()` 算出每個候選的 `(group, key, display)`
+（`group`＝「/」之前的文字，`key`／`display` 沿用 R2 的裝飾剝除邏輯），非衍生群組（不符 `DERIVED_GROUP_RE`，如 `Import`／`Growth`）
+直接以 `(group, key)` 當正典鍵；只有明確在 `DERIVED_GROUP_RE`（`A11y`／`Stress`，白名單、不做通用群組推斷）裡的衍生群組，才用
+`key` 回查本批候選裡「非衍生群組」用了同一個 `key` 的有幾個——**恰好一個**才映射過去併入該基底群，查不到或有多個不同候選（同 PR 內
+兩個不相干功域恰好撞號）一律不歸併、退回用衍生群組自己的字面當基底群（安全預設，寧可多要求一行也不要誤併或誤放行）。LS-251 實測：
+30 個變體板 → 8 個正典畫面 `Import/01`／`Import/02`／`Import/03`／`Import/04`／`Import/04b`／`Import/05`／`Import/06a`／`Import/06b`，
+與 R1 M1 預期一致（且 M2 的跨群組誤併問題已解——用合成的 `Import / 01` ＋ `Growth / 01` 同 PR 夾具驗證，見自測）。
 `new_screen_boards()` 回傳正典畫面群組（含全部 member 變體），`screen_attr_missing()` 對每個正典畫面只要**任一** member 的完整板名
 出現在「畫面級屬性」段之後即算放行（member 越多、放行條件越寬鬆，不是越嚴格——這是刻意的，見下方）。Notes 板完全沒有「畫面級屬性」
-段 → 所有正典畫面全部列為缺失；段落存在但某正典畫面的所有 member 都沒被提到 → 只列該正典畫面（訊息印 canonical_id＋代表描述文字＋
-全部 member 板 id，方便回頭對應稿內哪些板）。
+段 → 所有正典畫面全部列為缺失；段落存在但某正典畫面的所有 member 都沒被提到 → 只列該正典畫面（訊息印「<基底群> / <編號或去裝飾名>」
+＋代表描述文字＋全部 member 板 id，方便回頭對應稿內哪些板）。
 
 輸出：每筆缺失一行「✗ 板 <rootId>（名稱）／節點 <textId>／缺失 id <token>：<子句>」；沿革 info 行以「（沿革）」開頭；署名 NBSP
 違規一行「✗ 署名 NBSP：板 …／節點|實例 …：「<內容>」<單位> 前 <codepoints>」、舊債以「（舊債）署名 NBSP：」開頭；畫面級屬性缺列
-一行「✗ 畫面級屬性缺列：正典畫面 <canonical_id>（<代表描述文字>；板 id：<member id 逗號列>）——Notes 未含「畫面級屬性」段，或段內
-未提及任一變體名稱」；
+一行「✗ 畫面級屬性缺列：正典畫面 <基底群> / <編號或去裝飾名>（<代表描述文字>；板 id：<member id 逗號列>）——Notes 未含「畫面級屬性」
+段，或段內未提及任一變體名稱」；
 最後一行摘要。exit 0＝無缺失且無 NBSP／畫面級屬性違規；1＝有缺失或違規；2＝參數／git／JSON 錯誤（fail closed）。
 
 用法：design_notes_check.py --pen <repo 相對路徑> --head <sha> --base <merge-base sha> [--history <sha> ...]
@@ -108,6 +115,13 @@ DERIVED_SUFFIX_RE = re.compile(
 # 板編號：開頭一到多位數字＋可選一個英文字母（`01`／`04b`／`06a`）。`(?:-\w+)?` 消耗但不擷取編號後綴（如 `-iPad`）——
 # canonical_id 只取編號本身，`-iPad` 這類裝置後綴不影響分組。
 BOARD_NUMBER_RE = re.compile(r"^([0-9]+[A-Za-z]?)(?:-\w+)?")
+# LS-300 R3（merge-review R2 M2）：只有這兩個**明確的**衍生群組前綴才會嘗試映射回基底群；其他任何群組前綴
+# （`Import`／`Growth`／`LS-17`……）一律當成獨立的基底群，即使跟別的群組撞同一個編號也不歸併——R2 版把
+# 「/」之前的文字整段丟棄，導致 `Import / 01` 與 `Growth / 01` 這種語意完全不同、只是恰好都從 01 開始編號
+# 的畫面被誤併成同一個正典畫面，Notes 只寫其中一個、另一個完全沒寫也會被判過（reviewer 端對端重放證實，
+# major，不是理論疑慮）。白名單只收 `A11y`／`Stress` 這兩個目前唯一在用的衍生群組字面，新增衍生群組字面
+# 需要回頭改這支正則（刻意窄，寧可新衍生群組被誤判成獨立基底群要求多寫一行，也不要無條件放寬導致 M2 重演）。
+DERIVED_GROUP_RE = re.compile(r"^(?:A11y|Stress)$")
 
 
 def die(msg):
@@ -214,36 +228,39 @@ def touched_roots(base_doc, head_doc):
     return {rid for rid, blob in head_tops.items() if base_tops.get(rid) != blob}
 
 
-def canonicalize_screen_name(name):
-    """LS-300 R2（merge-review R1 M1）：回傳 (canonical_id, display)。name 去掉群組前綴（第一個「/」之前的文字，
-    含 `A11y`／`Stress` 這類衍生群組——與其對應的基準群組同編號即視為同一正典畫面）後：
-      - 開頭是板編號（`BOARD_NUMBER_RE`，如 `01`／`04b`／`06a`）→ canonical_id 只取編號本身（忽略 `-iPad` 這類
-        編號後綴與其餘描述文字／深色／AX3／裝置括號等裝飾），同編號的不同變體歸併成一個正典畫面。
-      - 沒有編號（票文「<編號 或 名稱>」的名稱型畫面）→ canonical_id 退回去除已知裝飾字樣（`DERIVED_SUFFIX_RE`）
-        後的描述文字本身。
+def screen_key_and_display(rest):
+    """LS-300 R3（merge-review R2 M2）：從「/」之後的文字（不含群組前綴）算出 (key, display)——純粹剝裝飾字樣、
+    不處理群組（群組決策移到 `new_screen_boards()`，因為「衍生群組要不要映射回基底群」需要看同一批候選裡其他
+    board 的群組，不是單一板名能獨立決定的事，見下）。
+      - 開頭是板編號（`BOARD_NUMBER_RE`，如 `01`／`04b`／`06a`）→ key 只取編號本身（忽略 `-iPad` 這類編號後綴
+        與其餘描述文字／深色／AX3／裝置括號等裝飾）。
+      - 沒有編號（票文「<編號 或 名稱>」的名稱型畫面）→ key 退回去除已知裝飾字樣（`DERIVED_SUFFIX_RE`）後的
+        描述文字本身。
     `display` 一律是去裝飾字樣、去頭尾空白、內部連續空白壓成一個空格的描述文字，供訊息與 Notes 代表列顯示。"""
-    # DESIGN-NOTES-CANONICALIZE-CHECK
-    _, _, rest = name.partition("/")
-    rest = rest.strip()
     display = DERIVED_SUFFIX_RE.sub("", rest)
     display = re.sub(r"\s*[·‧]\s*$", "", display)
     display = re.sub(r"\s+", " ", display).strip()
     m = BOARD_NUMBER_RE.match(rest)
-    if m:
-        return "#" + m.group(1), display
-    return "name:" + display, display
+    key = m.group(1) if m else display  # DESIGN-NOTES-DECORATION-CHECK
+    return key, display
 
 
 def new_screen_boards(base_doc, head_doc):
-    """LS-300（R2，merge-review R1 M1）：本 PR 新增的**正典畫面**——head 快照裡符合 `SCREEN_BOARD_NAME_RE`（名稱
+    """LS-300（R3，merge-review R2 M2）：本 PR 新增的**正典畫面**——head 快照裡符合 `SCREEN_BOARD_NAME_RE`（名稱
     形如「<群組> / <編號或名稱>」）、排除 Notes 板（`NOTES_NAME_RE`）與 `cmp/` 元件定義、且 id 不在 base
-    （merge-base）快照裡的頂層節點，依 `canonicalize_screen_name()` 的 canonical_id 歸併——深色／AX3／iPad 等
-    衍生變體不各自算一塊「新畫面板」。回傳 `[(canonical_id, display, [(id, name), ...]), ...]`：`display` 取該
-    正典畫面第一個出現的 member 的描述文字，`members` 依 head 快照 children 順序（穩定輸出，方便訊息與 LS-251
-    實跑核對）。"""
+    （merge-base）快照裡的頂層節點。正典鍵＝「基底群 ＋（編號或去裝飾名）」，兩段掃描：
+      1. 每個候選先算 (group, key, display)——`group` 是「/」之前的文字（未經處理）、`key`／`display` 來自
+         `screen_key_and_display()`。**非**衍生群組（不符 `DERIVED_GROUP_RE`，如 `Import`／`Growth`）直接把
+         `(group, key)` 登記進 `base_groups_by_key[key]`。
+      2. 衍生群組（`A11y`／`Stress`）的候選用 `key` 回查 `base_groups_by_key`——查到**恰好一個**基底群就映射
+         過去（同一個編號在本批新增畫面裡只有一個基底群在用，視為那個基底群的裝置／外觀變體）；查不到或有
+         多個不同基底群撞同一個 `key`（同 PR 內兩個不相干功能區塊恰好都從同一個編號開始，這正是 merge-review
+         R2 M2 抓到的情境）就**不歸併**，退回用衍生群組自己的字面（`A11y`／`Stress`）當基底群——安全預設，
+         寧可要求衍生變體板多列一行，也不要誤併到錯的基底群或掩蓋掉真正缺 Notes 的另一個畫面。
+    回傳 `[(base_group, key, display, [(id, name), ...]), ...]`：`display` 取該正典畫面第一個出現的 member 的
+    描述文字，`members` 依 head 快照 children 順序（穩定輸出，方便訊息與 LS-251 實跑核對）。"""
     base_ids = {c["id"] for c in base_doc.get("children") or [] if isinstance(c, dict) and isinstance(c.get("id"), str)}
-    groups = {}
-    order = []
+    candidates = []
     for c in head_doc.get("children") or []:
         if not isinstance(c, dict) or not isinstance(c.get("id"), str) or c["id"] in base_ids:
             continue
@@ -252,21 +269,39 @@ def new_screen_boards(base_doc, head_doc):
             continue
         if not SCREEN_BOARD_NAME_RE.match(name):
             continue
-        cid, display = canonicalize_screen_name(name)
-        if cid not in groups:
-            groups[cid] = {"display": display, "members": []}
-            order.append(cid)
-        groups[cid]["members"].append((c["id"], name))
-    return [(cid, groups[cid]["display"], groups[cid]["members"]) for cid in order]
+        group, _, rest = name.partition("/")
+        group = group.strip()
+        key, display = screen_key_and_display(rest.strip())
+        candidates.append((c["id"], name, group, key, display))
+
+    base_groups_by_key = {}
+    for _cid, _name, group, key, _display in candidates:
+        if not DERIVED_GROUP_RE.match(group):  # DESIGN-NOTES-BASE-GROUP-CHECK
+            base_groups_by_key.setdefault(key, set()).add(group)
+
+    groups = {}
+    order = []
+    for cid, name, group, key, display in candidates:
+        if DERIVED_GROUP_RE.match(group):
+            owners = base_groups_by_key.get(key, set())
+            base_group = next(iter(owners)) if len(owners) == 1 else group
+        else:
+            base_group = group
+        canonical_key = (base_group, key)  # DESIGN-NOTES-BASE-GROUP-KEY-CHECK
+        if canonical_key not in groups:
+            groups[canonical_key] = {"display": display, "members": []}
+            order.append(canonical_key)
+        groups[canonical_key]["members"].append((cid, name))
+    return [(bg, key, groups[(bg, key)]["display"], groups[(bg, key)]["members"]) for bg, key in order]
 
 
 def screen_attr_missing(head_doc, canonical_boards):
-    """LS-300（R2，merge-review R1 M1）：Notes 板文字裡「畫面級屬性」段（`SCREEN_ATTR_HEADING_RE` 首次命中之後的
+    """LS-300（R3，merge-review R2 M2）：Notes 板文字裡「畫面級屬性」段（`SCREEN_ATTR_HEADING_RE` 首次命中之後的
     文字，跨全部 Notes 板、依 `notes_boards`／`text_nodes` 既有順序串接）是否提到每個正典畫面的**任一** member
     板名（子字串比對；member 越多、放行條件越寬鬆是刻意的——ui-designer 只要在 Notes 提到其中一個變體名稱，這個
     正典畫面就算有列，不必每個深色／AX3／iPad 變體各自出現）。段落完全不存在 → 全部正典畫面皆列為缺失；段落存在
     但某正典畫面的所有 member 都沒出現在該段之後的文字裡 → 只列該正典畫面。回傳缺失的
-    `[(canonical_id, display, members), ...]` 子集（保留 canonical_boards 的順序）。"""
+    `[(base_group, key, display, members), ...]` 子集（保留 canonical_boards 的順序）。"""
     if not canonical_boards:
         return []
     chunks = []
@@ -278,7 +313,7 @@ def screen_attr_missing(head_doc, canonical_boards):
     if not m:
         return list(canonical_boards)
     scoped = joined[m.start():]
-    return [(cid, display, members) for cid, display, members in canonical_boards if not any(name in scoped for _, name in members)]  # DESIGN-NOTES-SCREEN-ATTR-CHECK
+    return [(bg, key, display, members) for bg, key, display, members in canonical_boards if not any(name in scoped for _, name in members)]  # DESIGN-NOTES-SCREEN-ATTR-CHECK
 
 
 def check(head_doc, head_ids, dead_candidates):
@@ -354,15 +389,16 @@ def main(argv):
     for rid, rname, owner, content, unit, cps in nbsp_bad:
         print("✗ 署名 NBSP：板 %s（%s）／%s：「%s」%s 前 %s（須 U+00A0；允許 U+2060／換行，LS-202）" % (rid, rname, owner, content[:60], unit, cps), file=sys.stderr)
 
-    # LS-300（R2，merge-review R1 M1）：畫面級屬性清單——本 PR 新增的正典畫面（深色／AX3／iPad 等變體已歸併），
-    # 是否每一個都在 Notes 板「畫面級屬性」段裡被提到（任一變體板名即算）。
+    # LS-300（R3，merge-review R2 M2）：畫面級屬性清單——本 PR 新增的正典畫面（正典鍵＝基底群＋編號或去裝飾名，
+    # 深色／AX3／iPad 等變體已歸併、但不同基底群即使撞號也不歸併），是否每一個都在 Notes 板「畫面級屬性」段裡
+    # 被提到（任一變體板名即算）。
     new_boards = new_screen_boards(base_doc, head_doc)
     screen_missing = screen_attr_missing(head_doc, new_boards)
-    for cid, display, members in screen_missing:
+    for bg, key, display, members in screen_missing:
         member_ids = "、".join(mid for mid, _ in members)
         print(
-            "✗ 畫面級屬性缺列：正典畫面 %s（%s；板 id：%s）——Notes 未含「畫面級屬性」段，或段內未提及任一變體名稱（LS-300）"
-            % (cid, display, member_ids), file=sys.stderr
+            "✗ 畫面級屬性缺列：正典畫面 %s / %s（%s；板 id：%s）——Notes 未含「畫面級屬性」段，或段內未提及任一變體名稱（LS-300）"
+            % (bg, key, display, member_ids), file=sys.stderr
         )
 
     summary = "Notes 板 %d 塊、head id %d、本 PR 範圍曾存在而 head 已無的 id %d、沿革引用 %d、缺失 %d、署名 NBSP 違規 %d（舊債 %d）、新增正典畫面 %d、畫面級屬性缺列 %d" % (
