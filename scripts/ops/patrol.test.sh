@@ -1959,7 +1959,23 @@ cat > "$work/fake-gh" <<'FAKEGH'
 #!/bin/bash
 [ -n "${FAKE_GH_CALLS:-}" ] && printf '%s\n' "$*" >> "$FAKE_GH_CALLS"
 case "${2:-}" in
-  list) cat "${FAKE_GH_RUNS:?}" ;;
+  list)
+    # LS-285：superseded 判準用 `run list --branch <b> --workflow ci.yml ...` 另查該分支的 run 清單；
+    # 沒有 --branch 的舊式呼叫（近 N 日同類紅那支 `run list`）行為不變，照舊回 FAKE_GH_RUNS。有 --branch
+    # 才改讀 FAKE_GH_SUP_DIR 底下以分支名（`/` 換成 `_`）命名的檔案；沒設 FAKE_GH_SUP_DIR 或檔案不存在
+    # 就空輸出（等同 gh 端查不到任何同分支 run，既有 ㉚ 夾具沒佈這份資料，superseded 判準自然判不出
+    # 「有更新的 run」，落回原本的時長比對——既有夾具行為不受影響）。
+    branch=; prev=
+    for a in "$@"; do
+      [ "$prev" = --branch ] && branch=$a
+      prev=$a
+    done
+    if [ -n "$branch" ]; then
+      [ -n "${FAKE_GH_SUP_DIR:-}" ] && cat "${FAKE_GH_SUP_DIR}/$(printf '%s' "$branch" | tr '/' '_').tsv" 2>/dev/null
+    else
+      cat "${FAKE_GH_RUNS:?}"
+    fi
+    ;;
   view)
     id=$3
     for a in "$@"; do
@@ -2091,6 +2107,44 @@ rc_is '㉚k2 PATROL_REDS_BUDGET_SEC 非整數 → exit 2' 2 "$?" "$out30k2"
 
 out30h="$(PATROL_REDS_DAYS=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 rc_is '㉚h PATROL_REDS_DAYS 非整數 → exit 2（fail closed，同既有 PATROL_* 慣例）' 2 "$?" "$out30h"
+
+# ---- ㉚l（LS-285；來源 LS-96 池項 `eacd6d72`）：superseded 判準——cancelled run 撞 concurrency:
+#      cancel-in-progress 取代（不是撞 job timeout-minutes）不該算進同類紅。用獨立的一批 run／快取，
+#      不動 ㉚ 既有那批夾具（既有夾具全部維持原字段數，`read` 在欄位不足時多出來的變數落地空字串，
+#      superseded 判準因此自然略過、既有斷言不受影響——見 patrol.sh 對 r_event 的門檻判斷）。
+gh_dir_l="$work/fake-gh-data-l"; mkdir -p "$gh_dir_l"
+sup_dir_l="$work/fake-gh-sup-l"; mkdir -p "$sup_dir_l"
+# (a) cancelled 39 分（2340 s）、`ci-ipad` job 無 failure／timed_out step；同 ref 有一個 headSha 不同、
+#     createdAt 晚 5 分的 run（`concurrency: cancel-in-progress` 的典型形狀）→ 應判 superseded、不計入。
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-14T10:39:10Z","conclusion":"cancelled","name":"ci-ipad","startedAt":"2026-09-14T10:00:10Z","steps":[{"conclusion":"success"},{"conclusion":"cancelled"}]}]}' > "$gh_dir_l/34890000001.jobs.json"
+printf '%s\n' $'34890000001\tshaAAA1\tpush\t1789380000' $'34890000002\tshaAAA2\tpush\t1789380300' > "$sup_dir_l/feature_LS-285-a.tsv"
+# (b) cancelled 51 分（3060 s）、同型 job、同 ref 沒有更新的 run（沒有對應的 sup 檔，mock 空輸出）→
+#     不是 superseded，改用該 job 實際 timeout-minutes——合成 repo 沒有 ci.yml，讀不到，退回
+#     REDS_TIMEOUT_MIN（預設 30 分）；3060 s ≥ 1800 s → 計入 timeout。
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-14T11:51:10Z","conclusion":"cancelled","name":"ci-ipad","startedAt":"2026-09-14T11:00:10Z","steps":[{"conclusion":"success"},{"conclusion":"cancelled"}]}]}' > "$gh_dir_l/34890000003.jobs.json"
+printf '%s\n' \
+  $'34890000001\tcancelled\tfeature/LS-285-a\t2026-09-14T10:00:00Z\tshaAAA1\tpush\t1789380000' \
+  $'34890000003\tcancelled\tfeature/LS-285-b\t2026-09-14T11:00:00Z\tshaBBB1\tpush\t1789383600' > "$work/gh-runs-l"
+calls30l="$work/gh-calls-l"; : > "$calls30l"
+cache30l="$work/reds-cache-l"; rm -rf "$cache30l"
+PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs-l" FAKE_GH_DIR="$gh_dir_l" FAKE_GH_SUP_DIR="$sup_dir_l" \
+  FAKE_GH_CALLS="$calls30l" PATROL_REDS_CACHE="$cache30l" PATROL_REDS_MAX_FETCH=10 \
+  bash "$patrol" --repo "$repo" --no-fetch "$STALE" >/dev/null 2>&1
+cache_a="$cache30l/v3/34890000001"; cache_b="$cache30l/v3/34890000003"
+if [ -f "$cache_a" ] && [ ! -s "$cache_a" ]; then
+  echo "✓ ㉚l-a cancelled 39 分＋同 ref 有更新 run → 判 superseded、簽章快取空白（不計入）"
+else
+  echo "✗ ㉚l-a 應判 superseded（簽章快取應為空白）：$(cat "$cache_a" 2>/dev/null || echo '（檔案不存在）')" >&2
+  fail=1
+fi
+has '㉚l-b cancelled 51 分、同 ref 無更新 run → 不是 superseded，用實際 timeout-minutes（合成 repo 無 ci.yml 故退回 30 分）計入 timeout' \
+  "$(cat "$cache_b" 2>/dev/null)" 'timeout（cancelled、無 failure／timed_out step、cancelled job ≥30 分——撞 job timeout-minutes）'
+if grep -q -- '--branch feature/LS-285-a' "$calls30l"; then
+  echo "✓ ㉚l-c superseded 判準真的打了 --branch <ref> 查詢（不是空跑）"
+else
+  echo "✗ ㉚l-c 沒看到 --branch feature/LS-285-a 的查詢" >&2
+  fail=1
+fi
 
 if [ "$fail" -eq 0 ]; then
   if [ "$jq_skipped" -gt 0 ]; then
