@@ -16,7 +16,7 @@ model: opus
 
 **iOS 26.2+ sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48**：審 UITest 時若看到 sheet 內元件用絕對座標常數斷言，或可點元件沒給 `minHeight ≥48` 緩衝，列 finding（sheet 內容在 iOS 26.2+ 套 ≈0.96 縮放，絕對座標與貼著 44pt 下限的高度都會在特定 runtime 下跌破，LS-167 的教訓）。
 
-**長命令一律前景執行帶 timeout（LS-191／LS-236）**：`xcodebuild`／`run.sh` 等長命令一律前景 Bash 帶 timeout（單次 ≤10 分，即 Bash 工具上限 600000ms；預期超過 10 分鐘的測試以 `-only-testing` 分段跑）；**不使用背景 Bash**——需要並行時在 handoff／裁決 comment 回報 orchestrator 拆派，不自行背景化（LS-215 起 PreToolUse `background-bash-guard.sh` 對 `run_in_background:true` 與「背景化再等」命令文字慣用形狀一律 deny，找不到 agent 身分時 fail-open，見 COLLABORATION §3）。不得依賴截斷後的自動背景化——工具 timeout 截斷後子行程不會被殺掉，只是這一輪看不到輸出，會留下殘留行程與下一輪的 xcodebuild 搶模擬器（LS-166／LS-217；`scripts/gates/stale-xcodebuild-check.sh` 機械擋殘留）。
+**長命令一律前景執行帶 timeout（LS-191／LS-236）**：`xcodebuild`／`run.sh` 等長命令一律前景 Bash 帶 timeout（單次 ≤10 分，即 Bash 工具上限 600000ms；預期超過 10 分鐘的測試以 `-only-testing` 分段跑）；**不使用背景 Bash**——需要並行時在 handoff／裁決 comment 回報 orchestrator 拆派，不自行背景化（LS-215 起 PreToolUse `background-bash-guard.sh` 對 `run_in_background:true` 與「背景化再等」命令文字慣用形狀一律 deny，找不到 agent 身分時 fail-open，見 COLLABORATION §3）。不得依賴截斷後的自動背景化——工具 timeout 截斷後子行程不會被殺掉，只是這一輪看不到輸出，會留下殘留行程與下一輪的 xcodebuild 搶模擬器（LS-166／LS-217；`scripts/gates/stale-xcodebuild-check.sh` 機械擋殘留）。等 CI 一律前景 `bash scripts/ops/ci-wait.sh <run-id>`（exit 3 就再跑一次；禁 `gh run watch`、禁 `run_in_background`）；背景命令完成不會喚醒 subagent（LS-299：`gh run watch` 撞 Bash 工具 600s 上限被系統移背景後停下等通知，09-15 三次事故）。
 
 **禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行；研究用 `Explore`（唯讀）——本定義 tools 白名單無 `Agent`，需要研究／並行一律回報 orchestrator 拆派；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
 
@@ -27,6 +27,8 @@ model: opus
 **shell 自測在 ubuntu:24.04 通道跑 ≥10 次（LS-270，來源 LS-96 池項 `d4c1add5`(c)）**：PR 動到 `scripts/**/*.test.sh`／gate 腳本時，在 macOS 上跑一次綠**不算驗過**——`rules` job 跑在 `ubuntu-latest`，BSD 與 GNU 的行為差異只有 Linux 通道看得到，而且有一整類是**機率性**的：LS-267 R2 B1 的 `set -o pipefail` ＋ `| grep -q`（GNU grep 命中即退出→上游 SIGPIPE→管線 141）在 ubuntu 20 次跑紅 14 次、在 macOS 永遠綠，跑 1 次很可能剛好抽到綠。重放一律用 `docker run --rm -v "$PWD":/repo -w /repo ubuntu:24.04 bash -c 'bash scripts/<路徑>.test.sh'`（同 LS-244 既有做法）**跑 ≥10 次並記錄紅幾次**，verdict 寫明次數；只跑 1 次就宣稱通過，等同沒驗（見 `docs/COLLABORATION.md` §7 BSD-GNU 列、`scripts/gates/pipefail-grep-q-check.sh`）。
 
 **verdict comment 逐項對應派工單、貼出前先跑 gate（LS-211）**：verdict／finding 引用的實作者 handoff「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」（測試名——`git grep` 可驗存在（含 struct/enum/extension 宣告、同名檔案、同名目錄；緊鄰 `*` 的萬用字元、同句否定詞「沒有／無／不存在／未」、同行 mutation 語境三種寫法不驗存在性，見 `handoff_evidence_check.py` 檔頭）——或路徑 `.png`／`.log`／`.test.sh`／`scratchpad/`／`evidence/`／`.swift`／`.py`／`.sh`／`.md`／`.yml`／`.json`，或指令 `xcodebuild`／`bash scripts/…`／`gh run view`／`.xcresult`），沒有就列 finding；**貼 comment 前先跑** `bash scripts/gates/handoff-evidence-check.sh <暫存檔>`，把輸出附在 comment 末尾；紅則逐條說明是誤判或補證據——**不得為了討好工具改寫正確敘述**（本工具仍有已知限制，見腳本檔頭 N6／N9，不要求一定要綠）。段落標題整行粗體，括號附註可接在同行（如 `**已驗證**（逐項對應票文驗收）：`／`**已驗證**：`，LS-292）。
+
+**對 handoff 勾選表抽兩列重放（LS-300，LS-96 池項 `3aa46c78`）**：實作者 handoff 若含「畫面級屬性（逐條勾選）」子段（見 `handoff_evidence_check.py`），不只信「已勾選」的申報——抽其中兩列，對照設計稿 Notes 板「畫面級屬性」段（板名｜隱藏 Tab Bar｜標題型態｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大）與實際實作（模擬器或程式碼）重放核對是否相符，對不上列 finding（來源 LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」——設計稿 Notes 板有寫、ios-dev 沒逐條對、merge-reviewer 沒查）。
 
 ## 四個必審維度
 1. **Race condition**：Swift Concurrency 正確性（actor 隔離、@MainActor、Sendable、Task 取消與生命週期）、背景上傳佇列與重試的資料競態、快取一致性、Supabase 寫入與本地狀態的同步。
