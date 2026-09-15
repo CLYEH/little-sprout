@@ -732,7 +732,7 @@ REDS_CACHE=${PATROL_REDS_CACHE:-${TMPDIR:-/tmp}/patrol-reds-cache}
 # 照樣被讀進來。reviewer 實地重現過：用本 head 跑 patrol 時讀到更早草稿版寫下的快取，印出
 # 「⚠ 同類紅 10 次」的假警報（內容是現行程式碼根本不會產生的字串）。路徑加一段版本，簽章規則
 # 變更就把常數往上跳，舊批整批自然失效（也不必手動清 /tmp）。
-REDS_CACHE_VER=v2   # R2 M3 加了 class: 簽章，簽章集合變了 → 跳號讓 v1 快取整批失效
+REDS_CACHE_VER=v3   # LS-285：cancelled 分類改為「先判 superseded 再用 job 實際 timeout-minutes」，判準變了 → 跳號讓 v2 快取整批失效
 # LS-260 R2 i3（merge-review R1）：乾淨快取那一輪 reviewer 實測 15.2 s（序列 `gh run view`，其中
 # `--log-failed` 會抓整包 log），而 SessionStart hook 的預算是 30 s，本段原本沒有任何時間上界（只有
 # 「筆數」上限）。加一個純 deadline 比對的時間預算：每次要打網路前先看時間，超過就這輪不再抓、下一輪
@@ -740,10 +740,43 @@ REDS_CACHE_VER=v2   # R2 M3 加了 class: 簽章，簽章集合變了 → 跳號
 REDS_BUDGET_SEC=${PATROL_REDS_BUDGET_SEC:-20}
 case "$REDS_BUDGET_SEC" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_BUDGET_SEC 須為整數秒（得到「${REDS_BUDGET_SEC}」）" >&2; exit 2 ;; esac
 # LS-260 R2 M1：cancelled job 跑滿幾分鐘才算「撞 job timeout-minutes」（見下方分類邏輯的實測分離度）
+# LS-285：改為優先讀 ci.yml 該 job 實際的 timeout-minutes；讀不到（job 不存在、格式跳脫慣例、或這次
+# 跑在沒有 .github/workflows/ci.yml 的環境——例如自測用的合成 repo）才退回這個值當 fallback。
 REDS_TIMEOUT_MIN=${PATROL_REDS_TIMEOUT_MIN:-30}
 case "$REDS_DAYS" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_DAYS 須為整數天（得到「${REDS_DAYS}」）" >&2; exit 2 ;; esac
 case "$REDS_MAX_FETCH" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_MAX_FETCH 須為整數（得到「${REDS_MAX_FETCH}」）" >&2; exit 2 ;; esac
 case "$REDS_TIMEOUT_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_REDS_TIMEOUT_MIN 須為整數分鐘（得到「${REDS_TIMEOUT_MIN}」）" >&2; exit 2 ;; esac
+# LS-285（來源 LS-96 池項 `eacd6d72`）：cancelled run 判準用到的兩支小工具。
+# 1) 讀 ci.yml 該 job 的 timeout-minutes：純文字掃描（ci.yml 不是 JSON，用不上 jq；patrol.sh 一貫不直接
+#    依賴 bare jq，只透過 gh 內建 jq，這裡索性連 yq 都不必裝）。掃描不到就印空字串，呼叫端自行退回
+#    REDS_TIMEOUT_MIN。
+reds_job_timeout_min() {   # $1=job 名
+  awk -v job="$1" '
+    $0 ~ "^  " job ":[[:space:]]*$" { infound=1; next }
+    infound && /^  [A-Za-z0-9_-]+:[[:space:]]*$/ { infound=0 }
+    infound && /timeout-minutes:/ {
+      line=$0
+      sub(/.*timeout-minutes:[[:space:]]*/, "", line)
+      sub(/[[:space:]].*/, "", line)
+      print line
+      exit
+    }
+  ' "$ROOT/.github/workflows/ci.yml" 2>/dev/null
+}
+# 2) 同一個 ref 上是否有更新的 run 把它取代（concurrency: cancel-in-progress）：單一欄位快取（不用
+#    bash 4 的 declare -A，patrol.sh 全檔維持 bash 3.2 相容，見 :1191 附近既有註解）——同一輪內連續
+#    處理同分支的多個 cancelled run 只打一次 `gh run list --branch`，換分支才重打。
+redsup_branch_cache=; redsup_data_cache=
+reds_branch_ci_runs() {   # $1=headBranch；印 TSV：databaseId\theadSha\tevent\tcreatedAt-epoch（每行一個 run）
+  if [ "$1" = "$redsup_branch_cache" ]; then
+    printf '%s' "$redsup_data_cache"; return
+  fi
+  redsup_branch_cache=$1
+  redsup_data_cache=$(cd "$ROOT" && "$GH_BIN" run list --branch "$1" --workflow ci.yml --limit 30 \
+    --json databaseId,headSha,createdAt,event \
+    --jq '.[] | [.databaseId, .headSha, .event, (.createdAt | fromdateiso8601)] | @tsv' 2>/dev/null)
+  printf '%s' "$redsup_data_cache"
+}
 REDS_LINES=; reds_note=; J_REDS=; reds_flagged=0; reds_runs=0; reds_oldest=
 if [ "$DO_PR" -ne 1 ]; then
   reds_note="略過（--no-pr）"
@@ -759,9 +792,10 @@ else
   # 另外把 `createdAt` 也取回來，人類段才印得出「實際涵蓋到哪一筆」，不再空口宣稱 7 日。
   reds_since=$(date -u -v-"${REDS_DAYS}"d +%F 2>/dev/null) \
     || reds_since=$(date -u -d "${REDS_DAYS} days ago" +%F 2>/dev/null) || reds_since=
+  # LS-285：多帶 headSha／event／createdAt 的 epoch——cancelled 分類的 superseded 判準要用（見下方）。
   reds_list=$(cd "$ROOT" && "$GH_BIN" run list --limit 200 ${reds_since:+--created ">=${reds_since}"} \
-    --json databaseId,headBranch,createdAt,conclusion \
-    --jq ".[] | select(.conclusion == \"failure\" or .conclusion == \"cancelled\") | select((.createdAt | fromdateiso8601) > (now - ${REDS_DAYS} * 86400)) | [.databaseId, .conclusion, .headBranch, .createdAt] | @tsv" 2>/dev/null)
+    --json databaseId,headBranch,createdAt,conclusion,headSha,event \
+    --jq ".[] | select(.conclusion == \"failure\" or .conclusion == \"cancelled\") | select((.createdAt | fromdateiso8601) > (now - ${REDS_DAYS} * 86400)) | [.databaseId, .conclusion, .headBranch, .createdAt, .headSha, .event, (.createdAt | fromdateiso8601)] | @tsv" 2>/dev/null)
   if [ -z "$reds_list" ]; then
     reds_note="近 ${REDS_DAYS} 日無 failure／cancelled 的 run（或 gh 查詢失敗／未登入，fail-soft 不擋）"
   else
@@ -770,7 +804,7 @@ else
     find "$REDS_CACHE" -type f -mtime "+$((REDS_DAYS * 2))" -delete 2>/dev/null
     reds_fetched=0; reds_sigs=; reds_budget_hit=0
     reds_deadline=$(( $(date +%s) + REDS_BUDGET_SEC ))
-    while IFS=$'\t' read -r r_id r_concl r_branch r_created; do
+    while IFS=$'\t' read -r r_id r_concl r_branch r_created r_sha r_event r_created_epoch; do
       [ -n "$r_id" ] || continue
       reds_runs=$((reds_runs + 1))
       # gh 回傳是新到舊，最後一筆即最舊；直接覆寫，不另外比對字串
@@ -806,16 +840,56 @@ else
           # 333／56，有 failure step 的 2 個（55／340）另被條件 1 擋掉——1800 秒把兩群切得很開。
           # 判準用 `--json jobs`（純 JSON，比 `--log-failed` 下載整包 log 便宜得多），同樣進快取。
           reds_fetched=$((reds_fetched + 1))
+          # LS-285：多取 cancelled job 裡跑最久那個的名字（$n）與 completedAt 的 epoch（$c）——分別要拿去
+          # 查 ci.yml 該 job 實際 timeout-minutes、與判 superseded 的「≤2 分」窗口用。
           r_shape=$(cd "$ROOT" && "$GH_BIN" run view "$r_id" --json jobs --jq \
-            '[.jobs[].steps[]?.conclusion] as $sc | ([.jobs[] | select(.conclusion == "cancelled" and .startedAt != null and .completedAt != null) | ((.completedAt | fromdateiso8601) - (.startedAt | fromdateiso8601))] | max // 0) as $d | "\(if ($sc | any(. == "failure" or . == "timed_out")) then 1 else 0 end)\t\($d)"' 2>/dev/null)
+            '[.jobs[].steps[]?.conclusion] as $sc | ([.jobs[] | select(.conclusion == "cancelled" and .startedAt != null and .completedAt != null) | {n: .name, d: ((.completedAt | fromdateiso8601) - (.startedAt | fromdateiso8601)), c: (.completedAt | fromdateiso8601)}] | sort_by(.d) | last) as $top | "\(if ($sc | any(. == "failure" or . == "timed_out")) then 1 else 0 end)\t\($top.d // 0)\t\($top.n // "")\t\($top.c // 0)"' 2>/dev/null)
           r_hasfail=$(printf '%s' "$r_shape" | cut -f1); r_cansec=$(printf '%s' "$r_shape" | cut -f2)
+          r_jobname=$(printf '%s' "$r_shape" | cut -f3); r_canend=$(printf '%s' "$r_shape" | cut -f4)
           case "${r_hasfail}|${r_cansec}" in
             0\|*[!0-9]*|0\|) : > "$cache_f" ;;   # 秒數解析不出來（gh 失敗／欄位缺）→ 空簽章，不臆測
             0\|*)
-              if [ "$r_cansec" -ge $((REDS_TIMEOUT_MIN * 60)) ]; then
-                printf 'timeout（cancelled、無 failure／timed_out step、cancelled job ≥%s 分——撞 job timeout-minutes）\n' "$REDS_TIMEOUT_MIN" > "$cache_f"
+              # LS-285（來源 LS-96 池項 `eacd6d72`）：先判 superseded——同 headBranch／同 workflow（ci.yml）／
+              # 同 event 若有 createdAt 較新且 headSha 不同的 run，或本 run 撞 cancel 那一刻（cancelled job
+              # 的 completedAt）落在某個較新 run 的 createdAt 之後 ≤2 分內，代表是被
+              # `concurrency: cancel-in-progress` 取代，不是撞 timeout——不計入，也不再拿固定
+              # REDS_TIMEOUT_MIN 比對，改用該 job 在 ci.yml 實際寫的 timeout-minutes。
+              r_superseded=0
+              if [ -n "$r_event" ]; then
+                r_created_epoch_ok=0
+                case "$r_created_epoch" in ''|*[!0-9]*) : ;; *) r_created_epoch_ok=1 ;; esac
+                sup_list=$(reds_branch_ci_runs "$r_branch")
+                if [ -n "$sup_list" ]; then
+                  while IFS=$'\t' read -r s_id s_sha s_event s_epoch; do
+                    [ -n "$s_id" ] || continue
+                    [ "$s_id" = "$r_id" ] && continue
+                    [ "$s_event" = "$r_event" ] || continue
+                    case "$s_epoch" in ''|*[!0-9]*) continue ;; esac
+                    if [ "$r_created_epoch_ok" -eq 1 ] && [ "$s_sha" != "$r_sha" ] && [ "$s_epoch" -gt "$r_created_epoch" ]; then
+                      r_superseded=1; break
+                    fi
+                    case "$r_canend" in
+                      ''|*[!0-9]*) : ;;
+                      *)
+                        r_diff=$((r_canend - s_epoch))
+                        if [ "$r_diff" -ge 0 ] && [ "$r_diff" -le 120 ]; then r_superseded=1; break; fi
+                        ;;
+                    esac
+                  done <<SUPEOF
+$sup_list
+SUPEOF
+                fi
+              fi
+              if [ "$r_superseded" -eq 1 ]; then
+                : > "$cache_f"   # superseded（concurrency cancel）：不計入
               else
-                : > "$cache_f"                   # (b) 過期／人工取消：日常，不計數
+                job_timeout=$(reds_job_timeout_min "$r_jobname")
+                case "$job_timeout" in ''|*[!0-9]*) job_timeout=$REDS_TIMEOUT_MIN ;; esac
+                if [ "$r_cansec" -ge $((job_timeout * 60)) ]; then
+                  printf 'timeout（cancelled、無 failure／timed_out step、cancelled job ≥%s 分——撞 job timeout-minutes）\n' "$job_timeout" > "$cache_f"
+                else
+                  : > "$cache_f"                 # (b) 過期／人工取消：日常，不計數
+                fi
               fi
               ;;
             *) : > "$cache_f" ;;                 # 有 failure／timed_out step，或整段讀不到 → 不計數
