@@ -1154,6 +1154,78 @@ else
   fail=1
 fi
 
+# ==== ㉑ LS-300（LS-96 池項 3aa46c78）：可選子段「畫面級屬性（逐條勾選）」====
+# ㉑a 合規：子段每列有板名｜✓/✗｜證據 → 綠
+expect 0 '㉑a 「畫面級屬性（逐條勾選）」每列有板名／✓✗／證據（測試名）→ 綠' '「畫面級屬性（逐條勾選）」第 5 行起的列項合規（板名 Import / 01 匯入整理頁 (iPhone)）' \
+'## 已驗證
+- 條件 1：`FooTests` 全綠
+
+**畫面級屬性（逐條勾選）**：
+- Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜（測試名 FooTests）
+'
+
+# ㉑b 缺證據：有板名與 ✓/✗，但沒有測試名／路徑／指令 → 紅，指名缺證據
+expect 1 '㉑b 「畫面級屬性」列有板名／✓✗，但沒有『怎麼驗』證據 → 紅' \
+'「畫面級屬性（逐條勾選）」第 5 行缺 證據（測試名／路徑／指令，同「已驗證」段規則）' \
+'## 已驗證
+- 條件 1：`FooTests` 全綠
+
+**畫面級屬性（逐條勾選）**：
+- Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓
+'
+
+# ㉑c 缺板名：`-` 後直接是屬性、沒有「板名｜」開頭 → 紅，指名缺板名
+expect 1 '㉑c 「畫面級屬性」列沒有板名（沒有「｜」分隔）→ 紅，指名缺板名' \
+'「畫面級屬性（逐條勾選）」第 5 行缺 板名（`-` 後、第一個分隔符「｜」或「|」前的文字）' \
+'## 已驗證
+- 條件 1：`FooTests` 全綠
+
+**畫面級屬性（逐條勾選）**：
+- 隱藏 Tab Bar ✓（測試名 FooTests）
+'
+
+# ㉑d 子段不存在時不影響舊 handoff——沒有「畫面級屬性」段落的既有 handoff 慣例（①a 同形）仍綠
+expect 0 '㉑d 沒有「畫面級屬性」子段的既有 handoff（子段不存在＝不驗）→ 仍綠' '' \
+'## 已驗證
+- 條件 1：`FooTests` 全綠
+'
+
+# ㉑e（R2，merge-review R1 i1）半形「|」分隔符也算板名分隔——手誤打半形不該被誤判「缺板名」
+expect 0 '㉑e 半形「|」分隔符（非規約全形「｜」）→ 仍能解析出板名、綠' '「畫面級屬性（逐條勾選）」第 5 行起的列項合規（板名 Import / 01 匯入整理頁 (iPhone)）' \
+'## 已驗證
+- 條件 1：`FooTests` 全綠
+
+**畫面級屬性（逐條勾選）**：
+- Import / 01 匯入整理頁 (iPhone)|隱藏 Tab Bar ✓|標題 系統 large|（測試名 FooTests）
+'
+
+# ==== ㉒ mutation 負控：拿掉「畫面級屬性」子段的板名／✓✗／證據判定（missing 恆為空）→ ㉑c 的缺板名
+#        樣本必須改判綠，證明紅是這條檢查造成的 ====
+mut_screenattr="$work/handoff_evidence_check.no-screen-attr.py"
+awk '
+  index($0, "# HANDOFF-SCREEN-ATTR-CHECK") > 0 { print "        missing = []  # HANDOFF-SCREEN-ATTR-MUTATION-MARK"; print; next }
+  { print }
+' "$py" > "$mut_screenattr"
+if grep -qF 'missing = []  # HANDOFF-SCREEN-ATTR-MUTATION-MARK' "$mut_screenattr"; then
+  printf '%s' '## 已驗證
+- 條件 1：`FooTests` 全綠
+
+**畫面級屬性（逐條勾選）**：
+- 隱藏 Tab Bar ✓（測試名 FooTests）
+' > "$work/mut22.md"
+  out22="$(python3 "$mut_screenattr" "$work/mut22.md" --repo "$R" 2>&1)"; rc22=$?
+  if [ "$rc22" -eq 0 ]; then
+    echo "✓ ㉒ mutant（拿掉板名／✓✗／證據判定）：㉑c 的缺板名樣本改判綠——證明紅是這條檢查造成的"
+  else
+    echo "✗ ㉒ mutant 未如預期翻轉（實得 exit ${rc22}）" >&2
+    printf '%s\n' "$out22" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ㉒ mutate：找不到插入點，負控本身無效" >&2
+  fail=1
+fi
+
 if [ "$fail" -eq 0 ]; then
   n=$(grep -c '^✓' "$count_log")
   echo "✓ handoff-evidence-check 自測通過（${n} 組樣本）"
