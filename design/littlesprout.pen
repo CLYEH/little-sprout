@@ -67744,7 +67744,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "`cmp/Card Photo`（umJHD）的 Photo Wrap 新增「Video Badge」子節點，預設 enabled:false（絕大多數照片卡不受影響）。示範：時間軸 `yXSht` 的 `xrCoj`（Card Photo 1）覆寫 enabled:true，顯示「▶ 影片 0:32」。時間軸卡片上的影片項**不自動播放、不內嵌播放器**——徽章只是靜態標示，card 本身仍是一張沖印品照片（縮圖用影片首格畫面），這點是行為規格，稿面無法示範「沒有播放器」這件事的存在，寫在這裡供 ios-dev 對照：Feed 內任何 kind=photo 且 media_type=video 的卡片一律用靜態縮圖＋本徽章，絕不嵌入 AVPlayer 或自動播放。",
+                  "content": "`cmp/Card Photo`（umJHD）的 Photo Wrap 新增「Video Badge」子節點，預設 enabled:false（絕大多數照片卡不受影響）。原示範案例：時間軸 `yXSht` 的原 `xrCoj`（Card Photo 1，LS-280 R2 已 Delete+Copy 重建為現行 id `Oh3Om`，並改回繼承元件預設 enabled:false，不再示範此案例）曾覆寫 enabled:true，顯示「▶ 影片 0:32」。時間軸卡片上的影片項**不自動播放、不內嵌播放器**——徽章只是靜態標示，card 本身仍是一張沖印品照片（縮圖用影片首格畫面），這點是行為規格，稿面無法示範「沒有播放器」這件事的存在，寫在這裡供 ios-dev 對照：Feed 內任何 kind=photo 且 media_type=video 的卡片一律用靜態縮圖＋本徽章，絕不嵌入 AVPlayer 或自動播放。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
