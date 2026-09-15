@@ -24,6 +24,16 @@
 # 只擋 U+0020（U+3000 全形空白或完全無空白不擋）；「觸碰的板」用頂層 JSON 是否變更判定——動 `cmp/Card Diary` 定義就得順手修掉
 # 定義內的 U+0020，動某板就得修掉該板實例的覆寫。
 #
+# LS-300 畫面級屬性清單（LS-96 池項 3aa46c78）：同一支再驗第三件事——本 PR 新增的畫面板（頂層 frame，名稱形如
+# 「<群組> / <編號或名稱>」，排除 Notes 板本身與 `cmp/` 元件定義）是否每一塊都在 Notes 板「畫面級屬性」段（子字串
+# 「畫面級屬性」之後的文字，跨全部 Notes 板）裡被板名子字串比對命中——缺 Notes 段落或段內未提及該板名即紅，逐板點名。
+# 欄位格式（隱藏 Tab Bar／標題型態／釘底動作帶／失敗文案鍵／深色特例／AX3 特例／iPad 重排放大）見
+# docs/COLLABORATION.md §1 與 .claude/agents/ui-designer.md Notes 段；本 gate 只驗「板名有沒有被提到」，不驗欄位
+# 內容是否填齊——欄位完整度是 ios-dev handoff／merge-reviewer 的責任（handoff_evidence_check.py 認「畫面級屬性
+# （逐條勾選）」子段）。盲區：(5) 衍生板（A11y／Stress）同樣算「新板」、要求各自一列或寫「同 <基準板名>」帶過，見
+# design_notes_check.py 檔頭；(6) 只驗板名子字串出現在段落之後的文字裡，不驗「這一列真的是這塊板的列」——板名恰好
+# 出現在段落內其他板的敘述文字裡也會被誤判命中（誤放行方向，不誤擋）。
+#
 # 用法：design-notes-check.sh <path.pen> --base <ref> [--head-sha <sha>]
 # exit：0＝無缺失且無 NBSP 違規；1＝有缺失或 NBSP 違規；2＝參數／git 錯誤（fail closed）。自測：design-notes-check.test.sh（CI rules job）。
 set -uo pipefail

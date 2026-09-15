@@ -31,9 +31,20 @@ LS-21／LS-47 legacy 板的舊 Age Text 全數帶進來（development 實測 88 
 merge-base→head 之間 JSON 有變更（含新增）才算違規（紅）；未觸碰的板上的既有命中列「（舊債）」警告、不擋——他票舊債另開 chore
 （a106f940 同一原則）。代價：觸碰某板就得順手修掉它上面所有署名 U+0020（方向是紅、不是漏放）。
 
+畫面級屬性清單（LS-300；LS-96 池項 3aa46c78）：LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」——推入式畫面隱藏 Tab Bar、
+Tab-root 只用自訂標題、失敗文案分支，設計稿 Notes 板有寫、ios-dev 沒逐條對。這支順便驗：本 PR 新增的**畫面板**（頂層 frame，
+名稱形如「<群組> / <編號或名稱>」——`SCREEN_BOARD_NAME_RE`，排除 Notes 板本身與 `cmp/` 元件定義）在 head 快照裡，是否每一塊都能在
+Notes 板文字裡找到一列（`SCREEN_ATTR_HEADING_RE` 命中「畫面級屬性」之後的文字範圍內，以**板名子字串**比對——不驗欄位內容完不完整，
+只驗「這塊板有沒有被提到」，欄位規格見 `docs/COLLABORATION.md` §1／`.claude/agents/ui-designer.md`）。新增＝id 不在 base（merge-base）
+快照裡（同 NBSP 的 `touched_roots` 判斷新增/變更，這裡只取「新增」）。Notes 板完全沒有「畫面級屬性」段 → 所有新板全部列為缺失；
+段落存在但某板名沒被提到 → 只列該板。代價：新畫面板一律要求 Notes 補列，不論該板是不是全螢幕推入式——寧可誤要求（AX／Stress 這類
+衍生板同樣算「新板」，見票文範圍「不做」只排除「像素級視覺比對」，未排除衍生板；ios-dev／merge-reviewer 若判斷某類衍生板不需要
+獨立列，可在該列直接寫「同 <基準板名>」帶過，板名子字串比對照樣算命中）。
+
 輸出：每筆缺失一行「✗ 板 <rootId>（名稱）／節點 <textId>／缺失 id <token>：<子句>」；沿革 info 行以「（沿革）」開頭；署名 NBSP
-違規一行「✗ 署名 NBSP：板 …／節點|實例 …：「<內容>」<單位> 前 <codepoints>」、舊債以「（舊債）署名 NBSP：」開頭；
-最後一行摘要。exit 0＝無缺失且無 NBSP 違規；1＝有缺失或 NBSP 違規；2＝參數／git／JSON 錯誤（fail closed）。
+違規一行「✗ 署名 NBSP：板 …／節點|實例 …：「<內容>」<單位> 前 <codepoints>」、舊債以「（舊債）署名 NBSP：」開頭；畫面級屬性缺列
+一行「✗ 畫面級屬性缺列：板 <rootId>（<名稱>）——Notes 未含「畫面級屬性」段，或段內未提及此板名」；
+最後一行摘要。exit 0＝無缺失且無 NBSP／畫面級屬性違規；1＝有缺失或違規；2＝參數／git／JSON 錯誤（fail closed）。
 
 用法：design_notes_check.py --pen <repo 相對路徑> --head <sha> --base <merge-base sha> [--history <sha> ...]
   --head／--base／--history 皆以 `git show <sha>:<pen>` 讀快照（在 repo 內執行）；--history 為本 PR 範圍內觸碰 .pen 的
@@ -64,6 +75,12 @@ ARROW_AFTER_RE = re.compile(r"\s*→")
 CARD_COMPONENT_NAMES = ("cmp/Card Album", "cmp/Card Diary")
 AGE_UNIT_RE = re.compile("([  ⁠\n]+)(歲|個⁠?月)")
 SPACE = " "
+# LS-300：新增畫面板的名稱形狀「<群組> / <編號或名稱>」（如 `Import / 01 匯入整理頁 (iPhone)`）；
+# Notes 板本身的名稱（如 `Import / 實作註記 · Handoff Notes (ios-dev)`）也含「/」，必須先過
+# NOTES_NAME_RE 排除；`cmp/` 開頭的元件定義另外排除。字元類別故意寬鬆（只要求「/」左右各至少一個
+# 非空白字元），不窄化到特定群組字面（「Import」「Growth」……）——票文字面只給範例，不是列舉。
+SCREEN_BOARD_NAME_RE = re.compile(r"^\S[^/]*/\s*\S")
+SCREEN_ATTR_HEADING_RE = re.compile(r"畫面級屬性")
 
 
 def die(msg):
@@ -170,6 +187,42 @@ def touched_roots(base_doc, head_doc):
     return {rid for rid, blob in head_tops.items() if base_tops.get(rid) != blob}
 
 
+def new_screen_boards(base_doc, head_doc):
+    """LS-300：本 PR 新增的畫面板——head 快照裡符合 `SCREEN_BOARD_NAME_RE`（名稱形如「<群組> / <編號或名稱>」）、
+    排除 Notes 板（`NOTES_NAME_RE`）與 `cmp/` 元件定義、且 id 不在 base（merge-base）快照裡的頂層節點。回傳
+    `[(id, name), ...]`，依 head 快照 children 順序（穩定輸出，方便訊息與 LS-251 實跑核對）。"""
+    base_ids = {c["id"] for c in base_doc.get("children") or [] if isinstance(c, dict) and isinstance(c.get("id"), str)}
+    out = []
+    for c in head_doc.get("children") or []:
+        if not isinstance(c, dict) or not isinstance(c.get("id"), str) or c["id"] in base_ids:
+            continue
+        name = c.get("name") or ""
+        if NOTES_NAME_RE.search(name) or name.startswith("cmp/"):
+            continue
+        if SCREEN_BOARD_NAME_RE.match(name):
+            out.append((c["id"], name))
+    return out
+
+
+def screen_attr_missing(head_doc, new_boards):
+    """LS-300：Notes 板文字裡「畫面級屬性」段（`SCREEN_ATTR_HEADING_RE` 首次命中之後的文字，跨全部 Notes 板、
+    依 `notes_boards`／`text_nodes` 既有順序串接）是否提到每一塊新畫面板的板名（子字串比對）。段落完全不存在
+    → 全部新板皆列為缺失；段落存在但某板名沒出現在該段之後的文字裡 → 只列該板。回傳缺失的 `[(id, name), ...]`
+    子集（保留 new_boards 的順序）。"""
+    if not new_boards:
+        return []
+    chunks = []
+    for board in notes_boards(head_doc):
+        for t in text_nodes(board):
+            chunks.append(t["content"])
+    joined = "\n".join(chunks)
+    m = SCREEN_ATTR_HEADING_RE.search(joined)
+    if not m:
+        return list(new_boards)
+    scoped = joined[m.start():]
+    return [(rid, name) for rid, name in new_boards if name not in scoped]  # DESIGN-NOTES-SCREEN-ATTR-CHECK
+
+
 def check(head_doc, head_ids, dead_candidates):
     missing = []
     history = []
@@ -243,13 +296,21 @@ def main(argv):
     for rid, rname, owner, content, unit, cps in nbsp_bad:
         print("✗ 署名 NBSP：板 %s（%s）／%s：「%s」%s 前 %s（須 U+00A0；允許 U+2060／換行，LS-202）" % (rid, rname, owner, content[:60], unit, cps), file=sys.stderr)
 
-    summary = "Notes 板 %d 塊、head id %d、本 PR 範圍曾存在而 head 已無的 id %d、沿革引用 %d、缺失 %d、署名 NBSP 違規 %d（舊債 %d）" % (
-        len(boards), len(head_ids), len(dead_candidates), len(history), len(missing), len(nbsp_bad), len(nbsp_old))
+    # LS-300：畫面級屬性清單——本 PR 新增的畫面板，是否每一塊都在 Notes 板「畫面級屬性」段裡被提到。
+    new_boards = new_screen_boards(base_doc, head_doc)
+    screen_missing = screen_attr_missing(head_doc, new_boards)
+    for rid, rname in screen_missing:
+        print("✗ 畫面級屬性缺列：板 %s（%s）——Notes 未含「畫面級屬性」段，或段內未提及此板名（LS-300）" % (rid, rname), file=sys.stderr)
+
+    summary = "Notes 板 %d 塊、head id %d、本 PR 範圍曾存在而 head 已無的 id %d、沿革引用 %d、缺失 %d、署名 NBSP 違規 %d（舊債 %d）、新增畫面板 %d、畫面級屬性缺列 %d" % (
+        len(boards), len(head_ids), len(dead_candidates), len(history), len(missing), len(nbsp_bad), len(nbsp_old), len(new_boards), len(screen_missing))
     problems = []
     if missing:
         problems.append("Notes 引用了本 PR 刪掉的節點 id，改成現行 id，或在同一子句用沿革標記（原／當時／已刪除／取代舊，或寫成「舊 id→新 id」把舊 id 放在箭頭左側）說明它已不存在（LS-168）")
     if nbsp_bad:
         problems.append("本 PR 觸碰的板／元件上，cmp/Card Album／cmp/Card Diary 署名的 歲／個月 前空白含 U+0020——改成 U+00A0（允許 U+2060／換行）後重落地（LS-202）")
+    if screen_missing:
+        problems.append("新增畫面板未在 Notes「畫面級屬性」段逐板列出——補一列（板名｜隱藏 Tab Bar｜標題｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大），格式見 docs/COLLABORATION.md §1（LS-300）")
     if problems:
         print("✗ design-notes gate：%s——%s" % (summary, "；".join(problems)), file=sys.stderr)
         return 1
