@@ -70,6 +70,14 @@ POOL_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P([1-4])\s*·")  # 行首�
 POOL_ANNOUNCE_RE = re.compile(r"銷除|銷案|已升票")
 BACKEND_KEYWORDS = ("RPC", "RLS", "migration", "schema", "後端", "Supabase", "資料表", "trigger", "policy", "SQL", "Edge Function", "bucket")
 STATE_FILE_REL = os.path.join(".claude", "patrol-state.json")  # 連續空輪計數（gitignored）
+BACKTICK_TOKEN_RE = re.compile(r"`([^`\n]{2,80})`")  # LS-298 scope 2：Story 票文反引號 token（表名／RPC 名／檔名）
+# LS-298 scope 3：docs/archive/linear/LS-<n>.md（LS-276 `linear-archive.py` 匯出格式）的欄位——首行 `# LS-<n> <標題>`，
+# 表格列 `| 狀態 | Done（completed） |`／`| 標籤 | a, b |`／可選 `| 父票 | LS-<m> <標題> |`。
+ARCHIVE_DIR_REL = os.path.join("docs", "archive", "linear")
+ARCHIVE_TITLE_RE = re.compile(r"^#\s+(LS-\d+)\s")
+ARCHIVE_STATUS_RE = re.compile(r"^\|\s*狀態\s*\|\s*(\S+)")
+ARCHIVE_LABELS_RE = re.compile(r"^\|\s*標籤\s*\|\s*(.*?)\s*\|\s*$")
+ARCHIVE_PARENT_RE = re.compile(r"^\|\s*父票\s*\|\s*(LS-\d+)")
 
 ISSUES_QUERY = """
 query($after: String, $teamKey: String!) {
@@ -498,6 +506,26 @@ def lane_candidates(issues, lane, current_cycle_number):
     return [], outside_ok, bool(outside_ok)
 
 
+def ready_dispatch_candidate(issues, lane, current_cycle_number, worktrees):
+    """LS-298 scope 4：lane 內若有 Ready（本 cycle）且 `.claude/worktrees/LS-<n>` 已建的票——已被派工、
+    worktree 建好但 Linear 狀態還沒推進到 In Progress，這種票不算在飛（WIP_STATES 不含 Ready）也不算候補
+    （classify_candidate() 只認 Backlog／Spec 狀態），是既有盲區：lane 表印「在飛 0、候補只有下一張」，
+    動作清單因此誤要求再拉一張、超過 lane 上限（LS-251 事故，連兩輪）。回傳該票 identifier（同 lane 多張
+    取 sort_key 排序後第一張）或 None（無此情況，或 current_cycle_number 未知不判定）。"""
+    if current_cycle_number is None:
+        return None
+    cands = [
+        i for i in issues
+        if lane_of(i) == lane and i["state"]["name"] == "Ready"
+        and cycle_number_of(i) == current_cycle_number
+        and ticket_number(i["identifier"]) in worktrees
+    ]
+    if not cands:
+        return None
+    cands.sort(key=sort_key)
+    return cands[0]["identifier"]
+
+
 def lane_pending(issues, lane):
     """R1 F1：classify_candidate() 算出的 'spec'／'structure' 排除原因之前只用來丟棄候補，沒有輸出
     出口——票文缺「## 驗收」或缺 project／Phase 票缺 milestone 的票會靜默停滯，沒人知道要去補。
@@ -539,23 +567,76 @@ def design_tickets_for(story_ident, all_issues):
     ]
 
 
-def design_gate_sources(open_issues, all_issues):
+def extract_backtick_tokens(text):
+    """LS-298 scope 2：抽 Story 標題／票文中的反引號 token（表名／RPC 名／檔名等技術詞），依出現順序去重。"""
+    seen = []
+    for m in BACKTICK_TOKEN_RE.finditer(text or ""):
+        tok = m.group(1).strip()
+        if tok and tok not in seen:
+            seen.append(tok)
+    return seen
+
+
+def repo_landed_tokens(root, tokens):
+    """LS-298 scope 2：沿用 repo_landed_pool_items()（LS-287）的批次 `git grep -n -F` 手法，對 Story 抽出
+    的反引號 token 查整個 repo（token 是表名／RPC 名／檔名，可能出現在 migrations／Sources／docs 任何位置，
+    不像池項 id 限定在少數路徑）。回傳 {token: "檔:行"}（同一 token 多處命中取第一筆）；沒有 token 或查無
+    命中都回空字典——這層只是提示，查不到就維持原措辭（fail-open，不影響候選正確性）。"""
+    if not tokens:
+        return {}
+    args = ["grep", "-n", "-F"]
+    for t in tokens:
+        args += ["-e", t]
+    res = git(root, *args)
+    landed = {}
+    for line in res.stdout.splitlines():
+        path, sep, rest = line.partition(":")
+        if not sep:
+            continue
+        lineno, sep2, content = rest.partition(":")
+        if not sep2:
+            continue
+        for t in tokens:
+            if t not in landed and t in content:
+                landed[t] = "%s:%s" % (path, lineno)
+    return landed
+
+
+def with_landed_note(issue, entry, root):
+    """LS-298 scope 2：對候選附 repo 已落地提示——命中附「已落地：<token> → <檔:行>（疑已有子票）」；
+    root 為 None（degraded_lane_sources() 只算 uncertain 候選、結果本來就要丟棄時）或零命中都維持原 why。"""
+    if root is None:
+        return entry
+    text = (issue.get("title") or "") + "\n" + (issue.get("description") or "")
+    tokens = extract_backtick_tokens(text)
+    landed = repo_landed_tokens(root, tokens)
+    if not landed:
+        return entry
+    tok = next(t for t in tokens if t in landed)
+    entry = dict(entry)
+    entry["why"] = entry["why"] + "；已落地：%s → %s（疑已有子票）" % (tok, landed[tok])
+    return entry
+
+
+def design_gate_sources(open_issues, all_issues, root=None):
     """(a) design／ui：Backlog 中票文含正典粗體標記 `**UI 票：需 Design gate**`（needs_design_gate()）、且尚無任何
-    lane:design 票承接者。"""
+    lane:design 票承接者。LS-298 scope 2：root 給定時，每個候選再附 repo 已落地提示（with_landed_note()）。"""
     out = []
     for i in open_issues:
         if i["state"]["name"] not in BACKLOG_STATES or not needs_design_gate(i):
             continue
         if design_tickets_for(i["identifier"], all_issues):
             continue
-        out.append({"id": i["identifier"], "title": i.get("title") or "", "why": "需 Design gate、尚無設計票（先開 lane:design）"})
+        entry = {"id": i["identifier"], "title": i.get("title") or "", "why": "需 Design gate、尚無設計票（先開 lane:design）"}
+        out.append(with_landed_note(i, entry, root))
     out.sort(key=lambda s: ticket_number(s["id"]) or 0)
     return out
 
 
-def backend_sources(open_issues, all_issues):
+def backend_sources(open_issues, all_issues, root=None):
     """(c) backend：Backlog Story 票文含後端關鍵字、且尚無任何 lane:backend 子票（open 或已結案）者。
-    關鍵字啟發式——只列出、由 orchestrator 判斷可否拆「後端先行（不需 Design gate）」。"""
+    關鍵字啟發式——只列出、由 orchestrator 判斷可否拆「後端先行（不需 Design gate）」。LS-298 scope 2：
+    root 給定時，每個候選再附 repo 已落地提示（with_landed_note()）。"""
     out = []
     for i in open_issues:
         if i["state"]["name"] not in BACKLOG_STATES or not is_story(i):
@@ -567,12 +648,80 @@ def backend_sources(open_issues, all_issues):
         ident = i["identifier"]
         if any(lane_of(c) == "lane:backend" and (c.get("parent") or {}).get("identifier") == ident for c in all_issues):
             continue
-        out.append({
+        entry = {
             "id": ident, "title": i.get("title") or "",
             "why": "Story 含後端關鍵字 %s、尚無 lane:backend 子票——可拆後端先行？" % "／".join(hits[:3]),
-        })
+        }
+        out.append(with_landed_note(i, entry, root))
     out.sort(key=lambda s: ticket_number(s["id"]) or 0)
     return out
+
+
+def read_archive_issue(path):
+    """LS-298 scope 3：讀單一 docs/archive/linear/LS-<n>.md（LS-276 `linear-archive.py` 匯出格式）。回傳
+    {"id","title","done","labels","parent"} 或 None（讀不到／首行不符格式，fail-soft，不擋主流程）。"""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            lines = fh.read().splitlines()
+    except OSError:
+        return None
+    if not lines:
+        return None
+    m = ARCHIVE_TITLE_RE.match(lines[0])
+    if not m:
+        return None
+    info = {"id": m.group(1), "title": lines[0][m.end():].strip(), "done": False, "labels": set(), "parent": None}
+    for line in lines:
+        sm = ARCHIVE_STATUS_RE.match(line)
+        if sm:
+            info["done"] = sm.group(1).startswith("Done")
+        lm = ARCHIVE_LABELS_RE.match(line)
+        if lm:
+            info["labels"] = {t.strip() for t in lm.group(1).split(",") if t.strip() and t.strip() != "—"}
+        pm = ARCHIVE_PARENT_RE.match(line)
+        if pm:
+            info["parent"] = pm.group(1)
+    return info
+
+
+def archive_done_child(root, story_ident, lane_label, match_title=False):
+    """LS-298 scope 3：已結案 API 查詢失敗時的退回路徑——讀 docs/archive/linear/*.md（LS-276 本機匯出）
+    純字串比對找 lane_label 的 Done 子票（父票欄＝story_ident，或 match_title 時標題整字提到 story_ident，
+    同 design_tickets_for() 的兩種承接判定）。回傳命中票 identifier，或 None（沒有／讀不到目錄都 fail-soft，
+    不打 API）。"""
+    archive_dir = os.path.join(root, ARCHIVE_DIR_REL)
+    try:
+        names = sorted(os.listdir(archive_dir))
+    except OSError:
+        return None
+    for name in names:
+        if not name.endswith(".md"):
+            continue
+        info = read_archive_issue(os.path.join(archive_dir, name))
+        if not info or not info["done"] or lane_label not in info["labels"]:
+            continue
+        if info["parent"] == story_ident or (match_title and references(info["title"], story_ident)):
+            return info["id"]
+    return None
+
+
+def degraded_lane_sources(uncertain, lane, root):
+    """LS-298 scope 1＋3：已結案票查詢失敗時，design_gate_sources()／backend_sources() 只看得到 open 票，
+    無法確認「尚無子票」是否為真（LS-297 事故：closed 查詢失敗當下仍印出「尚無 lane:backend 子票」，
+    orchestrator 據此開出重複票）。對只用 open 票判斷出的候選（uncertain，可能是假陰性——真正的子票是
+    Done、只是查不到）逐一退回讀 docs/archive/linear/*.md 反查（scope 3）：命中視為已落地、印
+    「已落地／已有 Done 子票 LS-<n>」；查無仍不列入候選，但印「子票有無不可判（已結案查詢失敗）」
+    （scope 1：寧可不列，也不能誤稱「尚無子票」誘導重複開票）。回傳 (候選清單＝恆空, 逐項 notes)。"""
+    lane_label = "lane:backend" if lane == "lane:backend" else "lane:design"
+    notes = []
+    for s in uncertain:
+        ident = s["id"]
+        hit = archive_done_child(root, ident, lane_label, match_title=(lane_label == "lane:design"))
+        if hit:
+            notes.append("%s：已落地／已有 Done 子票 %s（本機封存索引）" % (ident, hit))
+        else:
+            notes.append("%s：子票有無不可判（已結案查詢失敗）" % ident)
+    return [], notes
 
 
 def is_pool_announcement(comment):
@@ -896,9 +1045,16 @@ def build_report(token, root, team_key, team_id, sim_lines):
         alls, err = all_issues()
         if err:
             notes.append(err)
+            # LS-298 scope 1＋3：已結案查詢失敗——不能只用 open 票判斷「尚無子票」（可能是假陰性），
+            # 先算出只用 open 票看到的候選（uncertain），再逐一退回讀本機封存索引（degraded_lane_sources()）；
+            # 兩者查無結果的一律不列入來源候選，只印說明。
+            uncertain = backend_sources(issues, issues) if lane == "lane:backend" else design_gate_sources(issues, issues)
+            _, degraded_notes = degraded_lane_sources(uncertain, lane, root)
+            notes.extend(degraded_notes)
+            return [], notes
         if lane == "lane:backend":
-            return backend_sources(issues, alls), notes
-        return design_gate_sources(issues, alls), notes  # lane:design／lane:ui 共用同一份來源
+            return backend_sources(issues, alls, root=root), notes
+        return design_gate_sources(issues, alls, root=root), notes  # lane:design／lane:ui 共用同一份來源
 
     state = load_state(root)
     streaks = state.get("open_ticket_empty_rounds")
@@ -907,17 +1063,28 @@ def build_report(token, root, team_key, team_id, sim_lines):
 
     lanes = {}
     lane_actions = []
+    worktrees = worktree_tickets(root)
     for lane, limit in LANE_LIMITS.items():
         wip = lane_wip(issues, lane, root=root, script_dir=SCRIPT_DIR)
-        in_cycle_ok, all_ok, needs_scope = lane_candidates(
-            issues, lane, current["number"] if current else None
-        )
+        # LS-298 scope 4：Ready（本 cycle）且 worktree 已建的票——已被派工，佔候補首位，lane_candidates()
+        # 不再往下算（避免同時選中另一張候補、超過 lane 上限，LS-251 事故）。
+        ready_dispatch = ready_dispatch_candidate(issues, lane, current["number"] if current else None, worktrees)
+        if ready_dispatch:
+            candidates_shown = []
+            needs_scope = False
+            cand_display = [ready_dispatch]
+        else:
+            in_cycle_ok, all_ok, needs_scope = lane_candidates(
+                issues, lane, current["number"] if current else None
+            )
+            candidates_shown = in_cycle_ok if in_cycle_ok else all_ok
+            cand_display = [i["identifier"] for i in candidates_shown]
         pending = lane_pending(issues, lane)
-        candidates_shown = in_cycle_ok if in_cycle_ok else all_ok
         entry = {
             "limit": limit,
             "wip": wip,
-            "candidates": [i["identifier"] for i in candidates_shown],
+            "candidates": cand_display,
+            "ready_dispatch": ready_dispatch,
             "chosen": None,
             "needs_scope_plus": needs_scope,
             "pending_spec": pending["spec"],
@@ -946,7 +1113,8 @@ def build_report(token, root, team_key, team_id, sim_lines):
         # LS-144 開票責任：在飛 0 且無可派候補（無候補或候補全被擋）→ 印「→ 開票」並列來源候選；
         # 連續空輪數存 .claude/patrol-state.json（每 lane 一個計數；有在飛或有候補即歸零），≥2 輪升 ⚠。
         # 不看 current 是否可判定——lane 空著就是停擺，與能不能派工（需 cycle）是兩件事。
-        if wip == 0 and not candidates_shown:
+        # LS-298 scope 4：ready_dispatch 有值時 lane 其實被佔用（worktree 已建、待派），不算「空」，不印開票。
+        if wip == 0 and not candidates_shown and not ready_dispatch:
             rounds = int(streaks.get(lane) or 0) + 1
             blocked = []
             if pending["hold"]:
@@ -1015,7 +1183,10 @@ def format_lane_line(lane, entry):
     """R1 F1／I2：五欄——上限／在飛／候補／待 Spec／待結構；候補全部來自 cycle 外（scope+）時標明
     並只印前 3 張，避免誤以為 cycle 內現成有這麼多候補（I2：真實跑過 12 張全 cycle 外的案例）。"""
     cand_list = entry["candidates"]
-    if entry.get("needs_scope_plus") and cand_list:
+    if entry.get("ready_dispatch"):
+        # LS-298 scope 4：Ready＋worktree 已建的票佔候補首位，標記待派、不再往下印別的候補（cap）。
+        cand = "%s（worktree 已建，待派）" % entry["ready_dispatch"]
+    elif entry.get("needs_scope_plus") and cand_list:
         shown = cand_list[:3]
         more = "…" if len(cand_list) > 3 else ""
         cand = "%s%s（cycle 外，取第一張需 scope+）" % (", ".join(shown), more)
