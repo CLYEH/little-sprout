@@ -1,7 +1,7 @@
 {
   "ticket": "LS-251",
   "round": 1,
-  "head_sha": "1339d56",
+  "head_sha": "1339d568e7b4719e319da812e9a3b1ff98acc654",
   "total_nodes": 12109,
   "tree_hash": "280c77a6559dd64a",
   "scan_scope": "boards",
