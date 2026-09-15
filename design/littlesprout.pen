@@ -163696,6 +163696,104 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "hJhun",
+          "name": "N LS-280 R6 修訂：C5b 愛心列露出＋C2 板名註記",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "j5CsQS",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "LS-280 R6 修訂（VR R5 APPROVE 附 C 項 `f8cedf88`，orchestrator 裁 C5b `804d3c21`）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "uzmew",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "o7XDIm",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "C5b 修正",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "aFI6s",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "VR R5 指出 R5 版（`yeWtr` height 120）的「❤已按愛心 4／💬留言 3」列被 sheet 上緣切在字腰，數字在海報尺寸下不可辨（C5／MN-14，APPROVE 附帶選項，非 BLOCKER）。orchestrator 裁 C5b：微調落點而非接受現狀。改法：`z20bG/yeWtr`（Comment List）`height` 120→**90**（`clip:true` 不變）——sheet 上緣往下移至該列下方留白，整列「已按愛心 4／留言 3」完整可見，且第一則留言（陳志明「好可愛喔！阿公這張笑得眼睛都瞇起來了…」）仍完整可見兩行。重出 `comments-iphone-v3.jpg`，合成 recipe 與 R5 相同（`Copy(\"z20bG\")`→`Copy(\"vzYXz\")`背景→`Move` 索引 1→`Copy(\"HPxRL\")` 覆寫 `MoKee:{content:\"3\"}` 換掉背景原生 Signature→`Export`→PIL 縮長邊 1024→`Delete` 臨時節點），僅 `yeWtr.height` 一個數字不同。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "GKP60",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "tEcVR",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "C2 修正",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "f4kzy",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "orchestrator 預裁 (c)：`z20bG` 標成「僅供海報合成、非實作規格」，避免 ios-dev 誤以為要實作這個 medium detent 狀態。板名已改為「LS-177 / 留言 sheet · medium (iPhone)（僅供海報合成、非實作規格，LS-280 C2）」。iPad `wY7f8` 無對應 medium 版——在此定位下不構成缺口（iPad 版面本來就不需要 detent 就能露出日記卡與照片列）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -163704,7 +163802,7 @@
       "id": "z20bG",
       "x": 23388,
       "y": 28500,
-      "name": "LS-177 / 留言 sheet · medium (iPhone)",
+      "name": "LS-177 / 留言 sheet · medium (iPhone)（僅供海報合成、非實作規格，LS-280 C2）",
       "clip": true,
       "width": 393,
       "height": 852,
@@ -163848,7 +163946,7 @@
                   "name": "Comment List",
                   "clip": true,
                   "width": "fill_container",
-                  "height": 120,
+                  "height": 90,
                   "layout": "vertical",
                   "gap": "$sp-section",
                   "children": [
