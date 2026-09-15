@@ -3,16 +3,23 @@ import Foundation
 import XCTest
 
 /// `MediaDraftTempStorage`（LS-212）：日記編輯器影片暫存檔的專屬目錄與 App 啟動時的孤兒清理。
-/// 每支測試前後都自己清一次目錄，避免測試順序或平行執行時互相踩到同一個
-/// `.temporaryDirectory` 路徑（這個目錄是行程層級的單一路徑，不是每個測試各自獨立的暫存區）。
+/// 每支測試把 `MediaDraftTempStorage.root` 指向自己的 `mktemp` 子目錄（LS-293），不再共用
+/// 行程層級的 `.temporaryDirectory` 路徑——`DiaryComposerStoreVideoCacheTests`／
+/// `VideoTrimmerTests` 平行跑也不會互刪暫存檔；`tearDown` 只刪自己那份 `testRoot`。
 final class MediaDraftTempStorageTests: XCTestCase {
+    private var testRoot: URL!
+
     override func setUp() {
         super.setUp()
-        MediaDraftTempStorage.purgeStaleFiles()
+        testRoot = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("LS-293-MediaDraftTempStorageTests-\(UUID().uuidString)", isDirectory: true)
+        MediaDraftTempStorage.root = testRoot
     }
 
     override func tearDown() {
-        MediaDraftTempStorage.purgeStaleFiles()
+        try? FileManager.default.removeItem(at: testRoot)
+        MediaDraftTempStorage.root = FileManager.default.temporaryDirectory
+        testRoot = nil
         super.tearDown()
     }
 
