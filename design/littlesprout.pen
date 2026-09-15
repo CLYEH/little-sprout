@@ -56436,11 +56436,11 @@
                                       "x": 233.5
                                     },
                                     "mlORb": {
-                                      "y": 236
+                                      "y": 211
                                     },
                                     "atAkU": {
                                       "x": 233.5,
-                                      "y": 236
+                                      "y": 211
                                     }
                                   }
                                 }
@@ -162577,7 +162577,7 @@
               "id": "vOKkn",
               "name": "H",
               "fill": "$print-ink",
-              "content": "LS-280 R2 修訂（VR R1 comment `0cc95d66`，orchestrator 裁定 `3acccbbf`）",
+              "content": "LS-280 R2 修訂（VR R1 `0cc95d66`）",
               "fontFamily": "Noto Sans TC",
               "fontSize": 22,
               "fontWeight": "700"
