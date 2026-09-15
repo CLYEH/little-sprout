@@ -1104,4 +1104,73 @@ ok("LS-226 原始碼斷言：分批路徑對不在本批的 root skipChildren、
   assert.ok(src.includes("if (batchRoots && batchIndex != null) throw new Error("), "SCAN_BATCH／SCAN_BATCH_ROOTS 擇一");
 });
 
+// ───── LS-289：--from-snapshot（pen-snapshot-dump.js 的唯讀快照 dump → node 端跑未修改的 scanAll）─────
+// 沿用 LS-226 的 FIX（cross-batch-snapshot.json，173 節點、6 root）當「既有夾具樹」，把它壓成 pen-snapshot-dump.js
+// 會印出的緊湊陣列（vr-scan.js／vr-scan2.js 同規格：[id,name,parent,type,ref,enabled01,clip01,image01,x,y,w,h]），
+// 證明「in-Pencil 路徑」（scanAll 直接吃節點物件陣列）與「snapshot 路徑」（--from-snapshot 讀陣列 dump 重建同一批
+// 節點物件）對同一份快照跑出逐位元相同的六支 result_hash＋tree_hash。
+const toSnapshotRows = (nodes) => nodes.map((n) => [n.id, n.name, n.parent, n.type, n.ref == null ? null : n.ref, n.enabled ? 1 : 0, n.clip ? 1 : 0, n.image ? 1 : 0, n.x, n.y, n.w, n.h]);
+
+ok("LS-289 parseSnapshotDump：純 JSON 陣列與 SNAP<n> 行格式（行序不拘、可夾雜其他行）皆能解析回與 FIX 逐鍵相同的節點形狀；ref=null → undefined、enabled/clip/image 讀 0/1；非陣列／不足 12 欄／兩種格式都認不出一律 throw", () => {
+  const rows = toSnapshotRows(FIX);
+  const wantNodes = FIX.map((n) => ({ id: n.id, name: n.name, parent: n.parent, type: n.type, ref: n.ref == null ? undefined : n.ref, enabled: !!n.enabled, clip: !!n.clip, image: !!n.image, x: n.x, y: n.y, w: n.w, h: n.h }));
+  assert.deepStrictEqual(M.parseSnapshotDump(JSON.stringify(rows)), wantNodes, "純 JSON 陣列（snap-r2.json／snap-r3.json 的形狀）");
+  const half = Math.ceil(rows.length / 2);
+  const dumpText = "SNAP2 " + JSON.stringify(rows.slice(half)) + "\n（不相干的雜訊行，parser 應忽略）\nSNAP1 " + JSON.stringify(rows.slice(0, half)) + "\n";
+  assert.deepStrictEqual(M.parseSnapshotDump(dumpText), wantNodes, "SNAP<n> 行格式：SNAP2 排在 SNAP1 前面、中間夾雜噪音行，parser 只認前綴、依編號串接不受順序影響");
+  assert.throws(() => M.parseSnapshotDump("既不是 JSON 也沒有 SNAP 行"), /既不是 JSON 陣列開頭、也找不到/);
+  assert.throws(() => M.parseSnapshotDump(JSON.stringify([["only", "six", null, "frame", null, 1]])), /不是 12 欄的節點陣列/);
+});
+
+ok("LS-289 in-Pencil 路徑 vs snapshot 路徑：同一份 FIX 快照，scanAll 直接跑（in-Pencil）與 --from-snapshot CLI 讀陣列 dump 重建節點再跑（snapshot），六支 result_hash＋tree_hash 逐位元相同——scope=boards（沿用 FIX_OPTS）與 scope=document（不給 --boards）都驗；scan_note 帶「snapshot mode，dump sha256=<dump 檔內容的 sha256>」", () => {
+  const fs = require("fs"); const os = require("os"); const { spawnSync } = require("child_process");
+  const crypto = require("crypto");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "LS-289-snap-"));
+  const dumpPath = path.join(dir, "dump.json");
+  fs.writeFileSync(dumpPath, JSON.stringify(toSnapshotRows(FIX)));
+  const dumpText = fs.readFileSync(dumpPath, "utf8");
+  const wantSha = crypto.createHash("sha256").update(dumpText).digest("hex");
+  const TREE_HASH = "0123456789abcdef";
+  const script = path.join(__dirname, "overflow-scan.js");
+
+  const outBoards = path.join(dir, "receipt-boards.json");
+  const rb = spawnSync("node", [script, "--from-snapshot", dumpPath, "--tree-hash", TREE_HASH, "--total-nodes", "173", "--boards", "B1,B2", "--out", outBoards], { encoding: "utf8" });
+  assert.strictEqual(rb.status, 0, rb.stderr);
+  const receiptBoards = JSON.parse(fs.readFileSync(outBoards, "utf8"));
+  const expectBoards = M.withResultHashes(Object.assign(M.compactResult(M.scanAll(FIX, Object.assign({}, FIX_OPTS, { scanScope: "boards" }))), { tree_hash: TREE_HASH }));
+  for (const k of M.SCAN_KEYS) assert.deepStrictEqual(receiptBoards.scans[k], expectBoards.scans[k], "scope=boards：" + k);
+  assert.deepStrictEqual([receiptBoards.tree_hash, receiptBoards.scan_scope, receiptBoards.total_nodes], [TREE_HASH, "boards", 173]);
+  assert.strictEqual(receiptBoards.scan_note, "snapshot mode，dump sha256=" + wantSha);
+  assert.ok(/^SUMMARY total_nodes=173 scanned_nodes=68 scan_scope=boards /.test(rb.stderr), rb.stderr.split("\n")[0]);
+
+  const outDoc = path.join(dir, "receipt-doc.json");
+  const rd = spawnSync("node", [script, "--from-snapshot", dumpPath, "--tree-hash", TREE_HASH, "--total-nodes", "173", "--out", outDoc], { encoding: "utf8" });
+  assert.strictEqual(rd.status, 0, rd.stderr);
+  const receiptDoc = JSON.parse(fs.readFileSync(outDoc, "utf8"));
+  const expectDoc = M.withResultHashes(Object.assign(M.compactResult(M.scanAll(FIX)), { tree_hash: TREE_HASH }));
+  for (const k of M.SCAN_KEYS) assert.deepStrictEqual(receiptDoc.scans[k], expectDoc.scans[k], "scope=document：" + k);
+  assert.strictEqual(receiptDoc.scan_scope, "document");
+
+  // 用法錯誤：缺 --tree-hash／格式錯／缺 --total-nodes／dump 找不到 一律非 0（2＝用法錯，1＝執行期錯）
+  assert.strictEqual(spawnSync("node", [script, "--from-snapshot", dumpPath], { encoding: "utf8" }).status, 2, "缺 --tree-hash");
+  assert.strictEqual(spawnSync("node", [script, "--from-snapshot", dumpPath, "--tree-hash", "not-hex"], { encoding: "utf8" }).status, 2, "--tree-hash 格式錯");
+  assert.strictEqual(spawnSync("node", [script, "--from-snapshot", dumpPath, "--tree-hash", TREE_HASH], { encoding: "utf8" }).status, 2, "缺 --total-nodes");
+  assert.strictEqual(spawnSync("node", [script, "--from-snapshot", path.join(dir, "nope.json"), "--tree-hash", TREE_HASH, "--total-nodes", "1"], { encoding: "utf8" }).status, 1, "dump 檔不存在");
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+ok("LS-289 mutation：snapshot 解析的座標欄位錯位（x/w 欄位對調，模擬 parseSnapshotDump／pen-snapshot-dump.js 兩端欄位順序沒對齊的 bug）→ 節點 AABB 全部跑掉，scanAll 六支的 result_hash 至少一支跟著變——證明欄位順序是有負載的，這種錯位一定會被同稿態比對抓紅（不會靜默算出同一份收據）", () => {
+  const rows = toSnapshotRows(FIX);
+  const good = M.parseSnapshotDump(JSON.stringify(rows));
+  const badRows = rows.map((r) => { const c = r.slice(); const t = c[8]; c[8] = c[10]; c[10] = t; return c; }); // x(8) ↔ w(10)
+  const bad = M.parseSnapshotDump(JSON.stringify(badRows));
+  assert.notDeepStrictEqual(bad, good, "座標欄位對調後節點形狀應該不同（不能巧合算出同一棵樹）");
+  const TREE_HASH = "0000000000000001";
+  const goodOut = M.withResultHashes(Object.assign(M.compactResult(M.scanAll(good, FIX_OPTS)), { tree_hash: TREE_HASH }));
+  const badOut = M.withResultHashes(Object.assign(M.compactResult(M.scanAll(bad, FIX_OPTS)), { tree_hash: TREE_HASH }));
+  assert.strictEqual(goodOut.scans.corner_anchor.mismatch, 0, "正確解析：既有 fixture 角托 mismatch=0（LS-226 fixture 案已釘住）");
+  const changed = M.SCAN_KEYS.some((k) => badOut.scans[k].result_hash !== goodOut.scans[k].result_hash);
+  assert.ok(changed, "座標錯位後六支至少一支的 result_hash 必須跟著變——否則代表某支掃描對欄位錯位無感，reviewer 拿錯的 dump 重掃也比對不出差異");
+});
+
 console.log("overflow-scan.test.js：全數通過（" + n + " 組）");
