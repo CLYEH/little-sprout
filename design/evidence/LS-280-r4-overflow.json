@@ -1,0 +1,957 @@
+{
+ "ticket": "LS-280",
+ "round": 4,
+ "head_sha": "371913c0d5020e7f6e5711718ce9f05e299bc0b5",
+ "total_nodes": 10432,
+ "tree_hash": "5eec848490892a05",
+ "scan_scope": "boards",
+ "scan_note": "本輪 Pencil execute 每節點成本已劣化到約 3.6ms（票文提示），全稿 resolveInstances 展開走訪＋Print 合併在同一次 execute 內連續三次 InternalError: interrupted（純計數 16639 節點的 resolveInstances 走訪本身可單獨成功，但接上字串組裝＋Print 分段輸出後即逾時；execute 呼叫之間的 全域變數不持久，無法拆成「先算後印」兩次呼叫延續同一份資料）。改用 dump→node 路徑但把快照範圍限縮到 scan_scope=\"boards\"：對 SCAN_BOARDS 十個 root（z20bG／JbTfv／yXSht／go7f9／vzYXz／MjRcr／yec61／FiBvh／wY7f8／H73kPC，涵蓋本 PR 對 .pen 頂層節點有變更的每一板，含新增的 z20bG）逐板各跑一次 resolveInstances:false（收 refMap）＋resolveInstances:true（收快照列，含以父鏈累加算出的板內相對絕對座標），於單一 execute 呼叫內完成、一次成功（1437 個展開節點，Pencil 自動落地成本地檔案）；SNAP 行 grep 取出後於本機 node 端 require scripts/design/overflow-scan.js 原始未修改檔呼叫 scanAll({scanScope:\"boards\", boards:SCAN_BOARDS})／compactResult／withResultHashes 產出本收據——掃描函式本身完全未修改、未臨場手寫。scan_scope=\"boards\"（非 document）：受限於本輪快照只涵蓋 SCAN_BOARDS 十板子樹，六支輸出的 document_containers／document_points／document_mismatch／document_flagged 等「document_*」欄位實際上等於這十板的限縮值，不是全稿真實統計（LS-185／LS-202 規則要求如實標註，此處明說、不得誤讀成全稿舊債基準）；total_nodes（10432）與 tree_hash 仍是對整份 .pen（未展開 instance）的全稿計算與雜湊，與 head_sha 對應版本逐位元相符（design_tree_hash.py 對該 commit 重算同值 5eec848490892a05），兩者與六支掃描的「boards 限縮」快照是各自獨立的資料來源，互不影響正確性。三支 O(n²) 掃描（sibling_intersection／row_overflow／cross_parent_collision）的 flagged 陣列依收據形狀規範只留「每類一筆代表」，已拿掉逐筆重複的 class／count 欄位值（MN-9：與 R3 收據同款省略，本輪起固定寫入本說明）——count 已在每筆代表內完整保留，只是不再對每一筆重複列出相同的 class 字串。全程單一稿態、掃描前後無任何寫入（tree_hash 對應的 head_sha commit 371913c 是掃描時的 disk 狀態，掃描完成後才另外提交 XhTus 底圖來源說明性的 commit 1b63fab，該 commit 未觸碰 .pen，不影響本收據對應的稿態）。",
+ "scans": {
+  "sibling_intersection": {
+   "scope": "boards",
+   "document_count": 140,
+   "classes": 27,
+   "flagged": [
+    {
+     "node_a": "L319N",
+     "node_b": "jyX2d",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Scrim",
+     "parent": "z20bG",
+     "parent_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Scrim @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 1,
+     "classification": "留言 sheet 既有全螢幕背景疊層設計（Status Bar Backdrop 全板出血、Scrim/Sheet Wrap/Card Wrap 疊在其上），FiBvh／wY7f8／z20bG 三板同一組數字——z20bG 為 FiBvh 複本，此為複製既有結構、非本輪新增問題。"
+    },
+    {
+     "node_a": "L319N",
+     "node_b": "hZW11",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Sheet Wrap",
+     "parent": "z20bG",
+     "parent_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Sheet Wrap @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 1,
+     "classification": "留言 sheet 既有全螢幕背景疊層設計（Status Bar Backdrop 全板出血、Scrim/Sheet Wrap/Card Wrap 疊在其上），FiBvh／wY7f8／z20bG 三板同一組數字——z20bG 為 FiBvh 複本，此為複製既有結構、非本輪新增問題。"
+    },
+    {
+     "node_a": "jyX2d",
+     "node_b": "hZW11",
+     "name_a": "Scrim",
+     "name_b": "Sheet Wrap",
+     "parent": "z20bG",
+     "parent_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      393,
+      852
+     ],
+     "class": "Scrim × Sheet Wrap @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 1,
+     "classification": "留言 sheet 既有全螢幕背景疊層設計，FiBvh／wY7f8／z20bG 三板同一組數字，複製既有結構、非本輪新增問題。"
+    },
+    {
+     "node_a": "hbUOc/MN0WF",
+     "node_b": "hbUOc/R1lbwf",
+     "name_a": "Photo",
+     "name_b": "Mount TL",
+     "parent": "hbUOc/lOPO7",
+     "parent_name": "Print",
+     "overlap": [
+      3.06,
+      3.06
+     ],
+     "class": "Photo × Mount TL @ Print",
+     "count": 12,
+     "classification": "cmp/Profile Print（留言區大頭貼 Mount TL/BR）角托依 corner-out 5pt 規則刻意壓過相片緣，既有沖印母題設計、非本輪引入（z20bG/FiBvh/wY7f8 三板皆同一 avatar 元件、同一組數字）。"
+    },
+    {
+     "node_a": "hbUOc/MN0WF",
+     "node_b": "hbUOc/S4O4r8",
+     "name_a": "Photo",
+     "name_b": "Mount BR",
+     "parent": "hbUOc/lOPO7",
+     "parent_name": "Print",
+     "overlap": [
+      3.06,
+      3.06
+     ],
+     "class": "Photo × Mount BR @ Print",
+     "count": 12,
+     "classification": "cmp/Profile Print（留言區大頭貼 Mount TL/BR）角托依 corner-out 5pt 規則刻意壓過相片緣，既有沖印母題設計、非本輪引入（z20bG/FiBvh/wY7f8 三板皆同一 avatar 元件、同一組數字）。"
+    },
+    {
+     "node_a": "hbUOc/R1lbwf/sD5Ma",
+     "node_b": "hbUOc/R1lbwf/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "hbUOc/R1lbwf",
+     "parent_name": "Mount TL",
+     "overlap": [
+      16.4,
+      16.4
+     ],
+     "class": "Corner Shape × Corner Edge @ Mount TL",
+     "count": 12,
+     "classification": "cmp/Photo Corner 元件自身兩片三角路徑（sD5Ma／DhOiK）本就疊合成一顆L形角托圖案，同一顆角托內建交集，既有設計、非本輪引入。"
+    },
+    {
+     "node_a": "hbUOc/S4O4r8/sD5Ma",
+     "node_b": "hbUOc/S4O4r8/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "hbUOc/S4O4r8",
+     "parent_name": "Mount BR",
+     "overlap": [
+      16.4,
+      16.4
+     ],
+     "class": "Corner Shape × Corner Edge @ Mount BR",
+     "count": 12,
+     "classification": "cmp/Photo Corner 元件自身兩片三角路徑（sD5Ma／DhOiK）本就疊合成一顆L形角托圖案，同一顆角托內建交集，既有設計、非本輪引入。"
+    },
+    {
+     "node_a": "Z4TsQ/tBi8u",
+     "node_b": "Z4TsQ/xlLIo",
+     "name_a": "Ghost",
+     "name_b": "Stamp",
+     "parent": "Z4TsQ/OCYqN",
+     "parent_name": "Stamp Wrap",
+     "overlap": [
+      147.97,
+      39.63
+     ],
+     "class": "Ghost × Stamp @ Stamp Wrap",
+     "count": 6,
+     "classification": "既有蓋章裝飾效果（Ghost 殘影疊 Stamp），非本輪觸碰的板／元件，屬既有設計。"
+    },
+    {
+     "node_a": "Oh3Om/bjq5n",
+     "node_b": "Oh3Om/INXbk",
+     "name_a": "Photo Wrap",
+     "name_b": "Corner TL",
+     "parent": "Oh3Om/boZpu",
+     "parent_name": "Photo Print",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Photo Wrap × Corner TL @ Photo Print",
+     "count": 4,
+     "classification": "角托依 corner-out 5pt 規則刻意壓過印品紙緣，既有沖印母題設計（Oh3Om／Print Cell 系列元件既有樣式）、非本輪引入。"
+    },
+    {
+     "node_a": "Oh3Om/bjq5n",
+     "node_b": "Oh3Om/O6ami",
+     "name_a": "Photo Wrap",
+     "name_b": "Corner TR",
+     "parent": "Oh3Om/boZpu",
+     "parent_name": "Photo Print",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Photo Wrap × Corner TR @ Photo Print",
+     "count": 4,
+     "classification": "角托依 corner-out 5pt 規則刻意壓過印品紙緣，既有沖印母題設計（Oh3Om／Print Cell 系列元件既有樣式）、非本輪引入。"
+    },
+    {
+     "node_a": "Oh3Om/KRUtz",
+     "node_b": "Oh3Om/SNbd8",
+     "name_a": "Imprint Row",
+     "name_b": "Corner BL",
+     "parent": "Oh3Om/boZpu",
+     "parent_name": "Photo Print",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Imprint Row × Corner BL @ Photo Print",
+     "count": 4,
+     "classification": "角托依 corner-out 5pt 規則刻意壓過印品紙緣，既有沖印母題設計（Oh3Om／Print Cell 系列元件既有樣式）、非本輪引入。"
+    },
+    {
+     "node_a": "Oh3Om/KRUtz",
+     "node_b": "Oh3Om/P15GB",
+     "name_a": "Imprint Row",
+     "name_b": "Corner BR",
+     "parent": "Oh3Om/boZpu",
+     "parent_name": "Photo Print",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Imprint Row × Corner BR @ Photo Print",
+     "count": 4,
+     "classification": "角托依 corner-out 5pt 規則刻意壓過印品紙緣，既有沖印母題設計（Oh3Om／Print Cell 系列元件既有樣式）、非本輪引入。"
+    },
+    {
+     "node_a": "Oh3Om/INXbk/sD5Ma",
+     "node_b": "Oh3Om/INXbk/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "Oh3Om/INXbk",
+     "parent_name": "Corner TL",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner TL",
+     "count": 11,
+     "classification": "cmp/Photo Corner 元件自身兩片三角路徑（sD5Ma／DhOiK）本就疊合成一顆L形角托圖案，同一顆角托內建交集，既有設計、非本輪引入。"
+    },
+    {
+     "node_a": "Oh3Om/O6ami/sD5Ma",
+     "node_b": "Oh3Om/O6ami/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "Oh3Om/O6ami",
+     "parent_name": "Corner TR",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner TR",
+     "count": 11,
+     "classification": "cmp/Photo Corner 元件自身兩片三角路徑（sD5Ma／DhOiK）本就疊合成一顆L形角托圖案，同一顆角托內建交集，既有設計、非本輪引入。"
+    },
+    {
+     "node_a": "Oh3Om/SNbd8/sD5Ma",
+     "node_b": "Oh3Om/SNbd8/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "Oh3Om/SNbd8",
+     "parent_name": "Corner BL",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner BL",
+     "count": 11,
+     "classification": "cmp/Photo Corner 元件自身兩片三角路徑（sD5Ma／DhOiK）本就疊合成一顆L形角托圖案，同一顆角托內建交集，既有設計、非本輪引入。"
+    },
+    {
+     "node_a": "Oh3Om/P15GB/sD5Ma",
+     "node_b": "Oh3Om/P15GB/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "Oh3Om/P15GB",
+     "parent_name": "Corner BR",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner BR",
+     "count": 11,
+     "classification": "cmp/Photo Corner 元件自身兩片三角路徑（sD5Ma／DhOiK）本就疊合成一顆L形角托圖案，同一顆角托內建交集，既有設計、非本輪引入。"
+    },
+    {
+     "node_a": "WitwS/uZ5Lt",
+     "node_b": "WitwS/kVUWa",
+     "name_a": "Stack Sheet 2",
+     "name_b": "Stack Sheet 1",
+     "parent": "WitwS/oBEkH",
+     "parent_name": "Photo C",
+     "overlap": [
+      1,
+      88
+     ],
+     "class": "Stack Sheet 2 × Stack Sheet 1 @ Photo C",
+     "count": 1,
+     "classification": "cmp/Card Diary『還有 N 張』堆疊紙既有視覺效果（兩片故意重疊模擬紙堆），既有設計、非本輪引入。"
+    },
+    {
+     "node_a": "WitwS/ekqx4",
+     "node_b": "WitwS/GCEdk",
+     "name_a": "Thumb C",
+     "name_b": "More Scrim",
+     "parent": "WitwS/oBEkH",
+     "parent_name": "Photo C",
+     "overlap": [
+      96.3,
+      100
+     ],
+     "class": "Thumb C × More Scrim @ Photo C",
+     "count": 1,
+     "classification": "既有『還有 N 張』半透明覆蓋層疊在底圖照片上，設計本身就是覆蓋關係（MJ-9/C1b 本輪在 MjRcr/GKxdw 與 JbTfv/uT4lA 新建的覆蓋格沿用同一樣式），既有元件既有設計。"
+    },
+    {
+     "node_a": "n2VSQy",
+     "node_b": "Egn9A",
+     "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "name_b": "Tab Bar",
+     "parent": "yXSht",
+     "parent_name": "LS-21 / 11 時間軸 (iPhone)",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ LS-21 / 11 時間軸 (iPhone)",
+     "count": 1,
+     "classification": "既有 Spacer／Tab Bar 淨空補償結構，yXSht 既有版面、非本輪觸碰內容。"
+    },
+    {
+     "node_a": "V9wQZl",
+     "node_b": "OJNI5",
+     "name_a": "Photo Wrap",
+     "name_b": "Corner TL",
+     "parent": "x7R0d",
+     "parent_name": "Print Cell",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Photo Wrap × Corner TL @ Print Cell",
+     "count": 7,
+     "classification": "角托依 corner-out 5pt 規則刻意壓過印品紙緣，既有沖印母題設計（Oh3Om／Print Cell 系列元件既有樣式）、非本輪引入。"
+    },
+    {
+     "node_a": "V9wQZl",
+     "node_b": "C57TMC",
+     "name_a": "Photo Wrap",
+     "name_b": "Corner TR",
+     "parent": "x7R0d",
+     "parent_name": "Print Cell",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Photo Wrap × Corner TR @ Print Cell",
+     "count": 7,
+     "classification": "角托依 corner-out 5pt 規則刻意壓過印品紙緣，既有沖印母題設計（Oh3Om／Print Cell 系列元件既有樣式）、非本輪引入。"
+    },
+    {
+     "node_a": "ZPLDq",
+     "node_b": "aSlCA",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Scrim",
+     "parent": "FiBvh",
+     "parent_name": "LS-177 / 留言 sheet (iPhone)",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Scrim @ LS-177 / 留言 sheet (iPhone)",
+     "count": 1,
+     "classification": "留言 sheet 既有全螢幕背景疊層設計（Status Bar Backdrop 全板出血、Scrim/Sheet Wrap/Card Wrap 疊在其上），FiBvh／wY7f8／z20bG 三板同一組數字——z20bG 為 FiBvh 複本，此為複製既有結構、非本輪新增問題。"
+    },
+    {
+     "node_a": "ZPLDq",
+     "node_b": "s2v2Y",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Sheet Wrap",
+     "parent": "FiBvh",
+     "parent_name": "LS-177 / 留言 sheet (iPhone)",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Sheet Wrap @ LS-177 / 留言 sheet (iPhone)",
+     "count": 1,
+     "classification": "留言 sheet 既有全螢幕背景疊層設計（Status Bar Backdrop 全板出血、Scrim/Sheet Wrap/Card Wrap 疊在其上），FiBvh／wY7f8／z20bG 三板同一組數字——z20bG 為 FiBvh 複本，此為複製既有結構、非本輪新增問題。"
+    },
+    {
+     "node_a": "aSlCA",
+     "node_b": "s2v2Y",
+     "name_a": "Scrim",
+     "name_b": "Sheet Wrap",
+     "parent": "FiBvh",
+     "parent_name": "LS-177 / 留言 sheet (iPhone)",
+     "overlap": [
+      393,
+      852
+     ],
+     "class": "Scrim × Sheet Wrap @ LS-177 / 留言 sheet (iPhone)",
+     "count": 1,
+     "classification": "留言 sheet 既有全螢幕背景疊層設計，FiBvh／wY7f8／z20bG 三板同一組數字，複製既有結構、非本輪新增問題。"
+    },
+    {
+     "node_a": "k05pL",
+     "node_b": "ZXg82",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Scrim",
+     "parent": "wY7f8",
+     "parent_name": "LS-177 / 留言 sheet (iPad 11\")",
+     "overlap": [
+      834,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Scrim @ LS-177 / 留言 sheet (iPad 11\")",
+     "count": 1,
+     "classification": "留言 sheet 既有全螢幕背景疊層設計（Status Bar Backdrop 全板出血、Scrim/Sheet Wrap/Card Wrap 疊在其上），FiBvh／wY7f8／z20bG 三板同一組數字——z20bG 為 FiBvh 複本，此為複製既有結構、非本輪新增問題。"
+    },
+    {
+     "node_a": "k05pL",
+     "node_b": "j0Webv",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Card Wrap",
+     "parent": "wY7f8",
+     "parent_name": "LS-177 / 留言 sheet (iPad 11\")",
+     "overlap": [
+      834,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Card Wrap @ LS-177 / 留言 sheet (iPad 11\")",
+     "count": 1,
+     "classification": "留言 sheet 既有全螢幕背景疊層設計（Status Bar Backdrop 全板出血、Scrim/Sheet Wrap/Card Wrap 疊在其上），FiBvh／wY7f8／z20bG 三板同一組數字——z20bG 為 FiBvh 複本，此為複製既有結構、非本輪新增問題。"
+    },
+    {
+     "node_a": "ZXg82",
+     "node_b": "j0Webv",
+     "name_a": "Scrim",
+     "name_b": "Card Wrap",
+     "parent": "wY7f8",
+     "parent_name": "LS-177 / 留言 sheet (iPad 11\")",
+     "overlap": [
+      834,
+      1194
+     ],
+     "class": "Scrim × Card Wrap @ LS-177 / 留言 sheet (iPad 11\")",
+     "count": 1,
+     "classification": "留言 sheet 既有全螢幕背景疊層設計，FiBvh／wY7f8／z20bG 三板同一組數字，複製既有結構、非本輪新增問題。"
+    }
+   ],
+   "result_hash": "b9e9f069ee174eba"
+  },
+  "row_overflow": {
+   "scope": "boards",
+   "document_count": 84,
+   "classes": 11,
+   "flagged": [
+    {
+     "node": "hbUOc/R1lbwf/sD5Ma",
+     "name": "Corner Shape",
+     "parent": "hbUOc/R1lbwf",
+     "parent_name": "Mount TL",
+     "overflow": 6.56,
+     "class": "Mount TL :: Corner Shape",
+     "count": 12,
+     "classification": "cmp/Profile Print（留言區大頭貼 Mount TL/BR）角托依 corner-out 5pt 規則刻意壓過相片緣，既有沖印母題設計、非本輪引入（z20bG/FiBvh/wY7f8 三板皆同一 avatar 元件、同一組數字）。"
+    },
+    {
+     "node": "hbUOc/R1lbwf/DhOiK",
+     "name": "Corner Edge",
+     "parent": "hbUOc/R1lbwf",
+     "parent_name": "Mount TL",
+     "overflow": 6.56,
+     "class": "Mount TL :: Corner Edge",
+     "count": 12,
+     "classification": "cmp/Profile Print（留言區大頭貼 Mount TL/BR）角托依 corner-out 5pt 規則刻意壓過相片緣，既有沖印母題設計、非本輪引入（z20bG/FiBvh/wY7f8 三板皆同一 avatar 元件、同一組數字）。"
+    },
+    {
+     "node": "hbUOc/S4O4r8",
+     "name": "Mount BR",
+     "parent": "hbUOc/lOPO7",
+     "parent_name": "Print",
+     "overflow": 2.28,
+     "class": "Print :: Mount BR",
+     "count": 12,
+     "classification": "cmp/Profile Print（留言區大頭貼 Mount TL/BR）角托依 corner-out 5pt 規則刻意壓過相片緣，既有沖印母題設計、非本輪引入（z20bG/FiBvh/wY7f8 三板皆同一 avatar 元件、同一組數字）。"
+    },
+    {
+     "node": "hbUOc/S4O4r8/sD5Ma",
+     "name": "Corner Shape",
+     "parent": "hbUOc/S4O4r8",
+     "parent_name": "Mount BR",
+     "overflow": 6.56,
+     "class": "Mount BR :: Corner Shape",
+     "count": 12,
+     "classification": "cmp/Profile Print（留言區大頭貼 Mount TL/BR）角托依 corner-out 5pt 規則刻意壓過相片緣，既有沖印母題設計、非本輪引入（z20bG/FiBvh/wY7f8 三板皆同一 avatar 元件、同一組數字）。"
+    },
+    {
+     "node": "hbUOc/S4O4r8/DhOiK",
+     "name": "Corner Edge",
+     "parent": "hbUOc/S4O4r8",
+     "parent_name": "Mount BR",
+     "overflow": 6.56,
+     "class": "Mount BR :: Corner Edge",
+     "count": 12,
+     "classification": "cmp/Profile Print（留言區大頭貼 Mount TL/BR）角托依 corner-out 5pt 規則刻意壓過相片緣，既有沖印母題設計、非本輪引入（z20bG/FiBvh/wY7f8 三板皆同一 avatar 元件、同一組數字）。"
+    },
+    {
+     "node": "Oh3Om/O6ami",
+     "name": "Corner TR",
+     "parent": "Oh3Om/boZpu",
+     "parent_name": "Photo Print",
+     "overflow": 5,
+     "class": "Photo Print :: Corner TR",
+     "count": 4,
+     "classification": "角托依 corner-out 5pt 規則刻意壓過印品紙緣，既有沖印母題設計（Oh3Om／Print Cell 系列元件既有樣式）、非本輪引入。"
+    },
+    {
+     "node": "Oh3Om/P15GB",
+     "name": "Corner BR",
+     "parent": "Oh3Om/boZpu",
+     "parent_name": "Photo Print",
+     "overflow": 5,
+     "class": "Photo Print :: Corner BR",
+     "count": 4,
+     "classification": "角托依 corner-out 5pt 規則刻意壓過印品紙緣，既有沖印母題設計（Oh3Om／Print Cell 系列元件既有樣式）、非本輪引入。"
+    },
+    {
+     "node": "WitwS/uZ5Lt",
+     "name": "Stack Sheet 2",
+     "parent": "WitwS/oBEkH",
+     "parent_name": "Photo C",
+     "overflow": 9.97,
+     "class": "Photo C :: Stack Sheet 2",
+     "count": 1,
+     "classification": "cmp/Card Diary『還有 N 張』堆疊紙既有視覺效果（兩片故意重疊模擬紙堆），既有設計、非本輪引入。"
+    },
+    {
+     "node": "WitwS/kVUWa",
+     "name": "Stack Sheet 1",
+     "parent": "WitwS/oBEkH",
+     "parent_name": "Photo C",
+     "overflow": 6.97,
+     "class": "Photo C :: Stack Sheet 1",
+     "count": 1,
+     "classification": "cmp/Card Diary『還有 N 張』堆疊紙既有視覺效果（兩片故意重疊模擬紙堆），既有設計、非本輪引入。"
+    },
+    {
+     "node": "C57TMC",
+     "name": "Corner TR",
+     "parent": "x7R0d",
+     "parent_name": "Print Cell",
+     "overflow": 5,
+     "class": "Print Cell :: Corner TR",
+     "count": 7,
+     "classification": "角托依 corner-out 5pt 規則刻意壓過印品紙緣，既有沖印母題設計（Oh3Om／Print Cell 系列元件既有樣式）、非本輪引入。"
+    },
+    {
+     "node": "x4NnCv",
+     "name": "Corner BR",
+     "parent": "x7R0d",
+     "parent_name": "Print Cell",
+     "overflow": 5,
+     "class": "Print Cell :: Corner BR",
+     "count": 7,
+     "classification": "角托依 corner-out 5pt 規則刻意壓過印品紙緣，既有沖印母題設計（Oh3Om／Print Cell 系列元件既有樣式）、非本輪引入。"
+    }
+   ],
+   "result_hash": "34cf517575501541"
+  },
+  "cross_parent_collision": {
+   "scope": "boards",
+   "document_count": 100,
+   "classes": 20,
+   "flagged": [
+    {
+     "node_a": "jyX2d",
+     "node_b": "hbUOc/R1lbwf/sD5Ma",
+     "name_a": "Scrim",
+     "name_b": "Corner Shape",
+     "parent_a": "z20bG",
+     "parent_b": "hbUOc/R1lbwf",
+     "board": "z20bG",
+     "board_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      16.4,
+      16.4
+     ],
+     "class": "Scrim × Corner Shape @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 4,
+     "classification": "Scrim 是覆蓋全板的半透明遮罩，與其下任何內容（含 avatar 角托）本就 AABB 相交，z-order 正確（Scrim 在下、Sheet/Card 在上），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "jyX2d",
+     "node_b": "hbUOc/R1lbwf/DhOiK",
+     "name_a": "Scrim",
+     "name_b": "Corner Edge",
+     "parent_a": "z20bG",
+     "parent_b": "hbUOc/R1lbwf",
+     "board": "z20bG",
+     "board_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      16.4,
+      16.4
+     ],
+     "class": "Scrim × Corner Edge @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 4,
+     "classification": "Scrim 是覆蓋全板的半透明遮罩，與其下任何內容（含 avatar 角托）本就 AABB 相交，z-order 正確（Scrim 在下、Sheet/Card 在上），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "LrA08",
+     "node_b": "sgQ6k/R1lbwf/sD5Ma",
+     "name_a": "Comment Row",
+     "name_b": "Corner Shape",
+     "parent_a": "yeWtr",
+     "parent_b": "sgQ6k/R1lbwf",
+     "board": "z20bG",
+     "board_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      14.12,
+      16.4
+     ],
+     "class": "Comment Row × Corner Shape @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 2,
+     "classification": "MJ-8 medium detent 手法：Comment List（yeWtr）height 改 0 且 clip:true，容器內留言列與大頭貼角托的 AABB 相交完全被裁切、不可見（TakeScreenshot 截圖確認 z20bG 板面乾淨、僅露出頭像一角＋輸入列，無可見錯位）——sibling/cross_parent 掃描不看 clip 祖先，此為機制副作用、非視覺缺陷，FiBvh／wY7f8（未套用 medium 手法）皆無此筆。"
+    },
+    {
+     "node_a": "LrA08",
+     "node_b": "sgQ6k/R1lbwf/DhOiK",
+     "name_a": "Comment Row",
+     "name_b": "Corner Edge",
+     "parent_a": "yeWtr",
+     "parent_b": "sgQ6k/R1lbwf",
+     "board": "z20bG",
+     "board_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      14.12,
+      16.4
+     ],
+     "class": "Comment Row × Corner Edge @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 2,
+     "classification": "MJ-8 medium detent 手法：Comment List（yeWtr）height 改 0 且 clip:true，容器內留言列與大頭貼角托的 AABB 相交完全被裁切、不可見（TakeScreenshot 截圖確認 z20bG 板面乾淨、僅露出頭像一角＋輸入列，無可見錯位）——sibling/cross_parent 掃描不看 clip 祖先，此為機制副作用、非視覺缺陷，FiBvh／wY7f8（未套用 medium 手法）皆無此筆。"
+    },
+    {
+     "node_a": "hbUOc/MN0WF",
+     "node_b": "hbUOc/R1lbwf/sD5Ma",
+     "name_a": "Photo",
+     "name_b": "Corner Shape",
+     "parent_a": "hbUOc/lOPO7",
+     "parent_b": "hbUOc/R1lbwf",
+     "board": "z20bG",
+     "board_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      9.62,
+      9.62
+     ],
+     "class": "Photo × Corner Shape @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 8,
+     "classification": "cmp/Profile Print 既有 corner-out 設計（同上，跨 parent 版），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "hbUOc/MN0WF",
+     "node_b": "hbUOc/R1lbwf/DhOiK",
+     "name_a": "Photo",
+     "name_b": "Corner Edge",
+     "parent_a": "hbUOc/lOPO7",
+     "parent_b": "hbUOc/R1lbwf",
+     "board": "z20bG",
+     "board_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      9.62,
+      9.62
+     ],
+     "class": "Photo × Corner Edge @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 8,
+     "classification": "cmp/Profile Print 既有 corner-out 設計（同上，跨 parent 版），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "hbUOc/S4O4r8/sD5Ma",
+     "node_b": "OhIDI",
+     "name_a": "Corner Shape",
+     "name_b": "Footer",
+     "parent_a": "hbUOc/S4O4r8",
+     "parent_b": "p6U4it",
+     "board": "z20bG",
+     "board_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      16.4,
+      16.4
+     ],
+     "class": "Corner Shape × Footer @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 1,
+     "classification": "同上：Comment List 裁切為 0 高度後，其內留言列大頭貼角托與下方 Footer 的 AABB 相交但被 clip:true 祖先完全裁掉、不可見，截圖確認無可見錯位，機制副作用、非新缺陷。"
+    },
+    {
+     "node_a": "hbUOc/S4O4r8/DhOiK",
+     "node_b": "OhIDI",
+     "name_a": "Corner Edge",
+     "name_b": "Footer",
+     "parent_a": "hbUOc/S4O4r8",
+     "parent_b": "p6U4it",
+     "board": "z20bG",
+     "board_name": "LS-177 / 留言 sheet · medium (iPhone)",
+     "overlap": [
+      16.4,
+      16.4
+     ],
+     "class": "Corner Edge × Footer @ LS-177 / 留言 sheet · medium (iPhone)",
+     "count": 1,
+     "classification": "同上：Comment List 裁切為 0 高度後，其內留言列大頭貼角托與下方 Footer 的 AABB 相交但被 clip:true 祖先完全裁掉、不可見，截圖確認無可見錯位，機制副作用、非新缺陷。"
+    },
+    {
+     "node_a": "CJ2BA",
+     "node_b": "OJNI5",
+     "name_a": "Spacer 16",
+     "name_b": "Corner TL",
+     "parent_a": "iUM2a",
+     "parent_b": "x7R0d",
+     "board": "vzYXz",
+     "board_name": "LS-21 / 13 日記詳情 (iPhone)",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Spacer 16 × Corner TL @ LS-21 / 13 日記詳情 (iPhone)",
+     "count": 2,
+     "classification": "vzYXz（LS-21 / 13 日記詳情 iPhone）既有版面排版框與角托的既有交集，非本輪觸碰的照片格節點，既有設計。"
+    },
+    {
+     "node_a": "CJ2BA",
+     "node_b": "C57TMC",
+     "name_a": "Spacer 16",
+     "name_b": "Corner TR",
+     "parent_a": "iUM2a",
+     "parent_b": "x7R0d",
+     "board": "vzYXz",
+     "board_name": "LS-21 / 13 日記詳情 (iPhone)",
+     "overlap": [
+      26,
+      5
+     ],
+     "class": "Spacer 16 × Corner TR @ LS-21 / 13 日記詳情 (iPhone)",
+     "count": 2,
+     "classification": "vzYXz（LS-21 / 13 日記詳情 iPhone）既有版面排版框與角托的既有交集，非本輪觸碰的照片格節點，既有設計。"
+    },
+    {
+     "node_a": "FO005",
+     "node_b": "im7DS",
+     "name_a": "Corner BL",
+     "name_b": "Spacer Section",
+     "parent_a": "Nmk3C",
+     "parent_b": "iUM2a",
+     "board": "vzYXz",
+     "board_name": "LS-21 / 13 日記詳情 (iPhone)",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Corner BL × Spacer Section @ LS-21 / 13 日記詳情 (iPhone)",
+     "count": 1,
+     "classification": "vzYXz（LS-21 / 13 日記詳情 iPhone）既有版面排版框與角托的既有交集，非本輪觸碰的照片格節點，既有設計。"
+    },
+    {
+     "node_a": "a3oZ2",
+     "node_b": "im7DS",
+     "name_a": "Corner BR",
+     "name_b": "Spacer Section",
+     "parent_a": "Nmk3C",
+     "parent_b": "iUM2a",
+     "board": "vzYXz",
+     "board_name": "LS-21 / 13 日記詳情 (iPhone)",
+     "overlap": [
+      26,
+      5
+     ],
+     "class": "Corner BR × Spacer Section @ LS-21 / 13 日記詳情 (iPhone)",
+     "count": 1,
+     "classification": "vzYXz（LS-21 / 13 日記詳情 iPhone）既有版面排版框與角托的既有交集，非本輪觸碰的照片格節點，既有設計。"
+    },
+    {
+     "node_a": "aSlCA",
+     "node_b": "R0UbU/R1lbwf/sD5Ma",
+     "name_a": "Scrim",
+     "name_b": "Corner Shape",
+     "parent_a": "FiBvh",
+     "parent_b": "R0UbU/R1lbwf",
+     "board": "FiBvh",
+     "board_name": "LS-177 / 留言 sheet (iPhone)",
+     "overlap": [
+      16.4,
+      16.4
+     ],
+     "class": "Scrim × Corner Shape @ LS-177 / 留言 sheet (iPhone)",
+     "count": 8,
+     "classification": "Scrim 是覆蓋全板的半透明遮罩，與其下任何內容（含 avatar 角托）本就 AABB 相交，z-order 正確（Scrim 在下、Sheet/Card 在上），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "aSlCA",
+     "node_b": "R0UbU/R1lbwf/DhOiK",
+     "name_a": "Scrim",
+     "name_b": "Corner Edge",
+     "parent_a": "FiBvh",
+     "parent_b": "R0UbU/R1lbwf",
+     "board": "FiBvh",
+     "board_name": "LS-177 / 留言 sheet (iPhone)",
+     "overlap": [
+      16.4,
+      16.4
+     ],
+     "class": "Scrim × Corner Edge @ LS-177 / 留言 sheet (iPhone)",
+     "count": 8,
+     "classification": "Scrim 是覆蓋全板的半透明遮罩，與其下任何內容（含 avatar 角托）本就 AABB 相交，z-order 正確（Scrim 在下、Sheet/Card 在上），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "R0UbU/MN0WF",
+     "node_b": "R0UbU/R1lbwf/sD5Ma",
+     "name_a": "Photo",
+     "name_b": "Corner Shape",
+     "parent_a": "R0UbU/lOPO7",
+     "parent_b": "R0UbU/R1lbwf",
+     "board": "FiBvh",
+     "board_name": "LS-177 / 留言 sheet (iPhone)",
+     "overlap": [
+      9.62,
+      9.62
+     ],
+     "class": "Photo × Corner Shape @ LS-177 / 留言 sheet (iPhone)",
+     "count": 8,
+     "classification": "cmp/Profile Print 既有 corner-out 設計（同上，跨 parent 版），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "R0UbU/MN0WF",
+     "node_b": "R0UbU/R1lbwf/DhOiK",
+     "name_a": "Photo",
+     "name_b": "Corner Edge",
+     "parent_a": "R0UbU/lOPO7",
+     "parent_b": "R0UbU/R1lbwf",
+     "board": "FiBvh",
+     "board_name": "LS-177 / 留言 sheet (iPhone)",
+     "overlap": [
+      9.62,
+      9.62
+     ],
+     "class": "Photo × Corner Edge @ LS-177 / 留言 sheet (iPhone)",
+     "count": 8,
+     "classification": "cmp/Profile Print 既有 corner-out 設計（同上，跨 parent 版），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "ZXg82",
+     "node_b": "vlX7W/R1lbwf/sD5Ma",
+     "name_a": "Scrim",
+     "name_b": "Corner Shape",
+     "parent_a": "wY7f8",
+     "parent_b": "vlX7W/R1lbwf",
+     "board": "wY7f8",
+     "board_name": "LS-177 / 留言 sheet (iPad 11\")",
+     "overlap": [
+      16.4,
+      16.4
+     ],
+     "class": "Scrim × Corner Shape @ LS-177 / 留言 sheet (iPad 11\")",
+     "count": 8,
+     "classification": "Scrim 是覆蓋全板的半透明遮罩，與其下任何內容（含 avatar 角托）本就 AABB 相交，z-order 正確（Scrim 在下、Sheet/Card 在上），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "ZXg82",
+     "node_b": "vlX7W/R1lbwf/DhOiK",
+     "name_a": "Scrim",
+     "name_b": "Corner Edge",
+     "parent_a": "wY7f8",
+     "parent_b": "vlX7W/R1lbwf",
+     "board": "wY7f8",
+     "board_name": "LS-177 / 留言 sheet (iPad 11\")",
+     "overlap": [
+      16.4,
+      16.4
+     ],
+     "class": "Scrim × Corner Edge @ LS-177 / 留言 sheet (iPad 11\")",
+     "count": 8,
+     "classification": "Scrim 是覆蓋全板的半透明遮罩，與其下任何內容（含 avatar 角托）本就 AABB 相交，z-order 正確（Scrim 在下、Sheet/Card 在上），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "vlX7W/MN0WF",
+     "node_b": "vlX7W/R1lbwf/sD5Ma",
+     "name_a": "Photo",
+     "name_b": "Corner Shape",
+     "parent_a": "vlX7W/lOPO7",
+     "parent_b": "vlX7W/R1lbwf",
+     "board": "wY7f8",
+     "board_name": "LS-177 / 留言 sheet (iPad 11\")",
+     "overlap": [
+      9.62,
+      9.62
+     ],
+     "class": "Photo × Corner Shape @ LS-177 / 留言 sheet (iPad 11\")",
+     "count": 8,
+     "classification": "cmp/Profile Print 既有 corner-out 設計（同上，跨 parent 版），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    },
+    {
+     "node_a": "vlX7W/MN0WF",
+     "node_b": "vlX7W/R1lbwf/DhOiK",
+     "name_a": "Photo",
+     "name_b": "Corner Edge",
+     "parent_a": "vlX7W/lOPO7",
+     "parent_b": "vlX7W/R1lbwf",
+     "board": "wY7f8",
+     "board_name": "LS-177 / 留言 sheet (iPad 11\")",
+     "overlap": [
+      9.62,
+      9.62
+     ],
+     "class": "Photo × Corner Edge @ LS-177 / 留言 sheet (iPad 11\")",
+     "count": 8,
+     "classification": "cmp/Profile Print 既有 corner-out 設計（同上，跨 parent 版），FiBvh／wY7f8／z20bG 三板同一組數字，既有設計、非本輪新增問題。"
+    }
+   ],
+   "result_hash": "b55bd5a1fc9f2fbe"
+  },
+  "corner_anchor": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "z20bG",
+    "JbTfv",
+    "yXSht",
+    "go7f9",
+    "vzYXz",
+    "MjRcr",
+    "yec61",
+    "FiBvh",
+    "wY7f8",
+    "H73kPC"
+   ],
+   "containers": 11,
+   "points": 88,
+   "mismatch": 0,
+   "flagged": [],
+   "unresolved": [],
+   "ref_hits": 28,
+   "ref_hits_defs": 0,
+   "document_containers": 11,
+   "document_points": 88,
+   "document_mismatch": 0,
+   "document_flagged": [],
+   "document_unresolved": [],
+   "result_hash": "3ef650f2f7ccc294"
+  },
+  "text_occlusion": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "z20bG",
+    "JbTfv",
+    "yXSht",
+    "go7f9",
+    "vzYXz",
+    "MjRcr",
+    "yec61",
+    "FiBvh",
+    "wY7f8",
+    "H73kPC"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "b395c80e1ee4cb14"
+  },
+  "board_clip": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "z20bG",
+    "JbTfv",
+    "yXSht",
+    "go7f9",
+    "vzYXz",
+    "MjRcr",
+    "yec61",
+    "FiBvh",
+    "wY7f8",
+    "H73kPC"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "f6e4ca3fd472bc92"
+  }
+ }
+}
