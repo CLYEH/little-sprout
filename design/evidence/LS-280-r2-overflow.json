@@ -1,0 +1,325 @@
+{
+  "ticket": "LS-280",
+  "round": 2,
+  "head_sha": "3c8e12a48055b99fa84f1a215cd48e643ad826fb",
+  "total_nodes": 10342,
+  "tree_hash": "1db4cd08f8a7870a",
+  "scan_scope": "boards",
+  "scan_note": "改走正典腳本檔頭第 2 種執行環境（orchestrator 08:44 裁定＋VR R1 建議，取代 R1 的精簡 snippet 手法）：Pencil 端先跑 resolveInstances:false 全稿走訪收 refMap，再對 SCAN_BOARDS=[yXSht,go7f9,JbTfv,c2yk3s,Vn4TL,ak7RI,b59DUk,ZRyXL,MjRcr,vzYXz,H73kPC,yec61]（本輪直接動過節點的 yXSht/go7f9/JbTfv/MjRcr/vzYXz 五板＋視覺受影響的 c2yk3s/Vn4TL/ak7RI/b59DUk/ZRyXL 五塊 App Store 海報板＋Notes 板 H73kPC＋R2c 補動的 LS-119 Notes 板 yec61）逐板 resolveInstances:true 走訪，把每個節點壓成緊湊陣列 [id,name,parent,type,ref,enabled,clip,image,x,y,w,h] 用 Print(\"SNAPn \"+JSON.stringify(...)) 分批印出（單次 Print 73180 字元，超過約 7 萬字元自動存成本機檔，未手動觸發任何截斷）；node 端讀該檔案、正則抽取 SNAP 行還原節點陣列，直接 require('scripts/design/overflow-scan.js')（未修改，逐字原檔）取 scanAll／summaryLine／cornerWarnings／compactLines／compactResult／withResultHashes 六個匯出函式跑六支——不再手抄／精簡任何掃描邏輯。過程分三個子階段：①first pass（head_sha 前身 d045fa3）六支抓到兩處新引入缺陷（corner_anchor mismatch=2：eBgN8 caption 換短後容器變矮、Corner BL/BR 絕對座標未跟著收縮；row_overflow 多 1 筆：R2 Notes 新段落標題過長）並已修正落地；②design-notes-check.sh 另外抓到 LS-119 Notes（yec61/ArkP3）對本輪刪除重建的 xrCoj 死 id 引用，補沿革寫法落地（commit 3c8e12a，純文字內容變更，不影響任何節點幾何／不改變六支數字，經本次重跑逐支計數確認 117/24/8/0/0/0 與 d045fa3 版本完全相同，只有 tree_hash／result_hash 隨內容雜湊變動）；③本收據即對 head_sha=3c8e12a（本 PR 對這份 .pen 最後一次 commit）這份快照的單一次掃描（同一 Pencil execute 快照，未拼接、未跨稿態）。sibling_intersection／row_overflow／cross_parent_collision 命中全數為角托 corner-out 5pt 規格、Stack Sheet／More Scrim 堆疊效果、裝置外框壓印品母題等既有結構性刻意重疊，非缺陷，逐類附 classification。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 117,
+      "result_hash": "b9e6b26c9d3d60ce",
+      "flagged": [
+        {
+          "node_a": "Z4TsQ/tBi8u",
+          "node_b": "Z4TsQ/xlLIo",
+          "class": "Ghost × Stamp @ Stamp Wrap",
+          "count": 6,
+          "classification": "既有版面元素（非本票引入）——Stamp Wrap 元件內建的 Ghost 與 Stamp 兩層刻意疊放，本票未動此元件"
+        },
+        {
+          "node_a": "Oh3Om/bjq5n",
+          "node_b": "Oh3Om/INXbk",
+          "class": "Photo Wrap × Corner TL @ Photo Print",
+          "count": 4,
+          "classification": "刻意重疊——角托 corner-out 5pt 規格（tokens.md corner-out=5），corner_anchor 掃描已核對全部 120 個錨點座標、mismatch=0（同 LS-247/LS-280 R1 precedent）"
+        },
+        {
+          "node_a": "Oh3Om/bjq5n",
+          "node_b": "Oh3Om/O6ami",
+          "class": "Photo Wrap × Corner TR @ Photo Print",
+          "count": 4,
+          "classification": "刻意重疊——同類，見 Photo Wrap × Corner TL @ Photo Print 說明"
+        },
+        {
+          "node_a": "Oh3Om/KRUtz",
+          "node_b": "Oh3Om/SNbd8",
+          "class": "Imprint Row × Corner BL @ Photo Print",
+          "count": 4,
+          "classification": "刻意重疊——同類，見 Photo Wrap × Corner TL @ Photo Print 說明"
+        },
+        {
+          "node_a": "Oh3Om/KRUtz",
+          "node_b": "Oh3Om/P15GB",
+          "class": "Imprint Row × Corner BR @ Photo Print",
+          "count": 4,
+          "classification": "刻意重疊——同類，見 Photo Wrap × Corner TL @ Photo Print 說明"
+        },
+        {
+          "node_a": "Oh3Om/INXbk/sD5Ma",
+          "node_b": "Oh3Om/INXbk/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 15,
+          "classification": "刻意重疊——cmp/Photo Corner 元件內部 Corner Shape 與 Corner Edge 兩層同尺寸疊放構成單一角托的立體邊緣效果，屬元件內部結構，非跨節點碰撞"
+        },
+        {
+          "node_a": "Oh3Om/O6ami/sD5Ma",
+          "node_b": "Oh3Om/O6ami/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 15,
+          "classification": "刻意重疊——同類，見 Corner Shape × Corner Edge @ Corner TL 說明"
+        },
+        {
+          "node_a": "Oh3Om/SNbd8/sD5Ma",
+          "node_b": "Oh3Om/SNbd8/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 15,
+          "classification": "刻意重疊——同類，見 Corner Shape × Corner Edge @ Corner TL 說明"
+        },
+        {
+          "node_a": "Oh3Om/P15GB/sD5Ma",
+          "node_b": "Oh3Om/P15GB/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 15,
+          "classification": "刻意重疊——同類，見 Corner Shape × Corner Edge @ Corner TL 說明"
+        },
+        {
+          "node_a": "WitwS/uZ5Lt",
+          "node_b": "WitwS/kVUWa",
+          "class": "Stack Sheet 2 × Stack Sheet 1 @ Photo C",
+          "count": 1,
+          "classification": "既有版面元素（非本票引入）——Card Diary『更多照片』堆疊視覺效果，兩張 Stack Sheet 刻意疊放模擬相片堆疊厚度，本票只 override 了圖片 fill，未動堆疊結構"
+        },
+        {
+          "node_a": "WitwS/ekqx4",
+          "node_b": "WitwS/GCEdk",
+          "class": "Thumb C × More Scrim @ Photo C",
+          "count": 1,
+          "classification": "既有版面元素（非本票引入）——同一堆疊效果的遮罩層（More Scrim）蓋在第三張縮圖上顯示『還有 N 張』"
+        },
+        {
+          "node_a": "n2VSQy",
+          "node_b": "Egn9A",
+          "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ LS-21 / 11 時間軸 (iPhone)",
+          "count": 1,
+          "classification": "既有版面元素（非本票引入）——底部浮動 Tab Bar 本就蓋在內容捲動區前緣淨空的 Spacer 之上，yXSht 既有結構"
+        },
+        {
+          "node_a": "gfP0F",
+          "node_b": "s1Kzm",
+          "class": "Device Frame × Hero Print @ App Store / iPhone 6.9 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意重疊——裝置外框（Device Frame）疊在 Hero Print 母題上方作為展示模擬外殼，設計即需要外框壓在內容之上（同 LS-247 precedent，本票未動此二節點）"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "Mt7RR",
+          "class": "Print × Corner BL @ Hero Print",
+          "count": 1,
+          "classification": "刻意重疊——角托 corner-out 5pt 規格，見 Photo Wrap × Corner TL @ Photo Print 說明"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "k7LmU",
+          "class": "Print × Corner BR @ Hero Print",
+          "count": 1,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Hero Print 說明"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "ASXNn",
+          "class": "Print × Corner TL @ Hero Print",
+          "count": 1,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Hero Print 說明"
+        },
+        {
+          "node_a": "FKjPv",
+          "node_b": "KqlsB",
+          "class": "Print × Corner TR @ Hero Print",
+          "count": 1,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Hero Print 說明"
+        },
+        {
+          "node_a": "QqTID",
+          "node_b": "N3mjp6",
+          "class": "Device Frame × Print Stage @ App Store / iPad 13 / 01 時間軸",
+          "count": 1,
+          "classification": "刻意重疊——同 Device Frame × Hero Print 說明，iPad 版裝置外框壓在 Print Stage 母題上方"
+        },
+        {
+          "node_a": "JyHDo",
+          "node_b": "ugNXv",
+          "class": "Print × Corner BL @ Print Stage",
+          "count": 3,
+          "classification": "刻意重疊——角托 corner-out 5pt 規格，見 Photo Wrap × Corner TL @ Photo Print 說明"
+        },
+        {
+          "node_a": "JyHDo",
+          "node_b": "sISpf",
+          "class": "Print × Corner BR @ Print Stage",
+          "count": 3,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Print Stage 說明"
+        },
+        {
+          "node_a": "JyHDo",
+          "node_b": "CIxhg",
+          "class": "Print × Corner TL @ Print Stage",
+          "count": 3,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Print Stage 說明"
+        },
+        {
+          "node_a": "JyHDo",
+          "node_b": "w0qZ1n",
+          "class": "Print × Corner TR @ Print Stage",
+          "count": 3,
+          "classification": "刻意重疊——同類，見 Print × Corner BL @ Print Stage 說明"
+        },
+        {
+          "node_a": "P08Jb",
+          "node_b": "b0dORT",
+          "class": "Photo Wrap × Corner TL @ Print Cell",
+          "count": 7,
+          "classification": "刻意重疊——角托 corner-out 5pt 規格，見 Photo Wrap × Corner TL @ Photo Print 說明（MjRcr 日記詳情頁 4 格照片牆的個別 Print Cell 容器）"
+        },
+        {
+          "node_a": "P08Jb",
+          "node_b": "v8xvB",
+          "class": "Photo Wrap × Corner TR @ Print Cell",
+          "count": 7,
+          "classification": "刻意重疊——同類，見 Photo Wrap × Corner TL @ Print Cell 說明"
+        }
+      ]
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 24,
+      "result_hash": "e08292f70855368a",
+      "flagged": [
+        {
+          "node": "Oh3Om/O6ami",
+          "classification": "刻意——角托 corner-out 5pt 規格，右緣故意超出紙面 5pt（同 precedent，非缺陷；同類 4 例，對應四塊已修復印品容器）"
+        },
+        {
+          "node": "Oh3Om/P15GB",
+          "classification": "刻意——同上，見 Oh3Om/O6ami 說明"
+        },
+        {
+          "node": "WitwS/uZ5Lt",
+          "classification": "既有版面元素（非本票引入）——Card Diary『更多照片』堆疊效果的 Stack Sheet，本票未動堆疊結構"
+        },
+        {
+          "node": "WitwS/kVUWa",
+          "classification": "既有版面元素（非本票引入）——同上"
+        },
+        {
+          "node": "v8xvB",
+          "classification": "刻意——角托 corner-out 5pt 規格，MjRcr 4 格照片牆 Print Cell 容器右緣（同類 7 例，對應 7 個角托）"
+        },
+        {
+          "node": "DRWaQ",
+          "classification": "刻意——同上，見 v8xvB 說明"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 8,
+      "result_hash": "f6325e37db6daa59",
+      "flagged": [
+        {
+          "node_a": "eBgN8/Qjdzx",
+          "node_b": "rsoPm",
+          "classification": "刻意重疊的邊際副作用——eBgN8（Card Album）R2 修正角托 y 後，其『更多照片』Stack Sheet 底緣往下延伸 4pt 觸及下方相鄰卡片 rsoPm 的頂緣，屬 corner-out／stack 既有堆疊厚度的自然延伸，非新引入的版面錯位（同類 2 例，Stack Sheet 1／2 各一）"
+        },
+        {
+          "node_a": "eBgN8/o5O1GD",
+          "node_b": "rsoPm",
+          "classification": "刻意重疊，見 eBgN8/Qjdzx 說明"
+        },
+        {
+          "node_a": "CJ2BA",
+          "node_b": "OJNI5",
+          "classification": "既有版面元素（非本票引入）——vzYXz（LS-21/13 日記詳情 iPhone）既有結構，Hero Print 角托 corner-out 5pt 蓋入相鄰 Spacer 16，本票只 override 了 vzYXz 內 3 個 Photo Wrap 的圖片 fill 與日記本文，未動此區塊版面（同類 2 例，Corner TL／TR 各一）"
+        },
+        {
+          "node_a": "CJ2BA",
+          "node_b": "C57TMC",
+          "classification": "既有版面元素（非本票引入），見 CJ2BA×OJNI5 說明"
+        },
+        {
+          "node_a": "FO005",
+          "node_b": "im7DS",
+          "classification": "既有版面元素（非本票引入）——vzYXz 既有結構，Corner BL 角托 corner-out 5pt 蓋入 Spacer Section，本票未動此區塊版面"
+        },
+        {
+          "node_a": "a3oZ2",
+          "node_b": "im7DS",
+          "classification": "既有版面元素（非本票引入），見 FO005×im7DS 說明"
+        }
+      ]
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "835645dad9be84ee",
+      "boards": [
+        "yXSht",
+        "go7f9",
+        "JbTfv",
+        "c2yk3s",
+        "Vn4TL",
+        "ak7RI",
+        "b59DUk",
+        "ZRyXL",
+        "MjRcr",
+        "vzYXz",
+        "H73kPC",
+        "yec61"
+      ],
+      "containers": 15,
+      "points": 120,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 15,
+      "document_points": 120,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "ref_hits": 44,
+      "unresolved": []
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "f7f5bcf600d68d6e",
+      "flagged": [],
+      "document_flagged": [],
+      "boards": [
+        "yXSht",
+        "go7f9",
+        "JbTfv",
+        "c2yk3s",
+        "Vn4TL",
+        "ak7RI",
+        "b59DUk",
+        "ZRyXL",
+        "MjRcr",
+        "vzYXz",
+        "H73kPC",
+        "yec61"
+      ]
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "3b44bf27b6647eec",
+      "flagged": [],
+      "document_flagged": [],
+      "boards": [
+        "yXSht",
+        "go7f9",
+        "JbTfv",
+        "c2yk3s",
+        "Vn4TL",
+        "ak7RI",
+        "b59DUk",
+        "ZRyXL",
+        "MjRcr",
+        "vzYXz",
+        "H73kPC",
+        "yec61"
+      ]
+    }
+  }
+}
