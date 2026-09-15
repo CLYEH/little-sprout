@@ -50,10 +50,26 @@
 //      沒有「送一次全文、後面各批只帶 id」這種省法，分批的 token 成本＝本檔字元數 × 批數。取捨：要跑六支就只能送全文；
 //      若這一輪只需要 `tree_hash`（例如 VR 複核新鮮度、或 pen-read.sh exit 3 的自行複算），改送**極小的 hash-only
 //      snippet**便宜得多（LS-247 VR R3 實測 1.3k 字元 × 15 批，成本約送全文的 1/10）。
+//   1c. 唯讀快照 dump 模式（LS-289，**≥8k 節點稿的建議做法**，取代 1b 分批模式作為首選——分批仍可用，留作備選）：
+//      Pencil 端改送輕量很多的 `scripts/design/pen-snapshot-dump.js`（只做唯讀走訪＋印快照，不含六支演算法本體，
+//      LS-280 VR R2–R6 六輪實測比帶完整 92 KB 正典腳本的 execute 穩定、不必分批重試）——把該檔全文送進
+//      `mcp__pencil__execute`，回收 `SNAP<n> [...]` 行（或其因 >7 萬字元自動落檔的內容），貼進同一份 dump 檔；
+//      再用 node 端 `node scripts/design/overflow-scan.js --from-snapshot <dump 檔> --tree-hash <16 碼 hex>
+//      --total-nodes <n> [--boards a,b,…] [--out receipt.json]` 讀 dump（支援 `SNAP<n>` 行格式與純 JSON 陣列）、
+//      跑**未修改的** `scanAll`＋六支＋`withResultHashes`，輸出與 `RESULT-JSON`／`--merge` 同形狀的收據（`scan_scope`
+//      依 `--boards` 有無；`scan_note` 自動填 `"snapshot mode，dump sha256=<…>"`）。**`--tree-hash`／`--total-nodes`
+//      必填**：dump 只是展開 instance 後的緊湊快照（12 個欄位），無法從中重算出與 `.pen` 原始未展開全樹相同的
+//      `tree_hash`／`total_nodes`（那需要全部節點的完整屬性）——另外用既有 `SCAN_HASH_ONLY` 走訪，或
+//      `scripts/gates/design_tree_hash.py` 對同一稿態（同一次落地、掃描前無寫入）離線算好再傳入（LS-280 R2／R3
+//      實際做法：對已落地 commit 的 `.pen` 離線重算）。與 1b 分批模式的取捨：1b 每批都要重送整支 92 KB 正典腳本
+//      （token 成本＝腳本字元數 × 批數），1c 只送一次輕量 dump 腳本（視稿的大小可能仍要分批 Print，但腳本本身
+//      小很多、interrupted 機率低很多）；六支演算法與 `result_hash`／`tree_hash` 算法兩條路徑完全共用
+//      `scanAll`／`withResultHashes`（`--merge` 與 `--from-snapshot` 都只是不同的「怎麼取得節點快照」前處理），
+//      `overflow-scan.test.js` 釘住兩條路徑對同一份快照六支 `result_hash`＋`tree_hash` 逐位元相同。
 //   2. node：`require` 本檔取得純函數（`scanAll` 與六支 `scan*`、`treeHash`／`treeHashLines`／`canonNode`、分批的 `batchRange`／
 //      `mergeBatches`／`compactScans`／`withResultHashes`），`scripts/design/overflow-scan.test.js` 用合成節點樹驗演算法、並以 python
 //      交叉驗 tree_hash／result_hash 同值；CI rules job 的自測 step 跑它。直接執行＝`--merge` CLI（見 1b；node 端環境變數
-//      `SCAN_BATCH_SIZE` 覆寫 batchRange 的預設批大小）。掃描核心不碰 Pencil API，Pen 不在時也能驗。注意：.pen JSON 只存 root／absolute
+//      `SCAN_BATCH_SIZE` 覆寫 batchRange 的預設批大小）或 `--from-snapshot` CLI（見 1c）。掃描核心不碰 Pencil API，Pen 不在時也能驗。注意：.pen JSON 只存 root／absolute
 //      節點的 x／y，layout 子節點的絕對座標要 Pencil 版面引擎才算得出——離線 node 能驗的是演算法與 tree_hash，不是真實稿的六支數字。
 //
 // 節點快照格式（純函數的唯一輸入）：陣列，父先於子（top-down，陣列順序＝繪製順序，第五支據此判 z-order），每筆：
@@ -1048,8 +1064,97 @@ function extractBatchJson(text, name) {
   if (!line) throw new Error("overflow-scan merge：" + name + " 既不是 JSON、也找不到 `BATCH-JSON ` 行");
   return JSON.parse(line.slice("BATCH-JSON ".length));
 }
+
+// ---- LS-289：--from-snapshot（讀 scripts/design/pen-snapshot-dump.js 的唯讀快照 dump，跑未修改的 scanAll）----
+// dump 兩種格式（與 pen-snapshot-dump.js 檔頭「取回」段同規格，parser 與既有 vr-scan.js／vr-scan2.js 一致）：
+//   ① 純 JSON 陣列：整份檔案就是 rows 陣列（pen-snapshot-dump.js 落地檔、或既有 snap-r2.json／snap-r3.json 的形狀）。
+//   ② `SNAP<n> [...]` 行格式：pen-snapshot-dump.js 分批 Print 的原文（含其他行也沒關係，parser 只挑這個前綴），
+//      n 不拘順序，把各行的陣列依序串接。
+// 每筆 row＝[id, name, parent, type, ref, enabled(0/1), clip(0/1), image(0/1), x, y, w, h]（絕對座標 AABB，
+// 與 canonNode／snapVisit 同構的欄位子集——buildIndex 期待的節點形狀）。
+function parseSnapshotDump(text) {
+  const t = String(text);
+  const trimmed = t.trim();
+  let rows;
+  if (trimmed.startsWith("[")) {
+    rows = JSON.parse(trimmed);
+  } else {
+    // 依 SNAP<n> 的數字 n 排序後才串接（不是檔案裡的物理行序）——分批落檔（>7 萬字元自動落本機檔）後手動貼回同一個
+    // 檔案時，物理行序不一定與 n 一致，節點順序影響同一父節點下兄弟的相對序（sibling_intersection 的配對序、
+    // text_occlusion 的 z-order），排序後才能保證與 Pencil 端印出的順序（＝pre-order／繪製順序）一致。
+    const segs = [];
+    for (const line of t.split("\n")) {
+      const m = /^SNAP(\d+)\s+(\[.*\])\s*$/.exec(line.trim());
+      if (m) segs.push([Number(m[1]), JSON.parse(m[2])]);
+    }
+    if (!segs.length) throw new Error("overflow-scan --from-snapshot：dump 既不是 JSON 陣列開頭、也找不到任何 `SNAP<n> [...]` 行（scripts/design/pen-snapshot-dump.js 的輸出格式）");
+    segs.sort((a, b) => a[0] - b[0]);
+    rows = [];
+    for (const [, arr] of segs) for (const r of arr) rows.push(r);
+  }
+  if (!Array.isArray(rows)) throw new Error("overflow-scan --from-snapshot：dump 解析結果不是陣列");
+  return rows.map((r, i) => {
+    if (!Array.isArray(r) || r.length < 12) throw new Error("overflow-scan --from-snapshot：dump 第 " + i + " 筆不是 12 欄的節點陣列（收到 " + JSON.stringify(r) + "）");
+    const [id, name, parent, type, ref, enabled, clip, image, x, y, w, h] = r;
+    return { id, name, parent, type, ref: ref == null ? undefined : ref, enabled: enabled === 1 || enabled === true, clip: clip === 1 || clip === true, image: image === 1 || image === true, x, y, w, h };
+  });
+}
+
+// `--tree-hash`／`--total-nodes` 必填：dump 是展開 instance 後的緊湊快照（只有六支演算法要用的 12 個欄位），無法從中
+// 重算出與 `.pen` 原始未展開全樹相同的 `tree_hash`／`total_nodes`（那需要全部節點的完整屬性）——須另外用既有
+// `SCAN_HASH_ONLY` 走訪，或 `scripts/gates/design_tree_hash.py` 對同一稿態離線算好再傳入（LS-280 R2／R3 實際做法：
+// 對已落地 commit 的 `.pen` 離線重算，見該票收據 `scan_note`）。輸出＝收據形狀（同 `RESULT-JSON`／`--merge`），
+// `scan_note` 自動填 `"snapshot mode，dump sha256=<dump 檔內容的 sha256>"`；`ticket`／`round`／`head_sha` 與 `--merge`
+// 一樣不填，由設計端照抄收據再補（design-evidence-check.sh 只驗 `scan_note` 非空字串，見該檔）。
+function cliFromSnapshot(argv, fs, stdout, stderr) {
+  const usage = "用法：node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash <16碼hex> --total-nodes <n> [--boards a,b,…] [--out <receipt.json>]";
+  let dumpPath = null, outPath = null, boardsArg = null, treeHash = null, totalNodesArg = null;
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--boards") { boardsArg = argv[++i]; if (boardsArg == null) { stderr("✗ --boards 缺值\n" + usage); return 2; } }
+    else if (a === "--out") { outPath = argv[++i]; if (outPath == null) { stderr("✗ --out 缺值\n" + usage); return 2; } }
+    else if (a === "--tree-hash") { treeHash = argv[++i]; if (treeHash == null) { stderr("✗ --tree-hash 缺值\n" + usage); return 2; } }
+    else if (a === "--total-nodes") { totalNodesArg = argv[++i]; if (totalNodesArg == null) { stderr("✗ --total-nodes 缺值\n" + usage); return 2; } }
+    else if (dumpPath == null) { dumpPath = a; }
+    else { stderr("✗ 未知參數 " + a + "\n" + usage); return 2; }
+  }
+  if (!dumpPath) { stderr("✗ 缺 dump 路徑\n" + usage); return 2; }
+  if (typeof treeHash !== "string" || !/^[0-9a-f]{16}$/.test(treeHash)) {
+    stderr("✗ --tree-hash 須為 16 碼小寫 hex（收到 " + JSON.stringify(treeHash) + "）——快照 dump 無法重算出與 .pen 原始未展開全樹相同的 tree_hash，須另外算好再傳入（見上方註解）\n" + usage);
+    return 2;
+  }
+  if (typeof totalNodesArg !== "string" || !/^\d+$/.test(totalNodesArg)) {
+    stderr("✗ --total-nodes 須為非負整數（收到 " + JSON.stringify(totalNodesArg) + "）\n" + usage);
+    return 2;
+  }
+  let text;
+  try { text = fs.readFileSync(dumpPath, "utf8"); } catch (e) { stderr("✗ 讀不到 dump「" + dumpPath + "」：" + (e && e.message ? e.message : e)); return 1; }
+  let nodes;
+  try { nodes = parseSnapshotDump(text); } catch (e) { stderr("✗ " + (e && e.message ? e.message : e)); return 1; }
+  const boards = boardsArg ? boardsArg.split(",").map((s) => s.trim()).filter(Boolean) : [];
+  const scanScope = boards.length ? "boards" : "document";
+  let out;
+  try {
+    out = scanAll(nodes, scanScope === "boards" ? { boards, scanScope } : { scanScope });
+  } catch (e) { stderr("✗ " + (e && e.message ? e.message : e)); return 1; }
+  out.total_nodes = Number(totalNodesArg);
+  out.tree_hash = treeHash;
+  out.flags = { cross_all: false, custom_overlay_re: false };
+  const sha = require("crypto").createHash("sha256").update(text).digest("hex");
+  const receipt = withResultHashes(compactResult(out));
+  receipt.scan_note = "snapshot mode，dump sha256=" + sha;
+  stderr(summaryLine(receipt));
+  for (const w of cornerWarnings(receipt.scans.corner_anchor)) stderr("WARNING " + w);
+  for (const block of compactLines(receipt)) stderr(block);
+  const json = JSON.stringify(receipt) + "\n";
+  if (outPath) fs.writeFileSync(outPath, json); else stdout(json);
+  return 0;
+}
+
 function cli(argv, fs, stdout, stderr) {
-  const usage = "用法：node scripts/design/overflow-scan.js --merge <batch-1> … <batch-K> [--out <merged.json>]";
+  const usage = "用法：node scripts/design/overflow-scan.js --merge <batch-1> … <batch-K> [--out <merged.json>]\n" +
+    "      node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash <16碼hex> --total-nodes <n> [--boards a,b,…] [--out <receipt.json>]";
+  if (argv[0] === "--from-snapshot") return cliFromSnapshot(argv.slice(1), fs, stdout, stderr);
   if (argv[0] !== "--merge") { stderr(usage); return 2; }
   const files = [];
   let outPath = null;
@@ -1238,7 +1343,7 @@ if (typeof Get === "function" && typeof Print === "function") {
   }
   }
 } else if (typeof module === "object" && module && module.exports) {
-  module.exports = { AREA_MIN, TOL, CORNER_OUT, PHOTO_CORNER_ID, PHOTO_CORNER_NAME, CORNER_NAME_RE, CORNER_VARIANT_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, DEFAULT_BATCH_SIZE, SCAN_KEYS, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, cornerComponentIds, cornerWarnings, CLASS_KEYS, IDENTITY, resultHashLines, resultHash, withResultHashes, compactScans, compactResult, compactLines, pairEntry, primaryFilter, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, batchRange, defaultBatchSize, mergeBatches, summaryLine, extractBatchJson, cli, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
+  module.exports = { AREA_MIN, TOL, CORNER_OUT, PHOTO_CORNER_ID, PHOTO_CORNER_NAME, CORNER_NAME_RE, CORNER_VARIANT_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, DEFAULT_BATCH_SIZE, SCAN_KEYS, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, cornerComponentIds, cornerWarnings, CLASS_KEYS, IDENTITY, resultHashLines, resultHash, withResultHashes, compactScans, compactResult, compactLines, pairEntry, primaryFilter, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, batchRange, defaultBatchSize, mergeBatches, summaryLine, extractBatchJson, parseSnapshotDump, cliFromSnapshot, cli, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
   if (typeof require === "function" && require.main === module) {
     process.exitCode = cli(process.argv.slice(2), require("fs"), (t) => process.stdout.write(t), (t) => process.stderr.write(t + "\n"));
   }
