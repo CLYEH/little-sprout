@@ -5,7 +5,7 @@
   "total_nodes": 10342,
   "tree_hash": "1db4cd08f8a7870a",
   "scan_scope": "boards",
-  "scan_note": "改走正典腳本檔頭第 2 種執行環境（orchestrator 08:44 裁定＋VR R1 建議，取代 R1 的精簡 snippet 手法）：Pencil 端先跑 resolveInstances:false 全稿走訪收 refMap，再對 SCAN_BOARDS=[yXSht,go7f9,JbTfv,c2yk3s,Vn4TL,ak7RI,b59DUk,ZRyXL,MjRcr,vzYXz,H73kPC]（本輪直接動過節點的 yXSht/go7f9/JbTfv/MjRcr/vzYXz 五板＋視覺受影響的 c2yk3s/Vn4TL/ak7RI/b59DUk/ZRyXL 五塊 App Store 海報板＋Notes 板 H73kPC）逐板 resolveInstances:true 走訪，把每個節點壓成緊湊陣列 [id,name,parent,type,ref,enabled,clip,image,x,y,w,h] 用 Print(\"SNAPn \"+JSON.stringify(...)) 分批印出（單次 Print 73180 字元，超過約 7 萬字元自動存成本機檔，未手動觸發任何截斷）；node 端讀該檔案、正則抽取 SNAP 行還原節點陣列，直接 require('scripts/design/overflow-scan.js')（未修改，逐字原檔）取 scanAll／summaryLine／cornerWarnings／compactLines／compactResult／withResultHashes 六個匯出函式跑六支——不再手抄／精簡任何掃描邏輯。過程分三個子階段：①first pass（head_sha 前身 d045fa3）六支抓到兩處新引入缺陷（corner_anchor mismatch=2：eBgN8 caption 換短後容器變矮、Corner BL/BR 絕對座標未跟著收縮；row_overflow 多 1 筆：R2 Notes 新段落標題過長）並已修正落地；②design-notes-check.sh 另外抓到 LS-119 Notes（yec61/ArkP3）對本輪刪除重建的 xrCoj 死 id 引用，補沿革寫法落地（commit 3c8e12a，純文字內容變更，不影響任何節點幾何／不改變六支數字，經本次重跑逐支計數確認 117/24/8/0/0/0 與 d045fa3 版本完全相同，只有 tree_hash／result_hash 隨內容雜湊變動）；③本收據即對 head_sha=3c8e12a（本 PR 對這份 .pen 最後一次 commit）這份快照的單一次掃描（同一 Pencil execute 快照，未拼接、未跨稿態）。sibling_intersection／row_overflow／cross_parent_collision 命中全數為角托 corner-out 5pt 規格、Stack Sheet／More Scrim 堆疊效果、裝置外框壓印品母題等既有結構性刻意重疊，非缺陷，逐類附 classification。",
+  "scan_note": "改走正典腳本檔頭第 2 種執行環境（orchestrator 08:44 裁定＋VR R1 建議，取代 R1 的精簡 snippet 手法）：Pencil 端先跑 resolveInstances:false 全稿走訪收 refMap，再對 SCAN_BOARDS=[yXSht,go7f9,JbTfv,c2yk3s,Vn4TL,ak7RI,b59DUk,ZRyXL,MjRcr,vzYXz,H73kPC,yec61]（本輪直接動過節點的 yXSht/go7f9/JbTfv/MjRcr/vzYXz 五板＋視覺受影響的 c2yk3s/Vn4TL/ak7RI/b59DUk/ZRyXL 五塊 App Store 海報板＋Notes 板 H73kPC＋R2c 補動的 LS-119 Notes 板 yec61）逐板 resolveInstances:true 走訪，把每個節點壓成緊湊陣列 [id,name,parent,type,ref,enabled,clip,image,x,y,w,h] 用 Print(\"SNAPn \"+JSON.stringify(...)) 分批印出（單次 Print 73180 字元，超過約 7 萬字元自動存成本機檔，未手動觸發任何截斷）；node 端讀該檔案、正則抽取 SNAP 行還原節點陣列，直接 require('scripts/design/overflow-scan.js')（未修改，逐字原檔）取 scanAll／summaryLine／cornerWarnings／compactLines／compactResult／withResultHashes 六個匯出函式跑六支——不再手抄／精簡任何掃描邏輯。過程分三個子階段：①first pass（head_sha 前身 d045fa3）六支抓到兩處新引入缺陷（corner_anchor mismatch=2：eBgN8 caption 換短後容器變矮、Corner BL/BR 絕對座標未跟著收縮；row_overflow 多 1 筆：R2 Notes 新段落標題過長）並已修正落地；②design-notes-check.sh 另外抓到 LS-119 Notes（yec61/ArkP3）對本輪刪除重建的 xrCoj 死 id 引用，補沿革寫法落地（commit 3c8e12a，純文字內容變更，不影響任何節點幾何／不改變六支數字，經本次重跑逐支計數確認 117/24/8/0/0/0 與 d045fa3 版本完全相同，只有 tree_hash／result_hash 隨內容雜湊變動）；③本收據即對 head_sha=3c8e12a（本 PR 對這份 .pen 最後一次 commit）這份快照的單一次掃描（同一 Pencil execute 快照，未拼接、未跨稿態）。sibling_intersection／row_overflow／cross_parent_collision 命中全數為角托 corner-out 5pt 規格、Stack Sheet／More Scrim 堆疊效果、裝置外框壓印品母題等既有結構性刻意重疊，非缺陷，逐類附 classification。",
   "scans": {
     "sibling_intersection": {
       "scope": "boards",
@@ -265,7 +265,8 @@
         "ZRyXL",
         "MjRcr",
         "vzYXz",
-        "H73kPC"
+        "H73kPC",
+        "yec61"
       ],
       "containers": 15,
       "points": 120,
@@ -283,14 +284,42 @@
       "document_count": 0,
       "result_hash": "f7f5bcf600d68d6e",
       "flagged": [],
-      "document_flagged": []
+      "document_flagged": [],
+      "boards": [
+        "yXSht",
+        "go7f9",
+        "JbTfv",
+        "c2yk3s",
+        "Vn4TL",
+        "ak7RI",
+        "b59DUk",
+        "ZRyXL",
+        "MjRcr",
+        "vzYXz",
+        "H73kPC",
+        "yec61"
+      ]
     },
     "board_clip": {
       "scope": "boards",
       "document_count": 0,
       "result_hash": "3b44bf27b6647eec",
       "flagged": [],
-      "document_flagged": []
+      "document_flagged": [],
+      "boards": [
+        "yXSht",
+        "go7f9",
+        "JbTfv",
+        "c2yk3s",
+        "Vn4TL",
+        "ak7RI",
+        "b59DUk",
+        "ZRyXL",
+        "MjRcr",
+        "vzYXz",
+        "H73kPC",
+        "yec61"
+      ]
     }
   }
 }
