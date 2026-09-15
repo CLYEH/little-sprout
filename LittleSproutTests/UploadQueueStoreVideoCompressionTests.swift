@@ -119,6 +119,96 @@ final class UploadQueueStoreVideoCompressionTests: XCTestCase {
         )
         guard case .failed(let reason) = failedRow.state else { return XCTFail("預期失敗態") }
         XCTAssertFalse(reason.isRetryable, "同一支原始檔案重試不會變小，不該提供重試")
+        // merge-review R1 i1：不可重試失敗要清掉選片暫存原檔（`videoPreparer` 這裡直接丟錯，
+        // 未曾產出壓縮輸出，所以只有 `pickedURL` 要驗）。
+        XCTAssertFalse(FileManager.default.fileExists(atPath: pickedURL.path), "超限失敗後選片暫存複本應該被清掉")
+    }
+
+    /// merge-review R1 i1：不可重試失敗（LS002 額度已滿）發生在壓縮**成功之後**——`compressedVideoCache`
+    /// 這時已經有值，`finish` 要連同快取的壓縮輸出一起清掉，不是只清原始選片複本。
+    func test_video_quotaFailureAfterSuccessfulCompression_cleansUpOriginalAndCachedCompressedOutput() async {
+        let pickedURL = makeTempFile()
+        let compressedURL = makeTempFile()
+        let mediaService = StubMediaUploadService()
+        mediaService.setUploadVideoHandler { _, _, _, _ in
+            throw AppError.rejected(message: "額度已滿", code: LSErrorCode.storageQuotaExceeded.rawValue)
+        }
+        let store = UploadQueueStore(
+            familyID: familyID, mediaUploadService: mediaService,
+            videoPreparer: { _ in
+                VideoTrimmer.UploadSource(fileURL: compressedURL, fileExtension: "mp4", pixelSize: nil)
+            }
+        )
+
+        store.enqueue([makeVideoUpload(fileURL: pickedURL)])
+
+        await waitUntil { store.sections.contains { $0.kind == .failed } }
+        guard case .failed(.quota) = store.rows.first?.state else {
+            return XCTFail("預期落在 LS002 失敗態，實際 \(String(describing: store.rows.first?.state))")
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: pickedURL.path), "選片暫存複本應該被清掉")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: compressedURL.path), "快取的壓縮輸出應該被清掉，不是孤兒檔")
+    }
+
+    // MARK: - 可重試失敗後重試：沿用已壓好的輸出（merge-review R1 B1）
+
+    /// 沿 `DiaryComposerStoreVideoCacheTests
+    /// .test_publish_videoUploadFailureThenRetry_reusesCachedCompressedOutput_doesNotReexport`
+    /// 同款情境搬到 `UploadQueueStore`：上傳（非壓縮）失敗是可重試的，`retry(_:)` 不該讓這支
+    /// 影片重新跑一次 `videoPreparer`——40 秒 4K 在正式路徑上一次 export 要數十秒，重試每次都
+    /// 重壓會讓網路不穩時的使用者越試越久，且前一次的壓縮輸出會變成沒有回收者的孤兒檔。
+    func test_video_retryableUploadFailureThenRetry_reusesCachedCompressedOutput_doesNotReexport() async {
+        let pickedURL = makeTempFile()
+        let compressedURL = makeTempFile()
+        defer {
+            try? FileManager.default.removeItem(at: pickedURL)
+            try? FileManager.default.removeItem(at: compressedURL)
+        }
+        let preparerCalls = OSAllocatedUnfairLock(initialState: 0)
+        let uploadAttempts = OSAllocatedUnfairLock(initialState: 0)
+        let mediaService = StubMediaUploadService()
+        let videoMediaID = UUID()
+        mediaService.setUploadVideoHandler { _, _, _, _ in
+            let attempt = uploadAttempts.withLock { state -> Int in
+                state += 1
+                return state
+            }
+            if attempt == 1 { throw AppError.network(message: "dropped mid-upload") }
+            return videoMediaID
+        }
+        let store = UploadQueueStore(
+            familyID: familyID, mediaUploadService: mediaService,
+            videoPreparer: { _ in
+                preparerCalls.withLock { $0 += 1 }
+                return VideoTrimmer.UploadSource(
+                    fileURL: compressedURL, fileExtension: "mp4", pixelSize: PixelSize(width: 1920, height: 1080)
+                )
+            }
+        )
+        let uploadID = UUID()
+
+        store.enqueue([makeVideoUpload(fileURL: pickedURL, id: uploadID)])
+        await waitUntil { store.sections.contains { $0.kind == .failed } }
+        guard case .failed(.network) = store.rows.first?.state else {
+            return XCTFail("預期第一次上傳因網路失敗，實際 \(String(describing: store.rows.first?.state))")
+        }
+        // PROBE 同款斷言：重試前壓縮輸出還留著（快取命中的前提），不是被提早清掉。
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: compressedURL.path), "測試前置：上傳失敗後快取的壓縮輸出應該還留著"
+        )
+
+        store.retry(uploadID)
+        await waitUntil { store.sections.contains { $0.kind == .completed } }
+
+        XCTAssertEqual(preparerCalls.withLock { $0 }, 1, "重試應沿用已壓好的輸出（實際 export 次數）")
+        XCTAssertEqual(mediaService.uploadVideoCalls.count, 2, "上傳本身失敗了要重打，但用的是同一份壓縮輸出")
+        XCTAssertEqual(
+            mediaService.uploadVideoCalls.map(\.fileURL), [compressedURL, compressedURL],
+            "兩次上傳都該是同一份壓縮輸出，不是各自重新壓一次"
+        )
+        // 成功後這份壓縮輸出（正在使用中的那一份）該被清掉——第一次壓縮輸出不該留成孤兒。
+        XCTAssertFalse(FileManager.default.fileExists(atPath: compressedURL.path), "第一次壓縮輸出不該留成孤兒")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: pickedURL.path), "選片暫存複本應該被清掉")
     }
 
     // MARK: - 成功後清掉本機暫存檔
