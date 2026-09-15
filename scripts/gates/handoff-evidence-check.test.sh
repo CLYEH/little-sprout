@@ -4,8 +4,11 @@
 # 「逐條驗收」抓不到）、每項證據判定被拿掉、或「測試名存在」驗證被拿掉（假測試名矇混過關），這裡
 # 會紅。另附兩個真實樣本（LS-191 QA comment c541cd06 應紅、LS-192 QA comment 88fb24bc 應綠）——
 # 來源見 LS-96 池項 1ff7b8d8／LS-211 票文驗收條件。
-# LS-256（①af／①ag／②m；LS-96 池項 b550a1e5）：(c) 命令白名單補 `git merge-tree`／`git diff`（merge-reviewer verdict
-# 慣用，此前兩次誤紅）——拿掉即 ①af／①ag 紅；白名單不得放寬到任意 `git `（`git log` 只是看過不是驗證）——放寬即 ②m 紅。
+# LS-256（①af／①ag；LS-96 池項 b550a1e5）：(c) 命令白名單補 `git merge-tree`／`git diff`（merge-reviewer verdict
+# 慣用，此前兩次誤紅）——拿掉即 ①af／①ag 紅。
+# LS-294（①aj-①am；LS-96 池項 24b0dcf6）：(c) 補 `git <subcmd>` 泛化（含 `log`／`status`／`push`／`fetch`／
+# `merge-base`／`ls-remote`／`worktree`／`grep`，取代 LS-256「`git log` 不算證據」的決定）與
+# `node`／`python3`／`swift <path>`；(b) 補 `.test.js`／`.test.py`——拿掉任一即①aj-①am 紅（見⑰/⑱ mutation）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -118,6 +121,11 @@ printf '# Agent fixture\n' > "$R/.claude/agents/fixture.md"
 # R5（LS-228 R2，F1）：supabase/**/*.sh 白名單路徑——同時是 merge-review R1 F1(a) 點名的真實回歸樣本
 # （規約必引的 `bash supabase/tests/run.sh`），這裡建一支同名真實存在的 fixture。
 printf '#!/bin/bash\necho run\n' > "$R/supabase/tests/run.sh"
+# LS-294（LS-96 池項 24b0dcf6）：①af2（node <path> 命令證據＋.test.js 路徑證據）用的 fixture——路徑
+# 刻意與真實 LS-289 handoff 引用的 `scripts/design/overflow-scan.test.js` 同形（不影響判定，PATH_RE／
+# COMMAND_RE 皆不驗這個路徑真的存在，見檔頭 (b)／(c) 說明；建成真實存在只是同時示範良好寫法）。
+mkdir -p "$R/scripts/design"
+printf '// fixture\n' > "$R/scripts/design/overflow-scan.test.js"
 
 git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false add -A
 git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q -m 'chore(harness): LS-211 fixture'
@@ -353,6 +361,50 @@ expect 0 '①ai（LS-292，票 (b)）粗體標題後直接接全形冒號仍算�
 - 條件 1：`FooTests` 全綠
 '
 
+# LS-294（LS-96 池項 24b0dcf6，票 (a)(b)(c)）：LS-292 修好 BOLD_ONLY_RE 後對 LS-289 首則 handoff 重跑，
+# 裸 `git log`／`node <path>`（連帶 `.test.js` 檔名）／`git push` 仍缺證據（exit 1，三行）——COMMAND_RE
+# 補 `git <subcmd>` 泛化與 `node`／`python3`／`swift <path>`，PATH_RE 補 `.test.js`／`.test.py`。
+expect 0 '①aj（LS-294，票 (a)）裸 `git log --oneline -3`（無 bash／gh 前綴）算命令證據' '' \
+'## 已驗證
+- 條件 1：`git log --oneline -3` 核對三支 commit 皆在
+'
+
+expect 0 '①ak（LS-294，票 (b)）`node <path>` 命令證據＋引用的 `.test.js` 檔名同時算 PATH_RE 路徑證據' '' \
+'## 已驗證
+- 條件 1：`node scripts/design/overflow-scan.test.js` 全數通過（54 組）
+'
+
+# ①ak2／①ak3：把 (c) `node <path>` 命令證據與 (b) `.test.js` 路徑證據拆成互不重疊的獨立樣本（不像①ak
+# 兩條規則同時命中），供下面⑰／⑱ mutation 各自單獨反轉時能乾淨歸因是哪一條規則造成的。
+expect 0 '①ak2（LS-294）`node <path>` 命令證據，路徑無 .test.js／.py／.swift 副檔名，只靠 COMMAND_RE 放行' '' \
+'## 已驗證
+- 條件 1：`node scripts/design/pen-snapshot-dump` 跑過一次快照 dump
+'
+
+expect 0 '①ak3（LS-294）只引用 `.test.js` 檔名（無 node／bash／gh 前綴），只靠 PATH_RE 放行' '' \
+'## 已驗證
+- 條件 1：見 `scripts/design/overflow-scan.test.js` 內新增的三條測試案例
+'
+
+expect 0 '①al（LS-294）裸 `git push`（push gate 通過的自然措辭，非 bash／gh 前綴）算命令證據' '' \
+'## 已驗證
+- 條件 1：`git push` 前景執行通過（push gate 通過）
+'
+
+# ①am 刻意用不帶 .py／.swift 副檔名的引數（`scripts/gates/handoff_evidence_check`／`build`），避免
+# 跟既有 PATH_RE 的 `\.py\b`／`\.swift\b` 無條件子字串重疊，讓下面⑰ mutation 能乾淨歸因到 COMMAND_RE
+# 新增的 `python3`／`swift <path>` 這條規則，不是被既有 PATH_RE 規則撐住。
+expect 0 '①am（LS-294）`python3 <path>`／`swift <path>` 命令證據，引數無 .py／.swift 副檔名（避免與既有 PATH_RE 重疊）' '' \
+'## 已驗證
+- 條件 1：`python3 scripts/gates/handoff_evidence_check` 核對過白名單邏輯
+- 條件 2：`swift build` 跑過一次
+'
+
+expect 0 '①an（LS-294，取代 LS-256 原②m）`git log --oneline -5` 現在算命令證據——同一批 git 子命令泛化' '' \
+'## 已驗證
+- 條件 1：`git log --oneline -5` 看過 commit 都在
+'
+
 # ==== ② 負樣本（≥4）====
 expect 1 '②a 列項缺任何證據（無測試名／路徑／命令）' '缺『怎麼驗』證據' \
 '## 已驗證
@@ -416,17 +468,21 @@ expect 1 '②l（R5，LS-228 R2，F1 新增類別）supabase/**/*.sh 白名單�
 - 條件 1：核對過 `supabase/tests/does-not-exist.sh` 的內容
 '
 
-# LS-256：白名單只補 merge-tree／diff 兩個子命令，不是任意 `git `——`git log`／`git status` 只是看過、不是驗證，仍缺證據
-expect 1 '②m（LS-256）git log 不在命令白名單（只補 merge-tree／diff，不放寬到任意 git）→ 紅' '缺『怎麼驗』證據' \
-'## 已驗證
-- 條件 1：`git log --oneline -5` 看過 commit 都在
-'
+# ②m（LS-256）原本斷言「`git log` 不在命令白名單、只補 merge-tree／diff」——**LS-294（LS-96 池項
+# 24b0dcf6）取代這個決定**：LS-289 真實 handoff 用 `git log --oneline` 佐證「commit 確實存在」，
+# 判定與 `git diff --stat` 佐證變更範圍同一等級，不再算「只是看過、不是驗證」。原本這裡的負樣本
+# 已改判正樣本，見上面①aj（COMMAND_RE 現在認 `git log`，見票文 LS-294）。
 
 # LS-292（票 (c)）：粗體後接非括號正文（不是可選括號附註／冒號形狀）仍不算標題——維持 N6(a) 語意。
 # 這行不被承認為段落起點，文件內又沒有其他合格標題，find_section 找不到段落 → fail closed（exit 2）。
 expect 2 '②n（LS-292，票 (c)）粗體後接非括號正文仍不算標題 → 找不到「已驗證」段落' '找不到' \
 '**已驗證** 全部 14 條綠
 - 條件 1：`FooTests` 全綠
+'
+
+expect 1 '②o（LS-294，票 (c)）敘述性句子含「git」字樣但非指令（如「用 git 管理」）→ 不算證據（維持嚴格）' '缺『怎麼驗』證據' \
+'## 已驗證
+- 條件 1：本票的檔案變更用 git 管理，沒有另外新增工具
 '
 
 # ==== ③ --help／參數 ====
@@ -946,6 +1002,77 @@ if grep -qF 'PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/
   fi
 else
   echo "✗ ⑯ mutate：找不到 HANDOFF-EVIDENCE-PATH 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑰（LS-294，LS-96 池項 24b0dcf6）mutation 負控：COMMAND_RE 退回 LS-256 版（只認 merge-tree／diff，
+#        不認 git 其他子命令、不認 node／python3／swift <path>）→ ①aj／①ak2／①al／①am 四個只靠這批新
+#        規則放行的正樣本必須改判紅，證明是這幾條新規則在放行 ====
+mut_oldcmd="$work/handoff_evidence_check.command-re-ls256.py"
+awk '
+  index($0, "# HANDOFF-EVIDENCE-COMMAND") > 0 { print "COMMAND_RE = re.compile(r\"xcodebuild|bash scripts/|gh run view|git merge-tree|git diff|\\.xcresult\")  # HANDOFF-EVIDENCE-COMMAND"; next }
+  { print }
+' "$py" > "$mut_oldcmd"
+if grep -qF 'COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|git merge-tree|git diff|\.xcresult")  # HANDOFF-EVIDENCE-COMMAND' "$mut_oldcmd"; then
+  echo "✓ ⑰ mutate：確認已把 COMMAND_RE 退回 LS-256 版（只認 merge-tree／diff，無其他 git 子命令、無 node／python3／swift）"
+  all_ok=1
+  for pair in \
+    'gitlog:## 已驗證
+- 條件 1：`git log --oneline -3` 核對三支 commit 皆在
+' \
+    'nodepath:## 已驗證
+- 條件 1：`node scripts/design/pen-snapshot-dump` 跑過一次快照 dump
+' \
+    'gitpush:## 已驗證
+- 條件 1：`git push` 前景執行通過（push gate 通過）
+' \
+    'py3swift:## 已驗證
+- 條件 1：`python3 scripts/gates/handoff_evidence_check` 核對過白名單邏輯
+- 條件 2：`swift build` 跑過一次
+'
+  do
+    tag="${pair%%:*}"
+    body="${pair#*:}"
+    printf '%s' "$body" > "$work/mut17-$tag.md"
+    out17="$(python3 "$mut_oldcmd" "$work/mut17-$tag.md" --repo "$R" 2>&1)"; rc17=$?
+    if [ "$rc17" -ne 1 ]; then
+      echo "✗ ⑰ mutant（$tag）未如預期翻轉為 exit 1（實得 exit ${rc17}）" >&2
+      printf '%s\n' "$out17" | sed 's/^/    /' >&2
+      all_ok=0
+    fi
+  done
+  if [ "$all_ok" -eq 1 ]; then
+    echo "✓ ⑰ mutant（COMMAND_RE 退回 LS-256 版）：①aj／①ak2／①al／①am 四組正樣本全數改判紅——證明 git 子命令泛化與 node／python3／swift <path> 是這幾條規則放行的"
+  else
+    fail=1
+  fi
+else
+  echo "✗ ⑰ mutate：找不到 HANDOFF-EVIDENCE-COMMAND 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑱（LS-294，LS-96 池項 24b0dcf6）mutation 負控：PATH_RE 拿掉 `.test.js`／`.test.py` → ①ak3（只靠
+#        `.test.js` 檔名放行、無 node／bash／gh 前綴）必須改判紅，證明是這兩個副檔名在放行 ====
+mut_notestjs="$work/handoff_evidence_check.no-test-js-py.py"
+awk '
+  index($0, "# HANDOFF-EVIDENCE-PATH") > 0 { print "PATH_RE = re.compile(r\"\\.png|\\.log|\\.test\\.sh|scratchpad/|evidence/|\\.swift\\b|\\.py\\b|\\.sh\\b|\\.md\\b|\\.yml\\b|\\.json\\b\")  # HANDOFF-EVIDENCE-PATH"; next }
+  { print }
+' "$py" > "$mut_notestjs"
+if grep -qF 'PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/|\.swift\b|\.py\b|\.sh\b|\.md\b|\.yml\b|\.json\b")  # HANDOFF-EVIDENCE-PATH' "$mut_notestjs"; then
+  echo "✓ ⑱ mutate：確認已把 PATH_RE 拿掉 .test.js／.test.py（退回 R5／LS-228 R2 版）"
+  printf '%s' '## 已驗證
+- 條件 1：見 `scripts/design/overflow-scan.test.js` 內新增的三條測試案例
+' > "$work/mut18.md"
+  out18="$(python3 "$mut_notestjs" "$work/mut18.md" --repo "$R" 2>&1)"; rc18=$?
+  if [ "$rc18" -eq 1 ] && printf '%s' "$out18" | grep -qF '缺『怎麼驗』證據'; then
+    echo "✓ ⑱ mutant（拿掉 .test.js／.test.py）：①ak3 的正樣本改判紅——證明這兩個副檔名是放行原因"
+  else
+    echo "✗ ⑱ mutant 未如預期翻轉（實得 exit ${rc18}）" >&2
+    printf '%s\n' "$out18" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ⑱ mutate：找不到 HANDOFF-EVIDENCE-PATH 標記，負控本身無效" >&2
   fail=1
 fi
 

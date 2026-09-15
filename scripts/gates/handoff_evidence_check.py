@@ -54,7 +54,14 @@
       既有語料淨增誤報（merge-review R1 `43e2f60e` F1：規約必引的 `bash supabase/tests/run.sh`、根目錄
       `project.yml`、裸檔名 `db-reset-retry.sh` 這類引用改前 exit 0、R4 head exit 1）——**R5（LS-228
       R2）原樣還原 `.sh`／`.md`／`.yml`**，本票（LS-228）的白名單只做加法：(b2) 之外仍保留這條寬鬆
-      的無條件子字串當 fallback，不收緊既有行為（純加法，見票文 R2 裁定）。
+      的無條件子字串當 fallback，不收緊既有行為（純加法，見票文 R2 裁定）。**LS-294（LS-96 池項
+      `24b0dcf6`）補 `.test.js`／`.test.py`**：`.test.sh` 早已在這條無條件子字串內（同 `.sh` 既有
+      行為，不驗真的存在，既有樣本 ①g／①h 用示意性假檔名 `foo.test.sh` 佐證）；LS-289 首則 handoff
+      的 `node scripts/design/overflow-scan.test.js` 一行原先兩頭皆不中（PATH_RE 完全沒有 `.js` 這個
+      副檔名、COMMAND_RE 也不認 `node <path>`），單靠補 `.test.js`（與同源新增的 `.test.py`，成對
+      補齊三個測試腳本副檔名）即可涵蓋，與上面 (c) 新增的 `node <path>` 命令證據是同一缺口的兩種
+      互補寫法（引用檔名 vs. 引用執行指令），沿用 (b) 既有「子字串比對、不驗證真的存在」邏輯，不
+      另外發明存在性驗證機制（維持 R4/(b2) 白名單目錄機制與 (b) 這條寬鬆 fallback 的既有分工）。
   (b2) 白名單目錄下的具體路徑（**必須**驗證檔案在 repo 內真實存在，比 (b) 更嚴格——同一個路徑若落在
       (b2) 涵蓋的目錄內，即使 (b) 的無條件子字串已判定「有證據」，仍會因 (b2) 的存在性檢查落空而讓
       整列判紅；(b2) 的目的是在特定重要目錄內防堵「引用不存在檔案」矇混，不是要收窄 (b) 的涵蓋範圍）
@@ -91,12 +98,23 @@
       `is_mutation_context` 兩個既有判準（比照 (a) 測試名候選）——原本只有 `is_command_invocation_candidate`
       一種，導致「這個白名單路徑不存在，gate 正確判紅」這類正確的否定／mutation 語境敘述本身會被
       誤判為引用（merge-review R1 `43e2f60e` F4：驗這支 gate 自己的 verdict 會踩到）。
-  (c) 命令——含 `xcodebuild`、`bash scripts/`、`gh run view`、`git merge-tree`、`git diff` 或 `.xcresult`
-      子字串（R2 補 `gh run view`／`.xcresult`：merge-review verdict 常用 `gh run view --job --log` 核對
-      CI、`.xcresult` 是測試結果檔；**LS-256（LS-96 池項 `b550a1e5`）補 `git merge-tree`／`git diff`**：
-      merge-reviewer verdict 慣用 `git merge-tree <base> <head>` 驗 PR 可乾淨併入、`git diff <base>..<head>
-      --stat` 對帳變更範圍，兩者都是「怎麼驗」的真實命令證據，此前不在白名單、reviewer 兩次被誤紅後以
-      說明取代改寫。只認這兩個子命令，`git log`／`git status` 之類只是看過、不是驗證，仍不算證據）。
+  (c) 命令——含 `xcodebuild`、`bash scripts/`、`gh run view`、`git <subcmd>`（見下）、`node <path>`／
+      `python3 <path>`／`swift <path>` 或 `.xcresult` 子字串（R2 補 `gh run view`／`.xcresult`：
+      merge-review verdict 常用 `gh run view --job --log` 核對 CI、`.xcresult` 是測試結果檔；
+      **LS-256（LS-96 池項 `b550a1e5`）補 `git merge-tree`／`git diff`**：merge-reviewer verdict 慣用
+      `git merge-tree <base> <head>` 驗 PR 可乾淨併入、`git diff <base>..<head> --stat` 對帳變更範圍，
+      兩者都是「怎麼驗」的真實命令證據，此前不在白名單、reviewer 兩次被誤紅後以說明取代改寫。
+      **LS-294（LS-96 池項 `24b0dcf6`）補 `git log`／`status`／`push`／`fetch`／`merge-base`／
+      `ls-remote`／`worktree`／`grep` 與 `node`／`python3`／`swift <path>`**：LS-292 修好 `BOLD_ONLY_RE`
+      後對 LS-289 首則 handoff 重跑，裸 `git log --oneline`（列 commit 佐證「三 commit」）、
+      `git push`（push gate 通過的自然措辭）與 `node scripts/design/overflow-scan.test.js`（跑自測腳本）
+      三行仍缺證據——`git <subcmd>` 只認 `\\bgit\\s+(?:log|diff|status|push|fetch|merge-base|ls-remote|
+      worktree|grep|merge-tree)\\b`（`\\b` 前後界定，避免 `digit log` 這類詞中字誤配；不放寬到任意
+      `git <任意字>`）；`node`／`python3`／`swift <path>` 同理只認直接接著一個非空白 token 的形狀
+      （`\\b(?:node|python3|swift)\\s+\\S+`）。**此修正取代 LS-256 原本「`git log`／`git status` 只是看過、
+      不是驗證，仍不算證據」的決定**——LS-289 真實 handoff 顯示 `git log --oneline` 用來佐證「commit
+      確實存在」是合理的怎麼驗依據，與 `git diff --stat` 佐證「變更範圍」同一等級；舊決定的既有負樣本
+      （原 ②m）已同步改判正樣本，見 `handoff-evidence-check.test.sh`）。
 
 段落偵測（涵蓋三種實際慣例，見 LS-211 handoff 附的真實樣本與 merge-review R1 `b212dd78`）：
   - CLAUDE.md 的 ios-dev handoff 格式：字面「已驗證」開頭的段（`## 已驗證`／`**已驗證**`／純文字
@@ -159,7 +177,9 @@ TEST_NAME_RE = re.compile(r"\btest[A-Z][A-Za-z0-9_]*\b|\b[A-Za-z_][A-Za-z0-9_]*T
 # R4（LS-228）一度把 `.sh`／`.md`／`.yml` 從這條無條件子字串移除，merge-review R1（`43e2f60e` F1）
 # 實測對既有語料淨增 20 份誤報（規約必引的 `bash supabase/tests/run.sh`、根目錄 `project.yml`、裸
 # 檔名皆中）——R5（LS-228 R2）原樣還原，本票只做加法（見 (b2)，不收緊這條既有行為）。
-PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/|\.swift\b|\.py\b|\.sh\b|\.md\b|\.yml\b|\.json\b")  # HANDOFF-EVIDENCE-PATH
+# LS-294（LS-96 池項 `24b0dcf6`）補 `.test.js`／`.test.py`（`.test.sh` 已在其他分支涵蓋，見上）——
+# LS-289 首則 handoff `node scripts/design/overflow-scan.test.js` 一行此前 PATH_RE 完全不認 `.js`。
+PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|\.test\.js|\.test\.py|scratchpad/|evidence/|\.swift\b|\.py\b|\.sh\b|\.md\b|\.yml\b|\.json\b")  # HANDOFF-EVIDENCE-PATH
 # R4（LS-228，來源 LS-96 池項 `acb4e2df`）：白名單目錄下的具體路徑，必須驗證檔案真的存在（見 (b2)
 # 檔頭說明）。`supabase/functions`／`supabase`（.sh）／`scripts`／`docs`／`.claude` 允許任意層級子目錄
 # （`(?:[\w.-]+/)+` 或 `(?:[\w.-]+/)*`）；`supabase/migrations`／`supabase/tests`（.sql）只認直接掛在
@@ -181,7 +201,12 @@ PATH_ANCHOR_RE = re.compile(
     r"|scripts/(?:[\w.-]+/)+[\w.-]+(?<!\.test)\.sh"
     r"|\.github/workflows/[\w.-]+\.yml"
 )  # HANDOFF-PATH-ANCHOR
-COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|git merge-tree|git diff|\.xcresult")  # HANDOFF-EVIDENCE-COMMAND
+# LS-294（LS-96 池項 `24b0dcf6`）：`git <subcmd>` 一般化（原本只認 `merge-tree`／`diff` 兩個子命令，
+# 見 (c) 檔頭說明——此修正取代 LS-256「`git log`／`git status` 不算證據」的決定）與 `node`／`python3`／
+# `swift <path>`——三者皆要求 `\b`（獨立字，前後為空白或反引號等非詞字元）避免「digit log」這類詞中
+# 字誤配；`node`／`python3`／`swift` 後要求緊接 `\s+\S+`（一個非空白 token）才算，純文字提到這些字
+# （如「動作快速」）不會誤配，因為後面通常不是空白＋非空白 token 的指令形狀。
+COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|\.xcresult|\bgit\s+(?:log|diff|status|push|fetch|merge-base|ls-remote|worktree|grep|merge-tree)\b|\b(?:node|python3|swift)\s+\S+")  # HANDOFF-EVIDENCE-COMMAND
 
 # ---- R2（merge-review R1 F1）：候選過濾——glob 形狀／同句否定詞／mutation 語境不驗存在性 ----
 NEGATION_WORDS = ("沒有", "無", "不存在", "未")
@@ -457,11 +482,12 @@ def run(path, repo):
         if missing_evidence:
             print(
                 "✗ handoff-evidence-check：第 %d 行起的列項缺『怎麼驗』證據（須含測試名、"
-                ".png/.log/.test.sh/scratchpad//evidence//.swift/.py/.sh/.md/.yml/.json 路徑、"
+                ".png/.log/.test.sh/.test.js/.test.py/scratchpad//evidence//.swift/.py/.sh/.md/.yml/.json 路徑、"
                 "白名單目錄路徑（supabase/functions/**/*.ts、supabase/migrations/*.sql、"
                 "supabase/tests/*.sql、supabase/**/*.sh、docs/**/*.md、.claude/**/*.md、"
                 "scripts/**/*.sh、.github/workflows/*.yml），或 "
-                "xcodebuild／bash scripts/／gh run view／git merge-tree／git diff／.xcresult 命令）" % line_no,
+                "xcodebuild／bash scripts/／gh run view／git log|diff|status|push|fetch|merge-base|"
+                "ls-remote|worktree|grep|merge-tree／node|python3|swift <path>／.xcresult 命令）" % line_no,
                 file=sys.stderr,
             )
             ok = False
