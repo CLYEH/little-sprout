@@ -70,10 +70,17 @@ enum VideoTrimmer {
         // 還沒真的呼叫 `exportAsynchronously` 之前，`onCancel` 會**立刻**執行；若那時候直接
         // `cancelExport()`，AVFoundation 會把 session 標成「已經開始過」，`operation` 接著才呼叫
         // `exportAsynchronously` 就會丟未捕捉的 `NSInternalInconsistencyException`（reviewer 實跑
-        // 重現 test host crash）。`lifecycle` 這顆鎖保護的旗標把兩條路徑序列化：`operation`
-        // 呼叫 `exportAsynchronously` 前先在鎖裡確認沒有搶先被取消、標成 `.started` 才真的呼叫；
-        // `onCancel` 只在已經 `.started` 時才 `cancelExport()`，否則只記 `.cancelledBeforeStart`，
-        // `operation` 讀到就直接丟 `CancellationError()`、完全不碰 session。
+        // 重現 test host crash）。`lifecycle` 這顆鎖保護的旗標把兩條路徑序列化。
+        //
+        // **LS-286（n1，源自 R2 merge-review informational `ce5d0837`）**：R2 版本「標 `.started`」
+        // 與「呼叫 `exportAsynchronously`」是鎖裡標、鎖外呼叫兩個動作——取消若剛好卡在兩者之間，
+        // `onCancel` 讀到的仍是 `.started`，一樣會對一支還沒呼叫過 `exportAsynchronously` 的
+        // session 呼叫 `cancelExport()`，重演 R1 B1 同一個 crash（reviewer 用
+        // `usleep(200_000)` 放大窗口實測重現）。這裡把 `exportAsynchronously` 呼叫本身移進同一個
+        // `withLock` 閉包——「標 `.started`」與「啟動 export」在鎖內原子發生，`onCancel` 只有在
+        // 鎖裡看到 `.started` 時，`exportAsynchronously` 必定已經被呼叫過，`cancelExport()` 才
+        // 安全；`exportAsynchronously` 本身立即返回（真正的匯出在別的執行緒非同步跑），持鎖時間
+        // 可忽略。
         //
         // **i1**：輸出檔刪除只留在下面唯一的 completion handler（成功／失敗互斥的同一個
         // `if/else`），`onCancel` 本身不碰檔案——避免「取消觸發的刪檔」與「AVFoundation 自己
@@ -86,21 +93,21 @@ enum VideoTrimmer {
         nonisolated(unsafe) let cancellableSession = exportSession
         let lifecycle = OSAllocatedUnfairLock<ExportLifecycleState>(initialState: .idle)
         try await withTaskCancellationHandler {
-            let shouldExport = lifecycle.withLock { state -> Bool in
-                guard state == .idle else { return false }
-                state = .started
-                return true
-            }
-            guard shouldExport else { throw CancellationError() }
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                cancellableSession.exportAsynchronously {
-                    if cancellableSession.status == .completed {
-                        continuation.resume()
-                    } else {
-                        try? FileManager.default.removeItem(at: outputURL)
-                        continuation.resume(throwing: cancellableSession.error ?? TrimmerError.exportFailed)
+                let shouldExport = lifecycle.withLock { state -> Bool in
+                    guard state == .idle else { return false }
+                    state = .started
+                    cancellableSession.exportAsynchronously {
+                        if cancellableSession.status == .completed {
+                            continuation.resume()
+                        } else {
+                            try? FileManager.default.removeItem(at: outputURL)
+                            continuation.resume(throwing: cancellableSession.error ?? TrimmerError.exportFailed)
+                        }
                     }
+                    return true
                 }
+                if !shouldExport { continuation.resume(throwing: CancellationError()) }
             }
         } onCancel: {
             let shouldCancelExport = lifecycle.withLock { state -> Bool in
