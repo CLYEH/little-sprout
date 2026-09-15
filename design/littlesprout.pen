@@ -166567,8 +166567,9 @@
                       "id": "h0Thbl",
                       "name": "Top Row",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "space_between",
-                      "alignItems": "center",
                       "children": [
                         {
                           "id": "GcgA1",
@@ -166769,6 +166770,8 @@
                               "id": "ubvx4",
                               "name": "Album Label",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": 200,
                               "content": "不放相簿",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -166831,8 +166834,9 @@
                       "id": "VEdVo",
                       "name": "Top Row",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "space_between",
-                      "alignItems": "center",
                       "children": [
                         {
                           "id": "FWa59",
@@ -167005,6 +167009,8 @@
                               "id": "F3dRDr",
                               "name": "Album Label",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": 200,
                               "content": "陳小安的相簿",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -167067,8 +167073,9 @@
                       "id": "Qy0k4",
                       "name": "Top Row",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "space_between",
-                      "alignItems": "center",
                       "children": [
                         {
                           "id": "yKVQq",
@@ -167283,6 +167290,8 @@
                               "id": "D4D8MG",
                               "name": "Album Label",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": 200,
                               "content": "不放相簿",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -171610,8 +171619,9 @@
                       "id": "x7duzE",
                       "name": "Top Row",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "space_between",
-                      "alignItems": "center",
                       "children": [
                         {
                           "id": "orX5i",
@@ -171853,6 +171863,8 @@
                               "id": "Z1C4EI",
                               "name": "Album Label",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": 200,
                               "content": "不放相簿",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -171915,8 +171927,9 @@
                       "id": "aaWbp",
                       "name": "Top Row",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "space_between",
-                      "alignItems": "center",
                       "children": [
                         {
                           "id": "J70uqz",
@@ -172103,6 +172116,8 @@
                               "id": "sn4Wr",
                               "name": "Album Label",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": 200,
                               "content": "不放相簿",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -172410,8 +172425,9 @@
                       "id": "MDBsP",
                       "name": "Top Row",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "space_between",
-                      "alignItems": "center",
                       "children": [
                         {
                           "id": "foTUE",
@@ -172584,6 +172600,8 @@
                               "id": "JsFl6",
                               "name": "Album Label",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": 200,
                               "content": "不放相簿",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -172646,8 +172664,9 @@
                       "id": "P0f1cU",
                       "name": "Top Row",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "space_between",
-                      "alignItems": "center",
                       "children": [
                         {
                           "id": "rWX5w",
@@ -172834,6 +172853,8 @@
                               "id": "Ayrmc",
                               "name": "Album Label",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": 200,
                               "content": "不放相簿",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -176416,6 +176437,8 @@
           "id": "eXn6j",
           "name": "Nav Row",
           "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-tight",
           "padding": [
             0,
             16,
@@ -176423,7 +176446,6 @@
             0
           ],
           "justifyContent": "space_between",
-          "alignItems": "center",
           "children": [
             {
               "id": "tPQnn",
@@ -176497,8 +176519,9 @@
                   "id": "V4SBH",
                   "name": "Progress Head",
                   "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
                   "justifyContent": "space_between",
-                  "alignItems": "center",
                   "children": [
                     {
                       "type": "text",
@@ -182180,8 +182203,9 @@
                       "id": "U7sYkQ",
                       "name": "Top Row",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "space_between",
-                      "alignItems": "center",
                       "children": [
                         {
                           "id": "NXPsA",
@@ -182353,6 +182377,8 @@
                               "id": "zZAJm",
                               "name": "Album Label",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": 200,
                               "content": "不放相簿",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -182415,8 +182441,9 @@
                       "id": "aU8zE",
                       "name": "Top Row",
                       "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
                       "justifyContent": "space_between",
-                      "alignItems": "center",
                       "children": [
                         {
                           "id": "Y7gDZd",
@@ -182602,6 +182629,8 @@
                               "id": "P0wxV",
                               "name": "Album Label",
                               "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": 200,
                               "content": "不放相簿",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
