@@ -42222,7 +42222,7 @@
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
-                                "url": "appstore-photos/demo-grid-invite.jpg",
+                                "url": "appstore-photos/demo-timeline-v2.jpg",
                                 "mode": "fill"
                               },
                               "cornerRadius": "$radius-md",
@@ -163348,6 +163348,212 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "orchestrator 裁定「用頭頂到下巴 ÷ 畫面高，重量四張，緣由段與表格同值」——候選檔確認存在於本機 `~/little-sprout-design-candidates/LS-247/`（20 張 PNG＋MANIFEST.json，未入 repo），本輪用同一份 5% 網格對 `invite-r2-1..4.png` 逐張套用 R1 已記錄的裁切座標後重新量測，`SELECTION.md` §1(b) 表格與緣由段已同步更新為同一組數字。invite-r2-4 的臉佔比由舊值『約 40%』修正為『約 54%』（已過 50% 門檻），但不影響原淘汰結論——該候選仍因接觸動作類型（擦嘴，不在 BRIEF §1(b) 必有清單）單獨不符合，非雙重失格；最終選圖 invite-r2-1 不受影響。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "g9BLRE",
+          "name": "N LS-280 R4 修訂：MJ-8 medium detent／MJ-9 有人裁切／C1b",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "bCR5o",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "LS-280 R4 修訂（VR R3 ITERATE `c4010ba5`，orchestrator 聚焦輪裁定）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "eCAO7",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "IcIiN",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-8 修正",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "FBX5r",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`ZRyXL` 的留言合成（R3 recipe：全高 sheet 背景合成）真出圖後留言 sheet 佔滿全高，日記卡／照片列／「已按愛心 4」全被蓋住，與 iPad `b59DUk` 同款合成不一致。新增持久板 `z20bG`「LS-177 / 留言 sheet · medium (iPhone)」——`FiBvh` 的複本，唯一差異是 `Comment List`（`yeWtr`）`height` 由 fixed content 改 0（`Sheet Wrap` 仍 `justifyContent:\"end\"` 底部對齊，收縮 Comment List 讓 Comment Sheet 整體自然高度變矮，底部對齊下自動露出上方背景，Sheet Wrap 本身 y/height 不動——直接搬 wrapper y/height 對這個底部錨定佈局無效，已驗證）。合成 recipe 不變：`Copy(\"z20bG\", document)` 建臨時節點→`Copy(\"vzYXz\", 臨時節點, {x:0,y:0,layoutPosition:\"absolute\"})` 背景→`Move` 背景到 children 索引 1（Status Bar 後、Scrim 前）→背景 Signature 換成 `TEX4L`（`cmp/Card Diary·已按愛心`instance，來源 `IgqGF`）的 `HPxRL` override（含 Heart Group 實心愛心＋「已按愛心 4」＋留言按鈕），取代背景板原生的純簽名列（`vzYXz` 本身不含互動列，須從 `TEX4L/HPxRL` 複製）→`TakeScreenshot` 確認→`Export`（scale 2，全高不裁）→PIL 縮長邊 1024（iPhone 板 393×852 全板不裁）→`Delete` 臨時節點。重生 `comments-iphone-v3.jpg`：上緣可見兩張本輪換過的照片＋完整「❤已按愛心 4／💬留言 2」列，iPhone／iPad 敘事一致。證據：`.claude/evidence/LS-280/r4/export/nJ9L3.png`（iPad 對照組匯出，iPhone 版截圖已內嵌於本輪 execute 回應，未落地為檔案）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HbXnR",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "cE0If",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-9 修正",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ZAmB0",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "規則：每一格照片必須有人。`demo-hero-detail.jpg`（hero.jpg 廚房流理台一角，無人物）原兩處引用：`WitwS/SBo3L`（`c2yk3s` 首格）、`MjRcr/GKxdw`（`b59DUk` 四格之一）。`WitwS/SBo3L` 改 `demo-hero-portrait.jpg`（hero.jpg 裁切 `(480,30,980,780)`，阿嬤獨照側臉大笑，有人）——`c2yk3s` 三格現為 hero(`SBo3L`)／invite(`h9c6d`)／join(`ekqx4`，本已是既有的「還有 2 張」覆蓋格 `oBEkH/GCEdk`，沿用元件既有 variant）各一張有人裁切。`MjRcr/GKxdw`（Replace 後新 id `dZEOp`）改建為「還有 2 張」覆蓋格：底圖換 `demo-hero-toddler.jpg`（hero.jpg 裁切 `(1050,20,1550,700)`，小安獨照正臉大笑，有人）＋新增 `More Scrim`（`opacity:0.75`／`fill:\"$print-ink\"`／`cornerRadius:\"$radius-md\"`／置中）＋`More Count`（`fill:\"$on-photo\"`／「還有 2 張」），尺寸與樣式照抄 `cmp/Card Diary` 既有 `GCEdk`/`CQpms` 定義（156×117，與 `WitwS` 的「還有 2 張」用字一致，呼應同一篇日記敘事）。`demo-hero-detail.jpg` 全文件零引用（`resolveInstances:true` 全樹掃描確認），已 `git rm`。裁切矩形與重疊率表、pHash 見 R4 handoff comment。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zZTlA",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "XRsaD",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "C1 裁定執行（C1b）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Hiz3n",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "orchestrator 直接裁定 C1b：`ak7RI`／`JbTfv`「最近的照片」三格兩張明顯不同取景（重疊率 <50%、pHash 非近似）＋第三格「還有 N 張」覆蓋格——取代 R3 `O3vFHn` 記錄的「MJ-6 與 MJ-2 互斥、留待裁決」暫緩處置。`G5hRJ` 改 `demo-hero-portrait.jpg`、`aEIpO` 改 `demo-hero-toddler.jpg`（與 MJ-9 同一對新裁切，hero.jpg x 軸裁切窗 480–980 vs 1050–1550，0% 面積重疊，dHash 64 位元漢明距離 38／64，非近似）；兩者皆 hero.jpg 裁切、僅含小安／阿嬤，不引入 invite／join 的新生兒素材，R3 記錄的 MJ-2 年齡一致性顧慮未被打破。`uT4lA`（Replace 後新 id `XhTus`）改建「還有 2 張」覆蓋格，底圖為 `demo-timeline-v2.jpg`（同樣 hero.jpg、小安摸阿嬤臉，非 invite/join，理由同上）＋`More Scrim`／`More Count`（139×120，樣式同 `GCEdk`/`CQpms`）。`ak7RI` 本身不含這三格節點，靠 `slot/screenshot` 合成圖 `child-ipad-v2.jpg`（源自 `JbTfv`，crop `[62,1174)` 既有裁切窗）承載，已重新 Export＋PIL 重生。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hNssY",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "IbOr2",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-9 修正",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "vBAvg",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "r4 收據 `design/evidence/LS-280-r4-overflow.json` 的 `scan_note` 已補一句：三支 O(n²) 掃描（`sibling_intersection`／`row_overflow`／`cross_parent_collision`）的 `flagged` 陣列僅保留每類一筆代表＋`count`，明確拿掉多餘、對驗證無增益的逐筆 `class` 欄位重複值——R3 收據同款省略但未書面交代理由，本輪起固定寫入 `scan_note`。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "I0QS7V",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "GdPPC",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-10 沿革",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Fa2Rp",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`go7f9`／`JbTfv` 兩塊 iPad 板裁切窗不同（`go7f9` `[0,1112)`、`JbTfv` `[62,1174)`），連帶兩板合成圖的狀態列可見與否不一致——這是 LS-234 世代既有的板差異（兩板原生內容高度不同，裁切窗各自為了避開各自的頁尾按鈕/元件手動推導），非本票（LS-280）引入，本輪未動這兩個裁切窗數值。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
