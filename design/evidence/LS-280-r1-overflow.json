@@ -71,6 +71,7 @@
     },
     "cross_parent_collision": { "scope": "boards", "document_count": 0, "result_hash": "15078908710ca6fb", "flagged": [] },
     "corner_anchor": {
+      "scope": "boards", "document_count": 0, "result_hash": "52f2a16281d8f130",
       "boards": ["yXSht", "go7f9", "JbTfv", "c2yk3s", "Vn4TL", "ak7RI", "H73kPC"],
       "containers": 6, "points": 48, "mismatch": 0,
       "flagged": [],
@@ -78,7 +79,7 @@
       "ref_hits": 8,
       "unresolved": []
     },
-    "text_occlusion": { "flagged": [], "document_flagged": [] },
-    "board_clip": { "flagged": [], "document_flagged": [] }
+    "text_occlusion": { "scope": "boards", "document_count": 0, "result_hash": "c792187da8f0f9b0", "flagged": [], "document_flagged": [] },
+    "board_clip": { "scope": "boards", "document_count": 0, "result_hash": "0ae11aaf5e7eeb2e", "flagged": [], "document_flagged": [] }
   }
 }
