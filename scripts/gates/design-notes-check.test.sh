@@ -183,20 +183,20 @@ expect 1 '⑯-b 同一定義的 個月 也各報一筆' '／節點 wQVzs：「�
 g checkout -q -b ls300-live "$base_ref"
 pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" "$(board ImpB1 'Import / 01 匯入整理頁 (iPhone)' '')" "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
 commit_pen 'design(pen): LS-300 r1 新增 Import / 01 板，Notes 補畫面級屬性列'
-expect 0 '⑰ 新畫面板列在 Notes「畫面級屬性」段（板名子字串命中）→ 綠' '新增畫面板 1、畫面級屬性缺列 0' '' design/littlesprout.pen --base "$base_ref"
+expect 0 '⑰ 新畫面板列在 Notes「畫面級屬性」段（板名子字串命中）→ 綠' '新增正典畫面 1、畫面級屬性缺列 0' '' design/littlesprout.pen --base "$base_ref"
 
-# ⑱ 負樣本：同一塊新板，Notes 完全沒有「畫面級屬性」段 → 紅，點名板 id／板名
+# ⑱ 負樣本：同一塊新板，Notes 完全沒有「畫面級屬性」段 → 紅，點名正典畫面 id／代表描述文字／member 板 id
 g checkout -q -b ls300-missing "$base_ref"
 pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" "$(board ImpB1 'Import / 01 匯入整理頁 (iPhone)' '')" "$(notes T1 '列 Xk9f2 高 44（沒有畫面級屬性段）')"
 commit_pen 'design(pen): LS-300 r1 新增 Import / 01 板，Notes 沒補畫面級屬性段'
-expect 1 '⑱ 新畫面板完全沒被 Notes 提及（無「畫面級屬性」段）→ 紅，列板 id／板名' '✗ 畫面級屬性缺列：板 ImpB1（Import / 01 匯入整理頁 (iPhone)）' '' design/littlesprout.pen --base "$base_ref"
+expect 1 '⑱ 新畫面板完全沒被 Notes 提及（無「畫面級屬性」段）→ 紅，列正典畫面 id／描述文字／member 板 id' '✗ 畫面級屬性缺列：正典畫面 #01（01 匯入整理頁；板 id：ImpB1）' '' design/littlesprout.pen --base "$base_ref"
 
 # ⑲ 段落存在但只提到其中一塊新板 → 紅，只點名缺的那塊，不誤點已列的
 g checkout -q -b ls300-partial "$base_ref"
 pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" "$(board ImpB1 'Import / 01 匯入整理頁 (iPhone)' '')" "$(board ImpB2 'Import / 02 日期不明群 (iPhone)' '')" "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
 commit_pen 'design(pen): LS-300 r1 兩塊新板，Notes 只列了 01'
 out="$(cd "$R" && bash "$check" design/littlesprout.pen --base "$base_ref" 2>&1)"; got=$?
-if [ "$got" -eq 1 ] && grep -qF '✗ 畫面級屬性缺列：板 ImpB2（Import / 02 日期不明群 (iPhone)）' <<<"$out" && ! grep -qF '✗ 畫面級屬性缺列：板 ImpB1' <<<"$out"; then
+if [ "$got" -eq 1 ] && grep -qF '✗ 畫面級屬性缺列：正典畫面 #02（02 日期不明群；板 id：ImpB2）' <<<"$out" && ! grep -qF '✗ 畫面級屬性缺列：正典畫面 #01' <<<"$out"; then
   echo "✓ ⑲ 段落只提到 01，只有 02（ImpB2）被點名缺列、01（ImpB1）不誤點"
 else
   echo "✗ ⑲ 應只點名 ImpB2、不誤點 ImpB1（實得 exit ${got}）" >&2
@@ -222,6 +222,65 @@ if awk '
   fi
 else
   echo "✗ ⑳ mutate：找不到 DESIGN-NOTES-SCREEN-ATTR-CHECK 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ───── LS-300 R2（merge-review R1 M1）：正典畫面歸併——深色／AX3／iPad（含編號後綴 -iPad）等衍生變體不各自要求一列 ─────
+# ㉑ LS-251 形狀正樣本：同一正典畫面 4 個變體板（基準 iPhone／深色／A11y AX3／-iPad），Notes 只提到其中一個變體名稱 → 綠
+#     （LS-251 分支實測：30 個變體板 → 8 個正典畫面；這裡用縮小版 4 變體 → 1 正典畫面重現同一形狀）
+g checkout -q -b ls300-canon-live "$base_ref"
+pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" \
+    "$(board Scr01a 'Import / 01 測試頁 (iPhone)' '')" \
+    "$(board Scr01b 'Import / 01 測試頁 · 深色' '')" \
+    "$(board Scr01c 'A11y / 01 測試頁 · Dynamic Type AX3（body 40pt）' '')" \
+    "$(board Scr01d 'Import / 01-iPad 測試頁 (iPad 11吋)（不裁切）' '')" \
+    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 測試頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
+commit_pen 'design(pen): LS-300 R2 canon-live 同畫面 4 變體板，Notes 一列'
+expect 0 '㉑ LS-251 形狀：同正典畫面 4 變體板（基準／深色／AX3／iPad），Notes 一列（任一變體名稱）→ 綠' '新增正典畫面 1、畫面級屬性缺列 0' '' design/littlesprout.pen --base "$base_ref"
+
+# ㉒ 缺其中一個正典畫面：兩個正典畫面各 2 個變體，Notes 只列了 01 → 紅，只列 #02 這一個正典畫面（不逐變體列兩行）
+g checkout -q -b ls300-canon-missing "$base_ref"
+pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" \
+    "$(board Scr01a 'Import / 01 測試頁 (iPhone)' '')" \
+    "$(board Scr01b 'Import / 01 測試頁 · 深色' '')" \
+    "$(board Scr02a 'Import / 02 另一頁 (iPhone)' '')" \
+    "$(board Scr02b 'Import / 02 另一頁 · 深色' '')" \
+    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 測試頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
+commit_pen 'design(pen): LS-300 R2 canon-missing 兩正典畫面，Notes 只列 01'
+out="$(cd "$R" && bash "$check" design/littlesprout.pen --base "$base_ref" 2>&1)"; got=$?
+miss02_count="$(grep -cF '✗ 畫面級屬性缺列：正典畫面 #02' <<<"$out" || true)"
+if [ "$got" -eq 1 ] && [ "$miss02_count" -eq 1 ] && ! grep -qF '✗ 畫面級屬性缺列：正典畫面 #01' <<<"$out"; then
+  echo "✓ ㉒ 兩正典畫面各 2 變體，Notes 只列 01：只有 #02 被點名缺列（一行，不逐變體列兩行）、#01 不誤點"
+else
+  echo "✗ ㉒ 應恰好一行 #02 缺列、不誤點 #01（實得 exit ${got}、#02 命中 ${miss02_count} 行）" >&2
+  printf '%s\n' "$out" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ㉓ mutation 負控：拿掉正典歸併（`canonicalize_screen_name` 直接回傳裸板名、不剝裝飾字樣不合併變體）→ ㉑ 的
+#     4 變體 1 正典畫面樣本改判紅，且除了 Notes 提到的那個基準變體外，其餘 3 個變體各自被點名缺列（同 LS-251
+#     實跑「拿掉歸併」時 30 行缺列的縮小版重現：4 變體、1 個被 Notes 命中、3 個缺列）
+mut_canon="$work/design_notes_check.no-canon.py"
+if awk '
+  index($0, "# DESIGN-NOTES-CANONICALIZE-CHECK") > 0 { print; print "    return name, name"; next }
+  { print }
+' "$py" > "$mut_canon" && grep -q 'return name, name' "$mut_canon"; then
+  live_head="$(g rev-parse ls300-canon-live)"
+  out_mut="$(cd "$R" && python3 "$mut_canon" --pen design/littlesprout.pen --head "$live_head" --base "$base_ref" 2>&1)"; rc_mut=$?
+  miss_lines="$(grep -c '✗ 畫面級屬性缺列：' <<<"$out_mut" || true)"
+  if [ "$rc_mut" -eq 1 ] && [ "$miss_lines" -eq 3 ] \
+     && grep -qF '✗ 畫面級屬性缺列：正典畫面 Import / 01 測試頁 · 深色' <<<"$out_mut" \
+     && grep -qF '✗ 畫面級屬性缺列：正典畫面 A11y / 01 測試頁 · Dynamic Type AX3（body 40pt）' <<<"$out_mut" \
+     && grep -qF '✗ 畫面級屬性缺列：正典畫面 Import / 01-iPad 測試頁 (iPad 11吋)（不裁切）' <<<"$out_mut" \
+     && ! grep -qF '✗ 畫面級屬性缺列：正典畫面 Import / 01 測試頁 (iPhone)' <<<"$out_mut"; then
+    echo "✓ ㉓ mutant（拿掉正典歸併）：㉑ 的 4 變體 1 正典畫面樣本改判紅，未被 Notes 逐字提到的 3 個變體各自缺列（Notes 提到的基準變體不缺）——證明綠是歸併邏輯造成的"
+  else
+    echo "✗ ㉓ mutant 未如預期翻轉（實得 exit ${rc_mut}、缺列行數 ${miss_lines}）" >&2
+    printf '%s\n' "$out_mut" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ㉓ mutate：找不到 DESIGN-NOTES-CANONICALIZE-CHECK 標記，負控本身無效" >&2
   fail=1
 fi
 

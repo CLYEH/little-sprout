@@ -33,17 +33,27 @@ merge-base→head 之間 JSON 有變更（含新增）才算違規（紅）；�
 
 畫面級屬性清單（LS-300；LS-96 池項 3aa46c78）：LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」——推入式畫面隱藏 Tab Bar、
 Tab-root 只用自訂標題、失敗文案分支，設計稿 Notes 板有寫、ios-dev 沒逐條對。這支順便驗：本 PR 新增的**畫面板**（頂層 frame，
-名稱形如「<群組> / <編號或名稱>」——`SCREEN_BOARD_NAME_RE`，排除 Notes 板本身與 `cmp/` 元件定義）在 head 快照裡，是否每一塊都能在
-Notes 板文字裡找到一列（`SCREEN_ATTR_HEADING_RE` 命中「畫面級屬性」之後的文字範圍內，以**板名子字串**比對——不驗欄位內容完不完整，
-只驗「這塊板有沒有被提到」，欄位規格見 `docs/COLLABORATION.md` §1／`.claude/agents/ui-designer.md`）。新增＝id 不在 base（merge-base）
-快照裡（同 NBSP 的 `touched_roots` 判斷新增/變更，這裡只取「新增」）。Notes 板完全沒有「畫面級屬性」段 → 所有新板全部列為缺失；
-段落存在但某板名沒被提到 → 只列該板。代價：新畫面板一律要求 Notes 補列，不論該板是不是全螢幕推入式——寧可誤要求（AX／Stress 這類
-衍生板同樣算「新板」，見票文範圍「不做」只排除「像素級視覺比對」，未排除衍生板；ios-dev／merge-reviewer 若判斷某類衍生板不需要
-獨立列，可在該列直接寫「同 <基準板名>」帶過，板名子字串比對照樣算命中）。
+名稱形如「<群組> / <編號或名稱>」——`SCREEN_BOARD_NAME_RE`，排除 Notes 板本身與 `cmp/` 元件定義）在 head 快照裡，是否每一個**正典畫面**
+都能在 Notes 板文字裡找到一列（`SCREEN_ATTR_HEADING_RE` 命中「畫面級屬性」之後的文字範圍內，以**任一變體板名子字串**比對——不驗欄位
+內容完不完整，只驗「這個正典畫面有沒有被提到」，欄位規格見 `docs/COLLABORATION.md` §1／`.claude/agents/ui-designer.md`）。新增＝id 不在
+base（merge-base）快照裡（同 NBSP 的 `touched_roots` 判斷新增/變更，這裡只取「新增」）。
+
+**R2（merge-review R1 M1）正典畫面歸併**：深色／AX3／iPad（含編號後綴 `-iPad`）這類同一畫面的裝置／外觀變體，原版把每個變體板各自
+當一塊「新畫面板」，對 LS-251 分支（六畫面、實測 30 個新增板）逼出 30 行缺列——但票文「畫面級屬性」欄位本身就含「深色特例」「AX3
+特例」「iPad 重排 vs 放大」，設計意圖是**一個畫面一行、深色/AX3/iPad 差異記在該行的欄位裡**，不是要求每個變體各自成行。`canonicalize_screen_name()`
+把板名去掉群組前綴（`A11y`／`Stress` 這類衍生群組與其對應的基準群組同編號即視為同一正典畫面）與已知裝飾字樣（`DERIVED_SUFFIX_RE`：
+` · 深色`、` · Dynamic Type AX3（…）`、編號後綴 `-iPad`、`(iPhone)`／`(iPad …)`／`（不裁切）` 這類裝置註記）後算出 canonical_id——有
+板編號（`[0-9]+[A-Za-z]?`，如 `01`／`04b`／`06a`）的畫面只取編號本身當 id（忽略其餘描述文字），沒有編號的名稱型畫面則退回去裝飾後的
+描述文字當 id（LS-251 實測：30 個變體板 → 8 個正典畫面 `01／02／03／04／04b／05／06a／06b`，與 merge-review R1 M1 預期一致）。
+`new_screen_boards()` 回傳正典畫面群組（含全部 member 變體），`screen_attr_missing()` 對每個正典畫面只要**任一** member 的完整板名
+出現在「畫面級屬性」段之後即算放行（member 越多、放行條件越寬鬆，不是越嚴格——這是刻意的，見下方）。Notes 板完全沒有「畫面級屬性」
+段 → 所有正典畫面全部列為缺失；段落存在但某正典畫面的所有 member 都沒被提到 → 只列該正典畫面（訊息印 canonical_id＋代表描述文字＋
+全部 member 板 id，方便回頭對應稿內哪些板）。
 
 輸出：每筆缺失一行「✗ 板 <rootId>（名稱）／節點 <textId>／缺失 id <token>：<子句>」；沿革 info 行以「（沿革）」開頭；署名 NBSP
 違規一行「✗ 署名 NBSP：板 …／節點|實例 …：「<內容>」<單位> 前 <codepoints>」、舊債以「（舊債）署名 NBSP：」開頭；畫面級屬性缺列
-一行「✗ 畫面級屬性缺列：板 <rootId>（<名稱>）——Notes 未含「畫面級屬性」段，或段內未提及此板名」；
+一行「✗ 畫面級屬性缺列：正典畫面 <canonical_id>（<代表描述文字>；板 id：<member id 逗號列>）——Notes 未含「畫面級屬性」段，或段內
+未提及任一變體名稱」；
 最後一行摘要。exit 0＝無缺失且無 NBSP／畫面級屬性違規；1＝有缺失或違規；2＝參數／git／JSON 錯誤（fail closed）。
 
 用法：design_notes_check.py --pen <repo 相對路徑> --head <sha> --base <merge-base sha> [--history <sha> ...]
@@ -81,6 +91,23 @@ SPACE = " "
 # 非空白字元），不窄化到特定群組字面（「Import」「Growth」……）——票文字面只給範例，不是列舉。
 SCREEN_BOARD_NAME_RE = re.compile(r"^\S[^/]*/\s*\S")
 SCREEN_ATTR_HEADING_RE = re.compile(r"畫面級屬性")
+# LS-300 R2（merge-review R1 M1）：正典畫面歸併——深色／AX3／iPad 等衍生變體去掉這些裝飾字樣後視為同一正典畫面
+# （見 canonicalize_screen_name）。裝飾樣式：編號後綴 `-iPad`（如 `01-iPad`）、`· 深色`、`· Dynamic Type AX3（…）`
+# （AX3 字級附註內容不定，用 `[^）]*` 吃掉整個全形括號）、裝置註記 `(iPhone)`／`(iPad …)`（半形括號、內容不定）、
+# `（不裁切）`（全形括號，LS-251 iPad 板慣用附註）。`Stress`／`A11y` 這類衍生「群組」（頂層前綴，如 `A11y / 01 …`）
+# 不在這支正則裡處理——群組前綴在 `canonicalize_screen_name` 直接整段丟棄（只留「/」之後的文字），與基準群組同編號
+# 自然歸併，不需要另外列出群組名稱字面（避免每加一種新衍生群組名稱就要回頭補正則）。
+DERIVED_SUFFIX_RE = re.compile(
+    r"-iPad\b"
+    r"|[·‧]\s*深色"
+    r"|[·‧]\s*Dynamic Type AX3（[^）]*）"
+    r"|\(iPhone\)"
+    r"|\(iPad[^)]*\)"
+    r"|（不裁切）"
+)
+# 板編號：開頭一到多位數字＋可選一個英文字母（`01`／`04b`／`06a`）。`(?:-\w+)?` 消耗但不擷取編號後綴（如 `-iPad`）——
+# canonical_id 只取編號本身，`-iPad` 這類裝置後綴不影響分組。
+BOARD_NUMBER_RE = re.compile(r"^([0-9]+[A-Za-z]?)(?:-\w+)?")
 
 
 def die(msg):
@@ -187,29 +214,60 @@ def touched_roots(base_doc, head_doc):
     return {rid for rid, blob in head_tops.items() if base_tops.get(rid) != blob}
 
 
+def canonicalize_screen_name(name):
+    """LS-300 R2（merge-review R1 M1）：回傳 (canonical_id, display)。name 去掉群組前綴（第一個「/」之前的文字，
+    含 `A11y`／`Stress` 這類衍生群組——與其對應的基準群組同編號即視為同一正典畫面）後：
+      - 開頭是板編號（`BOARD_NUMBER_RE`，如 `01`／`04b`／`06a`）→ canonical_id 只取編號本身（忽略 `-iPad` 這類
+        編號後綴與其餘描述文字／深色／AX3／裝置括號等裝飾），同編號的不同變體歸併成一個正典畫面。
+      - 沒有編號（票文「<編號 或 名稱>」的名稱型畫面）→ canonical_id 退回去除已知裝飾字樣（`DERIVED_SUFFIX_RE`）
+        後的描述文字本身。
+    `display` 一律是去裝飾字樣、去頭尾空白、內部連續空白壓成一個空格的描述文字，供訊息與 Notes 代表列顯示。"""
+    # DESIGN-NOTES-CANONICALIZE-CHECK
+    _, _, rest = name.partition("/")
+    rest = rest.strip()
+    display = DERIVED_SUFFIX_RE.sub("", rest)
+    display = re.sub(r"\s*[·‧]\s*$", "", display)
+    display = re.sub(r"\s+", " ", display).strip()
+    m = BOARD_NUMBER_RE.match(rest)
+    if m:
+        return "#" + m.group(1), display
+    return "name:" + display, display
+
+
 def new_screen_boards(base_doc, head_doc):
-    """LS-300：本 PR 新增的畫面板——head 快照裡符合 `SCREEN_BOARD_NAME_RE`（名稱形如「<群組> / <編號或名稱>」）、
-    排除 Notes 板（`NOTES_NAME_RE`）與 `cmp/` 元件定義、且 id 不在 base（merge-base）快照裡的頂層節點。回傳
-    `[(id, name), ...]`，依 head 快照 children 順序（穩定輸出，方便訊息與 LS-251 實跑核對）。"""
+    """LS-300（R2，merge-review R1 M1）：本 PR 新增的**正典畫面**——head 快照裡符合 `SCREEN_BOARD_NAME_RE`（名稱
+    形如「<群組> / <編號或名稱>」）、排除 Notes 板（`NOTES_NAME_RE`）與 `cmp/` 元件定義、且 id 不在 base
+    （merge-base）快照裡的頂層節點，依 `canonicalize_screen_name()` 的 canonical_id 歸併——深色／AX3／iPad 等
+    衍生變體不各自算一塊「新畫面板」。回傳 `[(canonical_id, display, [(id, name), ...]), ...]`：`display` 取該
+    正典畫面第一個出現的 member 的描述文字，`members` 依 head 快照 children 順序（穩定輸出，方便訊息與 LS-251
+    實跑核對）。"""
     base_ids = {c["id"] for c in base_doc.get("children") or [] if isinstance(c, dict) and isinstance(c.get("id"), str)}
-    out = []
+    groups = {}
+    order = []
     for c in head_doc.get("children") or []:
         if not isinstance(c, dict) or not isinstance(c.get("id"), str) or c["id"] in base_ids:
             continue
         name = c.get("name") or ""
         if NOTES_NAME_RE.search(name) or name.startswith("cmp/"):
             continue
-        if SCREEN_BOARD_NAME_RE.match(name):
-            out.append((c["id"], name))
-    return out
+        if not SCREEN_BOARD_NAME_RE.match(name):
+            continue
+        cid, display = canonicalize_screen_name(name)
+        if cid not in groups:
+            groups[cid] = {"display": display, "members": []}
+            order.append(cid)
+        groups[cid]["members"].append((c["id"], name))
+    return [(cid, groups[cid]["display"], groups[cid]["members"]) for cid in order]
 
 
-def screen_attr_missing(head_doc, new_boards):
-    """LS-300：Notes 板文字裡「畫面級屬性」段（`SCREEN_ATTR_HEADING_RE` 首次命中之後的文字，跨全部 Notes 板、
-    依 `notes_boards`／`text_nodes` 既有順序串接）是否提到每一塊新畫面板的板名（子字串比對）。段落完全不存在
-    → 全部新板皆列為缺失；段落存在但某板名沒出現在該段之後的文字裡 → 只列該板。回傳缺失的 `[(id, name), ...]`
-    子集（保留 new_boards 的順序）。"""
-    if not new_boards:
+def screen_attr_missing(head_doc, canonical_boards):
+    """LS-300（R2，merge-review R1 M1）：Notes 板文字裡「畫面級屬性」段（`SCREEN_ATTR_HEADING_RE` 首次命中之後的
+    文字，跨全部 Notes 板、依 `notes_boards`／`text_nodes` 既有順序串接）是否提到每個正典畫面的**任一** member
+    板名（子字串比對；member 越多、放行條件越寬鬆是刻意的——ui-designer 只要在 Notes 提到其中一個變體名稱，這個
+    正典畫面就算有列，不必每個深色／AX3／iPad 變體各自出現）。段落完全不存在 → 全部正典畫面皆列為缺失；段落存在
+    但某正典畫面的所有 member 都沒出現在該段之後的文字裡 → 只列該正典畫面。回傳缺失的
+    `[(canonical_id, display, members), ...]` 子集（保留 canonical_boards 的順序）。"""
+    if not canonical_boards:
         return []
     chunks = []
     for board in notes_boards(head_doc):
@@ -218,9 +276,9 @@ def screen_attr_missing(head_doc, new_boards):
     joined = "\n".join(chunks)
     m = SCREEN_ATTR_HEADING_RE.search(joined)
     if not m:
-        return list(new_boards)
+        return list(canonical_boards)
     scoped = joined[m.start():]
-    return [(rid, name) for rid, name in new_boards if name not in scoped]  # DESIGN-NOTES-SCREEN-ATTR-CHECK
+    return [(cid, display, members) for cid, display, members in canonical_boards if not any(name in scoped for _, name in members)]  # DESIGN-NOTES-SCREEN-ATTR-CHECK
 
 
 def check(head_doc, head_ids, dead_candidates):
@@ -296,13 +354,18 @@ def main(argv):
     for rid, rname, owner, content, unit, cps in nbsp_bad:
         print("✗ 署名 NBSP：板 %s（%s）／%s：「%s」%s 前 %s（須 U+00A0；允許 U+2060／換行，LS-202）" % (rid, rname, owner, content[:60], unit, cps), file=sys.stderr)
 
-    # LS-300：畫面級屬性清單——本 PR 新增的畫面板，是否每一塊都在 Notes 板「畫面級屬性」段裡被提到。
+    # LS-300（R2，merge-review R1 M1）：畫面級屬性清單——本 PR 新增的正典畫面（深色／AX3／iPad 等變體已歸併），
+    # 是否每一個都在 Notes 板「畫面級屬性」段裡被提到（任一變體板名即算）。
     new_boards = new_screen_boards(base_doc, head_doc)
     screen_missing = screen_attr_missing(head_doc, new_boards)
-    for rid, rname in screen_missing:
-        print("✗ 畫面級屬性缺列：板 %s（%s）——Notes 未含「畫面級屬性」段，或段內未提及此板名（LS-300）" % (rid, rname), file=sys.stderr)
+    for cid, display, members in screen_missing:
+        member_ids = "、".join(mid for mid, _ in members)
+        print(
+            "✗ 畫面級屬性缺列：正典畫面 %s（%s；板 id：%s）——Notes 未含「畫面級屬性」段，或段內未提及任一變體名稱（LS-300）"
+            % (cid, display, member_ids), file=sys.stderr
+        )
 
-    summary = "Notes 板 %d 塊、head id %d、本 PR 範圍曾存在而 head 已無的 id %d、沿革引用 %d、缺失 %d、署名 NBSP 違規 %d（舊債 %d）、新增畫面板 %d、畫面級屬性缺列 %d" % (
+    summary = "Notes 板 %d 塊、head id %d、本 PR 範圍曾存在而 head 已無的 id %d、沿革引用 %d、缺失 %d、署名 NBSP 違規 %d（舊債 %d）、新增正典畫面 %d、畫面級屬性缺列 %d" % (
         len(boards), len(head_ids), len(dead_candidates), len(history), len(missing), len(nbsp_bad), len(nbsp_old), len(new_boards), len(screen_missing))
     problems = []
     if missing:
@@ -310,7 +373,7 @@ def main(argv):
     if nbsp_bad:
         problems.append("本 PR 觸碰的板／元件上，cmp/Card Album／cmp/Card Diary 署名的 歲／個月 前空白含 U+0020——改成 U+00A0（允許 U+2060／換行）後重落地（LS-202）")
     if screen_missing:
-        problems.append("新增畫面板未在 Notes「畫面級屬性」段逐板列出——補一列（板名｜隱藏 Tab Bar｜標題｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大），格式見 docs/COLLABORATION.md §1（LS-300）")
+        problems.append("新增正典畫面未在 Notes「畫面級屬性」段逐畫面列出——每個畫面補一列（板名｜隱藏 Tab Bar｜標題｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大），深色／AX3／iPad 變體記在該列欄位、不必各自成行，格式見 docs/COLLABORATION.md §1（LS-300）")
     if problems:
         print("✗ design-notes gate：%s——%s" % (summary, "；".join(problems)), file=sys.stderr)
         return 1
