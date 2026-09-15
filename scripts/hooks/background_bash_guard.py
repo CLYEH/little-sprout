@@ -76,6 +76,14 @@
 #       keyword 文字裡各自照原規則判定，不會被硬套「當成獨立命令重新評估」。除此之外沒有進一步做
 #       pretool_engine 的完整命令位置正規化——這支是文字慣用形狀的啟發式比對，不是 H1-H3 那種要
 #       fail-closed 到繞路都擋住的安全邊界，維持簡單（票文 size:S）。
+#   (c)（LS-299，源自 LS-96 池項 26bbff68）命令文字含 `gh run watch` 且身分 ∈ BLOCKED_AGENTS——這條
+#       跟 (a)／(b) 不一樣：`gh run watch <id> --exit-status` 本身不帶任何背景化語法（沒有 `&`／
+#       `nohup`／subshell），問題是它一路阻塞到 run 完成，常常撞 Bash 工具 600s 上限被系統自動移到
+#       背景，agent 收到「已移背景」就停下等通知——但背景命令完成不會喚醒 subagent（09-15 三次事
+#       故：LS-286／287／295）。沒有 idiom 可偵測，只能直接偵測字面本身，教可執行修法：改用
+#       `bash scripts/ops/ci-wait.sh <run-id>` 前景分段輪詢。同 (a)，只對 BLOCKED_AGENTS 生效，
+#       orchestrator 自己不受影響（票文範圍明示不把 ci-wait.sh 用在 orchestrator 身上）；與 (b) 共用
+#       同一套遞迴（`$(...)`／反引號／`-c`／`eval` 包一層一樣會被偵測到）。
 #
 # W0：stdin 空／JSON 壞／頂層非物件／python3 或本檔案本身發生未預期例外 → deny（fail-closed，同
 #   pretool.sh／main_checkout_guard.py 的既有慣例）。
@@ -107,6 +115,22 @@ BLOCKED_AGENTS = {
 }
 
 KEYWORD_RE = re.compile(r"git\s+push|xcodebuild|push-gate|\.test\.sh|run\.sh|supabase")
+# LS-299（源自 LS-96 池項 26bbff68）：規則 (c)——`gh run watch <id> --exit-status` 本身不帶任何
+# `&`／`nohup`／subshell 背景化語法，只是單純一路阻塞到 run 完成的前景命令；問題不是「使用者自己把它
+# 背景化」（規則 a／b 的範圍），而是它常常跑超過 Bash 工具 600s 上限、被系統自動移到背景，agent 收到
+# 「已移背景」就停下等通知——但背景命令完成不會喚醒 subagent（09-15 三次事故：LS-286／287／295）。
+# 這裡沒有 idiom 可偵測（沒有背景化語法），只能直接偵測字面本身；與規則 (a) 同精神，只對
+# BLOCKED_AGENTS 六個身分生效（orchestrator 自己不受影響，票文範圍明示不把 ci-wait.sh 用在
+# orchestrator 身上）。
+# R2（merge-review R1 B2，major，已修）：初版直接對未經引號遮蔽的文字做 regex 字面比對，會誤擋單純
+# 「提及」該字串而非真的執行的合法命令——`echo "已改用 ci-wait.sh，不再用 gh run watch"`（訊息字串）、
+# `grep "gh run watch" scripts/ops/ci-wait.sh`（審查／盤點殘留用法，正是本票範圍 3 要求 reviewer 做
+# 的動作）、`git commit -m "fix(ops): stop using gh run watch, use ci-wait.sh"`（commit message）三種
+# reviewer 實測皆會 deny。修法：`_gh_run_watch_command_position()` 直接重用
+# `pretool_engine.tokenize_segments` 的分段＋斷詞——引號內文本身就是單一 token（不會被拆成獨立的
+# `gh`／`run`／`watch` 三個 unquoted token），只有某個分段（`;`／`\n`／`&`／`&&`／`|`／`||` 切開的
+# 命令位置）的**前三個 token 逐一是未加引號**的 `gh`／`run`／`watch` 字面才算命中——這天然就是
+# 「只在命令位置判定」，不需要另外寫一套「行首或分隔符之後」的位置判斷。
 NOHUP_BG_RE = re.compile(r"\bnohup\b[^\n;&|]*&(?!&)")
 SUBSHELL_BG_RE = re.compile(r"\([^()\n]*\)\s*&(?!&)")
 BARE_AMP_RE = re.compile(r"(?<![&>])&(?!&|>)")
@@ -248,33 +272,69 @@ def _extract_recurse_payloads(stripped):
     return payloads
 
 
-def _hit_at_depth(cmd, depth):
-    """單一層的 idiom＋keyword 判定，遞迴進 `_extract_recurse_payloads` 找到的片段（M1 修法）。
+def _gh_run_watch_command_position(stripped):
+    """R2（merge-review R1 B2，major，已修）：規則 (c) 只在「命令位置」（行首、或 `;`／`&&`／`||`／
+    `|` 之後）比對 `gh run watch`——直接重用 `tokenize_segments` 的分段＋斷詞（不重寫一套位置判斷）。
+    引號內文本身就是單一 token（不會被拆成獨立的 `gh`／`run`／`watch` 三個 unquoted token），所以
+    `echo "…gh run watch"`／`grep "gh run watch" …`／`git commit -m "…gh run watch…"` 這類把整句包
+    進引號的寫法，天然不會命中；只有某個分段的**前三個 token 逐一是未加引號**的 `gh`／`run`／`watch`
+    字面才算數。引號／`$(...)`／反引號不平衡（`Ambiguous`）視為不比對——這支是文字慣用形狀的啟發式
+    比對，不是安全邊界，遮蔽失敗頂多退回不命中，不像 H1-H3 那樣要 fail-closed 到繞路都擋住。"""
+    try:
+        segments, _cmdsubs = E.tokenize_segments(stripped)
+    except E.Ambiguous:
+        return False
+    want = ("gh", "run", "watch")
+    for seg in segments:
+        toks = seg["tokens"]
+        if len(toks) < 3:
+            continue
+        if all(not toks[i][1] and toks[i][0] == want[i] for i in range(3)):
+            return True
+    return False
+
+
+def _hit_at_depth(cmd, depth, identity):
+    """單一層的 idiom＋keyword 判定（規則 b），遞迴進 `_extract_recurse_payloads` 找到的片段（M1
+    修法）；同一層也檢查規則 (c)（`gh run watch` 在命令位置，只對 `identity` ∈ BLOCKED_AGENTS 生
+    效；R2 已修為只認命令位置，見 `_gh_run_watch_command_position`）。回傳 None（無命中）或
+    "b"／"c"（命中哪條規則，供上層組不同的 deny 訊息）。
     idiom 比對用 `_mask_quoted` 遮蔽過的文字（引號內的 `&` 不算運算子）；keyword 比對用**未經
     `_mask_quoted` 遮蔽**的原始文字（關鍵字被引號包住——如檔名字面——仍是命令真的碰到那個操作的
     證據，不該連同引號一起消失，這正是 M1 迴歸裡「keyword 被引號包住也失效」那一半的修法）；兩者
     都先過 `_mask_allowlisted_bg`（放行清單片段整段豁免，不分 idiom／keyword）。深度超過
     `MAX_RECURSE_DEPTH` 就不再遞迴（fail-open 方向，啟發式比對不是安全邊界）。"""
     if depth > MAX_RECURSE_DEPTH:
-        return False
+        return None
     stripped, _bad = E.strip_heredocs(cmd)
     idiom_text = _mask_allowlisted_bg(_mask_quoted(stripped))
     keyword_text = _mask_allowlisted_bg(stripped)
     if _idiom_hit(idiom_text) and KEYWORD_RE.search(keyword_text):
-        return True
+        return "b"
+    if identity in BLOCKED_AGENTS and _gh_run_watch_command_position(stripped):
+        return "c"
     for payload in _extract_recurse_payloads(stripped):
-        if _hit_at_depth(payload, depth + 1):
-            return True
-    return False
+        hit = _hit_at_depth(payload, depth + 1, identity)
+        if hit:
+            return hit
+    return None
 
 
-def check_command_idiom(cmd):
-    if _hit_at_depth(cmd, 0):
+def check_command_idiom(cmd, identity):
+    kind = _hit_at_depth(cmd, 0, identity)
+    if kind == "b":
         return (
             "H-BG(b)：命令文字為「背景化再等」慣用形狀（nohup／subshell 背景化，或背景化後接 "
             "wait/sleep/while/until 輪詢；含遞迴進 $(...)／反引號／bash|sh|zsh|dash -c／eval 引數的"
             "情形）且含 git push／xcodebuild／push-gate／.test.sh／run.sh／supabase——一律前景執行"
             f"並帶 timeout，等待改用 for/sleep 輪詢，見 {COLL_REF}"
+        )
+    if kind == "c":
+        return (
+            f"H-BG(c)：agent「{identity}」的命令文字含 `gh run watch`——它會一路阻塞到 run 完成，"
+            "撞 Bash 工具 600s 上限後被系統移背景、agent 停下等通知（背景命令完成不會喚醒 "
+            "subagent，LS-299）。改用前景分段輪詢 `bash scripts/ops/ci-wait.sh <run-id>`"
+            f"（exit 3 就再跑一次），見 {COLL_REF}"
         )
     return None
 
@@ -311,7 +371,7 @@ def main():
         sys.exit(2)
 
     command = str(ti.get("command") or "")
-    reason = check_command_idiom(command)
+    reason = check_command_idiom(command, identity)
     if reason:
         sys.stdout.write(reason)
         sys.exit(2)
