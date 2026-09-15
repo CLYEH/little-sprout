@@ -384,6 +384,7 @@ jobs:
           bash scripts/ops/simulator-lock.test.sh || rc=1
           bash scripts/ops/promote.test.sh || rc=1
           bash scripts/ops/promote-follow.test.sh || rc=1
+          bash scripts/ops/merge-follow.test.sh || rc=1
           bash scripts/ops/post-status.test.sh || rc=1
           bash scripts/ops/pen-open.test.sh || rc=1
           bash scripts/ops/pen-read.test.sh || rc=1
