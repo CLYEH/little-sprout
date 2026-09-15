@@ -54295,7 +54295,7 @@
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
-                                "url": "appstore-photos/demo-grid-hero.jpg",
+                                "url": "appstore-photos/demo-hero-detail.jpg",
                                 "mode": "fill"
                               }
                             },
@@ -56424,12 +56424,12 @@
                                     },
                                     "Qjdzx": {
                                       "width": 212.5,
-                                      "y": 264,
+                                      "y": 239,
                                       "enabled": true
                                     },
                                     "o5O1GD": {
                                       "width": 212.5,
-                                      "y": 257,
+                                      "y": 232,
                                       "enabled": true
                                     },
                                     "JgUK8": {
@@ -56451,7 +56451,12 @@
                               "type": "ref",
                               "ref": "qtCd7",
                               "name": "Card Diary 1",
-                              "width": "fill_container"
+                              "width": "fill_container",
+                              "descendants": {
+                                "p2odx": {
+                                  "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。"
+                                }
+                              }
                             }
                           ]
                         }
@@ -64616,7 +64621,7 @@
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
-                                "url": "appstore-photos/demo-grid-hero.jpg",
+                                "url": "appstore-photos/demo-hero-detail.jpg",
                                 "mode": "fill"
                               }
                             },
@@ -143394,7 +143399,7 @@
                               "fill": "$text-primary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "好可愛喔！挖沙工具記得多帶幾個，上次那組被沖到海裡了 😄",
+                              "content": "好可愛喔！阿公這張笑得眼睛都瞇起來了，看得出來真的很開心。",
                               "lineHeight": 1.5,
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -143500,7 +143505,7 @@
                               "fill": "$text-primary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "看起來玩得好開心～下次約一起去！",
+                              "content": "這些照片好珍貴，謝謝你們分享～我也想翻翻我家的舊相簿了！",
                               "lineHeight": 1.5,
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -143606,7 +143611,7 @@
                               "fill": "$text-primary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "已經在收拾了，明天見！",
+                              "content": "改天約個時間，我們也一起翻相簿聊聊天！",
                               "lineHeight": 1.5,
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -145496,7 +145501,7 @@
                               "fill": "$text-primary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "好可愛喔！挖沙工具記得多帶幾個，上次那組被沖到海裡了 😄",
+                              "content": "好可愛喔！阿公這張笑得眼睛都瞇起來了，看得出來真的很開心。",
                               "lineHeight": 1.5,
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -145602,7 +145607,7 @@
                               "fill": "$text-primary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "看起來玩得好開心～下次約一起去！",
+                              "content": "這些照片好珍貴，謝謝你們分享～我也想翻翻我家的舊相簿了！",
                               "lineHeight": 1.5,
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -145708,7 +145713,7 @@
                               "fill": "$text-primary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "已經在收拾了，明天見！",
+                              "content": "改天約個時間，我們也一起翻相簿聊聊天！",
                               "lineHeight": 1.5,
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
@@ -162971,6 +162976,320 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "R1 版本『未動範圍』只列整塊板名，讓人誤以為已觸碰的板（`c2yk3s`／`Vn4TL`）已經乾淨。R2 更新為：`c2yk3s`／`Vn4TL`／`ak7RI`／`b59DUk`／`ZRyXL` 五板（含其裝置畫面內容來源`yXSht`／`go7f9`／`JbTfv`／`MjRcr`／`vzYXz`）目前已無已知冷綠 Unsplash 內容（含元件預設層）；仍維持原冷色調的是 02 相簿詳情（`y9r9Fq`／`mWZy3`，來源`pVSXP`／`rFiLJ`，5 個`Photo Wrap`皆 Unsplash 花園／戶外照片）、03 邀請加入（`Bm7Lx`／`BnjqP`）、05 寶貝 iPhone（`Q9Zw3f`，來源`gpSsR`無最近照片列功能）——這些板本輪未觸碰，票文與 orchestrator 裁定皆未要求擴張至此，留待後續票。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "e2nW5R",
+          "name": "N LS-280 R3 修訂：留言與本文對齊、色溫方法改 L 對齊、底片多樣性",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "IGCZv",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "LS-280 R3 修訂（VR R2 `a4286567`）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "yBi3O",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "rQIOY",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "BL-3 處置",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "illHs",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R2 的 `comments-*-v3.jpg` 是「像素級量測後貼補」（只換照片矩形），本文與留言逐位元不動、與板上已改的新文字脫節。R3 改用真正的**合成重出 recipe**（可重跑）：①`Copy(\"wY7f8\"/\"FiBvh\", document, {...})` 建立臨時節點；②`Copy(對應的 MjRcr／vzYXz, 臨時節點, {x:0,y:0,layoutPosition:\"absolute\"})` 把整塊背景板複製進去；③`Move` 該背景複製體到臨時節點 children 索引 1（Status Bar 之後、Scrim 之前），讓半透明 Scrim 正常覆蓋背景、卡片維持原本置中留言 modal 的樣子；④`TakeScreenshot` 目視確認背景可讀、文字對齊；⑤`Export` 臨時節點（scale 2，原生高度不裁切）；⑥PIL 純像素裁切（iPad `[0,1112]`、iPhone 全板 `393×852` 不裁）＋縮長邊 1024；⑦`Delete` 臨時節點，不殘留於文件。四則留言（`FiBvh/ZDzhC`／`Fx3jd`／`W0wkt`，`wY7f8/XGw5o`／`BYskM`／`dreKF`）由「挖沙工具／被沖到海裡」改寫為呼應「翻相簿」敘事與「留言愛心，滿滿的愛」標語的三則對話（好可愛喔阿公這張笑得...／這些照片好珍貴謝謝分享...／改天約個時間一起翻相簿...），iPhone／iPad 兩板文字逐字相同。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "T8Z5VW",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "f9JHa",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-5 處置",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "TM3Ei",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`go7f9/eBgN8` caption 由兩行改一行後卡高 257→232，角托 y 已在 R2 修正為 211，但「更多照片」堆疊紙 `Qjdzx`（Stack Sheet 2）／`o5O1GD`（Stack Sheet 1）的 `y` 仍是舊卡高算出的 264／257，未同步收縮，導致兩片堆疊紙整個落在下方 `rsoPm` 卡片內（`cross_parent_collision` 0→8，其中 2 筆）。修正：`Qjdzx.y`→239、`o5O1GD.y`→232（比照 `yXSht/MYxf1` 元件預設的 232/239 正解）。**R2 收據 `LS-280-r2-overflow.json` 的 `cross_parent_collision` 該筆 classification 寫「延伸 4pt／既有／非新引入」與事實不符**（VR R2 逐項指出：不是延伸 4pt，是整塊在卡外 25–32pt；不是既有，是 R2 caption 改短才失效；不是非新引入，R1 對 `go7f9` 同支掃描是 0）——R3 收據重寫為「R2 caption 改短後 Stack Sheet y 未同步收縮而新引入的版面錯位，R3 已修正」。**卡片高度改變時要同步換算的清單**（本輪起正式記錄，供未來任何再改這兩張卡片文案長度的編輯查閱）：角托 4 顆（`O6ami`／`SNbd8`／`P15GB`，公式 `x=W−26+5`／`y=H−26+5`）＋ Stack Sheet 2 片（`o5O1GD`＝卡高−水平位移對應的 232 那條、`Qjdzx`＝卡高+7 對應的 239 那條，即 Stack Sheet 1 貼卡片底緣、Stack Sheet 2 再往下 7pt）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "h9RUrH",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dqbsE",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-7 處置",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "dzsF3",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`go7f9/rsoPm`（`ref:\"qtCd7\"`，iPad 時間軸第二則「溜滑梯」日記，元件預設 `descendants:{}`）補上 `p2odx:{content:\"今天陪小安一起翻相簿...\"}` 覆寫，與 `yXSht/WitwS` 同一天同一篇短版日記逐字相同——iPhone／iPad 兩塊海報現在說同一件事。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "O3vFHn",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nNICZ",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MJ-6 處置",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "RzZV8",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "同一塊板裝置畫面內同一來源定稿最多出現一次（沖印品與畫面內同一張是母題、不計）。`c2yk3s`：`WitwS/SBo3L`（原 `demo-grid-hero.jpg`，與 `xrCoj`／Hero Print 同為 hero.jpg 造成板內二次出現）改 `demo-hero-detail.jpg`——hero.jpg 廚房流理台一角的新裁切（原圖座標 `(1400,860,2160,1190)`，與 `demo-timeline-v2.jpg` 的 `(550,20,1550,850)` 在 y 軸完全不重疊，0% 面積重疊，無臉孔、純環境細節），與 `xrCoj`（hero.jpg 阿嬤與小安互動特寫）的『取景明顯不同』滿足 MjRcr 式例外。`b59DUk`：`MjRcr/GKxdw`（原同為 `demo-grid-hero.jpg`，與 `P08Jb` 板內重複）同法改 `demo-hero-detail.jpg`。`ak7RI`／`JbTfv`「最近的照片」三格**維持 R2 現狀（`demo-thumb-hero.jpg`／`-v2`／`-v3`，皆 hero.jpg 不同裁切），未改為 hero／invite／join 各一**——這是刻意偏離 orchestrator R3 裁定文字，理由：這三格明確標示「編輯陳小安／2 歲 3 個月」，invite.jpg／join.jpg 皆為新生兒，換用會重新引入 R1 MJ-2 已修正並經 VR R2 明確列為『請保護、別在 R3 改壞』的年齡矛盾（MJ-2 與 MJ-6 在此處互斥，本輪判斷保留年齡一致優先）。三格改採 R2 既有的三種不同構圖（中景雙人／單人特寫／含廚房環境的寬景），皆為同一次拍攝的不同時刻／取景，非同一裁切重複；若 orchestrator 認為 MJ-6 優先於 MJ-2，需要 codex-rescue 補圖或改用跨寶貝語意（VR R2 原提的兩個選項），這不在『不新生圖』的本票授權範圍內，故留待下一輪裁決，不擅自新生圖或大改此區塊身分語意。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RN4o8",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "c2Qkb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-5 處置",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "MrEkG",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "三個零引用孤兒資產已刪除：`demo-timeline.jpg`（69 KB）／`demo-thumb-invite.jpg`（58 KB）／`demo-thumb-join.jpg`（59 KB）。Notes 沿革段（`bdwVf`／`g2PvdB`／`y4k4N`）提及這些檔名的文字原樣保留，沿革本來就是描述已停用的東西。`demo-grid-join.jpg` 依 MN-8 重新裁切（見下）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ISTB2",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "e4Wthv",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-7 處置",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "j1vJDa",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "色溫判準改用**L 對齊後的色相／彩度 ΔE00**（把兩張的 L 都設為 50 再算 CIEDE2000，隔離亮度差、只看色相與彩度）取代單純全圖均值 ΔE00——VR R2 指出全圖均值裡有一半是曝光差（hero L=45.5 vs invite/join L≈35），不是底片本身的問題。三張定稿彼此的 L 對齊值：hero↔invite 4.86、hero↔join 4.04、invite↔join 1.72（作為『同一捲底片』的參考基準範圍）。本輪觸碰板逐一量測結果（L 對齊後 ΔE00，vs 該板 Hero Print）：`c2yk3s` 首卡 1.71／縮圖1(細節) 2.20／縮圖2(invite) 5.11／縮圖3(join) 4.97；`Vn4TL` card1 1.71／card2 4.37；`ak7RI`/`JbTfv` 三格 1.72／1.72／0.81；`b59DUk` 四格 4.23／1.61／1.08／6.24。全數落在或接近三張定稿彼此的參考範圍（1.72–4.86），確認 BL-1／BL-2 的色溫統一是實質達成、不是曝光差造成的假象。完整數值存 `.claude/evidence/LS-280/r3/measure-lab-r3.json`（gitignored）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gozHy",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "HdHr9",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-8 處置",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "fYpTE",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`demo-grid-join.jpg` 原裁切（join.jpg 嬰兒背面＋手臂＋包巾，無臉無動作）重新裁切為 join.jpg `(900,50,1750,1050)`——媽媽低頭看嬰兒的臉＋懷中新生兒，主體清楚可辨。`MjRcr/lok1I`／`WitwS/ekqx4`／`vzYXz/WCuPM` 三處引用同步套用新裁切內容（檔名不變，僅內容更新）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "V82l8",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "w9DLYQ",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "MN-2/MN-6 處置",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "X9yzD",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "orchestrator 裁定「用頭頂到下巴 ÷ 畫面高，重量四張，緣由段與表格同值」——候選檔確認存在於本機 `~/little-sprout-design-candidates/LS-247/`（20 張 PNG＋MANIFEST.json，未入 repo），本輪用同一份 5% 網格對 `invite-r2-1..4.png` 逐張套用 R1 已記錄的裁切座標後重新量測，`SELECTION.md` §1(b) 表格與緣由段已同步更新為同一組數字。invite-r2-4 的臉佔比由舊值『約 40%』修正為『約 54%』（已過 50% 門檻），但不影響原淘汰結論——該候選仍因接觸動作類型（擦嘴，不在 BRIEF §1(b) 必有清單）單獨不符合，非雙重失格；最終選圖 invite-r2-1 不受影響。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
