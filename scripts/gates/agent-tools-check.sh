@@ -89,6 +89,10 @@ ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 # LS-299（源自 LS-96 池項 26bbff68）：ios-dev／qa／merge-reviewer 正文須含 `scripts/ops/ci-wait.sh`——等 CI
 # 改一律前景分段輪詢這支腳本，取代 `gh run watch`（撞 Bash 工具 600s 上限被系統移背景後停下等通知，09-15
 # 三次事故：LS-286／287／295）；那句被刪即紅。
+# LS-300（LS-96 池項 3aa46c78）：ios-dev／merge-reviewer 正文各補一句——LS-125／126 QA 視覺 FAIL 四項全是
+# 「稿有、實作漏」（推入式畫面隱藏 Tab Bar、Tab-root 只用自訂標題、失敗文案分支），設計稿 Notes 板有寫、
+# ios-dev 沒逐條對、merge-reviewer 沒查。ios-dev：實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選——
+# 那句被刪即紅。merge-reviewer：對 handoff 勾選表抽兩列重放——那句被刪即紅。
 BODY_RULES=
 # LS-254：五份（ios-dev／ui-designer／visual-reviewer／merge-reviewer／qa）正文須含「禁派 fork」——fork 繼承整份派工單、會把它當
 # 自己的任務平行執行（LS-234 R7 同一 .pen／branch 雙寫；LS-188／LS-192 越權改檔，三起皆為 worker 自己派的 fork）；PreToolUse
@@ -158,7 +162,9 @@ merge-reviewer|UITest mutation 重放要看失敗點／時間軸是否隨 mutati
 merge-reviewer|macOS 沒有 timeout 指令|LS-270（LS-96 池項 8a946ea2(3)）：timeout 600 xcodebuild … 在 macOS exit 127＝整個測試沒跑過，卻容易被讀成「跑完沒事」（LS-266 R2 實例）；改用 gtimeout（先 command -v 確認）或 XCTest 看門狗
 ios-dev|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.sh（exit 3 就再跑一次），取代 gh run watch，那句被刪即紅
 qa|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.sh（exit 3 就再跑一次），取代 gh run watch，那句被刪即紅
-merge-reviewer|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.sh（exit 3 就再跑一次），取代 gh run watch，那句被刪即紅"
+merge-reviewer|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.sh（exit 3 就再跑一次），取代 gh run watch，那句被刪即紅
+ios-dev|實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選|LS-300：LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」，設計稿 Notes 板有寫、ios-dev 沒逐條對；handoff 用 handoff_evidence_check.py 認的「畫面級屬性（逐條勾選）」子段
+merge-reviewer|對 handoff 勾選表抽兩列重放|LS-300：不只信 ios-dev「已勾選」的申報，抽兩列對照設計稿 Notes「畫面級屬性」段與實際實作重放核對"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，

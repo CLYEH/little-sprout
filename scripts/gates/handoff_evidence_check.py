@@ -148,8 +148,19 @@
   - N9 本 gate 只驗「有沒有寫怎麼驗」，驗不出「證據與宣稱是否對應」這種語意問題（`1ff7b8d8`(b)：
     QA 用歡迎頁測試證明設定頁能開 sheet，這種「證據↔宣稱錯配」機械面仍是空的）。
 
-exit：0＝全過；1＝任一項缺證據、引用的測試名不存在，或引用的白名單路徑（見 (b2)）不存在；2＝找不到
-檔案／不在 git repo 且未給 --repo（fail closed）。
+畫面級屬性逐條勾選（LS-300；LS-96 池項 `3aa46c78`）：`design-notes-check.sh` 只驗 Notes 板有沒有提到新畫面板的
+板名，不驗 ios-dev 實作時真的逐條對過；這支再認一個**可選**子段——標題含「畫面級屬性」（如「**畫面級屬性（逐條
+勾選）**：」，用既有 `find_section_by_keyword`／`is_heading_line` 同一套判定，故這個子段本身在文件裡會被當成
+獨立標題、不是「已驗證」段落的內文，見 `is_heading_line` 對粗體行的既有語意）。段落存在時，逐 `-` 列點驗三件事：
+(1) 板名——`-` 之後、第一個分隔符（全形 `｜` 或半形 `|`，R2／merge-review R1 i1：規約訂全形，但半形手誤不該
+誤判「缺板名」）之前的非空文字；(2) 至少一個 ✓／✗；(3) 沿用既有 `has_evidence`（測試名／路徑／指令，同「已驗證」
+段的證據規則）。三者缺一即紅，指名缺的是哪一種。**段落不存在時完全不驗**（回傳
+`ok=True`、無訊息）——舊 handoff（LS-300 之前的既有樣本，票文範圍 3 第三條夾具）不因為沒寫這個新子段而被
+追溯判紅。已知限制：只驗格式（有沒有板名／勾選符號／證據），不驗板名是否真的對應 Notes 板名子字串（那是
+`design-notes-check.sh` 的職責、發生在設計 PR 而非本 handoff 上）、也不驗勾選的 ✓／✗ 是否符合實際實作（同 N9）。
+
+exit：0＝全過；1＝任一項缺證據、引用的測試名不存在、引用的白名單路徑（見 (b2)）不存在，或「畫面級屬性（逐條
+勾選）」子段任一列缺板名／勾選符號／證據；2＝找不到檔案／不在 git repo 且未給 --repo（fail closed）。
 """
 import os
 import re
@@ -226,6 +237,14 @@ NEGATION_WORDS = ("沒有", "無", "不存在", "未")
 CLAUSE_BOUNDARY_RE = re.compile(r"[。！？\n、；：，]|——")
 MUTATION_CONTEXT_RE = re.compile(r"mutation|mutant|改回|→\s*紅", re.IGNORECASE)  # HANDOFF-MUTATION-CONTEXT
 
+# ---- LS-300：「畫面級屬性（逐條勾選）」子段判定 ----
+SCREEN_ATTR_KEYWORD_RE = re.compile(r"畫面級屬性")  # HANDOFF-SCREEN-ATTR-KEYWORD
+SCREEN_ATTR_CHECKMARK_RE = re.compile(r"[✓✗]")
+# R2（merge-review R1 i1）：規約三處（ui-designer.md／ios-dev.md／COLLABORATION.md）皆訂全形「｜」，但
+# ios-dev 手誤打成半形「|」時，原版只認全形會誤判「缺板名」（fail-closed 方向，不誤放行，風險本來就低）——
+# 這裡放寬成兩者皆認，減少這種手誤造成的假紅。
+SCREEN_ATTR_SEP_RE = re.compile(r"[｜|]")
+
 
 def fail(msg):
     sys.stderr.write("✗ handoff-evidence-check：%s\n" % msg)
@@ -251,12 +270,13 @@ def is_heading_line(line):
     return False, ""
 
 
-def find_section(lines):
+def find_section_by_keyword(lines, keyword_re):
     """回傳 (start_idx, end_idx)：0-based，end 為 exclusive，start 指向標題行的下一行（段落內容
-    起點）；找不到回傳 None。只取第一個符合的段落（「解析『已驗證』段」為單數；已知限制見 N6(b)）。"""
+    起點）；找不到回傳 None。只取第一個符合的段落（LS-300：抽出 `find_section` 的通用版本，供
+    「已驗證」段與「畫面級屬性（逐條勾選）」子段共用同一套標題判定，已知限制見 N6(b)）。"""
     for i, line in enumerate(lines):
         is_head, inner = is_heading_line(line)
-        if not is_head or not SECTION_KEYWORD_RE.search(inner):
+        if not is_head or not keyword_re.search(inner):
             continue
         for j in range(i + 1, len(lines)):
             is_head2, _ = is_heading_line(lines[j])
@@ -264,6 +284,10 @@ def find_section(lines):
                 return (i + 1, j)
         return (i + 1, len(lines))
     return None
+
+
+def find_section(lines):
+    return find_section_by_keyword(lines, SECTION_KEYWORD_RE)
 
 
 def split_items(lines, start, end):
@@ -301,6 +325,44 @@ def split_items(lines, start, end):
         # 段落內、還沒遇到第一個列項之前的純文字（如段落簡介）忽略。
     flush()
     return items
+
+
+def check_screen_attrs(lines):
+    """LS-300：可選子段「畫面級屬性（逐條勾選）」——標題含「畫面級屬性」（`SCREEN_ATTR_KEYWORD_RE`）。
+    子段不存在時回傳 `(True, [])`（不影響舊 handoff，票文範圍 3 第三條夾具）。存在時逐 `-` 列點（沿用
+    `split_items` 的 dash 分項邏輯）驗三件事：板名（`-` 之後、第一個分隔符「｜」或「|」之前的非空文字）、至少一個
+    ✓／✗（`SCREEN_ATTR_CHECKMARK_RE`）、`has_evidence`（沿用「已驗證」段既有的測試名／路徑／指令規則，
+    見 (a)/(b)/(b2)/(c)）。回傳 `(ok, messages)`——`messages` 逐項印 ✓／✗，供 `run()` 併入輸出。"""
+    section = find_section_by_keyword(lines, SCREEN_ATTR_KEYWORD_RE)
+    if section is None:
+        return True, []
+    start, end = section
+    items = split_items(lines, start, end)
+    if not items:
+        return False, ["✗ handoff-evidence-check：「畫面級屬性（逐條勾選）」段落內沒有任何列項（`-`）"]
+    ok = True
+    messages = []
+    for line_no, block in items:
+        first_line = block.splitlines()[0] if block else ""
+        stripped = DASH_ITEM_RE.sub("", first_line.strip(), count=1)
+        sep_m = SCREEN_ATTR_SEP_RE.search(stripped)
+        board_name = stripped[:sep_m.start()].strip() if sep_m else ""
+        missing = []
+        if not board_name:
+            missing.append("板名（`-` 後、第一個分隔符「｜」或「|」前的文字）")
+        if not SCREEN_ATTR_CHECKMARK_RE.search(block):
+            missing.append("✓／✗")
+        if not has_evidence(block):
+            missing.append("證據（測試名／路徑／指令，同「已驗證」段規則）")
+        if missing:  # HANDOFF-SCREEN-ATTR-CHECK
+            ok = False
+            messages.append(
+                "✗ handoff-evidence-check：「畫面級屬性（逐條勾選）」第 %d 行缺 %s"
+                % (line_no, "、".join(missing))
+            )
+        else:
+            messages.append("✓ 「畫面級屬性（逐條勾選）」第 %d 行起的列項合規（板名 %s）" % (line_no, board_name))
+    return ok, messages
 
 
 def is_glob_candidate(text, start):
@@ -521,6 +583,13 @@ def run(path, repo):
             ok = False
         if not missing_evidence and not bad_names and not bad_paths:
             print("✓ 第 %d 行起的列項有證據" % line_no)
+
+    # LS-300：可選子段「畫面級屬性（逐條勾選）」——不存在不影響既有 handoff（見 check_screen_attrs docstring）。
+    screen_ok, screen_messages = check_screen_attrs(lines)
+    for msg in screen_messages:
+        print(msg, file=sys.stderr if msg.startswith("✗") else sys.stdout)
+    ok = ok and screen_ok
+
     return ok
 
 

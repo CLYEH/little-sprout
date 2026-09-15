@@ -25,7 +25,9 @@ scratchpad//evidence//.swift/.py/.sh/.md/.yml/.json，子字串比對不驗證�
 驗證真的存在且未逃出 --repo：supabase/functions/**/*.ts、supabase/migrations/*.sql、
 supabase/tests/*.sql、supabase/**/*.sh、docs/**/*.md、.claude/**/*.md、scripts/**/*.sh、
 .github/workflows/*.yml），或命令（xcodebuild／bash scripts/／gh run view／.xcresult）。
-exit：0＝全過；1＝有違規（含引用的白名單路徑不存在）；2＝參數／環境錯誤。
+LS-300：另認一個可選子段「畫面級屬性（逐條勾選）」（標題含「畫面級屬性」）——存在時逐列驗板名／
+✓✗／證據三者；不存在時不影響既有 handoff（不強制要求）。
+exit：0＝全過；1＝有違規（含引用的白名單路徑不存在、畫面級屬性子段缺板名／✓✗／證據）；2＝參數／環境錯誤。
 EOF
     exit 0
     ;;
