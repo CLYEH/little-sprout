@@ -167011,7 +167011,7 @@
       "id": "k3jwB",
       "x": 8176,
       "y": 84702.06855622969,
-      "name": "Import / 01-iPad 匯入整理頁 (iPad 11\")",
+      "name": "Import / 01-iPad 匯入整理頁 (iPad 11\") （不裁切）",
       "clip": true,
       "width": 834,
       "fill": {
@@ -167080,19 +167080,19 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad-lg",
             0,
             "$screen-pad-lg"
           ],
+          "alignItems": "center",
           "children": [
             {
               "type": "frame",
               "id": "P0AJH",
               "name": "Header",
-              "width": "fill_container",
+              "width": 560,
               "layout": "vertical",
               "gap": "$sp-tight",
               "children": [
@@ -167133,13 +167133,13 @@
               "type": "frame",
               "id": "K5meuM",
               "name": "Groups",
-              "width": "fill_container",
+              "width": 560,
               "layout": "vertical",
               "gap": "$sp-block",
               "children": [
                 {
                   "type": "frame",
-                  "id": "nGbIW",
+                  "id": "vGsv0",
                   "name": "Date Group Card",
                   "width": "fill_container",
                   "fill": "$surface",
@@ -167152,14 +167152,14 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "EeQDS",
+                      "id": "QzJQa",
                       "name": "Top Row",
                       "width": "fill_container",
                       "justifyContent": "space_between",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "nVStB",
+                          "id": "Exc68",
                           "type": "ref",
                           "ref": "oLN0e",
                           "name": "Date Stamp",
@@ -167174,7 +167174,7 @@
                           }
                         },
                         {
-                          "id": "teXPg",
+                          "id": "qS7t4",
                           "type": "ref",
                           "ref": "AqN3F",
                           "name": "Count Pill",
@@ -167191,240 +167191,277 @@
                     },
                     {
                       "type": "frame",
-                      "id": "yk33l",
-                      "name": "Thumb Row",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "fudL9",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "dpDsP",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "DJEQI",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1779881259393-6949a9838196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTB8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "ssnPy",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "Wly5s",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "RZOO9",
-                          "name": "More Cell",
-                          "width": 88,
-                          "height": 88,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "O1MpO",
-                              "name": "More Count",
-                              "fill": "$text-secondary",
-                              "content": "+18",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
-                              "fontWeight": "700"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "Oaodx",
-                      "name": "Babies Row",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "id": "A8YEa",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小安",
-                          "descendants": {
-                            "VHw9O": {
-                              "content": "安"
-                            },
-                            "h1A3w": {
-                              "content": "小安"
-                            }
-                          }
-                        },
-                        {
-                          "id": "yfQdW",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小軒",
-                          "fill": "$surface",
-                          "stroke": "$control-line",
-                          "strokeWidth": 1.5,
-                          "descendants": {
-                            "RMRjC": {
-                              "fill": "$accent-soft"
-                            },
-                            "VHw9O": {
-                              "content": "軒",
-                              "fill": "$text-primary"
-                            },
-                            "h1A3w": {
-                              "content": "小軒",
-                              "fill": "$text-secondary",
-                              "fontWeight": "600"
-                            },
-                            "cKUwt": {
-                              "fill": "#00000000",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5
-                            },
-                            "MSNMe": {
-                              "enabled": false
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "jPfi7",
-                      "name": "Album Row",
+                      "id": "o7pCQs",
+                      "name": "Content Row",
                       "width": "fill_container",
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$sp-group",
-                        "$inset-card"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
+                      "gap": "$sp-block",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "N0fiq",
-                          "name": "Album Left",
+                          "id": "cX60y",
+                          "name": "Left Col",
+                          "width": 280,
+                          "layout": "vertical",
                           "gap": "$sp-label",
-                          "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "Xv0nv",
-                              "name": "Album Icon",
-                              "width": 18,
-                              "height": 18,
-                              "icon": "image",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
+                              "type": "frame",
+                              "id": "EkzhB",
+                              "name": "Thumb Row 1",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "zwQft",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "NiEXN",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "o4BSd5",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1779881259393-6949a9838196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTB8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "YL3YU",
-                              "name": "Album Label",
-                              "fill": "$text-primary",
-                              "content": "不放相簿",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
+                              "type": "frame",
+                              "id": "yuTaD",
+                              "name": "Thumb Row 2",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "w743C4",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "E95hAT",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "yzUkc",
+                                  "name": "More Cell",
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": "$surface-2",
+                                  "cornerRadius": "$radius-md",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "p3EhX",
+                                      "name": "More Count",
+                                      "fill": "$text-secondary",
+                                      "content": "+18",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-imprint",
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "v0p0j",
+                              "name": "Babies Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "sUZJ8",
+                                  "type": "ref",
+                                  "ref": "o9Brs1",
+                                  "name": "Baby Chip 小安",
+                                  "descendants": {
+                                    "VHw9O": {
+                                      "content": "安"
+                                    },
+                                    "h1A3w": {
+                                      "content": "小安"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "G66rW",
+                                  "type": "ref",
+                                  "ref": "o9Brs1",
+                                  "name": "Baby Chip 小軒",
+                                  "fill": "$surface",
+                                  "stroke": "$control-line",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "RMRjC": {
+                                      "fill": "$accent-soft"
+                                    },
+                                    "VHw9O": {
+                                      "content": "軒",
+                                      "fill": "$text-primary"
+                                    },
+                                    "h1A3w": {
+                                      "content": "小軒",
+                                      "fill": "$text-secondary",
+                                      "fontWeight": "600"
+                                    },
+                                    "cKUwt": {
+                                      "fill": "#00000000",
+                                      "stroke": "$control-line",
+                                      "strokeWidth": 1.5
+                                    },
+                                    "MSNMe": {
+                                      "enabled": false
+                                    }
+                                  }
+                                }
+                              ]
                             }
                           ]
                         },
                         {
-                          "type": "icon",
-                          "id": "yv9sp",
-                          "name": "Chevron",
-                          "width": 18,
-                          "height": 18,
-                          "icon": "chevron-right",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "jbre0",
-                      "name": "Skip Row",
-                      "width": "fill_container",
-                      "justifyContent": "end",
-                      "children": [
-                        {
-                          "id": "H9t8GT",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Skip Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "x"
+                          "type": "frame",
+                          "id": "sPXj1",
+                          "name": "Right Col",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "justifyContent": "space_between",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "QuCpt",
+                              "name": "Album Row",
+                              "width": "fill_container",
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-md",
+                              "padding": [
+                                "$sp-group",
+                                "$inset-card"
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "rwPjf",
+                                  "name": "Album Left",
+                                  "gap": "$sp-label",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "QnYjH",
+                                      "name": "Album Icon",
+                                      "width": 18,
+                                      "height": 18,
+                                      "icon": "image",
+                                      "library": "lucide",
+                                      "fill": "$text-secondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "vSXCR",
+                                      "name": "Album Label",
+                                      "fill": "$text-primary",
+                                      "content": "不放相簿",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "bDQjz",
+                                  "name": "Chevron",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                }
+                              ]
                             },
-                            "hIhVd": {
-                              "content": "略過這群"
+                            {
+                              "type": "frame",
+                              "id": "kf82X",
+                              "name": "Skip Row",
+                              "width": "fill_container",
+                              "justifyContent": "end",
+                              "children": [
+                                {
+                                  "id": "T9l5y",
+                                  "type": "ref",
+                                  "ref": "qe9yS",
+                                  "name": "Skip Button",
+                                  "descendants": {
+                                    "breqI": {
+                                      "icon": "x"
+                                    },
+                                    "hIhVd": {
+                                      "content": "略過這群"
+                                    }
+                                  }
+                                }
+                              ]
                             }
-                          }
+                          ]
                         }
                       ]
                     }
@@ -167492,7 +167529,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "kEkiJ",
+                  "id": "BGDNF",
                   "name": "Date Group Card",
                   "width": "fill_container",
                   "fill": "$surface",
@@ -167505,14 +167542,14 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "vuUgu",
+                      "id": "XINFw",
                       "name": "Top Row",
                       "width": "fill_container",
                       "justifyContent": "space_between",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "isRtP",
+                          "id": "u3glqW",
                           "type": "ref",
                           "ref": "oLN0e",
                           "name": "Date Stamp",
@@ -167527,7 +167564,7 @@
                           }
                         },
                         {
-                          "id": "J3YOkc",
+                          "id": "nKUWf",
                           "type": "ref",
                           "ref": "AqN3F",
                           "name": "Count Pill",
@@ -167544,289 +167581,326 @@
                     },
                     {
                       "type": "frame",
-                      "id": "AsaxW",
-                      "name": "Thumb Row",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "XLrgr",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "goWvE",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "tllyK",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1779881259393-6949a9838196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTB8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "t6dBe3",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "FhBvx",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "WWHXp",
-                          "name": "More Cell",
-                          "width": 88,
-                          "height": 88,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "f6cH6",
-                              "name": "More Count",
-                              "fill": "$text-secondary",
-                              "content": "+0",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
-                              "fontWeight": "700"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "h74Knu",
-                      "name": "Babies Row",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "id": "EvfGG",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小安",
-                          "fill": "$surface",
-                          "stroke": "$control-line",
-                          "strokeWidth": 1.5,
-                          "descendants": {
-                            "RMRjC": {
-                              "fill": "$accent-soft"
-                            },
-                            "VHw9O": {
-                              "content": "安",
-                              "fill": "$text-primary"
-                            },
-                            "h1A3w": {
-                              "content": "小安",
-                              "fill": "$text-secondary",
-                              "fontWeight": "600"
-                            },
-                            "cKUwt": {
-                              "fill": "#00000000",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5
-                            },
-                            "MSNMe": {
-                              "enabled": false
-                            }
-                          }
-                        },
-                        {
-                          "id": "XdhJ0",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小軒",
-                          "fill": "$surface",
-                          "stroke": "$control-line",
-                          "strokeWidth": 1.5,
-                          "descendants": {
-                            "RMRjC": {
-                              "fill": "$accent-soft"
-                            },
-                            "VHw9O": {
-                              "content": "軒",
-                              "fill": "$text-primary"
-                            },
-                            "h1A3w": {
-                              "content": "小軒",
-                              "fill": "$text-secondary",
-                              "fontWeight": "600"
-                            },
-                            "cKUwt": {
-                              "fill": "#00000000",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5
-                            },
-                            "MSNMe": {
-                              "enabled": false
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "C4ZWG",
-                      "name": "Assign Notice",
+                      "id": "gSpXi",
+                      "name": "Content Row",
                       "width": "fill_container",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "a3k52",
-                          "name": "Assign Notice Icon",
-                          "width": 18,
-                          "height": 18,
-                          "icon": "circle-alert",
-                          "library": "lucide",
-                          "fill": "$text-primary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "J7P6v3",
-                          "name": "Assign Notice Text",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "這群還沒有指定寶寶",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "YhlwN",
-                      "name": "Album Row",
-                      "width": "fill_container",
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$sp-group",
-                        "$inset-card"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
+                      "gap": "$sp-block",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "ZqOJt",
-                          "name": "Album Left",
+                          "id": "UnXbM",
+                          "name": "Left Col",
+                          "width": 280,
+                          "layout": "vertical",
                           "gap": "$sp-label",
-                          "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "XshP5",
-                              "name": "Album Icon",
-                              "width": 18,
-                              "height": 18,
-                              "icon": "image",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
+                              "type": "frame",
+                              "id": "L2dGvq",
+                              "name": "Thumb Row 1",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "OBLCW",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "LdP9z",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "RhjJ4",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1779881259393-6949a9838196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTB8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "xH885",
-                              "name": "Album Label",
-                              "fill": "$text-primary",
-                              "content": "不放相簿",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
+                              "type": "frame",
+                              "id": "OfFxZ",
+                              "name": "Thumb Row 2",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "a9oXW",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "TSuJK",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "U5UVZ5",
+                                  "name": "More Cell",
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": "$surface-2",
+                                  "cornerRadius": "$radius-md",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "qeVhG",
+                                      "name": "More Count",
+                                      "fill": "$text-secondary",
+                                      "content": "+0",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-imprint",
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "t3Xfq",
+                              "name": "Babies Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "I1pHp1",
+                                  "type": "ref",
+                                  "ref": "o9Brs1",
+                                  "name": "Baby Chip 小安",
+                                  "fill": "$surface",
+                                  "stroke": "$control-line",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "RMRjC": {
+                                      "fill": "$accent-soft"
+                                    },
+                                    "VHw9O": {
+                                      "content": "安",
+                                      "fill": "$text-primary"
+                                    },
+                                    "h1A3w": {
+                                      "content": "小安",
+                                      "fill": "$text-secondary",
+                                      "fontWeight": "600"
+                                    },
+                                    "cKUwt": {
+                                      "fill": "#00000000",
+                                      "stroke": "$control-line",
+                                      "strokeWidth": 1.5
+                                    },
+                                    "MSNMe": {
+                                      "enabled": false
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "B4TRQ8",
+                                  "type": "ref",
+                                  "ref": "o9Brs1",
+                                  "name": "Baby Chip 小軒",
+                                  "fill": "$surface",
+                                  "stroke": "$control-line",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "RMRjC": {
+                                      "fill": "$accent-soft"
+                                    },
+                                    "VHw9O": {
+                                      "content": "軒",
+                                      "fill": "$text-primary"
+                                    },
+                                    "h1A3w": {
+                                      "content": "小軒",
+                                      "fill": "$text-secondary",
+                                      "fontWeight": "600"
+                                    },
+                                    "cKUwt": {
+                                      "fill": "#00000000",
+                                      "stroke": "$control-line",
+                                      "strokeWidth": 1.5
+                                    },
+                                    "MSNMe": {
+                                      "enabled": false
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "wZD2R",
+                              "name": "Assign Notice",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "pvPCQ",
+                                  "name": "Assign Notice Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "HOnL9",
+                                  "name": "Assign Notice Text",
+                                  "fill": "$text-primary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "這群還沒有指定寶寶",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             }
                           ]
                         },
                         {
-                          "type": "icon",
-                          "id": "JpfMc",
-                          "name": "Chevron",
-                          "width": 18,
-                          "height": 18,
-                          "icon": "chevron-right",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "sGxki",
-                      "name": "Skip Row",
-                      "width": "fill_container",
-                      "justifyContent": "end",
-                      "children": [
-                        {
-                          "id": "NUW60",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Skip Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "x"
+                          "type": "frame",
+                          "id": "ldy6u",
+                          "name": "Right Col",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "justifyContent": "space_between",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ta8ii",
+                              "name": "Album Row",
+                              "width": "fill_container",
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-md",
+                              "padding": [
+                                "$sp-group",
+                                "$inset-card"
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "DMhXG",
+                                  "name": "Album Left",
+                                  "gap": "$sp-label",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "B2oEx",
+                                      "name": "Album Icon",
+                                      "width": 18,
+                                      "height": 18,
+                                      "icon": "image",
+                                      "library": "lucide",
+                                      "fill": "$text-secondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "T447dl",
+                                      "name": "Album Label",
+                                      "fill": "$text-primary",
+                                      "content": "不放相簿",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "IkMbi",
+                                  "name": "Chevron",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                }
+                              ]
                             },
-                            "hIhVd": {
-                              "content": "略過這群"
+                            {
+                              "type": "frame",
+                              "id": "LPk4h",
+                              "name": "Skip Row",
+                              "width": "fill_container",
+                              "justifyContent": "end",
+                              "children": [
+                                {
+                                  "id": "yRcuC",
+                                  "type": "ref",
+                                  "ref": "qe9yS",
+                                  "name": "Skip Button",
+                                  "descendants": {
+                                    "breqI": {
+                                      "icon": "x"
+                                    },
+                                    "hIhVd": {
+                                      "content": "略過這群"
+                                    }
+                                  }
+                                }
+                              ]
                             }
-                          }
+                          ]
                         }
                       ]
                     }
@@ -167863,13 +167937,14 @@
                 "$sp-item",
                 "$screen-pad-lg"
               ],
+              "justifyContent": "center",
               "children": [
                 {
                   "id": "D7D2N",
                   "type": "ref",
                   "ref": "OKSJI",
                   "name": "Start Import Button",
-                  "width": 280,
+                  "width": 400,
                   "descendants": {
                     "s9bME2": {
                       "icon": "upload"
@@ -172519,7 +172594,7 @@
       "id": "YSShl",
       "x": 8176,
       "y": 91695.20281165419,
-      "name": "Import / 02-iPad 日期不明群 (iPad 11\")",
+      "name": "Import / 02-iPad 日期不明群 (iPad 11\") （不裁切）",
       "clip": true,
       "width": 834,
       "fill": {
@@ -172588,19 +172663,19 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad-lg",
             0,
             "$screen-pad-lg"
           ],
+          "alignItems": "center",
           "children": [
             {
               "type": "frame",
               "id": "C59iPJ",
               "name": "Header",
-              "width": "fill_container",
+              "width": 560,
               "layout": "vertical",
               "gap": "$sp-tight",
               "children": [
@@ -172641,13 +172716,13 @@
               "type": "frame",
               "id": "K4hyP",
               "name": "Groups",
-              "width": "fill_container",
+              "width": 560,
               "layout": "vertical",
               "gap": "$sp-block",
               "children": [
                 {
                   "type": "frame",
-                  "id": "nYJ1P",
+                  "id": "AWmHy",
                   "name": "Date Group Card",
                   "width": "fill_container",
                   "fill": "$surface",
@@ -172660,14 +172735,14 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "lZn68",
+                      "id": "B0fTp6",
                       "name": "Top Row",
                       "width": "fill_container",
                       "justifyContent": "space_between",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "AYPT4",
+                          "id": "usGtK",
                           "type": "ref",
                           "ref": "oLN0e",
                           "name": "Date Stamp",
@@ -172682,7 +172757,7 @@
                           }
                         },
                         {
-                          "id": "NtzwL",
+                          "id": "cLLz3",
                           "type": "ref",
                           "ref": "AqN3F",
                           "name": "Count Pill",
@@ -172699,7 +172774,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "iUg3Z",
+                      "id": "NSsOa",
                       "name": "Date Note Row",
                       "width": "fill_container",
                       "gap": "$sp-label",
@@ -172707,7 +172782,7 @@
                       "children": [
                         {
                           "type": "icon",
-                          "id": "wPZHv",
+                          "id": "WmMvh",
                           "name": "Note Icon",
                           "width": 18,
                           "height": 18,
@@ -172717,7 +172792,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "ZBXqp",
+                          "id": "XKtvE",
                           "name": "Note Text",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -172731,13 +172806,13 @@
                     },
                     {
                       "type": "frame",
-                      "id": "dMWz0",
+                      "id": "gCa9B",
                       "name": "Change Date Row",
                       "width": "fill_container",
                       "justifyContent": "end",
                       "children": [
                         {
-                          "id": "NwAeF",
+                          "id": "s5OFL",
                           "type": "ref",
                           "ref": "qe9yS",
                           "name": "Change Date Button",
@@ -172754,258 +172829,280 @@
                     },
                     {
                       "type": "frame",
-                      "id": "vps1s",
-                      "name": "Thumb Row",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "b67p0",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "rDjbc",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "sJJNy",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1779881259393-6949a9838196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTB8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "TBsXm",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "RqMij",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "GB2kj",
-                          "name": "More Cell",
-                          "width": 88,
-                          "height": 88,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "DiWJo",
-                              "name": "More Count",
-                              "fill": "$text-secondary",
-                              "content": "+0",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
-                              "fontWeight": "700"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "dF44g",
-                      "name": "Babies Row",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "id": "n85DQm",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小安",
-                          "fill": "$surface",
-                          "stroke": "$control-line",
-                          "strokeWidth": 1.5,
-                          "descendants": {
-                            "RMRjC": {
-                              "fill": "$accent-soft"
-                            },
-                            "VHw9O": {
-                              "content": "安",
-                              "fill": "$text-primary"
-                            },
-                            "h1A3w": {
-                              "content": "小安",
-                              "fill": "$text-secondary",
-                              "fontWeight": "600"
-                            },
-                            "cKUwt": {
-                              "fill": "#00000000",
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5
-                            },
-                            "MSNMe": {
-                              "enabled": false
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "ldLlP",
-                      "name": "Assign Notice",
+                      "id": "ErhfY",
+                      "name": "Content Row",
                       "width": "fill_container",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "dNRle",
-                          "name": "Assign Notice Icon",
-                          "width": 18,
-                          "height": 18,
-                          "icon": "circle-alert",
-                          "library": "lucide",
-                          "fill": "$text-primary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "xIwo7",
-                          "name": "Assign Notice Text",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "這群還沒有指定寶寶",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "F94Kx",
-                      "name": "Album Row",
-                      "width": "fill_container",
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$sp-group",
-                        "$inset-card"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
+                      "gap": "$sp-block",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "jbF2W",
-                          "name": "Album Left",
+                          "id": "AXVSs",
+                          "name": "Left Col",
+                          "width": 280,
+                          "layout": "vertical",
                           "gap": "$sp-label",
-                          "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "iYo2W",
-                              "name": "Album Icon",
-                              "width": 18,
-                              "height": 18,
-                              "icon": "image",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
+                              "type": "frame",
+                              "id": "T6IeHA",
+                              "name": "Thumb Row 1",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "meGtU",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "lBRvy",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "YVd5l",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1779881259393-6949a9838196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTB8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "Z5tLrM",
-                              "name": "Album Label",
-                              "fill": "$text-primary",
-                              "content": "不放相簿",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
+                              "type": "frame",
+                              "id": "c3N3V",
+                              "name": "Thumb Row 2",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "ypxTX",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "dCA3B",
+                                  "name": "More Cell",
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": "$surface-2",
+                                  "cornerRadius": "$radius-md",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "IPVRq",
+                                      "name": "More Count",
+                                      "fill": "$text-secondary",
+                                      "content": "+0",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-imprint",
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "kryAL",
+                              "name": "Babies Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "Jae3f",
+                                  "type": "ref",
+                                  "ref": "o9Brs1",
+                                  "name": "Baby Chip 小安",
+                                  "fill": "$surface",
+                                  "stroke": "$control-line",
+                                  "strokeWidth": 1.5,
+                                  "descendants": {
+                                    "RMRjC": {
+                                      "fill": "$accent-soft"
+                                    },
+                                    "VHw9O": {
+                                      "content": "安",
+                                      "fill": "$text-primary"
+                                    },
+                                    "h1A3w": {
+                                      "content": "小安",
+                                      "fill": "$text-secondary",
+                                      "fontWeight": "600"
+                                    },
+                                    "cKUwt": {
+                                      "fill": "#00000000",
+                                      "stroke": "$control-line",
+                                      "strokeWidth": 1.5
+                                    },
+                                    "MSNMe": {
+                                      "enabled": false
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "eU6db",
+                              "name": "Assign Notice",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "sIPrG",
+                                  "name": "Assign Notice Icon",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "nzzlB",
+                                  "name": "Assign Notice Text",
+                                  "fill": "$text-primary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "這群還沒有指定寶寶",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             }
                           ]
                         },
                         {
-                          "type": "icon",
-                          "id": "uBFUr",
-                          "name": "Chevron",
-                          "width": 18,
-                          "height": 18,
-                          "icon": "chevron-right",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "nWHi9",
-                      "name": "Skip Row",
-                      "width": "fill_container",
-                      "justifyContent": "end",
-                      "children": [
-                        {
-                          "id": "paruC",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Skip Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "x"
+                          "type": "frame",
+                          "id": "MKMsQ",
+                          "name": "Right Col",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "justifyContent": "space_between",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "NN4Yh",
+                              "name": "Album Row",
+                              "width": "fill_container",
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-md",
+                              "padding": [
+                                "$sp-group",
+                                "$inset-card"
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "b3cSO9",
+                                  "name": "Album Left",
+                                  "gap": "$sp-label",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "bulZQ",
+                                      "name": "Album Icon",
+                                      "width": 18,
+                                      "height": 18,
+                                      "icon": "image",
+                                      "library": "lucide",
+                                      "fill": "$text-secondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "P6sr3c",
+                                      "name": "Album Label",
+                                      "fill": "$text-primary",
+                                      "content": "不放相簿",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "OTsMU",
+                                  "name": "Chevron",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                }
+                              ]
                             },
-                            "hIhVd": {
-                              "content": "略過這群"
+                            {
+                              "type": "frame",
+                              "id": "h1OvF",
+                              "name": "Skip Row",
+                              "width": "fill_container",
+                              "justifyContent": "end",
+                              "children": [
+                                {
+                                  "id": "lLMg2",
+                                  "type": "ref",
+                                  "ref": "qe9yS",
+                                  "name": "Skip Button",
+                                  "descendants": {
+                                    "breqI": {
+                                      "icon": "x"
+                                    },
+                                    "hIhVd": {
+                                      "content": "略過這群"
+                                    }
+                                  }
+                                }
+                              ]
                             }
-                          }
+                          ]
                         }
                       ]
                     }
@@ -173013,7 +173110,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "UhMFT",
+                  "id": "Zxvz4",
                   "name": "Date Group Card",
                   "width": "fill_container",
                   "fill": "$surface",
@@ -173026,14 +173123,14 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "JFsYA",
+                      "id": "I1In0",
                       "name": "Top Row",
                       "width": "fill_container",
                       "justifyContent": "space_between",
                       "alignItems": "center",
                       "children": [
                         {
-                          "id": "nMBGa",
+                          "id": "UeI2G",
                           "type": "ref",
                           "ref": "oLN0e",
                           "name": "Date Stamp",
@@ -173048,7 +173145,7 @@
                           }
                         },
                         {
-                          "id": "C0HnZ",
+                          "id": "FydGk",
                           "type": "ref",
                           "ref": "AqN3F",
                           "name": "Count Pill",
@@ -173065,223 +173162,260 @@
                     },
                     {
                       "type": "frame",
-                      "id": "hK3E2",
-                      "name": "Thumb Row",
-                      "gap": "$sp-label",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "ADuaQ",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "umMPA",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "s0agD",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "YE3OA",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "ev8Ck",
-                          "name": "Thumb",
-                          "clip": true,
-                          "width": 88,
-                          "height": 88,
-                          "fill": {
-                            "type": "image",
-                            "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1779881259393-6949a9838196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTB8&ixlib=rb-4.1.0&q=80&w=1080",
-                            "mode": "fill"
-                          },
-                          "cornerRadius": "$radius-md"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "q97cwO",
-                          "name": "More Cell",
-                          "width": 88,
-                          "height": 88,
-                          "fill": "$surface-2",
-                          "cornerRadius": "$radius-md",
-                          "justifyContent": "center",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "YCAJn",
-                              "name": "More Count",
-                              "fill": "$text-secondary",
-                              "content": "+2",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
-                              "fontWeight": "700"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "YyarP",
-                      "name": "Babies Row",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "id": "zaX2x",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小安",
-                          "descendants": {
-                            "VHw9O": {
-                              "content": "安"
-                            },
-                            "h1A3w": {
-                              "content": "小安"
-                            }
-                          }
-                        },
-                        {
-                          "id": "Byyiy",
-                          "type": "ref",
-                          "ref": "o9Brs1",
-                          "name": "Baby Chip 小軒",
-                          "descendants": {
-                            "VHw9O": {
-                              "content": "軒"
-                            },
-                            "h1A3w": {
-                              "content": "小軒"
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "JHsTc",
-                      "name": "Album Row",
+                      "id": "M4It0E",
+                      "name": "Content Row",
                       "width": "fill_container",
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-md",
-                      "padding": [
-                        "$sp-group",
-                        "$inset-card"
-                      ],
-                      "justifyContent": "space_between",
-                      "alignItems": "center",
+                      "gap": "$sp-block",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "zTc06",
-                          "name": "Album Left",
+                          "id": "YnaML",
+                          "name": "Left Col",
+                          "width": 280,
+                          "layout": "vertical",
                           "gap": "$sp-label",
-                          "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "ZS2az",
-                              "name": "Album Icon",
-                              "width": 18,
-                              "height": 18,
-                              "icon": "image",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
+                              "type": "frame",
+                              "id": "yCr6d",
+                              "name": "Thumb Row 1",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "W0zV1y",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "h1XCH",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "k9Ls5M",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "UWge1",
-                              "name": "Album Label",
-                              "fill": "$text-primary",
-                              "content": "不放相簿",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-body",
-                              "fontWeight": "600"
+                              "type": "frame",
+                              "id": "bEhE5",
+                              "name": "Thumb Row 2",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "cyCHi",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "otMsp",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1779881259393-6949a9838196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTB8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "ymYXa",
+                                  "name": "More Cell",
+                                  "width": 84,
+                                  "height": 84,
+                                  "fill": "$surface-2",
+                                  "cornerRadius": "$radius-md",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "PszQj",
+                                      "name": "More Count",
+                                      "fill": "$text-secondary",
+                                      "content": "+2",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-imprint",
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "xO4Di",
+                              "name": "Babies Row",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "id": "E45GG",
+                                  "type": "ref",
+                                  "ref": "o9Brs1",
+                                  "name": "Baby Chip 小安",
+                                  "descendants": {
+                                    "VHw9O": {
+                                      "content": "安"
+                                    },
+                                    "h1A3w": {
+                                      "content": "小安"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "e0xwjB",
+                                  "type": "ref",
+                                  "ref": "o9Brs1",
+                                  "name": "Baby Chip 小軒",
+                                  "descendants": {
+                                    "VHw9O": {
+                                      "content": "軒"
+                                    },
+                                    "h1A3w": {
+                                      "content": "小軒"
+                                    }
+                                  }
+                                }
+                              ]
                             }
                           ]
                         },
                         {
-                          "type": "icon",
-                          "id": "FOKEv",
-                          "name": "Chevron",
-                          "width": 18,
-                          "height": 18,
-                          "icon": "chevron-right",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "StikK",
-                      "name": "Skip Row",
-                      "width": "fill_container",
-                      "justifyContent": "end",
-                      "children": [
-                        {
-                          "id": "K7D86",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Skip Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "x"
+                          "type": "frame",
+                          "id": "DbdsA",
+                          "name": "Right Col",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "justifyContent": "space_between",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "yTIiv",
+                              "name": "Album Row",
+                              "width": "fill_container",
+                              "fill": "$surface-2",
+                              "cornerRadius": "$radius-md",
+                              "padding": [
+                                "$sp-group",
+                                "$inset-card"
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "IBs5u",
+                                  "name": "Album Left",
+                                  "gap": "$sp-label",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "dbrAw",
+                                      "name": "Album Icon",
+                                      "width": 18,
+                                      "height": 18,
+                                      "icon": "image",
+                                      "library": "lucide",
+                                      "fill": "$text-secondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "WQP93",
+                                      "name": "Album Label",
+                                      "fill": "$text-primary",
+                                      "content": "不放相簿",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-body",
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "yP61o",
+                                  "name": "Chevron",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-secondary"
+                                }
+                              ]
                             },
-                            "hIhVd": {
-                              "content": "略過這群"
+                            {
+                              "type": "frame",
+                              "id": "EZerT",
+                              "name": "Skip Row",
+                              "width": "fill_container",
+                              "justifyContent": "end",
+                              "children": [
+                                {
+                                  "id": "o6rIBb",
+                                  "type": "ref",
+                                  "ref": "qe9yS",
+                                  "name": "Skip Button",
+                                  "descendants": {
+                                    "breqI": {
+                                      "icon": "x"
+                                    },
+                                    "hIhVd": {
+                                      "content": "略過這群"
+                                    }
+                                  }
+                                }
+                              ]
                             }
-                          }
+                          ]
                         }
                       ]
                     }
@@ -173318,13 +173452,14 @@
                 "$sp-item",
                 "$screen-pad-lg"
               ],
+              "justifyContent": "center",
               "children": [
                 {
                   "id": "z6Qfgs",
                   "type": "ref",
                   "ref": "OKSJI",
                   "name": "Start Import Button",
-                  "width": 280,
+                  "width": 400,
                   "descendants": {
                     "s9bME2": {
                       "icon": "upload"
@@ -173365,7 +173500,7 @@
       "id": "y0FLsZ",
       "x": 8176,
       "y": 99036.49789695085,
-      "name": "Import / 03-iPad 上限與規則提示 (iPad 11\")",
+      "name": "Import / 03-iPad 上限與規則提示 (iPad 11\") （不裁切）",
       "clip": true,
       "width": 834,
       "fill": {
@@ -173434,25 +173569,25 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad-lg",
             0,
             "$screen-pad-lg"
           ],
+          "alignItems": "center",
           "children": [
             {
               "type": "frame",
-              "id": "SrlYi",
+              "id": "Qzl14",
               "name": "Header",
-              "width": "fill_container",
+              "width": 560,
               "layout": "vertical",
               "gap": "$sp-tight",
               "children": [
                 {
                   "type": "text",
-                  "id": "IOORK",
+                  "id": "LNxtB",
                   "name": "Title",
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
@@ -173464,7 +173599,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "f89zDL",
+                  "id": "tlsQk",
                   "name": "Subtitle",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -173473,14 +173608,33 @@
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "Smq53",
+                  "name": "Rules Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "影片最長 1 分鐘。HEIC 相片會轉成一般照片；Live Photo 會保留照片與短片。",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
                 }
               ]
             },
             {
               "type": "frame",
+              "id": "DluGI",
+              "name": "Spacer 24",
+              "width": 560,
+              "height": 24
+            },
+            {
+              "type": "frame",
               "id": "k5nzaU",
               "name": "Limit Banner",
-              "width": "fill_container",
+              "width": 560,
               "fill": "$surface-2",
               "cornerRadius": "$radius-md",
               "gap": "$sp-label",
@@ -173525,7 +173679,7 @@
               "type": "frame",
               "id": "cBJKh",
               "name": "Groups",
-              "width": "fill_container",
+              "width": 560,
               "layout": "vertical",
               "gap": "$sp-block",
               "children": [
@@ -174098,13 +174252,14 @@
                 "$sp-item",
                 "$screen-pad-lg"
               ],
+              "justifyContent": "center",
               "children": [
                 {
                   "id": "YjBSx",
                   "type": "ref",
                   "ref": "OKSJI",
                   "name": "Start Import Button",
-                  "width": 280,
+                  "width": 400,
                   "descendants": {
                     "s9bME2": {
                       "icon": "upload"
@@ -178393,7 +178548,7 @@
       "id": "vOgRq",
       "x": 8176,
       "y": 105967.75769836412,
-      "name": "Import / 04-iPad 匯入進度 (iPad 11\")",
+      "name": "Import / 04-iPad 匯入進度 (iPad 11\") （不裁切）",
       "clip": true,
       "width": 834,
       "fill": {
@@ -180610,7 +180765,7 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "wKsO3",
+                  "id": "CydZ0",
                   "name": "Empty State",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -180619,58 +180774,274 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "D6hvZ",
-                      "name": "Empty Icon Wrap",
-                      "width": 88,
-                      "height": 88,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-full",
-                      "justifyContent": "center",
-                      "alignItems": "center",
+                      "id": "vid85",
+                      "name": "Empty Print",
+                      "width": 345,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.393,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.259,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.293,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "vertical",
+                      "gap": 7,
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
-                          "type": "icon",
-                          "id": "DwOke",
-                          "name": "Empty Icon",
-                          "width": 36,
-                          "height": 36,
-                          "icon": "lock",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
+                          "type": "frame",
+                          "id": "BmLYk",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 184,
+                          "fill": "$print-paper",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "jrgeO",
+                              "name": "Lock Icon",
+                              "width": 36,
+                              "height": 36,
+                              "icon": "lock",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "euedE",
+                          "name": "Imprint Row",
+                          "width": "fill_container",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Vj5Wi",
+                              "name": "Caption",
+                              "fill": "$print-ink-secondary",
+                              "content": "看不到照片",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "k3tS0u",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "HlWPE",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 324,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "Tw9r2",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": 211,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "GBbIY",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 324,
+                          "y": 211,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "l6T6Dg",
+                      "id": "I38x0p",
                       "name": "Empty Text",
-                      "width": "fill_container",
+                      "width": 345,
                       "layout": "vertical",
                       "gap": "$sp-label",
-                      "alignItems": "center",
                       "children": [
                         {
                           "type": "text",
-                          "id": "XdJ8l",
+                          "id": "r68gb",
                           "name": "Empty Title",
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "還沒有取用相片的權限",
-                          "textAlign": "center",
+                          "content": "還沒有取用照片的權限",
                           "fontFamily": "$font",
                           "fontSize": "$fs-lead",
                           "fontWeight": "700"
                         },
                         {
                           "type": "text",
-                          "id": "Z9FrpS",
+                          "id": "BvxXN",
                           "name": "Empty Body",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "請到「設定」開啟「照片」權限，才能把回憶加進來。",
-                          "textAlign": "center",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -180678,11 +181049,11 @@
                       ]
                     },
                     {
-                      "id": "F1nVzh",
+                      "id": "Ipn6W",
                       "type": "ref",
                       "ref": "OKSJI",
                       "name": "Open Settings Button",
-                      "width": 260,
+                      "width": 345,
                       "descendants": {
                         "s9bME2": {
                           "icon": "settings"
@@ -181595,7 +181966,7 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "MbCHs",
+                  "id": "Pq5mX",
                   "name": "Empty State",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -181604,58 +181975,274 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "hLB7b",
-                      "name": "Empty Icon Wrap",
-                      "width": 88,
-                      "height": 88,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-full",
-                      "justifyContent": "center",
-                      "alignItems": "center",
+                      "id": "TYDfy",
+                      "name": "Empty Print",
+                      "width": 345,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.393,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.259,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.293,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "vertical",
+                      "gap": 7,
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
-                          "type": "icon",
-                          "id": "hHxls",
-                          "name": "Empty Icon",
-                          "width": 36,
-                          "height": 36,
-                          "icon": "lock",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
+                          "type": "frame",
+                          "id": "N1UMad",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 184,
+                          "fill": "$print-paper",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "CBGIx",
+                              "name": "Lock Icon",
+                              "width": 36,
+                              "height": 36,
+                              "icon": "lock",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "t69D7",
+                          "name": "Imprint Row",
+                          "width": "fill_container",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "SIEbk",
+                              "name": "Caption",
+                              "fill": "$print-ink-secondary",
+                              "content": "看不到照片",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "u840W",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "K4lub3",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 324,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "xW5IH",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": 211,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "rC3yy",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 324,
+                          "y": 211,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "O8E7Z",
+                      "id": "TYNZ0",
                       "name": "Empty Text",
-                      "width": "fill_container",
+                      "width": 345,
                       "layout": "vertical",
                       "gap": "$sp-label",
-                      "alignItems": "center",
                       "children": [
                         {
                           "type": "text",
-                          "id": "wmHa2",
+                          "id": "QAeaB",
                           "name": "Empty Title",
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "還沒有取用相片的權限",
-                          "textAlign": "center",
+                          "content": "還沒有取用照片的權限",
                           "fontFamily": "$font",
                           "fontSize": "$fs-lead",
                           "fontWeight": "700"
                         },
                         {
                           "type": "text",
-                          "id": "YGgHl",
+                          "id": "IaBDa",
                           "name": "Empty Body",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "請到「設定」開啟「照片」權限，才能把回憶加進來。",
-                          "textAlign": "center",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -181663,11 +182250,11 @@
                       ]
                     },
                     {
-                      "id": "V5drhc",
+                      "id": "OLq1o",
                       "type": "ref",
                       "ref": "OKSJI",
                       "name": "Open Settings Button",
-                      "width": 260,
+                      "width": 345,
                       "descendants": {
                         "s9bME2": {
                           "icon": "settings"
@@ -182597,7 +183184,7 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "n4Bca6",
+                  "id": "Ujt3x",
                   "name": "Empty State",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -182606,58 +183193,274 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "PvRlQ",
-                      "name": "Empty Icon Wrap",
-                      "width": 88,
-                      "height": 88,
-                      "fill": "$surface-2",
-                      "cornerRadius": "$radius-full",
-                      "justifyContent": "center",
-                      "alignItems": "center",
+                      "id": "AkGxB",
+                      "name": "Empty Print",
+                      "width": 345,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.393,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.259,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.293,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "layout": "vertical",
+                      "gap": 7,
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
                       "children": [
                         {
-                          "type": "icon",
-                          "id": "zCnZQ",
-                          "name": "Empty Icon",
-                          "width": 36,
-                          "height": 36,
-                          "icon": "lock",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
+                          "type": "frame",
+                          "id": "q90dVK",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 184,
+                          "fill": "$print-paper",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "l3ERF",
+                              "name": "Lock Icon",
+                              "width": 36,
+                              "height": 36,
+                              "icon": "lock",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yi7cH",
+                          "name": "Imprint Row",
+                          "width": "fill_container",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "RIwHm",
+                              "name": "Caption",
+                              "fill": "$print-ink-secondary",
+                              "content": "看不到照片",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "ByBnn",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "c694a",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 324,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "TESqy",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": 211,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "z5NZC",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 324,
+                          "y": 211,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "iMajf",
+                      "id": "f3f7xY",
                       "name": "Empty Text",
-                      "width": "fill_container",
+                      "width": 345,
                       "layout": "vertical",
                       "gap": "$sp-label",
-                      "alignItems": "center",
                       "children": [
                         {
                           "type": "text",
-                          "id": "LmocF",
+                          "id": "qvoWJ",
                           "name": "Empty Title",
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "還沒有取用相片的權限",
-                          "textAlign": "center",
+                          "content": "還沒有取用照片的權限",
                           "fontFamily": "$font",
                           "fontSize": "$fs-lead",
                           "fontWeight": "700"
                         },
                         {
                           "type": "text",
-                          "id": "TJs2k",
+                          "id": "fJ7n3",
                           "name": "Empty Body",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "請到「設定」開啟「照片」權限，才能把回憶加進來。",
-                          "textAlign": "center",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -182665,11 +183468,11 @@
                       ]
                     },
                     {
-                      "id": "lBK7Z",
+                      "id": "w8iAkn",
                       "type": "ref",
                       "ref": "OKSJI",
                       "name": "Open Settings Button",
-                      "width": 260,
+                      "width": 345,
                       "descendants": {
                         "s9bME2": {
                           "icon": "settings"
@@ -182712,7 +183515,7 @@
       "id": "O3WN3",
       "x": 8176,
       "y": 119362.44467150778,
-      "name": "Import / 06a-iPad 權限態 · Limited Library (iPad 11\")",
+      "name": "Import / 06a-iPad 權限態 · Limited Library (iPad 11\") （不裁切）",
       "clip": true,
       "width": 834,
       "fill": {
@@ -182781,19 +183584,19 @@
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
-          "gap": "$sp-block",
           "padding": [
             8,
             "$screen-pad-lg",
             0,
             "$screen-pad-lg"
           ],
+          "alignItems": "center",
           "children": [
             {
               "type": "frame",
               "id": "E013Iz",
               "name": "Header",
-              "width": "fill_container",
+              "width": 560,
               "layout": "vertical",
               "gap": "$sp-tight",
               "children": [
@@ -182825,9 +183628,16 @@
             },
             {
               "type": "frame",
+              "id": "LtBOw",
+              "name": "Spacer 24",
+              "width": 560,
+              "height": 24
+            },
+            {
+              "type": "frame",
               "id": "YcVFD",
               "name": "Limited Library Banner",
-              "width": "fill_container",
+              "width": 560,
               "fill": "$surface-2",
               "cornerRadius": "$radius-md",
               "stroke": "$border",
@@ -182908,7 +183718,7 @@
               "type": "frame",
               "id": "Ck6nE",
               "name": "Groups",
-              "width": "fill_container",
+              "width": 560,
               "layout": "vertical",
               "gap": "$sp-block",
               "children": [
@@ -183484,13 +184294,14 @@
                 "$sp-item",
                 "$screen-pad-lg"
               ],
+              "justifyContent": "center",
               "children": [
                 {
                   "id": "Uvwyb",
                   "type": "ref",
                   "ref": "OKSJI",
                   "name": "Start Import Button",
-                  "width": 280,
+                  "width": 400,
                   "descendants": {
                     "s9bME2": {
                       "icon": "upload"
@@ -183876,6 +184687,42 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "y4ujjU",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "T2s4by",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-251 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "sogw5",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "②整理態新增兩個子狀態（VR MN-4／MN-5）：(a) 已略過——卡片收合成單行（日期・張數已略過＋「取消略過」文字鈕），「開始匯入 N 張」的 N 即時扣除該群張數（01 示範：36→略過 8 張的一群→28）；(b) 未指定寶寶——該群所有寶貝 chip 都未選時，Babies Row 下方出現 $text-primary＋circle-alert 的即時回話列「這群還沒有指定寶寶」，不 disable 主鈕（十條之八），使用者仍可送出（未指定寶寶不是錯誤，只是需要提醒）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -183979,7 +184826,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-251 R1",
+                  "content": "LS-251 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -183993,7 +184840,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "字級：畫面標題 $fs-display 34／區塊標題與統計數字 $fs-lead 22／內文與按鈕 $fs-body 17／次要說明與狀態列 $fs-note 17／縮圖疊字「+N」固定 12pt（不吃 Dynamic Type，比照母題「疊在固定尺寸縮圖上的字不長大」慣例，非 $fs-imprint token 本身但同一條規則——固定尺寸縮圖上的計數徽章一律 12pt 字面值）。",
+                  "content": "字級：畫面標題 $fs-display 34／05 成功統計數字 $fs-display 34（R2 改版，原設計失敗與成功同 $fs-lead 22 對稱置中，已改不對稱）／區塊標題 $fs-lead 22／內文、按鈕與 04 進度計數「已處理 42／128 張」皆 $fs-body 17／次要說明與狀態列 $fs-note 17／縮圖疊字「+N」與寶貝 chip 頭像姓名縮寫字，兩者皆為固定尺寸物件上的印記字，統一用 $fs-imprint 12（R2 前 iPhone 版是 $fs-note 17、AX3 是字面 12，會「縮小」而非「不長大」，R2 已修正兩邊都用 $fs-imprint token，不再是字面值）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -184015,7 +184862,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-251 R1",
+                  "content": "LS-251 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -184029,7 +184876,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "間距：卡片內距 $inset-card 20／卡片內部元素間距 $sp-item 16／區塊之間 $sp-block 24／整理頁「頁首→分組列表」章節斷點 $sp-section 44（每張畫面出現一次，Header 與 Groups 之間）／寶貝 chip 與縮圖橫列 gap $sp-label 8／chip 內部（頭像–姓名–勾號）gap $sp-tight 6。",
+                  "content": "間距：卡片內距 $inset-card 20／卡片內部元素間距 $sp-item 16／區塊之間 $sp-block 24／整理頁「頁首→分組列表」章節斷點：Header 與 Groups 之間現為精確 44pt（R1 因 Body 的 $sp-block 24 gap 與 Spacer Section 44 疊加成 92pt，R2 已修正——受 Pencil「height 不可綁 $variable」限制，Spacer Section 高度仍是字面值 44，非 $sp-section token 引用，但數值已對；03/06a 等 Header 後還有 Limit/Limited Library Banner 的板，改用顯式 Spacer 24 字面框補足原本該有的 $sp-block 24，Body 自身 gap 歸零，不再讓 flex gap 與顯式間距框疊加）／寶貝 chip 與縮圖橫列 gap $sp-label 8／chip 內部（頭像–姓名–勾號）gap $sp-tight 6。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -184051,7 +184898,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-251 R1",
+                  "content": "LS-251 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -184065,7 +184912,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "色彩：卡片 $surface＋$border 1pt＋$radius-lg 18；相簿/略過列 $surface-2＋$radius-md 14；上限橫幅與 limited-library 橫幅用 $text-primary＋circle-alert（非 danger，達上限不是錯誤，是資訊，十條之八）；失敗列用 $danger；成功統計 icon 用 $success（06d 之後全稿唯二 success 使用點之一）；寶貝 chip 選中＝$accent-soft 底＋$text-primary 頭像/勾號實心；未選中＝$surface 底＋$control-line 1.5pt 框＋$accent-soft 頭像＋$control-line 勾號外框（勾號 icon 隱藏）。",
+                  "content": "色彩：卡片 $surface＋$border 1pt＋$radius-lg 18；相簿/略過列 $surface-2＋$radius-md 14；上限橫幅（03）與 limited-library 橫幅（06a）統一 $surface-2 底＋$text-primary＋circle-alert icon（R1 兩者誤用不同底色與 icon 色，R2 已對齊，非 danger，達上限/部分授權不是錯誤，是資訊，十條之八）；失敗列用 $danger；05 成功統計 icon 改用 circle-check（R2；check-circle 這個 lucide 名稱在本機 Pencil 版本渲染成問號占位圖示，是既有文件其他既有節點也中招的預先存在渲染 bug，非本票新增，已記入 Pencil 踩雷記錄與 LS-96 待辦池，本票只把新建的 05 icon 改名避開，未動其他既有節點）；寶貝 chip 選中＝$accent-soft 底（無框）＋$text-primary 頭像/勾號實心；未選中＝chip 根節點 fill:$surface＋stroke:$control-line 1.5pt（R1 只在內層勾號小圓上加了框、chip 整體底色仍是 $accent-soft 與選中相同，R2 已修正到根節點）＋$accent-soft 頭像＋$control-line 勾號外框（勾號 icon enabled:false 隱藏）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -184087,7 +184934,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-251 R1",
+                  "content": "LS-251 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -184101,7 +184948,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "元件引用：日期章沿用 cmp/Day Divider（oLN0e，跨畫面 signature，與時間軸/日記詳情同一元件）；寶貝多選新建 cmp/Baby Chip（o9Brs1，6 個可覆寫子節點：RMRjC 頭像底／VHw9O 頭像字／h1A3w 姓名／cKUwt 勾號底／MSNMe 勾號 icon）；按鈕沿用 cmp/Button Primary（OKSJI）／cmp/Button Secondary（XggYA）／cmp/Button Text（qe9yS）；相簿選擇列為卡片內自畫 Row（未借用 cmp/Settings Row bZhuV，因其為 393 全寬滿版列設計、不適合嵌在有圓角內距的卡片裡）；上傳佇列列沿用 LS-142 rTEGf 的 Queue Row 結構逐字複製（未做成正式元件，因原件本身也非 reusable，維持與源頭一致的處理方式）。",
+                  "content": "元件引用：日期章沿用 cmp/Day Divider（oLN0e，跨畫面 signature，與時間軸/日記詳情同一元件）；寶貝多選 cmp/Baby Chip（o9Brs1，6 個可覆寫子節點：RMRjC 頭像底／VHw9O 頭像字（fontSize 現為 $fs-imprint token，R1 是字面 13）／h1A3w 姓名／cKUwt 勾號底／MSNMe 勾號 icon；未選中狀態的 fill/stroke/strokeWidth 覆寫在 ref instance 根節點層級，不是元件定義本身）；按鈕沿用 cmp/Button Primary（OKSJI）／cmp/Button Secondary（XggYA）／cmp/Button Text（qe9yS，R2 新增「全部重試」「取消略過」「更改日期」等文字鈕實例，皆沿用同一元件）；相簿選擇列為卡片內自畫 Row（未借用 cmp/Settings Row bZhuV，因其為 393 全寬滿版列設計、不適合嵌在有圓角內距的卡片裡）；上傳佇列列沿用 LS-142 rTEGf 的 Queue Row 結構逐字複製；R2 新增 Empty Print 母題於 06b（沿用 LS-21/11b 與 LS-177 留言 sheet 空狀態已核可的白邊＋四角托＋染料池＋Imprint Row 結構，Photo Wrap 內放 lock icon 取代照片）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -184185,7 +185032,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-251 R1",
+                  "content": "LS-251 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -184199,7 +185046,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "①單次匯入上限：本稿提案 200 張（03 板示範），未經使用者裁決前為建議值，非定案；若使用者裁決改變數字，03/04/05 文案內的「200 張」「128 張」等數字需同步（本票的 128/36/20/12 等示範數字彼此獨立、互不引用，不受此裁決影響）。",
+                  "content": "①單次匯入上限：本稿提案 200 張（03 板示範），未經使用者裁決前為建議值，非定案；若使用者裁決改變數字，03 文案內的「200 張」需同步。R2 起示範數字分兩族：01/02/05/06a 用同一次「36 張、3 個日期群」小批次匯入的故事線（01 略過 1 群後主鈕變 28 張，05 完成摘要對應改造成 04/04b 的 128 族——見下），04/04b/05 用同一次「128 張」大批次匯入的故事線（VR MN-6：05 R1 原本誤用 36，R2 已改成 126 成功＋2 失敗＝128，與 04/04b 一致）；02（12 張）、03（200 張）、06a（20 張）各自是獨立情境（日期不明／已達上限／limited-library），不需要與其他板數字互相對應。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -184221,7 +185068,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-251 R1",
+                  "content": "LS-251 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -184235,7 +185082,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "②影片長度／HEIC／Live Photo 規則：03 板規則提示文案「影片最長 1 分鐘、HEIC 與即時預覽相片（Live Photo）會各保留一張靜態圖與一段短片」為提案文字，沿用 LS-119 R5 既有「影片最長 1 分鐘」規則（見 motifs.md 影片格），HEIC／Live Photo 的處理方式（各保留一張靜態圖＋一段短片）是本票新提案，未經使用者確認。",
+                  "content": "②影片長度／HEIC／Live Photo 規則：R1 文案「HEIC 與即時預覽相片（Live Photo）會各保留一張靜態圖與一段短片」有事實錯誤——HEIC 是靜態影像格式，沒有短片，只有 Live Photo 才有照片＋短片。R2 已修正為兩句話：「影片最長 1 分鐘。HEIC 相片會轉成一般照片；Live Photo 會保留照片與短片。」（沿用 LS-119 R5 既有「影片最長 1 分鐘」規則，見 motifs.md 影片格；HEIC 轉一般照片、Live Photo 保留照片+短片，是本票新提案，未經使用者確認）。同時把這段說明從 Action Bar 移到 Header 下方固定槽（R1 這段文字曾讓 03 的 Action Bar 從 93pt 撐到 176pt、把 CTA 往下推 83pt，R2 移位後 Action Bar 高度回到與其他板一致）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -184257,7 +185104,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-251 R1",
+                  "content": "LS-251 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -184271,7 +185118,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "③預設相簿：01/02/03/06a 各群預設「不放相簿」（只依日期歸檔到時間軸，不強制進相簿）；若使用者裁決預設應為「當前相簿」（例如從相簿詳情「加入照片」進入時），Album Row 初始值需依入口來源分支，本輪未做這個分支（PHPickerViewController 呼叫端傳入的 context 由實作票決定）。",
+                  "content": "③預設相簿：01/02/03/06a 各群預設「不放相簿」（只依日期歸檔到時間軸，不強制進相簿）；若使用者裁決預設應為「當前相簿」（例如從相簿詳情「加入照片」進入時），Album Row 初始值需依入口來源分支，本輪未做這個分支（PHPickerViewController 呼叫端傳入的 context 由實作票決定）。R2：05 完成摘要的主鈕原為「查看相簿」，與「不放相簿」預設矛盾（VR MN-9），已改為「回到時間軸」——這個文案在兩種預設下都成立，不受這題裁決結果影響；但若使用者裁決預設改為「當前相簿」，05 主鈕仍建議依實際目的地做條件分支（進了相簿就給「查看相簿」，沒進相簿就留「回到時間軸」），這個分支邏輯本輪未做。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -184319,7 +185166,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-251 R1",
+                  "content": "LS-251 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -184333,7 +185180,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "04b 取消整批確認僅畫 iPhone 淺色一版，未補深色／AX3／iPad：這是系統風格的簡短確認對話框（兩顆按鈕＋兩行文字），沒有內容隨狀態變化，深色模式與大字級皆是系統 alert/sheet 慣例的直接延伸、不影響版面決策，比照既有票對「純系統慣例、內容恆定」的簡單態不強制全變體覆蓋的做法（見 motifs.md 釘底動作帶「不適用」段的同類精神）。",
+                  "content": "04b 取消整批確認 R1 僅畫 iPhone 淺色一版；R2 依 VR MN-14 補上 AX3（Rfl9n），因為 Alert Body「已上傳的 34 張會保留，其餘 94 張不會匯入。」是帶兩個動態數字的長句，在 40pt 下最容易撐爆 305 寬的 Alert Card（本輪 AX3 溢出修的 9 處正是同一 class），必須實測而非假設系統慣例會自動撐住；經 R2 實測 305 寬卡片在 AX3 下未溢出。深色／iPad 仍未補：深色是系統 alert 配色的直接延伸、無版面決策；iPad 上系統風格置中對話框與畫面寬度無關，兩者維持 R1 的「純系統慣例、內容恆定」豁免理由不變。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -184355,7 +185202,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-251 R1",
+                  "content": "LS-251 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -184369,7 +185216,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "03 板上限情境只展示 2 張代表性日期群卡＋「其餘 5 個日期群往下捲動可見」提示文字，未展開全部 7 群：與壓測板慣例一致（見 motifs.md 壓測板段），呈現「已達上限」的視覺與規則提示才是本板重點，逐一展開 7 張卡片對驗證這個重點沒有額外資訊量。",
+                  "content": "03 板上限情境只展示 2 張代表性日期群卡，未展開全部 7 群：與壓測板慣例一致（見 motifs.md 壓測板段），呈現「已達上限」的視覺與規則提示才是本板重點。R1 原本另外畫了一行「其餘 5 個日期群往下捲動可見」提示文字，R2 已移除（VR MN-8：這行是設計時的自我註記，用了與正式 UI 說明文字相同的樣式，會被誤判為要照抄上線的真實內容；捲動提示這件事本身不需要畫進畫面，只留在本節文字說明）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -184489,7 +185336,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-251 R1",
+                  "content": "LS-251 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -184503,7 +185350,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "04 家族：iPhone YfOUJ／深色 y2Qsy／AX3 Fgezb／iPad vOgRq。04b：nMVqp（iPhone 淺色）。05 家族：iPhone L6zy2／深色 qGUTt／AX3 CDlkK／iPad C09ZI。",
+                  "content": "04 家族：iPhone YfOUJ／深色 y2Qsy／AX3 Fgezb／iPad vOgRq。04b：iPhone淺色 nMVqp／AX3 Rfl9n（R2 新增，VR MN-14）。05 家族：iPhone L6zy2／深色 qGUTt／AX3 CDlkK／iPad C09ZI。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -184714,6 +185561,180 @@
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
                   "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Rfl9n",
+      "x": 8176,
+      "y": 129360.0069081836,
+      "name": "A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "GIuqs",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "UprjD",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "s7ruX",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Alert Wrap",
+          "width": 393,
+          "height": 852,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "c3DUF8",
+              "name": "Alert Card",
+              "width": 305,
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 24
+              },
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "PIZU7",
+                  "name": "Alert Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "pWdlG",
+                      "name": "Alert Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "要取消整批匯入嗎？",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "V7UVi",
+                      "name": "Alert Body",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "已上傳的 34 張會保留，其餘 94 張不會匯入。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "YOKQO",
+                  "name": "Alert Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "id": "bXSKr",
+                      "type": "ref",
+                      "ref": "XggYA",
+                      "name": "Keep Going Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "G4R75k": {
+                          "enabled": false
+                        },
+                        "yxwnz": {
+                          "content": "繼續匯入"
+                        }
+                      }
+                    },
+                    {
+                      "id": "EICI0",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Confirm Cancel Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消匯入",
+                          "fill": "$danger"
+                        }
+                      }
+                    }
+                  ]
                 }
               ]
             }
