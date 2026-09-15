@@ -64,6 +64,11 @@ enum UploadFailureReason: Equatable {
     /// `DiaryPublishErrorMessage.displayText` 已驗證過的同一句文案（LS-279），不同畫面共用
     /// 同一份措辭。
     case videoTooLarge(suggestedSeconds: Int)
+    /// LS-288 i3：`UploadQueueStore` 的 export 逾時看門狗觸發——`videoPreparer`（影片壓縮）卡住
+    /// 超過逾時上限（預設 10 分鐘）沒有回應。跟 `.quota`／`.videoTooLarge` 同一類道理：重試同一支
+    /// 原始檔案很可能再次卡在同一個地方，不給「重試」，使用者得先確認這支影片本身是否有問題
+    /// （例如檔案已損毀）再重新選取上傳。
+    case videoExportTimedOut
 
     var title: String {
         switch self {
@@ -72,6 +77,8 @@ enum UploadFailureReason: Equatable {
         case .quota: "相簿容量已滿，這張沒有上傳。"
         case .videoTooLarge(let suggestedSeconds):
             "影片太長，壓縮後仍超過 50MB 上限，請裁到 \(suggestedSeconds) 秒內再試一次。"
+        case .videoExportTimedOut:
+            "影片處理逾時，請確認影片檔案正常後重新選取上傳。"
         }
     }
 
@@ -79,7 +86,7 @@ enum UploadFailureReason: Equatable {
     /// `.videoTooLarge` 同理（LS-284：換一次呼叫不會讓同一支影片變小）。
     var isRetryable: Bool {
         switch self {
-        case .quota, .videoTooLarge: false
+        case .quota, .videoTooLarge, .videoExportTimedOut: false
         case .network, .server: true
         }
     }

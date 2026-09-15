@@ -59,8 +59,9 @@ final class UploadQueueStore {
     /// LS-284：影片項目上傳前的壓縮步驟，注入點同 `DiaryComposerStore.videoPreparer`——正式
     /// 路徑預設呼叫 `VideoTrimmer.compressedForUpload`，測試才需要在不準備真影片檔的前提下
     /// 釘住「壓縮結果（含壓完仍超限的錯誤）怎麼往下接」。壓縮本身的行為由 `VideoTrimmerTests`
-    /// 覆蓋，這裡不重複測。
-    private let videoPreparer: @Sendable (URL) async throws -> VideoTrimmer.UploadSource
+    /// 覆蓋，這裡不重複測。非 `private`：`UploadQueueStore+VideoExportSlot.swift` 的
+    /// `runVideoPreparer(_:)` 要讀（理由同 `videoExportInFlight` 文件註解）。
+    let videoPreparer: @Sendable (URL) async throws -> VideoTrimmer.UploadSource
     /// entry id → 已壓縮好、還沒上傳成功的 `UploadSource`（LS-284 merge-review R1 B1，沿
     /// `DiaryComposerStore.compressedVideoCache` 語意）：可重試失敗後 `retry(_:)`／
     /// `retryAllRetryable()` 只是把狀態翻回 `.waiting`、不清這份快取，`performUpload` 重跑時
@@ -73,9 +74,16 @@ final class UploadQueueStore {
     /// （export 專屬上限 1），不動 `maxConcurrentUploads` 本身——名額照樣同時被佔用（正在等
     /// export 的那筆也算一個名額），但同時只有一個真正在轉檔，其餘等候的名額可以是照片，照片
     /// 上傳不受影響。`videoExportInFlight`／`videoExportWaiters` 只在 MainActor 上讀寫（同整支
-    /// store 的隔離模型，見檔頭文件註解），先進先出用陣列即可，不需要額外的鎖。
-    private var videoExportInFlight = false
-    private var videoExportWaiters: [CheckedContinuation<Void, Never>] = []
+    /// store 的隔離模型，見檔頭文件註解），先進先出用陣列即可，不需要額外的鎖。`id` 是 LS-288
+    /// i1 加的——取消時要能從陣列中間精準移除這一個等待者，不是只能動頭尾。操作這兩個屬性的
+    /// 方法搬到 `UploadQueueStore+VideoExportSlot.swift`（理由同 `TimelineStore+Reactions.swift`
+    /// 檔頭：本檔逼近 SwiftLint `file_length` 上限），因此不能是 `private`（extension 存取
+    /// 同型別的 `private` 成員限同一個檔案）。
+    var videoExportInFlight = false
+    var videoExportWaiters: [(id: UUID, continuation: CheckedContinuation<Void, Error>)] = []
+    /// LS-288 i3：`acquireVideoExportSlot()` 拿到名額之後、實際呼叫 `videoPreparer` 的逾時
+    /// 看門狗上限，見 `UploadQueueStore+VideoExportSlot.swift` 的 `runVideoPreparer(_:)`。
+    let videoExportTimeout: Duration
     private var entries: [UUID: Entry] = [:]
     /// 插入順序——`entries` 是字典（用 id 查找／更新方便），排序另外靠這份陣列記住「先進
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
@@ -89,6 +97,7 @@ final class UploadQueueStore {
         familyID: UUID, mediaUploadService: MediaUploadService, maxConcurrentUploads: Int = 3,
         now: @escaping @MainActor () -> Date = Date.init,
         onUploadSucceeded: @escaping @MainActor (_ id: UUID, _ mediaID: UUID) -> Void = { _, _ in },
+        videoExportTimeout: Duration = .seconds(600),
         videoPreparer: @escaping @Sendable (URL) async throws -> VideoTrimmer.UploadSource = { fileURL in
             try await VideoTrimmer.compressedForUpload(fileURL: fileURL)
         }
@@ -98,6 +107,7 @@ final class UploadQueueStore {
         self.maxConcurrentUploads = maxConcurrentUploads
         self.now = now
         self.onUploadSucceeded = onUploadSucceeded
+        self.videoExportTimeout = videoExportTimeout
         self.videoPreparer = videoPreparer
     }
 
@@ -240,6 +250,10 @@ final class UploadQueueStore {
                 // 順序但同樣理由：這裡呼叫端不會讓這個 store 消失，不需要那個順序保護。
                 self.onUploadSucceeded(id, mediaID)
                 self.finish(id, state: .completed)
+            } catch is VideoExportTimeoutError {
+                // LS-288 i3：跟 `.quota`／`.videoTooLarge` 一樣不落 `AppError.map` 的
+                // `.server` 桶——那個桶是可重試的，但卡住的 export 重試大機率卡在同一個地方。
+                self.finish(id, state: .failed(.videoExportTimedOut))
             } catch let error as AppError {
                 self.finish(id, state: .failed(.from(error)))
             } catch {
@@ -301,9 +315,9 @@ final class UploadQueueStore {
             if let cached, FileManager.default.fileExists(atPath: cached.fileURL.path) {
                 source = cached
             } else {
-                await acquireVideoExportSlot()
+                try await acquireVideoExportSlot()
                 defer { releaseVideoExportSlot() }
-                source = try await videoPreparer(fileURL)
+                source = try await runVideoPreparer(fileURL)
                 compressedVideoCache[id] = source
             }
             // 用輸出的實際像素尺寸；量不到才沿用選片當下量到的（同 `DiaryComposerStore
@@ -329,28 +343,8 @@ final class UploadQueueStore {
         }
     }
 
-    /// LS-286 i2：拿到名額就立刻標記並返回；沒有就排進等候佇列，等 `releaseVideoExportSlot()`
-    /// 叫醒。呼叫端與 `releaseVideoExportSlot()` 都在 MainActor 上執行，不會有兩個呼叫同時看到
-    /// `videoExportInFlight == false` 而都拿到名額的競態。
-    private func acquireVideoExportSlot() async {
-        if !videoExportInFlight {
-            videoExportInFlight = true
-            return
-        }
-        await withCheckedContinuation { continuation in
-            videoExportWaiters.append(continuation)
-        }
-    }
-
-    /// 佇列裡還有人等就直接把名額轉給排最前面的那個（`videoExportInFlight` 維持 `true`，名額
-    /// 沒有被釋放又重新搶過），沒人等才真的把名額放掉。
-    private func releaseVideoExportSlot() {
-        if videoExportWaiters.isEmpty {
-            videoExportInFlight = false
-        } else {
-            videoExportWaiters.removeFirst().resume()
-        }
-    }
+    // `acquireVideoExportSlot()`／`releaseVideoExportSlot()`／`runVideoPreparer(_:)` 見
+    // `UploadQueueStore+VideoExportSlot.swift`。
 
     #if DEBUG
     /// 只給 `#Preview`／`TapTargetGateHarness`／UITest 用——直接灌狀態，不經過真正的上傳
@@ -389,5 +383,7 @@ final class UploadQueueStore {
     func debugForcePayloadNil(_ id: UUID) {
         entries[id]?.payload = nil
     }
+    // `debugAcquireVideoExportSlot()`／`debugReleaseVideoExportSlot()`／
+    // `debugVideoExportWaiterCount` 見 `UploadQueueStore+VideoExportSlot.swift`。
     #endif
 }
