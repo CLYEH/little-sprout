@@ -140,4 +140,113 @@ final class UploadQueueStoreVideoExportSlotTests: XCTestCase {
         XCTAssertEqual(reason, .videoExportTimedOut, "逾時要標成專屬的失敗原因，不是通用的伺服器忙碌")
         XCTAssertFalse(reason.isRetryable, "同一支卡住的原始檔案重試大機率再次卡住同一個地方，不該提供重試")
     }
+
+    // MARK: - runVideoPreparer 外層 Task 取消轉發進 preparer（mutation：拿掉 withTaskCancellationHandler 轉發）
+
+    /// LS-290 i1＋i4（LS-288 merge-review R1 informational `9e0e0a51`）：`runVideoPreparer(_:)`
+    /// 用未結構化 Task 包 preparer，外層呼叫端（`performUpload`）的 Task 被取消原本不會轉發
+    /// 進去——LS-283 I1 為 `VideoTrimmer` 加的 `cancelExport()` 通道因此被繞過。跟上面
+    /// `test_video_exportWatchdog_timesOut...` 用「永遠不 resume、不理會取消信號」的卡死
+    /// preparer 相反，這裡是它的孿生測試：preparer 用會回應取消的 `Task.sleep`（`Task.sleep`
+    /// 被取消時會立刻拋出，不是靜默忽略），驗證外層取消真的轉發到它身上，而不是只讓
+    /// `runVideoPreparer` 自己在逾時之後才放棄——上面第 7 點 reviewer probe 提到的情境如果哪天
+    /// 有票要做「離頁／登出取消飛行中上傳」，要先有這支測試釘住。
+    func test_runVideoPreparer_outerTaskCancelled_forwardsToPreparerAndThrowsCancellationError() async {
+        let fileURL = makeTempFile()
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        let preparerStarted = OSAllocatedUnfairLock(initialState: false)
+        let preparerObservedCancellation = OSAllocatedUnfairLock(initialState: false)
+        let store = UploadQueueStore(
+            familyID: familyID, mediaUploadService: StubMediaUploadService(), videoExportTimeout: .seconds(5),
+            videoPreparer: { url in
+                preparerStarted.withLock { $0 = true }
+                do {
+                    try await Task.sleep(for: .seconds(5))
+                } catch {
+                    preparerObservedCancellation.withLock { $0 = true }
+                    throw error
+                }
+                return VideoTrimmer.UploadSource(fileURL: url, fileExtension: "mp4", pixelSize: nil)
+            }
+        )
+
+        let resultBox = OSAllocatedUnfairLock<Result<VideoTrimmer.UploadSource, Error>?>(initialState: nil)
+        let outerTask = Task {
+            do {
+                let source = try await store.debugRunVideoPreparer(fileURL)
+                resultBox.withLock { $0 = .success(source) }
+            } catch {
+                resultBox.withLock { $0 = .failure(error) }
+            }
+        }
+
+        // 等 preparer 真的開始（進了 `Task.sleep`）才取消——避免取消時機早於 `preparerTask`
+        // 被建立，那樣就測不到「轉發」本身，只是巧合地還沒有東西可取消。
+        await waitUntil { preparerStarted.withLock { $0 } }
+        outerTask.cancel()
+
+        await waitUntil { resultBox.withLock { $0 != nil } }
+        XCTAssertTrue(
+            preparerObservedCancellation.withLock { $0 }, "外層 Task 取消應該轉發進 preparer，讓它收到取消信號"
+        )
+        let isCancellationError = resultBox.withLock { result -> Bool in
+            if case .failure(is CancellationError) = result { return true }
+            return false
+        }
+        XCTAssertTrue(
+            isCancellationError,
+            "取消後 runVideoPreparer 應該以 CancellationError 結束，實際 \(String(describing: resultBox.withLock { $0 }))"
+        )
+    }
+
+    // MARK: - export 逾時看門狗在 preparer 完成後自我取消（mutation：拿掉 timeoutTask.cancel()）
+
+    /// LS-290 i2（LS-288 merge-review R1 informational `9e0e0a51`）：`runVideoPreparer(_:)` 內部
+    /// 的逾時看門狗 Task 原本不論 `preparer` 是否已經成功完成都會睡滿整個 `videoExportTimeout`
+    /// （預設 10 分鐘）——一批 50 支影片就是 50 個白留著的常駐 MainActor Task。用可注入的
+    /// `sleepForTimeout` 換掉真正的 `Task.sleep`，改成短間隔輪詢 `Task.isCancelled` 的探針：
+    /// preparer 很快就成功完成，斷言看門狗真的提早被 `timeoutTask.cancel()` 取消，不是睡滿整段
+    /// 逾時（2 秒）才自然醒來——若拿掉那行 cancel，探針永遠等不到 `Task.isCancelled` 翻真，
+    /// `waitUntil` 的預設 1 秒逾時會先讓這支測試紅。
+    func test_runVideoPreparer_watchdogCancelledAfterPreparerSucceeds() async throws {
+        let fileURL = makeTempFile()
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        let watchdogCancelledEarly = OSAllocatedUnfairLock(initialState: false)
+        let watchdogProbeFinished = OSAllocatedUnfairLock(initialState: false)
+        let store = UploadQueueStore(
+            familyID: familyID, mediaUploadService: StubMediaUploadService(), videoExportTimeout: .seconds(2),
+            videoPreparer: { url in
+                try await Task.sleep(for: .milliseconds(20))
+                return VideoTrimmer.UploadSource(fileURL: url, fileExtension: "mp4", pixelSize: nil)
+            }
+        )
+
+        let source = try await store.debugRunVideoPreparer(fileURL) { duration in
+            let deadline = ContinuousClock.now + duration
+            while ContinuousClock.now < deadline {
+                if Task.isCancelled {
+                    watchdogCancelledEarly.withLock { $0 = true }
+                    watchdogProbeFinished.withLock { $0 = true }
+                    throw CancellationError()
+                }
+                do {
+                    // `Task.sleep` 本身也會在等待中途因為取消而拋錯——不能只靠上面迴圈開頭那次
+                    // 檢查，取消可能發生在這次 5ms 小睡中間。
+                    try await Task.sleep(for: .milliseconds(5))
+                } catch {
+                    watchdogCancelledEarly.withLock { $0 = true }
+                    watchdogProbeFinished.withLock { $0 = true }
+                    throw error
+                }
+            }
+            watchdogProbeFinished.withLock { $0 = true }
+        }
+
+        XCTAssertEqual(source.fileURL, fileURL, "preparer 應該正常成功，逾時取消是看門狗自己的事，不影響回傳結果")
+        await waitUntil { watchdogProbeFinished.withLock { $0 } }
+        XCTAssertTrue(
+            watchdogCancelledEarly.withLock { $0 },
+            "preparer 成功後看門狗應該被 timeoutTask.cancel() 提早取消，不是睡滿整段逾時才自然結束"
+        )
+    }
 }
