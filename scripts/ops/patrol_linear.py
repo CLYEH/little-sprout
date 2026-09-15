@@ -618,6 +618,51 @@ def pool_sources(comments, all_issues):
     return out
 
 
+# LS-287：pool_sources() 的「已被未封存票 description 引用」是查 Linear 票文；這裡再補第二層——查 repo
+# 本身（腳本檔頭「來源 LS-96 池項 <id>」等）是否已經落地實作。兩層互補，都判定為已升票／已落地，
+# 不列為候選（09-15 兩輪列出的 12 候選中 5 個其實 LS-141／180／140／226 已做掉，orchestrator 每輪重複
+# 人工排除）。只查 repo 內會被 agent／人翻閱到的位置，不掃整個 repo（避免誤命中 .pen／二進位或無關檔案）。
+POOL_LANDED_PATHS = ["scripts/", ".github/", "docs/COLLABORATION.md", "docs/PLAN.md", ".claude/agents/"]
+
+
+def repo_landed_pool_items(root, prefixes):
+    """一次 `git grep -n -F -e <id1> -e <id2> …` 批次查全部池項 id 前 8 碼（避免逐項 spawn subprocess）。
+    回傳 {prefix: "檔:行"}（同一 prefix 多處命中取 git grep 回傳順序的第一筆）。prefixes 為空或 git grep
+    找不到任何命中（returncode 1）都回傳空字典；非 0/1 的 returncode（環境錯誤）視同查無命中、fail-open
+    ——這層是純效率優化，查不出來就退回現行「不排除」，不影響候選正確性。"""
+    if not prefixes:
+        return {}
+    args = ["grep", "-n", "-F"]
+    for p in prefixes:
+        args += ["-e", p]
+    args += ["--"] + POOL_LANDED_PATHS
+    res = git(root, *args)
+    landed = {}
+    for line in res.stdout.splitlines():
+        path, sep, rest = line.partition(":")
+        if not sep:
+            continue
+        lineno, sep2, content = rest.partition(":")
+        if not sep2:
+            continue
+        for p in prefixes:
+            if p not in landed and p in content:
+                landed[p] = "%s:%s" % (path, lineno)
+    return landed
+
+
+def format_landed_note(landed_items):
+    """『已落地：<id8> → <檔:行>』一行，限 3 個以內逐列，多則加「…等 n 項」。刻意重用 open_ticket 既有的
+    `notes` 機制（附加在同一條「→ 開票」動作行的 ［…］ 裡）——這行本身就含 →，會通過
+    patrol-filter.sh（docs/COLLABORATION.md §5-b／patrol-filter.test.sh 釘住，理由見那邊）；比起藏成
+    不帶標記的獨立行更能讓 orchestrator 直接看到「候選被排除了誰」，不必另外反查。"""
+    shown = landed_items[:3]
+    text = "已落地：" + "、".join("%s → %s" % (p, loc) for p, loc in shown)
+    if len(landed_items) > 3:
+        text += "…等 %d 項" % len(landed_items)
+    return text
+
+
 def format_open_ticket_action(lane, ot):
     rounds = ot["empty_rounds"]
     if rounds >= 2:
@@ -839,7 +884,15 @@ def build_report(token, root, team_key, team_id, sim_lines):
             alls, err = all_issues()
             if err:
                 notes.append(err)
-            return pool_sources(comments, alls), notes
+            sources = pool_sources(comments, alls)
+            # LS-287：候選定案前再排除 repo 已落地者（見 repo_landed_pool_items()）。
+            prefixes = [s["id"].split("#", 1)[1] for s in sources if "#" in s["id"]]
+            landed = repo_landed_pool_items(root, prefixes)
+            if landed:
+                sources = [s for s in sources if s["id"].split("#", 1)[1] not in landed]
+                ordered = [(p, landed[p]) for p in prefixes if p in landed]
+                notes.append(format_landed_note(ordered))
+            return sources, notes
         alls, err = all_issues()
         if err:
             notes.append(err)

@@ -4,8 +4,9 @@
 # (2) **配套前提**——patrol 三支腳本的「異常／略過／讀不到」結論行都帶得動標記，不會被這道過濾靜默吞掉
 #     （merge-review R1 M1：R1 版的過濾式把 Linear 半段「略過（無 LINEAR_API_KEY）」等整類行吃掉，
 #      orchestrator 只看到 git 半段、Linear 半段停擺沒有任何訊號）。
-# 逐分支夾具另見 `patrol-linear.test.sh` ⑪(e)-(g)（Linear 半段全稱＋無 key 略過）與
+# 逐分支夾具另見 `patrol-linear.test.sh` ⑪(e)-(g)（Linear 半段全稱＋無 key 略過）、⑬（LS-287 已落地排除）與
 # `patrol.test.sh` ㉛（git 半段旗標／停滯行）；本檔補 patrol.sh 的退化分支與文件引用對帳。
+# ⑨（LS-287）：harness 開票行的「已落地：」附註裁定「進 context」（隨同一條 → 行通過），理由見該區塊註解。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -133,7 +134,19 @@ has '⑧ patrol-linear.sh：無 LINEAR_API_KEY 三種模式都帶 ⚠' \
 file_has '⑧ patrol_linear.py：狀態對照行由渲染端統一前置 ⚠（產生端不重複加）' "${root}/scripts/ops/patrol_linear.py" '"  ⚠ %s" % line'
 file_has '⑧ patrol_linear.py：cycle 對帳 (c)(d) 訊息帶 ⚠' "${root}/scripts/ops/patrol_linear.py" '"  (c) ⚠ %s"'
 
+# ---- ⑨（LS-287）「已落地：」補位候選排除附註——裁定：進 context ----
+# patrol_linear.py 的 format_landed_note() 把「已落地：<id8> → <檔:行>」附掛在同一條「→ 開票：…」動作行
+# 的 ［…］notes 括號裡（重用既有 open_ticket notes 機制，不另開一條獨立行）。既然它跟 → 同一行，這道
+# 過濾本來就會留下整行（判準①只看行內有沒有 → ／⚠ 等標記字元，不分段），所以裁定是「進 context」——
+# 讓 orchestrator 在看到「lane:harness 空 n 輪」時，同時看到候選被排除了誰、不必另外反查 repo；比藏成
+# 不帶標記的獨立行更直接。這裡釘住這個決定本身：若哪天改成獨立一行印出且沒帶標記，這裡要跟著紅。
+sample9=$(printf '%s\n' \
+  '  lane:harness    上限1 在飛0  候補：（無候補）' \
+  '    → 開票：lane:harness 空 1 輪（無候補）——來源候選：LS-96#33334444「尚未落地的候選」（P2 池項尚未升票）［已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2］')
+kept9=$(printf '%s\n' "$sample9" | bash "$pf")
+has '⑨ 「已落地：」附註隨同一條 → 開票行一起通過過濾（裁定：進 context）' "$kept9" '已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2'
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ patrol-filter 自測通過（9 組樣本）"
+  echo "✓ patrol-filter 自測通過（10 組樣本）"
 fi
 exit "$fail"

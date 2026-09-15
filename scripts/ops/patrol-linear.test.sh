@@ -14,6 +14,8 @@
 # 票不得進待Design（F1）；銷除公告自身引述「P1 ·」不列、P3 池項文中引用「P1 ·」不升級（F2）；Canceled 設計票不算承接（F3）。
 # R2 負樣本：混級 comment（`- P3 ·` 後接 `- P2 ·`）以最小級 P2 列出（N1）；「**UI 票：需先過 Design gate**」變體歸待Design、
 # 「**UI 票：不需 Design gate**」不歸（N2）；公告不以「銷除」開頭（日期／票號起頭）仍被跳過（N3）。
+# ⑬（LS-287）：harness 池項來源候選再多一層排除——id 前 8 碼若已被 repo 腳本檔頭等引用（`git grep`）視為已落地，
+# 從候選移除並在「→ 開票」行附註「已落地：…」；未命中維持現行；mutation 證明綠來自這段排除本身。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -1159,6 +1161,114 @@ case "$py_qa" in
   '') echo "✗ ⑫ 渲染不出狀態對照行（format_human 形狀變了？）" >&2; fail=1 ;;
   *)  echo "✗ ⑫ 狀態對照行的 ⚠ 個數不是 1：${py_qa}" >&2; fail=1 ;;
 esac
+
+# ---- ⑬（LS-287）harness 池項來源候選：id 前 8 碼已被 repo 腳本檔頭等引用者視為已落地，從候選移除、
+#      同段的「→ 開票」行附註「已落地：<id8> → <檔:行>」；未命中維持現行輸出 ----
+repo_landed="$work/repo_landed"
+git init -q -b main "$repo_landed"
+git -C "$repo_landed" config user.email test@example.com
+git -C "$repo_landed" config user.name Test
+mkdir -p "$repo_landed/scripts/ops"
+# 「11112222」已被這支腳本檔頭引用（模擬 cleanup-merged.sh／pen-read.sh 之類「來源 LS-96 池項 <id>」的慣例）；
+# 「33334444」不出現在 repo 任何地方，應維持現行輸出（夾具 (b)）。
+cat > "$repo_landed/scripts/ops/fake-landed-LS287.sh" <<'EOF'
+#!/bin/bash
+# 假腳本（LS-287 自測用）：來源 LS-96 池項 11112222
+echo hi
+EOF
+git -C "$repo_landed" add scripts/ops/fake-landed-LS287.sh
+git -C "$repo_landed" -c commit.gpgsign=false commit -q -m 'chore: init'
+printf 'LINEAR_API_KEY=test-token-not-real\n' > "$repo_landed/.env"
+
+fx_landed="$work/fixtures_landed"
+mkdir -p "$fx_landed"
+cat > "$fx_landed/cycles.json" <<'EOF'
+{"data":{"team":{"cycles":{"nodes":[]}}}}
+EOF
+cat > "$fx_landed/closed_issues.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}
+EOF
+cat > "$fx_landed/issues_page1.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"identifier":"LS-96","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
+   "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}}
+]}}}
+EOF
+# aaaa11112222…：P2 已落地（repo 已引用）；bbbb33334444…：P2 未落地（repo 無引用）——皆合法 P2 池項。
+cat > "$fx_landed/pool_comments.json" <<'EOF'
+{"data":{"issue":{"comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"id":"11112222-0000-4000-8000-000000000001","createdAt":"2026-09-01T00:00:00.000Z","body":"入池：P2 · 已落地的候選 · 估 size:S"},
+  {"id":"33334444-0000-4000-8000-000000000002","createdAt":"2026-09-02T00:00:00.000Z","body":"入池：P2 · 尚未落地的候選 · 估 size:S"}
+]}}}}
+EOF
+mkdir -p "$work/bin_landed"
+cat > "$work/bin_landed/curl" <<EOF
+#!/bin/bash
+fx="${fx_landed}"
+data=""
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    --data) data=\$2; shift ;;
+  esac
+  shift
+done
+case "\$data" in
+  *'comments('*) cat "\$fx/pool_comments.json" ;;
+  *'type: { in: ['*) cat "\$fx/closed_issues.json" ;;
+  *'cycles('*) cat "\$fx/cycles.json" ;;
+  *'issues('*) cat "\$fx/issues_page1.json" ;;
+  *) echo '{"errors":[{"message":"stub curl：不應被呼叫（current 為 None 時不查 documents／cycle issues）"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_landed/curl"
+
+out13="$(PATH="$work/bin_landed:$PATH" bash "$plsh" --repo "$repo_landed" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ⑬ LS-287 fixture exit 0"; else echo "✗ ⑬ 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out13" | sed 's/^/    /' >&2; fail=1; fi
+export OUT13="$out13"
+py13="$(python3 - <<'PYEOF'
+import json, os
+d = json.loads(os.environ["OUT13"])
+ok = True
+def check(name, cond):
+    global ok
+    print(("✓ " if cond else "✗ ") + name)
+    if not cond:
+        ok = False
+
+harness = d["lanes"]["lane:harness"]["open_ticket"]
+ids = [s["id"] for s in harness["sources"]]
+check("⑬(a) 已落地的池項（11112222）從候選移除，只剩未落地的（33334444）（夾具 b：未命中維持現行）",
+      ids == ["LS-96#33334444"])
+check("⑬(a) 開票行的 notes 印「已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2」",
+      any(n.startswith("已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2") for n in harness["notes"]))
+check("⑬(a) 動作清單的「→ 開票」行含已落地附註（同段一行，重用 notes［…］）",
+      any(a.startswith("→ 開票：lane:harness 空 1 輪") and "已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2" in a for a in d["actions"]))
+print("OK" if ok else "FAIL")
+PYEOF
+)"
+printf '%s\n' "$py13"
+if printf '%s' "$py13" | tail -1 | grep -qx OK; then :; else fail=1; fi
+
+# ⑬(b) mutation：拿掉 repo-grep 排除（把 repo_landed_pool_items 硬短路回傳空字典）→ 已落地的池項也會被列出，
+#      證明 ⑬(a) 的紅/綠來自這段機械排除，不是巧合
+mutdir13="$work/mut13"
+rm -rf "$mutdir13"; mkdir -p "$mutdir13"
+cp -R "${root}/scripts" "$mutdir13/scripts"
+sed 's/^def repo_landed_pool_items(root, prefixes):$/def repo_landed_pool_items(root, prefixes):\n    return {}  # LS-287 mutation test/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir13/scripts/ops/patrol_linear.py"
+if ! grep -q '# LS-287 mutation test' "$mutdir13/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑬(b) mutant 沒被正確合成" >&2; fail=1
+else
+  out13m="$(PATH="$work/bin_landed:$PATH" bash "$mutdir13/scripts/ops/patrol-linear.sh" --repo "$repo_landed" --json 2>&1)"
+  export OUT13M="$out13m"
+  mut13err="$work/ls287-mut-err"
+  if python3 -c 'import json,os; d=json.loads(os.environ["OUT13M"]); ids=[s["id"] for s in d["lanes"]["lane:harness"]["open_ticket"]["sources"]]; assert ids==["LS-96#11112222","LS-96#33334444"], ids' 2>"$mut13err"; then
+    echo "✓ ⑬(b) mutant（拿掉 repo-grep 排除）：已落地的 11112222 也被列出——證明 ⑬(a) 的綠來自這段機械排除"
+  else
+    echo "✗ ⑬(b) mutant 未如預期翻轉" >&2; cat "$mut13err" >&2; printf '%s\n' "$out13m" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2
