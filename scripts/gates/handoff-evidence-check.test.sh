@@ -8,7 +8,8 @@
 # 慣用，此前兩次誤紅）——拿掉即 ①af／①ag 紅。
 # LS-294（①aj-①am；LS-96 池項 24b0dcf6）：(c) 補 `git <subcmd>` 泛化（含 `log`／`status`／`push`／`fetch`／
 # `merge-base`／`ls-remote`／`worktree`／`grep`，取代 LS-256「`git log` 不算證據」的決定）與
-# `node`／`python3`／`swift <path>`；(b) 補 `.test.js`／`.test.py`——拿掉任一即①aj-①am 紅（見⑰/⑱ mutation）。
+# `node`／`python3`／`swift <path>`（R2／merge-review R1 a7e72913 B1 收窄為路徑形狀）；(b) 補 `.test.js`
+# （R2 informational-1：`.test.py` 因與既有 `\.py\b` 重複已移除）——拿掉任一即①aj-①am 紅（見⑰/⑱/⑲ mutation）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -391,18 +392,26 @@ expect 0 '①al（LS-294）裸 `git push`（push gate 通過的自然措辭，�
 - 條件 1：`git push` 前景執行通過（push gate 通過）
 '
 
-# ①am 刻意用不帶 .py／.swift 副檔名的引數（`scripts/gates/handoff_evidence_check`／`build`），避免
-# 跟既有 PATH_RE 的 `\.py\b`／`\.swift\b` 無條件子字串重疊，讓下面⑰ mutation 能乾淨歸因到 COMMAND_RE
-# 新增的 `python3`／`swift <path>` 這條規則，不是被既有 PATH_RE 規則撐住。
-expect 0 '①am（LS-294）`python3 <path>`／`swift <path>` 命令證據，引數無 .py／.swift 副檔名（避免與既有 PATH_RE 重疊）' '' \
+# ①am 刻意用不帶 .py／.swift 副檔名的引數（`scripts/gates/handoff_evidence_check`／
+# `scripts/tools/format-check`），避免跟既有 PATH_RE 的 `\.py\b`／`\.swift\b` 無條件子字串重疊，讓下面
+# ⑰ mutation 能乾淨歸因到 COMMAND_RE 新增的 `python3`／`swift <path>` 這條規則，不是被既有 PATH_RE
+# 規則撐住；兩個引數皆含 `/`，滿足 R2（merge-review R1 `a7e72913` B1）收窄後的路徑形狀要求。
+expect 0 '①am（LS-294，R2 收窄後仍為正樣本）`python3 <path>`／`swift <path>` 命令證據，路徑含 `/`、無 .py／.swift 副檔名（避免與既有 PATH_RE 重疊）' '' \
 '## 已驗證
 - 條件 1：`python3 scripts/gates/handoff_evidence_check` 核對過白名單邏輯
-- 條件 2：`swift build` 跑過一次
+- 條件 2：`swift scripts/tools/format-check` 跑過一次
 '
 
 expect 0 '①an（LS-294，取代 LS-256 原②m）`git log --oneline -5` 現在算命令證據——同一批 git 子命令泛化' '' \
 '## 已驗證
 - 條件 1：`git log --oneline -5` 看過 commit 都在
+'
+
+# ①ao（R2，merge-review R1 a7e72913 B1 回歸樣本）：收窄後 `python3 <path>` 真實路徑寫法仍通過——
+# 呼應 reviewer 指名的「`python3 scripts/ops/patrol_linear.py` 仍通過」。
+expect 0 '①ao（LS-294，R2）`python3 scripts/ops/patrol_linear.py` 真實路徑寫法，收窄後仍算命令證據' '' \
+'## 已驗證
+- 條件 1：`python3 scripts/ops/patrol_linear.py` 跑過一次
 '
 
 # ==== ② 負樣本（≥4）====
@@ -483,6 +492,30 @@ expect 2 '②n（LS-292，票 (c)）粗體後接非括號正文仍不算標題 �
 expect 1 '②o（LS-294，票 (c)）敘述性句子含「git」字樣但非指令（如「用 git 管理」）→ 不算證據（維持嚴格）' '缺『怎麼驗』證據' \
 '## 已驗證
 - 條件 1：本票的檔案變更用 git 管理，沒有另外新增工具
+'
+
+# ②p-②s（R2，merge-review R1 a7e72913 B1）：`node`／`python3`／`swift` 後接一般文字（非路徑形狀，
+# 不含 `/` 或 `.`）不算命令證據——reviewer 重放證實舊版 `\s+\S+` 會誤判以下四句為指令證據；
+# `②s` 直接取材自 `docs/COLLABORATION.md` 既有的「python3 + 中文名詞、詞間無空格」寫法，證明不是
+# 刁鑽巧合而是本專案常態敘述，過寬會讓「任意提及」矇混過關，違背這支 gate 的初衷。
+expect 1 '②p（R2，a7e72913 B1）`the node module handles this`——node 後接非路徑 token 不算證據' '缺『怎麼驗』證據' \
+'## 已驗證
+- 條件 1：the node module handles this
+'
+
+expect 1 '②q（R2，a7e72913 B1）`python3 is a language`——python3 後接非路徑 token 不算證據' '缺『怎麼驗』證據' \
+'## 已驗證
+- 條件 1：python3 is a language
+'
+
+expect 1 '②r（R2，a7e72913 B1）「已驗證：swift 語言的行為與預期相符」——swift 後接非路徑中文敘述不算證據' '缺『怎麼驗』證據' \
+'## 已驗證
+- 條件 1：已驗證：swift 語言的行為與預期相符
+'
+
+expect 1 '②s（R2，a7e72913 B1）「python3 結構 diff（節點總數含巢狀…）」——本 repo docs/COLLABORATION.md 既有寫法，非指令仍不算證據' '缺『怎麼驗』證據' \
+'## 已驗證
+- 條件 1：python3 結構 diff（節點總數含巢狀…）
 '
 
 # ==== ③ --help／參數 ====
@@ -1051,7 +1084,7 @@ else
   fail=1
 fi
 
-# ==== ⑱（LS-294，LS-96 池項 24b0dcf6）mutation 負控：PATH_RE 拿掉 `.test.js`／`.test.py` → ①ak3（只靠
+# ==== ⑱（LS-294，LS-96 池項 24b0dcf6）mutation 負控：PATH_RE 拿掉 `.test.js` → ①ak3（只靠
 #        `.test.js` 檔名放行、無 node／bash／gh 前綴）必須改判紅，證明是這兩個副檔名在放行 ====
 mut_notestjs="$work/handoff_evidence_check.no-test-js-py.py"
 awk '
@@ -1059,13 +1092,13 @@ awk '
   { print }
 ' "$py" > "$mut_notestjs"
 if grep -qF 'PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/|\.swift\b|\.py\b|\.sh\b|\.md\b|\.yml\b|\.json\b")  # HANDOFF-EVIDENCE-PATH' "$mut_notestjs"; then
-  echo "✓ ⑱ mutate：確認已把 PATH_RE 拿掉 .test.js／.test.py（退回 R5／LS-228 R2 版）"
+  echo "✓ ⑱ mutate：確認已把 PATH_RE 拿掉 .test.js（退回 R5／LS-228 R2 版）"
   printf '%s' '## 已驗證
 - 條件 1：見 `scripts/design/overflow-scan.test.js` 內新增的三條測試案例
 ' > "$work/mut18.md"
   out18="$(python3 "$mut_notestjs" "$work/mut18.md" --repo "$R" 2>&1)"; rc18=$?
   if [ "$rc18" -eq 1 ] && printf '%s' "$out18" | grep -qF '缺『怎麼驗』證據'; then
-    echo "✓ ⑱ mutant（拿掉 .test.js／.test.py）：①ak3 的正樣本改判紅——證明這兩個副檔名是放行原因"
+    echo "✓ ⑱ mutant（拿掉 .test.js）：①ak3 的正樣本改判紅——證明這個副檔名是放行原因"
   else
     echo "✗ ⑱ mutant 未如預期翻轉（實得 exit ${rc18}）" >&2
     printf '%s\n' "$out18" | sed 's/^/    /' >&2
@@ -1073,6 +1106,51 @@ if grep -qF 'PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/
   fi
 else
   echo "✗ ⑱ mutate：找不到 HANDOFF-EVIDENCE-PATH 標記，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ⑲（R2，merge-review R1 a7e72913 B1）mutation 負控：COMMAND_RE 的 `node`／`python3`／`swift` 路徑
+#        形狀要求（`\S*[./]\S*`）退回 R1 版（任一非空白 token 即算，`\S+`）→ ②p/②q/②r/②s 四個新負樣本
+#        必須改判過（exit 0），證明是路徑形狀要求在擋這些假陽性 ====
+mut_looseinterp="$work/handoff_evidence_check.loose-interp.py"
+awk '
+  index($0, "# HANDOFF-EVIDENCE-COMMAND") > 0 { print "COMMAND_RE = re.compile(r\"xcodebuild|bash scripts/|gh run view|\\.xcresult|\\bgit\\s+(?:log|diff|status|push|fetch|merge-base|ls-remote|worktree|grep|merge-tree)\\b|\\b(?:node|python3|swift)\\s+\\S+\")  # HANDOFF-EVIDENCE-COMMAND"; next }
+  { print }
+' "$py" > "$mut_looseinterp"
+if grep -qF 'COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|\.xcresult|\bgit\s+(?:log|diff|status|push|fetch|merge-base|ls-remote|worktree|grep|merge-tree)\b|\b(?:node|python3|swift)\s+\S+")  # HANDOFF-EVIDENCE-COMMAND' "$mut_looseinterp"; then
+  echo "✓ ⑲ mutate：確認已把 node／python3／swift 的路徑形狀要求退回 R1 版（\\S+，任一非空白 token 即算）"
+  all_ok19=1
+  for pair in \
+    'nodeprose:## 已驗證
+- 條件 1：the node module handles this
+' \
+    'py3prose:## 已驗證
+- 條件 1：python3 is a language
+' \
+    'swiftprose:## 已驗證
+- 條件 1：已驗證：swift 語言的行為與預期相符
+' \
+    'py3zh:## 已驗證
+- 條件 1：python3 結構 diff（節點總數含巢狀…）
+'
+  do
+    tag="${pair%%:*}"
+    body="${pair#*:}"
+    printf '%s' "$body" > "$work/mut19-$tag.md"
+    out19="$(python3 "$mut_looseinterp" "$work/mut19-$tag.md" --repo "$R" 2>&1)"; rc19=$?
+    if [ "$rc19" -ne 0 ]; then
+      echo "✗ ⑲ mutant（$tag）未如預期翻轉為 exit 0（實得 exit ${rc19}）" >&2
+      printf '%s\n' "$out19" | sed 's/^/    /' >&2
+      all_ok19=0
+    fi
+  done
+  if [ "$all_ok19" -eq 1 ]; then
+    echo "✓ ⑲ mutant（路徑形狀要求退回 \\S+）：②p／②q／②r／②s 四組負樣本全數改判過（exit 0）——證明 R2（a7e72913 B1）收窄的路徑形狀要求正是擋住這些假陽性的原因"
+  else
+    fail=1
+  fi
+else
+  echo "✗ ⑲ mutate：找不到 HANDOFF-EVIDENCE-COMMAND 標記，負控本身無效" >&2
   fail=1
 fi
 

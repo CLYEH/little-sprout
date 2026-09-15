@@ -55,13 +55,15 @@
       `project.yml`、裸檔名 `db-reset-retry.sh` 這類引用改前 exit 0、R4 head exit 1）——**R5（LS-228
       R2）原樣還原 `.sh`／`.md`／`.yml`**，本票（LS-228）的白名單只做加法：(b2) 之外仍保留這條寬鬆
       的無條件子字串當 fallback，不收緊既有行為（純加法，見票文 R2 裁定）。**LS-294（LS-96 池項
-      `24b0dcf6`）補 `.test.js`／`.test.py`**：`.test.sh` 早已在這條無條件子字串內（同 `.sh` 既有
-      行為，不驗真的存在，既有樣本 ①g／①h 用示意性假檔名 `foo.test.sh` 佐證）；LS-289 首則 handoff
-      的 `node scripts/design/overflow-scan.test.js` 一行原先兩頭皆不中（PATH_RE 完全沒有 `.js` 這個
-      副檔名、COMMAND_RE 也不認 `node <path>`），單靠補 `.test.js`（與同源新增的 `.test.py`，成對
-      補齊三個測試腳本副檔名）即可涵蓋，與上面 (c) 新增的 `node <path>` 命令證據是同一缺口的兩種
-      互補寫法（引用檔名 vs. 引用執行指令），沿用 (b) 既有「子字串比對、不驗證真的存在」邏輯，不
-      另外發明存在性驗證機制（維持 R4/(b2) 白名單目錄機制與 (b) 這條寬鬆 fallback 的既有分工）。
+      `24b0dcf6`）補 `.test.js`**：`.test.sh` 早已在這條無條件子字串內（同 `.sh` 既有行為，不驗真的
+      存在，既有樣本 ①g／①h 用示意性假檔名 `foo.test.sh` 佐證）；LS-289 首則 handoff 的
+      `node scripts/design/overflow-scan.test.js` 一行原先兩頭皆不中（PATH_RE 完全沒有 `.js` 這個
+      副檔名、COMMAND_RE 也不認 `node <path>`），單靠補 `.test.js` 即可涵蓋，與上面 (c) 新增的
+      `node <path>` 命令證據是同一缺口的兩種互補寫法（引用檔名 vs. 引用執行指令），沿用 (b) 既有
+      「子字串比對、不驗證真的存在」邏輯，不另外發明存在性驗證機制（維持 R4/(b2) 白名單目錄機制與
+      (b) 這條寬鬆 fallback 的既有分工）。**R2（merge-review R1 `a7e72913` informational-1）**：
+      票文字面另要求 `.test.py`，實測與既有無條件子字串 `\\.py\\b` 完全重複（`.test.py` 字尾必含
+      `.py`）且從無夾具驗證其必要性——移除，不補隔離夾具（票文給的二擇一，選移除）。
   (b2) 白名單目錄下的具體路徑（**必須**驗證檔案在 repo 內真實存在，比 (b) 更嚴格——同一個路徑若落在
       (b2) 涵蓋的目錄內，即使 (b) 的無條件子字串已判定「有證據」，仍會因 (b2) 的存在性檢查落空而讓
       整列判紅；(b2) 的目的是在特定重要目錄內防堵「引用不存在檔案」矇混，不是要收窄 (b) 的涵蓋範圍）
@@ -177,9 +179,12 @@ TEST_NAME_RE = re.compile(r"\btest[A-Z][A-Za-z0-9_]*\b|\b[A-Za-z_][A-Za-z0-9_]*T
 # R4（LS-228）一度把 `.sh`／`.md`／`.yml` 從這條無條件子字串移除，merge-review R1（`43e2f60e` F1）
 # 實測對既有語料淨增 20 份誤報（規約必引的 `bash supabase/tests/run.sh`、根目錄 `project.yml`、裸
 # 檔名皆中）——R5（LS-228 R2）原樣還原，本票只做加法（見 (b2)，不收緊這條既有行為）。
-# LS-294（LS-96 池項 `24b0dcf6`）補 `.test.js`／`.test.py`（`.test.sh` 已在其他分支涵蓋，見上）——
-# LS-289 首則 handoff `node scripts/design/overflow-scan.test.js` 一行此前 PATH_RE 完全不認 `.js`。
-PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|\.test\.js|\.test\.py|scratchpad/|evidence/|\.swift\b|\.py\b|\.sh\b|\.md\b|\.yml\b|\.json\b")  # HANDOFF-EVIDENCE-PATH
+# LS-294（LS-96 池項 `24b0dcf6`）補 `.test.js`（`.test.sh` 已在其他分支涵蓋，見上）——LS-289 首則
+# handoff `node scripts/design/overflow-scan.test.js` 一行此前 PATH_RE 完全不認 `.js`。**R2
+# （merge-review R1 `a7e72913` informational-1）**：票文字面另要求補 `.test.py`，但 `.test.py` 字尾必含
+# `.py`，已被既有無條件子字串 `\.py\b` 完整涵蓋（`foo.test.py` 對 `\.py\b` 必為 True），是無害但無意義
+# 的重複分支、也從未有夾具單獨驗證它的必要性——予以移除，不另補隔離夾具（二擇一，見票文 informational）。
+PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|\.test\.js|scratchpad/|evidence/|\.swift\b|\.py\b|\.sh\b|\.md\b|\.yml\b|\.json\b")  # HANDOFF-EVIDENCE-PATH
 # R4（LS-228，來源 LS-96 池項 `acb4e2df`）：白名單目錄下的具體路徑，必須驗證檔案真的存在（見 (b2)
 # 檔頭說明）。`supabase/functions`／`supabase`（.sh）／`scripts`／`docs`／`.claude` 允許任意層級子目錄
 # （`(?:[\w.-]+/)+` 或 `(?:[\w.-]+/)*`）；`supabase/migrations`／`supabase/tests`（.sql）只認直接掛在
@@ -202,11 +207,19 @@ PATH_ANCHOR_RE = re.compile(
     r"|\.github/workflows/[\w.-]+\.yml"
 )  # HANDOFF-PATH-ANCHOR
 # LS-294（LS-96 池項 `24b0dcf6`）：`git <subcmd>` 一般化（原本只認 `merge-tree`／`diff` 兩個子命令，
-# 見 (c) 檔頭說明——此修正取代 LS-256「`git log`／`git status` 不算證據」的決定）與 `node`／`python3`／
-# `swift <path>`——三者皆要求 `\b`（獨立字，前後為空白或反引號等非詞字元）避免「digit log」這類詞中
-# 字誤配；`node`／`python3`／`swift` 後要求緊接 `\s+\S+`（一個非空白 token）才算，純文字提到這些字
-# （如「動作快速」）不會誤配，因為後面通常不是空白＋非空白 token 的指令形狀。
-COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|\.xcresult|\bgit\s+(?:log|diff|status|push|fetch|merge-base|ls-remote|worktree|grep|merge-tree)\b|\b(?:node|python3|swift)\s+\S+")  # HANDOFF-EVIDENCE-COMMAND
+# 見 (c) 檔頭說明——此修正取代 LS-256「`git log`／`git status` 不算證據」的決定，merge-review R1
+# `a7e72913` 政策裁定 (a) 接受）與 `node`／`python3`／`swift <path>`——三者皆要求 `\b`（獨立字，前後
+# 為空白或反引號等非詞字元）避免「digit log」這類詞中字誤配。
+# **R2（merge-review R1 `a7e72913` B1）**：`node`／`python3`／`swift` 後原本只要求緊接 `\s+\S+`（任一
+# 非空白 token），reviewer 重放證實過寬——`the node module handles this`／`python3 is a language`／
+# `已驗證：swift 語言的行為與預期相符`／`確認 node 版本相容` 皆誤判為指令證據，`docs/COLLABORATION.md`
+# 本身就有「python3 結構 diff（…）」這種「工具名＋中文名詞、詞間無空格」的既有寫法，證明這不是刁鑽
+# 巧合而是常態；任意提及這三個技術名詞（不論有沒有真的跑過指令）都能矇混過關，正是這支 gate 要擋的事。
+# 改為 `\s+\S*[./]\S*`——後接 token 須含 `/` 或 `.`（路徑形狀，貼合票文字面「`node <path>`」的
+# 「path」語意），`module`／`is`／`語言的行為與預期相符`／`版本相容`／`結構` 皆不含 `/`／`.`，不再誤判；
+# `scripts/design/pen-snapshot-dump`（無副檔名但含 `/`）、`scripts/gates/handoff_evidence_check.py`
+# （含 `/` 與 `.`）、`scripts/tools/format-check`（含 `/`）等真實路徑寫法仍會命中。
+COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|\.xcresult|\bgit\s+(?:log|diff|status|push|fetch|merge-base|ls-remote|worktree|grep|merge-tree)\b|\b(?:node|python3|swift)\s+\S*[./]\S*")  # HANDOFF-EVIDENCE-COMMAND
 
 # ---- R2（merge-review R1 F1）：候選過濾——glob 形狀／同句否定詞／mutation 語境不驗存在性 ----
 NEGATION_WORDS = ("沒有", "無", "不存在", "未")
@@ -482,7 +495,7 @@ def run(path, repo):
         if missing_evidence:
             print(
                 "✗ handoff-evidence-check：第 %d 行起的列項缺『怎麼驗』證據（須含測試名、"
-                ".png/.log/.test.sh/.test.js/.test.py/scratchpad//evidence//.swift/.py/.sh/.md/.yml/.json 路徑、"
+                ".png/.log/.test.sh/.test.js/scratchpad//evidence//.swift/.py/.sh/.md/.yml/.json 路徑、"
                 "白名單目錄路徑（supabase/functions/**/*.ts、supabase/migrations/*.sql、"
                 "supabase/tests/*.sql、supabase/**/*.sh、docs/**/*.md、.claude/**/*.md、"
                 "scripts/**/*.sh、.github/workflows/*.yml），或 "
