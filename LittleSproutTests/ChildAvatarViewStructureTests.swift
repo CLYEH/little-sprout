@@ -59,4 +59,27 @@ final class ChildAvatarViewStructureTests: XCTestCase {
                 + "型別字串：\(typeName)"
         )
     }
+
+    /// LS-293：加上 `.failure` phase 重試（`.task(id: retryToken)`）＋`.id(retryToken)` 之後，
+    /// 重跑一次同樣的判準——`AsyncImage` 仍必須直接掛在 overlay 段、不能因為重試機制的實作
+    /// 方式（例如誤把 `AsyncImage` 包進 `if retryState... { } else { }`）重新落入
+    /// `_ConditionalContent`。上面那條測試已經涵蓋這個不變量本身，這裡另立一條是專門釘住
+    /// LS-293 這次改動沒有破壞它——之後改重試邏輯的人看測試名稱就知道要留意什麼。
+    @MainActor
+    func test_body_retryMechanismDoesNotReintroduceConditionalWrappingAroundAsyncImage() {
+        let typeName = String(describing: type(of: ChildAvatarView(name: "陳小安").body))
+
+        guard let overlayStart = typeName.range(of: "_OverlayModifier<")?.upperBound else {
+            return XCTFail("ChildAvatarView.body 的型別裡找不到 _OverlayModifier<：\(typeName)")
+        }
+        guard let asyncImageStart = typeName.range(
+            of: "AsyncImage", range: overlayStart..<typeName.endIndex
+        )?.lowerBound else {
+            return XCTFail("ChildAvatarView.body 的型別裡（_OverlayModifier< 之後）找不到 AsyncImage：\(typeName)")
+        }
+        XCTAssertFalse(
+            typeName[overlayStart..<asyncImageStart].contains("_ConditionalContent"),
+            "LS-293 加的重試機制（retryToken／.id()）把 AsyncImage 重新包進條件分支了：\(typeName)"
+        )
+    }
 }

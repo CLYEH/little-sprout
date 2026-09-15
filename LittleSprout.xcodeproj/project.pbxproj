@@ -65,6 +65,7 @@
 		1DB445C53472BD19A1DD3131 /* SettingsPushRowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643C6B3527FD660D2F89D842 /* SettingsPushRowUITests.swift */; };
 		1E88D1E63E9E2386698CBB2B /* CommentDeleteConfirmationSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3626E5AD602F5C5151E75278 /* CommentDeleteConfirmationSheetTests.swift */; };
 		1F25A631ACCC133CEE190ABF /* OTPVerificationModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C295C45BFA6330DF97EDAD /* OTPVerificationModelTests.swift */; };
+		1F3109BAA9AAD998951AF52A /* ChildAvatarRetryStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBF8ABD19C5B53C6FEB98742 /* ChildAvatarRetryStateTests.swift */; };
 		1F393961CF9F97E34474AD4F /* AuthButtonsState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB26A8533526BFBFD692560 /* AuthButtonsState.swift */; };
 		206A1B32B7EF93F3805932C5 /* TimelineStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C5672CE61BE2296C5EA787 /* TimelineStoreTests.swift */; };
 		21D4D505A709F1ED3CCAF4A6 /* TimelineStoreToggleReactionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AC550771E9C98F572DEE18 /* TimelineStoreToggleReactionTests.swift */; };
@@ -866,6 +867,7 @@
 		D9BBCF08BF3732C55DD08ABD /* SupabaseChildAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseChildAPIClient.swift; sourceTree = "<group>"; };
 		DB1F424885683D690458417D /* FamilyStoreMembersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreMembersTests.swift; sourceTree = "<group>"; };
 		DB9D3354E30054F4234BF2B5 /* StubPushAuthorizationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubPushAuthorizationService.swift; sourceTree = "<group>"; };
+		DBF8ABD19C5B53C6FEB98742 /* ChildAvatarRetryStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildAvatarRetryStateTests.swift; sourceTree = "<group>"; };
 		DC5027E02B9CD08C0E248406 /* AppFontTokenClampTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFontTokenClampTests.swift; sourceTree = "<group>"; };
 		DC9F969B2673823F6B3CE0A7 /* TapTargetGateSelfTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapTargetGateSelfTests.swift; sourceTree = "<group>"; };
 		DD6715A7DC764D22744BD176 /* JoinRequestTimeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinRequestTimeFormatter.swift; sourceTree = "<group>"; };
@@ -1135,6 +1137,7 @@
 				7FD928203A33BAF4F43BDB5D /* BirthdayFormatTests.swift */,
 				AC1EF5E70745F2D0DCAA3405 /* ChildAgeFormatterTests.swift */,
 				63669E8DAD14B79A6DCAD9FD /* ChildAvatarInitialTests.swift */,
+				DBF8ABD19C5B53C6FEB98742 /* ChildAvatarRetryStateTests.swift */,
 				E854A344C6B7C3A322E9BB7B /* ChildAvatarViewStructureTests.swift */,
 				5E699460134CBD4E0FE83B9A /* ChildFilterLayoutTests.swift */,
 				C9C8D00E975B4DE5DC111D3D /* ChildrenStoreAvatarListRefreshTests.swift */,
@@ -2150,6 +2153,7 @@
 				70A9A544D42C882AAF8E01BC /* BirthdayFormatTests.swift in Sources */,
 				88A188770092CA21AD9CC704 /* ChildAgeFormatterTests.swift in Sources */,
 				575E3F2F213D7274D1D10C68 /* ChildAvatarInitialTests.swift in Sources */,
+				1F3109BAA9AAD998951AF52A /* ChildAvatarRetryStateTests.swift in Sources */,
 				743E06DCB634D775FB5F8D62 /* ChildAvatarViewStructureTests.swift in Sources */,
 				8D8794877BA169209A1BB4ED /* ChildFilterLayoutTests.swift in Sources */,
 				F20F691FBACD89A57DFE187C /* ChildrenStoreAvatarListRefreshTests.swift in Sources */,

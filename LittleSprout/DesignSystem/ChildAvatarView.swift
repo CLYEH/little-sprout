@@ -22,6 +22,14 @@ import SwiftUI
 /// （`.claude/evidence/LS-273/qa-e2e/browse-20260914-214742/`）。
 /// 結構不變量由 `ChildAvatarViewStructureTests` 釘住；**想在這裡加 `.id()` 之前**請先讀
 /// `ChildrenStoreAvatarListRefreshTests` 檔頭（LS-174 實測：`.id()` 會放大這個 race）。
+///
+/// **LS-293：載入失敗（`.failure` phase）延遲重試一次**（源自 LS-273 merge-review R1
+/// `498c8e5a` i1：任何暫時性網路失敗或下載 task 被取消，`AsyncImage` 都不會自己重試，卡在
+/// 縮寫直到有別的事觸發重建）。`retryToken` 與 LS-174 那次被推翻的 `.id(avatarURL)` 嘗試**不
+/// 是同一種東西**：`avatarURL` 在一次上傳裡會連續變兩次（過渡態→最終值，見
+/// `ChildrenStoreAvatarListRefreshTests` 檔頭），`.id(avatarURL)` 因此會被那兩次連續重建互相
+/// 取消；`retryToken` 只在 `.failure` 觸發、且刻意延遲 0.5 秒之後才前進一格，跟 `avatarURL`
+/// 上游狀態是否原子寫入無關，也只翻一次（見 `ChildAvatarRetryState`）。
 struct ChildAvatarView: View {
     let name: String
     var size: CGFloat = 48
@@ -30,6 +38,12 @@ struct ChildAvatarView: View {
     /// 短效簽名 URL（`ChildrenStore.avatarURL(for:)`）；nil 時退回縮寫——呼叫端不需要自己
     /// 判斷「這個孩子有沒有頭像」，缺圖與簽名還沒回來是同一種畫面（顯示縮寫）。
     var avatarURL: URL?
+
+    /// LS-293：`.failure` phase 該不該觸發重試的純狀態機（只重試一次）。
+    @State private var retryState = ChildAvatarRetryState()
+    /// 只在確定要重試時才前進一格，逼 `AsyncImage` 用新身分重建、觸發一次新的下載 task——
+    /// 不改變 `avatarURL` 本身，語意上等同 cache-busting。
+    @State private var retryToken = 0
 
     var body: some View {
         Circle()
@@ -43,20 +57,53 @@ struct ChildAvatarView: View {
                 AsyncImage(url: avatarURL) { phase in
                     if case .success(let image) = phase {
                         image.resizable().scaledToFill()
+                    } else if case .failure = phase {
+                        // LS-293：`.task(id: retryToken)` 綁在目前這一輪 token 上——
+                        // `retryToken` 真的前進之後，新一輪的 task 會發現
+                        // `retryState.shouldRetry()` 已經是 false 而立刻返回，不會無限重試。
+                        initialsText
+                            .task(id: retryToken) { await scheduleRetryIfNeeded() }
                     } else {
                         initialsText
                     }
                 }
+                .id(retryToken)
                 .frame(width: size, height: size)
                 .clipShape(Circle())
             }
             .accessibilityHidden(true)
     }
 
+    /// 只在還沒重試過時排程：延遲 0.5 秒（讓暫時性失敗有機會自行恢復，也避開緊接著的
+    /// transition 重建）後把 `retryToken` 前進一格。第二次失敗（`retryState.shouldRetry()`
+    /// 已回 false）直接返回，維持顯示縮寫。
+    private func scheduleRetryIfNeeded() async {
+        guard retryState.shouldRetry() else { return }
+        try? await Task.sleep(for: .milliseconds(500))
+        guard !Task.isCancelled else { return }
+        retryToken += 1
+    }
+
     private var initialsText: some View {
         Text(ChildAvatarInitial.initial(for: name))
             .font(.system(size: size * 0.4, weight: .bold))
             .foregroundStyle(isDimmed ? Color.lsTextSecondary : Color.lsTextPrimary)
+    }
+}
+
+/// LS-293：`ChildAvatarView` 的 `AsyncImage` 載入失敗時「該不該再試一次」的純狀態機，抽出來
+/// 讓行為測試可以直接餵一段可注入的 phase 決策序列驗證，不必真的架設網路 stub 去驅動
+/// `AsyncImage` 內部的下載 task（同 `ChildAvatarViewStructureTests` 檔頭的理由：這類時序在
+/// `UIHostingController` 裡單獨渲染重現不出來）。
+struct ChildAvatarRetryState: Equatable {
+    private(set) var hasRetried = false
+
+    /// 回傳 true 代表「這次該觸發重試」；只有第一次呼叫會回 true，之後恆回 false——第二次
+    /// 失敗要直接顯示縮寫，不能無限重試。
+    mutating func shouldRetry() -> Bool {
+        guard !hasRetried else { return false }
+        hasRetried = true
+        return true
     }
 }
 
