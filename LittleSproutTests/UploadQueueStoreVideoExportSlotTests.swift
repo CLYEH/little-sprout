@@ -140,4 +140,62 @@ final class UploadQueueStoreVideoExportSlotTests: XCTestCase {
         XCTAssertEqual(reason, .videoExportTimedOut, "逾時要標成專屬的失敗原因，不是通用的伺服器忙碌")
         XCTAssertFalse(reason.isRetryable, "同一支卡住的原始檔案重試大機率再次卡住同一個地方，不該提供重試")
     }
+
+    // MARK: - runVideoPreparer 外層 Task 取消轉發進 preparer（mutation：拿掉 withTaskCancellationHandler 轉發）
+
+    /// LS-290 i1＋i4（LS-288 merge-review R1 informational `9e0e0a51`）：`runVideoPreparer(_:)`
+    /// 用未結構化 Task 包 preparer，外層呼叫端（`performUpload`）的 Task 被取消原本不會轉發
+    /// 進去——LS-283 I1 為 `VideoTrimmer` 加的 `cancelExport()` 通道因此被繞過。跟上面
+    /// `test_video_exportWatchdog_timesOut...` 用「永遠不 resume、不理會取消信號」的卡死
+    /// preparer 相反，這裡是它的孿生測試：preparer 用會回應取消的 `Task.sleep`（`Task.sleep`
+    /// 被取消時會立刻拋出，不是靜默忽略），驗證外層取消真的轉發到它身上，而不是只讓
+    /// `runVideoPreparer` 自己在逾時之後才放棄——上面第 7 點 reviewer probe 提到的情境如果哪天
+    /// 有票要做「離頁／登出取消飛行中上傳」，要先有這支測試釘住。
+    func test_runVideoPreparer_outerTaskCancelled_forwardsToPreparerAndThrowsCancellationError() async {
+        let fileURL = makeTempFile()
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        let preparerStarted = OSAllocatedUnfairLock(initialState: false)
+        let preparerObservedCancellation = OSAllocatedUnfairLock(initialState: false)
+        let store = UploadQueueStore(
+            familyID: familyID, mediaUploadService: StubMediaUploadService(), videoExportTimeout: .seconds(5),
+            videoPreparer: { url in
+                preparerStarted.withLock { $0 = true }
+                do {
+                    try await Task.sleep(for: .seconds(5))
+                } catch {
+                    preparerObservedCancellation.withLock { $0 = true }
+                    throw error
+                }
+                return VideoTrimmer.UploadSource(fileURL: url, fileExtension: "mp4", pixelSize: nil)
+            }
+        )
+
+        let resultBox = OSAllocatedUnfairLock<Result<VideoTrimmer.UploadSource, Error>?>(initialState: nil)
+        let outerTask = Task {
+            do {
+                let source = try await store.debugRunVideoPreparer(fileURL)
+                resultBox.withLock { $0 = .success(source) }
+            } catch {
+                resultBox.withLock { $0 = .failure(error) }
+            }
+        }
+
+        // 等 preparer 真的開始（進了 `Task.sleep`）才取消——避免取消時機早於 `preparerTask`
+        // 被建立，那樣就測不到「轉發」本身，只是巧合地還沒有東西可取消。
+        await waitUntil { preparerStarted.withLock { $0 } }
+        outerTask.cancel()
+
+        await waitUntil { resultBox.withLock { $0 != nil } }
+        XCTAssertTrue(
+            preparerObservedCancellation.withLock { $0 }, "外層 Task 取消應該轉發進 preparer，讓它收到取消信號"
+        )
+        let isCancellationError = resultBox.withLock { result -> Bool in
+            if case .failure(is CancellationError) = result { return true }
+            return false
+        }
+        XCTAssertTrue(
+            isCancellationError,
+            "取消後 runVideoPreparer 應該以 CancellationError 結束，實際 \(String(describing: resultBox.withLock { $0 }))"
+        )
+    }
 }

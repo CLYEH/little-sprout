@@ -62,32 +62,45 @@ extension UploadQueueStore {
     /// 回應取消信號能早點停，沒回應也不影響這裡已經放棄等待）。`resumed` 只會被其中一邊
     /// （`preparer` 完成或逾時）先看到 `false` 並翻成 `true`，同 `acquireVideoExportSlot()`
     /// 的理由，不會 resume 兩次。
+    ///
+    /// **LS-290 i1＋i4**：`preparerTask` 原本是未結構化 Task，外層呼叫端（`performUpload`）的
+    /// Task 被取消不會轉發進來——LS-283 I1 為 `VideoTrimmer` 加的 `cancelExport()` 通道因此被
+    /// 繞過。用 `withTaskCancellationHandler` 把 `preparerTask.cancel()` 接到外層取消上；
+    /// `preparerTaskRef` 用鎖保護是因為 `onCancel` 閉包可能在任意執行緒上並發執行（不像
+    /// `acquireVideoExportSlot()` 的 `onCancel` 需要跳回 MainActor 改陣列，這裡只是呼叫
+    /// `Task.cancel()`，本身執行緒安全，不需要跳轉，只需要鎖保護這個參照本身的讀寫）。
     func runVideoPreparer(_ fileURL: URL) async throws -> VideoTrimmer.UploadSource {
         let preparer = videoPreparer
         let timeout = videoExportTimeout
-        return try await withCheckedThrowingContinuation { continuation in
-            let resumed = OSAllocatedUnfairLock(initialState: false)
-            func resumeOnce(_ result: Result<VideoTrimmer.UploadSource, Error>) {
-                let shouldResume = resumed.withLock { didResume -> Bool in
-                    guard !didResume else { return false }
-                    didResume = true
-                    return true
+        let preparerTaskRef = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                let resumed = OSAllocatedUnfairLock(initialState: false)
+                func resumeOnce(_ result: Result<VideoTrimmer.UploadSource, Error>) {
+                    let shouldResume = resumed.withLock { didResume -> Bool in
+                        guard !didResume else { return false }
+                        didResume = true
+                        return true
+                    }
+                    guard shouldResume else { return }
+                    continuation.resume(with: result)
                 }
-                guard shouldResume else { return }
-                continuation.resume(with: result)
-            }
-            let preparerTask = Task {
-                do {
-                    resumeOnce(.success(try await preparer(fileURL)))
-                } catch {
-                    resumeOnce(.failure(error))
+                let preparerTask = Task {
+                    do {
+                        resumeOnce(.success(try await preparer(fileURL)))
+                    } catch {
+                        resumeOnce(.failure(error))
+                    }
+                }
+                preparerTaskRef.withLock { $0 = preparerTask }
+                Task {
+                    try? await Task.sleep(for: timeout)
+                    preparerTaskRef.withLock { $0 }?.cancel()
+                    resumeOnce(.failure(VideoExportTimeoutError()))
                 }
             }
-            Task {
-                try? await Task.sleep(for: timeout)
-                preparerTask.cancel()
-                resumeOnce(.failure(VideoExportTimeoutError()))
-            }
+        } onCancel: {
+            preparerTaskRef.withLock { $0 }?.cancel()
         }
     }
 
@@ -104,6 +117,12 @@ extension UploadQueueStore {
     }
 
     var debugVideoExportWaiterCount: Int { videoExportWaiters.count }
+
+    /// 測試用途（LS-290 i1）：直接呼叫 `runVideoPreparer(_:)`，不經過完整 `enqueue`／
+    /// `performUpload` 流程，讓測試能精準控制「外層 Task 何時取消」。
+    func debugRunVideoPreparer(_ fileURL: URL) async throws -> VideoTrimmer.UploadSource {
+        try await runVideoPreparer(fileURL)
+    }
     #endif
 }
 
