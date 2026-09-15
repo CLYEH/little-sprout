@@ -173749,8 +173749,8 @@
                           "id": "PlH4v",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -173764,8 +173764,8 @@
                           "id": "IOJ6Q",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -173779,8 +173779,8 @@
                           "id": "WlOth",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -173794,8 +173794,8 @@
                           "id": "HcCr8",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -173809,8 +173809,8 @@
                           "id": "J0iWY",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -173823,8 +173823,8 @@
                           "type": "frame",
                           "id": "horem",
                           "name": "More Cell",
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
                           "justifyContent": "center",
@@ -174011,8 +174011,8 @@
                           "id": "w9aDKo",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -174026,8 +174026,8 @@
                           "id": "BOiwn",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -174041,8 +174041,8 @@
                           "id": "QUhCU",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -174056,8 +174056,8 @@
                           "id": "kUvIE",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -174071,8 +174071,8 @@
                           "id": "aIb2G",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -174085,8 +174085,8 @@
                           "type": "frame",
                           "id": "hLw5U",
                           "name": "More Cell",
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
                           "justifyContent": "center",
@@ -174437,6 +174437,8 @@
                       "id": "IDzch",
                       "name": "Progress Count",
                       "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "已處理 42／128 張",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -174728,7 +174730,7 @@
                               "icon": "refresh-cw"
                             },
                             "yxwnz": {
-                              "content": "全部重試（2 張）"
+                              "content": "全部重試"
                             }
                           }
                         }
@@ -175456,6 +175458,8 @@
                       "id": "MhQY4",
                       "name": "Progress Count",
                       "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "已處理 42／128 張",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -175747,7 +175751,7 @@
                               "icon": "refresh-cw"
                             },
                             "yxwnz": {
-                              "content": "全部重試（2 張）"
+                              "content": "全部重試"
                             }
                           }
                         }
@@ -176306,6 +176310,8 @@
                       "id": "o8yQqT",
                       "name": "Progress Count",
                       "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "已處理 42／128 張",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -176584,7 +176590,7 @@
                               "icon": "refresh-cw"
                             },
                             "yxwnz": {
-                              "content": "全部重試（2 張）"
+                              "content": "全部重試"
                             }
                           }
                         }
@@ -178679,6 +178685,8 @@
                       "id": "b1o5l",
                       "name": "Progress Count",
                       "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "已處理 42／128 張",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -178970,7 +178978,7 @@
                               "icon": "refresh-cw"
                             },
                             "yxwnz": {
-                              "content": "全部重試（2 張）"
+                              "content": "全部重試"
                             }
                           }
                         }
@@ -183088,7 +183096,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 1000,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -183788,8 +183796,8 @@
                           "id": "i14wHJ",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -183803,8 +183811,8 @@
                           "id": "cZzz6",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -183818,8 +183826,8 @@
                           "id": "YNozq",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -183833,8 +183841,8 @@
                           "id": "eDfe4",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -183848,8 +183856,8 @@
                           "id": "h3mCrQ",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -183862,8 +183870,8 @@
                           "type": "frame",
                           "id": "tCSWe",
                           "name": "More Cell",
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
                           "justifyContent": "center",
@@ -184050,8 +184058,8 @@
                           "id": "FEz3H",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -184065,8 +184073,8 @@
                           "id": "a53A0g",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -184080,8 +184088,8 @@
                           "id": "PC9sx",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -184095,8 +184103,8 @@
                           "id": "vx0oP",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -184110,8 +184118,8 @@
                           "id": "YwFht",
                           "name": "Thumb",
                           "clip": true,
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -184124,8 +184132,8 @@
                           "type": "frame",
                           "id": "qzzH4",
                           "name": "More Cell",
-                          "width": 88,
-                          "height": 88,
+                          "width": 76,
+                          "height": 76,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
                           "justifyContent": "center",
