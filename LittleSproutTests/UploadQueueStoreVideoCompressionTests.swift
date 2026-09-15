@@ -211,6 +211,55 @@ final class UploadQueueStoreVideoCompressionTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: pickedURL.path), "選片暫存複本應該被清掉")
     }
 
+    // MARK: - 影片 export 專屬並行上限 1（mutation：拿掉 acquire／releaseVideoExportSlot）
+
+    /// i2（LS-286，源自 LS-284 merge-review R1 informational `39ce890a`）：`maxConcurrentUploads`
+    /// 預設 3 時，3 支影片同時進佇列會有 3 個 `AVAssetExportSession` 同時做 4K→1080p 轉檔、吃滿
+    /// 全部名額，排在後面的照片要等。加了 export 專屬並行上限 1 之後，任何時刻同時在跑
+    /// `videoPreparer` 的數量不該超過 1；兩張照片先進佇列，驗證它們最先完成——不需要等任何一支
+    /// 影片 export 完才輪得到它們（`maxConcurrentUploads` 本身沒變，照片走自己的上傳名額，跟
+    /// export 專屬鎖無關）。
+    func test_video_exportConcurrency_cappedAtOne_photosNotBlockedByVideoExports() async {
+        let videoURLs = (0..<3).map { _ in makeTempFile() }
+        defer { for url in videoURLs { try? FileManager.default.removeItem(at: url) } }
+        let concurrentExports = OSAllocatedUnfairLock(initialState: 0)
+        let maxObservedConcurrentExports = OSAllocatedUnfairLock(initialState: 0)
+        let mediaService = StubMediaUploadService()
+        mediaService.setUploadVideoHandler { _, _, _, _ in UUID() }
+        let completionOrder = OSAllocatedUnfairLock(initialState: [UUID]())
+        let photoID1 = UUID()
+        let photoID2 = UUID()
+        let store = UploadQueueStore(
+            familyID: familyID, mediaUploadService: mediaService,
+            onUploadSucceeded: { id, _ in completionOrder.withLock { $0.append(id) } },
+            videoPreparer: { fileURL in
+                let current = concurrentExports.withLock { state -> Int in
+                    state += 1
+                    return state
+                }
+                maxObservedConcurrentExports.withLock { $0 = max($0, current) }
+                try? await Task.sleep(nanoseconds: 40_000_000)
+                concurrentExports.withLock { $0 -= 1 }
+                return VideoTrimmer.UploadSource(fileURL: fileURL, fileExtension: "mp4", pixelSize: nil)
+            }
+        )
+
+        let uploads = [makePhotoUpload(tag: "a", id: photoID1), makePhotoUpload(tag: "b", id: photoID2)]
+            + videoURLs.map { makeVideoUpload(fileURL: $0) }
+        store.enqueue(uploads)
+
+        await waitUntil(timeoutSeconds: 3) { store.remainingCount == 0 }
+
+        XCTAssertEqual(mediaService.uploadPhotoCalls.count, 2, "兩張照片應該都完成，不被影片 export 卡住")
+        XCTAssertEqual(
+            Set(completionOrder.withLock { $0 }.prefix(2)), Set([photoID1, photoID2]),
+            "兩張照片應該最先完成——不需要排在任何一支影片 export 完成之後"
+        )
+        XCTAssertLessThanOrEqual(
+            maxObservedConcurrentExports.withLock { $0 }, 1, "任何時刻同時在跑的 videoPreparer（export）數量不該超過 1"
+        )
+    }
+
     // MARK: - 成功後清掉本機暫存檔
 
     func test_video_uploadSuccess_cleansUpOriginalAndCompressedTempFiles() async {

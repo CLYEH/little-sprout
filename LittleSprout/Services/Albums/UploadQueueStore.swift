@@ -67,6 +67,15 @@ final class UploadQueueStore {
     /// 命中就直接重用，不重新呼叫 `videoPreparer`（不重新 export）；上傳成功或不可重試失敗
     /// （終局狀態）由 `performUpload`／`finish` 清掉，見兩處註解。
     private var compressedVideoCache: [UUID: VideoTrimmer.UploadSource] = [:]
+    /// LS-286 i2（來源 LS-284 merge-review R1 informational `39ce890a`）：`maxConcurrentUploads`
+    /// 預設 3，一批選了 3 支以上影片時會有 3 個 `AVAssetExportSession` 同時做 4K→1080p 轉檔、
+    /// 且吃滿全部併發名額，排在後面的照片項目要等。這裡只序列化「呼叫 `videoPreparer`」這一段
+    /// （export 專屬上限 1），不動 `maxConcurrentUploads` 本身——名額照樣同時被佔用（正在等
+    /// export 的那筆也算一個名額），但同時只有一個真正在轉檔，其餘等候的名額可以是照片，照片
+    /// 上傳不受影響。`videoExportInFlight`／`videoExportWaiters` 只在 MainActor 上讀寫（同整支
+    /// store 的隔離模型，見檔頭文件註解），先進先出用陣列即可，不需要額外的鎖。
+    private var videoExportInFlight = false
+    private var videoExportWaiters: [CheckedContinuation<Void, Never>] = []
     private var entries: [UUID: Entry] = [:]
     /// 插入順序——`entries` 是字典（用 id 查找／更新方便），排序另外靠這份陣列記住「先進
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
@@ -292,6 +301,8 @@ final class UploadQueueStore {
             if let cached, FileManager.default.fileExists(atPath: cached.fileURL.path) {
                 source = cached
             } else {
+                await acquireVideoExportSlot()
+                defer { releaseVideoExportSlot() }
                 source = try await videoPreparer(fileURL)
                 compressedVideoCache[id] = source
             }
@@ -315,6 +326,29 @@ final class UploadQueueStore {
         try? FileManager.default.removeItem(at: originalURL)
         if uploadedURL != originalURL {
             try? FileManager.default.removeItem(at: uploadedURL)
+        }
+    }
+
+    /// LS-286 i2：拿到名額就立刻標記並返回；沒有就排進等候佇列，等 `releaseVideoExportSlot()`
+    /// 叫醒。呼叫端與 `releaseVideoExportSlot()` 都在 MainActor 上執行，不會有兩個呼叫同時看到
+    /// `videoExportInFlight == false` 而都拿到名額的競態。
+    private func acquireVideoExportSlot() async {
+        if !videoExportInFlight {
+            videoExportInFlight = true
+            return
+        }
+        await withCheckedContinuation { continuation in
+            videoExportWaiters.append(continuation)
+        }
+    }
+
+    /// 佇列裡還有人等就直接把名額轉給排最前面的那個（`videoExportInFlight` 維持 `true`，名額
+    /// 沒有被釋放又重新搶過），沒人等才真的把名額放掉。
+    private func releaseVideoExportSlot() {
+        if videoExportWaiters.isEmpty {
+            videoExportInFlight = false
+        } else {
+            videoExportWaiters.removeFirst().resume()
         }
     }
 
