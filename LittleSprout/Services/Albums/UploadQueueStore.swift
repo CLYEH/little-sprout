@@ -61,6 +61,12 @@ final class UploadQueueStore {
     /// 釘住「壓縮結果（含壓完仍超限的錯誤）怎麼往下接」。壓縮本身的行為由 `VideoTrimmerTests`
     /// 覆蓋，這裡不重複測。
     private let videoPreparer: @Sendable (URL) async throws -> VideoTrimmer.UploadSource
+    /// entry id → 已壓縮好、還沒上傳成功的 `UploadSource`（LS-284 merge-review R1 B1，沿
+    /// `DiaryComposerStore.compressedVideoCache` 語意）：可重試失敗後 `retry(_:)`／
+    /// `retryAllRetryable()` 只是把狀態翻回 `.waiting`、不清這份快取，`performUpload` 重跑時
+    /// 命中就直接重用，不重新呼叫 `videoPreparer`（不重新 export）；上傳成功或不可重試失敗
+    /// （終局狀態）由 `performUpload`／`finish` 清掉，見兩處註解。
+    private var compressedVideoCache: [UUID: VideoTrimmer.UploadSource] = [:]
     private var entries: [UUID: Entry] = [:]
     /// 插入順序——`entries` 是字典（用 id 查找／更新方便），排序另外靠這份陣列記住「先進
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
@@ -217,7 +223,7 @@ final class UploadQueueStore {
         Task { [weak self] in
             guard let self else { return }
             do {
-                let mediaID = try await self.performUpload(payload, pixelSize: pixelSize)
+                let mediaID = try await self.performUpload(id: id, payload, pixelSize: pixelSize)
                 // LS-166：先呼叫掛鉤（讓呼叫端有機會把這張掛進相簿／更新畫面），再翻成
                 // `.completed`——兩者順序不影響 `entries`／`order` 的一致性（掛鉤不觸碰這兩個
                 // 屬性），純粹是「先讓呼叫端知道結果，這支 store 自己的狀態轉換晚一步」，同
@@ -233,10 +239,21 @@ final class UploadQueueStore {
         }
     }
 
+    /// merge-review R1 B1／i1：終局狀態（完成或不可重試失敗）要把這支影片佔用的本機暫存空間
+    /// 收乾淨。完成路徑的清理已經在 `performUpload` 內做過（上傳成功當下就知道要清哪些檔案，
+    /// 不必等 `finish`），這裡只處理**不可重試失敗**——`.videoTooLarge`（本票新增）與既有
+    /// `.quota`：payload 裡的 `fileURL` 是 `PickedItemLoader` 產生的選片暫存複本，
+    /// `compressedVideoCache[id]` 若有值（例如壓縮成功但上傳因額度已滿被拒）是還沒被清掉的
+    /// 壓縮輸出——兩者都要清，這支影片不會再被重試。
     private func finish(_ id: UUID, state: UploadItemState) {
         guard entries[id] != nil else { return }
         entries[id]?.state = state
         if Self.releasesPayload(for: state) {
+            if case .failed = state, case .video(let fileURL, _)? = entries[id]?.payload {
+                let uploadedURL = compressedVideoCache[id]?.fileURL ?? fileURL
+                Self.cleanupVideoTempFiles(originalURL: fileURL, uploadedURL: uploadedURL)
+            }
+            compressedVideoCache.removeValue(forKey: id)
             entries[id]?.payload = nil
         }
         advance()
@@ -256,22 +273,37 @@ final class UploadQueueStore {
     /// 既有作法）——壓完仍超過單檔上限會在 `videoPreparer` 這裡丟 `AppError`（`UploadFailureReason
     /// .from(_:)` 認得出這個碼），下面的 `uploadVideo` 不會被呼叫到；壓縮輸出暫存檔本身在那個
     /// 分支已經被 `VideoTrimmer.checkWithinSizeLimit` 清掉了，這裡不用再清一次。
-    private func performUpload(_ payload: PendingUpload.Kind, pixelSize: PixelSize) async throws -> UUID {
+    ///
+    /// **merge-review R1 B1**：`compressedVideoCache` 命中且檔案還在就直接重用，不重新呼叫
+    /// `videoPreparer`——`retry(_:)`／`retryAllRetryable()` 只把狀態翻回 `.waiting`、快取不會
+    /// 被清掉，上傳因網路／伺服器問題失敗後按「重試」不會讓一支 40 秒 4K 影片重新轉檔一次。
+    /// 命中但檔案已不在（低儲存空間清了 tmp）當未命中處理，重壓一次（同 `DiaryComposerStore`
+    /// R2 i2）。`id` 是這一筆在 `entries` 裡的 id，快取鍵沿用它（同一支影片在佇列裡只會有一個
+    /// id，不會跟其他筆混淆）。
+    private func performUpload(id: UUID, _ payload: PendingUpload.Kind, pixelSize: PixelSize) async throws -> UUID {
         switch payload {
         case .photo(let data, let fileExtension):
             return try await mediaUploadService.uploadPhoto(
                 familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize
             )
         case .video(let fileURL, _):
-            let source = try await videoPreparer(fileURL)
+            let source: VideoTrimmer.UploadSource
+            let cached = compressedVideoCache[id]
+            if let cached, FileManager.default.fileExists(atPath: cached.fileURL.path) {
+                source = cached
+            } else {
+                source = try await videoPreparer(fileURL)
+                compressedVideoCache[id] = source
+            }
             // 用輸出的實際像素尺寸；量不到才沿用選片當下量到的（同 `DiaryComposerStore
             // .uploadSingle` merge-review R1 m7）。
-            let id = try await mediaUploadService.uploadVideo(
+            let mediaID = try await mediaUploadService.uploadVideo(
                 familyID: familyID, fileURL: source.fileURL, fileExtension: source.fileExtension,
                 pixelSize: source.pixelSize ?? pixelSize
             )
+            compressedVideoCache.removeValue(forKey: id)
             Self.cleanupVideoTempFiles(originalURL: fileURL, uploadedURL: source.fileURL)
-            return id
+            return mediaID
         }
     }
 
