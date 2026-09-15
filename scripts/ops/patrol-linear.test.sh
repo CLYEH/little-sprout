@@ -1270,6 +1270,348 @@ else
   fi
 fi
 
+# ---- ⑭（LS-298 scope 1＋3）已結案票查詢失敗：design_gate_sources()／backend_sources() 的「尚無子票」
+#      類候選改印「子票有無不可判（已結案查詢失敗）」且不列入來源候選（scope 1）；先退回讀
+#      docs/archive/linear/*.md 反查，命中印「已落地／已有 Done 子票 LS-<n>」（scope 3）----
+repo_degraded="$work/repo_degraded"
+git init -q -b main "$repo_degraded"
+git -C "$repo_degraded" config user.email test@example.com
+git -C "$repo_degraded" config user.name Test
+mkdir -p "$repo_degraded/docs/archive/linear"
+cat > "$repo_degraded/docs/archive/linear/LS-995.md" <<'EOF'
+# LS-995 Task：LS-994 後端先行——假子票（LS-298 自測用）
+
+| 欄位 | 值 |
+|---|---|
+| 狀態 | Done（completed） |
+| 標籤 | size:S, lane:backend |
+| 父票 | LS-994 假 Story |
+EOF
+git -C "$repo_degraded" add docs/archive/linear/LS-995.md
+: > "$repo_degraded/.gitkeep"; git -C "$repo_degraded" add .gitkeep
+git -C "$repo_degraded" -c commit.gpgsign=false commit -q -m 'chore: init'
+printf 'LINEAR_API_KEY=test-token-not-real\n' > "$repo_degraded/.env"
+
+fx_degraded="$work/fixtures_degraded"
+mkdir -p "$fx_degraded"
+cat > "$fx_degraded/cycles.json" <<'EOF'
+{"data":{"team":{"cycles":{"nodes":[
+  {"id":"cyc-5","number":5,"startsAt":"2020-01-01T00:00:00.000Z","endsAt":"2099-01-01T00:00:00.000Z","isActive":true}
+]}}}}
+EOF
+cat > "$fx_degraded/documents.json" <<'EOF'
+{"data":{"documents":{"nodes":[{"id":"doc-1","title":"Cycle 5 規劃"}]}}}
+EOF
+cat > "$fx_degraded/cycle_issues.json" <<'EOF'
+{"data":{"cycle":{"issues":{"nodes":[]}}}}
+EOF
+# LS-993：Story、後端關鍵字 RPC、無 lane:backend 子票、封存索引也查無 → 應印「不可判」。
+# LS-994：Story、後端關鍵字 RLS、無 lane:backend 子票，但 docs/archive/linear/LS-995.md 為其 Done
+# 子票（父票欄＝LS-994、lane:backend）→ 應印「已落地」。
+cat > "$fx_degraded/issues_page1.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"identifier":"LS-96","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
+   "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-993","title":"Story：無法判定的候選","description":"後端需要 RPC 支援。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-994","title":"Story：已落地的候選","description":"後端需要 RLS 政策。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-02T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}}
+]}}}
+EOF
+mkdir -p "$work/bin_degraded"
+cat > "$work/bin_degraded/curl" <<EOF
+#!/bin/bash
+fx="${fx_degraded}"
+data=""
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    --data) data=\$2; shift ;;
+  esac
+  shift
+done
+case "\$data" in
+  *'comments('*) echo '{"data":{"issue":{"comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}}' ;;
+  *'documents('*) cat "\$fx/documents.json" ;;
+  *'cycle(id:'*) cat "\$fx/cycle_issues.json" ;;
+  *'cycles('*) cat "\$fx/cycles.json" ;;
+  *'type: { in: ['*) echo '{"errors":[{"message":"stub：模擬 closed issues 查詢失敗（curl 28 同型，LS-297 事故重現）"}]}' ;;
+  *'issues('*) cat "\$fx/issues_page1.json" ;;
+  *) echo '{"errors":[{"message":"stub curl：認不出的 query"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_degraded/curl"
+
+out14="$(PATH="$work/bin_degraded:$PATH" bash "$plsh" --repo "$repo_degraded" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ⑭ LS-298 scope1＋3 fixture exit 0"; else echo "✗ ⑭ 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out14" | sed 's/^/    /' >&2; fail=1; fi
+export OUT14="$out14"
+py14="$(python3 - <<'PYEOF'
+import json, os
+d = json.loads(os.environ["OUT14"])
+ok = True
+def check(name, cond):
+    global ok
+    print(("✓ " if cond else "✗ ") + name)
+    if not cond:
+        ok = False
+
+backend = d["lanes"]["lane:backend"]["open_ticket"]
+check("⑭ scope1：已結案查詢失敗時，「尚無子票」候選不列入來源候選（sources 空）", backend["sources"] == [])
+check("⑭ scope1：LS-993（封存索引也查無）印「子票有無不可判（已結案查詢失敗）」",
+      any(n == "LS-993：子票有無不可判（已結案查詢失敗）" for n in backend["notes"]))
+check("⑭ scope3：LS-994（封存索引命中 LS-995）印「已落地／已有 Done 子票 LS-995」",
+      any(n == "LS-994：已落地／已有 Done 子票 LS-995（本機封存索引）" for n in backend["notes"]))
+check("⑭ 一般錯誤說明仍在（已結案票查詢失敗）", any("已結案票查詢失敗" in n for n in backend["notes"]))
+print("OK" if ok else "FAIL")
+PYEOF
+)"
+printf '%s\n' "$py14"
+if [ "$(tail -1 <<<"$py14")" = OK ]; then :; else fail=1; fi
+
+# ⑭a mutation（scope 1）：拿掉降級的早退（open_ticket_sources() 的 `return [], notes`）→ LS-993／LS-994
+#      都會被誤列為候選（重現 LS-297 事故：closed 查詢失敗仍印「尚無子票」）
+mutdir14a="$work/mut14a"
+rm -rf "$mutdir14a"; mkdir -p "$mutdir14a"
+cp -R "${root}/scripts" "$mutdir14a/scripts"
+sed 's/^            return \[\], notes$/            pass  # LS-298 mutation test (scope 1 disabled)/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir14a/scripts/ops/patrol_linear.py"
+if ! grep -q 'LS-298 mutation test (scope 1 disabled)' "$mutdir14a/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑭a mutant 沒被正確合成" >&2; fail=1
+else
+  out14a="$(PATH="$work/bin_degraded:$PATH" bash "$mutdir14a/scripts/ops/patrol-linear.sh" --repo "$repo_degraded" --json 2>&1)"
+  export OUT14A="$out14a"
+  if python3 -c 'import json,os; d=json.loads(os.environ["OUT14A"]); ids=set(s["id"] for s in d["lanes"]["lane:backend"]["open_ticket"]["sources"]); assert ids=={"LS-993","LS-994"}, ids' 2>"$work/mut14a-err"; then
+    echo "✓ ⑭a mutant（拿掉降級的早退）：LS-993／LS-994 都被誤列為候選——證明 ⑭ scope1 的綠來自這段降級"
+  else
+    echo "✗ ⑭a mutant 未如預期翻轉" >&2; cat "$work/mut14a-err" >&2; printf '%s\n' "$out14a" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
+# ⑭c mutation（scope 3）：archive_done_child() 恆回 None → LS-994 也變成「不可判」（封存索引反查失效）
+mutdir14c="$work/mut14c"
+rm -rf "$mutdir14c"; mkdir -p "$mutdir14c"
+cp -R "${root}/scripts" "$mutdir14c/scripts"
+sed 's/^def archive_done_child(root, story_ident, lane_label, match_title=False):$/def archive_done_child(root, story_ident, lane_label, match_title=False):\n    return None  # LS-298 mutation test (scope 3 disabled)/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir14c/scripts/ops/patrol_linear.py"
+if ! grep -q 'LS-298 mutation test (scope 3 disabled)' "$mutdir14c/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑭c mutant 沒被正確合成" >&2; fail=1
+else
+  out14c="$(PATH="$work/bin_degraded:$PATH" bash "$mutdir14c/scripts/ops/patrol-linear.sh" --repo "$repo_degraded" --json 2>&1)"
+  export OUT14C="$out14c"
+  if python3 -c 'import json,os; d=json.loads(os.environ["OUT14C"]); notes=d["lanes"]["lane:backend"]["open_ticket"]["notes"]; assert any(n=="LS-994：子票有無不可判（已結案查詢失敗）" for n in notes), notes; assert not any("已落地" in n for n in notes), notes' 2>"$work/mut14c-err"; then
+    echo "✓ ⑭c mutant（拿掉封存讀取）：LS-994 也變成「不可判」——證明 ⑭ scope3 的「已落地」綠來自封存讀取本身"
+  else
+    echo "✗ ⑭c mutant 未如預期翻轉" >&2; cat "$work/mut14c-err" >&2; printf '%s\n' "$out14c" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
+# ---- ⑮（LS-298 scope 2）Story 候選附 repo 已落地提示：抽票文反引號 token 跑 git grep，命中附
+#      「已落地：<token> → <檔:行>（疑已有子票）」；候選本身仍照列（closed 查詢正常成功，非降級路徑）----
+repo_landed2="$work/repo_landed2"
+git init -q -b main "$repo_landed2"
+git -C "$repo_landed2" config user.email test@example.com
+git -C "$repo_landed2" config user.name Test
+mkdir -p "$repo_landed2/scripts/ops"
+cat > "$repo_landed2/scripts/ops/fake-landed-LS298.sh" <<'EOF'
+#!/bin/bash
+# 假腳本（LS-298 自測用）：已經實作 fancy_measurement_table
+echo hi
+EOF
+git -C "$repo_landed2" add scripts/ops/fake-landed-LS298.sh
+git -C "$repo_landed2" -c commit.gpgsign=false commit -q -m 'chore: init'
+printf 'LINEAR_API_KEY=test-token-not-real\n' > "$repo_landed2/.env"
+
+fx_landed2="$work/fixtures_landed2"
+mkdir -p "$fx_landed2"
+cat > "$fx_landed2/cycles.json" <<'EOF'
+{"data":{"team":{"cycles":{"nodes":[]}}}}
+EOF
+cat > "$fx_landed2/closed_issues.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}
+EOF
+cat > "$fx_landed2/issues_page1.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"identifier":"LS-96","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
+   "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-996","title":"Story：反引號 token 命中","description":"後端需要 RPC 支援 `fancy_measurement_table`。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:ui"}]},
+   "cycle":null,"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}}
+]}}}
+EOF
+mkdir -p "$work/bin_landed2"
+cat > "$work/bin_landed2/curl" <<EOF
+#!/bin/bash
+fx="${fx_landed2}"
+data=""
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    --data) data=\$2; shift ;;
+  esac
+  shift
+done
+case "\$data" in
+  *'comments('*) echo '{"data":{"issue":{"comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}}' ;;
+  *'type: { in: ['*) cat "\$fx/closed_issues.json" ;;
+  *'cycles('*) cat "\$fx/cycles.json" ;;
+  *'issues('*) cat "\$fx/issues_page1.json" ;;
+  *) echo '{"errors":[{"message":"stub curl：不應被呼叫（current 為 None 時不查 documents／cycle issues）"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_landed2/curl"
+
+out15="$(PATH="$work/bin_landed2:$PATH" bash "$plsh" --repo "$repo_landed2" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ⑮ LS-298 scope2 fixture exit 0"; else echo "✗ ⑮ 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out15" | sed 's/^/    /' >&2; fail=1; fi
+export OUT15="$out15"
+py15="$(python3 - <<'PYEOF'
+import json, os
+d = json.loads(os.environ["OUT15"])
+ok = True
+def check(name, cond):
+    global ok
+    print(("✓ " if cond else "✗ ") + name)
+    if not cond:
+        ok = False
+backend = d["lanes"]["lane:backend"]["open_ticket"]
+srcs = {s["id"]: s for s in backend["sources"]}
+check("⑮ scope2：LS-996 仍列為候選（未被排除，只是附註）", "LS-996" in srcs)
+check("⑮ scope2：LS-996 的 why 附「已落地：fancy_measurement_table → scripts/ops/fake-landed-LS298.sh:<行>（疑已有子票）」",
+      "LS-996" in srcs
+      and "已落地：fancy_measurement_table → scripts/ops/fake-landed-LS298.sh:" in srcs["LS-996"]["why"]
+      and srcs["LS-996"]["why"].endswith("（疑已有子票）"))
+print("OK" if ok else "FAIL")
+PYEOF
+)"
+printf '%s\n' "$py15"
+if [ "$(tail -1 <<<"$py15")" = OK ]; then :; else fail=1; fi
+
+# ⑮b mutation：repo_landed_tokens() 恆回空字典 → LS-996 的 why 不再附已落地提示
+mutdir15="$work/mut15"
+rm -rf "$mutdir15"; mkdir -p "$mutdir15"
+cp -R "${root}/scripts" "$mutdir15/scripts"
+sed 's/^def repo_landed_tokens(root, tokens):$/def repo_landed_tokens(root, tokens):\n    return {}  # LS-298 mutation test (scope 2 disabled)/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir15/scripts/ops/patrol_linear.py"
+if ! grep -q 'LS-298 mutation test (scope 2 disabled)' "$mutdir15/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑮b mutant 沒被正確合成" >&2; fail=1
+else
+  out15b="$(PATH="$work/bin_landed2:$PATH" bash "$mutdir15/scripts/ops/patrol-linear.sh" --repo "$repo_landed2" --json 2>&1)"
+  export OUT15B="$out15b"
+  if python3 -c 'import json,os; d=json.loads(os.environ["OUT15B"]); srcs={s["id"]:s for s in d["lanes"]["lane:backend"]["open_ticket"]["sources"]}; assert "已落地" not in srcs["LS-996"]["why"], srcs["LS-996"]["why"]' 2>"$work/mut15-err"; then
+    echo "✓ ⑮b mutant（拿掉 git grep 提示）：LS-996 的 why 不再附已落地——證明 ⑮ scope2 的綠來自這段提示本身"
+  else
+    echo "✗ ⑮b mutant 未如預期翻轉" >&2; cat "$work/mut15-err" >&2; printf '%s\n' "$out15b" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
+# ---- ⑯（LS-298 scope 4）Ready（本 cycle）且 `.claude/worktrees/LS-<n>` 已建的票——lane 候補首位標
+#      「（worktree 已建，待派）」，不再往下拉第二張候補（LS-251 事故：連兩輪誤拉候補、超過 lane 上限）----
+repo_ready="$work/repo_ready"
+git init -q -b main "$repo_ready"
+git -C "$repo_ready" config user.email test@example.com
+git -C "$repo_ready" config user.name Test
+: > "$repo_ready/.gitkeep"; git -C "$repo_ready" add .gitkeep; git -C "$repo_ready" -c commit.gpgsign=false commit -q -m 'chore: init'
+git -C "$repo_ready" worktree add -q "$work/wt/LS-997" -b ls997-branch
+printf 'LINEAR_API_KEY=test-token-not-real\n' > "$repo_ready/.env"
+
+fx_ready="$work/fixtures_ready"
+mkdir -p "$fx_ready"
+cat > "$fx_ready/cycles.json" <<'EOF'
+{"data":{"team":{"cycles":{"nodes":[
+  {"id":"cyc-5","number":5,"startsAt":"2020-01-01T00:00:00.000Z","endsAt":"2099-01-01T00:00:00.000Z","isActive":true}
+]}}}}
+EOF
+cat > "$fx_ready/documents.json" <<'EOF'
+{"data":{"documents":{"nodes":[{"id":"doc-1","title":"Cycle 5 規劃"}]}}}
+EOF
+cat > "$fx_ready/cycle_issues.json" <<'EOF'
+{"data":{"cycle":{"issues":{"nodes":[]}}}}
+EOF
+# LS-997：lane:design、Ready、cycle 5、已建 worktree（scope4 觸發條件）。LS-998：lane:design、Backlog、
+# cycle 5，票文完整、有效候補——用來檢驗「候補首位被 LS-997 佔走後，不會再往下拉 LS-998」（lane:design 上限 1）。
+cat > "$fx_ready/issues_page1.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"identifier":"LS-997","title":"設計：已派工待推進","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
+   "state":{"name":"Ready","type":"unstarted"},"labels":{"nodes":[{"name":"lane:design"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}},
+  {"identifier":"LS-998","title":"設計：下一張候補","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-02T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:design"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}}
+]}}}
+EOF
+mkdir -p "$work/bin_ready"
+cat > "$work/bin_ready/curl" <<EOF
+#!/bin/bash
+fx="${fx_ready}"
+data=""
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    --data) data=\$2; shift ;;
+  esac
+  shift
+done
+case "\$data" in
+  *'documents('*) cat "\$fx/documents.json" ;;
+  *'cycle(id:'*) cat "\$fx/cycle_issues.json" ;;
+  *'cycles('*) cat "\$fx/cycles.json" ;;
+  *'issues('*) cat "\$fx/issues_page1.json" ;;
+  *) echo '{"errors":[{"message":"stub curl：不應被呼叫（design lane 有候補不觸發開票來源查詢）"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_ready/curl"
+
+out16="$(PATH="$work/bin_ready:$PATH" bash "$plsh" --repo "$repo_ready" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ⑯ LS-298 scope4 fixture exit 0"; else echo "✗ ⑯ 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out16" | sed 's/^/    /' >&2; fail=1; fi
+export OUT16="$out16"
+py16="$(python3 - <<'PYEOF'
+import json, os
+d = json.loads(os.environ["OUT16"])
+ok = True
+def check(name, cond):
+    global ok
+    print(("✓ " if cond else "✗ ") + name)
+    if not cond:
+        ok = False
+design = d["lanes"]["lane:design"]
+check("⑯ scope4：候補首位＝LS-997（Ready＋worktree 已建）", design["candidates"] == ["LS-997"])
+check("⑯ scope4：ready_dispatch 記為 LS-997", design.get("ready_dispatch") == "LS-997")
+check("⑯ scope4：不選中、不產生動作（不拉第二張 LS-998）", design["chosen"] is None and design["actions"] == [])
+check("⑯ scope4：不觸發開票（open_ticket 為 null）", design["open_ticket"] is None)
+print("OK" if ok else "FAIL")
+PYEOF
+)"
+printf '%s\n' "$py16"
+if [ "$(tail -1 <<<"$py16")" = OK ]; then :; else fail=1; fi
+
+out16h="$(PATH="$work/bin_ready:$PATH" bash "$plsh" --repo "$repo_ready" 2>&1)"; rc=$?
+if [ "$rc" -ne 0 ]; then echo "✗ ⑯ human 模式應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out16h" | sed 's/^/    /' >&2; fail=1; fi
+has_in '⑯ human：lane:design 行標「LS-997（worktree 已建，待派）」' "$out16h" 'LS-997（worktree 已建，待派）'
+
+# ⑯b mutation：ready_dispatch_candidate() 恆回 None（拿掉 worktree 判斷）→ LS-998 被誤拉為第二張候補並選中
+#      （重現 LS-251 事故：連兩輪誤要求再拉一張、超過 lane 上限 1）
+mutdir16="$work/mut16"
+rm -rf "$mutdir16"; mkdir -p "$mutdir16"
+cp -R "${root}/scripts" "$mutdir16/scripts"
+sed 's/^def ready_dispatch_candidate(issues, lane, current_cycle_number, worktrees):$/def ready_dispatch_candidate(issues, lane, current_cycle_number, worktrees):\n    return None  # LS-298 mutation test (scope 4 disabled)/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir16/scripts/ops/patrol_linear.py"
+if ! grep -q 'LS-298 mutation test (scope 4 disabled)' "$mutdir16/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑯b mutant 沒被正確合成" >&2; fail=1
+else
+  out16m="$(PATH="$work/bin_ready:$PATH" bash "$mutdir16/scripts/ops/patrol-linear.sh" --repo "$repo_ready" --json 2>&1)"
+  export OUT16M="$out16m"
+  if python3 -c 'import json,os; d=json.loads(os.environ["OUT16M"]); design=d["lanes"]["lane:design"]; assert design["chosen"]=="LS-998", design; assert any("save_issue LS-998 state=Ready cycle=5" in a for a in design["actions"]), design["actions"]' 2>"$work/mut16-err"; then
+    echo "✓ ⑯b mutant（拿掉 worktree 判斷）：LS-998 被誤拉為第二張候補並選中——證明 ⑯ scope4 的綠來自這段判斷（重現 LS-251 事故）"
+  else
+    echo "✗ ⑯b mutant 未如預期翻轉" >&2; cat "$work/mut16-err" >&2; printf '%s\n' "$out16m" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2
   exit 1
