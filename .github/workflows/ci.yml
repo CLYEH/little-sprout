@@ -384,6 +384,9 @@ jobs:
           bash scripts/ops/simulator-lock.test.sh || rc=1
           bash scripts/ops/promote.test.sh || rc=1
           bash scripts/ops/promote-follow.test.sh || rc=1
+          # LS-299：等 CI 分段前景輪詢（qa/ios-dev 撞 gh run watch 跑超過 Bash 工具 600s 上限、系統移背景
+          # 後停下等通知——背景命令完成不會喚醒 subagent），fixture 化 gh，含逾時退出邏輯的 mutation
+          bash scripts/ops/ci-wait.test.sh || rc=1
           bash scripts/ops/merge-follow.test.sh || rc=1
           bash scripts/ops/post-status.test.sh || rc=1
           bash scripts/ops/pen-open.test.sh || rc=1

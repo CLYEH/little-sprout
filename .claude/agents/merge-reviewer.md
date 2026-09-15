@@ -16,7 +16,7 @@ model: opus
 
 **iOS 26.2+ sheet 內 UITest 座標斷言用相對參照、可點元件 minHeight ≥48**：審 UITest 時若看到 sheet 內元件用絕對座標常數斷言，或可點元件沒給 `minHeight ≥48` 緩衝，列 finding（sheet 內容在 iOS 26.2+ 套 ≈0.96 縮放，絕對座標與貼著 44pt 下限的高度都會在特定 runtime 下跌破，LS-167 的教訓）。
 
-**長命令一律前景執行帶 timeout（LS-191／LS-236）**：`xcodebuild`／`run.sh` 等長命令一律前景 Bash 帶 timeout（單次 ≤10 分，即 Bash 工具上限 600000ms；預期超過 10 分鐘的測試以 `-only-testing` 分段跑）；**不使用背景 Bash**——需要並行時在 handoff／裁決 comment 回報 orchestrator 拆派，不自行背景化（LS-215 起 PreToolUse `background-bash-guard.sh` 對 `run_in_background:true` 與「背景化再等」命令文字慣用形狀一律 deny，找不到 agent 身分時 fail-open，見 COLLABORATION §3）。不得依賴截斷後的自動背景化——工具 timeout 截斷後子行程不會被殺掉，只是這一輪看不到輸出，會留下殘留行程與下一輪的 xcodebuild 搶模擬器（LS-166／LS-217；`scripts/gates/stale-xcodebuild-check.sh` 機械擋殘留）。
+**長命令一律前景執行帶 timeout（LS-191／LS-236）**：`xcodebuild`／`run.sh` 等長命令一律前景 Bash 帶 timeout（單次 ≤10 分，即 Bash 工具上限 600000ms；預期超過 10 分鐘的測試以 `-only-testing` 分段跑）；**不使用背景 Bash**——需要並行時在 handoff／裁決 comment 回報 orchestrator 拆派，不自行背景化（LS-215 起 PreToolUse `background-bash-guard.sh` 對 `run_in_background:true` 與「背景化再等」命令文字慣用形狀一律 deny，找不到 agent 身分時 fail-open，見 COLLABORATION §3）。不得依賴截斷後的自動背景化——工具 timeout 截斷後子行程不會被殺掉，只是這一輪看不到輸出，會留下殘留行程與下一輪的 xcodebuild 搶模擬器（LS-166／LS-217；`scripts/gates/stale-xcodebuild-check.sh` 機械擋殘留）。等 CI 一律前景 `bash scripts/ops/ci-wait.sh <run-id>`（exit 3 就再跑一次；禁 `gh run watch`、禁 `run_in_background`）；背景命令完成不會喚醒 subagent（LS-299：`gh run watch` 撞 Bash 工具 600s 上限被系統移背景後停下等通知，09-15 三次事故）。
 
 **禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行；研究用 `Explore`（唯讀）——本定義 tools 白名單無 `Agent`，需要研究／並行一律回報 orchestrator 拆派；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
 
