@@ -196550,7 +196550,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "曲線卡（iPad 預設，06）",
+                  "content": "colW 32、rightPad 24、plotW 213、plotH 260、topMargin 60（pjrd7/mowNE，R3 修正：原 R2 為 163/420 長寬比 1:2.58，改橫式後 1:1.22，接近 iPhone 1.64:1）；左欄固定寬 200（R3 由 230 收窄，讓出寬度給右欄）；歷史紀錄列全部 6 筆，逐項格式與 03 記錄卡完全一致（cmp/Growth Record Row 尚未正式元件化，兩處手動同步，見「未完成」）。",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -198191,6 +198191,778 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "視為已隨 M-2／材質調整自然緩解，不另外縮小主鈕。數值升級到 fs-lead、曲線卡改紙材質後，畫面的視覺重心已從「新增量測」按鈕移回最新數值與曲線本身，未見主鈕視覺過重的問題重現（見 01 完整截圖）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "BZfqW",
+          "name": "N 月齡刻度規則（R3 新增，回應 M-7）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "hv1vr",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "月齡刻度規則（R3 新增，回應 M-7）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "OjMbw",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dEHQk",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "規則",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "pQzHW",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "刻度＝資料點的月齡值，逐一標示；預設密度（iPhone/iPad 一般字級）全部標出，AX3 密度（空間不足）改「每隔一個標」（含首尾），例如 6 個資料點 1/4/7/10/13/16 在 AX3 只標 1/7/16。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "UViKb",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "R3n1w",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "空狀態例外",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "l08lnc",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "沒有資料點的骨架版（04）不標任何刻度數字，只留淡淡格線與軸名「月齡」，避免暗示存在但看不到的資料。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tmJc4",
+          "name": "N R3 修訂記錄（依 VR R2 comment 8dbba1c8 逐項落地）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "FIqc6",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R3 修訂記錄（依 VR R2 comment 8dbba1c8 逐項落地）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "DnCsX",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "EHuSR",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "B-1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "cce9X",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。12 張有紙卡的板：格線改 $paper-rule；cmp/Segmented 元件定義本身改紙上配色（track 低透明度墨色、選中鍵 print-paper+print-ink 框、標籤 print-ink 家族），六個實例一次修正；Value Tooltip 改 print-paper 底/print-ink 框/print-ink 文字（8 板）；Chart Card 補強 outer shadow（offset 2/8 blur 16）。自我掃描：紙上 theme-aware token 數（$surface/$surface-2/$border/$control-line/$text-primary/$text-secondary/$accent-soft/$bg/$danger/$accent 在 fill===$print-paper 後代中）＝0（逐板 Get 走訪確認，未發現殘留）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "i4lj0A",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CyOhE",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "B-2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "AOZcI",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。04 Empty Message 補 $print-paper 底＋sp-item 內距，格線不再穿過文字（三板：DHwk2/Koczy/ygM5T）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "BOiIq",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "js4WZ",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "B-3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Hj9pz",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。9 個年齡字串逐字對齊 cmp/Card Diary 的 zk1yE 標準（NBSP U+00A0 四處分隔＋個/月間 U+2060）。**harness 缺口記錄**：design-notes-check.sh 的署名 NBSP gate 只掃 cmp/Card Album／cmp/Card Diary 的 Signature Line，掃不到 Identity Header 的年齡文字——本輪已人工逐字元核對（見本節「B-3」量測），但這類節點若未來再次修改，建議把 gate 掃描範圍擴大到所有含「歲」「個⁠月」的文字節點，記入 LS-96 待辦池。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Zlc6H",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Km7xE",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-1/M-2/M-3/M-4",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "f01EeE",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。06 iPad：左欄 230→200，右欄曲線改橫式（colW/rightPad/plotW/plotH 32/24/213/260，長寬比 1:1.22，原 1:2.58）；分隔線改 fit_content 跟隨內容；歷史列全部 6 筆；歷史列格式與 03 記錄卡統一（icon+label+value 逐項）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zNnmQ",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "tlKNF",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "F8YnH",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。02 超出範圍錯誤態：身高欄位下方重新啟用 cmp/Text Field 既有的 Field Help 插槽承載警語（text-primary+circle-alert+控件加粗邊框），警語緊鄰欄位；底部 Status Slot 改回中性「至少填一項」整表訊息，欄位級與表單級訊息並存不衝突。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "b13RxU",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "N8eqvb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-6",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "DO2GW",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。三張空欄位卡補回第四行（Delta Row 佔位，圖示+「尚無資料」），卡片自然高度回到 143（與 01 相同），刪除 15pt 魔術 spacer。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XiXZA",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "v6aGi",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-7",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "L1KZjK",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。見上「月齡刻度規則」節；04 骨架版拿掉所有刻度數字。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WLyt0",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "raxSo",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-8",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "tKaLF",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。05a/05b Legend 從 fs-meta 13 升到 fs-note 17。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "C7AzG",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NKhAf",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-9",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "cPYwV",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "部分處理。R3 收據對「Axis Label 40 × Month Label 1」與「Gridline × Empty Message」兩類的分類已與「月齡」那類採同一手法（座標覆核＋獨立說明，非丟進裝飾大類）；後者因 B-2 修正後訊息有了不透明底，實測 AABB 是否仍相交見 r3 收據 scan_note。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vsKtr",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "igYJb",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-10",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "OYybk",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。05a 色帶改 $print-ink-secondary（單值不掛 theme，取代會反轉的 $control-line），與 B-1 同一套邏輯，不需要另外登記新 token。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "YgTgK",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "uGAJF",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-11",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "FJs2c",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。03 六筆記錄改用 cmp/Day Divider 做年份分組標頭（「2026年」/「2025年」），卡片日期同步省略年份。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "buXDL",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "UmQWB",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-12",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "uf3A8",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。03 滑動揭露態示範從第 2 列移到最後一列（5/20 2025），danger 色塊不再是列表第一眼看到的東西。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "w3888",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "tXExk",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "i-1/i-2/i-3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "m6VbE",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "VR 已撤回 R1 i-1（設計判斷成立，未改動）；i-2 declined 理由成立，**已記入 LS-96 待辦池**（另補 Tokens 板登記 $on-danger 或等值配對，非本票範圍）；i-3(=R1 i-5) declined 理由查證屬實，不再處理。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "wSajr",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "aXeds",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "i-4",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "oWaKJ",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修。02 日期欄補回「（今天）」。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cUxMF",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "gSM4j",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "i-5",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "gqfBe",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "不修，記錄理由。05a 色帶兩端硬切留待 R4（若還有下一輪）或核可後再優化，本輪優先序集中在 B/M 級；視覺上兩端硬切目前不影響可讀性判斷。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "S3kTDv",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "D7YNX",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "i-6",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "udIhf",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已修（cmp/Segmented 元件定義本身改為 fill_container，B-1 修正的一部分，不會再發生 06 那種硬寫 280 溢出）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "d5Cuf",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "e07Fh",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "i-7",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "YkLGh",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "不修，維持既有慣例。z1QNs 列操作 sheet 分隔線滿版與 LS-152 WgbNc 一致，屬既有慣例延伸，非本票缺陷。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hnLdK",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RG7Hg",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "i-8",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ZcNzH",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "已隨 M-7 一併處理（04 骨架版拿掉刻度，回答了「有刻度卻無資料」的問題）。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
