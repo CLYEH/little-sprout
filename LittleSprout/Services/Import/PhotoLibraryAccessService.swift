@@ -20,12 +20,6 @@ enum PhotoLibraryAccessState: Equatable {
 /// `fetchAssets` 三支 API 收在一個型別裡，方便呼叫端（`ImportBatchFlowModifier`）不用
 /// 直接碰 Photos framework 型別。
 enum PhotoLibraryAccessService {
-    /// 讀權限（不彈系統對話框）。
-    @MainActor
-    static func currentState() -> PhotoLibraryAccessState {
-        state(for: PHPhotoLibrary.authorizationStatus(for: .readWrite))
-    }
-
     /// 尚未決定時彈系統對話框；已決定過的狀態直接回傳，不會重複彈窗（系統行為）。
     @MainActor
     static func requestAccess() async -> PhotoLibraryAccessState {

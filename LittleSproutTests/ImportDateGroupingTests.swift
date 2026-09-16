@@ -123,11 +123,15 @@ final class ImportDateGroupingTests: XCTestCase {
 
     // MARK: - 日期格式四型 C4a①②
 
+    // merge-review R2 i3／R4：`groupHeaderLabel`／`unknownDateGroupLabel` 改成 `@MainActor`
+    // （見 `ImportDateGrouping.swift` 文件註解），這兩支呼叫端也要標 `@MainActor` 才能同步呼叫。
+    @MainActor
     func test_groupHeaderLabel_formatsAsMonthDayWithoutWeekday() {
         let label = ImportDateFormatting.groupHeaderLabel(for: date("2026-09-10T12:00:00Z"), calendar: utcCalendar)
         XCTAssertEqual(label, "9月10日")
     }
 
+    @MainActor
     func test_unknownDateGroupLabel_formatsAsTodayWithParentheticalMonthDay() {
         let label = ImportDateFormatting.unknownDateGroupLabel(
             anchorDate: date("2026-09-15T00:00:00Z"), calendar: utcCalendar

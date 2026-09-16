@@ -75,6 +75,7 @@ enum ImportDateFormatting {
     /// 格式（刻意跟時間軸 `DayDividerView` 的日期章不同：那邊「今天」有特殊文案；這裡「今天」
     /// 跟其他日期一視同仁，只有「日期不明」群才會出現「今天」字樣，用來標示那是系統推測值
     /// 而非 EXIF 事實，見 `unknownDateGroupLabel`）。
+    @MainActor
     static func groupHeaderLabel(for date: Date, calendar: Calendar = .current) -> String {
         monthDayFormatter.calendar = calendar
         return monthDayFormatter.string(from: date)
@@ -82,6 +83,7 @@ enum ImportDateFormatting {
 
     /// C4a②：日期不明群的標題「今天（9/15）」——「今天」＋括號內確切月日，提醒使用者這是
     /// 系統推測值、可以改（`anchorDate` 是使用者目前選定的錨點日期，不一定真的是今天）。
+    @MainActor
     static func unknownDateGroupLabel(anchorDate: Date, calendar: Calendar = .current) -> String {
         slashMonthDayFormatter.calendar = calendar
         return "今天（\(slashMonthDayFormatter.string(from: anchorDate))）"
@@ -93,19 +95,21 @@ enum ImportDateFormatting {
     /// 產出「M月d日」這種固定字面格式（實測輸出 `9/10`），這裡需要的是**固定樣板**不是
     /// 「隨系統語言變化的日期呈現」，`DateFormatter.dateFormat` 才是對的工具。
     ///
-    /// `nonisolated(unsafe)`：這兩個 formatter 只從 `ImportDateFormatting.groupHeaderLabel`／
-    /// `unknownDateGroupLabel` 呼叫，兩者只在 SwiftUI view body（`ImportGroupCardView`，
-    /// MainActor）呼叫，不像 `ImportDateGrouping.dayKey` 會被 M5 的 `Task.detached` 呼叫到——
-    /// 沒有真正跨執行緒同時存取的情境，標成 `nonisolated(unsafe)` 讓 Swift 6 嚴格並行檢查
-    /// 放行，不用為了型別系統而假裝需要 actor 隔離。
-    private nonisolated(unsafe) static let monthDayFormatter: DateFormatter = {
+    /// **merge-review R2 i3／R4 修正**：原本標 `nonisolated(unsafe)`、靠口頭不變式（「只在
+    /// MainActor 呼叫」）維持安全性，reviewer 指出這不會被編譯器強制——下一個把這兩個函式
+    /// 搬到背景的人不會收到警告。改成 `@MainActor static let`，讓編譯器直接擋下任何非
+    /// MainActor 存取（呼叫端 `groupHeaderLabel`／`unknownDateGroupLabel` 本來就只在
+    /// `ImportGroupCardView` view body 呼叫，加這個標記不改變任何現有行為）。
+    @MainActor
+    private static let monthDayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "zh_Hant_TW")
         formatter.dateFormat = "M月d日"
         return formatter
     }()
 
-    private nonisolated(unsafe) static let slashMonthDayFormatter: DateFormatter = {
+    @MainActor
+    private static let slashMonthDayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "M/d"

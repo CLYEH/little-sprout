@@ -152,10 +152,15 @@ struct ImportGroupCardView: View {
         .accessibilityLabel("這群放進的相簿，目前\(albumLabel)")
     }
 
+    /// merge-review R2 i5／R3 i6：`group.albumID` 非 nil 但 `albums` 清單裡還查不到那本
+    /// （例如 `AlbumsStore.albums` 剛好在重新整理）時，原本一律顯示「不放相簿」——文字與
+    /// 實際資料相反（`ImportPlan` 其實帶著這個 `albumID`，主鈕按下去真的會放進那本相簿），
+    /// 使用者會被字面誤導成「沒選、可以放心按」。「不放相簿」只在 `albumID == nil`（使用者
+    /// 真的選了這個選項，或 C3a 一般案的預設值）時顯示；`albumID` 有值但查無資料一律顯示
+    /// 「相簿載入中…」，如實反映「已經指定了、只是清單還沒跟上」。
     private var albumLabel: String {
-        guard let albumID = group.albumID, let album = albums.first(where: { $0.id == albumID }) else {
-            return "不放相簿"
-        }
+        guard let albumID = group.albumID else { return "不放相簿" }
+        guard let album = albums.first(where: { $0.id == albumID }) else { return "相簿載入中…" }
         return album.title
     }
 
