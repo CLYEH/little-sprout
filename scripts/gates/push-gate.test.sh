@@ -52,10 +52,18 @@ set -uo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 gate_src="${root}/scripts/gates/push-gate.sh"
 fail=0
+# LS-301：新寫的自測片段（㊶）改用共用庫的 has()，不自定比對邏輯。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
+# LS-306：①～㊵ 這些既有案例本來就預期「每次呼叫都真的跑到 xcodebuild」（同一份 $R 的 tree 在很多
+# 案例之間沒有變；若不關掉快取，第一次呼叫寫入的標記會讓後面所有呼叫都誤判成「同 tree 已通過」而
+# 整段跳過，各種 STUB_TEST_RC／看門狗假身都測不到）。整份測試檔預設關閉快取讀取（export 讓
+# run_gate／run_gate_keep_lock／⑦ 那類直接呼叫 push-gate.sh 的案例全部繼承到）；只有 ㊶ 自己驗
+# 快取行為時在呼叫端明寫 LS_PUSH_GATE_NO_CACHE=0 覆寫（env 對同名變數後者覆寫前者，該次呼叫適用）。
+export LS_PUSH_GATE_NO_CACHE=1
 
 # ---- 三顆固定但帶 $$ 的 UDID（I2：避免與另一份併行跑的自測撞名；這三顆本身不是鎖目錄路徑，鎖目錄另外
 #      由 SIMULATOR_LOCK_DIR 指到 $work 底下，這裡帶 $$ 純粹是同一原則的延伸、也讓輸出訊息在併行跑時
@@ -256,6 +264,7 @@ run_gate() {
   # 這種巧合，測試結果會跟著本機環境漂移）；⑬ 用 "$@" 覆寫成真的有 Xcode_<pin>.app 的 stub 目錄。
   # LS-199：GITHUB_ACTIONS 清空——CI rules job 跑本檔時它是 true，push-gate.sh 會跳過看門狗直接前景執行，
   # ㉘～㉛ 的掛住假身就會真的掛到永遠；本機開發機才是看門狗的生產路徑，自測一律走它（㉞ 另外驗 true 時不啟用）。
+  # LS-306：LS_PUSH_GATE_NO_CACHE 預設 1（見檔案開頭 export），這裡不必重複帶——"$@" 需要時可覆寫成 0。
   ( cd "$R" && env FAKE_DEST_UDID="$ded_udid" PATH="$work/bin:$PATH" \
       XCODE_APPS_DIR="$work/no-such-apps" GITHUB_ACTIONS= "$@" \
       bash scripts/gates/push-gate.sh </dev/null 2>&1 )
@@ -1616,6 +1625,105 @@ if [ "$rc35e" -eq 2 ] && printf '%s' "$out35e" | grep -qF '假身：detect-simul
 else
   echo "✗ ㊵(e) 應原樣轉發 exit 2（實得 exit ${rc35e}）" >&2; printf '%s\n' "$out35e" | sed 's/^/    /' >&2; fail=1
 fi
+
+# ============================================================
+# ㊶ LS-306 A1／A2：同 tree 快取（步驟 2 全綠後寫標記、同 tree 第二次跳過、tree 變不跳、過期不跳、
+#    LS_PUSH_GATE_NO_CACHE=1 不跳）＋開始前的進度句。快取標記寫在 $R/.git/ls-push-gate/<tree-sha>
+#    （合成 repo 是一般 git repo，--git-common-dir 就是 .git）。用 has()（selftest-helpers.sh）比對
+#    子字串，不自定 has()（LS-301）；沿用本檔既有「echo ✓／✗＋fail=1」報告慣例（不用共用庫的
+#    ok()／fail()——那兩個函式各自更新自己的 selftest_helpers_n／_fail，不是本檔案檔尾判定用的
+#    $fail，混用會讓這裡新增的樣本紅了也不會反映在最終 exit code 上）。
+# ============================================================
+cache_dir="$R/.git/ls-push-gate"
+rm -rf "$cache_dir"   # 先清掉前面 ①～㊵ 各案例在同一份 $R 上可能已經留下的標記，確保下面從乾淨狀態起跑
+
+# (a) 第一次（cache miss）：真的跑 xcodebuild test，不印「跳過（快取」
+test_log36a="$work/test-log-36a.txt"; : > "$test_log36a"
+out36a=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log36a" LS_PUSH_GATE_NO_CACHE=0)
+if [ -s "$test_log36a" ] && ! has "$out36a" '跳過（快取'; then
+  echo "✓ ㊶a 第一次（cache miss）：xcodebuild test 真的被跑到"
+else
+  echo "✗ ㊶a 第一次應真的跑測試（實得 TEST_LOG=$(cat "$test_log36a" 2>/dev/null)）" >&2
+  printf '%s\n' "$out36a" | sed 's/^/    /' >&2; fail=1
+fi
+
+# (b) 同一個 tree 第二次：cache hit——xcodebuild test 完全沒被呼叫（TEST_LOG 仍空）、也沒有新的
+#     shutdown 呼叫（整段被跳過，根本沒進到模擬器偵測），輸出印「跳過（快取」
+test_log36b="$work/test-log-36b.txt"; : > "$test_log36b"
+: > "$SHUTDOWN_LOG"
+out36b=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log36b" LS_PUSH_GATE_NO_CACHE=0)
+if [ ! -s "$test_log36b" ] && [ ! -s "$SHUTDOWN_LOG" ] && has "$out36b" '跳過（快取'; then
+  echo "✓ ㊶b 同一 tree 第二次：cache hit，xcodebuild test／模擬器 shutdown 都沒被呼叫，印「跳過（快取」"
+else
+  echo "✗ ㊶b 同一 tree 第二次應完全跳過（實得 TEST_LOG=$(cat "$test_log36b" 2>/dev/null)、SHUTDOWN_LOG=$(cat "$SHUTDOWN_LOG" 2>/dev/null)）" >&2
+  printf '%s\n' "$out36b" | sed 's/^/    /' >&2; fail=1
+fi
+
+# (c) tree 變了（commit 一個新內容）：不跳，真的重跑
+echo "ls306-$$" >> "$R/f.txt"; g add f.txt; g commit -qm 'chore: LS-0 change tree for LS-306 ㊶c'
+test_log36c="$work/test-log-36c.txt"; : > "$test_log36c"
+out36c=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log36c" LS_PUSH_GATE_NO_CACHE=0)
+if [ -s "$test_log36c" ] && ! has "$out36c" '跳過（快取'; then
+  echo "✓ ㊶c tree 變了（新 commit）：不採信舊 tree 的快取，真的重跑"
+else
+  echo "✗ ㊶c tree 變了應重跑（實得 TEST_LOG=$(cat "$test_log36c" 2>/dev/null)）" >&2
+  printf '%s\n' "$out36c" | sed 's/^/    /' >&2; fail=1
+fi
+
+# (d) LS_PUSH_GATE_NO_CACHE=1：即使同一個 tree（㊶c 剛寫入的快取）也強制重跑
+test_log36d="$work/test-log-36d.txt"; : > "$test_log36d"
+out36d=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log36d" LS_PUSH_GATE_NO_CACHE=1)
+if [ -s "$test_log36d" ] && ! has "$out36d" '跳過（快取'; then
+  echo "✓ ㊶d LS_PUSH_GATE_NO_CACHE=1：同 tree 也強制重跑，不看快取"
+else
+  echo "✗ ㊶d NO_CACHE 應強制重跑（實得 TEST_LOG=$(cat "$test_log36d" 2>/dev/null)）" >&2
+  printf '%s\n' "$out36d" | sed 's/^/    /' >&2; fail=1
+fi
+
+# (e) 標記過期（24h）：把 ㊶c／㊶d 留下的那份同 tree 標記的 mtime 改成很久以前，同一個 tree 也不採信
+cache_key36=$(g rev-parse 'HEAD^{tree}')
+if [ ! -f "$cache_dir/$cache_key36" ]; then
+  echo "✗ ㊶e 前置條件失敗：找不到 tree ${cache_key36} 的快取標記，過期測試無法成立" >&2; fail=1
+else
+  touch -t 202001010000 "$cache_dir/$cache_key36"
+  test_log36e="$work/test-log-36e.txt"; : > "$test_log36e"
+  out36e=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log36e" LS_PUSH_GATE_NO_CACHE=0)
+  if [ -s "$test_log36e" ] && ! has "$out36e" '跳過（快取'; then
+    echo "✓ ㊶e 標記過期（24h）：同一 tree 也不採信，真的重跑"
+  else
+    echo "✗ ㊶e 過期標記應重跑（實得 TEST_LOG=$(cat "$test_log36e" 2>/dev/null)）" >&2
+    printf '%s\n' "$out36e" | sed 's/^/    /' >&2; fail=1
+  fi
+fi
+
+# ㊶ mutation：把快取讀取判斷條件其中一個子句（LS_PUSH_GATE_NO_CACHE 這個 test）強制改成恆假，讓
+# 整個 `&&` 判斷恆假 → 同一個 tree 第二次不再跳過（改回真的重跑），證明 ㊶b 的「跳過」確由這段
+# 判斷造成，不是巧合。
+mut36=$(mktemp -d)
+anchor36='[ "${LS_PUSH_GATE_NO_CACHE:-0}" != 1 ]'
+if ! grep -qF "$anchor36" "$gate_src"; then
+  echo "✗ ㊶ mutation 錨點（快取判斷條件）不在 push-gate.sh，mutation 測試無法成立：${anchor36}" >&2; fail=1
+else
+  sed "s/$(printf '%s' "$anchor36" | sed 's/[.[\*^$]/\\&/g')/[ 1 = 0 ]/" "$gate_src" > "$mut36/push-gate.sh"
+  if diff -q "$gate_src" "$mut36/push-gate.sh" >/dev/null 2>&1; then
+    echo '✗ ㊶ mutant 與原始檔完全相同（sed 未命中，mutation 測試本身無效）' >&2; fail=1
+  else
+    cp "$mut36/push-gate.sh" "$R/scripts/gates/push-gate.sh"
+    rm -rf "$cache_dir"
+    test_log36m1="$work/test-log-36m1.txt"; : > "$test_log36m1"
+    run_gate STUB_TEST_RC=0 TEST_LOG="$test_log36m1" LS_PUSH_GATE_NO_CACHE=0 >/dev/null   # 建一次快取標記（mutant 底下這步仍會執行、仍會寫入——只有讀取判斷被改壞）
+    test_log36m2="$work/test-log-36m2.txt"; : > "$test_log36m2"
+    out36m=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log36m2" LS_PUSH_GATE_NO_CACHE=0)
+    cp "$gate_src" "$R/scripts/gates/push-gate.sh"
+    if [ -s "$test_log36m2" ] && ! has "$out36m" '跳過（快取'; then
+      echo "✓ ㊶ mutant：拿掉快取判斷條件後，同一 tree 第二次不再跳過、真的重跑（原本 ㊶b 的跳過確由這段判斷造成）"
+    else
+      echo "✗ ㊶ mutant 應讓同 tree 第二次也重跑（實得 TEST_LOG=$(cat "$test_log36m2" 2>/dev/null)）" >&2
+      printf '%s\n' "$out36m" | sed 's/^/    /' >&2; fail=1
+    fi
+  fi
+fi
+rm -rf "$mut36" "$cache_dir"
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ push-gate 模擬器自測通過"
