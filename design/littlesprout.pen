@@ -189519,7 +189519,7 @@
       "name": "Growth / 02 新增量測 sheet (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 1217,
+      "height": 1097,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -189557,273 +189557,139 @@
         },
         {
           "type": "frame",
-          "id": "jxG3z",
+          "id": "mFEKE",
           "layoutPosition": "absolute",
           "x": 0,
           "y": 0,
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1217,
-          "fill": "$paper-shadow"
-        },
-        {
-          "type": "frame",
-          "id": "cAzYX",
-          "layoutPosition": "absolute",
-          "x": 0,
-          "y": 0,
-          "name": "Sheet Wrap",
-          "width": 393,
-          "height": 1217,
-          "layout": "vertical",
-          "justifyContent": "end",
+          "height": 1097,
+          "fill": "$paper-shadow",
           "children": [
             {
               "type": "frame",
-              "id": "br3W6",
-              "name": "Form Sheet",
-              "width": "fill_container",
-              "fill": "$surface",
-              "cornerRadius": [
-                24,
-                24,
-                0,
-                0
-              ],
-              "stroke": "$border",
-              "strokeWidth": 1,
-              "layout": "vertical",
-              "gap": "$sp-section",
-              "padding": [
-                "$sp-block",
-                "$screen-pad",
-                "$sp-section",
-                "$screen-pad"
-              ],
+              "id": "F9XgyC",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "Sheet Wrap",
+              "width": 393,
+              "height": 1097,
+              "layout": "none",
               "children": [
                 {
                   "type": "frame",
-                  "id": "UkNTw",
-                  "name": "Header",
-                  "width": "fill_container",
+                  "id": "QykwD",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": 62,
+                  "name": "Form Sheet",
+                  "width": 393,
+                  "fill": "$surface",
+                  "cornerRadius": [
+                    24,
+                    24,
+                    0,
+                    0
+                  ],
+                  "stroke": "$border",
+                  "strokeWidth": 1,
                   "layout": "vertical",
-                  "gap": "$sp-group",
-                  "alignItems": "center",
+                  "gap": "$sp-section",
+                  "padding": [
+                    "$sp-block",
+                    "$screen-pad",
+                    "$sp-section",
+                    "$screen-pad"
+                  ],
                   "children": [
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": "$radius-full",
-                      "id": "w5vl4",
-                      "name": "Grabber",
-                      "fill": "$border",
-                      "width": 36,
-                      "height": 5
-                    },
-                    {
-                      "type": "text",
-                      "id": "C9npqo",
-                      "name": "Head Title",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "新增量測",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "700"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "DFVhL",
-                  "name": "Date Field",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-label",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "L1NMU",
-                      "name": "Field Label",
-                      "fill": "$text-primary",
-                      "content": "測量日期",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-body",
-                      "fontWeight": "700"
-                    },
                     {
                       "type": "frame",
-                      "id": "uJLew",
-                      "name": "Field Box",
+                      "id": "HSrLF",
+                      "name": "Header",
                       "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-md",
-                      "stroke": "$control-line",
-                      "strokeWidth": 1.5,
-                      "padding": [
-                        "$sp-group",
-                        "$inset-card"
-                      ],
-                      "justifyContent": "space_between",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "PJLBa",
-                          "name": "Field Value",
-                          "fill": "$text-primary",
-                          "content": "8月20日（今天）",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "normal"
+                          "type": "rectangle",
+                          "cornerRadius": "$radius-full",
+                          "id": "Gn4DH",
+                          "name": "Grabber",
+                          "fill": "$border",
+                          "width": 36,
+                          "height": 5
                         },
                         {
-                          "type": "icon",
-                          "id": "WpHcO",
-                          "name": "Calendar Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "calendar",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
+                          "type": "text",
+                          "id": "O3y29",
+                          "name": "Head Title",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "新增量測",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
                         }
                       ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "Q5GhDu",
-                  "name": "Measurement Group",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-item",
-                  "children": [
-                    {
-                      "id": "l23GaM",
-                      "type": "ref",
-                      "ref": "UcO8T",
-                      "name": "Height Field",
-                      "descendants": {
-                        "tOvM3": {
-                          "content": "身高（cm）"
-                        },
-                        "iu3Q8": {
-                          "content": "請輸入身高"
-                        },
-                        "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
-                          "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
-                        }
-                      }
                     },
-                    {
-                      "id": "h7gBgi",
-                      "type": "ref",
-                      "ref": "UcO8T",
-                      "name": "Weight Field",
-                      "descendants": {
-                        "tOvM3": {
-                          "content": "體重（kg）"
-                        },
-                        "iu3Q8": {
-                          "content": "請輸入體重"
-                        },
-                        "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
-                          "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
-                        }
-                      }
-                    },
-                    {
-                      "id": "bscwe",
-                      "type": "ref",
-                      "ref": "UcO8T",
-                      "name": "Head Field",
-                      "descendants": {
-                        "tOvM3": {
-                          "content": "頭圍（cm）"
-                        },
-                        "iu3Q8": {
-                          "content": "請輸入頭圍"
-                        },
-                        "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
-                          "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
-                        }
-                      }
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "d5ZUg",
-                  "name": "Footer",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-item",
-                  "children": [
                     {
                       "type": "frame",
-                      "id": "Jq94o",
-                      "name": "Note Field",
+                      "id": "Zvoah",
+                      "name": "Date Field",
                       "width": "fill_container",
                       "layout": "vertical",
                       "gap": "$sp-label",
                       "children": [
                         {
                           "type": "text",
-                          "id": "Ngs0M",
+                          "id": "dSvLI",
                           "name": "Field Label",
                           "fill": "$text-primary",
-                          "content": "備註（選填）",
+                          "content": "測量日期",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "700"
                         },
                         {
                           "type": "frame",
-                          "id": "aXbhA",
+                          "id": "kF9KQ",
                           "name": "Field Box",
                           "width": "fill_container",
-                          "height": 84,
                           "fill": "$surface",
                           "cornerRadius": "$radius-md",
                           "stroke": "$control-line",
                           "strokeWidth": 1.5,
-                          "padding": "$inset-card",
+                          "padding": [
+                            "$sp-group",
+                            "$inset-card"
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
                           "children": [
                             {
                               "type": "text",
-                              "id": "vKv9S",
+                              "id": "v2PkD1",
                               "name": "Field Value",
-                              "fill": "$text-secondary",
-                              "textGrowth": "fixed-width",
-                              "width": "fill_container",
-                              "content": "想記錄的小事（選填）",
+                              "fill": "$text-primary",
+                              "content": "8月20日（今天）",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
                               "fontWeight": "normal"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "fPmKy",
+                              "name": "Calendar Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
                             }
                           ]
                         }
@@ -189831,75 +189697,227 @@
                     },
                     {
                       "type": "frame",
-                      "id": "B8NQN",
-                      "name": "Status Slot",
+                      "id": "mMOK7",
+                      "name": "Measurement Group",
                       "width": "fill_container",
-                      "height": 56,
-                      "gap": "$sp-tight",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
                       "children": [
                         {
-                          "type": "icon",
-                          "id": "hgrMY",
-                          "name": "Status Icon",
-                          "width": 18,
-                          "height": 18,
-                          "icon": "info",
-                          "library": "lucide",
-                          "fill": "$text-secondary"
+                          "id": "UGpMr",
+                          "type": "ref",
+                          "ref": "UcO8T",
+                          "name": "Height Field",
+                          "descendants": {
+                            "tOvM3": {
+                              "content": "身高（cm）"
+                            },
+                            "iu3Q8": {
+                              "content": "請輸入身高"
+                            },
+                            "i2SHf": {
+                              "enabled": false
+                            }
+                          }
                         },
                         {
-                          "type": "text",
-                          "id": "DHZ2B",
-                          "name": "Status Text",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
+                          "id": "mJmFm",
+                          "type": "ref",
+                          "ref": "UcO8T",
+                          "name": "Weight Field",
+                          "descendants": {
+                            "tOvM3": {
+                              "content": "體重（kg）"
+                            },
+                            "iu3Q8": {
+                              "content": "請輸入體重"
+                            },
+                            "i2SHf": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "TXuOs",
+                          "type": "ref",
+                          "ref": "UcO8T",
+                          "name": "Head Field",
+                          "descendants": {
+                            "tOvM3": {
+                              "content": "頭圍（cm）"
+                            },
+                            "iu3Q8": {
+                              "content": "請輸入頭圍"
+                            },
+                            "i2SHf": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Z09mYe",
+                          "name": "Range Warning Slot",
                           "width": "fill_container",
-                          "content": "身高、體重、頭圍至少需要填寫一項。",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "normal"
+                          "height": 56,
+                          "gap": "$sp-label",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "recVS",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Icon",
+                              "enabled": false,
+                              "width": 18,
+                              "height": 18,
+                              "icon": "circle-alert",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "i9EBK",
+                              "name": "Message",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "b8T7y",
-                      "name": "Actions",
+                      "id": "tcJDn",
+                      "name": "Footer",
                       "width": "fill_container",
                       "layout": "vertical",
-                      "gap": "$sp-group",
+                      "gap": "$sp-item",
                       "children": [
                         {
-                          "id": "ulccM",
-                          "type": "ref",
-                          "ref": "OKSJI",
-                          "name": "Save Button",
+                          "type": "frame",
+                          "id": "ZejKe",
+                          "name": "Note Field",
                           "width": "fill_container",
-                          "descendants": {
-                            "s9bME2": {
-                              "icon": "check",
-                              "enabled": false
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "garJb",
+                              "name": "Field Label",
+                              "fill": "$text-primary",
+                              "content": "備註（選填）",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "700"
                             },
-                            "w7CUP": {
-                              "content": "儲存"
+                            {
+                              "type": "frame",
+                              "id": "tAObw",
+                              "name": "Field Box",
+                              "width": "fill_container",
+                              "height": 84,
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "padding": "$inset-card",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "iqLVB",
+                                  "name": "Field Value",
+                                  "fill": "$text-secondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "想記錄的小事（選填）",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             }
-                          }
+                          ]
                         },
                         {
-                          "id": "k5P6W",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Cancel Button",
+                          "type": "frame",
+                          "id": "GYJ8W",
+                          "name": "Status Slot",
                           "width": "fill_container",
-                          "justifyContent": "center",
-                          "descendants": {
-                            "breqI": {
-                              "enabled": false
+                          "height": 56,
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "j5RGJC",
+                              "name": "Status Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "info",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
                             },
-                            "hIhVd": {
-                              "content": "取消"
+                            {
+                              "type": "text",
+                              "id": "A0gaA2",
+                              "name": "Status Text",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "身高、體重、頭圍至少需要填寫一項。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
                             }
-                          }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "TXImH",
+                          "name": "Actions",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-group",
+                          "children": [
+                            {
+                              "id": "n4jYDt",
+                              "type": "ref",
+                              "ref": "OKSJI",
+                              "name": "Save Button",
+                              "width": "fill_container",
+                              "descendants": {
+                                "s9bME2": {
+                                  "icon": "check",
+                                  "enabled": false
+                                },
+                                "w7CUP": {
+                                  "content": "儲存"
+                                }
+                              }
+                            },
+                            {
+                              "id": "xQL9S",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Cancel Button",
+                              "width": "fill_container",
+                              "justifyContent": "center",
+                              "descendants": {
+                                "breqI": {
+                                  "enabled": false
+                                },
+                                "hIhVd": {
+                                  "content": "取消"
+                                }
+                              }
+                            }
+                          ]
                         }
                       ]
                     }
@@ -189919,7 +189937,7 @@
       "name": "Growth / 02 新增量測 sheet · 錯誤態（全空）",
       "clip": true,
       "width": 393,
-      "height": 1217,
+      "height": 1097,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -189963,24 +189981,24 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1217,
+          "height": 1097,
           "fill": "$paper-shadow"
         },
         {
           "type": "frame",
-          "id": "i3OfdM",
+          "id": "O7CCWH",
           "layoutPosition": "absolute",
           "x": 0,
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1217,
+          "height": 1097,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
             {
               "type": "frame",
-              "id": "IPvLv",
+              "id": "KtMAT",
               "name": "Form Sheet",
               "width": "fill_container",
               "fill": "$surface",
@@ -190003,7 +190021,7 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "xdFOd",
+                  "id": "D5vpQi",
                   "name": "Header",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -190013,7 +190031,7 @@
                     {
                       "type": "rectangle",
                       "cornerRadius": "$radius-full",
-                      "id": "y4cem7",
+                      "id": "EhW53",
                       "name": "Grabber",
                       "fill": "$border",
                       "width": 36,
@@ -190021,7 +190039,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "h98qo",
+                      "id": "w8hbj",
                       "name": "Head Title",
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
@@ -190036,7 +190054,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "vgHnz",
+                  "id": "v3wF9",
                   "name": "Date Field",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -190044,7 +190062,7 @@
                   "children": [
                     {
                       "type": "text",
-                      "id": "G4LkW",
+                      "id": "Vuesu",
                       "name": "Field Label",
                       "fill": "$text-primary",
                       "content": "測量日期",
@@ -190054,7 +190072,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "cMWpe",
+                      "id": "Uhl2i",
                       "name": "Field Box",
                       "width": "fill_container",
                       "fill": "$surface",
@@ -190070,7 +190088,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "Cebyj",
+                          "id": "QmXua",
                           "name": "Field Value",
                           "fill": "$text-primary",
                           "content": "8月20日（今天）",
@@ -190080,7 +190098,7 @@
                         },
                         {
                           "type": "icon",
-                          "id": "xOIj6",
+                          "id": "oZEQe",
                           "name": "Calendar Icon",
                           "width": 22,
                           "height": 22,
@@ -190094,14 +190112,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "iGCte",
+                  "id": "vo8fP",
                   "name": "Measurement Group",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-item",
                   "children": [
                     {
-                      "id": "H96XG",
+                      "id": "j19Hn4",
                       "type": "ref",
                       "ref": "UcO8T",
                       "name": "Height Field",
@@ -190113,19 +190131,12 @@
                           "content": "請輸入身高"
                         },
                         "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
                           "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
                         }
                       }
                     },
                     {
-                      "id": "Sezu7",
+                      "id": "cPZMC",
                       "type": "ref",
                       "ref": "UcO8T",
                       "name": "Weight Field",
@@ -190137,19 +190148,12 @@
                           "content": "請輸入體重"
                         },
                         "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
                           "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
                         }
                       }
                     },
                     {
-                      "id": "L6aib",
+                      "id": "ixGnN",
                       "type": "ref",
                       "ref": "UcO8T",
                       "name": "Head Field",
@@ -190161,22 +190165,50 @@
                           "content": "請輸入頭圍"
                         },
                         "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
                           "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
                         }
                       }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fZR1W",
+                      "name": "Range Warning Slot",
+                      "width": "fill_container",
+                      "height": 56,
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "lX340",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Icon",
+                          "enabled": false,
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "OVKJ1",
+                          "name": "Message",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
                   "type": "frame",
-                  "id": "udFTU",
+                  "id": "AURIU",
                   "name": "Footer",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -190184,7 +190216,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "c4Jd2",
+                      "id": "drYN7",
                       "name": "Note Field",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -190192,7 +190224,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "x6uFEW",
+                          "id": "T7Gk15",
                           "name": "Field Label",
                           "fill": "$text-primary",
                           "content": "備註（選填）",
@@ -190202,7 +190234,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "ohC0r",
+                          "id": "G2hnl",
                           "name": "Field Box",
                           "width": "fill_container",
                           "height": 84,
@@ -190214,7 +190246,7 @@
                           "children": [
                             {
                               "type": "text",
-                              "id": "HacZG",
+                              "id": "rGtTH",
                               "name": "Field Value",
                               "fill": "$text-secondary",
                               "textGrowth": "fixed-width",
@@ -190230,7 +190262,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "c5DTS",
+                      "id": "v898pq",
                       "name": "Status Slot",
                       "width": "fill_container",
                       "height": 56,
@@ -190238,7 +190270,7 @@
                       "children": [
                         {
                           "type": "icon",
-                          "id": "A7hE1A",
+                          "id": "vr392",
                           "name": "Status Icon",
                           "width": 18,
                           "height": 18,
@@ -190248,7 +190280,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "TpgaV",
+                          "id": "l7GH0",
                           "name": "Status Text",
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
@@ -190262,14 +190294,14 @@
                     },
                     {
                       "type": "frame",
-                      "id": "M22A0",
+                      "id": "NGykj",
                       "name": "Actions",
                       "width": "fill_container",
                       "layout": "vertical",
                       "gap": "$sp-group",
                       "children": [
                         {
-                          "id": "f6NNAB",
+                          "id": "jIfQ1",
                           "type": "ref",
                           "ref": "OKSJI",
                           "name": "Save Button",
@@ -190285,7 +190317,7 @@
                           }
                         },
                         {
-                          "id": "NsiI1",
+                          "id": "xTNoP",
                           "type": "ref",
                           "ref": "qe9yS",
                           "name": "Cancel Button",
@@ -190318,7 +190350,7 @@
       "name": "Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
       "clip": true,
       "width": 393,
-      "height": 1217,
+      "height": 1097,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -190362,7 +190394,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1217,
+          "height": 1097,
           "fill": "$paper-shadow"
         },
         {
@@ -190373,7 +190405,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1217,
+          "height": 1097,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
@@ -190493,14 +190525,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "B447T",
+                  "id": "L91vZu",
                   "name": "Measurement Group",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-item",
                   "children": [
                     {
-                      "id": "E4cCYB",
+                      "id": "FJjG3",
                       "type": "ref",
                       "ref": "UcO8T",
                       "name": "Height Field",
@@ -190508,33 +190540,16 @@
                         "tOvM3": {
                           "content": "身高（cm）"
                         },
-                        "v6YiYR": {
-                          "stroke": "$control-line",
-                          "strokeWidth": 2
-                        },
                         "iu3Q8": {
-                          "content": "180.0",
-                          "fill": "$text-primary"
+                          "content": "180.0"
                         },
                         "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
-                          "icon": "circle-alert",
-                          "fill": "$text-primary",
-                          "width": 18,
-                          "height": 18
-                        },
-                        "ikuz2": {
-                          "content": "180.0 cm 比同齡孩子高很多。如果沒有打錯，直接儲存就可以。",
-                          "fill": "$text-primary",
-                          "fontWeight": "600"
+                          "enabled": false
                         }
                       }
                     },
                     {
-                      "id": "xqmyK",
+                      "id": "K6OOQ",
                       "type": "ref",
                       "ref": "UcO8T",
                       "name": "Weight Field",
@@ -190546,19 +190561,12 @@
                           "content": "請輸入體重"
                         },
                         "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
                           "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
                         }
                       }
                     },
                     {
-                      "id": "lyMZZ",
+                      "id": "l5O0JP",
                       "type": "ref",
                       "ref": "UcO8T",
                       "name": "Head Field",
@@ -190570,16 +190578,42 @@
                           "content": "請輸入頭圍"
                         },
                         "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
                           "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
                         }
                       }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "tVkvL",
+                      "name": "Range Warning Slot",
+                      "width": "fill_container",
+                      "height": 56,
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "Q8EoUS",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "PBeoA",
+                          "name": "Message",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "身高 180.0 cm 比同齡孩子高很多。如果沒有打錯，直接儲存就可以。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -190730,7 +190764,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1217,
+      "height": 1097,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -190774,7 +190808,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1217,
+          "height": 1097,
           "fill": "$paper-shadow"
         },
         {
@@ -190785,7 +190819,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1217,
+          "height": 1097,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
@@ -190905,14 +190939,14 @@
                 },
                 {
                   "type": "frame",
-                  "id": "TtBho",
+                  "id": "o0Mi5",
                   "name": "Measurement Group",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-item",
                   "children": [
                     {
-                      "id": "rfvdo",
+                      "id": "x6Jd0",
                       "type": "ref",
                       "ref": "UcO8T",
                       "name": "Height Field",
@@ -190924,19 +190958,12 @@
                           "content": "請輸入身高"
                         },
                         "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
                           "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
                         }
                       }
                     },
                     {
-                      "id": "s92RH",
+                      "id": "P41kF2",
                       "type": "ref",
                       "ref": "UcO8T",
                       "name": "Weight Field",
@@ -190948,19 +190975,12 @@
                           "content": "請輸入體重"
                         },
                         "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
                           "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
                         }
                       }
                     },
                     {
-                      "id": "n0bQg",
+                      "id": "xSEZK",
                       "type": "ref",
                       "ref": "UcO8T",
                       "name": "Head Field",
@@ -190972,16 +190992,44 @@
                           "content": "請輸入頭圍"
                         },
                         "i2SHf": {
-                          "enabled": true,
-                          "height": 56
-                        },
-                        "a7OyZ7": {
                           "enabled": false
-                        },
-                        "ikuz2": {
-                          "content": ""
                         }
                       }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bqFpv",
+                      "name": "Range Warning Slot",
+                      "width": "fill_container",
+                      "height": 56,
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "wpB6G",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Icon",
+                          "enabled": false,
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "J0k3Ly",
+                          "name": "Message",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -196781,7 +196829,79 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "固定高度 56（AX3 改 fit_content，因 fs-note 在 AX3 下需要更多行）；三態（KWEaE 預設／qrFWJ 全空／L9AvJN 超出範圍）共用同一個插槽定義，Save/Cancel 在三態的 y 皆為同一值（1025，見各板根節點 height）。",
+                  "content": "四板 Footer/Actions 已重合為同一絕對座標（R6 驗證：KWEaE/qrFWJ/S4Pdz/L9AvJN 四板 Actions 絕對 y 皆為 42750，板高皆為 1097）；02 表單頂部固定，Footer 內含 Note Field＋Status Slot（此處，固定高度 56，AX3 改 fit_content）＋Actions。「至少填一項」的整表訊息在此；欄位級的超出範圍軟提醒改用群組級 Range Warning Slot（見另一條「02 Range Warning Slot（C-2）」），兩者是不同插槽，勿混淆。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "i9Rxq",
+              "name": "i",
+              "width": "fill_container",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PAH3Y",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "02 Range Warning Slot（C-2）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "hQpxd",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "VR R5 comment 8d6af24b C-2：超出合理範圍的軟提醒（例：「身高 180.0 cm 比同齡孩子高很多。如果沒有打錯，直接儲存就可以。」）從 R5 的「每欄各自 56pt 插槽」改回 Measurement Group 下方一個群組級固定槽（height:56，恆存在，平時 icon 隱藏、文字空白）。三個量測欄本身回到緊湊的 16pt 等距（無插槽膨脹），群組與插槽的間距＝$sp-item(16)，遠小於段落斷點 $sp-section(44)，不會把「日期→量測群」與「量測群→備註」這種真正的段落切分弱化。訊息文字明確點名欄位（例句以「身高」開頭），因為插槽已不緊鄰特定欄位。四板（KWEaE/qrFWJ/S4Pdz/L9AvJN）Measurement Group 皆 bh=383（3×93 欄 + 2×16 欄距 + 16 插槽前間距 + 56 插槽）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WCIOc",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "w7bLF",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "04 AX3 文案折行保證（C-1）",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "TZOSC",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3 空狀態文案（Empty Body）沿用與 light/dark 逐字相同的內容（含孩子名字，變數）。文字框 160pt／fs-meta AX3 33pt ＝ 每行最多 4 個中文字；中文貪婪折行的末行字數＝「前導字數 mod 每行字數」，前導字數含孩子名字長度（變數：2～4 字視名字而定），因此「成長曲線不拆行」這件事在固定窄框寬度下對任意孩子名字都不可能穩定成立——調寬紙底只會把孤字換到另一個位置，不會消滅它（VR R5 comment 8d6af24b 實測驗算：紙底 197pt 時每行容量增為 5 字，「成長曲線。」雖能整串落在一行，但前導 22 字÷5=4.4，末行反而退回「線。」2 字元，比目前 192pt/3 字元更差）。**本票採用、且 ios-dev 在 SwiftUI 端要用同一條驗收的機械保證**：末行 ≥3 個字元，不得出現 1～2 字元孤字。若未來要徹底消滅拆行，正解是換句式（讓句尾詞組本身短於每行字數）或改兩段式文案，不是調整框寬。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -199951,7 +200071,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "04 AX3 空狀態文案還原為與 light/dark 一致（含孩子名「陳小軒」）。因紙卡寬度需優先滿足 B-2 的格線外露硬指標（192pt，露出 ≥16pt），文字折成 7 行，末行「曲線。」3 字元——「成長曲線」仍被拆行，但孤字已從 2 字元改善為 3 字元。已嘗試以 269~330pt 寬度讓「成長曲線」完全不拆，但那會讓紙卡寬度超出骨架 clip 邊界（305pt）並吃掉格線外露量，與 B-2 直接衝突；在兩者互斥的情況下，本輪判斷 B-2（BLOCKER）優先於 M-4 的排版細節（MAJOR），若這個取捨不被接受，需要先決定是否放寬 04 AX3 整張卡片／骨架的寬度上限（跨出本輪聚焦清單範圍）。",
+                  "content": "04 AX3 空狀態文案還原為與 light/dark 一致（含孩子名「陳小軒」）。AX3 下 Empty Body 文字框 160pt／fs-meta 33pt ＝ 每行 4 字；中文貪婪折行的孤字長度由「前導字數 mod 每行字數」決定，而前導字數含孩子名字（變數），因此「成長曲線不拆行」在固定窄框下對任意名字不可能穩定成立（VR R5 comment 8d6af24b 獨立驗算：紙底放寬到 197pt 雖能讓每行容量增為 5 字、讓「成長曲線。」單獨成行，但前導字數也隨之變成 22÷5=4.4，末行反而退回「線。」2 字元，調框寬只是把孤字換位置）。本票採用的保證改為：末行 ≥3 字元，不得出現 1–2 字元孤字（目前「曲線。」3 字元，達標）。ios-dev 在 SwiftUI 端請用同一條保證驗收（末行 ≥3 字元），不是照抄 Pencil 的折行結果本身。若未來想真正消滅拆行，正解是換句式（讓句尾詞組短於每行字數）或改用兩段式文案，不是調框寬。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
