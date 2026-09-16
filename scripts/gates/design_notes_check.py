@@ -102,8 +102,9 @@ SCREEN_ATTR_HEADING_RE = re.compile(r"畫面級屬性")
 # （見 canonicalize_screen_name）。裝飾樣式：編號後綴 `-iPad`（如 `01-iPad`）、`· 深色`、`· Dynamic Type AX3（…）`
 # （AX3 字級附註內容不定，用 `[^）]*` 吃掉整個全形括號）、裝置註記 `(iPhone)`／`(iPad …)`（半形括號、內容不定）、
 # `（不裁切）`（全形括號，LS-251 iPad 板慣用附註）。`Stress`／`A11y` 這類衍生「群組」（頂層前綴，如 `A11y / 01 …`）
-# 不在這支正則裡處理——群組前綴在 `canonicalize_screen_name` 直接整段丟棄（只留「/」之後的文字），與基準群組同編號
-# 自然歸併，不需要另外列出群組名稱字面（避免每加一種新衍生群組名稱就要回頭補正則）。
+# 不在這支正則裡處理——正典鍵是「基底群＋編號」（見 `new_screen_boards()`），`A11y`／`Stress` 只在本批候選裡
+# 恰好命中唯一一個非衍生基底群用了同一編號時才映射過去併入該基底群，不是無條件丟棄群組前綴（R3，見下方
+# `DERIVED_GROUP_RE`）。
 DERIVED_SUFFIX_RE = re.compile(
     r"-iPad\b"
     r"|[·‧]\s*深色"

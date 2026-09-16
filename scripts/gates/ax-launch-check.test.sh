@@ -8,6 +8,9 @@ set -uo pipefail
 root_repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 check="${root_repo}/scripts/gates/ax-launch-check.sh"
 fail=0
+# LS-302：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，避免
+# `printf | grep -qF` 在 pipefail 下的 SIGPIPE 誤判（LS-267/LS-270）。
+source "${root_repo}/scripts/gates/lib/selftest-helpers.sh"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -23,7 +26,7 @@ mkroot() {
 expect() {
   local want=$1 name=$2 must=$3 rootdir=$4 out got
   out="$(bash "$check" --root "$rootdir" 2>&1)"; got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; }; then
     echo "✓ ${name}"
   else
     echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}，實得 ${got}）" >&2
@@ -88,7 +91,7 @@ expect 0 '① allowlist 命中（TapTargetMeasurement.swift）→ 印 informatio
 
 # ==== ①n（R2，merge-review R1 N4）：--root 帶尾斜線時 allowlist 整字比對仍要生效 ====
 out_slash="$(bash "$check" --root "${r}/" 2>&1)"; got_slash=$?
-if [ "$got_slash" -eq 0 ] && printf '%s' "$out_slash" | grep -qF '允許期限內'; then
+if [ "$got_slash" -eq 0 ] && has "$out_slash" '允許期限內'; then
   echo "✓ ①n --root 帶尾斜線 → allowlist 仍正確命中，不誤紅"
 else
   echo "✗ ①n --root 帶尾斜線應仍過、印「允許期限內」（實得 exit ${got_slash}）" >&2
@@ -141,19 +144,19 @@ expect 1 '② 多檔混合（一好一壞）→ 紅、只點名壞的那個' 'Mi
 
 # ==== ③ 參數／環境錯誤：fail closed（exit 2）====
 out="$(bash "$check" --root 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF -- '--root 缺值'; then
+if [ "$got" -eq 2 ] && has "$out" '--root 缺值'; then
   echo "✓ ③ --root 缺值 → exit 2"
 else
   echo "✗ ③ --root 缺值（期望 exit 2，實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 out="$(bash "$check" --bogus 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF -- '未知參數'; then
+if [ "$got" -eq 2 ] && has "$out" '未知參數'; then
   echo "✓ ③ 未知參數 → exit 2"
 else
   echo "✗ ③ 未知參數（期望 exit 2，實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 out="$(bash "$check" --root "$work/no-such-dir" 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF -- '找不到'; then
+if [ "$got" -eq 2 ] && has "$out" '找不到'; then
   echo "✓ ③ --root 指到不存在的 LittleSproutUITests → exit 2"
 else
   echo "✗ ③ --root 不存在（期望 exit 2，實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1

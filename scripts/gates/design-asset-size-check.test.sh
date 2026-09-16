@@ -14,6 +14,9 @@ set -uo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 checker="${root}/scripts/gates/design-asset-size-check.sh"
 fail=0
+# LS-302：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，避免
+# `printf | grep -qF` 在 pipefail 下的 SIGPIPE 誤判（LS-267/LS-270）。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -31,7 +34,7 @@ expect() {
   local want=$1 name=$2 must=${3:-} out got
   out="$(bash "$checker" "$work/repo" 2>&1)"
   got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; }; then
     echo "✓ ${name}"
   else
     echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}，實得 ${got}）" >&2
@@ -129,7 +132,7 @@ g rm -q --cached design/evidence/LS-74-r1-overflow.json
 # ⑬ 非 git 目錄 → exit 2 fail closed，且不噴 git diff 原始 usage
 mkdir -p "$work/notrepo"
 out="$(bash "$checker" "$work/notrepo" 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF 'fail closed' && ! printf '%s' "$out" | grep -qF 'usage: git diff'; then
+if [ "$got" -eq 2 ] && has "$out" 'fail closed' && ! has "$out" 'usage: git diff'; then
   echo '✓ ⑬ 非 git 目錄 → exit 2 fail closed、無 usage 噴版'
 else
   echo "✗ ⑬ 非 git 目錄 → exit 2 fail closed、無 usage 噴版（實得 ${got}）" >&2
@@ -139,7 +142,7 @@ fi
 
 # ⑭ --base 缺 ref 參數 → exit 2 fail closed
 out="$(bash "$checker" --base 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF 'fail closed'; then
+if [ "$got" -eq 2 ] && has "$out" 'fail closed'; then
   echo '✓ ⑭ --base 缺 ref 參數 → exit 2 fail closed'
 else
   echo "✗ ⑭ --base 缺 ref 參數 → exit 2 fail closed（實得 ${got}）" >&2
@@ -149,7 +152,7 @@ fi
 
 # ⑮ --base 指到不存在的 ref → exit 2 fail closed
 out="$(bash "$checker" --base does-not-exist-ref "$work/repo" 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF 'fail closed'; then
+if [ "$got" -eq 2 ] && has "$out" 'fail closed'; then
   echo '✓ ⑮ --base 指到不存在的 ref → exit 2 fail closed'
 else
   echo "✗ ⑮ --base 指到不存在的 ref → exit 2 fail closed（實得 ${got}）" >&2
@@ -166,7 +169,7 @@ mkbin design/violate.png 600000
 g add design/violate.png
 g commit -qm violate
 out="$(bash "$checker" --base "$base_ref" "$work/repo" 2>&1)"; got=$?
-if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF 'design/violate.png'; then
+if [ "$got" -eq 1 ] && has "$out" 'design/violate.png'; then
   echo '✓ ⑯ --base 模式：head 分支 committed（非 staged）違規檔 → 紅，點名路徑'
 else
   echo "✗ ⑯ --base 模式：head 分支 committed 違規檔 → 紅，點名路徑（實得 ${got}）" >&2

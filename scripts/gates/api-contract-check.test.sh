@@ -13,6 +13,10 @@ set -uo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 checker="${root}/scripts/gates/api-contract-check.sh"
 fail=0
+# LS-302：改 source 共用庫（scripts/gates/lib/selftest-helpers.sh）——本檔沒有字串比對用的
+# has()，只是把自己的 expect() 併入盤點範圍（selftest-wiring-check informational 只看
+# 有沒有 source 這個檔案）。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
