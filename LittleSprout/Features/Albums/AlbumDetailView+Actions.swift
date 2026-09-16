@@ -108,6 +108,12 @@ extension AlbumDetailView {
     /// 賦值——若使用者這一批還在解碼時，畫面上仍掛著「上一批」的舊回話列，會被誤以為是這一批
     /// 的結果。同 `DiaryComposerStore.beginLoadingPickedItems()` 既有作法，在新一批開始時就
     /// 先歸零。
+    ///
+    /// **LS-303 R4（merge-review R3 M1／M2）**：不再各自 `makeUploadQueueStore` 建立一份
+    /// 專屬 store——改拿 `albumsStore.sharedUploadQueueStore(...)`（app 層級單一實例，批次
+    /// 匯入過渡管線 `LegacyAlbumUploadImportCoordinator` 也拿同一份），`enqueue` 前逐筆
+    /// `registerPendingAlbum` 登記要掛進哪本相簿，見 `AlbumsStore+SharedUploadQueue.swift`
+    /// 檔頭文件註解（完整的併發上限／生命週期問題說明在那裡，這裡不重複）。
     @MainActor
     func loadPicked(_ items: [PhotosPickerItem], detailStore: AlbumDetailStore) async {
         isLoadingPickedItems = true
@@ -120,8 +126,13 @@ extension AlbumDetailView {
         let (uploads, skippedCount) = Self.partitionPickedItems(loaded)
         skippedItemCount = skippedCount
         guard !uploads.isEmpty else { return }
-        let queue = uploadQueueStore ?? makeUploadQueueStore(detailStore: detailStore)
+        let queue = albumsStore.sharedUploadQueueStore(
+            familyID: detailStore.familyID, mediaUploadService: mediaUploadService
+        )
         uploadQueueStore = queue
+        for upload in uploads {
+            albumsStore.registerPendingAlbum(entryID: upload.id, albumID: detailStore.albumID)
+        }
         queue.enqueue(uploads)
         showsUploadQueueSheet = true
     }
@@ -170,37 +181,6 @@ extension AlbumDetailView {
                 .appFont(.note, weight: .semibold)
                 .foregroundStyle(Color.lsTextPrimary)
         }
-    }
-
-    /// 每個 `AlbumDetailStore` 只建立一次、往後重用（`UploadQueueStore` 檔頭：飛行中的
-    /// `Task` 跟著這個實例走，不是跟著 sheet 的 View 走，關閉 sheet 不會中斷上傳）。
-    ///
-    /// `onUploadSucceeded`（merge-review R2 M2 修正）：真正把照片掛進相簿（`album_media`
-    /// INSERT）改成呼叫 `albumsStore.attachUploadedMedia`——`albumID`／`familyID` 先從
-    /// `detailStore` 抽成區域變數值型別捕捉，`albumsStore` 是長生命週期物件（app 層存活，
-    /// 不像 `detailStore` 是這個 View 的 `@State`），兩者都不會因為使用者在上傳飛行中 pop 掉
-    /// 詳情頁而消失。
-    ///
-    /// **LS-237 修（池 `4fafaa19`(b)）**：不再傳 `[weak detailStore]` 進來——那份參照是
-    /// 「這個 upload queue 建立當下使用者留在哪個畫面」，使用者若在上傳飛行中離開再進同一本
-    /// 相簿，`AlbumDetailView.task(id:)` 會建一個全新的 `AlbumDetailStore` 實例，這個
-    /// closure 捕捉到的舊參照對新畫面沒有任何幫助（見池項原文「新 detailStore 收不到後續
-    /// 完成的照片」）。「如果使用者還留在這個畫面，立刻讓照片牆反映最新狀態」現在改由
-    /// `AlbumsStore.attachUploadedMedia` 自己查「目前是誰在看這本相簿」（`subscribeDetailStore`
-    /// 登記的最新一份）直接呼叫 `reflectUploadedMedia`，一定是使用者現在正看著的畫面，見該
-    /// 方法文件註解。
-    private func makeUploadQueueStore(detailStore: AlbumDetailStore) -> UploadQueueStore {
-        let albumID = detailStore.albumID
-        let familyID = detailStore.familyID
-        let albumsStore = albumsStore
-        return UploadQueueStore(
-            familyID: familyID, mediaUploadService: mediaUploadService,
-            onUploadSucceeded: { _, mediaID in
-                Task {
-                    await albumsStore.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: mediaID)
-                }
-            }
-        )
     }
 
     /// 刪除成功後收尾——回上一頁（列表本身仍持有舊快取，`AlbumsStore.albums` 直到下次

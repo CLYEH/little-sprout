@@ -44,6 +44,14 @@ final class AlbumsStore {
     /// 世代計數器：理由與守門邏輯同 `TimelineStore.generation` 文件註解，這裡不重複。
     private var generation = 0
 
+    /// LS-303 R4（merge-review R3 M1／M2，orchestrator 裁決 `8579e30e`）：「加入照片」單張
+    /// 即傳與批次匯入過渡管線共用的 app 層級 `UploadQueueStore`——完整理由與併發／生命週期
+    /// 問題見 `AlbumsStore+SharedUploadQueue.swift` 檔頭文件註解。兩個屬性不標 `private`
+    /// （同 `AlbumDetailView` 既有慣例）：那支擴充檔要跨檔案讀寫。
+    var sharedUploadQueueStoreInstance: UploadQueueStore?
+    /// entry id（`PendingUpload.id`）→ 這筆完成後要掛進哪本相簿，見上。
+    var pendingUploadAlbumIDs: [UUID: UUID] = [:]
+
     /// LS-237 修（池 `4fafaa19`(a)）：每本相簿下一個要用的 `sortOrder`，`.pending` 是「正在
     /// 打第一次 `fetchMaxSortOrder` 查詢、還不知道基底值」、`.ready` 是「已經知道基底，之後
     /// 都是同步遞增」（`acquiredAt` 見 `sortOrderCursorIdleTTL` 文件註解）——見
