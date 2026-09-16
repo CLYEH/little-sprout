@@ -207869,57 +207869,10 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "id": "p1rTa",
+                      "id": "YxuLr",
                       "type": "ref",
-                      "ref": "XggYA",
-                      "name": "Import Entry Button",
-                      "width": "fit_content",
-                      "height": 44,
-                      "padding": [
-                        9.5,
-                        12
-                      ],
-                      "gap": 6,
-                      "descendants": {
-                        "G4R75k": {
-                          "type": "frame",
-                          "id": "J3x31",
-                          "name": "Import Mark",
-                          "width": 14,
-                          "height": 14,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "rectangle",
-                              "id": "Cc3UE",
-                              "layoutPosition": "absolute",
-                              "x": 0,
-                              "y": 2,
-                              "name": "Mark Back",
-                              "width": 12,
-                              "height": 12,
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "KMK8Z",
-                              "layoutPosition": "absolute",
-                              "x": 2,
-                              "y": 0,
-                              "name": "Mark Front",
-                              "fill": "$surface",
-                              "width": 12,
-                              "height": 12,
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5
-                            }
-                          ]
-                        },
-                        "yxwnz": {
-                          "content": "匯入"
-                        }
-                      }
+                      "ref": "o8zYlX",
+                      "name": "Import Entry Button"
                     },
                     {
                       "id": "S5QGJd",
@@ -208421,57 +208374,10 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "id": "VMlHH",
+                      "id": "wpGlp",
                       "type": "ref",
-                      "ref": "XggYA",
-                      "name": "Import Entry Button",
-                      "width": "fit_content",
-                      "height": 44,
-                      "padding": [
-                        9.5,
-                        12
-                      ],
-                      "gap": 6,
-                      "descendants": {
-                        "G4R75k": {
-                          "type": "frame",
-                          "id": "D651Zv",
-                          "name": "Import Mark",
-                          "width": 14,
-                          "height": 14,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "rectangle",
-                              "id": "XFV7a",
-                              "layoutPosition": "absolute",
-                              "x": 0,
-                              "y": 2,
-                              "name": "Mark Back",
-                              "width": 12,
-                              "height": 12,
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "yantQ",
-                              "layoutPosition": "absolute",
-                              "x": 2,
-                              "y": 0,
-                              "name": "Mark Front",
-                              "fill": "$surface",
-                              "width": 12,
-                              "height": 12,
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5
-                            }
-                          ]
-                        },
-                        "yxwnz": {
-                          "content": "匯入"
-                        }
-                      }
+                      "ref": "o8zYlX",
+                      "name": "Import Entry Button"
                     },
                     {
                       "id": "zVe4j",
@@ -209022,75 +208928,42 @@
                   "fontWeight": "700"
                 },
                 {
-                  "type": "frame",
-                  "id": "i3QPd",
-                  "name": "Header Actions Row",
-                  "gap": "$sp-item",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "id": "CGHEc",
-                      "type": "ref",
-                      "ref": "XggYA",
-                      "name": "Import Entry Button",
-                      "width": "fit_content",
-                      "height": 44,
-                      "padding": 15,
-                      "gap": 6,
-                      "descendants": {
-                        "G4R75k": {
-                          "type": "frame",
-                          "id": "d4h91Z",
-                          "name": "Import Mark",
-                          "width": 14,
-                          "height": 14,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "rectangle",
-                              "id": "NE3BM",
-                              "layoutPosition": "absolute",
-                              "x": 0,
-                              "y": 2,
-                              "name": "Mark Back",
-                              "width": 12,
-                              "height": 12,
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "KwZ5g",
-                              "layoutPosition": "absolute",
-                              "x": 2,
-                              "y": 0,
-                              "name": "Mark Front",
-                              "fill": "$surface",
-                              "width": 12,
-                              "height": 12,
-                              "stroke": "$control-line",
-                              "strokeWidth": 1.5
-                            }
-                          ]
-                        },
-                        "yxwnz": {
-                          "enabled": false
-                        }
-                      }
-                    },
-                    {
-                      "id": "iXHfZ",
-                      "type": "ref",
-                      "ref": "zy3Ps",
-                      "name": "Create Entry Button",
-                      "descendants": {
-                        "G0L1jH": {
-                          "width": 32,
-                          "height": 32
-                        }
-                      }
+                  "id": "iXHfZ",
+                  "type": "ref",
+                  "ref": "zy3Ps",
+                  "name": "Create Entry Button",
+                  "descendants": {
+                    "G0L1jH": {
+                      "width": 32,
+                      "height": 32
                     }
-                  ]
+                  }
+                },
+                {
+                  "id": "VcvfI",
+                  "type": "ref",
+                  "ref": "o8zYlX",
+                  "name": "Import Entry Button",
+                  "descendants": {
+                    "EJMa0": {
+                      "width": 32,
+                      "height": 58.666666666666664
+                    },
+                    "v4CTZT": {
+                      "width": 32,
+                      "height": 26.666666666666664
+                    },
+                    "H1Be6h": {
+                      "width": 32,
+                      "height": 5.333333333333333,
+                      "y": 37.33333333333333
+                    },
+                    "zwQeX": {
+                      "width": 32,
+                      "height": 5.333333333333333,
+                      "y": 53.33333333333333
+                    }
+                  }
                 }
               ]
             },
@@ -209400,6 +209273,86 @@
               "height": 40
             }
           }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "o8zYlX",
+      "x": 1720,
+      "y": 96,
+      "name": "cmp/Button Import",
+      "reusable": true,
+      "fill": "$surface",
+      "cornerRadius": "$radius-md",
+      "stroke": "$control-line",
+      "strokeWidth": 1.5,
+      "gap": 6,
+      "padding": [
+        9.5,
+        12
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "EJMa0",
+          "name": "Import Mark",
+          "width": 12,
+          "height": 22,
+          "layout": "none",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "v4CTZT",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "Mark Front",
+              "fill": "$print-paper",
+              "width": 12,
+              "height": 10,
+              "stroke": "$paper-shadow",
+              "strokeWidth": 1
+            },
+            {
+              "type": "rectangle",
+              "id": "H1Be6h",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 14,
+              "name": "Mark Strip 1",
+              "fill": "$print-paper",
+              "width": 12,
+              "height": 2,
+              "stroke": "$paper-shadow",
+              "strokeWidth": 1
+            },
+            {
+              "type": "rectangle",
+              "id": "zwQeX",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 20,
+              "name": "Mark Strip 2",
+              "fill": "$print-paper",
+              "width": 12,
+              "height": 2,
+              "stroke": "$paper-shadow",
+              "strokeWidth": 1
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "Jo1QU",
+          "name": "Label",
+          "fill": "$text-primary",
+          "content": "匯入",
+          "fontFamily": "$font",
+          "fontSize": "$fs-body",
+          "fontWeight": "600"
         }
       ]
     }
