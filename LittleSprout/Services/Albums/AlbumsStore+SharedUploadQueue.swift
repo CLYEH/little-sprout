@@ -33,6 +33,11 @@ extension AlbumsStore {
             onUploadSucceeded: { [weak self] entryID, mediaID in
                 guard let self, let albumID = self.pendingUploadAlbumIDs.removeValue(forKey: entryID) else { return }
                 Task { await self.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: mediaID) }
+            },
+            // LS-303 R5（merge-review R4 i1）：不可重試失敗終局同樣從對照表移除，理由見
+            // `UploadQueueStore.onUploadFailedTerminal` 文件註解。
+            onUploadFailedTerminal: { [weak self] entryID in
+                self?.pendingUploadAlbumIDs.removeValue(forKey: entryID)
             }
         )
         sharedUploadQueueStoreInstance = store

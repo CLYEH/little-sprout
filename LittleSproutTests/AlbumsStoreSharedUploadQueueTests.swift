@@ -9,6 +9,7 @@ import XCTest
 @MainActor
 final class AlbumsStoreSharedUploadQueueTests: XCTestCase {
     private let familyID = UUID(uuidString: "33333333-3333-3333-3333-333333333333")!
+    private let familyB = UUID(uuidString: "55555555-5555-5555-5555-555555555555")!
 
     private func waitUntil(
         timeoutSeconds: Double = 1, file: StaticString = #filePath, line: UInt = #line,
@@ -64,6 +65,75 @@ final class AlbumsStoreSharedUploadQueueTests: XCTestCase {
         await waitUntil { apiStub.attachMediaCalls.count == 2 }
         let albumIDs = Set(apiStub.attachMediaCalls.map(\.albumID))
         XCTAssertEqual(albumIDs, [albumA, albumB], "兩筆各自登記的 albumID 都要正確反映在 attachMedia 呼叫上")
+    }
+
+    /// M1（LS-303 R5，merge-review R4 `902eb329`）：登出（`reset()`）之後同一個 app 行程內
+    /// 換帳號登入，共用佇列必須用新帳號的 `familyID`——不能沿用舊帳號焊在快取實例裡的值
+    /// （`AlbumsStore.reset()` 修前只清 `sortOrderCursors`／`detailStoreByAlbumID`，沒清
+    /// `sharedUploadQueueStoreInstance`／`pendingUploadAlbumIDs`，見 `AlbumsStore.reset()`
+    /// 文件註解）。
+    func test_sharedUploadQueueStore_afterReset_usesNewFamilyID() async {
+        let apiStub = StubAlbumsAPIClient()
+        let store = AlbumsStore(apiClient: apiStub)
+        let mediaService = StubMediaUploadService()
+
+        _ = store.sharedUploadQueueStore(familyID: familyID, mediaUploadService: mediaService)
+        store.reset()
+        let queue = store.sharedUploadQueueStore(familyID: familyB, mediaUploadService: mediaService)
+        queue.enqueue([
+            PendingUpload(
+                kind: .photo(data: Data("x".utf8), fileExtension: "jpg"), thumbnail: nil,
+                pixelSize: PixelSize(width: 4, height: 3)
+            )
+        ])
+
+        await waitUntil { !mediaService.uploadPhotoCalls.isEmpty }
+        XCTAssertEqual(
+            mediaService.uploadPhotoCalls.first?.familyID, familyB,
+            "登出換帳號後，共用佇列應該用新家庭 id 上傳"
+        )
+    }
+
+    /// M1（LS-303 R5）：`reset()` 之後 `sharedUploadQueueStore` 必須建一個**新的**實例——
+    /// 光是 `familyID` 對，若還在用同一個舊實例（例如只改 `reset()` 沒清
+    /// `sharedUploadQueueStoreInstance`），代表快取沒真的失效，只是巧合下一次呼叫傳的
+    /// `familyID` 沒被用到（`sharedUploadQueueStore` 對已存在的實例會忽略新傳入的
+    /// `familyID`，見該函式文件註解）。
+    func test_sharedUploadQueueStore_afterReset_returnsNewInstance() {
+        let store = AlbumsStore(apiClient: StubAlbumsAPIClient())
+        let mediaService = StubMediaUploadService()
+
+        let before = store.sharedUploadQueueStore(familyID: familyID, mediaUploadService: mediaService)
+        store.reset()
+        let after = store.sharedUploadQueueStore(familyID: familyB, mediaUploadService: mediaService)
+
+        XCTAssertFalse(before === after, "reset() 後應該重新建立 UploadQueueStore 實例，不沿用舊的")
+    }
+
+    /// i1（LS-303 R5，merge-review R4 `902eb329`）：不可重試失敗終局（`.quota`）也要從
+    /// `pendingUploadAlbumIDs` 直接移除——不是只有成功才清，見 `UploadQueueStore
+    /// .onUploadFailedTerminal` 文件註解。
+    func test_onUploadFailedTerminal_removesEntryFromPendingAlbumIDs() async {
+        let apiStub = StubAlbumsAPIClient()
+        let store = AlbumsStore(apiClient: apiStub)
+        let mediaService = StubMediaUploadService()
+        let albumID = UUID()
+        let entryID = UUID()
+        mediaService.setUploadPhotoHandler { _, _, _, _ in
+            throw AppError.rejected(message: "額度已滿", code: LSErrorCode.storageQuotaExceeded.rawValue)
+        }
+
+        let queue = store.sharedUploadQueueStore(familyID: familyID, mediaUploadService: mediaService)
+        store.registerPendingAlbum(entryID: entryID, albumID: albumID)
+        queue.enqueue([
+            PendingUpload(
+                id: entryID, kind: .photo(data: Data("x".utf8), fileExtension: "jpg"), thumbnail: nil,
+                pixelSize: PixelSize(width: 4, height: 3)
+            )
+        ])
+
+        await waitUntil { queue.failedCount == 1 }
+        XCTAssertNil(store.pendingUploadAlbumIDs[entryID], "終局失敗後對照表項目應該被移除")
     }
 
     /// 沒有登記過的 entry（理論上不該發生，防禦性測試）完成後不該呼叫 `attachMedia`——

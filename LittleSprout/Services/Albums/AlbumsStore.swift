@@ -345,6 +345,11 @@ final class AlbumsStore {
         // 這裡清掉單純是避免登出後還殘留舊帳號的相簿 id 對照。
         sortOrderCursors = [:]
         detailStoreByAlbumID = [:]
+        // LS-303 R5（merge-review R4 M1）：共用上傳佇列把 familyID 焊在第一次呼叫建立的
+        // `UploadQueueStore` 裡（`AlbumsStore+SharedUploadQueue.swift` 檔頭文件註解）——
+        // 不清掉這兩個屬性，登出換帳號後上傳仍會打舊家庭的 familyID。
+        sharedUploadQueueStoreInstance = nil
+        pendingUploadAlbumIDs = [:]
     }
 
     #if DEBUG
