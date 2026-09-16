@@ -10,6 +10,10 @@ checker="${root}/scripts/gates/brand-skill-check.sh"
 fail=0
 n=0
 ok() { echo "✓ $1"; n=$((n+1)); }
+# LS-302：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，避免
+# `printf | grep -qF` 在 pipefail 下的 SIGPIPE 誤判（LS-267/LS-270）；本檔已自訂 ok()，
+# 共用庫不覆寫既有定義。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -20,8 +24,8 @@ expect() {
   local want=$1 name=$2 must=$3 must2=${4:-} out got
   out="$(bash "$checker" "$work/repo" 2>&1)"
   got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; } \
-     && { [ -z "$must2" ] || printf '%s' "$out" | grep -qF -- "$must2"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; } \
+     && { [ -z "$must2" ] || has "$out" "$must2"; }; then
     ok "${name}"
   else
     echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}${must2:+、「${must2}」}，實得 ${got}）" >&2
@@ -119,19 +123,19 @@ printf -- '---\nname: ui-designer\n---\n- 沒接線。\n' > "$work/repo/.claude/
 printf -- '---\nname: visual-reviewer\n---\n- 沒接線。\n' > "$work/repo/.claude/agents/visual-reviewer.md"
 expect 1 '⑤ 三處違規同時列出（references＋兩份 agent）' 'references/tokens.md' 'visual-reviewer.md'
 out="$(bash "$checker" "$work/repo" 2>&1)"
-if printf '%s' "$out" | grep -qF 'ui-designer.md'; then ok "⑤ 第三處（ui-designer.md）也在同一次輸出"; else echo "✗ ⑤ ui-designer.md 未列出" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+if has "$out" 'ui-designer.md'; then ok "⑤ 第三處（ui-designer.md）也在同一次輸出"; else echo "✗ ⑤ ui-designer.md 未列出" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
 # ⑤b repo 路徑含空白：agent 清單是陣列、逐檔檢查，訊息不因分詞列出假路徑（m6）
 reset; mv "$work/repo" "$work/re po"
 out="$(bash "$checker" "$work/re po" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '已接線'; then
+if [ "$got" -eq 0 ] && has "$out" '已接線'; then
   ok '⑤ repo 路徑含空白、接線齊 → 綠'
 else
   echo "✗ ⑤ repo 路徑含空白、接線齊（期望 exit 0，實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 rm "$work/re po/.claude/agents/visual-reviewer.md"
 out="$(bash "$checker" "$work/re po" 2>&1)"; got=$?
-if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '.claude/agents/visual-reviewer.md：不存在' && ! printf '%s' "$out" | grep -qF 'ui-designer.md'; then
+if [ "$got" -eq 1 ] && has "$out" '.claude/agents/visual-reviewer.md：不存在' && ! has "$out" 'ui-designer.md'; then
   ok '⑤ repo 路徑含空白、缺 visual-reviewer.md → 只點名它，ui-designer.md 不被分詞誤報'
 else
   echo "✗ ⑤ repo 路徑含空白、缺 visual-reviewer.md（期望 exit 1、只列 visual-reviewer.md；實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -141,14 +145,14 @@ rm -rf "$work/re po"
 # ⑥ 參數／路徑錯誤：fail closed（exit 2）
 if out="$(bash "$checker" "$work/nope" 2>&1)"; then
   echo "✗ ⑥ repo 路徑不存在 → 應 exit 2（實得 0）" >&2; fail=1
-elif [ $? -eq 2 ] && printf '%s' "$out" | grep -qF '找不到目錄'; then
+elif [ $? -eq 2 ] && has "$out" '找不到目錄'; then
   ok "⑥ repo 路徑不存在 → exit 2"
 else
   echo "✗ ⑥ repo 路徑不存在（期望 exit 2、輸出含「找不到目錄」）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 if out="$(bash "$checker" "$work/repo" extra 2>&1)"; then
   echo "✗ ⑥ 多餘參數 → 應 exit 2（實得 0）" >&2; fail=1
-elif [ $? -eq 2 ] && printf '%s' "$out" | grep -qF '只接受一個'; then
+elif [ $? -eq 2 ] && has "$out" '只接受一個'; then
   ok "⑥ 多餘參數 → exit 2"
 else
   echo "✗ ⑥ 多餘參數（期望 exit 2）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -156,7 +160,7 @@ fi
 
 # ⑦ 真 repo：本 repo 自己的接線必須是綠的（gate 自測順便驗實際狀態；未傳參數＝從 git 推 toplevel）
 out="$( (cd "$root" && bash "$checker") 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '已接線'; then
+if [ "$got" -eq 0 ] && has "$out" '已接線'; then
   ok "⑦ 本 repo 實際接線 → 綠（未傳參數）"
 else
   echo "✗ ⑦ 本 repo 實際接線（期望 exit 0，實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1

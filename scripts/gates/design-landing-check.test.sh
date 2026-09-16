@@ -7,6 +7,9 @@ set -uo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 check="${root}/scripts/gates/design-landing-check.sh"
 fail=0
+# LS-302：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，避免
+# `printf | grep -qF` 在 pipefail 下的 SIGPIPE 誤判（LS-267/LS-270）。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
@@ -16,7 +19,7 @@ expect() {
   shift 3
   out="$(bash "$check" "$@" 2>&1)"
   got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; }; then
     echo "✓ ${name}"
   else
     echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}，實得 ${got}）" >&2
@@ -44,7 +47,7 @@ expect 1 '② --expect-nodes 99（節點數不符）仍照舊擋下' '節點數'
 empty="$work/empty.pen"
 : > "$empty"
 out="$(bash "$check" "$empty" --print-nodes 2>&1)"; got=$?
-if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '0 bytes'; then
+if [ "$got" -eq 1 ] && has "$out" '0 bytes'; then
   echo '✓ ③ 0 bytes 檔＋--print-nodes → 仍落既有錯誤路徑，不印數字'
 else
   echo "✗ ③ 0 bytes 檔＋--print-nodes（實得 exit=${got}，輸出「${out}」）" >&2
@@ -55,7 +58,7 @@ fi
 bad="$work/bad.pen"
 printf '{not json' > "$bad"
 out="$(bash "$check" "$bad" --print-nodes 2>&1)"; got=$?
-if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '不是有效 JSON'; then
+if [ "$got" -eq 1 ] && has "$out" '不是有效 JSON'; then
   echo '✓ ④ 壞 JSON＋--print-nodes → 仍落既有錯誤路徑'
 else
   echo "✗ ④ 壞 JSON＋--print-nodes（實得 exit=${got}，輸出「${out}」）" >&2

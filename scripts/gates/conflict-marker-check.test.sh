@@ -8,6 +8,9 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 check="${root}/scripts/gates/conflict-marker-check.sh"
 fail=0
 n=0
+# LS-302：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，避免
+# `printf | grep -qF` 在 pipefail 下的 SIGPIPE 誤判（LS-267/LS-270）。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -21,8 +24,8 @@ expect() {
   local want=$1 name=$2 must=$3 mustnot=${4:-} out got
   out="$(cd "$R" && bash "$check" 2>&1)"
   got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; } \
-     && { [ -z "$mustnot" ] || ! printf '%s' "$out" | grep -qF -- "$mustnot"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; } \
+     && { [ -z "$mustnot" ] || ! has "$out" "$mustnot"; }; then
     echo "✓ ${name}"; n=$((n + 1))
   else
     echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}${mustnot:+、不含「${mustnot}」}，實得 ${got}）" >&2
@@ -92,7 +95,7 @@ g reset -q --hard
 
 # ⑨ 不在 git repo → exit 2
 out="$(cd "$work" && bash "$check" 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '不在 git repo'; then
+if [ "$got" -eq 2 ] && has "$out" '不在 git repo'; then
   echo '✓ ⑨ 不在 git repo → exit 2（fail closed）'; n=$((n + 1))
 else
   echo "✗ ⑨ 不在 git repo 應 exit 2（實得 ${got}：${out}）" >&2; fail=1

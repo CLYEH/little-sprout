@@ -6,6 +6,9 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 check=scripts/gates/breaking-section-check.sh
 fail=0
+# LS-302：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，避免
+# `printf | grep -qF` 在 pipefail 下的 SIGPIPE 誤判（LS-267/LS-270）。
+source scripts/gates/lib/selftest-helpers.sh
 
 # expect <期望 exit code> <樣本名稱> <PR body>
 expect() {
@@ -53,7 +56,7 @@ expect_f() {
   local want=$1 name=$2 body=$3 findings=$4 needle=${5:-} got err
   err="$(printf '%s' "$body" | bash "$check" --findings "$findings" 2>&1 >/dev/null)"
   got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$needle" ] || printf '%s' "$err" | grep -qF -- "$needle"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$needle" ] || has "$err" "$needle"; }; then
     echo "✓ $name"
   else
     echo "✗ ${name}（期望 exit ${want}，實得 ${got}${needle:+；期望 stderr 含「$needle」}）" >&2
