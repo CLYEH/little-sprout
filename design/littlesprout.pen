@@ -199718,6 +199718,248 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "VbLi9",
+          "name": "N R5 修訂記錄（聚焦輪，依 VR R4 comment ee815e4a 逐項核銷）",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "I8lKjT",
+              "name": "H",
+              "fill": "$print-ink",
+              "content": "R5 修訂記錄（聚焦輪，依 VR R4 comment ee815e4a 逐項核銷）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ofJe5",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "R6EoE",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "B-1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "HdB24",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "02 三板（base/全空/深色）Form Sheet ry −2→62、Scrim/Sheet Wrap h 1025→1217（M-3 三欄槽連動後的新總高），與 L9AvJN 對齊。核銷：四板 Actions 絕對 y 皆為 42750。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "otBBs",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ClSyO",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "B-2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "UWiKZ",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "04 AX3 LiJgw：Gridline 85/40 寬度比照 light/dark 收窄到 rx=36 w=233，紙底維持 192 寬置中。核銷：左右各露 20.5pt（light/dark 同為 20.5pt）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "bVPR1",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "HV7Q7",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "T54lpE",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "04 light/dark 中間兩條格線（70/55）殘留短劃：停用該兩條，只保留 85/40 當上下框（VR 給的二擇一方案之一）；AX3 同步停用。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fJ86K",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "m7zbp",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "WXrnJ",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "04 三板空卡雙破折號：Delta Row Placeholder 的 Trend Icon 改 enabled:false，只留 Value 欄「—」一個。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gcWnE",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "DswsK",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-3",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "I5Ojc4",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "02 四板量測欄保留槽只加在身高欄、群組被拆：體重／頭圍欄也各自補上同樣的 56pt Field Help 保留槽（平時空白）。核銷：三欄間距統一為 16pt。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XG6pf",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "etJyU",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "M-4",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ocdIt",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "04 AX3 空狀態文案還原為與 light/dark 一致（含孩子名「陳小軒」）。因紙卡寬度需優先滿足 B-2 的格線外露硬指標（192pt，露出 ≥16pt），文字折成 7 行，末行「曲線。」3 字元——「成長曲線」仍被拆行，但孤字已從 2 字元改善為 3 字元。已嘗試以 269~330pt 寬度讓「成長曲線」完全不拆，但那會讓紙卡寬度超出骨架 clip 邊界（305pt）並吃掉格線外露量，與 B-2 直接衝突；在兩者互斥的情況下，本輪判斷 B-2（BLOCKER）優先於 M-4 的排版細節（MAJOR），若這個取捨不被接受，需要先決定是否放寬 04 AX3 整張卡片／骨架的寬度上限（跨出本輪聚焦清單範圍）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
