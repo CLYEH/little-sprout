@@ -189068,7 +189068,10 @@
                             {
                               "type": "icon",
                               "id": "GwcR5",
+                              "x": 0,
+                              "y": 5,
                               "name": "Trend Icon",
+                              "enabled": false,
                               "width": 15,
                               "height": 15,
                               "icon": "minus",
@@ -189163,7 +189166,10 @@
                             {
                               "type": "icon",
                               "id": "B2OQH",
+                              "x": 0,
+                              "y": 5,
                               "name": "Trend Icon",
+                              "enabled": false,
                               "width": 15,
                               "height": 15,
                               "icon": "minus",
@@ -189258,7 +189264,10 @@
                             {
                               "type": "icon",
                               "id": "gh2n0",
+                              "x": 0,
+                              "y": 5,
                               "name": "Trend Icon",
+                              "enabled": false,
                               "width": 15,
                               "height": 15,
                               "icon": "minus",
@@ -189363,6 +189372,7 @@
                       "x": 36,
                       "y": 106.66666666666667,
                       "name": "Gridline 70",
+                      "enabled": false,
                       "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
@@ -189374,6 +189384,7 @@
                       "x": 36,
                       "y": 153.33333333333334,
                       "name": "Gridline 55",
+                      "enabled": false,
                       "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
@@ -189508,7 +189519,7 @@
       "name": "Growth / 02 新增量測 sheet (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 1089,
+      "height": 1217,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -189553,7 +189564,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1025,
+          "height": 1217,
           "fill": "$paper-shadow"
         },
         {
@@ -189564,7 +189575,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1025,
+          "height": 1217,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
@@ -189727,7 +189738,14 @@
                           "content": "請輸入體重"
                         },
                         "i2SHf": {
+                          "enabled": true,
+                          "height": 56
+                        },
+                        "a7OyZ7": {
                           "enabled": false
+                        },
+                        "ikuz2": {
+                          "content": ""
                         }
                       }
                     },
@@ -189744,7 +189762,14 @@
                           "content": "請輸入頭圍"
                         },
                         "i2SHf": {
+                          "enabled": true,
+                          "height": 56
+                        },
+                        "a7OyZ7": {
                           "enabled": false
+                        },
+                        "ikuz2": {
+                          "content": ""
                         }
                       }
                     }
@@ -189894,7 +189919,7 @@
       "name": "Growth / 02 新增量測 sheet · 錯誤態（全空）",
       "clip": true,
       "width": 393,
-      "height": 1089,
+      "height": 1217,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -189938,7 +189963,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1025,
+          "height": 1217,
           "fill": "$paper-shadow"
         },
         {
@@ -189949,7 +189974,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1025,
+          "height": 1217,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
@@ -190112,7 +190137,14 @@
                           "content": "請輸入體重"
                         },
                         "i2SHf": {
+                          "enabled": true,
+                          "height": 56
+                        },
+                        "a7OyZ7": {
                           "enabled": false
+                        },
+                        "ikuz2": {
+                          "content": ""
                         }
                       }
                     },
@@ -190129,7 +190161,14 @@
                           "content": "請輸入頭圍"
                         },
                         "i2SHf": {
+                          "enabled": true,
+                          "height": 56
+                        },
+                        "a7OyZ7": {
                           "enabled": false
+                        },
+                        "ikuz2": {
+                          "content": ""
                         }
                       }
                     }
@@ -190279,7 +190318,7 @@
       "name": "Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
       "clip": true,
       "width": 393,
-      "height": 1089,
+      "height": 1217,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -190323,7 +190362,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1089,
+          "height": 1217,
           "fill": "$paper-shadow"
         },
         {
@@ -190334,7 +190373,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1089,
+          "height": 1217,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
@@ -190507,7 +190546,14 @@
                           "content": "請輸入體重"
                         },
                         "i2SHf": {
+                          "enabled": true,
+                          "height": 56
+                        },
+                        "a7OyZ7": {
                           "enabled": false
+                        },
+                        "ikuz2": {
+                          "content": ""
                         }
                       }
                     },
@@ -190524,7 +190570,14 @@
                           "content": "請輸入頭圍"
                         },
                         "i2SHf": {
+                          "enabled": true,
+                          "height": 56
+                        },
+                        "a7OyZ7": {
                           "enabled": false
+                        },
+                        "ikuz2": {
+                          "content": ""
                         }
                       }
                     }
@@ -190677,7 +190730,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1089,
+      "height": 1217,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -190721,7 +190774,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1025,
+          "height": 1217,
           "fill": "$paper-shadow"
         },
         {
@@ -190732,7 +190785,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1025,
+          "height": 1217,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
@@ -190895,7 +190948,14 @@
                           "content": "請輸入體重"
                         },
                         "i2SHf": {
+                          "enabled": true,
+                          "height": 56
+                        },
+                        "a7OyZ7": {
                           "enabled": false
+                        },
+                        "ikuz2": {
+                          "content": ""
                         }
                       }
                     },
@@ -190912,7 +190972,14 @@
                           "content": "請輸入頭圍"
                         },
                         "i2SHf": {
+                          "enabled": true,
+                          "height": 56
+                        },
+                        "a7OyZ7": {
                           "enabled": false
+                        },
+                        "ikuz2": {
+                          "content": ""
                         }
                       }
                     }
@@ -199871,7 +199938,10 @@
                             {
                               "type": "icon",
                               "id": "PSSC5",
+                              "x": 0,
+                              "y": 5,
                               "name": "Trend Icon",
+                              "enabled": false,
                               "width": 15,
                               "height": 15,
                               "icon": "minus",
@@ -199966,7 +200036,10 @@
                             {
                               "type": "icon",
                               "id": "jEoQh",
+                              "x": 0,
+                              "y": 5,
                               "name": "Trend Icon",
+                              "enabled": false,
                               "width": 15,
                               "height": 15,
                               "icon": "minus",
@@ -200061,7 +200134,10 @@
                             {
                               "type": "icon",
                               "id": "B6FpJZ",
+                              "x": 0,
+                              "y": 5,
                               "name": "Trend Icon",
+                              "enabled": false,
                               "width": 15,
                               "height": 15,
                               "icon": "minus",
@@ -200166,6 +200242,7 @@
                       "x": 36,
                       "y": 106.66666666666667,
                       "name": "Gridline 70",
+                      "enabled": false,
                       "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
@@ -200177,6 +200254,7 @@
                       "x": 36,
                       "y": 153.33333333333334,
                       "name": "Gridline 55",
+                      "enabled": false,
                       "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
@@ -200314,7 +200392,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2392,
+      "height": 2444,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -200525,7 +200603,10 @@
                             {
                               "type": "icon",
                               "id": "yC5JB",
+                              "x": 0,
+                              "y": 21.5,
                               "name": "Trend Icon",
+                              "enabled": false,
                               "width": 15,
                               "height": 15,
                               "icon": "minus",
@@ -200620,7 +200701,10 @@
                             {
                               "type": "icon",
                               "id": "Oqt2J",
+                              "x": 0,
+                              "y": 21.5,
                               "name": "Trend Icon",
+                              "enabled": false,
                               "width": 15,
                               "height": 15,
                               "icon": "minus",
@@ -200715,7 +200799,10 @@
                             {
                               "type": "icon",
                               "id": "NOIsc",
+                              "x": 0,
+                              "y": 21.5,
                               "name": "Trend Icon",
+                              "enabled": false,
                               "width": 15,
                               "height": 15,
                               "icon": "minus",
@@ -200801,18 +200888,18 @@
                   "name": "Chart Plot Skeleton",
                   "clip": true,
                   "width": "fill_container",
-                  "height": 518,
+                  "height": 570,
                   "layout": "none",
                   "children": [
                     {
                       "type": "rectangle",
                       "id": "LoeK7",
                       "layoutPosition": "absolute",
-                      "x": 56,
+                      "x": 36,
                       "y": 110,
                       "name": "Gridline 85",
                       "fill": "$paper-rule",
-                      "width": 193,
+                      "width": 233,
                       "height": 1
                     },
                     {
@@ -200822,6 +200909,7 @@
                       "x": 56,
                       "y": 223.33333333333334,
                       "name": "Gridline 70",
+                      "enabled": false,
                       "fill": "$paper-rule",
                       "width": 193,
                       "height": 1
@@ -200833,6 +200921,7 @@
                       "x": 56,
                       "y": 336.6666666666667,
                       "name": "Gridline 55",
+                      "enabled": false,
                       "fill": "$paper-rule",
                       "width": 193,
                       "height": 1
@@ -200841,11 +200930,11 @@
                       "type": "rectangle",
                       "id": "vLTnp",
                       "layoutPosition": "absolute",
-                      "x": 56,
+                      "x": 36,
                       "y": 450,
                       "name": "Gridline 40",
                       "fill": "$paper-rule",
-                      "width": 193,
+                      "width": 233,
                       "height": 1
                     },
                     {
@@ -200853,7 +200942,7 @@
                       "id": "hx9YS",
                       "layoutPosition": "absolute",
                       "x": 56,
-                      "y": 466,
+                      "y": 502,
                       "name": "Age Axis Label",
                       "fill": "$print-ink-secondary",
                       "textGrowth": "fixed-width",
@@ -200869,7 +200958,7 @@
                       "id": "vbIHm",
                       "layoutPosition": "absolute",
                       "x": 56.5,
-                      "y": 91,
+                      "y": 24,
                       "name": "Empty Message",
                       "fill": "$print-paper",
                       "cornerRadius": "$radius-md",
@@ -200900,7 +200989,7 @@
                           "fill": "$print-ink-secondary",
                           "textGrowth": "fixed-width",
                           "width": 160,
-                          "content": "新增第一筆量測，就能看見成長曲線。",
+                          "content": "新增第一筆身高、體重或頭圍，就能看見陳小軒的成長曲線。",
                           "lineHeight": 1.4,
                           "textAlign": "center",
                           "fontFamily": "$font",
