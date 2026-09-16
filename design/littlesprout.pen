@@ -185191,6 +185191,37 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "KuB5r",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fBUnn",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-307 R1",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "O1Jcb",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Import / 00 時間軸入口 (iPhone)｜隱藏 Tab Bar ✗（Tab-root 首頁，Tab Bar 維持顯示）｜標題 系統 large（＝tab 名稱「時間軸」，entry-conditions.md⑬固定）｜釘底動作帶 無（Tab-root 例外，見 motifs.md「不適用：Tab-root 畫面」，改用 Header Row 具名按鈕，見「LS-307 匯入入口」節）｜失敗文案鍵 無（純導覽入口，不觸發網路請求；匯入流程本身失敗文案見本板 Import 04/05 既有列 LfFR3／K3X3iL）｜深色 色彩隨主題切換，版面與按鈕幾何不變｜AX3 Header 由單列改三列直式堆疊（Title→Import Btn→Create Btn），Day Group 2 padding-top 需依本板實測重新調校，未含於本票範圍｜iPad NavigationSplitView 內容欄沿用同款兩鈕橫向布局，寬度餘裕更大不需堆疊",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -185319,6 +185350,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "③預設相簿：01/02/03/06a 各群預設「不放相簿」（只依日期歸檔到時間軸，不強制進相簿）；若使用者裁決預設應為「當前相簿」（例如從相簿詳情「加入照片」進入時），Album Row 初始值需依入口來源分支，本輪未做這個分支（PHPickerViewController 呼叫端傳入的 context 由實作票決定）。R2：05 完成摘要的主鈕原為「查看相簿」，與「不放相簿」預設矛盾（VR MN-9），已改為「回到時間軸」——這個文案在兩種預設下都成立，不受這題裁決結果影響；但若使用者裁決預設改為「當前相簿」，05 主鈕仍建議依實際目的地做條件分支（進了相簿就給「查看相簿」，沒進相簿就留「回到時間軸」），這個分支邏輯本輪未做。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ya5L5",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "S04c9M",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-307 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "H1t0Z",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "① Header 次要入口＋空狀態沿用同一入口，是否認可此範圍取捨：LS-307 R1 選定時間軸一般狀態的匯入入口為 Header Row 新增外框鈕「匯入照片」（與既有『新增回憶』並列，不新造第二顆主鈕、不改變『＋』單擊直接開編輯器的既有行為），空狀態（`Qxema`/11b）沿用同一 Header Row 結構、不另畫空狀態專屬大型匯入 CTA。若使用者傾向要在空狀態額外強化匯入入口（例如空狀態卡片內再加一顆醒目匯入 CTA），需另開 R2 迭代處理，且會涉及是否要新增第二顆非 accent 實心鈕在空狀態、或改變視覺層級——本題影響範圍：僅空狀態版面，不影響本板（一般狀態）已定案的 Header Row 版面與抄值。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -185757,6 +185824,176 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "多寶貝橫向並列的 chip 列（Babies Row）在 AX3 下（chip 內姓名文字放大到 40pt）2 顆 chip 並列會超出卡片內寬——AX3 板改用 layout:\"vertical\" 讓 chip 逐一垂直堆疊，這是本題「同一畫面在 AX3 下允許改變內部排列方向以避免溢出」的又一例（與 elder-constraints.md 既有精神一致：AX3 板是獨立設計而非單純縮放）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NxGgr",
+          "name": "LS-307 匯入入口",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "zKisF",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-307 匯入入口",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "v9QTi",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TQqIp",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-307 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "TCs7A",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "時間軸入口方案 B：Header Row 新增外框次要鈕「匯入照片」，取代 LS-303 R1 M2／LS-251 fZYWK 誤植的『時間軸「＋」』入口設想——時間軸的「＋」是 cmp/Create Entry Button（`zy3Ps`），為建立日記的唯一入口，`QADriver.openEditor()`／`SectionTabBarPushRegressionTests` 依賴其單擊直接開啟編輯器，不得改成選單（排除候選 a）。抄值：Header Row（`clvHc`，本板複本，源出 `FCiMS`）由 [Title, Create Entry Button] 二元素改為 [Title, Header Actions Group]；Header Actions Group（`W4h5F`）layout:horizontal、alignItems:center、gap:`$sp-item`(16)，內含 Import Entry Button（`BgktV`）＋既有 Create Entry Button ref（`S5QGJd`，元件本身未改）。Import Entry Button：外框鈕，`fill:$surface`／`stroke:$control-line`／`strokeWidth:1.5`／`cornerRadius:$radius-full`／`padding:[$ctl-pad-tap,$sp-item]`（44pt 高，與主鈕同高）／`justifyContent:center`／`alignItems:center`；內容僅一個 text「匯入照片」（`Kjq9D`，`$fs-body` 17／600／`$text-primary`，無 icon——outline pill 純文字已足夠辨識，且省下的寬度是這個方案在單行內放得下兩顆按鈕的關鍵）。實測寬度：Title 102、Import Btn 100、Create Btn 124、Header Actions Group 240（100+16+124）；Header Row 總寬 345（screen-pad 24 兩側），justifyContent:space_between 下 Title 與 Group 間距 3pt——由內容實測決定，非湊出來的數字。Header Row 高度維持 49pt 不變（與原板 `FCiMS` 完全相同），因此 Feed／Tab Bar 既有幾何（Day Group 1 底緣 753.44 貼齊 Tab Bar 頂 754 的既有調校，見 motifs.md「Tab Bar 全字級純 icon」段）零位移、零需要重新調校——這是選 candidate B 且採單行版面（而非「Header 改兩列」）的直接原因：兩列版本經實測會把 Header Row 從 49pt 撐高到 101pt（Title 49＋gap8＋Actions Row 44），Feed 整體下移 52pt，會讓 Day Group 1 侵入 Tab Bar 膠囊範圍，需要額外刪減卡片或重調 padding-top 才能復原（比照 LS-120 HLXo3 R6/R7 的修法），超出本票「1 板決策」的範圍，故不採。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KBGUC",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vJjOv",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-307 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "xs77w",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "三案比較（票文候選 a/b/c）：(a)「＋」長按或改兩項選單——排除，理由如上（破壞 QADriver.openEditor() 單擊直接開啟編輯器的既有依賴，且違反長輩硬約束「不用長按等進階手勢」——長按拖曳的唯一明文例外限定日記編輯器照片排序，不得比照推廣，見 elder-constraints.md 例外一第①前提）。(b) Header 次要入口——採用，見上抄值列。(c) 空狀態卡帶「匯入舊照片」＋一般狀態另一處入口——部分吸收：本板（一般狀態）用方案 b；空狀態（`Qxema`／11b）不需要另畫變體板，因為 Header Row 是 Body 內固定結構、與 Feed 是否有內容無關（`Qxema` 沿用同一 Header Row／Create Entry Button 結構，只有 Feed 換成空狀態卡），Import Entry Button 隨 Header Row 原樣延續到空狀態，不需要為空狀態另外設計一顆『匯入舊照片』大型 CTA——這樣可以避免同一個動作在同一畫面兩處各自有一顆入口鈕（違反「不新造第二顆主鈕」精神，即使兩顆都非 accent 實心，維持認知負荷低仍是優先）。裁決點見下方「裁決點清單」節新增列。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "n80b3y",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TPgf0",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-307 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "orXbN",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "深色：Import Entry Button 三個 token（`$surface`／`$control-line`／`$text-primary`）皆為 theme-aware，深色模式色值自動切換，版面幾何（100×44、radius-full、strokeWidth 1.5）不變；不需另畫深色板。AX3：`$fs-body` 17→40 會讓「匯入照片」與「新增回憶」兩顆按鈕文字同時膨脹，單行 Header Actions Group 寬度必然超出 345 可用寬（實測基準：預設 17pt 下 Group 已達 240/345＝70% 佔用，40pt 下文字部分放大 ~2.35× 遠超剩餘空間）——AX3 下改為 Header 三列直式堆疊（Title 單列→Import Entry Button 單列→Create Entry Button 單列），比照 Import 01 AX3 `e0S0TW`「Info Row／Babies Row 改 layout:vertical 直式堆疊避免碰撞」的既有慣例；此時 Header Row 高度會顯著增加，AX3 板必須依 motifs.md「Tab Bar 全字級純 icon」段的既有方法論重新逐板實測 Day Group 2 padding-top（比照 `lKoZG`/`HLXo3` 做法，不能沿用本板 iPhone 預設密度的零位移結論）——這是下一輪若要正式出 AX3 板時的既有已知工作項，本票範圍未含 AX3 板（1 板決策票，AX3 留待 LS-303 iOS 實作子票或後續設計票視需要再出）。iPad：NavigationSplitView 內容欄寬度遠大於 iPhone 345pt 可用寬（無 Tab Bar 幾何限制），Header Actions Group 橫向並列毫無壓力，直接沿用本板同款兩鈕橫排布局即可，不需堆疊，也不需另畫 iPad 板。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "E6pHtG",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "eSiwG",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-307 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "MCbLu",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`QADriver.openEditor()`／`SectionTabBarPushRegressionTests` 相容性：本板未修改 `cmp/Create Entry Button`（`zy3Ps`）元件定義本身，時間軸板內的 instance（本板 `S5QGJd`，複製自 `jIFEN`）也僅被 `Move` 到新的 `Header Actions Group` 容器內、其自身屬性（fill/padding/children/單擊語意）完全未變——XCUITest 慣例以 `accessibilityIdentifier` 或可見文字（「新增回憶」）查找元素，不依賴其父容器路徑或畫面座標，故重新定位不影響既有測試比對邏輯。ios-dev 實作時仍需在真機／模擬器上重跑 `SectionTabBarPushRegressionTests` 確認（本板僅為靜態設計稿，非執行環境，無法在此驗證），若測試因某種未預期原因失敗（例如測試改用座標而非 identifier），視為 harness 債務記入 LS-96，不回頭改本設計。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
