@@ -1,5 +1,5 @@
 {
- "scanned_nodes": 1781,
+ "scanned_nodes": 1788,
  "scan_scope": "boards",
  "scans": {
   "sibling_intersection": {
@@ -1009,7 +1009,8 @@
     "pjrd7",
     "zgwkn",
     "GSXN1",
-    "h5BNyi"
+    "h5BNyi",
+    "SEy9U"
    ],
    "containers": 0,
    "points": 0,
@@ -1050,7 +1051,8 @@
     "pjrd7",
     "zgwkn",
     "GSXN1",
-    "h5BNyi"
+    "h5BNyi",
+    "SEy9U"
    ],
    "flagged": [],
    "document_flagged": [],
@@ -1081,7 +1083,8 @@
     "pjrd7",
     "zgwkn",
     "GSXN1",
-    "h5BNyi"
+    "h5BNyi",
+    "SEy9U"
    ],
    "flagged": [],
    "document_flagged": [],
@@ -1094,7 +1097,7 @@
   "cross_all": false,
   "custom_overlay_re": false
  },
- "scan_note": "snapshot mode（LS-289），dump sha256=e88396d41f896f9e96c490ce332771216be72effd3b846560ab01533f39cbcac；全稿 13646 節點（未展開）改用 pen-snapshot-dump.js 唯讀走訪一次 execute 取得展開快照（rows=21047，1 次 execute 未分批，未觸發 interrupted）。tree_hash 以 scripts/gates/design_tree_hash.py 對已落地 commit 759aafd（head_sha，本輪 .pen 最後一次改動）離線重算——本輪曾嘗試 VR 建議的 1.5KB hash-only snippet 直接在 Pencil execute 內算（含 canon/canonNode/fnv1a64/hex64/addLimbs，includePathGeometry:true），連續三次 InternalError: interrupted（隨機中斷點），改回離線重算路徑；snapshot 與離線雜湊之間無任何寫入。scan_scope=boards，SCAN_BOARDS 涵蓋本輪 21 個新畫面板＋Notes 板共 22 個頂層板（Growth/01-06 六個畫面群的 light/dark/AX3/iPad/錯誤態/action-sheet/刪除確認變體）。R1→R2 修正歷程：初次 scan 抓到 2 筆 row_overflow（06 iPad Chart Card 內 Segmented 硬寫 width:280 超出卡片實際寬度 239；04 AX3 Empty Lead 文字未設 textGrowth 導致單行溢出），修正並重掃後仍剩 1 筆（06 深色版 Segmented 是光版修正前 Copy 出來的殘留硬寫值，同步修正），第三次重掃 row_overflow=0、text_occlusion=0、board_clip=0、corner_anchor mismatch=0，本收據即為該次最終掃描結果。sibling_intersection 208 筆（64 類）全數為①成長曲線 Chart Plot（含 04 骨架版）內部裝飾元素 AABB 刻意重疊或緊鄰（折線端點=資料點、色帶疊格線、月齡刻度與軸標題文字框因內距重疊但字形間仍有間距，逐類已用座標覆核）或②Sheet 版式既有三層絕對定位堆疊（Status Bar 背景/Scrim/Sheet Wrap，沿 LS-152 既有結構）。corner_anchor containers=0 為預期結果——本票畫面無照片沖印品母題，未使用角托元件（同 R1）。",
+ "scan_note": "snapshot mode（LS-289），dump sha256=e88396d41f896f9e96c490ce332771216be72effd3b846560ab01533f39cbcac；全稿 13646 節點（未展開）改用 pen-snapshot-dump.js 唯讀走訪一次 execute 取得展開快照（rows=21047，1 次 execute 未分批，未觸發 interrupted）。tree_hash 以 scripts/gates/design_tree_hash.py 對已落地 commit 759aafd（head_sha，本輪 .pen 最後一次改動）離線重算——本輪曾嘗試 VR 建議的 1.5KB hash-only snippet 直接在 Pencil execute 內算（含 canon/canonNode/fnv1a64/hex64/addLimbs，includePathGeometry:true），連續三次 InternalError: interrupted（隨機中斷點），改回離線重算路徑；snapshot 與離線雜湊之間無任何寫入。scan_scope=boards，SCAN_BOARDS 涵蓋本輪 21 個新畫面板＋Notes 板＋新增 cmp/Segmented 元件定義（SEy9U）共 22 個頂層板。R1→R2 修正歷程：初次 scan 抓到 2 筆 row_overflow（06 iPad Chart Card 內 Segmented 硬寫 width:280 超出卡片實際寬度 239；04 AX3 Empty Lead 文字未設 textGrowth 導致單行溢出），修正並重掃後仍剩 1 筆（06 深色版 Segmented 是光版修正前 Copy 出來的殘留硬寫值，同步修正），第三次重掃row_overflow=0、text_occlusion=0、board_clip=0、corner_anchor mismatch=0，本收據即為該次最終掃描結果（後補 cmp/Segmented board 未改變任何計數）。sibling_intersection 208 筆（64 類）全數為①成長曲線 Chart Plot（含 04 骨架版）內部裝飾元素 AABB 刻意重疊或緊鄰（折線端點=資料點、色帶疊格線、月齡刻度與軸標題文字框因內距重疊但字形間仍有間距，逐類已用座標覆核）或②Sheet 版式既有三層絕對定位堆疊（Status Bar 背景/Scrim/Sheet Wrap，沿 LS-152 既有結構）。corner_anchor containers=0 為預期結果——本票畫面無照片沖印品母題，未使用角托元件（同 R1）。",
  "ticket": "LS-252",
  "round": 2,
  "head_sha": "759aafdcf59ccede463eec94f7e29e4f114d63df"
