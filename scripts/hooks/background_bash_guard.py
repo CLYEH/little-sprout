@@ -84,6 +84,12 @@
 #       `bash scripts/ops/ci-wait.sh <run-id>` 前景分段輪詢。同 (a)，只對 BLOCKED_AGENTS 生效，
 #       orchestrator 自己不受影響（票文範圍明示不把 ci-wait.sh 用在 orchestrator 身上）；與 (b) 共用
 #       同一套遞迴（`$(...)`／反引號／`-c`／`eval` 包一層一樣會被偵測到）。
+#   LS-306 A3（LS-96 池項 45a016f6）：規則 (a) 的 deny 訊息在「被擋下的命令是 `git push`（命令位置，
+#       跳過 `_skip_wrapper_prefix` 吃掉的 env／time／nice／env 前綴）」時換成更可執行的文案——push-gate
+#       常跑 8-12 分被 Bash 工具截斷後系統自動背景化，agent 若又明確帶 `run_in_background:true` 重試，
+#       通用 H-BG(a) 的「改用 for/sleep 輪詢」對 `git push` 沒有意義（git push 沒有輪詢等待的寫法）；
+#       正確修法是前景重跑一次 `git push`，同一個 tree 會被 push-gate 的同 tree 快取（A1）秒過。不是
+#       新增一條擋／放行的規則——deny 本身仍是規則 (a) 原本就會做的事，這裡只換訊息。
 #
 # W0：stdin 空／JSON 壞／頂層非物件／python3 或本檔案本身發生未預期例外 → deny（fail-closed，同
 #   pretool.sh／main_checkout_guard.py 的既有慣例）。
@@ -322,6 +328,28 @@ def _gh_run_watch_command_position(stripped):
     return False
 
 
+def _git_push_command_position(stripped):
+    """LS-306 A3（LS-96 池項 `45a016f6`）：同 `_gh_run_watch_command_position`——比對「git push」在
+    命令位置（跳過 `_skip_wrapper_prefix()` 吃掉的環境變數賦值／`time`／`nice`／`env` 前綴，沿
+    LS-302）。用途不同：規則 (a) 對 `run_in_background:true`＋`identity ∈ BLOCKED_AGENTS` 早就一律
+    deny（見 `main()`）——這支只是在該情形下額外判斷「被擋下的命令是不是 git push」，好給出比通用
+    H-BG(a) 更可執行的訊息（票文範圍 45a016f6：push-gate 逾時被背景化，正確做法是前景重跑一次
+    `git push`，同 tree 會被 A1 的快取秒過）。引號／`$(...)`／反引號不平衡視為不比對，同上。"""
+    try:
+        segments, _cmdsubs = E.tokenize_segments(stripped)
+    except E.Ambiguous:
+        return False
+    want = ("git", "push")
+    for seg in segments:
+        toks = seg["tokens"]
+        start = _skip_wrapper_prefix(toks)
+        if len(toks) - start < 2:
+            continue
+        if all(not toks[start + i][1] and toks[start + i][0] == want[i] for i in range(2)):
+            return True
+    return False
+
+
 def _hit_at_depth(cmd, depth, identity):
     """單一層的 idiom＋keyword 判定（規則 b），遞迴進 `_extract_recurse_payloads` 找到的片段（M1
     修法）；同一層也檢查規則 (c)（`gh run watch` 在命令位置，只對 `identity` ∈ BLOCKED_AGENTS 生
@@ -391,14 +419,27 @@ def main():
     if note:
         sys.stderr.write(f"background-bash-guard：{note}\n")
 
+    command = str(ti.get("command") or "")
+
     if ti.get("run_in_background") is True and identity in BLOCKED_AGENTS:
-        sys.stdout.write(
-            f"H-BG(a)：agent「{identity}」不得以 run_in_background:true 執行 Bash——前景執行並帶 "
-            f"timeout，等待改用 for/sleep 輪詢，見 {COLL_REF}"
-        )
+        # LS-306 A3（LS-96 池項 45a016f6）：同樣是規則 (a) 的 deny，命令是 `git push`（命令位置，含
+        # env／time／nice／env 前綴）時換一句更可執行的訊息——push-gate 常跑 8-12 分被 Bash 工具背景
+        # 化的真實案例，正確做法是前景重跑一次 `git push`（同 tree 會被 A1 的快取秒過），不是泛用的
+        # 「改用 for/sleep 輪詢」（那句對 git push 沒有意義，git push 沒有輪詢等待的寫法）。
+        stripped_for_push, _bad = E.strip_heredocs(command)
+        if _git_push_command_position(stripped_for_push):
+            sys.stdout.write(
+                f"H-BG(a)：agent「{identity}」不得以 run_in_background:true 背景執行 `git push`——"
+                "改前景執行並帶 timeout 600000；逾時被系統背景化就再前景重跑一次 `git push`（同一個 "
+                f"tree 會被 push-gate 快取秒過，LS-306），見 {COLL_REF}"
+            )
+        else:
+            sys.stdout.write(
+                f"H-BG(a)：agent「{identity}」不得以 run_in_background:true 執行 Bash——前景執行並帶 "
+                f"timeout，等待改用 for/sleep 輪詢，見 {COLL_REF}"
+            )
         sys.exit(2)
 
-    command = str(ti.get("command") or "")
     reason = check_command_idiom(command, identity)
     if reason:
         sys.stdout.write(reason)

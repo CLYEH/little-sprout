@@ -155,6 +155,45 @@ expect '②a-對照 Explore run_in_background:true（allow，不在名單）' 0 
 expect '②a-對照 general-purpose run_in_background:true（allow，不在名單）' 0 \
   "$(bash_json_agent '"general-purpose"' 'ls -la' true)"
 
+# LS-306 A3（LS-96 池項 45a016f6）：規則 (a) 對 `git push`（命令位置，含 env／wrapper 前綴）的 deny
+# 訊息換成更可執行的文案（提到「快取秒過」，指向 push-gate A1 的同 tree 快取）——deny 本身不是新規則，
+# 只是同一個 (a) 的訊息分支；六個身分都要各擋一次；非 git push 的一般命令仍走通用 H-BG(a) 訊息。
+expect '②a-push1 ios-dev run_in_background:true 執行 git push（deny）' 2 \
+  "$(bash_json_agent '"ios-dev"' 'git push -u origin HEAD' true)"
+expect '②a-push2 qa run_in_background:true 執行 GH_TOKEN=x git push（env 前綴，deny）' 2 \
+  "$(bash_json_agent '"qa"' 'GH_TOKEN=x git push -u origin HEAD' true)"
+expect '②a-push3 merge-reviewer run_in_background:true 執行 time git push（wrapper 前綴，deny）' 2 \
+  "$(bash_json_agent '"merge-reviewer"' 'time git push -u origin HEAD' true)"
+expect '②a-push4 dead-code-sweeper run_in_background:true 執行 cd x && git push（分隔符後命令位置，deny）' 2 \
+  "$(bash_json_agent '"dead-code-sweeper"' 'cd x && git push -u origin HEAD' true)"
+# LS-306 B1／B2：ui-designer／visual-reviewer 一樣在 BLOCKED_AGENTS 名單內（自 LS-215 起就是——B2
+# 這裡是補一組正樣本＋負樣本佐證，不是新增身分；ui-designer 用 git-push 專屬訊息，visual-reviewer 用
+# 非 git-push 的一般命令對照通用訊息，兩者都要 deny）
+expect '②a-push5 ui-designer run_in_background:true 執行 git push（deny）' 2 \
+  "$(bash_json_agent '"ui-designer"' 'git push -u origin HEAD' true)"
+expect '②a-push6 visual-reviewer run_in_background:true 執行 git push（deny）' 2 \
+  "$(bash_json_agent '"visual-reviewer"' 'git push -u origin HEAD' true)"
+out_push1=$(printf '%s' "$(bash_json_agent '"ios-dev"' 'git push -u origin HEAD' true)" | bash "$guard" 2>/dev/null)
+if printf '%s' "$out_push1" | grep -qF '快取秒過'; then
+  ok '②a-push-訊息 git push 背景化的 deny 訊息含「快取秒過」提示（比通用 H-BG(a) 更可執行）'
+else
+  bad "②a-push-訊息 應含「快取秒過」提示（實得：${out_push1}）"
+fi
+# 對照：非 git push 的一般命令仍走通用 H-BG(a) 訊息（不含「快取秒過」）——不是所有 (a) 的訊息都被
+# 改寫成 push 專屬文案，只有真的是 git push 才換
+out_push_ctrl=$(printf '%s' "$(bash_json_agent '"visual-reviewer"' 'sleep 60' true)" | bash "$guard" 2>/dev/null)
+if printf '%s' "$out_push_ctrl" | grep -qF '快取秒過'; then
+  bad "②a-push-對照 非 git push 命令不應含「快取秒過」提示（實得：${out_push_ctrl}）"
+elif printf '%s' "$out_push_ctrl" | grep -qF 'H-BG(a)'; then
+  ok '②a-push-對照 非 git push 命令（sleep 60）仍走通用 H-BG(a) 訊息，不含 push 專屬提示'
+else
+  bad "②a-push-對照 應含通用 H-BG(a) 訊息（實得：${out_push_ctrl}）"
+fi
+# 主 session（無 agent_type）：即使背景 git push 也放行——規則 (a) 只擋 BLOCKED_AGENTS，這條與身分
+# 判斷無關，git push 專屬訊息判斷同樣不繞過身分檢查
+expect '②a-push-對照2 主 session 背景 git push（allow，不在名單）' 0 \
+  "$(bash_json_rb 'git push -u origin HEAD' true)"
+
 # (b) 命令文字「背景化再等」慣用形狀（四種）——與身分無關，這裡用「無 agent_type」代表任何呼叫者
 # 皆擋，且各搭配一個 KEYWORD_RE 字面
 expect '②b1 nohup … & ＋ run.sh（deny）' 2 \
@@ -562,6 +601,36 @@ else
   fi
 fi
 rm -rf "$mut7"
+
+# ============================================================
+# ⑫ LS-306 A3 mutation：讓 `_git_push_command_position` 恆為 False（呼叫點改 `if False:`）→
+#    ②a-push1 的訊息退回通用 H-BG(a)（不含「快取秒過」）；deny 本身不受影響（依然 exit 2）——因為
+#    規則 (a) 對 run_in_background:true＋BLOCKED_AGENTS 一律 deny，這裡只驗「快取秒過」這個更具體的
+#    提示確由 git push 偵測造成，不是巧合都印同一句。
+# ============================================================
+mut8=$(mktemp -d)
+cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut8/"
+anchor8='if _git_push_command_position(stripped_for_push):'
+if ! grep -qF "$anchor8" "$engine_py"; then
+  bad "⑫ mutation 錨點（git push 專屬訊息判斷）不在 background_bash_guard.py，mutation 測試無法成立：${anchor8}"
+else
+  sed "s/$(printf '%s' "$anchor8" | sed 's/[.[\*^$]/\\&/g')/if False:/" "$engine_py" > "$mut8/background_bash_guard.py"
+  if ! diff -q "$engine_py" "$mut8/background_bash_guard.py" >/dev/null 2>&1; then
+    out=$(printf '%s' "$(bash_json_agent '"ios-dev"' 'git push -u origin HEAD' true)" | "$bash_bin" "$mut8/background-bash-guard.sh" 2>/dev/null); got=$?
+    ok12=1
+    [ "$got" -eq 2 ] || ok12=0
+    case "$out" in *'快取秒過'*) ok12=0 ;; esac
+    case "$out" in *'H-BG(a)'*) ;; *) ok12=0 ;; esac
+    if [ "$ok12" -eq 1 ]; then
+      ok '⑫ mutant：拿掉 git push 專屬訊息判斷後，②a-push1 退回通用 H-BG(a) 訊息（deny 仍在，訊息改變證明判斷確實有效）'
+    else
+      bad "⑫ mutant 應仍 deny 但訊息退回通用（實得 exit ${got}：${out}）"
+    fi
+  else
+    bad '⑫ mutant 與原始檔完全相同（sed 未命中，mutation 測試本身無效）'
+  fi
+fi
+rm -rf "$mut8"
 
 rm -rf "$work"
 trap - EXIT
