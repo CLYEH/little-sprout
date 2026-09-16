@@ -1004,6 +1004,63 @@ if [ -n "$pen_wt_ticket" ]; then
 fi
 # LS209-PEN-WRONG-END
 
+# ---- 用量（LS-311；使用者 2026-09-16 指示：讀 statusline 落地的 ~/.claude/usage-cache.json（rate_limits.
+#      seven_day／five_hour，由 scripts/ops/usage-cache-snippet.sh／statusline-command.sh 原子寫入）——週用量
+#      ≥ PATROL_USAGE_STOP（預設 99）→ 印 99 級行，指示 orchestrator 停下所有工作＋寫交接；≥ PATROL_USAGE_WARN
+#      （預設 97）→ 印 97 級行，指示不派新任務、在飛跑完只記票（usage-budget-winddown 步驟）。**未達門檻
+#      brief 與人類全文模式一行都不印**（使用者明示零訊號，避免撞用量上限被強制中斷、在飛工作全損）；--json
+#      一律帶 usage 物件（seven_day／five_hour／resets_at／written_at／stale）供自測。快取缺／空／不可解析／
+#      written_at 早於 PATROL_USAGE_MAX_AGE_MIN（預設 120）分鐘＝探針壞掉，是這段唯一允許的非門檻訊號（安全
+#      裝置失效必須被看見，同本檔其餘「探針失敗仍要標」的既有慣例）。five_hour 只進 --json，不觸發門檻（使用者
+#      要的是週用量；是否納入列 informational 交 orchestrator）。不依賴 jq（沿本檔既有慣例，line 74）：
+#      statusline 端寫入是 jq -c 的緊湊格式，用 grep -oE 對命名子物件抓 used_percentage／resets_at，抓不到
+#      一律視為「不可解析」，不強求完整 JSON 語法驗證。PATROL_USAGE_FILE 可換路徑（自測用）。
+usage_file="${PATROL_USAGE_FILE:-$HOME/.claude/usage-cache.json}"
+usage_warn="${PATROL_USAGE_WARN:-97}"
+usage_stop="${PATROL_USAGE_STOP:-99}"
+usage_max_age="${PATROL_USAGE_MAX_AGE_MIN:-120}"
+usage_seven=; usage_seven_resets=; usage_five=; usage_five_resets=; usage_written_at=; usage_stale=false; usage_reason=
+usage_extract() {  # $1=json $2=父鍵 $3=欄位 -> 數字或空（jq -c 緊湊格式，先框住命名子物件再抓值，避免同名欄位跨物件誤抓）
+  local obj
+  obj=$(printf '%s' "$1" | grep -oE "\"$2\":\{[^}]*\}" | head -1)
+  [ -n "$obj" ] || return 0
+  printf '%s' "$obj" | grep -oE "\"$3\":-?[0-9.]+" | head -1 | sed -E 's/.*://'
+}
+usage_fmt_time() {  # epoch→本地時間；macOS -r 吃 epoch、GNU 走 -d @epoch（同 supabase-lock.sh fmt_hm 既有慣例）
+  [ -n "${1:-}" ] || { printf '?'; return; }
+  date -r "$1" '+%m-%d %H:%M' 2>/dev/null || date -d "@$1" '+%m-%d %H:%M' 2>/dev/null || printf '%s' "$1"
+}
+usage_json_num() { case "${1:-}" in ''|*[!0-9.eE+-]*) printf 'null' ;; *) printf '%s' "$1" ;; esac; }
+if [ ! -f "$usage_file" ]; then
+  usage_reason="快取檔不存在：${usage_file}"
+elif [ ! -s "$usage_file" ]; then
+  usage_reason="快取檔為空：${usage_file}"
+else
+  usage_json=$(cat "$usage_file" 2>/dev/null)
+  usage_written_at=$(printf '%s' "$usage_json" | grep -oE '"written_at":[0-9]+' | head -1 | sed -E 's/.*://')
+  usage_seven=$(usage_extract "$usage_json" seven_day used_percentage)
+  usage_seven_resets=$(usage_extract "$usage_json" seven_day resets_at)
+  usage_five=$(usage_extract "$usage_json" five_hour used_percentage)
+  usage_five_resets=$(usage_extract "$usage_json" five_hour resets_at)
+  if [ -z "$usage_written_at" ] || [ -z "$usage_seven" ]; then
+    usage_reason="JSON 不可解析或必要欄位缺失：${usage_file}"
+  else
+    usage_age_min=$(( (now - usage_written_at) / 60 ))
+    if [ "$usage_age_min" -gt "$usage_max_age" ]; then
+      usage_stale=true
+      usage_reason="快取已 ${usage_age_min} 分鐘未更新（上限 ${usage_max_age} 分）：${usage_file}"
+    fi
+  fi
+fi
+USAGE_LINE=
+if [ -n "$usage_reason" ]; then
+  USAGE_LINE="⚠ [用量] 探針無資料（${usage_reason}）→ 確認 ~/.claude/statusline-command.sh 已掛快取寫入段（docs/COLLABORATION.md §4-b）"
+elif awk -v v="$usage_seven" -v t="$usage_stop" 'BEGIN{exit !(v>=t)}' </dev/null; then
+  USAGE_LINE="⚠ [用量] 週用量 ${usage_seven}%（重置 $(usage_fmt_time "$usage_seven_resets")）→ 停下所有工作：CronDelete 巡檢、不派任何 agent、在飛只等結果記票、寫交接 session-resume-<日期>.md（usage-budget-winddown 步驟 1–5）"
+elif awk -v v="$usage_seven" -v t="$usage_warn" 'BEGIN{exit !(v>=t)}' </dev/null; then
+  USAGE_LINE="⚠ [用量] 週用量 ${usage_seven}%（重置 $(usage_fmt_time "$usage_seven_resets")）→ 不派新任務；在飛 agent 跑完只記票（usage-budget-winddown 步驟 3）"
+fi
+
 # ---- 專屬模擬器（LS-83／LS-187）：detect-simulator.sh 建的 <票號>-<機型無空白> 用完不刪，由這段事後抓。
 #      第一層（LS-187；使用者 2026-09-05 指出 4 台 Done 票殘機——Done 後 7 天內、皆 Shutdown——巡檢 20+ 輪沒抓）：每台
 #      LS-<n>-* 看「票」——該票 worktree 已不在磁碟（git worktree list 沒有任何一筆「目錄存在且 basename 或分支整字含
@@ -1320,14 +1377,16 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"supabase_containers":%s,"supabase_start_skew_minutes":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"repeat_failures":[%s],"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"supabase_containers":%s,"supabase_start_skew_minutes":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"usage":{"seven_day":%s,"five_hour":%s,"resets_at":%s,"written_at":%s,"stale":%s},"repeat_failures":[%s],"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
       "$(json_num "$dev_main")" "$(json_num "$test_main")" "$(json_num "$test_dev")" "$(json_num "$dev_test")" "$(json_num "$main_ahead_m")" "$(json_str "$drift_flag")" \
       "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$(json_num "$supa_containers")" "$(json_num "$supa_skew_m")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$(json_num "$lock_waiters")" "$(json_num "$lock_waiters_max_min")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
       "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
-      "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" "$J_REDS" "$J_FLAGS"
+      "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" \
+      "$(usage_json_num "$usage_seven")" "$(usage_json_num "$usage_five")" "$(usage_json_num "$usage_seven_resets")" "$(usage_json_num "$usage_written_at")" "$([ "$usage_stale" = true ] && printf true || printf false)" \
+      "$J_REDS" "$J_FLAGS"
     ;;
   brief)
     sim_rt_note=; [ "$sim_rt_mismatch" -gt 0 ] && sim_rt_note="（釘住 iOS ${sim_pinned_os}，提示不擋）"
@@ -1337,11 +1396,13 @@ case "$MODE" in
     [ -n "$lock_queue_flag" ] && echo "Supabase lock：${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
     [ "$pencil_ran" -eq 1 ] && printf '%s\n' "$PENCIL_LINE"
     [ -n "$PEN_WRONG_LINE" ] && printf '%s\n' "$PEN_WRONG_LINE"
+    [ -n "$USAGE_LINE" ] && printf '%s\n' "$USAGE_LINE"
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
     ;;
   *)
     echo "== 巡檢 ${stamp}（stale ≥${STALE}m；root ${ROOT}）"
     [ -n "$fetch_warn" ] && echo "  ${fetch_warn}"
+    [ -n "$USAGE_LINE" ] && echo "  ${USAGE_LINE}"
     echo "== PR（open）"
     # LS-267 R2 M1：`--no-pr` 是刻意略過（不標）；gh 未安裝／gh 失敗是退化——PR 半段整段沒巡，帶 ⚠ 才過得了 §4-b 過濾
     if [ -n "$pr_skip" ]; then
