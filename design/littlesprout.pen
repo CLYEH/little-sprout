@@ -208928,6 +208928,32 @@
                   "fontWeight": "700"
                 },
                 {
+                  "id": "VcvfI",
+                  "type": "ref",
+                  "ref": "o8zYlX",
+                  "name": "Import Entry Button",
+                  "descendants": {
+                    "EJMa0": {
+                      "width": 32,
+                      "height": 61.33333333333333
+                    },
+                    "v4CTZT": {
+                      "width": 32,
+                      "height": 26.666666666666664
+                    },
+                    "H1Be6h": {
+                      "width": 32,
+                      "height": 8,
+                      "y": 36
+                    },
+                    "zwQeX": {
+                      "width": 32,
+                      "height": 8,
+                      "y": 53.33333333333333
+                    }
+                  }
+                },
+                {
                   "id": "iXHfZ",
                   "type": "ref",
                   "ref": "zy3Ps",
@@ -208936,32 +208962,6 @@
                     "G0L1jH": {
                       "width": 32,
                       "height": 32
-                    }
-                  }
-                },
-                {
-                  "id": "VcvfI",
-                  "type": "ref",
-                  "ref": "o8zYlX",
-                  "name": "Import Entry Button",
-                  "descendants": {
-                    "EJMa0": {
-                      "width": 32,
-                      "height": 58.666666666666664
-                    },
-                    "v4CTZT": {
-                      "width": 32,
-                      "height": 26.666666666666664
-                    },
-                    "H1Be6h": {
-                      "width": 32,
-                      "height": 5.333333333333333,
-                      "y": 37.33333333333333
-                    },
-                    "zwQeX": {
-                      "width": 32,
-                      "height": 5.333333333333333,
-                      "y": 53.33333333333333
                     }
                   }
                 }
@@ -209300,7 +209300,7 @@
           "id": "EJMa0",
           "name": "Import Mark",
           "width": 12,
-          "height": 22,
+          "height": 23,
           "layout": "none",
           "children": [
             {
@@ -209321,11 +209321,11 @@
               "id": "H1Be6h",
               "layoutPosition": "absolute",
               "x": 0,
-              "y": 14,
+              "y": 13.5,
               "name": "Mark Strip 1",
               "fill": "$print-paper",
               "width": 12,
-              "height": 2,
+              "height": 3,
               "stroke": "$paper-shadow",
               "strokeWidth": 1
             },
@@ -209338,7 +209338,7 @@
               "name": "Mark Strip 2",
               "fill": "$print-paper",
               "width": 12,
-              "height": 2,
+              "height": 3,
               "stroke": "$paper-shadow",
               "strokeWidth": 1
             }
