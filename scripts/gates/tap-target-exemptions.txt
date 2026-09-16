@@ -27,3 +27,4 @@ SettingsRowView：純顯示元件（導覽由外層 SettingsView 的 NavigationL
 StorageUsageView：預設（載入中／有值）兩態純顯示無互動元件；失敗態多一顆「重試」鈕（已給 minHeight 44）但 `PreviewFamilyAPIClient.fetchQuota` 恆成功、harness 目前造不出失敗態讓 tap-target-check 量到它，追蹤於 LS-96（merge-review R1 m3），待有可控 stub 後移除本行
 BlockListView：LS-23 尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估
 ReportInboxView：LS-23 尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估
+GrowthChartCardView：導覽由外層 ChildGrowthDetailView 負責承載（已註冊 TapTargetGateScreenName.growthDetailPopulated／.growthDetailEmpty，量測會涵蓋卡內 Segmented／資料點點擊區），不另掛獨立 harness case，追蹤於 LS-96

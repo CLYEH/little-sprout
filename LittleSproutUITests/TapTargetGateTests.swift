@@ -223,6 +223,28 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.commentsSheet)
     }
 
+    /// LS-312：01 寶貝詳情・成長區塊（populated）——最新值卡三格／曲線卡 Segmented／資料點／
+    /// 「新增量測」／「查看全部紀錄」。
+    func testChildGrowthDetailViewPopulated() {
+        assertAllTappablesMeetMinimum(.growthDetailPopulated)
+    }
+
+    /// LS-312：04 空狀態——空狀態下「新增量測」鈕仍需 ≥44pt（品牌硬約束：不得 `.disabled(`）。
+    func testChildGrowthDetailViewEmpty() {
+        assertAllTappablesMeetMinimum(.growthDetailEmpty)
+    }
+
+    /// LS-312：「新增量測」空殼承接畫面——「取消」鈕。
+    func testGrowthAddMeasurementPlaceholderView() {
+        assertAllTappablesMeetMinimum(.growthAddMeasurementPlaceholder)
+    }
+
+    /// LS-312：「查看全部紀錄」空殼承接畫面——純顯示，斷言 sentinel 渲染即可（無互動元件，
+    /// 但仍走同一套 tap-target 量測確保未來加東西時機械覆蓋不會漏掉）。
+    func testGrowthRecordsListPlaceholderView() {
+        assertAllTappablesMeetMinimum(.growthRecordsListPlaceholder)
+    }
+
     /// 任一元件 <44pt 就用 `XCTFail` 記一筆——逐一累計，不是遇到第一個違規就提前結束，讓
     /// `tap-target-check.sh` 能一次點名所有違規者（LS-17 QA1 就是同一畫面上不只一顆違規）。
     /// merge-review R1 B1：先斷言畫面真的渲染出來，harness 靜默失效不會被誤判成「這個畫面

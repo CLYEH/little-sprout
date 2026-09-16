@@ -253,6 +253,21 @@ enum TapTargetGateScreenName: String {
     // `.disabled`。
     case commentsSheetOwnerNotReady = "CommentsSheetViewOwnerNotReady"
 
+    // LS-312：寶貝詳情・成長區塊——populated（01，示範資料集 6 筆量測）就有代表性：最新值卡
+    // 三格／Segmented／「新增量測」／「查看全部紀錄」四類可點元件都不需要真的登入即可渲染
+    // （`GrowthStore.previewSeededWithDemoRecords()`，同 `createChild` 等既有先例）。
+    case growthDetailPopulated = "ChildGrowthDetailView"
+    // LS-312：04 空狀態變體（`GrowthStore.preview()` 預設空陣列）——同 `.settingsMemberRole`
+    // 等既有變體 case 的先例，不是獨立檔案，不需要另外具名排除；量測「新增量測」鈕在空狀態下
+    // 仍然可點（品牌硬約束：不得 `.disabled(`）。
+    case growthDetailEmpty = "ChildGrowthDetailViewEmpty"
+    // LS-312：「新增量測」sheet 空殼承接畫面——初始態即有代表性（「取消」鈕），同 `createChild`
+    // 等既有先例。
+    case growthAddMeasurementPlaceholder = "GrowthAddMeasurementPlaceholderView"
+    // LS-312：「查看全部紀錄」空殼承接畫面——純顯示，無互動元件；量測用途同其餘 placeholder
+    // 系列 case，主要借用「launch environment 指定畫面」通道跑 sentinel／截圖對稿。
+    case growthRecordsListPlaceholder = "GrowthRecordsListPlaceholderView"
+
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
     case selfTestGood = "SelfTestGood"
@@ -354,6 +369,13 @@ enum TapTargetGateScreenName: String {
         case .commentsSheetNetworkError: return .staticText("留言")
         case .commentsSheetSendTargetGone: return .staticText("留言")
         case .commentsSheetOwnerNotReady: return .staticText("留言")
+        // Identity Header 的孩子名字——示範資料集固定「陳小安」，一開畫面就渲染，不依賴
+        // `growthStore.refresh()`（`GrowthAPIClient` 是假的，但 identity 來自 seed，不用等
+        // 網路）。
+        case .growthDetailPopulated: return .staticText("陳小安")
+        case .growthDetailEmpty: return .staticText("陳小軒")
+        case .growthAddMeasurementPlaceholder: return .button("取消")
+        case .growthRecordsListPlaceholder: return .staticText("全部記錄")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
