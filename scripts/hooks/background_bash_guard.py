@@ -131,6 +131,10 @@ KEYWORD_RE = re.compile(r"git\s+push|xcodebuild|push-gate|\.test\.sh|run\.sh|sup
 # `gh`／`run`／`watch` 三個 unquoted token），只有某個分段（`;`／`\n`／`&`／`&&`／`|`／`||` 切開的
 # 命令位置）的**前三個 token 逐一是未加引號**的 `gh`／`run`／`watch` 字面才算命中——這天然就是
 # 「只在命令位置判定」，不需要另外寫一套「行首或分隔符之後」的位置判斷。
+# R3（LS-302，LS-96 池項 `4881522d`／merge-review R2 `41f46b34` i1）：R2 版「命令位置」只認分段的
+# 第一個 token——`GH_TOKEN=x gh run watch`／`time gh run watch` 這類最常見的前綴形狀因此繞過。
+# `_skip_wrapper_prefix()` 在比對前三個 token 之前，先跳過分段開頭一串未加引號的環境變數賦值
+# （`FOO=bar`）與 `time`／`nice`／`env` 包裝字面。
 NOHUP_BG_RE = re.compile(r"\bnohup\b[^\n;&|]*&(?!&)")
 SUBSHELL_BG_RE = re.compile(r"\([^()\n]*\)\s*&(?!&)")
 BARE_AMP_RE = re.compile(r"(?<![&>])&(?!&|>)")
@@ -272,12 +276,35 @@ def _extract_recurse_payloads(stripped):
     return payloads
 
 
+ENV_ASSIGN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")  # 未加引號的 `FOO=bar` 賦值形狀
+WRAPPER_WORDS = ("time", "nice", "env")
+
+
+def _skip_wrapper_prefix(toks):
+    """LS-302（LS-96 池項 `4881522d`，源自 LS-299 merge-review R2 i1）：命令位置判定跳過分段開頭一串
+    未加引號的環境變數賦值前綴（`FOO=bar`）與 `time`／`nice`／`env` 包裝字面（`GH_TOKEN=x gh run watch`
+    ／`time gh run watch`／`env FOO=bar gh run watch` 這類前綴形狀先前只認第一個 token，一律不命中）；
+    回傳跳過前綴後、真正命令開始的 token 索引。任一前綴 token 本身帶引號就停止跳過（引號是真的字面
+    值，不是位置修飾語）。"""
+    i, n = 0, len(toks)
+    while i < n:
+        text, had_quotes = toks[i]
+        if had_quotes:
+            break
+        if ENV_ASSIGN_RE.match(text) or text in WRAPPER_WORDS:
+            i += 1
+            continue
+        break
+    return i
+
+
 def _gh_run_watch_command_position(stripped):
     """R2（merge-review R1 B2，major，已修）：規則 (c) 只在「命令位置」（行首、或 `;`／`&&`／`||`／
-    `|` 之後）比對 `gh run watch`——直接重用 `tokenize_segments` 的分段＋斷詞（不重寫一套位置判斷）。
-    引號內文本身就是單一 token（不會被拆成獨立的 `gh`／`run`／`watch` 三個 unquoted token），所以
+    `|` 之後，跳過 `_skip_wrapper_prefix()` 吃掉的環境變數賦值／`time`／`nice`／`env` 前綴，R3 已修）
+    比對 `gh run watch`——直接重用 `tokenize_segments` 的分段＋斷詞（不重寫一套位置判斷）。引號內文
+    本身就是單一 token（不會被拆成獨立的 `gh`／`run`／`watch` 三個 unquoted token），所以
     `echo "…gh run watch"`／`grep "gh run watch" …`／`git commit -m "…gh run watch…"` 這類把整句包
-    進引號的寫法，天然不會命中；只有某個分段的**前三個 token 逐一是未加引號**的 `gh`／`run`／`watch`
+    進引號的寫法，天然不會命中；只有跳過前綴後**接續三個 token 逐一是未加引號**的 `gh`／`run`／`watch`
     字面才算數。引號／`$(...)`／反引號不平衡（`Ambiguous`）視為不比對——這支是文字慣用形狀的啟發式
     比對，不是安全邊界，遮蔽失敗頂多退回不命中，不像 H1-H3 那樣要 fail-closed 到繞路都擋住。"""
     try:
@@ -287,9 +314,10 @@ def _gh_run_watch_command_position(stripped):
     want = ("gh", "run", "watch")
     for seg in segments:
         toks = seg["tokens"]
-        if len(toks) < 3:
+        start = _skip_wrapper_prefix(toks)
+        if len(toks) - start < 3:
             continue
-        if all(not toks[i][1] and toks[i][0] == want[i] for i in range(3)):
+        if all(not toks[start + i][1] and toks[start + i][0] == want[i] for i in range(3)):
             return True
     return False
 

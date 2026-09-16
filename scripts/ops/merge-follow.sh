@@ -28,9 +28,9 @@
 #      `(feature|fix|hotfix)/LS-<n>-<slug>` 工作分支，這一步固定 exit 2「非工作分支」，**沿現況不
 #      擋**（只記一行供稽核，見 COLLABORATION §2／LS-291 討論；票文明確要求呼叫但不擋）；對這支
 #      back-merge PR 重複步驟 1–3（desc 用 `promote: no content diff（back-merge main→development，
-#      #<原 pr> <原 head sha7>[ <rid 前 8 碼>]）`，沿 `merge-chain.sample.sh`／`bm-follow.sample.sh`
-#      實際跑過的措辭，與 COLLABORATION §2 表格「back-merge:」前綴的書面措辭不同——以兩支已實際執行過
-#      的樣板為準）。
+#      #<原 pr> <原 head sha7>[ <rid 前 8 碼>]）`，沿取代的 scratchpad 樣板（LS-282／285／289）
+#      實際跑過的措辭，與 COLLABORATION §2 表格「back-merge:」前綴的書面措辭不同——以實際執行過
+#      的措辭為準）。
 #   5. `--then-promote <from> <to>`：最後 `exec bash scripts/ops/promote-follow.sh <from> <to>`（用
 #      `exec`：這是本腳本最後一步，直接把 process 換成它，退出碼與輸出都是它的）。
 #
@@ -249,7 +249,7 @@ tip=$(resolve_merge_tip "$base" "$pr") || { print_resume_hint; exit 6; }
 if [ -n "$note" ]; then
   desc=$note
 elif [ -n "$rid" ]; then
-  # 第二親＝這次 merge commit 的第二個 parent＝被併入的 head（沿 merge-follow.sample.sh 措辭）
+  # 第二親＝這次 merge commit 的第二個 parent＝被併入的 head（沿取代的 scratchpad 樣板措辭，LS-282／285／289）
   p2sha7=$(git log -1 --format='%P' "$tip" 2>/dev/null | awk '{print $2}' | cut -c1-7)
   desc="promote: no content diff（#${pr} ${p2sha7:-${orig_head_sha7}} ${rid:0:8}）"
 else
