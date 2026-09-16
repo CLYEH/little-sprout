@@ -199639,7 +199639,7 @@
                               "type": "ref",
                               "ref": "SEy9U",
                               "name": "Segmented",
-                              "width": 280
+                              "width": "fill_container"
                             },
                             {
                               "type": "frame",
