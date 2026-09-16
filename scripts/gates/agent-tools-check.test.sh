@@ -22,8 +22,9 @@ checker="${root}/scripts/gates/agent-tools-check.sh"
 fail=0
 n=0
 ok() { echo "✓ $1"; n=$((n+1)); }
-# has <文字> <子字串>：here-string 比對，避免 `printf | grep -q` 在 pipefail 下的 SIGPIPE 誤判（LS-295）。
-has() { grep -qF -- "$2" <<<"$1"; }
+# has <文字> <子字串>：LS-301 起改用共用庫（scripts/gates/lib/selftest-helpers.sh），語意不變
+# （here-string 比對，避免 `printf | grep -q` 在 pipefail 下的 SIGPIPE 誤判，LS-295）。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT

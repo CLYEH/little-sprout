@@ -19,6 +19,9 @@ script="${root}/scripts/gates/pipefail-grep-q-check.sh"
 fail=0; n=0
 ok() { echo "✓ $1"; n=$((n + 1)); }
 bad() { echo "✗ $1" >&2; fail=1; }
+# LS-301：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，語意不變（本檔早就用
+# here-string，這裡是跟共用庫一致、不再各自維護一份）。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -27,13 +30,13 @@ expect() {   # expect <期望 exit> <名稱> <實得 exit> <輸出> [必含…]
   local want=$1 name=$2 got=$3 out=$4; shift 4
   local good=1 must
   [ "$got" -eq "$want" ] || good=0
-  for must in "$@"; do grep -qF -- "$must" <<<"$out" || good=0; done
+  for must in "$@"; do has "$out" "$must" || good=0; done
   if [ "$good" -eq 1 ]; then ok "$name"; else
     echo "✗ ${name}（期望 exit ${want}，實得 ${got}）" >&2; sed 's/^/    /' <<<"$out" >&2; fail=1
   fi
 }
 refute() {   # refute <名稱> <輸出> <不該出現的字串>
-  if grep -qF -- "$3" <<<"$2"; then bad "${1}（輸出不該含「${3}」）"; sed 's/^/    /' <<<"$2" >&2; else ok "$1"; fi
+  if has "$2" "$3"; then bad "${1}（輸出不該含「${3}」）"; sed 's/^/    /' <<<"$2" >&2; else ok "$1"; fi
 }
 
 # ---- 夾具 ----

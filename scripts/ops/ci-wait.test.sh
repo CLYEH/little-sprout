@@ -82,18 +82,14 @@ chmod +x "$bin/date"
 export PATH="$bin:$PATH"
 export GH_LOG="$work/gh.log" GH_STATE_DIR="$work/state" DATE_STATE_DIR="$work/state"
 
-# has <label> <text> <substr>：斷言 <text> 含 <substr>（here-string 比對，避免 pipefail 下的 SIGPIPE 誤判，
-# LS-270）；找到即計入 ok()，找不到印 ✗＋原文並 fail=1——R2（merge-review R1 自我複查）：舊版只回傳布林
-# 值、呼叫端沒接判斷式，8 處斷言全是靜默無效的裝飾，改成這個版本才會真的讓測試紅。
-has() {
-  if grep -qF -- "$3" <<<"$2"; then
-    ok "$1"
-  else
-    echo "✗ $1（應含「$3」，實得）" >&2
-    printf '%s\n' "$2" | sed 's/^/    /' >&2
-    fail=1
-  fi
-}
+# expect_has <text> <substr> <label>：LS-301 起改用共用庫（scripts/gates/lib/selftest-helpers.sh）
+# 的 expect_has（here-string 比對，避免 pipefail 下的 SIGPIPE 誤判，LS-270／LS-295）；語意不變——找到
+# 即計入 ok()，找不到印 ✗＋原文並把本檔的 fail 旗標設 1（R2 merge-review R1 自我複查：舊版只回傳布林
+# 值、呼叫端沒接判斷式，8 處斷言全是靜默無效的裝飾，改成這個版本才會真的讓測試紅）。本檔已有 fail=0
+# 的旗標變數，這裡補一個同名的 fail() 函式（bash 函式與變數不同命名空間，`fail=1` 賦值與 `fail "msg"`
+# 呼叫不衝突）讓共用庫的 expect_has 失敗時仍會設到這個旗標。
+fail() { echo "✗ $1" >&2; fail=1; }
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 reset_all() {
   : > "$GH_LOG"; rm -rf "$GH_STATE_DIR"; mkdir -p "$GH_STATE_DIR"
   unset GH_FAIL_CALLS GH_RUN_JSON_SEQUENCE DATE_SEQUENCE
@@ -117,30 +113,30 @@ reset_all
 s=$(fx s-success '{"status":"completed","conclusion":"success","jobs":[{"name":"rules","status":"completed","conclusion":"success","steps":[]},{"name":"lint","status":"completed","conclusion":"success","steps":[]}]}')
 out="$(GH_RUN_JSON_SEQUENCE="$s" bash "$script" 2001 --interval 0 2>&1)"; rc=$?
 if [ "$rc" -eq 0 ]; then ok "② run success → exit 0"; else echo "✗ ② run success 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
-has '② 印 conclusion=success' "$out" 'conclusion=success'
-has '② 印各 job 結論' "$out" 'job rules：success'
+expect_has "$out" 'conclusion=success' '② 印 conclusion=success'
+expect_has "$out" 'job rules：success' '② 印各 job 結論'
 
 # ---- ③ run 完成 failure → exit 1，印 conclusion=failure ----
 reset_all
 f=$(fx f-failure '{"status":"completed","conclusion":"failure","jobs":[{"name":"rules","status":"completed","conclusion":"failure","steps":[]}]}')
 out="$(GH_RUN_JSON_SEQUENCE="$f" bash "$script" 2002 --interval 0 2>&1)"; rc=$?
 if [ "$rc" -eq 1 ]; then ok "③ run failure → exit 1"; else echo "✗ ③ run failure 應 exit 1（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
-has '③ 印 conclusion=failure' "$out" 'conclusion=failure'
+expect_has "$out" 'conclusion=failure' '③ 印 conclusion=failure'
 
 # ---- ④ 到 --max-minutes 仍在跑 → exit 3，印「仍在跑」與再跑指令 ----
 reset_all
 r=$(fx r-running '{"status":"in_progress","conclusion":null,"jobs":[{"name":"rules","status":"in_progress","conclusion":null,"steps":[]}]}')
 out="$(GH_RUN_JSON_SEQUENCE="$r" bash "$script" 2003 --max-minutes 0 --interval 0 2>&1)"; rc=$?
 if [ "$rc" -eq 3 ]; then ok "④ 到 max-minutes 仍在跑 → exit 3"; else echo "✗ ④ 應 exit 3（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
-has '④ 印「仍在跑」' "$out" '仍在跑'
-has '④ 印再跑指令' "$out" 'bash scripts/ops/ci-wait.sh 2003'
+expect_has "$out" '仍在跑' '④ 印「仍在跑」'
+expect_has "$out" 'bash scripts/ops/ci-wait.sh 2003' '④ 印再跑指令'
 
 # ---- ⑤ --job 只看該 job：目標 job 已完成 success，其餘 job／整個 run 仍 in_progress → 仍應 exit 0 ----
 reset_all
 j=$(fx j-job-done '{"status":"in_progress","conclusion":null,"jobs":[{"name":"rules","status":"completed","conclusion":"success","steps":[]},{"name":"ci","status":"in_progress","conclusion":null,"steps":[]}]}')
 out="$(GH_RUN_JSON_SEQUENCE="$j" bash "$script" 2004 --job rules --interval 0 2>&1)"; rc=$?
 if [ "$rc" -eq 0 ]; then ok "⑤ --job 目標 job 已完成、其餘仍在跑 → exit 0（不受拖累）"; else echo "✗ ⑤ 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
-has '⑤ 印目標 job 的結論' "$out" 'job「rules」conclusion=success'
+expect_has "$out" 'job「rules」conclusion=success' '⑤ 印目標 job 的結論'
 
 # ---- ⑤b --job 指定不存在的 job 名 → 視為仍在跑，到 max-minutes exit 3（不誤判成完成）----
 reset_all
@@ -151,7 +147,7 @@ if [ "$rc" -eq 3 ]; then ok "⑤b --job 指定不存在的 job → 視為仍在�
 reset_all
 out="$(GH_FAIL_CALLS="1,2,3" GH_RUN_JSON_SEQUENCE="$s" bash "$script" 2006 --interval 0 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ]; then ok "⑥ gh 連續失敗 3 次 → exit 2"; else echo "✗ ⑥ 應 exit 2（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
-has '⑥ 印失敗訊息' "$out" '連續失敗 3 次'
+expect_has "$out" '連續失敗 3 次' '⑥ 印失敗訊息'
 
 # ---- ⑦ gh 失敗兩次後第三次恢復 → 不誤判，照常判定完成（fail_streak 未跨過 3 就不該提早 exit 2）----
 reset_all
@@ -170,7 +166,7 @@ reset_all
 d8_r=$(fx r2-running '{"status":"in_progress","conclusion":null,"jobs":[{"name":"rules","status":"in_progress","conclusion":null,"steps":[]}]}')
 out="$(GH_FAIL_CALLS="1,2" GH_RUN_JSON_SEQUENCE="$d8_r" DATE_SEQUENCE="0 25 50 75 100 125" bash "$script" 2008 --max-minutes 1 --interval 0 2>&1)"; rc=$?
 if [ "$rc" -eq 3 ]; then ok "⑧ 失敗、失敗、逾時 → exit 3（失敗分支也先比對 elapsed，不多繞一輪）"; else echo "✗ ⑧ 應 exit 3（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
-has '⑧ 印已耗時 1 分 15 秒（75s＝budget 60s＋恰好一輪的模擬時鐘步進，不是好幾輪）' "$out" '已耗時 1 分 15 秒'
+expect_has "$out" '已耗時 1 分 15 秒' '⑧ 印已耗時 1 分 15 秒（75s＝budget 60s＋恰好一輪的模擬時鐘步進，不是好幾輪）'
 d8_calls=$(viewcalls)
 if [ "$d8_calls" = 2 ]; then ok "⑧ gh 只被呼叫 2 次（逾時後沒有多打第 3 次，證明失敗分支確實先比對 elapsed 才決定要不要再呼叫 gh）"; else echo "✗ ⑧ gh 呼叫次數應為 2（實得 ${d8_calls}）——逾時後可能多打了一次 gh" >&2; fail=1; fi
 
