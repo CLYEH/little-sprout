@@ -6,7 +6,7 @@
 "use strict";
 const assert = require("assert");
 const path = require("path");
-const { scanAll, scanCornerAnchor, scanTextOcclusion, scanBoardClip, buildIndex, compactLines, canon, canonNode, fnv1a64, hex64, treeHash, treeHashLines, PHOTO_CORNER_ID } = require(path.join(__dirname, "overflow-scan.js"));
+const { scanAll, scanCornerAnchor, scanTextOcclusion, scanBoardClip, buildIndex, compactLines, canon, canonNode, fnv1a64, hex64, treeHash, treeHashLines, PHOTO_CORNER_ID, extractFn, cliEmitHashSnippet } = require(path.join(__dirname, "overflow-scan.js"));
 
 function N(id, parent, x, y, w, h, extra) {
   return Object.assign({ id, name: id, parent, type: "frame", enabled: true, x, y, w, h }, extra || {});
@@ -633,6 +633,82 @@ ok("tree_hash js／py 交叉一致：同一份合成 .pen（含 emoji／轉義�
   const dumpPath = execFileSync("python3", [py, tmp, "--dump", "Pp5kQ"], { encoding: "utf8" }).replace(/\n$/, "");
   assert.strictEqual(dumpPath, canonNode(doc.children[2], null, 2), "path 節點（含 geometry）的行 js／py 逐字相同");
   fs.rmSync(path.dirname(tmp), { recursive: true, force: true });
+});
+
+// ───── LS-309：--emit-hash-snippet（pen-read.sh／pen-open.sh 回讀改送這份 ~3.3 KB 自包含 snippet，取代整份 92 KB 正典腳本）─────
+// Get/Print shim：純 JS 重現 Pencil execute 環境對「未展開全樹」的 pre-order 走訪語意（parentCtx/index/skipChildren），
+// 直接餵同一份 doc（上面 LS-168 區塊已用的合成 .pen，H0＝treeHash(treeHashLines(doc))、已與 design_tree_hash.py 交叉驗過）——
+// 這樣本測試同時驗證：① snippet 真的能在 Get/Print 環境執行（不只是字串長得像）、② 全樹模式與 H0／python 三方同值、
+// ③ SCAN_HASH_ROOTS 分段兩批的 hash_part mod 2^64 相加＝不分段 tree_hash（LS-309 A1 的合併規則等價性）、④ ROOT-COUNT 探測值正確。
+function makeGetShim(rootDoc) {
+  return function Get(visit) {
+    const walk = (node, parentCtx, index) => {
+      let skip = false;
+      const ctx = { parentCtx, index, skipChildren: () => { skip = true; } };
+      visit(node, ctx);
+      if (skip) return;
+      const kids = node.children || [];
+      for (let i = 0; i < kids.length; i++) walk(kids[i], { node }, i);
+    };
+    const kids = rootDoc.children || [];
+    for (let i = 0; i < kids.length; i++) walk(kids[i], null, i);
+  };
+}
+function runHashSnippet(snippetSrc, rootDoc, globals) {
+  const vm = require("vm");
+  const lines = [];
+  const sandbox = Object.assign({ Get: makeGetShim(rootDoc), Print: (s) => lines.push(s) }, globals || {});
+  vm.createContext(sandbox);
+  vm.runInContext(snippetSrc, sandbox);
+  return lines.join("\n");
+}
+
+ok("LS-309 extractFn：五個函式逐字元從本檔原始碼抽出（找不到函式名／本體起始 { 即 throw），抽出文字是本檔子字串（不是另外手抄，不會漂移）", () => {
+  const fs = require("fs");
+  const src = fs.readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
+  for (const name of ["canon", "canonNode", "fnv1a64", "hex64", "addLimbs"]) {
+    const fn = extractFn(src, name);
+    assert.ok(fn.startsWith("function " + name + "("), name);
+    assert.ok(src.includes(fn), name + "：抽出的文字必須是原始碼的逐字元子字串（不是手抄副本）");
+  }
+  assert.throws(() => extractFn(src, "noSuchFunction"), /找不到 function noSuchFunction/);
+  assert.throws(() => extractFn("function broken(", "broken"), /找不到函式本體起始/);
+});
+
+ok("LS-309 --emit-hash-snippet：抽出的五函式＋driver 可在 Get/Print shim 下執行；全樹模式與 H0（js treeHash）／design_tree_hash.py 三方同值；SCAN_HASH_ROOTS 分兩段＋ROOT-COUNT 探測，分段 hash_part mod 2^64 相加＝不分段 tree_hash（正典合併規則，與 mergeBatches 的 tree_hash 加總同規格）", () => {
+  const fs = require("fs");
+  const emit = [];
+  const rc = cliEmitHashSnippet(fs, (s) => emit.push(s), (s) => emit.push(s));
+  assert.strictEqual(rc, 0);
+  const snippetSrc = emit.join("");
+  assert.ok(snippetSrc.length < 8000, "hash-only snippet 應遠小於整份 92 KB 正典腳本（LS-309 的整個動機）：" + snippetSrc.length + " bytes");
+  new (require("vm").Script)(snippetSrc); // 語法必須合法
+
+  const expectedLines = treeHashLines(doc);
+
+  // 全樹模式：無 SCAN_HASH_ROOTS／SCAN_HASH_ROOT_COUNT_ONLY
+  const full = runHashSnippet(snippetSrc, doc, {});
+  const m = /SUMMARY-HASH total_nodes=(\d+) tree_hash=([0-9a-f]{16})/.exec(full);
+  assert.ok(m, "應印出 SUMMARY-HASH：" + full);
+  assert.strictEqual(Number(m[1]), expectedLines.length, "total_nodes 應等於未展開全樹節點數");
+  assert.strictEqual(m[2], H0, "全樹模式 tree_hash 應與 js treeHash(treeHashLines(doc))／design_tree_hash.py 同值（三方鏈：H0 已在前一個 ok() 驗過與 python 同值）");
+
+  // ROOT-COUNT 探測
+  const rcOut = runHashSnippet(snippetSrc, doc, { SCAN_HASH_ROOT_COUNT_ONLY: true });
+  const rm = /ROOT-COUNT n=(\d+)/.exec(rcOut);
+  assert.ok(rm, "應印出 ROOT-COUNT：" + rcOut);
+  assert.strictEqual(Number(rm[1]), doc.children.length);
+
+  // 分段：doc.children 共 4 個 root，切 [0,2) 與 [2,4)——LS-252 R3 實測手動分兩段的做法在這裡機械化
+  const part1 = runHashSnippet(snippetSrc, doc, { SCAN_HASH_ROOTS: [0, 2] });
+  const part2 = runHashSnippet(snippetSrc, doc, { SCAN_HASH_ROOTS: [2, 4] });
+  const p1 = /SUMMARY-HASH-PART roots=\[0,2\) total_nodes=(\d+) hash_part=([0-9a-f]{16})/.exec(part1);
+  const p2 = /SUMMARY-HASH-PART roots=\[2,4\) total_nodes=(\d+) hash_part=([0-9a-f]{16})/.exec(part2);
+  assert.ok(p1 && p2, "兩段都應印出 SUMMARY-HASH-PART：" + part1 + " / " + part2);
+  assert.strictEqual(Number(p1[1]) + Number(p2[1]), expectedLines.length, "分段 total_nodes 相加應等於全樹節點數");
+  const merged = (BigInt("0x" + p1[2]) + BigInt("0x" + p2[2])) % (1n << 64n);
+  const mergedHex = merged.toString(16).padStart(16, "0");
+  assert.strictEqual(mergedHex, H0, "兩段 hash_part 依 mod 2^64 相加應與不分段 tree_hash 逐位元相同（LS-309：分段＝不分段）");
 });
 
 // ───── LS-185 第六支 board_clip（LS-120 R2 spacer 推出板外／LS-177 R2 Header Row 捲離畫面的形狀；板 393×852，各板 x 平移） ─────

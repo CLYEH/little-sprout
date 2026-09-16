@@ -127,17 +127,26 @@
 # 下一次呼叫就會自動連上新 socket，不需要使用者手動 `/mcp`，見 pen-status.sh 檔頭沿革）——「照指示切檔」與
 # 「照指示重掃／截圖」互斥。本票把 `--force-reload` 改成**先驗新鮮度、相符不殺**：
 #   1. 切檔＋輪詢路徑一致後，磁碟 `scripts/gates/design_tree_hash.py <want>` 算 tree_hash，再用 `pen interactive --app
-#      desktop` 餵 `execute({ input: <scripts/design/overflow-scan.js 全文，前置一行 SCAN_HASH_ONLY = true> })` 讀回
-#      Pencil 端同一演算法印出的 `SUMMARY-HASH … tree_hash=…`（read_pen_hash()；每次看門狗 PEN_OPEN_HASH_TIMEOUT 秒、
-#      最多 PEN_OPEN_HASH_ATTEMPTS 次）。**兩邊相符＝renderer 記憶體內容等於磁碟**（LS-118 要防的是 renderer 停在舊
-#      磁碟快照；同一份 canon＋FNV-1a 64 全樹雜湊相符即等價證明），exit 0、不清場、MCP 連線保留。
+#      desktop` 餵 `execute({ input: <hash-only snippet> })` 讀回 Pencil 端同一演算法印出的 `SUMMARY-HASH … tree_hash=…`
+#      （read_pen_hash()；每次看門狗 PEN_OPEN_HASH_TIMEOUT 秒、最多 PEN_OPEN_HASH_ATTEMPTS 次）。**兩邊相符＝renderer
+#      記憶體內容等於磁碟**（LS-118 要防的是 renderer 停在舊磁碟快照；同一份 canon＋FNV-1a 64 全樹雜湊相符即等價證明），
+#      exit 0、不清場、MCP 連線保留。**LS-309**：這裡送的不再是 `scripts/design/overflow-scan.js` 全文（前置一行
+#      `SCAN_HASH_ONLY = true`，~101 KB）——改送 `node scripts/design/overflow-scan.js --emit-hash-snippet` 產生的
+#      自包含 hash-only snippet（~3.3 KB，見該檔檔頭 1d 段）；13–14k 節點級的稿連三輪整份送全文必然失敗（LS-96 池項
+#      `35819063`，LS-251／LS-252 共 7 輪回讀無一次成功），小很多的 payload 大幅降低 `InternalError: interrupted`
+#      機率。單次仍失敗（HASH_ATTEMPTS 次皆逾時／中斷）時，`read_pen_hash()` 不再直接放棄——改用同一份 snippet 的
+#      `SCAN_HASH_ROOT_COUNT_ONLY` 模式探測全稿 root 數，再對半遞迴分段（每段各自重試 HASH_ATTEMPTS 次，仍失敗才再
+#      對半；分段數逼近 `PEN_OPEN_HASH_MAX_SEGMENTS`（預設 8）仍未收斂才放棄），各段 `hash_part` 依 FNV-1a 64 加總
+#      mod 2^64 的結合律／交換律直接相加（與 `overflow-scan.js` 的 `mergeBatches` 對 `tree_hash` 的合併規則同構），
+#      得到與不分段整棵雜湊逐位元相同的值（LS-252 R3 實測手動驗證過）。多數稿一路走「整棵單次成功」的快路徑，
+#      分段只在真的失敗時才觸發——不是無條件先分段。
 #   2. 讀回的值與磁碟不同（renderer 真的停在舊快照、或記憶體有未落地編輯）→ 才走既有清場流程（候選枚舉＋
 #      check_root_safe＋osascript→TERM→KILL＋重開）；未落地的真實編輯仍 fail closed exit 1，與 LS-118 相同。
-#   3. 讀不到 Pencil 端雜湊（CLI 逾時／Pencil `InternalError: interrupted`——9000 節點級的稿單次 execute 走訪全樹會
-#      機率性中斷，LS-177 R1／R2 實測；或 CLI 輸出格式改了）→ **不殺、不猜**：stdout 印期望值 `tree_hash=<磁碟值>` 與
-#      複算指引，exit 3——由呼叫的 agent 用 mcp__pencil__execute 自己跑 SCAN_HASH_ONLY（大稿可分段累加，VR 既有作法）
-#      比對；相符即可讀稿，不符回報 orchestrator 決定是否 `--kill`。這就是「印出待 agent 複算的期望值＋exit 碼」的
-#      替代設計：Pencil 端唯一的 shell 途徑是同一支 execute，它在大稿上不保證成功，所以只能當快路徑、不能當唯一路徑。
+#   3. 整棵單次與分段都失敗（CLI 逾時／Pencil `InternalError: interrupted`——見 1；或 CLI 輸出格式改了）→ **不殺、
+#      不猜**：stdout 印期望值 `tree_hash=<磁碟值>` 與複算指引，exit 3——由呼叫的 agent 用 mcp__pencil__execute 自己
+#      跑 SCAN_HASH_ONLY（大稿可分段累加，VR 既有作法）比對；相符即可讀稿，不符回報 orchestrator 決定是否 `--kill`。
+#      這就是「印出待 agent 複算的期望值＋exit 碼」的替代設計：Pencil 端唯一的 shell 途徑是同一支 execute，它在大稿
+#      上不保證成功，所以只能當快路徑、不能當唯一路徑。
 #   4. 只要清場流程真的結束了 Pen 主行程，stdout 必印「Pencil MCP：下一次 MCP 呼叫會自動重連；失敗才 /mcp」
 #      ——不論之後重開成功與否（agent 定義要求把這行帶回 handoff）；預設模式路徑不一致時的自動清場（R2）同樣印。
 #   5. `--kill`：舊 `--force-reload` 語意（不比雜湊、一律安全判定＋kill＋重開），只給 orchestrator 明示清場用
@@ -266,39 +275,135 @@ poll_once() {
   rm -f "$tmp"
 }
 
-# LS-180：向 Pencil 端回讀目前 active document 的 tree_hash——把正典腳本 scripts/design/overflow-scan.js 全文（前置
-# `SCAN_HASH_ONLY = true;`）JSON 編碼成 JS 字串字面值，經 `pen interactive --app desktop` 的 `execute({ input })` 送進
-# Pencil 跑同一份 canon＋FNV-1a 64 走訪，擷取它 Print 的 `SUMMARY-HASH total_nodes=… tree_hash=<16 hex>`。stdout 印
-# 16 碼 hex；逾時／中斷／輸出無 SUMMARY-HASH 就印空字串（重試 HASH_ATTEMPTS 次後放棄），呼叫端據此走 exit 3 路徑。
-# 看門狗／暫存檔／背景程序模式同 poll_once()。純唯讀（Get 走訪），不動文件。
-read_pen_hash() {
-  local snippet in tmp attempt h ppid wpid
-  snippet=$(python3 - "${script_root}/scripts/design/overflow-scan.js" <<'PY'
+# LS-309：組出 hash-only snippet 執行片段——`node scripts/design/overflow-scan.js --emit-hash-snippet` 印出的自包含
+# ~3.3 KB JS（$2＝呼叫前置的全域變數宣告，空字串＝不分段全樹模式；見該檔檔頭 1d 段），JSON 編碼成 JS 字串字面值，
+# 經 `pen interactive --app desktop` 的 `execute({ input })` 送進 Pencil。純唯讀（Get 走訪），不動文件；stdout 印
+# `pen interactive` 的原始輸出（呼叫端自己 grep），逾時／組不出片段就印空字串＋return 1。
+pen_hash_execute() {
+  local prelude=$1 snippet_base=$2 wrapped in tmp ppid wpid
+  wrapped=$(python3 - "$prelude" "$snippet_base" <<'PY'
 import json, sys
-src = open(sys.argv[1], encoding="utf-8").read()
-print("execute({ input: " + json.dumps("SCAN_HASH_ONLY = true;\n" + src, ensure_ascii=True) + " })")
+prelude, base = sys.argv[1], sys.argv[2]
+body = (prelude + "\n" if prelude else "") + base
+print("execute({ input: " + json.dumps(body, ensure_ascii=True) + " })")
 PY
-  ) || { echo "  Pencil 端 tree_hash：無法組出 execute 片段（python3／overflow-scan.js 缺？）" >&2; return 0; }
-  attempt=0
+  ) || return 1
+  tmp=$(mktemp "${TMPDIR:-/tmp}/pen-open-hash-out.XXXXXX") || return 1
+  in=$(mktemp "${TMPDIR:-/tmp}/pen-open-hash-in.XXXXXX") || { rm -f "$tmp"; return 1; }
+  printf '%s\nexit()\n' "$wrapped" > "$in"
+  "$PEN_BIN" interactive --app desktop < "$in" > "$tmp" 2>&1 &
+  ppid=$!
+  ( sleep "$HASH_TIMEOUT"; kill "$ppid" 2>/dev/null ) >/dev/null 2>&1 &
+  wpid=$!
+  wait "$ppid" 2>/dev/null
+  kill "$wpid" 2>/dev/null
+  cat "$tmp"
+  rm -f "$in" "$tmp"
+}
+
+# LS-309：對指定 root 範圍送 hash-only snippet，重試 HASH_ATTEMPTS 次（看門狗 HASH_TIMEOUT 秒／次，同既有慣例）。
+# lo/hi 皆空字串＝整棵不分段（SUMMARY-HASH）；否則帶 SCAN_HASH_ROOTS=[lo,hi) 分段（SUMMARY-HASH-PART）。成功設
+# $HASH_TRY_PART（16 碼 hex）／$HASH_TRY_COUNT（節點數）並 return 0；全部失敗只印診斷、return 1（呼叫端決定下一步）。
+try_hash_range() {
+  local lo=$1 hi=$2 snippet_base=$3 attempt=0 out h n prelude="" label
+  if [ -n "$lo" ]; then prelude="SCAN_HASH_ROOTS = [${lo}, ${hi}];"; label="root 範圍 [${lo},${hi})"; else label="整份（不分段）"; fi
   while [ "$attempt" -lt "$HASH_ATTEMPTS" ]; do
     attempt=$((attempt + 1))
-    tmp=$(mktemp "${TMPDIR:-/tmp}/pen-open-hash-out.XXXXXX") || return 0
-    in=$(mktemp "${TMPDIR:-/tmp}/pen-open-hash-in.XXXXXX") || { rm -f "$tmp"; return 0; }
-    printf '%s\nexit()\n' "$snippet" > "$in"
-    "$PEN_BIN" interactive --app desktop < "$in" > "$tmp" 2>&1 &
-    ppid=$!
-    ( sleep "$HASH_TIMEOUT"; kill "$ppid" 2>/dev/null ) >/dev/null 2>&1 &
-    wpid=$!
-    wait "$ppid" 2>/dev/null
-    kill "$wpid" 2>/dev/null
-    h=$(grep -oE 'SUMMARY-HASH total_nodes=[0-9]+ tree_hash=[0-9a-f]{16}' "$tmp" 2>/dev/null | sed -E 's/.*tree_hash=//' | head -1)
-    rm -f "$in" "$tmp"
+    out=$(pen_hash_execute "$prelude" "$snippet_base") || out=""
+    if [ -n "$lo" ]; then
+      h=$(printf '%s' "$out" | grep -oE 'SUMMARY-HASH-PART roots=\[[0-9]+,[0-9]+\) total_nodes=[0-9]+ hash_part=[0-9a-f]{16}' | sed -E 's/.*hash_part=//' | head -1)
+      n=$(printf '%s' "$out" | grep -oE 'SUMMARY-HASH-PART roots=\[[0-9]+,[0-9]+\) total_nodes=[0-9]+' | sed -E 's/.*total_nodes=//' | head -1)
+    else
+      h=$(printf '%s' "$out" | grep -oE 'SUMMARY-HASH total_nodes=[0-9]+ tree_hash=[0-9a-f]{16}' | sed -E 's/.*tree_hash=//' | head -1)
+      n=$(printf '%s' "$out" | grep -oE 'SUMMARY-HASH total_nodes=[0-9]+' | sed -E 's/.*total_nodes=//' | head -1)
+    fi
     if [ -n "$h" ]; then
-      printf '%s\n' "$h"
+      HASH_TRY_PART="$h"
+      HASH_TRY_COUNT="${n:-0}"
       return 0
     fi
-    echo "  Pencil 端 tree_hash 第 ${attempt}/${HASH_ATTEMPTS} 次回讀失敗（${HASH_TIMEOUT}s 內無 SUMMARY-HASH 輸出：逾時／InternalError: interrupted／CLI 格式變了）" >&2
+    echo "  Pencil 端 tree_hash：${label} 第 ${attempt}/${HASH_ATTEMPTS} 次回讀失敗（${HASH_TIMEOUT}s 內無預期輸出：逾時／InternalError: interrupted／CLI 格式變了）" >&2
   done
+  return 1
+}
+
+# LS-309：SCAN_HASH_ROOT_COUNT_ONLY 探測全稿 root 數（不下探子樹，稿再大也快）；讀不到印空字串。
+probe_root_count() {
+  local out n
+  out=$(pen_hash_execute "SCAN_HASH_ROOT_COUNT_ONLY = true;" "$1") || out=""
+  n=$(printf '%s' "$out" | grep -oE 'ROOT-COUNT n=[0-9]+' | sed -E 's/.*n=//' | head -1)
+  printf '%s' "$n"
+}
+
+# LS-309：分段遞迴上限——避免 ps/pencil 資料異常或稿極端破碎時無止盡對半下去（每次 execute 都要等到
+# HASH_TIMEOUT×HASH_ATTEMPTS，段數上不封頂會拖到不合理久）。
+HASH_MAX_SEGMENTS=${PEN_OPEN_HASH_MAX_SEGMENTS:-8}
+
+# LS-180／LS-309：向 Pencil 端回讀目前 active document 的 tree_hash。先試整棵單次（多數稿一次過，含 13–14k 節點級
+# ——LS-252 R1／R2 皆一次過）；HASH_ATTEMPTS 次皆失敗才改用 root 數量探測＋對半遞迴分段（各段各自重試，仍失敗才再
+# 對半，到 HASH_MAX_SEGMENTS 上限放棄），分段 hash_part 依 mod 2^64 相加合併（見檔頭 LS-180／LS-309 段的等價性說明）。
+# stdout 只印最終 16 碼 hex（成功時恰一行）；診斷訊息一律 stderr。失敗（含組不出 snippet／root 數量探測不到）印診斷
+# 後 return 0、不印任何 hex——呼叫端把空字串視為「讀不到」，走既有 exit 3 路徑。
+read_pen_hash() {
+  local snippet_base root_count
+  snippet_base=$(node "${script_root}/scripts/design/overflow-scan.js" --emit-hash-snippet 2>/dev/null) || {
+    echo "  Pencil 端 tree_hash：無法組出 hash-only snippet（node／overflow-scan.js --emit-hash-snippet 缺？）" >&2
+    return 0
+  }
+  [ -n "$snippet_base" ] || { echo "  Pencil 端 tree_hash：hash-only snippet 是空字串" >&2; return 0; }
+
+  if try_hash_range "" "" "$snippet_base"; then
+    printf '%s\n' "$HASH_TRY_PART"
+    return 0
+  fi
+  echo "  Pencil 端 tree_hash：整份單次回讀失敗，改分段（LS-309）" >&2
+
+  root_count=$(probe_root_count "$snippet_base")
+  case "$root_count" in
+    ''|*[!0-9]*)
+      echo "  Pencil 端 tree_hash：root 數量探測失敗（得到「${root_count}」），放棄分段" >&2
+      return 0
+      ;;
+  esac
+  if [ "$root_count" -lt 2 ]; then
+    echo "  Pencil 端 tree_hash：root 數量 ${root_count} 不足以分段，放棄" >&2
+    return 0
+  fi
+
+  # 直接對半起手（不先重送一次未拆分的 [0, root_count)——那等於在同一個 code path 下第三／四次重試整棵，LS-252
+  # R3 實測的正是「連續兩次整棵失敗後直接對半」才成功，不是「再重試一次整棵」），與 LS-252 R3 的實測配方一致。
+  local seg_mid=$((root_count / 2))
+  local queue=("0:${seg_mid}" "${seg_mid}:${root_count}") acc_hash="0000000000000000" acc_count=0 seg_done=0
+  local item lo hi span mid merged
+  while [ "${#queue[@]}" -gt 0 ]; do
+    item="${queue[0]}"
+    queue=("${queue[@]:1}")
+    lo="${item%%:*}"
+    hi="${item##*:}"
+    if try_hash_range "$lo" "$hi" "$snippet_base"; then
+      merged=$(python3 -c "print('%016x' % ((0x${acc_hash} + 0x${HASH_TRY_PART}) % (1 << 64)))") || {
+        echo "  Pencil 端 tree_hash：合併分段雜湊失敗（python3？）" >&2
+        return 0
+      }
+      acc_hash="$merged"
+      acc_count=$((acc_count + HASH_TRY_COUNT))
+      seg_done=$((seg_done + 1))
+      continue
+    fi
+    span=$((hi - lo))
+    if [ "$span" -le 1 ]; then
+      echo "  Pencil 端 tree_hash：root 範圍 [${lo},${hi}) 已無法再分段仍失敗，放棄" >&2
+      return 0
+    fi
+    if [ $((seg_done + ${#queue[@]} + 2)) -gt "$HASH_MAX_SEGMENTS" ]; then
+      echo "  Pencil 端 tree_hash：分段數將超過上限 ${HASH_MAX_SEGMENTS}（PEN_OPEN_HASH_MAX_SEGMENTS 可調），放棄" >&2
+      return 0
+    fi
+    mid=$((lo + span / 2))
+    queue+=("${lo}:${mid}" "${mid}:${hi}")
+  done
+  echo "  Pencil 端 tree_hash：分段成功（${seg_done} 段，共 ${acc_count} 節點）" >&2
+  printf '%s\n' "$acc_hash"
   return 0
 }
 
