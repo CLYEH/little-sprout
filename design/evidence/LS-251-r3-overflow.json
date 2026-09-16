@@ -1,0 +1,402 @@
+{
+  "ticket": "LS-251",
+  "round": 3,
+  "head_sha": "dd4feb45c4576c72ab727a7e712198b2ac2148e9",
+  "total_nodes": 12155,
+  "tree_hash": "092abb2cbe867d00",
+  "scan_scope": "boards",
+  "scan_note": "LS-289 唯讀快照法：scripts/design/pen-snapshot-dump.js 全稿 dump（19230 rows，49 SNAP 批，一次 execute 成功（多次因稿態龐大 InternalError: interrupted，以相同 editId 重試至成功——沒有修改 snippet 邏輯），Pencil 回應超過單次上限自動落檔、原樣讀回貼進 dump 檔）→ node scripts/design/overflow-scan.js --from-snapshot --tree-hash 092abb2cbe867d00 --total-nodes 12155 --boards <32 個 id，與 merge-base→head_sha 頂層 diff 逐一核對相符> 跑未修改的 scanAll 六支。tree_hash 用 scripts/gates/design_tree_hash.py 對落地後（head_sha=dd4feb45，即 PR 對本 .pen 最後一次 commit dd4feb4，含 R3 第一次掃描後發現的 SH-15 scope 越界復原）的 .pen 離線重算，掃描與雜湊皆對同一稿態（掃描前最後一次寫入是 dd4feb4 落地，其後只有唯讀 execute）。三支 BLOCKER（corner_anchor.mismatch／text_occlusion.flagged／board_clip.flagged）皆為 0。sibling_intersection 15 類中 3 類（ios-dev 抄值表×裁決點清單、狀態機×LS-142 邊界、i×i）為 Notes 板內部分節框 Get bounds 快取失真——TakeScreenshot(X6iCY) 複驗渲染正常、文字段落清楚分隔，非真實版面問題（Pencil 已知限制，見 agent 定義「Get 回傳的 bounds／ctx.problems 會快取失真」段）。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 58,
+      "classes": 15,
+      "flagged": [
+        {
+          "node_a": "EyKZM/tBi8u",
+          "node_b": "EyKZM/xlLIo",
+          "name_a": "Ghost",
+          "name_b": "Stamp",
+          "parent": "EyKZM/OCYqN",
+          "parent_name": "Stamp Wrap",
+          "overlap": [
+            78.99,
+            38.43
+          ],
+          "class": "Ghost × Stamp @ Stamp Wrap",
+          "count": 32,
+          "classification": "cmp/Day Divider Ghost×Stamp 重印母題內建重疊（既有已核可元件，同類 32 例，跨 R3 觸碰的 22 板）"
+        },
+        {
+          "node_a": "jgk97",
+          "node_b": "I4r7QV",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Scrim",
+          "parent": "nMVqp",
+          "parent_name": "Import / 04b 匯入進度 · 取消整批確認 (iPhone)",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Scrim @ Import / 04b 匯入進度 · 取消整批確認 (iPhone)",
+          "count": 1,
+          "classification": "04b modal 的 Status Bar 遮罩層與 Scrim 疊層，標準 alert-over-scrim 結構（同類 1 例）"
+        },
+        {
+          "node_a": "jgk97",
+          "node_b": "Zje4G",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Alert Wrap",
+          "parent": "nMVqp",
+          "parent_name": "Import / 04b 匯入進度 · 取消整批確認 (iPhone)",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Alert Wrap @ Import / 04b 匯入進度 · 取消整批確認 (iPhone)",
+          "count": 1,
+          "classification": "04b modal 的 Status Bar 遮罩層與對話框疊層，標準 alert-over-scrim 結構（同類 1 例）"
+        },
+        {
+          "node_a": "I4r7QV",
+          "node_b": "Zje4G",
+          "name_a": "Scrim",
+          "name_b": "Alert Wrap",
+          "parent": "nMVqp",
+          "parent_name": "Import / 04b 匯入進度 · 取消整批確認 (iPhone)",
+          "overlap": [
+            393,
+            852
+          ],
+          "class": "Scrim × Alert Wrap @ Import / 04b 匯入進度 · 取消整批確認 (iPhone)",
+          "count": 1,
+          "classification": "04b modal 標準 Scrim×Alert 疊層（同類 1 例）"
+        },
+        {
+          "node_a": "z5mPIB",
+          "node_b": "HTxcs",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TL",
+          "parent": "izt0E",
+          "parent_name": "Empty Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TL @ Empty Print",
+          "count": 4,
+          "classification": "Empty Print 角托 corner-out 5pt 意圖壓過紙緣，與相鄰內容框重疊為設計預期（4 個 Empty Print 實例各 1 對，同類 4 例）"
+        },
+        {
+          "node_a": "ZQPbr",
+          "node_b": "LlD2a",
+          "name_a": "Imprint Row",
+          "name_b": "Corner BR",
+          "parent": "izt0E",
+          "parent_name": "Empty Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Imprint Row × Corner BR @ Empty Print",
+          "count": 4,
+          "classification": "Empty Print 角托 corner-out 5pt 意圖壓過紙緣，與相鄰內容框重疊為設計預期（4 個 Empty Print 實例各 1 對，同類 4 例）"
+        },
+        {
+          "node_a": "HTxcs/sD5Ma",
+          "node_b": "HTxcs/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "HTxcs",
+          "parent_name": "Corner TL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 4,
+          "classification": "cmp/Photo Corner 元件內部三角填色與對角邊線本就重疊繪製（既有元件內部結構，同類 4 例）"
+        },
+        {
+          "node_a": "LlD2a/sD5Ma",
+          "node_b": "LlD2a/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "LlD2a",
+          "parent_name": "Corner BR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 4,
+          "classification": "cmp/Photo Corner 元件內部三角填色與對角邊線本就重疊繪製（既有元件內部結構，同類 4 例）"
+        },
+        {
+          "node_a": "X6iCY",
+          "node_b": "Rfl9n",
+          "name_a": "Import / 實作註記 · Handoff Notes (ios-dev)",
+          "name_b": "A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+          "parent": null,
+          "parent_name": "root",
+          "overlap": [
+            393,
+            852
+          ],
+          "class": "Import / 實作註記 · Handoff Notes (ios-dev) × A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt） @ root",
+          "count": 1,
+          "classification": "Notes 板與 04b AX3 板在畫布上緊鄰擺放巧合，非同一畫面內容（板層級，不影響任何交付畫面）"
+        },
+        {
+          "node_a": "IIBGz",
+          "node_b": "C6S26",
+          "name_a": "狀態機（選取→整理→上傳→摘要）",
+          "name_b": "與 LS-142 佇列的邊界",
+          "parent": "X6iCY",
+          "parent_name": "Import / 實作註記 · Handoff Notes (ios-dev)",
+          "overlap": [
+            812,
+            121
+          ],
+          "class": "狀態機（選取→整理→上傳→摘要） × 與 LS-142 佇列的邊界 @ Import / 實作註記 · Handoff Notes (ios-dev)",
+          "count": 1,
+          "classification": "Notes 板與 04b AX3 板在畫布上緊鄰擺放巧合，非同一畫面內容（板層級，不影響任何交付畫面）"
+        },
+        {
+          "node_a": "GHe0Q",
+          "node_b": "spegP",
+          "name_a": "ios-dev 抄值表",
+          "name_b": "裁決點清單（送核可頁時列出）",
+          "parent": "X6iCY",
+          "parent_name": "Import / 實作註記 · Handoff Notes (ios-dev)",
+          "overlap": [
+            812,
+            233
+          ],
+          "class": "ios-dev 抄值表 × 裁決點清單（送核可頁時列出） @ Import / 實作註記 · Handoff Notes (ios-dev)",
+          "count": 1,
+          "classification": "Notes 板與 04b AX3 板在畫布上緊鄰擺放巧合，非同一畫面內容（板層級，不影響任何交付畫面）"
+        },
+        {
+          "node_a": "BL7LY",
+          "node_b": "FEYie",
+          "name_a": "i",
+          "name_b": "i",
+          "parent": "GHe0Q",
+          "parent_name": "ios-dev 抄值表",
+          "overlap": [
+            812,
+            17
+          ],
+          "class": "i × i @ ios-dev 抄值表",
+          "count": 1,
+          "classification": "Notes 板內部分節框 Get bounds 快取失真（Pencil 已知限制，TakeScreenshot 複驗渲染正常、文字段落清楚分隔，不影響交付內容）"
+        },
+        {
+          "node_a": "GIuqs",
+          "node_b": "UprjD",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Scrim",
+          "parent": "Rfl9n",
+          "parent_name": "A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Scrim @ A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+          "count": 1,
+          "classification": "04b modal 的 Status Bar 遮罩層與 Scrim 疊層，標準 alert-over-scrim 結構（同類 1 例）"
+        },
+        {
+          "node_a": "GIuqs",
+          "node_b": "s7ruX",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Alert Wrap",
+          "parent": "Rfl9n",
+          "parent_name": "A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Alert Wrap @ A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+          "count": 1,
+          "classification": "04b modal 的 Status Bar 遮罩層與對話框疊層，標準 alert-over-scrim 結構（同類 1 例）"
+        },
+        {
+          "node_a": "UprjD",
+          "node_b": "s7ruX",
+          "name_a": "Scrim",
+          "name_b": "Alert Wrap",
+          "parent": "Rfl9n",
+          "parent_name": "A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+          "overlap": [
+            393,
+            852
+          ],
+          "class": "Scrim × Alert Wrap @ A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+          "count": 1,
+          "classification": "04b modal 標準 Scrim×Alert 疊層（同類 1 例）"
+        }
+      ],
+      "result_hash": "955635455d452a82"
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 4,
+      "classes": 1,
+      "flagged": [
+        {
+          "node": "LlD2a",
+          "name": "Corner BR",
+          "parent": "izt0E",
+          "parent_name": "Empty Print",
+          "overflow": 5,
+          "class": "Empty Print :: Corner BR",
+          "count": 4,
+          "classification": "Empty Print Corner BR 角托 corner-out 5pt 意圖右緣溢出（設計預期，同類 4 例：izt0E/hBF60/aKXJ1/X2cnQ 各 1 顆）"
+        }
+      ],
+      "result_hash": "755bbb922052490f"
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "cb707a89989e536c"
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "m7ZCDg",
+        "VrvV5",
+        "e0S0TW",
+        "k3jwB",
+        "wL5FG",
+        "EcgUO",
+        "eweX7",
+        "YSShl",
+        "mWiBG",
+        "gkS1Q",
+        "Q8jHEZ",
+        "y0FLsZ",
+        "YfOUJ",
+        "y2Qsy",
+        "Fgezb",
+        "vOgRq",
+        "nMVqp",
+        "Rfl9n",
+        "L6zy2",
+        "qGUTt",
+        "CDlkK",
+        "C09ZI",
+        "A721Zq",
+        "DnRLA",
+        "jENvo",
+        "O3WN3",
+        "PFvEX",
+        "Gxjee",
+        "iOZ0V",
+        "d6bTWC",
+        "o9Brs1",
+        "X6iCY"
+      ],
+      "containers": 4,
+      "points": 16,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 8,
+      "ref_hits_defs": 0,
+      "document_containers": 4,
+      "document_points": 16,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": [],
+      "result_hash": "095b92e3a96a9da1"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "m7ZCDg",
+        "VrvV5",
+        "e0S0TW",
+        "k3jwB",
+        "wL5FG",
+        "EcgUO",
+        "eweX7",
+        "YSShl",
+        "mWiBG",
+        "gkS1Q",
+        "Q8jHEZ",
+        "y0FLsZ",
+        "YfOUJ",
+        "y2Qsy",
+        "Fgezb",
+        "vOgRq",
+        "nMVqp",
+        "Rfl9n",
+        "L6zy2",
+        "qGUTt",
+        "CDlkK",
+        "C09ZI",
+        "A721Zq",
+        "DnRLA",
+        "jENvo",
+        "O3WN3",
+        "PFvEX",
+        "Gxjee",
+        "iOZ0V",
+        "d6bTWC",
+        "o9Brs1",
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "7dfb09fed082a621"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "m7ZCDg",
+        "VrvV5",
+        "e0S0TW",
+        "k3jwB",
+        "wL5FG",
+        "EcgUO",
+        "eweX7",
+        "YSShl",
+        "mWiBG",
+        "gkS1Q",
+        "Q8jHEZ",
+        "y0FLsZ",
+        "YfOUJ",
+        "y2Qsy",
+        "Fgezb",
+        "vOgRq",
+        "nMVqp",
+        "Rfl9n",
+        "L6zy2",
+        "qGUTt",
+        "CDlkK",
+        "C09ZI",
+        "A721Zq",
+        "DnRLA",
+        "jENvo",
+        "O3WN3",
+        "PFvEX",
+        "Gxjee",
+        "iOZ0V",
+        "d6bTWC",
+        "o9Brs1",
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "c14a0c308610979f"
+    }
+  }
+}

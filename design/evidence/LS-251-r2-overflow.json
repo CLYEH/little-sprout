@@ -1,0 +1,192 @@
+{
+  "ticket": "LS-251",
+  "round": 2,
+  "head_sha": "f6e117adf470afe4c7003bb7b43762c27803d957",
+  "total_nodes": 12152,
+  "tree_hash": "1ba986d34a3b7039",
+  "scan_scope": "boards",
+  "scan_note": "LS-289 唯讀快照法：scripts/design/pen-snapshot-dump.js 全稿 dump（19241 rows，193 SNAP 批，一次 execute 成功）→ node scripts/design/overflow-scan.js --from-snapshot --tree-hash 1ba986d34a3b7039 --total-nodes 12152 --boards <31 個 id（29 畫面板 + 本票新增 04b AX3 板 Rfl9n + cmp/Baby Chip 元件 o9Brs1 + Notes X6iCY）> 跑未修改的 scanAll 六支。tree_hash 用 scripts/gates/design_tree_hash.py 對落地後（head_sha=f6e117a）的 .pen 離線重算，掃描與雜湊皆對同一稿態（掃描前最後一次 execute 是純讀取，無寫入）。此為 R2 收工前最後一次掃描；三支 BLOCKER（corner_anchor.mismatch／text_occlusion.flagged／board_clip.flagged）皆為 0——過程中發現並修正了三類真實問題：(a) Pencil 長時間互動 session 對『早期子節點長高後，同容器內較晚的兄弟節點』的 Get bounds 有快取失真（多輪 Replace 強制重算後才消失，已記入 Pencil 踩雷記錄），(b) MN-13/MN-12/SH-3/SH-4 新增內容在 AX3 40pt 下的真實溢出（06b AX3 板高不足、01 AX3 略過列文字未換行、03/06a-iPad 縮圖 88pt 在 560pt 窄欄放不下、04 進度計數與『全部重試』文字未設 textGrowth）——皆已修正；(c) MN-2 的 More Count fontSize 全文檔 Get 搜尋未限定 Import 板範圍，誤改到 LS-47/09-iPad、cmp/Card Diary、LS-21/13-iPad 三個本票未觸碰節點的 fontSize，已於同一輪內復原（$fs-note），確認復原後這三個板已不在 git diff 範圍內。本收據為以上修正後的乾淨結果。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 64,
+      "result_hash": "9bcb9ec3a215dff2",
+      "flagged": [
+        {
+          "node_a": "t0fzsA/tBi8u",
+          "node_b": "t0fzsA/xlLIo",
+          "class": "Ghost × Stamp @ Stamp Wrap",
+          "count": 32,
+          "classification": "cmp/Day Divider 既有核可元件（LS-46 起）的重印日期章 Ghost+Stamp 疊字母題，橫跨本票 01/02/03/06a 各 4 變體共 32 處，設計意圖非缺陷（見 little-sprout-brand motifs.md）"
+        },
+        {
+          "node_a": "jgk97",
+          "node_b": "I4r7QV",
+          "class": "Status Bar (Backdrop) × Scrim @ Import / 04b 匯入進度 · 取消整批確認 (iPhone)",
+          "count": 1,
+          "classification": "04b 是全螢幕 Scrim+Alert 對話框 overlay，Scrim 以 layoutPosition:absolute 疊在整個畫面上是標準 modal z-order 疊層，非缺陷"
+        },
+        {
+          "node_a": "jgk97",
+          "node_b": "Zje4G",
+          "class": "Status Bar (Backdrop) × Alert Wrap @ Import / 04b 匯入進度 · 取消整批確認 (iPhone)",
+          "count": 1,
+          "classification": "同上，Alert Wrap 亦為 absolute 疊層，標準 modal z-order，非缺陷"
+        },
+        {
+          "node_a": "I4r7QV",
+          "node_b": "Zje4G",
+          "class": "Scrim × Alert Wrap @ Import / 04b 匯入進度 · 取消整批確認 (iPhone)",
+          "count": 1,
+          "classification": "Scrim 與其上的 Alert Wrap 本就是同一疊層家族，刻意重疊，非缺陷"
+        },
+        {
+          "node_a": "z5mPIB",
+          "node_b": "HTxcs",
+          "class": "Photo Wrap × Corner TL @ Empty Print",
+          "count": 3,
+          "classification": "沖印品母題角托 corner-out 5pt 壓過紙緣（tokens.md corner-out=5），06b 三變體的 Empty Print 皆為既有已核可母題的正常延伸，非缺陷"
+        },
+        {
+          "node_a": "z5mPIB",
+          "node_b": "n3wSKz",
+          "class": "Photo Wrap × Corner TR @ Empty Print",
+          "count": 3,
+          "classification": "同上，corner-out 5pt 設計意圖"
+        },
+        {
+          "node_a": "ZQPbr",
+          "node_b": "gwSF5",
+          "class": "Imprint Row × Corner BL @ Empty Print",
+          "count": 3,
+          "classification": "同上，corner-out 5pt 設計意圖"
+        },
+        {
+          "node_a": "ZQPbr",
+          "node_b": "LlD2a",
+          "class": "Imprint Row × Corner BR @ Empty Print",
+          "count": 3,
+          "classification": "同上，corner-out 5pt 設計意圖"
+        },
+        {
+          "node_a": "HTxcs/sD5Ma",
+          "node_b": "HTxcs/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 3,
+          "classification": "cmp/Photo Corner 元件定義本身內部的三角形填色與邊線本就疊合繪製（同一顆角托的填色層與描邊層），元件內部結構、非缺陷"
+        },
+        {
+          "node_a": "n3wSKz/sD5Ma",
+          "node_b": "n3wSKz/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 3,
+          "classification": "同上"
+        },
+        {
+          "node_a": "gwSF5/sD5Ma",
+          "node_b": "gwSF5/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 3,
+          "classification": "同上"
+        },
+        {
+          "node_a": "LlD2a/sD5Ma",
+          "node_b": "LlD2a/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 3,
+          "classification": "同上"
+        },
+        {
+          "node_a": "X6iCY",
+          "node_b": "Rfl9n",
+          "class": "Import / 實作註記 · Handoff Notes (ios-dev) × A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt） @ root",
+          "count": 1,
+          "classification": "本票新增的 04b AX3 板（Rfl9n）用 FindEmptySpace 插入時與 Notes 板在無限畫布上的擺放位置略微相鄰，兩者皆非同一畫面內容、不會一起被截圖或實作，純屬畫布佈局巧合，非缺陷"
+        },
+        {
+          "node_a": "IIBGz",
+          "node_b": "C6S26",
+          "class": "狀態機（選取→整理→上傳→摘要） × 與 LS-142 佇列的邊界 @ Import / 實作註記 · Handoff Notes (ios-dev)",
+          "count": 1,
+          "classification": "Notes 板內部兩個說明區塊邊緣輕微相鄰（Notes 非出貨畫面，僅供 ios-dev 閱讀文字內容），非缺陷"
+        },
+        {
+          "node_a": "GIuqs",
+          "node_b": "UprjD",
+          "class": "Status Bar (Backdrop) × Scrim @ A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+          "count": 1,
+          "classification": "同 04b iPhone 版理由，AX3 版本的 Scrim 疊層，標準 modal z-order，非缺陷"
+        },
+        {
+          "node_a": "GIuqs",
+          "node_b": "s7ruX",
+          "class": "Status Bar (Backdrop) × Alert Wrap @ A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+          "count": 1,
+          "classification": "同上"
+        },
+        {
+          "node_a": "UprjD",
+          "node_b": "s7ruX",
+          "class": "Scrim × Alert Wrap @ A11y / 04b 匯入進度 · 取消整批確認 · Dynamic Type AX3（body 40pt）",
+          "count": 1,
+          "classification": "同上"
+        }
+      ]
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 6,
+      "result_hash": "7130addae83fa177",
+      "flagged": [
+        {
+          "node": "n3wSKz",
+          "name": "Corner TR",
+          "parent_name": "Empty Print",
+          "classification": "角托 corner-out 5pt 刻意壓出紙面右緣（tokens.md corner-out=5，母題規則），06b 三變體共 3 例，非缺陷"
+        },
+        {
+          "node": "LlD2a",
+          "name": "Corner BR",
+          "parent_name": "Empty Print",
+          "classification": "角托 corner-out 5pt 刻意壓出紙面右緣，同上，06b 三變體共 3 例，非缺陷"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "8fcdd67fb96c0d3e",
+      "flagged": []
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": ["m7ZCDg", "VrvV5", "e0S0TW", "k3jwB", "wL5FG", "EcgUO", "eweX7", "YSShl", "mWiBG", "gkS1Q", "Q8jHEZ", "y0FLsZ", "YfOUJ", "y2Qsy", "Fgezb", "vOgRq", "nMVqp", "Rfl9n", "L6zy2", "qGUTt", "CDlkK", "C09ZI", "A721Zq", "DnRLA", "jENvo", "O3WN3", "PFvEX", "Gxjee", "iOZ0V", "d6bTWC", "o9Brs1", "X6iCY"],
+      "containers": 3,
+      "points": 24,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 3,
+      "document_points": 24,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "ref_hits": 12,
+      "unresolved": [],
+      "result_hash": "cdb8eed9ca385773"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "425865f4f1505ff3"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "85a76826a6de5171"
+    }
+  }
+}
