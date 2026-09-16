@@ -211,6 +211,25 @@ expect '②c-負1 qa 前景裸 gh run watch 123（deny）' 2 \
 expect '②c-負2 qa cd x && gh run watch …（deny，&& 之後的命令位置）' 2 \
   "$(bash_json_agent_norb '"qa"' 'cd x && gh run watch 123 --exit-status')"
 
+# R3（LS-302，LS-96 池項 `4881522d`／merge-review R2 `41f46b34` i1）：環境變數賦值前綴與
+# time／nice／env 包裝一樣要在「命令位置」判定裡被跳過、當作沒發生過——這是本票補的正樣本
+expect '②c-R3-1 qa GH_TOKEN=x gh run watch（deny，環境變數賦值前綴）' 2 \
+  "$(bash_json_agent_norb '"qa"' 'GH_TOKEN=x gh run watch 123456 --exit-status')"
+expect '②c-R3-2 qa time gh run watch（deny，time 包裝）' 2 \
+  "$(bash_json_agent_norb '"qa"' 'time gh run watch 123456 --exit-status')"
+expect '②c-R3-3 qa nice gh run watch（deny，nice 包裝）' 2 \
+  "$(bash_json_agent_norb '"qa"' 'nice gh run watch 123456 --exit-status')"
+expect '②c-R3-4 qa env GH_TOKEN=x gh run watch（deny，env 包裝＋賦值疊加）' 2 \
+  "$(bash_json_agent_norb '"qa"' 'env GH_TOKEN=x gh run watch 123456 --exit-status')"
+expect '②c-R3-5 qa cd x && GH_TOKEN=x time gh run watch（deny，分隔符之後照樣跳過前綴）' 2 \
+  "$(bash_json_agent_norb '"qa"' 'cd x && GH_TOKEN=x time gh run watch 123456 --exit-status')"
+# 負夾具：wrapper 字面本身帶引號（真的字面值，不是位置修飾語）不該被跳過——不成立「命令位置」
+expect '②c-R3-負1 qa echo 訊息含引號包住的 "time gh run watch"（allow，引號內非真的執行）' 0 \
+  "$(bash_json_agent_norb '"qa"' 'echo \"time gh run watch\"')"
+# 對照：只有賦值／wrapper 前綴、後面接的不是 gh run watch（allow，不誤判成命中）
+expect '②c-R3-對照 qa GH_TOKEN=x gh pr view（allow，賦值前綴後不是 gh run watch）' 0 \
+  "$(bash_json_agent_norb '"qa"' 'GH_TOKEN=x gh pr view 123')"
+
 # R2（merge-review R1 B2，major，已修）：規則 (c) 原本對未經引號遮蔽的文字做字面比對，會誤擋單純
 # 「提及」該字串而非真的執行的合法命令——reviewer 實測下列三條皆會誤 deny，修法改成只在「命令位置」
 # （tokenize_segments 分段的前三個 token 逐一是未加引號的 gh／run／watch）才判定，引號內文本身是單一
@@ -499,6 +518,50 @@ else
   fi
 fi
 rm -rf "$mut6"
+
+# ============================================================
+# ⑪ LS-302（LS-96 池項 `4881522d`）mutation：拿掉 `_skip_wrapper_prefix()` 的跳過邏輯（恆不跳過，
+# 退回 R2 版「只認第一個 token」）→ ②c-R3-1..5（環境變數賦值／time／nice／env 前綴）五組正樣本必須
+# 翻成 allow（誤放行）——證明這五組的 deny 確由跳過前綴這段邏輯造成；同一個 mutant 下 ②c-負1/2
+# （沒有前綴、裸 `gh run watch`）仍要維持 deny，證明沒有動到「命令位置」判定本身。
+# ============================================================
+mut7=$(mktemp -d)
+cp "$guard" "$engine_py" "${root}/scripts/hooks/pretool_engine.py" "$mut7/"
+anchor_skip='        if ENV_ASSIGN_RE.match(text) or text in WRAPPER_WORDS:'
+if ! grep -qF "$anchor_skip" "$engine_py"; then
+  bad "⑪ mutation 錨點（跳過前綴判斷）不在 background_bash_guard.py，mutation 測試無法成立：${anchor_skip}"
+else
+  sed "s/$(printf '%s' "$anchor_skip" | sed 's/[.[\*^$]/\\&/g')/        if False:/" "$engine_py" > "$mut7/background_bash_guard.py"
+  if ! diff -q "$engine_py" "$mut7/background_bash_guard.py" >/dev/null 2>&1; then
+    all_flipped=1
+    for payload in \
+      "$(bash_json_agent_norb '"qa"' 'GH_TOKEN=x gh run watch 123456 --exit-status')" \
+      "$(bash_json_agent_norb '"qa"' 'time gh run watch 123456 --exit-status')" \
+      "$(bash_json_agent_norb '"qa"' 'nice gh run watch 123456 --exit-status')" \
+      "$(bash_json_agent_norb '"qa"' 'env GH_TOKEN=x gh run watch 123456 --exit-status')" \
+      "$(bash_json_agent_norb '"qa"' 'cd x && GH_TOKEN=x time gh run watch 123456 --exit-status')"
+    do
+      out=$(printf '%s' "$payload" | "$bash_bin" "$mut7/background-bash-guard.sh" 2>/dev/null); got=$?
+      if [ "$got" -ne 0 ] || [ -n "$out" ]; then
+        all_flipped=0
+        bad "⑪ mutant 應把「②c-R3」正樣本翻成 allow（實得 exit ${got}：${out}）——deny 不是靠跳過前綴這段邏輯？"
+      fi
+    done
+    if [ "$all_flipped" -eq 1 ]; then
+      ok '⑪ mutant：拿掉跳過前綴邏輯後，②c-R3 五組正樣本（環境變數賦值／time／nice／env 前綴）全部變成 allow（原本的 deny 確由這段邏輯造成）'
+    fi
+    # 對照：沒有前綴、裸 gh run watch（命令位置）同一個 mutant 下仍要 deny
+    out=$(printf '%s' "$(bash_json_agent_norb '"qa"' 'cd x && gh run watch 123 --exit-status')" | "$bash_bin" "$mut7/background-bash-guard.sh" 2>/dev/null); got=$?
+    if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecision":"deny"'*) true ;; *) false ;; esac; then
+      ok '⑪-對照 mutant：拿掉跳過前綴邏輯後，②c-負2（沒有前綴）仍維持 deny——只有帶前綴的樣本受影響'
+    else
+      bad "⑪-對照 mutant 應仍 deny ②c-負2（實得 exit ${got}：${out}）"
+    fi
+  else
+    bad '⑪ mutant 與原始檔完全相同（sed 未命中，mutation 測試本身無效）'
+  fi
+fi
+rm -rf "$mut7"
 
 rm -rf "$work"
 trap - EXIT
