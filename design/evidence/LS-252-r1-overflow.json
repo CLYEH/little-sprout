@@ -1,0 +1,884 @@
+{
+ "scanned_nodes": 1264,
+ "scan_scope": "boards",
+ "scans": {
+  "sibling_intersection": {
+   "scope": "boards",
+   "document_count": 141,
+   "classes": 49,
+   "flagged": [
+    {
+     "node_a": "bcNWa",
+     "node_b": "j5mzcZ",
+     "name_a": "Gridline 85",
+     "name_b": "Growth Line",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      273,
+      1
+     ],
+     "class": "Gridline 85 × Growth Line @ Chart Plot",
+     "count": 6,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "bcNWa",
+     "node_b": "YRjHt",
+     "name_a": "Gridline 85",
+     "name_b": "Value Tooltip",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      81,
+      1
+     ],
+     "class": "Gridline 85 × Value Tooltip @ Chart Plot",
+     "count": 4,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "AOcqb",
+     "node_b": "j5mzcZ",
+     "name_a": "Axis Label 85",
+     "name_b": "Growth Line",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      26,
+      12
+     ],
+     "class": "Axis Label 85 × Growth Line @ Chart Plot",
+     "count": 6,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "wIW2p",
+     "node_b": "j5mzcZ",
+     "name_a": "Axis Label 45",
+     "name_b": "Growth Line",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      26,
+      7
+     ],
+     "class": "Axis Label 45 × Growth Line @ Chart Plot",
+     "count": 6,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "j5mzcZ",
+     "node_b": "mtmsy",
+     "name_a": "Growth Line",
+     "name_b": "Point 0",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      8
+     ],
+     "class": "Growth Line × Point 0 @ Chart Plot",
+     "count": 8,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "j5mzcZ",
+     "node_b": "o6AgY",
+     "name_a": "Growth Line",
+     "name_b": "Point 3",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      8
+     ],
+     "class": "Growth Line × Point 3 @ Chart Plot",
+     "count": 8,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "j5mzcZ",
+     "node_b": "rxi2C",
+     "name_a": "Growth Line",
+     "name_b": "Point 6",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      8
+     ],
+     "class": "Growth Line × Point 6 @ Chart Plot",
+     "count": 8,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "j5mzcZ",
+     "node_b": "zZx7g",
+     "name_a": "Growth Line",
+     "name_b": "Point 9",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      8
+     ],
+     "class": "Growth Line × Point 9 @ Chart Plot",
+     "count": 8,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "j5mzcZ",
+     "node_b": "D1pnK",
+     "name_a": "Growth Line",
+     "name_b": "Point 12",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      8
+     ],
+     "class": "Growth Line × Point 12 @ Chart Plot",
+     "count": 8,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "j5mzcZ",
+     "node_b": "BUYNa",
+     "name_a": "Growth Line",
+     "name_b": "Point 15",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      6,
+      12
+     ],
+     "class": "Growth Line × Point 15 @ Chart Plot",
+     "count": 8,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "j5mzcZ",
+     "node_b": "YRjHt",
+     "name_a": "Growth Line",
+     "name_b": "Value Tooltip",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      81,
+      21.75
+     ],
+     "class": "Growth Line × Value Tooltip @ Chart Plot",
+     "count": 8,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "BUYNa",
+     "node_b": "YRjHt",
+     "name_a": "Point 15",
+     "name_b": "Value Tooltip",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      6,
+      5
+     ],
+     "class": "Point 15 × Value Tooltip @ Chart Plot",
+     "count": 6,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "UuXb9",
+     "node_b": "kpIQn",
+     "name_a": "Axis Label 45",
+     "name_b": "Month Label 0",
+     "parent": "RSRUn",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      16,
+      14
+     ],
+     "class": "Axis Label 45 × Month Label 0 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Spdp5",
+     "node_b": "M40mY",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Scrim",
+     "parent": "yL3kY",
+     "parent_name": "Growth / 02 新增量測 sheet (iPhone)",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Scrim @ Growth / 02 新增量測 sheet (iPhone)",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "Spdp5",
+     "node_b": "uaueT",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Sheet Wrap",
+     "parent": "yL3kY",
+     "parent_name": "Growth / 02 新增量測 sheet (iPhone)",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 02 新增量測 sheet (iPhone)",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "M40mY",
+     "node_b": "uaueT",
+     "name_a": "Scrim",
+     "name_b": "Sheet Wrap",
+     "parent": "yL3kY",
+     "parent_name": "Growth / 02 新增量測 sheet (iPhone)",
+     "overlap": [
+      393,
+      995
+     ],
+     "class": "Scrim × Sheet Wrap @ Growth / 02 新增量測 sheet (iPhone)",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "a8uSwA",
+     "node_b": "k36s41",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Scrim",
+     "parent": "y0aF8s",
+     "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（全空）",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Scrim @ Growth / 02 新增量測 sheet · 錯誤態（全空）",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "a8uSwA",
+     "node_b": "eCdhh",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Sheet Wrap",
+     "parent": "y0aF8s",
+     "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（全空）",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 02 新增量測 sheet · 錯誤態（全空）",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "k36s41",
+     "node_b": "eCdhh",
+     "name_a": "Scrim",
+     "name_b": "Sheet Wrap",
+     "parent": "y0aF8s",
+     "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（全空）",
+     "overlap": [
+      393,
+      1020
+     ],
+     "class": "Scrim × Sheet Wrap @ Growth / 02 新增量測 sheet · 錯誤態（全空）",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "BaGHt",
+     "node_b": "Vf0Qa",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Scrim",
+     "parent": "j3KH8",
+     "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Scrim @ Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "BaGHt",
+     "node_b": "dj1b0",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Sheet Wrap",
+     "parent": "j3KH8",
+     "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "Vf0Qa",
+     "node_b": "dj1b0",
+     "name_a": "Scrim",
+     "name_b": "Sheet Wrap",
+     "parent": "j3KH8",
+     "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+     "overlap": [
+      393,
+      1069
+     ],
+     "class": "Scrim × Sheet Wrap @ Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "dkfbz",
+     "node_b": "dw8WP",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Scrim",
+     "parent": "IDQ7E",
+     "parent_name": "Growth / 02 新增量測 sheet · 深色",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Scrim @ Growth / 02 新增量測 sheet · 深色",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "dkfbz",
+     "node_b": "gJI0J",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Sheet Wrap",
+     "parent": "IDQ7E",
+     "parent_name": "Growth / 02 新增量測 sheet · 深色",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 02 新增量測 sheet · 深色",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "dw8WP",
+     "node_b": "gJI0J",
+     "name_a": "Scrim",
+     "name_b": "Sheet Wrap",
+     "parent": "IDQ7E",
+     "parent_name": "Growth / 02 新增量測 sheet · 深色",
+     "overlap": [
+      393,
+      995
+     ],
+     "class": "Scrim × Sheet Wrap @ Growth / 02 新增量測 sheet · 深色",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "iPspr",
+     "node_b": "S3Ys9",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Scrim",
+     "parent": "OWkSn",
+     "parent_name": "A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Scrim @ A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "iPspr",
+     "node_b": "LkMQ8",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Sheet Wrap",
+     "parent": "OWkSn",
+     "parent_name": "A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Sheet Wrap @ A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "S3Ys9",
+     "node_b": "LkMQ8",
+     "name_a": "Scrim",
+     "name_b": "Sheet Wrap",
+     "parent": "OWkSn",
+     "parent_name": "A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+     "overlap": [
+      393,
+      1519
+     ],
+     "class": "Scrim × Sheet Wrap @ A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "rZQck",
+     "node_b": "Lt9j7",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Scrim",
+     "parent": "DkdRN",
+     "parent_name": "Growth / 03 刪除紀錄 · 確認",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Scrim @ Growth / 03 刪除紀錄 · 確認",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "rZQck",
+     "node_b": "mZ0rm",
+     "name_a": "Status Bar (Backdrop)",
+     "name_b": "Sheet Wrap",
+     "parent": "DkdRN",
+     "parent_name": "Growth / 03 刪除紀錄 · 確認",
+     "overlap": [
+      393,
+      62
+     ],
+     "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 03 刪除紀錄 · 確認",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "Lt9j7",
+     "node_b": "mZ0rm",
+     "name_a": "Scrim",
+     "name_b": "Sheet Wrap",
+     "parent": "DkdRN",
+     "parent_name": "Growth / 03 刪除紀錄 · 確認",
+     "overlap": [
+      393,
+      852
+     ],
+     "class": "Scrim × Sheet Wrap @ Growth / 03 刪除紀錄 · 確認",
+     "count": 1,
+     "classification": "Sheet 既有版式慣例：Status Bar 背景層／半透明 Scrim／Sheet Wrap 三者皆絕對定位疊放於同一 root（沿 LS-152 刪除確認 sheet 既有結構，非本票新增缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "kEM4Q",
+     "name_a": "Percentile Band",
+     "name_b": "Percentile Band",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      305,
+      140
+     ],
+     "class": "Percentile Band × Percentile Band @ Chart Plot",
+     "count": 1,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "A16By",
+     "name_a": "Percentile Band",
+     "name_b": "Gridline 88",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      273,
+      1
+     ],
+     "class": "Percentile Band × Gridline 88 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "G3G6e2",
+     "name_a": "Percentile Band",
+     "name_b": "Axis Label 88",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      26,
+      12
+     ],
+     "class": "Percentile Band × Axis Label 88 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "mVYnJ",
+     "name_a": "Percentile Band",
+     "name_b": "Axis Label 42",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      26,
+      7
+     ],
+     "class": "Percentile Band × Axis Label 42 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "MUl2k",
+     "name_a": "Percentile Band",
+     "name_b": "Growth Line",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      305,
+      140
+     ],
+     "class": "Percentile Band × Growth Line @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "OOTvB",
+     "name_a": "Percentile Band",
+     "name_b": "Point 0",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      8
+     ],
+     "class": "Percentile Band × Point 0 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "mGrQv",
+     "name_a": "Percentile Band",
+     "name_b": "Point 3",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      8
+     ],
+     "class": "Percentile Band × Point 3 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "orllS",
+     "name_a": "Percentile Band",
+     "name_b": "Point 6",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      8
+     ],
+     "class": "Percentile Band × Point 6 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "D4Wkf",
+     "name_a": "Percentile Band",
+     "name_b": "Point 9",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      8
+     ],
+     "class": "Percentile Band × Point 9 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "ToR9E",
+     "name_a": "Percentile Band",
+     "name_b": "Point 12",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      8
+     ],
+     "class": "Percentile Band × Point 12 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "KuA4z",
+     "name_a": "Percentile Band",
+     "name_b": "Point 15",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      6,
+      12
+     ],
+     "class": "Percentile Band × Point 15 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Ivut6",
+     "node_b": "VHs5s",
+     "name_a": "Percentile Band",
+     "name_b": "Value Tooltip",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      64,
+      37
+     ],
+     "class": "Percentile Band × Value Tooltip @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "A16By",
+     "node_b": "MUl2k",
+     "name_a": "Gridline 88",
+     "name_b": "Growth Line",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      273,
+      1
+     ],
+     "class": "Gridline 88 × Growth Line @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "A16By",
+     "node_b": "VHs5s",
+     "name_a": "Gridline 88",
+     "name_b": "Value Tooltip",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      64,
+      1
+     ],
+     "class": "Gridline 88 × Value Tooltip @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "G3G6e2",
+     "node_b": "MUl2k",
+     "name_a": "Axis Label 88",
+     "name_b": "Growth Line",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      26,
+      12
+     ],
+     "class": "Axis Label 88 × Growth Line @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "mVYnJ",
+     "node_b": "MUl2k",
+     "name_a": "Axis Label 42",
+     "name_b": "Growth Line",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      26,
+      7
+     ],
+     "class": "Axis Label 42 × Growth Line @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "ToR9E",
+     "node_b": "VHs5s",
+     "name_a": "Point 12",
+     "name_b": "Value Tooltip",
+     "parent": "T8rq1Y",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      8,
+      2.35
+     ],
+     "class": "Point 12 × Value Tooltip @ Chart Plot",
+     "count": 4,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    },
+    {
+     "node_a": "Df4NJ",
+     "node_b": "VKbxK",
+     "name_a": "Month Label 12",
+     "name_b": "Month Label 15",
+     "parent": "v5Wa7",
+     "parent_name": "Chart Plot",
+     "overlap": [
+      4.6,
+      19
+     ],
+     "class": "Month Label 12 × Month Label 15 @ Chart Plot",
+     "count": 2,
+     "classification": "向量成長曲線內部裝飾元素刻意重疊（折線／格線／座標標籤／資料點／百分位色帶／數值氣泡同一 Chart Plot 內絕對定位繪製，line 與 point/gridline/tooltip 相交是圖表視覺語言本身，非版面缺陷）"
+    }
+   ],
+   "result_hash": "7af24645f14d8783"
+  },
+  "row_overflow": {
+   "scope": "boards",
+   "document_count": 8,
+   "classes": 1,
+   "flagged": [
+    {
+     "node": "BUYNa",
+     "name": "Point 15",
+     "parent": "RjWai",
+     "parent_name": "Chart Plot",
+     "overflow": 6,
+     "class": "Chart Plot :: Point 15",
+     "count": 8,
+     "classification": "最後一個成長曲線資料點（圓形，半徑 6/9pt）外緣超出 Chart Plot 自身宣告寬度 6pt；Chart Plot 由 Chart Card 20pt 內距（$inset-card）包住，實際落在卡片內距緩衝區內，未觸及卡片或板界（board_clip 掃描同批 0 筆可佐證），非缺陷"
+    }
+   ],
+   "result_hash": "96ecc12329dd1134"
+  },
+  "cross_parent_collision": {
+   "scope": "boards",
+   "document_count": 0,
+   "classes": 0,
+   "flagged": [],
+   "result_hash": "11b1f5d83497064f"
+  },
+  "corner_anchor": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "QpvnZ",
+    "vnyMW",
+    "IlAt6",
+    "yL3kY",
+    "y0aF8s",
+    "j3KH8",
+    "IDQ7E",
+    "OWkSn",
+    "d5yqO",
+    "DkdRN",
+    "debbU",
+    "v5bM87",
+    "EnTiZ",
+    "e19Dp0",
+    "a7KXUR",
+    "MRe1A",
+    "obUJ8",
+    "tRL2y",
+    "u1rPc",
+    "PH9m7",
+    "t1aQM"
+   ],
+   "containers": 0,
+   "points": 0,
+   "mismatch": 0,
+   "flagged": [],
+   "unresolved": [],
+   "ref_hits": 0,
+   "ref_hits_defs": 0,
+   "document_containers": 0,
+   "document_points": 0,
+   "document_mismatch": 0,
+   "document_flagged": [],
+   "document_unresolved": [],
+   "result_hash": "4f9d0e3245635084"
+  },
+  "text_occlusion": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "QpvnZ",
+    "vnyMW",
+    "IlAt6",
+    "yL3kY",
+    "y0aF8s",
+    "j3KH8",
+    "IDQ7E",
+    "OWkSn",
+    "d5yqO",
+    "DkdRN",
+    "debbU",
+    "v5bM87",
+    "EnTiZ",
+    "e19Dp0",
+    "a7KXUR",
+    "MRe1A",
+    "obUJ8",
+    "tRL2y",
+    "u1rPc",
+    "PH9m7",
+    "t1aQM"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "c43c854d6c7b5904"
+  },
+  "board_clip": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "QpvnZ",
+    "vnyMW",
+    "IlAt6",
+    "yL3kY",
+    "y0aF8s",
+    "j3KH8",
+    "IDQ7E",
+    "OWkSn",
+    "d5yqO",
+    "DkdRN",
+    "debbU",
+    "v5bM87",
+    "EnTiZ",
+    "e19Dp0",
+    "a7KXUR",
+    "MRe1A",
+    "obUJ8",
+    "tRL2y",
+    "u1rPc",
+    "PH9m7",
+    "t1aQM"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "078b877f22094a82"
+  }
+ },
+ "total_nodes": 13189,
+ "tree_hash": "a14e9a8003961d2d",
+ "flags": {
+  "cross_all": false,
+  "custom_overlay_re": false
+ },
+ "scan_note": "snapshot mode（LS-289），dump sha256=9eba64dd8396f6557123312446e2eb6cd77f8eee44c15900068dd3636f54d076；全稿 13189 節點（未展開）超過建議分批門檻，改用 pen-snapshot-dump.js 唯讀走訪一次 execute 取得展開快照（rows=20523，1 次 execute 未分批，未觸發 interrupted），tree_hash 另以 scripts/gates/design_tree_hash.py 對已落地 commit 2354b46（head_sha）離線重算（Pencil SCAN_HASH_ONLY 全稿雜湊走訪在本機連續 interrupted，改走離線重算路徑，同一稿態、快照與雜湊之間無任何寫入）。scan_scope=boards，SCAN_BOARDS 涵蓋本輪新增全部 21 個頂層板（Growth/01–06 六個畫面群的 light/dark/AX3/iPad/錯誤態/刪除確認變體＋Notes 板）。sibling_intersection 141 筆全數為①成長曲線 Chart Plot 內部裝飾元素（折線×格線/座標標籤/資料點/百分位色帶/數值氣泡）刻意疊放的向量圖表繪製語言、或②Sheet 版式既有三層絕對定位堆疊（Status Bar 背景/Scrim/Sheet Wrap，沿 LS-152 既有結構）；row_overflow 8 筆為最後資料點圓形半徑外擴 6pt（落在 Chart Card 20pt 內距緩衝內，未觸及卡片或板界）。corner_anchor containers=0 為預期結果——本票畫面無照片沖印品母題，未使用角托元件。board_clip／text_occlusion 兩支必為 0 的掃描皆通過（board_clip 修正一輪：Growth/01 及其深色版的成長曲線 Value Tooltip 文字寬度超出預留空間、右緣溢出板界 5pt，已於 commit 2354b46 修正為依實測寬度動態夾限位置）。",
+ "ticket": "LS-252",
+ "round": 1,
+ "head_sha": "2354b46a9ece9aef8fb656adf2772938a751593f"
+}

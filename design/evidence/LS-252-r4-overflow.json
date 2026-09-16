@@ -1,0 +1,1134 @@
+{
+  "ticket": "LS-252",
+  "round": 4,
+  "head_sha": "d8cab9620875594e9e1e0c5daafa99e8bfa80b68",
+  "total_nodes": 13969,
+  "tree_hash": "fe07d17be2bfb075",
+  "scan_scope": "boards",
+  "scan_note": "不分批（單次 --from-snapshot 離線跑六支）；in-Pencil SCAN_HASH_ONLY 單次 execute 依 orchestrator 指示只試一次（不重試三次）：本輪確認仍 InternalError: interrupted（與 VR 本輪一致，VR 本輪也證實需要 root 分段才過），隨即改用 LS-289 流程：Pencil execute 送 pen-snapshot-dump.js（唯讀）→ 54 個 SNAP batch 拼成 dump 檔 → node overflow-scan.js --from-snapshot；tree_hash 另外用 scripts/gates/design_tree_hash.py 對已落地 commit d8cab96 離線算好 (fe07d17be2bfb075) 傳入。SCAN_BOARDS 涵蓋本輪觸碰的全部 23 個頂層節點 （01/02/03/04/05a/05b/06 各變體 + Notes + cmp/Segmented；06 三個變體本輪已改為 UbLmB/fySdV 取代舊 gDgVF/M9rKl）。收據跑前的例行複驗额外發現並修正 3 項迴歸：① 06 三板 Home Indicator 板裁切（B-2/M-1 改動內容高度但板高未同步，board_clip +19.5~339.5pt，四板補齊 34pt 完整 Home Indicator 空間）；② A11y/03 揭露動作塊高度修正（B-2）連動使板高不足，一併補齊；③ A11y/06 最新紀錄三卡沿用 light/dark 的橫向三欄 161.67pt 寬版面在 AX3 大字級下 row_overflow 5 處 8.33~22.33pt，改為直向堆疊 fill_container 消除。三項 修正已於 commit 1254d3b／d8cab96 落地並在此次最終掃描重新驗證：row_overflow=0、board_clip.flagged=0、text_occlusion.flagged=0、corner_anchor.mismatch=0。整份收據來自 commit d8cab96 落地後、同一稿態的單次離線掃描。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 231,
+      "result_hash": "9c661858f45b43ff",
+      "flagged": [
+        {
+          "node_a": "G5cPd",
+          "node_b": "iDeKG",
+          "name_a": "Gridline 85",
+          "name_b": "Growth Line",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            233,
+            1
+          ],
+          "class": "Gridline 85 × Growth Line @ Chart Plot",
+          "count": 8,
+          "classification": "圖表內部圖層疊加：格線／軸標籤與資料線同屬繪圖區座標系，資料線經過對應數值格線處本就會相交，屬折線圖標準疊加，非破版。"
+        },
+        {
+          "node_a": "ekOE2",
+          "node_b": "iDeKG",
+          "name_a": "Axis Label 85",
+          "name_b": "Growth Line",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            32,
+            25
+          ],
+          "class": "Axis Label 85 × Growth Line @ Chart Plot",
+          "count": 8,
+          "classification": "圖表內部圖層疊加：格線／軸標籤與資料線同屬繪圖區座標系，資料線經過對應數值格線處本就會相交，屬折線圖標準疊加，非破版。"
+        },
+        {
+          "node_a": "Cbn10",
+          "node_b": "iDeKG",
+          "name_a": "Gridline 70",
+          "name_b": "Growth Line",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            233,
+            1
+          ],
+          "class": "Gridline 70 × Growth Line @ Chart Plot",
+          "count": 8,
+          "classification": "圖表內部圖層疊加：格線／軸標籤與資料線同屬繪圖區座標系，資料線經過對應數值格線處本就會相交，屬折線圖標準疊加，非破版。"
+        },
+        {
+          "node_a": "htQ6m",
+          "node_b": "iDeKG",
+          "name_a": "Axis Label 70",
+          "name_b": "Growth Line",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            32,
+            25
+          ],
+          "class": "Axis Label 70 × Growth Line @ Chart Plot",
+          "count": 8,
+          "classification": "圖表內部圖層疊加：格線／軸標籤與資料線同屬繪圖區座標系，資料線經過對應數值格線處本就會相交，屬折線圖標準疊加，非破版。"
+        },
+        {
+          "node_a": "L6i3a",
+          "node_b": "iDeKG",
+          "name_a": "Gridline 55",
+          "name_b": "Growth Line",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            233,
+            1
+          ],
+          "class": "Gridline 55 × Growth Line @ Chart Plot",
+          "count": 8,
+          "classification": "圖表內部圖層疊加：格線／軸標籤與資料線同屬繪圖區座標系，資料線經過對應數值格線處本就會相交，屬折線圖標準疊加，非破版。"
+        },
+        {
+          "node_a": "heL4w",
+          "node_b": "iDeKG",
+          "name_a": "Axis Label 55",
+          "name_b": "Growth Line",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            32,
+            25
+          ],
+          "class": "Axis Label 55 × Growth Line @ Chart Plot",
+          "count": 8,
+          "classification": "圖表內部圖層疊加：格線／軸標籤與資料線同屬繪圖區座標系，資料線經過對應數值格線處本就會相交，屬折線圖標準疊加，非破版。"
+        },
+        {
+          "node_a": "kfbjT",
+          "node_b": "iDeKG",
+          "name_a": "Axis Label 40",
+          "name_b": "Growth Line",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            32,
+            9
+          ],
+          "class": "Axis Label 40 × Growth Line @ Chart Plot",
+          "count": 8,
+          "classification": "圖表內部圖層疊加：格線／軸標籤與資料線同屬繪圖區座標系，資料線經過對應數值格線處本就會相交，屬折線圖標準疊加，非破版。"
+        },
+        {
+          "node_a": "kfbjT",
+          "node_b": "q1oY2O",
+          "name_a": "Axis Label 40",
+          "name_b": "Month Label 1",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            12,
+            6
+          ],
+          "class": "Axis Label 40 × Month Label 1 @ Chart Plot",
+          "count": 8,
+          "classification": "縱軸數值標籤（40）與橫軸第一個月齡刻度文字在繪圖區左下角相鄰，屬座標軸標籤密集區域的既有裝飾性鄰近重疊。"
+        },
+        {
+          "node_a": "CwrcX",
+          "node_b": "iDeKG",
+          "name_a": "Unit Label",
+          "name_b": "Growth Line",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            56,
+            19
+          ],
+          "class": "Unit Label × Growth Line @ Chart Plot",
+          "count": 8,
+          "classification": "圖表內部圖層疊加：格線／軸標籤與資料線同屬繪圖區座標系，資料線經過對應數值格線處本就會相交，屬折線圖標準疊加，非破版。"
+        },
+        {
+          "node_a": "iDeKG",
+          "node_b": "uFFsl",
+          "name_a": "Growth Line",
+          "name_b": "Point 1",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            8,
+            8
+          ],
+          "class": "Growth Line × Point 1 @ Chart Plot",
+          "count": 8,
+          "classification": "資料線與其自身資料點：折線圖定義上線必通過各資料點，是圖表繪製的必然疊加，非破版。"
+        },
+        {
+          "node_a": "iDeKG",
+          "node_b": "Jaxzl",
+          "name_a": "Growth Line",
+          "name_b": "Point 4",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            8,
+            8
+          ],
+          "class": "Growth Line × Point 4 @ Chart Plot",
+          "count": 8,
+          "classification": "資料線與其自身資料點：折線圖定義上線必通過各資料點，是圖表繪製的必然疊加，非破版。"
+        },
+        {
+          "node_a": "iDeKG",
+          "node_b": "PksZ6",
+          "name_a": "Growth Line",
+          "name_b": "Point 7",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            8,
+            8
+          ],
+          "class": "Growth Line × Point 7 @ Chart Plot",
+          "count": 8,
+          "classification": "資料線與其自身資料點：折線圖定義上線必通過各資料點，是圖表繪製的必然疊加，非破版。"
+        },
+        {
+          "node_a": "iDeKG",
+          "node_b": "Cg0EE",
+          "name_a": "Growth Line",
+          "name_b": "Point 10",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            8,
+            8
+          ],
+          "class": "Growth Line × Point 10 @ Chart Plot",
+          "count": 8,
+          "classification": "資料線與其自身資料點：折線圖定義上線必通過各資料點，是圖表繪製的必然疊加，非破版。"
+        },
+        {
+          "node_a": "iDeKG",
+          "node_b": "mjo6C",
+          "name_a": "Growth Line",
+          "name_b": "Point 16",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            12,
+            12
+          ],
+          "class": "Growth Line × Point 16 @ Chart Plot",
+          "count": 8,
+          "classification": "資料線與其自身資料點：折線圖定義上線必通過各資料點，是圖表繪製的必然疊加，非破版。"
+        },
+        {
+          "node_a": "iDeKG",
+          "node_b": "PC5fW",
+          "name_a": "Growth Line",
+          "name_b": "Value Tooltip",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            89,
+            41
+          ],
+          "class": "Growth Line × Value Tooltip @ Chart Plot",
+          "count": 8,
+          "classification": "數值提示框（Value Tooltip）刻意疊放在資料線上方（繪製順序在後、z-index 較高），是設計上的懸浮提示效果。"
+        },
+        {
+          "node_a": "J19W2",
+          "node_b": "eJhz1",
+          "name_a": "Month Label 16",
+          "name_b": "Age Axis Label",
+          "parent": "KiaOQ",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            16,
+            19
+          ],
+          "class": "Month Label 16 × Age Axis Label @ Chart Plot",
+          "count": 7,
+          "classification": "既有裝飾性標籤鄰近重疊：軸名「月齡」靠近最後一個月齡刻度文字（R4 06 iPad 全寬重排後 light/dark 兩板回到與 iPhone 同列擺法，此類的量測基準不變）。"
+        },
+        {
+          "node_a": "K4k8k",
+          "node_b": "x7ff8l",
+          "name_a": "Gridline 40",
+          "name_b": "Growth Line",
+          "parent": "NPtru",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            193,
+            1
+          ],
+          "class": "Gridline 40 × Growth Line @ Chart Plot",
+          "count": 4,
+          "classification": "圖表內部圖層疊加：格線／軸標籤與資料線同屬繪圖區座標系，資料線經過對應數值格線處本就會相交，屬折線圖標準疊加，非破版。"
+        },
+        {
+          "node_a": "x7ff8l",
+          "node_b": "ykneh",
+          "name_a": "Growth Line",
+          "name_b": "Month Label 1",
+          "parent": "NPtru",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            48,
+            44
+          ],
+          "class": "Growth Line × Month Label 1 @ Chart Plot",
+          "count": 4,
+          "classification": "資料線在月齡刻度文字上方通過，屬繪圖區內線與軸刻度文字的既有疊加層次，非破版。"
+        },
+        {
+          "node_a": "x7ff8l",
+          "node_b": "T9nSnb",
+          "name_a": "Growth Line",
+          "name_b": "Month Label 7",
+          "parent": "NPtru",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            48,
+            44
+          ],
+          "class": "Growth Line × Month Label 7 @ Chart Plot",
+          "count": 4,
+          "classification": "資料線在月齡刻度文字上方通過，屬繪圖區內線與軸刻度文字的既有疊加層次，非破版。"
+        },
+        {
+          "node_a": "x7ff8l",
+          "node_b": "fdqRZ",
+          "name_a": "Growth Line",
+          "name_b": "Month Label 16",
+          "parent": "NPtru",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            48,
+            44
+          ],
+          "class": "Growth Line × Month Label 16 @ Chart Plot",
+          "count": 4,
+          "classification": "資料線在月齡刻度文字上方通過，屬繪圖區內線與軸刻度文字的既有疊加層次，非破版。"
+        },
+        {
+          "node_a": "x7ff8l",
+          "node_b": "gEDP3",
+          "name_a": "Growth Line",
+          "name_b": "Age Axis Label",
+          "parent": "NPtru",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            60,
+            44
+          ],
+          "class": "Growth Line × Age Axis Label @ Chart Plot",
+          "count": 3,
+          "classification": "06 iPad 版資料線與軸名同屬繪圖區座標系內的既有疊加層次，與其餘 Growth Line × 軸標籤同類。"
+        },
+        {
+          "node_a": "x1KRHG",
+          "node_b": "C8yU4O",
+          "name_a": "Gridline 70",
+          "name_b": "Empty Message",
+          "parent": "KF6r5",
+          "parent_name": "Chart Plot Skeleton",
+          "overlap": [
+            192,
+            1
+          ],
+          "class": "Gridline 70 × Empty Message @ Chart Plot Skeleton",
+          "count": 3,
+          "classification": "04 骨架版背景格線與空狀態訊息文字疊加：格線是骨架背景裝飾層，空狀態文字置於其上方，屬刻意的疊加效果（B-3 修正後紙卡改窄置中，格線從左右穿出，此類疊加限縮在卡片正下方區域，符合設計意圖）。"
+        },
+        {
+          "node_a": "tUJmI",
+          "node_b": "C8yU4O",
+          "name_a": "Gridline 55",
+          "name_b": "Empty Message",
+          "parent": "KF6r5",
+          "parent_name": "Chart Plot Skeleton",
+          "overlap": [
+            192,
+            1
+          ],
+          "class": "Gridline 55 × Empty Message @ Chart Plot Skeleton",
+          "count": 3,
+          "classification": "04 骨架版背景格線與空狀態訊息文字疊加：格線是骨架背景裝飾層，空狀態文字置於其上方，屬刻意的疊加效果（B-3 修正後紙卡改窄置中，格線從左右穿出，此類疊加限縮在卡片正下方區域，符合設計意圖）。"
+        },
+        {
+          "node_a": "uPj6z",
+          "node_b": "jxG3z",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Scrim",
+          "parent": "KWEaE",
+          "parent_name": "Growth / 02 新增量測 sheet (iPhone)",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Scrim @ Growth / 02 新增量測 sheet (iPhone)",
+          "count": 1,
+          "classification": "底部彈出 sheet 的全螢幕遮罩（Scrim）覆蓋整個畫面含狀態列，屬 sheet 呈現的標準全螢幕遮罩效果，非破版。"
+        },
+        {
+          "node_a": "uPj6z",
+          "node_b": "cAzYX",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Sheet Wrap",
+          "parent": "KWEaE",
+          "parent_name": "Growth / 02 新增量測 sheet (iPhone)",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 02 新增量測 sheet (iPhone)",
+          "count": 1,
+          "classification": "sheet 容器（Sheet Wrap）覆蓋整個畫面含狀態列區域，屬全螢幕 sheet 呈現的既有版面，非破版。"
+        },
+        {
+          "node_a": "jxG3z",
+          "node_b": "cAzYX",
+          "name_a": "Scrim",
+          "name_b": "Sheet Wrap",
+          "parent": "KWEaE",
+          "parent_name": "Growth / 02 新增量測 sheet (iPhone)",
+          "overlap": [
+            393,
+            1025
+          ],
+          "class": "Scrim × Sheet Wrap @ Growth / 02 新增量測 sheet (iPhone)",
+          "count": 1,
+          "classification": "遮罩（Scrim）與其上方的 sheet 容器（Sheet Wrap）本就疊放於同一畫面，是 sheet 彈出效果的標準結構，非破版。"
+        },
+        {
+          "node_a": "euBiW",
+          "node_b": "zhWXo",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Scrim",
+          "parent": "qrFWJ",
+          "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（全空）",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Scrim @ Growth / 02 新增量測 sheet · 錯誤態（全空）",
+          "count": 1,
+          "classification": "底部彈出 sheet 的全螢幕遮罩（Scrim）覆蓋整個畫面含狀態列，屬 sheet 呈現的標準全螢幕遮罩效果，非破版。"
+        },
+        {
+          "node_a": "euBiW",
+          "node_b": "i3OfdM",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Sheet Wrap",
+          "parent": "qrFWJ",
+          "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（全空）",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 02 新增量測 sheet · 錯誤態（全空）",
+          "count": 1,
+          "classification": "sheet 容器（Sheet Wrap）覆蓋整個畫面含狀態列區域，屬全螢幕 sheet 呈現的既有版面，非破版。"
+        },
+        {
+          "node_a": "zhWXo",
+          "node_b": "i3OfdM",
+          "name_a": "Scrim",
+          "name_b": "Sheet Wrap",
+          "parent": "qrFWJ",
+          "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（全空）",
+          "overlap": [
+            393,
+            1025
+          ],
+          "class": "Scrim × Sheet Wrap @ Growth / 02 新增量測 sheet · 錯誤態（全空）",
+          "count": 1,
+          "classification": "遮罩（Scrim）與其上方的 sheet 容器（Sheet Wrap）本就疊放於同一畫面，是 sheet 彈出效果的標準結構，非破版。"
+        },
+        {
+          "node_a": "h1Agd",
+          "node_b": "Spvfs",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Scrim",
+          "parent": "L9AvJN",
+          "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Scrim @ Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+          "count": 1,
+          "classification": "底部彈出 sheet 的全螢幕遮罩（Scrim）覆蓋整個畫面含狀態列，屬 sheet 呈現的標準全螢幕遮罩效果，非破版。"
+        },
+        {
+          "node_a": "h1Agd",
+          "node_b": "yRhS9",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Sheet Wrap",
+          "parent": "L9AvJN",
+          "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+          "count": 1,
+          "classification": "sheet 容器（Sheet Wrap）覆蓋整個畫面含狀態列區域，屬全螢幕 sheet 呈現的既有版面，非破版。"
+        },
+        {
+          "node_a": "Spvfs",
+          "node_b": "yRhS9",
+          "name_a": "Scrim",
+          "name_b": "Sheet Wrap",
+          "parent": "L9AvJN",
+          "parent_name": "Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+          "overlap": [
+            393,
+            1089
+          ],
+          "class": "Scrim × Sheet Wrap @ Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+          "count": 1,
+          "classification": "遮罩（Scrim）與其上方的 sheet 容器（Sheet Wrap）本就疊放於同一畫面，是 sheet 彈出效果的標準結構，非破版。"
+        },
+        {
+          "node_a": "rTzA5",
+          "node_b": "R3s2lA",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Scrim",
+          "parent": "S4Pdz",
+          "parent_name": "Growth / 02 新增量測 sheet · 深色",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Scrim @ Growth / 02 新增量測 sheet · 深色",
+          "count": 1,
+          "classification": "底部彈出 sheet 的全螢幕遮罩（Scrim）覆蓋整個畫面含狀態列，屬 sheet 呈現的標準全螢幕遮罩效果，非破版。"
+        },
+        {
+          "node_a": "rTzA5",
+          "node_b": "s6bJtO",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Sheet Wrap",
+          "parent": "S4Pdz",
+          "parent_name": "Growth / 02 新增量測 sheet · 深色",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 02 新增量測 sheet · 深色",
+          "count": 1,
+          "classification": "sheet 容器（Sheet Wrap）覆蓋整個畫面含狀態列區域，屬全螢幕 sheet 呈現的既有版面，非破版。"
+        },
+        {
+          "node_a": "R3s2lA",
+          "node_b": "s6bJtO",
+          "name_a": "Scrim",
+          "name_b": "Sheet Wrap",
+          "parent": "S4Pdz",
+          "parent_name": "Growth / 02 新增量測 sheet · 深色",
+          "overlap": [
+            393,
+            1025
+          ],
+          "class": "Scrim × Sheet Wrap @ Growth / 02 新增量測 sheet · 深色",
+          "count": 1,
+          "classification": "遮罩（Scrim）與其上方的 sheet 容器（Sheet Wrap）本就疊放於同一畫面，是 sheet 彈出效果的標準結構，非破版。"
+        },
+        {
+          "node_a": "xHKuI",
+          "node_b": "SuL0C",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Scrim",
+          "parent": "XUasb",
+          "parent_name": "A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Scrim @ A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+          "count": 1,
+          "classification": "底部彈出 sheet 的全螢幕遮罩（Scrim）覆蓋整個畫面含狀態列，屬 sheet 呈現的標準全螢幕遮罩效果，非破版。"
+        },
+        {
+          "node_a": "xHKuI",
+          "node_b": "etY55",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Sheet Wrap",
+          "parent": "XUasb",
+          "parent_name": "A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Sheet Wrap @ A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+          "count": 1,
+          "classification": "sheet 容器（Sheet Wrap）覆蓋整個畫面含狀態列區域，屬全螢幕 sheet 呈現的既有版面，非破版。"
+        },
+        {
+          "node_a": "SuL0C",
+          "node_b": "etY55",
+          "name_a": "Scrim",
+          "name_b": "Sheet Wrap",
+          "parent": "XUasb",
+          "parent_name": "A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+          "overlap": [
+            393,
+            1439
+          ],
+          "class": "Scrim × Sheet Wrap @ A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+          "count": 1,
+          "classification": "遮罩（Scrim）與其上方的 sheet 容器（Sheet Wrap）本就疊放於同一畫面，是 sheet 彈出效果的標準結構，非破版。"
+        },
+        {
+          "node_a": "BuEY0",
+          "node_b": "hgVXM",
+          "name_a": "Field Value",
+          "name_b": "Calendar Icon",
+          "parent": "fStSl",
+          "parent_name": "Field Box",
+          "overlap": [
+            32,
+            32
+          ],
+          "class": "Field Value × Calendar Icon @ Field Box",
+          "count": 1,
+          "classification": "日期欄位值文字與行事曆圖示同排顯示，圖示為欄位內嵌裝飾，刻意疊放在欄位內容前緣。"
+        },
+        {
+          "node_a": "WJnwk/tBi8u",
+          "node_b": "WJnwk/xlLIo",
+          "name_a": "Ghost",
+          "name_b": "Stamp",
+          "parent": "WJnwk/OCYqN",
+          "parent_name": "Stamp Wrap",
+          "overlap": [
+            71.99,
+            38.3
+          ],
+          "class": "Ghost × Stamp @ Stamp Wrap",
+          "count": 12,
+          "classification": "cmp/Day Divider 既有元件：Ghost 為淡化旋轉殘影，刻意疊放在 Stamp 正下方模擬「多層郵戳」視覺母題，非破版（R4 count 從 6 增至 12：06 iPad 兩欄年份分組新增 4 個 Year Divider 實例，加上既有 03 兩板各 2 個，共 6 對）。"
+        },
+        {
+          "node_a": "J7MLoC",
+          "node_b": "I543fs",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Scrim",
+          "parent": "z1QNs",
+          "parent_name": "Growth / 03 列操作 sheet（非手勢替代路徑）",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Scrim @ Growth / 03 列操作 sheet（非手勢替代路徑）",
+          "count": 1,
+          "classification": "底部彈出 sheet 的全螢幕遮罩（Scrim）覆蓋整個畫面含狀態列，屬 sheet 呈現的標準全螢幕遮罩效果，非破版。"
+        },
+        {
+          "node_a": "J7MLoC",
+          "node_b": "zY0x7",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Sheet Wrap",
+          "parent": "z1QNs",
+          "parent_name": "Growth / 03 列操作 sheet（非手勢替代路徑）",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 03 列操作 sheet（非手勢替代路徑）",
+          "count": 1,
+          "classification": "sheet 容器（Sheet Wrap）覆蓋整個畫面含狀態列區域，屬全螢幕 sheet 呈現的既有版面，非破版。"
+        },
+        {
+          "node_a": "I543fs",
+          "node_b": "zY0x7",
+          "name_a": "Scrim",
+          "name_b": "Sheet Wrap",
+          "parent": "z1QNs",
+          "parent_name": "Growth / 03 列操作 sheet（非手勢替代路徑）",
+          "overlap": [
+            393,
+            852
+          ],
+          "class": "Scrim × Sheet Wrap @ Growth / 03 列操作 sheet（非手勢替代路徑）",
+          "count": 1,
+          "classification": "遮罩（Scrim）與其上方的 sheet 容器（Sheet Wrap）本就疊放於同一畫面，是 sheet 彈出效果的標準結構，非破版。"
+        },
+        {
+          "node_a": "I2lDRh",
+          "node_b": "n4Y8Q",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Scrim",
+          "parent": "d4zid",
+          "parent_name": "Growth / 03 刪除紀錄・確認",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Scrim @ Growth / 03 刪除紀錄・確認",
+          "count": 1,
+          "classification": "底部彈出 sheet 的全螢幕遮罩（Scrim）覆蓋整個畫面含狀態列，屬 sheet 呈現的標準全螢幕遮罩效果，非破版。"
+        },
+        {
+          "node_a": "I2lDRh",
+          "node_b": "eOSXb",
+          "name_a": "Status Bar (Backdrop)",
+          "name_b": "Sheet Wrap",
+          "parent": "d4zid",
+          "parent_name": "Growth / 03 刪除紀錄・確認",
+          "overlap": [
+            393,
+            62
+          ],
+          "class": "Status Bar (Backdrop) × Sheet Wrap @ Growth / 03 刪除紀錄・確認",
+          "count": 1,
+          "classification": "sheet 容器（Sheet Wrap）覆蓋整個畫面含狀態列區域，屬全螢幕 sheet 呈現的既有版面，非破版。"
+        },
+        {
+          "node_a": "n4Y8Q",
+          "node_b": "eOSXb",
+          "name_a": "Scrim",
+          "name_b": "Sheet Wrap",
+          "parent": "d4zid",
+          "parent_name": "Growth / 03 刪除紀錄・確認",
+          "overlap": [
+            393,
+            852
+          ],
+          "class": "Scrim × Sheet Wrap @ Growth / 03 刪除紀錄・確認",
+          "count": 1,
+          "classification": "遮罩（Scrim）與其上方的 sheet 容器（Sheet Wrap）本就疊放於同一畫面，是 sheet 彈出效果的標準結構，非破版。"
+        },
+        {
+          "node_a": "IzXiA",
+          "node_b": "bYI47",
+          "name_a": "Growth / 05a 百分位參考帶 · WHO 0–5 歲",
+          "name_b": "A11y / 03 記錄列表 · Dynamic Type AX3（body 40pt）",
+          "parent": null,
+          "parent_name": "root",
+          "overlap": [
+            393,
+            346.86
+          ],
+          "class": "Growth / 05a 百分位參考帶 · WHO 0–5 歲 × A11y / 03 記錄列表 · Dynamic Type AX3（body 40pt） @ root",
+          "count": 1,
+          "classification": "無限畫布上兩個不同頂層板彼此鄰近擺放的空間關係，非同一支手機畫面內的元素碰撞，不影響任何實際畫面（R4：A11y/03 板因 B-2 揭露列高度修正而變高，與相鄰的 05a 比較板在畫布上首次觸及，純屬畫布擺放巧合）。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "VKZz5",
+          "name_a": "Percentile Band",
+          "name_b": "Percentile Band",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            265,
+            200
+          ],
+          "class": "Percentile Band × Percentile Band @ Chart Plot",
+          "count": 1,
+          "classification": "兩條相鄰百分位色帶（如 3rd–97th 與 15th–85th）本身即為巢狀區間，交集屬百分位帶圖表的正常繪製，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "wZWb5",
+          "name_a": "Percentile Band",
+          "name_b": "Gridline 85",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            229,
+            1
+          ],
+          "class": "Percentile Band × Gridline 85 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "qtFED",
+          "name_a": "Percentile Band",
+          "name_b": "Axis Label 85",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            32,
+            25
+          ],
+          "class": "Percentile Band × Axis Label 85 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "MCP0q",
+          "name_a": "Percentile Band",
+          "name_b": "Gridline 70",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            229,
+            1
+          ],
+          "class": "Percentile Band × Gridline 70 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "qMM3y",
+          "name_a": "Percentile Band",
+          "name_b": "Axis Label 70",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            32,
+            25
+          ],
+          "class": "Percentile Band × Axis Label 70 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "kgROp",
+          "name_a": "Percentile Band",
+          "name_b": "Gridline 55",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            229,
+            1
+          ],
+          "class": "Percentile Band × Gridline 55 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "l1f4f",
+          "name_a": "Percentile Band",
+          "name_b": "Axis Label 55",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            32,
+            25
+          ],
+          "class": "Percentile Band × Axis Label 55 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "u3x1A4",
+          "name_a": "Percentile Band",
+          "name_b": "Axis Label 40",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            32,
+            9
+          ],
+          "class": "Percentile Band × Axis Label 40 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "WkfI5",
+          "name_a": "Percentile Band",
+          "name_b": "Unit Label",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            56,
+            19
+          ],
+          "class": "Percentile Band × Unit Label @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "iPGil",
+          "name_a": "Percentile Band",
+          "name_b": "Growth Line",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            265,
+            200
+          ],
+          "class": "Percentile Band × Growth Line @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "NTFob",
+          "name_a": "Percentile Band",
+          "name_b": "Point 1",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            8,
+            8
+          ],
+          "class": "Percentile Band × Point 1 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "C48RCD",
+          "name_a": "Percentile Band",
+          "name_b": "Point 4",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            8,
+            8
+          ],
+          "class": "Percentile Band × Point 4 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "A7vEB",
+          "name_a": "Percentile Band",
+          "name_b": "Point 7",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            8,
+            8
+          ],
+          "class": "Percentile Band × Point 7 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "vpvqL",
+          "name_a": "Percentile Band",
+          "name_b": "Point 10",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            8,
+            8
+          ],
+          "class": "Percentile Band × Point 10 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "Ie7wh",
+          "name_a": "Percentile Band",
+          "name_b": "Point 16",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            6,
+            12
+          ],
+          "class": "Percentile Band × Point 16 @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "bxRVC",
+          "node_b": "r5MKu",
+          "name_a": "Percentile Band",
+          "name_b": "Value Tooltip",
+          "parent": "y6ccA",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            49,
+            41
+          ],
+          "class": "Percentile Band × Value Tooltip @ Chart Plot",
+          "count": 2,
+          "classification": "百分位色帶（M-10(R3) 改用主題色 token 後）作為繪圖區底層著色區塊，本就會與格線／軸標籤／資料線／資料點／提示框疊加，是色帶身為背景區塊的必然疊加，非破版。"
+        },
+        {
+          "node_a": "SKifu",
+          "node_b": "Kd9mh",
+          "name_a": "Gridline 85",
+          "name_b": "Value Tooltip",
+          "parent": "mowNE",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            50.34,
+            1
+          ],
+          "class": "Gridline 85 × Value Tooltip @ Chart Plot",
+          "count": 3,
+          "classification": "提示框疊在格線上方，與 Growth Line × Value Tooltip 同屬繪圖區懸浮提示疊加層次。"
+        },
+        {
+          "node_a": "ClHqn",
+          "node_b": "S1Uq3",
+          "name_a": "Growth Line",
+          "name_b": "Month Label 4",
+          "parent": "mowNE",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            32,
+            25
+          ],
+          "class": "Growth Line × Month Label 4 @ Chart Plot",
+          "count": 3,
+          "classification": "資料線在月齡刻度文字上方通過，屬繪圖區內線與軸刻度文字的既有疊加層次，非破版。"
+        },
+        {
+          "node_a": "ClHqn",
+          "node_b": "YTBtN",
+          "name_a": "Growth Line",
+          "name_b": "Month Label 10",
+          "parent": "mowNE",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            32,
+            25
+          ],
+          "class": "Growth Line × Month Label 10 @ Chart Plot",
+          "count": 3,
+          "classification": "資料線在月齡刻度文字上方通過，屬繪圖區內線與軸刻度文字的既有疊加層次，非破版。"
+        },
+        {
+          "node_a": "LoeK7",
+          "node_b": "vbIHm",
+          "name_a": "Gridline 85",
+          "name_b": "Empty Message",
+          "parent": "ooglT",
+          "parent_name": "Chart Plot Skeleton",
+          "overlap": [
+            192,
+            1
+          ],
+          "class": "Gridline 85 × Empty Message @ Chart Plot Skeleton",
+          "count": 1,
+          "classification": "04 骨架版背景格線與空狀態訊息文字疊加：格線是骨架背景裝飾層，空狀態文字置於其上方，屬刻意的疊加效果（B-3 修正後紙卡改窄置中，格線從左右穿出，此類疊加限縮在卡片正下方區域，符合設計意圖）。"
+        },
+        {
+          "node_a": "vLTnp",
+          "node_b": "vbIHm",
+          "name_a": "Gridline 40",
+          "name_b": "Empty Message",
+          "parent": "ooglT",
+          "parent_name": "Chart Plot Skeleton",
+          "overlap": [
+            192,
+            1
+          ],
+          "class": "Gridline 40 × Empty Message @ Chart Plot Skeleton",
+          "count": 1,
+          "classification": "04 骨架版背景格線與空狀態訊息文字疊加：格線是骨架背景裝飾層，空狀態文字置於其上方，屬刻意的疊加效果（B-3 修正後紙卡改窄置中，格線從左右穿出，此類疊加限縮在卡片正下方區域，符合設計意圖）。"
+        },
+        {
+          "node_a": "hx9YS",
+          "node_b": "vbIHm",
+          "name_a": "Age Axis Label",
+          "name_b": "Empty Message",
+          "parent": "ooglT",
+          "parent_name": "Chart Plot Skeleton",
+          "overlap": [
+            192,
+            3
+          ],
+          "class": "Age Axis Label × Empty Message @ Chart Plot Skeleton",
+          "count": 1,
+          "classification": "04 AX3 骨架格線區的月齡軸名與（B-3 修正後置中變窄的）空狀態紙卡在 AX3 尺寸下邊緣輕微重疊，與同板 Gridline × Empty Message 屬同一類裝飾性背景層重疊，非破版。"
+        },
+        {
+          "node_a": "mGPTq",
+          "node_b": "q7jqY",
+          "name_a": "Point 16",
+          "name_b": "Value Tooltip",
+          "parent": "v8G0fM",
+          "parent_name": "Chart Plot",
+          "overlap": [
+            12,
+            12
+          ],
+          "class": "Point 16 × Value Tooltip @ Chart Plot",
+          "count": 1,
+          "classification": "提示框指向的資料點與提示框本身相鄰重疊，是「提示框指著這個點」的視覺語意必然結果，非破版。"
+        }
+      ]
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "8d838136f8efa7c9",
+      "flagged": []
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "933f644fa5bcb9c2",
+      "flagged": []
+    },
+    "corner_anchor": {
+      "boards": [
+        "jp6ka",
+        "gBBcu",
+        "a9S6ke",
+        "KWEaE",
+        "qrFWJ",
+        "L9AvJN",
+        "S4Pdz",
+        "XUasb",
+        "IUdB6",
+        "z1QNs",
+        "d4zid",
+        "xAacW",
+        "bYI47",
+        "DHwk2",
+        "fOwyi",
+        "LiJgw",
+        "IzXiA",
+        "Vh4GQ",
+        "pjrd7",
+        "UbLmB",
+        "fySdV",
+        "h5BNyi",
+        "SEy9U"
+      ],
+      "containers": 0,
+      "points": 0,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 0,
+      "document_points": 0,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "ref_hits": 0,
+      "unresolved": [],
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "d12a7ca9b68903f7"
+    },
+    "text_occlusion": {
+      "flagged": [],
+      "document_flagged": [],
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "45c9f3c4dda10c77"
+    },
+    "board_clip": {
+      "flagged": [],
+      "document_flagged": [],
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "8918f5f6932efdf5"
+    }
+  }
+}
