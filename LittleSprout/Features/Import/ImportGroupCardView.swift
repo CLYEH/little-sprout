@@ -18,6 +18,11 @@ struct ImportGroupCardView: View {
     /// LS-303 R2（merge-review R1 M1）：`nil` 時（harness／preview 無真的 `PHAsset`）縮圖格
     /// 全部退回系統圖示佔位，見 `ImportThumbnailCell`。
     let thumbnailProvider: ImportThumbnailProvider?
+    /// LS-303 R5（merge-review R4 i2）：入口來源（`ImportEntrySource.albumDetail`）已知的
+    /// 相簿 id／名稱，`albumLabel` 在 `albums` 清單查不到 `group.albumID` 時的 fallback，
+    /// 見該屬性文件註解。
+    let fallbackAlbumID: UUID?
+    let fallbackAlbumName: String?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// LS-303：日期不明群的「可改日期」——`DatePicker(displayedComponents: .date)` 在
@@ -156,12 +161,18 @@ struct ImportGroupCardView: View {
     /// （例如 `AlbumsStore.albums` 剛好在重新整理）時，原本一律顯示「不放相簿」——文字與
     /// 實際資料相反（`ImportPlan` 其實帶著這個 `albumID`，主鈕按下去真的會放進那本相簿），
     /// 使用者會被字面誤導成「沒選、可以放心按」。「不放相簿」只在 `albumID == nil`（使用者
-    /// 真的選了這個選項，或 C3a 一般案的預設值）時顯示；`albumID` 有值但查無資料一律顯示
-    /// 「相簿載入中…」，如實反映「已經指定了、只是清單還沒跟上」。
+    /// 真的選了這個選項，或 C3a 一般案的預設值）時顯示。
+    ///
+    /// merge-review R4 i2：`albumID` 有值但查無資料時，R3 版本顯示稿外新造文案
+    /// 「相簿載入中…」——改用入口來源已經知道的相簿名稱（`fallbackAlbumID`／
+    /// `fallbackAlbumName`，見兩者文件註解）當 fallback，不需要新造任何文案。這覆蓋唯一會
+    /// 發生的情況：入口來源預設的那本相簿還沒出現在 `AlbumsStore.albums` 清單裡（使用者從
+    /// `albumChip` 選單另選的相簿一定已經在 `albums` 裡，前面的 `first(where:)` 就會命中）。
     private var albumLabel: String {
         guard let albumID = group.albumID else { return "不放相簿" }
-        guard let album = albums.first(where: { $0.id == albumID }) else { return "相簿載入中…" }
-        return album.title
+        if let album = albums.first(where: { $0.id == albumID }) { return album.title }
+        if albumID == fallbackAlbumID, let fallbackAlbumName { return fallbackAlbumName }
+        return "不放相簿"
     }
 
     private var skipButton: some View {

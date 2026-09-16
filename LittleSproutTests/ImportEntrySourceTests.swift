@@ -13,17 +13,29 @@ final class ImportEntrySourceTests: XCTestCase {
 
     func test_defaultAlbumID_albumDetail_returnsThatAlbum() {
         let albumID = UUID()
-        XCTAssertEqual(ImportEntrySource.albumDetail(albumID: albumID).defaultAlbumID, albumID)
+        XCTAssertEqual(ImportEntrySource.albumDetail(albumID: albumID, albumName: "測試相簿").defaultAlbumID, albumID)
     }
 
     func test_defaultAlbumID_timeline_returnsNil() {
         XCTAssertNil(ImportEntrySource.timeline.defaultAlbumID)
     }
 
+    /// i2（LS-303 R5，merge-review R4 `902eb329`）：`ImportGroupCardView.albumLabel` 的
+    /// fallback 顯示名稱來源。
+    func test_defaultAlbumName_albumDetail_returnsThatName() {
+        XCTAssertEqual(
+            ImportEntrySource.albumDetail(albumID: UUID(), albumName: "生日派對").defaultAlbumName, "生日派對"
+        )
+    }
+
+    func test_defaultAlbumName_timeline_returnsNil() {
+        XCTAssertNil(ImportEntrySource.timeline.defaultAlbumName)
+    }
+
     func test_applyDefaultAlbum_albumDetail_setsAlbumIDOnEveryGroup() {
         let albumID = UUID()
         let groups = [group(id: "a"), group(id: "b"), group(id: "c")]
-        let result = ImportEntrySource.albumDetail(albumID: albumID).applyDefaultAlbum(to: groups)
+        let result = ImportEntrySource.albumDetail(albumID: albumID, albumName: "測試相簿").applyDefaultAlbum(to: groups)
         XCTAssertEqual(result.map(\.albumID), [albumID, albumID, albumID])
     }
 
@@ -36,14 +48,16 @@ final class ImportEntrySourceTests: XCTestCase {
     func test_applyDefaultAlbum_preservesOtherFields() {
         let albumID = UUID()
         let original = group(id: "2026-09-10")
-        let result = ImportEntrySource.albumDetail(albumID: albumID).applyDefaultAlbum(to: [original])
+        let result = ImportEntrySource.albumDetail(albumID: albumID, albumName: "測試相簿")
+            .applyDefaultAlbum(to: [original])
         XCTAssertEqual(result[0].id, original.id)
         XCTAssertEqual(result[0].assetLocalIdentifiers, original.assetLocalIdentifiers)
         XCTAssertEqual(result[0].anchorDate, original.anchorDate)
     }
 
     func test_applyDefaultAlbum_emptyGroups_returnsEmpty() {
-        XCTAssertTrue(ImportEntrySource.albumDetail(albumID: UUID()).applyDefaultAlbum(to: []).isEmpty)
+        let source = ImportEntrySource.albumDetail(albumID: UUID(), albumName: "測試相簿")
+        XCTAssertTrue(source.applyDefaultAlbum(to: []).isEmpty)
     }
 
     // MARK: - `ImportPlan.hasUnskippedGroupsWithoutAlbum`（LS-303 R3，merge-review R2 M2）

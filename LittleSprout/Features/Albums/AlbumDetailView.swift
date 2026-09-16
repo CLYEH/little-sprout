@@ -120,7 +120,7 @@ struct AlbumDetailView: View {
                 }
                 .importBatchFlow(
                     isActive: $showsBatchImport, childrenStore: childrenStore, albumsStore: albumsStore,
-                    entrySource: .albumDetail(albumID: albumID),
+                    entrySource: .albumDetail(albumID: albumID, albumName: detailStore.title),
                     // LS-303 R3：`legacyImportCoordinator` 由 `loadDetailStoreIfNeeded()` 在
                     // `detailStore` 建立的同時一併建立，這個分支下應該恆非 nil；`NoOpImport
                     // UploadCoordinator()` 只是型別要求的保底，不預期真的用到。

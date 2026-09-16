@@ -68,13 +68,24 @@ struct ImportPlan: Codable, Equatable {
 /// 移出本票，另開 lane:design 決策票，有稿再接），保留這個 case 是讓型別本身描述完整的
 /// 入口空間，供該票落地時直接重用，不需要再改 `ImportPlan`／`ImportOrganizeView` 的介面。
 enum ImportEntrySource: Equatable {
-    case albumDetail(albumID: UUID)
+    /// LS-303 R5（merge-review R4 i2）：`albumName` 是這本相簿當下的標題——整理頁相簿列
+    /// （`ImportGroupCardView.albumLabel`）在 `AlbumsStore.albums` 清單還沒載入完成、查不到
+    /// 這個 `albumID` 時拿這個字串當 fallback 顯示，不用稿外新造「相簿載入中…」文案。
+    case albumDetail(albumID: UUID, albumName: String)
     case timeline
 
     /// 整理頁各群 `albumID` 的初始值。
     var defaultAlbumID: UUID? {
         switch self {
-        case .albumDetail(let albumID): albumID
+        case .albumDetail(let albumID, _): albumID
+        case .timeline: nil
+        }
+    }
+
+    /// 見 `albumDetail` case 文件註解；`.timeline` 沒有已知相簿名稱。
+    var defaultAlbumName: String? {
+        switch self {
+        case .albumDetail(_, let albumName): albumName
         case .timeline: nil
         }
     }

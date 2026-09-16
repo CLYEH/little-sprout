@@ -27,6 +27,11 @@ struct ImportOrganizeView: View {
     /// 不再塞假 UUID 進 `ImportPlan`（會讓主鈕 N 與摘要多算出查無此圖的筆），改成整筆捨棄
     /// 並在畫面上提示，見 `droppedItemsReplyRow`。
     let droppedCount: Int
+    /// LS-303 R5（merge-review R4 i2）：入口來源已知的相簿 id／名稱——傳給
+    /// `ImportGroupCardView` 當 `albums` 清單還沒載入完成時的 fallback 顯示，見該檔
+    /// `albumLabel` 文件註解。`.timeline`／harness `init(plan:...)` 皆為 nil。
+    let fallbackAlbumID: UUID?
+    let fallbackAlbumName: String?
 
     @State private var plan: ImportPlan
     @Environment(\.dismiss) private var dismiss
@@ -45,6 +50,8 @@ struct ImportOrganizeView: View {
         self.assetLimit = assetLimit
         self.thumbnailProvider = thumbnailProvider
         self.droppedCount = droppedCount
+        self.fallbackAlbumID = entrySource.defaultAlbumID
+        self.fallbackAlbumName = entrySource.defaultAlbumName
         // LS-303 R2（merge-review R1 M2，orchestrator 裁決 `c997f234`）：從相簿詳情進入時
         // 每群預設放進該相簿（可改）；其餘入口（目前只有 `.timeline`，本票無呼叫點）維持
         // C3a「預設不放相簿」——`applyDefaultAlbum` 是純函式，見 `ImportEntrySourceTests`。
@@ -68,6 +75,8 @@ struct ImportOrganizeView: View {
         self.assetLimit = assetLimit
         self.thumbnailProvider = thumbnailProvider
         self.droppedCount = 0
+        self.fallbackAlbumID = nil
+        self.fallbackAlbumName = nil
         _plan = State(initialValue: plan)
     }
 
@@ -89,7 +98,8 @@ struct ImportOrganizeView: View {
                         ImportGroupCardView(
                             group: $group, children: childrenStore.activeChildren, albums: albumsStore.albums,
                             maxThumbnailSlots: thumbnailSlots, thumbnailCellSize: thumbnailCellSize,
-                            thumbnailProvider: thumbnailProvider
+                            thumbnailProvider: thumbnailProvider, fallbackAlbumID: fallbackAlbumID,
+                            fallbackAlbumName: fallbackAlbumName
                         )
                     }
                 }
