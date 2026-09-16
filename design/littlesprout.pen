@@ -185941,6 +185941,2645 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "QpvnZ",
+      "x": 3326,
+      "y": 26347,
+      "name": "Growth / 01 寶貝詳情・成長區塊 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 993,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "eixuM",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "p5CHy5",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "寶貝"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "GgKHB",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-block",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "av8SY",
+              "name": "Identity Header",
+              "width": "fill_container",
+              "gap": "$sp-group",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "VR1JV",
+                  "type": "ref",
+                  "ref": "RaaIf",
+                  "name": "Avatar",
+                  "descendants": {
+                    "A30rIX": {
+                      "content": "安"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "n1oEY",
+                  "name": "Identity Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "MFe4n",
+                      "name": "Name",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "陳小安",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "LkAn7",
+                      "name": "Age",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": " 0 歲 8 個⁠月",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "p5xvj",
+              "name": "Section Lead",
+              "fill": "$text-primary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "最新紀錄",
+              "fontFamily": "$font",
+              "fontSize": "$fs-lead",
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "A3Vbm",
+              "name": "Latest Values",
+              "width": "fill_container",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "xLgJu",
+                  "name": "身高 Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ZR3lm",
+                      "name": "Label Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "J37CN",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "ruler",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wcHGE",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "身高",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "rgDup",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "72.4 cm",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dhbY0",
+                      "name": "Delta Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "cy3Ay",
+                          "name": "Trend Icon",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "trending-up",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "e5S973",
+                          "name": "Delta",
+                          "fill": "$text-secondary",
+                          "content": "較上次 +1.2",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "nkAuF",
+                      "name": "Measured Date",
+                      "fill": "$text-secondary",
+                      "content": "8/20 測量",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "O4OFs",
+                  "name": "體重 Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "K9868",
+                      "name": "Label Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "Un9of",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "scale",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Wb5YT",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "體重",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "hJUgz",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "8.9 kg",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UcEqC",
+                      "name": "Delta Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "N8COa",
+                          "name": "Trend Icon",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "trending-up",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "MwFBN",
+                          "name": "Delta",
+                          "fill": "$text-secondary",
+                          "content": "較上次 +0.3",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "j8tQQ",
+                      "name": "Measured Date",
+                      "fill": "$text-secondary",
+                      "content": "8/20 測量",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Y9Frc",
+                  "name": "頭圍 Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "DBGhc",
+                      "name": "Label Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "S6qUw",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "jMDB7",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "頭圍",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "f53LMd",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "44.1 cm",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "c3K8q",
+                      "name": "Delta Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "WlItH",
+                          "name": "Trend Icon",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "minus",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "M44VEC",
+                          "name": "Delta",
+                          "fill": "$text-secondary",
+                          "content": "與上次相同",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "zlNIJ",
+                      "name": "Measured Date",
+                      "fill": "$text-secondary",
+                      "content": "8/6 測量",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "H3xTwb",
+              "name": "Chart Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zD8wz",
+                  "name": "Chart Label",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "成長曲線",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "LXqpc",
+                  "name": "Segmented Track",
+                  "width": "fill_container",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "padding": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "s3UnAp",
+                      "name": "Tab 身高",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        "$ctl-pad-md",
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "qBn0B",
+                          "name": "Tab Label",
+                          "fill": "$text-primary",
+                          "content": "身高",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EMjV2",
+                      "name": "Tab 體重",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "cornerRadius": "$radius-md",
+                      "padding": [
+                        "$ctl-pad-md",
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "urQyR",
+                          "name": "Tab Label",
+                          "fill": "$text-secondary",
+                          "content": "體重",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "AhulI",
+                      "name": "Tab 頭圍",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "cornerRadius": "$radius-md",
+                      "padding": [
+                        "$ctl-pad-md",
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "briFu",
+                          "name": "Tab Label",
+                          "fill": "$text-secondary",
+                          "content": "頭圍",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "RjWai",
+                  "name": "Chart Plot",
+                  "width": "fill_container",
+                  "height": 174,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "bcNWa",
+                      "layoutPosition": "absolute",
+                      "x": 32,
+                      "y": 0,
+                      "name": "Gridline 85",
+                      "fill": "$border",
+                      "width": 273,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "AOcqb",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": -7,
+                      "name": "Axis Label 85",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 26,
+                      "content": "85",
+                      "textAlign": "right",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "x96c8x",
+                      "layoutPosition": "absolute",
+                      "x": 32,
+                      "y": 140,
+                      "name": "Gridline 45",
+                      "fill": "$border",
+                      "width": 273,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "wIW2p",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 133,
+                      "name": "Axis Label 45",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 26,
+                      "content": "45",
+                      "textAlign": "right",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "path",
+                      "id": "j5mzcZ",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Growth Line",
+                      "geometry": "M32 120.75l54.6-37.45 54.6-23.1 54.6-14.7 54.6-11.55 54.6-11.2",
+                      "viewBox": [
+                        0,
+                        0,
+                        305,
+                        140
+                      ],
+                      "fill": "#00000000",
+                      "width": 305,
+                      "height": 140,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2.5
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "mtmsy",
+                      "layoutPosition": "absolute",
+                      "x": 28,
+                      "y": 116.75,
+                      "name": "Point 0",
+                      "fill": "$surface",
+                      "width": 8,
+                      "height": 8,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "A240JW",
+                      "layoutPosition": "absolute",
+                      "x": 18,
+                      "y": 152,
+                      "name": "Month Label 0",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "0",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "o6AgY",
+                      "layoutPosition": "absolute",
+                      "x": 82.6,
+                      "y": 79.29999999999998,
+                      "name": "Point 3",
+                      "fill": "$surface",
+                      "width": 8,
+                      "height": 8,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "WPQb8",
+                      "layoutPosition": "absolute",
+                      "x": 72.6,
+                      "y": 152,
+                      "name": "Month Label 3",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "3",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "rxi2C",
+                      "layoutPosition": "absolute",
+                      "x": 137.2,
+                      "y": 56.2,
+                      "name": "Point 6",
+                      "fill": "$surface",
+                      "width": 8,
+                      "height": 8,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "ckjNb",
+                      "layoutPosition": "absolute",
+                      "x": 127.19999999999999,
+                      "y": 152,
+                      "name": "Month Label 6",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "6",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "zZx7g",
+                      "layoutPosition": "absolute",
+                      "x": 191.79999999999998,
+                      "y": 41.5,
+                      "name": "Point 9",
+                      "fill": "$surface",
+                      "width": 8,
+                      "height": 8,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "gXywS",
+                      "layoutPosition": "absolute",
+                      "x": 181.8,
+                      "y": 152,
+                      "name": "Month Label 9",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "9",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "D1pnK",
+                      "layoutPosition": "absolute",
+                      "x": 246.4,
+                      "y": 29.950000000000003,
+                      "name": "Point 12",
+                      "fill": "$surface",
+                      "width": 8,
+                      "height": 8,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "PVcIo",
+                      "layoutPosition": "absolute",
+                      "x": 236.4,
+                      "y": 152,
+                      "name": "Month Label 12",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "12",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "BUYNa",
+                      "layoutPosition": "absolute",
+                      "x": 299,
+                      "y": 16.75,
+                      "name": "Point 15",
+                      "fill": "$text-primary",
+                      "width": 12,
+                      "height": 12,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "dqKAv",
+                      "layoutPosition": "absolute",
+                      "x": 277,
+                      "y": 152,
+                      "name": "Month Label 15",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "15",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YRjHt",
+                      "layoutPosition": "absolute",
+                      "x": 281,
+                      "y": -15.25,
+                      "name": "Value Tooltip",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1,
+                      "padding": [
+                        "$sp-tight",
+                        "$sp-label"
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "vqF0H",
+                          "name": "Tooltip Value",
+                          "fill": "$text-primary",
+                          "content": "78.5 cm",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "Uffeu",
+              "type": "ref",
+              "ref": "OKSJI",
+              "name": "Add Measurement Button",
+              "width": "fill_container",
+              "descendants": {
+                "s9bME2": {
+                  "icon": "plus"
+                },
+                "w7CUP": {
+                  "content": "新增量測"
+                }
+              }
+            },
+            {
+              "id": "JlEb2",
+              "type": "ref",
+              "ref": "qe9yS",
+              "name": "View All Button",
+              "width": "fill_container",
+              "justifyContent": "center",
+              "descendants": {
+                "breqI": {
+                  "icon": "list"
+                },
+                "hIhVd": {
+                  "content": "查看全部紀錄"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "dNCXi",
+              "name": "Bottom Spacer",
+              "width": "fill_container",
+              "height": 8
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ENGb6",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "jVtwy",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "vnyMW",
+      "x": 3819,
+      "y": 26347,
+      "name": "Growth / 01 寶貝詳情・成長區塊 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 993,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "PPy6d",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "bHzQw",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "寶貝"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "szF8g",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-block",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "WnxVR",
+              "name": "Identity Header",
+              "width": "fill_container",
+              "gap": "$sp-group",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "v76gq",
+                  "type": "ref",
+                  "ref": "RaaIf",
+                  "name": "Avatar",
+                  "descendants": {
+                    "A30rIX": {
+                      "content": "安"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "uUW6N",
+                  "name": "Identity Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Q6nwk",
+                      "name": "Name",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "陳小安",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "pxCqx",
+                      "name": "Age",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": " 0 歲 8 個⁠月",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "a83abt",
+              "name": "Section Lead",
+              "fill": "$text-primary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "最新紀錄",
+              "fontFamily": "$font",
+              "fontSize": "$fs-lead",
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "fohA7",
+              "name": "Latest Values",
+              "width": "fill_container",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "uOHAE",
+                  "name": "身高 Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "fcv9I",
+                      "name": "Label Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "EXp7P",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "ruler",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "x5Qfhf",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "身高",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "cSDCa",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "72.4 cm",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "N7yJ2T",
+                      "name": "Delta Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "o02hL",
+                          "name": "Trend Icon",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "trending-up",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "TLaAi",
+                          "name": "Delta",
+                          "fill": "$text-secondary",
+                          "content": "較上次 +1.2",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "opUly",
+                      "name": "Measured Date",
+                      "fill": "$text-secondary",
+                      "content": "8/20 測量",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ITDNi",
+                  "name": "體重 Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "DPPPb",
+                      "name": "Label Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "V66aWE",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "scale",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tSLja",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "體重",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "j3S6X",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "8.9 kg",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "m4gXL",
+                      "name": "Delta Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "t89gUH",
+                          "name": "Trend Icon",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "trending-up",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "r6JdUB",
+                          "name": "Delta",
+                          "fill": "$text-secondary",
+                          "content": "較上次 +0.3",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "e33JM",
+                      "name": "Measured Date",
+                      "fill": "$text-secondary",
+                      "content": "8/20 測量",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "HkCwa",
+                  "name": "頭圍 Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "a0ZY9",
+                      "name": "Label Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "TOPb1",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "W442z",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "頭圍",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "AKbFE",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "44.1 cm",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "gTBGz",
+                      "name": "Delta Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "OIrKN",
+                          "name": "Trend Icon",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "minus",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "V6hY4",
+                          "name": "Delta",
+                          "fill": "$text-secondary",
+                          "content": "與上次相同",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "Ua8rA",
+                      "name": "Measured Date",
+                      "fill": "$text-secondary",
+                      "content": "8/6 測量",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lXtD5",
+              "name": "Chart Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "R5uzE",
+                  "name": "Chart Label",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "成長曲線",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "ejFY0",
+                  "name": "Segmented Track",
+                  "width": "fill_container",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "padding": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "jsCDc",
+                      "name": "Tab 身高",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        "$ctl-pad-md",
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "eeQNO",
+                          "name": "Tab Label",
+                          "fill": "$text-primary",
+                          "content": "身高",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "PKCbn",
+                      "name": "Tab 體重",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "cornerRadius": "$radius-md",
+                      "padding": [
+                        "$ctl-pad-md",
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "gqJ86",
+                          "name": "Tab Label",
+                          "fill": "$text-secondary",
+                          "content": "體重",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hqxeg",
+                      "name": "Tab 頭圍",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "cornerRadius": "$radius-md",
+                      "padding": [
+                        "$ctl-pad-md",
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "bn1iU",
+                          "name": "Tab Label",
+                          "fill": "$text-secondary",
+                          "content": "頭圍",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "dzehI",
+                  "name": "Chart Plot",
+                  "width": "fill_container",
+                  "height": 174,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "uVSvr",
+                      "layoutPosition": "absolute",
+                      "x": 32,
+                      "y": 0,
+                      "name": "Gridline 85",
+                      "fill": "$border",
+                      "width": 273,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "rHIer",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": -7,
+                      "name": "Axis Label 85",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 26,
+                      "content": "85",
+                      "textAlign": "right",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "k2SdJx",
+                      "layoutPosition": "absolute",
+                      "x": 32,
+                      "y": 140,
+                      "name": "Gridline 45",
+                      "fill": "$border",
+                      "width": 273,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "hO3JS",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 133,
+                      "name": "Axis Label 45",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 26,
+                      "content": "45",
+                      "textAlign": "right",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "path",
+                      "id": "SdTcg",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Growth Line",
+                      "geometry": "M32 120.75l54.6-37.45 54.6-23.1 54.6-14.7 54.6-11.55 54.6-11.2",
+                      "viewBox": [
+                        0,
+                        0,
+                        305,
+                        140
+                      ],
+                      "fill": "#00000000",
+                      "width": 305,
+                      "height": 140,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2.5
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "N9ZcI8",
+                      "layoutPosition": "absolute",
+                      "x": 28,
+                      "y": 116.75,
+                      "name": "Point 0",
+                      "fill": "$surface",
+                      "width": 8,
+                      "height": 8,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "pgtZ0",
+                      "layoutPosition": "absolute",
+                      "x": 18,
+                      "y": 152,
+                      "name": "Month Label 0",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "0",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "Gd11q",
+                      "layoutPosition": "absolute",
+                      "x": 82.6,
+                      "y": 79.29999999999998,
+                      "name": "Point 3",
+                      "fill": "$surface",
+                      "width": 8,
+                      "height": 8,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "dWzg1",
+                      "layoutPosition": "absolute",
+                      "x": 72.6,
+                      "y": 152,
+                      "name": "Month Label 3",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "3",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "pKgNp",
+                      "layoutPosition": "absolute",
+                      "x": 137.2,
+                      "y": 56.2,
+                      "name": "Point 6",
+                      "fill": "$surface",
+                      "width": 8,
+                      "height": 8,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "hEE9k",
+                      "layoutPosition": "absolute",
+                      "x": 127.19999999999999,
+                      "y": 152,
+                      "name": "Month Label 6",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "6",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "krNdV",
+                      "layoutPosition": "absolute",
+                      "x": 191.79999999999998,
+                      "y": 41.5,
+                      "name": "Point 9",
+                      "fill": "$surface",
+                      "width": 8,
+                      "height": 8,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "Y3UYVW",
+                      "layoutPosition": "absolute",
+                      "x": 181.8,
+                      "y": 152,
+                      "name": "Month Label 9",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "9",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "pkUcr",
+                      "layoutPosition": "absolute",
+                      "x": 246.4,
+                      "y": 29.950000000000003,
+                      "name": "Point 12",
+                      "fill": "$surface",
+                      "width": 8,
+                      "height": 8,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "k1i0I9",
+                      "layoutPosition": "absolute",
+                      "x": 236.4,
+                      "y": 152,
+                      "name": "Month Label 12",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "12",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "uCWch",
+                      "layoutPosition": "absolute",
+                      "x": 299,
+                      "y": 16.75,
+                      "name": "Point 15",
+                      "fill": "$text-primary",
+                      "width": 12,
+                      "height": 12,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "ygHGW",
+                      "layoutPosition": "absolute",
+                      "x": 277,
+                      "y": 152,
+                      "name": "Month Label 15",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 28,
+                      "content": "15",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GVLEv",
+                      "layoutPosition": "absolute",
+                      "x": 281,
+                      "y": -15.25,
+                      "name": "Value Tooltip",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1,
+                      "padding": [
+                        "$sp-tight",
+                        "$sp-label"
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "w95Y5o",
+                          "name": "Tooltip Value",
+                          "fill": "$text-primary",
+                          "content": "78.5 cm",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "QDLKM",
+              "type": "ref",
+              "ref": "OKSJI",
+              "name": "Add Measurement Button",
+              "width": "fill_container",
+              "descendants": {
+                "s9bME2": {
+                  "icon": "plus"
+                },
+                "w7CUP": {
+                  "content": "新增量測"
+                }
+              }
+            },
+            {
+              "id": "P47b9x",
+              "type": "ref",
+              "ref": "qe9yS",
+              "name": "View All Button",
+              "width": "fill_container",
+              "justifyContent": "center",
+              "descendants": {
+                "breqI": {
+                  "icon": "list"
+                },
+                "hIhVd": {
+                  "content": "查看全部紀錄"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "tzcS8",
+              "name": "Bottom Spacer",
+              "width": "fill_container",
+              "height": 8
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "O5wmi",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "R2bY4",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "IlAt6",
+      "x": 4312,
+      "y": 26347,
+      "name": "A11y / 01 寶貝詳情・成長區塊 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 2243,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "cOTAI",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "VaYiX",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "寶貝"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "LmoDi",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-block",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "ScuA0",
+              "name": "Identity Header",
+              "width": "fill_container",
+              "gap": "$sp-group",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "W1dAbL",
+                  "type": "ref",
+                  "ref": "RaaIf",
+                  "width": 88,
+                  "height": 88,
+                  "name": "Avatar",
+                  "descendants": {
+                    "A30rIX": {
+                      "content": "安",
+                      "fontSize": 34
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "uwbrV",
+                  "name": "Identity Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QaudL",
+                      "name": "Name",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "陳小安",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "CWTjZ",
+                      "name": "Age",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": " 0 歲 8 個⁠月",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "mDi0R",
+              "name": "Section Lead",
+              "fill": "$text-primary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "最新紀錄",
+              "fontFamily": "$font",
+              "fontSize": "$fs-lead",
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "bQ69N",
+              "name": "Latest Values",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "xj34g",
+                  "name": "身高 Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "J0i3w",
+                      "name": "Label Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "mO7gO",
+                          "name": "Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "ruler",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "WLoJ7",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "身高",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "tUy2D",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "72.4 cm",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lfjoi",
+                      "name": "Delta Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "ScbZz",
+                          "name": "Trend Icon",
+                          "width": 26,
+                          "height": 26,
+                          "icon": "trending-up",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Do39p",
+                          "name": "Delta",
+                          "fill": "$text-secondary",
+                          "content": "較上次 +1.2",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "VT0RF",
+                      "name": "Measured Date",
+                      "fill": "$text-secondary",
+                      "content": "8/20 測量",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vPxjm",
+                  "name": "體重 Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Jrrjr",
+                      "name": "Label Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "uexU6",
+                          "name": "Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "scale",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "U2m3k",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "體重",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "oBLpr",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "8.9 kg",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XAsK3",
+                      "name": "Delta Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "WGuC2",
+                          "name": "Trend Icon",
+                          "width": 26,
+                          "height": 26,
+                          "icon": "trending-up",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wlyx3",
+                          "name": "Delta",
+                          "fill": "$text-secondary",
+                          "content": "較上次 +0.3",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "tEJOr",
+                      "name": "Measured Date",
+                      "fill": "$text-secondary",
+                      "content": "8/20 測量",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "raA7m",
+                  "name": "頭圍 Card",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "hceQY",
+                      "name": "Label Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "iHTQo",
+                          "name": "Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "circle",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "LvzNi",
+                          "name": "Label",
+                          "fill": "$text-secondary",
+                          "content": "頭圍",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "R843W",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "44.1 cm",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZkG76",
+                      "name": "Delta Row",
+                      "gap": "$sp-tight",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "FY8SX",
+                          "name": "Trend Icon",
+                          "width": 26,
+                          "height": 26,
+                          "icon": "minus",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZMCLq",
+                          "name": "Delta",
+                          "fill": "$text-secondary",
+                          "content": "與上次相同",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "bQo1j",
+                      "name": "Measured Date",
+                      "fill": "$text-secondary",
+                      "content": "8/6 測量",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ecdqG",
+              "name": "Chart Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QZ1Pm",
+                  "name": "Chart Label",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "成長曲線",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "M21NvJ",
+                  "name": "Segmented Track",
+                  "width": "fill_container",
+                  "fill": "$surface-2",
+                  "cornerRadius": "$radius-md",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "hZ6rR",
+                      "name": "Tab 身高",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        "$ctl-pad-md",
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "DKtPl",
+                          "name": "Tab Label",
+                          "fill": "$text-primary",
+                          "content": "身高",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "z4FMy",
+                      "name": "Tab 體重",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "cornerRadius": "$radius-md",
+                      "padding": [
+                        "$ctl-pad-md",
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "uXyl9",
+                          "name": "Tab Label",
+                          "fill": "$text-secondary",
+                          "content": "體重",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "C1Wp7c",
+                      "name": "Tab 頭圍",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "cornerRadius": "$radius-md",
+                      "padding": [
+                        "$ctl-pad-md",
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "KlLye",
+                          "name": "Tab Label",
+                          "fill": "$text-secondary",
+                          "content": "頭圍",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "RSRUn",
+                  "name": "Chart Plot",
+                  "width": "fill_container",
+                  "height": 310,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "zmMTH",
+                      "layoutPosition": "absolute",
+                      "x": 52,
+                      "y": 70,
+                      "name": "Gridline 85",
+                      "fill": "$border",
+                      "width": 253,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "KuI20",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 52,
+                      "name": "Axis Label 85",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 44,
+                      "content": "85",
+                      "textAlign": "right",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "q6zQkd",
+                      "layoutPosition": "absolute",
+                      "x": 52,
+                      "y": 240,
+                      "name": "Gridline 45",
+                      "fill": "$border",
+                      "width": 253,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "UuXb9",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 222,
+                      "name": "Axis Label 45",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 44,
+                      "content": "45",
+                      "textAlign": "right",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "path",
+                      "id": "We3Dy",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Growth Line",
+                      "geometry": "M52 216.625l50.6-45.475 50.6-28.05 50.6-17.85 50.6-14.025 50.6-13.6",
+                      "viewBox": [
+                        0,
+                        0,
+                        305,
+                        240
+                      ],
+                      "fill": "#00000000",
+                      "width": 305,
+                      "height": 240,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 4
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "v1amPc",
+                      "layoutPosition": "absolute",
+                      "x": 46,
+                      "y": 210.625,
+                      "name": "Point 0",
+                      "fill": "$surface",
+                      "width": 12,
+                      "height": 12,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 3
+                    },
+                    {
+                      "type": "text",
+                      "id": "kpIQn",
+                      "layoutPosition": "absolute",
+                      "x": 28,
+                      "y": 256,
+                      "name": "Month Label 0",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 48,
+                      "content": "0",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "E9eao",
+                      "layoutPosition": "absolute",
+                      "x": 96.6,
+                      "y": 165.14999999999998,
+                      "name": "Point 3",
+                      "fill": "$surface",
+                      "width": 12,
+                      "height": 12,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 3
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "f841R",
+                      "layoutPosition": "absolute",
+                      "x": 147.2,
+                      "y": 137.10000000000002,
+                      "name": "Point 6",
+                      "fill": "$surface",
+                      "width": 12,
+                      "height": 12,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 3
+                    },
+                    {
+                      "type": "text",
+                      "id": "DLgPG",
+                      "layoutPosition": "absolute",
+                      "x": 129.2,
+                      "y": 256,
+                      "name": "Month Label 6",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 48,
+                      "content": "6",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "Rlk1m",
+                      "layoutPosition": "absolute",
+                      "x": 197.79999999999998,
+                      "y": 119.24999999999999,
+                      "name": "Point 9",
+                      "fill": "$surface",
+                      "width": 12,
+                      "height": 12,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 3
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "X4PIV",
+                      "layoutPosition": "absolute",
+                      "x": 248.4,
+                      "y": 105.225,
+                      "name": "Point 12",
+                      "fill": "$surface",
+                      "width": 12,
+                      "height": 12,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 3
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "OTyMH",
+                      "layoutPosition": "absolute",
+                      "x": 296,
+                      "y": 88.625,
+                      "name": "Point 15",
+                      "fill": "$text-primary",
+                      "width": 18,
+                      "height": 18,
+                      "stroke": "$text-primary",
+                      "strokeWidth": 3
+                    },
+                    {
+                      "type": "text",
+                      "id": "E2VEeH",
+                      "layoutPosition": "absolute",
+                      "x": 257,
+                      "y": 256,
+                      "name": "Month Label 15",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 48,
+                      "content": "15",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "l7e8O",
+                      "layoutPosition": "absolute",
+                      "x": 129,
+                      "y": 0,
+                      "name": "Value Tooltip",
+                      "width": 176,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        "$sp-tight",
+                        "$sp-label"
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "iduPp",
+                          "name": "Tooltip Value",
+                          "fill": "$text-primary",
+                          "content": "78.5 cm",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "Wpv6u",
+              "type": "ref",
+              "ref": "OKSJI",
+              "name": "Add Measurement Button",
+              "width": "fill_container",
+              "descendants": {
+                "s9bME2": {
+                  "icon": "plus"
+                },
+                "w7CUP": {
+                  "content": "新增量測"
+                }
+              }
+            },
+            {
+              "id": "fFTZ7",
+              "type": "ref",
+              "ref": "qe9yS",
+              "name": "View All Button",
+              "width": "fill_container",
+              "justifyContent": "center",
+              "descendants": {
+                "breqI": {
+                  "icon": "list"
+                },
+                "hIhVd": {
+                  "content": "查看全部紀錄"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "D8IeX",
+              "name": "Bottom Spacer",
+              "width": "fill_container",
+              "height": 8
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "TJgjj",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "jC4p9",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
