@@ -189058,6 +189058,35 @@
                           "fontWeight": "700"
                         },
                         {
+                          "type": "frame",
+                          "id": "KdoS0",
+                          "name": "Delta Row Placeholder",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "GwcR5",
+                              "name": "Trend Icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "minus",
+                              "library": "lucide",
+                              "fill": "$border"
+                            },
+                            {
+                              "type": "text",
+                              "id": "EJ0Py",
+                              "name": "Delta",
+                              "fill": "$text-secondary",
+                              "content": "尚無資料",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
                           "type": "text",
                           "id": "UH0h4",
                           "name": "Placeholder Note",
@@ -189122,6 +189151,35 @@
                           "fontFamily": "$font",
                           "fontSize": "$fs-lead",
                           "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "CwCXg",
+                          "name": "Delta Row Placeholder",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "B2OQH",
+                              "name": "Trend Icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "minus",
+                              "library": "lucide",
+                              "fill": "$border"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ZEO6u",
+                              "name": "Delta",
+                              "fill": "$text-secondary",
+                              "content": "尚無資料",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
                         },
                         {
                           "type": "text",
@@ -189190,6 +189248,35 @@
                           "fontWeight": "700"
                         },
                         {
+                          "type": "frame",
+                          "id": "afXXh",
+                          "name": "Delta Row Placeholder",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "gh2n0",
+                              "name": "Trend Icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "minus",
+                              "library": "lucide",
+                              "fill": "$border"
+                            },
+                            {
+                              "type": "text",
+                              "id": "KqBRh",
+                              "name": "Delta",
+                              "fill": "$text-secondary",
+                              "content": "尚無資料",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
                           "type": "text",
                           "id": "oqmca",
                           "name": "Placeholder Note",
@@ -189204,13 +189291,6 @@
                       ]
                     }
                   ]
-                },
-                {
-                  "type": "frame",
-                  "id": "D5zGu",
-                  "name": "Geometry Lock Spacer",
-                  "width": "fill_container",
-                  "height": 15
                 }
               ]
             },
@@ -189413,1157 +189493,6 @@
               "type": "rectangle",
               "cornerRadius": "$radius-full",
               "id": "h8oeKZ",
-              "name": "Home Indicator",
-              "fill": "$home-indicator",
-              "width": 140,
-              "height": 5
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "Koczy",
-      "x": 7763,
-      "y": 41399,
-      "name": "Growth / 04 空狀態 · 深色",
-      "theme": {
-        "mode": "dark"
-      },
-      "clip": true,
-      "width": 393,
-      "height": 996,
-      "fill": {
-        "type": "gradient",
-        "gradientType": "radial",
-        "enabled": true,
-        "rotation": 0,
-        "size": {
-          "width": 1.6997455470737914,
-          "height": 1.3497652582159625
-        },
-        "colors": [
-          {
-            "color": "$bg-lit",
-            "position": 0
-          },
-          {
-            "color": "$bg",
-            "position": 1
-          }
-        ],
-        "center": {
-          "x": 0.13994910941475827,
-          "y": 0.01995305164319249
-        }
-      },
-      "cornerRadius": 44,
-      "layout": "vertical",
-      "children": [
-        {
-          "id": "BvFyO",
-          "type": "ref",
-          "ref": "OeXop",
-          "name": "Status Bar",
-          "width": "fill_container"
-        },
-        {
-          "id": "mfJPH",
-          "type": "ref",
-          "ref": "W6qTyS",
-          "name": "Nav Back",
-          "width": "fill_container",
-          "descendants": {
-            "VCU41": {
-              "content": "寶貝"
-            }
-          }
-        },
-        {
-          "type": "frame",
-          "id": "R923R",
-          "name": "Body",
-          "width": "fill_container",
-          "layout": "vertical",
-          "gap": "$sp-section",
-          "padding": [
-            16,
-            "$screen-pad",
-            8,
-            "$screen-pad"
-          ],
-          "children": [
-            {
-              "type": "frame",
-              "id": "i24Eb",
-              "name": "Section Identity",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-item",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "ZnbEQ",
-                  "name": "Identity Header",
-                  "width": "fill_container",
-                  "gap": "$sp-group",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "id": "eWr7i",
-                      "type": "ref",
-                      "ref": "RaaIf",
-                      "name": "Avatar",
-                      "descendants": {
-                        "A30rIX": {
-                          "content": "軒"
-                        }
-                      }
-                    },
-                    {
-                      "type": "frame",
-                      "id": "ieFCD",
-                      "name": "Identity Text",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "Xp5yH",
-                          "name": "Name",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "陳小軒",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-display",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "aY3Wd",
-                          "name": "Age",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "2 歲 1 個⁠月",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "TFDwT",
-                  "name": "Section Label",
-                  "fill": "$text-primary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "最新紀錄",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-body",
-                  "fontWeight": "700"
-                },
-                {
-                  "type": "frame",
-                  "id": "XOUE2",
-                  "name": "Latest Values Placeholder",
-                  "width": "fill_container",
-                  "gap": "$sp-item",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "KdKFy",
-                      "name": "身高 Card Empty",
-                      "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-md",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "padding": "$sp-group",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "UzVHt",
-                          "name": "Label Row",
-                          "gap": "$sp-tight",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "z30FV",
-                              "name": "Icon",
-                              "width": 16,
-                              "height": 16,
-                              "icon": "ruler",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "R7j7k",
-                              "name": "Label",
-                              "fill": "$text-secondary",
-                              "content": "身高",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "h98wn",
-                          "name": "Value",
-                          "fill": "$text-secondary",
-                          "content": "—",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-lead",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "jvDhA",
-                          "name": "Placeholder Note",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "尚無紀錄",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "SqH74",
-                      "name": "體重 Card Empty",
-                      "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-md",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "padding": "$sp-group",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "qpsJ2",
-                          "name": "Label Row",
-                          "gap": "$sp-tight",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "KMLjL",
-                              "name": "Icon",
-                              "width": 16,
-                              "height": 16,
-                              "icon": "scale",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "LuGh5",
-                              "name": "Label",
-                              "fill": "$text-secondary",
-                              "content": "體重",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "pucVQ",
-                          "name": "Value",
-                          "fill": "$text-secondary",
-                          "content": "—",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-lead",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "qMoGa",
-                          "name": "Placeholder Note",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "尚無紀錄",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "h3jc9",
-                      "name": "頭圍 Card Empty",
-                      "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-md",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "padding": "$sp-group",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "oNNcA",
-                          "name": "Label Row",
-                          "gap": "$sp-tight",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "bhoii",
-                              "name": "Icon",
-                              "width": 16,
-                              "height": 16,
-                              "icon": "circle",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "dUb4O",
-                              "name": "Label",
-                              "fill": "$text-secondary",
-                              "content": "頭圍",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "q8Edh",
-                          "name": "Value",
-                          "fill": "$text-secondary",
-                          "content": "—",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-lead",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "nyLVd",
-                          "name": "Placeholder Note",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "尚無紀錄",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "waACD",
-                  "name": "Geometry Lock Spacer",
-                  "width": "fill_container",
-                  "height": 15
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "l6DFTV",
-              "name": "Empty Chart Card",
-              "width": "fill_container",
-              "fill": "$print-paper",
-              "cornerRadius": "$radius-lg",
-              "stroke": "$paper-edge",
-              "strokeWidth": 1,
-              "effect": {
-                "type": "shadow",
-                "shadowType": "outer",
-                "color": "$paper-shadow",
-                "offset": {
-                  "x": 2,
-                  "y": 8
-                },
-                "blur": 16
-              },
-              "layout": "vertical",
-              "gap": "$sp-item",
-              "padding": "$inset-card",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "n1b6V",
-                  "name": "Chart Label",
-                  "fill": "$print-ink",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "成長曲線",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-body",
-                  "fontWeight": "700"
-                },
-                {
-                  "id": "b5fYo",
-                  "type": "ref",
-                  "ref": "SEy9U",
-                  "name": "Segmented",
-                  "width": "fill_container"
-                },
-                {
-                  "type": "frame",
-                  "id": "HcZoa",
-                  "name": "Chart Plot Skeleton",
-                  "clip": true,
-                  "width": "fill_container",
-                  "height": 239,
-                  "layout": "none",
-                  "children": [
-                    {
-                      "type": "rectangle",
-                      "id": "m87ii",
-                      "layoutPosition": "absolute",
-                      "x": 36,
-                      "y": 60,
-                      "name": "Gridline 85",
-                      "fill": "$paper-rule",
-                      "width": 233,
-                      "height": 1
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "I4dnN",
-                      "layoutPosition": "absolute",
-                      "x": 36,
-                      "y": 106.66666666666667,
-                      "name": "Gridline 70",
-                      "fill": "$paper-rule",
-                      "width": 233,
-                      "height": 1
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "WLnbU",
-                      "layoutPosition": "absolute",
-                      "x": 36,
-                      "y": 153.33333333333334,
-                      "name": "Gridline 55",
-                      "fill": "$paper-rule",
-                      "width": 233,
-                      "height": 1
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "dCOeJ",
-                      "layoutPosition": "absolute",
-                      "x": 36,
-                      "y": 200,
-                      "name": "Gridline 40",
-                      "fill": "$paper-rule",
-                      "width": 233,
-                      "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "FxgLA",
-                      "layoutPosition": "absolute",
-                      "x": 265,
-                      "y": 210,
-                      "name": "Age Axis Label",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 40,
-                      "content": "月齡",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-meta",
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "HfQWk",
-                      "layoutPosition": "absolute",
-                      "x": 36,
-                      "y": 60,
-                      "name": "Empty Message",
-                      "width": 233,
-                      "height": 140,
-                      "fill": "$print-paper",
-                      "cornerRadius": "$radius-md",
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "padding": "$sp-item",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "G6J7PL",
-                          "name": "Empty Lead",
-                          "fill": "$print-ink",
-                          "content": "這張紙還沒有記錄",
-                          "textAlign": "center",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "X79OfM",
-                          "name": "Empty Body",
-                          "fill": "$print-ink-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": 209,
-                          "content": "新增第一筆身高、體重或頭圍，就能看見陳小軒的成長曲線。",
-                          "lineHeight": 1.4,
-                          "textAlign": "center",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "ZgIMM",
-              "name": "Actions",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-group",
-              "children": [
-                {
-                  "id": "Lns7I",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Add Measurement Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "plus"
-                    },
-                    "w7CUP": {
-                      "content": "新增量測"
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "B6P3sO",
-          "name": "Home Indicator Area",
-          "width": "fill_container",
-          "height": 34,
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "rectangle",
-              "cornerRadius": "$radius-full",
-              "id": "pFjg7",
-              "name": "Home Indicator",
-              "fill": "$home-indicator",
-              "width": 140,
-              "height": 5
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "ygM5T",
-      "x": 8256,
-      "y": 41399,
-      "name": "A11y / 04 空狀態 · Dynamic Type AX3（body 40pt）",
-      "theme": {
-        "size": "ax3"
-      },
-      "clip": true,
-      "width": 393,
-      "height": 2279,
-      "fill": {
-        "type": "gradient",
-        "gradientType": "radial",
-        "enabled": true,
-        "rotation": 0,
-        "size": {
-          "width": 1.6997455470737914,
-          "height": 1.3497652582159625
-        },
-        "colors": [
-          {
-            "color": "$bg-lit",
-            "position": 0
-          },
-          {
-            "color": "$bg",
-            "position": 1
-          }
-        ],
-        "center": {
-          "x": 0.13994910941475827,
-          "y": 0.01995305164319249
-        }
-      },
-      "placeholder": true,
-      "cornerRadius": 44,
-      "layout": "vertical",
-      "children": [
-        {
-          "id": "IJb3X",
-          "type": "ref",
-          "ref": "OeXop",
-          "name": "Status Bar",
-          "width": "fill_container"
-        },
-        {
-          "id": "PU86k",
-          "type": "ref",
-          "ref": "W6qTyS",
-          "name": "Nav Back",
-          "width": "fill_container",
-          "descendants": {
-            "VCU41": {
-              "content": "寶貝"
-            }
-          }
-        },
-        {
-          "type": "frame",
-          "id": "RePDn",
-          "name": "Body",
-          "width": "fill_container",
-          "layout": "vertical",
-          "gap": "$sp-section",
-          "padding": [
-            16,
-            "$screen-pad",
-            8,
-            "$screen-pad"
-          ],
-          "children": [
-            {
-              "type": "frame",
-              "id": "AlO7u",
-              "name": "Section Identity",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-item",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "ikUna",
-                  "name": "Identity Header",
-                  "width": "fill_container",
-                  "gap": "$sp-group",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "id": "v824Pr",
-                      "type": "ref",
-                      "ref": "RaaIf",
-                      "width": 88,
-                      "height": 88,
-                      "name": "Avatar",
-                      "descendants": {
-                        "A30rIX": {
-                          "content": "軒",
-                          "fontSize": 34
-                        }
-                      }
-                    },
-                    {
-                      "type": "frame",
-                      "id": "Z3qip",
-                      "name": "Identity Text",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "lXbt5",
-                          "name": "Name",
-                          "fill": "$text-primary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "陳小軒",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-display",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "N8kI0u",
-                          "name": "Age",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "2 歲 1 個⁠月",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "OZHyc",
-                  "name": "Section Label",
-                  "fill": "$text-primary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "最新紀錄",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-body",
-                  "fontWeight": "700"
-                },
-                {
-                  "type": "frame",
-                  "id": "kpRrr",
-                  "name": "Latest Values Placeholder",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-item",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "TMsP5",
-                      "name": "身高 Card Empty",
-                      "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-md",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "padding": "$sp-group",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "xl0qk",
-                          "name": "Label Row",
-                          "gap": "$sp-tight",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "MO3AX",
-                              "name": "Icon",
-                              "width": 32,
-                              "height": 32,
-                              "icon": "ruler",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "u5PXf",
-                              "name": "Label",
-                              "fill": "$text-secondary",
-                              "content": "身高",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "F7il1T",
-                          "name": "Value",
-                          "fill": "$text-secondary",
-                          "content": "—",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-lead",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "dNNLA",
-                          "name": "Placeholder Note",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "尚無紀錄",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "sNqGu",
-                      "name": "體重 Card Empty",
-                      "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-md",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "padding": "$sp-group",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "vd6O9",
-                          "name": "Label Row",
-                          "gap": "$sp-tight",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "sH6wj",
-                              "name": "Icon",
-                              "width": 32,
-                              "height": 32,
-                              "icon": "scale",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "zHHrs",
-                              "name": "Label",
-                              "fill": "$text-secondary",
-                              "content": "體重",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "qqiy7",
-                          "name": "Value",
-                          "fill": "$text-secondary",
-                          "content": "—",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-lead",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "MDu6E",
-                          "name": "Placeholder Note",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "尚無紀錄",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "H8laq",
-                      "name": "頭圍 Card Empty",
-                      "width": "fill_container",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-md",
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "layout": "vertical",
-                      "gap": "$sp-tight",
-                      "padding": "$sp-group",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "wiryy",
-                          "name": "Label Row",
-                          "gap": "$sp-tight",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "id": "ko9FZ",
-                              "name": "Icon",
-                              "width": 32,
-                              "height": 32,
-                              "icon": "circle",
-                              "library": "lucide",
-                              "fill": "$text-secondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "xmZpM",
-                              "name": "Label",
-                              "fill": "$text-secondary",
-                              "content": "頭圍",
-                              "fontFamily": "$font",
-                              "fontSize": "$fs-note",
-                              "fontWeight": "600"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "l8KGd",
-                          "name": "Value",
-                          "fill": "$text-secondary",
-                          "content": "—",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-lead",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "b5ue3",
-                          "name": "Placeholder Note",
-                          "fill": "$text-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "尚無紀錄",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "EE5VW",
-                  "name": "Geometry Lock Spacer",
-                  "width": "fill_container",
-                  "height": 15
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "Sb0tM",
-              "name": "Empty Chart Card",
-              "width": "fill_container",
-              "fill": "$print-paper",
-              "cornerRadius": "$radius-lg",
-              "stroke": "$paper-edge",
-              "strokeWidth": 1,
-              "effect": {
-                "type": "shadow",
-                "shadowType": "outer",
-                "color": "$paper-shadow",
-                "offset": {
-                  "x": 2,
-                  "y": 8
-                },
-                "blur": 16
-              },
-              "layout": "vertical",
-              "gap": "$sp-item",
-              "padding": "$inset-card",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "yDRJU",
-                  "name": "Chart Label",
-                  "fill": "$print-ink",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "成長曲線",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-body",
-                  "fontWeight": "700"
-                },
-                {
-                  "id": "ovDvO",
-                  "type": "ref",
-                  "ref": "SEy9U",
-                  "name": "Segmented",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": "$sp-tight"
-                },
-                {
-                  "type": "frame",
-                  "id": "CmaEw",
-                  "name": "Chart Plot Skeleton",
-                  "clip": true,
-                  "width": "fill_container",
-                  "height": 566,
-                  "layout": "none",
-                  "children": [
-                    {
-                      "type": "rectangle",
-                      "id": "cZstc",
-                      "layoutPosition": "absolute",
-                      "x": 56,
-                      "y": 110,
-                      "name": "Gridline 85",
-                      "fill": "$paper-rule",
-                      "width": 193,
-                      "height": 1
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "nxcQb",
-                      "layoutPosition": "absolute",
-                      "x": 56,
-                      "y": 223.33333333333334,
-                      "name": "Gridline 70",
-                      "fill": "$paper-rule",
-                      "width": 193,
-                      "height": 1
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "J1UQM",
-                      "layoutPosition": "absolute",
-                      "x": 56,
-                      "y": 336.6666666666667,
-                      "name": "Gridline 55",
-                      "fill": "$paper-rule",
-                      "width": 193,
-                      "height": 1
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "bezLs",
-                      "layoutPosition": "absolute",
-                      "x": 56,
-                      "y": 450,
-                      "name": "Gridline 40",
-                      "fill": "$paper-rule",
-                      "width": 193,
-                      "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "CDxj7",
-                      "layoutPosition": "absolute",
-                      "x": 245,
-                      "y": 466,
-                      "name": "Age Axis Label",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 60,
-                      "content": "月齡",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-meta",
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "Wqeut",
-                      "layoutPosition": "absolute",
-                      "x": 56,
-                      "y": 110,
-                      "name": "Empty Message",
-                      "width": 193,
-                      "height": 340,
-                      "fill": "$print-paper",
-                      "cornerRadius": "$radius-md",
-                      "layout": "vertical",
-                      "gap": "$sp-group",
-                      "padding": "$sp-item",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "PDHM6",
-                          "name": "Empty Lead",
-                          "fill": "$print-ink",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "這張紙還沒有記錄",
-                          "textAlign": "center",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-note",
-                          "fontWeight": "700"
-                        },
-                        {
-                          "type": "text",
-                          "id": "fgG00",
-                          "name": "Empty Body",
-                          "fill": "$print-ink-secondary",
-                          "textGrowth": "fixed-width",
-                          "width": 179,
-                          "content": "新增第一筆量測，就能看見成長曲線。",
-                          "lineHeight": 1.4,
-                          "textAlign": "center",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-meta",
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "XYS4Y",
-              "name": "Actions",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-group",
-              "children": [
-                {
-                  "id": "yRGH5",
-                  "type": "ref",
-                  "ref": "OKSJI",
-                  "name": "Add Measurement Button",
-                  "width": "fill_container",
-                  "descendants": {
-                    "s9bME2": {
-                      "icon": "plus"
-                    },
-                    "w7CUP": {
-                      "content": "新增量測"
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "Ne89C",
-          "name": "Home Indicator Area",
-          "width": "fill_container",
-          "height": 34,
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "rectangle",
-              "cornerRadius": "$radius-full",
-              "id": "KOSKj",
               "name": "Home Indicator",
               "fill": "$home-indicator",
               "width": 140,
@@ -205208,6 +204137,1315 @@
               "name": "Home Indicator",
               "fill": "$home-indicator",
               "width": 200,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "fOwyi",
+      "x": 7763,
+      "y": 41399,
+      "name": "Growth / 04 空狀態 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 996,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "i4003R",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "TGwlW",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "寶貝"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "ZxwWe",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            16,
+            "$screen-pad",
+            8,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "TyGUl",
+              "name": "Section Identity",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "pYKVk",
+                  "name": "Identity Header",
+                  "width": "fill_container",
+                  "gap": "$sp-group",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "I8JBP",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "軒"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ooWd3",
+                      "name": "Identity Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "q9cVuj",
+                          "name": "Name",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "陳小軒",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "u86dV8",
+                          "name": "Age",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "2 歲 1 個⁠月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "VYiE8",
+                  "name": "Section Label",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "最新紀錄",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "KFwl2",
+                  "name": "Latest Values Placeholder",
+                  "width": "fill_container",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "L55h04",
+                      "name": "身高 Card Empty",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": "$sp-group",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Gr7Uq",
+                          "name": "Label Row",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "HUglK",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "sDt98",
+                              "name": "Label",
+                              "fill": "$text-secondary",
+                              "content": "身高",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "xNT7t",
+                          "name": "Value",
+                          "fill": "$text-secondary",
+                          "content": "—",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "CsAJM",
+                          "name": "Delta Row Placeholder",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "PSSC5",
+                              "name": "Trend Icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "minus",
+                              "library": "lucide",
+                              "fill": "$border"
+                            },
+                            {
+                              "type": "text",
+                              "id": "NZCPf",
+                              "name": "Delta",
+                              "fill": "$text-secondary",
+                              "content": "尚無資料",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "Z0HcIH",
+                          "name": "Placeholder Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "尚無紀錄",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "uNtO6",
+                      "name": "體重 Card Empty",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": "$sp-group",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "kMaYT",
+                          "name": "Label Row",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "dnaMJ",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "XX9Fx",
+                              "name": "Label",
+                              "fill": "$text-secondary",
+                              "content": "體重",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "A4Mydl",
+                          "name": "Value",
+                          "fill": "$text-secondary",
+                          "content": "—",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pJ7Ws",
+                          "name": "Delta Row Placeholder",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "jEoQh",
+                              "name": "Trend Icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "minus",
+                              "library": "lucide",
+                              "fill": "$border"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CXPAB",
+                              "name": "Delta",
+                              "fill": "$text-secondary",
+                              "content": "尚無資料",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "bKMYm",
+                          "name": "Placeholder Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "尚無紀錄",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GqXbH",
+                      "name": "頭圍 Card Empty",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": "$sp-group",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "r1uJCS",
+                          "name": "Label Row",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "sObWN",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "circle",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "x2YIW",
+                              "name": "Label",
+                              "fill": "$text-secondary",
+                              "content": "頭圍",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "fj9kT",
+                          "name": "Value",
+                          "fill": "$text-secondary",
+                          "content": "—",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "RrvAf",
+                          "name": "Delta Row Placeholder",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "B6FpJZ",
+                              "name": "Trend Icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "minus",
+                              "library": "lucide",
+                              "fill": "$border"
+                            },
+                            {
+                              "type": "text",
+                              "id": "N7f9R",
+                              "name": "Delta",
+                              "fill": "$text-secondary",
+                              "content": "尚無資料",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "m4WoJx",
+                          "name": "Placeholder Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "尚無紀錄",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OM0Xm",
+              "name": "Empty Chart Card",
+              "width": "fill_container",
+              "fill": "$print-paper",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$paper-edge",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 2,
+                  "y": 8
+                },
+                "blur": 16
+              },
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "R1x1d",
+                  "name": "Chart Label",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "成長曲線",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "id": "PY5Qj",
+                  "type": "ref",
+                  "ref": "SEy9U",
+                  "name": "Segmented",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "zZMTH",
+                  "name": "Chart Plot Skeleton",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 239,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "Fw8T7",
+                      "layoutPosition": "absolute",
+                      "x": 36,
+                      "y": 60,
+                      "name": "Gridline 85",
+                      "fill": "$paper-rule",
+                      "width": 233,
+                      "height": 1
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "nIyeR",
+                      "layoutPosition": "absolute",
+                      "x": 36,
+                      "y": 106.66666666666667,
+                      "name": "Gridline 70",
+                      "fill": "$paper-rule",
+                      "width": 233,
+                      "height": 1
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "X7a8ib",
+                      "layoutPosition": "absolute",
+                      "x": 36,
+                      "y": 153.33333333333334,
+                      "name": "Gridline 55",
+                      "fill": "$paper-rule",
+                      "width": 233,
+                      "height": 1
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "xru2n",
+                      "layoutPosition": "absolute",
+                      "x": 36,
+                      "y": 200,
+                      "name": "Gridline 40",
+                      "fill": "$paper-rule",
+                      "width": 233,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "u7yhw6",
+                      "layoutPosition": "absolute",
+                      "x": 265,
+                      "y": 210,
+                      "name": "Age Axis Label",
+                      "fill": "$print-ink-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 40,
+                      "content": "月齡",
+                      "textAlign": "right",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fiQut",
+                      "layoutPosition": "absolute",
+                      "x": 36,
+                      "y": 60,
+                      "name": "Empty Message",
+                      "width": 233,
+                      "height": 140,
+                      "fill": "$print-paper",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": "$sp-item",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "q1j8Y",
+                          "name": "Empty Lead",
+                          "fill": "$print-ink",
+                          "content": "這張紙還沒有記錄",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "JW7T8",
+                          "name": "Empty Body",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": 209,
+                          "content": "新增第一筆身高、體重或頭圍，就能看見陳小軒的成長曲線。",
+                          "lineHeight": 1.4,
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Wjdnd",
+              "name": "Actions",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "children": [
+                {
+                  "id": "kBbTu",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Add Measurement Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "新增量測"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "o8eGA",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "m8ILF",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "LiJgw",
+      "x": 8256,
+      "y": 41399,
+      "name": "A11y / 04 空狀態 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 2392,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "XqHd1",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "StsNh",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "寶貝"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "n3wUKA",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            16,
+            "$screen-pad",
+            8,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "cS6u0",
+              "name": "Section Identity",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "C4UUML",
+                  "name": "Identity Header",
+                  "width": "fill_container",
+                  "gap": "$sp-group",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "t4CYkp",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "width": 88,
+                      "height": 88,
+                      "name": "Avatar",
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "軒",
+                          "fontSize": 34
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zTJdN",
+                      "name": "Identity Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "unuCh",
+                          "name": "Name",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "陳小軒",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wIrJr",
+                          "name": "Age",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "2 歲 1 個⁠月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "E2AiAn",
+                  "name": "Section Label",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "最新紀錄",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "CINDx",
+                  "name": "Latest Values Placeholder",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "JnQnD",
+                      "name": "身高 Card Empty",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": "$sp-group",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "E1091",
+                          "name": "Label Row",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "GcWDo",
+                              "name": "Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "J6SmDB",
+                              "name": "Label",
+                              "fill": "$text-secondary",
+                              "content": "身高",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "oNur8",
+                          "name": "Value",
+                          "fill": "$text-secondary",
+                          "content": "—",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "fC8Cb",
+                          "name": "Delta Row Placeholder",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "yC5JB",
+                              "name": "Trend Icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "minus",
+                              "library": "lucide",
+                              "fill": "$border"
+                            },
+                            {
+                              "type": "text",
+                              "id": "rx5Ck",
+                              "name": "Delta",
+                              "fill": "$text-secondary",
+                              "content": "尚無資料",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "dw6mJ",
+                          "name": "Placeholder Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "尚無紀錄",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mSPpp",
+                      "name": "體重 Card Empty",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": "$sp-group",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "H6bk8N",
+                          "name": "Label Row",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "jRo2z",
+                              "name": "Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "LYLLJ",
+                              "name": "Label",
+                              "fill": "$text-secondary",
+                              "content": "體重",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "ABZYn",
+                          "name": "Value",
+                          "fill": "$text-secondary",
+                          "content": "—",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "BUBrd",
+                          "name": "Delta Row Placeholder",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Oqt2J",
+                              "name": "Trend Icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "minus",
+                              "library": "lucide",
+                              "fill": "$border"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CA8vh",
+                              "name": "Delta",
+                              "fill": "$text-secondary",
+                              "content": "尚無資料",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "WtSnA",
+                          "name": "Placeholder Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "尚無紀錄",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pnqSM",
+                      "name": "頭圍 Card Empty",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": "$sp-group",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "N4EhU",
+                          "name": "Label Row",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "X8S0RY",
+                              "name": "Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "circle",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "NJAii",
+                              "name": "Label",
+                              "fill": "$text-secondary",
+                              "content": "頭圍",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "sxHLp",
+                          "name": "Value",
+                          "fill": "$text-secondary",
+                          "content": "—",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LO9fj",
+                          "name": "Delta Row Placeholder",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "NOIsc",
+                              "name": "Trend Icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "minus",
+                              "library": "lucide",
+                              "fill": "$border"
+                            },
+                            {
+                              "type": "text",
+                              "id": "GiRqD",
+                              "name": "Delta",
+                              "fill": "$text-secondary",
+                              "content": "尚無資料",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "fEVaa",
+                          "name": "Placeholder Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "尚無紀錄",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "z2BI1b",
+              "name": "Empty Chart Card",
+              "width": "fill_container",
+              "fill": "$print-paper",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$paper-edge",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "$paper-shadow",
+                "offset": {
+                  "x": 2,
+                  "y": 8
+                },
+                "blur": 16
+              },
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "FzNH4",
+                  "name": "Chart Label",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "成長曲線",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "id": "jO06R",
+                  "type": "ref",
+                  "ref": "SEy9U",
+                  "name": "Segmented",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight"
+                },
+                {
+                  "type": "frame",
+                  "id": "ooglT",
+                  "name": "Chart Plot Skeleton",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 518,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "LoeK7",
+                      "layoutPosition": "absolute",
+                      "x": 56,
+                      "y": 110,
+                      "name": "Gridline 85",
+                      "fill": "$paper-rule",
+                      "width": 193,
+                      "height": 1
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "IwhST",
+                      "layoutPosition": "absolute",
+                      "x": 56,
+                      "y": 223.33333333333334,
+                      "name": "Gridline 70",
+                      "fill": "$paper-rule",
+                      "width": 193,
+                      "height": 1
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "z01ic",
+                      "layoutPosition": "absolute",
+                      "x": 56,
+                      "y": 336.6666666666667,
+                      "name": "Gridline 55",
+                      "fill": "$paper-rule",
+                      "width": 193,
+                      "height": 1
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "vLTnp",
+                      "layoutPosition": "absolute",
+                      "x": 56,
+                      "y": 450,
+                      "name": "Gridline 40",
+                      "fill": "$paper-rule",
+                      "width": 193,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "hx9YS",
+                      "layoutPosition": "absolute",
+                      "x": 56,
+                      "y": 466,
+                      "name": "Age Axis Label",
+                      "fill": "$print-ink-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": 193,
+                      "content": "月齡",
+                      "textAlign": "right",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vbIHm",
+                      "layoutPosition": "absolute",
+                      "x": 56,
+                      "y": 110,
+                      "name": "Empty Message",
+                      "width": 193,
+                      "height": 340,
+                      "fill": "$print-paper",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": "$sp-item",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "yRWVA",
+                          "name": "Empty Lead",
+                          "fill": "$print-ink",
+                          "content": "這張紙還沒有記錄",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZicdD",
+                          "name": "Empty Body",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": 179,
+                          "content": "新增第一筆量測，就能看見成長曲線。",
+                          "lineHeight": 1.4,
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-meta",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Ho7Wu",
+              "name": "Actions",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "children": [
+                {
+                  "id": "o8xCS9",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Add Measurement Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "新增量測"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "c7XhD",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "pQWFv",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
               "height": 5
             }
           ]
