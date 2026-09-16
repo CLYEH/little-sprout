@@ -27,3 +27,5 @@ SettingsRowView：純顯示元件（導覽由外層 SettingsView 的 NavigationL
 StorageUsageView：預設（載入中／有值）兩態純顯示無互動元件；失敗態多一顆「重試」鈕（已給 minHeight 44）但 `PreviewFamilyAPIClient.fetchQuota` 恆成功、harness 目前造不出失敗態讓 tap-target-check 量到它，追蹤於 LS-96（merge-review R1 m3），待有可控 stub 後移除本行
 BlockListView：LS-23 尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估
 ReportInboxView：LS-23 尚未實作的最小佔位（ContentUnavailableView，無互動元件），追蹤於 LS-96，待該票補正式內容後再評估
+ImportGroupCardView：非獨立入口，由外層 ImportOrganizeView（已註冊 TapTargetGateScreenName.importOrganizeDefault／.importOrganizeLimited）渲染時一併涵蓋其寶貝 chip／相簿列／略過鈕／日期選擇鈕的量測，不另掛 harness case，LS-303
+BabyChipView：非獨立入口，由外層 ImportGroupCardView（透過 ImportOrganizeView 一併涵蓋，見上）渲染時一併涵蓋，LS-303

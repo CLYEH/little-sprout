@@ -71,6 +71,9 @@ enum TapTargetGateHarness {
             uploadQueueSheetHost
         case .uploadQueueSheetNormal:
             uploadQueueSheetNormalHost
+        case .importOrganizeDefault: importOrganizeDefaultHost
+        case .importOrganizeLimited: importOrganizeLimitedHost
+        case .importPermissionDenied: importPermissionDeniedHost
         case .passwordSignIn: passwordSignInHost
         case .welcome: welcomeHost
         case .profileEdit: profileEditHost
@@ -224,7 +227,8 @@ enum TapTargetGateHarness {
             TimelineView(
                 familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
                 diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-                safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient()
+                albumsStore: .preview(), safetyAPIClient: PreviewSafetyAPIClient(),
+                commentAPIClient: PreviewCommentAPIClient()
             )
         }
     }

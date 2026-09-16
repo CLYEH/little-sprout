@@ -61,6 +61,9 @@ struct AlbumDetailView: View {
     @State private var pickerSelection: [PhotosPickerItem] = []
     @State var showsEditAlbum = false
     @State var showsDeleteConfirmation = false
+    /// LS-303：相機膠卷批次匯入入口——`moreMenu`「從相機膠卷批次匯入」觸發，見
+    /// `AlbumDetailView+Actions.swift` 與 `ImportBatchFlowModifier`。
+    @State var showsBatchImport = false
     @State private var contentWidth: CGFloat = UIScreen.main.bounds.width - 2 * AppSpacing.screenPad
     @Environment(\.dismiss) var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -112,6 +115,9 @@ struct AlbumDetailView: View {
                     pickerSelection = []
                     Task { await loadPicked(itemsToLoad, detailStore: detailStore) }
                 }
+                .importBatchFlow(
+                    isActive: $showsBatchImport, childrenStore: childrenStore, albumsStore: albumsStore
+                )
             } else if seedLoadFailed {
                 seedLoadFailureState
             } else {
@@ -147,6 +153,7 @@ struct AlbumDetailView: View {
         VStack(spacing: AppSpacing.label) {
             if skippedItemCount > 0 { skippedItemsReplyRow }
             addPhotosBarButton
+            batchImportBarButton
         }
         .padding(.vertical, AppSpacing.item)
         .padding(.horizontal, AppSpacing.screenPad)
@@ -164,7 +171,10 @@ struct AlbumDetailView: View {
                     navRow
                     titleText(store)
                     metaRow(store)
-                    addPhotosInlineButton
+                    HStack(spacing: AppSpacing.item) {
+                        addPhotosInlineButton
+                        batchImportInlineButton
+                    }
                     if skippedItemCount > 0 { skippedItemsReplyRow }
                 }
                 photoGridOrEmptyState(store, containerWidth: contentWidth)
