@@ -1,3 +1,4 @@
+import Photos
 import PhotosUI
 import SwiftUI
 
@@ -16,7 +17,7 @@ struct ImportBatchFlowModifier: ViewModifier {
     let childrenStore: ChildrenStore
     let albumsStore: AlbumsStore
     let entrySource: ImportEntrySource
-    var uploadCoordinator: ImportUploadCoordinator = NoOpImportUploadCoordinator()
+    var uploadCoordinator: ImportUploadCoordinator
 
     @State private var accessState: PhotoLibraryAccessState = .authorized
     @State private var showsPicker = false
@@ -39,9 +40,15 @@ struct ImportBatchFlowModifier: ViewModifier {
                 isActive = false
                 Task { await requestAccessAndProceed() }
             }
+            // merge-review R2 B1（blocker）：沒有帶 photo library 參數建立的 picker，Apple SDK
+            // 對 `PhotosPickerItem.itemIdentifier` 的 doc string 明寫「Photos picker 沒有帶
+            // photo library 建立時一律 nil」——這不是 simulator 限制，真機同樣如此，是先前
+            // R2 handoff 誤判的根因。改帶共用相片庫參數（下一行）改用 in-process picker
+            // 才能反查 `itemIdentifier`；附帶好處：`.limited` 授權下只顯示使用者已授權過的
+            // 那些照片，跟 06a banner 文案「目前只能看到你挑選過的那些照片」語意一致。
             .photosPicker(
                 isPresented: $showsPicker, selection: $pickerSelection, maxSelectionCount: 200,
-                matching: .any(of: [.images, .videos])
+                matching: .any(of: [.images, .videos]), photoLibrary: .shared()
             )
             .onChange(of: pickerSelection) { _, items in
                 guard !items.isEmpty else { return }
@@ -111,13 +118,16 @@ private struct OrganizePayload: Identifiable {
 
 extension View {
     /// `isActive`：呼叫端按鈕觸發用的 binding（見型別文件註解）。`entrySource`：LS-303 R2
-    /// M2 裁決——決定整理頁每群相簿預設值。
+    /// M2 裁決——決定整理頁每群相簿預設值。`uploadCoordinator`：LS-303 R3（merge-review R2
+    /// M2）——預設 `NoOpImportUploadCoordinator()`（harness／`.timeline` 入口尚未接線時的
+    /// 保底），`AlbumDetailView` 傳自己持有的 `LegacyAlbumUploadImportCoordinator`。
     func importBatchFlow(
         isActive: Binding<Bool>, childrenStore: ChildrenStore, albumsStore: AlbumsStore,
-        entrySource: ImportEntrySource
+        entrySource: ImportEntrySource, uploadCoordinator: ImportUploadCoordinator = NoOpImportUploadCoordinator()
     ) -> some View {
         modifier(ImportBatchFlowModifier(
-            isActive: isActive, childrenStore: childrenStore, albumsStore: albumsStore, entrySource: entrySource
+            isActive: isActive, childrenStore: childrenStore, albumsStore: albumsStore, entrySource: entrySource,
+            uploadCoordinator: uploadCoordinator
         ))
     }
 }

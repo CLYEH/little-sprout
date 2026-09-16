@@ -57,12 +57,21 @@ enum PhotoLibraryAccessService {
     /// 步驟一（MainActor，呼叫端在 `.onChange(of: pickerSelection)` 裡同步呼叫）：
     /// `PhotosPickerItem.itemIdentifier` 是輕量同步屬性存取，不是 Photos 資料庫查詢——
     /// 留在 MainActor 讀；`PhotosPickerItem` 本身不跨過 `Task.detached` 邊界（避免任何
-    /// 對它非 MainActor 存取的未定義行為）。回傳保留原始選取順序的 identifier 列表＋
-    /// 沒有 `itemIdentifier`（理論上極罕見）的筆數（merge-review R1 i3）。
+    /// 對它非 MainActor 存取的未定義行為）。只做「讀出 `itemIdentifier`」這一步，分類邏輯
+    /// 交給 `partition(identifiers:)`（merge-review R2 M3：`PhotosPickerItem` 本身無法在
+    /// 單元測試建構假值，抽成這樣才能被覆蓋，同 `PickedItemLoader` 檔頭既有的拆分理由）。
     @MainActor
     static func identifiers(for items: [PhotosPickerItem]) -> (identifiers: [String], droppedCount: Int) {
-        let ids = items.compactMap(\.itemIdentifier)
-        return (ids, items.count - ids.count)
+        partition(identifiers: items.map(\.itemIdentifier))
+    }
+
+    /// 「一批 `itemIdentifier?`（`nil` 代表 PHPicker 沒有帶 photo library 建立、或極罕見的
+    /// 讀取失敗）→ 保留原始順序的非 nil identifier 列表＋捨棄筆數」——純函式，跟
+    /// `PhotosPickerItem` 完全脫鉤，可以直接餵假 identifier 陣列做單元測試（merge-review R2
+    /// M3 B1 修復：見 `PhotoLibraryAccessServiceTests`）。
+    static func partition(identifiers: [String?]) -> (identifiers: [String], droppedCount: Int) {
+        let ids = identifiers.compactMap { $0 }
+        return (ids, identifiers.count - ids.count)
     }
 
     /// 步驟二（merge-review R1 M5，呼叫端包 `Task.detached` 離開 MainActor）：真正的
