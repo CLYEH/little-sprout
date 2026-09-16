@@ -127,10 +127,11 @@ final class LegacyAlbumUploadImportCoordinator: ImportUploadCoordinator {
               let image = UIImage(data: result.data),
               let pixelSize = PickedItemLoader.orientedPixelSize(of: image)
         else { return nil }
-        let thumbnail = await PickedItemLoader.downsizedThumbnail(for: image)
-        return PendingUpload(
-            kind: .photo(data: result.data, fileExtension: ext), thumbnail: thumbnail, pixelSize: pixelSize
-        )
+        // LS-303 R5（merge-review R4 M2）：這條過渡管線沒有任何畫面顯示縮圖（不開
+        // `UploadQueueSheetView`）——共用佇列 entry 現在活到登出（見 `AlbumsStore
+        // +SharedUploadQueue.swift` 檔頭文件註解），200 張批次若都解一份縮圖會在 session
+        // 期間白白留著約 66 MB；`nil` 讓呼叫端退回系統圖示佔位，同時省掉這裡的解碼成本。
+        return PendingUpload(kind: .photo(data: result.data, fileExtension: ext), thumbnail: nil, pixelSize: pixelSize)
     }
 
     private static func loadVideoUpload(for asset: PHAsset) async -> PendingUpload? {
@@ -153,9 +154,9 @@ final class LegacyAlbumUploadImportCoordinator: ImportUploadCoordinator {
         guard succeeded else { return nil }
         let avAsset = AVURLAsset(url: destination)
         guard let pixelSize = await VideoTrimmer.pixelSize(ofFirstVideoTrackIn: avAsset) else { return nil }
-        let thumbnail = PickedItemLoader.firstFrame(of: avAsset)
+        // LS-303 R5（merge-review R4 M2）：同上方 `loadPhotoUpload`——這條過渡管線不顯示縮圖。
         return PendingUpload(
-            kind: .video(fileURL: destination, fileExtension: ext), thumbnail: thumbnail, pixelSize: pixelSize
+            kind: .video(fileURL: destination, fileExtension: ext), thumbnail: nil, pixelSize: pixelSize
         )
     }
 }
