@@ -205173,7 +205173,7 @@
       },
       "clip": true,
       "width": 834,
-      "height": 2636.43,
+      "height": 3224.4324675272946,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -205378,7 +205378,7 @@
               "name": "Divider",
               "fill": "$border",
               "width": 1,
-              "height": 2540.43
+              "height": 3128.4324675272946
             },
             {
               "type": "frame",
@@ -205845,13 +205845,14 @@
                   "id": "KIxyu",
                   "name": "Summary Row",
                   "width": "fill_container",
+                  "layout": "vertical",
                   "gap": "$sp-block",
                   "children": [
                     {
                       "type": "frame",
                       "id": "Z8tNFO",
                       "name": "身高 Card",
-                      "width": 161.67,
+                      "width": "fill_container",
                       "fill": "$surface",
                       "cornerRadius": "$radius-md",
                       "stroke": "$border",
@@ -205963,7 +205964,7 @@
                       "type": "frame",
                       "id": "TfIMd",
                       "name": "體重 Card",
-                      "width": 161.67,
+                      "width": "fill_container",
                       "fill": "$surface",
                       "cornerRadius": "$radius-md",
                       "stroke": "$border",
@@ -206075,7 +206076,7 @@
                       "type": "frame",
                       "id": "p3HGVe",
                       "name": "頭圍 Card",
-                      "width": 161.67,
+                      "width": "fill_container",
                       "fill": "$surface",
                       "cornerRadius": "$radius-md",
                       "stroke": "$border",
