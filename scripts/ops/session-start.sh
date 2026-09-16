@@ -48,6 +48,15 @@ if git -C "$root" rev-parse --git-dir >/dev/null 2>&1; then
 fi
 # LS209-SSH-KEEPALIVE-END
 
+# LS-311：statusline-command.sh 若沒掛用量快取寫入段（grep 不到 usage-cache 字面），巡檢「用量」段讀不到
+# ~/.claude/usage-cache.json，週用量門檻偵測會退化成「探針無資料」（不擋，但等於這段沒巡到）。這裡只偵測
+# 並提示，不代寫、不改 ~/.claude（不是本 repo 管得到的檔案；見硬規則）。
+usage_snippet_note=
+statusline_sh="$HOME/.claude/statusline-command.sh"
+if [ ! -f "$statusline_sh" ] || ! grep -q 'usage-cache' "$statusline_sh" 2>/dev/null; then
+  usage_snippet_note="⚠ ~/.claude/statusline-command.sh 未掛用量快取寫入段——巡檢「用量」段讀不到 ~/.claude/usage-cache.json，週用量門檻偵測會印「探針無資料」（不擋，但等於沒巡到）。安裝方式見 scripts/ops/usage-cache-snippet.sh 檔頭（LS-311）。"
+fi
+
 out=$(bash "${here}/patrol.sh" --brief --repo "$root" "$stale" 2>&1); rc=$?
 ctx="## 巡檢（SessionStart hook → scripts/ops/patrol.sh --brief；規約 docs/COLLABORATION.md §4-b）"$'\n'
 if [ "$rc" -ne 0 ]; then
@@ -61,6 +70,7 @@ if printf '%s' "$out" | grep -q '^\[hooks\]'; then
   ctx="${ctx}⚠ gate hooks 未裝好（上列 [hooks] 行）：本機 commit／push gate 靜默不跑、只剩 CI 攔——先照指示修（\`git config core.hooksPath .githooks\`／\`chmod +x .githooks/*\`）再 commit／push 或派工（COLLABORATION §2，LS-87）。"$'\n'
 fi
 [ -n "$ssh_note" ] && ctx="${ctx}${ssh_note}"$'\n'
+[ -n "$usage_snippet_note" ] && ctx="${ctx}${usage_snippet_note}"$'\n'
 ctx="${ctx}先 CronList 確認本 session 是否已有巡檢 cron（compact／resume 後 session 仍在，cron 不會消失），沒有才用 CronCreate 建 \`*/26 * * * *\`（模板見 docs/COLLABORATION.md §4-b）；已有就不要重建。"
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":%s}}\n' "$(json_str "$ctx")"
 printed=1

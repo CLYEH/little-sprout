@@ -146,7 +146,16 @@ sample9=$(printf '%s\n' \
 kept9=$(printf '%s\n' "$sample9" | bash "$pf")
 has '⑨ 「已落地：」附註隨同一條 → 開票行一起通過過濾（裁定：進 context）' "$kept9" '已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2'
 
+# ---- ⑩（LS-311）用量段「⚠ [用量]」行：97 級警示、99 級停工都要原樣通過（不靠這裡另開白名單——patrol.sh
+#      自己已把 ⚠／→ 寫進訊息裡，符合判準①；這裡釘住「真的通過」這件事，回歸不會被日後改動悄悄濾掉）----
+sample10=$(printf '%s\n' \
+  '  ⚠ [用量] 週用量 97%（重置 09-20 19:00）→ 不派新任務；在飛 agent 跑完只記票（usage-budget-winddown 步驟 3）' \
+  '  ⚠ [用量] 週用量 99%（重置 09-20 19:00）→ 停下所有工作：CronDelete 巡檢、不派任何 agent、在飛只等結果記票、寫交接 session-resume-<日期>.md（usage-budget-winddown 步驟 1–5）')
+kept10=$(printf '%s\n' "$sample10" | bash "$pf")
+has '⑩ 留下 97 級 [用量] 警示行' "$kept10" '⚠ [用量] 週用量 97%'
+has '⑩ 留下 99 級 [用量] 停工行' "$kept10" '⚠ [用量] 週用量 99%'
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ patrol-filter 自測通過（10 組樣本）"
+  echo "✓ patrol-filter 自測通過（11 組樣本）"
 fi
 exit "$fail"
