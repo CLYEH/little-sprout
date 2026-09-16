@@ -237,13 +237,28 @@ struct ImportOrganizeView: View {
         uploadCoordinator.requiresAlbumSelection && plan.hasUnskippedGroupsWithoutAlbum
     }
 
+    /// LS-303 R5（merge-review R4 i4）：全部群都被略過時 `pendingAssetCount == 0`——同樣是
+    /// 使用者可修正的狀態（取消略過任一群即可），非本票 M3 finding 所指「這批一張都沒有的
+    /// in-flight 概念」，改回品牌不可協商第 8 條同一套 idiom：不 disable，按下才提示。
+    private var noPendingAssets: Bool { plan.pendingAssetCount == 0 }
+
     /// 使用者已經按過一次主鈕、但當下有未略過群沒相簿——`missingAlbumSelection` 一旦回到
     /// false（使用者改了相簿或略過那群）這個回話列就跟著消失，不需要另外重置。
     @State private var didAttemptImportWithMissingAlbum = false
+    /// 同上，對應 `noPendingAssets`。兩者互斥：`hasUnskippedGroupsWithoutAlbum` 只計未略過
+    /// 且非空的群，`pendingAssetCount == 0` 時不會有這種群存在。
+    @State private var didAttemptImportWithNoPendingAssets = false
 
     private var ctaBar: some View {
         VStack(spacing: AppSpacing.tight) {
-            if didAttemptImportWithMissingAlbum && missingAlbumSelection {
+            if didAttemptImportWithNoPendingAssets && noPendingAssets {
+                HStack(spacing: AppSpacing.label) {
+                    Image(systemName: "exclamationmark.circle").appIconFrame(.small)
+                        .foregroundStyle(Color.lsTextPrimary)
+                    Text("沒有要匯入的照片，先取消一個略過的日期")
+                        .appFont(.note).foregroundStyle(Color.lsTextPrimary)
+                }
+            } else if didAttemptImportWithMissingAlbum && missingAlbumSelection {
                 // 同 `ImportGroupCardView` 寶貝 chip 那套回話列語彙（`exclamationmark.circle`
                 // ＋`lsTextPrimary`，R3 M3 finding 指出的「不同語彙」在這裡訂正）。
                 HStack(spacing: AppSpacing.label) {
@@ -253,6 +268,10 @@ struct ImportOrganizeView: View {
                 }
             }
             Button {
+                guard !noPendingAssets else {
+                    didAttemptImportWithNoPendingAssets = true
+                    return
+                }
                 guard !missingAlbumSelection else {
                     didAttemptImportWithMissingAlbum = true
                     return
@@ -267,9 +286,6 @@ struct ImportOrganizeView: View {
             }
             .foregroundStyle(Color.lsOnAccent)
             .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-            // 「這批一張都沒有」是真的無事可做（同 in-flight 概念，不是可修正的驗證失敗）
-            // ——這顆維持既有的 disable；「未選相簿」不算這一類，見上方文件註解。
-            .disabled(plan.pendingAssetCount == 0)
         }
         .padding(.horizontal, AppSpacing.screenPad)
         .padding(.vertical, AppSpacing.item)
