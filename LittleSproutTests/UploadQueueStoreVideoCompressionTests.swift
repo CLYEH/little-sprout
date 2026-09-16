@@ -105,7 +105,16 @@ final class UploadQueueStoreVideoCompressionTests: XCTestCase {
 
         store.enqueue([makeVideoUpload(fileURL: pickedURL), makePhotoUpload(tag: "ok")])
 
-        await waitUntil { store.remainingCount == 1 }
+        // LS-305：`remainingCount == 1` 本身無法區分「照片已完成、影片還在 uploading」與
+        // 「照片已完成、影片已落地失敗態」——兩者的 remainingCount 都是 1（`.uploading`／
+        // `.failed` 對 remainingCount 來說是同一類「非完成」）。影片與照片是同批 enqueue、
+        // `maxConcurrentUploads: 2` 下並發啟動的兩個獨立 Task，沒有任何機制保證影片的
+        // `videoPreparer` 丟錯（經過 `acquireVideoExportSlot()` 的 await）一定搶在照片的
+        // stub 上傳（可能零 await 同步完成）之前落地，導致偶爾在照片剛完成、影片仍
+        // `.uploading` 的瞬間就通過這個等待條件，下面第 113 行 `guard` 撲空。改成同時等
+        // `failedCount == 1`，把等待條件收斂成測試真正要的終局態（照片完成＋影片失敗各一），
+        // 不是產品碼競態。
+        await waitUntil { store.remainingCount == 1 && store.failedCount == 1 }
         XCTAssertEqual(mediaService.uploadVideoCalls.count, 0, "壓完仍超限的影片不該被送上 Storage")
         XCTAssertEqual(
             store.sections.first { $0.kind == .completed }?.rows.count, 1, "另一筆照片不該被這支影片的失敗擋住"
