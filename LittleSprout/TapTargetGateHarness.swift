@@ -71,6 +71,9 @@ enum TapTargetGateHarness {
             uploadQueueSheetHost
         case .uploadQueueSheetNormal:
             uploadQueueSheetNormalHost
+        case .importOrganizeDefault: importOrganizeDefaultHost
+        case .importOrganizeLimited: importOrganizeLimitedHost
+        case .importPermissionDenied: importPermissionDeniedHost
         case .passwordSignIn: passwordSignInHost
         case .welcome: welcomeHost
         case .profileEdit: profileEditHost

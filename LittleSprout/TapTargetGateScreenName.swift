@@ -104,6 +104,18 @@ enum TapTargetGateScreenName: String {
     // 在生產常態下量到群標題 x=119.3，應為 24）。這個 case 掛 `previewNormalSample()`（無
     // 失敗、無續傳橫幅、`uploading` 不帶百分比），專門讓機械 gate／UITest 覆蓋這個常態。
     case uploadQueueSheetNormal = "UploadQueueSheetViewNormal"
+    // LS-303：匯入整理頁（`design/littlesprout.pen` Import 01/02/03，同一結構）——初始態不
+    // 需要真的 `PHAsset`（`ImportOrganizeView` 有 `plan:` 入口專為 harness／preview 準備，
+    // 見該檔文件註解），固定 fixture（23 張＋5 張＋3 張日期不明群）就有代表性：群卡／
+    // 寶貝 chip／相簿列／略過鈕／釘底主鈕皆渲染。
+    // rawValue 逐字等於檔名（`ImportOrganizeView`）——`tap-target-registry-check.sh` 只認
+    // 這個形狀（同 `.albumsDefaultState` 既有先例）。
+    case importOrganizeDefault = "ImportOrganizeView"
+    // LS-303：limited-library 疊加態——同上 fixture，`accessState: .limited` 額外渲染
+    // 06a 提醒 banner 與「管理可存取照片」鈕。
+    case importOrganizeLimited = "ImportOrganizeViewLimited"
+    // LS-303：06b 拒絕權限空狀態——完全無資料依賴，取消鈕／主鈕一開畫面就有代表性。
+    case importPermissionDenied = "ImportPermissionDeniedView"
     // LS-164：帳號密碼登入畫面（審核帳號用）——初始態不需要任何 seed 資料（`.preview()`
     // 免登入即可建構，同 `createChild`／`createAlbum` 的既有理由），Email／密碼欄與登入鈕
     // 一開畫面就有代表性。
@@ -302,6 +314,12 @@ enum TapTargetGateScreenName: String {
         case .uploadQueueSheet: return .staticText("沒有成功")
         // 常態樣本沒有失敗群，用永遠會渲染的標題文字當 sentinel。
         case .uploadQueueSheetNormal: return .staticText("正在新增照片")
+        // 自訂 nav row 標題——固定 fixture 一開畫面就渲染。
+        case .importOrganizeDefault: return .staticText("整理新照片")
+        // 06a banner 標題——`accessState: .limited` 固定顯示。
+        case .importOrganizeLimited: return .staticText("只能看到部分照片")
+        // 06b 標題——無資料依賴，一開畫面就渲染。
+        case .importPermissionDenied: return .staticText("新增照片")
         case .passwordSignIn: return .staticText("帳號密碼登入")
         // Doc Title——`LegalDocumentSheet` 載入完成後必定渲染，不依賴檔案實際內容。
         case .legalDocumentSheet: return .staticText("使用條款")

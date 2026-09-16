@@ -86,6 +86,22 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.albumDetailMember)
     }
 
+    /// LS-303：匯入整理頁——群卡（寶貝 chip／相簿列／略過鈕）＋釘底主鈕，固定 fixture 不需要
+    /// 真的 `PHAsset`。
+    func testImportOrganizeDefault() {
+        assertAllTappablesMeetMinimum(.importOrganizeDefault)
+    }
+
+    /// LS-303：limited-library 疊加態——多一顆「管理可存取照片」鈕。
+    func testImportOrganizeLimited() {
+        assertAllTappablesMeetMinimum(.importOrganizeLimited)
+    }
+
+    /// LS-303：06b 拒絕權限空狀態——取消鈕／「開啟「照片」權限」主鈕。
+    func testImportPermissionDenied() {
+        assertAllTappablesMeetMinimum(.importPermissionDenied)
+    }
+
     /// LS-166：「編輯相簿名稱」sheet，初始態（名稱欄／寶貝標記欄／儲存鈕）不需要任何 seed 資料。
     func testEditAlbumView() {
         assertAllTappablesMeetMinimum(.editAlbum)
