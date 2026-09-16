@@ -2,14 +2,16 @@
 # LS-180：Pencil 連線探針——給巡檢（patrol.sh 有 design 分支 worktree 時）與設計票派工前用。三個訊號一行印出：
 #   1. 行程：`pgrep -f 'Pen\.app/Contents/MacOS/Pen$'`（同 pen-open.sh 清場用的樣式）。
 #   2. 路徑：`pen-open.sh --status`（pen CLI 經 Pen 的 desktop socket 跑 get_app_state；讀不到＝CLI 側連不上或未登入）。
-#   3. MCP 探針（**LS-308 改寫**，取代舊版 fd 交集邏輯，見下方沿革）：Claude Code 為每個 session 起一支
-#      `<Pen.app>/…/mcp-server-<arch> --app desktop` 子行程（stdio 接 Claude Code）。判「本 session」用
-#      `ps -o ppid= -p <mcp-server pid>` 取父行程 pid，再 `ps -o command= -p <ppid>` 讀父行程命令是否含 `claude`
-#      （父行程仍活著且是 claude＝這支 mcp-server 屬於目前在跑的 session；父行程已死的殘留 mcp-server 不會落在這裡）；
-#      取第一支命中的當「本 session」，其餘 mcp-server 行程數一律算「殘留」（不分是否為別的活 session 或死 session 的
-#      孤兒，只當 informational，不影響 exit code）。判定邏輯抽到 `scripts/ops/lib/pencil-mcp.sh`（`pencil_mcp_probe`），
-#      與 `pen-open.sh --kill` 清場後列殘留（A3）共用同一套，不重複貼一份（LS-267 R2 M1 同型教訓）。
-#      PEN_STATUS_PS_BIN 可換 `ps` 路徑，自測用。
+#   3. MCP 探針（**LS-308 改寫**，取代舊版 fd 交集邏輯，見下方沿革；**LS-309 B 再改「本 session」判定**）：
+#      Claude Code 為每個 session 起一支 `<Pen.app>/…/mcp-server-<arch> --app desktop` 子行程（stdio 接
+#      Claude Code）。判「本 session」先沿呼叫端 `$PPID` 鏈往上找本 session 真正的 claude 主行程 pid，
+#      再精確比對每支 mcp-server 的父行程 pid（`ps -o ppid= -p <mcp-server pid>`）是否等於該 pid——不再靠
+#      「pgrep 枚舉順序中第一支父行程命令含 claude 字面」推定（LS-308 舊判準在多支 claude 父行程、本 session
+#      非最小 pid 時會選錯，LS-96 池項 `bef760fe`）；找不到本 session 的 claude 主行程（不在 Claude Code 底下
+#      執行等）才退回舊判準並標「推定」。其餘 mcp-server 行程數一律算「殘留」（不分是否為別的活 session 或死
+#      session 的孤兒，只當 informational，不影響 exit code）。判定邏輯抽到 `scripts/ops/lib/pencil-mcp.sh`
+#      （`pencil_mcp_probe`），與 `pen-open.sh --kill` 清場後列殘留（A3）共用同一套，不重複貼一份（LS-267 R2
+#      M1 同型教訓）。PEN_STATUS_PS_BIN 可換 `ps` 路徑，自測用。
 #
 #   沿革（LS-180 原始邏輯，2026-09-05 起，**已被 LS-308 撤銷**）：原本假設「Pen 被結束重開後 socket 換了、
 #   mcp-server 不會重連」，用 `lsof -F dn` 取 mcp-server 的 unix socket peer 位址與 Pen 行程的 socket 位址做交集，
@@ -85,6 +87,7 @@ if [ "$PENCIL_MCP_TOTAL" -eq 0 ]; then
 else
   if [ -n "$PENCIL_MCP_OWN_PID" ]; then
     mcp="MCP：本 session mcp-server ✓（pid ${PENCIL_MCP_OWN_PID}，懶連線，派工前實測一次 get_app_state）"
+    [ "${PENCIL_MCP_OWN_INFERRED:-0}" = 1 ] && mcp="${mcp}（推定——\$PPID 鏈找不到本 session 的 claude 主行程，退回舊判準，LS-309）"
   else
     mcp="MCP：本 session 沒有 mcp-server 行程（尚未呼叫過 pencil MCP 或父行程已死；下一次 mcp__pencil__* 呼叫會自動連上，失敗才 /mcp）"
   fi

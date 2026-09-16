@@ -139,14 +139,19 @@ set_ps_pen_files() {
 clear_ps_pen_files() { : > "$PEN_STUB_PS_OUTPUT"; }
 
 # stub `pen`：只認 `interactive --app desktop`，讀 stdin 分兩路——
-#   餵進來的是 `execute(`（LS-180 tree_hash 回讀）：依 $PEN_STUB_HASH 控制檔決定輸出：HASH:<16 hex> → 印
-#     `SUMMARY-HASH total_nodes=… tree_hash=<hex>`；HANG → sleep 5（測 PEN_OPEN_HASH_TIMEOUT 看門狗）；其他／空 →
-#     模擬 Pencil `InternalError: interrupted`（無 SUMMARY-HASH）。每次呼叫把 $PEN_STUB_EXEC_COUNT 加一（驗「預設模式
-#     不回讀雜湊」）。
+#   餵進來的是 `execute(`（LS-180／LS-309 tree_hash 回讀）：**先看 $PEN_STUB_HASH_QUEUE**（LS-309 分段測試用）——
+#     檔案存在且非空時，依「第 N 次 execute 呼叫」（N＝本次遞增後的 $PEN_STUB_EXEC_COUNT）取該檔第 N 行當作這次的
+#     原文輸出（`FAIL` 或缺該行＝模擬 InternalError: interrupted），一行對應 pen-open.sh 依序送出的每一次 execute
+#     （整棵單次 → root 數量探測 → 各分段），讓測試能精確控制「這一次呼叫是分段流程的第幾步、成功還是失敗」，
+#     不必猜 pen-open.sh 內部怎麼組 SCAN_HASH_ROOTS。**沒有 queue 檔（多數既有 LS-180 測試）才退回舊版**：依
+#     $PEN_STUB_HASH 控制檔——HASH:<16 hex> → 印 `SUMMARY-HASH total_nodes=… tree_hash=<hex>`；HANG → sleep 5
+#     （測 PEN_OPEN_HASH_TIMEOUT 看門狗）；其他／空 → 模擬 Pencil `InternalError: interrupted`。每次呼叫把
+#     $PEN_STUB_EXEC_COUNT 加一（驗「預設模式不回讀雜湊」／LS-309 分段測試靠這個數字對應 queue 行號）。
 #   其他（get_app_state）：依 $PEN_STUB_STATE——PATH:<path> → 印 get_app_state 格式的那一行；HANG → sleep 5（測
 #     ATTEMPT_TIMEOUT 看門狗）；其他 → 模擬讀不到
 export PEN_STUB_HASH="${work}/hash"
 export PEN_STUB_EXEC_COUNT="${work}/exec.count"
+export PEN_STUB_HASH_QUEUE="${work}/hash.queue"
 cat > "${bin}/pen" <<'STUB'
 #!/bin/bash
 if [ "$1" != interactive ]; then exit 1; fi
@@ -155,6 +160,15 @@ case "$input" in
   *execute\(*)
     n=$(( $(cat "${PEN_STUB_EXEC_COUNT:?}" 2>/dev/null || echo 0) + 1 ))
     printf '%s' "$n" > "${PEN_STUB_EXEC_COUNT}"
+    if [ -s "${PEN_STUB_HASH_QUEUE:-/nonexistent-hash-queue}" ]; then
+      line=$(sed -n "${n}p" "${PEN_STUB_HASH_QUEUE}")
+      if [ -z "$line" ] || [ "$line" = FAIL ]; then
+        echo "Error: InternalError: interrupted"
+      else
+        printf '%s\n' "$line"
+      fi
+      exit 0
+    fi
     hc="$(cat "${PEN_STUB_HASH:?}" 2>/dev/null || true)"
     case "$hc" in
       HASH:*) printf 'SUMMARY-HASH total_nodes=1 tree_hash=%s\n' "${hc#HASH:}" ;;
@@ -836,6 +850,60 @@ else
   bad "⑮i 應 exit 2（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 clear_fake_pen
+
+# ---- ㉔／㉕（LS-309）：整棵單次雜湊回讀失敗後的分段路徑——root 數量探測＋對半遞迴分段，各段 hash_part 依
+#      mod 2^64 相加合併。用 $PEN_STUB_HASH_QUEUE（第 N 次 execute 呼叫對應第 N 行）精確控制「單次失敗 → 探測
+#      root 數 → 分段各自成功／持續失敗」，不依賴 $PEN_STUB_HASH 的單一控制值。夾具 wtSeg 有 4 個頂層節點
+#      （root 數量足以分兩段），WT_HASH_SEG 為其磁碟 tree_hash（design_tree_hash.py 算出），供合成 hash_part 組出
+#      「相加後與磁碟一致」的正案例。
+wtSeg="${work}/wt-seg"; mkdir -p "${wtSeg}/design"
+printf '%s' '{"version":1,"children":[{"id":"s1","x":1,"children":[]},{"id":"s2","x":2,"children":[]},{"id":"s3","x":3,"children":[]},{"id":"s4","x":4,"children":[]}]}' > "${wtSeg}/design/littlesprout.pen"
+wantSeg="$(cd "${wtSeg}/design" && pwd -P)/littlesprout.pen"
+WT_HASH_SEG="$(python3 "${root}/scripts/gates/design_tree_hash.py" "$wantSeg")"
+
+# ㉔ 整棵單次失敗 → root 數量探測成功（n=4）→ 對半兩段皆成功，hash_part 相加（0 + WT_HASH_SEG mod 2^64）＝WT_HASH_SEG
+#    → 與磁碟一致，exit 0、不清場（走既有 LS-180「相符不殺」路徑，只是這次雜湊是分段合出來的）。
+reset_open_tracking; clear_fake_pen; wt_backup_safe
+{
+  echo FAIL
+  echo "ROOT-COUNT n=4"
+  echo "SUMMARY-HASH-PART roots=[0,2) total_nodes=2 hash_part=0000000000000000"
+  echo "SUMMARY-HASH-PART roots=[2,4) total_nodes=2 hash_part=${WT_HASH_SEG}"
+} > "$PEN_STUB_HASH_QUEUE"
+set_state "PATH:${wantSeg}"
+start_fake_pen
+out="$(run "$wtSeg" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "tree_hash=${WT_HASH_SEG} 與磁碟一致" \
+  && printf '%s' "$out" | grep -qF '分段成功（2 段' \
+  && fake_pen_alive && [ "$(exec_calls)" -eq 4 ]; then
+  ok '㉔ 整棵單次失敗 → root 數量探測＋對半分兩段皆成功，hash_part 相加後與磁碟一致 → exit 0 不清場（LS-309）'
+else
+  bad "㉔ 應 exit 0 且分段合併成功（實得 ${got}，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# ㉕ 整棵單次失敗 → root 數量探測成功 → 每一段（含遞迴再分半後的最小範圍）都持續失敗 → 最終放棄、不清場、
+#    exit 3 印期望值交 agent 複算（與 ⑮c 同一組 exit 3 語意，只是這次是分段耗盡後才放棄，不是單次重試耗盡）。
+reset_open_tracking; clear_fake_pen; wt_backup_safe
+{
+  echo FAIL
+  echo "ROOT-COUNT n=4"
+  echo FAIL
+  echo FAIL
+  echo FAIL
+} > "$PEN_STUB_HASH_QUEUE"
+set_state "PATH:${wantSeg}"
+start_fake_pen
+out="$(run "$wtSeg" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 3 ] && printf '%s' "$out" | grep -qF "期望值 tree_hash=${WT_HASH_SEG}" \
+  && printf '%s' "$out" | grep -qF '已無法再分段仍失敗，放棄' \
+  && fake_pen_alive; then
+  ok '㉕ 分段仍持續失敗（遞迴到最小範圍）→ 放棄，不清場、exit 3 印期望值（LS-309）'
+else
+  bad "㉕ 應 exit 3 且不清場（實得 ${got}，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+rm -f "$PEN_STUB_HASH_QUEUE"
 
 # ---- ⑯～⑳（LS-236）：`--restore` 子命令＋`--kill` 清場後自動比對還原主 checkout `design/littlesprout.pen`
 #        （來源：LS-208 收尾事故，pen-open.sh <主 checkout> --kill 重開後 Pen 把記憶體中的票檔內容寫回主

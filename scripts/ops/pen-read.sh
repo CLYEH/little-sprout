@@ -20,7 +20,10 @@
 # 內容＝磁碟，exit 0、**不殺行程、Pencil MCP 連線保留**；只有真的不相符才走清場（安全判定＋kill＋重開）
 # 並印「Pencil MCP：下一次 MCP 呼叫會自動重連；失敗才 /mcp」（LS-308：mcp-server 為懶連線，不需人工 /mcp）；
 # 讀不到 Pencil 端雜湊則不殺、印期望值、
-# exit 3 交呼叫的 agent 自己用 mcp__pencil__execute 複算（細節見 pen-open.sh 檔頭 LS-180 段）。安全判定
+# exit 3 交呼叫的 agent 自己用 mcp__pencil__execute 複算（細節見 pen-open.sh 檔頭 LS-180 段）。**LS-309**：回讀
+# 送的 snippet 已改為 `overflow-scan.js --emit-hash-snippet` 產生的 ~3.3 KB 自包含版（取代整份 ~101 KB 正典腳本），
+# 單次仍失敗才用 root 數量探測＋對半遞迴分段自動重算，13–14k 節點級的稿不再連續必敗；本腳本轉呼叫介面不變，
+# 只是背後 `pen-open.sh` 的 `read_pen_hash()` 更可靠，exit 碼與 stdout/stderr 語意皆不變。安全判定
 # （check_root_safe，見 pen-open.sh）對「目標本身」與「目前所有開著的 .pen」一視同仁——任一份可能有未落地
 # 的真實變更就整個拒絕清場，fail closed（exit 1，訊息會指出該去哪個 root 先 pen-land）；不會為了讀稿而默默
 # 丟掉別人真正未落地的設計工作。要無條件清場請 orchestrator 明示用 `pen-open.sh <root> --kill`（本腳本不提供）。
