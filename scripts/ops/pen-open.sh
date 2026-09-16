@@ -180,6 +180,9 @@
 # 結束後全部視窗的 backup 皆完整無損。R2 因此兩者都做：先試 osascript（環境允許時是更禮貌的退出方式），
 # 短暫等待後一律補 `kill -TERM` 兜底，不依賴 osascript 一定成功）。
 set -uo pipefail
+pen_open_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pencil-mcp.sh
+source "${pen_open_script_dir}/lib/pencil-mcp.sh"
 
 usage() {
   echo "用法：pen-open.sh <worktree-or-repo-root> [--no-quit|--force-reload|--kill]｜pen-open.sh --status｜pen-open.sh --restore" >&2
@@ -618,6 +621,16 @@ reconnect_notice() {
   echo "Pencil MCP：下一次 MCP 呼叫會自動重連；失敗才 /mcp（Pen 主行程 pid ${pen_pid} 已結束重開，mcp-server 為懶連線——agent 收到這行請在 handoff 註明「Pen 已重開，派工前已實測 get_app_state」，LS-308／LS-180）"
 }
 
+# LS-308 A3（來源 LS-96 池項 43230092 同批：實測本機常有多支別 session 殘留的 mcp-server，2 支 12 天前的 claude、
+# 4 支 codex）：`--kill` 是 orchestrator 明示的清場，重開後只列出殘留 mcp-server 供人工參考——**只印不殺**，別的
+# session 的行程不歸這支腳本管。判定邏輯與 pen-status.sh 共用 lib/pencil-mcp.sh，不重複貼一份。
+pencil_residual_notice() {
+  [ "$kill_mode" -eq 1 ] || return 0
+  pencil_mcp_probe
+  [ "$PENCIL_MCP_OTHER" -gt 0 ] || return 0
+  echo "Pencil MCP 殘留：另有 ${PENCIL_MCP_OTHER} 支別 session 的 mcp-server（僅列出、不處理；如需清理由使用者自行結束該 session，LS-308）"
+}
+
 open -a Pen "$want" >/dev/null 2>&1
 poll_until_match
 poll_rc=$?
@@ -635,17 +648,21 @@ restore_rc=0
 if [ "$poll_rc" -eq 0 ] && [ "$restore_rc" -ne 0 ]; then
   echo "✗ pen-open：清場後 Pen 目前文件＝${want}，但主 checkout design/littlesprout.pen 還原複驗失敗（見上方 ⚠）" >&2
   reconnect_notice
+  pencil_residual_notice
   exit 2
 elif [ "$poll_rc" -eq 0 ]; then
   echo "✓ pen-open：清場後 Pen 目前文件＝${want}"
   reconnect_notice
+  pencil_residual_notice
   exit 0
 elif [ "$poll_rc" -eq 1 ]; then
   echo "✗ pen-open：清場後仍路徑不一致——目標「${want}」，Pen 目前「${LAST_SEEN}」" >&2
   reconnect_notice
+  pencil_residual_notice
   exit 1
 else
   echo "✗ pen-open：清場後 ${POLL_TIMEOUT}s 內讀不到 Pen 文件路徑" >&2
   reconnect_notice
+  pencil_residual_notice
   exit 2
 fi

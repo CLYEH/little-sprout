@@ -57,13 +57,22 @@ STUB
 chmod +x "${bin}/open"
 
 # stub `pgrep`：只回傳測試自己起的假 Pen 行程 pid（$PEN_STUB_PID_FILE 有內容就印出來，沒有就不印任何東西，
-# 模擬「找不到殘留行程」）。
+# 模擬「找不到殘留行程」）。**LS-308 A3**：pen-open.sh --kill 清場後會另外用 pgrep -f <mcp-server 樣式> 查 mcp-server
+# 行程（lib/pencil-mcp.sh 的 pencil_mcp_probe）——依樣式分流到獨立的 $PEN_STUB_MCP_PIDS（預設空，不干擾既有的
+# Pen 主行程夾具）。
+export PEN_STUB_MCP_PIDS="${work}/mcp_pids"
+: > "$PEN_STUB_MCP_PIDS"
 cat > "${bin}/pgrep" <<'STUB'
 #!/bin/bash
-[ -s "${PEN_STUB_PID_FILE:?}" ] && cat "${PEN_STUB_PID_FILE}"
+case "$*" in
+  *mcp-server*) [ -s "${PEN_STUB_MCP_PIDS:?}" ] && cat "${PEN_STUB_MCP_PIDS}" ;;
+  *) [ -s "${PEN_STUB_PID_FILE:?}" ] && cat "${PEN_STUB_PID_FILE}" ;;
+esac
 exit 0
 STUB
 chmod +x "${bin}/pgrep"
+set_mcp_pids() { printf '%s\n' "$1" > "$PEN_STUB_MCP_PIDS"; }
+clear_mcp_pids() { : > "$PEN_STUB_MCP_PIDS"; : > "${PEN_STUB_MCP_PS_DB:?}"; }
 
 # stub `osascript`：依 $PEN_STUB_OSASCRIPT_KILLS（1｜0，預設 0）決定「優雅退出」是否真的把假行程殺掉；
 # 0 時什麼都不做，讓 pen-open.sh 自己之後補的 `kill -TERM`（真指令，不是 stub）去善後。
@@ -78,15 +87,46 @@ chmod +x "${bin}/osascript"
 
 # stub `ps`：R3 F1 的完整修法會用 `ps -Ao command | grep 'Pen Helper' | grep -oE ...` 唯讀枚舉目前所有開著的
 # .pen——這裡必須 stub 掉真正的系統 `ps`，否則測試會撈到這台機器上真正在跑的 Pen（若有）並汙染候選清單。
-# 只印 $PEN_STUB_PS_OUTPUT 檔案內容（沒有該檔就印空，等同「ps 沒撈到任何額外視窗」）。
+# 只印 $PEN_STUB_PS_OUTPUT 檔案內容（沒有該檔就印空，等同「ps 沒撈到任何額外視窗」）。**LS-308 A3**：同一支 `ps`
+# 也要應付 `lib/pencil-mcp.sh` 的 `-o ppid=／-o command= -p <pid>` 用法——用 `-Ao` 開頭分流到舊行為，其餘走
+# $PEN_STUB_MCP_PS_DB（「<pid> <ppid> <command>」表，格式同 pen-status.test.sh 的 set_mcp_parent）。
 export PEN_STUB_PS_OUTPUT="${work}/ps_output"
+export PEN_STUB_MCP_PS_DB="${work}/mcp_ps.db"
 : > "$PEN_STUB_PS_OUTPUT"
+: > "$PEN_STUB_MCP_PS_DB"
 cat > "${bin}/ps" <<'STUB'
 #!/bin/bash
-[ -f "${PEN_STUB_PS_OUTPUT:?}" ] && cat "${PEN_STUB_PS_OUTPUT}"
+if [ "${1:-}" = -Ao ]; then
+  [ -f "${PEN_STUB_PS_OUTPUT:?}" ] && cat "${PEN_STUB_PS_OUTPUT}"
+  exit 0
+fi
+mode=; pid=
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o) mode=$2; shift 2 ;;
+    -p) pid=$2; shift 2 ;;
+    *) shift ;;
+  esac
+done
+[ -f "${PEN_STUB_MCP_PS_DB:?}" ] || exit 0
+row=$(awk -v p="$pid" '$1 == p { $1=""; sub(/^ /, ""); print }' "${PEN_STUB_MCP_PS_DB}")
+[ -n "$row" ] || exit 0
+ppid=${row%% *}
+cmd=${row#* }
+case "$mode" in
+  ppid=) printf '%s\n' "$ppid" ;;
+  command=) printf '%s\n' "$cmd" ;;
+esac
 exit 0
 STUB
 chmod +x "${bin}/ps"
+# set_mcp_parent <mcp pid> <parent pid> <parent command>：補齊 pencil_mcp_probe 兩次查詢需要的兩筆——
+# mcp pid 自己的 ppid＝parent_pid；parent_pid 自己的 command＝parent_cmd（同 pen-status.test.sh 的慣例）。
+set_mcp_parent() {
+  local mcp_pid=$1 parent_pid=$2 parent_cmd=$3
+  printf '%s %s -\n' "$mcp_pid" "$parent_pid" >> "$PEN_STUB_MCP_PS_DB"
+  printf '%s 1 %s\n' "$parent_pid" "$parent_cmd" >> "$PEN_STUB_MCP_PS_DB"
+}
 # set_ps_pen_files <path>...：模擬 `ps -Ao command` 印出的 Pen renderer 命令列，每個路徑一行，格式貼近本票
 # 實機格式（`--init-params={"documentState":{"fileURI":"file://<path>",...}}`），讓 grep -oE 的樣式抓得到。
 set_ps_pen_files() {
@@ -707,13 +747,53 @@ out="$(run "$wt" --kill 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF -- '--kill' \
   && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
   && printf '%s' "$out" | grep -qF 'Pencil MCP：下一次 MCP 呼叫會自動重連' \
+  && ! printf '%s' "$out" | grep -qF 'Pencil MCP 殘留' \
   && ! fake_pen_alive && [ "$(open_calls)" -eq 2 ] && [ "$(exec_calls)" -eq 0 ]; then
-  ok '⑮e --kill：不比雜湊、一律清場重開、印「下一次 MCP 呼叫會自動重連」，execute 零次（LS-180）'
+  ok '⑮e --kill：不比雜湊、一律清場重開、印「下一次 MCP 呼叫會自動重連」，execute 零次，無殘留 mcp-server 不印殘留行（LS-180／LS-308）'
 else
   bad "⑮e 應 exit 0 且清場重開（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 unset PEN_STUB_OSASCRIPT_KILLS
 clear_fake_pen
+
+# ⑮e-2（LS-308 A3）：--kill 清場後有殘留 mcp-server（本 session 一支＋別 session 兩支）→ 印殘留數 2，只印不殺
+#      （不呼叫 pgrep -f <mcp-server 樣式> 以外的任何行程操作；假 Pen 主行程真的被換掉但沒人動 mcp-server）。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe; set_hash "HASH:${WT_HASH}"
+set_state "PATH:${want}"
+start_fake_pen
+export PEN_STUB_OSASCRIPT_KILLS=1
+set_mcp_pids $'24097\n24098\n24099'
+set_mcp_parent 24097 900 claude
+set_mcp_parent 24098 1 launchd
+set_mcp_parent 24099 500 codex
+out="$(run "$wt" --kill 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
+  && printf '%s' "$out" | grep -qF 'Pencil MCP 殘留：另有 2 支別 session 的 mcp-server（僅列出、不處理' \
+  && ! fake_pen_alive; then
+  ok '⑮e-2 --kill：殘留 2 支別 session 的 mcp-server → 印殘留數，只印不殺（LS-308 A3）'
+else
+  bad "⑮e-2 應印殘留數 2（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen; clear_mcp_pids
+
+# ⑮e-3（LS-308 A3）：預設模式（無旗標）自動清場也會結束 Pen 主行程，但殘留 mcp-server 列示只給 --kill；
+#      即使當下有殘留也不印那行（A3 票文範圍限定 pen-open.sh --kill）。
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt2_backup_safe; wt_backup_safe
+set_state "PATH:${want2}"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
+set_mcp_pids 24097
+set_mcp_parent 24097 1 launchd
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
+  && ! printf '%s' "$out" | grep -qF 'Pencil MCP 殘留'; then
+  ok '⑮e-3 預設模式（非 --kill）自動清場：即使有殘留 mcp-server 也不印殘留行（LS-308 A3 只限 --kill）'
+else
+  bad "⑮e-3 應 exit 0 且不印殘留行（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen; clear_mcp_pids
 
 # ⑮f --kill 且目標 dirty → 仍 fail closed exit 1，不 kill（--kill 只是跳過雜湊比對，不跳過安全判定）。
 reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_unsafe
@@ -825,9 +905,10 @@ mainCkWt_reset_clean
 # 走到我們要驗的那段邏輯——印出 mut_root 路徑供呼叫端組出 mutant script 路徑。
 mk_mutant() {
   local mut_root="${work}/$1" sed_expr=$2
-  mkdir -p "${mut_root}/scripts/ops"
+  mkdir -p "${mut_root}/scripts/ops/lib"
   sed "$sed_expr" "$script" > "${mut_root}/scripts/ops/pen-open.sh"
   cp "${root}/scripts/ops/pen-land.sh" "${mut_root}/scripts/ops/pen-land.sh"
+  cp "${root}/scripts/ops/lib/pencil-mcp.sh" "${mut_root}/scripts/ops/lib/pencil-mcp.sh"
   mkdir -p "${mut_root}/scripts/gates"
   cp "${root}/scripts/gates/design_tree_hash.py" "${mut_root}/scripts/gates/design_tree_hash.py"
 }

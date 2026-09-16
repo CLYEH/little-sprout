@@ -373,7 +373,7 @@ jobs:
       # 退回只看 dirty／Pen 讀不到一律放行 → 對應樣本紅。
       # LS-207（8af1c2bc）：同上——不因前面步驟（如 pr-body-check）紅而被 skip。R2（fd783f6c I2）：用 !cancelled()
       # 不用 always()，job 被取消（撞 timeout-minutes）時不必再硬跑一輪。
-      - name: Ops 腳本自測（patrol／patrol-filter／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged／prod-purge-health／review-demo-seed／prod-storage-verify／qa-e2e，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207／LS-235／LS-240／LS-244／LS-158）
+      - name: Ops 腳本自測（patrol／patrol-filter／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／pencil-mcp／patrol-linear／cleanup-merged／prod-purge-health／review-demo-seed／prod-storage-verify／qa-e2e，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207／LS-235／LS-240／LS-244／LS-158／LS-308）
         if: ${{ !cancelled() }}
         run: |
           rc=0
@@ -394,8 +394,10 @@ jobs:
           bash scripts/ops/post-status.test.sh || rc=1
           bash scripts/ops/pen-open.test.sh || rc=1
           bash scripts/ops/pen-read.test.sh || rc=1
-          # LS-180：Pencil 連線探針（行程／路徑／mcp-server↔Pen unix socket 交集；stub pgrep／lsof／pen）
+          # LS-180：Pencil 連線探針（行程／路徑／MCP 訊號；LS-308 起 MCP 判定改用 ps 父行程、見 lib/pencil-mcp.sh）
           bash scripts/ops/pen-status.test.sh || rc=1
+          # LS-308 A3：pen-status.sh／pen-open.sh --kill 共用的 mcp-server「本 session／殘留」判定庫
+          bash scripts/ops/lib/pencil-mcp.test.sh || rc=1
           bash scripts/ops/pen-land.test.sh || rc=1
           bash scripts/ops/patrol-linear.test.sh || rc=1
           bash scripts/ops/cleanup-merged.test.sh || rc=1

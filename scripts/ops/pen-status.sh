@@ -7,7 +7,9 @@
 #      `ps -o ppid= -p <mcp-server pid>` 取父行程 pid，再 `ps -o command= -p <ppid>` 讀父行程命令是否含 `claude`
 #      （父行程仍活著且是 claude＝這支 mcp-server 屬於目前在跑的 session；父行程已死的殘留 mcp-server 不會落在這裡）；
 #      取第一支命中的當「本 session」，其餘 mcp-server 行程數一律算「殘留」（不分是否為別的活 session 或死 session 的
-#      孤兒，只當 informational，不影響 exit code）。PEN_STATUS_PS_BIN 可換 `ps` 路徑，自測用。
+#      孤兒，只當 informational，不影響 exit code）。判定邏輯抽到 `scripts/ops/lib/pencil-mcp.sh`（`pencil_mcp_probe`），
+#      與 `pen-open.sh --kill` 清場後列殘留（A3）共用同一套，不重複貼一份（LS-267 R2 M1 同型教訓）。
+#      PEN_STATUS_PS_BIN 可換 `ps` 路徑，自測用。
 #
 #   沿革（LS-180 原始邏輯，2026-09-05 起，**已被 LS-308 撤銷**）：原本假設「Pen 被結束重開後 socket 換了、
 #   mcp-server 不會重連」，用 `lsof -F dn` 取 mcp-server 的 unix socket peer 位址與 Pen 行程的 socket 位址做交集，
@@ -31,6 +33,8 @@
 # 自測：scripts/ops/pen-status.test.sh（stub pgrep／ps／pen，不碰真的 Pen；掛 CI rules job）。
 set -uo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pencil-mcp.sh
+source "${script_dir}/lib/pencil-mcp.sh"
 path_only=0
 if [ $# -eq 1 ] && [ "$1" = "--path" ]; then
   path_only=1
@@ -53,8 +57,6 @@ if [ "$path_only" -eq 1 ]; then
 fi
 
 PEN_PROC_RE='Pen\.app/Contents/MacOS/Pen$'
-MCP_PROC_RE='Pen\.app/.*mcp-server-[^ ]* --app desktop'
-PS_BIN=${PEN_STATUS_PS_BIN:-ps}
 bad=0
 
 pen_pid=$(pgrep -f "$PEN_PROC_RE" 2>/dev/null | head -1)
@@ -76,33 +78,17 @@ else
 fi
 
 # MCP 訊號（LS-308）：不影響 bad／exit code——mcp-server 是懶連線，缺行程或找不到本 session 的那支都只是
-# 「還沒打過請求」，不是壞掉；資訊性內容只給 agent 派工前參考。
-mcp_pids=$(pgrep -f "$MCP_PROC_RE" 2>/dev/null | tr '\n' ' ')
-mcp_pids=${mcp_pids% }
-if [ -z "$mcp_pids" ]; then
+# 「還沒打過請求」，不是壞掉；資訊性內容只給 agent 派工前參考。判定邏輯見 lib/pencil-mcp.sh。
+pencil_mcp_probe
+if [ "$PENCIL_MCP_TOTAL" -eq 0 ]; then
   mcp="MCP：本機沒有 Pencil mcp-server 行程（尚未呼叫過 pencil MCP；下一次 mcp__pencil__* 呼叫會自動連上，失敗才 /mcp）"
 else
-  own_pid=; total=0; other=0
-  for m in $mcp_pids; do
-    total=$((total + 1))
-    ppid=$("$PS_BIN" -o ppid= -p "$m" 2>/dev/null | tr -d '[:space:]')
-    parent_cmd=
-    [ -n "$ppid" ] && parent_cmd=$("$PS_BIN" -o command= -p "$ppid" 2>/dev/null)
-    if [ -z "$own_pid" ]; then
-      case "$parent_cmd" in
-        *claude*) own_pid=$m ;;
-        *) other=$((other + 1)) ;;
-      esac
-    else
-      other=$((other + 1))
-    fi
-  done
-  if [ -n "$own_pid" ]; then
-    mcp="MCP：本 session mcp-server ✓（pid ${own_pid}，懶連線，派工前實測一次 get_app_state）"
+  if [ -n "$PENCIL_MCP_OWN_PID" ]; then
+    mcp="MCP：本 session mcp-server ✓（pid ${PENCIL_MCP_OWN_PID}，懶連線，派工前實測一次 get_app_state）"
   else
     mcp="MCP：本 session 沒有 mcp-server 行程（尚未呼叫過 pencil MCP 或父行程已死；下一次 mcp__pencil__* 呼叫會自動連上，失敗才 /mcp）"
   fi
-  [ "$other" -gt 0 ] && mcp="${mcp}；另有 ${other} 支別 session 的 mcp-server（informational）"
+  [ "$PENCIL_MCP_OTHER" -gt 0 ] && mcp="${mcp}；另有 ${PENCIL_MCP_OTHER} 支別 session 的 mcp-server（informational）"
 fi
 
 echo "Pencil：${proc} · ${path_txt} · ${mcp}"
