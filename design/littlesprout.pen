@@ -192598,6 +192598,683 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "EnTiZ",
+      "x": 7270,
+      "y": 36650,
+      "name": "Growth / 04 空狀態 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 604,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "d3DiyR",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "BFmOj",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "寶貝"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "V6Xc2z",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-block",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "KVWFN",
+              "name": "Identity Header",
+              "width": "fill_container",
+              "gap": "$sp-group",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "oXE4u",
+                  "type": "ref",
+                  "ref": "RaaIf",
+                  "name": "Avatar",
+                  "descendants": {
+                    "A30rIX": {
+                      "content": "軒"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "A1ffa",
+                  "name": "Identity Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "I8eRc",
+                      "name": "Name",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "陳小軒",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "H4TUEh",
+                      "name": "Age",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": " 2 歲 1 個⁠月",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "aFHac",
+              "name": "Empty Chart Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": "$sp-section",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "bT1gk",
+                  "name": "Placeholder Icon",
+                  "width": 44,
+                  "height": 44,
+                  "icon": "activity",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "P1zdF4",
+                  "name": "Empty Lead",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "還沒有成長紀錄",
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-lead",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "GNREq",
+                  "name": "Empty Body",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新增第一筆身高、體重或頭圍，就能看到陳小軒的成長曲線。",
+                  "lineHeight": 1.5,
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "SBdtR",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Add Measurement Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "新增量測"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OOaUA",
+              "name": "Bottom Spacer",
+              "width": "fill_container",
+              "height": 8
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ODXQZ",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "H3exV",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "e19Dp0",
+      "x": 7763,
+      "y": 36650,
+      "name": "Growth / 04 空狀態 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 604,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "csWFF",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "DKoBi",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "寶貝"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "dEBXZ",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-block",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "H0okBk",
+              "name": "Identity Header",
+              "width": "fill_container",
+              "gap": "$sp-group",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "nnAys",
+                  "type": "ref",
+                  "ref": "RaaIf",
+                  "name": "Avatar",
+                  "descendants": {
+                    "A30rIX": {
+                      "content": "軒"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "VJOBj",
+                  "name": "Identity Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Cleg1",
+                      "name": "Name",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "陳小軒",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NcIUh",
+                      "name": "Age",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": " 2 歲 1 個⁠月",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "X8etfY",
+              "name": "Empty Chart Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": "$sp-section",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "hiQFy",
+                  "name": "Placeholder Icon",
+                  "width": 44,
+                  "height": 44,
+                  "icon": "activity",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "IJAqP",
+                  "name": "Empty Lead",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "還沒有成長紀錄",
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-lead",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "CfPA1",
+                  "name": "Empty Body",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新增第一筆身高、體重或頭圍，就能看到陳小軒的成長曲線。",
+                  "lineHeight": 1.5,
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "UWIGs",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Add Measurement Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "新增量測"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WU56q",
+              "name": "Bottom Spacer",
+              "width": "fill_container",
+              "height": 8
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "VvAQz",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "hUN7G",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "a7KXUR",
+      "x": 8256,
+      "y": 36650,
+      "name": "A11y / 04 空狀態 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1097,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "dxTWV",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "A6S0ch",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "寶貝"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "R99a3",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-block",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "caUfD",
+              "name": "Identity Header",
+              "width": "fill_container",
+              "gap": "$sp-group",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "GlmSu",
+                  "type": "ref",
+                  "ref": "RaaIf",
+                  "name": "Avatar",
+                  "descendants": {
+                    "A30rIX": {
+                      "content": "軒"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "Ijicr",
+                  "name": "Identity Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sgoap",
+                      "name": "Name",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "陳小軒",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-display",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Qspgx",
+                      "name": "Age",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": " 2 歲 1 個⁠月",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eYedJ",
+              "name": "Empty Chart Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-group",
+              "padding": "$sp-section",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Ajfym",
+                  "name": "Placeholder Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "activity",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "rStlM",
+                  "name": "Empty Lead",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "還沒有成長紀錄",
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-lead",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Z1bWNw",
+                  "name": "Empty Body",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新增第一筆身高、體重或頭圍，就能看到陳小軒的成長曲線。",
+                  "lineHeight": 1.5,
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "j3Q8rV",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "Add Measurement Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "plus"
+                    },
+                    "w7CUP": {
+                      "content": "新增量測"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WLzn0",
+              "name": "Bottom Spacer",
+              "width": "fill_container",
+              "height": 8
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Q5bzD",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "Muwok",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
