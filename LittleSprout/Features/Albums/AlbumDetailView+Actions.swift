@@ -57,46 +57,19 @@ extension AlbumDetailView {
         .accessibilityLabel("更多操作")
     }
 
-    // MARK: - 加入照片
+    // MARK: - 加入照片（LS-303 R2：觸發相機膠卷批次匯入，見 `AlbumDetailView.swift` 檔頭）
 
     var addPhotosBarButton: some View {
         PrimaryButton(
             icon: "photo.badge.plus", title: "加入照片", isLoading: isLoadingPickedItems,
-            loadingTitle: "照片載入中…", action: { showsPhotosPicker = true }
-        )
-    }
-
-    /// LS-303：相機膠卷批次匯入新入口——次要動作（`SecondaryButton`），跟 `addPhotosBarButton`
-    /// 並排；刻意不改 `addPhotosBarButton`／`addPhotosInlineButton`（既有「加入照片」單張即
-    /// 傳流程，其他既有測試依賴其行為，見 `ImportBatchFlowModifier` 文件註解），這裡是額外
-    /// 附加的第二條路徑。
-    var batchImportBarButton: some View {
-        SecondaryButton(icon: "photo.stack", title: "批次匯入", action: { showsBatchImport = true })
-    }
-
-    /// iPad「行內」版，同 `addPhotosInlineButton` 樣式但次要（`$control-line` 外框）。
-    var batchImportInlineButton: some View {
-        Button {
-            showsBatchImport = true
-        } label: {
-            HStack(spacing: AppSpacing.label) {
-                Image(systemName: "photo.stack").appIconFrame(.medium)
-                Text("批次匯入").appFont(.body, weight: .semibold)
-            }
-            .frame(minHeight: 48)
-            .padding(.horizontal, AppSpacing.item)
-            .contentShape(Rectangle())
-        }
-        .foregroundStyle(Color.lsTextPrimary)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppSpacing.radiusMedium).strokeBorder(Color.lsControlLine, lineWidth: 1.5)
+            loadingTitle: "照片載入中…", action: { showsBatchImport = true }
         )
     }
 
     /// iPad「行內」版（Notes `rFiLJ` `RbEqx`：`width:fit_content`，不像 Action Bar 版滿版）。
     var addPhotosInlineButton: some View {
         Button {
-            showsPhotosPicker = true
+            showsBatchImport = true
         } label: {
             HStack(spacing: AppSpacing.label) {
                 Image(systemName: "photo.badge.plus").appIconFrame(.medium)

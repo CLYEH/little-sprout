@@ -17,8 +17,9 @@ struct ImportPlan: Codable, Equatable {
         /// `PHAsset.localIdentifier` 陣列，維持選取／分組時的原始順序。
         var assetLocalIdentifiers: [String]
         var babyIDs: [UUID]
-        /// `nil` = 「不放相簿」——C3a 使用者裁決：不論入口（相簿詳情／時間軸）一律預設不放
-        /// 相簿，不依入口分支（見 LS-249 comment `5e180074`）。
+        /// `nil` = 「不放相簿」。LS-303 R2（merge-review R1 M2，orchestrator 裁決
+        /// `c997f234`，覆寫 C3a 的一般案）：從相簿詳情進入時預設為該相簿（`ImportEntrySource
+        /// .albumDetail(albumID:)`，可改），其餘入口才維持 C3a「預設不放相簿」。
         var albumID: UUID?
         var isSkipped: Bool
 
@@ -52,6 +53,35 @@ struct ImportPlan: Codable, Equatable {
     /// 頂部摘要的 M——只算日期群數（沿設計稿 03 板「共 200 張・7 個日期群」語意，日期不明
     /// 群本身也算一群）。
     var groupCount: Int { groups.count }
+}
+
+/// 匯入流程的觸發入口（LS-303 R2，merge-review R1 M2，orchestrator 裁決 `c997f234`）——
+/// 決定整理頁每群 `albumID` 的預設值。`.timeline` 本票沒有任何呼叫點（時間軸批次匯入入口
+/// 移出本票，另開 lane:design 決策票，有稿再接），保留這個 case 是讓型別本身描述完整的
+/// 入口空間，供該票落地時直接重用，不需要再改 `ImportPlan`／`ImportOrganizeView` 的介面。
+enum ImportEntrySource: Equatable {
+    case albumDetail(albumID: UUID)
+    case timeline
+
+    /// 整理頁各群 `albumID` 的初始值。
+    var defaultAlbumID: UUID? {
+        switch self {
+        case .albumDetail(let albumID): albumID
+        case .timeline: nil
+        }
+    }
+
+    /// 套用入口來源的相簿預設值到每一群——純函式，`ImportOrganizeView.init` 呼叫，抽出來
+    /// 是讓這條規則能離開 SwiftUI View 生命週期單獨測試（見
+    /// `ImportEntrySourceTests.test_applyDefaultAlbum_*`）。
+    func applyDefaultAlbum(to groups: [ImportPlan.Group]) -> [ImportPlan.Group] {
+        guard let albumID = defaultAlbumID else { return groups }
+        return groups.map { group in
+            var group = group
+            group.albumID = albumID
+            return group
+        }
+    }
 }
 
 /// 2/2（上傳→摘要，blockedBy 本票）的入口介面——本票只接 no-op stub，真正的實作在 LS-249

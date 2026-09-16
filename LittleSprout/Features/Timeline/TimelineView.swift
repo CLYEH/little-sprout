@@ -15,9 +15,6 @@ struct TimelineView: View {
     let timelineStore: TimelineStore
     let diaryAPIClient: DiaryAPIClient
     let mediaUploadService: MediaUploadService
-    /// LS-303：相機膠卷批次匯入（`headerRow` 新增「批次匯入」鈕）需要的相簿清單——同一個
-    /// `RootView`／`SectionContentView` 層級的既有實例，不另外新建。
-    let albumsStore: AlbumsStore
     /// LS-189：轉手往下傳到 `DiaryDetailView`（內容操作表：檢舉／封鎖／Owner 移除／刪除）；
     /// LS-218：留言 sheet（`CommentsSheetView`）內的留言列操作表（檢舉／封鎖）也用得到，這裡
     /// 一併直接用。
@@ -27,12 +24,6 @@ struct TimelineView: View {
 
     @State private var selectedChildID: UUID?
     @State private var showsDiaryEditor = false
-    /// LS-303：相機膠卷批次匯入入口——`headerButtons`（`TimelineView+Import.swift`）新增的
-    /// 「批次匯入」鈕觸發，見 `ImportBatchFlowModifier`。刻意獨立於 `showsDiaryEditor`，不把
-    /// 「新增回憶」改成選單（`SectionTabBarPushRegressionTests`／`QADriver.openEditor()`
-    /// 依賴單擊直接 push 進 `DiaryEditorView` 的既有行為）。不是 `private`：跨檔案 extension
-    /// 需要 `$showsBatchImport`，同 `commentsSheetTarget` 既有存取層級理由。
-    @State var showsBatchImport = false
     /// LS-218：`InteractionRow.onOpenComments`（三種卡片共用）開出的留言 sheet 目標——見
     /// `TimelineView+Comments.swift`（`commentsSheetHost`／`openComments(kind:refId:)`）。不是
     /// `private`：跨檔案 extension 需要 `$commentsSheetTarget`，同 `apiClient` 在
@@ -102,7 +93,6 @@ struct TimelineView: View {
                 )
             }
         }
-        .importBatchFlow(isActive: $showsBatchImport, childrenStore: childrenStore, albumsStore: albumsStore)
     }
 
     // MARK: - 版面
@@ -147,25 +137,15 @@ struct TimelineView: View {
                     .foregroundStyle(Color.lsTextPrimary)
                     .accessibilityAddTraits(.isHeader)
                 Spacer()
-                headerButtons
+                createMemoryButton
             }
             VStack(alignment: .leading, spacing: AppSpacing.label) {
                 Text("時間軸")
                     .appFont(.display, weight: .bold)
                     .foregroundStyle(Color.lsTextPrimary)
                     .accessibilityAddTraits(.isHeader)
-                headerButtons
+                createMemoryButton
             }
-        }
-    }
-
-    /// LS-303：`createMemoryButton`（既有、regression-tested，見該屬性文件註解）旁邊新增
-    /// `batchImportButton`（`TimelineView+Import.swift`）——兩顆並排，`ViewThatFits` 量不下
-    /// 時自然摺到 `headerRow` 的堆疊變體（見上），不需要手動算第二個門檻寬度。
-    private var headerButtons: some View {
-        HStack(spacing: AppSpacing.label) {
-            createMemoryButton
-            batchImportButton
         }
     }
 
@@ -384,8 +364,7 @@ struct TimelineView: View {
         TimelineView(
             familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-            albumsStore: .preview(), safetyAPIClient: PreviewSafetyAPIClient(),
-            commentAPIClient: PreviewCommentAPIClient()
+            safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient()
         )
     }
 }

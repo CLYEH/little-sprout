@@ -227,8 +227,7 @@ enum TapTargetGateHarness {
             TimelineView(
                 familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
                 diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-                albumsStore: .preview(), safetyAPIClient: PreviewSafetyAPIClient(),
-                commentAPIClient: PreviewCommentAPIClient()
+                safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient()
             )
         }
     }
