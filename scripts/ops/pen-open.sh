@@ -28,7 +28,8 @@
 #                                                       停在上次讀到磁碟的時間點；LS-180 起改為**先比 tree_hash**：
 #                                                       磁碟 design_tree_hash.py vs Pencil 端 execute 回讀，相符即
 #                                                       exit 0、不殺行程（Pencil MCP 連線保留）；不相符且安全判定
-#                                                       通過才清場重開並印「需重連」；讀不到 Pencil 端雜湊則印期望
+#                                                       通過才清場重開並印重連提示句（LS-308：懶連線自動重連，非
+#                                                       人工 /mcp）；讀不到 Pencil 端雜湊則印期望
 #                                                       值、exit 3 交 agent 複算（見下方 LS-180 段）。`pen-read.sh`
 #                                                       即為此模式的唯讀封裝，供 QA／視覺審查讀稿用。
 #                                                       `--kill`＝舊 `--force-reload` 語意：不比雜湊，一律安全判定＋

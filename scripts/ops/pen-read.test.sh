@@ -137,7 +137,7 @@ if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '用法'; then ok '多參�
 
 # ---- 正確轉呼叫 pen-open.sh --force-reload：目前已一致但 Pencil 端雜湊不符 → 強制清場重開（只有 --force-reload
 #      才會回讀雜湊並走到這個行為，pen-open.sh 預設模式一致就早退——這就是「有沒有正確帶上 --force-reload」的證據）；
-#      LS-180：殺了主行程必印「需重連」----
+#      LS-180：殺了主行程必印「下一次 MCP 呼叫會自動重連」----
 reset_open_tracking; clear_fake_pen; wt_backup_safe; set_hash 'HASH:ffffffffffffffff'
 set_state "PATH:${want}"
 start_fake_pen
@@ -146,9 +146,9 @@ out="$(run "$wt" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF -- '--force-reload' \
   && printf '%s' "$out" | grep -qF 'tree_hash 不一致' \
   && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
-  && printf '%s' "$out" | grep -qF 'Pencil MCP 需重連：請在 Claude Code 執行 /mcp 重連 pencil' \
+  && printf '%s' "$out" | grep -qF 'Pencil MCP：下一次 MCP 呼叫會自動重連' \
   && ! fake_pen_alive && [ "$(open_calls)" -eq 2 ]; then
-  ok 'pen-read.sh <root>：正確轉呼叫 pen-open.sh --force-reload，雜湊不符才強制清場重開並印「需重連」'
+  ok 'pen-read.sh <root>：正確轉呼叫 pen-open.sh --force-reload，雜湊不符才強制清場重開並印「下一次 MCP 呼叫會自動重連」'
 else
   bad "應 exit 0 且真的清場重開（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -161,7 +161,7 @@ set_state "PATH:${want}"
 start_fake_pen
 out="$(run "$wt" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "tree_hash=${WT_HASH} 與磁碟一致" \
-  && ! printf '%s' "$out" | grep -qF 'Pencil MCP 需重連' && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  && ! printf '%s' "$out" | grep -qF 'Pencil MCP：下一次 MCP 呼叫會自動重連' && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
   ok 'pen-read.sh <root>：已一致且雜湊相符 → exit 0 不 kill（LS-180）'
 else
   bad "應 exit 0 且不 kill（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
