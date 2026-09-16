@@ -239,6 +239,11 @@ expect '②c-對照2 Explore gh run watch（allow，不在名單）' 0 \
 # 對照：ci-wait.sh 本身不含 `gh run watch` 字面，改用它之後不會誤擋
 expect '②c-對照3 qa 前景 ci-wait.sh（allow，不含 gh run watch 字面）' 0 \
   "$(bash_json_agent_norb '"qa"' 'bash scripts/ops/ci-wait.sh 123456 --job rules')"
+# LS-306 B2（LS-96 池項 e820a463）：確認 ui-designer／visual-reviewer 確實在 BLOCKED_AGENTS 名單內
+# （②c5／②c6 已是正樣本；這裡補負樣本——同一身分執行非 gh run watch 的命令仍放行，證明是「命令內容」
+# 而非「身分本身」在擋，名單沒有過度擴權）
+expect '②c-B2-對照 ui-designer 前景非 gh run watch 命令（allow，同一身分不誤擋其他命令）' 0 \
+  "$(bash_json_agent_norb '"ui-designer"' 'bash scripts/ops/ci-wait.sh 123456 --job rules')"
 # 遞迴：包一層 bash -c／$(...) 也要接住（同規則 b 共用 _extract_recurse_payloads）
 expect '②c-遞迴1 qa 用 bash -c 包住 gh run watch（deny）' 2 \
   "$(bash_json_agent_norb '"qa"' 'bash -c \"gh run watch 123456 --exit-status\"')"
