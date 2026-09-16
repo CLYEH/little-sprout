@@ -66,6 +66,25 @@
 //      小很多、interrupted 機率低很多）；六支演算法與 `result_hash`／`tree_hash` 算法兩條路徑完全共用
 //      `scanAll`／`withResultHashes`（`--merge` 與 `--from-snapshot` 都只是不同的「怎麼取得節點快照」前處理），
 //      `overflow-scan.test.js` 釘住兩條路徑對同一份快照六支 `result_hash`＋`tree_hash` 逐位元相同。
+//   1d. Hash-only snippet CLI（LS-309，取代 pen-open.sh 舊版「送整份 ~101 KB 正典腳本＋`SCAN_HASH_ONLY = true;` 前綴」的
+//      回讀路徑——13–14k 節點級的稿連三輪必然失敗，LS-96 池項 `35819063`，來源 LS-251／LS-252 共 7 輪回讀無一次成功）：
+//      `node scripts/design/overflow-scan.js --emit-hash-snippet` 印出一份自包含、~3.3 KB 的最小 JS（只含 `canon`／
+//      `canonNode`／`fnv1a64`／`hex64`／`addLimbs` 五個函式的原始碼——用 `extractFn()` 逐字元從本檔抽出，不是另外手抄
+//      一份，跟正典演算法不會漂移——外加一段 `Get`／`Print` 走訪 driver）；送進 `pen interactive` 的 `execute` 比送整份
+//      腳本輕得多、`InternalError: interrupted` 機率更低。driver 支援三種模式（皆由 execute 前置的全域變數控制，
+//      跨呼叫不保留、每次都要重設）：
+//        - 無旗標：全樹雜湊，印 `SUMMARY-HASH total_nodes=<n> tree_hash=<16 碼 hex>`（與舊版 `SCAN_HASH_ONLY` 同格式，
+//          呼叫端既有 regex 不必改）。
+//        - `SCAN_HASH_ROOTS = [lo, hi]`：只雜湊全稿 root 序 `[lo,hi)` 範圍內的節點（root 層 `skipChildren` 濾掉範圍外
+//          的 root，同 1b 分批模式的技法），印 `SUMMARY-HASH-PART roots=[lo,hi) total_nodes=<n> hash_part=<16 碼 hex>`。
+//        - `SCAN_HASH_ROOT_COUNT_ONLY = true`：只數全稿 root 數（每個 root 一到就 `skipChildren`，不下探子樹，稿再大
+//          也快），印 `ROOT-COUNT n=<count>`。
+//      合併規則與 `mergeBatches` 的 `tree_hash` 相同——FNV-1a 64 逐行加總 mod 2^64 具結合律／交換律，跟走訪順序、要不要
+//      分段無關，所以 `hash_part` 之間可以直接兩兩相加（`(a+b) mod 2^64`）取得與不分段整棵雜湊逐位元相同的值（LS-252
+//      R3 實測手動驗證過：13914 節點對半分兩批 `[0,150)`／`[150,∞)`，兩個 `hash_part` 相加＝不分段的 `tree_hash`）。
+//      `pen-open.sh` 的 `read_pen_hash()` 先試整棵單次（多數情況成功，含 13–14k 節點級的稿——LS-252 R1／R2 皆一次過），
+//      失敗才用 root 數量探測＋對半遞迴分段（每段各自重試、仍失敗才再對半，到 `PEN_OPEN_HASH_MAX_SEGMENTS` 上限放棄），
+//      不是無條件先分段——大多數稿一路都走不分段的快路徑。
 //   2. node：`require` 本檔取得純函數（`scanAll` 與六支 `scan*`、`treeHash`／`treeHashLines`／`canonNode`、分批的 `batchRange`／
 //      `mergeBatches`／`compactScans`／`withResultHashes`），`scripts/design/overflow-scan.test.js` 用合成節點樹驗演算法、並以 python
 //      交叉驗 tree_hash／result_hash 同值；CI rules job 的自測 step 跑它。直接執行＝`--merge` CLI（見 1b；node 端環境變數
@@ -1151,10 +1170,75 @@ function cliFromSnapshot(argv, fs, stdout, stderr) {
   return 0;
 }
 
+// ---- LS-309：--emit-hash-snippet（見檔頭 1d）----
+// 從本檔原始碼逐字元抽出 "function <name>(...) { ... }" 完整區塊（含巢狀大括號，用深度計數——五個目標函式內部沒有
+// 字串／正則含大括號字元，純計數安全；brace 計數比 regex 更不怕內部再有巢狀函式）。找不到函式名或函式本體起始的
+// `{` 就 throw——這是抽取器自己的程式錯誤，不是使用者輸入問題，直接讓呼叫端看到堆疊。
+function extractFn(src, name) {
+  const marker = "function " + name + "(";
+  const idx = src.indexOf(marker);
+  if (idx < 0) throw new Error("overflow-scan --emit-hash-snippet：原始碼找不到 function " + name + "(");
+  const braceStart = src.indexOf("{", idx);
+  if (braceStart < 0) throw new Error("overflow-scan --emit-hash-snippet：" + name + " 找不到函式本體起始 {");
+  let depth = 0, i = braceStart;
+  for (; i < src.length; i++) {
+    if (src[i] === "{") depth++;
+    else if (src[i] === "}") { depth--; if (depth === 0) { i++; break; } }
+  }
+  if (depth !== 0) throw new Error("overflow-scan --emit-hash-snippet：" + name + " 大括號未閉合（原始碼被改壞？）");
+  return src.slice(idx, i);
+}
+
+// driver：三種模式見檔頭 1d。`Get`／`Print` 是 Pencil execute 環境注入的全域，這段程式碼本身不 require 任何東西——
+// 這正是「自包含」的意思，抽出的五個函式＋這段 driver 送進 execute 就是完整可執行的 snippet。
+const HASH_SNIPPET_DRIVER = [
+  'if (typeof Get === "function" && typeof Print === "function") {',
+  '  var countOnly = typeof SCAN_HASH_ROOT_COUNT_ONLY !== "undefined" && SCAN_HASH_ROOT_COUNT_ONLY === true;',
+  '  var range = typeof SCAN_HASH_ROOTS !== "undefined" && Array.isArray(SCAN_HASH_ROOTS) ? SCAN_HASH_ROOTS : null;',
+  '  if (countOnly) {',
+  '    var rc = 0;',
+  '    Get(function (n, c) { if (!c.parentCtx) { rc++; c.skipChildren(); } });',
+  '    Print("ROOT-COUNT n=" + rc);',
+  "  } else {",
+  '    var lo = range ? Number(range[0]) : null;',
+  '    var hi = range ? Number(range[1]) : null;',
+  '    var count = 0;',
+  '    var acc = [0, 0, 0, 0];',
+  '    Get(function (n, c) {',
+  '      if (!c.parentCtx && lo != null) {',
+  '        if (c.index < lo || c.index >= hi) { c.skipChildren(); return; }',
+  '      }',
+  '      count++;',
+  '      var line = canonNode(n, c.parentCtx ? c.parentCtx.node.id : null, c.index);',
+  '      addLimbs(acc, fnv1a64(line));',
+  '    }, { includePathGeometry: true });',
+  '    if (range) {',
+  '      Print("SUMMARY-HASH-PART roots=[" + lo + "," + hi + ") total_nodes=" + count + " hash_part=" + hex64(acc));',
+  '    } else {',
+  '      Print("SUMMARY-HASH total_nodes=" + count + " tree_hash=" + hex64(acc));',
+  "    }",
+  "  }",
+  "} else {",
+  '  throw new Error("overflow-scan hash-only snippet：非 Pencil execute 環境（無 Get／Print）");',
+  "}",
+].join("\n");
+
+function cliEmitHashSnippet(fs, stdout, stderr) {
+  let src;
+  try { src = fs.readFileSync(__filename, "utf8"); } catch (e) { stderr("✗ 讀不到自己的原始碼（" + __filename + "）：" + (e && e.message ? e.message : e)); return 1; }
+  const names = ["canon", "canonNode", "fnv1a64", "hex64", "addLimbs"];
+  let fns;
+  try { fns = names.map((n) => extractFn(src, n)); } catch (e) { stderr("✗ " + (e && e.message ? e.message : e)); return 1; }
+  stdout(fns.join("\n\n") + "\n\n" + HASH_SNIPPET_DRIVER + "\n");
+  return 0;
+}
+
 function cli(argv, fs, stdout, stderr) {
   const usage = "用法：node scripts/design/overflow-scan.js --merge <batch-1> … <batch-K> [--out <merged.json>]\n" +
-    "      node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash <16碼hex> --total-nodes <n> [--boards a,b,…] [--out <receipt.json>]";
+    "      node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash <16碼hex> --total-nodes <n> [--boards a,b,…] [--out <receipt.json>]\n" +
+    "      node scripts/design/overflow-scan.js --emit-hash-snippet";
   if (argv[0] === "--from-snapshot") return cliFromSnapshot(argv.slice(1), fs, stdout, stderr);
+  if (argv[0] === "--emit-hash-snippet") return cliEmitHashSnippet(fs, stdout, stderr);
   if (argv[0] !== "--merge") { stderr(usage); return 2; }
   const files = [];
   let outPath = null;
@@ -1343,7 +1427,7 @@ if (typeof Get === "function" && typeof Print === "function") {
   }
   }
 } else if (typeof module === "object" && module && module.exports) {
-  module.exports = { AREA_MIN, TOL, CORNER_OUT, PHOTO_CORNER_ID, PHOTO_CORNER_NAME, CORNER_NAME_RE, CORNER_VARIANT_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, DEFAULT_BATCH_SIZE, SCAN_KEYS, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, cornerComponentIds, cornerWarnings, CLASS_KEYS, IDENTITY, resultHashLines, resultHash, withResultHashes, compactScans, compactResult, compactLines, pairEntry, primaryFilter, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, batchRange, defaultBatchSize, mergeBatches, summaryLine, extractBatchJson, parseSnapshotDump, cliFromSnapshot, cli, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines };
+  module.exports = { AREA_MIN, TOL, CORNER_OUT, PHOTO_CORNER_ID, PHOTO_CORNER_NAME, CORNER_NAME_RE, CORNER_VARIANT_RE, BLEED_RE, OVERLAY_RE, LEAF_TYPE_RE, SCAN_SCOPES, DEFAULT_BATCH_SIZE, SCAN_KEYS, hasImageFill, buildIndex, overlapArea, contains, cornerExpected, cornerComponentIds, cornerWarnings, CLASS_KEYS, IDENTITY, resultHashLines, resultHash, withResultHashes, compactScans, compactResult, compactLines, pairEntry, primaryFilter, scanSiblingIntersection, scanRowOverflow, scanCrossParentCollision, scanCornerAnchor, scanTextOcclusion, scanBoardClip, restrictToBoards, scanAll, batchRange, defaultBatchSize, mergeBatches, summaryLine, extractBatchJson, parseSnapshotDump, cliFromSnapshot, cli, canon, canonNode, fnv1a64, hex64, addLimbs, treeHash, treeHashLines, extractFn, cliEmitHashSnippet, HASH_SNIPPET_DRIVER };
   if (typeof require === "function" && require.main === module) {
     process.exitCode = cli(process.argv.slice(2), require("fs"), (t) => process.stdout.write(t), (t) => process.stderr.write(t + "\n"));
   }

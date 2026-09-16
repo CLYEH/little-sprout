@@ -51,7 +51,10 @@ export PATH="${bin}:${PATH}"
 
 set_mcp() { printf '%s\n' "$1" > "$STUB_MCP_PIDS"; }
 set_mcp_parent() { printf '%s %s -\n' "$1" "$2" >> "$STUB_PS_DB"; printf '%s 1 %s\n' "$2" "$3" >> "$STUB_PS_DB"; }
-reset() { : > "$STUB_MCP_PIDS"; : > "$STUB_PS_DB"; unset PENCIL_MCP_TOTAL PENCIL_MCP_OWN_PID PENCIL_MCP_OTHER; }
+# set_ps_row <pid> <ppid> <cmd>：LS-309——直接寫一列「這個 pid 自己的 ppid／command」，供組 $PPID 鏈夾具用
+# （set_mcp_parent 只夠描述「mcp-server pid → 其父行程」兩層，鏈式測試需要任意長度、任意層的 pid/ppid/cmd）。
+set_ps_row() { printf '%s %s %s\n' "$1" "$2" "$3" >> "$STUB_PS_DB"; }
+reset() { : > "$STUB_MCP_PIDS"; : > "$STUB_PS_DB"; unset PENCIL_MCP_TOTAL PENCIL_MCP_OWN_PID PENCIL_MCP_OTHER PENCIL_MCP_OWN_INFERRED PENCIL_MCP_START_PID; }
 
 # shellcheck source=pencil-mcp.sh
 source "$lib"
@@ -112,6 +115,65 @@ if [ "$PENCIL_MCP_TOTAL" -eq 1 ] && [ "$PENCIL_MCP_OWN_PID" = 24097 ] && [ "$PEN
 else
   bad "⑥ 應 OTHER=0（實得 TOTAL=${PENCIL_MCP_TOTAL} OWN=${PENCIL_MCP_OWN_PID} OTHER=${PENCIL_MCP_OTHER}）"
 fi
+
+# ---- ⑦ LS-309：多支 claude 父行程、本 session 非最小 pid——$PPID 鏈精確比對，不再被 pgrep 枚舉順序／
+#      「第一支父行程含 claude」這個寬鬆判準誤導。PENCIL_MCP_START_PID=5000 模擬「呼叫端的 $PPID 鏈」：
+#      5000（cmd=some-shell）→ ppid 4000（cmd=another-shell）→ ppid 3000（cmd=usr-bin-claude，含 claude）
+#      ＝本 session 真正的 claude 主行程 pid=3000。mcp-server 兩支：pid 100（pgrep 枚舉排第一、父行程 6000
+#      的 cmd 也含 claude——這正是舊判準會選錯的「另一支 claude 父行程」，但 100 的 ppid≠3000，不是本 session）
+#      與 pid 24097（ppid=3000，才是真正屬於本 session 的那支，pgrep 枚舉排第二、且 pid 數值也比 100 大）----
+reset
+export PENCIL_MCP_START_PID=5000
+set_ps_row 5000 4000 some-shell
+set_ps_row 4000 3000 another-shell
+set_ps_row 3000 1 usr-bin-claude
+set_mcp $'100\n24097'
+set_ps_row 100 6000 -
+set_ps_row 6000 1 claude
+set_ps_row 24097 3000 -
+pencil_mcp_probe
+if [ "$PENCIL_MCP_TOTAL" -eq 2 ] && [ "$PENCIL_MCP_OWN_PID" = 24097 ] && [ "$PENCIL_MCP_OTHER" -eq 1 ] && [ "${PENCIL_MCP_OWN_INFERRED:-0}" -eq 0 ]; then
+  ok '⑦ $PPID 鏈精確比對：本 session 的 claude 主行程 pid=3000，只有 ppid=3000 的 mcp-server（24097）算 OWN；另一支父行程也含 claude 字面但 ppid≠3000 的（100）算 OTHER，不被舊「第一支」判準誤選；OWN_INFERRED=0（精確比對，非推定）'
+else
+  bad "⑦ 應 OWN=24097 OTHER=1 OWN_INFERRED=0（實得 TOTAL=${PENCIL_MCP_TOTAL} OWN=${PENCIL_MCP_OWN_PID} OTHER=${PENCIL_MCP_OTHER} OWN_INFERRED=${PENCIL_MCP_OWN_INFERRED:-未設}）"
+fi
+unset PENCIL_MCP_START_PID
+
+# ---- ⑧ LS-309：$PPID 鏈找不到本 session的 claude 主行程（鏈斷在 pid 1，非 Claude Code 下執行的情境）→
+#      退回 LS-308 舊判準（第一支父行程命令含 claude 的 mcp-server），並標 PENCIL_MCP_OWN_INFERRED=1 ----
+reset
+export PENCIL_MCP_START_PID=7000
+set_ps_row 7000 1 launchd
+set_mcp 24097
+set_mcp_parent 24097 900 claude
+pencil_mcp_probe
+if [ "$PENCIL_MCP_TOTAL" -eq 1 ] && [ "$PENCIL_MCP_OWN_PID" = 24097 ] && [ "$PENCIL_MCP_OTHER" -eq 0 ] && [ "${PENCIL_MCP_OWN_INFERRED:-0}" -eq 1 ]; then
+  ok '⑧ $PPID 鏈找不到 claude 主行程（鏈斷在 pid 1）→ 退回舊判準（第一支父行程含 claude）並標 OWN_INFERRED=1（LS-309）'
+else
+  bad "⑧ 應 OWN=24097 OTHER=0 OWN_INFERRED=1（實得 TOTAL=${PENCIL_MCP_TOTAL} OWN=${PENCIL_MCP_OWN_PID} OTHER=${PENCIL_MCP_OTHER} OWN_INFERRED=${PENCIL_MCP_OWN_INFERRED:-未設}）"
+fi
+unset PENCIL_MCP_START_PID
+
+# ---- ⑨ LS-309：$PPID 鏈超過深度上限（32；防禦性，ps 資料異常成環時不要無限迴圈）→ 視為找不到、退回舊判準 ----
+reset
+# 起點 pid=2（迴圈條件排除 pid=0／1，那兩個視為鏈終點，不能拿來當起點）接到一條 40 層都查不到 claude 字面的
+# 鏈（2→3→…→41，每個 cmd 都是 noise、ppid 依序遞增），驗證深度上限會讓函式提前放棄，不會一路查到系統其他行程。
+export PENCIL_MCP_START_PID=2
+i=2
+while [ "$i" -le 40 ]; do
+  set_ps_row "$i" "$((i + 1))" "noise${i}"
+  i=$((i + 1))
+done
+set_ps_row 41 1 noise41
+set_mcp 24097
+set_mcp_parent 24097 900 claude
+pencil_mcp_probe
+if [ "$PENCIL_MCP_TOTAL" -eq 1 ] && [ "$PENCIL_MCP_OWN_PID" = 24097 ] && [ "${PENCIL_MCP_OWN_INFERRED:-0}" -eq 1 ]; then
+  ok '⑨ $PPID 鏈超過深度上限（40 層皆查不到 claude）→ 視為找不到、退回舊判準並標 OWN_INFERRED=1（防禦性，LS-309）'
+else
+  bad "⑨ 應 OWN=24097 OWN_INFERRED=1（實得 TOTAL=${PENCIL_MCP_TOTAL} OWN=${PENCIL_MCP_OWN_PID} OWN_INFERRED=${PENCIL_MCP_OWN_INFERRED:-未設}）"
+fi
+unset PENCIL_MCP_START_PID
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pencil-mcp 自測失敗" >&2
