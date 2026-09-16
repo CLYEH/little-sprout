@@ -185885,7 +185885,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "時間軸入口方案 B：Header Row 新增外框次要鈕「匯入照片」，取代 LS-303 R1 M2／LS-251 fZYWK 誤植的『時間軸「＋」』入口設想——時間軸的「＋」是 cmp/Create Entry Button（`zy3Ps`），為建立日記的唯一入口，`QADriver.openEditor()`／`SectionTabBarPushRegressionTests` 依賴其單擊直接開啟編輯器，不得改成選單（排除候選 a）。抄值：Header Row（`clvHc`，本板複本，源出 `FCiMS`）由 [Title, Create Entry Button] 二元素改為 [Title, Header Actions Group]；Header Actions Group（`W4h5F`）layout:horizontal、alignItems:center、gap:`$sp-item`(16)，內含 Import Entry Button（`BgktV`）＋既有 Create Entry Button ref（`S5QGJd`，元件本身未改）。Import Entry Button：外框鈕，`fill:$surface`／`stroke:$control-line`／`strokeWidth:1.5`／`cornerRadius:$radius-full`／`padding:[$ctl-pad-tap,$sp-item]`（44pt 高，與主鈕同高）／`justifyContent:center`／`alignItems:center`；內容僅一個 text「匯入照片」（`Kjq9D`，`$fs-body` 17／600／`$text-primary`，無 icon——outline pill 純文字已足夠辨識，且省下的寬度是這個方案在單行內放得下兩顆按鈕的關鍵）。實測寬度：Title 102、Import Btn 100、Create Btn 124、Header Actions Group 240（100+16+124）；Header Row 總寬 345（screen-pad 24 兩側），justifyContent:space_between 下 Title 與 Group 間距 3pt——由內容實測決定，非湊出來的數字。Header Row 高度維持 49pt 不變（與原板 `FCiMS` 完全相同），因此 Feed／Tab Bar 既有幾何（Day Group 1 底緣 753.44 貼齊 Tab Bar 頂 754 的既有調校，見 motifs.md「Tab Bar 全字級純 icon」段）零位移、零需要重新調校——這是選 candidate B 且採單行版面（而非「Header 改兩列」）的直接原因：兩列版本經實測會把 Header Row 從 49pt 撐高到 101pt（Title 49＋gap8＋Actions Row 44），Feed 整體下移 52pt，會讓 Day Group 1 侵入 Tab Bar 膠囊範圍，需要額外刪減卡片或重調 padding-top 才能復原（比照 LS-120 HLXo3 R6/R7 的修法），超出本票「1 板決策」的範圍，故不採。",
+                  "content": "時間軸入口方案 B：Header Row 新增外框次要鈕（R2 改版：疊紙記號＋「匯入」，見下），取代 LS-303 R1 M2／LS-251 fZYWK 誤植的『時間軸「＋」』入口設想——時間軸的「＋」是 cmp/Create Entry Button（`zy3Ps`），為建立日記的唯一入口，`QADriver.openEditor()`／`SectionTabBarPushRegressionTests` 依賴其單擊直接開啟編輯器，不得改成選單（排除候選 a）。抄值（R2 訂正版，取代 R1 版本）：Header Row（`clvHc`，本板複本，源出 `FCiMS`）為 [Title, Header Actions Group]；Header Actions Group（`W4h5F`）layout:horizontal、alignItems:center、gap:`$sp-item`(16)，內含 Import Entry Button（`p1rTa`）＋既有 Create Entry Button ref（`S5QGJd`，元件本身未改）。**Import Entry Button 改 ref `cmp/Button Secondary`（`XggYA`）的 compact 覆寫實例**（R2 M-1／M-2 合併處置，取代 R1 一次性新造的 `BgktV`）：instance-level 覆寫 `width:fit_content`（不繼承元件基底的字面 345）、`height:44`、`padding:[9.5,12]`（水平 12 依裁決指示）、`gap:6`；`descendants:{\"Secondary Label\":{content:\"匯入\"}}`；icon 插槽（原 lucide `mail`）整個 `Replace` 成自製 14×14「Import Mark」frame（`J3x31`，非 lucide 圖庫 icon）——內含兩片 12×12 矩形（`Mark Back` x=0,y=2／`Mark Front` x=2,y=0,fill:`$surface`），皆 `stroke:$control-line strokeWidth:1.5`，偏移 (2,−2) 呼應 `cmp/Card Album` Stack Sheet 母題（該元件基底 `Qjdzx`/`o5O1GD`/`mTljh` 三片 4pt 水平薄片、`fill:$print-paper`/`stroke:$paper-shadow`，逐片下移 7pt 模擬疊放——本記號為適配 14×14 icon 尺度的重新詮釋：兩片方形疊放＋對角偏移，同屬「底下還有更多張」語彙，非字面縮小原疊紙）。**元件基底 `XggYA` 本身未修改**——全稿另有 49 處既有 instance（`IWwXg`/`GjQNR`/`KUtIk`… 皆為全寬 345 標準用法），本次只在我方這一個 instance 上做屬性覆寫，不影響既有用法；「compact 變體」的定義即這組覆寫配方（非元件定義新增分支），Notes 記錄於此供後續同類 header 用法複用同一配方。cornerRadius 沿元件基底 `$radius-md`（**未**另立新 radius token，同時解掉 R1 M-1 的「兩顆膠囊同形只靠填色區分」——Import 現為 `$radius-md` 方角膠囊、Create 維持 `$radius-full` 圓形膠囊，形狀分家）。實測寬度（R2）：Title 102、Import Btn **78**（mark14+gap6+label「匯入」約38+padding24）、Create Btn 124、Header Actions Group **218**（78+16+124）；Header Row 總寬 345，Title 與 Group 間距 **25.00pt**（345−102−218）——由內容實測決定，滿足 orchestrator R2 裁決「殘餘 ≥24pt」（`$sp-block` 24 節奏級）。Header Row 高度維持 **49pt** 不變（與原板 `FCiMS` 完全相同）。\n\n**座標訂正（R2，取代 R1 錯誤敘述，VR R1 comment `e20dcfc8` B-1）**：R1 版本寫「Day Group 1 底緣 753.44 貼齊 Tab Bar 頂 754、淨空 0.56pt」，這是把 Body-relative 座標（753.44）與 board-relative 座標（754）直接相減的錯誤——兩個不同座標系的數字不該相減，「0.56pt 淨空」在稿上不存在。**實測（board-relative，R2 重新量測）**：Body（`BUjIl`）y=62.00、h=692.00、bottom=**754.00**、`clip:true`；Tab Bar（`hJ3cT`）`layoutPosition:absolute`、y=**754.00**——**Body 底緣＝Tab Bar 頂緣＝754.00，淨空 0.00pt**。Day Group 1（`igJ4C`）board-relative bottom＝**815.44**（Body y62＋Feed y182＋Day Group1 相對高571.44），**超出 Body 裁切緣 61.44pt**——這是 Body `clip:true` 的正常捲動裁切（內容比可視窗高，多的部分被裁掉留待使用者往下捲），**不是與 Tab Bar 的碰撞**：Tab Bar 是 `layoutPosition:absolute` 浮在 Body 之上的獨立浮層，兩者的重疊/淨空關係與 Body 內部捲動內容裁切到哪裡完全無關——Header Row 長高多少都不可能把任何東西「推進」Tab Bar，Body 底緣永遠釘死在 754。**「兩列方案」排除理由改寫**：兩列版本（Header 49→101pt）的真實代價是可見 feed 少 52pt（約當第一張照片卡上緣），**不是**侵入 Tab Bar 膠囊範圍（該風險本就不存在）。R2 在 B-2／M-1／M-2 的 compact 化後，單列版面已能在殘餘 ≥24pt（實測 25.00pt）下成立，故仍選單列——理由是「保住 52pt 可見 feed，且殘餘已達節奏級門檻」的正面取捨，不是規避一個不存在的碰撞風險。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -207838,31 +207838,57 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "frame",
-                      "id": "BgktV",
+                      "id": "p1rTa",
+                      "type": "ref",
+                      "ref": "XggYA",
                       "name": "Import Entry Button",
-                      "fill": "$surface",
-                      "cornerRadius": "$radius-full",
-                      "stroke": "$control-line",
-                      "strokeWidth": 1.5,
+                      "width": "fit_content",
+                      "height": 44,
                       "padding": [
-                        "$ctl-pad-tap",
-                        "$sp-item"
+                        9.5,
+                        12
                       ],
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "Kjq9D",
-                          "name": "Import Label",
-                          "fill": "$text-primary",
-                          "content": "匯入照片",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "600"
+                      "gap": 6,
+                      "descendants": {
+                        "G4R75k": {
+                          "type": "frame",
+                          "id": "J3x31",
+                          "name": "Import Mark",
+                          "width": 14,
+                          "height": 14,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "id": "Cc3UE",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 2,
+                              "name": "Mark Back",
+                              "width": 12,
+                              "height": 12,
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "KMK8Z",
+                              "layoutPosition": "absolute",
+                              "x": 2,
+                              "y": 0,
+                              "name": "Mark Front",
+                              "fill": "$surface",
+                              "width": 12,
+                              "height": 12,
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5
+                            }
+                          ]
+                        },
+                        "yxwnz": {
+                          "content": "匯入"
                         }
-                      ]
+                      }
                     },
                     {
                       "id": "S5QGJd",
