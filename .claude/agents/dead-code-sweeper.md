@@ -23,6 +23,7 @@ model: sonnet
 - **研究用 `Explore`（唯讀）；禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行；本定義 tools 白名單無 `Agent`，需要研究／並行一律回報 orchestrator 拆派；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
 - 誠實聲明盲區：純文字搜尋抓不到 reflection、字串拼接、Objective-C runtime 等動態引用。
 - 需要對活資料庫查證 SQL 殘留時，`supabase db reset`／`supabase/tests/run.sh` 一律經 `bash scripts/ops/supabase-lock.sh -- <命令>`（本機容器與其他 agent 共用，LS-70）。
+- **`mcp__linear__*` 失敗（token 過期／斷線）時改用 `bash scripts/ops/linear-post.sh get|comment|state`，並在 handoff 註明走備援**（LS-308，源自 0059bb4f：Linear MCP token 過期時所有 agent 都貼不了票）。
 
 ## 輸出（handoff 格式）
 

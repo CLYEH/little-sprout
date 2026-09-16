@@ -184,7 +184,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -227,6 +227,9 @@ jobs:
           bash scripts/gates/design-evidence-check.test.sh || rc=1
           # LS-168：Notes 板節點 id 存在性 gate 自測（合成 repo：活 id／死 id／沿革標記三案＋mutation）
           bash scripts/gates/design-notes-check.test.sh || rc=1
+          # LS-309 C：Identity Header 年齡字串 NBSP gate 自測（合成 repo：正確 codepoint／U+0020 退化／分隔缺失／
+          # 未觸碰板舊債不擋／ref override／Notes 板散文排除／參數 fail closed／--head-sha）
+          bash scripts/gates/design-identity-header-check.test.sh || rc=1
           # LS-122：六支溢出掃描的正典腳本純函數自測（node，合成節點樹；Pen 不在 CI 也能驗演算法）；LS-168 加第五支
           # text_occlusion 與 tree_hash（含 python design_tree_hash.py 交叉一致案，runner 需 python3——ubuntu-latest 內建）；LS-185 加第六支 board_clip
           node scripts/design/overflow-scan.test.js || rc=1
@@ -373,7 +376,7 @@ jobs:
       # 退回只看 dirty／Pen 讀不到一律放行 → 對應樣本紅。
       # LS-207（8af1c2bc）：同上——不因前面步驟（如 pr-body-check）紅而被 skip。R2（fd783f6c I2）：用 !cancelled()
       # 不用 always()，job 被取消（撞 timeout-minutes）時不必再硬跑一輪。
-      - name: Ops 腳本自測（patrol／patrol-filter／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／patrol-linear／cleanup-merged／prod-purge-health／review-demo-seed／prod-storage-verify／qa-e2e，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207／LS-235／LS-240／LS-244／LS-158）
+      - name: Ops 腳本自測（patrol／patrol-filter／session-start／supabase-lock／simulator-lock／promote／post-status／pen-open／pen-read／pen-status／pen-land／pencil-mcp／patrol-linear／cleanup-merged／prod-purge-health／review-demo-seed／prod-storage-verify／qa-e2e，LS-71／LS-70／LS-85／LS-87／LS-91／LS-103／LS-118／LS-180／LS-86／LS-207／LS-235／LS-240／LS-244／LS-158／LS-308）
         if: ${{ !cancelled() }}
         run: |
           rc=0
@@ -394,9 +397,13 @@ jobs:
           bash scripts/ops/post-status.test.sh || rc=1
           bash scripts/ops/pen-open.test.sh || rc=1
           bash scripts/ops/pen-read.test.sh || rc=1
-          # LS-180：Pencil 連線探針（行程／路徑／mcp-server↔Pen unix socket 交集；stub pgrep／lsof／pen）
+          # LS-180：Pencil 連線探針（行程／路徑／MCP 訊號；LS-308 起 MCP 判定改用 ps 父行程、見 lib/pencil-mcp.sh）
           bash scripts/ops/pen-status.test.sh || rc=1
+          # LS-308 A3：pen-status.sh／pen-open.sh --kill 共用的 mcp-server「本 session／殘留」判定庫
+          bash scripts/ops/lib/pencil-mcp.test.sh || rc=1
           bash scripts/ops/pen-land.test.sh || rc=1
+          # LS-308 B1：Linear MCP token 過期時的 GraphQL 備援（本機假伺服器，不打正式 Linear API）
+          bash scripts/ops/linear-post.test.sh || rc=1
           bash scripts/ops/patrol-linear.test.sh || rc=1
           bash scripts/ops/cleanup-merged.test.sh || rc=1
           # LS-235：正式站 purge-storage 排程健康度巡檢腳本自測（全 fixture 化，不連線任何真正的 Supabase 專案）
@@ -569,6 +576,22 @@ jobs:
           if [ -n "$pens" ]; then
             while IFS= read -r p; do
               bash scripts/gates/design-notes-check.sh "$p" --base "origin/$BASE" --head-sha "$HEAD_SHA"
+            done <<< "$pens"
+          fi
+
+      # LS-309 C：Identity Header（板自己的節點，不透過 cmp/Card Album／cmp/Card Diary 元件）年齡字串 NBSP——
+      # design-notes-check.sh 既有的署名 NBSP 檢查只掃那兩個元件，掃不到板自己的年齡節點（LS-96 池項
+      # `285d3310`，來源 LS-252 VR R2/R3：9 個年齡字串因此漏網、靠人工 hex dump 才抓到）。觸發條件同上一 step。
+      - name: .pen Identity Header 年齡 NBSP gate（LS-309）
+        if: ${{ !cancelled() && (github.event_name == 'pull_request' && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/'))) }}
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          base_sha=$(git merge-base "origin/$BASE" "$HEAD_SHA")
+          pens=$(git -c core.quotePath=false diff --name-only --diff-filter=ACM "$base_sha"..."$HEAD_SHA" -- '*.pen' || true)
+          if [ -n "$pens" ]; then
+            while IFS= read -r p; do
+              bash scripts/gates/design-identity-header-check.sh "$p" --base "origin/$BASE" --head-sha "$HEAD_SHA"
             done <<< "$pens"
           fi
 

@@ -9,6 +9,9 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 check="${root}/scripts/gates/approval-comment-check.sh"
 gate="${root}/scripts/gates/destructive-approval-check.sh"
 fail=0
+# LS-302：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，避免
+# `printf | grep -qF` 在 pipefail 下的 SIGPIPE 誤判（LS-267/LS-270）。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -41,7 +44,7 @@ expect() {
   : > "$GH_STUB_LOG"
   out="$(bash "$check" "$@" 2>&1)"
   got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; }; then
     echo "✓ ${name}"
   else
     echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}，實得 ${got}）" >&2

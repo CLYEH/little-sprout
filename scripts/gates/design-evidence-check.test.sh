@@ -45,6 +45,9 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 check="${root}/scripts/gates/design-evidence-check.sh"
 landing="${root}/scripts/gates/design-landing-check.sh"
 fail=0
+# LS-302：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，避免
+# `printf | grep -qF` 在 pipefail 下的 SIGPIPE 誤判（LS-267/LS-270）。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -61,7 +64,7 @@ expect() {
   shift 3
   out="$(cd "$R" && bash "$check" "$@" 2>&1)"
   got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; }; then
     echo "✓ ${name}"
   else
     echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}，實得 ${got}）" >&2
@@ -449,7 +452,7 @@ expect 1 '㉑ merge ref 上不給 --head-sha → 紅：合併 commit 被當成�
   '不是本 PR 對這份 .pen 最後一次的 commit' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_moved"
 out21="$(cd "$R" && bash "$check" "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_moved" 2>&1)"
-if printf '%s' "$out21" | grep -qF '漏列本 PR 對 .pen 有變更的頂層節點'; then
+if has "$out21" '漏列本 PR 對 .pen 有變更的頂層節點'; then
   echo "✗ ㉑ merge ref 上不給 --head-sha：base 側動的 c 不該被算成本 PR 觸碰的板（(a) 每份收據以自己的共同祖先為基準）" >&2
   printf '%s\n' "$out21" | sed 's/^/    /' >&2
   fail=1

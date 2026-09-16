@@ -338,6 +338,27 @@ else
   fail=1
 fi
 
+# ㉗（LS-302，LS-96 池項 `c36d6295`(2)）歧義分支：A11y / 01 回查 key「01」在本批候選裡撞到**兩個**不同的
+#     非衍生基底群（Import / 01＋Growth / 01），不是 ㉕(b) 的「恰好一個」——owners 集合大小為 2、不歸併，
+#     A11y 退回用自己的群名當基底群，Notes 只列 Import／Growth 兩者 → A11y / 01 仍要求自己一列
+g checkout -q -b ls300-a11y-ambiguous "$base_ref"
+pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" \
+    "$(board ImpZ 'Import / 01 匯入整理頁 (iPhone)' '')" \
+    "$(board GroZ 'Growth / 01 最新值卡 (iPhone)' '')" \
+    "$(board A11yZ 'A11y / 01 測試頁 · Dynamic Type AX3（body 40pt）' '')" \
+    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大\nGrowth / 01 最新值卡 (iPhone)｜隱藏 Tab Bar ✗｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 growth.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
+commit_pen 'design(pen): LS-302 4 a11y-ambiguous A11y/01 撞兩個基底群不歸併，各自一列'
+out="$(cd "$R" && bash "$check" design/littlesprout.pen --base "$base_ref" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && grep -qF '✗ 畫面級屬性缺列：正典畫面 A11y / 01' <<<"$out" \
+   && ! grep -qF '✗ 畫面級屬性缺列：正典畫面 Import / 01' <<<"$out" \
+   && ! grep -qF '✗ 畫面級屬性缺列：正典畫面 Growth / 01' <<<"$out"; then
+  echo "✓ ㉗ A11y / 01 撞兩個基底群（Import／Growth）不歸併：只點名 A11y / 01 缺列，各自保留自己群名、各自要求一列"
+else
+  echo "✗ ㉗ 應只點名 A11y / 01 缺列、不誤點已列的 Import／Growth（實得 exit ${got}）" >&2
+  printf '%s\n' "$out" | sed 's/^/    /' >&2
+  fail=1
+fi
+
 if [ "$fail" -eq 0 ]; then
   echo "design-notes-check.test.sh：全數通過"
 else

@@ -71,6 +71,11 @@ POOL_ANNOUNCE_RE = re.compile(r"銷除|銷案|已升票")
 BACKEND_KEYWORDS = ("RPC", "RLS", "migration", "schema", "後端", "Supabase", "資料表", "trigger", "policy", "SQL", "Edge Function", "bucket")
 STATE_FILE_REL = os.path.join(".claude", "patrol-state.json")  # 連續空輪計數（gitignored）
 BACKTICK_TOKEN_RE = re.compile(r"`([^`\n]{2,80})`")  # LS-298 scope 2：Story 票文反引號 token（表名／RPC 名／檔名）
+# LS-302（LS-96 池項 `7503e269`(1)，沿 LS-287 高熵手法）：短或泛用 token（`id`／`RLS`／`RPC`／`schema`／
+# `migration`）在整 repo `git grep -F` 下極易命中無關檔案，誤標「已落地」；extract_backtick_tokens() 用
+# 最小長度（≥6）＋黑名單過濾掉這類低熵 token，只留下真正像表名／RPC 名／檔名的高熵字串。
+BACKTICK_TOKEN_MIN_LEN = 6
+BACKTICK_TOKEN_BLACKLIST = frozenset({"id", "rls", "rpc", "schema", "migration"})
 # LS-298 scope 3：docs/archive/linear/LS-<n>.md（LS-276 `linear-archive.py` 匯出格式）的欄位——首行 `# LS-<n> <標題>`，
 # 表格列 `| 狀態 | Done（completed） |`／`| 標籤 | a, b |`／可選 `| 父票 | LS-<m> <標題> |`。
 ARCHIVE_DIR_REL = os.path.join("docs", "archive", "linear")
@@ -568,12 +573,18 @@ def design_tickets_for(story_ident, all_issues):
 
 
 def extract_backtick_tokens(text):
-    """LS-298 scope 2：抽 Story 標題／票文中的反引號 token（表名／RPC 名／檔名等技術詞），依出現順序去重。"""
+    """LS-298 scope 2：抽 Story 標題／票文中的反引號 token（表名／RPC 名／檔名等技術詞），依出現順序去重。
+    LS-302：過濾掉短於 BACKTICK_TOKEN_MIN_LEN 或落在 BACKTICK_TOKEN_BLACKLIST（大小寫不分）的低熵 token。"""
     seen = []
     for m in BACKTICK_TOKEN_RE.finditer(text or ""):
         tok = m.group(1).strip()
-        if tok and tok not in seen:
-            seen.append(tok)
+        if not tok or tok in seen:
+            continue
+        if len(tok) < BACKTICK_TOKEN_MIN_LEN:
+            continue
+        if tok.lower() in BACKTICK_TOKEN_BLACKLIST:
+            continue
+        seen.append(tok)
     return seen
 
 

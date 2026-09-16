@@ -57,7 +57,8 @@ ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 # 自 LS-159 起就在但當時沒有 gate，R2 (a) 一併釘住（三份同一條規則）。
 # LS-158：qa 多步驟驗收優先 `scripts/ops/qa-e2e.sh`（mobile-mcp 降為截圖／單步輔助）——qa.md 那段被刪即紅。
 # LS-180：ui-designer／visual-reviewer 切檔一律不殺行程——`pen-open.sh` 的 `--kill`（與 `--force-reload` 的清場路徑）會結束
-# Pen 主行程、讓 session 的 Pencil MCP 斷線不重連，只在 orchestrator 明示時使用、用後必回報「需重連」；那句被刪即紅。
+# Pen 主行程、讓 session 的 Pencil MCP stdio 連線中斷，只在 orchestrator 明示時使用；那句被刪即紅（**LS-308**：實測 mcp-server
+# 為懶連線、下一次呼叫會自動重連，不再需要人工 /mcp——用後回報的字樣已從「需重連」改為「下一次 MCP 呼叫會自動重連」）。
 # LS-180 裁決：設計票期間 Pen 停在票檔——ui-designer 收工不切回主 checkout（切回會把票檔留在背景視窗，下一輪 VR 只能清場）；
 # ui-designer.md 步驟 5 的「收工 Pen 停在票檔」被刪或改回「切回主 checkout」即紅（只驗新句在，「切回」字樣本身不擋——
 # 步驟 5 需要用它說明為什麼不切）。
@@ -164,7 +165,16 @@ ios-dev|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.
 qa|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.sh（exit 3 就再跑一次），取代 gh run watch，那句被刪即紅
 merge-reviewer|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.sh（exit 3 就再跑一次），取代 gh run watch，那句被刪即紅
 ios-dev|實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選|LS-300：LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」，設計稿 Notes 板有寫、ios-dev 沒逐條對；handoff 用 handoff_evidence_check.py 認的「畫面級屬性（逐條勾選）」子段
-merge-reviewer|對 handoff 勾選表抽兩列重放|LS-300：不只信 ios-dev「已勾選」的申報，抽兩列對照設計稿 Notes「畫面級屬性」段與實際實作重放核對"
+merge-reviewer|對 handoff 勾選表抽兩列重放|LS-300：不只信 ios-dev「已勾選」的申報，抽兩列對照設計稿 Notes「畫面級屬性」段與實際實作重放核對
+ios-dev|逾時被背景化就前景重跑 push，快取秒過|LS-306 A2：xcodebuild 前印進度句，逾時被背景化知道前景重跑 push 快取秒過（push-gate.sh 同 tree 快取，LS-306 A1）
+ui-designer|scripts/ops/ci-wait.sh|LS-306 B1：等 CI 一律前景 ci-wait.sh（exit 3 就再跑一次），禁 gh run watch、禁 run_in_background，那句被刪即紅
+visual-reviewer|scripts/ops/ci-wait.sh|LS-306 B1：等 CI 一律前景 ci-wait.sh（exit 3 就再跑一次），禁 gh run watch、禁 run_in_background，那句被刪即紅
+ios-dev|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
+qa|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
+merge-reviewer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
+dead-code-sweeper|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
+ui-designer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
+visual-reviewer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，
