@@ -188580,6 +188580,1829 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "yL3kY",
+      "x": 3326,
+      "y": 27490,
+      "name": "Growth / 02 新增量測 sheet (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 995,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Spdp5",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "M40mY",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 995,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "uaueT",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 995,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "G0s6YF",
+              "name": "Form Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "t43d30",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "text",
+                  "id": "ovrzJ",
+                  "name": "Head Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新增量測",
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-lead",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "pNaFX",
+                  "name": "Date Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "a9E5Z",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "測量日期",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nZmxG",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "S1SZa",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "content": "8月20日（今天）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "yeK54",
+                          "name": "Calendar Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "calendar",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "TTu8b",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Height Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "身高（cm）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入身高"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "xnzS6",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Weight Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "體重（kg）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入體重"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "NQW13",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Head Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "頭圍（cm）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入頭圍"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "y0hIPr",
+                  "name": "Note Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "yavKn",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "備註（選填）",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r9jrJR",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 84,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "jcGIk",
+                          "name": "Field Value",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "想記錄的小事（選填）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "JaFSE",
+                  "name": "Helper Row",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "YqOUo",
+                      "name": "Helper Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "info",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ExjJk",
+                      "name": "Helper Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "身高、體重、頭圍至少需要填寫一項。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "dnJLe",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "YY6F5",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Save Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "check"
+                        },
+                        "w7CUP": {
+                          "content": "儲存"
+                        }
+                      }
+                    },
+                    {
+                      "id": "kIQJe",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "y0aF8s",
+      "x": 3819,
+      "y": 27490,
+      "name": "Growth / 02 新增量測 sheet · 錯誤態（全空）",
+      "clip": true,
+      "width": 393,
+      "height": 1020,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "a8uSwA",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "k36s41",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1020,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "eCdhh",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1020,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "z46fvD",
+              "name": "Form Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "amZkw",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "text",
+                  "id": "N8hge5",
+                  "name": "Head Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新增量測",
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-lead",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "sq197",
+                  "name": "Date Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "yj620",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "測量日期",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LzqQU",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "JZ7D7",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "content": "8月20日（今天）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "bwyqD",
+                          "name": "Calendar Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "calendar",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "hhZgs",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "stroke": "$danger",
+                  "strokeWidth": 2,
+                  "name": "Height Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "身高（cm）"
+                    },
+                    "v6YiYR": {
+                      "stroke": "$danger",
+                      "strokeWidth": 2
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入身高"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "ppTb8",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "stroke": "$danger",
+                  "strokeWidth": 2,
+                  "name": "Weight Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "體重（kg）"
+                    },
+                    "v6YiYR": {
+                      "stroke": "$danger",
+                      "strokeWidth": 2
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入體重"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "NlWeT",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "stroke": "$danger",
+                  "strokeWidth": 2,
+                  "name": "Head Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "頭圍（cm）"
+                    },
+                    "v6YiYR": {
+                      "stroke": "$danger",
+                      "strokeWidth": 2
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入頭圍"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "pipCT",
+                  "name": "Note Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "F8HwpY",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "備註（選填）",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bYSVx",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 84,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "G6AkZ6",
+                          "name": "Field Value",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "想記錄的小事（選填）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bOPmr",
+                  "name": "Helper Row",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "bSGEc",
+                      "name": "Helper Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$danger"
+                    },
+                    {
+                      "type": "text",
+                      "id": "iV44z",
+                      "name": "Helper Text",
+                      "fill": "$danger",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "請至少填寫身高、體重、頭圍其中一項，才能儲存這筆紀錄。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ptyTw",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "OendP",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Save Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "check"
+                        },
+                        "w7CUP": {
+                          "content": "儲存"
+                        }
+                      }
+                    },
+                    {
+                      "id": "K3fZh4",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "j3KH8",
+      "x": 4805,
+      "y": 27490,
+      "name": "Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
+      "clip": true,
+      "width": 393,
+      "height": 1069,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "BaGHt",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "Vf0Qa",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1069,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "dj1b0",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1069,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "E5qGeV",
+              "name": "Form Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "axTJ0",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "text",
+                  "id": "bBKm6",
+                  "name": "Head Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新增量測",
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-lead",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "OPHgs",
+                  "name": "Date Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "RoxK0",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "測量日期",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TKKBN",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "VJQ9q",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "content": "8月20日（今天）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "aqfU0",
+                          "name": "Calendar Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "calendar",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "V0X48",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Height Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "身高（cm）"
+                    },
+                    "iu3Q8": {
+                      "content": "180.0",
+                      "fill": "$text-primary"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "iue7N",
+                  "name": "Height Warning",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "UeeNq",
+                      "name": "Warn Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ezwD9",
+                      "name": "Warn Text",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "180.0 cm 看起來偏高，確定沒有輸入錯誤的話仍可直接儲存。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "id": "fJ6o8",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Weight Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "體重（kg）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入體重"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "aw6vn",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Head Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "頭圍（cm）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入頭圍"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "j4bmmI",
+                  "name": "Note Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "kWTGM",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "備註（選填）",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kp90S",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 84,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "rLNf3",
+                          "name": "Field Value",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "想記錄的小事（選填）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hDjb9",
+                  "name": "Helper Row",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "T9AE77",
+                      "name": "Helper Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "info",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "e6BJb1",
+                      "name": "Helper Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "身高、體重、頭圍至少需要填寫一項。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "N8QxK",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "K4Dvao",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Save Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "check"
+                        },
+                        "w7CUP": {
+                          "content": "儲存"
+                        }
+                      }
+                    },
+                    {
+                      "id": "m66Hc2",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "IDQ7E",
+      "x": 5298,
+      "y": 27490,
+      "name": "Growth / 02 新增量測 sheet · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 995,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "dkfbz",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "dw8WP",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 995,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "gJI0J",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 995,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "z69yvp",
+              "name": "Form Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "v0MtLE",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "text",
+                  "id": "xezvE",
+                  "name": "Head Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新增量測",
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-lead",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "oj7Bu",
+                  "name": "Date Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "WqY1w",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "測量日期",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "y77E1",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "CTeGn",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "content": "8月20日（今天）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "ZBRsN",
+                          "name": "Calendar Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "calendar",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "VDpiO",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Height Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "身高（cm）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入身高"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "HXvyA",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Weight Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "體重（kg）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入體重"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "M6qwbc",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Head Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "頭圍（cm）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入頭圍"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "naufm",
+                  "name": "Note Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "acXC8",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "備註（選填）",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hRe3b",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "height": 84,
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": "$inset-card",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "rMfBj",
+                          "name": "Field Value",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "想記錄的小事（選填）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Q98ps",
+                  "name": "Helper Row",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "l4jlCt",
+                      "name": "Helper Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "info",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "XFXYD",
+                      "name": "Helper Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "身高、體重、頭圍至少需要填寫一項。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ADHai",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "BOeXb",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Save Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "check"
+                        },
+                        "w7CUP": {
+                          "content": "儲存"
+                        }
+                      }
+                    },
+                    {
+                      "id": "whlVM",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "OWkSn",
+      "x": 11230,
+      "y": 27490,
+      "name": "A11y / 02 新增量測 sheet · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1519,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "iPspr",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "S3Ys9",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1519,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "LkMQ8",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1519,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "zdnZT",
+              "name": "Form Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "esP7B",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "text",
+                  "id": "LHNCX",
+                  "name": "Head Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "新增量測",
+                  "textAlign": "center",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-lead",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "d4qTn",
+                  "name": "Date Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "pqwlf",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "測量日期",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xUHap",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "z1N8ou",
+                          "name": "Field Value",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "8月20日（今天）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "C2v3CS",
+                          "name": "Calendar Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "calendar",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "A54YF",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Height Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "身高（cm）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入身高"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "MKGAH",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Weight Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "體重（kg）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入體重"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "lg2JB",
+                  "type": "ref",
+                  "ref": "UcO8T",
+                  "name": "Head Field",
+                  "descendants": {
+                    "tOvM3": {
+                      "content": "頭圍（cm）"
+                    },
+                    "iu3Q8": {
+                      "content": "請輸入頭圍"
+                    },
+                    "i2SHf": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "Doxko",
+                  "name": "Note Field",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Y6ain",
+                      "name": "Field Label",
+                      "fill": "$text-primary",
+                      "content": "備註（選填）",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XWWbr",
+                      "name": "Field Box",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$control-line",
+                      "strokeWidth": 1.5,
+                      "padding": [
+                        "$sp-group",
+                        "$inset-card"
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "UixXt",
+                          "name": "Field Value",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "想記錄的小事（選填）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "C9Akk",
+                  "name": "Helper Row",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "UvaY6",
+                      "name": "Helper Icon",
+                      "width": 32,
+                      "height": 32,
+                      "icon": "info",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "wEnVl",
+                      "name": "Helper Text",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "身高、體重、頭圍至少需要填寫一項。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OF30x",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "kOtZV",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Save Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "icon": "check"
+                        },
+                        "w7CUP": {
+                          "content": "儲存"
+                        }
+                      }
+                    },
+                    {
+                      "id": "fRwVN",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
