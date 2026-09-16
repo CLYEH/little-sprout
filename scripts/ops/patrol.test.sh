@@ -64,6 +64,12 @@ printf '#!/bin/bash\necho "Pencil：（自測假身）"\nexit 0\n' > "$PATROL_PE
 mkdir -p "$work/fake-devices-default"
 export PATROL_SIM_DEVICES_DIR="$work/fake-devices-default" PATROL_DU_CACHE="$work/du-cache"
 unset LINEAR_API_KEY
+# LS-311：用量段預設隔離——不碰本機真正的 ~/.claude/usage-cache.json（可能不存在、也可能已經超過門檻），
+# 也不讓 CI（沒有這個檔）在每一筆既有斷言前面多印一行「⚠ [用量] 探針無資料」。指到一份固定 10%（低於
+# 兩個門檻）的合成快取；㉜ 自己在呼叫時覆寫 PATROL_USAGE_FILE／PATROL_USAGE_WARN／PATROL_USAGE_STOP／
+# PATROL_USAGE_MAX_AGE_MIN 驗證六種門檻分支。
+printf '{"rate_limits":{"seven_day":{"used_percentage":10,"resets_at":9999999999},"five_hour":{"used_percentage":1,"resets_at":9999999999}},"written_at":%s}' "$(date +%s)" > "$work/fake-usage-cache-default.json"
+export PATROL_USAGE_FILE="$work/fake-usage-cache-default.json"
 
 # 臨時 repo 與本機全域／系統 git 設定隔離：自測結果不能因人而異
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
@@ -295,6 +301,99 @@ else
     echo "✓ ㉛c mutant（拿掉 add_flag 補標記）：出現 ⚠／✗／→ 全無的旗標行（如「$(printf '%s' "$bad31c" | head -1 | cut -c1-60)…」）——證明 (c) 的綠來自那段保證"
   else
     echo "✗ ㉛c mutant 未如預期翻轉——add_flag 的補標記可能已零覆蓋" >&2; fail=1
+  fi
+fi
+
+# ---- ㉜（LS-311；使用者 2026-09-16 指示）用量段：讀 ~/.claude/usage-cache.json（PATROL_USAGE_FILE 可換路徑）
+#      的 rate_limits.seven_day，週用量 ≥ PATROL_USAGE_STOP（預設 99）印停工＋交接、≥ PATROL_USAGE_WARN
+#      （預設 97）印不派新任務；未達門檻 --brief／人類全文一行都不印；快取缺／空／不可解析／過期印「探針無
+#      資料」（唯一允許的非門檻訊號）。六例：96.9（零訊號）／97.0（警示）／99.0（停工，STOP 優先於 WARN）／
+#      缺檔／過期／壞 JSON；另補兩則 mutation 證明 ㉜b／㉜e 的綠不是空跑（票文指定形狀）----
+usage_mk() { printf '{"rate_limits":{"seven_day":{"used_percentage":%s,"resets_at":1789902000},"five_hour":{"used_percentage":5,"resets_at":1789589400}},"written_at":%s}' "$1" "$2"; }
+u_now=$(date +%s)
+
+# ㉜a 96.9（低於 WARN 97）→ --brief／人類全文零輸出；--json usage.seven_day=96.9、stale=false
+usage_mk 96.9 "$u_now" > "$work/usage-a.json"
+brief32a="$(PATROL_USAGE_FILE="$work/usage-a.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㉜a 96.9% --brief 零輸出（grep 不到「用量」）' "$brief32a" '用量'
+human32a="$(PATROL_USAGE_FILE="$work/usage-a.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㉜a 96.9% 人類全文模式零輸出（grep 不到「用量」）' "$human32a" '用量'
+json32a="$(PATROL_USAGE_FILE="$work/usage-a.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '㉜a --json usage.seven_day=96.9、stale=false' "$json32a" '.usage.seven_day == 96.9 and .usage.stale == false'
+
+# ㉜b 97.0（達 WARN，未達 STOP）→ 97 級警示行（不派新任務；usage-budget-winddown 步驟 3）
+usage_mk 97.0 "$u_now" > "$work/usage-b.json"
+warn_line='⚠ [用量] 週用量 97.0%（重置 '
+brief32b="$(PATROL_USAGE_FILE="$work/usage-b.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has '㉜b 97.0% --brief 印 97 級警示' "$brief32b" "$warn_line"
+has '㉜b 97.0% 帶 usage-budget-winddown 步驟 3（不派新任務）' "$brief32b" '不派新任務；在飛 agent 跑完只記票（usage-budget-winddown 步驟 3）'
+hasnt '㉜b 97.0% 不是 99 級停工訊息' "$brief32b" '停下所有工作'
+human32b="$(PATROL_USAGE_FILE="$work/usage-b.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has '㉜b 97.0% 人類全文模式也印警示' "$human32b" "$warn_line"
+brief32b_f="$(printf '%s\n' "$brief32b" | bash "${root}/scripts/ops/patrol-filter.sh")"
+has '㉜b 97.0% 警示行經 patrol-filter.sh 原樣通過' "$brief32b_f" "$warn_line"
+
+# ㉜c 99.0（同時達 STOP 與 WARN）→ 99 級停工行、STOP 優先於 WARN（不重疊、恰一行）
+usage_mk 99.0 "$u_now" > "$work/usage-c.json"
+stop_line='⚠ [用量] 週用量 99.0%（重置 '
+brief32c="$(PATROL_USAGE_FILE="$work/usage-c.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has '㉜c 99.0% --brief 印 99 級停工（CronDelete／不派任何 agent／寫交接）' "$brief32c" "$stop_line"
+has '㉜c 99.0% 帶 usage-budget-winddown 步驟 1–5' "$brief32c" 'session-resume-<日期>.md（usage-budget-winddown 步驟 1–5）'
+hasnt '㉜c 99.0% STOP 優先於 WARN：不再印「不派新任務」的 97 級行' "$brief32c" '不派新任務；在飛 agent 跑完只記票'
+n32c=$(printf '%s\n' "$brief32c" | grep -c '\[用量\]')
+if [ "$n32c" -eq 1 ]; then echo "✓ ㉜c 99.0% 恰印一行 [用量]（STOP／WARN 不重疊）"; else echo "✗ ㉜c 99.0% [用量] 行數應為 1，實得 ${n32c}" >&2; fail=1; fi
+
+# ㉜d 缺檔 → 探針無資料（快取檔不存在）
+brief32d="$(PATROL_USAGE_FILE="$work/usage-does-not-exist.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has '㉜d 缺檔 → 探針無資料（快取檔不存在）' "$brief32d" '⚠ [用量] 探針無資料（快取檔不存在'
+has '㉜d 探針無資料指示確認 statusline-command.sh 已掛快取寫入段' "$brief32d" '確認 ~/.claude/statusline-command.sh 已掛快取寫入段（docs/COLLABORATION.md §4-b）'
+
+# ㉜e 過期（written_at 早於 PATROL_USAGE_MAX_AGE_MIN）→ 探針無資料（已 N 分鐘未更新）
+u_old=$(( u_now - 200 ))
+usage_mk 50 "$u_old" > "$work/usage-e.json"
+brief32e="$(PATROL_USAGE_FILE="$work/usage-e.json" PATROL_USAGE_MAX_AGE_MIN=1 bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has '㉜e 過期（200s 前，上限 1 分）→ 探針無資料（已 N 分鐘未更新）' "$brief32e" '⚠ [用量] 探針無資料（快取已'
+has '㉜e 過期原因帶「未更新（上限」字樣' "$brief32e" '分鐘未更新（上限 1 分）'
+json32e="$(PATROL_USAGE_FILE="$work/usage-e.json" PATROL_USAGE_MAX_AGE_MIN=1 bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '㉜e --json usage.stale=true' "$json32e" '.usage.stale == true'
+
+# ㉜f 壞 JSON → 探針無資料（JSON 不可解析或必要欄位缺失）
+printf 'not json at all' > "$work/usage-f.json"
+brief32f="$(PATROL_USAGE_FILE="$work/usage-f.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has '㉜f 壞 JSON → 探針無資料（JSON 不可解析或必要欄位缺失）' "$brief32f" '⚠ [用量] 探針無資料（JSON 不可解析或必要欄位缺失'
+
+# ㉜g mutation（票文指定形狀「把 97 門檻比較反轉」）：拿掉 WARN 比較的 !（BEGIN{exit !(v>=t)} → exit (v>=t)}）
+# → ㉜b 的 97 級警示應消失，證明 ㉜b 的綠是來自這行比較、不是空跑
+mut32g="$work/patrol-mut32g.sh"
+warn_ln=$(grep -n 'usage_warn" .*BEGIN{exit !(v>=t)}' "$patrol" | head -1 | cut -d: -f1)
+if [ -z "$warn_ln" ]; then
+  echo "✗ ㉜g 找不到 WARN 門檻比較那一行（腳本形狀變了？）" >&2; fail=1
+else
+  sed "${warn_ln}s/!(v>=t)/(v>=t)/" "$patrol" > "$mut32g"
+  brief32g="$(PATROL_USAGE_FILE="$work/usage-b.json" bash "$mut32g" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+  if printf '%s' "$brief32g" | grep -qF "$warn_line"; then
+    echo "✗ ㉜g mutant（WARN 門檻比較反轉）：97.0% 仍印警示——㉜b 的綠不是來自這行比較" >&2; fail=1
+  else
+    echo "✓ ㉜g mutant（WARN 門檻比較反轉：拿掉 !）：97.0% 不再印警示——證明 ㉜b 釘的正是這行比較"
+  fi
+fi
+
+# ㉜h mutation（票文指定形狀「把 stale 判定拿掉」）：把 stale 門檻改成不可能觸發（-gt "$usage_max_age" → -gt 999999999）
+# → ㉜e 的「探針無資料」應消失（50% 低於門檻、退回零輸出），證明 ㉜e 的綠是來自這段判定、不是空跑
+mut32h="$work/patrol-mut32h.sh"
+if ! grep -qF -- '-gt "$usage_max_age"' "$patrol"; then
+  echo "✗ ㉜h 找不到 stale 判定那一行（腳本形狀變了？）" >&2; fail=1
+else
+  sed 's/-gt "$usage_max_age"/-gt 999999999/' "$patrol" > "$mut32h"
+  if ! grep -qF -- '-gt 999999999' "$mut32h"; then
+    echo "✗ ㉜h mutant 沒被正確合成" >&2; fail=1
+  else
+    brief32h="$(PATROL_USAGE_FILE="$work/usage-e.json" PATROL_USAGE_MAX_AGE_MIN=1 bash "$mut32h" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+    if printf '%s' "$brief32h" | grep -q '用量'; then
+      echo "✗ ㉜h mutant（拿掉 stale 判定）：仍印用量行——㉜e 的綠不是來自這段判定：${brief32h}" >&2; fail=1
+    else
+      echo "✓ ㉜h mutant（stale 判定門檻改成不可能觸發）：探針無資料訊息消失（50% 低於門檻、零輸出）——證明 ㉜e 釘的正是這段判定"
+    fi
   fi
 fi
 
