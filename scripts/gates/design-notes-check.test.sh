@@ -30,13 +30,17 @@ R="$work/repo"
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 g() { git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
 
+# LS-301：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，語意不變（原本是
+# `printf | grep -qF`，在 pipefail 下有 SIGPIPE 誤判風險，LS-267／LS-270）。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
+
 expect() {
   # expect <期望 exit> <名稱> <輸出必含|''> <輸出必不含|''> <參數…>
   local want=$1 name=$2 must=$3 mustnot=$4 out got
   shift 4
   out="$(cd "$R" && bash "$check" "$@" 2>&1)"
   got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; } && { [ -z "$mustnot" ] || ! printf '%s' "$out" | grep -qF -- "$mustnot"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; } && { [ -z "$mustnot" ] || ! has "$out" "$mustnot"; }; then
     echo "✓ ${name}"
   else
     echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}${mustnot:+、輸出不含「${mustnot}」}，實得 ${got}）" >&2
@@ -111,7 +115,7 @@ pen "$(board Ab12C '01 板' '{"type":"frame","id":"Nw3Pq","name":"Row 3"}')" "$(
 commit_pen 'design(pen): LS-1 r2 兩個 Row 都刪了、Notes 箭頭右側指向死 id'
 expect 1 '⑪ 「舊→新」右側的新 id 已死 → 紅，左側舊 id 印沿革（只放行箭頭左側）' '缺失 id Zq7Lm' '缺失 id Xk9f2' design/littlesprout.pen --base "$base_ref"
 out="$(cd "$R" && bash "$check" design/littlesprout.pen --base "$base_ref" 2>&1)"
-if printf '%s' "$out" | grep -qF '（沿革）板 NOTES（LS-1 / 實作註記 · Handoff Notes）／節點 T1／舊 id Xk9f2'; then echo "✓ ⑪ 左側 Xk9f2 印沿革行"; else echo "✗ ⑪ 左側 Xk9f2 應印沿革行" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+if has "$out" '（沿革）板 NOTES（LS-1 / 實作註記 · Handoff Notes）／節點 T1／舊 id Xk9f2'; then echo "✓ ⑪ 左側 Xk9f2 印沿革行"; else echo "✗ ⑪ 左側 Xk9f2 應印沿革行" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
 # ⑧ --head-sha：在 pr-dead 之後再開一個 commit 模擬 merge ref；指定 PR head＝pr-dead 的 commit 仍紅；指向修正後的 commit 綠
 dead_head="$(g rev-parse pr-dead)"
@@ -128,7 +132,7 @@ expect 2 '⑧ --head-sha 缺值 → exit 2' '--head-sha 缺值' '' design/little
 expect 2 '⑨ 缺 --base → exit 2' '缺 --base' '' design/littlesprout.pen
 expect 2 '⑨ 找不到 .pen → exit 2' '找不到' '' design/nope.pen --base "$base_ref"
 out="$(cd "$work" && bash "$check" "$R/design/littlesprout.pen" --base "$base_ref" 2>&1)"; got=$?
-if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '不在 git 目錄內'; then echo "✓ ⑨ 非 git 目錄 → exit 2"; else echo "✗ ⑨ 非 git 目錄（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+if [ "$got" -eq 2 ] && has "$out" '不在 git 目錄內'; then echo "✓ ⑨ 非 git 目錄 → exit 2"; else echo "✗ ⑨ 非 git 目錄（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
 # ───── LS-202：署名年齡片語 NBSP（cmp/Card Album／cmp/Card Diary 的署名文字，歲／個月 前空白只准 U+00A0／U+2060／換行） ─────
 # 合成 cmp/Card Album（reusable，Signature Line text wQVzs）＋兩塊板各一個實例（descendants 覆寫 wQVzs content）。JSON 內用 \u 轉義寫
@@ -150,7 +154,7 @@ pen202 "$OKSIG" '小安 · 2⁠歲 3\n個⁠月' '舊板' '小明 · 8 個⁠�
 commit_pen 'design(pen): LS-202 r1 改卡片板署名（NBSP／WJ／換行）'
 expect 0 '⑫ 觸碰板的署名空白全為 U+00A0／U+2060／換行 → 綠；未觸碰板的既有 U+0020 列（舊債）不擋' '署名 NBSP 違規 0（舊債 1）' '✗ 署名 NBSP' design/littlesprout.pen --base "$base2_ref"
 out="$(cd "$R" && bash "$check" design/littlesprout.pen --base "$base2_ref" 2>&1)"
-if printf '%s' "$out" | grep -qF '（舊債）署名 NBSP：板 OLDB（舊板）／實例 OLDi1 override wQVzs：「小明 · 8 個⁠月」個⁠月 前 U+0020'; then echo "✓ ⑫ 舊債行點名板／實例／override／codepoint"; else echo "✗ ⑫ 舊債行格式" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
+if has "$out" '（舊債）署名 NBSP：板 OLDB（舊板）／實例 OLDi1 override wQVzs：「小明 · 8 個⁠月」個⁠月 前 U+0020'; then echo "✓ ⑫ 舊債行點名板／實例／override／codepoint"; else echo "✗ ⑫ 舊債行格式" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 
 # ⑬ U+0020：本 PR 把 CARDB 覆寫寫成一般空白 → 紅，印板／實例／override／codepoint
 g checkout -q -b pr-nbsp-space "$base2_ref"

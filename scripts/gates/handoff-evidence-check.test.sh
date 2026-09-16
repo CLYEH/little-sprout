@@ -135,13 +135,17 @@ git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q -
 # 這個檔案刻意留在 $work（$R 的上層目錄），不進 $R 的 git repo。
 printf '#!/bin/bash\necho outside\n' > "$work/outside-escape.sh"
 
+# LS-301：內部比對改用共用庫（scripts/gates/lib/selftest-helpers.sh）的 has()，語意不變（原本是
+# `printf | grep -qF`，在 pipefail 下有 SIGPIPE 誤判風險，LS-267／LS-270）。
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
+
 # expect <期望 exit code> <樣本名稱> <輸出必含字串|''> <handoff 內容>
 expect() {
   local want=$1 name=$2 must=$3 body=$4 out got
   printf '%s' "$body" > "$work/handoff.md"
   out="$(bash "$check" "$work/handoff.md" --repo "$R" 2>&1)"
   got=$?
-  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; }; then
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; }; then
     echo "✓ ${name}"
   else
     echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}，實得 ${got}）" >&2
@@ -520,14 +524,14 @@ expect 1 '②s（R2，a7e72913 B1）「python3 結構 diff（節點總數含巢�
 
 # ==== ③ --help／參數 ====
 out3a="$(bash "$check" --help 2>&1)"; got3a=$?
-if [ "$got3a" -eq 0 ] && printf '%s' "$out3a" | grep -qF -- '用法：'; then
+if [ "$got3a" -eq 0 ] && has "$out3a" '用法：'; then
   echo "✓ ③a --help → exit 0，印用法"
 else
   echo "✗ ③a --help（期望 exit 0，實得 ${got3a}）" >&2; printf '%s\n' "$out3a" | sed 's/^/    /' >&2; fail=1
 fi
 
 out3b="$(bash "$check" 2>&1)"; got3b=$?
-if [ "$got3b" -eq 2 ] && printf '%s' "$out3b" | grep -qF -- '用法'; then
+if [ "$got3b" -eq 2 ] && has "$out3b" '用法'; then
   echo "✓ ③b 缺檔參數 → exit 2"
 else
   echo "✗ ③b 缺檔參數（期望 exit 2，實得 ${got3b}）" >&2; printf '%s\n' "$out3b" | sed 's/^/    /' >&2; fail=1
@@ -583,8 +587,8 @@ out_real1="$(bash "$check" "$work/ls191-c541cd06.md" --repo "$R" 2>&1)"; rc_real
 # R2（merge-review R1 F2）：不只斷 rc==1——斷「哪一行、什麼原因」的具體 finding 訊息原文，且斷言
 # 「只有這一條」（不再誤判第 15 行「沒有獨立 `*IPadTests` 類別」這句正確的否定陳述，R1 F1(b)）。
 if [ "$rc_real1" -eq 1 ] \
-   && printf '%s' "$out_real1" | grep -qF '✗ handoff-evidence-check：第 11 行起的列項缺『怎麼驗』證據' \
-   && ! printf '%s' "$out_real1" | grep -qF 'IPadTests'; then
+   && has "$out_real1" '✗ handoff-evidence-check：第 11 行起的列項缺『怎麼驗』證據' \
+   && ! has "$out_real1" 'IPadTests'; then
   echo "✓ ④a 真實樣本 LS-191 QA comment c541cd06 → exit 1，斷言訊息原文確實是「第 11 行起的列項缺『怎麼驗』證據」（項 3「iPhone 標準字級」），且不再誤判第 15 行 IPadTests 否定句（R1 F1(b) 已修）"
 else
   echo "✗ ④a 真實樣本 c541cd06 應紅在第 11 行、且不含 IPadTests 誤判（期望 exit 1，實得 ${rc_real1}）" >&2
@@ -728,7 +732,7 @@ if grep -qF 'skip = False  # HANDOFF-SKIP-CHECK' "$mut_skip"; then
 '
   printf '%s' "$glob_body" > "$work/glob.md"
   out_glob="$(python3 "$mut_skip" "$work/glob.md" --repo "$R" 2>&1)"; rc_glob=$?
-  if [ "$rc_glob" -eq 1 ] && printf '%s' "$out_glob" | grep -qF 'NoSuchIPadTests'; then
+  if [ "$rc_glob" -eq 1 ] && has "$out_glob" 'NoSuchIPadTests'; then
     echo "✓ ⑥ mutant（拿掉 glob 跳過）：①k 的正樣本改判紅（NoSuchIPadTests 被當成引用驗存在）——證明 glob 判準是原因"
   else
     echo "✗ ⑥ mutant（glob）未如預期翻轉（實得 exit ${rc_glob}）" >&2
@@ -741,7 +745,7 @@ if grep -qF 'skip = False  # HANDOFF-SKIP-CHECK' "$mut_skip"; then
 '
   printf '%s' "$neg_body" > "$work/neg.md"
   out_neg="$(python3 "$mut_skip" "$work/neg.md" --repo "$R" 2>&1)"; rc_neg=$?
-  if [ "$rc_neg" -eq 1 ] && printf '%s' "$out_neg" | grep -qF 'NoSuchWeirdTests'; then
+  if [ "$rc_neg" -eq 1 ] && has "$out_neg" 'NoSuchWeirdTests'; then
     echo "✓ ⑥ mutant（拿掉否定詞跳過）：①l 的正樣本改判紅——證明否定詞判準是原因"
   else
     echo "✗ ⑥ mutant（否定詞）未如預期翻轉（實得 exit ${rc_neg}）" >&2
@@ -754,7 +758,7 @@ if grep -qF 'skip = False  # HANDOFF-SKIP-CHECK' "$mut_skip"; then
 '
   printf '%s' "$mut_ctx_body" > "$work/mutctx.md"
   out_mutctx="$(python3 "$mut_skip" "$work/mutctx.md" --repo "$R" 2>&1)"; rc_mutctx=$?
-  if [ "$rc_mutctx" -eq 1 ] && printf '%s' "$out_mutctx" | grep -qF 'BogusMutationOnlyTests'; then
+  if [ "$rc_mutctx" -eq 1 ] && has "$out_mutctx" 'BogusMutationOnlyTests'; then
     echo "✓ ⑥ mutant（拿掉 mutation 語境跳過）：①m 的正樣本改判紅——證明 mutation 語境判準是原因"
   else
     echo "✗ ⑥ mutant（mutation 語境）未如預期翻轉（實得 exit ${rc_mutctx}）" >&2
@@ -805,7 +809,7 @@ if grep -qF 'PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/
 - 條件 1：核對過 `some/config.json` 的內容
 ' > "$work/pathext.md"
   out_pathext="$(python3 "$mut_path" "$work/pathext.md" --repo "$R" 2>&1)"; rc_pathext=$?
-  if [ "$rc_pathext" -eq 1 ] && printf '%s' "$out_pathext" | grep -qF '缺『怎麼驗』證據'; then
+  if [ "$rc_pathext" -eq 1 ] && has "$out_pathext" '缺『怎麼驗』證據'; then
     echo "✓ ⑧ mutant（拿掉新路徑副檔名）：①n 型樣本改判紅——證明是這幾個副檔名在放行"
   else
     echo "✗ ⑧ mutant 未如預期翻轉（實得 exit ${rc_pathext}）" >&2
@@ -877,7 +881,7 @@ if grep -qF 'clause_end = start  # HANDOFF-NEGATION-AFTER' "$mut_negafter"; then
 - 條件 1：`FooBarTests` 這個類別不存在，改用 `FooTests` 驗證
 ' > "$work/negafter.md"
   out_negafter="$(python3 "$mut_negafter" "$work/negafter.md" --repo "$R" 2>&1)"; rc_negafter=$?
-  if [ "$rc_negafter" -eq 1 ] && printf '%s' "$out_negafter" | grep -qF 'FooBarTests'; then
+  if [ "$rc_negafter" -eq 1 ] && has "$out_negafter" 'FooBarTests'; then
     echo "✓ ⑪ mutant（否定詞只看之前）：①q 的正樣本改判紅（FooBarTests 被當成引用）——證明「候選之後」判準是原因"
   else
     echo "✗ ⑪ mutant 未如預期翻轉（實得 exit ${rc_negafter}）" >&2
@@ -929,7 +933,7 @@ if grep -qF 'return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or CO
 '
   printf '%s' "$ts_only_body" > "$work/tsonly.md"
   out_tsonly="$(python3 "$mut_noanchor" "$work/tsonly.md" --repo "$R" 2>&1)"; rc_tsonly=$?
-  if [ "$rc_tsonly" -eq 1 ] && printf '%s' "$out_tsonly" | grep -qF '缺『怎麼驗』證據'; then
+  if [ "$rc_tsonly" -eq 1 ] && has "$out_tsonly" '缺『怎麼驗』證據'; then
     echo "✓ ⑬ mutant（拿掉 PATH_ANCHOR_RE 舉證）：①r 型樣本改判紅——證明白名單路徑舉證確實是 PATH_ANCHOR_RE 這條規則造成的"
   else
     echo "✗ ⑬ mutant 未如預期翻轉（實得 exit ${rc_tsonly}）" >&2
@@ -982,7 +986,7 @@ if grep -qF 'skip = is_command_invocation_candidate(block, m.start())  # HANDOFF
 '
   printf '%s' "$neg_path_body" > "$work/negpath.md"
   out_negpath="$(python3 "$mut_nopathskip" "$work/negpath.md" --repo "$R" 2>&1)"; rc_negpath=$?
-  if [ "$rc_negpath" -eq 1 ] && printf '%s' "$out_negpath" | grep -qF '20990101000000_x.sql'; then
+  if [ "$rc_negpath" -eq 1 ] && has "$out_negpath" '20990101000000_x.sql'; then
     echo "✓ ⑮ mutant（否定詞）：①ad 的正樣本改判紅（20990101000000_x.sql 被當成引用驗存在）——證明否定詞判準是原因"
   else
     echo "✗ ⑮ mutant（否定詞）未如預期翻轉（實得 exit ${rc_negpath}）" >&2
@@ -995,7 +999,7 @@ if grep -qF 'skip = is_command_invocation_candidate(block, m.start())  # HANDOFF
 '
   printf '%s' "$mut_path_body" > "$work/mutpath.md"
   out_mutpath="$(python3 "$mut_nopathskip" "$work/mutpath.md" --repo "$R" 2>&1)"; rc_mutpath=$?
-  if [ "$rc_mutpath" -eq 1 ] && printf '%s' "$out_mutpath" | grep -qF '99_nonexistent_mutant.sql'; then
+  if [ "$rc_mutpath" -eq 1 ] && has "$out_mutpath" '99_nonexistent_mutant.sql'; then
     echo "✓ ⑮ mutant（mutation 語境）：①ae 的正樣本改判紅——證明 mutation 語境判準是原因"
   else
     echo "✗ ⑮ mutant（mutation 語境）未如預期翻轉（實得 exit ${rc_mutpath}）" >&2
@@ -1097,7 +1101,7 @@ if grep -qF 'PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|scratchpad/|evidence/
 - 條件 1：見 `scripts/design/overflow-scan.test.js` 內新增的三條測試案例
 ' > "$work/mut18.md"
   out18="$(python3 "$mut_notestjs" "$work/mut18.md" --repo "$R" 2>&1)"; rc18=$?
-  if [ "$rc18" -eq 1 ] && printf '%s' "$out18" | grep -qF '缺『怎麼驗』證據'; then
+  if [ "$rc18" -eq 1 ] && has "$out18" '缺『怎麼驗』證據'; then
     echo "✓ ⑱ mutant（拿掉 .test.js）：①ak3 的正樣本改判紅——證明這個副檔名是放行原因"
   else
     echo "✗ ⑱ mutant 未如預期翻轉（實得 exit ${rc18}）" >&2

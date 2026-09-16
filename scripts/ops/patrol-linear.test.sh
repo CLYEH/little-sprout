@@ -23,6 +23,13 @@ plsh="${root}/scripts/ops/patrol-linear.sh"
 fail=0
 command -v python3 >/dev/null 2>&1 || { echo "✗ patrol-linear 自測需要 python3" >&2; exit 1; }
 
+# LS-301：本檔散落多處 `printf | grep -qF` 改用共用庫（scripts/gates/lib/selftest-helpers.sh）的
+# has()（here-string，避免 pipefail 下的 SIGPIPE 誤判），語意不變。本檔沒有自己的 ok()／fail() 函式
+# （只有 `fail=0` 旗標變數），這裡補一個同名 fail() 函式（bash 函式與變數不同命名空間，`fail=1` 賦值
+# 與 `fail "msg"` 呼叫不衝突）讓共用庫的 expect_has 失敗時仍會設到這個旗標。
+fail() { echo "✗ $1" >&2; fail=1; }
+source "${root}/scripts/gates/lib/selftest-helpers.sh"
+
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
@@ -165,7 +172,7 @@ export SIMCTL_LIST_JSON='{"devices":{}}'   # Booted 模擬器段沿用 patrol.sh
 # ---- ① 無 LINEAR_API_KEY → 略過、exit 0、不呼叫 curl ----
 : > "$CURL_STUB_LOG"
 out="$(bash "$plsh" --repo "$repo_no_token" 2>&1)"; rc=$?
-if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -qF '略過（無 LINEAR_API_KEY）'; then
+if [ "$rc" -eq 0 ] && has "$out" '略過（無 LINEAR_API_KEY）'; then
   echo "✓ ① 無 LINEAR_API_KEY → exit 0 且印略過"
 else
   echo "✗ ① 應 exit 0 且印略過（實得 ${rc}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
@@ -176,7 +183,7 @@ else
   echo "✓ ① 略過時不呼叫 curl"
 fi
 out_json="$(bash "$plsh" --repo "$repo_no_token" --json 2>&1)"
-if printf '%s' "$out_json" | grep -qF '"skipped":true'; then echo "✓ ① --json 模式印 skipped:true"; else echo "✗ ① --json 應印 skipped:true（實得：${out_json}）" >&2; fail=1; fi
+if has "$out_json" '"skipped":true'; then echo "✓ ① --json 模式印 skipped:true"; else echo "✗ ① --json 應印 skipped:true（實得：${out_json}）" >&2; fail=1; fi
 
 # ---- ② 正常跑一輪（有 token）：--json 拿完整結構，逐項斷言 ----
 : > "$CURL_STUB_LOG"
@@ -262,7 +269,7 @@ print("OK" if ok else "FAIL")
 PYEOF
 )"
 printf '%s\n' "$py_out"
-if printf '%s' "$py_out" | tail -1 | grep -qx OK; then :; else fail=1; fi
+if [ "$(tail -1 <<<"$py_out")" = OK ]; then :; else fail=1; fi
 
 # ---- ③ 分頁：兩頁 issues 都被呼叫（after=null 與 after=CURSOR1 各一次）、cycles／documents 各呼叫過 ----
 n_after_null=$(grep -cF '"after": null' "$CURL_STUB_LOG")
@@ -275,27 +282,27 @@ if [ "$n_docs" -ge 1 ]; then echo "✓ ③ documents 查詢有呼叫（cycle 對
 
 # ---- ④ human／--brief 模式跑得動、不炸（格式細節已由 --json 斷言涵蓋，這裡只驗不crash＋含動作清單）----
 out_human="$(bash "$plsh" --repo "$repo" 2>&1)"; rc=$?
-if [ "$rc" -eq 0 ] && printf '%s' "$out_human" | grep -qF '動作清單'; then echo "✓ ④ human 模式 exit 0 且含動作清單段"; else echo "✗ ④ human 模式異常（exit ${rc}）" >&2; printf '%s\n' "$out_human" | sed 's/^/    /' >&2; fail=1; fi
+if [ "$rc" -eq 0 ] && has "$out_human" '動作清單'; then echo "✓ ④ human 模式 exit 0 且含動作清單段"; else echo "✗ ④ human 模式異常（exit ${rc}）" >&2; printf '%s\n' "$out_human" | sed 's/^/    /' >&2; fail=1; fi
 out_brief="$(bash "$plsh" --repo "$repo" --brief 2>&1)"; rc=$?
-if [ "$rc" -eq 0 ] && printf '%s' "$out_brief" | grep -qF 'save_issue LS-204 state=Ready cycle=5'; then echo "✓ ④ --brief 模式印動作清單（含 save_issue LS-204）"; else echo "✗ ④ --brief 模式異常（exit ${rc}）" >&2; printf '%s\n' "$out_brief" | sed 's/^/    /' >&2; fail=1; fi
+if [ "$rc" -eq 0 ] && has "$out_brief" 'save_issue LS-204 state=Ready cycle=5'; then echo "✓ ④ --brief 模式印動作清單（含 save_issue LS-204）"; else echo "✗ ④ --brief 模式異常（exit ${rc}）" >&2; printf '%s\n' "$out_brief" | sed 's/^/    /' >&2; fail=1; fi
 
 # ---- ④b R1 F1：human／--brief 的 lane 表五欄（上限／在飛／候補／待Spec／待結構）與 cycle 一行
 #        （編號／剩餘天數／票數 完成/總數）都要印出來——不是只在 --json 才有 ----
-has_in() { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✓ $1"; else echo "✗ ${1}（應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
-has_in '④b human：cycle 一行含編號與票數 完成/總數' "$out_human" 'current cycle：5（剩'
-has_in '④b human：cycle 一行含票數 2/4 完成' "$out_human" '票數 2/4 完成'
-has_in '④b human：lane:harness 行含待 Spec（LS-206）' "$out_human" '待Spec：LS-206'
-has_in '④b human：lane:harness 行含待結構（LS-207）' "$out_human" '待結構：LS-207'
-has_in '④b --brief：也印 Lane 狀態表與待 Spec／待結構' "$out_brief" '待Spec：LS-206'
-has_in '④b --brief：cycle 一行同樣在（不是只有 --json 才有）' "$out_brief" 'current cycle：5（剩'
-has_in '④b R1 I2：human lane:backend 候補標示 cycle 外需 scope+' "$out_human" 'LS-211（cycle 外，取第一張需 scope+）'
-has_in '④b R1 I2：--brief 同樣標示 cycle 外 scope+' "$out_brief" 'LS-211（cycle 外，取第一張需 scope+）'
+# LS-301：has_in() 改用檔頭已 source 的共用庫 expect_has，語意不變。
+expect_has "$out_human" 'current cycle：5（剩' '④b human：cycle 一行含編號與票數 完成/總數'
+expect_has "$out_human" '票數 2/4 完成' '④b human：cycle 一行含票數 2/4 完成'
+expect_has "$out_human" '待Spec：LS-206' '④b human：lane:harness 行含待 Spec（LS-206）'
+expect_has "$out_human" '待結構：LS-207' '④b human：lane:harness 行含待結構（LS-207）'
+expect_has "$out_brief" '待Spec：LS-206' '④b --brief：也印 Lane 狀態表與待 Spec／待結構'
+expect_has "$out_brief" 'current cycle：5（剩' '④b --brief：cycle 一行同樣在（不是只有 --json 才有）'
+expect_has "$out_human" 'LS-211（cycle 外，取第一張需 scope+）' '④b R1 I2：human lane:backend 候補標示 cycle 外需 scope+'
+expect_has "$out_brief" 'LS-211（cycle 外，取第一張需 scope+）' '④b R1 I2：--brief 同樣標示 cycle 外 scope+'
 
 # ---- ⑤ 參數錯誤 fail closed ----
 out="$(bash "$plsh" --repo 2>&1)"; rc=$?
-if [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -qF -- '--repo 缺值'; then echo "✓ ⑤ --repo 缺值 → exit 2"; else echo "✗ ⑤ --repo 缺值應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+if [ "$rc" -eq 2 ] && has "$out" '--repo 缺值'; then echo "✓ ⑤ --repo 缺值 → exit 2"; else echo "✗ ⑤ --repo 缺值應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 out="$(bash "$plsh" --bogus 2>&1)"; rc=$?
-if [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -qF '未知參數'; then echo "✓ ⑤ 未知參數 → exit 2"; else echo "✗ ⑤ 未知參數應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+if [ "$rc" -eq 2 ] && has "$out" '未知參數'; then echo "✓ ⑤ 未知參數 → exit 2"; else echo "✗ ⑤ 未知參數應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 out="$(bash "$plsh" --repo "$work/nope" 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ]; then echo "✓ ⑤ --repo 不存在 → exit 2"; else echo "✗ ⑤ --repo 不存在應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 
@@ -328,7 +335,7 @@ check_fail_mode() {
     printf '%s\n' "$out" | sed 's/^/    /' >&2
     fail=1
   fi
-  if printf '%s' "$out" | grep -qF "$want_substr"; then
+  if has "$out" "$want_substr"; then
     echo "✓ ⑥ ${label} 訊息含「${want_substr}」（非 Traceback，斷言有鑑別力）"
   else
     echo "✗ ⑥ ${label} 訊息應含「${want_substr}」（可能只是巧合 exit 1，非預期的 fail-loud 路徑）" >&2
@@ -369,7 +376,7 @@ grep -qF 'test-token-not-real' "$CURL_STUB_LOG" && { echo "✗ ⑥b token 出現
 out_closed_nokey="$(bash "$plsh" --closed 90 --repo "$repo_no_token" 2>"$work/stderr_closed_nokey.log")"; rc=$?
 if [ "$rc" -eq 3 ] && [ -z "$out_closed_nokey" ] && grep -qF '略過（無 LINEAR_API_KEY）' "$work/stderr_closed_nokey.log"; then echo "✓ ⑥b 無 key → exit 3、stdout 空、stderr 說略過"; else echo "✗ ⑥b 無 key 應 exit 3 且 stdout 空（實得 rc=${rc}、stdout=${out_closed_nokey}）" >&2; fail=1; fi
 out_closed_bad="$(bash "$plsh" --closed '90,abc' --repo "$repo" 2>&1)"; rc=$?
-if [ "$rc" -eq 2 ] && printf '%s' "$out_closed_bad" | grep -qF '票號數字'; then echo "✓ ⑥b 票號格式錯 → exit 2"; else echo "✗ ⑥b 票號格式錯應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+if [ "$rc" -eq 2 ] && has "$out_closed_bad" '票號數字'; then echo "✓ ⑥b 票號格式錯 → exit 2"; else echo "✗ ⑥b 票號格式錯應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 out_closed_empty="$(bash "$plsh" --closed '' --repo "$repo" 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ]; then echo "✓ ⑥b --closed 空值 → exit 2"; else echo "✗ ⑥b --closed 空值應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 
@@ -407,9 +414,9 @@ grep -qF 'test-token-not-real' "$CURL_STUB_LOG" && { echo "✗ ⑥c token 出現
 out_lane_nokey="$(bash "$plsh" --lane 188 --repo "$repo_no_token" 2>"$work/stderr_lane_nokey.log")"; rc=$?
 if [ "$rc" -eq 3 ] && [ -z "$out_lane_nokey" ] && grep -qF '略過（無 LINEAR_API_KEY）' "$work/stderr_lane_nokey.log"; then echo "✓ ⑥c 無 key → exit 3、stdout 空、stderr 說略過"; else echo "✗ ⑥c 無 key 應 exit 3（實得 rc=${rc}）" >&2; fail=1; fi
 out_lane_bad="$(bash "$plsh" --lane 188,3 --repo "$repo" 2>&1)"; rc=$?
-if [ "$rc" -eq 2 ] && printf '%s' "$out_lane_bad" | grep -qF '單一票號數字'; then echo "✓ ⑥c 逗號分隔（多票號）→ exit 2（--lane 只收單一票號）"; else echo "✗ ⑥c 多票號應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+if [ "$rc" -eq 2 ] && has "$out_lane_bad" '單一票號數字'; then echo "✓ ⑥c 逗號分隔（多票號）→ exit 2（--lane 只收單一票號）"; else echo "✗ ⑥c 多票號應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 out_lane_bad2="$(bash "$plsh" --lane abc --repo "$repo" 2>&1)"; rc=$?
-if [ "$rc" -eq 2 ] && printf '%s' "$out_lane_bad2" | grep -qF '單一票號數字'; then echo "✓ ⑥c 非數字 → exit 2"; else echo "✗ ⑥c 非數字應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+if [ "$rc" -eq 2 ] && has "$out_lane_bad2" '單一票號數字'; then echo "✓ ⑥c 非數字 → exit 2"; else echo "✗ ⑥c 非數字應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 out_lane_empty="$(bash "$plsh" --lane '' --repo "$repo" 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ]; then echo "✓ ⑥c --lane 空值 → exit 2"; else echo "✗ ⑥c --lane 空值應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 
@@ -476,7 +483,7 @@ else
   printf '%s\n' "$out_d" | sed 's/^/    /' >&2
   fail=1
 fi
-if printf '%s' "$out_d" | grep -qF 'Cycle 9 剩'; then
+if has "$out_d" 'Cycle 9 剩'; then
   echo "✓ ⑦ R1 F5：cycle 對帳 (d) 命中（剩 <24h）"
 else
   echo "✗ ⑦ cycle 對帳 (d) 應命中（剩 <24h）" >&2
@@ -685,22 +692,22 @@ print("OK" if ok else "FAIL")
 PYEOF
 )"
 printf '%s\n' "$py_none"
-if printf '%s' "$py_none" | tail -1 | grep -qx OK; then :; else fail=1; fi
-if printf '%s' "$out_none_json" | grep -qF 'cycle=?'; then
+if [ "$(tail -1 <<<"$py_none")" = OK ]; then :; else fail=1; fi
+if has "$out_none_json" 'cycle=?'; then
   echo "✗ ⑨ JSON 輸出不應出現 cycle=?（不可執行的動作字面）" >&2; fail=1
 else
   echo "✓ ⑨ JSON 輸出不含 cycle=?"
 fi
 
 out_none_human="$(PATH="$work/bin_none:$PATH" bash "$plsh" --repo "$repo_none" 2>&1)"; rc=$?
-if [ "$rc" -eq 0 ] && printf '%s' "$out_none_human" | grep -qF 'current cycle：無法判定'; then
+if [ "$rc" -eq 0 ] && has "$out_none_human" 'current cycle：無法判定'; then
   echo "✓ ⑨ human 模式印「current cycle：無法判定」"
 else
   echo "✗ ⑨ human 模式應印「current cycle：無法判定」（exit ${rc}）" >&2
   printf '%s\n' "$out_none_human" | sed 's/^/    /' >&2
   fail=1
 fi
-if printf '%s' "$out_none_human" | grep -qF 'cycle=?'; then
+if has "$out_none_human" 'cycle=?'; then
   echo "✗ ⑨ human 輸出不應出現 cycle=?" >&2; fail=1
 else
   echo "✓ ⑨ human 輸出不含 cycle=?"
@@ -877,7 +884,7 @@ print("OK" if ok else "FAIL")
 PYEOF
 )"
 printf '%s\n' "$py_ot1"
-if printf '%s' "$py_ot1" | tail -1 | grep -qx OK; then :; else fail=1; fi
+if [ "$(tail -1 <<<"$py_ot1")" = OK ]; then :; else fail=1; fi
 
 state_file="$repo_ot/.claude/patrol-state.json"
 if [ -f "$state_file" ] && python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); s=d["open_ticket_empty_rounds"]; sys.exit(0 if s["lane:ui"]==1 and s["lane:design"]==0 else 1)' "$state_file"; then
@@ -898,10 +905,10 @@ fi
 # human 模式：lane 表多兩欄（待Design／hold:user 註明使用者裁決）、第 3 段與動作清單都印開票行
 out_ot_h="$(PATH="$work/bin_ot:$PATH" bash "$plsh" --repo "$repo_ot" 2>&1)"; rc=$?
 if [ "$rc" -ne 0 ]; then echo "✗ ⑩ human 模式應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_ot_h" | sed 's/^/    /' >&2; fail=1; fi
-has_in '⑩ human：lane 表 hold:user 欄註明使用者裁決' "$out_ot_h" 'hold:user：LS-973（使用者裁決）'
-has_in '⑩ human：lane 表待Design 欄' "$out_ot_h" '待Design：LS-970, LS-971, LS-974, LS-975'
-has_in '⑩ human：動作清單含 ui 開票行' "$out_ot_h" '開票：lane:ui'
-if printf '%s' "$out_ot_h" | grep -qF '開票：lane:design'; then echo "✗ ⑩ human：design lane 有在飛不應印開票" >&2; fail=1; else echo "✓ ⑩ human：design lane 有在飛不印開票"; fi
+expect_has "$out_ot_h" 'hold:user：LS-973（使用者裁決）' '⑩ human：lane 表 hold:user 欄註明使用者裁決'
+expect_has "$out_ot_h" '待Design：LS-970, LS-971, LS-974, LS-975' '⑩ human：lane 表待Design 欄'
+expect_has "$out_ot_h" '開票：lane:ui' '⑩ human：動作清單含 ui 開票行'
+if has "$out_ot_h" '開票：lane:design'; then echo "✗ ⑩ human：design lane 有在飛不應印開票" >&2; fail=1; else echo "✓ ⑩ human：design lane 有在飛不印開票"; fi
 
 # 附加查詢失敗 fail-soft：comments 查詢回 GraphQL errors → 報表仍 exit 0、--json 仍是合法 JSON（stderr 不外漏）、
 # harness 開票行註明查詢失敗、其他 lane 不受影響
@@ -1000,7 +1007,7 @@ print("OK" if ok else "FAIL")
 PYEOF
 )"
 printf '%s\n' "$py_neg"
-if printf '%s' "$py_neg" | tail -1 | grep -qx OK; then :; else fail=1; fi
+if [ "$(tail -1 <<<"$py_neg")" = OK ]; then :; else fail=1; fi
 
 # ---- ⑪（LS-267／LS-239 R3）§4-b cron 模板的過濾式必須留得住動作清單／lane 表／cycle 一行 ----
 # orchestrator 巡檢改成自己直接跑 `patrol.sh 40 --linear` 再過濾進 context；樣式**直接從
@@ -1029,7 +1036,7 @@ else
   else
     echo "✗ ⑪(a) 動作清單有行不含 →（會被 §4-b 過濾式丟掉）：" >&2; printf '%s\n' "$bad11" | sed 's/^/    /' >&2; fail=1
   fi
-  miss11=$(printf '%s\n' "$act11" | while IFS= read -r l; do printf '%s\n' "$keep11" | grep -qF -- "$l" || printf '%s\n' "$l"; done)
+  miss11=$(printf '%s\n' "$act11" | while IFS= read -r l; do has "$keep11" "$l" || printf '%s\n' "$l"; done)
   if [ -z "$miss11" ]; then
     echo "✓ ⑪(a) 動作清單每一行實際通過過濾"
   else
@@ -1041,12 +1048,12 @@ fi
 lane11=$(printf '%s\n' "$out11" | grep -F '上限' | grep -F '在飛')
 if [ -z "$lane11" ]; then
   echo "✗ ⑪(b) 找不到 lane 狀態表，斷言會空跑" >&2; fail=1
-elif printf '%s\n' "$lane11" | grep -qv 'lane:'; then
+elif grep -qv 'lane:' <<<"$lane11"; then
   echo "✗ ⑪(b) lane 狀態表有行不含 lane:（會被過濾掉）：" >&2; printf '%s\n' "$lane11" | grep -v 'lane:' | sed 's/^/    /' >&2; fail=1
 else
   echo "✓ ⑪(b) lane 狀態表 $(printf '%s\n' "$lane11" | wc -l | tr -d ' ') 行全部含 lane:，且過濾後仍在（$(printf '%s\n' "$keep11" | grep -cF '上限') 行）"
 fi
-if printf '%s\n' "$keep11" | grep -qF 'current cycle'; then
+if has "$keep11" 'current cycle'; then
   echo "✓ ⑪(c) cycle 一行含 current cycle、過濾後仍在"
 else
   echo "✗ ⑪(c) cycle 一行沒通過過濾" >&2; printf '%s\n' "$out11" | grep -F 'cycle' | sed 's/^/    /' >&2; fail=1
@@ -1057,7 +1064,7 @@ fi
 #     (a)(b)、開票結構 (a)-(e)、QA 讀不到…）在定義上無感，reviewer R1 M1 實跑抓到整段被吞。
 lost11=$(printf '%s\n' "$out11" | grep -v '^== ' | grep -v '^[[:space:]]*$' \
   | grep -vE '：無$|：ok$|（無異常）|（無待執行動作）|（無候補）' \
-  | while IFS= read -r l; do printf '%s\n' "$keep11" | grep -qF -- "$l" || printf '%s\n' "$l"; done)
+  | while IFS= read -r l; do has "$keep11" "$l" || printf '%s\n' "$l"; done)
 if [ -z "$lost11" ]; then
   echo "✓ ⑪(e) 全稱：human 段所有「非『無／ok』結論行」都通過過濾（$(printf '%s\n' "$out11" | grep -v '^== ' | grep -vE '：無$|：ok$|（無異常）|（無待執行動作）|（無候補）|^[[:space:]]*$' | wc -l | tr -d ' ') 行）"
 else
@@ -1077,7 +1084,7 @@ else
   keep11e=$(printf '%s\n' "$out11e" | bash "$pfilter11" 2>/dev/null)
   lost11e=$(printf '%s\n' "$out11e" | grep -v '^== ' | grep -v '^[[:space:]]*$' \
     | grep -vE '：無$|：ok$|（無異常）|（無待執行動作）|（無候補）' \
-    | while IFS= read -r l; do printf '%s\n' "$keep11e" | grep -qF -- "$l" || printf '%s\n' "$l"; done)
+    | while IFS= read -r l; do has "$keep11e" "$l" || printf '%s\n' "$l"; done)
   if [ -n "$lost11e" ]; then
     echo "✓ ⑪(e2) mutant（mark() 不補 ⚠）：出現被過濾吞掉的結論行（如「$(printf '%s' "$lost11e" | head -1 | cut -c1-56)…」）——證明 (e) 的綠來自 mark()"
   else
@@ -1089,7 +1096,7 @@ fi
 #     （失敗情境：.env 過期／換機沒帶 → Linear 半段整段沒跑，orchestrator 卻只看到 git 半段，靜默停擺）
 out11f="$(bash "$plsh" --repo "$repo_no_token" 2>&1)"
 keep11f=$(printf '%s\n' "$out11f" | bash "$pfilter11" 2>/dev/null)
-if printf '%s\n' "$keep11f" | grep -qF '略過（無 LINEAR_API_KEY）'; then
+if has "$keep11f" '略過（無 LINEAR_API_KEY）'; then
   echo "✓ ⑪(f) 無 LINEAR_API_KEY 的略過行通過過濾（不會整段靜默消失）"
 else
   echo "✗ ⑪(f) 無 LINEAR_API_KEY 的略過行被過濾掉了——Linear 半段沒跑卻沒有任何訊號" >&2
@@ -1103,7 +1110,8 @@ cp -R "${root}/scripts" "$mutdir11g/scripts"
 sed 's/echo "⚠ 巡檢（Linear 半段）：略過（無 LINEAR_API_KEY）/echo "巡檢（Linear 半段）：略過（無 LINEAR_API_KEY）/' \
   "${root}/scripts/ops/patrol-linear.sh" > "$mutdir11g/scripts/ops/patrol-linear.sh"
 out11g="$(bash "$mutdir11g/scripts/ops/patrol-linear.sh" --repo "$repo_no_token" 2>&1)"
-if printf '%s\n' "$out11g" | bash "$pfilter11" 2>/dev/null | grep -qF '略過（無 LINEAR_API_KEY）'; then
+keep11g=$(printf '%s\n' "$out11g" | bash "$pfilter11" 2>/dev/null)
+if has "$keep11g" '略過（無 LINEAR_API_KEY）'; then
   echo "✗ ⑪(g) mutant（拿掉略過行的 ⚠）仍通過過濾——(f) 的綠不是來自標記，斷言沒有牙" >&2; fail=1
 else
   echo "✓ ⑪(g) mutant（拿掉略過行的 ⚠）：該行被過濾掉——證明 (f) 釘的正是那個標記"
@@ -1119,7 +1127,7 @@ if ! grep -q '"save_issue ' "$mutdir11/scripts/ops/patrol_linear.py"; then
 else
   out11d="$(bash "$mutdir11/scripts/ops/patrol-linear.sh" --repo "$repo" 2>&1)"
   act11d=$(printf '%s\n' "$out11d" | sed -n '/動作清單/,$p' | sed '1d' | grep -v '^[[:space:]]*$')
-  if printf '%s\n' "$act11d" | grep -q '^save_issue '; then
+  if grep -q '^save_issue ' <<<"$act11d"; then
     echo "✓ ⑪(d) mutant（動作行拿掉 →）：出現不含 → 的動作行——證明 (a) 的綠來自那個標記，過濾式會把它丟掉"
   else
     echo "✗ ⑪(d) mutant 未如預期翻轉——(a) 可能零覆蓋" >&2; printf '%s\n' "$act11d" | sed 's/^/    /' >&2; fail=1
@@ -1153,7 +1161,8 @@ PYEOF
 case "$py_qa" in
   1\|*)
     echo "✓ ⑫ 狀態對照行恰好一個 ⚠（不是雙標）：${py_qa#1|}"
-    if printf '%s\n' "${py_qa#1|}" | bash "$pfilter11" 2>/dev/null | grep -qF 'QA：origin/development 不存在或讀不到'; then
+    keep_qa12=$(printf '%s\n' "${py_qa#1|}" | bash "$pfilter11" 2>/dev/null)
+    if has "$keep_qa12" 'QA：origin/development 不存在或讀不到'; then
       echo "✓ ⑫ 該行仍通過 §4-b 過濾（渲染端的 ⚠ 就夠）"
     else
       echo "✗ ⑫ 該行沒通過過濾" >&2; fail=1
@@ -1248,7 +1257,7 @@ print("OK" if ok else "FAIL")
 PYEOF
 )"
 printf '%s\n' "$py13"
-if printf '%s' "$py13" | tail -1 | grep -qx OK; then :; else fail=1; fi
+if [ "$(tail -1 <<<"$py13")" = OK ]; then :; else fail=1; fi
 
 # ⑬(b) mutation：拿掉 repo-grep 排除（把 repo_landed_pool_items 硬短路回傳空字典）→ 已落地的池項也會被列出，
 #      證明 ⑬(a) 的紅/綠來自這段機械排除，不是巧合
@@ -1591,7 +1600,7 @@ if [ "$(tail -1 <<<"$py16")" = OK ]; then :; else fail=1; fi
 
 out16h="$(PATH="$work/bin_ready:$PATH" bash "$plsh" --repo "$repo_ready" 2>&1)"; rc=$?
 if [ "$rc" -ne 0 ]; then echo "✗ ⑯ human 模式應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out16h" | sed 's/^/    /' >&2; fail=1; fi
-has_in '⑯ human：lane:design 行標「LS-997（worktree 已建，待派）」' "$out16h" 'LS-997（worktree 已建，待派）'
+expect_has "$out16h" 'LS-997（worktree 已建，待派）' '⑯ human：lane:design 行標「LS-997（worktree 已建，待派）」'
 
 # ⑯b mutation：ready_dispatch_candidate() 恆回 None（拿掉 worktree 判斷）→ LS-998 被誤拉為第二張候補並選中
 #      （重現 LS-251 事故：連兩輪誤要求再拉一張、超過 lane 上限 1）

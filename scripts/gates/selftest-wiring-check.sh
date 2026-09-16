@@ -71,6 +71,25 @@ if [ -n "$extra" ]; then
   printf '%s\n' "$extra" | sed 's/^/    /' >&2
   rc=1
 fi
+
+# LS-301（範圍 4，LS-96 池項 `89166199`）：informational——自測檔內自行定義 has()／expect()（跟
+# LS-295／LS-299 出包的那個構造同形）卻沒有 source 共用庫（scripts/gates/lib/selftest-helpers.sh），
+# 就列出來提醒（不擋 push／CI）。判準：`grep -lE '^(has|expect)\(\)'`（跟票文盤點用的 git grep 同一個
+# 正則）命中，且檔內完全沒有出現 `selftest-helpers.sh` 字樣（沒 source 就不可能出現這個字樣）。
+# 本票換過的六支（agent-tools-check／ci-wait／design-notes-check／handoff-evidence-check／
+# patrol-linear／pipefail-grep-q-check）已 source，必為 0；其餘 50 支列 LS-96 池、後續分批清倉。
+unwired=$(
+  grep -E '\.test\.sh$' "${work}/repo.txt" | while IFS= read -r f; do
+    grep -qE '^(has|expect)\(\)' "${root}/${f}" 2>/dev/null || continue
+    grep -q 'selftest-helpers\.sh' "${root}/${f}" 2>/dev/null && continue
+    printf '%s\n' "$f"
+  done
+)
+if [ -n "$unwired" ]; then
+  echo "⚠ selftest-wiring-check：以下自測自行定義 has()／expect()，尚未 source 共用庫（scripts/gates/lib/selftest-helpers.sh；informational，不擋）：" >&2
+  printf '%s\n' "$unwired" | sed 's/^/    /' >&2
+fi
+
 [ "$rc" -eq 0 ] || exit 1
 
 echo "✓ selftest-wiring-check：$(wc -l < "${work}/repo.txt" | tr -d ' ') 支自測全部掛在 ci.yml（allowlist $(wc -l < "${work}/allow.txt" | tr -d ' ') 支）"
