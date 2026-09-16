@@ -56,12 +56,14 @@ enum ImportDateGrouping {
         return groups
     }
 
+    /// merge-review R1 M4：`DateFormatter()` 建構成本高，每群各建一個——改用 `Date.FormatStyle`
+    /// （Foundation 值型別，`Sendable`，天生免疫 Swift 6 嚴格並行對可變 class 的疑慮，M5 把
+    /// `group(_:)` 移到 `Task.detached` 後這裡不再保證跑在 MainActor）取代，不需要快取實例。
     private static func dayKey(_ day: Date, calendar: Calendar) -> String {
-        let formatter = DateFormatter()
-        formatter.calendar = calendar
-        formatter.timeZone = calendar.timeZone
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: day)
+        day.formatted(
+            Date.FormatStyle(calendar: calendar, timeZone: calendar.timeZone)
+                .year().month(.twoDigits).day(.twoDigits)
+        )
     }
 }
 
@@ -74,20 +76,39 @@ enum ImportDateFormatting {
     /// 跟其他日期一視同仁，只有「日期不明」群才會出現「今天」字樣，用來標示那是系統推測值
     /// 而非 EXIF 事實，見 `unknownDateGroupLabel`）。
     static func groupHeaderLabel(for date: Date, calendar: Calendar = .current) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "zh_Hant_TW")
-        formatter.calendar = calendar
-        formatter.dateFormat = "M月d日"
-        return formatter.string(from: date)
+        monthDayFormatter.calendar = calendar
+        return monthDayFormatter.string(from: date)
     }
 
     /// C4a②：日期不明群的標題「今天（9/15）」——「今天」＋括號內確切月日，提醒使用者這是
     /// 系統推測值、可以改（`anchorDate` 是使用者目前選定的錨點日期，不一定真的是今天）。
     static func unknownDateGroupLabel(anchorDate: Date, calendar: Calendar = .current) -> String {
+        slashMonthDayFormatter.calendar = calendar
+        return "今天（\(slashMonthDayFormatter.string(from: anchorDate))）"
+    }
+
+    /// merge-review R1 M4：`DateFormatter()` 建構成本高——每張群卡標題都會呼叫這裡，改成
+    /// 共用快取實例，只在每次呼叫時更新可能變動的 `calendar`（`Calendar` 是輕量值型別，
+    /// 屬性賦值本身不貴）。`Date.FormatStyle` 試過但 zh_Hant 的 `.month().day()` 不會自動
+    /// 產出「M月d日」這種固定字面格式（實測輸出 `9/10`），這裡需要的是**固定樣板**不是
+    /// 「隨系統語言變化的日期呈現」，`DateFormatter.dateFormat` 才是對的工具。
+    ///
+    /// `nonisolated(unsafe)`：這兩個 formatter 只從 `ImportDateFormatting.groupHeaderLabel`／
+    /// `unknownDateGroupLabel` 呼叫，兩者只在 SwiftUI view body（`ImportGroupCardView`，
+    /// MainActor）呼叫，不像 `ImportDateGrouping.dayKey` 會被 M5 的 `Task.detached` 呼叫到——
+    /// 沒有真正跨執行緒同時存取的情境，標成 `nonisolated(unsafe)` 讓 Swift 6 嚴格並行檢查
+    /// 放行，不用為了型別系統而假裝需要 actor 隔離。
+    private nonisolated(unsafe) static let monthDayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "zh_Hant_TW")
-        formatter.calendar = calendar
+        formatter.dateFormat = "M月d日"
+        return formatter
+    }()
+
+    private nonisolated(unsafe) static let slashMonthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "M/d"
-        return "今天（\(formatter.string(from: anchorDate))）"
-    }
+        return formatter
+    }()
 }

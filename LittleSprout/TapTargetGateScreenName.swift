@@ -315,7 +315,7 @@ enum TapTargetGateScreenName: String {
         // 常態樣本沒有失敗群，用永遠會渲染的標題文字當 sentinel。
         case .uploadQueueSheetNormal: return .staticText("正在新增照片")
         // 自訂 nav row 標題——固定 fixture 一開畫面就渲染。
-        case .importOrganizeDefault: return .staticText("整理照片")
+        case .importOrganizeDefault: return .staticText("整理新照片")
         // 06a banner 標題——`accessState: .limited` 固定顯示。
         case .importOrganizeLimited: return .staticText("只能看到部分照片")
         // 06b 標題——無資料依賴，一開畫面就渲染。

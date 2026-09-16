@@ -15,6 +15,9 @@ struct ImportGroupCardView: View {
     let albums: [AlbumSummary]
     let maxThumbnailSlots: Int
     let thumbnailCellSize: CGFloat
+    /// LS-303 R2（merge-review R1 M1）：`nil` 時（harness／preview 無真的 `PHAsset`）縮圖格
+    /// 全部退回系統圖示佔位，見 `ImportThumbnailCell`。
+    let thumbnailProvider: ImportThumbnailProvider?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// LS-303：日期不明群的「可改日期」——`DatePicker(displayedComponents: .date)` 在
@@ -45,8 +48,8 @@ struct ImportGroupCardView: View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
             topRow
             ImportThumbnailGridView(
-                assetCount: group.assetLocalIdentifiers.count, maxSlots: maxThumbnailSlots,
-                cellSize: thumbnailCellSize
+                assetIDs: group.assetLocalIdentifiers, maxSlots: maxThumbnailSlots,
+                provider: thumbnailProvider, cellSize: thumbnailCellSize
             )
         }
     }
@@ -168,11 +171,20 @@ struct ImportGroupCardView: View {
 
     // MARK: - 已略過收合列
 
+    /// LS-303 R2（merge-review R1 i4）：日期不明群略過後仍要用 C4a②「今天（9/16）」格式，
+    /// 不能落回 C4a① 的「9月16日」——「今天」正是標示這是系統推測值的語意，略過與否不改變
+    /// 這個群本身的日期不明狀態。
+    private var dateLabel: String {
+        group.isDateUnknown
+            ? ImportDateFormatting.unknownDateGroupLabel(anchorDate: group.anchorDate)
+            : ImportDateFormatting.groupHeaderLabel(for: group.anchorDate)
+    }
+
     private var skippedRow: some View {
-        let dateLabel = ImportDateFormatting.groupHeaderLabel(for: group.anchorDate)
         let assetCount = group.assetLocalIdentifiers.count
         return HStack {
-            Text("已略過・\(dateLabel)（\(assetCount) 張）")
+            // LS-303 R2（merge-review R1 M3）：稿面 `m7ZCDg` 逐字「9月8日・8 張已略過」。
+            Text("\(dateLabel)・\(assetCount) 張已略過")
                 .appFont(.note).foregroundStyle(Color.lsTextSecondary)
             Spacer(minLength: AppSpacing.label)
             Button {

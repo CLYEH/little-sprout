@@ -18,6 +18,15 @@ struct ImportOrganizeView: View {
     let uploadCoordinator: ImportUploadCoordinator
     let accessState: PhotoLibraryAccessState
     let assetLimit: Int
+    /// LS-303 R2（merge-review R1 M1）：`nil` 時（harness／preview）縮圖格全部退回系統圖示
+    /// 佔位，見 `ImportThumbnailCell`。呼叫端（`ImportBatchFlowModifier`）在 MainActor
+    /// context 建好實例才傳進來——`ImportThumbnailProvider` 本身是 `@MainActor` class，
+    /// 不能在這個 `init`（非 async，不保證 MainActor）裡現建。
+    let thumbnailProvider: ImportThumbnailProvider?
+    /// LS-303 R2（merge-review R1 i3）：PHPicker 選取結果沒有 `itemIdentifier` 的筆數——
+    /// 不再塞假 UUID 進 `ImportPlan`（會讓主鈕 N 與摘要多算出查無此圖的筆），改成整筆捨棄
+    /// 並在畫面上提示，見 `droppedItemsReplyRow`。
+    let droppedCount: Int
 
     @State private var plan: ImportPlan
     @Environment(\.dismiss) private var dismiss
@@ -25,14 +34,22 @@ struct ImportOrganizeView: View {
 
     init(
         childrenStore: ChildrenStore, albumsStore: AlbumsStore, uploadCoordinator: ImportUploadCoordinator,
-        pickedAssets: [ImportDateGrouping.PickedAsset], accessState: PhotoLibraryAccessState, assetLimit: Int = 200
+        pickedAssets: [ImportDateGrouping.PickedAsset], entrySource: ImportEntrySource,
+        thumbnailProvider: ImportThumbnailProvider?, droppedCount: Int = 0,
+        accessState: PhotoLibraryAccessState, assetLimit: Int = 200
     ) {
         self.childrenStore = childrenStore
         self.albumsStore = albumsStore
         self.uploadCoordinator = uploadCoordinator
         self.accessState = accessState
         self.assetLimit = assetLimit
-        _plan = State(initialValue: ImportPlan(groups: ImportDateGrouping.group(pickedAssets)))
+        self.thumbnailProvider = thumbnailProvider
+        self.droppedCount = droppedCount
+        // LS-303 R2（merge-review R1 M2，orchestrator 裁決 `c997f234`）：從相簿詳情進入時
+        // 每群預設放進該相簿（可改）；其餘入口（目前只有 `.timeline`，本票無呼叫點）維持
+        // C3a「預設不放相簿」——`applyDefaultAlbum` 是純函式，見 `ImportEntrySourceTests`。
+        let groups = entrySource.applyDefaultAlbum(to: ImportDateGrouping.group(pickedAssets))
+        _plan = State(initialValue: ImportPlan(groups: groups))
     }
 
     /// harness／preview 用：已經分好組的固定 plan，不需要真的餵 `PickedAsset`（LS-303
@@ -41,13 +58,16 @@ struct ImportOrganizeView: View {
     /// 帶入固定 fixture，不受這個限制）。
     init(
         childrenStore: ChildrenStore, albumsStore: AlbumsStore, uploadCoordinator: ImportUploadCoordinator,
-        plan: ImportPlan, accessState: PhotoLibraryAccessState, assetLimit: Int = 200
+        plan: ImportPlan, accessState: PhotoLibraryAccessState, assetLimit: Int = 200,
+        thumbnailProvider: ImportThumbnailProvider? = nil
     ) {
         self.childrenStore = childrenStore
         self.albumsStore = albumsStore
         self.uploadCoordinator = uploadCoordinator
         self.accessState = accessState
         self.assetLimit = assetLimit
+        self.thumbnailProvider = thumbnailProvider
+        self.droppedCount = 0
         _plan = State(initialValue: plan)
     }
 
@@ -55,15 +75,21 @@ struct ImportOrganizeView: View {
         VStack(spacing: 0) {
             navRow
             ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.block) {
+                // merge-review R1 M4：改 `LazyVStack`——200 張分 200 群的極端情況（本票自己的
+                // `ImportDateGroupingTests.test_group_twoHundredAssets_preservesFullCountAcrossGroups`
+                // 示範過）在非 lazy 的 `VStack` 下會一次具現化 200 張群卡，開整理頁當下主執行緒
+                // 卡頓。
+                LazyVStack(alignment: .leading, spacing: AppSpacing.block) {
                     summaryHeader
+                    if droppedCount > 0 { droppedItemsReplyRow }
                     if accessState == .limited { limitedLibraryBanner }
                     rulesBanner
                     if plan.totalAssetCount >= assetLimit { limitReachedBanner }
                     ForEach($plan.groups) { $group in
                         ImportGroupCardView(
                             group: $group, children: childrenStore.activeChildren, albums: albumsStore.albums,
-                            maxThumbnailSlots: thumbnailSlots, thumbnailCellSize: 96
+                            maxThumbnailSlots: thumbnailSlots, thumbnailCellSize: 96,
+                            thumbnailProvider: thumbnailProvider
                         )
                     }
                 }
@@ -101,7 +127,7 @@ struct ImportOrganizeView: View {
             }
             .foregroundStyle(Color.lsTextPrimary)
             Spacer(minLength: AppSpacing.label)
-            Text("整理照片").appFont(.body, weight: .bold).foregroundStyle(Color.lsTextPrimary)
+            Text("整理新照片").appFont(.body, weight: .bold).foregroundStyle(Color.lsTextPrimary)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: AppSpacing.label)
             // 對齊用的隱形佔位，讓標題視覺置中（同 `AlbumDetailView` Nav Row 既有排法）。
@@ -116,6 +142,20 @@ struct ImportOrganizeView: View {
             .appFont(.lead, weight: .bold)
             .foregroundStyle(Color.lsTextPrimary)
             .padding(.top, AppSpacing.label)
+    }
+
+    /// merge-review R1 i3：`itemIdentifier` 缺失的筆數不再塞假 id 進 `ImportPlan`（會讓
+    /// 「共 N 張」比實際可匯入的張數多），改成整筆捨棄並在這裡告知使用者——同
+    /// `AlbumDetailView+Actions.skippedItemsReplyRow` 既有視覺語彙（exclamationmark.circle
+    /// ＋note 字級）。
+    private var droppedItemsReplyRow: some View {
+        HStack(spacing: AppSpacing.label) {
+            Image(systemName: "exclamationmark.circle").appIconFrame(.small)
+                .foregroundStyle(Color.lsTextPrimary)
+            Text("有 \(droppedCount) 個項目讀不到、沒有加入")
+                .appFont(.note, weight: .semibold)
+                .foregroundStyle(Color.lsTextPrimary)
+        }
     }
 
     // MARK: - Banners
@@ -137,7 +177,7 @@ struct ImportOrganizeView: View {
             Button {
                 presentLimitedLibraryPicker()
             } label: {
-                Text("管理可存取照片").appFont(.note, weight: .semibold)
+                Text("管理可存取的照片").appFont(.note, weight: .semibold)
                     .frame(minHeight: 48)
                     .contentShape(Rectangle())
             }

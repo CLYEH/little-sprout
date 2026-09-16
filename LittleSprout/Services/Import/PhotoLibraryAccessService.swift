@@ -17,8 +17,8 @@ enum PhotoLibraryAccessState: Equatable {
 }
 
 /// 對 `PHPhotoLibrary` 的最小包裝——把 `PHAuthorizationStatus`／`requestAuthorization`／
-/// `fetchAssets` 三支 API 收在一個型別裡，方便呼叫端（`AlbumDetailView+Actions`／
-/// `TimelineView+Import`）不用直接碰 Photos framework 型別。
+/// `fetchAssets` 三支 API 收在一個型別裡，方便呼叫端（`ImportBatchFlowModifier`）不用
+/// 直接碰 Photos framework 型別。
 enum PhotoLibraryAccessService {
     /// 讀權限（不彈系統對話框）。
     @MainActor
@@ -42,24 +42,48 @@ enum PhotoLibraryAccessService {
         }
     }
 
-    /// PHPicker 選取結果 → 分組用的 `ImportDateGrouping.PickedAsset`——依 `itemIdentifier`
-    /// 反查 `PHAsset.creationDate`；`.limited` 授權下若某個 identifier 不在目前的存取範圍內
-    /// （或任何原因查不到），`fetchAssets` 對那一筆就是查無結果，這裡讓它退化成
-    /// `creationDate: nil`（落入「日期不明」群，可改日期）而不是整批失敗——同一批裡有查得到
-    /// 跟查不到的混合是預期情況，不是錯誤態。
-    static func pickedAssets(for items: [PhotosPickerItem]) -> [ImportDateGrouping.PickedAsset] {
-        let identifiers = items.compactMap(\.itemIdentifier)
-        guard !identifiers.isEmpty else {
-            return items.map { .init(localIdentifier: $0.itemIdentifier ?? UUID().uuidString, creationDate: nil) }
+    /// `pickedAssetsResult(for:)` 的回傳值。
+    struct PickedAssetsResult {
+        let pickedAssets: [ImportDateGrouping.PickedAsset]
+        /// localIdentifier → `PHAsset`——供 `ImportThumbnailProvider` 要縮圖用，只含
+        /// `fetchAssets` 真的查得到的那些（`.limited` 範圍外或已刪除的照片不在裡面）。
+        let assetsByID: [String: PHAsset]
+        /// merge-review R1 i3：`itemIdentifier` 缺失（理論上極罕見，PHPicker 正常挑選一定
+        /// 帶）的筆數——整筆捨棄，不塞假 id 進 `pickedAssets`，呼叫端可用這個數字提示使用者
+        /// 「有幾個項目沒有加入」。
+        let droppedCount: Int
+    }
+
+    /// 步驟一（MainActor，呼叫端在 `.onChange(of: pickerSelection)` 裡同步呼叫）：
+    /// `PhotosPickerItem.itemIdentifier` 是輕量同步屬性存取，不是 Photos 資料庫查詢——
+    /// 留在 MainActor 讀；`PhotosPickerItem` 本身不跨過 `Task.detached` 邊界（避免任何
+    /// 對它非 MainActor 存取的未定義行為）。回傳保留原始選取順序的 identifier 列表＋
+    /// 沒有 `itemIdentifier`（理論上極罕見）的筆數（merge-review R1 i3）。
+    @MainActor
+    static func identifiers(for items: [PhotosPickerItem]) -> (identifiers: [String], droppedCount: Int) {
+        let ids = items.compactMap(\.itemIdentifier)
+        return (ids, items.count - ids.count)
+    }
+
+    /// 步驟二（merge-review R1 M5，呼叫端包 `Task.detached` 離開 MainActor）：真正的
+    /// Photos 資料庫查詢——`PHAsset.fetchAssets`／`enumerateObjects` 是同步、會卡住呼叫
+    /// 執行緒的操作，這支函式本身仍是同步純函式（方便單元測試不必牽扯 `Task`），只吃／
+    /// 回傳 `String`／`PickedAssetsResult`（皆為 value type，跨 actor 邊界安全），不碰
+    /// `PhotosPickerItem`。
+    ///
+    /// `.limited` 授權下若某個 identifier 不在目前的存取範圍內（或任何原因查不到），
+    /// `fetchAssets` 對那一筆就是查無結果，這裡讓它退化成 `creationDate: nil`（落入「日期
+    /// 不明」群，可改日期）而不是整批失敗——同一批裡有查得到跟查不到的混合是預期情況，
+    /// 不是錯誤態；這跟「沒有 `itemIdentifier`」（`droppedCount`）是兩回事，不要混在一起。
+    static func fetchResult(for identifiers: [String], droppedCount: Int) -> PickedAssetsResult {
+        var assetsByID: [String: PHAsset] = [:]
+        if !identifiers.isEmpty {
+            let fetchResult = PHAsset.fetchAssets(withLocalIdentifiers: identifiers, options: nil)
+            fetchResult.enumerateObjects { asset, _, _ in assetsByID[asset.localIdentifier] = asset }
         }
-        let fetchResult = PHAsset.fetchAssets(withLocalIdentifiers: identifiers, options: nil)
-        var creationDateByID: [String: Date] = [:]
-        fetchResult.enumerateObjects { asset, _, _ in
-            creationDateByID[asset.localIdentifier] = asset.creationDate
+        let pickedAssets = identifiers.map { id in
+            ImportDateGrouping.PickedAsset(localIdentifier: id, creationDate: assetsByID[id]?.creationDate)
         }
-        return items.map { item in
-            let id = item.itemIdentifier ?? UUID().uuidString
-            return .init(localIdentifier: id, creationDate: creationDateByID[id])
-        }
+        return PickedAssetsResult(pickedAssets: pickedAssets, assetsByID: assetsByID, droppedCount: droppedCount)
     }
 }

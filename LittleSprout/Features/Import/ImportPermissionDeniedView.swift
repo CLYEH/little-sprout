@@ -55,15 +55,22 @@ struct ImportPermissionDeniedView: View {
                     .accessibilityAddTraits(.isHeader)
             }
             VStack(alignment: .leading, spacing: AppSpacing.block) {
-                Image(systemName: "photo.badge.exclamationmark")
-                    .appIconFrame(.large)
-                    .foregroundStyle(Color.lsTextSecondary)
-                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: AppSpacing.tight) {
+                    Image(systemName: "photo.badge.exclamationmark")
+                        .appIconFrame(.large)
+                        .foregroundStyle(Color.lsTextSecondary)
+                        .accessibilityHidden(true)
+                    // LS-303 R2（merge-review R1 M3）：稿面壓印小字「看不到照片」——不還原
+                    // Empty Print 母題本身的印品裝飾（i6，記 LS-96），但文案要照抄，
+                    // `$fs-imprint`（12pt）刻意不吃 Dynamic Type，同 Typography.swift 檔頭。
+                    Text("看不到照片").font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Color.lsTextSecondary)
+                }
                 VStack(alignment: .leading, spacing: AppSpacing.label) {
-                    Text("還沒有取用照片的權限。")
+                    Text("還沒有取用照片的權限")
                         .appFont(.body, weight: .semibold)
                         .foregroundStyle(Color.lsTextPrimary)
-                    Text("開啟「照片」權限後，就能從相機膠卷批次匯入舊照片與影片。")
+                    Text("請到「設定」開啟「照片」權限，才能把回憶加進來。")
                         .appFont(.note)
                         .foregroundStyle(Color.lsTextSecondary)
                 }
