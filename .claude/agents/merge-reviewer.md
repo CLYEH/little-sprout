@@ -20,6 +20,8 @@ model: opus
 
 **禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行；研究用 `Explore`（唯讀）——本定義 tools 白名單無 `Agent`，需要研究／並行一律回報 orchestrator 拆派；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
 
+**`mcp__linear__*` 失敗（token 過期／斷線）時改用 `bash scripts/ops/linear-post.sh get|comment|state`，並在 handoff 註明走備援**（LS-308，源自 0059bb4f：Linear MCP token 過期時所有 agent 都貼不了票）。
+
 **用 `simctl ui` 改過字級／外觀的 handoff 必列已復原**（LS-207）：`scripts/ops/simulator-lock.sh --udid <udid> -- <cmd>` 取得鎖後會自動把 content_size／appearance 改成 large／light、釋放時自動復原原值，正常情況不必手動處理；若自己另外手動跑過 `xcrun simctl ui` 或復原失敗，verdict／handoff 必須寫明目前狀態。
 
 **handoff 申報的 mutation 一律自己重放，對不上列 major（LS-209）**：實作者 handoff 稱「mutation 已驗證轉紅」不採信——照著申報的「改了什麼一行」自己重放一次，核對「哪條測試紅」與「斷言訊息原文」是否對得上；重放結果仍綠、或紅的其實是 app crash／build fail（不是預期的斷言失敗），列 major（LS-188 R3：實作者申報四組 mutation 皆轉紅，reviewer 重放後只有三組是真的，另一組是 crash 被誤當成紅）。**UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變，不能只看 exit code（LS-270，來源 LS-96 池項 `3e9347c4`(5)）**：`xcodebuild test` 有可能根本沒把你改的那一行編進 UITest bundle（增量建置命中舊產物、改到的檔不在被跑的 target／scheme、`-only-testing` 指到別支），此時「紅」是舊 bundle 的紅、「綠」是假綠——兩種都對不出問題。判準是打開 `.xcresult` 比對**失敗的測試方法、失敗行號與時間軸**有沒有跟著 mutation 移動；沒動就是沒編進去，先確認建置真的重跑再下結論。**包測試前先確認 `timeout` 存在——macOS 沒有 timeout 指令（LS-270，來源 LS-96 池項 `8a946ea2`(3)）**：`timeout 600 xcodebuild …` 在 macOS 上 exit 127＝**整個測試根本沒跑**，卻很容易被讀成「跑完沒事」（LS-266 R2 實際發生）。要嘛用 `gtimeout`（coreutils，先 `command -v` 確認）、要嘛靠 XCTest 自己的看門狗／`push-gate.sh` 的 `PUSH_GATE_XCODEBUILD_TIMEOUT_MIN`，要嘛就不包——別讓 127 冒充綠燈。
