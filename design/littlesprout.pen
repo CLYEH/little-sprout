@@ -195700,7 +195700,7 @@
                                   "type": "text",
                                   "id": "zrvdf",
                                   "layoutPosition": "absolute",
-                                  "x": 209,
+                                  "x": 205,
                                   "y": 370,
                                   "name": "Age Axis Label",
                                   "fill": "$print-ink-secondary",
@@ -198969,6 +198969,42 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "xXWzo",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Z1UYP",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "收據",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "m5nyae",
+                  "name": "l",
+                  "fill": "$print-ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R3 六支溢出掃描收據（r3）另抓出並修正：A11y/04 空狀態 Empty Lead 補 textGrowth:fixed-width＋容器 193→273pt（AX3 大字級原本 undefined 寬度置中溢出 63.5pt）；06 iPad Age Axis Label x 209→205（右緣收 4pt 對齊繪圖區 269pt）；A11y/03 Year Divider 的 Stamp（cmp/Day Divider 既有 rotation:-4 印章母題）在較寬年份文字下旋轉包絡框溢出 Stamp Wrap 2.3pt，屬既有跨畫面共用元件的旋轉特性（Feed 已在用同一元件），本票不改共用元件。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         }
@@ -200786,7 +200822,7 @@
                                   "type": "text",
                                   "id": "daClV",
                                   "layoutPosition": "absolute",
-                                  "x": 209,
+                                  "x": 205,
                                   "y": 370,
                                   "name": "Age Axis Label",
                                   "fill": "$print-ink-secondary",
@@ -203956,10 +203992,10 @@
                       "type": "frame",
                       "id": "vbIHm",
                       "layoutPosition": "absolute",
-                      "x": 56,
+                      "x": 16,
                       "y": 110,
                       "name": "Empty Message",
-                      "width": 193,
+                      "width": 273,
                       "height": 340,
                       "fill": "$print-paper",
                       "cornerRadius": "$radius-md",
@@ -203974,7 +204010,10 @@
                           "id": "yRWVA",
                           "name": "Empty Lead",
                           "fill": "$print-ink",
+                          "textGrowth": "fixed-width",
+                          "width": 241,
                           "content": "這張紙還沒有記錄",
+                          "lineHeight": 1.3,
                           "textAlign": "center",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
