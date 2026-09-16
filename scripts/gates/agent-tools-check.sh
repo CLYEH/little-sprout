@@ -57,7 +57,8 @@ ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 # 自 LS-159 起就在但當時沒有 gate，R2 (a) 一併釘住（三份同一條規則）。
 # LS-158：qa 多步驟驗收優先 `scripts/ops/qa-e2e.sh`（mobile-mcp 降為截圖／單步輔助）——qa.md 那段被刪即紅。
 # LS-180：ui-designer／visual-reviewer 切檔一律不殺行程——`pen-open.sh` 的 `--kill`（與 `--force-reload` 的清場路徑）會結束
-# Pen 主行程、讓 session 的 Pencil MCP 斷線不重連，只在 orchestrator 明示時使用、用後必回報「需重連」；那句被刪即紅。
+# Pen 主行程、讓 session 的 Pencil MCP stdio 連線中斷，只在 orchestrator 明示時使用；那句被刪即紅（**LS-308**：實測 mcp-server
+# 為懶連線、下一次呼叫會自動重連，不再需要人工 /mcp——用後回報的字樣已從「需重連」改為「下一次 MCP 呼叫會自動重連」）。
 # LS-180 裁決：設計票期間 Pen 停在票檔——ui-designer 收工不切回主 checkout（切回會把票檔留在背景視窗，下一輪 VR 只能清場）；
 # ui-designer.md 步驟 5 的「收工 Pen 停在票檔」被刪或改回「切回主 checkout」即紅（只驗新句在，「切回」字樣本身不擋——
 # 步驟 5 需要用它說明為什麼不切）。

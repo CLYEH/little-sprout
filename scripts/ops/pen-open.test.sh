@@ -372,8 +372,8 @@ export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
 out="$(run "$wt" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
   && printf '%s' "$out" | grep -qF '已確認' && ! fake_pen_alive \
-  && printf '%s' "$out" | grep -qF 'Pencil MCP 需重連：請在 Claude Code 執行 /mcp 重連 pencil'; then
-  ok '⑪a 殘留＋安全：osascript 優雅退出成功 → 重開切換成功，假行程真的結束，且印「需重連」（LS-180）'
+  && printf '%s' "$out" | grep -qF 'Pencil MCP：下一次 MCP 呼叫會自動重連'; then
+  ok '⑪a 殘留＋安全：osascript 優雅退出成功 → 重開切換成功，假行程真的結束，且印「下一次 MCP 呼叫會自動重連」（LS-180）'
 else
   bad "⑪a 應 exit 0 且假行程結束（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -529,7 +529,7 @@ clear_fake_pen; clear_ps_pen_files
 
 # ⑬a 目前已一致＋安全，但 Pencil 端 tree_hash 與磁碟不符（renderer 停在磁碟更新前的舊快照）→ 清場重開——
 #     驗證「不因已一致就早退」邏輯，且清場前後仍照既有安全判定把關、重開後才真正算成功。LS-180 起這條路徑
-#     只在雜湊不符時走（相符不殺見 ⑮a），且結束主行程後必印「需重連」。
+#     只在雜湊不符時走（相符不殺見 ⑮a），且結束主行程後必印「下一次 MCP 呼叫會自動重連」。
 reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe; set_hash 'HASH:ffffffffffffffff'
 set_state "PATH:${want}"
 start_fake_pen
@@ -538,9 +538,9 @@ out="$(run "$wt" --force-reload 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF -- '--force-reload' \
   && printf '%s' "$out" | grep -qF 'tree_hash 不一致' \
   && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
-  && printf '%s' "$out" | grep -qF 'Pencil MCP 需重連' \
+  && printf '%s' "$out" | grep -qF 'Pencil MCP：下一次 MCP 呼叫會自動重連' \
   && ! fake_pen_alive && [ "$(open_calls)" -eq 2 ] && [ "$(exec_calls)" -eq 1 ]; then
-  ok '⑬a --force-reload：已一致但雜湊不符 → 清場重開，假行程真的被換掉，印「需重連」（LS-118／LS-180）'
+  ok '⑬a --force-reload：已一致但雜湊不符 → 清場重開，假行程真的被換掉，印「下一次 MCP 呼叫會自動重連」（LS-118／LS-180）'
 else
   bad "⑬a 應 exit 0 且真的清場重開（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -583,8 +583,8 @@ export PEN_STUB_OPEN_SUCCEED_AT=2
 out="$(run "$wt" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '跳過清場步驟，直接嘗試重開' \
   && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
-  && ! printf '%s' "$out" | grep -qF 'Pencil MCP 需重連'; then
-  ok '⑬d 預設模式 pgrep 找不到主行程：跳過清場、直接重開，不受 --force-reload 新規則影響，沒殺行程就不印「需重連」（LS-118 R1 F1 對照）'
+  && ! printf '%s' "$out" | grep -qF 'Pencil MCP：下一次 MCP 呼叫會自動重連'; then
+  ok '⑬d 預設模式 pgrep 找不到主行程：跳過清場、直接重開，不受 --force-reload 新規則影響，沒殺行程就不印「下一次 MCP 呼叫會自動重連」（LS-118 R1 F1 對照）'
 else
   bad "⑬d 應 exit 0（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -642,15 +642,15 @@ clear_fake_pen
 
 # ---- ⑮ LS-180：--force-reload 先比 tree_hash、相符不殺；--kill 明示清場；預設模式不回讀雜湊 ----
 
-# ⑮a 已一致＋Pencil 端雜湊＝磁碟 → exit 0、不 kill（假行程仍活）、只 open 一次、印「未清場」、不印「需重連」。
+# ⑮a 已一致＋Pencil 端雜湊＝磁碟 → exit 0、不 kill（假行程仍活）、只 open 一次、印「未清場」、不印「下一次 MCP 呼叫會自動重連」。
 reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe; set_hash "HASH:${WT_HASH}"
 set_state "PATH:${want}"
 start_fake_pen
 out="$(run "$wt" --force-reload 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "tree_hash=${WT_HASH} 與磁碟一致" \
-  && printf '%s' "$out" | grep -qF '未清場' && ! printf '%s' "$out" | grep -qF 'Pencil MCP 需重連' \
+  && printf '%s' "$out" | grep -qF '未清場' && ! printf '%s' "$out" | grep -qF 'Pencil MCP：下一次 MCP 呼叫會自動重連' \
   && fake_pen_alive && [ "$(open_calls)" -eq 1 ] && [ "$(exec_calls)" -eq 1 ]; then
-  ok '⑮a --force-reload：已一致且 tree_hash 相符 → exit 0 不 kill、不重開、不印「需重連」（LS-180）'
+  ok '⑮a --force-reload：已一致且 tree_hash 相符 → exit 0 不 kill、不重開、不印「下一次 MCP 呼叫會自動重連」（LS-180）'
 else
   bad "⑮a 應 exit 0 且不 kill（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -662,8 +662,8 @@ set_state "PATH:${want}"
 start_fake_pen
 out="$(run "$wt" --force-reload 2>&1)"; got=$?
 if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF 'tree_hash 不一致' && printf '%s' "$out" | grep -qF '不自動 quit' \
-  && ! printf '%s' "$out" | grep -qF 'Pencil MCP 需重連' && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
-  ok '⑮b --force-reload：雜湊不符但目標有未落地變更 → 不安全不 kill，exit 1，不印「需重連」（LS-180）'
+  && ! printf '%s' "$out" | grep -qF 'Pencil MCP：下一次 MCP 呼叫會自動重連' && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
+  ok '⑮b --force-reload：雜湊不符但目標有未落地變更 → 不安全不 kill，exit 1，不印「下一次 MCP 呼叫會自動重連」（LS-180）'
 else
   bad "⑮b 應 exit 1 且不 kill（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -676,7 +676,7 @@ start_fake_pen
 out="$(run "$wt" --force-reload 2>&1)"; got=$?
 if [ "$got" -eq 3 ] && printf '%s' "$out" | grep -qF "期望值 tree_hash=${WT_HASH}" \
   && printf '%s' "$out" | grep -qF 'SCAN_HASH_ONLY' && printf '%s' "$out" | grep -qF -- '--kill' \
-  && ! printf '%s' "$out" | grep -qF 'Pencil MCP 需重連' \
+  && ! printf '%s' "$out" | grep -qF 'Pencil MCP：下一次 MCP 呼叫會自動重連' \
   && fake_pen_alive && [ "$(open_calls)" -eq 1 ]; then
   ok '⑮c --force-reload：雜湊讀不到 → 不 kill、exit 3、印期望值與 agent 複算指引（LS-180）'
 else
@@ -698,7 +698,7 @@ else
 fi
 clear_fake_pen
 
-# ⑮e --kill：已一致且雜湊其實相符，仍不比對、直接安全判定＋清場重開，印「需重連」；execute 一次都不呼叫。
+# ⑮e --kill：已一致且雜湊其實相符，仍不比對、直接安全判定＋清場重開，印「下一次 MCP 呼叫會自動重連」；execute 一次都不呼叫。
 reset_open_tracking; clear_fake_pen; clear_ps_pen_files; wt_backup_safe; set_hash "HASH:${WT_HASH}"
 set_state "PATH:${want}"
 start_fake_pen
@@ -706,9 +706,9 @@ export PEN_STUB_OSASCRIPT_KILLS=1
 out="$(run "$wt" --kill 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF -- '--kill' \
   && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" \
-  && printf '%s' "$out" | grep -qF 'Pencil MCP 需重連：請在 Claude Code 執行 /mcp 重連 pencil' \
+  && printf '%s' "$out" | grep -qF 'Pencil MCP：下一次 MCP 呼叫會自動重連' \
   && ! fake_pen_alive && [ "$(open_calls)" -eq 2 ] && [ "$(exec_calls)" -eq 0 ]; then
-  ok '⑮e --kill：不比雜湊、一律清場重開、印「需重連」，execute 零次（LS-180）'
+  ok '⑮e --kill：不比雜湊、一律清場重開、印「下一次 MCP 呼叫會自動重連」，execute 零次（LS-180）'
 else
   bad "⑮e 應 exit 0 且清場重開（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)，open 呼叫次數＝$(open_calls)，execute 次數＝$(exec_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
