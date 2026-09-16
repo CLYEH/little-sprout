@@ -190403,6 +190403,2201 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "d5yqO",
+      "x": 5298,
+      "y": 36650,
+      "name": "Growth / 03 記錄列表 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 796,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "k1UcY",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "kamH1",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "陳小安"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "m694t",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-block",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "MGfuc",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Kn4La",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "成長紀錄",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "k1ltq",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "陳小安 · 共 4 筆紀錄，左滑可編輯或刪除。",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "oA9k5",
+              "name": "Record List",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "qMgiS",
+                  "name": "Card 1",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "N9XUJ",
+                      "name": "Date",
+                      "fill": "$text-primary",
+                      "content": "8月20日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "MnHC5",
+                      "name": "Values",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "RhOw8",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "eW8n3",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Vlv4E",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "72.4 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "HObGW",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "pa3U2",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Y2KoP",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "8.9 kg",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "KJbj9",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "mqyYA",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "circle",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "u7POnu",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "44.1 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "jHxbn",
+                      "name": "Note",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "打完疫苗，順便量的。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "SEiS5",
+                  "name": "Swipe Wrapper",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 96,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "zJ9UG",
+                      "name": "Card Content",
+                      "width": 185,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "BOF8V",
+                          "name": "Card 2 (滑動中)",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "padding": "$inset-card",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zyW6v",
+                              "name": "Date",
+                              "fill": "$text-primary",
+                              "content": "8月6日",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "BsYdI",
+                              "name": "Values",
+                              "gap": "$sp-item",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "R4whpx",
+                                  "name": "Value Chip",
+                                  "gap": "$sp-tight",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "J1QE78",
+                                      "name": "Icon",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "circle",
+                                      "library": "lucide",
+                                      "fill": "$text-secondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "IcHuQ",
+                                      "name": "Val",
+                                      "fill": "$text-secondary",
+                                      "content": "44.1 cm",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KMfXF",
+                      "name": "Reveal Actions",
+                      "width": 160,
+                      "height": 96,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "I0hurY",
+                          "name": "Edit Action",
+                          "width": 80,
+                          "height": 96,
+                          "fill": "$surface-2",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "SEls8",
+                              "name": "Icon",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "pencil",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ZSnSa",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "編輯",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "T80iI",
+                          "name": "Delete Action",
+                          "width": 80,
+                          "height": 96,
+                          "fill": "$danger",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "qXYnR",
+                              "name": "Icon",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "trash-2",
+                              "library": "lucide",
+                              "fill": "$on-accent"
+                            },
+                            {
+                              "type": "text",
+                              "id": "gvp6X",
+                              "name": "Label",
+                              "fill": "$on-accent",
+                              "content": "刪除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "IKU6q",
+                  "name": "Card 3",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "cOVLV",
+                      "name": "Date",
+                      "fill": "$text-primary",
+                      "content": "7月15日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EmMGn",
+                      "name": "Values",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "up1Q8",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "LWZ02",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "qCUYq",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "70.1 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "OUpyd",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "qeNXP",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ZlWWJ",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "8.6 kg",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bZ2nj",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "K2G3to",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "circle",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "iISK0",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "43.8 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zH89R",
+                  "name": "Card 4",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "E9uRB",
+                      "name": "Date",
+                      "fill": "$text-primary",
+                      "content": "6月2日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "JSaae",
+                      "name": "Values",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ZRYci",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "zN13C",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "g9wzvO",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "68.5 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "hyhNq",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "c5eDlJ",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "zffwM",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "8.2 kg",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "HtvYd",
+                      "name": "Note",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "在家用捲尺量的，僅供參考。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HP3IO",
+              "name": "Bottom Spacer",
+              "width": "fill_container",
+              "height": 16
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vBhiK",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "Kpk5W",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "DkdRN",
+      "x": 5791,
+      "y": 36650,
+      "name": "Growth / 03 刪除紀錄 · 確認",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "rZQck",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "Lt9j7",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "mZ0rm",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "DljFM",
+              "name": "Confirm Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "ea8vz",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "m13thK",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "O73bIl",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "要刪除這筆 8 月 20 日的成長紀錄嗎？",
+                      "lineHeight": 1.3,
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "dElAL",
+                  "name": "Body Text",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "這筆量測（身高 72.4 cm、體重 8.9 kg、頭圍 44.1 cm）會從成長曲線與紀錄列表移除，家人也看不到。這個動作目前無法在 App 內復原。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "zigJv",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "nhWca",
+                      "name": "Confirm Delete",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$danger",
+                      "strokeWidth": 1.5,
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$ctl-pad-md",
+                        20
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "nHaSq",
+                          "name": "Trash Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "trash-2",
+                          "library": "lucide",
+                          "fill": "$danger"
+                        },
+                        {
+                          "type": "text",
+                          "id": "w11Up4",
+                          "name": "Confirm Label",
+                          "fill": "$danger",
+                          "content": "刪除這筆紀錄",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "OQ5Pt",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "debbU",
+      "x": 6284,
+      "y": 36650,
+      "name": "Growth / 03 記錄列表 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 796,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "bqDcC",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "K4Q888",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "陳小安"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "c1ipB",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-block",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "uhYAY",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "uAqGL",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "成長紀錄",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "bsBjG",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "陳小安 · 共 4 筆紀錄，左滑可編輯或刪除。",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "s26FRh",
+              "name": "Record List",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "O9ReX",
+                  "name": "Card 1",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "FMKGj",
+                      "name": "Date",
+                      "fill": "$text-primary",
+                      "content": "8月20日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "rMqMS",
+                      "name": "Values",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "lRtuj",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "OvPlu",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "uVIFF",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "72.4 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "hnbmO",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "DskRG",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "B88nQ2",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "8.9 kg",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "qi1X5",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "cOYXv",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "circle",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "nlud3",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "44.1 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "lmVIg",
+                      "name": "Note",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "打完疫苗，順便量的。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Vrikv",
+                  "name": "Swipe Wrapper",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 96,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "v2GBHJ",
+                      "name": "Card Content",
+                      "width": 185,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "GygcH",
+                          "name": "Card 2 (滑動中)",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "padding": "$inset-card",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TyY10",
+                              "name": "Date",
+                              "fill": "$text-primary",
+                              "content": "8月6日",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "SYCGS",
+                              "name": "Values",
+                              "gap": "$sp-item",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "bgDoZ",
+                                  "name": "Value Chip",
+                                  "gap": "$sp-tight",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "e3svz",
+                                      "name": "Icon",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "circle",
+                                      "library": "lucide",
+                                      "fill": "$text-secondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "a9TrqE",
+                                      "name": "Val",
+                                      "fill": "$text-secondary",
+                                      "content": "44.1 cm",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v6GaZ",
+                      "name": "Reveal Actions",
+                      "width": 160,
+                      "height": 96,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pDhp6",
+                          "name": "Edit Action",
+                          "width": 80,
+                          "height": 96,
+                          "fill": "$surface-2",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "IUMnb",
+                              "name": "Icon",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "pencil",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "tWIHS",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "編輯",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "eT8dl",
+                          "name": "Delete Action",
+                          "width": 80,
+                          "height": 96,
+                          "fill": "$danger",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "EXdeg",
+                              "name": "Icon",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "trash-2",
+                              "library": "lucide",
+                              "fill": "$on-accent"
+                            },
+                            {
+                              "type": "text",
+                              "id": "cUBf9",
+                              "name": "Label",
+                              "fill": "$on-accent",
+                              "content": "刪除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Zogy6",
+                  "name": "Card 3",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "T0FA7",
+                      "name": "Date",
+                      "fill": "$text-primary",
+                      "content": "7月15日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "P8T7Y",
+                      "name": "Values",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "mZOeP",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Fo6H4",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "LTA18",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "70.1 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ZmP0L",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "h5FHs8",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ZPtyT",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "8.6 kg",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "lGRG3",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "adhBE",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "circle",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "r4nHe",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "43.8 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "z4w5sZ",
+                  "name": "Card 4",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "k8UDOh",
+                      "name": "Date",
+                      "fill": "$text-primary",
+                      "content": "6月2日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "D9J9f9",
+                      "name": "Values",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "v2cMF",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "x76V5H",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "wlMwH",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "68.5 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "x1kG5",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "oy2Sn",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Njzlh",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "8.2 kg",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "EkTQO",
+                      "name": "Note",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "在家用捲尺量的，僅供參考。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Y9oHOU",
+              "name": "Bottom Spacer",
+              "width": "fill_container",
+              "height": 16
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "M7VF7",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "IrqNP",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "v5bM87",
+      "x": 6777,
+      "y": 36650,
+      "name": "A11y / 03 記錄列表 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1940,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "placeholder": true,
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "CLaLd",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "id": "PaHQQ",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "width": "fill_container",
+          "descendants": {
+            "VCU41": {
+              "content": "陳小安"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "m4NNfc",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-block",
+          "padding": [
+            16,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "IDlVA",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "t7MKsH",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "成長紀錄",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "vKkY9",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "陳小安 · 共 4 筆紀錄，左滑可編輯或刪除。",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Ze9YN",
+              "name": "Record List",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "KW3aO",
+                  "name": "Card 1",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "me30d",
+                      "name": "Date",
+                      "fill": "$text-primary",
+                      "content": "8月20日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fK4MY",
+                      "name": "Values",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "aOBPG",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "HCHIa",
+                              "name": "Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "B25TmT",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "72.4 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "DdghU",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "vBlHB",
+                              "name": "Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "K23PWo",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "8.9 kg",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "aFbgG",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "eI8gM",
+                              "name": "Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "circle",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "tcEly",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "44.1 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "OdVrm",
+                      "name": "Note",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "打完疫苗，順便量的。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "A35cy",
+                  "name": "Swipe Wrapper",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 278,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "PNFOE",
+                      "name": "Card Content",
+                      "width": "fill_container",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "D4p8e",
+                          "name": "Card 2 (滑動中)",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "padding": "$inset-card",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "tbYY5",
+                              "name": "Date",
+                              "fill": "$text-primary",
+                              "content": "8月6日",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "pw6TG",
+                              "name": "Values",
+                              "layout": "vertical",
+                              "gap": "$sp-item",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "iTI0R",
+                                  "name": "Value Chip",
+                                  "gap": "$sp-tight",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "idbH2",
+                                      "name": "Icon",
+                                      "width": 26,
+                                      "height": 26,
+                                      "icon": "circle",
+                                      "library": "lucide",
+                                      "fill": "$text-secondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "jLhWI",
+                                      "name": "Val",
+                                      "fill": "$text-secondary",
+                                      "content": "44.1 cm",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yqS0o",
+                      "name": "Reveal Actions",
+                      "width": "fill_container",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Yr8RY",
+                          "name": "Edit Action",
+                          "width": "fill_container",
+                          "fill": "$surface-2",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "padding": "$sp-item",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "AxvPL",
+                              "name": "Icon",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "pencil",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "k8D3a",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "編輯",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "fd8v1",
+                          "name": "Delete Action",
+                          "width": "fill_container",
+                          "fill": "$danger",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "padding": "$sp-item",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "lRs7l",
+                              "name": "Icon",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "trash-2",
+                              "library": "lucide",
+                              "fill": "$on-accent"
+                            },
+                            {
+                              "type": "text",
+                              "id": "YcRqw",
+                              "name": "Label",
+                              "fill": "$on-accent",
+                              "content": "刪除",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "LKmMW",
+                  "name": "Card 3",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gBaY3",
+                      "name": "Date",
+                      "fill": "$text-primary",
+                      "content": "7月15日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "h5TV0",
+                      "name": "Values",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "xjplG",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "OuU92",
+                              "name": "Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "hCSz4",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "70.1 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "KETIm",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "RfXgY",
+                              "name": "Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "qI5rZ",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "8.6 kg",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "hYQ2D",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "BcG4l",
+                              "name": "Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "circle",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "OHI0q",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "43.8 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hEGhQ",
+                  "name": "Card 4",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "padding": "$inset-card",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "wMCP9",
+                      "name": "Date",
+                      "fill": "$text-primary",
+                      "content": "6月2日",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "z0YRZg",
+                      "name": "Values",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "GqfcQ",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Bz0i5",
+                              "name": "Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "ruler",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "cbEew",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "68.5 cm",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "n2rkS",
+                          "name": "Value Chip",
+                          "gap": "$sp-tight",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "ZQhda",
+                              "name": "Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "scale",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Ag0ma",
+                              "name": "Val",
+                              "fill": "$text-secondary",
+                              "content": "8.2 kg",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "Erp4i",
+                      "name": "Note",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "在家用捲尺量的，僅供參考。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "S17fPO",
+              "name": "Bottom Spacer",
+              "width": "fill_container",
+              "height": 16
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "GM1cS",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "hA7qn",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
