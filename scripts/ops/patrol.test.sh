@@ -1011,9 +1011,10 @@ json21b="$(SIMCTL_LIST_JSON="$disk_json" PATROL_DISK_MIN_GB=0 bash "$patrol" --r
 jq_ok '㉑ 高於門檻 --json：disk.flag 空、derived_data_gb null（沒跑水位段 du）、devices_gb 數字（LS-187 每輪都有）、flags 無 [磁碟]' "$json21b" '.disk.flag == "" and .disk.derived_data_gb == null and (.disk.devices_gb | type == "number") and ([.flags[] | select(startswith("[磁碟]"))] | length == 0)'
 out21c="$(PATROL_DISK_MIN_GB=abc bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc_is '㉑ PATROL_DISK_MIN_GB 非整數 → exit 2' 2 "$?" "$out21c"
 
-# ---- ㉒ Pencil 連線探針（LS-180）：只在有 design 分支 worktree 時跑 pen-status.sh；探針非 0 → [Pencil] flag（human／
-#        brief／json 都帶、指示 /mcp 重連）；0 → 只印一行不標；沒有 design worktree → 略過、不呼叫探針；探針腳本不存在
-#        → 標 [Pencil] 說明 ----
+# ---- ㉒ Pencil 連線探針（LS-180；MCP 訊號自 LS-308 起只 informational、不影響 pen-status.sh exit code）：只在有
+#        design 分支 worktree 時跑 pen-status.sh；探針非 0（proc／path 造成）→ [Pencil] flag（human／brief／json 都帶、
+#        指示先呼叫 get_app_state、失敗才 /mcp）；0 → 只印一行不標；沒有 design worktree → 略過、不呼叫探針；探針腳本
+#        不存在 → 標 [Pencil] 說明 ----
 out22a="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 has   '㉒ 無 design 分支 worktree → Pencil 段印略過' "$out22a" '無 design 分支 worktree，略過探針'
 hasnt '㉒ 無 design worktree 不呼叫探針（假身輸出不出現）' "$out22a" '（自測假身）'
@@ -1021,19 +1022,19 @@ json22a="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/d
 jq_ok '㉒ --json 無 design worktree：pencil.ran false、line null' "$json22a" '.pencil.ran == false and .pencil.line == null'
 wt -b feature/LS-9-flow-design "$wts/LS-9" origin/development
 fake_ps_bad="$work/fake-pen-status-bad.sh"
-printf '#!/bin/bash\necho "Pencil：行程 ✓（pid 1） · 路徑 /x/design/littlesprout.pen · MCP 探針 ✗（mcp-server 1 支皆無 Pen socket 連線——在 Claude Code 執行 /mcp 重連 pencil）"\nexit 1\n' > "$fake_ps_bad"
+printf '#!/bin/bash\necho "Pencil：行程 ✓（pid 1） · 路徑 ✗（pen CLI 讀不到 active 文件——CLI 未登入／desktop socket 連不上） · MCP：本 session 沒有 mcp-server 行程（尚未呼叫過 pencil MCP；下一次 mcp__pencil__* 呼叫會自動連上，失敗才 /mcp）"\nexit 1\n' > "$fake_ps_bad"
 out22="$(PATROL_PEN_STATUS_SH="$fake_ps_bad" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
 rc_is '㉒ 探針 ✗ 仍 exit 0（異常在輸出）' 0 "$rc" "$out22"
 has   '㉒ human 有 Pencil 段' "$out22" '== Pencil 連線'
-has   '㉒ human 印探針行' "$out22" 'MCP 探針 ✗'
-has   '㉒ human 探針非 0 → 段內指示派工前 /mcp 重連' "$out22" '→ 設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil'
+has   '㉒ human 印探針行' "$out22" '路徑 ✗'
+has   '㉒ human 探針非 0 → 段內指示先呼叫 get_app_state、失敗才 /mcp' "$out22" '→ 設計票派工前先呼叫一次 mcp__pencil__get_app_state（懶連線會自動連上）；失敗才請使用者 /mcp'
 brief22="$(PATROL_PEN_STATUS_SH="$fake_ps_bad" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '㉒ --brief 印探針行' "$brief22" 'Pencil：行程 ✓（pid 1）'
 has   '㉒ --brief 探針非 0 → [Pencil] flag 帶探針行' "$brief22" '[Pencil] Pencil：行程 ✓（pid 1）'
-has   '㉒ --brief flag 指示派工前 /mcp 重連' "$brief22" '設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil'
+has   '㉒ --brief flag 指示先呼叫 get_app_state、失敗才 /mcp' "$brief22" '設計票派工前先呼叫一次 mcp__pencil__get_app_state（懶連線會自動連上）；失敗才請使用者 /mcp'
 json22="$(PATROL_PEN_STATUS_SH="$fake_ps_bad" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
-jq_ok '㉒ --json：pencil.ran true、rc 1、line 含探針、flags 恰一筆 [Pencil]' "$json22" \
-  '.pencil.ran == true and .pencil.rc == 1 and (.pencil.line | test("MCP 探針")) and ([.flags[] | select(startswith("[Pencil]"))] | length == 1)'
+jq_ok '㉒ --json：pencil.ran true、rc 1、line 含路徑 ✗、flags 恰一筆 [Pencil]' "$json22" \
+  '.pencil.ran == true and .pencil.rc == 1 and (.pencil.line | test("路徑 ✗")) and ([.flags[] | select(startswith("[Pencil]"))] | length == 1)'
 out22b="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 has   '㉒ 探針 0 → 印一行（預設假身）' "$out22b" '（自測假身）'
 hasnt '㉒ 探針 0 → 不標 [Pencil]' "$out22b" '[Pencil]'

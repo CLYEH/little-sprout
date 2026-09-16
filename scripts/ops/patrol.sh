@@ -939,10 +939,11 @@ EOF
   fi
 fi
 
-# ---- Pencil 連線（LS-180）：有 design 分支 worktree（設計票在飛）時跑 scripts/ops/pen-status.sh——Pen 行程／目前路徑／
-#      MCP socket 探針一行；探針非 0（Pen 沒開／路徑讀不到／mcp-server 與 Pen 之間沒有 socket 連線）就 add_flag，指示
-#      orchestrator 派設計票前先請使用者在 Claude Code 執行 /mcp 重連 pencil。沒有 design worktree 不呼叫（探針會打
-#      pen CLI，不必每輪付）。PATROL_PEN_STATUS_SH 可換假身（自測用，避免碰真的 Pen）。
+# ---- Pencil 連線（LS-180；MCP 訊號自 LS-308 起只 informational、不影響 pen-status.sh 的 exit code，見該檔檔頭）：
+#      有 design 分支 worktree（設計票在飛）時跑 scripts/ops/pen-status.sh——Pen 行程／目前路徑一行；探針非 0（Pen
+#      沒開／路徑讀不到）就 add_flag，指示 orchestrator 派設計票前先呼叫一次 mcp__pencil__get_app_state（懶連線
+#      會自動連上）；失敗才請使用者 /mcp。沒有 design worktree 不呼叫（探針會打 pen CLI，不必每輪付）。
+#      PATROL_PEN_STATUS_SH 可換假身（自測用，避免碰真的 Pen）。
 PENCIL_LINE=; pencil_rc=0; pencil_ran=0
 if [ "$design_wt" -eq 1 ]; then
   pencil_ran=1
@@ -953,7 +954,7 @@ if [ "$design_wt" -eq 1 ]; then
     PENCIL_LINE="Pencil：探針腳本不存在（${pssh}）"; pencil_rc=2
   fi
   if [ "$pencil_rc" -ne 0 ]; then
-    add_flag "[Pencil] ${PENCIL_LINE} → 設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil，重連後再派（LS-180）"
+    add_flag "[Pencil] ${PENCIL_LINE} → 設計票派工前先呼叫一次 mcp__pencil__get_app_state（懶連線會自動連上）；失敗才請使用者 /mcp（LS-180／LS-308）"
   fi
 fi
 
@@ -1367,10 +1368,10 @@ case "$MODE" in
     echo "== 近 ${REDS_DAYS} 日 CI 同類紅（LS-260；失敗測試名／失敗型別跨 run 聚合，同簽章 ≥2 個 run 即 ⚠ → §5-b 升 High）"
     [ -n "$reds_note" ] && echo "  ${reds_note}"
     if [ -n "$REDS_LINES" ]; then printf '%s' "$REDS_LINES"; else echo "  （無同簽章重複 ≥2 次的紅）"; fi
-    echo "== Pencil 連線（LS-180；有 design 分支 worktree 時探：行程／目前路徑／MCP socket；✗ 先請使用者 /mcp 重連 pencil 再派設計票）"
+    echo "== Pencil 連線（LS-180；有 design 分支 worktree 時探：行程／目前路徑；MCP 訊號自 LS-308 起只 informational、不影響 exit；✗ 先呼叫一次 get_app_state，失敗才請使用者 /mcp 再派設計票）"
     if [ "$pencil_ran" -eq 1 ]; then
       printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'
-      [ "$pencil_rc" -ne 0 ] && echo "  → 設計票派工前先請使用者在 Claude Code 執行 /mcp 重連 pencil，重連後再派（LS-180）"
+      [ "$pencil_rc" -ne 0 ] && echo "  → 設計票派工前先呼叫一次 mcp__pencil__get_app_state（懶連線會自動連上）；失敗才請使用者 /mcp（LS-180／LS-308）"
     else echo "  （無 design 分支 worktree，略過探針）"; fi
     echo "== Pen 開錯檔偵測（LS-209；Pen 目前文件若落在非 design lane 的票 worktree → ⚠，查不到 lane 印 ?、不擋）"
     if [ -n "$PEN_WRONG_LINE" ]; then echo "  ${PEN_WRONG_LINE}"; else echo "  （Pen 未開，或未開在任何票 worktree，或該票 lane 為 design）"; fi

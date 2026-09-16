@@ -28,7 +28,8 @@
 #                                                       停在上次讀到磁碟的時間點；LS-180 起改為**先比 tree_hash**：
 #                                                       磁碟 design_tree_hash.py vs Pencil 端 execute 回讀，相符即
 #                                                       exit 0、不殺行程（Pencil MCP 連線保留）；不相符且安全判定
-#                                                       通過才清場重開並印「需重連」；讀不到 Pencil 端雜湊則印期望
+#                                                       通過才清場重開並印重連提示句（LS-308：懶連線自動重連，非
+#                                                       人工 /mcp）；讀不到 Pencil 端雜湊則印期望
 #                                                       值、exit 3 交 agent 複算（見下方 LS-180 段）。`pen-read.sh`
 #                                                       即為此模式的唯讀封裝，供 QA／視覺審查讀稿用。
 #                                                       `--kill`＝舊 `--force-reload` 語意：不比雜湊，一律安全判定＋
@@ -122,8 +123,9 @@
 # pen-read.sh 都被擋（LS-152／LS-163 清理後各發生一次）。
 #
 # LS-180（來源 LS-177 VR R2 `b017cbd1`；LS-96 池項 bed3ca3e 同族）：`--force-reload` 一律清場＝Pen 主行程被結束，
-# **Pencil MCP 連線隨之中斷且 Claude Code session 內不會重連**（`mcp__pencil__*` 全部不可用，直到使用者手動 `/mcp`
-# 重連）——「照指示切檔」與「照指示重掃／截圖」互斥。本票把 `--force-reload` 改成**先驗新鮮度、相符不殺**：
+# **Pencil MCP 連線隨之中斷**（`mcp__pencil__*` 呼叫在下一次重連前不可用——**LS-308 修正**：mcp-server 是懶連線，
+# 下一次呼叫就會自動連上新 socket，不需要使用者手動 `/mcp`，見 pen-status.sh 檔頭沿革）——「照指示切檔」與
+# 「照指示重掃／截圖」互斥。本票把 `--force-reload` 改成**先驗新鮮度、相符不殺**：
 #   1. 切檔＋輪詢路徑一致後，磁碟 `scripts/gates/design_tree_hash.py <want>` 算 tree_hash，再用 `pen interactive --app
 #      desktop` 餵 `execute({ input: <scripts/design/overflow-scan.js 全文，前置一行 SCAN_HASH_ONLY = true> })` 讀回
 #      Pencil 端同一演算法印出的 `SUMMARY-HASH … tree_hash=…`（read_pen_hash()；每次看門狗 PEN_OPEN_HASH_TIMEOUT 秒、
@@ -136,7 +138,7 @@
 #      複算指引，exit 3——由呼叫的 agent 用 mcp__pencil__execute 自己跑 SCAN_HASH_ONLY（大稿可分段累加，VR 既有作法）
 #      比對；相符即可讀稿，不符回報 orchestrator 決定是否 `--kill`。這就是「印出待 agent 複算的期望值＋exit 碼」的
 #      替代設計：Pencil 端唯一的 shell 途徑是同一支 execute，它在大稿上不保證成功，所以只能當快路徑、不能當唯一路徑。
-#   4. 只要清場流程真的結束了 Pen 主行程，stdout 必印「⚠ Pencil MCP 需重連：請在 Claude Code 執行 /mcp 重連 pencil」
+#   4. 只要清場流程真的結束了 Pen 主行程，stdout 必印「Pencil MCP：下一次 MCP 呼叫會自動重連；失敗才 /mcp」
 #      ——不論之後重開成功與否（agent 定義要求把這行帶回 handoff）；預設模式路徑不一致時的自動清場（R2）同樣印。
 #   5. `--kill`：舊 `--force-reload` 語意（不比雜湊、一律安全判定＋kill＋重開），只給 orchestrator 明示清場用
 #      （例：確定 renderer 壞掉、或要一次關掉累積的背景視窗）；與 `--force-reload`／`--no-quit` 互斥。
@@ -147,7 +149,8 @@
 #   已知盲區：`open -a Pen <want>` 對「已在背景視窗開著」的路徑不會奪回 active（下方已知坑），那條路徑仍只能清場——
 #   本票的不殺路徑只救「目標已是 active」的情況（設計輪 designer↔VR 同一份稿交替最常見）。LS-180 裁決因此把規約
 #   改成「設計票期間 Pen 停在票檔、ui-designer／VR 收工都不切回主 checkout」（ui-designer.md 步驟 5、COLLABORATION
-#   §2／§6 ④），讓不殺路徑成為常態；票結案由 orchestrator 用 `--kill` 清場一次並請使用者重連。
+#   §2／§6 ④），讓不殺路徑成為常態；票結案由 orchestrator 用 `--kill` 清場一次，下一次 MCP 呼叫會自動重連
+#   （LS-308；失敗才請使用者 /mcp）。
 #
 # macOS 沒有 coreutils timeout：每次 pen interactive 呼叫用背景程序＋背景 sleep 到期就 kill 的看門狗模式
 # （同 scripts/ops/patrol.sh 的 fetch_with_timeout；此處用 stdin/stdout 重導向而非管線，$! 才是 pen 程序本身的
@@ -178,6 +181,9 @@
 # 結束後全部視窗的 backup 皆完整無損。R2 因此兩者都做：先試 osascript（環境允許時是更禮貌的退出方式），
 # 短暫等待後一律補 `kill -TERM` 兜底，不依賴 osascript 一定成功）。
 set -uo pipefail
+pen_open_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pencil-mcp.sh
+source "${pen_open_script_dir}/lib/pencil-mcp.sh"
 
 usage() {
   echo "用法：pen-open.sh <worktree-or-repo-root> [--no-quit|--force-reload|--kill]｜pen-open.sh --status｜pen-open.sh --restore" >&2
@@ -440,7 +446,7 @@ elif [ "$poll_rc" -eq 0 ]; then
     exit 0
   fi
   if [ -z "$pen_hash" ]; then
-    echo "⚠ pen-open：路徑已一致（${want}）但 Pencil 端 tree_hash 讀不到——未清場、Pencil MCP 連線保留；新鮮度待 agent 複算：用 mcp__pencil__execute 跑 scripts/design/overflow-scan.js（第一行加 SCAN_HASH_ONLY = true；大稿可分段累加），期望值 tree_hash=${disk_hash}；相符即可讀稿，不符回報 orchestrator 以 pen-open.sh <root> --kill 清場（之後需在 Claude Code 執行 /mcp 重連 pencil）（LS-180，exit 3）"
+    echo "⚠ pen-open：路徑已一致（${want}）但 Pencil 端 tree_hash 讀不到——未清場、Pencil MCP 連線保留；新鮮度待 agent 複算：用 mcp__pencil__execute 跑 scripts/design/overflow-scan.js（第一行加 SCAN_HASH_ONLY = true；大稿可分段累加），期望值 tree_hash=${disk_hash}；相符即可讀稿，不符回報 orchestrator 以 pen-open.sh <root> --kill 清場（清場後下一次 MCP 呼叫會自動重連，失敗才 /mcp，LS-308）（LS-180，exit 3）"
     exit 3
   fi
   echo "  --force-reload：tree_hash 不一致——磁碟 ${disk_hash}、Pencil 端 ${pen_hash}（renderer 停在舊快照或有未落地編輯，LS-118）——走清場重開" >&2
@@ -608,11 +614,22 @@ else
   pen_restarted=1
 fi
 
-# LS-180：Pen 主行程一旦結束，Claude Code 這個 session 的 Pencil MCP 就斷了且不會自己重連——不論下面重開成功與否
-# 都要讓呼叫者看到這行（agent 定義要求把它帶回 handoff；orchestrator 據此請使用者 /mcp 重連再派下一輪）。
+# LS-180：Pen 主行程一旦結束，Claude Code 這個 session 的 stdio 連線就斷了；**LS-308 修正**——實測 mcp-server 是懶連線，
+# 下一次 mcp__pencil__* 呼叫會自動連上新 socket，不需要人工 /mcp（見 pen-status.sh 檔頭沿革）。不論下面重開成功與否，
+# 都要讓呼叫者看到這行（agent 定義要求把它帶回 handoff、下一輪派工前先實測一次 get_app_state；失敗才請使用者 /mcp）。
 reconnect_notice() {
   [ "$pen_restarted" -eq 1 ] || return 0
-  echo "⚠ Pencil MCP 需重連：請在 Claude Code 執行 /mcp 重連 pencil（Pen 主行程 pid ${pen_pid} 已結束重開，本 session 的 mcp__pencil__* 不會自動重連——agent 收到這行必須在 handoff 回報「需重連」，LS-180）"
+  echo "Pencil MCP：下一次 MCP 呼叫會自動重連；失敗才 /mcp（Pen 主行程 pid ${pen_pid} 已結束重開，mcp-server 為懶連線——agent 收到這行請在 handoff 註明「Pen 已重開，派工前已實測 get_app_state」，LS-308／LS-180）"
+}
+
+# LS-308 A3（來源 LS-96 池項 43230092 同批：實測本機常有多支別 session 殘留的 mcp-server，2 支 12 天前的 claude、
+# 4 支 codex）：`--kill` 是 orchestrator 明示的清場，重開後只列出殘留 mcp-server 供人工參考——**只印不殺**，別的
+# session 的行程不歸這支腳本管。判定邏輯與 pen-status.sh 共用 lib/pencil-mcp.sh，不重複貼一份。
+pencil_residual_notice() {
+  [ "$kill_mode" -eq 1 ] || return 0
+  pencil_mcp_probe
+  [ "$PENCIL_MCP_OTHER" -gt 0 ] || return 0
+  echo "Pencil MCP 殘留：另有 ${PENCIL_MCP_OTHER} 支別 session 的 mcp-server（僅列出、不處理；如需清理由使用者自行結束該 session，LS-308）"
 }
 
 open -a Pen "$want" >/dev/null 2>&1
@@ -632,17 +649,21 @@ restore_rc=0
 if [ "$poll_rc" -eq 0 ] && [ "$restore_rc" -ne 0 ]; then
   echo "✗ pen-open：清場後 Pen 目前文件＝${want}，但主 checkout design/littlesprout.pen 還原複驗失敗（見上方 ⚠）" >&2
   reconnect_notice
+  pencil_residual_notice
   exit 2
 elif [ "$poll_rc" -eq 0 ]; then
   echo "✓ pen-open：清場後 Pen 目前文件＝${want}"
   reconnect_notice
+  pencil_residual_notice
   exit 0
 elif [ "$poll_rc" -eq 1 ]; then
   echo "✗ pen-open：清場後仍路徑不一致——目標「${want}」，Pen 目前「${LAST_SEEN}」" >&2
   reconnect_notice
+  pencil_residual_notice
   exit 1
 else
   echo "✗ pen-open：清場後 ${POLL_TIMEOUT}s 內讀不到 Pen 文件路徑" >&2
   reconnect_notice
+  pencil_residual_notice
   exit 2
 fi
