@@ -202764,7 +202764,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "已修。全空錯誤態不再逐欄標紅（移除雙層 danger 邊框），改為 j3KH8 已驗證過的 text-primary+circle-alert 回話列語彙，三項欄位維持正常 $control-line 邊框，儲存鈕維持可按。",
+                  "content": "已修。全空錯誤態不再逐欄標紅（移除雙層 danger 邊框），改為原 j3KH8（R1 板，已於 R2 刪除重建，現為 L9AvJN）已驗證過的 text-primary+circle-alert 回話列語彙，三項欄位維持正常 $control-line 邊框，儲存鈕維持可按。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
