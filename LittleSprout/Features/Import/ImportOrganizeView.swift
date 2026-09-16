@@ -206,19 +206,35 @@ struct ImportOrganizeView: View {
 
     // MARK: - 釘底主鈕（93pt，Notes「畫面級屬性」01 列）
 
+    /// LS-303 R3（merge-review R2 M2，orchestrator 裁決）：`uploadCoordinator
+    /// .requiresAlbumSelection`（目前只有過渡版 `LegacyAlbumUploadImportCoordinator` 為
+    /// `true`）時，若有未略過群沒指定相簿，主鈕停用＋提示「本版需先選相簿」——這條管線只
+    /// 支援「每群都指定相簿」，LS-304 換完整版上線即拿掉（`ImportPlan
+    /// .hasUnskippedGroupsWithoutAlbum` 是純函式，見 `ImportEntrySourceTests` 同檔測試）。
+    private var missingAlbumSelection: Bool {
+        uploadCoordinator.requiresAlbumSelection && plan.hasUnskippedGroupsWithoutAlbum
+    }
+
     private var ctaBar: some View {
-        Button {
-            uploadCoordinator.startImport(plan: plan)
-            dismiss()
-        } label: {
-            Text("開始匯入 \(plan.pendingAssetCount) 張")
-                .appFont(.body, weight: .bold)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppSpacing.controlPaddingCTA)
+        VStack(spacing: AppSpacing.tight) {
+            if missingAlbumSelection {
+                Text("本版需先選相簿")
+                    .appFont(.note, weight: .semibold)
+                    .foregroundStyle(Color.lsTextSecondary)
+            }
+            Button {
+                uploadCoordinator.startImport(plan: plan)
+                dismiss()
+            } label: {
+                Text("開始匯入 \(plan.pendingAssetCount) 張")
+                    .appFont(.body, weight: .bold)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppSpacing.controlPaddingCTA)
+            }
+            .foregroundStyle(Color.lsOnAccent)
+            .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+            .disabled(plan.pendingAssetCount == 0 || missingAlbumSelection)
         }
-        .foregroundStyle(Color.lsOnAccent)
-        .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-        .disabled(plan.pendingAssetCount == 0)
         .padding(.horizontal, AppSpacing.screenPad)
         .padding(.vertical, AppSpacing.item)
         .background(Color.lsSurface)

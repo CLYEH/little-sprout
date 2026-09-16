@@ -53,6 +53,14 @@ struct ImportPlan: Codable, Equatable {
     /// 頂部摘要的 M——只算日期群數（沿設計稿 03 板「共 200 張・7 個日期群」語意，日期不明
     /// 群本身也算一群）。
     var groupCount: Int { groups.count }
+
+    /// LS-303 R3（merge-review R2 M2，orchestrator 裁決）：`LegacyAlbumUploadImportCoordinator`
+    /// 過渡版只支援「每群都指定相簿」——有未略過、且非空、卻沒有 `albumID` 的群，代表主鈕按下
+    /// 去會有照片沒有地方可放。`ImportOrganizeView.ctaBar` 用這個純函式決定是否停用主鈕＋
+    /// 顯示提示，見 `ImportUploadCoordinator.requiresAlbumSelection`。
+    var hasUnskippedGroupsWithoutAlbum: Bool {
+        groups.contains { !$0.isSkipped && !$0.assetLocalIdentifiers.isEmpty && $0.albumID == nil }
+    }
 }
 
 /// 匯入流程的觸發入口（LS-303 R2，merge-review R1 M2，orchestrator 裁決 `c997f234`）——
@@ -84,17 +92,34 @@ enum ImportEntrySource: Equatable {
     }
 }
 
-/// 2/2（上傳→摘要，blockedBy 本票）的入口介面——本票只接 no-op stub，真正的實作在 LS-249
-/// 2/2 補上。`ImportOrganizeView` 的主鈕按下時呼叫 `startImport(plan:)`，不關心它怎麼做。
+/// 2/2（上傳→摘要，blockedBy 本票）的入口介面——`ImportOrganizeView` 的主鈕按下時呼叫
+/// `startImport(plan:)`，不關心它怎麼做。LS-303 R3（merge-review R2 M2）在 2/2 落地前接了一個
+/// 過渡實作（`LegacyAlbumUploadImportCoordinator`），本票不再只有 no-op stub。
 protocol ImportUploadCoordinator {
     @MainActor
     func startImport(plan: ImportPlan)
+
+    /// LS-303 R3（merge-review R2 M2）：這個實作是否要求整理頁每一個未略過群都指定相簿——
+    /// `ImportOrganizeView.ctaBar` 讀這個旗標決定要不要在使用者選「不放相簿」時停用主鈕＋
+    /// 提示「本版需先選相簿」。預設 `false`（`NoOpImportUploadCoordinator`／未來 LS-304 的
+    /// 完整版都不需要這個限制）；只有 `LegacyAlbumUploadImportCoordinator` 覆寫成 `true`。
+    /// `@MainActor`：同 `startImport(plan:)`——`LegacyAlbumUploadImportCoordinator` 整支是
+    /// `@MainActor final class`，protocol 需求不標 `@MainActor` 的話，該型別的 conformance
+    /// 在 Swift 6 嚴格並行檢查下會被視為跨 actor 邊界（編譯期錯誤，非警告）。
+    @MainActor
+    var requiresAlbumSelection: Bool { get }
 }
 
-/// 本票唯一的 `ImportUploadCoordinator` 實作——不做任何事，只用來讓「開始匯入」鈕有東西可以
-/// 呼叫、確認 `ImportPlan` 在主鈕按下當下的形狀是對的（見 `ImportOrganizeViewModelTests`）。
-/// 2/2 落地後這支會被真正的實作取代，呼叫端（`ImportOrganizeView` 的建構參數）不需要跟著改
-/// ——這正是拉這層 protocol 的理由。
+extension ImportUploadCoordinator {
+    @MainActor
+    var requiresAlbumSelection: Bool { false }
+}
+
+/// 本票唯一在 2/2 落地前的預設實作（harness／preview／`.timeline` 入口尚未接線時使用）——不做
+/// 任何事，只用來讓「開始匯入」鈕有東西可以呼叫、確認 `ImportPlan` 在主鈕按下當下的形狀是對的
+/// （見 `ImportOrganizeViewModelTests`）。2/2 落地後 `LegacyAlbumUploadImportCoordinator` 也會
+/// 被真正的實作取代，呼叫端（`ImportOrganizeView` 的建構參數）不需要跟著改——這正是拉這層
+/// protocol 的理由。
 struct NoOpImportUploadCoordinator: ImportUploadCoordinator {
     var onStart: (@MainActor (ImportPlan) -> Void)?
 

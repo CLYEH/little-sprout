@@ -73,6 +73,10 @@ struct AlbumDetailView: View {
     /// 見 `AlbumDetailView+Actions.addPhotosBarButton`／`addPhotosInlineButton` 與
     /// `ImportBatchFlowModifier`——取代原本 `showsPhotosPicker` 的單張即傳流程。
     @State var showsBatchImport = false
+    /// LS-303 R3（merge-review R2 M2，orchestrator 裁決）：`ImportOrganizeView` 主鈕的過渡
+    /// 上傳管線——`loadDetailStoreIfNeeded()` 拿到 `detailStore.familyID` 的同時建立一次，
+    /// 與 `detailStore` 同壽命，理由見 `LegacyAlbumUploadImportCoordinator` 檔頭文件註解。
+    @State var legacyImportCoordinator: LegacyAlbumUploadImportCoordinator?
     @State private var contentWidth: CGFloat = UIScreen.main.bounds.width - 2 * AppSpacing.screenPad
     @Environment(\.dismiss) var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -116,7 +120,11 @@ struct AlbumDetailView: View {
                 }
                 .importBatchFlow(
                     isActive: $showsBatchImport, childrenStore: childrenStore, albumsStore: albumsStore,
-                    entrySource: .albumDetail(albumID: albumID)
+                    entrySource: .albumDetail(albumID: albumID),
+                    // LS-303 R3：`legacyImportCoordinator` 由 `loadDetailStoreIfNeeded()` 在
+                    // `detailStore` 建立的同時一併建立，這個分支下應該恆非 nil；`NoOpImport
+                    // UploadCoordinator()` 只是型別要求的保底，不預期真的用到。
+                    uploadCoordinator: legacyImportCoordinator ?? NoOpImportUploadCoordinator()
                 )
             } else if seedLoadFailed {
                 seedLoadFailureState
