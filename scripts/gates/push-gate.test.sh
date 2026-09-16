@@ -1637,13 +1637,14 @@ fi
 cache_dir="$R/.git/ls-push-gate"
 rm -rf "$cache_dir"   # 先清掉前面 ①～㊵ 各案例在同一份 $R 上可能已經留下的標記，確保下面從乾淨狀態起跑
 
-# (a) 第一次（cache miss）：真的跑 xcodebuild test，不印「跳過（快取」
+# (a) 第一次（cache miss）：真的跑 xcodebuild test，印進度句（LS-306 A2），不印「跳過（快取」
 test_log36a="$work/test-log-36a.txt"; : > "$test_log36a"
 out36a=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log36a" LS_PUSH_GATE_NO_CACHE=0)
-if [ -s "$test_log36a" ] && ! has "$out36a" '跳過（快取'; then
-  echo "✓ ㊶a 第一次（cache miss）：xcodebuild test 真的被跑到"
+if [ -s "$test_log36a" ] && has "$out36a" '→ push gate：unit tests 開始（' \
+   && ! has "$out36a" '跳過（快取'; then
+  echo "✓ ㊶a 第一次（cache miss）：xcodebuild test 真的被跑到＋印出進度句（LS-306 A2）"
 else
-  echo "✗ ㊶a 第一次應真的跑測試（實得 TEST_LOG=$(cat "$test_log36a" 2>/dev/null)）" >&2
+  echo "✗ ㊶a 第一次應真的跑測試＋印進度句（實得 TEST_LOG=$(cat "$test_log36a" 2>/dev/null)）" >&2
   printf '%s\n' "$out36a" | sed 's/^/    /' >&2; fail=1
 fi
 

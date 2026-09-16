@@ -274,6 +274,9 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
      && [ -z "$(find "$push_gate_cache_file" -mmin +1440 2>/dev/null)" ]; then
     echo "✓ push gate：unit tests 已於 $(date -r "$push_gate_cache_file" '+%Y-%m-%d %H:%M:%S') 對同一 tree（${push_gate_cache_key}）通過，跳過（快取；LS_PUSH_GATE_NO_CACHE=1 強制重跑；LS-306）"
   else
+  # LS-306 A2：開始前印一行進度——步驟 2 常跑 5–12 分，逾時被 Bash 工具背景化後前景重跑 `git push`
+  # 才知道「快取秒過」不是又跑了一次測試；同句寫進 .claude/agents/ios-dev.md。
+  echo "→ push gate：unit tests 開始（$(date '+%H:%M:%S')，通常 5–12 分；逾時被背景化就前景重跑 push，快取秒過）"
   # 1b) Xcode 版本對齊（LS-106 R1 F2／F5；PR #165 head 8b7a0fa 同型：8b7a0fa 已修好 1a 的 xcodegen
   #     漂移，但 KeyboardHeightObserver.swift 仍留著 UIScreen.main.bounds，CI 用 .xcode-version
   #     釘住的 Xcode／SDK 對它的 MainActor 隔離判斷較嚴格判成編譯錯，本機當時裝的版本較寬鬆沒
