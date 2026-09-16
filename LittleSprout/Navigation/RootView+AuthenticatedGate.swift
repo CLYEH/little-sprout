@@ -40,6 +40,8 @@ struct AuthenticatedGate: View {
     let albumsStore: AlbumsStore
     let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
+    /// LS-312：轉手往下傳到 `AuthenticatedRootView`（寶貝詳情・成長區塊）。
+    let growthAPIClient: GrowthAPIClient
     let mediaUploadService: MediaUploadService
     /// LS-193：轉手往下傳到 `AuthenticatedRootView`→`SettingsView`→`DeleteAccountFlowView`。
     let accountAPIClient: AccountAPIClient
@@ -138,7 +140,8 @@ struct AuthenticatedGate: View {
                 AuthenticatedRootView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
-                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+                    diaryAPIClient: diaryAPIClient, growthAPIClient: growthAPIClient,
+                    mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
                     commentAPIClient: commentAPIClient, pushNotificationStore: pushNotificationStore
                 )

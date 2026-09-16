@@ -3,7 +3,11 @@ import Foundation
 
 /// 只給 SwiftUI `#Preview`／`TapTargetGateHarness` 用的假 `GrowthAPIClient`——不打真網路
 /// （同 `PreviewChildAPIClient` 的角色，見該檔）。生產路徑一律用 `SupabaseGrowthAPIClient`。
-private final class PreviewGrowthAPIClient: GrowthAPIClient, @unchecked Sendable {
+///
+/// 非 `private`（LS-312 導覽入口接線起）：`RootView.swift`／`TapTargetGateHarness.swift` 的
+/// preview／harness host 需要直接建構這個型別當 `growthAPIClient` 參數——同
+/// `PreviewDiaryAPIClient` 本來就不是 `private` 的既有先例。
+final class PreviewGrowthAPIClient: GrowthAPIClient, @unchecked Sendable {
     func listGrowthRecords(childID: UUID, limit: Int) async throws -> [GrowthRecord] { [] }
 }
 

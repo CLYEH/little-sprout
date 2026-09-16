@@ -88,6 +88,15 @@ final class ChildrenStore {
     func seedRoleForPreview(_ role: FamilyRole) {
         myRole = role
     }
+
+    /// LS-312：`TapTargetGateHarness`／UITest 需要 `ChildrenManagementView` 渲染出真的有孩子
+    /// 列表的狀態——同 `AlbumsStore.seedForPreview(albums:)` 的既有先例，直接寫入
+    /// `children`，不需要真的走一次 async `refresh(familyID:)`（`PreviewChildAPIClient
+    /// .listChildren` 固定回傳 `[]`，種了也會被蓋掉，見該檔文件註解）。
+    func seedForPreview(children: [Child]) {
+        self.children = children
+        listState = .success
+    }
     #endif
 
     /// 這個孩子的頭像簽名 URL；沒有 `avatarURL`、或簽名還沒回來／失敗時回傳 nil——呼叫端

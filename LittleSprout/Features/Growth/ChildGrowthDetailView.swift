@@ -12,12 +12,21 @@ import SwiftUI
 /// `GrowthSegmentedControl`／`GrowthChartCardView` 各自讀 `dynamicTypeSize` 切換直式堆疊與
 /// X 軸刻度密度；iPad 見 `regularLayout`。
 ///
-/// **導覽入口尚未接上**（PR「未完成」欄）：`ChildrenManagementView` 的寶貝列目前仍直接導向
-/// `EditChildView`（09b）——本票範圍（LS-312「範圍」段 1–6）未列「修改 09 導覽」，這支畫面
-/// 目前只能透過 `TapTargetGateHarness`／`#Preview` 建構測試。導覽接線留給後續票（見 handoff
-/// 風險欄）。
+/// **導覽入口**（LS-312 補記，orchestrator 裁決）：`ChildrenManagementView` 的寶貝列改推這支
+/// 畫面（見 `ChildrenManagementView+Detail.swift`），09b（`EditChildView`）改從「編輯」入口
+/// 進入。`editDestination` 刻意用型別抹除的目的地建構閉包（不是耦合 `ChildrenRoute`）——這支
+/// 畫面本身要維持可獨立經 `TapTargetGateHarness`／`#Preview` 建構（不依賴 `ChildrenRoute`／
+/// `ChildrenManagementView` 的導覽情境），呼叫端各自決定要推去哪裡。
+///
+/// 「編輯」刻意放在 Identity Header（body content），不是系統 `ToolbarItem`——同
+/// `GrowthAddMeasurementPlaceholderView`「取消」鈕文件註解點名的既有教訓：系統 nav bar bar
+/// button item 熱區不受 `.frame()` 影響，R1 曾放在 `ToolbarItem` 實測量到 56×36pt，低於 44pt
+/// 下限（`TapTargetGateTests.testChildrenManagementViewRowOpensDetailNotEdit` 抓到）。
 struct ChildGrowthDetailView: View {
     let growthStore: GrowthStore
+    /// 非 nil 時 Identity Header 顯示「編輯」入口，推向這個閉包建出的畫面；nil 時（例如
+    /// harness／`#Preview` 的獨立展示）不顯示這顆鈕。
+    var editDestination: (() -> AnyView)?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -154,6 +163,17 @@ struct ChildGrowthDetailView: View {
                 Text(BirthdayFormat.ageDescription(birthday: growthStore.childBirthday))
                     .appFont(.body)
                     .foregroundStyle(Color.lsTextSecondary)
+            }
+            Spacer(minLength: 0)
+            if let editDestination {
+                NavigationLink {
+                    editDestination()
+                } label: {
+                    Text("編輯")
+                        .appFont(.body, weight: .semibold)
+                        .foregroundStyle(Color.lsTextPrimary)
+                        .frame(minWidth: 44, minHeight: 44)
+                }
             }
         }
     }

@@ -44,8 +44,7 @@ extension QADriver {
         let rowBefore = elementDigest(row)
         snap("children-list-before")
 
-        try tapWhenHittable(row, "寶貝列表上的「\(childName)」列", timeout: 30)
-        try require(app.staticTexts["編輯寶貝資料"], "編輯寶貝資料頁")
+        try openEditPageFromRow(named: childName)
         let avatarBefore = elementDigest(try require(avatarPickerButton, "頭像欄（「換張照片」）"))
         snap("edit-before")
 
@@ -175,8 +174,7 @@ extension QADriver {
     /// 刪不掉就大聲失敗——靜默略過等於把累積問題留給下一輪，正是這條要修的東西。跑到這裡時本情境的
     /// 斷言都已經過了，所以這裡的紅只會是「收尾刪除」本身，訊息分得開。
     private func deleteChild(named name: String) throws {
-        try tapWhenHittable(childRow(named: name), "收尾：寶貝列表上的「\(name)」列", timeout: 30)
-        try require(app.staticTexts["編輯寶貝資料"], "收尾：編輯寶貝資料頁")
+        try openEditPageFromRow(named: name)
         try tapWhenHittable(app.buttons["移除這個寶貝"], "收尾：「移除這個寶貝」（編輯頁最下方）", timeout: 20)
         try require(app.buttons["移除，30 天內可還原"], "收尾：移除確認 sheet 的確認鈕", timeout: 20).tap()
         try require(childrenHeading, "收尾：移除後回到寶貝列表", timeout: 60)
@@ -266,6 +264,16 @@ extension QADriver {
         }
         target.tap()
         return target
+    }
+
+    /// LS-312：寶貝列 row 現在推「寶貝詳情」（`ChildGrowthDetailView`），`EditChildView`（09b）
+    /// 從詳情頁導覽列右上「編輯」進入，不再是列本身的目的地——把「列 → 詳情 → 編輯」這段新增
+    /// 的中繼步驟封裝成一支，`runChildAvatar()`／`deleteChild(named:)` 兩處呼叫端都需要，
+    /// 不各自重複。
+    private func openEditPageFromRow(named name: String) throws {
+        try tapWhenHittable(childRow(named: name), "寶貝列表上的「\(name)」列", timeout: 30)
+        try tapWhenHittable(app.buttons["編輯"], "寶貝詳情頁導覽列右上「編輯」", timeout: 30)
+        try require(app.staticTexts["編輯寶貝資料"], "編輯寶貝資料頁")
     }
 
     private func openChildrenTab() throws {

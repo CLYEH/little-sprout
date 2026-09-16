@@ -113,6 +113,7 @@ enum TapTargetGateHarness {
         case .growthDetailEmpty: growthDetailEmptyHost
         case .growthAddMeasurementPlaceholder: growthAddMeasurementPlaceholderHost
         case .growthRecordsListPlaceholder: growthRecordsListPlaceholderHost
+        case .childrenManagementPopulated: childrenManagementPopulatedHost
         case .selfTestTooSmall:
             selfTestTooSmallHost
         case .selfTestGood:
@@ -251,7 +252,8 @@ enum TapTargetGateHarness {
             )),
             childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
             eulaStore: .preview(shouldPresent: false),
-            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
+            diaryAPIClient: PreviewDiaryAPIClient(), growthAPIClient: PreviewGrowthAPIClient(),
+            mediaUploadService: PreviewMediaUploadService(),
             accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
             safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
             pushNotificationStore: .preview()
@@ -295,7 +297,8 @@ enum TapTargetGateHarness {
             authStore: .preview(), familyStore: .preview(),
             childrenStore: .preview(), timelineStore: timelineStore, albumsStore: .preview(),
             eulaStore: .preview(shouldPresent: false),
-            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
+            diaryAPIClient: PreviewDiaryAPIClient(), growthAPIClient: PreviewGrowthAPIClient(),
+            mediaUploadService: PreviewMediaUploadService(),
             accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
             safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
             pushNotificationStore: .preview()

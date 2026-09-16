@@ -259,13 +259,12 @@ enum TapTargetGateScreenName: String {
     // `.disabled`。
     case commentsSheetOwnerNotReady = "CommentsSheetViewOwnerNotReady"
 
-    // LS-312：populated（示範資料集 6 筆量測，`GrowthStore.previewSeededWithDemoRecords()`）——
-    // 最新值卡／Segmented／新增量測／查看全部紀錄皆有代表性；04 為空狀態變體（`.preview()`
-    // 空陣列，「新增量測」鈕不得掛停用樣式）；後兩者為 placeholder 空殼承接畫面。
+    // LS-312：最新值卡／Segmented／新增量測／查看全部紀錄皆有代表性；04 為空狀態變體。
     case growthDetailPopulated = "ChildGrowthDetailView"
     case growthDetailEmpty = "ChildGrowthDetailViewEmpty"
     case growthAddMeasurementPlaceholder = "GrowthAddMeasurementPlaceholderView"
     case growthRecordsListPlaceholder = "GrowthRecordsListPlaceholderView"
+    case childrenManagementPopulated = "ChildrenManagementView"  // LS-312：populated，1 個寶貝
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
@@ -376,6 +375,7 @@ enum TapTargetGateScreenName: String {
         case .growthDetailEmpty: return .staticText("陳小軒")
         case .growthAddMeasurementPlaceholder: return .button("取消")
         case .growthRecordsListPlaceholder: return .staticText("全部記錄")
+        case .childrenManagementPopulated: return .staticText("寶貝")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
