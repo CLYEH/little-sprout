@@ -26,6 +26,7 @@ extension Color {
     static let lsOnAccent = Color("on-accent")
     static let lsOnPhoto = Color("on-photo")
     static let lsPaperEdge = Color("paper-edge")
+    static let lsPaperRule = Color("paper-rule")
     static let lsPaperShadow = Color("paper-shadow")
     static let lsPhotoCorner = Color("photo-corner")
     static let lsPhotoDim = Color("photo-dim")
