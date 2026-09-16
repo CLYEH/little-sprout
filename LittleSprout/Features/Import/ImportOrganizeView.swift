@@ -88,7 +88,7 @@ struct ImportOrganizeView: View {
                     ForEach($plan.groups) { $group in
                         ImportGroupCardView(
                             group: $group, children: childrenStore.activeChildren, albums: albumsStore.albums,
-                            maxThumbnailSlots: thumbnailSlots, thumbnailCellSize: 96,
+                            maxThumbnailSlots: thumbnailSlots, thumbnailCellSize: thumbnailCellSize,
                             thumbnailProvider: thumbnailProvider
                         )
                     }
@@ -103,6 +103,15 @@ struct ImportOrganizeView: View {
         }
         .appBackground()
         .safeAreaInset(edge: .bottom) { ctaBar }
+    }
+
+    /// merge-review R2 i4／R4 修正：`ImportThumbnailGridView` 的欄寬自 i5 起是 `.flexible()`
+    /// （見該檔文件註解），實際格子寬度在 iPad regular size class 下明顯大於 iPhone 那份
+    /// 96pt——縮圖請求的 `targetSize` 若仍寫死 96×displayScale，iPad 上會要到偏小的縮圖再
+    /// 放大顯示、偏糊。這裡依 size class 給不同的請求解析度提示值（寧可多要一點、不要不夠：
+    /// `PHImageManager` 對「偏大」的請求只是多花一點解碼成本，不會像「偏小」那樣看起來模糊）。
+    private var thumbnailCellSize: CGFloat {
+        horizontalSizeClass == .regular ? 160 : 96
     }
 
     private var thumbnailSlots: Int {
@@ -206,23 +215,38 @@ struct ImportOrganizeView: View {
 
     // MARK: - 釘底主鈕（93pt，Notes「畫面級屬性」01 列）
 
-    /// LS-303 R3（merge-review R2 M2，orchestrator 裁決）：`uploadCoordinator
-    /// .requiresAlbumSelection`（目前只有過渡版 `LegacyAlbumUploadImportCoordinator` 為
-    /// `true`）時，若有未略過群沒指定相簿，主鈕停用＋提示「本版需先選相簿」——這條管線只
-    /// 支援「每群都指定相簿」，LS-304 換完整版上線即拿掉（`ImportPlan
+    /// LS-303 R4（merge-review R3 M3，orchestrator 裁決 `8579e30e` 收回 R3 的「主鈕
+    /// disabled」）：`uploadCoordinator.requiresAlbumSelection`（目前只有過渡版
+    /// `LegacyAlbumUploadImportCoordinator` 為 `true`）時，若有未略過群沒指定相簿，這條
+    /// 過渡管線只支援「每群都指定相簿」，LS-304 換完整版上線即拿掉（`ImportPlan
     /// .hasUnskippedGroupsWithoutAlbum` 是純函式，見 `ImportEntrySourceTests` 同檔測試）。
+    /// **不 disable 主鈕**（品牌不可協商第 8 條，同 `ImportGroupCardView` 寶貝 chip 那套
+    /// 回話列 idiom）——主鈕永遠可按，按下時才判斷：條件不成立就顯示回話列並停留整理頁，
+    /// 不呼叫 `uploadCoordinator.startImport`／不 `dismiss()`。
     private var missingAlbumSelection: Bool {
         uploadCoordinator.requiresAlbumSelection && plan.hasUnskippedGroupsWithoutAlbum
     }
 
+    /// 使用者已經按過一次主鈕、但當下有未略過群沒相簿——`missingAlbumSelection` 一旦回到
+    /// false（使用者改了相簿或略過那群）這個回話列就跟著消失，不需要另外重置。
+    @State private var didAttemptImportWithMissingAlbum = false
+
     private var ctaBar: some View {
         VStack(spacing: AppSpacing.tight) {
-            if missingAlbumSelection {
-                Text("本版需先選相簿")
-                    .appFont(.note, weight: .semibold)
-                    .foregroundStyle(Color.lsTextSecondary)
+            if didAttemptImportWithMissingAlbum && missingAlbumSelection {
+                // 同 `ImportGroupCardView` 寶貝 chip 那套回話列語彙（`exclamationmark.circle`
+                // ＋`lsTextPrimary`，R3 M3 finding 指出的「不同語彙」在這裡訂正）。
+                HStack(spacing: AppSpacing.label) {
+                    Image(systemName: "exclamationmark.circle").appIconFrame(.small)
+                        .foregroundStyle(Color.lsTextPrimary)
+                    Text("本版需先選相簿").appFont(.note).foregroundStyle(Color.lsTextPrimary)
+                }
             }
             Button {
+                guard !missingAlbumSelection else {
+                    didAttemptImportWithMissingAlbum = true
+                    return
+                }
                 uploadCoordinator.startImport(plan: plan)
                 dismiss()
             } label: {
@@ -233,7 +257,9 @@ struct ImportOrganizeView: View {
             }
             .foregroundStyle(Color.lsOnAccent)
             .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-            .disabled(plan.pendingAssetCount == 0 || missingAlbumSelection)
+            // 「這批一張都沒有」是真的無事可做（同 in-flight 概念，不是可修正的驗證失敗）
+            // ——這顆維持既有的 disable；「未選相簿」不算這一類，見上方文件註解。
+            .disabled(plan.pendingAssetCount == 0)
         }
         .padding(.horizontal, AppSpacing.screenPad)
         .padding(.vertical, AppSpacing.item)
