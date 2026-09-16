@@ -1621,6 +1621,34 @@ else
   fi
 fi
 
+# ---- ⑰（LS-302，LS-96 池項 `7503e269`(1)）extract_backtick_tokens() 最小長度 ≥6＋黑名單：正負夾具
+#      直接呼叫函式（純函式、無外部相依，不必經過完整 CLI／假 repo）----
+py17="$(ROOT="$root" python3 - <<'PYEOF'
+import os, sys
+sys.path.insert(0, os.path.join(os.environ["ROOT"], "scripts", "ops"))
+import patrol_linear as pl
+
+ok = True
+def check(name, cond):
+    global ok
+    print(("✓ " if cond else "✗ ") + name)
+    if not cond:
+        ok = False
+
+text_pos = "後端需要 RPC 支援 `fancy_measurement_table` 欄位。"
+toks_pos = pl.extract_backtick_tokens(text_pos)
+check("⑰ 正樣本：高熵長 token（fancy_measurement_table）保留", toks_pos == ["fancy_measurement_table"])
+
+text_neg = "改 `id` 欄位、`RLS` 政策、`RPC`、`schema`、`migration`、`ab`（<6 碼）都不該留。"
+toks_neg = pl.extract_backtick_tokens(text_neg)
+check("⑰ 負樣本：泛用詞／短 token（id／RLS／RPC／schema／migration／ab）全被濾掉", toks_neg == [])
+
+print("OK" if ok else "FAIL")
+PYEOF
+)"
+printf '%s\n' "$py17"
+if [ "$(tail -1 <<<"$py17")" = OK ]; then :; else fail=1; fi
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2
   exit 1
