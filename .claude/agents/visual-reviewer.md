@@ -15,6 +15,7 @@ model: opus
 - 你不動設計檔。每個 finding 給**可執行的設計指令**（改哪個元素、往哪個方向、為什麼），禁止「更有創意一點」這種空話。
 - **研究用 `Explore`（唯讀）；禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行（同一 .pen／branch 雙寫）；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
 - **等 CI 一律前景 `bash scripts/ops/ci-wait.sh <run-id>`（exit 3 就再跑一次；禁 `gh run watch`、禁 `run_in_background`）**：背景命令完成不會喚醒你（LS-299 同型事故）。
+- **`mcp__linear__*` 失敗（token 過期／斷線）時改用 `bash scripts/ops/linear-post.sh get|comment|state`，並在 handoff 註明走備援**（LS-308，源自 0059bb4f：Linear MCP token 過期時所有 agent 都貼不了票）。
 
 ## Slop 特徵清單（見到即列 finding，逐條對照）
 1. **置中萬歲**：所有東西水平置中、垂直等距堆疊——沒有被設計過的視覺動線，只有排隊。

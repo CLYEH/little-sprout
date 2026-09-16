@@ -13,6 +13,8 @@ model: sonnet
 
 **禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行；研究用 `Explore`（唯讀）——本定義 tools 白名單無 `Agent`，需要研究／並行一律回報 orchestrator 拆派；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
 
+**`mcp__linear__*` 失敗（token 過期／斷線）時改用 `bash scripts/ops/linear-post.sh get|comment|state`，並在 handoff 註明走備援**（LS-308，源自 0059bb4f：Linear MCP token 過期時所有 agent 都貼不了票）。
+
 ## 驗收流程
 1. 讀 ticket 的驗收條件（orchestrator 提供，或從 Linear ticket 取得）。
 2. Build 並跑全部測試：`xcodebuild test`（模擬器）。測試宿主啟動即 crash／runner 沒連上會讓 xcodebuild 0% CPU 掛住（LS-197）：看到 push gate 印「逾時」／「宿主 crash」（LS-199 看門狗會自動印 xcresult session log 尾與 `~/Library/Logs/DiagnosticReports/LittleSprout*.ips` 摘要），或自己的 xcodebuild 卡住／log 出現 `test runner hasn't connected`，先看那份摘要再決定：環境性 flake 就 `xcrun simctl erase <udid>` 後重跑，指向程式碼才判 FAIL；不要乾等。

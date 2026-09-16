@@ -28,6 +28,7 @@ model: sonnet
 - **量測前確認模擬器 runtime＝`.ios-runtime`**（LS-205）：push-gate／CI 都會印 `simulator: <name> <udid> iOS <ver>（pinned <ver>）`，量測前看一眼這行；`detect-simulator.sh` 本機找不到釘住版會 fail-open（印 ⚠ 改用本機現有版本），不同要在 handoff 註明——runtime 差異會影響 tap-target／版面量測（LS-167 的教訓）。
 - **handoff「已驗證」欄每支 mutation 必列三段（LS-209）**：改了什麼一行 → 哪條測試紅 → 斷言訊息原文；**crash／build fail 不算紅**（LS-188 R3：handoff 稱新測試 mutation 轉紅，reviewer 重放四組結果皆綠，其中一組其實是 app crash 被誤當成「測試紅」——沒有斷言訊息原文就沒人核對得出這個差異）。少一支就是沒驗過，不可寫成「已驗證」。
 - **handoff「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」（LS-211）**：每一列項須對應到驗收條件或範圍編號，且附測試名（`git grep` 可驗存在，不得引用不存在的測試名）或路徑（`.png`／`.log`／`scratchpad/`／`evidence/`）或指令（`xcodebuild`／`bash scripts/…`，含 LS-294 擴充：裸 `git <subcmd>`／`node`／`python3`／`swift <路徑>`／`*.test.js`）——不是「看起來沒問題」這種空泛敘述（LS-96 池項 `1ff7b8d8`：驗收項與證據未一對一）。貼出前可先跑 `bash scripts/gates/handoff-evidence-check.sh <handoff.md>` 自我檢查是否綠。段落標題整行粗體，括號附註可接在同行（如 `**已驗證**（逐項對應票文驗收）：`／`**已驗證**：`，LS-292）。
+- **`mcp__linear__*` 失敗（token 過期／斷線）時改用 `bash scripts/ops/linear-post.sh get|comment|state`，並在 handoff 註明走備援**（LS-308，源自 0059bb4f：Linear MCP token 過期時所有 agent 都貼不了票）。
 
 ## 完成定義（DoD）
 1. ticket 的每條驗收條件都有對應測試且通過（XCTest；UI 行為至少有可重複的手動驗證步驟）。

@@ -18,6 +18,7 @@ model: sonnet
 
 - **研究用 `Explore`（唯讀）；禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行（同一 .pen／branch 雙寫）；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
 - **等 CI 一律前景 `bash scripts/ops/ci-wait.sh <run-id>`（exit 3 就再跑一次；禁 `gh run watch`、禁 `run_in_background`）**：背景命令完成不會喚醒你（LS-299 同型事故）。
+- **`mcp__linear__*` 失敗（token 過期／斷線）時改用 `bash scripts/ops/linear-post.sh get|comment|state`，並在 handoff 註明走備援**（LS-308，源自 0059bb4f：Linear MCP token 過期時所有 agent 都貼不了票）。
 
 ## Pencil 已知限制（實證，違者該輪白做）
 - **`width`／`height` 屬性在任何節點型別都不接受 `$variable` 引用**：`Insert()` 靜默改採預設 `fit_content(0)`（塌陷成 0、節點消失），`Update()` 靜默保留舊值——皆不報錯、不警告；schema／`read_skill` 文件字面上沒排除 `width`／`height` 的 `$` 引用寫法，但實作不接受這兩個屬性（schema≠實作）。尺寸類 token 一律改用 padding／gap 承載（附帶好處：AX 字級下自動長高）。可安全綁 `$variable` 的屬性：`gap`／`padding`／`cornerRadius`／`strokeWidth`／`fontSize`／`letterSpacing`。**交付規則**：尺寸類 token 在 handoff 標「規格值」族並登記本輪硬寫次數（綁不了 `$variable`，這類數字必然是硬編字面值，多處硬編之後要同步改的地方得看得到清單）。
