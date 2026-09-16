@@ -69,6 +69,10 @@ struct ImportOrganizeView: View {
                 }
                 .padding(.horizontal, AppSpacing.screenPad)
                 .padding(.bottom, AppSpacing.block)
+                // LS-251 R6 Notes「畫面級屬性」01/02/03 列：iPad「560pt 置中欄」——「iPad 是
+                // 重排不是放大」（LS-142 Q7HrnF 慣例），內容欄本身收窄置中，不是整頁滿版拉大字。
+                .frame(maxWidth: horizontalSizeClass == .regular ? 560 : .infinity)
+                .frame(maxWidth: .infinity)
             }
         }
         .appBackground()

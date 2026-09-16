@@ -19,7 +19,9 @@ struct ImportPermissionDeniedView: View {
             navRow
             Spacer(minLength: 0)
             emptyState
-                .frame(maxWidth: horizontalSizeClass == .regular ? 480 : .infinity)
+                // LS-251 R6 Notes「畫面級屬性」06b 列：iPad 834pt 寬——比 01/02/03 的 560pt
+                // 置中欄寬（近全版），不是同一套窄欄規則。
+                .frame(maxWidth: horizontalSizeClass == .regular ? 834 : .infinity)
             Spacer(minLength: 0)
         }
         .appBackground()
