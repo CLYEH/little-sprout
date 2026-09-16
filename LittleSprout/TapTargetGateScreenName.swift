@@ -104,6 +104,12 @@ enum TapTargetGateScreenName: String {
     // 在生產常態下量到群標題 x=119.3，應為 24）。這個 case 掛 `previewNormalSample()`（無
     // 失敗、無續傳橫幅、`uploading` 不帶百分比），專門讓機械 gate／UITest 覆蓋這個常態。
     case uploadQueueSheetNormal = "UploadQueueSheetViewNormal"
+    // LS-303：匯入整理頁（Import 01/02/03）——`plan:` 入口專為 harness／preview 準備，固定
+    // fixture（23＋5＋3 張日期不明群）即有代表性；下一 case 為 limited-library 疊加態（同一
+    // fixture，`accessState: .limited` 額外渲染 06a banner）。
+    case importOrganizeDefault = "ImportOrganizeView"
+    case importOrganizeLimited = "ImportOrganizeViewLimited"
+    case importPermissionDenied = "ImportPermissionDeniedView"  // 06b 拒絕權限空狀態
     // LS-164：帳號密碼登入畫面（審核帳號用）——初始態不需要任何 seed 資料（`.preview()`
     // 免登入即可建構，同 `createChild`／`createAlbum` 的既有理由），Email／密碼欄與登入鈕
     // 一開畫面就有代表性。
@@ -253,19 +259,12 @@ enum TapTargetGateScreenName: String {
     // `.disabled`。
     case commentsSheetOwnerNotReady = "CommentsSheetViewOwnerNotReady"
 
-    // LS-312：寶貝詳情・成長區塊——populated（01，示範資料集 6 筆量測）就有代表性：最新值卡
-    // 三格／Segmented／「新增量測」／「查看全部紀錄」四類可點元件都不需要真的登入即可渲染
-    // （`GrowthStore.previewSeededWithDemoRecords()`，同 `createChild` 等既有先例）。
+    // LS-312：populated（示範資料集 6 筆量測，`GrowthStore.previewSeededWithDemoRecords()`）——
+    // 最新值卡／Segmented／新增量測／查看全部紀錄皆有代表性；04 為空狀態變體（`.preview()`
+    // 空陣列，「新增量測」鈕不得掛停用樣式）；後兩者為 placeholder 空殼承接畫面。
     case growthDetailPopulated = "ChildGrowthDetailView"
-    // LS-312：04 空狀態變體（`GrowthStore.preview()` 預設空陣列）——同 `.settingsMemberRole`
-    // 等既有變體 case 的先例，不是獨立檔案，不需要另外具名排除；量測「新增量測」鈕在空狀態下
-    // 仍然可點（品牌硬約束：不得 `.disabled(`）。
     case growthDetailEmpty = "ChildGrowthDetailViewEmpty"
-    // LS-312：「新增量測」sheet 空殼承接畫面——初始態即有代表性（「取消」鈕），同 `createChild`
-    // 等既有先例。
     case growthAddMeasurementPlaceholder = "GrowthAddMeasurementPlaceholderView"
-    // LS-312：「查看全部紀錄」空殼承接畫面——純顯示，無互動元件；量測用途同其餘 placeholder
-    // 系列 case，主要借用「launch environment 指定畫面」通道跑 sentinel／截圖對稿。
     case growthRecordsListPlaceholder = "GrowthRecordsListPlaceholderView"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
@@ -317,6 +316,10 @@ enum TapTargetGateScreenName: String {
         case .uploadQueueSheet: return .staticText("沒有成功")
         // 常態樣本沒有失敗群，用永遠會渲染的標題文字當 sentinel。
         case .uploadQueueSheetNormal: return .staticText("正在新增照片")
+        // 自訂 nav row 標題／06a banner／06b 標題——皆固定 fixture 一開畫面就渲染。
+        case .importOrganizeDefault: return .staticText("整理新照片")
+        case .importOrganizeLimited: return .staticText("只能看到部分照片")
+        case .importPermissionDenied: return .staticText("新增照片")
         case .passwordSignIn: return .staticText("帳號密碼登入")
         // Doc Title——`LegalDocumentSheet` 載入完成後必定渲染，不依賴檔案實際內容。
         case .legalDocumentSheet: return .staticText("使用條款")
@@ -369,9 +372,6 @@ enum TapTargetGateScreenName: String {
         case .commentsSheetNetworkError: return .staticText("留言")
         case .commentsSheetSendTargetGone: return .staticText("留言")
         case .commentsSheetOwnerNotReady: return .staticText("留言")
-        // Identity Header 的孩子名字——示範資料集固定「陳小安」，一開畫面就渲染，不依賴
-        // `growthStore.refresh()`（`GrowthAPIClient` 是假的，但 identity 來自 seed，不用等
-        // 網路）。
         case .growthDetailPopulated: return .staticText("陳小安")
         case .growthDetailEmpty: return .staticText("陳小軒")
         case .growthAddMeasurementPlaceholder: return .button("取消")

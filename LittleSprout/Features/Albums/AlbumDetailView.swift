@@ -2,9 +2,19 @@ import PhotosUI
 import SwiftUI
 
 /// 相簿詳情（LS-166，依 LS-142 稿：`pVSXP`／`yfZyT`／`ZXdu2`／`w0NxC`／`OysBA`／`rFiLJ`／
-/// `FPaFl`）——LS-165 只建立最小佔位，這裡換成正式內容：瀑布流照片牆、加入照片（PhotosPicker
-/// → `MediaUploadService` → LS-167 `UploadQueueSheetView` 真實接線）、多寶貝標記唯讀顯示、
-/// 編輯相簿名稱、刪除相簿。
+/// `FPaFl`）——LS-165 只建立最小佔位，這裡換成正式內容：瀑布流照片牆、加入照片、多寶貝標記
+/// 唯讀顯示、編輯相簿名稱、刪除相簿。
+///
+/// **LS-303 R2（merge-review R1 M2，orchestrator 裁決 `c997f234`）**：「加入照片」改觸發
+/// 相機膠卷批次匯入流程（`ImportBatchFlowModifier`：PHPicker 多選→EXIF 分組→整理頁
+/// `ImportOrganizeView`），入口來源 `.albumDetail(albumID:)` 讓整理頁相簿列預設這本相簿
+/// （可改）——取代原本「PhotosPicker → `MediaUploadService` → LS-167 `UploadQueueSheetView`」
+/// 單張即傳流程。原流程專屬的觸發狀態（`showsPhotosPicker`／`pickerSelection`）已隨
+/// `.photosPicker`／`.onChange` 一併移除；`loadPicked`／`partitionPickedItems`／
+/// `UploadQueueStore` 管線本體保留未刪（`AlbumDetailView+Actions.swift`）：2/2
+/// （`ImportUploadCoordinator` 真正實作，blockedBy 本票）大概率會重用這條既有上傳佇列
+/// 管線，本輪不預先猜測介面砍掉重練；目前從這個畫面已無路徑觸發，記入 LS-96 待辦池供
+/// dead-code-sweeper／2/2 收尾時一併處理。
 ///
 /// **整支畫面完全自畫導覽**（`.navigationBarBackButtonHidden(true)`＋`.toolbar(.hidden, for:
 /// .navigationBar)`，同 `DiaryEditorView` 既有先例）——Notes `kHDk4` `OHMPk`：「用 cmp/Nav
@@ -32,7 +42,7 @@ struct AlbumDetailView: View {
     let childrenStore: ChildrenStore
     let mediaUploadService: MediaUploadService
 
-    // LS-166：`showsEditAlbum`／`showsDeleteConfirmation`／`showsPhotosPicker`／
+    // LS-166：`showsEditAlbum`／`showsDeleteConfirmation`／
     // `uploadQueueStore`／`showsUploadQueueSheet`／`dismiss`／`isOwner` 不標 `private`——
     // `AlbumDetailView+Actions.swift`（Nav Row／更多選單／加入照片，跨檔案 extension）需要
     // 讀寫，Swift 的 `private` 以檔案為界，同 `DiaryDetailView`／`DiaryDetailView
@@ -48,7 +58,6 @@ struct AlbumDetailView: View {
     @State var seedLoadFailed = false
     @State var uploadQueueStore: UploadQueueStore?
     @State var showsUploadQueueSheet = false
-    @State var showsPhotosPicker = false
     /// merge-review R2 m1：`loadPicked` 期間停用「加入照片」按鈕（同
     /// `DiaryComposerStore.isLoadingPickedItems` 既有解法）——沒有這道旗標，使用者可以在
     /// 第一批還在解碼時立刻開第二批 picker，兩批 `loadPicked` 非按開始順序完成時，後完成的
@@ -58,9 +67,16 @@ struct AlbumDetailView: View {
     /// 失敗被跳過——沿 `DiaryComposerStore.unsupportedFormatSkippedCount` 既有解法（見
     /// `AlbumDetailView+Actions.loadPicked`），每次開新一批時歸零。
     @State var skippedItemCount = 0
-    @State private var pickerSelection: [PhotosPickerItem] = []
     @State var showsEditAlbum = false
     @State var showsDeleteConfirmation = false
+    /// LS-303 R2（merge-review R1 M2，orchestrator 裁決 `c997f234`）：「加入照片」鈕觸發，
+    /// 見 `AlbumDetailView+Actions.addPhotosBarButton`／`addPhotosInlineButton` 與
+    /// `ImportBatchFlowModifier`——取代原本 `showsPhotosPicker` 的單張即傳流程。
+    @State var showsBatchImport = false
+    /// LS-303 R3（merge-review R2 M2，orchestrator 裁決）：`ImportOrganizeView` 主鈕的過渡
+    /// 上傳管線——`loadDetailStoreIfNeeded()` 拿到 `detailStore.familyID` 的同時建立一次，
+    /// 與 `detailStore` 同壽命，理由見 `LegacyAlbumUploadImportCoordinator` 檔頭文件註解。
+    @State var legacyImportCoordinator: LegacyAlbumUploadImportCoordinator?
     @State private var contentWidth: CGFloat = UIScreen.main.bounds.width - 2 * AppSpacing.screenPad
     @Environment(\.dismiss) var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -102,16 +118,14 @@ struct AlbumDetailView: View {
                         UploadQueueSheetView(store: uploadQueueStore)
                     }
                 }
-                .photosPicker(
-                    isPresented: $showsPhotosPicker, selection: $pickerSelection,
-                    matching: .any(of: [.images, .videos])
+                .importBatchFlow(
+                    isActive: $showsBatchImport, childrenStore: childrenStore, albumsStore: albumsStore,
+                    entrySource: .albumDetail(albumID: albumID, albumName: detailStore.title),
+                    // LS-303 R3：`legacyImportCoordinator` 由 `loadDetailStoreIfNeeded()` 在
+                    // `detailStore` 建立的同時一併建立，這個分支下應該恆非 nil；`NoOpImport
+                    // UploadCoordinator()` 只是型別要求的保底，不預期真的用到。
+                    uploadCoordinator: legacyImportCoordinator ?? NoOpImportUploadCoordinator()
                 )
-                .onChange(of: pickerSelection) { _, newItems in
-                    guard !newItems.isEmpty else { return }
-                    let itemsToLoad = newItems
-                    pickerSelection = []
-                    Task { await loadPicked(itemsToLoad, detailStore: detailStore) }
-                }
             } else if seedLoadFailed {
                 seedLoadFailureState
             } else {

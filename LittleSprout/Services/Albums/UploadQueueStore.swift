@@ -56,6 +56,12 @@ final class UploadQueueStore {
     /// 性注入；預設空閉包，不影響 `UploadQueueStoreTests`／`UploadQueueStoreDefensiveTests`
     /// 既有呼叫端（皆未帶這個參數）。
     private let onUploadSucceeded: @MainActor (_ id: UUID, _ mediaID: UUID) -> Void
+    /// LS-303 R5（merge-review R4 i1）：終局失敗（不可重試，`releasesPayload` 為 true 的
+    /// `.failed`）的掛鉤——`onUploadSucceeded` 只在成功時讓呼叫端清掉自己的
+    /// `entry id → albumID` 對照表，不可重試失敗（`.quota`／`.videoTooLarge`／
+    /// `.videoExportTimedOut`）的 entry 永遠不會再被重試，對照表項目同樣該清掉。可重試失敗
+    /// （`retry(_:)`／`retryAllRetryable()` 之後還可能成功）不觸發，保留登記供之後成功時查表。
+    private let onUploadFailedTerminal: @MainActor (_ id: UUID) -> Void
     /// LS-284：影片項目上傳前的壓縮步驟，注入點同 `DiaryComposerStore.videoPreparer`——正式
     /// 路徑預設呼叫 `VideoTrimmer.compressedForUpload`，測試才需要在不準備真影片檔的前提下
     /// 釘住「壓縮結果（含壓完仍超限的錯誤）怎麼往下接」。壓縮本身的行為由 `VideoTrimmerTests`
@@ -97,6 +103,7 @@ final class UploadQueueStore {
         familyID: UUID, mediaUploadService: MediaUploadService, maxConcurrentUploads: Int = 3,
         now: @escaping @MainActor () -> Date = Date.init,
         onUploadSucceeded: @escaping @MainActor (_ id: UUID, _ mediaID: UUID) -> Void = { _, _ in },
+        onUploadFailedTerminal: @escaping @MainActor (_ id: UUID) -> Void = { _ in },
         videoExportTimeout: Duration = .seconds(600),
         videoPreparer: @escaping @Sendable (URL) async throws -> VideoTrimmer.UploadSource = { fileURL in
             try await VideoTrimmer.compressedForUpload(fileURL: fileURL)
@@ -107,6 +114,7 @@ final class UploadQueueStore {
         self.maxConcurrentUploads = maxConcurrentUploads
         self.now = now
         self.onUploadSucceeded = onUploadSucceeded
+        self.onUploadFailedTerminal = onUploadFailedTerminal
         self.videoExportTimeout = videoExportTimeout
         self.videoPreparer = videoPreparer
     }
@@ -278,6 +286,9 @@ final class UploadQueueStore {
             }
             compressedVideoCache.removeValue(forKey: id)
             entries[id]?.payload = nil
+            // LS-303 R5（merge-review R4 i1）：終局失敗（不可重試）也讓呼叫端清 entry→albumID
+            // 對照表，同 `onUploadSucceeded` 的查表清理，見該屬性文件註解。
+            if case .failed = state { onUploadFailedTerminal(id) }
         }
         advance()
     }
