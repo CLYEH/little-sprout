@@ -262,6 +262,21 @@ esac
 if [ "$skip_swift_steps" = 1 ]; then
   echo "✓ push gate：無 Swift 變更，跳過 unit tests（CI 仍跑）"
 elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
+  # LS-306 A1：同 tree 快取——步驟 2（xcodebuild unit tests，含下方 LS-95／LS-209 的 tap-target／iPad
+  # best-effort）全綠後在 git-common-dir（worktree 共用）寫一個以本分支 tree sha 為檔名的標記；被
+  # 背景化／逾時後前景重跑 `git push`，同一個 tree 直接秒過，不必再等一次 xcodebuild。只跳步驟 2，
+  # 其餘秒級檢查（步驟 1／3／3b／3c／4／5／6／7）照跑，不受影響。標記檔 24 h 過期（find -mmin +1440，
+  # 避免長時間沒 push 時誤信舊快取）；`LS_PUSH_GATE_NO_CACHE=1` 強制重跑，不看快取也不寫入（除錯用）。
+  push_gate_cache_dir="$(git rev-parse --git-common-dir)/ls-push-gate"
+  push_gate_cache_key="$(git rev-parse HEAD^{tree})"
+  push_gate_cache_file="${push_gate_cache_dir}/${push_gate_cache_key}"
+  if [ "${LS_PUSH_GATE_NO_CACHE:-0}" != 1 ] && [ -f "$push_gate_cache_file" ] \
+     && [ -z "$(find "$push_gate_cache_file" -mmin +1440 2>/dev/null)" ]; then
+    echo "✓ push gate：unit tests 已於 $(date -r "$push_gate_cache_file" '+%Y-%m-%d %H:%M:%S') 對同一 tree（${push_gate_cache_key}）通過，跳過（快取；LS_PUSH_GATE_NO_CACHE=1 強制重跑；LS-306）"
+  else
+  # LS-306 A2：開始前印一行進度——步驟 2 常跑 5–12 分，逾時被 Bash 工具背景化後前景重跑 `git push`
+  # 才知道「快取秒過」不是又跑了一次測試；同句寫進 .claude/agents/ios-dev.md。
+  echo "→ push gate：unit tests 開始（$(date '+%H:%M:%S')，通常 5–12 分；逾時被背景化就前景重跑 push，快取秒過）"
   # 1b) Xcode 版本對齊（LS-106 R1 F2／F5；PR #165 head 8b7a0fa 同型：8b7a0fa 已修好 1a 的 xcodegen
   #     漂移，但 KeyboardHeightObserver.swift 仍留著 UIScreen.main.bounds，CI 用 .xcode-version
   #     釘住的 Xcode／SDK 對它的 MainActor 隔離判斷較嚴格判成編譯錯，本機當時裝的版本較寬鬆沒
@@ -703,6 +718,11 @@ PY
       fi
       ;;
   esac
+  # LS-306 A1：整段（unit tests＋觸發時的 tap-target／iPad best-effort）走到這裡都沒有非 0 結束
+  # （set -euo pipefail），才算「全綠」，寫入同 tree 快取。
+  mkdir -p "$push_gate_cache_dir"
+  : > "$push_gate_cache_file"
+  fi
 else
   echo "⚠ push gate：尚未建立 Xcode 專案，跳過 unit tests（Phase 0-1 完成後自動生效）"
 fi
