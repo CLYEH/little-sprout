@@ -190868,6 +190868,8 @@
                           "id": "PDHM6",
                           "name": "Empty Lead",
                           "fill": "$print-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
                           "content": "這張紙還沒有記錄",
                           "textAlign": "center",
                           "fontFamily": "$font",
@@ -198377,8 +198379,8 @@
                               "id": "kz0K0",
                               "type": "ref",
                               "ref": "SEy9U",
-                              "name": "Segmented",
-                              "width": 280
+                              "name": "Segmented FIXR2MARK",
+                              "width": "fill_container"
                             },
                             {
                               "type": "frame",
