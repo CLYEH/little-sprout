@@ -189665,7 +189665,7 @@
                           "id": "PJLBa",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月20日",
+                          "content": "8月20日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -190043,7 +190043,7 @@
                           "id": "Cebyj",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月20日",
+                          "content": "8月20日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -190267,7 +190267,7 @@
       "name": "Growth / 02 新增量測 sheet · 錯誤態（超出合理範圍）",
       "clip": true,
       "width": 393,
-      "height": 1025,
+      "height": 1089,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -190311,7 +190311,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1025,
+          "height": 1089,
           "fill": "$paper-shadow"
         },
         {
@@ -190322,7 +190322,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1025,
+          "height": 1089,
           "layout": "vertical",
           "justifyContent": "end",
           "children": [
@@ -190421,7 +190421,7 @@
                           "id": "w3j31",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月20日",
+                          "content": "8月20日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -190457,12 +190457,27 @@
                         "tOvM3": {
                           "content": "身高（cm）"
                         },
+                        "v6YiYR": {
+                          "stroke": "$control-line",
+                          "strokeWidth": 2
+                        },
                         "iu3Q8": {
                           "content": "180.0",
                           "fill": "$text-primary"
                         },
                         "i2SHf": {
-                          "enabled": false
+                          "enabled": true
+                        },
+                        "a7OyZ7": {
+                          "icon": "circle-alert",
+                          "fill": "$text-primary",
+                          "width": 18,
+                          "height": 18
+                        },
+                        "ikuz2": {
+                          "content": "180.0 cm 比同齡孩子高很多。如果沒有打錯，直接儲存就可以。",
+                          "fill": "$text-primary",
+                          "fontWeight": "600"
                         }
                       }
                     },
@@ -190570,21 +190585,21 @@
                           "name": "Status Icon",
                           "width": 18,
                           "height": 18,
-                          "icon": "circle-alert",
+                          "icon": "info",
                           "library": "lucide",
-                          "fill": "$text-primary"
+                          "fill": "$text-secondary"
                         },
                         {
                           "type": "text",
                           "id": "K2kn4Z",
                           "name": "Status Text",
-                          "fill": "$text-primary",
+                          "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "180.0 cm 比同齡孩子高很多。如果沒有打錯，直接儲存就可以。",
+                          "content": "身高、體重、頭圍至少需要填寫一項。",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
-                          "fontWeight": "600"
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -190803,7 +190818,7 @@
                           "id": "Z5zrr5",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月20日",
+                          "content": "8月20日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -191185,7 +191200,7 @@
                           "id": "BuEY0",
                           "name": "Field Value",
                           "fill": "$text-primary",
-                          "content": "8月20日",
+                          "content": "8月20日（今天）",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -195622,7 +195637,7 @@
           "width": "fill_container",
           "content": "深色帶＝中間 50%（P25–P75）、淺色帶＝中間 90%（P5–P95）。",
           "fontFamily": "$font",
-          "fontSize": "$fs-meta",
+          "fontSize": "$fs-note",
           "fontWeight": "normal"
         },
         {
@@ -196060,7 +196075,7 @@
           "width": "fill_container",
           "content": "沒有群體比較，只呈現孩子自己隨時間的變化趨勢。",
           "fontFamily": "$font",
-          "fontSize": "$fs-meta",
+          "fontSize": "$fs-note",
           "fontWeight": "normal"
         }
       ]
