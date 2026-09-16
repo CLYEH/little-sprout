@@ -399,6 +399,8 @@ jobs:
           # LS-308 A3：pen-status.sh／pen-open.sh --kill 共用的 mcp-server「本 session／殘留」判定庫
           bash scripts/ops/lib/pencil-mcp.test.sh || rc=1
           bash scripts/ops/pen-land.test.sh || rc=1
+          # LS-308 B1：Linear MCP token 過期時的 GraphQL 備援（本機假伺服器，不打正式 Linear API）
+          bash scripts/ops/linear-post.test.sh || rc=1
           bash scripts/ops/patrol-linear.test.sh || rc=1
           bash scripts/ops/cleanup-merged.test.sh || rc=1
           # LS-235：正式站 purge-storage 排程健康度巡檢腳本自測（全 fixture 化，不連線任何真正的 Supabase 專案）
