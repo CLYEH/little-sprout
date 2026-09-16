@@ -185950,7 +185950,7 @@
       "name": "cmp/Segmented",
       "reusable": true,
       "width": 345,
-      "fill": "$surface-2",
+      "fill": "#5530401F",
       "cornerRadius": "$radius-md",
       "padding": "$sp-tight",
       "children": [
@@ -185959,10 +185959,10 @@
           "id": "dJn6x",
           "name": "Tab Selected",
           "width": "fill_container",
-          "fill": "$surface",
+          "fill": "$print-paper",
           "cornerRadius": "$radius-md",
-          "stroke": "$control-line",
-          "strokeWidth": 1.5,
+          "stroke": "$print-ink",
+          "strokeWidth": 1,
           "padding": [
             "$ctl-pad-md",
             0
@@ -185974,7 +185974,7 @@
               "type": "text",
               "id": "Iqsh8",
               "name": "Label",
-              "fill": "$text-primary",
+              "fill": "$print-ink",
               "content": "身高",
               "fontFamily": "$font",
               "fontSize": "$fs-body",
@@ -186000,7 +186000,7 @@
               "type": "text",
               "id": "wiWCW",
               "name": "Label",
-              "fill": "$text-secondary",
+              "fill": "$print-ink-secondary",
               "content": "體重",
               "fontFamily": "$font",
               "fontSize": "$fs-body",
@@ -186026,7 +186026,7 @@
               "type": "text",
               "id": "gnNjq",
               "name": "Label",
-              "fill": "$text-secondary",
+              "fill": "$print-ink-secondary",
               "content": "頭圍",
               "fontFamily": "$font",
               "fontSize": "$fs-body",
@@ -186156,11 +186156,11 @@
                         {
                           "type": "text",
                           "id": "vYW9l",
-                          "name": "Age",
+                          "name": "Age R3MARK1",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "1 歲4 個⁠月",
+                          "content": "1 歲 4 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -186542,10 +186542,10 @@
                 "shadowType": "outer",
                 "color": "$paper-shadow",
                 "offset": {
-                  "x": 0,
-                  "y": 3
+                  "x": 2,
+                  "y": 8
                 },
-                "blur": 12
+                "blur": 16
               },
               "layout": "vertical",
               "gap": "$sp-item",
@@ -186586,7 +186586,7 @@
                       "x": 36,
                       "y": 60,
                       "name": "Gridline 85",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
                     },
@@ -186613,7 +186613,7 @@
                       "x": 36,
                       "y": 106.66666666666667,
                       "name": "Gridline 70",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
                     },
@@ -186640,7 +186640,7 @@
                       "x": 36,
                       "y": 153.33333333333334,
                       "name": "Gridline 55",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
                     },
@@ -186667,7 +186667,7 @@
                       "x": 36,
                       "y": 200,
                       "name": "Gridline 40",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
                     },
@@ -186890,9 +186890,9 @@
                       "x": 216,
                       "y": 17.22,
                       "name": "Value Tooltip",
-                      "fill": "$surface",
+                      "fill": "$print-paper",
                       "cornerRadius": "$radius-md",
-                      "stroke": "$control-line",
+                      "stroke": "$print-ink",
                       "strokeWidth": 1,
                       "padding": [
                         8,
@@ -186905,7 +186905,7 @@
                           "type": "text",
                           "id": "pTUn6",
                           "name": "Tooltip Value",
-                          "fill": "$text-primary",
+                          "fill": "$print-ink",
                           "content": "78.5 cm",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
@@ -187108,7 +187108,7 @@
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "1 歲4 個⁠月",
+                          "content": "1 歲 4 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -187490,10 +187490,10 @@
                 "shadowType": "outer",
                 "color": "$paper-shadow",
                 "offset": {
-                  "x": 0,
-                  "y": 3
+                  "x": 2,
+                  "y": 8
                 },
-                "blur": 12
+                "blur": 16
               },
               "layout": "vertical",
               "gap": "$sp-item",
@@ -187534,7 +187534,7 @@
                       "x": 36,
                       "y": 60,
                       "name": "Gridline 85",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
                     },
@@ -187561,7 +187561,7 @@
                       "x": 36,
                       "y": 106.66666666666667,
                       "name": "Gridline 70",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
                     },
@@ -187588,7 +187588,7 @@
                       "x": 36,
                       "y": 153.33333333333334,
                       "name": "Gridline 55",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
                     },
@@ -187615,7 +187615,7 @@
                       "x": 36,
                       "y": 200,
                       "name": "Gridline 40",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
                     },
@@ -187838,9 +187838,9 @@
                       "x": 216,
                       "y": 17.22,
                       "name": "Value Tooltip",
-                      "fill": "$surface",
+                      "fill": "$print-paper",
                       "cornerRadius": "$radius-md",
-                      "stroke": "$control-line",
+                      "stroke": "$print-ink",
                       "strokeWidth": 1,
                       "padding": [
                         8,
@@ -187853,7 +187853,7 @@
                           "type": "text",
                           "id": "mYYnv",
                           "name": "Tooltip Value",
-                          "fill": "$text-primary",
+                          "fill": "$print-ink",
                           "content": "78.5 cm",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
@@ -188060,7 +188060,7 @@
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "1 歲4 個⁠月",
+                          "content": "1 歲 4 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -188443,10 +188443,10 @@
                 "shadowType": "outer",
                 "color": "$paper-shadow",
                 "offset": {
-                  "x": 0,
-                  "y": 3
+                  "x": 2,
+                  "y": 8
                 },
-                "blur": 12
+                "blur": 16
               },
               "layout": "vertical",
               "gap": "$sp-item",
@@ -188489,7 +188489,7 @@
                       "x": 56,
                       "y": 110,
                       "name": "Gridline 85",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 193,
                       "height": 1
                     },
@@ -188516,7 +188516,7 @@
                       "x": 56,
                       "y": 176.66666666666669,
                       "name": "Gridline 70",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 193,
                       "height": 1
                     },
@@ -188543,7 +188543,7 @@
                       "x": 56,
                       "y": 243.33333333333334,
                       "name": "Gridline 55",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 193,
                       "height": 1
                     },
@@ -188570,7 +188570,7 @@
                       "x": 56,
                       "y": 310,
                       "name": "Gridline 40",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 193,
                       "height": 1
                     },
@@ -188761,10 +188761,10 @@
                       "x": 120,
                       "y": 31.889999999999986,
                       "name": "Value Tooltip",
-                      "fill": "$surface",
+                      "fill": "$print-paper",
                       "cornerRadius": "$radius-md",
-                      "stroke": "$control-line",
-                      "strokeWidth": 1.5,
+                      "stroke": "$print-ink",
+                      "strokeWidth": 1,
                       "padding": [
                         10,
                         16
@@ -188776,7 +188776,7 @@
                           "type": "text",
                           "id": "KjzLz",
                           "name": "Tooltip Value",
-                          "fill": "$text-primary",
+                          "fill": "$print-ink",
                           "content": "78.5 cm",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
@@ -188977,7 +188977,7 @@
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "2 歲1 個⁠月",
+                          "content": "2 歲 1 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -189228,10 +189228,10 @@
                 "shadowType": "outer",
                 "color": "$paper-shadow",
                 "offset": {
-                  "x": 0,
-                  "y": 3
+                  "x": 2,
+                  "y": 8
                 },
-                "blur": 12
+                "blur": 16
               },
               "layout": "vertical",
               "gap": "$sp-item",
@@ -189272,25 +189272,9 @@
                       "x": 36,
                       "y": 60,
                       "name": "Gridline 85",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "rZEaO",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 51,
-                      "name": "Axis Label 85",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "85",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "rectangle",
@@ -189299,25 +189283,9 @@
                       "x": 36,
                       "y": 106.66666666666667,
                       "name": "Gridline 70",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "Y5Wbe",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 97.66666666666667,
-                      "name": "Axis Label 70",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "70",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "rectangle",
@@ -189326,25 +189294,9 @@
                       "x": 36,
                       "y": 153.33333333333334,
                       "name": "Gridline 55",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "i2Yyr",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 144.33333333333334,
-                      "name": "Axis Label 55",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "55",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "rectangle",
@@ -189353,88 +189305,9 @@
                       "x": 36,
                       "y": 200,
                       "name": "Gridline 40",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "WVsNh",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 191,
-                      "name": "Axis Label 40",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "40",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "oG9lU",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 2,
-                      "name": "Unit Label",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 56,
-                      "content": "cm",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-meta",
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "text",
-                      "id": "dJDl8",
-                      "layoutPosition": "absolute",
-                      "x": 20,
-                      "y": 210,
-                      "name": "Month Label 1",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "1",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "JA4ZY",
-                      "layoutPosition": "absolute",
-                      "x": 111.60000000000001,
-                      "y": 210,
-                      "name": "Month Label 7",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "7",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "y75x4",
-                      "layoutPosition": "absolute",
-                      "x": 249,
-                      "y": 210,
-                      "name": "Month Label 16",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "16",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -189461,8 +189334,11 @@
                       "name": "Empty Message",
                       "width": 233,
                       "height": 140,
+                      "fill": "$print-paper",
+                      "cornerRadius": "$radius-md",
                       "layout": "vertical",
                       "gap": "$sp-tight",
+                      "padding": "$sp-item",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -189672,7 +189548,7 @@
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "2 歲1 個⁠月",
+                          "content": "2 歲 1 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -189923,10 +189799,10 @@
                 "shadowType": "outer",
                 "color": "$paper-shadow",
                 "offset": {
-                  "x": 0,
-                  "y": 3
+                  "x": 2,
+                  "y": 8
                 },
-                "blur": 12
+                "blur": 16
               },
               "layout": "vertical",
               "gap": "$sp-item",
@@ -189967,25 +189843,9 @@
                       "x": 36,
                       "y": 60,
                       "name": "Gridline 85",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "B0zMa",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 51,
-                      "name": "Axis Label 85",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "85",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "rectangle",
@@ -189994,25 +189854,9 @@
                       "x": 36,
                       "y": 106.66666666666667,
                       "name": "Gridline 70",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "LpSwP",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 97.66666666666667,
-                      "name": "Axis Label 70",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "70",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "rectangle",
@@ -190021,25 +189865,9 @@
                       "x": 36,
                       "y": 153.33333333333334,
                       "name": "Gridline 55",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "t0T85",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 144.33333333333334,
-                      "name": "Axis Label 55",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "55",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "rectangle",
@@ -190048,88 +189876,9 @@
                       "x": 36,
                       "y": 200,
                       "name": "Gridline 40",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 233,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "e6Stao",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 191,
-                      "name": "Axis Label 40",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "40",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "qo8Xq",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 2,
-                      "name": "Unit Label",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 56,
-                      "content": "cm",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-meta",
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "text",
-                      "id": "qTJJF",
-                      "layoutPosition": "absolute",
-                      "x": 20,
-                      "y": 210,
-                      "name": "Month Label 1",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "1",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "mbs1i",
-                      "layoutPosition": "absolute",
-                      "x": 111.60000000000001,
-                      "y": 210,
-                      "name": "Month Label 7",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "7",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "Tq26I",
-                      "layoutPosition": "absolute",
-                      "x": 249,
-                      "y": 210,
-                      "name": "Month Label 16",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 32,
-                      "content": "16",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -190156,8 +189905,11 @@
                       "name": "Empty Message",
                       "width": 233,
                       "height": 140,
+                      "fill": "$print-paper",
+                      "cornerRadius": "$radius-md",
                       "layout": "vertical",
                       "gap": "$sp-tight",
+                      "padding": "$sp-item",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -190371,7 +190123,7 @@
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "2 歲1 個⁠月",
+                          "content": "2 歲 1 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -190623,10 +190375,10 @@
                 "shadowType": "outer",
                 "color": "$paper-shadow",
                 "offset": {
-                  "x": 0,
-                  "y": 3
+                  "x": 2,
+                  "y": 8
                 },
-                "blur": 12
+                "blur": 16
               },
               "layout": "vertical",
               "gap": "$sp-item",
@@ -190669,25 +190421,9 @@
                       "x": 56,
                       "y": 110,
                       "name": "Gridline 85",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 193,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "J9b9Bb",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 92,
-                      "name": "Axis Label 85",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 48,
-                      "content": "85",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "rectangle",
@@ -190696,25 +190432,9 @@
                       "x": 56,
                       "y": 223.33333333333334,
                       "name": "Gridline 70",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 193,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "e1gVse",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 205.33333333333334,
-                      "name": "Axis Label 70",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 48,
-                      "content": "70",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "rectangle",
@@ -190723,25 +190443,9 @@
                       "x": 56,
                       "y": 336.6666666666667,
                       "name": "Gridline 55",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 193,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "Ozyvu",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 318.6666666666667,
-                      "name": "Axis Label 55",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 48,
-                      "content": "55",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "rectangle",
@@ -190750,88 +190454,9 @@
                       "x": 56,
                       "y": 450,
                       "name": "Gridline 40",
-                      "fill": "$border",
+                      "fill": "$paper-rule",
                       "width": 193,
                       "height": 1
-                    },
-                    {
-                      "type": "text",
-                      "id": "E8y1W",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 432,
-                      "name": "Axis Label 40",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 48,
-                      "content": "40",
-                      "textAlign": "right",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "x9urcq",
-                      "layoutPosition": "absolute",
-                      "x": 0,
-                      "y": 2,
-                      "name": "Unit Label",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 96,
-                      "content": "cm",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-meta",
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "text",
-                      "id": "D2inFo",
-                      "layoutPosition": "absolute",
-                      "x": 32,
-                      "y": 466,
-                      "name": "Month Label 1",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 48,
-                      "content": "1",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "JM4rY",
-                      "layoutPosition": "absolute",
-                      "x": 107.60000000000002,
-                      "y": 466,
-                      "name": "Month Label 7",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 48,
-                      "content": "7",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "BtK50",
-                      "layoutPosition": "absolute",
-                      "x": 221,
-                      "y": 466,
-                      "name": "Month Label 16",
-                      "fill": "$print-ink-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 48,
-                      "content": "16",
-                      "textAlign": "center",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -190858,8 +190483,11 @@
                       "name": "Empty Message",
                       "width": 193,
                       "height": 340,
+                      "fill": "$print-paper",
+                      "cornerRadius": "$radius-md",
                       "layout": "vertical",
                       "gap": "$sp-group",
+                      "padding": "$sp-item",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -196646,10 +196274,10 @@
             "shadowType": "outer",
             "color": "$paper-shadow",
             "offset": {
-              "x": 0,
-              "y": 3
+              "x": 2,
+              "y": 8
             },
-            "blur": 12
+            "blur": 16
           },
           "layout": "vertical",
           "gap": "$sp-item",
@@ -196697,7 +196325,7 @@
                     265,
                     200
                   ],
-                  "fill": "$control-line",
+                  "fill": "$print-ink-secondary",
                   "width": 265,
                   "height": 200
                 },
@@ -196715,7 +196343,7 @@
                     265,
                     200
                   ],
-                  "fill": "$control-line",
+                  "fill": "$print-ink-secondary",
                   "width": 265,
                   "height": 200
                 },
@@ -196726,7 +196354,7 @@
                   "x": 36,
                   "y": 60,
                   "name": "Gridline 85",
-                  "fill": "$border",
+                  "fill": "$paper-rule",
                   "width": 233,
                   "height": 1
                 },
@@ -196753,7 +196381,7 @@
                   "x": 36,
                   "y": 106.66666666666667,
                   "name": "Gridline 70",
-                  "fill": "$border",
+                  "fill": "$paper-rule",
                   "width": 233,
                   "height": 1
                 },
@@ -196780,7 +196408,7 @@
                   "x": 36,
                   "y": 153.33333333333334,
                   "name": "Gridline 55",
-                  "fill": "$border",
+                  "fill": "$paper-rule",
                   "width": 233,
                   "height": 1
                 },
@@ -196807,7 +196435,7 @@
                   "x": 36,
                   "y": 200,
                   "name": "Gridline 40",
-                  "fill": "$border",
+                  "fill": "$paper-rule",
                   "width": 233,
                   "height": 1
                 },
@@ -197029,9 +196657,9 @@
                   "x": 216,
                   "y": 17.22222222222223,
                   "name": "Value Tooltip",
-                  "fill": "$surface",
+                  "fill": "$print-paper",
                   "cornerRadius": "$radius-md",
-                  "stroke": "$control-line",
+                  "stroke": "$print-ink",
                   "strokeWidth": 1,
                   "padding": [
                     8,
@@ -197044,7 +196672,7 @@
                       "type": "text",
                       "id": "ieZ6R",
                       "name": "Tooltip Value",
-                      "fill": "$text-primary",
+                      "fill": "$print-ink",
                       "content": "78.5 cm",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
@@ -197120,10 +196748,10 @@
             "shadowType": "outer",
             "color": "$paper-shadow",
             "offset": {
-              "x": 0,
-              "y": 3
+              "x": 2,
+              "y": 8
             },
-            "blur": 12
+            "blur": 16
           },
           "layout": "vertical",
           "gap": "$sp-item",
@@ -197164,7 +196792,7 @@
                   "x": 36,
                   "y": 60,
                   "name": "Gridline 85",
-                  "fill": "$border",
+                  "fill": "$paper-rule",
                   "width": 233,
                   "height": 1
                 },
@@ -197191,7 +196819,7 @@
                   "x": 36,
                   "y": 106.66666666666667,
                   "name": "Gridline 70",
-                  "fill": "$border",
+                  "fill": "$paper-rule",
                   "width": 233,
                   "height": 1
                 },
@@ -197218,7 +196846,7 @@
                   "x": 36,
                   "y": 153.33333333333334,
                   "name": "Gridline 55",
-                  "fill": "$border",
+                  "fill": "$paper-rule",
                   "width": 233,
                   "height": 1
                 },
@@ -197245,7 +196873,7 @@
                   "x": 36,
                   "y": 200,
                   "name": "Gridline 40",
-                  "fill": "$border",
+                  "fill": "$paper-rule",
                   "width": 233,
                   "height": 1
                 },
@@ -197467,9 +197095,9 @@
                   "x": 216,
                   "y": 17.22222222222223,
                   "name": "Value Tooltip",
-                  "fill": "$surface",
+                  "fill": "$print-paper",
                   "cornerRadius": "$radius-md",
-                  "stroke": "$control-line",
+                  "stroke": "$print-ink",
                   "strokeWidth": 1,
                   "padding": [
                     8,
@@ -197482,7 +197110,7 @@
                       "type": "text",
                       "id": "W28Eyx",
                       "name": "Tooltip Value",
-                      "fill": "$text-primary",
+                      "fill": "$print-ink",
                       "content": "78.5 cm",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
@@ -197779,7 +197407,7 @@
                           "id": "HFVoM",
                           "name": "Age",
                           "fill": "$text-secondary",
-                          "content": "1 歲4 個⁠月",
+                          "content": "1 歲 4 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -198356,10 +197984,10 @@
                             "shadowType": "outer",
                             "color": "$paper-shadow",
                             "offset": {
-                              "x": 0,
-                              "y": 3
+                              "x": 2,
+                              "y": 8
                             },
-                            "blur": 12
+                            "blur": 16
                           },
                           "layout": "vertical",
                           "gap": "$sp-item",
@@ -198398,7 +198026,7 @@
                                   "x": 36,
                                   "y": 60,
                                   "name": "Gridline 85",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 167,
                                   "height": 1
                                 },
@@ -198425,7 +198053,7 @@
                                   "x": 36,
                                   "y": 200,
                                   "name": "Gridline 70",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 167,
                                   "height": 1
                                 },
@@ -198452,7 +198080,7 @@
                                   "x": 36,
                                   "y": 340,
                                   "name": "Gridline 55",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 167,
                                   "height": 1
                                 },
@@ -198479,7 +198107,7 @@
                                   "x": 36,
                                   "y": 480,
                                   "name": "Gridline 40",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 167,
                                   "height": 1
                                 },
@@ -198701,9 +198329,9 @@
                                   "x": 150,
                                   "y": 57.666666666666686,
                                   "name": "Value Tooltip",
-                                  "fill": "$surface",
+                                  "fill": "$print-paper",
                                   "cornerRadius": "$radius-md",
-                                  "stroke": "$control-line",
+                                  "stroke": "$print-ink",
                                   "strokeWidth": 1,
                                   "padding": [
                                     8,
@@ -198716,7 +198344,7 @@
                                       "type": "text",
                                       "id": "mRDIm",
                                       "name": "Tooltip Value",
-                                      "fill": "$text-primary",
+                                      "fill": "$print-ink",
                                       "content": "78.5 cm",
                                       "fontFamily": "$font",
                                       "fontSize": "$fs-note",
@@ -199038,7 +198666,7 @@
                           "id": "y5CkrU",
                           "name": "Age",
                           "fill": "$text-secondary",
-                          "content": "1 歲4 個⁠月",
+                          "content": "1 歲 4 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -199615,10 +199243,10 @@
                             "shadowType": "outer",
                             "color": "$paper-shadow",
                             "offset": {
-                              "x": 0,
-                              "y": 3
+                              "x": 2,
+                              "y": 8
                             },
-                            "blur": 12
+                            "blur": 16
                           },
                           "layout": "vertical",
                           "gap": "$sp-item",
@@ -199657,7 +199285,7 @@
                                   "x": 36,
                                   "y": 60,
                                   "name": "Gridline 85",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 167,
                                   "height": 1
                                 },
@@ -199684,7 +199312,7 @@
                                   "x": 36,
                                   "y": 200,
                                   "name": "Gridline 70",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 167,
                                   "height": 1
                                 },
@@ -199711,7 +199339,7 @@
                                   "x": 36,
                                   "y": 340,
                                   "name": "Gridline 55",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 167,
                                   "height": 1
                                 },
@@ -199738,7 +199366,7 @@
                                   "x": 36,
                                   "y": 480,
                                   "name": "Gridline 40",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 167,
                                   "height": 1
                                 },
@@ -199960,9 +199588,9 @@
                                   "x": 150,
                                   "y": 57.666666666666686,
                                   "name": "Value Tooltip",
-                                  "fill": "$surface",
+                                  "fill": "$print-paper",
                                   "cornerRadius": "$radius-md",
-                                  "stroke": "$control-line",
+                                  "stroke": "$print-ink",
                                   "strokeWidth": 1,
                                   "padding": [
                                     8,
@@ -199975,7 +199603,7 @@
                                       "type": "text",
                                       "id": "nRjp5",
                                       "name": "Tooltip Value",
-                                      "fill": "$text-primary",
+                                      "fill": "$print-ink",
                                       "content": "78.5 cm",
                                       "fontFamily": "$font",
                                       "fontSize": "$fs-note",
@@ -200301,7 +199929,7 @@
                           "id": "S42vf",
                           "name": "Age",
                           "fill": "$text-secondary",
-                          "content": "1 歲4 個⁠月",
+                          "content": "1 歲 4 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -200879,10 +200507,10 @@
                             "shadowType": "outer",
                             "color": "$paper-shadow",
                             "offset": {
-                              "x": 0,
-                              "y": 3
+                              "x": 2,
+                              "y": 8
                             },
-                            "blur": 12
+                            "blur": 16
                           },
                           "layout": "vertical",
                           "gap": "$sp-item",
@@ -200923,7 +200551,7 @@
                                   "x": 60,
                                   "y": 110,
                                   "name": "Gridline 85",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 373,
                                   "height": 1
                                 },
@@ -200950,7 +200578,7 @@
                                   "x": 60,
                                   "y": 183.33333333333334,
                                   "name": "Gridline 70",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 373,
                                   "height": 1
                                 },
@@ -200977,7 +200605,7 @@
                                   "x": 60,
                                   "y": 256.6666666666667,
                                   "name": "Gridline 55",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 373,
                                   "height": 1
                                 },
@@ -201004,7 +200632,7 @@
                                   "x": 60,
                                   "y": 330,
                                   "name": "Gridline 40",
-                                  "fill": "$border",
+                                  "fill": "$paper-rule",
                                   "width": 373,
                                   "height": 1
                                 },
@@ -201195,10 +200823,10 @@
                                   "y": 34.7777777777778,
                                   "name": "Value Tooltip",
                                   "width": 176,
-                                  "fill": "$surface",
+                                  "fill": "$print-paper",
                                   "cornerRadius": "$radius-md",
-                                  "stroke": "$control-line",
-                                  "strokeWidth": 1.5,
+                                  "stroke": "$print-ink",
+                                  "strokeWidth": 1,
                                   "padding": [
                                     10,
                                     16
@@ -201210,7 +200838,7 @@
                                       "type": "text",
                                       "id": "XkPec",
                                       "name": "Tooltip Value",
-                                      "fill": "$text-primary",
+                                      "fill": "$print-ink",
                                       "content": "78.5 cm",
                                       "fontFamily": "$font",
                                       "fontSize": "$fs-note",
