@@ -113,16 +113,15 @@ struct ChildrenManagementView: View {
         )
     }
 
-    @ViewBuilder
+    /// LS-312 R2（merge-review R1 m1，orchestrator 裁決）：寶貝詳情（`ChildGrowthDetailView`）
+    /// 是唯讀畫面，所有家庭成員（含 viewer）都能開——不像過去目的地是 `EditChildView` 時只有
+    /// `canManageChildren` 才能點。「編輯」入口本身仍限管理者，見 `childDetail(for:)` 的
+    /// `editDestination` gate。
     private func childRow(_ child: Child) -> some View {
-        if childrenStore.canManageChildren {
-            NavigationLink(value: ChildrenRoute.detail(child.id)) {
-                childRowContent(child, showsChevron: true)
-            }
-            .buttonStyle(.plain)
-        } else {
-            childRowContent(child, showsChevron: false)
+        NavigationLink(value: ChildrenRoute.detail(child.id)) {
+            childRowContent(child, showsChevron: true)
         }
+        .buttonStyle(.plain)
     }
 
     private func childRowContent(_ child: Child, showsChevron: Bool) -> some View {
