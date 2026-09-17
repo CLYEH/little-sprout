@@ -127,6 +127,18 @@ final class AlbumsStore {
         }
     }
 
+    /// LS-315 R3（merge-review R2 m1／m2）：時間軸「匯入」入口點擊時的補載守門——`albums`
+    /// 還沒載過（空）且沒有另一次 `refresh` 正在飛行中才打。下沉到這裡而不是留在呼叫端的
+    /// 原始碼字面守衛，理由：(1) 呼叫端只是「點擊時偶爾要補載」，守門邏輯本身屬於
+    /// `AlbumsStore` 該不該重打 RPC 的狀態機決定，跟 `loadMore` 開頭的 `!loadMoreState
+    /// .isSubmitting` 是同一類判斷；(2) 這裡能用既有 `StubAlbumsAPIClient` 寫真行為測試
+    /// （`AlbumsStoreTests`），不必像原本的呼叫端字面守衛只能靠原始碼字串比對。
+    @discardableResult
+    func refreshIfEmpty(familyID: UUID) async -> Bool {
+        guard albums.isEmpty, !refreshState.isSubmitting else { return false }
+        return await refresh(familyID: familyID)
+    }
+
     /// 捲到底載入下一頁——游標取自目前最後一筆（`fetchAlbums` 回傳序＝
     /// `created_at desc, id desc`，最後一筆就是最舊的那一筆）。
     @discardableResult
