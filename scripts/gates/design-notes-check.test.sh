@@ -17,6 +17,8 @@
 #   ⑰～⑳ LS-300 畫面級屬性清單：新畫面板（名稱形如「<群組> / <編號或名稱>」）列在 Notes「畫面級屬性」段（板名子字串命中）→ 綠；
 #   完全沒有該段 → 紅並點名板名；段落存在但只提到其中一塊新板 → 紅，只點名缺的那塊，不誤點已列的；mutation：拿掉板名比對
 #   （`screen_attr_missing` 恆回空列表）→ ⑱ 的缺列樣本改判綠，證明紅是這條檢查造成的。
+#   ㉘～㉙ LS-322 畫面級屬性「資料落點」必列欄：既有（本 PR 未新增）畫面板 Notes 缺此欄不回溯（白名單）、本 PR 只新增
+#   另一塊資料落點齊全的畫面 → 綠；本 PR 新增的畫面缺資料落點欄 → 紅，只點名該畫面、不誤點既有舊畫面。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -185,7 +187,7 @@ expect 1 '⑯-b 同一定義的 個月 也各報一筆' '／節點 wQVzs：「�
 # ───── LS-300：新增畫面板「畫面級屬性」清單（新板名稱形如「<群組> / <編號或名稱>」，Notes 板「畫面級屬性」段板名子字串命中） ─────
 # ⑰ 正樣本：新增一塊 Import / 板，Notes 補了「畫面級屬性」段並提到板名 → 綠
 g checkout -q -b ls300-live "$base_ref"
-pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" "$(board ImpB1 'Import / 01 匯入整理頁 (iPhone)' '')" "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
+pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" "$(board ImpB1 'Import / 01 匯入整理頁 (iPhone)' '')" "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大｜資料落點 import_plan.status')"
 commit_pen 'design(pen): LS-300 r1 新增 Import / 01 板，Notes 補畫面級屬性列'
 expect 0 '⑰ 新畫面板列在 Notes「畫面級屬性」段（板名子字串命中）→ 綠' '新增正典畫面 1、畫面級屬性缺列 0' '' design/littlesprout.pen --base "$base_ref"
 
@@ -238,7 +240,7 @@ pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":
     "$(board Scr01b 'Import / 01 測試頁 · 深色' '')" \
     "$(board Scr01c 'A11y / 01 測試頁 · Dynamic Type AX3（body 40pt）' '')" \
     "$(board Scr01d 'Import / 01-iPad 測試頁 (iPad 11吋)（不裁切）' '')" \
-    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 測試頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
+    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 測試頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大｜資料落點 import_plan.status')"
 commit_pen 'design(pen): LS-300 R2 canon-live 同畫面 4 變體板，Notes 一列'
 expect 0 '㉑ LS-251 形狀：同正典畫面 4 變體板（基準／深色／AX3／iPad），Notes 一列（任一變體名稱）→ 綠' '新增正典畫面 1、畫面級屬性缺列 0' '' design/littlesprout.pen --base "$base_ref"
 
@@ -295,7 +297,7 @@ g checkout -q -b ls300-crossgroup-missing "$base_ref"
 pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" \
     "$(board ImpX 'Import / 01 匯入整理頁 (iPhone)' '')" \
     "$(board GroX 'Growth / 01 最新值卡 (iPhone)' '')" \
-    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
+    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大｜資料落點 import_plan.status')"
 commit_pen 'design(pen): LS-300 R3 crossgroup-missing Import/01 與 Growth/01 撞號，Notes 只列 Import'
 out="$(cd "$R" && bash "$check" design/littlesprout.pen --base "$base_ref" 2>&1)"; got=$?
 if [ "$got" -eq 1 ] && grep -qF '✗ 畫面級屬性缺列：正典畫面 Growth / 01（01 最新值卡；板 id：GroX）' <<<"$out" && ! grep -qF '✗ 畫面級屬性缺列：正典畫面 Import / 01' <<<"$out"; then
@@ -312,7 +314,7 @@ g checkout -q -b ls300-a11y-merge "$base_ref"
 pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" \
     "$(board Scr01e 'Import / 01 測試頁 (iPhone)' '')" \
     "$(board Scr01f 'A11y / 01 測試頁 · Dynamic Type AX3（body 40pt）' '')" \
-    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 測試頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
+    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 01 測試頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大｜資料落點 import_plan.status')"
 commit_pen 'design(pen): LS-300 R3 a11y-merge A11y/01 唯一映射回 Import/01'
 expect 0 '㉕(b) A11y / 01（唯一候選）映射回基底群 Import → 與 Import / 01 併成同一正典畫面、Notes 一列即綠' '新增正典畫面 1、畫面級屬性缺列 0' '' design/littlesprout.pen --base "$base_ref"
 
@@ -355,6 +357,39 @@ if [ "$got" -eq 1 ] && grep -qF '✗ 畫面級屬性缺列：正典畫面 A11y /
   echo "✓ ㉗ A11y / 01 撞兩個基底群（Import／Growth）不歸併：只點名 A11y / 01 缺列，各自保留自己群名、各自要求一列"
 else
   echo "✗ ㉗ 應只點名 A11y / 01 缺列、不誤點已列的 Import／Growth（實得 exit ${got}）" >&2
+  printf '%s\n' "$out" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ───── LS-322（LS-96 池項 0e87afd9／LS-317 收尾②）：畫面級屬性清單「資料落點」必列欄——只對本 PR
+# 新增的正典畫面要求，既有（本 PR 未新增）畫面板缺此欄不回溯（白名單） ─────
+# ㉘ 正樣本：既有畫面板 Notes 早已列出但沒有「資料落點」欄（LS-322 之前的舊格式）；本 PR 只新增另一塊
+#     畫面且該列資料落點齊全 → 綠，舊畫面不回溯要求
+g checkout -q -b ls322-legacy-base "$base_ref"
+pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" \
+    "$(board OldScr 'Import / 09 舊畫面 (iPhone)' '')" \
+    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 09 舊畫面 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
+commit_pen 'design(pen): LS-322 legacy-base 舊畫面板，Notes 舊格式無資料落點欄'
+legacy_base_ref="$(g rev-parse HEAD)"
+pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" \
+    "$(board OldScr 'Import / 09 舊畫面 (iPhone)' '')" \
+    "$(board NewScr 'Import / 10 新畫面 (iPhone)' '')" \
+    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 09 舊畫面 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大\nImport / 10 新畫面 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大｜資料落點 import_plan.status')"
+commit_pen 'design(pen): LS-322 legacy-ok 新增 Import/10，資料落點齊全；Import/09 舊畫面不回溯'
+expect 0 '㉘ 既有畫面缺資料落點不回溯（白名單）；本 PR 新增畫面資料落點齊全 → 綠' '新增正典畫面 1、畫面級屬性缺列 0、資料落點缺列 0' '' design/littlesprout.pen --base "$legacy_base_ref"
+
+# ㉙ 負樣本：同一份舊畫面基礎上，本 PR 新增畫面卻缺「資料落點」欄 → 紅，只點名新畫面，不誤點舊畫面
+g checkout -q -b ls322-missing "$legacy_base_ref"
+pen "$(board Ab12C '01 板' '{"type":"frame","id":"Xk9f2","name":"Row"},{"type":"frame","id":"Zq7Lm","name":"Row 2"}')" \
+    "$(board OldScr 'Import / 09 舊畫面 (iPhone)' '')" \
+    "$(board NewScr 'Import / 10 新畫面 (iPhone)' '')" \
+    "$(notes T1 '列 Xk9f2 高 44。畫面級屬性：Import / 09 舊畫面 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大\nImport / 10 新畫面 (iPhone)｜隱藏 Tab Bar ✓｜標題 系統 large｜釘底動作帶 無｜失敗文案鍵 import.read_failed｜深色 無特例｜AX3 無特例｜iPad 放大')"
+commit_pen 'design(pen): LS-322 missing 新增 Import/10，Notes 缺資料落點欄'
+out="$(cd "$R" && bash "$check" design/littlesprout.pen --base "$legacy_base_ref" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && grep -qF '✗ 資料落點缺列：正典畫面 Import / 10（10 新畫面；板 id：NewScr）' <<<"$out" && ! grep -qF '正典畫面 Import / 09' <<<"$out"; then
+  echo "✓ ㉙ 本 PR 新增畫面缺資料落點欄 → 紅，只點名新畫面（Import/10）、不回溯要求舊畫面（Import/09）"
+else
+  echo "✗ ㉙ 應只點名 Import / 10 缺資料落點、不誤點 Import / 09（實得 exit ${got}）" >&2
   printf '%s\n' "$out" | sed 's/^/    /' >&2
   fail=1
 fi
