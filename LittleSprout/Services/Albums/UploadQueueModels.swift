@@ -75,6 +75,17 @@ enum UploadFailureReason: Equatable {
     /// 原始檔案很可能再次卡在同一個地方，不給「重試」，使用者得先確認這支影片本身是否有問題
     /// （例如檔案已損毀）再重新選取上傳。
     case videoExportTimedOut
+    /// merge-review R2 i1：後端 `media_taken_at_range_check`（23514）——即使 M1 已經在寫入端
+    /// `min(anchorDate, Date())` 夾限，裝置時鐘本身快超過伺服器容忍的 1 天緩衝時，夾完仍可能
+    /// 超出 `now() + 1 day`。R1 把這歸進 `.server`（可重試）：使用者按重試只會重新 PUT 同一份
+    /// 位元組再被同一個 CHECK 打回，永遠不會成功，文案「伺服器忙碌」也誤導成暫時性問題。跟
+    /// `.quota`／`.videoTooLarge` 同一類道理，改成不可重試＋誠實文案。**已知不精確之處**：
+    /// `media` 表另外還有 `media_duration_seconds_positive`／`media_thumb_path_family_prefix`
+    /// 兩個 23514 check constraint，PostgREST 的 `code` 欄位不分是哪一個（分辨要解析 `message`
+    /// 裡的 constraint 名稱字串，違反 `AppError.swift` 檔頭「`message` 僅供 log，不進畫面／
+    /// 不驅動邏輯」的契約）——這兩個約束是客戶端內部不變量，正常路徑不該被違反，与
+    /// `.server`「已知不完美之處」段同一類可接受近似（`from(_:)` 已有先例）。
+    case invalidTakenAt
 
     var title: String {
         switch self {
@@ -85,14 +96,17 @@ enum UploadFailureReason: Equatable {
             "影片太長，壓縮後仍超過 50MB 上限，請裁到 \(suggestedSeconds) 秒內再試一次。"
         case .videoExportTimedOut:
             "影片處理逾時，請確認影片檔案正常後重新選取上傳。"
+        case .invalidTakenAt:
+            "拍攝日期無效，這張沒有上傳。"
         }
     }
 
     /// 稿面 kfLYA：LS002 不提供「重試」——換一次呼叫不會變出空間，使用者得先去騰出空間；
-    /// `.videoTooLarge` 同理（LS-284：換一次呼叫不會讓同一支影片變小）。
+    /// `.videoTooLarge` 同理（LS-284：換一次呼叫不會讓同一支影片變小）；`.invalidTakenAt`
+    /// 同理（merge-review R2 i1：重試同一份位元組會再被同一個 CHECK 打回）。
     var isRetryable: Bool {
         switch self {
-        case .quota, .videoTooLarge, .videoExportTimedOut: false
+        case .quota, .videoTooLarge, .videoExportTimedOut, .invalidTakenAt: false
         case .network, .server: true
         }
     }
@@ -100,18 +114,21 @@ enum UploadFailureReason: Equatable {
     /// 稿面 hD3dH（MJ-5）：只有 LS002 這一列多一個「查看儲存空間」連結出路。
     var showsQuotaLink: Bool { self == .quota }
 
-    /// `AppError` → 四分支的對應。**已知不完美之處**（設計稿只定義三句文案，沒有涵蓋所有
+    /// `AppError` → 分支的對應。**已知不完美之處**（設計稿只定義三句文案，沒有涵蓋所有
     /// 情境）：`.validationRetryable`（例如 `MediaUploadService.mapUploadError` 的 Storage
     /// 413 payload-too-large）與非 LS002 的 `.rejected`（例如帳號／家庭停權中途發生）都落在
     /// `.server` 這個桶——顯示「伺服器忙碌，請稍後再試」＋可重試，但這兩種情況重試同一份
     /// 位元組永遠不會成功。真正的邊界修法需要設計補文案，這裡先用最保守（不會誤導成「無法
     /// 挽回」、頂多讓使用者多按一次無效的重試）的桶接住，未在本票新增文案——記入 handoff
-    /// 「未完成」。`.videoTooLarge` 是例外：它有明確、每支影片各自現算的建議秒數可以講，
-    /// 不需要落到這個模糊桶。
+    /// 「未完成」。`.videoTooLarge`／`.invalidTakenAt` 是例外：都有明確、不會因重試而改變的
+    /// 失敗原因可以講，不需要落到這個模糊桶。
     static func from(_ error: AppError) -> UploadFailureReason {
         if case .validationRetryable(_, let code) = error,
            let suggestedSeconds = DiaryMediaErrorCode.videoTooLargeSuggestedSeconds(fromCode: code) {
             return .videoTooLarge(suggestedSeconds: suggestedSeconds)
+        }
+        if case .validationRetryable(_, let code) = error, code == "23514" {
+            return .invalidTakenAt
         }
         switch error {
         case .network:
