@@ -113,9 +113,16 @@ struct ChildGrowthDetailView: View {
         await store.refresh()
     }
 
+    /// m1（merge-review R2，orchestrator 裁決）：首次載入（`.submitting`＋還沒有任何資料）不能
+    /// 誤呈現成 04「這張紙還沒有記錄」——同 `AlbumDetailView.photoGridOrEmptyState` 既有語彙
+    /// （`case .submitting where store.photos.isEmpty: ProgressView()`），冷啟動／慢網時使用者
+    /// 不會盯著空狀態文案、誤按「新增量測」。有資料之後即使背景重新整理（`.submitting`
+    /// 但 `!isEmpty`）仍照常渲染舊資料，不切回骨架版。
     @ViewBuilder
     private func content(_ growthStore: GrowthStore) -> some View {
-        if horizontalSizeClass == .regular {
+        if case .submitting = growthStore.loadState, growthStore.isEmpty {
+            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if horizontalSizeClass == .regular {
             regularLayout(growthStore)
         } else {
             compactLayout(growthStore)
