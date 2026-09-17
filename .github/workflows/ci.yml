@@ -132,9 +132,12 @@ jobs:
         if: ${{ !cancelled() && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')) }}
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          # LS-316 merge-review R1 M1：--verify 的 design-ref 分支反查段要讀 PR head 的 .pen 快照；本 job 簽出的是
+          # refs/pull/N/merge（合併 commit），同 LS-127 的 .pen 三支 gate 一樣要傳 PR head sha 避開 base 側並行變更混入。
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-check.txt"
-          bash scripts/gates/pr-body-check.sh --branch "$HEAD" --verify "$RUNNER_TEMP/pr-body-check.txt"
+          bash scripts/gates/pr-body-check.sh --branch "$HEAD" --verify --head-sha "$HEAD_SHA" "$RUNNER_TEMP/pr-body-check.txt"
 
       # LS-256（LS-96 池項 010d927d(1)）：從這一步起到 job 結尾的每個 gate step 都帶 `!cancelled()`——GitHub Actions 的
       # step 預設只在前面全綠時跑，上面的 pr-body-check 一紅（body 文案問題），後面 14 支彼此獨立的 gate（evidence-path／
@@ -511,6 +514,9 @@ jobs:
 
       - name: Design gate（新增 SwiftUI View 需附設計稿標記）
         if: ${{ !cancelled() && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')) }}
+        env:
+          # LS-316 merge-review R1 M1：design-ref-check 讀 PR head 的 .pen 快照（LS-127 merge-ref 誤讀同型）。
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           # 掃所有變更 Swift 檔的「新增行」，涵蓋新檔與寫進既有檔的新 View；
@@ -528,7 +534,7 @@ jobs:
           pens_touched=$(git diff --name-only "$base_sha"...HEAD -- 'design/*.pen' || true)
           if [ "${new_views:-0}" -gt 0 ] || [ -n "$pens_touched" ]; then
             printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-design-ref.txt"
-            bash scripts/gates/design-ref-check.sh "$RUNNER_TEMP/pr-body-design-ref.txt" design/littlesprout.pen
+            bash scripts/gates/design-ref-check.sh "$RUNNER_TEMP/pr-body-design-ref.txt" design/littlesprout.pen --head-sha "$HEAD_SHA"
           fi
 
       # LS-26：.pen 落地結構兜底（本機 commit-gate 的伺服器端對應；
