@@ -1022,7 +1022,7 @@ usage_file="${PATROL_USAGE_FILE:-${usage_cfg_dir}/usage-cache.json}"
 usage_warn="${PATROL_USAGE_WARN:-97}"
 usage_stop="${PATROL_USAGE_STOP:-99}"
 usage_max_age="${PATROL_USAGE_MAX_AGE_MIN:-120}"
-usage_seven=; usage_seven_resets=; usage_five=; usage_five_resets=; usage_written_at=; usage_stale=false; usage_reason=
+usage_seven=; usage_seven_resets=; usage_five=; usage_written_at=; usage_stale=false; usage_reason=
 usage_extract() {  # $1=json $2=父鍵 $3=欄位 -> 數字或空（jq -c 緊湊格式，先框住命名子物件再抓值，避免同名欄位跨物件誤抓）
   local obj
   obj=$(printf '%s' "$1" | grep -oE "\"$2\":\{[^}]*\}" | head -1)
@@ -1044,7 +1044,6 @@ else
   usage_seven=$(usage_extract "$usage_json" seven_day used_percentage)
   usage_seven_resets=$(usage_extract "$usage_json" seven_day resets_at)
   usage_five=$(usage_extract "$usage_json" five_hour used_percentage)
-  usage_five_resets=$(usage_extract "$usage_json" five_hour resets_at)
   if [ -z "$usage_written_at" ] || [ -z "$usage_seven" ]; then
     usage_reason="JSON 不可解析或必要欄位缺失：${usage_file}"
   else
