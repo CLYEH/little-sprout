@@ -11,6 +11,9 @@
 #     解析不到而炸，不會安靜綠過）
 #   ⑦ mutation（票文「板名改一字」的形狀）：③ 的合成夾具改一字，紅的訊息隨之換成新字——證明紅是
 #     逐字比對造成的、不是空跑
+#   ⑧（LS-318；LS-96 池項 `6fee5681`）形狀不明（如 `Design: 見上方截圖`，不是「板名（id）」也不是純
+#     id token）→ 綠、印「（略過）」提示行、exit 0——這是 design_ref_check.py:110,160-164 既有的
+#     `skipped` 分支，這支腳本落地以來零夾具命中過它
 # 五例＋mutation 對應票文驗收「design-ref-check.test.sh 夾具：名稱相符／id 缺／名稱不符／純 id 寫法／
 # 無 Design 行 五例綠；mutation（#475 body 改一字）紅」——後半句（用真實 PR #475 body／.pen 跑基準與
 # mutation）是 LS-316 基準步驟本身（scratchpad/LS-316-baseline/、handoff 附證據)，不進這支合成夾具
@@ -96,6 +99,11 @@ expect 0 '⑥ Design: 欄位留空（模板未填）→ 綠，且不讀 .pen 快
 # ⑦ mutation：③ 的合成夾具板名多打一個字，紅的訊息隨之換字——證明紅是逐字比對造成的、不是空跑
 b7=$(body_file body-7.md 'Design: 99 錯板改（`Ab12Cd`）')
 expect 1 '⑦ mutation：③ 板名改一字，紅訊息的宣稱名稱隨之換成新字' 'body 寫板名「99 錯板改」，.pen 頂層節點 Ab12Cd 實際名稱「01 板」' '99 錯板」' "$b7" design/littlesprout.pen
+
+# ⑧（LS-318）形狀不明：不是「板名（id）」也不是純 id token（票文範例「見上方截圖」）→ 綠、印
+#   「（略過）」提示、exit 0；不得出現「✗ Design 行」（沒有東西被判定違規，只是沒核對）
+b8=$(body_file body-8.md 'Design: 見上方截圖')
+expect 0 '⑧ 形狀不明（Design: 見上方截圖）→ 綠、印略過提示' '（略過）Design 行「見上方截圖」：無法解析為「板名（id）」或純 id，未核對（design-ref-check 盲區）' '✗ Design 行' "$b8" design/littlesprout.pen
 
 if [ "$fail" -eq 0 ]; then
   echo "design-ref-check.test.sh：全數通過"
