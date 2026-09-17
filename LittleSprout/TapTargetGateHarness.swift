@@ -221,10 +221,10 @@ enum TapTargetGateHarness {
     }
 
     /// `.preview()` 三個 store 皆空狀態（無家庭／無寶貝／無 feed），`ChildFilterBar`
-    /// 因 `childrenStore.activeChildren.isEmpty` 不會渲染，畫面上唯一的可點元件就是
-    /// Header 的「新增回憶」建立鈕——不需要任何 seed 資料就有代表性。merge LS-125：
-    /// `TimelineView` 現在直接持有 `diaryAPIClient`／`mediaUploadService`（同
-    /// `diaryEditorHost` 用的假 client），才能建構。理由同上，拆成獨立 computed var。
+    /// 因 `childrenStore.activeChildren.isEmpty` 不會渲染，畫面上可點元件是 Header 的
+    /// 「匯入」／「新增回憶」兩顆鈕（LS-315 起兩顆）——不需要任何 seed 資料就有代表性。
+    /// merge LS-125：`TimelineView` 現在直接持有 `diaryAPIClient`／`mediaUploadService`
+    /// （同 `diaryEditorHost` 用的假 client），才能建構。理由同上，拆成獨立 computed var。
     @MainActor
     @ViewBuilder
     private static var timelineDefaultStateHost: some View {
@@ -232,7 +232,8 @@ enum TapTargetGateHarness {
             TimelineView(
                 familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
                 diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-                safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient()
+                safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
+                albumsStore: .preview()
             )
         }
     }

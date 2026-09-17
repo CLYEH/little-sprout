@@ -2,13 +2,19 @@ import SwiftUI
 
 /// 時間軸（app 首頁，LS-126 依 LS-119 核可稿）——`get_family_timeline` 卡片流三種 kind
 /// （日記便箋卡／相簿卡／照片卡）、Day Divider 日分組、`ChildFilterBar` 篩選、下拉更新／
-/// 捲底載入、Header 停靠「＋ 新增回憶」具名建立鈕。
+/// 捲底載入、Header 停靠「＋ 新增回憶」具名建立鈕、「匯入」相機膠卷入口鈕（LS-315）。
 ///
 /// merge LS-125（日記編輯器）：`onCreateMemory` 閉包預留（LS-125 併入前的暫時做法，票文
 /// 環境段「不得依賴其未併入的型別」）在 LS-125 併入後改直接持有 `diaryAPIClient`／
 /// `mediaUploadService`、`showsDiaryEditor` 狀態與導覽——同 LS-125 原本（舊路徑
 /// `Features/TimelineView.swift`）的做法，Header 的「新增回憶」具名鈕取代原本導覽列的暫時
 /// 「+」鈕（已整顆移除）。
+///
+/// LS-315（依 LS-307 核可稿 head `dfb3865`，板 `e1cOqx`／`FUfqg`／`aGkJ1`）：Header 新增
+/// 「匯入」鈕（`ImportEntryButton`，`cmp/Button Import`），沿 LS-303 既有 `ImportBatchFlowModifier`
+/// ／`ImportEntrySource.timeline`（該 case 當時已建立但無呼叫點，見 `ImportEntrySourceTests`
+/// 文件註解）接上 PHPicker 匯入流程；任何入口預設不放相簿（C3a），`uploadCoordinator` 沿用
+/// 預設 `NoOpImportUploadCoordinator()`（上傳／摘要交 LS-304，本票僅接「選取→整理」入口）。
 struct TimelineView: View {
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
@@ -21,9 +27,15 @@ struct TimelineView: View {
     let safetyAPIClient: SafetyAPIClient
     /// LS-218：留言 sheet 用——`InteractionRow.onOpenComments` 開出的 `CommentsSheetView`。
     let commentAPIClient: CommentAPIClient
+    /// LS-315：`.importBatchFlow` 需要——同 `AlbumDetailView` 既有呼叫端傳法。
+    let albumsStore: AlbumsStore
 
     @State private var selectedChildID: UUID?
     @State private var showsDiaryEditor = false
+    /// LS-315：Header「匯入」鈕觸發，見 `importEntryButton`（`TimelineView+Import.swift`）／
+    /// `.importBatchFlow`。不是 `private`——`TimelineView+Import.swift` 需要讀寫，同
+    /// `commentsSheetTarget` 既有跨檔案 extension 存取層級理由。
+    @State var showsImportBatch = false
     /// LS-218：`InteractionRow.onOpenComments`（三種卡片共用）開出的留言 sheet 目標——見
     /// `TimelineView+Comments.swift`（`commentsSheetHost`／`openComments(kind:refId:)`）。不是
     /// `private`：跨檔案 extension 需要 `$commentsSheetTarget`，同 `apiClient` 在
@@ -93,6 +105,10 @@ struct TimelineView: View {
                 )
             }
         }
+        // LS-315：Header「匯入」鈕，見型別文件註解。
+        .importBatchFlow(
+            isActive: $showsImportBatch, childrenStore: childrenStore, albumsStore: albumsStore, entrySource: .timeline
+        )
     }
 
     // MARK: - 版面
@@ -129,6 +145,11 @@ struct TimelineView: View {
     /// `ViewThatFits` 依實際量到的寬度自動切換，不綁 `dynamicTypeSize` 門檻值（門檻值本身
     /// 也沒有稿面依據）——中英文字數不同時的溢出點本來就該用實測寬度判斷，不是猜一個字級
     /// 級距分界。若稿面實際排法與此不同，MUST 待 Pen 釋放後另補一輪確認（見 PR body）。
+    ///
+    /// **LS-315**：新增「匯入」鈕（`importEntryButton`）——一般案（`e1cOqx`／`FUfqg`）在
+    /// 「Header Actions Group」（`gap:$sp-item`）裡與「新增回憶」同列、Import 在左；不合列
+    /// 時（`aGkJ1` AX3 板實測三列全帶文字）改三列堆疊，閱讀序 Title／匯入／新增回憶一致
+    /// （Notes `orXbN` R4：VR R3 `7e36fccc` i-7 動作序對調，Import 領先 Create）。
     private var headerRow: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .center) {
@@ -137,13 +158,17 @@ struct TimelineView: View {
                     .foregroundStyle(Color.lsTextPrimary)
                     .accessibilityAddTraits(.isHeader)
                 Spacer()
-                createMemoryButton
+                HStack(spacing: AppSpacing.item) {
+                    importEntryButton
+                    createMemoryButton
+                }
             }
             VStack(alignment: .leading, spacing: AppSpacing.label) {
                 Text("時間軸")
                     .appFont(.display, weight: .bold)
                     .foregroundStyle(Color.lsTextPrimary)
                     .accessibilityAddTraits(.isHeader)
+                importEntryButton
                 createMemoryButton
             }
         }
@@ -177,10 +202,9 @@ struct TimelineView: View {
             // pill 尺寸（`.background` 掛在 `.frame` 之前，胖的是外層透明點擊區，不是看得到
             // 的色塊），同 `SettingsView` 登出鈕／`loadMoreTrigger` 重新載入鈕的既有手法。
             // delta 復審 m2：這顆本身已被 `TapTargetGateScreenName.timelineDefaultState`
-            // 正式量測（見 `TapTargetGateHarness.swift`），是 `TimelineView` 目前唯一走出
-            // `tap-target-exemptions.txt` 豁免路徑、有自動化覆蓋的元件；同畫面其餘元件（日
-            // 分組卡片、捲底載入、失敗態重新載入鈕）仍需要 seed 資料與捲動狀態，豁免理由
-            // 不變。
+            // 正式量測；LS-315 起 `importEntryButton` 同樣不需要 seed 資料就會出現，一併
+            // 走出豁免路徑（不再是「唯一」）。同畫面其餘元件仍需要 seed 資料與捲動狀態，
+            // 豁免理由不變。
             .frame(minHeight: AppSpacing.section)
             .contentShape(Rectangle())
         }
@@ -349,10 +373,14 @@ struct TimelineView: View {
             }
             .frame(maxWidth: .infinity)
         case .idle, .success:
+            // LS-315：文案改依 Notes `F77gCE`（00b 空狀態）逐字抄值，「匯入」領頭、不加按鈕
+            // （C1c 裁決：空狀態不另造 CTA，靠文案指路到 Header 既有兩顆入口鈕）——00b 板
+            // 完整的「Empty Print」卡面視覺（相框樣式、獨立標題／壓印小字）不在本票範圍，
+            // Body 幾何各依來源板不追齊（見票文範圍 5、Notes `MCbLu`），這裡只換文字。
             ContentUnavailableView(
                 "還沒有回憶",
                 systemImage: "photo.stack",
-                description: Text("點上方的「新增回憶」寫下第一篇日記，或加入照片。")
+                description: Text("點上方的「匯入」把手機裡的舊照片搬進來，或點「新增回憶」寫下第一篇日記。")
             )
         }
     }
@@ -364,7 +392,8 @@ struct TimelineView: View {
         TimelineView(
             familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
             diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
-            safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient()
+            safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
+            albumsStore: .preview()
         )
     }
 }

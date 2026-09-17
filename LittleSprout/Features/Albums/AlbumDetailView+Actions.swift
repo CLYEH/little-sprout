@@ -58,32 +58,24 @@ extension AlbumDetailView {
     }
 
     // MARK: - 加入照片（LS-303 R2：觸發相機膠卷批次匯入，見 `AlbumDetailView.swift` 檔頭）
+    //
+    // LS-315：Action Bar／iPad 行內兩版改 ref 同一元件 `ImportEntryButton`（`cmp/Button
+    // Import` 第四使用點，Notes `TCs7A`：「之後的實作票應直接 ref cmp/Button Import，不得
+    // 各自發明」）——取代原本各自發明的 accent 填色樣式，`isLoadingPickedItems` 停用邏輯
+    // 沿用（該旗標本身已無呼叫端把它設為 true，見型別文件註解，記入 LS-96，不在本票處理）。
 
     var addPhotosBarButton: some View {
-        PrimaryButton(
-            icon: "photo.badge.plus", title: "加入照片", isLoading: isLoadingPickedItems,
-            loadingTitle: "照片載入中…", action: { showsBatchImport = true }
-        )
+        ImportEntryButton(label: "加入照片") { showsBatchImport = true }
+            .disabled(isLoadingPickedItems)
     }
 
-    /// iPad「行內」版（Notes `rFiLJ` `RbEqx`：`width:fit_content`，不像 Action Bar 版滿版）。
+    /// iPad「行內」版（Notes `rFiLJ` `RbEqx`：`width:fit_content`，不像 Action Bar 版滿版）——
+    /// `ImportEntryButton` 本身即 hug-content 緊湊 pill，天然符合這個既有取捨。
     var addPhotosInlineButton: some View {
-        Button {
-            showsBatchImport = true
-        } label: {
-            HStack(spacing: AppSpacing.label) {
-                Image(systemName: "photo.badge.plus").appIconFrame(.medium)
-                Text("加入照片").appFont(.body, weight: .semibold)
-            }
-            .frame(minHeight: 48)
-            .padding(.horizontal, AppSpacing.item)
-            .contentShape(Rectangle())
-        }
-        .foregroundStyle(Color.lsOnAccent)
-        .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-        // merge-review R2 m1：同 `addPhotosBarButton`——loading 期間停用，不讓使用者開出
-        // 第二批 picker 跟第一批交錯。
-        .disabled(isLoadingPickedItems)
+        ImportEntryButton(label: "加入照片") { showsBatchImport = true }
+            // merge-review R2 m1：同 `addPhotosBarButton`——loading 期間停用，不讓使用者開出
+            // 第二批 picker 跟第一批交錯。
+            .disabled(isLoadingPickedItems)
     }
 
     /// PhotosPicker 挑選結果 → `MediaUploadService` 佇列（沿 `DiaryEditorView+Photos

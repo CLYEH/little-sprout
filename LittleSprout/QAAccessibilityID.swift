@@ -70,4 +70,9 @@ enum QAAccessibilityID {
     static let commentLoadEarlierButton = "qa.comments.loadEarlierButton"
     static let commentRetryButton = "qa.comments.retryButton"
     static let commentCloseButton = "qa.comments.closeButton"
+    /// LS-315：時間軸 Header「匯入」鈕（`ImportEntryButton`，`cmp/Button Import` `o8zYlX`）
+    /// 三處 instance（一般狀態／空狀態／AX3）共用同一個字串——Notes `MCbLu`：「供 ios-dev
+    /// 實作與未來 QADriver／XCUITest 對照，避免三處各自發明不同字串」，值沿票文指定的
+    /// 字面（不加 `qa.` 前綴）。
+    static let timelineImportPhotos = "timeline.importPhotos"
 }

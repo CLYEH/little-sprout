@@ -76,6 +76,7 @@
 		1F393961CF9F97E34474AD4F /* AuthButtonsState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB26A8533526BFBFD692560 /* AuthButtonsState.swift */; };
 		206A1B32B7EF93F3805932C5 /* TimelineStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C5672CE61BE2296C5EA787 /* TimelineStoreTests.swift */; };
 		207CFF5FAB45D30280888981 /* PhotoLibraryAccessService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D61A6C472115192338A97F4 /* PhotoLibraryAccessService.swift */; };
+		2109AFB0670559B33E341231 /* TimelineView+Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CA78FC6D7BCCE0103D052F /* TimelineView+Import.swift */; };
 		21810E7F9187EEFE2481ADC7 /* ImportDateGrouping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869D332A966B09F270832FF5 /* ImportDateGrouping.swift */; };
 		21D4D505A709F1ED3CCAF4A6 /* TimelineStoreToggleReactionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AC550771E9C98F572DEE18 /* TimelineStoreToggleReactionTests.swift */; };
 		21F13267AB0CDCF93F74ABF9 /* DiaryComposerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72BAB19B1C35B0F183EE2699 /* DiaryComposerStore.swift */; };
@@ -89,6 +90,7 @@
 		25AE7F87285B432C9786C2D0 /* AccountAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A7D1A5031BDB4C6CE51381 /* AccountAPIClient.swift */; };
 		25F9D051097A5F845C3747AB /* DiaryDateFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8938E753539C18541CF4360 /* DiaryDateFormat.swift */; };
 		25FCC21C16E35CFC9D838BBB /* AuthButtonsStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6FB791F1C8D6FD682B0ABDB /* AuthButtonsStateTests.swift */; };
+		269DBB84AD4BB022C5CE1510 /* ImportEntryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C28B10B64350EF2599D6E1 /* ImportEntryButton.swift */; };
 		27765396913C304FC059C525 /* CommentAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFD1FF4DE88B8A84B28A7C2 /* CommentAPIClient.swift */; };
 		27942E3D3049966A807E6743 /* SupabaseCommentAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F87BF57597ACB46BC0AC7B /* SupabaseCommentAPIClientTests.swift */; };
 		27DFB207A8FB1F89BDBE0EC4 /* PreviewCommentAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E47F3C2BFA4730CBA70641 /* PreviewCommentAPIClient.swift */; };
@@ -572,6 +574,7 @@
 		16F94CB4C84E1E0211A97014 /* TimelineRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineRoute.swift; sourceTree = "<group>"; };
 		17ADF30BD9D82AA5300EFF5B /* DiaryCardVideoBadgeGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryCardVideoBadgeGeometryTests.swift; sourceTree = "<group>"; };
 		17B6EDB33CABFA69510857AF /* InviteCodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeField.swift; sourceTree = "<group>"; };
+		17C28B10B64350EF2599D6E1 /* ImportEntryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportEntryButton.swift; sourceTree = "<group>"; };
 		182C20B3BCF4D582DF384B73 /* OwnerRemoveContentConfirmSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerRemoveContentConfirmSheet.swift; sourceTree = "<group>"; };
 		18AB0FEB21BA55A39EB67982 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		191A7E61B14173F039A11C97 /* CreateChildView+Avatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateChildView+Avatar.swift"; sourceTree = "<group>"; };
@@ -949,6 +952,7 @@
 		D6FB791F1C8D6FD682B0ABDB /* AuthButtonsStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthButtonsStateTests.swift; sourceTree = "<group>"; };
 		D6FEB0AA729D73E382DB2760 /* BabyChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabyChipView.swift; sourceTree = "<group>"; };
 		D75234ADADB6EE19F2977CB2 /* SupabaseChildAvatarUploadServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseChildAvatarUploadServiceTests.swift; sourceTree = "<group>"; };
+		D7CA78FC6D7BCCE0103D052F /* TimelineView+Import.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimelineView+Import.swift"; sourceTree = "<group>"; };
 		D7DE28F37645984E622E64F5 /* AvatarImageProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarImageProcessorTests.swift; sourceTree = "<group>"; };
 		D7EE19B8D103ADB86326A704 /* ChildGrowthDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildGrowthDetailView.swift; sourceTree = "<group>"; };
 		D80254B30BAD4FF6E688CBB9 /* UploadQueueStoreVideoExportSlotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueStoreVideoExportSlotTests.swift; sourceTree = "<group>"; };
@@ -1419,6 +1423,7 @@
 				16F94CB4C84E1E0211A97014 /* TimelineRoute.swift */,
 				390715FC09697B47477605E4 /* TimelineView.swift */,
 				B382FF9798D526E3A1B37E63 /* TimelineView+Comments.swift */,
+				D7CA78FC6D7BCCE0103D052F /* TimelineView+Import.swift */,
 				A1905C686E265375F2E30D04 /* VideoPlayerScreen.swift */,
 			);
 			path = Timeline;
@@ -1807,6 +1812,7 @@
 				14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */,
 				7A9A9FE13E73169C65E5A03F /* ChildAvatarView.swift */,
 				0E8702562330091E614920D1 /* ColorTokens.swift */,
+				17C28B10B64350EF2599D6E1 /* ImportEntryButton.swift */,
 				17B6EDB33CABFA69510857AF /* InviteCodeField.swift */,
 				743A14E1E7666B9B37F94689 /* KeyboardHeightObserver.swift */,
 				F56FB37A90BCA2F75055D3D7 /* LabeledTextField.swift */,
@@ -2134,6 +2140,7 @@
 				122228B365A31F42DE831B94 /* GrowthStore.swift in Sources */,
 				1479FC018F029C307777A43C /* ImportBatchFlowModifier.swift in Sources */,
 				21810E7F9187EEFE2481ADC7 /* ImportDateGrouping.swift in Sources */,
+				269DBB84AD4BB022C5CE1510 /* ImportEntryButton.swift in Sources */,
 				142912236FD2EC5C05876953 /* ImportGroupCardView.swift in Sources */,
 				31A9B00315543BADF0C808DE /* ImportModels.swift in Sources */,
 				8E02B155E736F890FA098C89 /* ImportOrganizeView.swift in Sources */,
@@ -2263,6 +2270,7 @@
 				C306914EB8F752FFED8EB54C /* TimelineStore+Reactions.swift in Sources */,
 				7C07BF69FAFB75E77DA11249 /* TimelineStore.swift in Sources */,
 				74E602F347273C1919B3B01A /* TimelineView+Comments.swift in Sources */,
+				2109AFB0670559B33E341231 /* TimelineView+Import.swift in Sources */,
 				9784D85D783D81C9D00970E2 /* TimelineView.swift in Sources */,
 				02E21F9DC4DC1A797657A859 /* Typography.swift in Sources */,
 				32463742EC96BA86452232E8 /* UploadQueueModels.swift in Sources */,
