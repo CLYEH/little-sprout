@@ -102,6 +102,21 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.importPermissionDenied)
     }
 
+    /// LS-304：04 匯入進度頁——「取消匯入」／「在背景繼續，關閉視窗」／逐列重試／整批重試。
+    func testImportProgressDefault() {
+        assertAllTappablesMeetMinimum(.importProgressDefault)
+    }
+
+    /// LS-304：04b 取消整批確認——「繼續匯入」／「取消匯入」雙鈕。
+    func testImportProgressCancelConfirm() {
+        assertAllTappablesMeetMinimum(.importProgressCancelConfirm)
+    }
+
+    /// LS-304：05 完成摘要（含失敗列）——「回到時間軸」／「重試失敗項」／逐列重試。
+    func testImportSummaryWithFailures() {
+        assertAllTappablesMeetMinimum(.importSummaryWithFailures)
+    }
+
     /// LS-166：「編輯相簿名稱」sheet，初始態（名稱欄／寶貝標記欄／儲存鈕）不需要任何 seed 資料。
     func testEditAlbumView() {
         assertAllTappablesMeetMinimum(.editAlbum)

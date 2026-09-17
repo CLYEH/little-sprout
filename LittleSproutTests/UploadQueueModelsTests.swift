@@ -39,6 +39,18 @@ final class UploadQueueModelsTests: XCTestCase {
         XCTAssertEqual(UploadFailureReason.from(error), .server)
     }
 
+    /// merge-review R2 i1：後端 `media_taken_at_range_check`（23514）——R1 落到 `.server`
+    /// （可重試＋「伺服器忙碌」文案），重試同一份位元組只會再被同一個 CHECK 打回，永遠不會
+    /// 成功。改成不可重試＋誠實文案。
+    func test_from_validationRetryableWith23514_isInvalidTakenAt_notRetryable() {
+        let error = AppError.validationRetryable(message: "media_taken_at_range_check", code: "23514")
+
+        XCTAssertEqual(UploadFailureReason.from(error), .invalidTakenAt)
+        XCTAssertFalse(UploadFailureReason.invalidTakenAt.isRetryable, "重試同一份位元組會再被同一個 CHECK 打回，不該提供重試")
+        XCTAssertEqual(UploadFailureReason.invalidTakenAt.title, "拍攝日期無效，這張沒有上傳。")
+        XCTAssertFalse(UploadFailureReason.invalidTakenAt.showsQuotaLink)
+    }
+
     func test_quota_isNotRetryable_andShowsStorageLink() {
         XCTAssertFalse(UploadFailureReason.quota.isRetryable)
         XCTAssertTrue(UploadFailureReason.quota.showsQuotaLink)

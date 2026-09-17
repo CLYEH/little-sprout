@@ -65,10 +65,12 @@ struct ImportBatchFlowModifier: ViewModifier {
                     presentOrganize(with: result)
                 }
             }
+            // LS-304：內容改成 `ImportBatchFlowContainer`（整條 01→04→05 流程的容器），取代
+            // 原本直接放 `ImportOrganizeView`——見該檔文件註解「為什麼用內部狀態切換」。
             .fullScreenCover(item: $organizePayload) { payload in
-                ImportOrganizeView(
+                ImportBatchFlowContainer(
                     childrenStore: childrenStore, albumsStore: albumsStore, uploadCoordinator: uploadCoordinator,
-                    pickedAssets: payload.pickedAssets, entrySource: entrySource,
+                    entrySource: entrySource, pickedAssets: payload.pickedAssets,
                     thumbnailProvider: payload.thumbnailProvider, droppedCount: payload.droppedCount,
                     accessState: payload.accessState
                 )
@@ -118,9 +120,9 @@ private struct OrganizePayload: Identifiable {
 
 extension View {
     /// `isActive`：呼叫端按鈕觸發用的 binding（見型別文件註解）。`entrySource`：LS-303 R2
-    /// M2 裁決——決定整理頁每群相簿預設值。`uploadCoordinator`：LS-303 R3（merge-review R2
-    /// M2）——預設 `NoOpImportUploadCoordinator()`（harness／`.timeline` 入口尚未接線時的
-    /// 保底），`AlbumDetailView` 傳自己持有的 `LegacyAlbumUploadImportCoordinator`。
+    /// M2 裁決——決定整理頁每群相簿預設值。`uploadCoordinator`：預設 `NoOpImportUploadCoordinator()`
+    /// （harness／`.timeline` 入口尚未接線時的保底），`AlbumDetailView` 傳自己持有的
+    /// `AlbumImportUploadCoordinator`（LS-304 正式版）。
     func importBatchFlow(
         isActive: Binding<Bool>, childrenStore: ChildrenStore, albumsStore: AlbumsStore,
         entrySource: ImportEntrySource, uploadCoordinator: ImportUploadCoordinator = NoOpImportUploadCoordinator()

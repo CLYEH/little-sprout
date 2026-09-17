@@ -12,6 +12,10 @@ final class StubMediaUploadService: MediaUploadService, @unchecked Sendable {
         let familyID: UUID
         let fileExtension: String
         let pixelSize: PixelSize
+        /// LS-304：批次匯入把 EXIF 分組日期／使用者覆寫傳進來的 `taken_at`——既有呼叫端
+        /// （日記編輯器）不帶這個參數，走 `MediaUploadService` 4-arg 便利多載，記錄下來一律
+        /// `nil`，見該協定文件註解。
+        let takenAt: Date?
     }
 
     struct UploadVideoCall: Equatable {
@@ -19,6 +23,7 @@ final class StubMediaUploadService: MediaUploadService, @unchecked Sendable {
         let fileURL: URL
         let fileExtension: String
         let pixelSize: PixelSize
+        let takenAt: Date?
     }
 
     /// LS-212：`DiaryComposerStore.cleanupRemovedDrafts` 軟刪已上傳孤兒 media 的呼叫記錄。
@@ -53,16 +58,22 @@ final class StubMediaUploadService: MediaUploadService, @unchecked Sendable {
         box.withLock { $0.softDeleteMediaHandler = handler }
     }
 
-    func uploadPhoto(familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
-        let call = UploadPhotoCall(familyID: familyID, fileExtension: fileExtension, pixelSize: pixelSize)
+    func uploadPhoto(
+        familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID {
+        let call = UploadPhotoCall(
+            familyID: familyID, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: takenAt
+        )
         box.withLock { $0.uploadPhotoCalls.append(call) }
         let handler = box.withLock { $0.uploadPhotoHandler }
         return try await handler(familyID, data, fileExtension, pixelSize)
     }
 
-    func uploadVideo(familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
+    func uploadVideo(
+        familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID {
         let call = UploadVideoCall(
-            familyID: familyID, fileURL: fileURL, fileExtension: fileExtension, pixelSize: pixelSize
+            familyID: familyID, fileURL: fileURL, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: takenAt
         )
         box.withLock { $0.uploadVideoCalls.append(call) }
         let handler = box.withLock { $0.uploadVideoHandler }

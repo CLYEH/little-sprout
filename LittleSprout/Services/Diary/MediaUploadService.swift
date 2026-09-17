@@ -19,17 +19,26 @@ import UIKit
 protocol MediaUploadService: Sendable {
     /// 上傳一張照片；`data` 是已經讀進記憶體的原始位元組（`PhotosPickerItem.loadTransferable`
     /// 讀出來的那份），`fileExtension` 不含點（`jpg`／`heic`…）。回傳新建 `media` 列的 id。
-    func uploadPhoto(familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID
+    /// `takenAt`（LS-304，見 `MediaUploadService+TakenAt.swift`）：`media.taken_at`。
+    func uploadPhoto(
+        familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID
 
     /// 上傳一支影片；`fileURL` 是本機暫存檔（呼叫端若先用 `VideoTrimmer` 裁切壓縮過，這裡
-    /// 傳裁切後的暫存檔路徑）。回傳新建 `media` 列的 id。
-    func uploadVideo(familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize) async throws -> UUID
+    /// 傳裁切後的暫存檔路徑）。回傳新建 `media` 列的 id。`takenAt` 同 `uploadPhoto` 文件註解。
+    func uploadVideo(
+        familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID
 
     /// 軟刪一批已上傳成功、但草稿被移出佇列／編輯器整個被取消而不再需要的 `media` 列（LS-212，
     /// 依 LS-96 `d8634a08` R4 補充；完整理由見 `MediaUploadService+SoftDelete.swift`）。呼叫端
     /// best-effort：清不掉不阻斷任何 UI 流程。空陣列是合法 no-op，不打任何網路請求。
     func softDeleteMedia(mediaIDs: [UUID]) async throws
 }
+
+// `uploadPhoto`／`uploadVideo` 的 4-arg 便利多載（`takenAt` 預設 `nil`）與
+// `SupabaseMediaUploadService.iso8601String` 見 `MediaUploadService+TakenAt.swift`
+// （SwiftLint `file_length`：主檔逼近上限，這裡不重複貼一遍拆檔理由）。
 
 final class SupabaseMediaUploadService: MediaUploadService {
     // LS-212：`client`／`now` 從 `private` 改成預設（internal）存取層級——`softDeleteMedia`
@@ -62,7 +71,9 @@ final class SupabaseMediaUploadService: MediaUploadService {
         self.durationLoader = durationLoader
     }
 
-    func uploadPhoto(familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
+    func uploadPhoto(
+        familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID {
         let mediaID = UUID()
         // merge-review R1 m1：只讀一次 `now()`，原檔與縮圖路徑共用同一個時間點——見下方
         // `storagePath`／`makePhotoPendingThumbnail` 呼叫都吃這個值，不各自重新讀「現在」。
@@ -94,7 +105,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
                 id: mediaID, familyID: familyID,
                 descriptor: MediaRowDescriptor(
                     storagePath: path, type: "photo", byteSize: data.count, pixelSize: pixelSize, thumb: pendingThumb,
-                    durationSeconds: nil
+                    durationSeconds: nil, takenAt: takenAt
                 )
             )
         } catch {
@@ -104,7 +115,9 @@ final class SupabaseMediaUploadService: MediaUploadService {
         return mediaID
     }
 
-    func uploadVideo(familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
+    func uploadVideo(
+        familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID {
         let mediaID = UUID()
         // merge-review R1 m1：同 uploadPhoto，只讀一次 `now()`，原檔與縮圖路徑共用同一個時間點。
         let uploadTime = now()
@@ -150,7 +163,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
                 id: mediaID, familyID: familyID,
                 descriptor: MediaRowDescriptor(
                     storagePath: path, type: "video", byteSize: byteSize, pixelSize: pixelSize, thumb: pendingThumb,
-                    durationSeconds: durationSeconds
+                    durationSeconds: durationSeconds, takenAt: takenAt
                 )
             )
         } catch {
@@ -320,80 +333,5 @@ final class SupabaseMediaUploadService: MediaUploadService {
             path: thumbStoragePath(familyID: familyID, mediaID: mediaID, now: now),
             data: jpegData, pixelSize: PixelSize(width: cgImage.width, height: cgImage.height)
         )
-    }
-}
-
-/// 讀本機暫存檔屬性失敗時的內部錯誤——不對應任何後端碼，`AppError.map` 對辨認不出來的型別
-/// 一律落 `.server`（fail loud：不會有第五種「未知」分類讓呼叫端誤以為可以安全忽略）。
-private enum MediaUploadFileError: Error {
-    case missingFileSize
-}
-
-/// 縮圖產生完成、還沒 PUT 上去之前的暫存值——把「PUT 縮圖用的路徑＋bytes」與「寫進 media
-/// 列用的 thumb_width／thumb_height」包在一起，`uploadPhoto`／`uploadVideo` 兩處都不必再
-/// 各自把 thumb 路徑／寬／高拆成三個各自照顧的 optional（忘了同步更新其中一個，會讓三個
-/// `thumb_*` 欄位互相對不上，撞上 `media_thumb_dimensions_consistency` CHECK）。
-private struct PendingThumbnail {
-    let path: String
-    let data: Data
-    let pixelSize: PixelSize
-}
-
-/// `insertMediaRow` 的輸入分組——把 `storagePath`／`type`／`byteSize`／`pixelSize`／`thumb`
-/// 收成一個值，讓呼叫端／被呼叫端都少幾個參數（SwiftLint `function_parameter_count`）。
-private struct MediaRowDescriptor {
-    let storagePath: String
-    let type: String
-    let byteSize: Int
-    let pixelSize: PixelSize
-    let thumb: PendingThumbnail?
-    /// LS-135：影片時長（整數秒，`max(1, floor(d))`）——`uploadPhoto` 恆傳 `nil`；
-    /// `uploadVideo` 傳 `measureDurationSeconds` 的量測結果（可能是 `nil`，量測失敗不阻斷
-    /// 上傳，見該函式文件註解）。
-    let durationSeconds: Int?
-}
-
-private struct MediaInsertPayload: Encodable {
-    let id: UUID
-    let familyID: UUID
-    let storagePath: String
-    let type: String
-    let byteSize: Int
-    let width: Int
-    let height: Int
-    let uploadedBy: UUID
-    let thumbPath: String?
-    let thumbWidth: Int?
-    let thumbHeight: Int?
-    let durationSeconds: Int?
-
-    init(id: UUID, familyID: UUID, descriptor: MediaRowDescriptor, uploadedBy: UUID) {
-        self.id = id
-        self.familyID = familyID
-        self.storagePath = descriptor.storagePath
-        self.type = descriptor.type
-        self.byteSize = descriptor.byteSize
-        self.width = descriptor.pixelSize.width
-        self.height = descriptor.pixelSize.height
-        self.uploadedBy = uploadedBy
-        self.thumbPath = descriptor.thumb?.path
-        self.thumbWidth = descriptor.thumb?.pixelSize.width
-        self.thumbHeight = descriptor.thumb?.pixelSize.height
-        self.durationSeconds = descriptor.durationSeconds
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case familyID = "family_id"
-        case storagePath = "storage_path"
-        case type
-        case byteSize = "byte_size"
-        case width
-        case height
-        case uploadedBy = "uploaded_by"
-        case thumbPath = "thumb_path"
-        case thumbWidth = "thumb_width"
-        case thumbHeight = "thumb_height"
-        case durationSeconds = "duration_seconds"
     }
 }

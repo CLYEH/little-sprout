@@ -103,20 +103,21 @@ enum ImportEntrySource: Equatable {
     }
 }
 
-/// 2/2（上傳→摘要，blockedBy 本票）的入口介面——`ImportOrganizeView` 的主鈕按下時呼叫
-/// `startImport(plan:)`，不關心它怎麼做。LS-303 R3（merge-review R2 M2）在 2/2 落地前接了一個
-/// 過渡實作（`LegacyAlbumUploadImportCoordinator`），本票不再只有 no-op stub。
+/// 2/2（上傳→摘要）的入口介面——`ImportOrganizeView` 的主鈕按下時呼叫 `startImport(plan:)`，
+/// 不關心它怎麼做。LS-304：回傳 `ImportBatchSession`（同步，內容隨非同步的 PHAsset 讀取／
+/// 轉檔逐步填入）——04 進度頁需要知道「這個批次自己入列的項目」是哪些，見該型別文件註解；
+/// LS-303 R3 期間的過渡實作（`LegacyAlbumUploadImportCoordinator`）已由本票的
+/// `AlbumImportUploadCoordinator` 取代。
 protocol ImportUploadCoordinator {
     @MainActor
-    func startImport(plan: ImportPlan)
+    func startImport(plan: ImportPlan) -> ImportBatchSession
 
     /// LS-303 R3（merge-review R2 M2）：這個實作是否要求整理頁每一個未略過群都指定相簿——
     /// `ImportOrganizeView.ctaBar` 讀這個旗標決定要不要在使用者選「不放相簿」時停用主鈕＋
-    /// 提示「本版需先選相簿」。預設 `false`（`NoOpImportUploadCoordinator`／未來 LS-304 的
-    /// 完整版都不需要這個限制）；只有 `LegacyAlbumUploadImportCoordinator` 覆寫成 `true`。
-    /// `@MainActor`：同 `startImport(plan:)`——`LegacyAlbumUploadImportCoordinator` 整支是
-    /// `@MainActor final class`，protocol 需求不標 `@MainActor` 的話，該型別的 conformance
-    /// 在 Swift 6 嚴格並行檢查下會被視為跨 actor 邊界（編譯期錯誤，非警告）。
+    /// 提示「本版需先選相簿」。預設 `false`——`AlbumImportUploadCoordinator`（LS-304 正式版）
+    /// 不需要這個限制，這個過渡期限制原本只有已移除的 `LegacyAlbumUploadImportCoordinator`
+    /// 覆寫成 `true`。目前沒有任何實作覆寫；保留這個擴充點是讓型別本身描述完整的介面空間，
+    /// 不需要為此再改一次協定。`@MainActor`：同 `startImport(plan:)`——理由見該處註解。
     @MainActor
     var requiresAlbumSelection: Bool { get }
 }
@@ -126,16 +127,19 @@ extension ImportUploadCoordinator {
     var requiresAlbumSelection: Bool { false }
 }
 
-/// 本票唯一在 2/2 落地前的預設實作（harness／preview／`.timeline` 入口尚未接線時使用）——不做
-/// 任何事，只用來讓「開始匯入」鈕有東西可以呼叫、確認 `ImportPlan` 在主鈕按下當下的形狀是對的
-/// （見 `ImportOrganizeViewModelTests`）。2/2 落地後 `LegacyAlbumUploadImportCoordinator` 也會
-/// 被真正的實作取代，呼叫端（`ImportOrganizeView` 的建構參數）不需要跟著改——這正是拉這層
-/// protocol 的理由。
+/// harness／preview／`.timeline` 入口尚未接線時使用——不做任何事，只用來讓「開始匯入」鈕有
+/// 東西可以呼叫、確認 `ImportPlan` 在主鈕按下當下的形狀是對的（見
+/// `ImportOrganizeViewModelTests`）。回傳的 `ImportBatchSession` 是空殼（`entryIDs` 永遠不會
+/// 被填入，因為沒有真的呼叫任何上傳管線）——呼叫端（harness／preview）不依賴它的內容。
 struct NoOpImportUploadCoordinator: ImportUploadCoordinator {
     var onStart: (@MainActor (ImportPlan) -> Void)?
 
     @MainActor
-    func startImport(plan: ImportPlan) {
+    func startImport(plan: ImportPlan) -> ImportBatchSession {
         onStart?(plan)
+        return ImportBatchSession(
+            expectedAssetCount: plan.pendingAssetCount,
+            nonSkippedGroupCount: plan.groups.filter { !$0.isSkipped && !$0.assetLocalIdentifiers.isEmpty }.count
+        )
     }
 }
