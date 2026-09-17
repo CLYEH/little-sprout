@@ -311,9 +311,20 @@ set search_path = ''
 as $$
 declare
   v_limit integer := least(greatest(coalesce(p_limit, 20), 1), 100);
+  -- LS-243：呼叫者在這個家庭封鎖過的所有人，一次性算成陣列（不是逐列呼叫
+  -- private.blocked_pairs()）——comment_count 子查詢在下面對每一列（最多 v_limit
+  -- 列）都要判斷一次作者是否被封鎖，若沿用 child_ids 那種「per-row 呼叫 SQL
+  -- 函式」的寫法，v_limit 上限 100 時就是 100 次 private.blocked_pairs() 呼叫；
+  -- 改成陣列後，每一列只是一個常數陣列的 in-memory 成員檢查，不再有額外函式呼叫，
+  -- 見 supabase/tests/50_rls_plan_no_percall_subquery.sql 對 comment_count 的
+  -- 效能回歸段落。空陣列（無封鎖）時 `= any('{}')` 恆為 false，語意與「沒有封鎖」
+  -- 完全一致，不需要另外判斷是否為空。
   v_blocked_ids uuid[] := array(
     select bp.blocked_id from private.blocked_pairs() bp where bp.family_id = p_family_id
   );
+  -- 一次性判斷（不是逐列）：呼叫者在這個家庭封鎖過任何人嗎？絕大多數情況是 false，
+  -- 走完全未加過濾條件的原始查詢，效能不受影響（見上方說明）。沿用 v_blocked_ids
+  -- 算出來的陣列，不再另外呼叫一次 private.blocked_pairs()。
   v_has_blocks boolean := coalesce(array_length(v_blocked_ids, 1), 0) > 0;
 begin
   if (p_cursor_occurred_at is null) <> (p_cursor_ref_id is null) then
@@ -326,6 +337,8 @@ begin
       if v_has_blocks then
         return query
           select p.kind, p.ref_id, p.occurred_at,
+                 -- LS-262：原始 taken_at（僅 kind='media' 有意義，見函式頭段落 4 的
+                 -- 說明；其餘 kind 的 CASE 無 ELSE 分支，SQL 語意即為 NULL）。
                  (case p.kind
                     when 'media' then (select m.taken_at from public.media m where m.id = p.ref_id)
                   end) as taken_at,
@@ -340,6 +353,14 @@ begin
                    end,
                    '{}'::uuid[]
                  ) as child_ids,
+                 -- LS-243：comment_count——correlated 子查詢對 p_family_id/p.kind/p.ref_id
+                 -- 三欄命中 comments_target_idx（family_id, target_type, target_id,
+                 -- created_at）where deleted_at is null 這個 partial index 的前三欄，
+                 -- 只在已經被 LIMIT 收斂到 ≤v_limit 列的 p 上逐列跑一次，跟 child_ids
+                 -- 的 array_agg 子查詢是同一種「correlated 子查詢，走各自索引」時機
+                 -- （見 API.md 對 get_family_timeline 效能說明的既有寫法），不是對整個
+                 -- feed 的 N+1。封鎖過濾比照 list_comments 規則，但用上面 v_blocked_ids
+                 -- 陣列而不是逐列呼叫 private.blocked_pairs()（理由見宣告段）。
                  (select count(*)::bigint
                     from public.comments cm
                    where cm.family_id = p_family_id
@@ -364,6 +385,8 @@ begin
       else
         return query
           select p.kind, p.ref_id, p.occurred_at,
+                 -- LS-262：原始 taken_at（僅 kind='media' 有意義，見函式頭段落 4 的
+                 -- 說明；其餘 kind 的 CASE 無 ELSE 分支，SQL 語意即為 NULL）。
                  (case p.kind
                     when 'media' then (select m.taken_at from public.media m where m.id = p.ref_id)
                   end) as taken_at,
@@ -378,6 +401,14 @@ begin
                    end,
                    '{}'::uuid[]
                  ) as child_ids,
+                 -- LS-243：comment_count——correlated 子查詢對 p_family_id/p.kind/p.ref_id
+                 -- 三欄命中 comments_target_idx（family_id, target_type, target_id,
+                 -- created_at）where deleted_at is null 這個 partial index 的前三欄，
+                 -- 只在已經被 LIMIT 收斂到 ≤v_limit 列的 p 上逐列跑一次，跟 child_ids
+                 -- 的 array_agg 子查詢是同一種「correlated 子查詢，走各自索引」時機
+                 -- （見 API.md 對 get_family_timeline 效能說明的既有寫法），不是對整個
+                 -- feed 的 N+1。封鎖過濾比照 list_comments 規則，但用上面 v_blocked_ids
+                 -- 陣列而不是逐列呼叫 private.blocked_pairs()（理由見宣告段）。
                  (select count(*)::bigint
                     from public.comments cm
                    where cm.family_id = p_family_id
@@ -399,6 +430,8 @@ begin
       if v_has_blocks then
         return query
           select p.kind, p.ref_id, p.occurred_at,
+                 -- LS-262：原始 taken_at（僅 kind='media' 有意義，見函式頭段落 4 的
+                 -- 說明；其餘 kind 的 CASE 無 ELSE 分支，SQL 語意即為 NULL）。
                  (case p.kind
                     when 'media' then (select m.taken_at from public.media m where m.id = p.ref_id)
                   end) as taken_at,
@@ -413,6 +446,14 @@ begin
                    end,
                    '{}'::uuid[]
                  ) as child_ids,
+                 -- LS-243：comment_count——correlated 子查詢對 p_family_id/p.kind/p.ref_id
+                 -- 三欄命中 comments_target_idx（family_id, target_type, target_id,
+                 -- created_at）where deleted_at is null 這個 partial index 的前三欄，
+                 -- 只在已經被 LIMIT 收斂到 ≤v_limit 列的 p 上逐列跑一次，跟 child_ids
+                 -- 的 array_agg 子查詢是同一種「correlated 子查詢，走各自索引」時機
+                 -- （見 API.md 對 get_family_timeline 效能說明的既有寫法），不是對整個
+                 -- feed 的 N+1。封鎖過濾比照 list_comments 規則，但用上面 v_blocked_ids
+                 -- 陣列而不是逐列呼叫 private.blocked_pairs()（理由見宣告段）。
                  (select count(*)::bigint
                     from public.comments cm
                    where cm.family_id = p_family_id
@@ -438,6 +479,8 @@ begin
       else
         return query
           select p.kind, p.ref_id, p.occurred_at,
+                 -- LS-262：原始 taken_at（僅 kind='media' 有意義，見函式頭段落 4 的
+                 -- 說明；其餘 kind 的 CASE 無 ELSE 分支，SQL 語意即為 NULL）。
                  (case p.kind
                     when 'media' then (select m.taken_at from public.media m where m.id = p.ref_id)
                   end) as taken_at,
@@ -452,6 +495,14 @@ begin
                    end,
                    '{}'::uuid[]
                  ) as child_ids,
+                 -- LS-243：comment_count——correlated 子查詢對 p_family_id/p.kind/p.ref_id
+                 -- 三欄命中 comments_target_idx（family_id, target_type, target_id,
+                 -- created_at）where deleted_at is null 這個 partial index 的前三欄，
+                 -- 只在已經被 LIMIT 收斂到 ≤v_limit 列的 p 上逐列跑一次，跟 child_ids
+                 -- 的 array_agg 子查詢是同一種「correlated 子查詢，走各自索引」時機
+                 -- （見 API.md 對 get_family_timeline 效能說明的既有寫法），不是對整個
+                 -- feed 的 N+1。封鎖過濾比照 list_comments 規則，但用上面 v_blocked_ids
+                 -- 陣列而不是逐列呼叫 private.blocked_pairs()（理由見宣告段）。
                  (select count(*)::bigint
                     from public.comments cm
                    where cm.family_id = p_family_id
@@ -476,6 +527,8 @@ begin
       if v_has_blocks then
         return query
           select p.kind, p.ref_id, p.occurred_at,
+                 -- LS-262：原始 taken_at（僅 kind='media' 有意義，見函式頭段落 4 的
+                 -- 說明；其餘 kind 的 CASE 無 ELSE 分支，SQL 語意即為 NULL）。
                  (case p.kind
                     when 'media' then (select m.taken_at from public.media m where m.id = p.ref_id)
                   end) as taken_at,
@@ -490,6 +543,14 @@ begin
                    end,
                    '{}'::uuid[]
                  ) as child_ids,
+                 -- LS-243：comment_count——correlated 子查詢對 p_family_id/p.kind/p.ref_id
+                 -- 三欄命中 comments_target_idx（family_id, target_type, target_id,
+                 -- created_at）where deleted_at is null 這個 partial index 的前三欄，
+                 -- 只在已經被 LIMIT 收斂到 ≤v_limit 列的 p 上逐列跑一次，跟 child_ids
+                 -- 的 array_agg 子查詢是同一種「correlated 子查詢，走各自索引」時機
+                 -- （見 API.md 對 get_family_timeline 效能說明的既有寫法），不是對整個
+                 -- feed 的 N+1。封鎖過濾比照 list_comments 規則，但用上面 v_blocked_ids
+                 -- 陣列而不是逐列呼叫 private.blocked_pairs()（理由見宣告段）。
                  (select count(*)::bigint
                     from public.comments cm
                    where cm.family_id = p_family_id
@@ -515,6 +576,8 @@ begin
       else
         return query
           select p.kind, p.ref_id, p.occurred_at,
+                 -- LS-262：原始 taken_at（僅 kind='media' 有意義，見函式頭段落 4 的
+                 -- 說明；其餘 kind 的 CASE 無 ELSE 分支，SQL 語意即為 NULL）。
                  (case p.kind
                     when 'media' then (select m.taken_at from public.media m where m.id = p.ref_id)
                   end) as taken_at,
@@ -529,6 +592,14 @@ begin
                    end,
                    '{}'::uuid[]
                  ) as child_ids,
+                 -- LS-243：comment_count——correlated 子查詢對 p_family_id/p.kind/p.ref_id
+                 -- 三欄命中 comments_target_idx（family_id, target_type, target_id,
+                 -- created_at）where deleted_at is null 這個 partial index 的前三欄，
+                 -- 只在已經被 LIMIT 收斂到 ≤v_limit 列的 p 上逐列跑一次，跟 child_ids
+                 -- 的 array_agg 子查詢是同一種「correlated 子查詢，走各自索引」時機
+                 -- （見 API.md 對 get_family_timeline 效能說明的既有寫法），不是對整個
+                 -- feed 的 N+1。封鎖過濾比照 list_comments 規則，但用上面 v_blocked_ids
+                 -- 陣列而不是逐列呼叫 private.blocked_pairs()（理由見宣告段）。
                  (select count(*)::bigint
                     from public.comments cm
                    where cm.family_id = p_family_id
@@ -551,6 +622,8 @@ begin
       if v_has_blocks then
         return query
           select p.kind, p.ref_id, p.occurred_at,
+                 -- LS-262：原始 taken_at（僅 kind='media' 有意義，見函式頭段落 4 的
+                 -- 說明；其餘 kind 的 CASE 無 ELSE 分支，SQL 語意即為 NULL）。
                  (case p.kind
                     when 'media' then (select m.taken_at from public.media m where m.id = p.ref_id)
                   end) as taken_at,
@@ -565,6 +638,14 @@ begin
                    end,
                    '{}'::uuid[]
                  ) as child_ids,
+                 -- LS-243：comment_count——correlated 子查詢對 p_family_id/p.kind/p.ref_id
+                 -- 三欄命中 comments_target_idx（family_id, target_type, target_id,
+                 -- created_at）where deleted_at is null 這個 partial index 的前三欄，
+                 -- 只在已經被 LIMIT 收斂到 ≤v_limit 列的 p 上逐列跑一次，跟 child_ids
+                 -- 的 array_agg 子查詢是同一種「correlated 子查詢，走各自索引」時機
+                 -- （見 API.md 對 get_family_timeline 效能說明的既有寫法），不是對整個
+                 -- feed 的 N+1。封鎖過濾比照 list_comments 規則，但用上面 v_blocked_ids
+                 -- 陣列而不是逐列呼叫 private.blocked_pairs()（理由見宣告段）。
                  (select count(*)::bigint
                     from public.comments cm
                    where cm.family_id = p_family_id
@@ -591,6 +672,8 @@ begin
       else
         return query
           select p.kind, p.ref_id, p.occurred_at,
+                 -- LS-262：原始 taken_at（僅 kind='media' 有意義，見函式頭段落 4 的
+                 -- 說明；其餘 kind 的 CASE 無 ELSE 分支，SQL 語意即為 NULL）。
                  (case p.kind
                     when 'media' then (select m.taken_at from public.media m where m.id = p.ref_id)
                   end) as taken_at,
@@ -605,6 +688,14 @@ begin
                    end,
                    '{}'::uuid[]
                  ) as child_ids,
+                 -- LS-243：comment_count——correlated 子查詢對 p_family_id/p.kind/p.ref_id
+                 -- 三欄命中 comments_target_idx（family_id, target_type, target_id,
+                 -- created_at）where deleted_at is null 這個 partial index 的前三欄，
+                 -- 只在已經被 LIMIT 收斂到 ≤v_limit 列的 p 上逐列跑一次，跟 child_ids
+                 -- 的 array_agg 子查詢是同一種「correlated 子查詢，走各自索引」時機
+                 -- （見 API.md 對 get_family_timeline 效能說明的既有寫法），不是對整個
+                 -- feed 的 N+1。封鎖過濾比照 list_comments 規則，但用上面 v_blocked_ids
+                 -- 陣列而不是逐列呼叫 private.blocked_pairs()（理由見宣告段）。
                  (select count(*)::bigint
                     from public.comments cm
                    where cm.family_id = p_family_id
