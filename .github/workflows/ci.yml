@@ -518,6 +518,15 @@ jobs:
             echo "::error::PR 新增了 SwiftUI View 但 body 的 Design: 欄位是空的——新畫面必須先有 ui-designer 的 .pen 設計稿並填上 frame 名稱"
             exit 1
           fi
+          # LS-316：非空檢查只驗「有沒有填」，不驗「填的是不是真的」——LS-252 #471 merge-review R1 抓到
+          # sonnet 杜撰板描述，非空檢查完全擋不住（LS-96 池項 216c3a2d）。這裡追加呼叫 design-ref-check.sh
+          # 逐筆核對 body 的 Design: 行板名／id 是否與 head checkout 的 design/littlesprout.pen 頂層節點
+          # 一致；觸發條件同上（新 View 或本 PR 動了 design/*.pen）。
+          pens_touched=$(git diff --name-only "$base_sha"...HEAD -- 'design/*.pen' || true)
+          if [ "${new_views:-0}" -gt 0 ] || [ -n "$pens_touched" ]; then
+            printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-design-ref.txt"
+            bash scripts/gates/design-ref-check.sh "$RUNNER_TEMP/pr-body-design-ref.txt" design/littlesprout.pen
+          fi
 
       # LS-26：.pen 落地結構兜底（本機 commit-gate 的伺服器端對應；
       # 無 --expect-nodes——「落地比記憶體舊」的深度驗證靠收工程序＋handoff 證據）
