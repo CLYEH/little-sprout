@@ -376,9 +376,9 @@ struct TimelineView: View {
             // LS-315：文案改依 Notes `F77gCE`（00b 空狀態）逐字抄值，「匯入」領頭、不加按鈕
             // （C1c 裁決：空狀態不另造 CTA，靠文案指路到 Header 既有兩顆入口鈕）——00b 板
             // 完整的「Empty Print」卡面視覺（相框樣式、獨立標題／壓印小字）不在本票範圍，
-            // Body 幾何各依來源板不追齊（見票文範圍 5、Notes `MCbLu`），這裡只換文字。
+            // Body 幾何各依來源板不追齊（見票文範圍 5、Notes `MCbLu`），標題另依 `tZQNc` 抄值。
             ContentUnavailableView(
-                "還沒有回憶",
+                "這裡還沒有任何回憶",
                 systemImage: "photo.stack",
                 description: Text("點上方的「匯入」把手機裡的舊照片搬進來，或點「新增回憶」寫下第一篇日記。")
             )

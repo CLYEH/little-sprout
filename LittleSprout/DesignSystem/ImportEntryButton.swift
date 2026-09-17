@@ -55,7 +55,9 @@ struct ImportEntryButton: View {
                 RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
                     .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
             )
-            .frame(minHeight: AppSpacing.section)
+            // merge-review R1 m2：緊貼 44pt 下限在 iOS 26.2+ ≈0.96 縮放 runtime 會跌破
+            // tap-target 門檻（LS-167 同型）——抬到 48 留緩衝，不改變已畫好的視覺 pill 尺寸。
+            .frame(minHeight: 48)
             .contentShape(Rectangle())
         }
     }
