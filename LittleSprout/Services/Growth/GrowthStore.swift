@@ -43,6 +43,16 @@ final class GrowthStore {
     /// 骨架＋錯誤提示，不是整頁換成別的東西）。
     var isEmpty: Bool { records.isEmpty }
 
+    /// LS-312 R2（merge-review R1 M1，orchestrator 裁決）：`ChildGrowthDetailView.
+    /// loadIfNeeded()` 用這支判斷「要不要建一顆新 store」——抽成純函式方便單元測試鎖住這個
+    /// 決策（`GrowthStoreTests`）：View 本身的 `@State` 語意沒有 ViewInspector 測不到（見該檔
+    /// 文件註解）。同一個孩子（parent 重繪／頭像簽名 URL 重簽）不該重建、換孩子（iPad 側欄）
+    /// 才該重建。
+    static func needsRebuild(current: GrowthStore?, forChildID childID: UUID) -> Bool {
+        guard let current else { return true }
+        return current.childID != childID
+    }
+
     @discardableResult
     func refresh() async -> Bool {
         guard !loadState.isSubmitting else { return false }

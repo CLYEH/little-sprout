@@ -13,7 +13,7 @@ extension TapTargetGateHarness {
     @ViewBuilder
     static var growthDetailPopulatedHost: some View {
         NavigationStack {
-            ChildGrowthDetailView(growthStore: .previewSeededWithDemoRecords())
+            ChildGrowthDetailView(previewGrowthStore: .previewSeededWithDemoRecords())
         }
     }
 
@@ -23,7 +23,7 @@ extension TapTargetGateHarness {
     @ViewBuilder
     static var growthDetailEmptyHost: some View {
         NavigationStack {
-            ChildGrowthDetailView(growthStore: .preview(childName: "陳小軒"))
+            ChildGrowthDetailView(previewGrowthStore: .preview(childName: "陳小軒"))
         }
     }
 

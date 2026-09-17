@@ -191,6 +191,7 @@
 		5BBAB29B23BB37B83B46D487 /* EmailSignInModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226B824755111DECCA1F2AEE /* EmailSignInModelTests.swift */; };
 		5C691EBCF0E6332E28EF8654 /* UploadQueueStore+VideoExportSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F210F5BDD14ADE30EF4B005D /* UploadQueueStore+VideoExportSlot.swift */; };
 		5C9E6ED512A86D8A37DC15EA /* TapTargetGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38210395D04923BEFD0ED94B /* TapTargetGateTests.swift */; };
+		5DD4408D743CBBACF90061E9 /* GrowthStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1321C4BFB76E3F18A8055AA0 /* GrowthStoreTests.swift */; };
 		5E234D0A701EAB0B4BA3FEAD /* BirthdayFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE72EFF54C56748BD2A9AAC3 /* BirthdayFormat.swift */; };
 		5EC1E966C14830184690D16B /* TimelineModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131C968476EFA7FF91F30E97 /* TimelineModels.swift */; };
 		5ECC55BB49FAF374C24F19D5 /* InviteFamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AAA98C9E8EC8946FC45F0FF /* InviteFamilyView.swift */; };
@@ -555,6 +556,7 @@
 		118638BDAF3AB058A5A805C0 /* DeleteAccountStepTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountStepTests.swift; sourceTree = "<group>"; };
 		1316439F5231DB2C470519A8 /* SupabaseMediaUploadServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaUploadServiceTests.swift; sourceTree = "<group>"; };
 		131C968476EFA7FF91F30E97 /* TimelineModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineModels.swift; sourceTree = "<group>"; };
+		1321C4BFB76E3F18A8055AA0 /* GrowthStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthStoreTests.swift; sourceTree = "<group>"; };
 		1422150ED25BE1054FB9631F /* DiaryDeleteConfirmationCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDeleteConfirmationCopy.swift; sourceTree = "<group>"; };
 		14278530E77D1559729D3354 /* PreviewPushAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewPushAPIClient.swift; sourceTree = "<group>"; };
 		14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthButtons.swift; sourceTree = "<group>"; };
@@ -1303,6 +1305,7 @@
 				BA9BCE3B67830009105F917D /* FamilyStoreTests.swift */,
 				1EF6B48B968BD623EFF6F1F8 /* GrowthCurveTests.swift */,
 				7EC5441D002D7983E0FC9847 /* GrowthEmptyStateCopyTests.swift */,
+				1321C4BFB76E3F18A8055AA0 /* GrowthStoreTests.swift */,
 				2D6237BF6EAC92E8D4DCB382 /* ImportBatchFlowModifierRegressionTests.swift */,
 				D89356DF123DCA440A1440E4 /* ImportDateGroupingTests.swift */,
 				3B854436402C5E2BF4FFF0A8 /* ImportEntrySourceTests.swift */,
@@ -2384,6 +2387,7 @@
 				2923B118178851D5C29651A5 /* FamilyStoreTests.swift in Sources */,
 				2446A9D3B7C5A02D2E49FB77 /* GrowthCurveTests.swift in Sources */,
 				CE1464663C70214024056BDC /* GrowthEmptyStateCopyTests.swift in Sources */,
+				5DD4408D743CBBACF90061E9 /* GrowthStoreTests.swift in Sources */,
 				8D36946B41D68D83B6E45986 /* ImportBatchFlowModifierRegressionTests.swift in Sources */,
 				366FC5A0184274A239278F3E /* ImportDateGroupingTests.swift in Sources */,
 				BFD28F5A7684AC7AF7DA1FF7 /* ImportEntrySourceTests.swift in Sources */,

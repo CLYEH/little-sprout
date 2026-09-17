@@ -7,7 +7,7 @@ import SwiftUI
 ///
 /// 畫面級屬性（Notes `mfafV`→`PgHMe`／`tMMVT`／`H58CA`，逐條落地）：隱藏 Tab Bar ✗（一般
 /// push，Tab Bar 維持顯示——本視圖不呼叫 `.toolbar(.hidden, for: .tabBar)`）；標題系統
-/// large（`.navigationTitle(childName)`，不覆寫 display mode）；釘底動作帶無；深色靠 token
+/// large（`child.name`，不覆寫 display mode）；釘底動作帶無；深色靠 token
 /// 全自動反轉，紙卡（`GrowthChartCardView`）刻意不隨 theme 變色；AX3 靠
 /// `GrowthSegmentedControl`／`GrowthChartCardView` 各自讀 `dynamicTypeSize` 切換直式堆疊與
 /// X 軸刻度密度；iPad 見 `regularLayout`。
@@ -22,16 +22,47 @@ import SwiftUI
 /// `GrowthAddMeasurementPlaceholderView`「取消」鈕文件註解點名的既有教訓：系統 nav bar bar
 /// button item 熱區不受 `.frame()` 影響，R1 曾放在 `ToolbarItem` 實測量到 56×36pt，低於 44pt
 /// 下限（`TapTargetGateTests.testChildrenManagementViewRowOpensDetailNotEdit` 抓到）。
+///
+/// **`growthStore` 生命週期**（R2，merge-review R1 M1，orchestrator 裁決）：改收 `child`＋
+/// `apiClient`，`@State private var growthStore: GrowthStore?` 只在 `.task(id: child.id)`
+/// 內、`GrowthStore.needsRebuild(current:forChildID:)` 判定要重建時才換一顆——同一個孩子
+/// parent 重繪（例如 `ChildrenStore` 頭像簽名 URL 重簽）不會清空重讀；換孩子（iPad
+/// `regularLayout` 側欄切 `selectedChildID`）`child.id` 真的變了才重建，避免顯示錯的孩子。
+/// `body` 用 `growthStore?.childID == child.id` 這個條件（不只判 nil）決定要不要渲染
+/// `content(_:)`——換孩子那一瞬間舊 store 還在但孩子已經不對，這裡會先落回 `ProgressView`，
+/// 不會把 A 孩子的資料誤植到 B 孩子名下。
 struct ChildGrowthDetailView: View {
-    let growthStore: GrowthStore
+    let child: Child
+    let apiClient: GrowthAPIClient
     /// 非 nil 時 Identity Header 顯示「編輯」入口，推向這個閉包建出的畫面；nil 時（例如
     /// harness／`#Preview` 的獨立展示）不顯示這顆鈕。
     var editDestination: (() -> AnyView)?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var growthStore: GrowthStore?
     @State private var selectedMetric: GrowthMetric = .height
     @State private var showsAddMeasurement = false
+
+    init(child: Child, apiClient: GrowthAPIClient, editDestination: (() -> AnyView)? = nil) {
+        self.child = child
+        self.apiClient = apiClient
+        self.editDestination = editDestination
+    }
+
+    #if DEBUG
+    /// harness／`#Preview` 專用：直接注入已種好資料的 store，不走一次 async
+    /// `loadIfNeeded()`（假 client 固定回傳 `[]`，會把種好的示範資料覆蓋成空狀態）。
+    init(previewGrowthStore store: GrowthStore, editDestination: (() -> AnyView)? = nil) {
+        self.child = Child(
+            id: store.childID, name: store.childName, birthday: store.childBirthday,
+            avatarURL: nil, deletedAt: nil, createdAt: Date()
+        )
+        self.apiClient = PreviewGrowthAPIClient()
+        self.editDestination = editDestination
+        self._growthStore = State(initialValue: store)
+    }
+    #endif
 
     /// Notes `LiJgw`（04 AX3）：「Empty Message topMargin 110、plotH 340 避免文字擠壓」——
     /// AX3 空狀態文案（含孩子名字，最長可能三行）需要比一般字級更高的繪圖區，否則會跟
@@ -44,36 +75,52 @@ struct ChildGrowthDetailView: View {
 
     var body: some View {
         Group {
-            if horizontalSizeClass == .regular {
-                regularLayout
+            if let growthStore, growthStore.childID == child.id {
+                content(growthStore)
             } else {
-                compactLayout
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .navigationTitle(growthStore.childName)
-        .task {
-            // `loadState == .idle` 才真的呼叫——`#Preview`／`TapTargetGateHarness` 用
-            // `seedForPreview` 種好資料後 `loadState` 已是 `.success`，這裡不能無條件呼叫
-            // `refresh()`（假 client 固定回傳 `[]`，會把種好的示範資料覆蓋成空狀態）。
-            guard growthStore.loadState == .idle else { return }
-            await growthStore.refresh()
+        .navigationTitle(child.name)
+        .task(id: child.id) {
+            await loadIfNeeded()
         }
         .sheet(isPresented: $showsAddMeasurement) {
             GrowthAddMeasurementPlaceholderView()
         }
     }
 
+    @MainActor
+    private func loadIfNeeded() async {
+        guard GrowthStore.needsRebuild(current: growthStore, forChildID: child.id) else { return }
+        let store = GrowthStore(
+            childID: child.id, childName: child.name, childBirthday: child.birthday, apiClient: apiClient
+        )
+        growthStore = store
+        await store.refresh()
+    }
+
+    @ViewBuilder
+    private func content(_ growthStore: GrowthStore) -> some View {
+        if horizontalSizeClass == .regular {
+            regularLayout(growthStore)
+        } else {
+            compactLayout(growthStore)
+        }
+    }
+
     // MARK: - Compact (iPhone) — 01／04
 
-    private var compactLayout: some View {
+    private func compactLayout(_ growthStore: GrowthStore) -> some View {
         ScrollableFillView {
             VStack(alignment: .leading, spacing: AppSpacing.section) {
-                identityHeader
+                identityHeader(growthStore)
                 VStack(alignment: .leading, spacing: AppSpacing.item) {
                     Text("最新紀錄")
                         .appFont(.body)
                         .foregroundStyle(Color.lsTextPrimary)
-                    latestValuesRow
+                    latestValuesRow(growthStore)
                 }
                 GrowthChartCardView(
                     titleFont: .body, metric: $selectedMetric,
@@ -116,10 +163,10 @@ struct ChildGrowthDetailView: View {
     /// 只負責 Content Pane 本身的內容——左側 Nav Sidebar（時間軸／相簿／寶貝／設定）是
     /// `RootView.SectionSplitView` 既有的 app 層 iPad 殼（見該檔），不是這張票的範圍，這裡
     /// 不重畫一份。
-    private var regularLayout: some View {
+    private func regularLayout(_ growthStore: GrowthStore) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.section) {
-                identityHeader
+                identityHeader(growthStore)
                 GrowthChartCardView(
                     titleFont: .lead, metric: $selectedMetric,
                     points: growthStore.curvePoints(for: selectedMetric),
@@ -130,7 +177,7 @@ struct ChildGrowthDetailView: View {
                     Text("最新紀錄")
                         .appFont(.body)
                         .foregroundStyle(Color.lsTextPrimary)
-                    latestValuesRow
+                    latestValuesRow(growthStore)
                 }
                 PrimaryButton(icon: "plus", title: "新增量測") {
                     showsAddMeasurement = true
@@ -153,7 +200,7 @@ struct ChildGrowthDetailView: View {
 
     // MARK: - 共用
 
-    private var identityHeader: some View {
+    private func identityHeader(_ growthStore: GrowthStore) -> some View {
         HStack(spacing: AppSpacing.group) {
             ChildAvatarView(name: growthStore.childName, size: 64)
             VStack(alignment: .leading, spacing: AppSpacing.tight) {
@@ -178,7 +225,7 @@ struct ChildGrowthDetailView: View {
         }
     }
 
-    private var latestValuesRow: some View {
+    private func latestValuesRow(_ growthStore: GrowthStore) -> some View {
         HStack(spacing: AppSpacing.group) {
             ForEach(GrowthMetric.allCases) { metric in
                 GrowthLatestValueCard(metric: metric, latest: growthStore.latestValue(for: metric))
@@ -190,13 +237,13 @@ struct ChildGrowthDetailView: View {
 #if DEBUG
 #Preview("01 有資料") {
     NavigationStack {
-        ChildGrowthDetailView(growthStore: .previewSeededWithDemoRecords())
+        ChildGrowthDetailView(previewGrowthStore: .previewSeededWithDemoRecords())
     }
 }
 
 #Preview("04 空狀態") {
     NavigationStack {
-        ChildGrowthDetailView(growthStore: .preview(childName: "陳小軒"))
+        ChildGrowthDetailView(previewGrowthStore: .preview(childName: "陳小軒"))
     }
 }
 #endif
