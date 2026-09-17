@@ -185916,7 +185916,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "時間軸入口方案 B：Header Row 新增次要鈕（R3 改版：真疊紙記號＋「匯入」，見下），取代 LS-303 R1 M2／LS-251 fZYWK 誤植的『時間軸「＋」』入口設想——時間軸的「＋」是 cmp/Create Entry Button（`zy3Ps`），為建立日記的唯一入口，`QADriver.openEditor()`／`SectionTabBarPushRegressionTests` 依賴其單擊直接開啟編輯器，不得改成選單（排除候選 a）。\n\n**R3 升元件（VR R2 `1f3ab2cd` M-7）**：匯入鈕升為獨立 reusable 元件 `cmp/Button Import`（`o8zYlX`）——`fill:$surface`／`stroke:$control-line`／`strokeWidth:1.5`／`cornerRadius:$radius-md`／`padding:[9.5,12]`／`gap:6`，內含 Import Mark＋Label「匯入」（`$fs-body`/600/`$text-primary`）。**`cmp/Button Secondary`（`XggYA`）基底維持不動**，R1/R2 那組「instance-level 覆寫」配方已被獨立元件取代，不再需要靠 `descendants:{G4R75k:…}` 這種掛在元件內部子節點 id 上的脆弱寫法。三處 instance：一般狀態 `YxuLr`（`e1cOqx`）／空狀態 `wpGlp`（`FUfqg`）／AX3 `VcvfI`（`aGkJ1`，另覆寫 mark 尺寸見 `orXbN`）。**第四處使用點（記錄供承接）**：相簿詳情「加入照片」（LS-303 comment `c997f234` 已裁決承接同一匯入流程）之後的實作票應直接 ref `cmp/Button Import`，不得各自發明。\n\n**R3 疊紙記號重畫（VR R2 M-5，取代 R2「兩片方形對角偏移」的失敗版本）**：R2 版本兩片 12×12 矩形以 `strokeWidth 1.5` 疊放、描邊外緣淨空僅 0.50pt（@2x 糊成一條粗線），且用 `$control-line`／`$surface` 控件語彙，讀不出「一疊相紙」。R3 依 `D4zdmQ/oBEkH`（`cmp/Card Album` 的疊紙 instance）的 token 與間距邏輯原樣搬到 icon 尺度：**Import Mark**（`EJMa0`，12×22）＝前景 `Mark Front`（`v4CTZT`，12×10，`fill:$print-paper`／`stroke:$paper-shadow`／`strokeWidth:1`，代表一張相紙正面）＋兩片 `Mark Strip 1/2`（`H1Be6h`/`zwQeX`，各 12×2，同 token），三片之間皆為**真實 4pt 間距**（Front 底 10 → Strip1 頂 14；Strip1 底 16 → Strip2 頂 20），扣掉 `strokeWidth 1` 兩側各 0.5 後，描邊外緣淨空 **2.00pt**（達 VR 訂的 ≥2pt 硬性門檻），不再互相貼合模糊。「匯入」兩字因記號現在讀得出「紙／照片」語意而成立保留（VR R1 原意：記號承載「照片」的資訊，文字只需留動詞）。\n\n**實測寬度（R3）**：Title 102、Import Btn **76**（Mark 12＋gap6＋Label「匯入」≈34＋padding24）、Create Btn 124、Header Actions Group **216**（76+16+124）；Header Row 總寬 345，Title 與 Group 間距 **27.00pt**（345−102−216）。Header Row 高度維持 **49pt** 不變（與原板 `FCiMS` 完全相同），Feed／Tab Bar 既有幾何零位移（見下方座標訂正）。\n\n**（R3 補 VR R2 i-4）殘餘值的定位**：27.00pt 是 `justifyContent:space_between` 的**導出餘數**，不是被指定的規格值——它等於「總寬 345 − Title 寬 − Group 寬」，任一標籤文字增減一字都會改變這個數字。設計門檻是 **≥24pt（`$sp-block`）**，27.00 只是目前這組文案下的實測結果，ios-dev／後續設計不需要刻意「湊」成 27，只要維持 ≥24 即符合本票裁決。\n\n**座標訂正（沿用 R2，VR R1 comment `e20dcfc8` B-1，R2/R3 皆未變動此部分）**：Body（`BUjIl`）y=62.00、h=692.00、bottom=**754.00**、`clip:true`；Tab Bar（`hJ3cT`）`layoutPosition:absolute`、y=**754.00**——**Body 底緣＝Tab Bar 頂緣＝754.00，淨空 0.00pt**。Day Group 1（`igJ4C`）board-relative bottom＝**815.44**，超出 Body 裁切緣 **61.44pt**——Body `clip:true` 的正常捲動裁切，不是與 Tab Bar 的碰撞。「兩列方案」排除理由：真實代價是可見 feed −52pt（不是侵入 Tab Bar），R3 在殘餘 27.00pt（≥24pt 門檻）下仍選單列，保住這 52pt 可見內容。\n\n**R4 微調（VR R3 comment `7e36fccc` 附帶條件 i-8，APPROVE 附條件核銷用）**：疊紙記號薄片再推一階——`Mark Strip 1/2`（`H1Be6h`/`zwQeX`）高度 **2→3pt**，與前一片真實間距 **4→3.5pt**（`Import Mark` `EJMa0` envelope 12×22→**12×23**）；描邊外緣淨空 2.00→**2.50pt**，每片可見 `$print-paper` 露出量從幾乎被描邊吃光（1-1=0pt 可見，原判讀近似「格線」）提升到 **2pt**（3-1=2，跨過 VR「讓每片真的露出 1pt 以上」的門檻）。三處 instance：`YxuLr`（`e1cOqx`）／`wpGlp`（`FUfqg`）直接繼承元件定義更新，無需額外覆寫；AX3 `VcvfI` 另依 ×2.667 比例覆寫（見 `orXbN`）。實測 Header Row 寬度不受影響（Import Btn 仍 76、Group 仍 216、殘餘仍 27.00pt）——本次只動高度方向的間距，未動寬度。",
+                  "content": "時間軸入口方案 B：Header Row 新增次要鈕（R3 改版：真疊紙記號＋「匯入」，見下），取代 LS-303 R1 M2／LS-251 fZYWK 誤植的『時間軸「＋」』入口設想——時間軸的「＋」是 cmp/Create Entry Button（`zy3Ps`），為建立日記的唯一入口，`QADriver.openEditor()`／`SectionTabBarPushRegressionTests` 依賴其單擊直接開啟編輯器，不得改成選單（排除候選 a）。\n\n**R3 升元件（VR R2 `1f3ab2cd` M-7）**：匯入鈕升為獨立 reusable 元件 `cmp/Button Import`（`o8zYlX`）——`fill:$surface`／`stroke:$control-line`／`strokeWidth:1.5`／`cornerRadius:$radius-md`／`padding:[9.5,12]`／`gap:6`，內含 Import Mark＋Label「匯入」（`$fs-body`/600/`$text-primary`）。**`cmp/Button Secondary`（`XggYA`）基底維持不動**，R1/R2 那組「instance-level 覆寫」配方已被獨立元件取代，不再需要靠 `descendants:{G4R75k:…}` 這種掛在元件內部子節點 id 上的脆弱寫法。三處 instance：一般狀態 `YxuLr`（`e1cOqx`）／空狀態 `wpGlp`（`FUfqg`）／AX3 `VcvfI`（`aGkJ1`，另覆寫 mark 尺寸見 `orXbN`）。**第四處使用點（記錄供承接）**：相簿詳情「加入照片」（LS-303 comment `c997f234` 已裁決承接同一匯入流程）之後的實作票應直接 ref `cmp/Button Import`，不得各自發明。\n\n**R3 疊紙記號重畫（VR R2 M-5，取代 R2「兩片方形對角偏移」的失敗版本）**：R2 版本兩片 12×12 矩形以 `strokeWidth 1.5` 疊放、描邊外緣淨空僅 0.50pt（@2x 糊成一條粗線），且用 `$control-line`／`$surface` 控件語彙，讀不出「一疊相紙」。R3 依 `D4zdmQ/oBEkH`（`cmp/Card Album` 的疊紙 instance）的 token 與間距邏輯原樣搬到 icon 尺度：**Import Mark**（`EJMa0`，12×22）＝前景 `Mark Front`（`v4CTZT`，12×10，`fill:$print-paper`／`stroke:$paper-shadow`／`strokeWidth:1`，代表一張相紙正面）＋兩片 `Mark Strip 1/2`（`H1Be6h`/`zwQeX`，各 12×2，同 token），三片之間皆為**真實 4pt 間距**（Front 底 10 → Strip1 頂 14；Strip1 底 16 → Strip2 頂 20），扣掉 `strokeWidth 1` 兩側各 0.5 後，描邊外緣淨空 **2.00pt**（達 VR 訂的 ≥2pt 硬性門檻），不再互相貼合模糊。「匯入」兩字因記號現在讀得出「紙／照片」語意而成立保留（VR R1 原意：記號承載「照片」的資訊，文字只需留動詞）。\n\n**實測寬度（R3）**：Title 102、Import Btn **76**（Mark 12＋gap6＋Label「匯入」≈34＋padding24）、Create Btn 124、Header Actions Group **216**（76+16+124）；Header Row 總寬 345，Title 與 Group 間距 **27.00pt**（345−102−216）。Header Row 高度維持 **49pt** 不變（與原板 `FCiMS` 完全相同），Feed／Tab Bar 既有幾何零位移（見下方座標訂正）。\n\n**（R3 補 VR R2 i-4）殘餘值的定位**：27.00pt 是 `justifyContent:space_between` 的**導出餘數**，不是被指定的規格值——它等於「總寬 345 − Title 寬 − Group 寬」，任一標籤文字增減一字都會改變這個數字。設計門檻是 **≥24pt（`$sp-block`）**，27.00 只是目前這組文案下的實測結果，ios-dev／後續設計不需要刻意「湊」成 27，只要維持 ≥24 即符合本票裁決。\n\n**座標訂正（沿用 R2，VR R1 comment `e20dcfc8` B-1，R2/R3 皆未變動此部分）**：Body（`BUjIl`）y=62.00、h=692.00、bottom=**754.00**、`clip:true`；Tab Bar（`hJ3cT`）`layoutPosition:absolute`、y=**754.00**——**Body 底緣＝Tab Bar 頂緣＝754.00，淨空 0.00pt**。Day Group 1（`igJ4C`）board-relative bottom＝**815.44**，超出 Body 裁切緣 **61.44pt**——Body `clip:true` 的正常捲動裁切，不是與 Tab Bar 的碰撞。「兩列方案」排除理由：真實代價是可見 feed −52pt（不是侵入 Tab Bar），R3 在殘餘 27.00pt（≥24pt 門檻）下仍選單列，保住這 52pt 可見內容。\n\n**R4 微調（VR R3 comment `7e36fccc` 附帶條件 i-8，APPROVE 附條件核銷用）**：疊紙記號薄片再推一階——`Mark Strip 1/2`（`H1Be6h`/`zwQeX`）高度 **2→3pt**，與前一片真實間距 **4→3.5pt**（`Import Mark` `EJMa0` envelope 12×22→**12×23**）；描邊外緣淨空 2.00→**2.50pt**，每片可見 `$print-paper` 露出量從幾乎被描邊吃光（1-1=0pt 可見，原判讀近似「格線」）提升到 **2pt**（3-1=2，跨過 VR「讓每片真的露出 1pt 以上」的門檻）。三處 instance：`YxuLr`（`e1cOqx`）／`wpGlp`（`FUfqg`）直接繼承元件定義更新，無需額外覆寫；AX3 `VcvfI` 另依 ×2.667 比例覆寫（見 `orXbN`）。實測 Header Row 寬度不受影響（Import Btn 仍 76、Group 仍 216、殘餘仍 27.00pt）——本次只動高度方向的間距，未動寬度。\n\n**R5（LS-321）四板現況盤點**：相簿詳情「加入照片」目前四板（`LS-142 / 15`（板 `pVSXP`，按鈕 `ve8YN`）／`15b 空狀態`（板 `ZXdu2`，按鈕 `xcGEY`）／`15 深色`（板 `yfZyT`，按鈕 `iXdTJ`）／`A11y / 15 AX3`（板 `OysBA`，按鈕 `EZqDj`））皆為 `cmp/Button Primary`（`OKSJI`）instance，`width:fill_container`（AX3 板因字級放大 h=93，其餘三板 h=60），descendants 覆寫 icon→`image-plus`、label→「加入照片」。四板各自唯一的 `$accent` 用量正是這顆鈕（每板恰好 1 次，`resolveInstances` 掃描實測確認）——與本段之前「第四使用點直接 ref `cmp/Button Import`」矛盾：那句只授權 ref 元件，沒有處理「板面仍是 accent 主鈕」與「元件是 `$surface` 次要樣式」的視覺落差，也沒有處理「換元件後這頁會失去唯一 accent 標記」的後果。LS-315 R1 換底後正是撞上這個落差（M1，`0b0a7dc9`）。\n\n**裁決點：相簿詳情「加入照片」二選一**——(a) 維持既有滿版 `cmp/Button Primary`（改寫本段：「第四使用點不適用：相簿詳情『加入照片』是頁內主要動作＝15b 空狀態畫面唯一 CTA，不是 Header 次鈕，不套用『直接 ref 同一元件』規則」）；(b) 改 ref `cmp/Button Import`＋保留 `fill_container` 滿版寬度（四板改 ref，本段補「滿版變體」抄值；比較稿見 `A3ICAN`／按鈕 `ExIRu`）。\n\n- **(a) 的代價**：相簿詳情頁與時間軸 Header 用兩套視覺語言表達「加入照片／匯入」這組同義動作——同一動作在不同畫面一個是 accent 填色主鈕、一個是 `$surface` 外框次鈕，元件不一致（本段原句字面上不成立）；好處是保留頁面唯一的 accent 焦點——15b 空狀態畫面「加入照片」是畫面上唯一的 CTA，長輩硬約束「頁內主要動作的可辨識度」由顏色與滿版面積雙重承載，可辨識度最高。accent 配額：四板目前各自僅此 1 次，維持 (a) 不新增配額、不減少。\n- **(b) 的代價**：換成 `$surface`＋1.5pt `$control-line` 描邊的次要樣式後，四板（尤其 15b 空狀態）會變成**全板零 accent**——長輩要在沒有顏色線索、只剩邊框可辨識的情況下找到唯一的操作入口，可辨識度下降；好處是元件一致（四處使用點共用同一元件與樣式，本段原句字面成立）、且釋出的 accent 配額理論上可挪給其他更需要強調的元素（但相簿詳情目前沒有其他候選）。比較稿 `A3ICAN`（(b) 變體）與 `pVSXP`（(a) 原板）截圖並排：(b) 版按鈕的 Import Mark（疊紙記號）＋文字在 `$surface` 底上對比仍達標（`$text-primary` on `$surface` 屬於既有實測對比組，非新增風險），但整條動作帶失去視覺重量，在 15b 空狀態（唯一 CTA）最明顯。\n- **建議值：(a)**。理由：相簿詳情「加入照片」與時間軸 Header「匯入」雖是同一條匯入流程的兩個入口，但使用情境不同——Header 入口是次要／輔助動作（那一格的主動作是新增日記），相簿詳情入口（尤其空狀態）是畫面唯一動作，兩者在十條不可協商第 1 條「一畫面一顆實心主鈕」的位階本來就不同：Header 那格已有 Create 鈕佔掉「主鈕」角色，Import 鈕在那裡本就該是次要樣式；相簿詳情沒有其他競爭的主鈕，「加入照片」本身就該是那顆實心主鈕。元件不一致的代價（改寫一行 Notes 文字）遠低於長輩在空狀態頁面找不到主鈕的代價。若之後有實測資料顯示發現性足夠，(b) 仍是可回頭的選項（同 LS-307 C 案「不會擋住加法」的推理），但不建議在沒有實測前主動放棄頁面唯一的 accent 焦點。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -209353,6 +209353,1584 @@
           "fontFamily": "$font",
           "fontSize": "$fs-body",
           "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "A3ICAN",
+      "x": 14089,
+      "y": 785,
+      "name": "Album Detail / 加入照片 · (b) Button Import 滿版變體",
+      "clip": true,
+      "width": 393,
+      "height": 1097,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "b9N8HP",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "OZKyF",
+          "name": "Nav Row",
+          "width": "fill_container",
+          "padding": [
+            0,
+            16,
+            0,
+            0
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "id": "a8Nb5I",
+              "type": "ref",
+              "ref": "W6qTyS",
+              "name": "Nav Back",
+              "width": "fit_content",
+              "descendants": {
+                "VCU41": {
+                  "content": "相簿"
+                }
+              }
+            },
+            {
+              "id": "vp0uj",
+              "type": "ref",
+              "ref": "qe9yS",
+              "name": "More Button",
+              "descendants": {
+                "breqI": {
+                  "icon": "ellipsis"
+                },
+                "hIhVd": {
+                  "content": "更多"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "F8bebp",
+          "name": "Body",
+          "width": "fill_container",
+          "height": 864,
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "qFq7p",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ZnTso",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "阿公阿嬤家過年",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DHmmU",
+              "name": "Meta Row",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-tight",
+              "padding": [
+                "$sp-label",
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "rsy3m",
+                  "name": "Count",
+                  "fill": "$text-secondary",
+                  "content": "34 張相片",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "sgaA4",
+                  "name": "Pills Row",
+                  "gap": "$sp-label",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "YFc2R",
+                      "type": "ref",
+                      "ref": "AqN3F",
+                      "name": "Child Pill 1",
+                      "descendants": {
+                        "KR7zN": {
+                          "icon": "baby"
+                        },
+                        "g7Fnj": {
+                          "content": "小安"
+                        }
+                      }
+                    },
+                    {
+                      "id": "QH2xM",
+                      "type": "ref",
+                      "ref": "AqN3F",
+                      "name": "Child Pill 2",
+                      "descendants": {
+                        "KR7zN": {
+                          "icon": "baby"
+                        },
+                        "g7Fnj": {
+                          "content": "小明"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "xVb7H",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "lhWY3",
+              "name": "Photo Grid",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "UUXJ6",
+                  "name": "Column",
+                  "width": 164.5,
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "TE7TZ",
+                      "name": "Print Cell",
+                      "width": 164.5,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.393,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.259,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.293,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "padding": [
+                        8,
+                        8,
+                        32,
+                        8
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "R6zI1C",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 111.5,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
+                        {
+                          "id": "SpOXX",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "k9IsaG",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "YKCz5",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": 130.5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "zJPBe",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": 130.5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "tTOo2",
+                      "name": "Print Cell",
+                      "width": 164.5,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.393,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.259,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.293,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "padding": [
+                        8,
+                        8,
+                        32,
+                        8
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "mSO1g",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 164.5,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
+                        {
+                          "id": "EVKh0",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "Q7uf4U",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "e2uzhR",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": 183.5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "DklE0",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": 183.5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "drhBP",
+                      "name": "Print Cell",
+                      "width": 164.5,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.393,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.259,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.293,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "padding": [
+                        8,
+                        8,
+                        32,
+                        8
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "uilG1",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 195,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
+                        {
+                          "id": "OLIA6",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "ACaPh",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "NBGHQ",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": 214,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "u9vuZl",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": 214,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hbvKg",
+                  "name": "Column",
+                  "width": 164.5,
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "GR9nA",
+                      "name": "Print Cell",
+                      "width": 164.5,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.393,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.259,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.293,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "padding": [
+                        8,
+                        8,
+                        32,
+                        8
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "CHeuC",
+                          "name": "Photo Wrap",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "kris3",
+                            "link": "https://unsplash.com/@kris3",
+                            "author": "Kris Len Lu"
+                          },
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 198,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1704708799454-2a3e7ac158a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
+                        {
+                          "id": "NqGgW",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "KL69B",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "vX9sF",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": 217,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "oSuk3",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": 217,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WUCJg",
+                      "name": "Print Cell",
+                      "width": 164.5,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.393,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.259,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.293,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "padding": [
+                        8,
+                        8,
+                        32,
+                        8
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "aSWD3",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 148.5,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
+                        {
+                          "id": "XqXrD",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "b0Jlb",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "On2gW",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": 167.5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "NWaKE",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": 167.5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v9YaK",
+                      "name": "Print Cell",
+                      "width": 164.5,
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.393,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.259,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.293,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 1
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.19699999999999998,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.452,
+                            "height": 0.672
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 12
+                      },
+                      "padding": [
+                        8,
+                        8,
+                        32,
+                        8
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "f2nP77",
+                          "name": "Photo Wrap",
+                          "metadata": {
+                            "type": "unsplash",
+                            "username": "dcbelanger",
+                            "link": "https://unsplash.com/@dcbelanger",
+                            "author": "Danielle-Claude Bélanger"
+                          },
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 140,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1711637819586-fceae52fd6af?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODR8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
+                        {
+                          "id": "CIJBX",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "xM1l3",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 0 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "pH8A7",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": 159,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 26 L0 0 L26 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M0 0 L26 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "qJcGp",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 143.5,
+                          "y": 159,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TZNq0",
+              "name": "Spacer Bottom",
+              "width": "fill_container",
+              "height": 24
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LihXg",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "bLPv6",
+              "name": "Bar Hairline",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "AwJaR",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "ExIRu",
+                  "type": "ref",
+                  "ref": "o8zYlX",
+                  "name": "Add Photos Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "Jo1QU": {
+                      "content": "加入照片"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "sCXuF",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "Ue11R",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
         }
       ]
     }
