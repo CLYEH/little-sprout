@@ -108,6 +108,12 @@ final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
     /// merge-review R2 M4：迴圈開頭也檢查 `session.isCancelled`——這一群還沒讀完的其餘
     /// identifier 不再繼續讀取／入列（同 `enqueueGroups` 理由）；已經讀出的那幾筆維持不變，
     /// `markGroupResolved` 仍照跑一次，讓 `resolvedGroupCount` 的簿記保持一致。
+    ///
+    /// merge-review R3 m1：`await loadPendingUpload` 回來之後再檢查一次——取消當下最多
+    /// `maxConcurrentGroupLoads` 筆已經在飛行中的讀取，若只在迴圈開頭檢查，這幾筆讀完後仍會
+    /// 照樣 `registerPendingAlbum`／`session.append`／`store.enqueue`，使用者按了取消、畫面
+    /// 已關，相簿之後仍會多出這幾張（見 handoff m1）。這幾筆算「取消時放棄」，不計入
+    /// `droppedCount`（不是格式不支援／讀取失敗）。
     private func enqueue(group: ImportPlan.Group, into store: UploadQueueStore, session: ImportBatchSession) async {
         let anchorDate = min(group.anchorDate, Date())
         let albumID = group.albumID
@@ -115,6 +121,7 @@ final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
         for identifier in group.assetLocalIdentifiers {
             if session.isCancelled { break }
             let rawUploads = await loadPendingUpload(identifier)
+            if session.isCancelled { break }
             guard !rawUploads.isEmpty else {
                 droppedCount += 1
                 continue

@@ -130,8 +130,9 @@ final class AlbumImportCoordinatorStreamingTests: XCTestCase {
     /// 等其中一群完成才補上（同上面 M3(b) 測試的機制）。用一道 gate 讓已排入的 3 個 loader
     /// 呼叫卡住不回傳，確認「初始一批排滿 3 群、其餘 2 群還沒被讀取」之後才呼叫
     /// `session.cancel()`，再放開 gate 讓那 3 群完成——斷言 `enqueueGroups`／`enqueue` 的
-    /// 取消檢查生效：第 4、5 群永遠沒有被 `loadPendingUpload` 呼叫過，`entryIDs`／
-    /// `sharedUploadQueueStoreInstance.rows` 都停在 3 筆，不會因為取消之後還繼續讀取而長大。
+    /// 取消檢查生效：第 4、5 群永遠沒有被 `loadPendingUpload` 呼叫過；merge-review R3 m1
+    /// 收緊之後，取消前已在飛行中的那 3 群讀完也不該入列——`entryIDs`／
+    /// `sharedUploadQueueStoreInstance.rows` 停在 0 筆，不是「≤3 筆漏網」。
     func test_startImport_stopsEnqueueingRemainingGroupsAfterCancel() async {
         let apiStub = StubAlbumsAPIClient()
         let albumsStore = AlbumsStore(apiClient: apiStub)
@@ -166,17 +167,16 @@ final class AlbumImportCoordinatorStreamingTests: XCTestCase {
         session.cancel()
         gateOpen.withLock { $0 = true }
 
-        // 不能只等「entryIDs.count == 3」就斷言——沒有取消檢查時，第 4、5 群在 gate 打開後
-        // 一樣幾毫秒內就會完成，`entryIDs.count` 只是短暫經過 3 再繼續長到 5，用
-        // `waitUntil` 抓到「曾經是 3」這個瞬間會誤判成通過。固定等待一段遠大於 gate 打開後
-        // 排程延遲量級（微秒～個位數毫秒）的時間，確認「不會再長大」而不是「曾經到過 3」。
+        // 不能只等「entryIDs.count == 0」就斷言——固定等待一段遠大於 gate 打開後排程延遲
+        // 量級（微秒～個位數毫秒）的時間，確認那 3 筆飛行中的讀取真的回來過、但沒有入列
+        // （不是還沒排程到）。
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        XCTAssertEqual(session.entryIDs.count, 3, "取消前已排入的 3 群完成入列，取消後的群零入列")
-        XCTAssertEqual(recordedCalls.withLock { $0.count }, 3, "取消後，還沒排到的 2 群不該再被讀取")
+        XCTAssertEqual(recordedCalls.withLock { $0.count }, 3, "取消前已在飛行中的 3 筆讀取仍會跑完（不中斷 await）")
+        XCTAssertEqual(session.entryIDs.count, 0, "merge-review R3 m1：取消後零入列——即使是取消前已在讀取中的那 3 筆，讀完也不該入列")
         XCTAssertEqual(
-            albumsStore.sharedUploadQueueStoreInstance?.rows.count, 3,
-            "共用佇列也不該出現取消後才入列的新 id"
+            albumsStore.sharedUploadQueueStoreInstance?.rows.count, 0,
+            "共用佇列也不該出現取消後才入列的新 id（含取消前已在飛行中的項目）"
         )
     }
 
