@@ -32,6 +32,10 @@ struct ImportOrganizeView: View {
     /// `albumLabel` 文件註解。`.timeline`／harness `init(plan:...)` 皆為 nil。
     let fallbackAlbumID: UUID?
     let fallbackAlbumName: String?
+    /// LS-304：主鈕按下、`uploadCoordinator.startImport(plan:)` 拿到 `ImportBatchSession`
+    /// 之後呼叫——`ImportBatchFlowContainer` 用它把流程轉場到 04 進度頁（見該檔文件註解）。
+    /// 預設空閉包：harness／`#Preview`／`.timeline` 入口尚未接線時不需要真的轉場。
+    var onImportStarted: (ImportBatchSession) -> Void = { _ in }
 
     @State private var plan: ImportPlan
     @Environment(\.dismiss) private var dismiss
@@ -41,7 +45,8 @@ struct ImportOrganizeView: View {
         childrenStore: ChildrenStore, albumsStore: AlbumsStore, uploadCoordinator: ImportUploadCoordinator,
         pickedAssets: [ImportDateGrouping.PickedAsset], entrySource: ImportEntrySource,
         thumbnailProvider: ImportThumbnailProvider?, droppedCount: Int = 0,
-        accessState: PhotoLibraryAccessState, assetLimit: Int = 200
+        accessState: PhotoLibraryAccessState, assetLimit: Int = 200,
+        onImportStarted: @escaping (ImportBatchSession) -> Void = { _ in }
     ) {
         self.childrenStore = childrenStore
         self.albumsStore = albumsStore
@@ -52,6 +57,7 @@ struct ImportOrganizeView: View {
         self.droppedCount = droppedCount
         self.fallbackAlbumID = entrySource.defaultAlbumID
         self.fallbackAlbumName = entrySource.defaultAlbumName
+        self.onImportStarted = onImportStarted
         // LS-303 R2（merge-review R1 M2，orchestrator 裁決 `c997f234`）：從相簿詳情進入時
         // 每群預設放進該相簿（可改）；其餘入口（目前只有 `.timeline`，本票無呼叫點）維持
         // C3a「預設不放相簿」——`applyDefaultAlbum` 是純函式，見 `ImportEntrySourceTests`。
@@ -66,7 +72,8 @@ struct ImportOrganizeView: View {
     init(
         childrenStore: ChildrenStore, albumsStore: AlbumsStore, uploadCoordinator: ImportUploadCoordinator,
         plan: ImportPlan, accessState: PhotoLibraryAccessState, assetLimit: Int = 200,
-        thumbnailProvider: ImportThumbnailProvider? = nil
+        thumbnailProvider: ImportThumbnailProvider? = nil,
+        onImportStarted: @escaping (ImportBatchSession) -> Void = { _ in }
     ) {
         self.childrenStore = childrenStore
         self.albumsStore = albumsStore
@@ -77,6 +84,7 @@ struct ImportOrganizeView: View {
         self.droppedCount = 0
         self.fallbackAlbumID = nil
         self.fallbackAlbumName = nil
+        self.onImportStarted = onImportStarted
         _plan = State(initialValue: plan)
     }
 
@@ -226,13 +234,13 @@ struct ImportOrganizeView: View {
     // MARK: - 釘底主鈕（93pt，Notes「畫面級屬性」01 列）
 
     /// LS-303 R4（merge-review R3 M3，orchestrator 裁決 `8579e30e` 收回 R3 的「主鈕
-    /// disabled」）：`uploadCoordinator.requiresAlbumSelection`（目前只有過渡版
-    /// `LegacyAlbumUploadImportCoordinator` 為 `true`）時，若有未略過群沒指定相簿，這條
-    /// 過渡管線只支援「每群都指定相簿」，LS-304 換完整版上線即拿掉（`ImportPlan
-    /// .hasUnskippedGroupsWithoutAlbum` 是純函式，見 `ImportEntrySourceTests` 同檔測試）。
-    /// **不 disable 主鈕**（品牌不可協商第 8 條，同 `ImportGroupCardView` 寶貝 chip 那套
+    /// disabled」）：`uploadCoordinator.requiresAlbumSelection`（LS-304 起沒有任何實作覆寫
+    /// 成 `true`——這個限制原本只有過渡版 `LegacyAlbumUploadImportCoordinator`，已隨它移除
+    /// 失效，見 `ImportUploadCoordinator.requiresAlbumSelection` 文件註解；這個 guard 保留
+    /// 是讓型別本身描述完整的介面空間，非死碼——若未來任何實作有這個限制，這裡不需要跟著
+    /// 改）。**不 disable 主鈕**（品牌不可協商第 8 條，同 `ImportGroupCardView` 寶貝 chip 那套
     /// 回話列 idiom）——主鈕永遠可按，按下時才判斷：條件不成立就顯示回話列並停留整理頁，
-    /// 不呼叫 `uploadCoordinator.startImport`／不 `dismiss()`。
+    /// 不呼叫 `uploadCoordinator.startImport`／不進下一態。
     private var missingAlbumSelection: Bool {
         uploadCoordinator.requiresAlbumSelection && plan.hasUnskippedGroupsWithoutAlbum
     }
@@ -276,8 +284,11 @@ struct ImportOrganizeView: View {
                     didAttemptImportWithMissingAlbum = true
                     return
                 }
-                uploadCoordinator.startImport(plan: plan)
-                dismiss()
+                // LS-304：不再 `dismiss()`——整理頁是批次匯入流程（`ImportBatchFlowContainer`）
+                // 的起始態，按下主鈕後轉場到 04 進度頁（同一個 `.fullScreenCover` 內的狀態
+                // 切換，不是關掉再開新的一個），見該檔文件註解「為什麼不用 NavigationStack／
+                // 循序 fullScreenCover」段。
+                onImportStarted(uploadCoordinator.startImport(plan: plan))
             } label: {
                 Text("開始匯入 \(plan.pendingAssetCount) 張")
                     .appFont(.body, weight: .bold)

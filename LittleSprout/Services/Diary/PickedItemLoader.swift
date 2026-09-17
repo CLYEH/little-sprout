@@ -101,8 +101,12 @@ enum PickedItemLoader {
     /// 直接產生下採樣後的點陣，不會先把整張原圖解碼進記憶體再縮小（那正是 20 張 4K 原圖同時
     /// 撐爆記憶體的成因）。失敗時退回原圖，至少縮圖還看得到內容。
     ///
-    /// **LS-303 R3**：從 `private` 放寬成 internal static——`LegacyAlbumUploadImportCoordinator`
-    /// 需要對 `PHAsset` 讀出的原圖做同一種下採樣縮圖，不重複這段邏輯。
+    /// **LS-303 R3**：從 `private` 放寬成 internal static——過渡管線
+    /// `LegacyAlbumUploadImportCoordinator`（LS-304 已移除）需要對 `PHAsset` 讀出的原圖做
+    /// 同一種下採樣縮圖，不重複這段邏輯。**LS-304**：Legacy 移除後這個放寬層級並未收回——
+    /// `AlbumImportUploadCoordinator`（正式版，取代 Legacy）是新的外部呼叫端，04／05 進度／
+    /// 摘要頁的 Queue Row 需要顯示真的縮圖（Legacy 從未開任何畫面顯示縮圖，R5 起一律
+    /// `thumbnail: nil`，理由已隨 Legacy 移除失效），見該檔文件註解。
     static func downsizedThumbnail(for image: UIImage) async -> UIImage? {
         let target = CGSize(
             width: DiaryPhotoQueueLayout.thumbnailPixelBudget, height: DiaryPhotoQueueLayout.thumbnailPixelBudget
@@ -111,7 +115,8 @@ enum PickedItemLoader {
     }
 
     /// 同上，影片首幀縮圖直接請 `AVAssetImageGenerator` 用 `maximumSize` 下採樣產生，不要生
-    /// 全尺寸首幀再自己縮。放寬成 internal static，理由同 `downsizedThumbnail`（LS-303 R3）。
+    /// 全尺寸首幀再自己縮。放寬成 internal static，理由同 `downsizedThumbnail`（LS-303 R3／
+    /// LS-304）。
     static func firstFrame(of asset: AVAsset) -> UIImage? {
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true

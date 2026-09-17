@@ -17,11 +17,15 @@ final class PreviewDiaryAPIClient: DiaryAPIClient, @unchecked Sendable {
 
 /// 只給 SwiftUI `#Preview` 用的假 `MediaUploadService`——不打真網路。
 final class PreviewMediaUploadService: MediaUploadService, @unchecked Sendable {
-    func uploadPhoto(familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
+    func uploadPhoto(
+        familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID {
         UUID()
     }
 
-    func uploadVideo(familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
+    func uploadVideo(
+        familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID {
         UUID()
     }
 

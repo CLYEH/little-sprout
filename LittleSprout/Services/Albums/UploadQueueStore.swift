@@ -30,8 +30,10 @@ import UIKit
 @MainActor
 @Observable
 final class UploadQueueStore {
-    private struct Entry {
-        let thumbnail: UIImage?
+    struct Entry {
+        /// merge-review R1 M3(c)：批次匯入摘要頁離開時會釋放終局項目的縮圖（見
+        /// `releaseThumbnails(for:)`），因此不能是 `let`——其餘欄位維持不變。
+        var thumbnail: UIImage?
         let pixelSize: PixelSize
         /// 上傳用的原始位元組／檔案參照——完成或不可重試失敗後釋放為 `nil`（merge-review
         /// R2 F3：`.photo` 分支的 `Data` 是真正佔記憶體的部分，佇列一次幾十張時全部留著不會
@@ -41,6 +43,7 @@ final class UploadQueueStore {
         var payload: PendingUpload.Kind?
         let enqueuedAt: Date
         var state: UploadItemState
+        let takenAt: Date? // LS-304：見 `PendingUpload.takenAt` 文件註解。
     }
 
     private let familyID: UUID
@@ -61,7 +64,7 @@ final class UploadQueueStore {
     /// `entry id → albumID` 對照表，不可重試失敗（`.quota`／`.videoTooLarge`／
     /// `.videoExportTimedOut`）的 entry 永遠不會再被重試，對照表項目同樣該清掉。可重試失敗
     /// （`retry(_:)`／`retryAllRetryable()` 之後還可能成功）不觸發，保留登記供之後成功時查表。
-    private let onUploadFailedTerminal: @MainActor (_ id: UUID) -> Void
+    let onUploadFailedTerminal: @MainActor (_ id: UUID) -> Void
     /// LS-284：影片項目上傳前的壓縮步驟，注入點同 `DiaryComposerStore.videoPreparer`——正式
     /// 路徑預設呼叫 `VideoTrimmer.compressedForUpload`，測試才需要在不準備真影片檔的前提下
     /// 釘住「壓縮結果（含壓完仍超限的錯誤）怎麼往下接」。壓縮本身的行為由 `VideoTrimmerTests`
@@ -73,7 +76,7 @@ final class UploadQueueStore {
     /// `retryAllRetryable()` 只是把狀態翻回 `.waiting`、不清這份快取，`performUpload` 重跑時
     /// 命中就直接重用，不重新呼叫 `videoPreparer`（不重新 export）；上傳成功或不可重試失敗
     /// （終局狀態）由 `performUpload`／`finish` 清掉，見兩處註解。
-    private var compressedVideoCache: [UUID: VideoTrimmer.UploadSource] = [:]
+    var compressedVideoCache: [UUID: VideoTrimmer.UploadSource] = [:]
     /// LS-286 i2（來源 LS-284 merge-review R1 informational `39ce890a`）：`maxConcurrentUploads`
     /// 預設 3，一批選了 3 支以上影片時會有 3 個 `AVAssetExportSession` 同時做 4K→1080p 轉檔、
     /// 且吃滿全部併發名額，排在後面的照片項目要等。這裡只序列化「呼叫 `videoPreparer`」這一段
@@ -90,10 +93,10 @@ final class UploadQueueStore {
     /// LS-288 i3：`acquireVideoExportSlot()` 拿到名額之後、實際呼叫 `videoPreparer` 的逾時
     /// 看門狗上限，見 `UploadQueueStore+VideoExportSlot.swift` 的 `runVideoPreparer(_:)`。
     let videoExportTimeout: Duration
-    private var entries: [UUID: Entry] = [:]
+    var entries: [UUID: Entry] = [:]
     /// 插入順序——`entries` 是字典（用 id 查找／更新方便），排序另外靠這份陣列記住「先進
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
-    private var order: [UUID] = []
+    var order: [UUID] = []
 
     /// 稿面 `ImjbJ`：使用者上一次是被系統中斷、這次重新開 sheet 時接續——本票沒有偵測中斷
     /// 的機制（見檔頭「已知限制」），呼叫端可在確實偵測到的情境手動設 `true`。
@@ -177,7 +180,7 @@ final class UploadQueueStore {
             guard entries[upload.id] == nil else { continue }
             entries[upload.id] = Entry(
                 thumbnail: upload.thumbnail, pixelSize: upload.pixelSize, payload: upload.kind,
-                enqueuedAt: now(), state: .waiting
+                enqueuedAt: now(), state: .waiting, takenAt: upload.takenAt
             )
             order.append(upload.id)
         }
@@ -206,7 +209,7 @@ final class UploadQueueStore {
 
     // MARK: - 上傳推進
 
-    private func advance() {
+    func advance() {
         let capacity = maxConcurrentUploads - uploadingCount
         guard capacity > 0 else { return }
         let waitingIDs = order.filter { id in
@@ -246,11 +249,12 @@ final class UploadQueueStore {
         }
         entry.state = .uploading(progress: nil)
         let pixelSize = entry.pixelSize
+        let takenAt = entry.takenAt
         entries[id] = entry
         Task { [weak self] in
             guard let self else { return }
             do {
-                let mediaID = try await self.performUpload(id: id, payload, pixelSize: pixelSize)
+                let mediaID = try await self.performUpload(id: id, payload, pixelSize: pixelSize, takenAt: takenAt)
                 // LS-166：先呼叫掛鉤（讓呼叫端有機會把這張掛進相簿／更新畫面），再翻成
                 // `.completed`——兩者順序不影響 `entries`／`order` 的一致性（掛鉤不觸碰這兩個
                 // 屬性），純粹是「先讓呼叫端知道結果，這支 store 自己的狀態轉換晚一步」，同
@@ -314,11 +318,13 @@ final class UploadQueueStore {
     /// 命中但檔案已不在（低儲存空間清了 tmp）當未命中處理，重壓一次（同 `DiaryComposerStore`
     /// R2 i2）。`id` 是這一筆在 `entries` 裡的 id，快取鍵沿用它（同一支影片在佇列裡只會有一個
     /// id，不會跟其他筆混淆）。
-    private func performUpload(id: UUID, _ payload: PendingUpload.Kind, pixelSize: PixelSize) async throws -> UUID {
+    private func performUpload(
+        id: UUID, _ payload: PendingUpload.Kind, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID {
         switch payload {
         case .photo(let data, let fileExtension):
             return try await mediaUploadService.uploadPhoto(
-                familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize
+                familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: takenAt
             )
         case .video(let fileURL, _):
             let source: VideoTrimmer.UploadSource
@@ -335,7 +341,7 @@ final class UploadQueueStore {
             // .uploadSingle` merge-review R1 m7）。
             let mediaID = try await mediaUploadService.uploadVideo(
                 familyID: familyID, fileURL: source.fileURL, fileExtension: source.fileExtension,
-                pixelSize: source.pixelSize ?? pixelSize
+                pixelSize: source.pixelSize ?? pixelSize, takenAt: takenAt
             )
             compressedVideoCache.removeValue(forKey: id)
             Self.cleanupVideoTempFiles(originalURL: fileURL, uploadedURL: source.fileURL)
@@ -347,7 +353,7 @@ final class UploadQueueStore {
     /// `DiaryComposerStore.cleanupVideoTempFiles` merge-review R1 m9）——只在上傳成功、這支
     /// 影片真的離開佇列的作用中流程時呼叫；`originalURL` 是 `PickedItemLoader` 產生的選片暫存
     /// 複本，`uploadedURL` 是壓縮輸出，兩者不同檔案。
-    private static func cleanupVideoTempFiles(originalURL: URL, uploadedURL: URL) {
+    static func cleanupVideoTempFiles(originalURL: URL, uploadedURL: URL) {
         try? FileManager.default.removeItem(at: originalURL)
         if uploadedURL != originalURL {
             try? FileManager.default.removeItem(at: uploadedURL)
@@ -355,46 +361,9 @@ final class UploadQueueStore {
     }
 
     // `acquireVideoExportSlot()`／`releaseVideoExportSlot()`／`runVideoPreparer(_:)` 見
-    // `UploadQueueStore+VideoExportSlot.swift`。
-
-    #if DEBUG
-    /// 只給 `#Preview`／`TapTargetGateHarness`／UITest 用——直接灌狀態，不經過真正的上傳
-    /// 流程（同 `TimelineStore.seedForPreview` 的角色與圍欄理由）。
-    struct PreviewSeed {
-        let upload: PendingUpload
-        let enqueuedAt: Date
-        let state: UploadItemState
-
-        init(_ upload: PendingUpload, enqueuedAt: Date, state: UploadItemState) {
-            self.upload = upload
-            self.enqueuedAt = enqueuedAt
-            self.state = state
-        }
-    }
-
-    func seedForPreview(_ seeds: [PreviewSeed]) {
-        for seed in seeds {
-            entries[seed.upload.id] = Entry(
-                thumbnail: seed.upload.thumbnail, pixelSize: seed.upload.pixelSize, payload: seed.upload.kind,
-                enqueuedAt: seed.enqueuedAt, state: seed.state
-            )
-            order.append(seed.upload.id)
-        }
-    }
-
-    /// 測試用途：這筆是否還留著上傳用的原始 payload——完成或不可重試失敗後應該是 `nil`
-    /// （merge-review R2 F3）。
-    func debugPayload(_ id: UUID) -> PendingUpload.Kind? {
-        entries[id]?.payload
-    }
-
-    /// 測試用途：強制清空某筆的 payload，人為打破「`.waiting` 一定有 payload」這個不變量
-    /// （merge-review R3 i1）——正常流程走不到這個狀態，只能用這個鉤子模擬，驗證
-    /// `start(_:)` 撞到這個不變量被打破時會翻成失敗，不是永遠卡住。
-    func debugForcePayloadNil(_ id: UUID) {
-        entries[id]?.payload = nil
-    }
-    // `debugAcquireVideoExportSlot()`／`debugReleaseVideoExportSlot()`／
-    // `debugVideoExportWaiterCount` 見 `UploadQueueStore+VideoExportSlot.swift`。
-    #endif
+    // `UploadQueueStore+VideoExportSlot.swift`；`cancelPendingImportItems(_:)` 見
+    // `UploadQueueStore+ImportCancellation.swift`；`PreviewSeed`／`seedForPreview`／
+    // `debugPayload`／`debugForcePayloadNil` 見 `UploadQueueStore+Preview.swift`（LS-304：
+    // 三支都是為了讓 `UploadQueueStore.swift` 自己留在 SwiftLint `file_length` 上限內才拆出去，
+    // 不是行為分界）。
 }
