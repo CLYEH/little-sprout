@@ -692,6 +692,9 @@ rm -rf "$ls184_work"
 # ============================================================
 # H4（LS-322，源自 LS-315 三次停工）：pgrep -f 等待 push-gate／xcodebuild 未帶
 # worktrees/LS- 範圍字面 → deny；帶了 → allow（LS-322 定案寫法）。純命令文字比對。
+# R2（merge-review comment 9f4a1e38）：M1 加正規化（去引號、壓縮空白）補雙引號／多空白兩種
+# 風格變體的 deny／allow 各一組（H4⑥⑧、H4⑦⑨）；H4⑩ 對照殘留已知盲區（-f 與引號間本無空白，
+# reviewer 已確認可接受）。
 # ============================================================
 expect 'H4① 全域 pgrep -f [x]codebuild（deny，LS-315 根因形狀）' 2 \
   "$(bash_json "while pgrep -f '[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")"
@@ -702,6 +705,18 @@ expect 'H4③ 帶 worktrees/LS-315 範圍字面的 [x]codebuild（allow，LS-322
 expect 'H4④ 帶 worktrees/LS-42 範圍字面的 [p]ush-gate（allow）' 0 \
   "$(bash_json "while pgrep -f '[p]ush-gate' 2>/dev/null | grep -q worktrees/LS-42; do sleep 20; done")"
 expect 'H4⑤ 無關 pgrep 不誤擋（allow）' 0 "$(bash_json 'pgrep -f sleep')"
+# ---- R2（merge-review comment 9f4a1e38 M1）：先正規化（去引號、壓縮空白）再比對，堵雙引號／
+# 多空白這兩種常見風格變體；殘留已知盲區（-f 與引號之間本來就無空白）reviewer 已確認可接受 ----
+expect 'H4⑥ 雙引號、無範圍（deny，R1 M1：原版只認單引號被放行）' 2 \
+  "$(bash_json 'while pgrep -f \"[x]codebuild\" >/dev/null 2>&1; do sleep 20; done')"
+expect 'H4⑦ -f 後多一空白、無範圍（deny，R1 M1）' 2 \
+  "$(bash_json "while pgrep -f  '[x]codebuild' >/dev/null 2>&1; do sleep 20; done")"
+expect 'H4⑧ 雙引號、帶 worktrees/LS-315 範圍（allow，M1 正例：修法不誤擋合法寫法）' 0 \
+  "$(bash_json 'while pgrep -f \"[x]codebuild\" 2>/dev/null | grep -q worktrees/LS-315; do sleep 20; done')"
+expect 'H4⑨ -f 後多一空白、帶 worktrees/LS-42 範圍（allow，M1 正例）' 0 \
+  "$(bash_json "while pgrep -f  '[x]codebuild' 2>/dev/null | grep -q worktrees/LS-42; do sleep 20; done")"
+expect 'H4⑩ 對照：-f 與引號之間本來就無空白、無範圍（allow，殘留已知盲區，R1 M1 已確認可接受不擋本輪）' 0 \
+  "$(bash_json "while pgrep -f'[x]codebuild' >/dev/null 2>&1; do sleep 20; done")"
 
 if [ "$fail" -eq 0 ]; then
   if [ "${i6_skipped:-0}" -gt 0 ]; then
