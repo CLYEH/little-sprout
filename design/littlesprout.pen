@@ -185253,6 +185253,37 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "quxHT",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "XFj1e",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-321 R1",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "m0UJA3",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Album Detail / 加入照片 · (b) Button Import 滿版變體 (A3ICAN)｜隱藏 Tab Bar ✓ 不適用（比較稿，Copy(pVSXP) 未新增任何導覽變更）｜標題 系統 large（沿用 pVSXP，未變更）｜釘底動作帶 有（沿用 pVSXP 既有滿版動作帶，僅按鈕改 ref cmp/Button Import＋fill_container，高度不變）｜失敗文案鍵 不適用（Copy(pVSXP) 未動任何失敗態節點）｜深色特例 不適用（本板僅示範亮版比較；裁決選 (b) 才需要對稱補 15 深色／AX3／iPad 三板）｜AX3 特例 不適用（同上）｜iPad 重排/放大 不適用（同上；本板純供核可頁一題比較用，不進實作，見 TCs7A 裁決點）",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
