@@ -729,3 +729,23 @@ begin
   end if;
 end;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- 6. merge-review R1 i3（20260902011514_diary_album_multi_child_tags.sql:140-141
+--    是既有 migration，immutable gate 不能改；只能在本票 migration 末尾補一句
+--    comment on table 訂正）：feed_item_children 的表註解原文列了「四支 trigger
+--    函式維護」，本票新增 private.feed_sync_media_children()（第 2 段）並讓既有
+--    private.feed_sync_media()（第 3 段，CREATE OR REPLACE）首次也寫入這張表——
+--    維護 feed_item_children 的 trigger 函式從四支變六支
+--    （feed_sync_diary_children／feed_sync_album_children／feed_sync_diaries／
+--    feed_sync_albums／feed_sync_media_children／feed_sync_media）。
+-- ---------------------------------------------------------------------------
+comment on table public.feed_item_children is
+  'get_family_timeline 篩 child 用的扁平查詢表（LS-121）：一個時間軸項目標記 N 個孩子
+  就有 N 列，每列 (kind, ref_id, child_id) 各自可以被等值篩選、走
+  feed_item_children_family_child_occurred_idx 做 keyset 分頁——不篩 child 的查詢
+  完全不碰這張表，走 feed_items 本身（一個項目一列，天然不重複）。完全由
+  private.feed_sync_diary_children() / private.feed_sync_album_children() /
+  private.feed_sync_diaries() / private.feed_sync_albums() /
+  private.feed_sync_media_children() / private.feed_sync_media()（LS-317 起，後兩支）
+  六支 trigger 函式維護，authenticated 沒有任何寫入 grant。';
