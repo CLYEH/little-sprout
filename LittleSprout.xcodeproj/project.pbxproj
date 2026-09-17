@@ -342,7 +342,6 @@
 		A5652476504158AC7AB56B1D /* AlbumDetailStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 241E93FAAAD79FEF6D2138E2 /* AlbumDetailStoreTests.swift */; };
 		A583A6F5F73A5469EF67DC23 /* UploadQueueStoreDefensiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73E829FD28258F900CECEAF4 /* UploadQueueStoreDefensiveTests.swift */; };
 		A5A4BBD45115AEF64171B683 /* SupabaseChildAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CD6635FE0F483577B007AB /* SupabaseChildAPIClientTests.swift */; };
-		A60685DF6D77A3C2D0471B4D /* TimelineImportAlbumsRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CAD6232420EEDC91D44CA51 /* TimelineImportAlbumsRegressionTests.swift */; };
 		A60D73B16AE34E1F3385992D /* PickedItemLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 673C41FF62F64795F7752D25 /* PickedItemLoader.swift */; };
 		A6AFA622D09D18E714E54D32 /* TapTargetGateHarness+Push.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70052DB9EED77AAB95731CAD /* TapTargetGateHarness+Push.swift */; };
 		A6BCA981974F93A150209ECE /* OwnerRemoveContentConfirmSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 182C20B3BCF4D582DF384B73 /* OwnerRemoveContentConfirmSheet.swift */; };
@@ -495,6 +494,7 @@
 		EB9C272DC720C2345B620849 /* UploadQueueStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3426D48B93D0809933E05622 /* UploadQueueStoreTests.swift */; };
 		EC02D246C2D6898E7F55215E /* EditChildView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE3353D44311219CE17B533 /* EditChildView.swift */; };
 		EC24364AE168AD94B8795267 /* VideoDurationFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610553A99DBEBF3A5A73E479 /* VideoDurationFormatTests.swift */; };
+		ECD5747E9E3B9A06172C71C6 /* TimelineImportUploadCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3089761759D436F793AB403 /* TimelineImportUploadCoordinatorTests.swift */; };
 		F083097FC5D3ECC171AD16AF /* ChildGrowthDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7EE19B8D103ADB86326A704 /* ChildGrowthDetailView.swift */; };
 		F13AD1A73B09DDC419EAC93B /* ReportInboxAssemblerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD82679EDD789F70A8A8999 /* ReportInboxAssemblerTests.swift */; };
 		F1FFE704E0C50F3418A04669 /* DiaryDetailPresentationBindingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92463C497E79C1E1108BD80C /* DiaryDetailPresentationBindingsTests.swift */; };
@@ -833,7 +833,6 @@
 		8C74E777AB0094919EC703B2 /* AppConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigTests.swift; sourceTree = "<group>"; };
 		8C7ACE26EA3E828F870C6BB9 /* DiaryDurationFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDurationFormatTests.swift; sourceTree = "<group>"; };
 		8C83653E2AB94DBB5230ACB1 /* GrowthSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthSegmentedControl.swift; sourceTree = "<group>"; };
-		8CAD6232420EEDC91D44CA51 /* TimelineImportAlbumsRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineImportAlbumsRegressionTests.swift; sourceTree = "<group>"; };
 		8D28B773C8EDDC2BA7C7D993 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		8D538922363578E9E2B88FCC /* SupabaseSafetyAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseSafetyAPIClientTests.swift; sourceTree = "<group>"; };
 		8E6A0CCB93FDADE5B2C126BC /* JoinCodePhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinCodePhase.swift; sourceTree = "<group>"; };
@@ -877,6 +876,7 @@
 		A1905C686E265375F2E30D04 /* VideoPlayerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerScreen.swift; sourceTree = "<group>"; };
 		A1C80FBB4835B68D0EE95FD6 /* DiaryComposerStoreDraftCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStoreDraftCleanupTests.swift; sourceTree = "<group>"; };
 		A1FE65622DA3D1DE00028F27 /* PrintPhotoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintPhotoCard.swift; sourceTree = "<group>"; };
+		A3089761759D436F793AB403 /* TimelineImportUploadCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineImportUploadCoordinatorTests.swift; sourceTree = "<group>"; };
 		A3FB5A5983F1F8C9C04E3BC2 /* UploadQueueStoreVideoCompressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueStoreVideoCompressionTests.swift; sourceTree = "<group>"; };
 		A4406AC95C6E540F317CE828 /* AlbumDetailStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailStore.swift; sourceTree = "<group>"; };
 		A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyAPIClient.swift; sourceTree = "<group>"; };
@@ -1438,7 +1438,7 @@
 				EA808B45C621641B99EC528B /* TimelineContentAssemblerTests.swift */,
 				9B2FD827FA0B9B18B244A1DC /* TimelineContentAssemblerThumbPathTests.swift */,
 				D500E43E6BE915800BDC015C /* TimelineDayGroupingTests.swift */,
-				8CAD6232420EEDC91D44CA51 /* TimelineImportAlbumsRegressionTests.swift */,
+				A3089761759D436F793AB403 /* TimelineImportUploadCoordinatorTests.swift */,
 				947DF9E9DBEDFFD993312829 /* TimelineModelsTests.swift */,
 				116A0E8C201D8E30C990620A /* TimelineStoreCommentCountTests.swift */,
 				BDC172B024E0A7F8F373D603 /* TimelineStoreDeleteDiaryTests.swift */,
@@ -2577,7 +2577,7 @@
 				5082D3510D50899E250FFFA0 /* TimelineContentAssemblerTests.swift in Sources */,
 				AFA4F86684A41CC8BA208560 /* TimelineContentAssemblerThumbPathTests.swift in Sources */,
 				9C01D3DD6268BF3514B4643A /* TimelineDayGroupingTests.swift in Sources */,
-				A60685DF6D77A3C2D0471B4D /* TimelineImportAlbumsRegressionTests.swift in Sources */,
+				ECD5747E9E3B9A06172C71C6 /* TimelineImportUploadCoordinatorTests.swift in Sources */,
 				BD41888F467081226405ED53 /* TimelineModelsTests.swift in Sources */,
 				909B752A8D46A54F5460A537 /* TimelineStoreCommentCountTests.swift in Sources */,
 				6231319895327822C90C4541 /* TimelineStoreDeleteDiaryTests.swift in Sources */,

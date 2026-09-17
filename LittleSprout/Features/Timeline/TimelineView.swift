@@ -12,9 +12,8 @@ import SwiftUI
 ///
 /// LS-315（依 LS-307 核可稿 head `dfb3865`，板 `e1cOqx`／`FUfqg`／`aGkJ1`）：Header 新增
 /// 「匯入」鈕（`ImportEntryButton`，`cmp/Button Import`），沿 LS-303 既有 `ImportBatchFlowModifier`
-/// ／`ImportEntrySource.timeline`（該 case 當時已建立但無呼叫點，見 `ImportEntrySourceTests`
-/// 文件註解）接上 PHPicker 匯入流程；任何入口預設不放相簿（C3a），`uploadCoordinator` 沿用
-/// 預設 `NoOpImportUploadCoordinator()`（上傳／摘要交 LS-304，本票僅接「選取→整理」入口）。
+/// ／`ImportEntrySource.timeline` 接上 PHPicker 匯入流程；任何入口預設不放相簿（C3a）；
+/// `uploadCoordinator` R3 起改真的（見 `importUploadCoordinator`／擴充檔），細節見那兩處。
 struct TimelineView: View {
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
@@ -36,6 +35,7 @@ struct TimelineView: View {
     /// `.importBatchFlow`。不是 `private`——`TimelineView+Import.swift` 需要讀寫，同
     /// `commentsSheetTarget` 既有跨檔案 extension 存取層級理由。
     @State var showsImportBatch = false
+    @State var importUploadCoordinator: AlbumImportUploadCoordinator?
     /// LS-218：`InteractionRow.onOpenComments`（三種卡片共用）開出的留言 sheet 目標——見
     /// `TimelineView+Comments.swift`（`commentsSheetHost`／`openComments(kind:refId:)`）。不是
     /// `private`：跨檔案 extension 需要 `$commentsSheetTarget`，同 `apiClient` 在
@@ -80,7 +80,7 @@ struct TimelineView: View {
         .toolbar(.hidden, for: .navigationBar)
         .task(id: familyStore.myFamily?.id) {
             guard let familyID = familyStore.myFamily?.id else { return }
-            await childrenStore.refresh(familyID: familyID)
+            await refreshChildrenAndEnsureImportCoordinator(familyID: familyID)
         }
         .task(id: TimelineRefreshKey(familyID: familyStore.myFamily?.id, childID: selectedChildID)) {
             guard let familyID = familyStore.myFamily?.id else { return }
@@ -105,9 +105,9 @@ struct TimelineView: View {
                 )
             }
         }
-        // LS-315：Header「匯入」鈕，見型別文件註解。
         .importBatchFlow(
-            isActive: $showsImportBatch, childrenStore: childrenStore, albumsStore: albumsStore, entrySource: .timeline
+            isActive: $showsImportBatch, childrenStore: childrenStore, albumsStore: albumsStore,
+            entrySource: .timeline, uploadCoordinator: Self.resolveUploadCoordinator(importUploadCoordinator)
         )
     }
 
