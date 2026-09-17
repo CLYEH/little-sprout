@@ -186,6 +186,8 @@ declare
     'public.set_child_deleted(uuid, boolean)',
     'public.set_comment_deleted(uuid, boolean)',
     'public.set_diary_deleted(uuid, boolean)',
+    'public.set_media_children(uuid, uuid[])',
+    'public.set_media_children_batch(jsonb)',
     'public.toggle_reaction(uuid, text, uuid)',
     'public.transfer_ownership(uuid, uuid)',
     'public.unblock_user(uuid, uuid)',
