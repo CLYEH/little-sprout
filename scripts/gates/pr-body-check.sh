@@ -6,13 +6,24 @@
 # agent 在 `gh pr create/edit --body-file <f>` 前呼叫；CI rules job 對 github.event.pull_request.body 以 head
 # 分支票號再驗（伺服器端兜底）；自測 pr-body-check.test.sh。規約見 docs/COLLABORATION.md §3、§7。
 #
-# 用法：pr-body-check.sh [--branch <name>] [--verify] <body-file>
+# 用法：pr-body-check.sh [--branch <name>] [--verify] [--head-sha <sha>] [--base <ref>] <body-file>
 #   --branch  分支名，預設當前分支（CI 的 checkout 是 detached merge ref，必須傳 $HEAD）。不符
 #             (feature|fix|hotfix)/LS-<n>-<slug> 即 exit 2——promote／back-merge 的 head 是保護分支，沒有本票可比。
 #   --verify  反查申報（LS-140，見下）：CI rules job 帶；本機 `source .env` 後亦可（不帶 key 只驗格式＋git）。
+#   --head-sha  LS-316 design-ref 分支反查段（見下）用的 PR head；預設 HEAD（本機當前 checkout）。
+#   --base      LS-316 design-ref 分支反查段的 base 覆寫；不給時依 branch 前綴推（見下）。
 #   本機驗 body 一律用 CI 的完整形式 `pr-body-check.sh <f> --branch <分支> --verify`，**勿接管線（`| tail -1`），以 exit code
 #   分支**——管線會吃掉 exit code、`| tail` 只看 stdout 也看不到 stderr 的 ✗（LS-185 兩次把紅 body 推上 PR：一次 `| tail -1`、
 #   一次不帶 `--verify` 只驗了格式）。紅時最後一行一律在 stdout 印 `✗ pr-body-check：未通過…`，接了 `| tail -1` 也看得到（LS-186）。
+#
+# LS-316 design-ref 分支反查（--verify 才跑）：branch 對 base（hotfix/* 對 origin/main、feature|fix/* 對
+# origin/development，同 push-gate.sh 既有的 base 判定慣例）的 diff 若含 `design/*.pen` 或新增 SwiftUI
+# View（判定同 ci.yml Design gate 段），呼叫 design-ref-check.sh 核對 body 的 `Design:` 行板名／id 是否
+# 與 head 的 design/littlesprout.pen 頂層節點一致；不觸發時整段略過（多數 PR 不動設計稿）。base 解析不到
+# （origin/development／origin/main 本機未 fetch）時這段整個略過、不 fail closed——這裡只是 agent 本機
+# `gh pr create` 前的提早攔截，真正把關的是 CI 對同一支 ci.yml「Design gate」step 的獨立呼叫（用
+# github.base_ref 算出的 origin/$BASE，fetch-depth: 0 保證存在，且用 PR head sha 避開 LS-127 merge-ref
+# 誤讀），兩處各自獨立、都呼叫同一支 gate。
 #
 # 檔頭段：從檔頭到第一個「內容段落」結束為止——開頭的空白行與 Markdown 標題行（`#` 開頭）不算內容、但一併
 #   納入；第一個非空白非標題行起算內容段落，遇下一個空白行結束。這樣 PR 模板的「## Ticket／空行／LS-<n>」
@@ -61,13 +72,25 @@
 #   或再 push 一個 commit——失敗輸出會提示（PR #93 review F1；LS-37 在 DESTRUCTIVE-APPROVED 踩過同坑，COLLABORATION §6）。
 set -uo pipefail
 
-branch=; file=; verify=0
+self_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+branch=; file=; verify=0; head_sha=; design_ref_base_override=
 while [ $# -gt 0 ]; do
   case "$1" in
     --branch)
       if [ -z "${2:-}" ]; then echo "✗ pr-body-check：--branch 缺值" >&2; exit 2; fi
       branch=$2; shift 2 ;;
     --verify) verify=1; shift ;;
+    --head-sha)
+      # LS-316：design-ref-check 分支反查段用的 PR head（見下）；預設 HEAD（本機當前 checkout）。CI 傳
+      # PR head sha 避開 LS-127 merge-ref 誤讀（同 design-notes-check.sh 慣例）。
+      if [ -z "${2:-}" ]; then echo "✗ pr-body-check：--head-sha 缺值" >&2; exit 2; fi
+      head_sha=$2; shift 2 ;;
+    --base)
+      # LS-316：design-ref 分支反查段的 base 覆寫（同 design-notes-check.sh 既有的 --base 慣例）；不給時
+      # 依 branch 前綴推（hotfix/* → origin/main、其餘 → origin/development，見下）。
+      if [ -z "${2:-}" ]; then echo "✗ pr-body-check：--base 缺值" >&2; exit 2; fi
+      design_ref_base_override=$2; shift 2 ;;
     -*) echo "✗ pr-body-check：未知參數 $1" >&2; exit 2 ;;
     *)
       if [ -n "$file" ]; then echo "✗ pr-body-check：只接受一個 body 檔（多給了 $1）" >&2; exit 2; fi
@@ -370,6 +393,35 @@ PY
         fail=1
       fi
     done <<< "$pool_claims"
+  fi
+fi
+
+# ---- --verify (c)：LS-316 design-ref 分支反查——branch 對 base 的 diff 含 design/*.pen 或新增 SwiftUI
+# View 時，body 的 Design: 行板名／id 是否與 head 的 design/littlesprout.pen 頂層節點一致（見檔頭）。
+# base 解析不到（origin/development、origin/main 未 fetch——自測的合成 repo 本來就沒有 origin remote）
+# 時整段略過、不 fail closed：這裡是 agent 本機 gh pr create 前的提早攔截，真正的把關是 CI 對同一支
+# ci.yml「Design gate」step 的獨立呼叫（用 github.base_ref 算出的 origin/$BASE，fetch-depth: 0 保證存在）
+# ----
+if [ -n "$design_ref_base_override" ]; then
+  design_ref_base=$design_ref_base_override
+else
+  case "$branch" in
+    hotfix/*) design_ref_base=origin/main ;;
+    *) design_ref_base=origin/development ;;
+  esac
+fi
+design_ref_head=${head_sha:-HEAD}
+if design_ref_base_sha=$(git merge-base "$design_ref_base" "$design_ref_head" 2>/dev/null); then
+  design_ref_new_views=$(git diff "$design_ref_base_sha"..."$design_ref_head" -- '*.swift' 2>/dev/null | grep '^+' \
+    | grep -cE 'struct +[A-Za-z0-9_]+(<[^>]*>)? *: *([A-Za-z0-9_]+ *, *)*(some +)?View\b' || true)
+  design_ref_pen_touched=$(git diff --name-only "$design_ref_base_sha"..."$design_ref_head" -- 'design/*.pen' 2>/dev/null || true)
+  if [ "${design_ref_new_views:-0}" -gt 0 ] || [ -n "$design_ref_pen_touched" ]; then
+    design_ref_args=("$file" design/littlesprout.pen)
+    [ -n "$head_sha" ] && design_ref_args+=(--head-sha "$head_sha")
+    if ! bash "${self_dir}/design-ref-check.sh" "${design_ref_args[@]}"; then
+      echo "  design-ref-check 未通過（見上方 ✗ 各行）——body 的 Design: 行板名／id 須與 design/littlesprout.pen 頂層節點一致（LS-316）。" >&2
+      fail=1
+    fi
   fi
 fi
 

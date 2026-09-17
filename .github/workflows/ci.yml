@@ -132,9 +132,12 @@ jobs:
         if: ${{ !cancelled() && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')) }}
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          # LS-316 merge-review R1 M1：--verify 的 design-ref 分支反查段要讀 PR head 的 .pen 快照；本 job 簽出的是
+          # refs/pull/N/merge（合併 commit），同 LS-127 的 .pen 三支 gate 一樣要傳 PR head sha 避開 base 側並行變更混入。
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-check.txt"
-          bash scripts/gates/pr-body-check.sh --branch "$HEAD" --verify "$RUNNER_TEMP/pr-body-check.txt"
+          bash scripts/gates/pr-body-check.sh --branch "$HEAD" --verify --head-sha "$HEAD_SHA" "$RUNNER_TEMP/pr-body-check.txt"
 
       # LS-256（LS-96 池項 010d927d(1)）：從這一步起到 job 結尾的每個 gate step 都帶 `!cancelled()`——GitHub Actions 的
       # step 預設只在前面全綠時跑，上面的 pr-body-check 一紅（body 文案問題），後面 14 支彼此獨立的 gate（evidence-path／
@@ -184,7 +187,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -230,6 +233,9 @@ jobs:
           # LS-309 C：Identity Header 年齡字串 NBSP gate 自測（合成 repo：正確 codepoint／U+0020 退化／分隔缺失／
           # 未觸碰板舊債不擋／ref override／Notes 板散文排除／參數 fail closed／--head-sha）
           bash scripts/gates/design-identity-header-check.test.sh || rc=1
+          # LS-316：PR body Design: 行板名／id 對 .pen 頂層節點逐筆核對 gate 自測（合成 repo：名稱相符／id 缺／
+          # 名稱不符／純 id 寫法／無 Design 行／欄位留空邊界＋mutation）
+          bash scripts/gates/design-ref-check.test.sh || rc=1
           # LS-122：六支溢出掃描的正典腳本純函數自測（node，合成節點樹；Pen 不在 CI 也能驗演算法）；LS-168 加第五支
           # text_occlusion 與 tree_hash（含 python design_tree_hash.py 交叉一致案，runner 需 python3——ubuntu-latest 內建）；LS-185 加第六支 board_clip
           node scripts/design/overflow-scan.test.js || rc=1
@@ -508,6 +514,9 @@ jobs:
 
       - name: Design gate（新增 SwiftUI View 需附設計稿標記）
         if: ${{ !cancelled() && (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'hotfix/')) }}
+        env:
+          # LS-316 merge-review R1 M1：design-ref-check 讀 PR head 的 .pen 快照（LS-127 merge-ref 誤讀同型）。
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           base_sha=$(git merge-base "origin/$BASE" HEAD)
           # 掃所有變更 Swift 檔的「新增行」，涵蓋新檔與寫進既有檔的新 View；
@@ -517,6 +526,15 @@ jobs:
           if [ "${new_views:-0}" -gt 0 ] && ! printf '%s' "$PR_BODY" | grep -qE 'Design:[[:space:]]*[^[:space:]]'; then
             echo "::error::PR 新增了 SwiftUI View 但 body 的 Design: 欄位是空的——新畫面必須先有 ui-designer 的 .pen 設計稿並填上 frame 名稱"
             exit 1
+          fi
+          # LS-316：非空檢查只驗「有沒有填」，不驗「填的是不是真的」——LS-252 #471 merge-review R1 抓到
+          # sonnet 杜撰板描述，非空檢查完全擋不住（LS-96 池項 216c3a2d）。這裡追加呼叫 design-ref-check.sh
+          # 逐筆核對 body 的 Design: 行板名／id 是否與 head checkout 的 design/littlesprout.pen 頂層節點
+          # 一致；觸發條件同上（新 View 或本 PR 動了 design/*.pen）。
+          pens_touched=$(git diff --name-only "$base_sha"...HEAD -- 'design/*.pen' || true)
+          if [ "${new_views:-0}" -gt 0 ] || [ -n "$pens_touched" ]; then
+            printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-design-ref.txt"
+            bash scripts/gates/design-ref-check.sh "$RUNNER_TEMP/pr-body-design-ref.txt" design/littlesprout.pen --head-sha "$HEAD_SHA"
           fi
 
       # LS-26：.pen 落地結構兜底（本機 commit-gate 的伺服器端對應；
