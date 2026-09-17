@@ -6,11 +6,13 @@ import SwiftUI
 /// 慣例〕）。
 ///
 /// 畫面級屬性（Notes `mfafV`→`PgHMe`／`tMMVT`／`H58CA`，逐條落地）：隱藏 Tab Bar ✗（一般
-/// push，Tab Bar 維持顯示——本視圖不呼叫 `.toolbar(.hidden, for: .tabBar)`）；標題系統
-/// large（`child.name`，不覆寫 display mode）；釘底動作帶無；深色靠 token
-/// 全自動反轉，紙卡（`GrowthChartCardView`）刻意不隨 theme 變色；AX3 靠
-/// `GrowthSegmentedControl`／`GrowthChartCardView` 各自讀 `dynamicTypeSize` 切換直式堆疊與
-/// X 軸刻度密度；iPad 見 `regularLayout`。
+/// push，Tab Bar 維持顯示——本視圖不呼叫 `.toolbar(.hidden, for: .tabBar)`）；標題 01／04
+/// 系統 large（`child.name`，不覆寫 display mode），**06 例外**（R2，merge-review R1 m2）：
+/// Notes 06 那列寫「自訂（Identity Header 內 Name）」——系統標題不該再重複印一次名字，
+/// `horizontalSizeClass == .regular` 時改空字串＋`.inline`，名字只由 `identityHeader`
+/// 顯示一次；釘底動作帶無；深色靠 token 全自動反轉，紙卡（`GrowthChartCardView`）刻意不隨
+/// theme 變色；AX3 靠 `GrowthSegmentedControl`／`GrowthChartCardView` 各自讀
+/// `dynamicTypeSize` 切換直式堆疊與 X 軸刻度密度；iPad 見 `regularLayout`。
 ///
 /// **導覽入口**（LS-312 補記，orchestrator 裁決）：`ChildrenManagementView` 的寶貝列改推這支
 /// 畫面（見 `ChildrenManagementView+Detail.swift`），09b（`EditChildView`）改從「編輯」入口
@@ -82,7 +84,8 @@ struct ChildGrowthDetailView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .navigationTitle(child.name)
+        .navigationTitle(horizontalSizeClass == .regular ? "" : child.name)
+        .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .large)
         .task(id: child.id) {
             await loadIfNeeded()
         }
