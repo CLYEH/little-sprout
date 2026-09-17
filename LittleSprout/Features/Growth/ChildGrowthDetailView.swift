@@ -245,6 +245,11 @@ struct ChildGrowthDetailView: View {
         }
     }
 
+    /// m2（merge-review R2，orchestrator 裁決）：年齡字串套 `AlbumSignatureFormatter.
+    /// hardenedAge(_:)`（NBSP／WORD JOINER）——稿面 `jp6ka`／`pjrd7` 這處 codepoint 是不斷行
+    /// 空白（同 LS-309 `design_identity_header_check.py` 驗的形狀），長字串（例如「11 歲 11
+    /// 個月」）＋AX3＋iPhone 窄欄時才不會斷成「…個」／「月」孤字。刻意不改 `BirthdayFormat`
+    /// 本體——那支還餵著 `childRowContent` 的 `Pill` 等既有畫面，會擴散到票外。
     private func identityHeader() -> some View {
         HStack(spacing: AppSpacing.group) {
             ChildAvatarView(name: child.name, size: 64)
@@ -252,7 +257,7 @@ struct ChildGrowthDetailView: View {
                 Text(child.name)
                     .appFont(.display, weight: .bold)
                     .foregroundStyle(Color.lsTextPrimary)
-                Text(BirthdayFormat.ageDescription(birthday: child.birthday))
+                Text(AlbumSignatureFormatter.hardenedAge(BirthdayFormat.ageDescription(birthday: child.birthday)))
                     .appFont(.body)
                     .foregroundStyle(Color.lsTextSecondary)
             }
