@@ -1009,9 +1009,11 @@ fi
 #      ≥ PATROL_USAGE_STOP（預設 99）→ 印 99 級行，指示 orchestrator 停下所有工作＋寫交接；≥ PATROL_USAGE_WARN
 #      （預設 97）→ 印 97 級行，指示不派新任務、在飛跑完只記票（usage-budget-winddown 步驟）。**未達門檻
 #      brief 與人類全文模式一行都不印**（使用者明示零訊號，避免撞用量上限被強制中斷、在飛工作全損）；--json
-#      一律帶 usage 物件（seven_day／five_hour／resets_at／written_at／stale）供自測。快取缺／空／不可解析／
-#      written_at 早於 PATROL_USAGE_MAX_AGE_MIN（預設 120）分鐘＝探針壞掉，是這段唯一允許的非門檻訊號（安全
-#      裝置失效必須被看見，同本檔其餘「探針失敗仍要標」的既有慣例）。five_hour 只進 --json，不觸發門檻（使用者
+#      一律帶 usage 物件（seven_day／five_hour／resets_at／written_at／stale／last_known）供自測。快取缺／空／
+#      不可解析＝探針壞掉，是這段唯一允許的非門檻訊號（安全裝置失效必須被看見，同本檔其餘「探針失敗仍要標」
+#      的既有慣例）。written_at 早於 PATROL_USAGE_MAX_AGE_MIN（預設 120）分鐘但快取本身可解析＝過期、不是壞掉
+#      （LS-318；LS-96 池項 a1d7da12：閒置 session 只跑巡檢、cron 不刷新 statusline 屬正常）——改印「探針過期
+#      （最後已知 NN%…）」，沿最後已知值套用同一組 97／99 門檻、動作句併同一行。five_hour 只進 --json，不觸發門檻（使用者
 #      要的是週用量；是否納入列 informational 交 orchestrator）。不依賴 jq（沿本檔既有慣例，line 74）：
 #      statusline 端寫入是 jq -c 的緊湊格式，用 grep -oE 對命名子物件抓 used_percentage／resets_at，抓不到
 #      一律視為「不可解析」，不強求完整 JSON 語法驗證。PATROL_USAGE_FILE 可換路徑（自測用）。
@@ -1050,17 +1052,35 @@ else
     usage_age_min=$(( (now - usage_written_at) / 60 ))
     if [ "$usage_age_min" -gt "$usage_max_age" ]; then
       usage_stale=true
-      usage_reason="快取已 ${usage_age_min} 分鐘未更新（上限 ${usage_max_age} 分）：${usage_file}"
     fi
   fi
 fi
+# LS-318：97／99 門檻只算一次，stale／非 stale 兩條訊息共用同一組判定（避免各自重複一次 awk 比較——
+# 兩處字面重複會讓 ㉜g mutation 的 grep -n … | head -1 抓錯行，見 patrol.test.sh ㉜ 區塊註解）。
+usage_level=
+if [ -n "$usage_seven" ]; then
+  if awk -v v="$usage_seven" -v t="$usage_stop" 'BEGIN{exit !(v>=t)}' </dev/null; then
+    usage_level=stop
+  elif awk -v v="$usage_seven" -v t="$usage_warn" 'BEGIN{exit !(v>=t)}' </dev/null; then
+    usage_level=warn
+  fi
+fi
+usage_stop_action="停下所有工作：CronDelete 巡檢、不派任何 agent、在飛只等結果記票、寫交接 session-resume-<日期>.md（usage-budget-winddown 步驟 1–5）"
+usage_warn_action="不派新任務；在飛 agent 跑完只記票（usage-budget-winddown 步驟 3）"
 USAGE_LINE=
 if [ -n "$usage_reason" ]; then
   USAGE_LINE="⚠ [用量] 探針無資料（${usage_reason}）→ 確認 ${usage_cfg_dir}/statusline-command.sh 已掛快取寫入段（docs/COLLABORATION.md §4-b）"
-elif awk -v v="$usage_seven" -v t="$usage_stop" 'BEGIN{exit !(v>=t)}' </dev/null; then
-  USAGE_LINE="⚠ [用量] 週用量 ${usage_seven}%（重置 $(usage_fmt_time "$usage_seven_resets")）→ 停下所有工作：CronDelete 巡檢、不派任何 agent、在飛只等結果記票、寫交接 session-resume-<日期>.md（usage-budget-winddown 步驟 1–5）"
-elif awk -v v="$usage_seven" -v t="$usage_warn" 'BEGIN{exit !(v>=t)}' </dev/null; then
-  USAGE_LINE="⚠ [用量] 週用量 ${usage_seven}%（重置 $(usage_fmt_time "$usage_seven_resets")）→ 不派新任務；在飛 agent 跑完只記票（usage-budget-winddown 步驟 3）"
+elif [ "$usage_stale" = true ]; then
+  # LS-318（LS-96 池項 a1d7da12 末段）：快取本身可解析、只是過期——閒置 session 只跑巡檢，cron 不會刷新
+  # statusline 屬正常，不是探針壞掉；沿最後已知值 usage_seven 套用同一組 97／99 門檻，動作句併同一行印出。
+  usage_stale_action="門檻判定沿用最後已知值"
+  [ "$usage_level" = stop ] && usage_stale_action="$usage_stop_action"
+  [ "$usage_level" = warn ] && usage_stale_action="$usage_warn_action"
+  USAGE_LINE="⚠ [用量] 探針過期（最後已知 ${usage_seven}%，已 ${usage_age_min} 分鐘未更新；閒置 session 不刷新 statusline 屬正常）→ ${usage_stale_action}"
+elif [ "$usage_level" = stop ]; then
+  USAGE_LINE="⚠ [用量] 週用量 ${usage_seven}%（重置 $(usage_fmt_time "$usage_seven_resets")）→ ${usage_stop_action}"
+elif [ "$usage_level" = warn ]; then
+  USAGE_LINE="⚠ [用量] 週用量 ${usage_seven}%（重置 $(usage_fmt_time "$usage_seven_resets")）→ ${usage_warn_action}"
 fi
 
 # ---- 專屬模擬器（LS-83／LS-187）：detect-simulator.sh 建的 <票號>-<機型無空白> 用完不刪，由這段事後抓。
@@ -1379,7 +1399,7 @@ fi
 stamp=$(date '+%Y-%m-%d %H:%M')
 case "$MODE" in
   json)
-    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"supabase_containers":%s,"supabase_start_skew_minutes":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"usage":{"seven_day":%s,"five_hour":%s,"resets_at":%s,"written_at":%s,"stale":%s},"repeat_failures":[%s],"flags":[%s]}\n' \
+    printf '{"generated_at":%s,"stamp":%s,"stale_minutes":%s,"root":%s,"fetched":%s,"fetch_warning":%s,"main_checkout":{"branch":%s,"behind_origin_main":%s,"dirty":%s,"flag":%s},"hooks":{"path":%s,"flag":%s},"branches":{"development_behind_main":%s,"test_behind_main":%s,"test_behind_development":%s,"test_not_in_development":%s,"main_ahead_minutes":%s,"drift":%s},"prs_skipped":%s,"prs":[%s],"worktrees":[%s],"supabase_lock":%s,"supabase_containers":%s,"supabase_start_skew_minutes":%s,"hold_label":%s,"hold_expires_at":%s,"lock_waiters":%s,"lock_waiters_max_minutes":%s,"stale_simulators":[%s],"orphan_simulators":[%s],"sim_linear_note":%s,"default_simulators":%s,"rt_mismatch_simulators":%s,"booted_simulators":[%s],"booted_flagged":%s,"disk":{"avail_gb":%s,"min_gb":%s,"devices_gb":%s,"derived_data_gb":%s,"dedicated_simulators":%s,"flag":%s},"pencil":{"ran":%s,"line":%s,"rc":%s},"usage":{"seven_day":%s,"five_hour":%s,"resets_at":%s,"written_at":%s,"stale":%s,"last_known":%s},"repeat_failures":[%s],"flags":[%s]}\n' \
       "$now" "$(json_str "$stamp")" "$STALE" "$(json_str "$ROOT")" "$FETCHED" "$([ -n "$fetch_warn" ] && json_str "$fetch_warn" || printf null)" \
       "$(json_str "$mc_branch")" "$(json_num "$mc_behind")" "$mc_dirty" "$(json_str "$mc_flag")" \
       "$(json_str "$hooks_path")" "$(json_str "$hooks_flag")" \
@@ -1387,7 +1407,7 @@ case "$MODE" in
       "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$(json_num "$supa_containers")" "$(json_num "$supa_skew_m")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$(json_num "$lock_waiters")" "$(json_num "$lock_waiters_max_min")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
       "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
       "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" \
-      "$(usage_json_num "$usage_seven")" "$(usage_json_num "$usage_five")" "$(usage_json_num "$usage_seven_resets")" "$(usage_json_num "$usage_written_at")" "$([ "$usage_stale" = true ] && printf true || printf false)" \
+      "$(usage_json_num "$usage_seven")" "$(usage_json_num "$usage_five")" "$(usage_json_num "$usage_seven_resets")" "$(usage_json_num "$usage_written_at")" "$([ "$usage_stale" = true ] && printf true || printf false)" "$(usage_json_num "$usage_seven")" \
       "$J_REDS" "$J_FLAGS"
     ;;
   brief)
