@@ -70,7 +70,8 @@
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
 | `growth_records`（LS-255） | 我所屬家庭**未刪**的成長紀錄（身高／體重／頭圍） | owner／member（`author_id` 必須是自己） | 僅內容欄位（`measured_on`／`height_cm`／`weight_kg`／`head_cm`／`note`），**僅原作者本人**（owner 不在這條路徑——見 §3「為什麼 growth_records 用了真 RLS」） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_growth_record` RPC（作者本人，或該家庭 owner——不限作者，見 §4） | 真 RLS 直接開放 INSERT／UPDATE（不是 diaries/albums/comments/children 那種 RPC-only 收斂）：`deleted_at`／`deleted_by` 兩欄對 authenticated 無 UPDATE grant，唯一寫入路徑是 `delete_growth_record`（`SECURITY DEFINER`）；設計理由見 §3 |
-| `media` | 我所屬家庭**尚未軟刪**的檔案中繼資料，**上傳者自己的例外**——不論是否已軟刪都看得到自己上傳的列（`deleted_at is null or uploaded_by = auth.uid()`，LS-155 R2 起；與 `children` 全員可見已軟刪列的例外不同，這裡只有上傳者本人是例外，見 §3「`media_select` 過濾」段落的已知殘留缺口） | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | **文件承諾「owner 任意列」，實際只對 owner 自己上傳的列與尚未軟刪的別人的列成立**（一般刪除走 `deleted_at`）——owner 對「別人上傳、已軟刪」的列直接 `DELETE` 會因為 R2 的 `media_select` 把該列藏起來而**靜默影響 0 列**（LS-155 R2 review m1 實測，見 §3 殘留缺口段落）；真正的 owner moderation 請走 `remove_content_as_owner('media', id)`（`SECURITY DEFINER`，不受這個限制） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3 |
+| `media` | 我所屬家庭**尚未軟刪**的檔案中繼資料，**上傳者自己的例外**——不論是否已軟刪都看得到自己上傳的列（`deleted_at is null or uploaded_by = auth.uid()`，LS-155 R2 起；與 `children` 全員可見已軟刪列的例外不同，這裡只有上傳者本人是例外，見 §3「`media_select` 過濾」段落的已知殘留缺口） | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | **文件承諾「owner 任意列」，實際只對 owner 自己上傳的列與尚未軟刪的別人的列成立**（一般刪除走 `deleted_at`）——owner 對「別人上傳、已軟刪」的列直接 `DELETE` 會因為 R2 的 `media_select` 把該列藏起來而**靜默影響 0 列**（LS-155 R2 review m1 實測，見 §3 殘留缺口段落）；真正的 owner moderation 請走 `remove_content_as_owner('media', id)`（`SECURITY DEFINER`，不受這個限制） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3；寶貝標記唯一路徑是 `set_media_children`／`set_media_children_batch` RPC（見下 `media_children` 列與 §4） |
+| `media_children`（LS-317） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_media_children`／`set_media_children_batch`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（同上，直接 DELETE 已被 revoke） | 照片／影片 ↔ 孩子多對多標記，沿 `album_children`（LS-121）先例；`media` 本身沒有 hybrid 模式，授權門檻是「上傳者本人且當下仍有上傳權，或該家庭 owner」（同 `media_update` policy，不是建立者分支），見 §8 |
 | `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對別人相簿的內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8 |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
 | `album_summaries`（LS-200，view） | 我所屬家庭的相簿，逐列多帶 `visible_media_count`／`latest_media_id`／`latest_thumb_path`／`latest_storage_path`／`cover_thumb_path`／`cover_storage_path` 六個彙總欄——只算呼叫者依 RLS 看得到的 media | ❌ 沒有寫入語意（view，無 INSERT grant） | ❌ 同上 | ❌ 同上 | `security_invoker=true`，`albums_select`／`album_media_select`／`media_select` 三條既有 policy 逐使用者生效，取代 client 端 `album_media(count)` 內嵌 aggregate 的連結列計數口徑（LS-165 R2）；**欄位於 `CREATE VIEW` 當下凍結**，`albums` 加欄需重建 view 才會補上，見 §3「albums / diaries」 |
@@ -89,12 +90,14 @@
 | `notification_events` | 🔒 **完全不可讀**（成員無 grant 也無 policy） | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | LS-58：推播彙總佇列的資料面，只給 `service_role`（LS-22 的 Edge Function）讀寫；見 §3 |
 
 **寫入路徑小結（給 iOS 呼叫端的心智模型）**：`family_members`／`invites`／`join_requests`／
-`diaries`／`comments`／`reactions`／`children`／`diary_children`／`album_children`
-九張表**完全不能**用 `.insert()`／`.update()`／`.delete()`（`family_members` 的
+`diaries`／`comments`／`reactions`／`children`／`diary_children`／`album_children`／
+`media_children`
+十張表**完全不能**用 `.insert()`／`.update()`／`.delete()`（`family_members` 的
 `role`／`can_upload` 例外，見上表；`diaries`／`comments` 的硬刪 `.delete()` 仍走
 policy 直接允許，見上表；`children` 自 R1 起連硬刪都收回，三種操作對 `children`
 **無任何例外**——見上表 `children` 列；`diary_children`／`album_children`
-自 LS-121 起是全新的表，一開始就沒有任何直接寫入 grant，見 §8），一律呼叫對應
+自 LS-121 起、`media_children`（LS-317）自本票起是全新的表，一開始就沒有任何
+直接寫入 grant，見 §8），一律呼叫對應
 RPC；`feed_items`／`feed_item_children` 兩張表完全唯讀（`authenticated` 有 `SELECT`
 grant，但沒有任何寫入 grant，見上表）；
 其餘表可用 PostgREST 的 `.from(...)` 直接讀寫，但每張表都有欄位級或列級限制，寫
@@ -594,6 +597,14 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   （`update ... set deleted_at = now()`）自己以前上傳的照片都會被拒，拿到 `42501`
   ——不是「刪不到別人的」，是「刪不到自己的」。想清掉自己上傳的內容，要嘛先請 owner
   恢復 `can_upload`，要嘛請 owner 出手處理（owner 分支不受這個限制）。
+- **寶貝標記（`media_children`，LS-317）**：`media` 起先沒有直接關聯任何孩子（見
+  §8 舊版說明）；本票起透過 `media_children (family_id, media_id, child_id)`
+  連結表補上，唯一寫入路徑是 `set_media_children`／`set_media_children_batch`
+  RPC（見 §4）。**授權門檻不是「建立者分支」**（`albums`/`diaries` hybrid 模式
+  在這裡不適用，`media` 沒有內容欄位可比照）——沿用 `media_update` policy 的既有
+  判準：上傳者本人（且當下仍有上傳權，`can_upload` 被關掉即失去這個資格）或該
+  家庭 owner，跟「誰能軟刪一張照片」是同一組人。複合外鍵綁同一家庭，跨家庭的
+  孩子 id 一律 `23503`；已軟刪的孩子一律 `LS044`（見 §8）。
 
 ### `albums` / `diaries`
 - **相簿列表請讀 `album_summaries`（LS-200），不要用 client 端內嵌 aggregate 算張數**：
@@ -846,11 +857,14 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **LS-121 起沒有 `child_id` 欄位**——LS-48 曾經加過的單一 `child_id` 欄位已移除
   （一個項目可以標多個孩子，單一欄位的資料模型不再成立）。`get_family_timeline`
   回傳的 `child_ids uuid[]` 改由 `diary_children`／`album_children` 動態聚合，
-  `p_child_id` 篩選改走 `feed_item_children`（見 §8）。`media` 類項目的
-  `child_ids` **恆為空陣列**——`media` 本身不直接關聯任何孩子，只能透過
-  `album_media` 間接、多對多地關聯到相簿的孩子標記，無法唯一決定歸屬。實際影響：
-  `get_family_timeline` 的 `p_child_id` 篩選為指定值時，`media` 類項目**不會
-  出現**；只有 `p_child_id = NULL`（查全部）時才看得到。
+  `p_child_id` 篩選改走 `feed_item_children`（見 §8）。**`media` 類項目自 LS-317
+  起不再恆為空陣列**——`media_children` 連結表落地後，`child_ids` 改由
+  `media_children` 動態聚合（同 `diary`／`album` 分支的既有寫法），`p_child_id`
+  篩選為指定值時，標記過該孩子的 `media` 項目一樣會出現（跟 `diary`／`album`
+  同一套語意，不再是舊版「media 一律不出現」的限制）；沒有被 `set_media_children`
+  標記過的既有 `media` 列，`child_ids` 仍是空陣列（`media_children` 沒有對應
+  列），`p_child_id` 篩選下依然不出現——這不是恆定限制，是「沒標記就沒有」的
+  自然結果，見 §8。
 
 ### `notification_events`
 - **推播彙總佇列**——資料面（LS-58：來源 trigger、彙總視窗、合併鍵）與發送面（LS-172：
@@ -974,7 +988,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 正式站 advisors `authenticated_security_definer_function_executable` WARN 點名的架構
 選擇：這些 RPC 都是 `SECURITY DEFINER`（RLS 由函式內部呼叫 `private.*` 集合函式把關，
 不是靠呼叫端自己的 RLS 身分），且對 `authenticated` 開放 `EXECUTE`——這是刻意的架構
-選擇，不是漏洞。以下 29 支是目前完整清單（單一清單來源：與
+選擇，不是漏洞。以下 31 支是目前完整清單（單一清單來源：與
 `supabase/tests/60_default_privileges.sql` §8 的 `v_definer_rpcs`、
 `supabase/tests/110_advisors_hardening.sql` §3 的 `v_whitelist` 三處逐字同步；新增
 對 `authenticated` 開放的 SECURITY DEFINER RPC 時，三處都要更新，`110_` 的反向掃描
@@ -1004,6 +1018,8 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 | `set_child_deleted(uuid, boolean)` | 軟刪／還原孩子檔案 |
 | `set_comment_deleted(uuid, boolean)` | 軟刪／還原留言 |
 | `set_diary_deleted(uuid, boolean)` | 軟刪／還原日記 |
+| `set_media_children(uuid, uuid[])` | 設定照片／影片的孩子標記 |
+| `set_media_children_batch(jsonb)` | 批次設定多張照片的孩子標記 |
 | `toggle_reaction(uuid, text, uuid)` | 切換按讚 |
 | `transfer_ownership(uuid, uuid)` | 轉移家庭 owner 身份 |
 | `unblock_user(uuid, uuid)` | 解除封鎖 |
@@ -1320,6 +1336,42 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   trigger，見 §8）。
 - **併發**：對目標相簿列用 `FOR UPDATE` 鎖住，`album_children` 的「刪多補少」在
   同一個交易、同一把鎖之後執行——理由與併發保證同 `update_diary_entry`（見上）。
+
+### `set_media_children(p_media_id uuid, p_child_ids uuid[]) -> void`（LS-317，新增）
+- **誰能呼叫**：**上傳者本人，且當下仍有上傳權**（`family_id in
+  uploadable_family_ids()`，`can_upload` 被關掉即失去資格），**或**該家庭
+  owner（處理任何一張）——跟 `media_update` policy 的既有判準完全一致（見 §2
+  `media` 列／§3），不是 `set_album_children` 那種「建立者分支」：`media` 沒有
+  hybrid 模式，標記孩子跟軟刪一張照片是同一組處置權，不是內容編輯權。
+- **用途**：設定一張照片／影片的寶貝標記，唯一能寫 `media_children` 的路徑
+  （直接 `.insert()`/`.delete()` 對 `authenticated` 一律 `42501`，見 §2）。
+- **語意**：**全覆蓋**（PUT，不是逐一新增／移除）——`p_child_ids` 為 `NULL` 或
+  空陣列＝清空所有標記；非空＝目前的標記集合被替換成這個陣列去重、過濾 `NULL`
+  元素之後的集合，刪多補少（同 `update_diary_entry`／`set_album_children` 的
+  `p_child_ids` 語意，見 §8）。
+- **錯誤碼**：未登入、照片不存在、或呼叫者既非上傳者（或當下已無上傳權）也非
+  該家庭 owner，**皆為裸 `42501`**（票面明訂不另開合併碼，找不到的照片與授權
+  不足摺進同一個碼，不洩漏「這個 id 到底存不存在」）；`p_child_ids` 任一元素
+  跨家庭 `23503`；任一元素指向一個已軟刪的孩子 `LS044`（`media_children` 的
+  `BEFORE INSERT` trigger，見 §8）。
+- **併發**：對目標 `media` 列用 `FOR UPDATE` 鎖住，`media_children` 的「刪多
+  補少」在同一個交易、同一把鎖之後執行——理由與併發保證同
+  `update_diary_entry`／`set_album_children`（見上）。
+
+### `set_media_children_batch(p_items jsonb) -> void`（LS-317，新增）
+- **誰能呼叫**：同 `set_media_children`——這支只是迴圈呼叫它，逐筆套用同一套
+  授權判斷，不是另一組規則。
+- **用途**：批次設定多張照片的寶貝標記，供相機膠卷批次匯入一次多張使用（見
+  LS-249／LS-304）。`p_items` 形狀：`[{"media_id": "<uuid>", "child_ids":
+  ["<uuid>", ...]}]`，一次最多實務建議 200 筆（票面效能要求：200 筆 <1s）。
+- **原子性**：**單一交易，全成功或全失敗**——任何一筆的授權不足、目標不存在、
+  跨家庭 `23503`、或指向已軟刪孩子的 `LS044`，都會讓整個 RPC 呼叫拋出例外，
+  外層交易整批 rollback，包含陣列中排在它**之前**已經成功套用的項目也一併
+  撤銷（不是「壞的那一筆跳過，其餘照常」）。呼叫端不需要自己判斷哪幾筆成功、
+  哪幾筆失敗再局部重試——失敗就是整批都沒發生，重新組一次完全正確的陣列
+  再呼叫即可。
+- **錯誤碼**：與 `set_media_children` 相同（見上），差別只在觸發的是陣列中
+  的某一筆。
 
 ### `set_comment_deleted(p_comment_id uuid, p_deleted boolean) -> void`
 - **誰能呼叫**：作者本人（**只要求仍是該家庭任一角色的成員**，包含被降級成 viewer
@@ -2730,11 +2782,17 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
   孩子」——兩張連結表都沒有額外的 UNIQUE，`(diary_id, child_id)` / `(album_id,
   child_id)` 本身是複合主鍵，一個孩子可以出現在任意多篇內容裡，一篇內容也可以標
   任意多個孩子。
-- `media` 本身**不**直接關聯任何孩子——照片只透過 `album_media`/`diary_media` 間接
-  掛在有孩子標記的相簿／日記底下。要查「某個孩子的所有照片」，正確路徑是先查
-  `album_children`/`diary_children` where `child_id = ?` 拿到 `album_id`/`diary_id`，
-  再 join `album_media`/`diary_media` 取 `media`，**不是**在 `media` 表上直接篩選
-  （那個欄位不存在）。
+- **`media` 自 LS-317 起可直接關聯孩子**：透過 `media_children (family_id,
+  media_id, child_id)` 連結表表達，唯一寫入路徑是 `set_media_children`／
+  `set_media_children_batch` RPC（見 §3「media」段／§4）——授權門檻是「上傳者
+  本人＋當下仍有上傳權，或該家庭 owner」，不是 `diaries`/`albums` 的建立者分支
+  （`media` 沒有 hybrid 模式）。**LS-121 之前的舊限制已解除**：以前要查「某個
+  孩子的所有照片」只能繞道先查 `album_children`/`diary_children` where
+  `child_id = ?` 拿到 `album_id`/`diary_id`，再 join `album_media`/`diary_media`
+  取 `media`——這條間接路徑仍然有效（相簿／日記層級的標記不會因為本票而消失），
+  但現在也可以直接查 `media_children` where `child_id = ?` 拿到 `media_id`，
+  兩條路徑並存、互不取代（一張照片可能只透過相簿標記孩子、從未呼叫過
+  `set_media_children`，這種照片只能靠間接路徑查到）。
 - **建立與標記是兩個步驟**：`create_diary_entry` 的 `p_child_ids` 參數讓「建立」與
   「標記」在同一次 RPC 呼叫內完成；`albums` 本體仍是建立者直接 `.insert()`（未變，
   見 §3），標記孩子是緊接著的第二步，呼叫 `set_album_children`（見 §4）。
@@ -2751,8 +2809,11 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
     出現一次**——這條查詢走 `feed_items` 本身，一個項目一列，天然不重複。
   - `p_child_id = <某個孩子>`：只回傳標記含這個孩子的項目；同一篇同時標了 2 個
     孩子的內容，用其中任一個孩子篩選都會**各自出現一次**（分別是兩次不同的查詢，
-    不是同一次查詢回傳兩列）。**`media` 類項目一律不出現**——`media` 沒有直接的
-    孩子標記可比對，見上一條。
+    不是同一次查詢回傳兩列）。**`media` 類項目自 LS-317 起不再一律不出現**——
+    透過 `set_media_children` 標記過這個孩子的照片一樣會出現；沒被
+    `set_media_children` 標記過的照片（不論是否透過相簿／日記間接關聯到這個
+    孩子，見上一條）仍不出現，`media_children` 是唯一的比對來源，不會回頭查
+    `album_children`/`diary_children` 展開判斷。
   - 兩種情況下，回傳列的 `child_ids` 都是該項目標記的**全部**孩子（不只是篩選
     命中的那一個），見 §4 `get_family_timeline` 的回傳說明。
   - **設計取捨（EXPLAIN 證據見 PR handoff）**：`p_child_id` 篩選走一張獨立、由
@@ -2768,7 +2829,8 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
     一致，游標語意相同，見 `supabase/tests/97_multi_child_tags.sql` 的灌量測試。
 - **軟刪孩子與時間軸／照片日記的關係（LS-66；LS-47 定案第④題；LS-121 延伸到連結表）**：
   軟刪一個孩子（`set_child_deleted`）對**既有**標記完全不連動——`diary_children`／
-  `album_children`／`feed_item_children` 裡既有的列不會被這支 RPC 動到（它只改
+  `album_children`／`media_children`（LS-317）／`feed_item_children` 裡既有的列
+  不會被這支 RPC 動到（它只改
   `children` 這一張表的 `deleted_at`／`deleted_by` 兩欄）。因此：
   - `get_family_timeline` 對一個已軟刪孩子的行為**完全不變**——`p_child_id` 傳這個
     孩子的 id 一樣正常回傳他標記過的日記／相簿項目；`p_child_id` 為 `NULL`（查全部）
@@ -2793,7 +2855,8 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
     再也無法還原，他名下標記過的日記與相簿依然完整保留、依然可查（本票不含刪除
     策略，只有 `deleted_at` 語意，見 §3）。
 - **刪除孩子時連結表的級聯**：`diary_children`／`album_children`／
-  `feed_item_children` 對 `(family_id, child_id)` 的複合外鍵是 `on delete cascade`
+  `media_children`（LS-317）／`feed_item_children` 對 `(family_id, child_id)`
+  的複合外鍵是 `on delete cascade`
   （不是舊版 `feed_items.child_id` 用過的 `on delete set null`——那個欄位已隨本票
   移除）。本票仍然沒有任何應用層的孩子硬刪路徑（`children_delete` policy 依舊全擋，
   見 §3 `children` 段），這條 CASCADE 目前只在假設性的「未來若開放硬刪」情境下才會
@@ -2857,6 +2920,8 @@ set_album_deleted(uuid, boolean)
 set_child_deleted(uuid, boolean)
 set_comment_deleted(uuid, boolean)
 set_diary_deleted(uuid, boolean)
+set_media_children(uuid, uuid[])
+set_media_children_batch(jsonb)
 toggle_reaction(uuid, text, uuid)
 transfer_ownership(uuid, uuid)
 unblock_user(uuid, uuid)
@@ -2889,6 +2954,7 @@ growth_records
 invites
 join_requests
 media
+media_children
 notification_events
 orphan_scan_cursor
 profiles
