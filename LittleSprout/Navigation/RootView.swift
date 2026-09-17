@@ -20,6 +20,8 @@ struct RootView: View {
     /// LS-125：`DiaryEditorView` 用的 client，原樣轉手往下傳到 `TimelineView`（見
     /// `LittleSproutApp` 文件註解——不是 `@State`，這裡也只是單純轉手）。
     let diaryAPIClient: DiaryAPIClient
+    /// LS-312：轉手往下傳到 `ChildrenManagementView`（寶貝詳情・成長區塊）。
+    let growthAPIClient: GrowthAPIClient
     let mediaUploadService: MediaUploadService
     /// LS-193：`SettingsView`→`DeleteAccountFlowView` 用，同 `diaryAPIClient`／
     /// `mediaUploadService` 的既有角色分工（不隨 app 存活的無狀態 client，原樣轉手往下傳）。
@@ -51,6 +53,7 @@ struct RootView: View {
                     albumsStore: albumsStore,
                     eulaStore: eulaStore,
                     diaryAPIClient: diaryAPIClient,
+                    growthAPIClient: growthAPIClient,
                     mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient,
                     resumer: resumer,
@@ -94,6 +97,8 @@ struct AuthenticatedRootView: View {
     /// LS-190 R2（merge-review R1 B2(a)）：轉手往下傳到 `SettingsView`，登出時歸零。
     let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
+    /// LS-312：轉手往下傳到 `ChildrenManagementView`（寶貝詳情・成長區塊）。
+    let growthAPIClient: GrowthAPIClient
     let mediaUploadService: MediaUploadService
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
@@ -112,7 +117,8 @@ struct AuthenticatedRootView: View {
                 SectionSplitView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
-                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+                    diaryAPIClient: diaryAPIClient, growthAPIClient: growthAPIClient,
+                    mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
                     commentAPIClient: commentAPIClient,
                     pushNotificationStore: pushNotificationStore, selection: $selection
@@ -121,7 +127,8 @@ struct AuthenticatedRootView: View {
                 SectionTabView(
                     authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
                     timelineStore: timelineStore, albumsStore: albumsStore, eulaStore: eulaStore,
-                    diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+                    diaryAPIClient: diaryAPIClient, growthAPIClient: growthAPIClient,
+                    mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
                     commentAPIClient: commentAPIClient,
                     pushNotificationStore: pushNotificationStore, selection: $selection
@@ -204,6 +211,8 @@ private struct SectionTabView: View {
     let albumsStore: AlbumsStore
     let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
+    /// LS-312：轉手往下傳到 `ChildrenManagementView`（寶貝詳情・成長區塊）。
+    let growthAPIClient: GrowthAPIClient
     let mediaUploadService: MediaUploadService
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
@@ -219,7 +228,8 @@ private struct SectionTabView: View {
                     SectionContentView(
                         section: section, authStore: authStore, familyStore: familyStore,
                         childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-                        eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+                        eulaStore: eulaStore, diaryAPIClient: diaryAPIClient,
+                    growthAPIClient: growthAPIClient, mediaUploadService: mediaUploadService,
                         accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
                         commentAPIClient: commentAPIClient,
                         pushNotificationStore: pushNotificationStore
@@ -260,6 +270,8 @@ private struct SectionSplitView: View {
     let albumsStore: AlbumsStore
     let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
+    /// LS-312：轉手往下傳到 `ChildrenManagementView`（寶貝詳情・成長區塊）。
+    let growthAPIClient: GrowthAPIClient
     let mediaUploadService: MediaUploadService
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
@@ -281,7 +293,8 @@ private struct SectionSplitView: View {
                 SectionContentView(
                     section: selection, authStore: authStore, familyStore: familyStore,
                     childrenStore: childrenStore, timelineStore: timelineStore, albumsStore: albumsStore,
-                    eulaStore: eulaStore, diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
+                    eulaStore: eulaStore, diaryAPIClient: diaryAPIClient,
+                    growthAPIClient: growthAPIClient, mediaUploadService: mediaUploadService,
                     accountAPIClient: accountAPIClient, resumer: resumer, safetyAPIClient: safetyAPIClient,
                     commentAPIClient: commentAPIClient,
                     pushNotificationStore: pushNotificationStore
@@ -311,6 +324,8 @@ struct SectionContentView: View {
     let albumsStore: AlbumsStore
     let eulaStore: EULAStore
     let diaryAPIClient: DiaryAPIClient
+    /// LS-312：轉手往下傳到 `ChildrenManagementView`（寶貝詳情・成長區塊）。
+    let growthAPIClient: GrowthAPIClient
     let mediaUploadService: MediaUploadService
     let accountAPIClient: AccountAPIClient
     let resumer: PendingAccountDeletionResumer
@@ -337,7 +352,10 @@ struct SectionContentView: View {
                 familyStore: familyStore, childrenStore: childrenStore, albumsStore: albumsStore,
                 mediaUploadService: mediaUploadService
             )
-        case .children: ChildrenManagementView(familyStore: familyStore, childrenStore: childrenStore)
+        case .children:
+            ChildrenManagementView(
+                familyStore: familyStore, childrenStore: childrenStore, growthAPIClient: growthAPIClient
+            )
         case .settings:
             SettingsView(
                 authStore: authStore, familyStore: familyStore, childrenStore: childrenStore,
@@ -354,6 +372,7 @@ struct SectionContentView: View {
     AuthenticatedRootView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
+        growthAPIClient: PreviewGrowthAPIClient(),
         mediaUploadService: PreviewMediaUploadService(), accountAPIClient: PreviewAccountAPIClient(),
         resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient(),
         commentAPIClient: PreviewCommentAPIClient(), pushNotificationStore: .preview()
@@ -365,6 +384,7 @@ struct SectionContentView: View {
     AuthenticatedRootView(
         authStore: .preview(), familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
         albumsStore: .preview(), eulaStore: .preview(shouldPresent: false), diaryAPIClient: PreviewDiaryAPIClient(),
+        growthAPIClient: PreviewGrowthAPIClient(),
         mediaUploadService: PreviewMediaUploadService(), accountAPIClient: PreviewAccountAPIClient(),
         resumer: .preview(), safetyAPIClient: PreviewSafetyAPIClient(),
         commentAPIClient: PreviewCommentAPIClient(), pushNotificationStore: .preview()

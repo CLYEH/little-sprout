@@ -104,18 +104,12 @@ enum TapTargetGateScreenName: String {
     // 在生產常態下量到群標題 x=119.3，應為 24）。這個 case 掛 `previewNormalSample()`（無
     // 失敗、無續傳橫幅、`uploading` 不帶百分比），專門讓機械 gate／UITest 覆蓋這個常態。
     case uploadQueueSheetNormal = "UploadQueueSheetViewNormal"
-    // LS-303：匯入整理頁（`design/littlesprout.pen` Import 01/02/03，同一結構）——初始態不
-    // 需要真的 `PHAsset`（`ImportOrganizeView` 有 `plan:` 入口專為 harness／preview 準備，
-    // 見該檔文件註解），固定 fixture（23 張＋5 張＋3 張日期不明群）就有代表性：群卡／
-    // 寶貝 chip／相簿列／略過鈕／釘底主鈕皆渲染。
-    // rawValue 逐字等於檔名（`ImportOrganizeView`）——`tap-target-registry-check.sh` 只認
-    // 這個形狀（同 `.albumsDefaultState` 既有先例）。
+    // LS-303：匯入整理頁（Import 01/02/03）——`plan:` 入口專為 harness／preview 準備，固定
+    // fixture（23＋5＋3 張日期不明群）即有代表性；下一 case 為 limited-library 疊加態（同一
+    // fixture，`accessState: .limited` 額外渲染 06a banner）。
     case importOrganizeDefault = "ImportOrganizeView"
-    // LS-303：limited-library 疊加態——同上 fixture，`accessState: .limited` 額外渲染
-    // 06a 提醒 banner 與「管理可存取照片」鈕。
     case importOrganizeLimited = "ImportOrganizeViewLimited"
-    // LS-303：06b 拒絕權限空狀態——完全無資料依賴，取消鈕／主鈕一開畫面就有代表性。
-    case importPermissionDenied = "ImportPermissionDeniedView"
+    case importPermissionDenied = "ImportPermissionDeniedView"  // 06b 拒絕權限空狀態
     // LS-304：04 匯入進度頁——固定樣本涵蓋沒有成功／正在進行／已完成三群＋整批進度卡，
     // 「取消匯入」／「在背景繼續，關閉視窗」／逐列重試／整批重試皆有代表性。
     case importProgressDefault = "Import04ProgressView"
@@ -272,6 +266,13 @@ enum TapTargetGateScreenName: String {
     // 既有先例）——同上，不用來做逐元件 tap target 量測，純粹驗證留言列／送出鈕正確變成
     // `.disabled`。
     case commentsSheetOwnerNotReady = "CommentsSheetViewOwnerNotReady"
+
+    // LS-312：最新值卡／Segmented／新增量測／查看全部紀錄皆有代表性；04 為空狀態變體。
+    case growthDetailPopulated = "ChildGrowthDetailView"
+    case growthDetailEmpty = "ChildGrowthDetailViewEmpty"
+    case growthAddMeasurementPlaceholder = "GrowthAddMeasurementPlaceholderView"
+    case growthRecordsListPlaceholder = "GrowthRecordsListPlaceholderView"
+    case childrenManagementPopulated = "ChildrenManagementView"  // LS-312：populated，1 個寶貝
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"

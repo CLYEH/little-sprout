@@ -25,6 +25,9 @@ struct LittleSproutApp: App {
     /// 也不需要跨重繪保留可變狀態，草稿狀態的持久性由 `DiaryComposerStore`（畫面等級，見該檔）
     /// 負責，不需要在這裡另外包一層 store。
     let diaryAPIClient: DiaryAPIClient
+    /// LS-312：寶貝詳情・成長區塊（`ChildGrowthDetailView`）用的 client——同 `diaryAPIClient`
+    /// 的既有理由（不可變的純 service 物件，本身不 Observable）。
+    let growthAPIClient: GrowthAPIClient
     let mediaUploadService: MediaUploadService
     /// LS-193：`SettingsView`→`DeleteAccountFlowView` 用，同 `diaryAPIClient`／
     /// `mediaUploadService` 的既有角色分工（不隨 app 存活的無狀態 client）。
@@ -75,6 +78,7 @@ struct LittleSproutApp: App {
         _albumsStore = State(initialValue: AlbumsStore(apiClient: SupabaseAlbumsAPIClient(client: client)))
         _eulaStore = State(initialValue: EULAStore(apiClient: SupabaseEULAAPIClient(client: client)))
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)
+        growthAPIClient = SupabaseGrowthAPIClient(client: client)
         mediaUploadService = SupabaseMediaUploadService(client: client)
         accountAPIClient = SupabaseAccountAPIClient(client: client)
         _resumer = State(initialValue: PendingAccountDeletionResumer(accountAPIClient: accountAPIClient))
@@ -120,6 +124,7 @@ struct LittleSproutApp: App {
             albumsStore: albumsStore,
             eulaStore: eulaStore,
             diaryAPIClient: diaryAPIClient,
+            growthAPIClient: growthAPIClient,
             mediaUploadService: mediaUploadService,
             accountAPIClient: accountAPIClient,
             resumer: resumer,

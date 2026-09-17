@@ -1,0 +1,297 @@
+{
+  "ticket": "LS-307",
+  "round": 1,
+  "head_sha": "6570e01abf0ebf0302dbbd2ebadca1c9c97db8d9",
+  "total_nodes": 14065,
+  "tree_hash": "189b982828882f0e",
+  "scan_scope": "boards",
+  "scan_note": "不分批（單次 --from-snapshot 離線跑六支，LS-289）；Pencil execute 送 scripts/design/pen-snapshot-dump.js（唯讀，55 個 SNAP batch，total_rows=21637）→ 貼進單一 dump 檔 .claude/evidence/LS-307/r1/snapshot-dump.txt → node scripts/design/overflow-scan.js --from-snapshot --boards e1cOqx,X6iCY；tree_hash 用 scripts/gates/design_tree_hash.py 對 head_sha=6570e01 落地 commit 的 .pen 離線算（189b982828882f0e），total_nodes 用 design-landing-check.sh --print-nodes 對同一快照算（14065）。SCAN_BOARDS＝本票新增板 e1cOqx（Import / 00 時間軸入口 iPhone）與本票修改的 Import Notes 板 X6iCY（Import / 實作註記 · Handoff Notes ios-dev）；本輪未新增或刪除其他頂層板。r1 首次掃描發現 root 層 X6iCY×e1cOqx 相鄰重疊（Notes 板加入 LS-307 新節後長高，吞入原 FindEmptySpace 算出的 e1cOqx 座標）——已用 FindEmptySpace 錨定 X6iCY 下緣重新取位修正（commit 6570e01），本份收據掃描自修正後的稿態，sibling_intersection 從 22 降到 21（少 1 類，即該筆 root 重疊消失）。text_occlusion／board_clip／cross_parent_collision 三支 flagged=0；corner_anchor containers=2/points=16/mismatch=0；ref_hits=0 為 scope=boards 限縮模式下的預期提示（LS-207／LS-252 r6 同型狀況：nested ref 兩層以上時 resolveInstances:false 對照表只收得到最外層 instance，本票唯一角托容器 QNEky／D4zdmQ 皆巢狀於 cmp/Card Album、cmp/Card Photo 內，名稱備援 Corner TL/TR/BL/BR 撐住判定，mismatch 仍為 0，非停擺）。sibling_intersection／row_overflow 全部 21／6 筆均為繼承自 yXSht 原板未修改區域的既有設計母題（corner-out 出血、Day Divider Ghost 重影、Card Album 疊紙、Tab Bar 浮動膠囊），本票僅新增 Header Actions Group／Import Entry Button 與 Notes 文字節點，未新增任何本輪自製的碰撞。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 21,
+      "classes": 12,
+      "flagged": [
+        {
+          "node_a": "wicSq/tBi8u",
+          "node_b": "wicSq/xlLIo",
+          "name_a": "Ghost",
+          "name_b": "Stamp",
+          "parent": "wicSq/OCYqN",
+          "parent_name": "Stamp Wrap",
+          "overlap": [
+            147.98,
+            39.63
+          ],
+          "class": "Ghost × Stamp @ Stamp Wrap",
+          "count": 2,
+          "classification": "cmp/Day Divider 的 Ghost 重影效果：刻意以固定位移 (-3,+3)／旋轉差 3° 疊在主 Stamp 後方模擬二次蓋章視覺（motifs.md「日期章 Day Divider」段），非缺陷；本板複製自 yXSht，此區域未經 LS-307 修改。"
+        },
+        {
+          "node_a": "QNEky/bjq5n",
+          "node_b": "QNEky/INXbk",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TL",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TL @ Photo Print",
+          "count": 2,
+          "classification": "角托 corner-out 5pt 壓過紙緣的既定設計（tokens.md corner-out token；motifs.md「角托一律壓過紙緣 corner-out 5pt」）；本板複製自 yXSht，此區域未經 LS-307 修改。"
+        },
+        {
+          "node_a": "QNEky/bjq5n",
+          "node_b": "QNEky/O6ami",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TR",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TR @ Photo Print",
+          "count": 2,
+          "classification": "同左，角托右上壓過紙緣；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "QNEky/KRUtz",
+          "node_b": "QNEky/SNbd8",
+          "name_a": "Imprint Row",
+          "name_b": "Corner BL",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Imprint Row × Corner BL @ Photo Print",
+          "count": 2,
+          "classification": "角托下緣壓過印品 Imprint Row 的既定設計（corner-out 5pt）；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "QNEky/KRUtz",
+          "node_b": "QNEky/P15GB",
+          "name_a": "Imprint Row",
+          "name_b": "Corner BR",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Imprint Row × Corner BR @ Photo Print",
+          "count": 2,
+          "classification": "同左，角托右下壓過 Imprint Row；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "QNEky/INXbk/sD5Ma",
+          "node_b": "QNEky/INXbk/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "QNEky/INXbk",
+          "parent_name": "Corner TL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 2,
+          "classification": "cmp/Photo Corner 元件內部由 Corner Shape＋Corner Edge 兩層路徑疊加構成單一角托視覺，屬元件內部結構本身，非版面缺陷；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "QNEky/O6ami/sD5Ma",
+          "node_b": "QNEky/O6ami/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "QNEky/O6ami",
+          "parent_name": "Corner TR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 2,
+          "classification": "同左（TR 方位）。"
+        },
+        {
+          "node_a": "QNEky/SNbd8/sD5Ma",
+          "node_b": "QNEky/SNbd8/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "QNEky/SNbd8",
+          "parent_name": "Corner BL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 2,
+          "classification": "同左（BL 方位）。"
+        },
+        {
+          "node_a": "QNEky/P15GB/sD5Ma",
+          "node_b": "QNEky/P15GB/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "QNEky/P15GB",
+          "parent_name": "Corner BR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 2,
+          "classification": "同左（BR 方位）。"
+        },
+        {
+          "node_a": "D4zdmQ/uZ5Lt",
+          "node_b": "D4zdmQ/kVUWa",
+          "name_a": "Stack Sheet 2",
+          "name_b": "Stack Sheet 1",
+          "parent": "D4zdmQ/oBEkH",
+          "parent_name": "Photo C",
+          "overlap": [
+            1,
+            88
+          ],
+          "class": "Stack Sheet 2 × Stack Sheet 1 @ Photo C",
+          "count": 1,
+          "classification": "cmp/Card Album 相簿卡疊紙母題（motifs.md「相簿卡疊紙 Stack Sheet」）：兩條 4pt 薄片刻意小幅重疊營造堆疊層次，暗示紙底下還有更多張；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "D4zdmQ/ekqx4",
+          "node_b": "D4zdmQ/GCEdk",
+          "name_a": "Thumb C",
+          "name_b": "More Scrim",
+          "parent": "D4zdmQ/oBEkH",
+          "parent_name": "Photo C",
+          "overlap": [
+            96.3,
+            100
+          ],
+          "class": "Thumb C × More Scrim @ Photo C",
+          "count": 1,
+          "classification": "Card Album 縮圖與「查看更多」遮罩的既有堆疊效果，遮罩本就疊在縮圖上方是其功能本身；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "u95aXI",
+          "node_b": "hJ3cT",
+          "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "name_b": "Tab Bar",
+          "parent": "e1cOqx",
+          "parent_name": "Import / 00 時間軸入口 (iPhone)",
+          "overlap": [
+            361,
+            64
+          ],
+          "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ Import / 00 時間軸入口 (iPhone)",
+          "count": 1,
+          "classification": "Tab Bar 為絕對定位浮動膠囊（motifs.md「Tab Bar 全字級純 icon」段），疊在 Body 末端補償 spacer 之上是 Tab-root 版式既有慣例；本票僅改動 Header Row（Header Row 高度維持 49pt 不變），未觸及 Body 末端／Tab Bar 這段幾何，此重疊與 yXSht 原板完全一致。"
+        }
+      ],
+      "result_hash": "e0ae99d78b22d2db"
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 6,
+      "classes": 4,
+      "flagged": [
+        {
+          "node": "QNEky/O6ami",
+          "name": "Corner TR",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overflow": 5,
+          "class": "Photo Print :: Corner TR",
+          "count": 2,
+          "classification": "角托 corner-out 5pt 溢出印品右緣的既定設計；繼承自 yXSht 未修改。"
+        },
+        {
+          "node": "QNEky/P15GB",
+          "name": "Corner BR",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overflow": 5,
+          "class": "Photo Print :: Corner BR",
+          "count": 2,
+          "classification": "角托 corner-out 5pt 溢出印品下緣的既定設計；繼承自 yXSht 未修改。"
+        },
+        {
+          "node": "D4zdmQ/uZ5Lt",
+          "name": "Stack Sheet 2",
+          "parent": "D4zdmQ/oBEkH",
+          "parent_name": "Photo C",
+          "overflow": 9.97,
+          "class": "Photo C :: Stack Sheet 2",
+          "count": 1,
+          "classification": "疊紙母題刻意溢出印品邊緣，暗示底下還有更多張；繼承自 yXSht 未修改。"
+        },
+        {
+          "node": "D4zdmQ/kVUWa",
+          "name": "Stack Sheet 1",
+          "parent": "D4zdmQ/oBEkH",
+          "parent_name": "Photo C",
+          "overflow": 6.97,
+          "class": "Photo C :: Stack Sheet 1",
+          "count": 1,
+          "classification": "同左。"
+        }
+      ],
+      "result_hash": "d6eb3c1629b74d2e"
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "e65852a9b89a2535"
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "e1cOqx",
+        "X6iCY"
+      ],
+      "containers": 2,
+      "points": 16,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 0,
+      "ref_hits_defs": 0,
+      "document_containers": 2,
+      "document_points": 16,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": [],
+      "result_hash": "24436b03c9666f6a"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "e1cOqx",
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "98e2e21ef07e77ea"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "e1cOqx",
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "dc31e450a60c6968"
+    }
+  }
+}

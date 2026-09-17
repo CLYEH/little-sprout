@@ -1004,7 +1004,7 @@ if [ -n "$pen_wt_ticket" ]; then
 fi
 # LS209-PEN-WRONG-END
 
-# ---- 用量（LS-311；使用者 2026-09-16 指示：讀 statusline 落地的 ~/.claude/usage-cache.json（rate_limits.
+# ---- 用量（LS-311；使用者 2026-09-16 指示：讀 statusline 落地的 usage-cache.json（rate_limits.
 #      seven_day／five_hour，由 scripts/ops/usage-cache-snippet.sh／statusline-command.sh 原子寫入）——週用量
 #      ≥ PATROL_USAGE_STOP（預設 99）→ 印 99 級行，指示 orchestrator 停下所有工作＋寫交接；≥ PATROL_USAGE_WARN
 #      （預設 97）→ 印 97 級行，指示不派新任務、在飛跑完只記票（usage-budget-winddown 步驟）。**未達門檻
@@ -1015,11 +1015,14 @@ fi
 #      要的是週用量；是否納入列 informational 交 orchestrator）。不依賴 jq（沿本檔既有慣例，line 74）：
 #      statusline 端寫入是 jq -c 的緊湊格式，用 grep -oE 對命名子物件抓 used_percentage／resets_at，抓不到
 #      一律視為「不可解析」，不強求完整 JSON 語法驗證。PATROL_USAGE_FILE 可換路徑（自測用）。
-usage_file="${PATROL_USAGE_FILE:-$HOME/.claude/usage-cache.json}"
+#      路徑（LS-314；使用者 2026-09-17 指示「檢查當前 session 的 home」）：跟本 session 的 CLAUDE_CONFIG_DIR 走——多帳號各有
+#      自己的 config dir（如 ~/.claude-2），寫死 ~/.claude 會讀到別的帳號的用量（09-17 整天守錯帳號）；未設才退回 ~/.claude。
+usage_cfg_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+usage_file="${PATROL_USAGE_FILE:-${usage_cfg_dir}/usage-cache.json}"
 usage_warn="${PATROL_USAGE_WARN:-97}"
 usage_stop="${PATROL_USAGE_STOP:-99}"
 usage_max_age="${PATROL_USAGE_MAX_AGE_MIN:-120}"
-usage_seven=; usage_seven_resets=; usage_five=; usage_five_resets=; usage_written_at=; usage_stale=false; usage_reason=
+usage_seven=; usage_seven_resets=; usage_five=; usage_written_at=; usage_stale=false; usage_reason=
 usage_extract() {  # $1=json $2=父鍵 $3=欄位 -> 數字或空（jq -c 緊湊格式，先框住命名子物件再抓值，避免同名欄位跨物件誤抓）
   local obj
   obj=$(printf '%s' "$1" | grep -oE "\"$2\":\{[^}]*\}" | head -1)
@@ -1041,7 +1044,6 @@ else
   usage_seven=$(usage_extract "$usage_json" seven_day used_percentage)
   usage_seven_resets=$(usage_extract "$usage_json" seven_day resets_at)
   usage_five=$(usage_extract "$usage_json" five_hour used_percentage)
-  usage_five_resets=$(usage_extract "$usage_json" five_hour resets_at)
   if [ -z "$usage_written_at" ] || [ -z "$usage_seven" ]; then
     usage_reason="JSON 不可解析或必要欄位缺失：${usage_file}"
   else
@@ -1054,7 +1056,7 @@ else
 fi
 USAGE_LINE=
 if [ -n "$usage_reason" ]; then
-  USAGE_LINE="⚠ [用量] 探針無資料（${usage_reason}）→ 確認 ~/.claude/statusline-command.sh 已掛快取寫入段（docs/COLLABORATION.md §4-b）"
+  USAGE_LINE="⚠ [用量] 探針無資料（${usage_reason}）→ 確認 ${usage_cfg_dir}/statusline-command.sh 已掛快取寫入段（docs/COLLABORATION.md §4-b）"
 elif awk -v v="$usage_seven" -v t="$usage_stop" 'BEGIN{exit !(v>=t)}' </dev/null; then
   USAGE_LINE="⚠ [用量] 週用量 ${usage_seven}%（重置 $(usage_fmt_time "$usage_seven_resets")）→ 停下所有工作：CronDelete 巡檢、不派任何 agent、在飛只等結果記票、寫交接 session-resume-<日期>.md（usage-budget-winddown 步驟 1–5）"
 elif awk -v v="$usage_seven" -v t="$usage_warn" 'BEGIN{exit !(v>=t)}' </dev/null; then
