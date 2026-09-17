@@ -122,6 +122,7 @@ struct ChildGrowthDetailView: View {
                         .foregroundStyle(Color.lsTextPrimary)
                     latestValuesRow(growthStore)
                 }
+                failureBanner(growthStore)
                 GrowthChartCardView(
                     titleFont: .body, metric: $selectedMetric,
                     points: growthStore.curvePoints(for: selectedMetric),
@@ -167,6 +168,7 @@ struct ChildGrowthDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.section) {
                 identityHeader(growthStore)
+                failureBanner(growthStore)
                 GrowthChartCardView(
                     titleFont: .lead, metric: $selectedMetric,
                     points: growthStore.curvePoints(for: selectedMetric),
@@ -199,6 +201,30 @@ struct ChildGrowthDetailView: View {
     }
 
     // MARK: - 共用
+
+    /// M2（merge-review R1，orchestrator 裁決）：讀取失敗（離線／token 過期／伺服器 5xx）不能
+    /// 被 `isEmpty` 靜默吞成 04 空狀態——同 `AlbumDetailView.loadFailureState` 既有語彙
+    /// （錯誤文案＋「重新載入」），疊在骨架卡上方。`重新載入` 直接呼叫 `refresh()`——
+    /// `GrowthStore.refresh()` 本身的 `!loadState.isSubmitting` guard 已防重入，不需要另外
+    /// disable 這顆按鈕。
+    @ViewBuilder
+    private func failureBanner(_ growthStore: GrowthStore) -> some View {
+        if case .failure(let error) = growthStore.loadState {
+            HStack(spacing: AppSpacing.tight) {
+                Image(systemName: "exclamationmark.circle").appIconFrame(.small)
+                Text(error.userFacingMessage).appFont(.note)
+                Spacer(minLength: 0)
+                Button {
+                    Task { await growthStore.refresh() }
+                } label: {
+                    Text("重新載入")
+                        .appFont(.body, weight: .semibold)
+                        .frame(minHeight: 48)
+                }
+            }
+            .foregroundStyle(Color.lsTextPrimary)
+        }
+    }
 
     private func identityHeader(_ growthStore: GrowthStore) -> some View {
         HStack(spacing: AppSpacing.group) {
