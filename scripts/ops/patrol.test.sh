@@ -320,6 +320,8 @@ human32a="$(PATROL_USAGE_FILE="$work/usage-a.json" bash "$patrol" --repo "$repo"
 hasnt '㉜a 96.9% 人類全文模式零輸出（grep 不到「用量」）' "$human32a" '用量'
 json32a="$(PATROL_USAGE_FILE="$work/usage-a.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
 jq_ok '㉜a --json usage.seven_day=96.9、stale=false' "$json32a" '.usage.seven_day == 96.9 and .usage.stale == false'
+# LS-316（LS-96 池項 a1d7da12 第 3 條）：--json 對 .usage.five_hour 原本零斷言——usage_mk 固定寫 5，這裡釘住它。
+jq_ok '㉜a --json usage.five_hour=5' "$json32a" '.usage.five_hour == 5'
 
 # ㉜b 97.0（達 WARN，未達 STOP）→ 97 級警示行（不派新任務；usage-budget-winddown 步驟 3）
 usage_mk 97.0 "$u_now" > "$work/usage-b.json"
