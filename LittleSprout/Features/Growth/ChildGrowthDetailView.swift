@@ -275,11 +275,24 @@ struct ChildGrowthDetailView: View {
         }
     }
 
+    /// QA `49c96b88`（FAIL）：這裡原本從頭到尾是固定 `HStack`，AX3 下三格擠在窄欄裡把數字
+    /// 逐字元拆行。Notes `a9S6ke`（AX3）「Latest Values」節點 `TAbxe` 是 `layout: vertical`
+    /// （對比一般字級板 `jp6ka` 的 `iYQf1` 為橫向），沿用同檔 `GrowthSegmentedControl.
+    /// isVerticalLayout` 既有分支寫法：AX3 改三格上下堆疊、gap 抄 `$sp-item`
+    /// （`AppSpacing.item`）；一般字級維持原本橫向、gap 不變。
     private func latestValuesRow(_ growthStore: GrowthStore) -> some View {
-        HStack(spacing: AppSpacing.group) {
-            ForEach(GrowthMetric.allCases) { metric in
-                GrowthLatestValueCard(metric: metric, latest: growthStore.latestValue(for: metric))
+        Group {
+            if dynamicTypeSize >= .accessibility3 {
+                VStack(spacing: AppSpacing.item) { latestValueCards(growthStore) }
+            } else {
+                HStack(spacing: AppSpacing.group) { latestValueCards(growthStore) }
             }
+        }
+    }
+
+    private func latestValueCards(_ growthStore: GrowthStore) -> some View {
+        ForEach(GrowthMetric.allCases) { metric in
+            GrowthLatestValueCard(metric: metric, latest: growthStore.latestValue(for: metric))
         }
     }
 }

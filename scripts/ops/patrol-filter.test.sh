@@ -155,7 +155,13 @@ kept10=$(printf '%s\n' "$sample10" | bash "$pf")
 has '⑩ 留下 97 級 [用量] 警示行' "$kept10" '⚠ [用量] 週用量 97%'
 has '⑩ 留下 99 級 [用量] 停工行' "$kept10" '⚠ [用量] 週用量 99%'
 
+# ---- ⑪（LS-318）用量段「探針過期」行（沿最後已知值套門檻，不再是「探針無資料」）：一樣要原樣通過 ----
+sample11=$(printf '%s\n' \
+  '  ⚠ [用量] 探針過期（最後已知 50%，已 200 分鐘未更新；閒置 session 不刷新 statusline 屬正常）→ 門檻判定沿用最後已知值')
+kept11=$(printf '%s\n' "$sample11" | bash "$pf")
+has '⑪ 留下「探針過期」行' "$kept11" '⚠ [用量] 探針過期（最後已知 50%'
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ patrol-filter 自測通過（11 組樣本）"
+  echo "✓ patrol-filter 自測通過（12 組樣本）"
 fi
 exit "$fail"

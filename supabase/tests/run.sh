@@ -443,11 +443,24 @@ race_case "同一本相簿：兩連線同時覆蓋孩子標記，終態必須是
 # batch 呼叫同時覆蓋同一組（兩張）照片的孩子標記——批次 RPC 內部依 media_id 排序
 # 取鎖（R2 修法，見 20260917155738_media_children.sql:252-289 的 m1 修法），這裡
 # 驗批次交易在整個過程中持有所有涉及 media 的列鎖直到 commit，重疊批次不出錯
-# （無 40P01）、終態乾淨是後 commit 一方的完整集合。測試限度見
+# （無 40P01）、終態乾淨是後 commit 一方的完整集合。這組只有「等待」沒有「交錯」，
+# 抓不到鎖序被拿掉本身——那個回歸保護在下面的 hammer 場景（LS-320）。測試限度見
 # media_children_race_setup.sql 檔頭「誠實記錄」段。
 race_case "兩張照片：兩連線同時用順序相反的批次覆蓋孩子標記，終態必須是後 commit 一方的完整集合" \
   media_children_race_setup.sql media_children_race_s1.sql \
   media_children_race_s2.sql media_children_race_verify.sql
+
+# LS-320（LS-317 merge-review R2 m4 `a63b98e8`）：上面那組 race_case 只有「等待」
+# 沒有「交錯」，抓不到 m1 那顆 order by 被拿掉——ABBA 循環等待需要兩個連線在各自
+# 兩次取鎖之間真正交錯，固定的 sleep 錯開時序做不到。這裡改成兩連線各跑 80 回合、
+# 陣列順序相反的批次，完全不插入人工 sleep，靠大量重複製造交錯窗口（票文建議的
+# `deadlock_timeout='20ms'` 因 role authenticated 無權限設定該 superuser-context
+# GUC、且票文「不做」段禁止改全域設定，維持預設 1 秒偵測延遲，見
+# media_children_deadlock_hammer_setup.sql 檔頭）。mutation 自證（拿掉 migration
+# 裡的 order by 子句重跑）見 PR handoff。
+race_case "80 回合 hammer：兩連線各跑 80 回合順序相反的批次覆蓋同一組照片的孩子標記，全程不得 40P01" \
+  media_children_deadlock_hammer_setup.sql media_children_deadlock_hammer_s1.sql \
+  media_children_deadlock_hammer_s2.sql media_children_deadlock_hammer_verify.sql
 
 # LS-143 併發場景：兩位共同 owner（沒有其他成員）幾乎同時呼叫 delete_my_account()。
 # 跟 owner_guard_case 驗的是同一顆既有 trigger（LS-6／LS-15），換成帳號刪除這個新的

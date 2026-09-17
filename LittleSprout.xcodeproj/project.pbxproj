@@ -283,6 +283,7 @@
 		88E6B83192F91A9D8C4AE07F /* ImportThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32978B2ED82A8D83AE72C77A /* ImportThumbnailProvider.swift */; };
 		8923EF57530FAA260F9E65DB /* GrowthAgeNBSPRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F79950DF786C7BA12A3C979 /* GrowthAgeNBSPRegressionTests.swift */; };
 		8955E8323F03435DC76D1211 /* UploadQueueStoreRetryRetryableInTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDDD8173F56D793263B1D08E /* UploadQueueStoreRetryRetryableInTests.swift */; };
+		89A3AEB5B940BBD2B1A99E39 /* GrowthLatestValuesAX3RegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6E56E4C76AEA8782832761 /* GrowthLatestValuesAX3RegressionTests.swift */; };
 		89AC72DC128F22746428B4E6 /* DiaryComposerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F7EE078AA3B0599ECA5A505 /* DiaryComposerModels.swift */; };
 		89D1747659736969487B246B /* AttributionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 051C77F4F02C900469E71445 /* AttributionSheet.swift */; };
 		8A5D00A06F596E432294806B /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */; };
@@ -697,6 +698,7 @@
 		4CE3353D44311219CE17B533 /* EditChildView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditChildView.swift; sourceTree = "<group>"; };
 		4D16770ED55A8DF1FD527425 /* Pill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pill.swift; sourceTree = "<group>"; };
 		4E315D06E0BC5BD355A32CA4 /* PushDeviceTokenAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushDeviceTokenAPIClient.swift; sourceTree = "<group>"; };
+		4E6E56E4C76AEA8782832761 /* GrowthLatestValuesAX3RegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthLatestValuesAX3RegressionTests.swift; sourceTree = "<group>"; };
 		4F072DA1DC140AE9EB54D242 /* SupabaseSafetyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseSafetyAPIClient.swift; sourceTree = "<group>"; };
 		4F465CC26CEB1AF04443BBCE /* SupabaseFamilyAPIClient+Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SupabaseFamilyAPIClient+Profile.swift"; sourceTree = "<group>"; };
 		4F673CF81F2B07BA41EDDA93 /* VideoDurationFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDurationFormat.swift; sourceTree = "<group>"; };
@@ -1359,6 +1361,7 @@
 				7EC5441D002D7983E0FC9847 /* GrowthEmptyStateCopyTests.swift */,
 				C714D87C85DC97C0A9FB123E /* GrowthIdentityFreshnessRegressionTests.swift */,
 				5F5EDB155A72F057F906BF04 /* GrowthInitialLoadingStateRegressionTests.swift */,
+				4E6E56E4C76AEA8782832761 /* GrowthLatestValuesAX3RegressionTests.swift */,
 				1321C4BFB76E3F18A8055AA0 /* GrowthStoreTests.swift */,
 				C83589E845F988100234ED0A /* ImportBatchFlowContainerRegressionTests.swift */,
 				2D6237BF6EAC92E8D4DCB382 /* ImportBatchFlowModifierRegressionTests.swift */,
@@ -2472,6 +2475,7 @@
 				CE1464663C70214024056BDC /* GrowthEmptyStateCopyTests.swift in Sources */,
 				4E128F1D0AD9913386F289B7 /* GrowthIdentityFreshnessRegressionTests.swift in Sources */,
 				8305F04B569996859D2C9862 /* GrowthInitialLoadingStateRegressionTests.swift in Sources */,
+				89A3AEB5B940BBD2B1A99E39 /* GrowthLatestValuesAX3RegressionTests.swift in Sources */,
 				5DD4408D743CBBACF90061E9 /* GrowthStoreTests.swift in Sources */,
 				F868DF1A2FDACBEEEE02D7DD /* ImportBatchFlowContainerRegressionTests.swift in Sources */,
 				8D36946B41D68D83B6E45986 /* ImportBatchFlowModifierRegressionTests.swift in Sources */,
