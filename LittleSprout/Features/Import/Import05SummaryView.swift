@@ -98,6 +98,18 @@ struct Import05SummaryView: View {
                         .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
                 }
             }
+            if session.droppedCount > 0 {
+                // merge-review R1 M2＋LS-96 池項 `a997f824`(1)：同 `Import04ProgressView`——
+                // 讀不到／不支援格式／轉檔失敗的 asset 從未進佇列，不屬於 `failedRows`，這裡
+                // 另起一行講清楚，數字契約「成功＋沒有成功＋沒有加入＝開始匯入時看到的總數」
+                // 才成立（04→05 一路沿用同一個 `session.droppedCount`）。
+                HStack(spacing: AppSpacing.label) {
+                    Image(systemName: "exclamationmark.circle").appIconFrame(.small)
+                        .foregroundStyle(Color.lsTextSecondary)
+                    Text("\(session.droppedCount) 張沒有加入（格式不支援或讀取失敗）")
+                        .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
+                }
+            }
         }
         .padding(AppSpacing.insetCard)
         .frame(maxWidth: .infinity, alignment: .leading)

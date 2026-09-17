@@ -35,4 +35,22 @@ final class ImportBatchSessionTests: XCTestCase {
         session.markGroupResolved()
         XCTAssertTrue(session.isFullyEnqueued)
     }
+
+    /// merge-review R1 M2：`droppedCount` 要跨群累加，不是被後面呼叫覆蓋。
+    func test_markGroupResolved_accumulatesDroppedCountAcrossGroups() {
+        let session = ImportBatchSession(expectedAssetCount: 5, nonSkippedGroupCount: 2)
+
+        session.markGroupResolved(droppedCount: 2)
+        session.markGroupResolved(droppedCount: 1)
+
+        XCTAssertEqual(session.droppedCount, 3)
+    }
+
+    func test_markGroupResolved_defaultsToZeroDropped() {
+        let session = ImportBatchSession(expectedAssetCount: 1, nonSkippedGroupCount: 1)
+
+        session.markGroupResolved()
+
+        XCTAssertEqual(session.droppedCount, 0)
+    }
 }

@@ -38,6 +38,12 @@ extension UploadQueueStore {
         entries[id]?.payload
     }
 
+    /// 測試用途（merge-review R1 m6）：驗證 `taken_at` 有沒有正確套到這一筆——不論 kind 是
+    /// 照片還是影片，不需要真的跑完整條上傳／壓縮管線才能斷言。
+    func debugTakenAt(_ id: UUID) -> Date? {
+        entries[id]?.takenAt
+    }
+
     /// 測試用途：強制清空某筆的 payload，人為打破「`.waiting` 一定有 payload」這個不變量
     /// （merge-review R3 i1）——正常流程走不到這個狀態，只能用這個鉤子模擬，驗證
     /// `start(_:)` 撞到這個不變量被打破時會翻成失敗，不是永遠卡住。

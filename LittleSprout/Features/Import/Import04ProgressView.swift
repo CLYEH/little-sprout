@@ -37,12 +37,18 @@ struct Import04ProgressView: View {
     private var failedCount: Int { batchRows.count { if case .failed = $0.state { true } else { false } } }
     private var processedCount: Int { completedCount + failedCount }
     private var uploadingOrWaitingCount: Int { batchRows.count - processedCount }
+    /// merge-review R1 M2：讀不到／不支援格式的 asset 從不進 `batchRows`（不會有 entry），
+    /// 只靠 `processedCount` 算「已處理 N/M 張」會讓 N 永遠卡在比 M 少 `droppedCount` 那麼多，
+    /// 進度條永遠到不了滿——這裡把 `droppedCount` 併入「已處理」的分子（它們已經是終局結果，
+    /// 不是還在等），下面的「未加入 D 張」另一行講清楚這裡面有幾張是失敗／未進佇列。
+    private var droppedCount: Int { session.droppedCount }
+    private var displayProcessedCount: Int { processedCount + droppedCount }
     /// 04 進度卡「已處理 N/M 張」的 M——見 `ImportBatchSession.expectedAssetCount` 文件註解
     /// 「已知限制」（Live Photo 展開可能讓 `batchRows.count` 超過這個數字）。
     private var expectedTotal: Int { session.expectedAssetCount }
     private var progressFraction: Double {
         guard expectedTotal > 0 else { return 1 }
-        return min(Double(processedCount) / Double(expectedTotal), 1)
+        return min(Double(displayProcessedCount) / Double(expectedTotal), 1)
     }
     private var retryableFailedCount: Int {
         batchRows.count { row in
@@ -129,7 +135,7 @@ struct Import04ProgressView: View {
             HStack {
                 Text("整體進度").appFont(.body, weight: .bold).foregroundStyle(Color.lsTextSecondary)
                 Spacer(minLength: AppSpacing.label)
-                Text("已處理 \(processedCount)/\(expectedTotal) 張")
+                Text("已處理 \(displayProcessedCount)/\(expectedTotal) 張")
                     .appNumericFont(.lead, weight: .bold).foregroundStyle(Color.lsTextPrimary)
             }
             GeometryReader { proxy in
@@ -142,6 +148,17 @@ struct Import04ProgressView: View {
             .accessibilityHidden(true)
             Text("已完成 \(completedCount) 張・上傳中 \(uploadingOrWaitingCount) 張・失敗 \(failedCount) 張")
                 .appFont(.note).foregroundStyle(Color.lsTextSecondary)
+            if droppedCount > 0 {
+                // merge-review R1 M2＋LS-96 池項 `a997f824`(1)：比照
+                // `AlbumDetailView+Actions.skippedItemsReplyRow` 同型解法——讀不到／不支援
+                // 格式／轉檔失敗的 asset 不靜默丟，這裡補一行讓使用者知道少了幾張、為什麼。
+                HStack(alignment: .top, spacing: AppSpacing.label) {
+                    Image(systemName: "exclamationmark.circle").appIconFrame(.small)
+                        .foregroundStyle(Color.lsTextSecondary)
+                    Text("\(droppedCount) 張沒有加入（格式不支援或讀取失敗）")
+                        .appFont(.note).foregroundStyle(Color.lsTextSecondary)
+                }
+            }
         }
         .padding(AppSpacing.insetCard)
         .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusLarge))

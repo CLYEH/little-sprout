@@ -31,7 +31,9 @@ import UIKit
 @Observable
 final class UploadQueueStore {
     struct Entry {
-        let thumbnail: UIImage?
+        /// merge-review R1 M3(c)：批次匯入摘要頁離開時會釋放終局項目的縮圖（見
+        /// `releaseThumbnails(for:)`），因此不能是 `let`——其餘欄位維持不變。
+        var thumbnail: UIImage?
         let pixelSize: PixelSize
         /// 上傳用的原始位元組／檔案參照——完成或不可重試失敗後釋放為 `nil`（merge-review
         /// R2 F3：`.photo` 分支的 `Data` 是真正佔記憶體的部分，佇列一次幾十張時全部留著不會

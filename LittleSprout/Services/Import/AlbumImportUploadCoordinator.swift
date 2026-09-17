@@ -29,25 +29,35 @@ import UniformTypeIdentifiers
 ///   層級因此保留（不隨 Legacy 移除收回，檔頭註解已更新指向這裡）。
 ///
 /// **可注入的 asset 讀取掛鉤**：同 Legacy 既有理由——`PHAsset` 無法在單元測試合成假值，
-/// `loadPendingUploads` 讓群迭代／略過／`albumID == nil` 跳過這些邏輯能在不碰真實 Photos
+/// `loadPendingUpload` 讓群迭代／略過／`albumID == nil` 跳過這些邏輯能在不碰真實 Photos
 /// 資料庫的情況下被覆蓋（見 `AlbumImportUploadCoordinatorTests`）；HEIC 轉檔／Live Photo
 /// 展開等「三規則」邏輯則直接對 `ImportMediaTranscoder` 與這支類別自己的靜態轉換函式測試。
+///
+/// **merge-review R1 M3**：`enqueue(group:...)` 逐 identifier 讀一筆就 `store.enqueue`
+/// 一筆（不整群讀完才入列——同一筆原圖 `Data` 不再需要跟同群其餘幾十張同時留在記憶體）；
+/// `startImport(plan:)` 用 `withTaskGroup` 把同時處理中的群數上限設在 `maxConcurrentGroupLoads`
+/// （沿用 `UploadQueueStore.maxConcurrentUploads` 預設值 3 的既有語彙——上傳端本身也只吃得下
+/// 3 筆併發，群讀取端不需要衝更快）。
 @MainActor
 final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
+    /// 沿用 `UploadQueueStore.maxConcurrentUploads` 預設值（見該型別檔頭「並發上限」文件
+    /// 註解）——群層級讀取與上傳端共用同一個數字，不是巧合：讀更快也沒有意義，上傳端吃不下。
+    private static let maxConcurrentGroupLoads = 3
+
     private let familyID: UUID
     private let mediaUploadService: MediaUploadService
     private let albumsStore: AlbumsStore
-    private let loadPendingUploads: @Sendable ([String]) async -> [PendingUpload]
+    private let loadPendingUpload: @Sendable (String) async -> [PendingUpload]
 
     init(
         familyID: UUID, mediaUploadService: MediaUploadService, albumsStore: AlbumsStore,
-        loadPendingUploads: @escaping @Sendable ([String]) async -> [PendingUpload] =
-            AlbumImportUploadCoordinator.loadPendingUploadsFromPhotoLibrary
+        loadPendingUpload: @escaping @Sendable (String) async -> [PendingUpload] =
+            AlbumImportUploadCoordinator.loadPendingUpload(forIdentifier:)
     ) {
         self.familyID = familyID
         self.mediaUploadService = mediaUploadService
         self.albumsStore = albumsStore
-        self.loadPendingUploads = loadPendingUploads
+        self.loadPendingUpload = loadPendingUpload
     }
 
     /// 同步回傳 `ImportBatchSession`——`entryIDs` 隨每一群各自的非同步讀取逐步填入，04 進度
@@ -58,19 +68,48 @@ final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
         let session = ImportBatchSession(
             expectedAssetCount: plan.pendingAssetCount, nonSkippedGroupCount: activeGroups.count
         )
-        for group in activeGroups {
-            enqueue(group: group, into: store, session: session)
+        Task { [weak self] in
+            await self?.enqueueGroups(activeGroups, into: store, session: session)
         }
         return session
     }
 
-    private func enqueue(group: ImportPlan.Group, into store: UploadQueueStore, session: ImportBatchSession) {
-        let loadPendingUploads = loadPendingUploads
-        let albumsStore = albumsStore
-        let anchorDate = group.anchorDate
+    /// merge-review R1 M3(b)：群層級併發上限——一次最多 `maxConcurrentGroupLoads` 群同時在讀，
+    /// 不是 200 張分 20 群時 20 個 `Task` 一次全開（原本的寫法，峰值記憶體等於全部群的原圖
+    /// 位元組總和）。標準的「bounded concurrency」`withTaskGroup` 寫法：先塞滿上限，每有一個
+    /// 完成就補一個進來，直到來源耗盡。
+    private func enqueueGroups(
+        _ groups: [ImportPlan.Group], into store: UploadQueueStore, session: ImportBatchSession
+    ) async {
+        var iterator = groups.makeIterator()
+        await withTaskGroup(of: Void.self) { taskGroup in
+            for _ in 0..<Self.maxConcurrentGroupLoads {
+                guard let group = iterator.next() else { break }
+                taskGroup.addTask { [weak self] in await self?.enqueue(group: group, into: store, session: session) }
+            }
+            while await taskGroup.next() != nil {
+                guard let group = iterator.next() else { continue }
+                taskGroup.addTask { [weak self] in await self?.enqueue(group: group, into: store, session: session) }
+            }
+        }
+    }
+
+    /// merge-review R1 M1＋M2＋M3(a)：
+    /// - M1：`anchorDate` 夾限「不晚於現在」——寫入端雙保險，UI 端另有 `ImportGroupDatePickerSheet`
+    ///   的 `DatePicker(in: ...Date())` 擋住未來日期，這裡再擋一層（裝置時鐘、UI 之外的呼叫路徑）。
+    /// - M2：逐 identifier 讀，讀不到／不支援格式／轉檔失敗（回傳空陣列）計入 `droppedCount`，
+    ///   不靜默丟——`markGroupResolved(droppedCount:)` 累加進 `session.droppedCount`。
+    /// - M3(a)：讀到一筆立刻 `store.enqueue`，不整群等齊。
+    private func enqueue(group: ImportPlan.Group, into store: UploadQueueStore, session: ImportBatchSession) async {
+        let anchorDate = min(group.anchorDate, Date())
         let albumID = group.albumID
-        Task {
-            let rawUploads = await loadPendingUploads(group.assetLocalIdentifiers)
+        var droppedCount = 0
+        for identifier in group.assetLocalIdentifiers {
+            let rawUploads = await loadPendingUpload(identifier)
+            guard !rawUploads.isEmpty else {
+                droppedCount += 1
+                continue
+            }
             let uploads = rawUploads.map { upload in
                 PendingUpload(
                     id: upload.id, kind: upload.kind, thumbnail: upload.thumbnail, pixelSize: upload.pixelSize,
@@ -84,24 +123,21 @@ final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
                 session.append(upload.id)
             }
             store.enqueue(uploads)
-            session.markGroupResolved()
         }
+        session.markGroupResolved(droppedCount: droppedCount)
     }
 
     // MARK: - PHAsset → PendingUpload（同 Legacy 既有理由：Photos 資料庫查詢離開 MainActor）
 
-    nonisolated static func loadPendingUploadsFromPhotoLibrary(for identifiers: [String]) async -> [PendingUpload] {
-        let assets = await Task.detached(priority: .userInitiated) { () -> [PHAsset] in
-            let fetchResult = PHAsset.fetchAssets(withLocalIdentifiers: identifiers, options: nil)
-            var assets: [PHAsset] = []
-            fetchResult.enumerateObjects { asset, _, _ in assets.append(asset) }
-            return assets
+    /// 一個 identifier 讀不到對應的 `PHAsset`（例如使用者選取後、開始匯入前把這張刪了）或
+    /// 讀出來的 asset 不支援／解不出來，一律回傳空陣列——呼叫端（`enqueue(group:...)`）把
+    /// 空陣列算進 `droppedCount`（merge-review R1 M2），不是靜默消失。
+    nonisolated static func loadPendingUpload(forIdentifier identifier: String) async -> [PendingUpload] {
+        let asset = await Task.detached(priority: .userInitiated) { () -> PHAsset? in
+            PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject
         }.value
-        var uploads: [PendingUpload] = []
-        for asset in assets {
-            uploads.append(contentsOf: await loadPendingUploads(for: asset))
-        }
-        return uploads
+        guard let asset else { return [] }
+        return await loadPendingUploads(for: asset)
     }
 
     /// 一個 `PHAsset` 可能展開成 0～2 筆：一般照片／影片各一筆；Live Photo 兩筆（照片＋配對

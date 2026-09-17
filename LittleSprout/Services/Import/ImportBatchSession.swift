@@ -26,6 +26,11 @@ final class ImportBatchSession {
     /// 還沒讀完時提早誤判。`markGroupResolved()` 由 `AlbumImportUploadCoordinator` 在每一群
     /// `store.enqueue(uploads)` 之後呼叫，不論那一群讀到 0 筆或多筆。
     private(set) var resolvedGroupCount = 0
+    /// merge-review R1 M2：讀不到／不支援格式／轉檔失敗的 asset 數——`AlbumImportUploadCoordinator
+    /// .enqueue(group:...)` 對每個 identifier 讀出 0 筆時累加，不靜默丟（LS-96 池項
+    /// `a997f824`(1) 指派本票的處置：比照 `AlbumDetailView+Actions.skippedItemsReplyRow`
+    /// 同型解法，04／05 用這個數字補一行「N 張沒有加入」）。
+    private(set) var droppedCount = 0
 
     init(expectedAssetCount: Int, nonSkippedGroupCount: Int) {
         self.expectedAssetCount = expectedAssetCount
@@ -36,8 +41,9 @@ final class ImportBatchSession {
         entryIDs.append(id)
     }
 
-    func markGroupResolved() {
+    func markGroupResolved(droppedCount: Int = 0) {
         resolvedGroupCount += 1
+        self.droppedCount += droppedCount
     }
 
     var entryIDSet: Set<UUID> { Set(entryIDs) }
