@@ -7,9 +7,14 @@ import SwiftUI
 ///
 /// R2 訂正（LS-67 `UhhwS` I1）：09 每列不再常駐「編輯／移除」兩個文字動作，整列本身就是一個
 /// tap target 進 09b；「移除這個寶貝」只留在 09b 底部。
+///
+/// LS-312 導覽入口接線（orchestrator 裁決）：整列的目的地改成「寶貝詳情」
+/// （`ChildGrowthDetailView`，稿 `jp6ka`）——09b（`EditChildView`）現在從詳情頁導覽列右上
+/// 「編輯」進入，不再是列本身的目的地。`growthAPIClient` 只在建 `GrowthStore` 時用一次。
 struct ChildrenManagementView: View {
     let familyStore: FamilyStore
     let childrenStore: ChildrenStore
+    let growthAPIClient: GrowthAPIClient
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showsRemovedList = false
@@ -55,9 +60,9 @@ struct ChildrenManagementView: View {
             switch route {
             case .create:
                 CreateChildView(childrenStore: childrenStore)
-            case .edit(let childID):
+            case .detail(let childID):
                 if let child = childrenStore.children.first(where: { $0.id == childID }) {
-                    EditChildView(childrenStore: childrenStore, child: child)
+                    childDetail(for: child)
                 }
             }
         }
@@ -108,16 +113,15 @@ struct ChildrenManagementView: View {
         )
     }
 
-    @ViewBuilder
+    /// LS-312 R2（merge-review R1 m1，orchestrator 裁決）：寶貝詳情（`ChildGrowthDetailView`）
+    /// 是唯讀畫面，所有家庭成員（含 viewer）都能開——不像過去目的地是 `EditChildView` 時只有
+    /// `canManageChildren` 才能點。「編輯」入口本身仍限管理者，見 `childDetail(for:)` 的
+    /// `editDestination` gate。
     private func childRow(_ child: Child) -> some View {
-        if childrenStore.canManageChildren {
-            NavigationLink(value: ChildrenRoute.edit(child.id)) {
-                childRowContent(child, showsChevron: true)
-            }
-            .buttonStyle(.plain)
-        } else {
-            childRowContent(child, showsChevron: false)
+        NavigationLink(value: ChildrenRoute.detail(child.id)) {
+            childRowContent(child, showsChevron: true)
         }
+        .buttonStyle(.plain)
     }
 
     private func childRowContent(_ child: Child, showsChevron: Bool) -> some View {
@@ -219,16 +223,17 @@ struct ChildrenManagementView: View {
     // MARK: - Regular (iPad)
 
     /// 簡化版 iPad master-detail（見本檔文件註解的實作註記）：與 09-iPad 稿面的結構一致
-    /// （左欄清單／新增，右欄編輯表單），但右欄直接重用 `EditChildView`（含它自己的
-    /// 「取消」文字鈕），未逐像素比照稿面把「取消」拿掉、把「移除這個寶貝」搬到「儲存變更」
-    /// 之前——這是本票在時間預算下的已知簡化，記於 handoff 風險欄。
+    /// （左欄清單／新增，右欄詳情）。LS-312 導覽入口接線起，右欄改顯示寶貝詳情
+    /// （`childDetail(for:)`，同 compact 版），「編輯」從詳情頁導覽列右上進入——與 compact
+    /// 版同一套目的地，不再各自維護一份。未逐像素比照稿面把 09b「取消」文字鈕挪動位置——
+    /// 這是本票在時間預算下的已知簡化，記於 handoff 風險欄。
     private var regularLayout: some View {
         NavigationSplitView {
             sidebarContent
         } detail: {
             NavigationStack {
-                if let selectedChildID, childrenStore.children.contains(where: { $0.id == selectedChildID }) {
-                    EditChildView(childrenStore: childrenStore, child: childForID(selectedChildID)!)
+                if let selectedChildID, let child = childForID(selectedChildID) {
+                    childDetail(for: child)
                 } else {
                     ContentUnavailableView(
                         "選擇一個寶貝",
@@ -239,10 +244,6 @@ struct ChildrenManagementView: View {
                 }
             }
         }
-    }
-
-    private func childForID(_ id: UUID) -> Child? {
-        childrenStore.children.first { $0.id == id }
     }
 
     private var sidebarContent: some View {
@@ -343,7 +344,9 @@ private struct EmptyChildrenCard: View {
 #if DEBUG
 #Preview("有寶貝") {
     NavigationStack {
-        ChildrenManagementView(familyStore: .preview(), childrenStore: .preview())
+        ChildrenManagementView(
+            familyStore: .preview(), childrenStore: .preview(), growthAPIClient: PreviewGrowthAPIClient()
+        )
     }
 }
 #endif

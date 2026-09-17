@@ -239,6 +239,62 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.commentsSheet)
     }
 
+    /// LS-312：01 寶貝詳情・成長區塊（populated）——最新值卡三格／曲線卡 Segmented／資料點／
+    /// 「新增量測」／「查看全部紀錄」。
+    func testChildGrowthDetailViewPopulated() {
+        assertAllTappablesMeetMinimum(.growthDetailPopulated)
+    }
+
+    /// LS-312：04 空狀態——空狀態下「新增量測」鈕仍需 ≥44pt（品牌硬約束：不得 `.disabled(`）。
+    func testChildGrowthDetailViewEmpty() {
+        assertAllTappablesMeetMinimum(.growthDetailEmpty)
+    }
+
+    /// LS-312：「新增量測」空殼承接畫面——「取消」鈕。
+    func testGrowthAddMeasurementPlaceholderView() {
+        assertAllTappablesMeetMinimum(.growthAddMeasurementPlaceholder)
+    }
+
+    /// LS-312：「查看全部紀錄」空殼承接畫面——純顯示，斷言 sentinel 渲染即可（無互動元件，
+    /// 但仍走同一套 tap-target 量測確保未來加東西時機械覆蓋不會漏掉）。
+    func testGrowthRecordsListPlaceholderView() {
+        assertAllTappablesMeetMinimum(.growthRecordsListPlaceholder)
+    }
+
+    /// LS-312：populated（1 個寶貝）——`ChildrenManagementView` 取代原本 tap-target-exemptions.txt
+    /// 的排除，量測「陳小安」列（進寶貝詳情）＋「新增寶貝」主鈕。
+    func testChildrenManagementViewPopulated() {
+        assertAllTappablesMeetMinimum(.childrenManagementPopulated)
+    }
+
+    /// LS-312 導覽入口接線：寶貝列 row 目的地改成「寶貝詳情」（`ChildGrowthDetailView`），不再
+    /// 直接進 `EditChildView`（09b）——09b 改從詳情頁導覽列右上「編輯」進入。
+    ///
+    /// Mutation：把 `ChildrenManagementView.childRow` 的 `ChildrenRoute.detail(child.id)` 改回
+    /// `.edit(child.id)` 會讓這支紅——tap 列之後會直接看到「編輯寶貝資料」，`編輯` 導覽鈕不存在
+    /// （因為已經在編輯頁本身，不是詳情頁）。
+    func testChildrenManagementViewRowOpensDetailNotEdit() {
+        let app = TapTargetMeasurement.launch(.childrenManagementPopulated)
+        let row = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "陳小安")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "寶貝列表上的「陳小安」列應該存在")
+        row.tap()
+        XCTAssertTrue(
+            app.buttons["編輯"].waitForExistence(timeout: 10),
+            "點寶貝列之後應該先進寶貝詳情頁，導覽列右上要有「編輯」入口"
+        )
+        XCTAssertFalse(
+            app.staticTexts["編輯寶貝資料"].exists,
+            "點寶貝列不應該直接落在編輯頁——目的地應該是寶貝詳情，「編輯」要另外點一次"
+        )
+        // `.childrenManagementPopulated` 這個 harness case 的 sentinel 是列表根畫面，
+        // `assertAllTappablesMeetMinimum` 量不到推入後才出現的導覽列「編輯」鈕——這裡在推入
+        // 之後再量一次，才是「編輯」鈕熱區唯一的機械覆蓋（`ChildrenManagementView+Detail
+        // .swift` 的 `minWidth`／`minHeight: 44` 修正就是為了這裡）。
+        for message in TapTargetMeasurement.violations(in: app) {
+            XCTFail(message)
+        }
+    }
+
     /// 任一元件 <44pt 就用 `XCTFail` 記一筆——逐一累計，不是遇到第一個違規就提前結束，讓
     /// `tap-target-check.sh` 能一次點名所有違規者（LS-17 QA1 就是同一畫面上不只一顆違規）。
     /// merge-review R1 B1：先斷言畫面真的渲染出來，harness 靜默失效不會被誤判成「這個畫面

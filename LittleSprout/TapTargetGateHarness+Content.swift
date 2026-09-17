@@ -74,7 +74,8 @@ extension TapTargetGateHarness {
         return AuthenticatedGate(
             authStore: authStore, familyStore: familyStore, childrenStore: .preview(), timelineStore: .preview(),
             albumsStore: .preview(), eulaStore: .preview(shouldPresent: true, judgedUserID: userID),
-            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
+            diaryAPIClient: PreviewDiaryAPIClient(), growthAPIClient: PreviewGrowthAPIClient(),
+            mediaUploadService: PreviewMediaUploadService(),
             accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
             safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
             // LS-217：`.authorized`（非 `.notDetermined`）——避免這支流程測試意外撞上
