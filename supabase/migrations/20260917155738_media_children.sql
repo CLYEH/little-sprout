@@ -258,9 +258,19 @@ as $$
 declare
   v_uid uuid := auth.uid();
   v_item jsonb;
+  v_count integer;
 begin
   if v_uid is null then
     raise exception '未登入，無法設定照片的寶貝標記' using errcode = '42501';
+  end if;
+
+  -- merge-review R1 i1：實測 200 筆 35 ms，離 1 秒很遠，本不擋；但呼叫端若一次送
+  -- 幾千筆，會是一個長交易持有同等數量的 media 列鎖。上限抓 500（票面驗收批次量
+  -- 200 的 2.5 倍，留足匯入分批的彈性，同時避免無上限），超過拋 22023（見
+  -- docs/API.md §4 對應段落）。
+  select count(*) into v_count from jsonb_array_elements(coalesce(p_items, '[]'::jsonb));
+  if v_count > 500 then
+    raise exception '批次筆數超過上限（500），實際 % 筆', v_count using errcode = '22023';
   end if;
 
   for v_item in
