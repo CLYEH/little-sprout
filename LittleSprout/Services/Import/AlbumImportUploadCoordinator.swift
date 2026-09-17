@@ -185,7 +185,9 @@ final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
         // `UIImage(data:)` 已經先解過一次）就整筆捨棄，不上傳一張轉檔失敗的原始 HEIC。
         let (data, ext): (Data, String)
         if rawExt == "heic" || rawExt == "heif" {
-            guard let jpegData = ImportMediaTranscoder.convertHEICToJPEG(result.data) else { return nil }
+            // merge-review R1 m4：`image` 上面幾行已經解過一次（算 `pixelSize` 用）——轉檔
+            // 函式改收已解好的 `UIImage`，不用同一份 bytes 再讓 `UIImage(data:)` 解第二次。
+            guard let jpegData = ImportMediaTranscoder.convertHEICToJPEG(image) else { return nil }
             (data, ext) = (jpegData, "jpg")
         } else {
             (data, ext) = (result.data, rawExt)

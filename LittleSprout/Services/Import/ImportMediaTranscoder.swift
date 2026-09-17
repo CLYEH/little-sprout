@@ -13,11 +13,19 @@ enum ImportMediaTranscoder {
     /// `UIImage(data:)` 解碼時已經把 EXIF orientation 讀進 `imageOrientation`（同
     /// `PickedItemLoader.orientedPixelSize` 文件註解的既有事實）；`jpegData(compressionQuality:)`
     /// 重新編碼時會依 `imageOrientation` 把方向烤進畫素矩陣（輸出永遠是「up」），不需要另外
-    /// 处理旋轉。解碼失敗（來源不是有效影像資料）或編碼失敗都回傳 `nil`——呼叫端把這筆當
-    /// 「讀不到」整筆捨棄（同 `LegacyAlbumUploadImportCoordinator.loadPhotoUpload` 既有的
-    /// nil-短路慣例）。
-    static func convertHEICToJPEG(_ data: Data) -> Data? {
-        guard let image = UIImage(data: data) else { return nil }
-        return image.jpegData(compressionQuality: jpegQuality)
+    /// 处理旋轉。編碼失敗回傳 `nil`——呼叫端把這筆當「讀不到」整筆捨棄（同
+    /// `LegacyAlbumUploadImportCoordinator.loadPhotoUpload` 既有的 nil-短路慣例）。
+    ///
+    /// merge-review R1 m4：改收已解好的 `UIImage`（不是原始 `Data`）——呼叫端
+    /// （`AlbumImportUploadCoordinator.loadPhotoUpload`）早就用同一份 bytes 解過一次算
+    /// `pixelSize`，這裡不需要 `UIImage(data:)` 再解第二次同一張圖。**已知限制（未修）**：
+    /// `jpegData(compressionQuality:)` 的輸出不含來源的 EXIF／GPS metadata（永久相簿裡原檔
+    /// 的拍攝資訊就此消失，`taken_at` 有另外寫進 DB，不影響功能）——完整修法要換成
+    /// `CGImageDestinationCreateWithData`＋`CGImageDestinationAddImageFromSource` 保留
+    /// metadata，需要額外處理 orientation（`CGImageDestination` 不像 `UIImage.jpegData`
+    /// 那樣自動把 `imageOrientation` 烤進畫素），本輪範圍只做「消除雙重解碼」這一半，見
+    /// LS-96 記錄。
+    static func convertHEICToJPEG(_ image: UIImage) -> Data? {
+        image.jpegData(compressionQuality: jpegQuality)
     }
 }
