@@ -306,9 +306,14 @@ fi
 
 # ---- ㉜（LS-311；使用者 2026-09-16 指示）用量段：讀 ~/.claude/usage-cache.json（PATROL_USAGE_FILE 可換路徑）
 #      的 rate_limits.seven_day，週用量 ≥ PATROL_USAGE_STOP（預設 99）印停工＋交接、≥ PATROL_USAGE_WARN
-#      （預設 97）印不派新任務；未達門檻 --brief／人類全文一行都不印；快取缺／空／不可解析／過期印「探針無
+#      （預設 97）印不派新任務；未達門檻 --brief／人類全文一行都不印；快取缺／空／不可解析印「探針無
 #      資料」（唯一允許的非門檻訊號）。六例：96.9（零訊號）／97.0（警示）／99.0（停工，STOP 優先於 WARN）／
-#      缺檔／過期／壞 JSON；另補兩則 mutation 證明 ㉜b／㉜e 的綠不是空跑（票文指定形狀）----
+#      缺檔／壞 JSON／CLAUDE_CONFIG_DIR 路徑；另補兩則 mutation 證明 ㉜b／㉜e 的綠不是空跑（票文指定形狀）。
+#      LS-318（LS-96 池項 a1d7da12）：快取可解析但過期（written_at 早於 PATROL_USAGE_MAX_AGE_MIN）不再算
+#      「探針無資料」——閒置 session 只跑巡檢、cron 不刷新 statusline 屬正常，改印「探針過期（最後已知
+#      NN%…）」並沿最後已知值套用同一組 97／99 門檻（動作句併同一行）：㉜e 改（50%，未達門檻→只印過期行
+#      本身）、㉜j 新增（98%，達 WARN→過期行帶 97 級指示）、㉜k 新增（50%，只印過期行一行，同 ㉜c 的單行
+#      不重疊斷言精神）----
 usage_mk() { printf '{"rate_limits":{"seven_day":{"used_percentage":%s,"resets_at":1789902000},"five_hour":{"used_percentage":5,"resets_at":1789589400}},"written_at":%s}' "$1" "$2"; }
 u_now=$(date +%s)
 
@@ -350,14 +355,32 @@ brief32d="$(PATROL_USAGE_FILE="$work/usage-does-not-exist.json" bash "$patrol" -
 has '㉜d 缺檔 → 探針無資料（快取檔不存在）' "$brief32d" '⚠ [用量] 探針無資料（快取檔不存在'
 has '㉜d 探針無資料指示確認 statusline-command.sh 已掛快取寫入段' "$brief32d" '/statusline-command.sh 已掛快取寫入段（docs/COLLABORATION.md §4-b）'
 
-# ㉜e 過期（written_at 早於 PATROL_USAGE_MAX_AGE_MIN）→ 探針無資料（已 N 分鐘未更新）
+# ㉜e 過期（written_at 早於 PATROL_USAGE_MAX_AGE_MIN）、最後已知值未達門檻（50%）→ LS-318：探針過期（沿最後
+#     已知值），不再是「探針無資料」；→ 後只接通用句「門檻判定沿用最後已知值」（不帶 97／99 級動作）
 u_old=$(( u_now - 200 ))
 usage_mk 50 "$u_old" > "$work/usage-e.json"
 brief32e="$(PATROL_USAGE_FILE="$work/usage-e.json" PATROL_USAGE_MAX_AGE_MIN=1 bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
-has '㉜e 過期（200s 前，上限 1 分）→ 探針無資料（已 N 分鐘未更新）' "$brief32e" '⚠ [用量] 探針無資料（快取已'
-has '㉜e 過期原因帶「未更新（上限」字樣' "$brief32e" '分鐘未更新（上限 1 分）'
+has   '㉜e 過期（200s 前，上限 1 分）、50%（未達門檻）→ 探針過期（最後已知值），不是探針無資料' "$brief32e" '⚠ [用量] 探針過期（最後已知 50%，已 3 分鐘未更新；閒置 session 不刷新 statusline 屬正常）→ 門檻判定沿用最後已知值'
+hasnt '㉜e 不再誤報「探針無資料」（LS-318 修正前的舊行為）' "$brief32e" '探針無資料'
 json32e="$(PATROL_USAGE_FILE="$work/usage-e.json" PATROL_USAGE_MAX_AGE_MIN=1 bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
 jq_ok '㉜e --json usage.stale=true' "$json32e" '.usage.stale == true'
+jq_ok '㉜e --json usage.last_known=50（LS-318）' "$json32e" '.usage.last_known == 50'
+
+# ㉜j（LS-318 新增）過期＋98%（達 WARN、未達 STOP）→ 過期行內嵌 97 級指示（同一行，不是另開一行）
+usage_mk 98 "$u_old" > "$work/usage-j.json"
+brief32j="$(PATROL_USAGE_FILE="$work/usage-j.json" PATROL_USAGE_MAX_AGE_MIN=1 bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㉜j 過期＋98%（達 WARN）→ 過期行帶 97 級指示（同一行）' "$brief32j" '⚠ [用量] 探針過期（最後已知 98%，已 3 分鐘未更新；閒置 session 不刷新 statusline 屬正常）→ 不派新任務；在飛 agent 跑完只記票（usage-budget-winddown 步驟 3）'
+hasnt '㉜j 未達 STOP，不帶 99 級停工字樣' "$brief32j" '停下所有工作'
+n32j=$(printf '%s\n' "$brief32j" | grep -c '\[用量\]')
+if [ "$n32j" -eq 1 ]; then echo "✓ ㉜j 恰印一行 [用量]（過期與 97 級指示合併同一行）"; else echo "✗ ㉜j [用量] 行數應為 1，實得 ${n32j}" >&2; fail=1; fi
+
+# ㉜k（LS-318 新增）過期＋50%（未達任何門檻）→ 只印過期行一行（同 ㉜c「恰印一行」的精神，這裡驗的是
+#     「過期不會額外疊印 97／99 級行」，不是重驗 ㉜e 的文案）
+brief32k="$brief32e"
+n32k=$(printf '%s\n' "$brief32k" | grep -c '\[用量\]')
+if [ "$n32k" -eq 1 ]; then echo "✓ ㉜k 過期＋50%（未達門檻）→ 只印過期行一行"; else echo "✗ ㉜k [用量] 行數應為 1，實得 ${n32k}" >&2; fail=1; fi
+hasnt '㉜k 未達門檻不帶「不派新任務」字樣' "$brief32k" '不派新任務'
+hasnt '㉜k 未達門檻不帶「停下所有工作」字樣' "$brief32k" '停下所有工作'
 
 # ㉜i（LS-314；使用者 2026-09-17 指示「檢查當前 session 的 home」）預設路徑跟 CLAUDE_CONFIG_DIR 走：PATROL_USAGE_FILE
 #      未設、CLAUDE_CONFIG_DIR 指向暫存目錄時，讀的是 <該目錄>/usage-cache.json（多帳號各自 config dir，寫死 ~/.claude 會讀到
