@@ -152,10 +152,12 @@ struct Import05SummaryView: View {
                 .foregroundStyle(Color.lsOnAccent)
                 .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
                 if retryableFailedCount > 0 {
-                    // 票文範圍 3：「重試失敗項（只重跑失敗項）」——`retryAllRetryable()` 本身
-                    // 就只翻可重試的失敗列回 `.waiting`，不動已完成／不可重試（LS002）的項目。
+                    // 票文範圍 3：「重試失敗項（只重跑失敗項）」——`retryRetryable(in:)` 只翻
+                    // 這個批次自己範圍內可重試的失敗列回 `.waiting`，不動已完成／不可重試
+                    // （LS002）的項目，也不動共用佇列裡其他批次／單張即傳的失敗列（merge-review
+                    // R1 m1）。
                     Button {
-                        store.retryAllRetryable()
+                        store.retryRetryable(in: session.entryIDSet)
                     } label: {
                         HStack(spacing: AppSpacing.label) {
                             Image(systemName: "arrow.clockwise").appIconFrame(.medium)

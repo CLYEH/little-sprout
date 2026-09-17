@@ -58,4 +58,17 @@ extension UploadQueueStore {
     func rows(in ids: Set<UUID>) -> [UploadQueueRow] {
         rows.filter { ids.contains($0.id) }
     }
+
+    /// merge-review R1 m1：`retryAllRetryable()` 迭代整個 `order`（不分批次），04／05「重試
+    /// 這 N 張」／「重試失敗項（N）」的 N 卻只算這個批次自己的 `rows(in:)`——共用佇列同時
+    /// 留有「加入照片」單張即傳的失敗列時，按鈕標的數字跟實際重跑的筆數會對不上。這裡沿
+    /// `rows(in:)` 同樣的過濾慣例，只翻批次自己範圍內可重試的失敗列回 `.waiting`。
+    func retryRetryable(in ids: Set<UUID>) {
+        for id in order where ids.contains(id) {
+            guard var entry = entries[id], case .failed(let reason) = entry.state, reason.isRetryable else { continue }
+            entry.state = .waiting
+            entries[id] = entry
+        }
+        advance()
+    }
 }

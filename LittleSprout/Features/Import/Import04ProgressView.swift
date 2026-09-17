@@ -193,7 +193,9 @@ struct Import04ProgressView: View {
     /// `LBxck`：`Retry All Bar`——同 `UploadQueueSheetView.retryAllButton` 既有樣式。
     private var retryAllBar: some View {
         Button {
-            store.retryAllRetryable()
+            // merge-review R1 m1：只重跑這個批次自己範圍內的可重試失敗列，不動共用佇列裡
+            // 其他批次／單張即傳的失敗列——否則按鈕標的 N 跟實際重跑的筆數會對不上。
+            store.retryRetryable(in: batchIDs)
         } label: {
             HStack(spacing: AppSpacing.label) {
                 Image(systemName: "arrow.clockwise").appIconFrame(.medium)
