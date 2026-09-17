@@ -1,0 +1,296 @@
+{
+  "ticket": "LS-321",
+  "round": 4,
+  "head_sha": "0b129a31d29d5d0b87ff6fd6d7ce1401aa43cf7b",
+  "total_nodes": 14259,
+  "tree_hash": "c42b35489e79985a",
+  "scan_scope": "boards",
+  "scan_note": "R4（VR R3 a28d2d3f 裁決後的機械修正輪；orchestrator 裁決 c091fc44：只做機械項，不再追「讀得出一疊相紙」，該題交使用者裁決）。本輪只改 Notes 板 X6iCY（TCs7A B-1/B-2/M-1/M-2/i-1/i-2 文字修正、m0UJA3/YRWoZ 補「資料落點」欄[LS-322 merge-review R1 9f4a1e38 M2]、XFj1e/lE6TP stamp 更新至 R4），HEj70 等板面幾何完全未動，節點總數 14259 與 r3b 相同（未新增/刪除節點）。LS-289 唯讀快照 dump 法：pen-snapshot-dump.js 全文（未修改，SNAP_BATCH_ROWS=5000）送 execute → 5 個 SNAP<n> 行、SNAP-DONE total_rows=22094（與 r3b 同值，佐證未新增/刪除節點）→ node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash c42b35489e79985a --total-nodes 14259 --boards A3ICAN,hwr76,HEj70,X6iCY --out scan-result-r4.json。tree_hash 由 scripts/gates/design_tree_hash.py 對已落地 commit 0b129a3 的 design/littlesprout.pen 離線重算（單次計算，dump 與離線重算之間無任何寫入，同一稿態）。boards 涵蓋本 PR 對 .pen 有變更的全部四塊頂層板（原四板 pVSXP/ZXdu2/yfZyT/OysBA 未觸碰，不掃入）。sibling_intersection=48／row_overflow=16／cross_parent_collision=6／corner_anchor=8/64/0／ref_hits=32／text_occlusion=0／board_clip=0 與 r3b 逐值相同，證實本輪純文字修正未引入任何新的兄弟碰撞、橫列溢出、跨 parent 碰撞、角托錨點錯位、文字遮蔽或板裁切。紅線（o8zYlX/OKSJI/EJMa0/原四板/variables/themes/本輪 HEj70 幾何）以 sha256 逐節點比對 r3b(ff31ab4) vs r4(0b129a3)：全部 SAME（另見 handoff 紅線驗證段）。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 48,
+      "classes": 8,
+      "flagged": [
+        {
+          "node_a": "R6zI1C",
+          "node_b": "SpOXX",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TL",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TL @ Print Cell",
+          "count": 6
+        },
+        {
+          "node_a": "R6zI1C",
+          "node_b": "k9IsaG",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TR",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TR @ Print Cell",
+          "count": 6
+        },
+        {
+          "node_a": "SpOXX/sD5Ma",
+          "node_b": "SpOXX/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "SpOXX",
+          "parent_name": "Corner TL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 8
+        },
+        {
+          "node_a": "k9IsaG/sD5Ma",
+          "node_b": "k9IsaG/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "k9IsaG",
+          "parent_name": "Corner TR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 8
+        },
+        {
+          "node_a": "YKCz5/sD5Ma",
+          "node_b": "YKCz5/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "YKCz5",
+          "parent_name": "Corner BL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 8
+        },
+        {
+          "node_a": "zJPBe/sD5Ma",
+          "node_b": "zJPBe/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "zJPBe",
+          "parent_name": "Corner BR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 8
+        },
+        {
+          "node_a": "BeE1r",
+          "node_b": "XVUTl",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TL",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TL @ Blank Print Cell",
+          "count": 2
+        },
+        {
+          "node_a": "BeE1r",
+          "node_b": "GkUPf",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TR",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TR @ Blank Print Cell",
+          "count": 2
+        }
+      ],
+      "result_hash": "f7d4df594e25ba4f"
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 16,
+      "classes": 4,
+      "flagged": [
+        {
+          "node": "k9IsaG",
+          "name": "Corner TR",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overflow": 5,
+          "class": "Print Cell :: Corner TR",
+          "count": 6
+        },
+        {
+          "node": "zJPBe",
+          "name": "Corner BR",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overflow": 5,
+          "class": "Print Cell :: Corner BR",
+          "count": 6
+        },
+        {
+          "node": "GkUPf",
+          "name": "Corner TR",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overflow": 5,
+          "class": "Blank Print Cell :: Corner TR",
+          "count": 2
+        },
+        {
+          "node": "eNI19",
+          "name": "Corner BR",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overflow": 5,
+          "class": "Blank Print Cell :: Corner BR",
+          "count": 2
+        }
+      ],
+      "result_hash": "a3d0555acbcd5613"
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 6,
+      "classes": 4,
+      "flagged": [
+        {
+          "node_a": "xVb7H",
+          "node_b": "SpOXX",
+          "name_a": "Spacer Section",
+          "name_b": "Corner TL",
+          "parent_a": "F8bebp",
+          "parent_b": "TE7TZ",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            21,
+            5
+          ],
+          "class": "Spacer Section × Corner TL @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 2
+        },
+        {
+          "node_a": "xVb7H",
+          "node_b": "k9IsaG",
+          "name_a": "Spacer Section",
+          "name_b": "Corner TR",
+          "parent_a": "F8bebp",
+          "parent_b": "TE7TZ",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            26,
+            5
+          ],
+          "class": "Spacer Section × Corner TR @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 2
+        },
+        {
+          "node_a": "pH8A7",
+          "node_b": "TZNq0",
+          "name_a": "Corner BL",
+          "name_b": "Spacer Bottom",
+          "parent_a": "v9YaK",
+          "parent_b": "F8bebp",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            26,
+            5
+          ],
+          "class": "Corner BL × Spacer Bottom @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 1
+        },
+        {
+          "node_a": "qJcGp",
+          "node_b": "TZNq0",
+          "name_a": "Corner BR",
+          "name_b": "Spacer Bottom",
+          "parent_a": "v9YaK",
+          "parent_b": "F8bebp",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            21,
+            5
+          ],
+          "class": "Corner BR × Spacer Bottom @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 1
+        }
+      ],
+      "result_hash": "eec236d77d4da410"
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "A3ICAN",
+        "hwr76",
+        "HEj70",
+        "X6iCY"
+      ],
+      "containers": 8,
+      "points": 64,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 32,
+      "ref_hits_defs": 0,
+      "document_containers": 8,
+      "document_points": 64,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": [],
+      "result_hash": "a457ec59cde686c4"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "A3ICAN",
+        "hwr76",
+        "HEj70",
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "18f76374f4fe8f44"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "A3ICAN",
+        "hwr76",
+        "HEj70",
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "5c4665a6aa8c80c2"
+    }
+  }
+}
