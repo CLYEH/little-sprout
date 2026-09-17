@@ -1,0 +1,256 @@
+{
+ "ticket": "LS-321",
+ "round": 1,
+ "head_sha": "ef21d39705bb1d095addb5cc610e36348668fbab",
+ "total_nodes": 14200,
+ "tree_hash": "203c677fc4027b74",
+ "scan_scope": "boards",
+ "scan_note": "LS-289 唯讀快照 dump 模式（14200 節點稿逾單趟正典腳本上限）：Pencil execute 送 scripts/design/pen-snapshot-dump.js 全文（未修改），回收 55 個 SNAP<n> 行貼進同一份 dump 檔；tree_hash／total_nodes 另用 scripts/gates/design_tree_hash.py 對已落地 commit ef21d39（本票對 design/littlesprout.pen 最後一次 commit）離線重算（203c677fc4027b74／14200）；node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash 203c677fc4027b74 --total-nodes 14200 --boards A3ICAN,X6iCY 跑未修改的 scanAll＋六支＋withResultHashes（snapshot mode，dump sha256=950d47761dc4327163ffd03660ec1b99b2dd293ec547c1bf5862b4704230b83d）。SCAN_BOARDS 限本票新增板 A3ICAN（Album Detail / 加入照片 · (b) Button Import 滿版變體）與 Notes 板 X6iCY（本票僅改板內文字＋補一列畫面級屬性，未動任何既有節點結構／幾何，不需要另掃四張既有相簿詳情板 pVSXP／ZXdu2/yfZyT/OysBA）。sibling_intersection／row_overflow／cross_parent_collision 三支的全部 flagged 已逐項核對：對原板 pVSXP（LS-142 / 15 相簿詳情 (iPhone)）單獨重跑同一支腳本（同一份快照、--boards pVSXP），class／count 與 A3ICAN 逐值相同——A3ICAN 是 Copy(pVSXP) 的比較稿，這些是既有沖印品母題重疊／corner-out 5pt 規則的既有現象，原樣繼承、非本輪新增；corner_anchor／text_occlusion／board_clip 三支在本票範圍內 flagged 與 mismatch 皆為 0。本輪先落地 a0673c0（新板＋Notes 裁決點段），後又落地 ef21d39（Notes 補畫面級屬性列，LS-300）——本收據對 ef21d39 那個時點重新走一次 pen-snapshot-dump.js＋overflow-scan.js（單次 execute 完成快照，期間無任何寫入），確保 tree_hash／六支結果與 head_sha 為同一稿態。",
+ "scans": {
+  "sibling_intersection": {
+   "scope": "boards",
+   "document_count": 36,
+   "classes": 6,
+   "flagged": [
+    {
+     "node_a": "R6zI1C",
+     "node_b": "SpOXX",
+     "name_a": "Photo Wrap",
+     "name_b": "Corner TL",
+     "parent": "TE7TZ",
+     "parent_name": "Print Cell",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Photo Wrap × Corner TL @ Print Cell",
+     "count": 6,
+     "classification": "既有沖印品母題重疊（角托 corner-out 與相框層疊），Copy(\"pVSXP\",...) 原樣繼承——經對 pVSXP 本板單獨重跑同一支腳本核對，class／count／node 結構逐值相同（僅 id 因 Copy 換新不同），非本輪新增"
+    },
+    {
+     "node_a": "R6zI1C",
+     "node_b": "k9IsaG",
+     "name_a": "Photo Wrap",
+     "name_b": "Corner TR",
+     "parent": "TE7TZ",
+     "parent_name": "Print Cell",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Photo Wrap × Corner TR @ Print Cell",
+     "count": 6,
+     "classification": "既有沖印品母題重疊（角托 corner-out 與相框層疊），Copy(\"pVSXP\",...) 原樣繼承——經對 pVSXP 本板單獨重跑同一支腳本核對，class／count／node 結構逐值相同（僅 id 因 Copy 換新不同），非本輪新增"
+    },
+    {
+     "node_a": "SpOXX/sD5Ma",
+     "node_b": "SpOXX/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "SpOXX",
+     "parent_name": "Corner TL",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner TL",
+     "count": 6,
+     "classification": "既有沖印品母題重疊（角托 corner-out 與相框層疊），Copy(\"pVSXP\",...) 原樣繼承——經對 pVSXP 本板單獨重跑同一支腳本核對，class／count／node 結構逐值相同（僅 id 因 Copy 換新不同），非本輪新增"
+    },
+    {
+     "node_a": "k9IsaG/sD5Ma",
+     "node_b": "k9IsaG/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "k9IsaG",
+     "parent_name": "Corner TR",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner TR",
+     "count": 6,
+     "classification": "既有沖印品母題重疊（角托 corner-out 與相框層疊），Copy(\"pVSXP\",...) 原樣繼承——經對 pVSXP 本板單獨重跑同一支腳本核對，class／count／node 結構逐值相同（僅 id 因 Copy 換新不同），非本輪新增"
+    },
+    {
+     "node_a": "YKCz5/sD5Ma",
+     "node_b": "YKCz5/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "YKCz5",
+     "parent_name": "Corner BL",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner BL",
+     "count": 6,
+     "classification": "既有沖印品母題重疊（角托 corner-out 與相框層疊），Copy(\"pVSXP\",...) 原樣繼承——經對 pVSXP 本板單獨重跑同一支腳本核對，class／count／node 結構逐值相同（僅 id 因 Copy 換新不同），非本輪新增"
+    },
+    {
+     "node_a": "zJPBe/sD5Ma",
+     "node_b": "zJPBe/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "zJPBe",
+     "parent_name": "Corner BR",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner BR",
+     "count": 6,
+     "classification": "既有沖印品母題重疊（角托 corner-out 與相框層疊），Copy(\"pVSXP\",...) 原樣繼承——經對 pVSXP 本板單獨重跑同一支腳本核對，class／count／node 結構逐值相同（僅 id 因 Copy 換新不同），非本輪新增"
+    }
+   ],
+   "result_hash": "3f2b1100bd60fa3a"
+  },
+  "row_overflow": {
+   "scope": "boards",
+   "document_count": 12,
+   "classes": 2,
+   "flagged": [
+    {
+     "node": "k9IsaG",
+     "name": "Corner TR",
+     "parent": "TE7TZ",
+     "parent_name": "Print Cell",
+     "overflow": 5,
+     "class": "Print Cell :: Corner TR",
+     "count": 6,
+     "classification": "corner-out 5pt——角托壓過紙緣的母題規則（little-sprout-brand tokens.md corner-out=5），Copy 自 pVSXP 原樣繼承，非本輪新增"
+    },
+    {
+     "node": "zJPBe",
+     "name": "Corner BR",
+     "parent": "TE7TZ",
+     "parent_name": "Print Cell",
+     "overflow": 5,
+     "class": "Print Cell :: Corner BR",
+     "count": 6,
+     "classification": "corner-out 5pt——角托壓過紙緣的母題規則（little-sprout-brand tokens.md corner-out=5），Copy 自 pVSXP 原樣繼承，非本輪新增"
+    }
+   ],
+   "result_hash": "601bae6e7d7af753"
+  },
+  "cross_parent_collision": {
+   "scope": "boards",
+   "document_count": 6,
+   "classes": 4,
+   "flagged": [
+    {
+     "node_a": "xVb7H",
+     "node_b": "SpOXX",
+     "name_a": "Spacer Section",
+     "name_b": "Corner TL",
+     "parent_a": "F8bebp",
+     "parent_b": "TE7TZ",
+     "board": "A3ICAN",
+     "board_name": "Album Detail / 加入照片 · (b) Button Import 滿版變體",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Spacer Section × Corner TL @ Album Detail / 加入照片 · (b) Button Import 滿版變體",
+     "count": 2,
+     "classification": "corner-out 與 Spacer 交集，沖印品母題既有現象，Copy 自 pVSXP 原樣繼承（經對 pVSXP 本板單獨重跑同一支腳本核對 class／count 逐值相同），非本輪新增"
+    },
+    {
+     "node_a": "xVb7H",
+     "node_b": "k9IsaG",
+     "name_a": "Spacer Section",
+     "name_b": "Corner TR",
+     "parent_a": "F8bebp",
+     "parent_b": "TE7TZ",
+     "board": "A3ICAN",
+     "board_name": "Album Detail / 加入照片 · (b) Button Import 滿版變體",
+     "overlap": [
+      26,
+      5
+     ],
+     "class": "Spacer Section × Corner TR @ Album Detail / 加入照片 · (b) Button Import 滿版變體",
+     "count": 2,
+     "classification": "corner-out 與 Spacer 交集，沖印品母題既有現象，Copy 自 pVSXP 原樣繼承（經對 pVSXP 本板單獨重跑同一支腳本核對 class／count 逐值相同），非本輪新增"
+    },
+    {
+     "node_a": "pH8A7",
+     "node_b": "TZNq0",
+     "name_a": "Corner BL",
+     "name_b": "Spacer Bottom",
+     "parent_a": "v9YaK",
+     "parent_b": "F8bebp",
+     "board": "A3ICAN",
+     "board_name": "Album Detail / 加入照片 · (b) Button Import 滿版變體",
+     "overlap": [
+      26,
+      5
+     ],
+     "class": "Corner BL × Spacer Bottom @ Album Detail / 加入照片 · (b) Button Import 滿版變體",
+     "count": 1,
+     "classification": "corner-out 與 Spacer 交集，沖印品母題既有現象，Copy 自 pVSXP 原樣繼承（經對 pVSXP 本板單獨重跑同一支腳本核對 class／count 逐值相同），非本輪新增"
+    },
+    {
+     "node_a": "qJcGp",
+     "node_b": "TZNq0",
+     "name_a": "Corner BR",
+     "name_b": "Spacer Bottom",
+     "parent_a": "v9YaK",
+     "parent_b": "F8bebp",
+     "board": "A3ICAN",
+     "board_name": "Album Detail / 加入照片 · (b) Button Import 滿版變體",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Corner BR × Spacer Bottom @ Album Detail / 加入照片 · (b) Button Import 滿版變體",
+     "count": 1,
+     "classification": "corner-out 與 Spacer 交集，沖印品母題既有現象，Copy 自 pVSXP 原樣繼承（經對 pVSXP 本板單獨重跑同一支腳本核對 class／count 逐值相同），非本輪新增"
+    }
+   ],
+   "result_hash": "1acb6038cdc27f95"
+  },
+  "corner_anchor": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "A3ICAN",
+    "X6iCY"
+   ],
+   "containers": 6,
+   "points": 48,
+   "mismatch": 0,
+   "flagged": [],
+   "unresolved": [],
+   "ref_hits": 24,
+   "ref_hits_defs": 0,
+   "document_containers": 6,
+   "document_points": 48,
+   "document_mismatch": 0,
+   "document_flagged": [],
+   "document_unresolved": [],
+   "result_hash": "d06115bb1e5b6249"
+  },
+  "text_occlusion": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "A3ICAN",
+    "X6iCY"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "45008cd645736ac9"
+  },
+  "board_clip": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "A3ICAN",
+    "X6iCY"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "884f8f07fb015c47"
+  }
+ }
+}
