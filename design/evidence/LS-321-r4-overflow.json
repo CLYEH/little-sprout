@@ -24,7 +24,8 @@
             13
           ],
           "class": "Photo Wrap × Corner TL @ Print Cell",
-          "count": 6
+          "count": 6,
+          "classification": "既有沖印品母題重疊（角托 corner-out 外擴壓過含照片 Print Cell 的 Photo Wrap 邊緣），A3ICAN 由 Copy(pVSXP) 繼承，非本輪 R4 新增"
         },
         {
           "node_a": "R6zI1C",
@@ -38,7 +39,8 @@
             13
           ],
           "class": "Photo Wrap × Corner TR @ Print Cell",
-          "count": 6
+          "count": 6,
+          "classification": "既有沖印品母題重疊，同上，非本輪 R4 新增"
         },
         {
           "node_a": "SpOXX/sD5Ma",
@@ -52,7 +54,8 @@
             26
           ],
           "class": "Corner Shape × Corner Edge @ Corner TL",
-          "count": 8
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部既定疊層（Shape 與 Edge 描邊重疊），跨 A3ICAN/hwr76/HEj70/pVSXP 繼承同一母題，非本輪 R4 新增"
         },
         {
           "node_a": "k9IsaG/sD5Ma",
@@ -66,7 +69,8 @@
             26
           ],
           "class": "Corner Shape × Corner Edge @ Corner TR",
-          "count": 8
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部既定疊層，同上，非本輪 R4 新增"
         },
         {
           "node_a": "YKCz5/sD5Ma",
@@ -80,7 +84,8 @@
             26
           ],
           "class": "Corner Shape × Corner Edge @ Corner BL",
-          "count": 8
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部既定疊層，同上，非本輪 R4 新增"
         },
         {
           "node_a": "zJPBe/sD5Ma",
@@ -94,7 +99,8 @@
             26
           ],
           "class": "Corner Shape × Corner Edge @ Corner BR",
-          "count": 8
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部既定疊層，同上，非本輪 R4 新增"
         },
         {
           "node_a": "BeE1r",
@@ -108,7 +114,8 @@
             13
           ],
           "class": "Photo Wrap × Corner TL @ Blank Print Cell",
-          "count": 2
+          "count": 2,
+          "classification": "既有沖印品母題重疊（角托 corner-out 外擴壓過空狀態 Blank Print Cell 的 Photo Wrap 邊緣），hwr76/HEj70 由 Copy(ZXdu2) 繼承，非本輪 R4 新增"
         },
         {
           "node_a": "BeE1r",
@@ -122,7 +129,8 @@
             13
           ],
           "class": "Photo Wrap × Corner TR @ Blank Print Cell",
-          "count": 2
+          "count": 2,
+          "classification": "既有沖印品母題重疊，同上，非本輪 R4 新增"
         }
       ],
       "result_hash": "f7d4df594e25ba4f"
@@ -139,7 +147,8 @@
           "parent_name": "Print Cell",
           "overflow": 5,
           "class": "Print Cell :: Corner TR",
-          "count": 6
+          "count": 6,
+          "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，A3ICAN 由 Copy(pVSXP) 繼承，非本輪 R4 新增"
         },
         {
           "node": "zJPBe",
@@ -148,7 +157,8 @@
           "parent_name": "Print Cell",
           "overflow": 5,
           "class": "Print Cell :: Corner BR",
-          "count": 6
+          "count": 6,
+          "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，同上，非本輪 R4 新增"
         },
         {
           "node": "GkUPf",
@@ -157,7 +167,8 @@
           "parent_name": "Blank Print Cell",
           "overflow": 5,
           "class": "Blank Print Cell :: Corner TR",
-          "count": 2
+          "count": 2,
+          "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，hwr76/HEj70 由 Copy(ZXdu2) 繼承，非本輪 R4 新增"
         },
         {
           "node": "eNI19",
@@ -166,7 +177,8 @@
           "parent_name": "Blank Print Cell",
           "overflow": 5,
           "class": "Blank Print Cell :: Corner BR",
-          "count": 2
+          "count": 2,
+          "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，同上，非本輪 R4 新增"
         }
       ],
       "result_hash": "a3d0555acbcd5613"
@@ -190,7 +202,8 @@
             5
           ],
           "class": "Spacer Section × Corner TL @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
-          "count": 2
+          "count": 2,
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b/R4 新增或修改"
         },
         {
           "node_a": "xVb7H",
@@ -206,7 +219,8 @@
             5
           ],
           "class": "Spacer Section × Corner TR @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
-          "count": 2
+          "count": 2,
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b/R4 新增或修改"
         },
         {
           "node_a": "pH8A7",
@@ -222,7 +236,8 @@
             5
           ],
           "class": "Corner BL × Spacer Bottom @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
-          "count": 1
+          "count": 1,
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b/R4 新增或修改"
         },
         {
           "node_a": "qJcGp",
@@ -238,7 +253,8 @@
             5
           ],
           "class": "Corner BR × Spacer Bottom @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
-          "count": 1
+          "count": 1,
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b/R4 新增或修改"
         }
       ],
       "result_hash": "eec236d77d4da410"
