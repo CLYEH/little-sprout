@@ -346,7 +346,7 @@ if [ "$n32c" -eq 1 ]; then echo "✓ ㉜c 99.0% 恰印一行 [用量]（STOP／W
 # ㉜d 缺檔 → 探針無資料（快取檔不存在）
 brief32d="$(PATROL_USAGE_FILE="$work/usage-does-not-exist.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has '㉜d 缺檔 → 探針無資料（快取檔不存在）' "$brief32d" '⚠ [用量] 探針無資料（快取檔不存在'
-has '㉜d 探針無資料指示確認 statusline-command.sh 已掛快取寫入段' "$brief32d" '確認 ~/.claude/statusline-command.sh 已掛快取寫入段（docs/COLLABORATION.md §4-b）'
+has '㉜d 探針無資料指示確認 statusline-command.sh 已掛快取寫入段' "$brief32d" '/statusline-command.sh 已掛快取寫入段（docs/COLLABORATION.md §4-b）'
 
 # ㉜e 過期（written_at 早於 PATROL_USAGE_MAX_AGE_MIN）→ 探針無資料（已 N 分鐘未更新）
 u_old=$(( u_now - 200 ))
@@ -356,6 +356,18 @@ has '㉜e 過期（200s 前，上限 1 分）→ 探針無資料（已 N 分鐘�
 has '㉜e 過期原因帶「未更新（上限」字樣' "$brief32e" '分鐘未更新（上限 1 分）'
 json32e="$(PATROL_USAGE_FILE="$work/usage-e.json" PATROL_USAGE_MAX_AGE_MIN=1 bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
 jq_ok '㉜e --json usage.stale=true' "$json32e" '.usage.stale == true'
+
+# ㉜i（LS-314；使用者 2026-09-17 指示「檢查當前 session 的 home」）預設路徑跟 CLAUDE_CONFIG_DIR 走：PATROL_USAGE_FILE
+#      未設、CLAUDE_CONFIG_DIR 指向暫存目錄時，讀的是 <該目錄>/usage-cache.json（多帳號各自 config dir，寫死 ~/.claude 會讀到
+#      別的帳號）；探針無資料訊息也要指到同一個目錄的 statusline-command.sh。用 env -u 拿掉本檔上方為隔離本機真檔而 export 的
+#      PATROL_USAGE_FILE。
+mkdir -p "$work/cfg-i"
+usage_mk 97.0 "$u_now" > "$work/cfg-i/usage-cache.json"
+brief32i="$(env -u PATROL_USAGE_FILE CLAUDE_CONFIG_DIR="$work/cfg-i" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has '㉜i CLAUDE_CONFIG_DIR 指向的 usage-cache.json 被讀到（97.0 → 97 級警示）' "$brief32i" "$warn_line"
+mkdir -p "$work/cfg-i-empty"
+brief32i2="$(env -u PATROL_USAGE_FILE CLAUDE_CONFIG_DIR="$work/cfg-i-empty" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has '㉜i CLAUDE_CONFIG_DIR 目錄無快取 → 探針無資料指向該目錄的 statusline-command.sh' "$brief32i2" "確認 $work/cfg-i-empty/statusline-command.sh 已掛快取寫入段"
 
 # ㉜f 壞 JSON → 探針無資料（JSON 不可解析或必要欄位缺失）
 printf 'not json at all' > "$work/usage-f.json"
