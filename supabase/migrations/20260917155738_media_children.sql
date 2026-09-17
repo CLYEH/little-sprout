@@ -239,6 +239,16 @@ grant execute on function public.set_media_children(uuid, uuid[]) to authenticat
 -- `[{"media_id": "<uuid>", "child_ids": ["<uuid>", ...]}]`；單一元素缺
 -- media_id／child_ids 皆視為該元素的資料錯誤，一樣整批 rollback（fail loud，不
 -- 靜默跳過壞元素）。
+--
+-- merge-review R1 m1（`f2a7305` 版本已實測重現 40P01）：迴圈依 p_items 陣列給定的
+-- 順序逐筆呼叫 set_media_children，每筆內部的 `select ... for update` 取到的列鎖
+-- 持有到整個批次交易結束——若呼叫端給的陣列順序不同，兩個連線對同一組 media 用
+-- 相反順序呼叫會累積成相反的鎖序，構成 ABBA 循環等待。改法：`with ordinality`
+-- 取出陣列元素原始序號＋依 `media_id` 排序後才逐筆處理，讓任何呼叫端不論陣列
+-- 順序為何，同一批次內對這組 media 的鎖序永遠一致（遞增 media_id）——兩個重疊
+-- 批次因此只會排隊、不會出現循環等待。同一 media_id 在單一批次內重複出現時仍是
+-- 「陣列原始序號較後者勝」（`order by media_id, ord` 讓同 media_id 的多筆元素照
+-- 原始 ord 遞增處理，最後一筆蓋掉前面幾筆，語意不變）。
 create or replace function public.set_media_children_batch(p_items jsonb)
 returns void
 language plpgsql
@@ -253,7 +263,10 @@ begin
     raise exception '未登入，無法設定照片的寶貝標記' using errcode = '42501';
   end if;
 
-  for v_item in select * from jsonb_array_elements(coalesce(p_items, '[]'::jsonb))
+  for v_item in
+    select e.value
+      from jsonb_array_elements(coalesce(p_items, '[]'::jsonb)) with ordinality as e(value, ord)
+     order by (e.value->>'media_id'), e.ord
   loop
     perform public.set_media_children(
       (v_item->>'media_id')::uuid,
