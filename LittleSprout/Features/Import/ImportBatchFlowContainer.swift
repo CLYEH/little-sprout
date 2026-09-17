@@ -52,9 +52,21 @@ struct ImportBatchFlowContainer: View {
             if let store = albumsStore.sharedUploadQueueStoreInstance {
                 Import04ProgressView(
                     session: session, store: store,
-                    onLeaveInBackground: { dismiss() },
+                    onLeaveInBackground: {
+                        // merge-review R2 M5：M3(c) 的縮圖釋放原本只掛在 05「完成」這一條離開
+                        // 路徑——「在背景繼續」是票文範圍 3 明列、也是大批次最常走的離開路徑，
+                        // 縮圖同樣要釋放（見 `UploadQueueStore.releaseThumbnails(for:)` 文件
+                        // 註解）。
+                        store.releaseThumbnails(for: session.entryIDSet)
+                        dismiss()
+                    },
                     onAllItemsFinished: { route = .summary(session) },
-                    onCancelledImport: { dismiss() }
+                    onCancelledImport: {
+                        // merge-review R2 M5：同上，「取消整批」離開時這個批次已終局（完成／
+                        // 不可重試失敗）的項目也要釋放縮圖。
+                        store.releaseThumbnails(for: session.entryIDSet)
+                        dismiss()
+                    }
                 )
             } else {
                 Color.clear.onAppear { dismiss() }
