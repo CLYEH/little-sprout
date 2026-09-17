@@ -24,6 +24,11 @@ import SwiftUI
 /// 畫好的視覺 pill 尺寸。
 struct ImportEntryButton: View {
     let label: String
+    /// merge-review R2 M1：相簿詳情 Action Bar 版（`ve8YN`／`xcGEY`／`iXdTJ`／`EZqDj`）稿面
+    /// instance 都是 `width:"fill_container"`——`ImportEntryButton` 本身天生 hug-content，
+    /// 這顆旗標讓呼叫端可以選擇撐滿（Action Bar 版）或維持緊湊 pill（Header 三處 instance／
+    /// iPad 行內版 `RbEqx` `width:"fit_content"`），不動元件本身的視覺 pill 尺寸。
+    var fillsWidth = false
     let action: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -42,6 +47,7 @@ struct ImportEntryButton: View {
                 importMark
                 Text(label).appFont(.body, weight: .semibold).foregroundStyle(Color.lsTextPrimary)
             }
+            .frame(maxWidth: fillsWidth ? .infinity : nil)
             .padding(.vertical, AppSpacing.controlPaddingTap)
             .padding(.horizontal, AppSpacing.group)
             .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))

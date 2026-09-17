@@ -65,7 +65,9 @@ extension AlbumDetailView {
     // 沿用（該旗標本身已無呼叫端把它設為 true，見型別文件註解，記入 LS-96，不在本票處理）。
 
     var addPhotosBarButton: some View {
-        ImportEntryButton(label: "加入照片") { showsBatchImport = true }
+        // merge-review R2 M1：Action Bar 版稿面（`ve8YN`／`xcGEY`／`iXdTJ`／`EZqDj`）instance
+        // 都是 `width:"fill_container"`——`fillsWidth: true` 撐滿動作帶，不是 hug-content。
+        ImportEntryButton(label: "加入照片", fillsWidth: true) { showsBatchImport = true }
             .disabled(isLoadingPickedItems)
     }
 
