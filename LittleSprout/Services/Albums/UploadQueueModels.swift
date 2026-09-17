@@ -21,12 +21,18 @@ struct PendingUpload: Identifiable {
     /// 圖示佔位）。
     let thumbnail: UIImage?
     let pixelSize: PixelSize
+    /// LS-304：相機膠卷批次匯入每群的 EXIF 分組日期／使用者覆寫（`ImportPlan.Group
+    /// .anchorDate`）——`UploadQueueStore.performUpload` 原樣轉呼叫
+    /// `MediaUploadService.uploadPhoto`／`uploadVideo` 的 `takenAt` 參數。既有呼叫端（「加入
+    /// 照片」單張即傳）不帶這個參數，預設 `nil`（沿既有行為，`media.taken_at` 留空）。
+    let takenAt: Date?
 
-    init(id: UUID = UUID(), kind: Kind, thumbnail: UIImage?, pixelSize: PixelSize) {
+    init(id: UUID = UUID(), kind: Kind, thumbnail: UIImage?, pixelSize: PixelSize, takenAt: Date? = nil) {
         self.id = id
         self.kind = kind
         self.thumbnail = thumbnail
         self.pixelSize = pixelSize
+        self.takenAt = takenAt
     }
 }
 

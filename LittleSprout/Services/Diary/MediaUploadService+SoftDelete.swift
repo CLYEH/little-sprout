@@ -23,8 +23,9 @@ extension SupabaseMediaUploadService {
 
     /// 明確帶 'Z' 的 ISO8601 字串——同 `SupabaseTimelineAPIClient.iso8601String` 的理由：SDK
     /// 預設 Date 編碼不帶時區指示，Postgres 收到不帶時區的 timestamptz 字面值會依 session
-    /// timezone 解讀，不保證是 UTC。
-    private static func iso8601String(from date: Date) -> String {
+    /// timezone 解讀，不保證是 UTC。LS-304：從 `private` 放寬——`MediaUploadService
+    /// +Payloads.swift` 的 `MediaInsertPayload.init` 也需要同一支編碼函式。
+    static func iso8601String(from date: Date) -> String {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.string(from: date)
