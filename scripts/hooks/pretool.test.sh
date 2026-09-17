@@ -694,7 +694,7 @@ rm -rf "$ls184_work"
 # worktrees/LS- 範圍字面 → deny；帶了 → allow（LS-322 定案寫法）。純命令文字比對。
 # R2（merge-review comment 9f4a1e38）：M1 加正規化（去引號、壓縮空白）補雙引號／多空白兩種
 # 風格變體的 deny／allow 各一組（H4⑥⑧、H4⑦⑨）；H4⑩ 對照殘留已知盲區（-f 與引號間本無空白，
-# reviewer 已確認可接受）。
+# reviewer 已確認可接受）；H4⑪（minor）鎖住 echo 純引述字面仍被誤擋的已知現況，不修。
 # ============================================================
 expect 'H4① 全域 pgrep -f [x]codebuild（deny，LS-315 根因形狀）' 2 \
   "$(bash_json "while pgrep -f '[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")"
@@ -717,6 +717,11 @@ expect 'H4⑨ -f 後多一空白、帶 worktrees/LS-42 範圍（allow，M1 正�
   "$(bash_json "while pgrep -f  '[x]codebuild' 2>/dev/null | grep -q worktrees/LS-42; do sleep 20; done")"
 expect 'H4⑩ 對照：-f 與引號之間本來就無空白、無範圍（allow，殘留已知盲區，R1 M1 已確認可接受不擋本輪）' 0 \
   "$(bash_json "while pgrep -f'[x]codebuild' >/dev/null 2>&1; do sleep 20; done")"
+# ---- R2（merge-review comment 9f4a1e38 minor）：H4 無「引號內字面」豁免（不同 H1–H3b 走
+# pretool_engine.py 的命令位置分析），純引述這個字面模式（無 worktree 範圍）仍會被誤擋——已知、
+# 接受的過度擋方向，補一則負例鎖住現況（見 PR body 風險段說明不豁免的理由） ----
+expect 'H4⑪ echo 純引述字面、無範圍（deny，minor：已知過度擋，不修——見 PR body 風險段）' 2 \
+  "$(bash_json "echo 'pgrep -f '\\''[x]codebuild'\\'' documentation example, no worktree here'")"
 
 if [ "$fail" -eq 0 ]; then
   if [ "${i6_skipped:-0}" -gt 0 ]; then
