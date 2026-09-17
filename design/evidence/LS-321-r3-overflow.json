@@ -1,0 +1,109 @@
+{
+  "ticket": "LS-321",
+  "round": 3,
+  "head_sha": "427d63e46206f5571781c91e6c3185d09594ec5a",
+  "total_nodes": 14259,
+  "tree_hash": "fa9da4474f090691",
+  "scan_scope": "boards",
+  "scan_note": "LS-289 唯讀快照 dump 法：pen-snapshot-dump.js 全文（未修改）送 execute（SNAP_BATCH_ROWS 預設 400）→ 56 個 SNAP<n> 行、SNAP-DONE total_rows=22094（與 VR R2 獨立重掃的 22094 同值，佐證本輪未新增/刪除節點）→ node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash fa9da4474f090691 --total-nodes 14259 --boards HEj70,X6iCY。tree_hash 由 scripts/gates/design_tree_hash.py 對已落地 commit 427d63e 的 design/littlesprout.pen 離線重算（單次計算，dump 與離線重算之間無任何寫入，同一稿態）。boards 涵蓋本輪觸碰的兩塊板：HEj70（(c) 記號放大 M-3＋fill 改 on-accent M-2＋Body/Action Bar 高度連動）、X6iCY（Notes 板，TCs7A/YRWoZ/lE6TP 內容改寫）；未觸碰 ZXdu2/hwr76/pVSXP/yfZyT/OysBA 等紅線板，故不掃入。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 6,
+      "result_hash": "f21fbf631354dec8",
+      "flagged": [
+        {
+          "node_a": "hCVMG",
+          "node_b": "QPAax",
+          "class": "Photo Wrap × Corner TL @ Blank Print Cell",
+          "count": 1,
+          "classification": "既有沖印品母題重疊（角托 corner-out 外擴壓過 Photo Wrap 邊緣），HEj70 由 Copy(ZXdu2) 原樣繼承，非本輪新增"
+        },
+        {
+          "node_a": "hCVMG",
+          "node_b": "aGbMf",
+          "class": "Photo Wrap × Corner TR @ Blank Print Cell",
+          "count": 1,
+          "classification": "既有沖印品母題重疊，同上，非本輪新增"
+        },
+        {
+          "node_a": "QPAax/sD5Ma",
+          "node_b": "QPAax/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 1,
+          "classification": "cmp/Photo Corner 元件內部既定疊層（Shape 與 Edge 描邊重疊），非本輪新增"
+        },
+        {
+          "node_a": "aGbMf/sD5Ma",
+          "node_b": "aGbMf/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 1,
+          "classification": "cmp/Photo Corner 元件內部既定疊層，同上，非本輪新增"
+        },
+        {
+          "node_a": "jBN4H/sD5Ma",
+          "node_b": "jBN4H/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 1,
+          "classification": "cmp/Photo Corner 元件內部既定疊層，同上，非本輪新增"
+        },
+        {
+          "node_a": "wvdYe/sD5Ma",
+          "node_b": "wvdYe/DhOiK",
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 1,
+          "classification": "cmp/Photo Corner 元件內部既定疊層，同上，非本輪新增"
+        }
+      ]
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 2,
+      "result_hash": "d5108b8df34c7925",
+      "flagged": [
+        {
+          "node": "aGbMf",
+          "class": "Blank Print Cell :: Corner TR",
+          "count": 1,
+          "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，非本輪新增"
+        },
+        {
+          "node": "wvdYe",
+          "class": "Blank Print Cell :: Corner BR",
+          "count": 1,
+          "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，非本輪新增"
+        }
+      ]
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 0,
+      "result_hash": "98e0adefbd442158",
+      "flagged": []
+    },
+    "corner_anchor": {
+      "boards": ["HEj70", "X6iCY"],
+      "containers": 1,
+      "points": 8,
+      "mismatch": 0,
+      "flagged": [],
+      "document_containers": 1,
+      "document_points": 8,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "ref_hits": 4,
+      "unresolved": [],
+      "result_hash": "d6cbc649ce106b8d"
+    },
+    "text_occlusion": {
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "4b6b3d64f528740d"
+    },
+    "board_clip": {
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "8eba3f96aab6658b"
+    }
+  }
+}
