@@ -71,8 +71,12 @@ final class GrowthStore {
         GrowthCurve.latestValue(for: metric, records: records)
     }
 
-    func curvePoints(for metric: GrowthMetric) -> [GrowthCurve.CurvePoint] {
-        GrowthCurve.curvePoints(for: metric, records: records, birthday: childBirthday)
+    /// LS-312 R3（merge-review R2 M1-a，orchestrator 裁決）：`birthday` 由呼叫端帶入（`child.
+    /// birthday`），不吃 `self.childBirthday`——後者只在 store 建立當下寫死一次，`needsRebuild`
+    /// 同一個孩子不重建之後就不會再更新；使用者改對生日存檔（同一 `child.id`）之後，曲線月齡軸
+    /// 要立刻反映新生日，不能等到換孩子讓 store 重建才對。
+    func curvePoints(for metric: GrowthMetric, birthday: Date) -> [GrowthCurve.CurvePoint] {
+        GrowthCurve.curvePoints(for: metric, records: records, birthday: birthday)
     }
 }
 

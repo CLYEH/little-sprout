@@ -33,6 +33,15 @@ import SwiftUI
 /// `body` 用 `growthStore?.childID == child.id` 這個條件（不只判 nil）決定要不要渲染
 /// `content(_:)`——換孩子那一瞬間舊 store 還在但孩子已經不對，這裡會先落回 `ProgressView`，
 /// 不會把 A 孩子的資料誤植到 B 孩子名下。
+///
+/// **姓名／生日一律讀 `child`，不讀 `growthStore`**（R3，merge-review R2 M1-a，orchestrator
+/// 裁決）：`GrowthStore.childName`／`childBirthday` 只在 `init` 寫死一次，`needsRebuild` 同一個
+/// 孩子不重建之後就不會再更新——編輯寶貝存檔（同一 `child.id`、`ChildrenStore.updateChild()` →
+/// `reloadChildrenList()`）之後，`identityHeader()`／空狀態文案／曲線月齡軸若繼續讀
+/// `growthStore.childName`／`childBirthday` 會停在舊值。Identity Header、空狀態文案的
+/// `childName:`、曲線的 `curvePoints(for:birthday:)` 都改吃 `child.name`／`child.birthday`
+/// （呼叫端 `ChildrenManagementView` 重繪時 `child` 本身就是新值，不需要 store 跟著換）；
+/// `growthStore` 只留 `records`／`loadState`——見 `GrowthIdentityFreshnessRegressionTests`。
 struct ChildGrowthDetailView: View {
     let child: Child
     let apiClient: GrowthAPIClient
@@ -118,7 +127,7 @@ struct ChildGrowthDetailView: View {
     private func compactLayout(_ growthStore: GrowthStore) -> some View {
         ScrollableFillView {
             VStack(alignment: .leading, spacing: AppSpacing.section) {
-                identityHeader(growthStore)
+                identityHeader()
                 VStack(alignment: .leading, spacing: AppSpacing.item) {
                     Text("最新紀錄")
                         .appFont(.body)
@@ -128,8 +137,8 @@ struct ChildGrowthDetailView: View {
                 failureBanner(growthStore)
                 GrowthChartCardView(
                     titleFont: .body, metric: $selectedMetric,
-                    points: growthStore.curvePoints(for: selectedMetric),
-                    isEmptyState: growthStore.isEmpty, childName: growthStore.childName,
+                    points: growthStore.curvePoints(for: selectedMetric, birthday: child.birthday),
+                    isEmptyState: growthStore.isEmpty, childName: child.name,
                     plotHeight: chartPlotHeight
                 )
                 actionsCompact
@@ -170,12 +179,12 @@ struct ChildGrowthDetailView: View {
     private func regularLayout(_ growthStore: GrowthStore) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.section) {
-                identityHeader(growthStore)
+                identityHeader()
                 failureBanner(growthStore)
                 GrowthChartCardView(
                     titleFont: .lead, metric: $selectedMetric,
-                    points: growthStore.curvePoints(for: selectedMetric),
-                    isEmptyState: growthStore.isEmpty, childName: growthStore.childName,
+                    points: growthStore.curvePoints(for: selectedMetric, birthday: child.birthday),
+                    isEmptyState: growthStore.isEmpty, childName: child.name,
                     plotHeight: chartPlotHeight
                 )
                 VStack(alignment: .leading, spacing: AppSpacing.item) {
@@ -229,14 +238,14 @@ struct ChildGrowthDetailView: View {
         }
     }
 
-    private func identityHeader(_ growthStore: GrowthStore) -> some View {
+    private func identityHeader() -> some View {
         HStack(spacing: AppSpacing.group) {
-            ChildAvatarView(name: growthStore.childName, size: 64)
+            ChildAvatarView(name: child.name, size: 64)
             VStack(alignment: .leading, spacing: AppSpacing.tight) {
-                Text(growthStore.childName)
+                Text(child.name)
                     .appFont(.display, weight: .bold)
                     .foregroundStyle(Color.lsTextPrimary)
-                Text(BirthdayFormat.ageDescription(birthday: growthStore.childBirthday))
+                Text(BirthdayFormat.ageDescription(birthday: child.birthday))
                     .appFont(.body)
                     .foregroundStyle(Color.lsTextSecondary)
             }

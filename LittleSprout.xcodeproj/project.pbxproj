@@ -169,6 +169,7 @@
 		4C96C7336D3E00C30D6E5075 /* EmailFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FA71F5E5B2E516BEC50662 /* EmailFormat.swift */; };
 		4CF7E19D52171C546E2EAAAB /* JoinWaitingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE21E4A220A9C7AF7F79450 /* JoinWaitingView.swift */; };
 		4DAC292C1F7A6F7721709114 /* AppBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A53A1F6D147A58F55F72D3F /* AppBackground.swift */; };
+		4E128F1D0AD9913386F289B7 /* GrowthIdentityFreshnessRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C714D87C85DC97C0A9FB123E /* GrowthIdentityFreshnessRegressionTests.swift */; };
 		4FBA0B132FA839140B2E7FB4 /* SupabaseClientFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */; };
 		5006E2F67FD5072CA07B41F3 /* SafetyModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1676990AFF88042719C8300B /* SafetyModelsTests.swift */; };
 		504526865C4E36877D62D018 /* MediaDraftTempStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E42EA52EA5C7F06F992E88B /* MediaDraftTempStorageTests.swift */; };
@@ -912,6 +913,7 @@
 		C5EF32644DBA7C9FCFDD88B4 /* DiaryEditorView+ActionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DiaryEditorView+ActionBar.swift"; sourceTree = "<group>"; };
 		C608A0E7AB49C7BAF3669796 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		C60F7F7B7979872D5237A50C /* StubTimelineAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubTimelineAPIClient.swift; sourceTree = "<group>"; };
+		C714D87C85DC97C0A9FB123E /* GrowthIdentityFreshnessRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthIdentityFreshnessRegressionTests.swift; sourceTree = "<group>"; };
 		C734814B3EEC4E4E64E43057 /* ContentActionsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentActionsUITests.swift; sourceTree = "<group>"; };
 		C7DC283EF19BEF096CF3385F /* ImportOrganizeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportOrganizeView.swift; sourceTree = "<group>"; };
 		C7E25D7350CC4F526A8117F3 /* CommentsSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentsSheetView.swift; sourceTree = "<group>"; };
@@ -1311,6 +1313,7 @@
 				1EF6B48B968BD623EFF6F1F8 /* GrowthCurveTests.swift */,
 				A9798A0DE1FC0C8AD57FDEA9 /* GrowthDetailTitleRegressionTests.swift */,
 				7EC5441D002D7983E0FC9847 /* GrowthEmptyStateCopyTests.swift */,
+				C714D87C85DC97C0A9FB123E /* GrowthIdentityFreshnessRegressionTests.swift */,
 				1321C4BFB76E3F18A8055AA0 /* GrowthStoreTests.swift */,
 				2D6237BF6EAC92E8D4DCB382 /* ImportBatchFlowModifierRegressionTests.swift */,
 				D89356DF123DCA440A1440E4 /* ImportDateGroupingTests.swift */,
@@ -2395,6 +2398,7 @@
 				2446A9D3B7C5A02D2E49FB77 /* GrowthCurveTests.swift in Sources */,
 				504A11810A6DD21E682A2E57 /* GrowthDetailTitleRegressionTests.swift in Sources */,
 				CE1464663C70214024056BDC /* GrowthEmptyStateCopyTests.swift in Sources */,
+				4E128F1D0AD9913386F289B7 /* GrowthIdentityFreshnessRegressionTests.swift in Sources */,
 				5DD4408D743CBBACF90061E9 /* GrowthStoreTests.swift in Sources */,
 				8D36946B41D68D83B6E45986 /* ImportBatchFlowModifierRegressionTests.swift in Sources */,
 				366FC5A0184274A239278F3E /* ImportDateGroupingTests.swift in Sources */,
