@@ -78,17 +78,21 @@ final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
     /// 不是 200 張分 20 群時 20 個 `Task` 一次全開（原本的寫法，峰值記憶體等於全部群的原圖
     /// 位元組總和）。標準的「bounded concurrency」`withTaskGroup` 寫法：先塞滿上限，每有一個
     /// 完成就補一個進來，直到來源耗盡。
+    ///
+    /// merge-review R2 M4：`session.isCancelled` 一旦被 04b 確認取消設為 true，兩個迴圈都不再
+    /// 排新的群——原本沒有這道檢查時，還沒排到的群會照樣被讀出、`store.enqueue`、共用佇列
+    /// 照常上傳成功並掛進相簿，使用者按了「取消」卻繼續看到照片湧進時間軸（見 handoff M4）。
     private func enqueueGroups(
         _ groups: [ImportPlan.Group], into store: UploadQueueStore, session: ImportBatchSession
     ) async {
         var iterator = groups.makeIterator()
         await withTaskGroup(of: Void.self) { taskGroup in
             for _ in 0..<Self.maxConcurrentGroupLoads {
-                guard let group = iterator.next() else { break }
+                guard !session.isCancelled, let group = iterator.next() else { break }
                 taskGroup.addTask { [weak self] in await self?.enqueue(group: group, into: store, session: session) }
             }
             while await taskGroup.next() != nil {
-                guard let group = iterator.next() else { continue }
+                guard !session.isCancelled, let group = iterator.next() else { continue }
                 taskGroup.addTask { [weak self] in await self?.enqueue(group: group, into: store, session: session) }
             }
         }
@@ -100,11 +104,16 @@ final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
     /// - M2：逐 identifier 讀，讀不到／不支援格式／轉檔失敗（回傳空陣列）計入 `droppedCount`，
     ///   不靜默丟——`markGroupResolved(droppedCount:)` 累加進 `session.droppedCount`。
     /// - M3(a)：讀到一筆立刻 `store.enqueue`，不整群等齊。
+    ///
+    /// merge-review R2 M4：迴圈開頭也檢查 `session.isCancelled`——這一群還沒讀完的其餘
+    /// identifier 不再繼續讀取／入列（同 `enqueueGroups` 理由）；已經讀出的那幾筆維持不變，
+    /// `markGroupResolved` 仍照跑一次，讓 `resolvedGroupCount` 的簿記保持一致。
     private func enqueue(group: ImportPlan.Group, into store: UploadQueueStore, session: ImportBatchSession) async {
         let anchorDate = min(group.anchorDate, Date())
         let albumID = group.albumID
         var droppedCount = 0
         for identifier in group.assetLocalIdentifiers {
+            if session.isCancelled { break }
             let rawUploads = await loadPendingUpload(identifier)
             guard !rawUploads.isEmpty else {
                 droppedCount += 1

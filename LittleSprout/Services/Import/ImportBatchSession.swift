@@ -31,6 +31,13 @@ final class ImportBatchSession {
     /// `a997f824`(1) 指派本票的處置：比照 `AlbumDetailView+Actions.skippedItemsReplyRow`
     /// 同型解法，04／05 用這個數字補一行「N 張沒有加入」）。
     private(set) var droppedCount = 0
+    /// merge-review R2 M4：04b「取消整批匯入」確認後設為 true——`AlbumImportUploadCoordinator
+    /// .enqueueGroups`／`enqueue` 的兩層迴圈開頭都檢查這個旗標，還沒排到／還沒讀完的群不再
+    /// 繼續讀取入列（`Import04ProgressView.onConfirmCancel` 先呼叫 `session.cancel()` 才呼叫
+    /// `store.cancelPendingImportItems`，見該檔文件註解）。`ImportBatchSession` 全程只在
+    /// MainActor 讀寫（`@MainActor` class），這裡跟 `enqueueGroups`／`enqueue` 的檢查天然
+    /// 序列化，不需要額外鎖。
+    private(set) var isCancelled = false
 
     init(expectedAssetCount: Int, nonSkippedGroupCount: Int) {
         self.expectedAssetCount = expectedAssetCount
@@ -46,8 +53,23 @@ final class ImportBatchSession {
         self.droppedCount += droppedCount
     }
 
+    func cancel() {
+        isCancelled = true
+    }
+
     var entryIDSet: Set<UUID> { Set(entryIDs) }
     var isFullyEnqueued: Bool { resolvedGroupCount >= nonSkippedGroupCount }
+
+    /// merge-review R2 m1：04b「取消整批匯入」確認對話的「其餘 Y 張不會匯入」——涵蓋還在飛行
+    /// 中／失敗（會被 `cancelPendingImportItems` 移除）、格式不支援／讀取失敗（`droppedCount`，
+    /// 從未入列）、以及還沒讀到的（`expectedAssetCount` 扣掉已知的），不只是「目前已入列但
+    /// 未完成」那些——舊寫法 `batchRows.count - completedCount` 只算得到已入列的部分，跟 04
+    /// 「已處理 N/M 張」、05「成功／沒有成功／沒有加入」的 M／dropped 對不起來（票文驗收 4：
+    /// 04→04b→05 的 N 一致）。只看 `expectedAssetCount`／`completedCount` 兩個數字就能保證
+    /// 跟 04／05 共用同一份「總數」語意，不需要重新推導 dropped／未讀到各自的子數字。
+    func remainingCount(completedCount: Int) -> Int {
+        max(expectedAssetCount - completedCount, 0)
+    }
 }
 
 extension UploadQueueStore {

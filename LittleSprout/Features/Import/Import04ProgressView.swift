@@ -84,9 +84,14 @@ struct Import04ProgressView: View {
         .overlay {
             if showsCancelConfirm {
                 Import04bCancelConfirmView(
-                    uploadedCount: completedCount, remainingCount: batchRows.count - completedCount,
+                    uploadedCount: completedCount,
+                    remainingCount: session.remainingCount(completedCount: completedCount),
                     onKeepGoing: { showsCancelConfirm = false },
                     onConfirmCancel: {
+                        // merge-review R2 M4：先讓 session 知道「已取消」，`AlbumImportUploadCoordinator`
+                        // 兩層迴圈才會停止繼續讀取／入列還沒排到的群（見該檔文件註解）——順序
+                        // 要在 `cancelPendingImportItems` 之前，否則還沒排到的群不受影響。
+                        session.cancel()
                         store.cancelPendingImportItems(batchIDs)
                         showsCancelConfirm = false
                         onCancelledImport()

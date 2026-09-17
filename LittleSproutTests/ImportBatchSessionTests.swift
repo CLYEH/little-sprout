@@ -53,4 +53,42 @@ final class ImportBatchSessionTests: XCTestCase {
 
         XCTAssertEqual(session.droppedCount, 0)
     }
+
+    // MARK: - merge-review R2 M4：cancel()
+
+    func test_cancel_setsIsCancelledTrue() {
+        let session = ImportBatchSession(expectedAssetCount: 1, nonSkippedGroupCount: 1)
+
+        XCTAssertFalse(session.isCancelled)
+        session.cancel()
+        XCTAssertTrue(session.isCancelled)
+    }
+
+    // MARK: - merge-review R2 m1／m2：04b「其餘 Y 張」數字契約
+
+    /// 04b 只看 `expectedAssetCount`／`completedCount` 兩個數字，不重新推導 dropped／未讀到
+    /// 各自的子數字——這樣才能保證跟 04「已處理 N/M 張」、05「成功／沒有成功／沒有加入」
+    /// 三個畫面永遠讀同一份「總數」語意（票文驗收 4：04→04b→05 的 N 一致）。舊寫法
+    /// `batchRows.count - completedCount` 只算得到「已入列但未完成」，漏算 dropped 與還沒
+    /// 讀到的部分——這支測試把 `expectedAssetCount` 設得比「已入列」的數字明顯大，模擬
+    /// 「還有群還沒被讀到／有 dropped」的情境。
+    func test_remainingCount_isExpectedTotalMinusCompleted_includingDroppedAndUnprocessed() {
+        let session = ImportBatchSession(expectedAssetCount: 10, nonSkippedGroupCount: 3)
+
+        // 10 張裡只有 4 張完成——其餘 6 張（不管是失敗、格式不支援被 dropped、還是還沒被
+        // coordinator 讀到）都算「不會匯入」。
+        XCTAssertEqual(
+            session.remainingCount(completedCount: 4), 6,
+            "10 張裡 4 張已上傳，其餘 6 張（含未讀到／dropped／失敗）都不會匯入"
+        )
+    }
+
+    /// Live Photo 展開讓 `entryIDs.count` 可能超過 `expectedAssetCount`（型別文件註解「已知
+    /// 限制」）——`completedCount` 理論上也可能因此超過 `expectedAssetCount`，這裡確認邊界
+    /// 不會回負數（負的「其餘 Y 張」在畫面上沒有意義）。
+    func test_remainingCount_neverNegative() {
+        let session = ImportBatchSession(expectedAssetCount: 10, nonSkippedGroupCount: 1)
+
+        XCTAssertEqual(session.remainingCount(completedCount: 12), 0)
+    }
 }
