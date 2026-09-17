@@ -187,6 +187,7 @@ struct ChildGrowthDetailView: View {
     }
 }
 
+#if DEBUG
 #Preview("01 有資料") {
     NavigationStack {
         ChildGrowthDetailView(growthStore: .previewSeededWithDemoRecords())
@@ -198,3 +199,4 @@ struct ChildGrowthDetailView: View {
         ChildGrowthDetailView(growthStore: .preview(childName: "陳小軒"))
     }
 }
+#endif
