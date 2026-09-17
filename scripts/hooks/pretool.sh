@@ -2,7 +2,7 @@
 # PreToolUse fail-closed gate（LS-88 縮減版；LS-104 R1 精修「只在命令位置比對」；LS-104 R2
 # 修 merge-reviewer R1 comment 的 2 blocker/3 major——Linear LS-104 comment
 # 7a97f88a-d928-4e15-b656-a7d7be6eecb6）：只做三條「漏做會出事、字面可辨、後果不可逆」的
-# 規則，其餘（H4–H11）在 Harness 待辦池 LS-96，等事故再升。讀 stdin 的 hook JSON
+# 規則，其餘（H5–H11）在 Harness 待辦池 LS-96，等事故再升。讀 stdin 的 hook JSON
 # （`tool_name`／`tool_input`），逐條比對規則表，任一命中即 deny；全部不命中才 allow。
 #
 # 規則表：
@@ -34,6 +34,11 @@
 #               為真 → 放行；holder 是 `--hold`（`cmd=hold:*`）、守門 pid 活著、holder `worktree=` 與
 #               呼叫端目前目錄（hook JSON `cwd` 起算、沿命令追蹤 `cd`／`pushd`）所在 worktree 頂層
 #               相同 → 放行；否則 deny，訊息指向 `supabase-lock.sh -- <cmd>` 或 `--hold`。
+#   H4（Bash，LS-322，源自 LS-315）：命令文字含 `pgrep -f '[p]ush-gate` 或 `pgrep -f '[x]codebuild`
+#               （LS-312 定案的 self-match 迴避寫法）卻不含 `worktrees/LS-` 範圍字面，即 deny——
+#               這種等待迴圈會等到別票的 xcodebuild／push-gate（LS-315 四支迴圈疊到 3h53m）。純
+#               命令文字比對（不走命令位置分析，直接在本檔案 `case` 裡判，不送進
+#               pretool_engine.py）。
 #
 # 前處理與命令位置判定（R2 全部移到 scripts/hooks/pretool_engine.py，本檔案只呼叫，見
 # `run_bash_engine`；下面是設計摘要，完整細節與每一條的理由見該檔案檔頭大段註解）：
@@ -232,6 +237,20 @@ case "$tool_name" in
     if [ -n "${DENY_MSG:-}" ]; then
       final_deny "$DENY_MSG"
     fi
+    # H4（LS-322，源自 LS-315 三次停工）：等待 push gate／xcodebuild 的背景迴圈若用全域
+    # `pgrep -f '[p]ush-gate` 或 `pgrep -f '[x]codebuild`（LS-312 定案的 self-match 迴避寫法）
+    # 卻沒帶 `worktrees/LS-` 範圍字面，會等到別票的行程（LS-315：四支迴圈疊到 3h53m）。純文字
+    # 比對，不必送進 pretool_engine.py 的命令位置分析——case 的引號段落在 bash 的 pattern
+    # matching 裡是字面比對（`[p]`／`[x]` 不會被當成 glob character class），已用 bash 3.2 與
+    # 5.3 各驗證過。
+    case "$command" in
+      *"pgrep -f '[p]ush-gate"*|*"pgrep -f '[x]codebuild"*)
+        case "$command" in
+          *"worktrees/LS-"*) ;;
+          *) final_deny "H4：pgrep -f 等待 push-gate／xcodebuild 未帶 worktrees/LS-<n> 範圍字面，會等到別票的行程（LS-315 根因），見 ${COLL_REF}" ;;
+        esac
+        ;;
+    esac
     ;;
   Read)
     base=${file_path##*/}
