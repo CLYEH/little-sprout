@@ -185191,6 +185191,68 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "KuB5r",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fBUnn",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-307 R1",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "O1Jcb",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Import / 00 時間軸入口 (iPhone)｜隱藏 Tab Bar ✗（Tab-root 首頁，Tab Bar 維持顯示）｜標題 系統 large（＝tab 名稱「時間軸」，entry-conditions.md⑬固定）｜釘底動作帶 無（Tab-root 例外，見 motifs.md「不適用：Tab-root 畫面」，改用 Header Row 具名按鈕，見「LS-307 匯入入口」節）｜失敗文案鍵 無（純導覽入口，不觸發網路請求；匯入流程本身失敗文案見本板 Import 04/05 既有列 LfFR3／K3X3iL）｜深色 色彩隨主題切換，版面與按鈕幾何不變｜AX3 已出稿 `A11y / 00 時間軸入口 · Dynamic Type AX3`（`aGkJ1`）：R3 改三列 Header（R4 動作序訂正為 Title／匯入／新增回憶，i-7），Import Mark 覆寫放大至 32 寬且薄片加厚（i-8），Header Row 總高 165.00→253.33pt（+88.33pt，代價為可見 feed，非碰撞）｜iPad NavigationSplitView 內容欄沿用同款兩鈕橫向布局，寬度餘裕更大不需堆疊",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lNIsf",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "u1Wm7s",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "content": "LS-307 R2",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "jC0JB",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Import / 00b 時間軸空狀態入口 (iPhone)｜隱藏 Tab Bar ✗（Tab-root 首頁空狀態，Tab Bar 維持顯示）｜標題 系統 large（＝tab 名稱「時間軸」）｜釘底動作帶 無（同 00 板，主要動作在 Header Row）｜失敗文案鍵 無（純導覽入口，不觸發網路請求）｜深色 色彩隨主題切換，版面不變，未另畫深色板｜AX3 特例 未另畫（沿用 00 板的 AX3 處置：三列 Header、Import Mark 放大 32 寬，同一套規則）｜iPad 未另畫（沿用 00 板 iPad 處置：橫排無壓力）",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         },
@@ -185319,6 +185381,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "③預設相簿：01/02/03/06a 各群預設「不放相簿」（只依日期歸檔到時間軸，不強制進相簿）；若使用者裁決預設應為「當前相簿」（例如從相簿詳情「加入照片」進入時），Album Row 初始值需依入口來源分支，本輪未做這個分支（PHPickerViewController 呼叫端傳入的 context 由實作票決定）。R2：05 完成摘要的主鈕原為「查看相簿」，與「不放相簿」預設矛盾（VR MN-9），已改為「回到時間軸」——這個文案在兩種預設下都成立，不受這題裁決結果影響；但若使用者裁決預設改為「當前相簿」，05 主鈕仍建議依實際目的地做條件分支（進了相簿就給「查看相簿」，沒進相簿就留「回到時間軸」），這個分支邏輯本輪未做。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ya5L5",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "S04c9M",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-307 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "H1t0Z",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "① 空狀態入口的處理方式，三選一（R2 依 VR R1 `e20dcfc8` M-3 展開為三選一，取代 R1 版本的二選一）：\nA. 維持現狀——僅 Header 唯一入口，空狀態（`Qxema`/11b）不變、不加任何指路文案（若選此項，需承認空狀態目前讀不到匯入入口的教學提示）。\nB. 空狀態另造大型 CTA——在空狀態卡片內新增一顆獨立的「匯入舊照片」大型按鈕，此時需重新評估 accent 配額與認知負荷（同一動作兩顆入口）。\nC.（**稿面預設，見 `Import / 00b 時間軸空狀態入口` `FUfqg`**）空狀態文案指路——不新造按鈕，僅將空狀態引導文案（Subhead）改寫為指向 Header 既有入口（「…或點「匯入」把手機裡的舊照片搬進來。」），教學而非另開入口：兩千張照片、零則回憶的第一次使用情境下，靠文案把使用者導向唯一入口。\n三選一影響範圍：僅空狀態版面，不影響一般狀態（`e1cOqx`）已定案的 Header Row 版面與抄值。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -185757,6 +185855,176 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "多寶貝橫向並列的 chip 列（Babies Row）在 AX3 下（chip 內姓名文字放大到 40pt）2 顆 chip 並列會超出卡片內寬——AX3 板改用 layout:\"vertical\" 讓 chip 逐一垂直堆疊，這是本題「同一畫面在 AX3 下允許改變內部排列方向以避免溢出」的又一例（與 elder-constraints.md 既有精神一致：AX3 板是獨立設計而非單純縮放）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NxGgr",
+          "name": "LS-307 匯入入口",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "zKisF",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-307 匯入入口",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "v9QTi",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TQqIp",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-307 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "TCs7A",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "時間軸入口方案 B：Header Row 新增次要鈕（R3 改版：真疊紙記號＋「匯入」，見下），取代 LS-303 R1 M2／LS-251 fZYWK 誤植的『時間軸「＋」』入口設想——時間軸的「＋」是 cmp/Create Entry Button（`zy3Ps`），為建立日記的唯一入口，`QADriver.openEditor()`／`SectionTabBarPushRegressionTests` 依賴其單擊直接開啟編輯器，不得改成選單（排除候選 a）。\n\n**R3 升元件（VR R2 `1f3ab2cd` M-7）**：匯入鈕升為獨立 reusable 元件 `cmp/Button Import`（`o8zYlX`）——`fill:$surface`／`stroke:$control-line`／`strokeWidth:1.5`／`cornerRadius:$radius-md`／`padding:[9.5,12]`／`gap:6`，內含 Import Mark＋Label「匯入」（`$fs-body`/600/`$text-primary`）。**`cmp/Button Secondary`（`XggYA`）基底維持不動**，R1/R2 那組「instance-level 覆寫」配方已被獨立元件取代，不再需要靠 `descendants:{G4R75k:…}` 這種掛在元件內部子節點 id 上的脆弱寫法。三處 instance：一般狀態 `YxuLr`（`e1cOqx`）／空狀態 `wpGlp`（`FUfqg`）／AX3 `VcvfI`（`aGkJ1`，另覆寫 mark 尺寸見 `orXbN`）。**第四處使用點（記錄供承接）**：相簿詳情「加入照片」（LS-303 comment `c997f234` 已裁決承接同一匯入流程）之後的實作票應直接 ref `cmp/Button Import`，不得各自發明。\n\n**R3 疊紙記號重畫（VR R2 M-5，取代 R2「兩片方形對角偏移」的失敗版本）**：R2 版本兩片 12×12 矩形以 `strokeWidth 1.5` 疊放、描邊外緣淨空僅 0.50pt（@2x 糊成一條粗線），且用 `$control-line`／`$surface` 控件語彙，讀不出「一疊相紙」。R3 依 `D4zdmQ/oBEkH`（`cmp/Card Album` 的疊紙 instance）的 token 與間距邏輯原樣搬到 icon 尺度：**Import Mark**（`EJMa0`，12×22）＝前景 `Mark Front`（`v4CTZT`，12×10，`fill:$print-paper`／`stroke:$paper-shadow`／`strokeWidth:1`，代表一張相紙正面）＋兩片 `Mark Strip 1/2`（`H1Be6h`/`zwQeX`，各 12×2，同 token），三片之間皆為**真實 4pt 間距**（Front 底 10 → Strip1 頂 14；Strip1 底 16 → Strip2 頂 20），扣掉 `strokeWidth 1` 兩側各 0.5 後，描邊外緣淨空 **2.00pt**（達 VR 訂的 ≥2pt 硬性門檻），不再互相貼合模糊。「匯入」兩字因記號現在讀得出「紙／照片」語意而成立保留（VR R1 原意：記號承載「照片」的資訊，文字只需留動詞）。\n\n**實測寬度（R3）**：Title 102、Import Btn **76**（Mark 12＋gap6＋Label「匯入」≈34＋padding24）、Create Btn 124、Header Actions Group **216**（76+16+124）；Header Row 總寬 345，Title 與 Group 間距 **27.00pt**（345−102−216）。Header Row 高度維持 **49pt** 不變（與原板 `FCiMS` 完全相同），Feed／Tab Bar 既有幾何零位移（見下方座標訂正）。\n\n**（R3 補 VR R2 i-4）殘餘值的定位**：27.00pt 是 `justifyContent:space_between` 的**導出餘數**，不是被指定的規格值——它等於「總寬 345 − Title 寬 − Group 寬」，任一標籤文字增減一字都會改變這個數字。設計門檻是 **≥24pt（`$sp-block`）**，27.00 只是目前這組文案下的實測結果，ios-dev／後續設計不需要刻意「湊」成 27，只要維持 ≥24 即符合本票裁決。\n\n**座標訂正（沿用 R2，VR R1 comment `e20dcfc8` B-1，R2/R3 皆未變動此部分）**：Body（`BUjIl`）y=62.00、h=692.00、bottom=**754.00**、`clip:true`；Tab Bar（`hJ3cT`）`layoutPosition:absolute`、y=**754.00**——**Body 底緣＝Tab Bar 頂緣＝754.00，淨空 0.00pt**。Day Group 1（`igJ4C`）board-relative bottom＝**815.44**，超出 Body 裁切緣 **61.44pt**——Body `clip:true` 的正常捲動裁切，不是與 Tab Bar 的碰撞。「兩列方案」排除理由：真實代價是可見 feed −52pt（不是侵入 Tab Bar），R3 在殘餘 27.00pt（≥24pt 門檻）下仍選單列，保住這 52pt 可見內容。\n\n**R4 微調（VR R3 comment `7e36fccc` 附帶條件 i-8，APPROVE 附條件核銷用）**：疊紙記號薄片再推一階——`Mark Strip 1/2`（`H1Be6h`/`zwQeX`）高度 **2→3pt**，與前一片真實間距 **4→3.5pt**（`Import Mark` `EJMa0` envelope 12×22→**12×23**）；描邊外緣淨空 2.00→**2.50pt**，每片可見 `$print-paper` 露出量從幾乎被描邊吃光（1-1=0pt 可見，原判讀近似「格線」）提升到 **2pt**（3-1=2，跨過 VR「讓每片真的露出 1pt 以上」的門檻）。三處 instance：`YxuLr`（`e1cOqx`）／`wpGlp`（`FUfqg`）直接繼承元件定義更新，無需額外覆寫；AX3 `VcvfI` 另依 ×2.667 比例覆寫（見 `orXbN`）。實測 Header Row 寬度不受影響（Import Btn 仍 76、Group 仍 216、殘餘仍 27.00pt）——本次只動高度方向的間距，未動寬度。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KBGUC",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vJjOv",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-307 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "xs77w",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "三案比較（票文候選 a/b/c，R3 更新）：(a)「＋」長按或改兩項選單——排除，理由同 R1（破壞 QADriver.openEditor() 單擊直接開啟編輯器的既有依賴，且違反長輩硬約束「不用長按等進階手勢」——長按拖曳的唯一明文例外限定日記編輯器照片排序，不得比照推廣，見 elder-constraints.md 例外一第①前提）。(b) Header 次要入口——採用，見上抄值列（R3 改為 ref 獨立元件 `cmp/Button Import`＋真疊紙記號＋「匯入」，取代 R2 的 instance-level 覆寫版）。(c) 空狀態卡帶「匯入舊照片」＋一般狀態另一處入口——**R2 依 VR R1 `e20dcfc8` M-3 訂正**：`Qxema`（LS-21/11b 時間軸空狀態，既有基準板）本身未被 LS-307 修改，稿上讀不到任何匯入入口。已新增候選板 `Import / 00b 時間軸空狀態入口`（`FUfqg`，複製自 `Qxema`）落實 VR 第三選項「空狀態文案指路」：Header Row 加上與一般狀態相同的 Import Entry Button（`cmp/Button Import` ref `wpGlp`），**空狀態引導文案（Subhead，`F77gCE`）R3 依 VR R2 M-6 改寫為匯入領頭**：『點上方的「匯入」把手機裡的舊照片搬進來，或點「新增回憶」寫下第一篇日記。』（這塊板的前提是「兩千張舊照片、零則回憶」，匯入應是第一優先，R2 版本把它放在「或…」從句裡等於再次降級，R3 已對調）——不另造第二顆大型 CTA，靠既有 Header 入口＋文案指路解決發現性。裁決點見下方「裁決點清單」節，三選一，稿面預設第三項（即 `00b` 這個實作）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "n80b3y",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TPgf0",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-307 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "orXbN",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "深色：Import Entry Button（`cmp/Button Import` 三處 instance 及其 Import Mark 子節點）所用 token（`$surface`／`$control-line`／`$text-primary`／`$print-paper`／`$paper-shadow`）皆 theme-aware，深色模式色值自動切換，版面幾何（cornerRadius/padding/gap/mark 尺寸）不變；不需另畫深色板。\n\n**AX3（R3 全面改寫，撤回 R2「icon-only＋accessibilityLabel」方案——VR R2 comment `1f3ab2cd` B-3／B-4 判定該方案站不住）**：R2 版本把 AX3 的 Import Entry Button 降級為純圖形（`Secondary Label` `enabled:false`）並宣稱補了 `metadata:{type:\"a11y\",accessibilityLabel:\"匯入照片\"}`，但 VR 逐屬性核對稿上**根本沒有這個 metadata**（B-3：Notes 斷言了稿上沒有的東西，R1 M-3 失敗模式在 a11y 壓力板上重演）；即使補上，B-4 判定這個降級本身就不成立——elder-constraints「icon 一律帶文字標籤」是硬約束，Tab Bar／日記編輯器照片排序兩個既有先例都不能比照援引（Tab Bar 的例外是固定位置＋系統語意＋全 app 一致的導覽列，使用者靠位置認得它；照片排序的例外針對**手勢**不是**標籤**；兩者都沒有授權「在 AX3 極端字級下把內容動作鈕的唯一標籤藏掉」），而且這個例外被用在 AX3 壓力板本身——這塊板存在的目的就是證明畫面在低視力使用者手上可用，在這裡開例外等於取消這塊板的意義。\n\n**R3 改法（R4 訂正動作序，見下）**：`A11y / 00 時間軸入口 · Dynamic Type AX3`（`aGkJ1`）Header Row（`B1K4ec`）由「Title 一列＋動作列（兩鈕同列）」改為**三列**：Title（`wketg`）／「匯入」（`VcvfI`，`cmp/Button Import` ref）／「新增回憶」（`iXHfZ`，Create Entry Button ref），**全帶可見文字**，各自獨立一列（`layout:vertical`，`gap:$sp-label`）。**R4（VR R3 `7e36fccc` i-7）動作序對調**：R3 原順序為 Title／新增回憶／匯入，與預設板（`e1cOqx`/`FUfqg` 皆 Import 在左、Create 在右）及 00b 引導文案（匯入領頭）的閱讀序相反；一次 `Move(\"VcvfI\", \"B1K4ec\", 1)` 把 `VcvfI` 移到 `iXHfZ` 之前，三處入口現在閱讀序一致，Header Row 高度不受動作序影響。Import 按鈕的 Import Mark 覆寫放大：比照 Create Entry Button 的 plus icon AX3 覆寫慣例（`G0L1jH` 18→32，比例 ×1.778——本例改用寬度基準 32／預設寬度 12＝**×2.667** 等比縮放，因記號本身非正方形）：Mark Front 12×10→**32×26.67**（不受 R4 i-8 影響，前景尺寸未變）、**R4（i-8）Mark Strip 12×3→32×8**（y 位置等比重算 13.5→36、20→53.33，較 R3 版本 12×2/→32×5.33 加厚），container 12×23→**32×61.33**（R3 為 12×22→32×58.67）；Label 走 `$fs-body` token，隨 Dynamic Type 自動放大到 40，不需手動覆寫。\n\n**代價（VR 已算給、R3 實測覆核，R4 因 i-8 薄片加厚微幅上修）**：Header Row 高度 **165.00 → 253.33pt（+88.33pt，R3 原為 250.67/+85.67，R4 因 Import Mark envelope 加高 61.33 而增加 2.66pt）**（Title 80＋gap8＋Import 列 80.33＋gap8＋Create 列 77，動作序對調後仍是同一組數字加總，只是 Import／Create 兩列位置互換）。這 88.33pt **只是少看到同等份量的可見 feed，不是碰撞**——與 `TCs7A` 已訂正的 B-1 推理完全同型：`aGkJ1` 的 Body（`IzB34`）h=1316、`clip:true`，Feed（`AvlWt`）h=2200.96 早已遠超可視高度，Header 長高只是把 Body 裁切窗往下移，被裁掉的可見內容變多，不會把任何元素推進 Tab Bar。對這塊板的目標使用者（低視力、需要最大字級），用 85.67pt 的可見 feed 換一個讀得懂、有可見標籤的入口，不需要猶豫。\n\niPad：NavigationSplitView 內容欄寬度遠大於 iPhone 345pt 可用寬（無 Tab Bar 幾何限制），Header Actions Group 橫向並列毫無壓力，直接沿用 iPhone 預設密度兩鈕橫排布局即可，不需堆疊，也不需另畫 iPad 板。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "E6pHtG",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "eSiwG",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-307 R1",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "MCbLu",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "`QADriver.openEditor()`／`SectionTabBarPushRegressionTests` 相容性：本板未修改 `cmp/Create Entry Button`（`zy3Ps`）元件定義本身，時間軸板內的 instance（本板 `S5QGJd`，複製自 `jIFEN`）也僅被 `Move` 到新的 `Header Actions Group` 容器內、其自身屬性（fill/padding/children/單擊語意）完全未變——XCUITest 慣例以 `accessibilityIdentifier` 或可見文字（「新增回憶」）查找元素，不依賴其父容器路徑或畫面座標，故重新定位不影響既有測試比對邏輯。ios-dev 實作時仍需在真機／模擬器上重跑 `SectionTabBarPushRegressionTests` 確認（本板僅為靜態設計稿，非執行環境，無法在此驗證），若測試因某種未預期原因失敗（例如測試改用座標而非 identifier），視為 harness 債務記入 LS-96，不回頭改本設計。\n\n（R3 更新 i-2，取代 R2 版本的節點 id）建議 `accessibilityIdentifier`：`cmp/Button Import` 三處 instance（一般狀態 `YxuLr`／空狀態 `wpGlp`／AX3 `VcvfI`）統一用 `timeline.importPhotos`，供 ios-dev 實作與未來 QADriver／XCUITest 對照，避免三處各自發明不同字串。AX3 版本現已有可見文字「匯入」，`accessibilityLabel` 若額外補上建議與可見文字一致或更完整（例如「匯入照片」），但**不是必要**——WCAG 2.5.3 Label in Name 只要求可見文字是可及名稱的子集，系統預設行為（讀出可見文字）已足夠，R2 版本才需要額外 metadata 是因為當時沒有可見文字可讀。\n\n（R1 i-3／R2 §0 皆已記錄）accent 配額：VR 逐輪獨立複核，`e1cOqx`／`FUfqg`／`aGkJ1` 三板板身 `$accent` 皆 **0**，全樹（含展開引用元件）僅 `cmp/Create Entry Button`（`zy3Ps`）用 `$accent`、每板一次；`cmp/Child Avatar`（`RaaIf`）用 `$accent-soft`，不同 token 不計入配額。十條第 1 條（一畫面一顆實心主鈕）三板皆守住，R3 新增的 `cmp/Button Import` 元件同樣是 `$surface` 外框，零新增 accent 用法。\n\n（R3 補 VR R2 i-5）**00／00b 兩板 Body 幾何不一致，屬既有債，非本票造成**：`e1cOqx` Body（`BUjIl`）h=692／`clip:true`（承自 `yXSht`）；`FUfqg` Body（`U4Ln31`）h=756／`clip:false`（承自 `Qxema`，VR 已對 `Qxema` 原板獨立複測同為 62/756/clip:false）。本票兩板各自忠實複製其來源板（`yXSht`／`Qxema`）未修改這段幾何，不擅自統一兩者以免製造與來源板不同步的分岔。**正典判定**：兩板各自的 Body clip 行為以各自來源板（`yXSht`／`Qxema`）為準，ios-dev 實作時比照各自來源板的既有捲動/裁切邏輯即可；`yXSht`／`Qxema` 兩板本身是否該統一 Body 幾何，記入 LS-96 待辦池，不在本票範圍內處理。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -207514,6 +207782,1577 @@
               "height": 5
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "e1cOqx",
+      "x": 8176,
+      "y": 137527.0069081836,
+      "name": "Import / 00 時間軸入口 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "YB6nC",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "BUjIl",
+          "name": "Body",
+          "clip": true,
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "clvHc",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "EwzkJ",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "時間軸",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "W4h5F",
+                  "name": "Header Actions Group",
+                  "gap": "$sp-item",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "YxuLr",
+                      "type": "ref",
+                      "ref": "o8zYlX",
+                      "name": "Import Entry Button"
+                    },
+                    {
+                      "id": "S5QGJd",
+                      "type": "ref",
+                      "ref": "zy3Ps",
+                      "name": "Create Entry Button"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SO4ZO",
+              "name": "Spacer 16 HF",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "FV2mq",
+              "name": "Child Filter",
+              "width": "fill_container",
+              "fill": "$surface-2",
+              "cornerRadius": "$radius-full",
+              "padding": 3,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "WSjKo",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 1
+                    },
+                    "blur": 3
+                  },
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "eBQGf",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "全部",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "x24Xhf",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "z3iIg9",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "安",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "J06HW",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "小安",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ySBwF",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "mqrwa",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "軒",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "N4TQw",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "小軒",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zBZjZ",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "oEyTK",
+              "name": "Feed",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "igJ4C",
+                  "name": "Day Group 1",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "id": "wicSq",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "Day Divider 1",
+                      "width": "fill_container"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pm8ZG",
+                      "name": "Cards",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "id": "QNEky",
+                          "type": "ref",
+                          "ref": "umJHD",
+                          "name": "Card Photo 1",
+                          "width": "fill_container",
+                          "descendants": {
+                            "bjq5n": {
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-timeline-v2.jpg",
+                                "mode": "fill"
+                              }
+                            },
+                            "VywUw": {
+                              "content": "小安摸阿嬤的臉 · 2 歲 3 個⁠月"
+                            }
+                          }
+                        },
+                        {
+                          "id": "D4zdmQ",
+                          "type": "ref",
+                          "ref": "qtCd7",
+                          "name": "Card Diary 1",
+                          "width": "fill_container",
+                          "descendants": {
+                            "p2odx": {
+                              "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。"
+                            },
+                            "lEgJp": {
+                              "enabled": true
+                            },
+                            "SBo3L": {
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-portrait.jpg",
+                                "mode": "fill"
+                              }
+                            },
+                            "h9c6d": {
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-invite.jpg",
+                                "mode": "fill"
+                              }
+                            },
+                            "uZ5Lt": {
+                              "enabled": true
+                            },
+                            "kVUWa": {
+                              "enabled": true
+                            },
+                            "ekqx4": {
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-join.jpg",
+                                "mode": "fill"
+                              }
+                            },
+                            "GCEdk": {
+                              "enabled": true
+                            },
+                            "CQpms": {
+                              "content": "還有 2 張"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wzXA2",
+                  "name": "Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "id": "WCeXQ",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "Day Divider 2",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tBi8u": {
+                          "rotation": -3.0000000000000004
+                        },
+                        "VDOco": {
+                          "content": "8月30日（昨天）"
+                        },
+                        "xlLIo": {
+                          "rotation": -6.000000000000001
+                        },
+                        "ci8cq": {
+                          "content": "8月30日（昨天）"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SKRz4",
+                      "name": "Cards",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "id": "VXdf0",
+                          "type": "ref",
+                          "ref": "bhroo",
+                          "name": "Card Album 1",
+                          "width": "fill_container",
+                          "descendants": {
+                            "Qjdzx": {
+                              "enabled": true
+                            },
+                            "o5O1GD": {
+                              "enabled": true
+                            }
+                          }
+                        },
+                        {
+                          "id": "cgAuy",
+                          "type": "ref",
+                          "ref": "qtCd7",
+                          "name": "Card Diary 2",
+                          "width": "fill_container",
+                          "descendants": {
+                            "p2odx": {
+                              "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
+                            },
+                            "d41MUZ": {
+                              "content": "日記"
+                            },
+                            "WmQcz": {
+                              "enabled": false
+                            },
+                            "zk1yE": {
+                              "enabled": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "eUegJ",
+                  "name": "Load More",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-block",
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "XkGvJ",
+                      "name": "Spinner",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "loader",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "CW2l3",
+                      "name": "Load More Label",
+                      "fill": "$text-secondary",
+                      "content": "載入更多回憶中…",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "u95aXI",
+          "name": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "width": "fill_container",
+          "height": 64
+        },
+        {
+          "type": "frame",
+          "id": "ZFkdx",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "n5YWg",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "hJ3cT",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 754
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "FUfqg",
+      "x": 8176,
+      "y": 138459.0069081836,
+      "name": "Import / 00b 時間軸空狀態入口 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "y8UP8F",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "U4Ln31",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Iw4P4",
+              "name": "Header Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "p6HLv",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "時間軸",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "WXM6w",
+                  "name": "Header Actions Group",
+                  "gap": "$sp-item",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "wpGlp",
+                      "type": "ref",
+                      "ref": "o8zYlX",
+                      "name": "Import Entry Button"
+                    },
+                    {
+                      "id": "zVe4j",
+                      "type": "ref",
+                      "ref": "zy3Ps",
+                      "name": "Create Entry Button"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "YGMNM",
+              "name": "Spacer 16 HF",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "Z4MxR",
+              "name": "Child Filter",
+              "width": "fill_container",
+              "fill": "$surface-2",
+              "cornerRadius": "$radius-full",
+              "padding": 3,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Zk2Yz",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 1
+                    },
+                    "blur": 3
+                  },
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "N97aw",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "全部",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "y79Pr",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "fZx2q",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "安",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "RkMVA",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "小安",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "c0PBz",
+                  "name": "Segment",
+                  "width": "fill_container",
+                  "fill": "#00000000",
+                  "cornerRadius": "$radius-full",
+                  "stroke": "#00000000",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$ctl-pad-md",
+                    "$sp-item"
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "md0xO",
+                      "type": "ref",
+                      "ref": "RaaIf",
+                      "name": "Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "A30rIX": {
+                          "content": "軒",
+                          "fontSize": "$fs-body"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "SwUue",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "小軒",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jvqW2",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "e9phiy",
+              "name": "Feed",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "FDFi8",
+                  "name": "Empty Print",
+                  "width": 345,
+                  "fill": [
+                    "$print-paper",
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.393,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.452,
+                        "height": 0.672
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.259,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.452,
+                        "height": 0.672
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.293,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.452,
+                        "height": 0.672
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 0,
+                        "y": 1
+                      }
+                    },
+                    {
+                      "type": "gradient",
+                      "gradientType": "radial",
+                      "enabled": true,
+                      "opacity": 0.19699999999999998,
+                      "rotation": 0,
+                      "size": {
+                        "width": 0.452,
+                        "height": 0.672
+                      },
+                      "colors": [
+                        {
+                          "color": "$mount-pool",
+                          "position": 0
+                        },
+                        {
+                          "color": "$mount-pool-0",
+                          "position": 1
+                        }
+                      ],
+                      "center": {
+                        "x": 1,
+                        "y": 1
+                      }
+                    }
+                  ],
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "outer",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 0,
+                      "y": 3
+                    },
+                    "blur": 12
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "GYXMn",
+                      "name": "Photo Wrap",
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 184,
+                      "fill": "$print-paper",
+                      "justifyContent": "center",
+                      "alignItems": "center"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "n0AjZ",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "O8zkU0",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "content": "等待第一份回憶",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "DM1uY",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TL",
+                      "layoutPosition": "absolute",
+                      "x": -5,
+                      "y": -5,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 0 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "A9dWMX",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner TR",
+                      "layoutPosition": "absolute",
+                      "x": 324,
+                      "y": -5,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 0 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "LFmNH",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BL",
+                      "layoutPosition": "absolute",
+                      "x": -5,
+                      "y": 211,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M0 26 L0 0 L26 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M0 0 L26 26"
+                        }
+                      }
+                    },
+                    {
+                      "id": "Q4ipGD",
+                      "type": "ref",
+                      "ref": "GEBcf",
+                      "name": "Corner BR",
+                      "layoutPosition": "absolute",
+                      "x": 324,
+                      "y": 211,
+                      "descendants": {
+                        "sD5Ma": {
+                          "geometry": "M26 26 L26 0 L0 26 Z"
+                        },
+                        "DhOiK": {
+                          "geometry": "M26 0 L0 26"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "WZaxN",
+                  "name": "Guidance",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-tight",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "tZQNc",
+                      "name": "Headline",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "這裡還沒有任何回憶",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "F77gCE",
+                      "name": "Subhead",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "點上方的「匯入」把手機裡的舊照片搬進來，或點「新增回憶」寫下第一篇日記。",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "KFHih",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "V8sXrG",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "zuqgM",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 754
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "aGkJ1",
+      "x": 8176,
+      "y": 139391.0069081836,
+      "name": "A11y / 00 時間軸入口 · Dynamic Type AX3",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1500,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "mTeyu",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "IzB34",
+          "name": "Body",
+          "clip": true,
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            0,
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "B1K4ec",
+              "name": "Header Row",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wketg",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "content": "時間軸",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "id": "VcvfI",
+                  "type": "ref",
+                  "ref": "o8zYlX",
+                  "name": "Import Entry Button",
+                  "descendants": {
+                    "EJMa0": {
+                      "width": 32,
+                      "height": 61.33333333333333
+                    },
+                    "v4CTZT": {
+                      "width": 32,
+                      "height": 26.666666666666664
+                    },
+                    "H1Be6h": {
+                      "width": 32,
+                      "height": 8,
+                      "y": 36
+                    },
+                    "zwQeX": {
+                      "width": 32,
+                      "height": 8,
+                      "y": 53.33333333333333
+                    }
+                  }
+                },
+                {
+                  "id": "iXHfZ",
+                  "type": "ref",
+                  "ref": "zy3Ps",
+                  "name": "Create Entry Button",
+                  "descendants": {
+                    "G0L1jH": {
+                      "width": 32,
+                      "height": 32
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "a1YksC",
+              "name": "Spacer 16 HF",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "NtmAu",
+              "name": "Filter Button",
+              "fill": "$surface",
+              "cornerRadius": "$radius-full",
+              "stroke": "$control-line",
+              "strokeWidth": 1.5,
+              "gap": "$sp-tight",
+              "padding": [
+                "$ctl-pad-md",
+                "$sp-item"
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "btobB",
+                  "name": "Label",
+                  "fill": "$text-primary",
+                  "content": "全部",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "icon",
+                  "id": "kXSbD",
+                  "name": "Chevron",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "chevron-down",
+                  "library": "lucide",
+                  "fill": "$text-primary"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CwGia",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "AvlWt",
+              "name": "Feed",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XdxAx",
+                  "name": "Day Group 1",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "id": "YzMRY",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "Day Divider 1",
+                      "width": "fill_container"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "CrBnz",
+                      "name": "Cards",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "id": "hO6Sr",
+                          "type": "ref",
+                          "ref": "umJHD",
+                          "name": "Card Photo 1",
+                          "width": "fill_container",
+                          "descendants": {
+                            "SNbd8": {
+                              "y": 302
+                            },
+                            "P15GB": {
+                              "y": 302
+                            }
+                          }
+                        },
+                        {
+                          "id": "xNqOC",
+                          "type": "ref",
+                          "ref": "qtCd7",
+                          "name": "Card Diary 1",
+                          "width": "fill_container",
+                          "descendants": {
+                            "Jqwww": {
+                              "layout": "vertical",
+                              "alignItems": "end"
+                            },
+                            "WmQcz": {
+                              "enabled": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ykygU",
+                  "name": "Day Group 2（padding-top＝捲動位置模擬，見 Notes LuHbv）",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "padding": [
+                    96,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "IigLd",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "Day Divider 2",
+                      "width": "fill_container",
+                      "descendants": {
+                        "tBi8u": {
+                          "rotation": -3.0000000000000004
+                        },
+                        "VDOco": {
+                          "content": "8月30日（昨天）"
+                        },
+                        "xlLIo": {
+                          "rotation": -6.000000000000001
+                        },
+                        "ci8cq": {
+                          "content": "8月30日（昨天）"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Q7sEu",
+                      "name": "Cards",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "id": "jGudh",
+                          "type": "ref",
+                          "ref": "bhroo",
+                          "name": "Card Album 1",
+                          "width": "fill_container",
+                          "descendants": {
+                            "Qjdzx": {
+                              "y": 330,
+                              "enabled": true
+                            },
+                            "o5O1GD": {
+                              "y": 323,
+                              "enabled": true
+                            },
+                            "mlORb": {
+                              "y": 302
+                            },
+                            "atAkU": {
+                              "y": 302
+                            }
+                          }
+                        },
+                        {
+                          "id": "mEgPV",
+                          "type": "ref",
+                          "ref": "qtCd7",
+                          "name": "Card Diary 2",
+                          "width": "fill_container",
+                          "descendants": {
+                            "p2odx": {
+                              "content": "社區公園旁新開了一家麵包店，路過買了一個菠蘿麵包當點心，整個下午都很香。"
+                            },
+                            "Jqwww": {
+                              "layout": "vertical",
+                              "alignItems": "end"
+                            },
+                            "d41MUZ": {
+                              "content": "日記"
+                            },
+                            "WmQcz": {
+                              "enabled": false
+                            },
+                            "zk1yE": {
+                              "enabled": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ANnw3",
+                  "name": "Load More",
+                  "width": "fill_container",
+                  "gap": "$sp-tight",
+                  "padding": [
+                    "$sp-block",
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "W78MXQ",
+                      "name": "Spinner",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "loader",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gmTgD",
+                      "name": "Load More Label",
+                      "fill": "$text-secondary",
+                      "content": "載入更多回憶中…",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "IKVkU",
+          "name": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "width": "fill_container",
+          "height": 88
+        },
+        {
+          "type": "frame",
+          "id": "SWpNl",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "EJGaB",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        },
+        {
+          "id": "OJjhM",
+          "type": "ref",
+          "ref": "J2GxJV",
+          "name": "Tab Bar",
+          "layoutPosition": "absolute",
+          "x": 16,
+          "y": 1378,
+          "width": 361,
+          "height": 88,
+          "descendants": {
+            "OTQOw": {
+              "width": 48,
+              "height": 48
+            },
+            "PcO8y": {
+              "width": 40,
+              "height": 40
+            },
+            "tld9r": {
+              "width": 40,
+              "height": 40
+            },
+            "aOco6": {
+              "width": 40,
+              "height": 40
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "o8zYlX",
+      "x": 1720,
+      "y": 96,
+      "name": "cmp/Button Import",
+      "reusable": true,
+      "fill": "$surface",
+      "cornerRadius": "$radius-md",
+      "stroke": "$control-line",
+      "strokeWidth": 1.5,
+      "gap": 6,
+      "padding": [
+        9.5,
+        12
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "EJMa0",
+          "name": "Import Mark",
+          "width": 12,
+          "height": 23,
+          "layout": "none",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "v4CTZT",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "Mark Front",
+              "fill": "$print-paper",
+              "width": 12,
+              "height": 10,
+              "stroke": "$paper-shadow",
+              "strokeWidth": 1
+            },
+            {
+              "type": "rectangle",
+              "id": "H1Be6h",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 13.5,
+              "name": "Mark Strip 1",
+              "fill": "$print-paper",
+              "width": 12,
+              "height": 3,
+              "stroke": "$paper-shadow",
+              "strokeWidth": 1
+            },
+            {
+              "type": "rectangle",
+              "id": "zwQeX",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 20,
+              "name": "Mark Strip 2",
+              "fill": "$print-paper",
+              "width": 12,
+              "height": 3,
+              "stroke": "$paper-shadow",
+              "strokeWidth": 1
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "Jo1QU",
+          "name": "Label",
+          "fill": "$text-primary",
+          "content": "匯入",
+          "fontFamily": "$font",
+          "fontSize": "$fs-body",
+          "fontWeight": "600"
         }
       ]
     }

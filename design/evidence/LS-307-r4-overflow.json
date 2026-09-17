@@ -1,0 +1,451 @@
+{
+  "ticket": "LS-307",
+  "round": 4,
+  "head_sha": "77a6fad5e70cd4d1d12dc6c83bf851eca2197e98",
+  "total_nodes": 14137,
+  "tree_hash": "f80b3812d35a820c",
+  "scan_scope": "boards",
+  "scan_note": "不分批（單次 --from-snapshot 離線跑六支，LS-289）；Pencil execute 送 scripts/design/pen-snapshot-dump.js（唯讀，55 個 SNAP batch，total_rows=21862）→ 貼進單一 dump 檔 .claude/evidence/LS-307/r4/snapshot-dump.txt → node scripts/design/overflow-scan.js --from-snapshot --boards e1cOqx,FUfqg,aGkJ1,X6iCY,o8zYlX（同 R3 五個SCAN_BOARDS，本輪未新增或刪除任何頂層節點）；tree_hash 用 scripts/gates/design_tree_hash.py 對 head_sha=77a6fad 落地 commit 的 .pen 離線算（f80b3812d35a820c），total_nodes 用 design-landing-check.sh --print-nodes 對同一快照算（14137）。本輪為 VR R3 comment `7e36fccc` APPROVE 附帶條件 i-7（AX3 動作序對調）／i-8（疊紙薄片 2→3pt、間距 4→3.5pt）的微調輪，未新增/刪除任何板或元件，只動：① aGkJ1 內 Header Row 子節點順序（Move，不影響六支演算法的節點集合或幾何交集判定，因為順序不改變任一節點的絕對座標）② cmp/Button Import（o8zYlX）內 Mark Strip 1/2 的 height／y 與 Import Mark 的 height（純數值調整，改變前景/薄片間的間距，方向是加大間距、不是縮小）。**六支數字與 R3 逐項相同**（sibling_intersection 49/18 類、row_overflow 12/6 類、cross_parent_collision 2/2 類、corner_anchor 5/40/mismatch=0、text_occlusion.flagged=0、board_clip.flagged=0）——已用 python 對 R3／R4 兩份收據的三支 O(n²) 掃描逐 class 做差集比對，三支差集皆為空集合，機械證實 i-7/i-8 未產生任何新增或消失的碰撞類別（間距加大理應更不容易碰撞，數字持平符合預期：R3 已無自製碰撞可再消除，i-8 只是把既有的『非碰撞』間距從 2.00pt 加大到 2.50pt）。六支 BLOCKER 皆為 0。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 49,
+      "classes": 18,
+      "flagged": [
+        {
+          "node_a": "wicSq/tBi8u",
+          "node_b": "wicSq/xlLIo",
+          "name_a": "Ghost",
+          "name_b": "Stamp",
+          "parent": "wicSq/OCYqN",
+          "parent_name": "Stamp Wrap",
+          "overlap": [
+            147.98,
+            39.63
+          ],
+          "class": "Ghost × Stamp @ Stamp Wrap",
+          "count": 4,
+          "classification": "cmp/Day Divider 的 Ghost 重影效果：刻意以固定位移 (-3,+3)／旋轉差 3° 疊在主 Stamp 後方模擬二次蓋章視覺（motifs.md「日期章 Day Divider」段），非缺陷；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "QNEky/bjq5n",
+          "node_b": "QNEky/INXbk",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TL",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TL @ Photo Print",
+          "count": 4,
+          "classification": "角托 corner-out 5pt 壓過紙緣的既定設計（tokens.md corner-out token；motifs.md「角托一律壓過紙緣 corner-out 5pt」）；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "QNEky/bjq5n",
+          "node_b": "QNEky/O6ami",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TR",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TR @ Photo Print",
+          "count": 4,
+          "classification": "同左，角托右上壓過紙緣；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "QNEky/KRUtz",
+          "node_b": "QNEky/SNbd8",
+          "name_a": "Imprint Row",
+          "name_b": "Corner BL",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Imprint Row × Corner BL @ Photo Print",
+          "count": 4,
+          "classification": "角托下緣壓過印品 Imprint Row 的既定設計（corner-out 5pt）；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "QNEky/KRUtz",
+          "node_b": "QNEky/P15GB",
+          "name_a": "Imprint Row",
+          "name_b": "Corner BR",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Imprint Row × Corner BR @ Photo Print",
+          "count": 4,
+          "classification": "同左，角托右下壓過 Imprint Row；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "QNEky/INXbk/sD5Ma",
+          "node_b": "QNEky/INXbk/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "QNEky/INXbk",
+          "parent_name": "Corner TL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 5,
+          "classification": "cmp/Photo Corner 元件內部由 Corner Shape＋Corner Edge 兩層路徑疊加構成單一角托視覺，屬元件內部結構本身，非版面缺陷；繼承自各自原板（yXSht／Qxema／lKoZG）未修改區域。"
+        },
+        {
+          "node_a": "QNEky/O6ami/sD5Ma",
+          "node_b": "QNEky/O6ami/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "QNEky/O6ami",
+          "parent_name": "Corner TR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 5,
+          "classification": "同左（TR 方位）。"
+        },
+        {
+          "node_a": "QNEky/SNbd8/sD5Ma",
+          "node_b": "QNEky/SNbd8/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "QNEky/SNbd8",
+          "parent_name": "Corner BL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 5,
+          "classification": "同左（BL 方位）。"
+        },
+        {
+          "node_a": "QNEky/P15GB/sD5Ma",
+          "node_b": "QNEky/P15GB/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "QNEky/P15GB",
+          "parent_name": "Corner BR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 5,
+          "classification": "同左（BR 方位）。"
+        },
+        {
+          "node_a": "D4zdmQ/uZ5Lt",
+          "node_b": "D4zdmQ/kVUWa",
+          "name_a": "Stack Sheet 2",
+          "name_b": "Stack Sheet 1",
+          "parent": "D4zdmQ/oBEkH",
+          "parent_name": "Photo C",
+          "overlap": [
+            1,
+            88
+          ],
+          "class": "Stack Sheet 2 × Stack Sheet 1 @ Photo C",
+          "count": 1,
+          "classification": "cmp/Card Album 相簿卡疊紙母題（motifs.md「相簿卡疊紙 Stack Sheet」）：兩條 4pt 薄片刻意小幅重疊營造堆疊層次；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "D4zdmQ/ekqx4",
+          "node_b": "D4zdmQ/GCEdk",
+          "name_a": "Thumb C",
+          "name_b": "More Scrim",
+          "parent": "D4zdmQ/oBEkH",
+          "parent_name": "Photo C",
+          "overlap": [
+            96.3,
+            100
+          ],
+          "class": "Thumb C × More Scrim @ Photo C",
+          "count": 1,
+          "classification": "Card Album 縮圖與「查看更多」遮罩的既有堆疊效果，遮罩本就疊在縮圖上方是其功能本身；繼承自 yXSht 未修改。"
+        },
+        {
+          "node_a": "u95aXI",
+          "node_b": "hJ3cT",
+          "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "name_b": "Tab Bar",
+          "parent": "e1cOqx",
+          "parent_name": "Import / 00 時間軸入口 (iPhone)",
+          "overlap": [
+            361,
+            64
+          ],
+          "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ Import / 00 時間軸入口 (iPhone)",
+          "count": 1,
+          "classification": "Tab Bar 為絕對定位浮動膠囊（motifs.md「Tab Bar 全字級純 icon」段），疊在 Body 末端補償 spacer 之上是 Tab-root 版式既有慣例；繼承自 yXSht 未修改，本票未觸及此區域。"
+        },
+        {
+          "node_a": "U4Ln31",
+          "node_b": "zuqgM",
+          "name_a": "Body",
+          "name_b": "Tab Bar",
+          "parent": "FUfqg",
+          "parent_name": "Import / 00b 時間軸空狀態入口 (iPhone)",
+          "overlap": [
+            361,
+            64
+          ],
+          "class": "Body × Tab Bar @ Import / 00b 時間軸空狀態入口 (iPhone)",
+          "count": 1,
+          "classification": "同上一類的 Tab Bar 浮動膠囊慣例，Qxema 原板 Body 與 Tab Bar 皆為既有結構（無獨立補償 spacer，直接是 Body×Tab Bar），繼承自 Qxema 未修改，本票僅改動其 Header Row 與 Guidance 文案。"
+        },
+        {
+          "node_a": "GYXMn",
+          "node_b": "DM1uY",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TL",
+          "parent": "FDFi8",
+          "parent_name": "Empty Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TL @ Empty Print",
+          "count": 1,
+          "classification": "Empty Print（空白沖印品，motifs.md「空白沖印品」段）同樣套用角托 corner-out 5pt 既定設計；繼承自 Qxema 未修改。"
+        },
+        {
+          "node_a": "GYXMn",
+          "node_b": "A9dWMX",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TR",
+          "parent": "FDFi8",
+          "parent_name": "Empty Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TR @ Empty Print",
+          "count": 1,
+          "classification": "同左（TR 方位）。"
+        },
+        {
+          "node_a": "n0AjZ",
+          "node_b": "LFmNH",
+          "name_a": "Imprint Row",
+          "name_b": "Corner BL",
+          "parent": "FDFi8",
+          "parent_name": "Empty Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Imprint Row × Corner BL @ Empty Print",
+          "count": 1,
+          "classification": "同左（BL 方位，Imprint Row 版）。"
+        },
+        {
+          "node_a": "n0AjZ",
+          "node_b": "Q4ipGD",
+          "name_a": "Imprint Row",
+          "name_b": "Corner BR",
+          "parent": "FDFi8",
+          "parent_name": "Empty Print",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Imprint Row × Corner BR @ Empty Print",
+          "count": 1,
+          "classification": "同左（BR 方位，Imprint Row 版）。"
+        },
+        {
+          "node_a": "IKVkU",
+          "node_b": "OJjhM",
+          "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+          "name_b": "Tab Bar",
+          "parent": "aGkJ1",
+          "parent_name": "A11y / 00 時間軸入口 · Dynamic Type AX3",
+          "overlap": [
+            361,
+            88
+          ],
+          "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ A11y / 00 時間軸入口 · Dynamic Type AX3",
+          "count": 1,
+          "classification": "同 e1cOqx 的 Tab Bar 浮動膠囊既有慣例；繼承自 lKoZG 未修改，本票僅改動其 Header Row。"
+        }
+      ],
+      "result_hash": "1e312686aa93be18"
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 12,
+      "classes": 6,
+      "flagged": [
+        {
+          "node": "QNEky/O6ami",
+          "name": "Corner TR",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overflow": 5,
+          "class": "Photo Print :: Corner TR",
+          "count": 4,
+          "classification": "角托 corner-out 5pt 溢出印品右緣的既定設計；繼承自 yXSht 未修改。"
+        },
+        {
+          "node": "QNEky/P15GB",
+          "name": "Corner BR",
+          "parent": "QNEky/boZpu",
+          "parent_name": "Photo Print",
+          "overflow": 5,
+          "class": "Photo Print :: Corner BR",
+          "count": 4,
+          "classification": "角托 corner-out 5pt 溢出印品下緣的既定設計；繼承自 yXSht 未修改。"
+        },
+        {
+          "node": "D4zdmQ/uZ5Lt",
+          "name": "Stack Sheet 2",
+          "parent": "D4zdmQ/oBEkH",
+          "parent_name": "Photo C",
+          "overflow": 9.97,
+          "class": "Photo C :: Stack Sheet 2",
+          "count": 1,
+          "classification": "疊紙母題刻意溢出印品邊緣，暗示底下還有更多張；繼承自 yXSht 未修改。"
+        },
+        {
+          "node": "D4zdmQ/kVUWa",
+          "name": "Stack Sheet 1",
+          "parent": "D4zdmQ/oBEkH",
+          "parent_name": "Photo C",
+          "overflow": 6.97,
+          "class": "Photo C :: Stack Sheet 1",
+          "count": 1,
+          "classification": "同左。"
+        },
+        {
+          "node": "A9dWMX",
+          "name": "Corner TR",
+          "parent": "FDFi8",
+          "parent_name": "Empty Print",
+          "overflow": 5,
+          "class": "Empty Print :: Corner TR",
+          "count": 1,
+          "classification": "角托 corner-out 5pt 溢出 Empty Print 右緣的既定設計；繼承自 Qxema 未修改。"
+        },
+        {
+          "node": "Q4ipGD",
+          "name": "Corner BR",
+          "parent": "FDFi8",
+          "parent_name": "Empty Print",
+          "overflow": 5,
+          "class": "Empty Print :: Corner BR",
+          "count": 1,
+          "classification": "角托 corner-out 5pt 溢出 Empty Print 下緣的既定設計；繼承自 Qxema 未修改。"
+        }
+      ],
+      "result_hash": "9117a289aed51eb9"
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 2,
+      "classes": 2,
+      "flagged": [
+        {
+          "node_a": "jvqW2",
+          "node_b": "DM1uY",
+          "name_a": "Spacer Section",
+          "name_b": "Corner TL",
+          "parent_a": "U4Ln31",
+          "parent_b": "FDFi8",
+          "board": "FUfqg",
+          "board_name": "Import / 00b 時間軸空狀態入口 (iPhone)",
+          "overlap": [
+            21,
+            5
+          ],
+          "class": "Spacer Section × Corner TL @ Import / 00b 時間軸空狀態入口 (iPhone)",
+          "count": 1,
+          "classification": "Empty Print 角托 corner-out 5pt 上溢，越過 Feed 邊界觸及其上方手足節點 Spacer Section（両者父節點不同：Corner TL 的父鏈經 Empty Print→Feed→Body，Spacer Section 直接掛在 Body 下）——與既有 sibling_intersection 角托出血屬同一物理成因（corner-out 5pt），只是巢狀深度不同而被歸類為 cross_parent；繼承自 Qxema 原板既有幾何（`aY7S5` y=-5 relative to Empty Print），未經本票修改，本票僅改動 00b 的 Header Row 與 Guidance 文案，未觸及 Feed/Empty Print/Spacer Section。VR R2 已對 Qxema 原板獨立複測 overlap 同為 [21,5]，證實純屬繼承。"
+        },
+        {
+          "node_a": "jvqW2",
+          "node_b": "A9dWMX",
+          "name_a": "Spacer Section",
+          "name_b": "Corner TR",
+          "parent_a": "U4Ln31",
+          "parent_b": "FDFi8",
+          "board": "FUfqg",
+          "board_name": "Import / 00b 時間軸空狀態入口 (iPhone)",
+          "overlap": [
+            21,
+            5
+          ],
+          "class": "Spacer Section × Corner TR @ Import / 00b 時間軸空狀態入口 (iPhone)",
+          "count": 1,
+          "classification": "同左（TR 方位，`BbDZH`）。"
+        }
+      ],
+      "result_hash": "ad0a8bea8af84483"
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "e1cOqx",
+        "FUfqg",
+        "aGkJ1",
+        "X6iCY",
+        "o8zYlX"
+      ],
+      "containers": 5,
+      "points": 40,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 4,
+      "ref_hits_defs": 0,
+      "document_containers": 5,
+      "document_points": 40,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": [],
+      "result_hash": "a75b3edb31b6d416"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "e1cOqx",
+        "FUfqg",
+        "aGkJ1",
+        "X6iCY",
+        "o8zYlX"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "1bfab5f658cedc96"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "e1cOqx",
+        "FUfqg",
+        "aGkJ1",
+        "X6iCY",
+        "o8zYlX"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "5f49b8280e5cce14"
+    }
+  }
+}
