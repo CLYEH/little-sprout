@@ -1,11 +1,11 @@
 {
   "ticket": "LS-321",
   "round": 3,
-  "head_sha": "427d63e46206f5571781c91e6c3185d09594ec5a",
+  "head_sha": "2f4611eb336782d4a354224d89cf04505cef72af",
   "total_nodes": 14259,
-  "tree_hash": "fa9da4474f090691",
+  "tree_hash": "16a984e56655df3a",
   "scan_scope": "boards",
-  "scan_note": "LS-289 唯讀快照 dump 法：pen-snapshot-dump.js 全文（未修改）送 execute（SNAP_BATCH_ROWS 預設 400）→ 56 個 SNAP<n> 行、SNAP-DONE total_rows=22094（與 VR R2 獨立重掃的 22094 同值，佐證本輪未新增/刪除節點）→ node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash fa9da4474f090691 --total-nodes 14259 --boards A3ICAN,hwr76,HEj70,X6iCY。boards 涵蓋本 PR 對 .pen 有變更的全部四塊頂層板（A3ICAN／hwr76／HEj70 R1-R2 新增、X6iCY 為 Notes 板），不只本輪 R3 實際編輯的 HEj70／X6iCY 兩塊——sibling_intersection=48／row_overflow=16／cross_parent_collision=6／corner_anchor=8/64/0／ref_hits=32 與 VR R2 獨立重掃（comment 025f89ce）逐值相同，證實本輪 M-2／M-3／Notes 改寫未引入任何新的兄弟碰撞、橫列溢出或跨 parent 碰撞。tree_hash 由 scripts/gates/design_tree_hash.py 對已落地 commit 427d63e 的 design/littlesprout.pen 離線重算（單次計算，dump 與離線重算之間無任何寫入，同一稿態）。原四板 pVSXP/ZXdu2/yfZyT/OysBA 未觸碰，不掃入。",
+  "scan_note": "R3b（同一輪次的收斂子輪）：orchestrator 裁決 M-3 原採納值 20×38.33 撐大按鈕至 73.33pt，違反裁決 75d743ee/28401151 明訂『(c) 保留 (a) 的 cmp/Button Primary accent 外殼與 60pt 高』不變量，退回收斂。R3b 改依 25/23 等比縮放 envelope 至 13.04×24.99（收在按鈕原內容列 25pt 內，不觸發長高），按鈕/Action Bar/Body/Home Indicator 全部回到 R2 數值（60/93/619/818→852）。LS-289 唯讀快照 dump 法：pen-snapshot-dump.js 全文（未修改）送 execute（SNAP_BATCH_ROWS 預設 400）→ 56 個 SNAP<n> 行、SNAP-DONE total_rows=22094（與 r3a／VR R2 同值，佐證未新增/刪除節點）→ node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash 16a984e56655df3a --total-nodes 14259 --boards A3ICAN,hwr76,HEj70,X6iCY。boards 涵蓋本 PR 對 .pen 有變更的全部四塊頂層板。sibling_intersection=48／row_overflow=16／cross_parent_collision=6／corner_anchor=8/64/0／ref_hits=32 與 r3a 及 VR R2 獨立重掃逐值相同，證實 R3b 的收斂修改未引入任何新的兄弟碰撞、橫列溢出或跨 parent 碰撞。tree_hash 由 scripts/gates/design_tree_hash.py 對已落地 commit 2f4611e 的 design/littlesprout.pen 離線重算（單次計算，dump 與離線重算之間無任何寫入，同一稿態）。原四板 pVSXP/ZXdu2/yfZyT/OysBA 未觸碰，不掃入；紅線（o8zYlX/OKSJI/EJMa0/四板/variables/themes）用 sha256 逐節點比對 r2(a5441b8) vs r3b(HEAD) 全部 SAME。",
   "scans": {
     "sibling_intersection": {
       "scope": "boards",
@@ -133,7 +133,7 @@
           "classification": "既有沖印品母題重疊，同上，非本輪新增"
         }
       ],
-      "result_hash": "2a48b9494e4f9f18"
+      "result_hash": "77330085eb91da6a"
     },
     "row_overflow": {
       "scope": "boards",
@@ -181,7 +181,7 @@
           "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，同上，非本輪新增"
         }
       ],
-      "result_hash": "d6442f4acbf73adc"
+      "result_hash": "232e76876939762e"
     },
     "cross_parent_collision": {
       "scope": "boards",
@@ -203,7 +203,7 @@
           ],
           "class": "Spacer Section × Corner TL @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
           "count": 2,
-          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在（VR R2 獨立重掃同值 6 筆），非本輪 R3 新增或修改"
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b 新增或修改"
         },
         {
           "node_a": "xVb7H",
@@ -220,7 +220,7 @@
           ],
           "class": "Spacer Section × Corner TR @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
           "count": 2,
-          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在（VR R2 獨立重掃同值 6 筆），非本輪 R3 新增或修改"
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b 新增或修改"
         },
         {
           "node_a": "pH8A7",
@@ -237,7 +237,7 @@
           ],
           "class": "Corner BL × Spacer Bottom @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
           "count": 1,
-          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在（VR R2 獨立重掃同值 6 筆），非本輪 R3 新增或修改"
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b 新增或修改"
         },
         {
           "node_a": "qJcGp",
@@ -254,10 +254,10 @@
           ],
           "class": "Corner BR × Spacer Bottom @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
           "count": 1,
-          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在（VR R2 獨立重掃同值 6 筆），非本輪 R3 新增或修改"
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b 新增或修改"
         }
       ],
-      "result_hash": "213610c77d7788d9"
+      "result_hash": "6e2058041ab9c42b"
     },
     "corner_anchor": {
       "scope": "boards",
@@ -280,7 +280,7 @@
       "document_mismatch": 0,
       "document_flagged": [],
       "document_unresolved": [],
-      "result_hash": "d6cbc649ce106b8d"
+      "result_hash": "23b60d866b52a6df"
     },
     "text_occlusion": {
       "scope": "boards",
@@ -293,7 +293,7 @@
       ],
       "flagged": [],
       "document_flagged": [],
-      "result_hash": "4b6b3d64f528740d"
+      "result_hash": "985584a1926aaf5f"
     },
     "board_clip": {
       "scope": "boards",
@@ -306,7 +306,7 @@
       ],
       "flagged": [],
       "document_flagged": [],
-      "result_hash": "8eba3f96aab6658b"
+      "result_hash": "dba486d347f8a0dd"
     }
   }
 }
