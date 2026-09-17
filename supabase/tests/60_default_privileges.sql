@@ -481,6 +481,9 @@ declare
     'public.set_diary_deleted(uuid, boolean)',
     'public.set_album_deleted(uuid, boolean)',
     'public.set_album_children(uuid, uuid[])',
+    -- LS-317
+    'public.set_media_children(uuid, uuid[])',
+    'public.set_media_children_batch(jsonb)',
     'public.set_comment_deleted(uuid, boolean)',
     'public.create_comment(uuid, text, uuid, text)',
     'public.update_comment(uuid, text)',

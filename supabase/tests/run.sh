@@ -439,6 +439,16 @@ race_case "同一本相簿：兩連線同時覆蓋孩子標記，終態必須是
   album_children_race_setup.sql album_children_race_s1.sql \
   album_children_race_s2.sql album_children_race_verify.sql
 
+# LS-317 merge-review R1 m2（a0a811c6）：兩個順序相反的重疊 set_media_children_
+# batch 呼叫同時覆蓋同一組（兩張）照片的孩子標記——批次 RPC 內部依 media_id 排序
+# 取鎖（R2 修法，見 20260917155738_media_children.sql:252-289 的 m1 修法），這裡
+# 驗批次交易在整個過程中持有所有涉及 media 的列鎖直到 commit，重疊批次不出錯
+# （無 40P01）、終態乾淨是後 commit 一方的完整集合。測試限度見
+# media_children_race_setup.sql 檔頭「誠實記錄」段。
+race_case "兩張照片：兩連線同時用順序相反的批次覆蓋孩子標記，終態必須是後 commit 一方的完整集合" \
+  media_children_race_setup.sql media_children_race_s1.sql \
+  media_children_race_s2.sql media_children_race_verify.sql
+
 # LS-143 併發場景：兩位共同 owner（沒有其他成員）幾乎同時呼叫 delete_my_account()。
 # 跟 owner_guard_case 驗的是同一顆既有 trigger（LS-6／LS-15），換成帳號刪除這個新的
 # 觸發路徑——S1 先離開家庭並持鎖 3 秒，S2 1.2 秒後被同一把家庭列鎖擋住，解除阻塞後
