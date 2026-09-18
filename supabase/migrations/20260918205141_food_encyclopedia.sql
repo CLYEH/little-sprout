@@ -311,15 +311,13 @@ comment on column public.child_food_records.deleted_by is
   comment（20260913065021_growth_records.sql），本表逐字沿用不重複展開。';
 
 -- 同一寶貝同一食物最多一筆未軟刪記錄（票面規則）；同時是 upsert_child_food_record()
--- 的 ON CONFLICT 仲裁目標（見檔頭第 0 段 a）。
+-- 的 ON CONFLICT 仲裁目標（見檔頭第 0 段 a），也是 list_child_food_records 依
+-- child_id 等值篩選未刪列（票面「list 查詢用的 (child_id) where deleted_at is
+-- null」）唯一需要的索引——leading column child_id、謂詞相同，完全涵蓋這個查詢，
+-- 不需要另外一支只有 (child_id) 的 partial index（merge-review R1 informational
+-- i3：原本多開的 child_food_records_child_active_idx 是重複索引，已移除）。
 create unique index child_food_records_child_food_unique
   on public.child_food_records (child_id, food_id)
-  where deleted_at is null;
-
--- list_child_food_records 依 child_id 等值篩選未刪列（票面「list 查詢用的
--- (child_id) where deleted_at is null」）。
-create index child_food_records_child_active_idx
-  on public.child_food_records (child_id)
   where deleted_at is null;
 
 -- FK 反向索引（65_fk_reverse_index.sql 要求）：family_id 單獨的 FK 與複合
