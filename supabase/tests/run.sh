@@ -140,6 +140,30 @@ fi
 while IFS= read -r f; do
   name="$(basename "$f")"
   out="$tmp/$name.out"
+  # LS-325：117_food_encyclopedia.sql §1 依賴 food_catalog 與 supabase/seed-data/
+  # food_catalog.csv 逐列一致——這段比對由 host 端動態產生（scripts/ops/
+  # food-catalog-sql.py check），不是寫死在 117_food_encyclopedia.sql 裡的靜態
+  # SQL：docker exec 連線通道下 psql 跑在容器內看不到 host 的 CSV 檔案路徑，只能
+  # 由 host 端先把 CSV 轉成 SQL 常值，再用既有的 run_sql()（本來就是把檔案內容
+  #整個讀進來、經 stdin 餵給 psql）執行，兩種通道天生一致（見該腳本檔頭）。
+  if [ "$name" = "117_food_encyclopedia.sql" ]; then
+    csv_check="$tmp/117_csv_check.sql"
+    csv_out="$tmp/117_csv_check.sql.out"
+    echo "→ food_catalog↔CSV 一致性（host 端產生）"
+    if ! python3 "$here/../../scripts/ops/food-catalog-sql.py" check > "$csv_check" 2>"$tmp/117_csv_gen.err"; then
+      echo "  ✗ food-catalog-sql.py check 產生失敗：" >&2
+      cat "$tmp/117_csv_gen.err" >&2
+      exit 1
+    fi
+    if run_sql "$csv_check" > "$csv_out" 2>&1; then
+      sed 's/^/    /' "$csv_out"
+      echo "  ✓ food_catalog↔CSV 一致性"
+    else
+      echo "  ✗ food_catalog↔CSV 一致性失敗：" >&2
+      sed 's/^/    /' "$csv_out" >&2
+      exit 1
+    fi
+  fi
   echo "→ $name"
   if run_sql "$f" > "$out" 2>&1; then
     sed 's/^/    /' "$out"
@@ -540,6 +564,15 @@ race_case "同一位 owner 幾乎同時對兩個不同對象各發一次 transfe
   transfer_race_setup.sql transfer_race_s1.sql \
   transfer_race_s2.sql transfer_race_verify.sql
 
+# LS-325：兩個連線同時對同一寶貝同一食物呼叫 upsert_child_food_record（同一位
+# 作者，例如使用者不小心連點兩次）——partial unique index 是 ON CONFLICT 的仲裁
+# 目標，S1 先 INSERT 並持交易 3 秒，S2 延遲 1.2 秒進場，必須在 Postgres 內部的
+# 衝突偵測上被阻塞，解除阻塞後轉為更新；終態必須恰好一列，內容是 S2（後 commit
+# 那一方）的值。見 20260918205141_food_encyclopedia.sql 檔頭第 0 段 a。
+race_case "兩個連線同時 upsert_child_food_record 同一寶貝同一食物（同作者）：終態必須恰好一列、是後 commit 一方的內容" \
+  food_record_race_setup.sql food_record_race_s1.sql \
+  food_record_race_s2.sql food_record_race_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 -- LS-96 池項 8519d8a4 第 3 條（LS-172 merge-review R2-i3）：兩支併發情境的
@@ -571,7 +604,8 @@ delete from public.families where id in (
   'ed000000-0000-4000-8000-000000000002',
   'c2000000-0000-4000-8000-000000000001',
   'c2000000-0000-4000-8000-000000000002',
-  'de000000-0000-4000-8000-000000000001'
+  'de000000-0000-4000-8000-000000000001',
+  '71000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -612,7 +646,8 @@ delete from auth.users where id in (
   'c1000000-0000-4000-8000-000000000001',
   'c1000000-0000-4000-8000-000000000002',
   'c1000000-0000-4000-8000-000000000011',
-  'c1000000-0000-4000-8000-000000000012'
+  'c1000000-0000-4000-8000-000000000012',
+  '72000000-0000-4000-8000-000000000001'
 );
 SQL
 run_sql "$cleanup" > /dev/null
