@@ -23,8 +23,11 @@ final class GrowthMeasurementPrefillRegressionTests: XCTestCase {
         let source = try sourceText(relativePath: "LittleSprout/Features/Growth/GrowthMeasurementFormView.swift")
 
         XCTAssertTrue(
-            source.contains("_measuredOn = State(initialValue: editingRecord?.measuredOn ?? Date())"),
-            "日期欄要帶入既有筆的 measuredOn，新增時才落回今天"
+            source.contains(
+                "_measuredOn = State(initialValue: editingRecord.flatMap { Self.localMidnight(from: $0.measuredOn) }"
+                    + " ?? Date())"
+            ),
+            "日期欄要帶入既有筆的 measuredOn（換算成裝置本地時區同一組年月日，見 M1），新增時才落回今天"
         )
         XCTAssertTrue(
             source.contains("_heightText = State(initialValue: Self.text(for: editingRecord?.heightCm))"),

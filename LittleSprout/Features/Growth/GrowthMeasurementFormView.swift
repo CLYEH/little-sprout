@@ -45,7 +45,7 @@ struct GrowthMeasurementFormView: View {
     init(growthStore: GrowthStore, editingRecord: GrowthRecord? = nil) {
         self.growthStore = growthStore
         self.editingRecord = editingRecord
-        _measuredOn = State(initialValue: editingRecord?.measuredOn ?? Date())
+        _measuredOn = State(initialValue: editingRecord.flatMap { Self.localMidnight(from: $0.measuredOn) } ?? Date())
         _heightText = State(initialValue: Self.text(for: editingRecord?.heightCm))
         _weightText = State(initialValue: Self.text(for: editingRecord?.weightKg))
         _headText = State(initialValue: Self.text(for: editingRecord?.headCm))
@@ -56,6 +56,22 @@ struct GrowthMeasurementFormView: View {
     /// 三個 case 共用同一段實作，不依賴呼叫在哪個 case 上，這裡不特地挑一個 case 當代表）。
     private static func text(for value: Double?) -> String {
         value.map { String(format: "%.1f", $0) } ?? ""
+    }
+
+    /// R1 merge-review M1：`editingRecord.measuredOn` 是 UTC 午夜（`GrowthRecord` 解碼慣例，
+    /// 同 `Child.birthday`），但 `measuredOn` 這個 `@State` 全程被 `dateFieldLabel`（裝置本地
+    /// 時區的 `Calendar(identifier: .gregorian)`）與送出時的 `BirthdayFormat.wireString(from:
+    /// calendar: .current)` 當成「裝置本地時區的 Date」在用。在負時區裝置（例如
+    /// America/New_York）直接把 UTC 午夜塞進去，本地時區抽出的年月日會退回一天。這裡先把
+    /// UTC 午夜的年月日抽出來，換成「裝置本地時區同一組年月日的午夜」，之後兩處用本地時區
+    /// 抽出的年月日才會跟原始 `measuredOn` 一致（往返不變）。`calendar` 參數同 `BirthdayFormat.
+    /// wireString(from:calendar:)` 既有理由——預設 `.current`，測試才能注入固定時區；不設
+    /// `private`，`GrowthMeasurementFormViewTimeZoneTests` 需要直接呼叫這支純函式驗證。
+    static func localMidnight(from utcDate: Date, calendar: Calendar = .current) -> Date? {
+        var utcCalendar = Calendar(identifier: .gregorian)
+        utcCalendar.timeZone = TimeZone(identifier: "UTC")!
+        let components = utcCalendar.dateComponents([.year, .month, .day], from: utcDate)
+        return calendar.date(from: components)
     }
 
     private var heightValue: Double? { Double(heightText.trimmingCharacters(in: .whitespaces)) }
