@@ -265,15 +265,19 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.growthDetailEmpty)
     }
 
-    /// LS-312：「新增量測」空殼承接畫面——「取消」鈕。
-    func testGrowthAddMeasurementPlaceholderView() {
-        assertAllTappablesMeetMinimum(.growthAddMeasurementPlaceholder)
+    /// LS-313：02 新增量測 sheet——日期欄／三個量測欄／Save／Cancel。
+    func testGrowthMeasurementFormView() {
+        assertAllTappablesMeetMinimum(.growthMeasurementForm)
     }
 
-    /// LS-312：「查看全部紀錄」空殼承接畫面——純顯示，斷言 sentinel 渲染即可（無互動元件，
-    /// 但仍走同一套 tap-target 量測確保未來加東西時機械覆蓋不會漏掉）。
-    func testGrowthRecordsListPlaceholderView() {
-        assertAllTappablesMeetMinimum(.growthRecordsListPlaceholder)
+    /// LS-313：03 記錄列表——年份郵戳＋逐列滑動揭露（編輯／刪除）。
+    func testGrowthRecordsListView() {
+        assertAllTappablesMeetMinimum(.growthRecordsList)
+    }
+
+    /// LS-313：03c 列操作表（非手勢替代路徑）——編輯／刪除／取消三列。
+    func testGrowthRecordActionsSheet() {
+        assertAllTappablesMeetMinimum(.growthRecordActionsSheet)
     }
 
     /// LS-312：populated（1 個寶貝）——`ChildrenManagementView` 取代原本 tap-target-exemptions.txt

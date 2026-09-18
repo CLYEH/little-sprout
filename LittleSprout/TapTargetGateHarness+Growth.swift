@@ -27,26 +27,51 @@ extension TapTargetGateHarness {
         }
     }
 
+    /// LS-313：02 新增量測 sheet（真表單，取代 placeholder）——日期欄／三個量測欄／Save／
+    /// Cancel 都是有代表性的可點元件；sheet 本身自帶 grabber（不是系統 `.presentationDragIndicator`，
+    /// 見該檔文件註解），不需要包一層呈現 sheet 的容器就能直接量測。
     @MainActor
     @ViewBuilder
-    static var growthAddMeasurementPlaceholderHost: some View {
-        GrowthAddMeasurementPlaceholderView()
+    static var growthMeasurementFormHost: some View {
+        GrowthMeasurementFormView(growthStore: .preview())
     }
 
-    /// 純顯示、無內建 dismiss 元件的推入畫面（真實用法一律由 `NavigationLink` 推入，天生就有
-    /// 系統返回鍵）——用 `NavigationStack(path:)` 帶一個非空初始路徑，讓畫面直接以「已推入」
-    /// 狀態渲染，系統返回鍵因此存在，同真實推入路徑（同 `ChildGrowthDetailView.
-    /// actionsCompact` 的 `NavigationLink` 用法）。merge-review R1 B1 的「0 個元件」自檢會抓到
-    /// 沒有返回鍵的裸 `NavigationStack { GrowthRecordsListPlaceholderView() }`（root 沒有
-    /// 系統返回鍵）。
+    /// LS-313：03 記錄列表（真清單，取代 placeholder）——`previewSeededWithDemoRecords()`
+    /// 6 筆示範資料＋`currentUserID` 對齊 `GrowthStore.previewAuthorID`／`isFamilyOwner: true`，
+    /// 讓每一列的滑動揭露（編輯／刪除）與點列開 `GrowthRecordActionsSheet` 都有代表性可量。
+    /// `NavigationStack(path:)` 帶非空初始路徑的理由同舊版 placeholder host 文件註解（保留：
+    /// 真實用法一律由 `NavigationLink` 推入，天生就有系統返回鍵；沒有這個技巧建出來的裸
+    /// `NavigationStack { GrowthRecordsListView(...) }` 會被 merge-review R1 B1 的「0 個元件」
+    /// 自檢抓到 root 沒有系統返回鍵）。
     @MainActor
     @ViewBuilder
-    static var growthRecordsListPlaceholderHost: some View {
+    static var growthRecordsListHost: some View {
         NavigationStack(path: .constant([true])) {
             Color.clear
                 .navigationDestination(for: Bool.self) { _ in
-                    GrowthRecordsListPlaceholderView()
+                    GrowthRecordsListView(
+                        growthStore: .previewSeededWithDemoRecords(), childName: "陳小安",
+                        currentUserID: GrowthStore.previewAuthorID, isFamilyOwner: true
+                    )
                 }
+        }
+    }
+
+    /// LS-313：03c 列操作表——`onEdit`／`onDelete` 皆非 nil（同 `growthRecordsListHost` 的
+    /// `isFamilyOwner: true`＋`currentUserID` 對齊作者，代表「兩個動作都看得到」的情境），量
+    /// 「編輯這筆紀錄」／「刪除這筆紀錄」／「取消」三列。
+    @MainActor
+    @ViewBuilder
+    static var growthRecordActionsSheetHost: some View {
+        Color.clear.sheet(isPresented: .constant(true)) {
+            GrowthRecordActionsSheet(
+                record: GrowthRecord(
+                    id: UUID(), familyID: UUID(), childID: UUID(), authorID: GrowthStore.previewAuthorID,
+                    measuredOn: BirthdayFormat.date(fromWireString: "2026-08-20")!,
+                    heightCm: 78.5, weightKg: 9.6, headCm: 45.0, note: nil, createdAt: Date(), updatedAt: Date()
+                ),
+                onEdit: {}, onDelete: {}
+            )
         }
     }
 }

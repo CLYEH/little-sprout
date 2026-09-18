@@ -114,8 +114,13 @@ extension TapTargetGateScreenName {
         case .commentsSheetOwnerNotReady: return .staticText("留言")
         case .growthDetailPopulated: return .staticText("陳小安")
         case .growthDetailEmpty: return .staticText("陳小軒")
-        case .growthAddMeasurementPlaceholder: return .button("取消")
-        case .growthRecordsListPlaceholder: return .staticText("全部記錄")
+        // LS-313：Cancel 鈕（body content，非系統 toolbar，見該檔文件註解）一開 sheet 就渲染。
+        case .growthMeasurementForm: return .button("取消")
+        // LS-313：Header 標題文字——populated／empty 兩態皆會渲染（`navigationTitle` 另外也是
+        // 「成長紀錄」，但這裡指的是 body content 裡的 Header `Text`，不依賴 `records` 是否
+        // 為空）。
+        case .growthRecordsList: return .staticText("成長紀錄")
+        case .growthRecordActionsSheet: return .button("取消")
         case .childrenManagementPopulated: return .staticText("寶貝")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
