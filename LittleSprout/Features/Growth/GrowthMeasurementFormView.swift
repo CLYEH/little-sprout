@@ -41,6 +41,7 @@ struct GrowthMeasurementFormView: View {
     /// 升級成回話式提醒（`$text-primary`，Notes B-4：「不再逐欄標紅…改為…回話列語彙」）。輸入
     /// 之後（任一項非空）或再次按下儲存都會清掉，不需要额外的「使用者是否碰過欄位」追蹤。
     @State private var showsEmptyMessage = false
+    @State private var statusScrollRequest = 0
 
     init(growthStore: GrowthStore, editingRecord: GrowthRecord? = nil) {
         self.growthStore = growthStore
@@ -101,20 +102,25 @@ struct GrowthMeasurementFormView: View {
     var body: some View {
         VStack(spacing: 0) {
             grabber
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.section) {
-                    header
-                    dateField
-                    measurementGroup
-                    VStack(alignment: .leading, spacing: AppSpacing.item) {
-                        noteField
-                        statusSlot
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: AppSpacing.section) {
+                        header
+                        dateField
+                        measurementGroup
+                        VStack(alignment: .leading, spacing: AppSpacing.item) {
+                            noteField
+                            statusSlot.id(Self.statusSlotID)
+                        }
                     }
+                    .padding(.horizontal, AppSpacing.screenPad)
+                    .padding(.top, AppSpacing.item)
                 }
-                .padding(.horizontal, AppSpacing.screenPad)
-                .padding(.top, AppSpacing.item)
+                .clipped()
+                .onChange(of: statusScrollRequest) {
+                    withAnimation { proxy.scrollTo(Self.statusSlotID, anchor: .bottom) }
+                }
             }
-            .clipped()
             actions
                 .padding(.horizontal, AppSpacing.screenPad)
                 .padding(.top, AppSpacing.item)
@@ -294,6 +300,7 @@ struct GrowthMeasurementFormView: View {
     /// 保證 Range Warning Slot／Status Slot 高度逐像素一致）；AX3 改 `fit_content`——呼叫端
     /// 一律 `isAX3 ? nil : Self.slotHeight`，`nil` 讓 `.frame(height:)` 不設限、內容自然撐開。
     private static let slotHeight: CGFloat = 56
+    private static let statusSlotID = "growth-form-status-slot"
 
     private var actions: some View {
         VStack(spacing: AppSpacing.group) {
@@ -319,6 +326,7 @@ struct GrowthMeasurementFormView: View {
         guard !growthStore.saveState.isSubmitting else { return }
         guard hasAtLeastOneValue else {
             showsEmptyMessage = true
+            statusScrollRequest += 1
             return
         }
         showsEmptyMessage = false
@@ -330,7 +338,7 @@ struct GrowthMeasurementFormView: View {
         )
         Task {
             let saved = await growthStore.save(input)
-            if saved { dismiss() }
+            if saved { dismiss() } else { statusScrollRequest += 1 }
         }
     }
 
