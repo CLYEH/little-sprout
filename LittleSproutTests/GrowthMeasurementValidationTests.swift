@@ -42,31 +42,33 @@ final class GrowthMeasurementValidationTests: XCTestCase {
         XCTAssertNil(GrowthMeasurementValidation.rangeWarning(heightCm: 78.5, weightKg: 9.6, headCm: 45.0))
     }
 
-    /// Notes `hQpxd` 例句：「身高 180.0 cm 比同齡孩子高很多。如果沒有打錯，直接儲存就可以。」
-    func test_rangeWarning_heightOverThreshold_matchesNotesExample() {
+    /// R1 merge-review M4：門檻改成年齡無關的合理區間（上下限皆有）；orchestrator 裁決
+    /// `d55ff9ac` 第 5 條例句：「身高 220.0 cm 看起來不太尋常。如果沒有打錯，直接儲存就可
+    /// 以。」（原 Notes `hQpxd` 例句的 180.0 落在新上限 200.0 之內，改用超出新上限的 220.0）。
+    func test_rangeWarning_heightOverUpperBound_matchesDecisionExample() {
         XCTAssertEqual(
-            GrowthMeasurementValidation.rangeWarning(heightCm: 180.0, weightKg: nil, headCm: nil),
-            "身高 180.0 cm 比同齡孩子高很多。如果沒有打錯，直接儲存就可以。"
+            GrowthMeasurementValidation.rangeWarning(heightCm: 220.0, weightKg: nil, headCm: nil),
+            "身高 220.0 cm 看起來不太尋常。如果沒有打錯，直接儲存就可以。"
         )
     }
 
-    func test_rangeWarning_weightOverThreshold_mentionsWeight() {
-        let message = GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: 45.0, headCm: nil)
-        XCTAssertEqual(message, "體重 45.0 kg 比同齡孩子重很多。如果沒有打錯，直接儲存就可以。")
+    func test_rangeWarning_weightOverUpperBound_mentionsWeight() {
+        let message = GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: 160.0, headCm: nil)
+        XCTAssertEqual(message, "體重 160.0 kg 看起來不太尋常。如果沒有打錯，直接儲存就可以。")
     }
 
-    func test_rangeWarning_headOverThreshold_mentionsHead() {
-        let message = GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: nil, headCm: 65.0)
-        XCTAssertEqual(message, "頭圍 65.0 cm 比同齡孩子大很多。如果沒有打錯，直接儲存就可以。")
+    func test_rangeWarning_headUnderLowerBound_mentionsHead() {
+        let message = GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: nil, headCm: 4.5)
+        XCTAssertEqual(message, "頭圍 4.5 cm 看起來不太尋常。如果沒有打錯，直接儲存就可以。")
     }
 
     /// mutation：若三個 `if` 判斷順序或提前 `return` 被拿掉（例如改成同時回傳多條訊息），這支
     /// 測試會抓到——Range Warning Slot 只有一個插槽，只回傳第一個超出範圍的項目（依身高／
     /// 體重／頭圍的欄位視覺順序）。
     func test_rangeWarning_multipleFieldsOverThreshold_onlyReturnsFirst() {
-        let message = GrowthMeasurementValidation.rangeWarning(heightCm: 180.0, weightKg: 45.0, headCm: 65.0)
+        let message = GrowthMeasurementValidation.rangeWarning(heightCm: 220.0, weightKg: 160.0, headCm: 75.0)
         XCTAssertEqual(
-            message, "身高 180.0 cm 比同齡孩子高很多。如果沒有打錯，直接儲存就可以。",
+            message, "身高 220.0 cm 看起來不太尋常。如果沒有打錯，直接儲存就可以。",
             "三項同時超出範圍時，只回傳身高（視覺順序最前）那一條，不是全部列出"
         )
     }

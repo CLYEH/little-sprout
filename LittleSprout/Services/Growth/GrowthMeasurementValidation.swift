@@ -16,30 +16,34 @@ enum GrowthMeasurementValidation {
     }
 
     /// 「超出合理範圍」的軟性提醒——刻意用固定絕對門檻，不是依年齡換算的百分位（票文「不做：
-    /// 參考帶」已排除百分位計算，這裡是單純的手誤攔截：使用者常見的打字失誤是漏打小數點
-    /// （例如想輸入 18.0 卻打成 180），門檻選在「絕大多數孩子的合理量測範圍」之上、又低於
-    /// 「漏小數點常見錯誤值」，三項各自獨立檢查（同 `GrowthCurve` 三條曲線互不影響的既有
-    /// 精神），只回傳**第一個**超出範圍的項目（Range Warning Slot 只有一個插槽，不會同時列
-    /// 三條警語）——依身高／體重／頭圍的檢查順序，同表單欄位的視覺順序一致。
+    /// 參考帶」已排除百分位計算）。R1 merge-review M4（orchestrator 裁決 `d55ff9ac` 第 5 條）：
+    /// 這是單純的**手誤攔截**，不是同齡比較——上限擋「多打一個位數」（例如想輸入 18.0 kg 體重
+    /// 卻打成 180），下限擋「漏打小數點」（例如想輸入 45.0 cm 頭圍卻打成 4.5）。範圍刻意夠寬，
+    /// 涵蓋新生兒到成人的合理量測值，不是「該年齡的正常範圍」，三項各自獨立檢查（同
+    /// `GrowthCurve` 三條曲線互不影響的既有精神），只回傳**第一個**超出範圍的項目（Range
+    /// Warning Slot 只有一個插槽，不會同時列三條警語）——依身高／體重／頭圍的檢查順序，同
+    /// 表單欄位的視覺順序一致。
     static func rangeWarning(heightCm: Double?, weightKg: Double?, headCm: Double?) -> String? {
-        if let heightCm, heightCm > heightWarningThreshold {
-            return warningMessage(metric: .height, value: heightCm, adjective: "高")
+        if let heightCm, !heightRange.contains(heightCm) {
+            return warningMessage(metric: .height, value: heightCm)
         }
-        if let weightKg, weightKg > weightWarningThreshold {
-            return warningMessage(metric: .weight, value: weightKg, adjective: "重")
+        if let weightKg, !weightRange.contains(weightKg) {
+            return warningMessage(metric: .weight, value: weightKg)
         }
-        if let headCm, headCm > headWarningThreshold {
-            return warningMessage(metric: .head, value: headCm, adjective: "大")
+        if let headCm, !headRange.contains(headCm) {
+            return warningMessage(metric: .head, value: headCm)
         }
         return nil
     }
 
-    private static let heightWarningThreshold = 130.0
-    private static let weightWarningThreshold = 40.0
-    private static let headWarningThreshold = 60.0
+    private static let heightRange = 30.0...200.0
+    private static let weightRange = 1.0...150.0
+    private static let headRange = 25.0...70.0
 
-    /// Notes `hQpxd` 例句：「身高 180.0 cm 比同齡孩子高很多。如果沒有打錯，直接儲存就可以。」
-    private static func warningMessage(metric: GrowthMetric, value: Double, adjective: String) -> String {
-        "\(metric.label) \(metric.formattedValue(value)) \(metric.unit) 比同齡孩子\(adjective)很多。如果沒有打錯，直接儲存就可以。"
+    /// orchestrator 裁決 `d55ff9ac` 第 5 條例句：「身高 180.0 cm 看起來不太尋常。如果沒有打
+    /// 錯，直接儲存就可以。」——文案刻意不提「同齡」（門檻是年齡無關的絕對值，見上），也不分
+    /// 「太高／太重／太大」或「太矮／太輕／太小」，統一用「看起來不太尋常」。
+    private static func warningMessage(metric: GrowthMetric, value: Double) -> String {
+        "\(metric.label) \(metric.formattedValue(value)) \(metric.unit) 看起來不太尋常。如果沒有打錯，直接儲存就可以。"
     }
 }
