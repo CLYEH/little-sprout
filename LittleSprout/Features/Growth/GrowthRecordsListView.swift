@@ -113,17 +113,24 @@ struct GrowthRecordsListView: View {
         }
     }
 
+    /// R1 merge-review M3：Notes `IUdB6` Body 對整個列表區塊有左右 `$screen-pad`——原本
+    /// `listRowInsets` leading／trailing 皆 0，副標與卡片貼著螢幕邊緣。
     private var list: some View {
         List {
             header
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets())
+                .listRowInsets(EdgeInsets(
+                    top: 0, leading: AppSpacing.screenPad, bottom: 0, trailing: AppSpacing.screenPad
+                ))
             ForEach(rowItems) { item in
                 row(for: item)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: AppSpacing.tight, leading: 0, bottom: AppSpacing.tight, trailing: 0))
+                    .listRowInsets(EdgeInsets(
+                        top: AppSpacing.tight, leading: AppSpacing.screenPad,
+                        bottom: AppSpacing.tight, trailing: AppSpacing.screenPad
+                    ))
             }
         }
         .listStyle(.plain)
