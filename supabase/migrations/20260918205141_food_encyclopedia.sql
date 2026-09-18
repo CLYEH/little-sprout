@@ -225,7 +225,7 @@ values
 ('walnuts', '核桃', 'fat_nut', 87, array['tree_nut']::text[], 12),
 ('cashews', '腰果', 'fat_nut', 88, array['tree_nut']::text[], 12),
 ('tahini', '芝麻醬', 'fat_nut', 89, '{}'::text[], null),
-('sunflower_seed_butter', '葵花籤醬', 'fat_nut', 90, '{}'::text[], null),
+('sunflower_seed_butter', '葵花籽醬', 'fat_nut', 90, '{}'::text[], null),
 ('steamed_egg', '蒸蛋', 'tw_home', 91, array['egg']::text[], null),
 ('tofu_pudding', '豆花', 'tw_home', 92, array['soy']::text[], null),
 ('fish_soup', '魚湯', 'tw_home', 93, array['fish']::text[], null),
