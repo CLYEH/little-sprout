@@ -47,6 +47,25 @@ enum TimelineContentAssembler {
         return buildEntries(pointers: knownPointers, maps: maps)
     }
 
+    /// LS-329 merge-review R1：抓一頁指標並組裝。`assemble` 會濾掉 `.unknown` kind，整頁
+    /// `limit` 筆全是未知 kind 時組裝結果為空、但後面仍可能有已知內容——以該頁**最後一個
+    /// 指標**當游標繼續往下翻，直到拿到至少一筆或到底；否則 `TimelineStore` 第一頁全未知會
+    /// 停在空狀態、`loadMore` 撞上整頁未知會用同一個 `entries.last` 游標原地踏步。
+    static func fetchAssembledPage(
+        familyID: UUID, childID: UUID?, cursor: TimelineCursor?, limit: Int, apiClient: TimelineAPIClient
+    ) async throws -> (entries: [TimelineEntry], isFullPage: Bool) {
+        var cursor = cursor
+        while true {
+            let pointers = try await apiClient.fetchTimelinePointers(
+                familyID: familyID, childID: childID, cursor: cursor, limit: limit
+            )
+            let entries = try await assemble(pointers: pointers, apiClient: apiClient)
+            let isFullPage = pointers.count == limit
+            guard entries.isEmpty, isFullPage, let last = pointers.last else { return (entries, isFullPage) }
+            cursor = TimelineCursor(occurredAt: last.occurredAt, refId: last.refId)
+        }
+    }
+
     /// 三支批次查詢（diary／album／media）用 `withThrowingTaskGroup` 平行發出，見
     /// docs/API.md `get_family_timeline` 文件與本檔頂端註解。
     private static func fetchContentMaps(

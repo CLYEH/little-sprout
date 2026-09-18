@@ -191,13 +191,12 @@ final class TimelineStore {
         self.childID = childID
         refreshState = .submitting
         do {
-            let pointers = try await apiClient.fetchTimelinePointers(
-                familyID: familyID, childID: childID, cursor: nil, limit: Self.pageSize
+            let (newEntries, isFullPage) = try await TimelineContentAssembler.fetchAssembledPage(
+                familyID: familyID, childID: childID, cursor: nil, limit: Self.pageSize, apiClient: apiClient
             )
-            let newEntries = try await TimelineContentAssembler.assemble(pointers: pointers, apiClient: apiClient)
             guard myGeneration == generation else { return false }
             entries = newEntries
-            hasMorePages = pointers.count == Self.pageSize
+            hasMorePages = isFullPage
             refreshState = .success
             // LS-243：留言計數隨這一頁的指標一起回來，不必等網路請求，跟 `entries` 同一刻
             // 寫入即可（見 `syncCommentCounts` 文件註解）。
@@ -257,10 +256,9 @@ final class TimelineStore {
         loadMoreState = .submitting
         do {
             let cursor = TimelineCursor(occurredAt: last.occurredAt, refId: last.refId)
-            let pointers = try await apiClient.fetchTimelinePointers(
-                familyID: familyID, childID: childID, cursor: cursor, limit: Self.pageSize
+            let (newEntries, isFullPage) = try await TimelineContentAssembler.fetchAssembledPage(
+                familyID: familyID, childID: childID, cursor: cursor, limit: Self.pageSize, apiClient: apiClient
             )
-            let newEntries = try await TimelineContentAssembler.assemble(pointers: pointers, apiClient: apiClient)
             guard myGeneration == generation, entries.last?.id == baseTailID else {
                 // entries 基底已經被更新的呼叫換掉——安靜丟棄，但要把 loadMoreState
                 // 收回非 submitting，不然下一次使用者捲到底會被卡住的 in-flight guard
@@ -269,7 +267,7 @@ final class TimelineStore {
                 return false
             }
             entries.append(contentsOf: newEntries)
-            hasMorePages = pointers.count == Self.pageSize
+            hasMorePages = isFullPage
             loadMoreState = .success
             // LS-243：同 `refresh` 的既有理由——只補新追加這批的留言計數（已經在 `entries`
             // 裡的舊資料不重查），見 `syncCommentCounts` 文件註解。
