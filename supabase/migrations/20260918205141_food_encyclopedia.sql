@@ -595,8 +595,12 @@ grant execute on function public.list_child_food_records(uuid) to authenticated;
 -- p_food_id 不存在於 food_catalog 撞 23503（一般外鍵違反，不特別處理——food_catalog
 -- 是固定清單，iOS 呼叫端的候選值只會來自這張表本身，不存在的 food_id 屬於呼叫端
 -- 組錯參數，同 upsert_growth_record 對「一般 Postgres 錯誤碼，不逐碼開自訂碼」的
--- 既有裁量）。p_child_id 指向已軟刪的孩子撞 LS044（第 5 段 trigger，僅新增分支會
---觸發，更新分支從不改 child_id）。
+-- 既有裁量）。p_child_id 指向已軟刪的孩子撞 LS044（第 5 段 trigger）——這支 trigger
+-- 掛 BEFORE INSERT/UPDATE，但 `INSERT ... ON CONFLICT DO UPDATE` 的 BEFORE INSERT
+-- 對「提議列」求值，不論最後有沒有撞到衝突都會觸發：這次呼叫落地成新增，或撞
+-- 衝突轉成更新既有紀錄，只要目前傳入的 p_child_id 對應孩子已軟刪，兩種分支都會
+-- 撞（跟 growth_records 用 p_id 分支的純 UPDATE 陳述式不同，那裡不會重新觸發
+-- BEFORE INSERT，見該函式既有記載；merge-review R1 m1 登記）。
 create or replace function public.upsert_child_food_record(
   p_child_id uuid,
   p_food_id text,

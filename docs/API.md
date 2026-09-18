@@ -439,8 +439,10 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   被軟刪的舊紀錄是各自獨立的列，partial index 只保護「未刪」狀態，見 §4）。
 - **軟刪沿用 LS-57**：唯一路徑是 `delete_child_food_record`（`SECURITY DEFINER`），
   UI 語意是「這格圖鑑退回未嘗試（灰階）」，不是刪除歷史。
-- **已軟刪的孩子不能再被指定為新內容**（`LS044`，`BEFORE INSERT/UPDATE`，僅新增
-  分支會觸發，同 `growth_records`）。
+- **已軟刪的孩子不能再被指定為新內容**（`LS044`，`BEFORE INSERT/UPDATE`）——跟
+  `growth_records` 不同：這裡的「更新」是 `upsert_child_food_record` 撞
+  `ON CONFLICT DO UPDATE`，`BEFORE INSERT` trigger 對提議列求值、衝突與否都會
+  觸發，所以編輯既有紀錄時孩子若已軟刪一樣會撞（見 §4）。
 - **帳號停權／刪除過渡期**：同其餘「自著內容」表，見 §2、§5。
 - **時間軸（F5b）**：第一次記錄產生一張 `food_first` feed 卡片（`feed_kind` 新增值，
   LS-325），`child_ids` 恆為單一元素（`[child_id]`）；`comment_count` 恆為 `0`
@@ -1932,8 +1934,10 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   違反一律 fail loud，沒有「這一列不在 USING 範圍內就跳過」這個概念。這正是票面
   「並發：...第二筆得到明確錯誤或轉為更新」裡「明確錯誤」的那一支（見下方併發
   段「轉為更新」是另一支）。
-- **`p_child_id` 指向已軟刪的孩子**（僅新增分支，更新分支從不改 `child_id`）：
-  `LS044`。**`p_food_id` 不存在於 `food_catalog`**：`23503`（一般外鍵違反，不
+- **`p_child_id` 指向已軟刪的孩子**：`LS044`——`ON CONFLICT DO UPDATE` 的
+  `BEFORE INSERT` trigger 對提議列求值，新增分支與衝突轉更新分支都會觸發，編輯
+  既有紀錄時孩子若已軟刪同樣撞這個碼（見 §3）。**`p_food_id` 不存在於
+  `food_catalog`**：`23503`（一般外鍵違反，不
   開自訂碼——`food_catalog` 是固定清單，正常呼叫端的候選值只會來自這張表本身）。
   三項內容欄位違反 `CHECK`（`note` 超過 2000 字、`reaction` 不在三個合法值）：
   `23514`。**刻意不開自訂 `LSnnn` 碼**（理由同 `upsert_growth_record`：本票是
@@ -2326,7 +2330,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS041` | 孩子檔案不存在，或（`update_child` 情境）已被軟刪除須先還原 | `update_child`／`set_child_deleted` |
 | `LS042` | 不是仍是該家庭 owner/member 的成員，無法編輯孩子檔案 | `update_child` |
 | `LS043` | 孩子檔案已被移除超過 30 天，無法還原 | `set_child_deleted`（`p_deleted = false`） |
-| `LS044` | 寶貝已移除，無法歸屬新內容 | `diary_children`／`album_children` 的 `BEFORE INSERT` trigger（LS-121 起搬到連結表；原本掛在 `diaries`／`albums` 本體，見 §8）——`create_diary_entry`／`update_diary_entry`／`set_album_children`（`p_child_ids` 任一元素指向已軟刪的孩子）皆可能撞到，這是這支 trigger 唯一會被觸發的路徑（`diary_children`／`album_children` 對 `authenticated` 沒有任何直接寫入 grant，見 §2／§3，不存在繞過三支 RPC 直接撞到這個碼的呼叫端路徑）；只在真的要新增一列標記時才會觸發，不影響既有標記繼續存在、既有內容繼續軟刪／還原／編輯自己（見 §8）。**`growth_records`（LS-255 R2，merge-review R1 m2 登記）**：`growth_records` 的 `BEFORE INSERT/UPDATE` 也掛了同一支共用函式 `private.enforce_child_not_deleted()`——`upsert_growth_record` 的新增分支若 `p_child_id` 指向已軟刪的孩子會撞到；更新分支從不改 `child_id`（欄位級 grant 未開放），這支 trigger 對更新分支恆為 no-op。**`child_food_records`（LS-325）**：同樣掛了 `private.enforce_child_not_deleted()`（`BEFORE INSERT/UPDATE`）——`upsert_child_food_record` 的新增分支（`ON CONFLICT` 未命中，實際執行 INSERT）若 `p_child_id` 指向已軟刪的孩子會撞到；衝突時的更新分支從不改 `child_id`，恆為 no-op |
+| `LS044` | 寶貝已移除，無法歸屬新內容 | `diary_children`／`album_children` 的 `BEFORE INSERT` trigger（LS-121 起搬到連結表；原本掛在 `diaries`／`albums` 本體，見 §8）——`create_diary_entry`／`update_diary_entry`／`set_album_children`（`p_child_ids` 任一元素指向已軟刪的孩子）皆可能撞到，這是這支 trigger 唯一會被觸發的路徑（`diary_children`／`album_children` 對 `authenticated` 沒有任何直接寫入 grant，見 §2／§3，不存在繞過三支 RPC 直接撞到這個碼的呼叫端路徑）；只在真的要新增一列標記時才會觸發，不影響既有標記繼續存在、既有內容繼續軟刪／還原／編輯自己（見 §8）。**`growth_records`（LS-255 R2，merge-review R1 m2 登記）**：`growth_records` 的 `BEFORE INSERT/UPDATE` 也掛了同一支共用函式 `private.enforce_child_not_deleted()`——`upsert_growth_record` 的新增分支若 `p_child_id` 指向已軟刪的孩子會撞到；更新分支從不改 `child_id`（欄位級 grant 未開放），這支 trigger 對更新分支恆為 no-op。**`child_food_records`（LS-325）**：同樣掛了 `private.enforce_child_not_deleted()`（`BEFORE INSERT/UPDATE`）——但跟 `growth_records` 不同，`upsert_child_food_record` 唯一的寫入路徑是 `INSERT ... ON CONFLICT DO UPDATE`，`BEFORE INSERT` trigger 對提議列求值、不論最後落地成新增還是撞衝突轉更新都會觸發：`p_child_id` 指向已軟刪的孩子時，新增分支與編輯既有紀錄的衝突轉更新分支**都**會撞到，不是 no-op（merge-review R1 m1 登記，訂正原先誤寫的「恆為 no-op」） |
 | `LS045` | 不是相簿建立者本人，或雖是建立者但已不是該家庭 owner/member，無法設定寶貝標記 | `set_album_children`（LS-121） |
 | `LS050` | 你是家庭的唯一 owner，且家庭還有其他成員，須先轉移 owner 身份才能刪除帳號——`DETAIL` 帶 JSON 陣列列出全部需要轉移的家庭（`[{"family_id","family_name"}, ...]`），見 §4 `delete_my_account` | `delete_my_account`（LS-143） |
 | `LS051` | 帳號已請求刪除（`deletion_requested_at` 非 `NULL`），過渡期間不能再建立新資料——沒有輸入可換，只能等 Edge Function `delete-account` 完成刪除 | `families`／`family_members`／`media`／`diaries`／`albums`／`children`／`comments` 的 `BEFORE INSERT` trigger（`private.enforce_account_not_deletion_requested()`，LS-151），涵蓋直接 `.insert()` 與 `create_child`／`create_diary_entry`／`create_comment`／`approve_join`／建立新家庭自動寫入 owner 等 RPC 路徑，見 §2「過渡期擋寫」 |
