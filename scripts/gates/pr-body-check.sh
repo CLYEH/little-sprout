@@ -176,6 +176,20 @@ pool=LS-96
 hex_tokens() {
   printf '%s' "$1" | LC_ALL=C grep -oE '[0-9A-Za-z]+' | LC_ALL=C grep -E "^[0-9a-f]{$2,$3}\$" | paste -s -d, -
 }
+# LS-327（來源 LS-96 池項 9b6b435e）：完整 UUID（[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}）一律
+# 以首段為候選——即使首段恰為 8 位純數字（機率≈2.3%）也不套後面 pool_id_candidates 裡的純數字過濾，因為它是
+# 合法 UUID 首段、不是裸 run id；其後四段（如 -698d、-49ae、-9a1e、-391cb3fbadf9）不再當獨立候選——單獨看 12
+# 位尾段是合法 hex 但非純數字，會漏過純數字過濾變成候選（PR #486 第 72 行 `16074303-698d-49ae-9a1e-391cb3fbadf9`、
+# LS-304 R4 皆實測踩到：格式綠、--verify 反查尾段找不到而誤紅）。做法：先抓完整 UUID 首段，再把整段 UUID 從
+# 文字中拿掉，剩下文字才走原本逐 token 抽取＋純數字過濾（孤立 run id／行號仍排除，不受影響）。
+uuid_regex='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+pool_id_candidates() {
+  local line=$1 uuid_ids rest plain_ids
+  uuid_ids=$(printf '%s' "$line" | LC_ALL=C grep -oE "$uuid_regex" | LC_ALL=C cut -d- -f1 | paste -s -d, -)
+  rest=$(printf '%s' "$line" | LC_ALL=C sed -E "s/${uuid_regex}//g")
+  plain_ids=$(hex_tokens "$rest" 8 '' | tr , '\n' | grep -vE '^[0-9]+$' | paste -s -d, -)
+  printf '%s\n%s\n' "$uuid_ids" "$plain_ids" | tr ',' '\n' | grep -v '^$' | paste -s -d, -
+}
 # 「已修」的 SHA 候選（LS-186）：同一行第一個「已修」之後、第一個為 7–40 位小寫 hex 的獨立英數 token（token 規則同 hex_tokens：
 # `x9f348e36y` 不算、`commit`／`：`／`，` 這類非 hex token 跳過）；「已修」之前的 hex（LS-185 標題行的 comment id）與之後的
 # 第二個起都不算。`${1#*已修}` 是位元組字面比對，C／UTF-8 locale 皆穩。R1 版要求緊鄰（只隔空白／反引號／*／左括號）會擋掉
@@ -195,7 +209,8 @@ while IFS= read -r line || [ -n "$line" ]; do
   if [ "$is_pool" -eq 1 ]; then
     # LS-256（010d927d(3)）：純數字 token（GitHub run id、行號）不是 comment id 候選——Linear comment id 是 UUID，首 8 位
     # 全為數字的機率 (10/16)^8≈2.3%，寧可漏這 2.3% 也不讓 run id 冒充候選（冒充後格式綠、--verify 才紅在「找不到」）。
-    ids=$(hex_tokens "$line" 8 '' | tr , '\n' | grep -vE '^[0-9]+$' | paste -s -d, -)  # LS256-DIGIT-FILTER
+    # LS-327：完整 UUID 的首段優先於這條純數字過濾（見上 pool_id_candidates／uuid_regex 的說明）。
+    ids=$(pool_id_candidates "$line")  # LS256-DIGIT-FILTER
     if [ -z "$ids" ]; then
       echo "✗ pr-body-check：第 ${n} 行提到 ${pool}／入池／待辦池，但沒有 comment id（≥8 位 hex）：" >&2
       echo "    | ${line}" >&2

@@ -254,14 +254,33 @@ case "$tool_name" in
     h4_norm=${command//\"/}
     h4_norm=${h4_norm//\'/}
     while [[ $h4_norm == *"  "* ]]; do h4_norm=${h4_norm//  / }; done
-    case "$h4_norm" in
-      *"pgrep -f [p]ush-gate"*|*"pgrep -f [x]codebuild"*)
-        case "$h4_norm" in
-          *"worktrees/LS-"*) ;;
-          *) final_deny "H4：pgrep -f 等待 push-gate／xcodebuild 未帶 worktrees/LS-<n> 範圍字面，會等到別票的行程（LS-315 根因），見 ${COLL_REF}" ;;
-        esac
-        ;;
-    esac
+    # LS-327（池 6c522429，來源 LS-322 R2 2e65a5b9 實測）：上一版只認獨立 `-f`，`pgrep -lf`／
+    # `pgrep -fl`（旗標與 -f 合寫成短旗標組）未帶 worktrees/LS- 範圍字面也被放行。改為掃描整段
+    # 命令文字裡「`pgrep -`＋純小寫字母短旗標組（含 f）＋單一空白＋target」這個形狀，旗標組
+    # 允許任意字母組合（`-f`／`-lf`／`-fl`／`-af`／…都算）；target 為 `[x]codebuild` 或
+    # `[p]ush-gate` 字面。沿用原版「旗標與 target 之間須有單一空白」的假設（`-f` 與引號之間本來
+    # 就無空白的殘留盲區——如 `pgrep -f'[x]codebuild'`——沿用不修，reviewer 已確認可接受）。純
+    # bash 參數展開＋`[[ ]]` glob 判斷，不倚賴外部 tr／sed（PATH 限縮的 fail-closed 自測要求）。
+    h4_pgrep_trigger=0
+    h4_scan=$h4_norm
+    while [[ $h4_scan == *"pgrep -"* ]]; do
+      h4_scan=${h4_scan#*"pgrep -"}
+      h4_flag=${h4_scan%% *}
+      h4_tail=${h4_scan#"$h4_flag"}
+      h4_tail=${h4_tail# }
+      h4_target=${h4_tail%% *}
+      if [[ $h4_flag == *f* && $h4_flag != *[!a-z]* ]] \
+        && { [[ $h4_target == "[x]codebuild"* ]] || [[ $h4_target == "[p]ush-gate"* ]]; }; then
+        h4_pgrep_trigger=1
+        break
+      fi
+    done
+    if [ "$h4_pgrep_trigger" -eq 1 ]; then
+      case "$h4_norm" in
+        *"worktrees/LS-"*) ;;
+        *) final_deny "H4：pgrep -f 等待 push-gate／xcodebuild 未帶 worktrees/LS-<n> 範圍字面，會等到別票的行程（LS-315 根因），見 ${COLL_REF}" ;;
+      esac
+    fi
     ;;
   Read)
     base=${file_path##*/}

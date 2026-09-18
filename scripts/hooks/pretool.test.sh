@@ -722,6 +722,21 @@ expect 'H4⑩ 對照：-f 與引號之間本來就無空白、無範圍（allow�
 # 接受的過度擋方向，補一則負例鎖住現況（見 PR body 風險段說明不豁免的理由） ----
 expect 'H4⑪ echo 純引述字面、無範圍（deny，minor：已知過度擋，不修——見 PR body 風險段）' 2 \
   "$(bash_json "echo 'pgrep -f '\\''[x]codebuild'\\'' documentation example, no worktree here'")"
+# ---- LS-327（池 6c522429，來源 LS-322 R2 2e65a5b9 實測）：上一版只認獨立 -f，`pgrep -lf`／
+# `pgrep -fl`（旗標與 -f 合寫成短旗標組）未帶 worktrees/LS- 範圍字面也被放行，會等到別票的行程
+# （同 H4①②③④ 的根因，只是旗標寫法不同）；-af 為另一種常見合寫順序，一併鎖住 ----
+expect 'H4⑫ 全域 pgrep -lf [x]codebuild（deny，LS-327：-lf 合寫旗標未帶範圍）' 2 \
+  "$(bash_json "while pgrep -lf '[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")"
+expect 'H4⑬ 全域 pgrep -fl [p]ush-gate（deny，LS-327：-fl 合寫旗標未帶範圍）' 2 \
+  "$(bash_json "while pgrep -fl '[p]ush-gate' >/dev/null 2>&1; do sleep 20; done")"
+expect 'H4⑭ 全域 pgrep -af [x]codebuild（deny，LS-327：-af 合寫旗標未帶範圍）' 2 \
+  "$(bash_json "while pgrep -af '[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")"
+expect 'H4⑮ 帶 worktrees/LS-315 範圍字面的 pgrep -lf [x]codebuild（allow，LS-327 正例：修法不誤擋合法寫法）' 0 \
+  "$(bash_json "while pgrep -lf '[x]codebuild .*ABCD' 2>/dev/null | grep -q worktrees/LS-315; do sleep 20; done")"
+expect 'H4⑯ 帶 worktrees/LS-42 範圍字面的 pgrep -fl [p]ush-gate（allow，LS-327 正例）' 0 \
+  "$(bash_json "while pgrep -fl '[p]ush-gate' 2>/dev/null | grep -q worktrees/LS-42; do sleep 20; done")"
+expect 'H4⑰ pgrep -l（不含 f 的短旗標組）即使 target 是 [x]codebuild 字面也不誤擋（allow，LS-327：只有含 f 的旗標組才觸發）' 0 \
+  "$(bash_json "pgrep -l '[x]codebuild'")"
 
 if [ "$fail" -eq 0 ]; then
   if [ "${i6_skipped:-0}" -gt 0 ]; then
