@@ -48,15 +48,35 @@ enum GrowthCurve {
         let measuredOn: Date
     }
 
+    /// R1 merge-review M2：曲線／最新值卡不能沿用 `deduplicatedByDay`（整筆同日去重）——同一天
+    /// 先存身高、再存體重是兩筆不同記錄，整筆去重只留下「體重那一筆」，身高那筆的值就此消失，
+    /// 即使身高在那天確實有量到。改成**逐項**去重：只在同一天、同一個量測項出現多筆時才需要
+    /// 決定代表值，取 `createdAt` 最新的一筆（`createdAt` 相同時以 `id` 字串排序 tie-break，
+    /// 同 `deduplicatedByDay` 的既有決定性理由）。
+    private static func latestValuesByDay(
+        for metric: GrowthMetric, records: [GrowthRecord]
+    ) -> [(record: GrowthRecord, value: Double)] {
+        let withValue: [(record: GrowthRecord, value: Double)] = records.compactMap { record in
+            guard let value = metric.value(in: record) else { return nil }
+            return (record, value)
+        }
+        let grouped = Dictionary(grouping: withValue) { utcCalendar.startOfDay(for: $0.record.measuredOn) }
+        return grouped.values.compactMap { group in
+            group.max { lhs, rhs in
+                if lhs.record.createdAt != rhs.record.createdAt { return lhs.record.createdAt < rhs.record.createdAt }
+                return lhs.record.id.uuidString < rhs.record.id.uuidString
+            }
+        }
+    }
+
     /// 給定量測項與 `birthday`，取該項「有值」的曲線點，依月齡遞增排序（Notes `C46vnG`：
     /// 「三條曲線各自獨立取點」——身高／體重／頭圍互不影響彼此的缺值）。呼叫端在少於 2 點時
     /// 不畫折線（Notes「少於 2 個有效資料點時不畫折線」，見 04 空狀態骨架版）。
     static func curvePoints(for metric: GrowthMetric, records: [GrowthRecord], birthday: Date) -> [CurvePoint] {
-        deduplicatedByDay(records).compactMap { record in
-            guard let value = metric.value(in: record) else { return nil }
-            return CurvePoint(
-                ageMonths: ageInMonths(birthday: birthday, measuredOn: record.measuredOn),
-                value: value, measuredOn: record.measuredOn
+        latestValuesByDay(for: metric, records: records).map { entry in
+            CurvePoint(
+                ageMonths: ageInMonths(birthday: birthday, measuredOn: entry.record.measuredOn),
+                value: entry.value, measuredOn: entry.record.measuredOn
             )
         }.sorted { $0.ageMonths < $1.ageMonths }
     }
@@ -72,12 +92,9 @@ enum GrowthCurve {
     /// 「最新值卡」（Notes `qga6d`／`db1ET`）：該項量測「有值」的最新一筆記錄，與上一筆
     /// 「有值」的記錄算差值——**不是相鄰整筆**：某次記錄缺這一項，往前找的是「上一筆有值」的
     /// 記錄，不是陣列相鄰那一筆（例：13mo 缺身高，16mo 身高的『上一筆』是 10mo，不是 13mo）。
+    /// 逐項去重理由見 `latestValuesByDay` 文件註解（M2）。
     static func latestValue(for metric: GrowthMetric, records: [GrowthRecord]) -> LatestValue? {
-        let withValue: [(record: GrowthRecord, value: Double)] = deduplicatedByDay(records)
-            .compactMap { record in
-                guard let value = metric.value(in: record) else { return nil }
-                return (record, value)
-            }
+        let withValue = latestValuesByDay(for: metric, records: records)
             .sorted { $0.record.measuredOn > $1.record.measuredOn }
         guard let latest = withValue.first else { return nil }
         let delta = withValue.count > 1 ? latest.value - withValue[1].value : nil

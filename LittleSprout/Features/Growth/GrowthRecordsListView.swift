@@ -51,14 +51,23 @@ struct GrowthRecordsListView: View {
         }
     }
 
-    /// 依 `measuredOn` 遞減（`GrowthCurve.historyRecords`，同一天多筆取最後——見該函式文件
-    /// 註解），年份變化時插入一個郵戳列。
+    /// R1 merge-review M2：不用 `GrowthCurve.historyRecords`（整筆同日去重）——03 是「管理」
+    /// 這些記錄的地方，同一天先存身高、再存體重是兩筆不同記錄，都要能各自被看到、編輯、刪除，
+    /// 不能被同日去重藏起來。全列 `growthStore.records`，以記錄 `id` 為鍵（`RowItem.id`）；
+    /// 依 `measuredOn` 遞減排序，同日以 `createdAt` 遞減 tie-break（較晚存的排前面，同
+    /// `GrowthCurve.latestValuesByDay` 的 tie-break 依據一致，不是任意選一個），年份變化時
+    /// 插入一個郵戳列。
     private var rowItems: [RowItem] {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
+        let sorted = growthStore.records.sorted { lhs, rhs in
+            if lhs.measuredOn != rhs.measuredOn { return lhs.measuredOn > rhs.measuredOn }
+            if lhs.createdAt != rhs.createdAt { return lhs.createdAt > rhs.createdAt }
+            return lhs.id.uuidString < rhs.id.uuidString
+        }
         var items: [RowItem] = []
         var lastYear: Int?
-        for record in GrowthCurve.historyRecords(growthStore.records) {
+        for record in sorted {
             let year = calendar.component(.year, from: record.measuredOn)
             if year != lastYear {
                 items.append(.yearDivider(year))

@@ -139,6 +139,50 @@ final class GrowthStoreTests: XCTestCase {
         XCTAssertEqual(store.records.first?.heightCm, 78.5)
     }
 
+    /// R1 merge-review M2：同一天先存身高、再存體重是兩筆不同記錄——`records.count` 要是 2
+    /// （03 列表要能各自列出、編輯、刪除，不是被同日去重成 1），且最新值卡要能逐項各自讀到
+    /// 自己那筆的值。`weightRecord.createdAt` 刻意晚於 `heightRecord.createdAt`：舊寫法
+    /// （`GrowthCurve.deduplicatedByDay` 整筆同日取 `updatedAt` 最新者）會把體重那筆選成當天
+    /// 代表、身高的值就此消失。mutation：若 `GrowthCurve.latestValue`／`curvePoints` 改回呼叫
+    /// 整筆去重的 `deduplicatedByDay`，`latestValue(for: .height)` 會變成 `nil`（體重那筆的
+    /// `heightCm` 是 `nil`），這支測試會抓到。
+    func test_save_sameDaySecondRecordWithDifferentMetric_bothRecordsSurviveAndLatestValuePerMetric() async {
+        let stub = StubGrowthAPIClient()
+        let store = makeStore(apiClient: stub)
+        let measuredOn = BirthdayFormat.date(fromWireString: "2026-09-04")!
+        let familyID = UUID()
+        let authorID = UUID()
+        let heightRecord = GrowthRecord(
+            id: UUID(), familyID: familyID, childID: store.childID, authorID: authorID, measuredOn: measuredOn,
+            heightCm: 95.0, weightKg: nil, headCm: nil, note: nil,
+            createdAt: measuredOn, updatedAt: measuredOn
+        )
+        stub.upsertResult = .success(heightRecord)
+        let heightSaved = await store.save(
+            GrowthMeasurementInput(
+                id: nil, measuredOn: measuredOn, heightCm: 95.0, weightKg: nil, headCm: nil, note: nil
+            )
+        )
+        XCTAssertTrue(heightSaved, "前置條件：身高那筆要先存成功")
+
+        let weightRecord = GrowthRecord(
+            id: UUID(), familyID: familyID, childID: store.childID, authorID: authorID, measuredOn: measuredOn,
+            heightCm: nil, weightKg: 14.0, headCm: nil, note: nil,
+            createdAt: measuredOn.addingTimeInterval(60), updatedAt: measuredOn.addingTimeInterval(60)
+        )
+        stub.upsertResult = .success(weightRecord)
+        let weightSaved = await store.save(
+            GrowthMeasurementInput(
+                id: nil, measuredOn: measuredOn, heightCm: nil, weightKg: 14.0, headCm: nil, note: nil
+            )
+        )
+        XCTAssertTrue(weightSaved, "前置條件：體重那筆也要存成功")
+
+        XCTAssertEqual(store.records.count, 2, "同一天兩筆不同量測項各自是獨立記錄，不該被同日去重成 1 筆")
+        XCTAssertEqual(store.latestValue(for: .height)?.value, 95.0, "身高最新值不該被同一天後存的體重那筆蓋掉")
+        XCTAssertEqual(store.latestValue(for: .weight)?.value, 14.0)
+    }
+
     /// mutation：若 `save(_:)` 編輯分支改成一律 `append`（不判斷 `id` 是否已存在），這支測試
     /// 會抓到——編輯既有筆不該讓 `records` 多一筆重複的。
     func test_save_editingExistingRecord_replacesInPlaceNotAppends() async {
