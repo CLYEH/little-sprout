@@ -70,6 +70,8 @@
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
 | `growth_records`（LS-255） | 我所屬家庭**未刪**的成長紀錄（身高／體重／頭圍） | owner／member（`author_id` 必須是自己） | 僅內容欄位（`measured_on`／`height_cm`／`weight_kg`／`head_cm`／`note`），**僅原作者本人**（owner 不在這條路徑——見 §3「為什麼 growth_records 用了真 RLS」） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_growth_record` RPC（作者本人，或該家庭 owner——不限作者，見 §4） | 真 RLS 直接開放 INSERT／UPDATE（不是 diaries/albums/comments/children 那種 RPC-only 收斂）：`deleted_at`／`deleted_by` 兩欄對 authenticated 無 UPDATE grant，唯一寫入路徑是 `delete_growth_record`（`SECURITY DEFINER`）；設計理由見 §3 |
+| `food_catalog`（LS-325） | 任一登入使用者，全表 | 🔒 **唯讀**（只有本 migration 以表擁有者身分寫入 seed，`authenticated` 無任何寫入 grant） | 🔒 唯讀 | 🔒 唯讀 | 飲食圖鑑靜態目錄，約 120 種台灣常見食物，8 類，v1 不開放自訂（LS-310 F1a）；`id` 同時是插圖資產名（F3a）；`allergens`／`min_age_months` 純資訊，附免責聲明（F2a）。見 §3 |
+| `child_food_records`（LS-325） | 我所屬家庭**未刪**的飲食圖鑑記錄（每寶貝每食物一筆「第一次吃到」） | owner／member（`author_id` 必須是自己）；建議走 `upsert_child_food_record` RPC（自然鍵 upsert，見 §4） | 僅內容欄位（`first_tried_on`／`media_id`／`note`／`reaction`），**僅原作者本人**（owner 不在這條路徑，同 `growth_records`） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_child_food_record` RPC（作者本人，或該家庭 owner） | 權限模型逐字沿用 `growth_records`（見 §3）；同一寶貝同一食物最多一筆未軟刪紀錄（partial unique index），軟刪後可再新增；時間軸產生 `food_first` 卡片，見 §3「`feed_items`」／§4 `get_family_timeline` |
 | `media` | 我所屬家庭**尚未軟刪**的檔案中繼資料，**上傳者自己的例外**——不論是否已軟刪都看得到自己上傳的列（`deleted_at is null or uploaded_by = auth.uid()`，LS-155 R2 起；與 `children` 全員可見已軟刪列的例外不同，這裡只有上傳者本人是例外，見 §3「`media_select` 過濾」段落的已知殘留缺口） | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | **文件承諾「owner 任意列」，實際只對 owner 自己上傳的列與尚未軟刪的別人的列成立**（一般刪除走 `deleted_at`）——owner 對「別人上傳、已軟刪」的列直接 `DELETE` 會因為 R2 的 `media_select` 把該列藏起來而**靜默影響 0 列**（LS-155 R2 review m1 實測，見 §3 殘留缺口段落）；真正的 owner moderation 請走 `remove_content_as_owner('media', id)`（`SECURITY DEFINER`，不受這個限制） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3；寶貝標記唯一路徑是 `set_media_children`／`set_media_children_batch` RPC（見下 `media_children` 列與 §4） |
 | `media_children`（LS-317） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_media_children`／`set_media_children_batch`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（同上，直接 DELETE 已被 revoke） | 照片／影片 ↔ 孩子多對多標記，沿 `album_children`（LS-121）先例；`media` 本身沒有 hybrid 模式，授權門檻是「上傳者本人且當下仍有上傳權，或該家庭 owner」（同 `media_update` policy，不是建立者分支），見 §8 |
 | `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對別人相簿的內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8 |
@@ -134,7 +136,8 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
 **過渡期擋寫（LS-151，R2 訂正範圍）**：`profiles.deletion_requested_at` 非
 `NULL`（呼叫過 `delete_my_account()`、還沒被 Edge Function `delete-account` 真正
 刪除 `auth.users` 的窗口期）時，`families`／`media`／`diaries`／`albums`／
-`children`／`comments`／`join_requests`／`growth_records`（LS-255）八張表的
+`children`／`comments`／`join_requests`／`growth_records`（LS-255）／
+`child_food_records`（LS-325）九張表的
 `INSERT` 一律拒絕（`LS051`），
 `family_members` 額外擋 `UPDATE OF role, user_id`——不論走的是直接 `.insert()`
 還是任何 `SECURITY DEFINER` RPC（`create_child`／`create_diary_entry`／
@@ -400,6 +403,48 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   段）。owner 想對別人的紀錄做事，唯一有意義的操作是移除，要呼叫
   `delete_growth_record` RPC——這支失敗時**會**丟出明確的 `42501`，不會有「靜默
   0 列」這種模稜兩可的結果。
+
+### `food_catalog`（LS-325，LS-310 F1a／F2a／F3a）
+- 飲食圖鑑靜態目錄，約 120 種台灣常見食物，8 類（`grain_root`／`vegetable`／
+  `fruit`／`protein`／`dairy`／`fat_nut`／`tw_home`／`snack_drink`），`sort_order`
+  依國健署副食品引入順序排（類內遞增，不保證跨類連續）。`id` 是英文 slug（例如
+  `pumpkin`），同時是 app 插圖資產名（F3a）；v1 不開放自訂（F1a）。
+- **全表唯讀**：`authenticated` 只有 `SELECT`（`using (true)`，不分家庭——這是
+  app 內建的全域目錄，不是家庭範圍資料），沒有任何寫入 grant；唯一寫入路徑是本表
+  的 migration seed（`postgres`／表擁有者身分，繞過 RLS）。
+- `allergens text[]`：8 種常見過敏原（`egg`／`milk`／`peanut`／`tree_nut`／
+  `shellfish`／`fish`／`wheat`／`soy`）的子集，`check` 約束（`<@`）；`min_age_months`：
+  「一歲前不建議」的品項填 `12`，其餘 `null`（票面「不確定的醫學標記寧可保守」，
+  完整清單見本票 PR handoff）。**純資訊，附免責聲明（文案在 iOS 端呈現），不構成
+  醫療建議**——不要在此基礎上做任何自動化的「擋止／警告」邏輯以外的醫療判斷。
+- 內容來源：`supabase/seed-data/food_catalog.csv`（人類可讀，供使用者過目），
+  `scripts/ops/food-catalog-sql.py` 轉成 migration 內的 `INSERT`；兩者一致性見
+  `supabase/tests/117_food_encyclopedia.sql` §1。
+
+### `child_food_records`（LS-325，LS-310 F4a／F5b）
+- 每寶貝每食物一筆「第一次吃到」記錄：`first_tried_on`（必填）／`media_id`（選填，
+  必須同家庭，複合外鍵 `(family_id, media_id)`）／`note`／`reaction`
+  （`liked`／`neutral`／`disliked`）。
+- **權限模型逐字沿用 `growth_records`**（見上方「為什麼 `growth_records` 用了真
+  RLS」段，本表不重複展開推導）：讀（家庭成員皆可，僅未刪列）／新增（owner／
+  member，`author_id` 必須是自己）／更新內容（僅原作者本人，且仍是該家庭
+  owner/member，owner 不在這條路徑）。沒有第四條「軟刪」policy，理由與
+  `growth_records` 相同。
+- **同一寶貝同一食物最多一筆未軟刪紀錄**（partial unique index
+  `(child_id, food_id) where deleted_at is null`）——這既是票面規則本身，也是
+  `upsert_child_food_record`（見 §4）`ON CONFLICT` 的仲裁目標；**軟刪後可透過
+  `upsert_child_food_record` 對同一寶貝同一食物再新增一筆全新記錄**（新紀錄與
+  被軟刪的舊紀錄是各自獨立的列，partial index 只保護「未刪」狀態，見 §4）。
+- **軟刪沿用 LS-57**：唯一路徑是 `delete_child_food_record`（`SECURITY DEFINER`），
+  UI 語意是「這格圖鑑退回未嘗試（灰階）」，不是刪除歷史。
+- **已軟刪的孩子不能再被指定為新內容**（`LS044`，`BEFORE INSERT/UPDATE`，僅新增
+  分支會觸發，同 `growth_records`）。
+- **帳號停權／刪除過渡期**：同其餘「自著內容」表，見 §2、§5。
+- **時間軸（F5b）**：第一次記錄產生一張 `food_first` feed 卡片（`feed_kind` 新增值，
+  LS-325），`child_ids` 恆為單一元素（`[child_id]`）；`comment_count` 恆為 `0`
+  （`food_first` 不是 `content_target_type` 的成員，本票不擴充留言／按讚到食物卡片，
+  見 §4 `get_family_timeline`）；軟刪／還原（若日後開放）連動 `feed_items`，同
+  `diaries`／`albums`／`media` 既有寫法。見 §3「`feed_items`」。
 
 ### `media`
 - `storage_path` 必須符合 `{family_id}/{yyyy}/{mm}/{media_id}.{ext}`（見 §6），且有
@@ -847,9 +892,11 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   外洩風險。**永遠透過 `register_device_token` RPC**。
 
 ### `feed_items`
-- 純唯讀，`kind ∈ album|media|diary`，`occurred_at` 依 kind 各自取（album 用
+- 純唯讀，`kind ∈ album|media|diary|food_first`（`food_first` 為 LS-325 起新增的
+  `feed_kind` 列舉值），`occurred_at` 依 kind 各自取（album 用
   `created_at`；media 用 `coalesce(taken_at, created_at)`；diary 用 `entry_date`
-  轉 UTC 午夜）。分頁用 keyset：`WHERE family_id = ? AND (occurred_at, ref_id) < (?, ?)
+  轉 UTC 午夜；`food_first` 用 `child_food_records.first_tried_on` 轉 UTC 午夜，
+  同 diary 的既有處理）。分頁用 keyset：`WHERE family_id = ? AND (occurred_at, ref_id) < (?, ?)
   ORDER BY occurred_at DESC, ref_id DESC LIMIT n`，不要用 `OFFSET`。
 - **不要直接 `.from("feed_items")` 拼上面那條查詢**——用 §4 的 `get_family_timeline`
   RPC。它就是這條查詢包成 RPC 的結果，額外做了 `p_limit` 邊界夾定（見 §4），且是唯一
@@ -865,6 +912,13 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   標記過的既有 `media` 列，`child_ids` 仍是空陣列（`media_children` 沒有對應
   列），`p_child_id` 篩選下依然不出現——這不是恆定限制，是「沒標記就沒有」的
   自然結果，見 §8。
+- **`food_first`（LS-325）**：`child_ids` 恆為單一元素 `[child_id]`（`child_food_
+  records.child_id` 是 NOT NULL 單一欄位，不是連結表，不會像 `diary`／`album`／
+  `media` 那樣是 0～N 的多對多）；`p_child_id` 篩選走 `feed_item_children`（同其餘
+  三種 kind，見 §8）。`comment_count` 恆為 `0`——`food_first` 不是
+  `content_target_type` 的成員（本票不擴充留言／按讚到食物卡片），
+  `get_family_timeline` 對這個 kind 的 `comment_count` 子查詢用 CASE 短路整條轉型，
+  不會撞 `22P02`，見 §4。
 
 ### `notification_events`
 - **推播彙總佇列**——資料面（LS-58：來源 trigger、彙總視窗、合併鍵）與發送面（LS-172：
@@ -988,7 +1042,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 正式站 advisors `authenticated_security_definer_function_executable` WARN 點名的架構
 選擇：這些 RPC 都是 `SECURITY DEFINER`（RLS 由函式內部呼叫 `private.*` 集合函式把關，
 不是靠呼叫端自己的 RLS 身分），且對 `authenticated` 開放 `EXECUTE`——這是刻意的架構
-選擇，不是漏洞。以下 31 支是目前完整清單（單一清單來源：與
+選擇，不是漏洞。以下 32 支是目前完整清單（單一清單來源：與
 `supabase/tests/60_default_privileges.sql` §8 的 `v_definer_rpcs`、
 `supabase/tests/110_advisors_hardening.sql` §3 的 `v_whitelist` 三處逐字同步；新增
 對 `authenticated` 開放的 SECURITY DEFINER RPC 時，三處都要更新，`110_` 的反向掃描
@@ -1003,6 +1057,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 | `create_comment(uuid, text, uuid, text)` | 建立留言 |
 | `create_diary_entry(uuid, uuid[], text, date)` | 建立日記 |
 | `create_invite(uuid, text, timestamptz, integer)` | 建立家庭邀請碼 |
+| `delete_child_food_record(uuid)` | 軟刪飲食紀錄（作者本人或該家庭 owner） |
 | `delete_growth_record(uuid)` | 軟刪成長紀錄（作者本人或該家庭 owner） |
 | `delete_my_account()` | 使用者刪除自己的帳號 |
 | `get_my_join_request()` | 申請人查自己的加入申請狀態 |
@@ -1044,9 +1099,9 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 （LS-227 起 v1 已 DROP，只剩這一個簽名）／`purge_storage_queue_mark_failed`／
 `purge_storage_unknown_media_paths`），這些不算在
 上表的 29 支之內，也不是 advisors WARN 點名的對象（`authenticated` 對它們沒有
-`EXECUTE`）。另有 6 支 `SECURITY INVOKER` 的 public RPC（`get_family_timeline`／
+`EXECUTE`）。另有 8 支 `SECURITY INVOKER` 的 public RPC（`get_family_timeline`／
 `get_reaction_counts`／`list_children`／`get_family_quota`／`list_growth_records`／
-`upsert_growth_record`，見
+`upsert_growth_record`／`list_child_food_records`／`upsert_child_food_record`（LS-325），見
 `60_default_privileges.sql` §8 的 `v_invoker_rpcs`）同樣對 `authenticated` 開放
 `EXECUTE`，但因為不是 `SECURITY DEFINER`，不在 advisors 這個特定 WARN 的判準內，不
 列入上表。
@@ -1589,13 +1644,32 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   的欄位預設略過不報錯，欄位新增仍照 gate 規則標記 BREAKING。**排序規則本票不動**
   ——是否改依 `taken_at` 排序是 LS-251 設計裁決點，另票處理。測試見
   `supabase/tests/115_media_taken_at.sql`。
+- **BREAKING（LS-325）**：`feed_kind` 新增列舉值 `food_first`（見 `20260918205134_
+  food_encyclopedia_feed_kind.sql`）——`kind` 現在是四選一，不是三選一（見下方
+  「回傳的 `kind`」段落的更新）；`child_ids`／`comment_count`／`taken_at` 三個既有
+  欄位皆對 `food_first` 有定義的行為（`child_ids` 恆單元素、`comment_count` 恆
+  `0`、`taken_at` 恆 `NULL`，同 `diary`／`album` 的既有語意），不需要呼叫端額外
+  處理型別层的變化，**但既有 Swift `FeedKind` enum（`LittleSprout/Services/
+  Timeline/TimelineModels.swift`）在 LS-325 落地當下只有三個 case（`diary,
+  album, media`），對 `food_first` 沒有對應 case**——這不是這支後端票的範圍（本票
+  不動 Swift），但是這支 RPC 落地後的**真實部署風險**：一旦任何一筆
+  `child_food_records` 被建立（`upsert_child_food_record` 成功呼叫一次），
+  `get_family_timeline` 的結果就會混進 `kind: "food_first"` 的列；還沒更新
+  `FeedKind` 的 app 版本對這個值執行 `container.decode(FeedKind.self, ...)`
+  （合成的 `Decodable` 對未知 raw value 拋 `DecodingError`）會讓**該頁全部列**
+  的解碼失敗（不是只有那一筆），時間軸整頁變成錯誤狀態——這個風險必須在 LS-310
+  iOS 實作票（更新 `FeedKind` 加 `case foodFirst = "food_first"`）落地前，避免對
+  正式站執行任何會產生 `food_first` feed 項目的呼叫（即 `upsert_child_food_
+  record`）；正式站 `db push` 的時機由 orchestrator 與 iOS 票的排程協調決定，
+  不是本票能單方保證的事。
 - **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭的資料——`p_family_id` 傳一個
   自己不屬於的家庭不會報錯，只會回傳 0 列（`security invoker`，完全依賴 `feed_items`
   既有的 `feed_items_select` RLS policy，見 §3）。
-- **回傳的 `kind`**：`public.feed_kind` 這個 enum（`album`/`media`/`diary`），不是泛用
-  `text`——PostgREST 會把 enum 序列化成 JSON 字串，Swift 端可以直接對映成一個三選一的
-  型別（例如 `enum FeedKind: String, Decodable { case album, media, diary }`），不需要
-  自己防禦「萬一多一種字串」這種情況。
+- **回傳的 `kind`**：`public.feed_kind` 這個 enum（`album`/`media`/`diary`/
+  `food_first`，LS-325 起四選一），不是泛用 `text`——PostgREST 會把 enum 序列化成
+  JSON 字串，Swift 端可以直接對映成一個型別（例如 `enum FeedKind: String,
+  Decodable { case album, media, diary, foodFirst = "food_first" }`，見上方
+  LS-325 BREAKING 段落——這個 case 尚未由本票補上，留給 LS-310 iOS 實作票）。
 - **用途**：時間軸混排查詢（日記＋相簿＋照片），取代直接 `.from("feed_items")` 拼
   keyset 條件。回傳的是**指標**（`kind`／`ref_id`），不是完整內容——要看某一頁的完整
   資料（日記內文、相簿標題、照片路徑），**依 `kind` 分組後各發一支批次查詢**，不要對
@@ -1812,6 +1886,82 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   migration 檔頭第 4 段、§5）。其餘刻意不開自訂碼（理由同 `upsert_growth_record`）。
 - **併發**：對目標列用 `FOR UPDATE` 鎖住再讀 `family_id`／`author_id` 做授權判斷
   （LS-52 既定規則：RPC 授權判斷讀到的列都要先鎖住，防 TOCTOU）。
+
+### `list_child_food_records(p_child_id uuid) -> setof child_food_records`（LS-325）
+- **誰能呼叫**：任何已登入使用者，但只查得到自己所屬家庭、未刪的飲食紀錄
+  （`security invoker`，完全依賴 `child_food_records_select` RLS，同
+  `list_growth_records` 既有慣例）；`p_child_id` 傳一個自己不屬於的家庭的孩子不會
+  報錯，只會回傳 0 列。
+- **用途**：依 `child_id` 列出未刪的飲食紀錄，`first_tried_on desc, id desc`
+  排序。**不分頁**——食物目錄約 120 種是天花板，單一孩子的「已嘗試」列數遠低於
+  需要 keyset 分頁的量級（對比 `growth_records`／`comments` 那種隨時間無上限
+  增長的列表）。回傳整列（含 `food_id`／`author_id` 等），排序／依 `food_catalog`
+  的 `category`／`sort_order` 分類呈現留給呼叫端。
+- **錯誤碼**：無自訂碼；未登入或不屬於的家庭，配合 RLS 自然回傳 0 列。
+- **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
+
+### `upsert_child_food_record(p_child_id uuid, p_food_id text, p_first_tried_on date, p_media_id uuid, p_note text, p_reaction text) -> child_food_records`（LS-325）
+- **誰能呼叫**：該家庭 owner／member（viewer 不行，PLAN §3）。同一寶貝同一食物
+  已有未刪紀錄時，只有**原作者本人**能更新（且仍是該家庭 owner/member）；其他人
+  呼叫會拿到明確的 `42501`（見下）。
+- **用途**：自然鍵 upsert（不像 `upsert_growth_record` 用 `p_id` 分辨新增／更新
+  ——`child_food_records` 的自然鍵就是 `(child_id, food_id)`，呼叫端不需要、也不
+  應該自己先查一次「有沒有既存紀錄的 id」）。實作是單一句
+  `INSERT ... ON CONFLICT (child_id, food_id) WHERE deleted_at IS NULL DO UPDATE
+  SET ...`：沒有衝突（該寶貝第一次記錄這個食物，或先前的紀錄已被軟刪）→ 新增；
+  衝突（已有一筆未刪紀錄）→ 整組替換 `first_tried_on`／`media_id`／`note`／
+  `reaction`（PUT 語意）並把 `updated_at` 設成 `now()`。`security invoker`：
+  完全依賴 `child_food_records_insert`／`_update` 兩條真 RLS，函式本體不做任何
+  手動授權判斷——新增分支受 `_insert` policy 的 `WITH CHECK` 約束，衝突時的更新
+  分支受 `_update` policy 的 `USING`／`WITH CHECK` 約束（Postgres 對
+  `ON CONFLICT DO UPDATE` 的既有規則：衝突發生時套用 UPDATE policy，不是 INSERT
+  policy，見 `20260822120200_rls_policies.sql:336` 對 `register_device_token` 的
+  既有記載）。
+- **`p_child_id` 不存在或不屬於呼叫者任何家庭**（新增分支）：`family_id` 用一句
+  `SELECT`（依賴 `children_select` RLS）解出，解析為 `NULL` 時 `INSERT` 撞
+  `child_food_records_insert` 的 `WITH CHECK`——**本機實測結果**（同
+  `upsert_growth_record` 的既有記載）：PostgreSQL 對 INSERT 先評估 RLS 的
+  `WITH CHECK` 才輪到 `NOT NULL` 約束，得到 `42501`，不是 `23502`。
+- **同一寶貝同一食物已有未刪紀錄，但呼叫者不是原作者（或雖是作者但已不是該家庭
+  owner/member）**：`ON CONFLICT DO UPDATE` 對既有列套用 `child_food_records_
+  update` 的 `USING`，不通過時 Postgres **直接噴 `42501`**——跟一般 `UPDATE ...
+  WHERE` 陳述式「USING 不通過就靜默排除該列、0 列受影響」不同（`growth_records`
+  §3 記載的那種例外），INSERT 家族的陳述式（含 `ON CONFLICT DO UPDATE`）對 RLS
+  違反一律 fail loud，沒有「這一列不在 USING 範圍內就跳過」這個概念。這正是票面
+  「並發：...第二筆得到明確錯誤或轉為更新」裡「明確錯誤」的那一支（見下方併發
+  段「轉為更新」是另一支）。
+- **`p_child_id` 指向已軟刪的孩子**（僅新增分支，更新分支從不改 `child_id`）：
+  `LS044`。**`p_food_id` 不存在於 `food_catalog`**：`23503`（一般外鍵違反，不
+  開自訂碼——`food_catalog` 是固定清單，正常呼叫端的候選值只會來自這張表本身）。
+  三項內容欄位違反 `CHECK`（`note` 超過 2000 字、`reaction` 不在三個合法值）：
+  `23514`。**刻意不開自訂 `LSnnn` 碼**（理由同 `upsert_growth_record`：本票是
+  純後端票，不動 `LittleSprout/Errors/AppError.swift`）。
+- **回傳**：整列（`child_food_records` 的所有欄位）。
+- **併發（票面「race 測試」要求，見 PR handoff 的 mutation 證據）**：`ON CONFLICT`
+  以 `child_food_records_child_food_unique`（partial unique index）為仲裁目標，
+  是這支 RPC 唯一需要的序列化機制，不需要額外的 `pg_advisory_xact_lock`——兩個
+  連線同時對同一寶貝同一食物呼叫（該食物先前皆未記錄過）：其中一個先取得插入，
+  另一個在 Postgres 內部偵測到衝突後等待先動那個交易結束，結束後才判定是否真的
+  衝突；**若兩次呼叫是同一位作者**（例如使用者不小心連點兩次），後到的那次通過
+  `_update` policy（`author_id` 相符），正確轉為更新，最終狀態是後 commit 那次的
+  值、恰好一列（partial unique index 保護，不會有兩列）；**若兩次呼叫是不同的
+  人**，後到者若不是原作者會拿到上面「明確錯誤」段落的 `42501`。兩種結果都符合
+  票面「結果必為一筆，且第二筆得到明確錯誤或轉為更新」——由 Postgres 原生的
+  `ON CONFLICT` 機制與既有 RLS policy 保證，函式本體不需要手寫判斷。
+
+### `delete_child_food_record(p_id uuid) -> void`（LS-325）
+- **誰能呼叫**：作者本人（且仍是該家庭成員）或該家庭 owner（門檻邏輯逐字沿用
+  `delete_growth_record`）。
+- **用途**：軟刪，`deleted_at: NULL → now()`——UI 語意是「這格飲食圖鑑退回未嘗試
+  （灰階）」，不是刪除歷史；軟刪後可透過 `upsert_child_food_record` 對同一寶貝
+  同一食物再新增一筆全新記錄（見上）。**必須是 `SECURITY DEFINER`**：理由與
+  `delete_growth_record` 相同（`deleted_at`／`deleted_by` 無 UPDATE grant，「owner
+  可移除他人紀錄」無法只靠 author-scoped RLS 表達）。
+- **錯誤碼**：未登入 `42501`；紀錄不存在 `42501`；不是作者本人（或雖是作者但已
+  離開家庭）且不是該家庭 owner `42501`；owner 已軟刪這筆紀錄之後作者跨交易再呼叫
+  ——`LS027`（既有碼，共用 trigger 統一 raise，同 `delete_growth_record`）。
+- **併發**：對目標列用 `FOR UPDATE` 鎖住再讀 `family_id`／`author_id` 做授權判斷
+  （同 `delete_growth_record`）。
 
 ### `report_content(p_family_id uuid, p_target_type text, p_target_id uuid, p_reason text) -> uuid`
 - **LS-149**（PLAN §9-A1 UGC 三件套）。任何家庭成員都能檢舉同家庭的內容
@@ -2170,11 +2320,11 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS024` | 留言不存在 | `update_comment`／`set_comment_deleted` |
 | `LS025` | 不是留言作者本人，或雖是作者但已離開該家庭 | `update_comment` |
 | `LS026` | 留言／按讚／檢舉的 target 存在，但屬於別的家庭 | `create_comment`／`toggle_reaction`／`report_content`（LS-149，同一種目標歸屬檢查，見 §4） |
-| `LS027` | 這篇日記／這本相簿／這則留言／這筆成長紀錄已被家庭管理者移除，只有管理者能還原 | `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted`／`delete_growth_record`（LS-255 R2，merge-review R1 m1 登記——owner 已軟刪的紀錄，作者跨交易再呼叫 `delete_growth_record` 會撞到，由共用 trigger 統一 raise；`v_label` 補了 `growth_records` 分支，訊息主詞正確顯示「這筆成長紀錄」，不是掉到泛稱）（還原方向或重新軟刪方向皆可能；albums 的建立者直接 `.update()` 路徑也會撞到；由 `private.enforce_deletion_attribution()` trigger 統一 raise，LS-57，PR #98 review 擴大到重新軟刪方向並涵蓋 `deleted_by` 為 `NULL` 的情況） |
+| `LS027` | 這篇日記／這本相簿／這則留言／這筆成長紀錄／這筆飲食紀錄已被家庭管理者移除，只有管理者能還原 | `set_diary_deleted`／`set_album_deleted`／`set_comment_deleted`／`delete_growth_record`（LS-255 R2，merge-review R1 m1 登記——owner 已軟刪的紀錄，作者跨交易再呼叫 `delete_growth_record` 會撞到，由共用 trigger 統一 raise；`v_label` 補了 `growth_records` 分支，訊息主詞正確顯示「這筆成長紀錄」，不是掉到泛稱）／`delete_child_food_record`（LS-325，`v_label` 補了 `child_food_records` 分支，訊息主詞顯示「這筆飲食紀錄」，觸發時機與 `delete_growth_record` 相同）（還原方向或重新軟刪方向皆可能；albums 的建立者直接 `.update()` 路徑也會撞到；由 `private.enforce_deletion_attribution()` trigger 統一 raise，LS-57，PR #98 review 擴大到重新軟刪方向並涵蓋 `deleted_by` 為 `NULL` 的情況） |
 | `LS041` | 孩子檔案不存在，或（`update_child` 情境）已被軟刪除須先還原 | `update_child`／`set_child_deleted` |
 | `LS042` | 不是仍是該家庭 owner/member 的成員，無法編輯孩子檔案 | `update_child` |
 | `LS043` | 孩子檔案已被移除超過 30 天，無法還原 | `set_child_deleted`（`p_deleted = false`） |
-| `LS044` | 寶貝已移除，無法歸屬新內容 | `diary_children`／`album_children` 的 `BEFORE INSERT` trigger（LS-121 起搬到連結表；原本掛在 `diaries`／`albums` 本體，見 §8）——`create_diary_entry`／`update_diary_entry`／`set_album_children`（`p_child_ids` 任一元素指向已軟刪的孩子）皆可能撞到，這是這支 trigger 唯一會被觸發的路徑（`diary_children`／`album_children` 對 `authenticated` 沒有任何直接寫入 grant，見 §2／§3，不存在繞過三支 RPC 直接撞到這個碼的呼叫端路徑）；只在真的要新增一列標記時才會觸發，不影響既有標記繼續存在、既有內容繼續軟刪／還原／編輯自己（見 §8）。**`growth_records`（LS-255 R2，merge-review R1 m2 登記）**：`growth_records` 的 `BEFORE INSERT/UPDATE` 也掛了同一支共用函式 `private.enforce_child_not_deleted()`——`upsert_growth_record` 的新增分支若 `p_child_id` 指向已軟刪的孩子會撞到；更新分支從不改 `child_id`（欄位級 grant 未開放），這支 trigger 對更新分支恆為 no-op |
+| `LS044` | 寶貝已移除，無法歸屬新內容 | `diary_children`／`album_children` 的 `BEFORE INSERT` trigger（LS-121 起搬到連結表；原本掛在 `diaries`／`albums` 本體，見 §8）——`create_diary_entry`／`update_diary_entry`／`set_album_children`（`p_child_ids` 任一元素指向已軟刪的孩子）皆可能撞到，這是這支 trigger 唯一會被觸發的路徑（`diary_children`／`album_children` 對 `authenticated` 沒有任何直接寫入 grant，見 §2／§3，不存在繞過三支 RPC 直接撞到這個碼的呼叫端路徑）；只在真的要新增一列標記時才會觸發，不影響既有標記繼續存在、既有內容繼續軟刪／還原／編輯自己（見 §8）。**`growth_records`（LS-255 R2，merge-review R1 m2 登記）**：`growth_records` 的 `BEFORE INSERT/UPDATE` 也掛了同一支共用函式 `private.enforce_child_not_deleted()`——`upsert_growth_record` 的新增分支若 `p_child_id` 指向已軟刪的孩子會撞到；更新分支從不改 `child_id`（欄位級 grant 未開放），這支 trigger 對更新分支恆為 no-op。**`child_food_records`（LS-325）**：同樣掛了 `private.enforce_child_not_deleted()`（`BEFORE INSERT/UPDATE`）——`upsert_child_food_record` 的新增分支（`ON CONFLICT` 未命中，實際執行 INSERT）若 `p_child_id` 指向已軟刪的孩子會撞到；衝突時的更新分支從不改 `child_id`，恆為 no-op |
 | `LS045` | 不是相簿建立者本人，或雖是建立者但已不是該家庭 owner/member，無法設定寶貝標記 | `set_album_children`（LS-121） |
 | `LS050` | 你是家庭的唯一 owner，且家庭還有其他成員，須先轉移 owner 身份才能刪除帳號——`DETAIL` 帶 JSON 陣列列出全部需要轉移的家庭（`[{"family_id","family_name"}, ...]`），見 §4 `delete_my_account` | `delete_my_account`（LS-143） |
 | `LS051` | 帳號已請求刪除（`deletion_requested_at` 非 `NULL`），過渡期間不能再建立新資料——沒有輸入可換，只能等 Edge Function `delete-account` 完成刪除 | `families`／`family_members`／`media`／`diaries`／`albums`／`children`／`comments` 的 `BEFORE INSERT` trigger（`private.enforce_account_not_deletion_requested()`，LS-151），涵蓋直接 `.insert()` 與 `create_child`／`create_diary_entry`／`create_comment`／`approve_join`／建立新家庭自動寫入 owner 等 RPC 路徑，見 §2「過渡期擋寫」 |
@@ -2883,6 +3033,15 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
   移除）。本票仍然沒有任何應用層的孩子硬刪路徑（`children_delete` policy 依舊全擋，
   見 §3 `children` 段），這條 CASCADE 目前只在假設性的「未來若開放硬刪」情境下才會
   真的觸發，回歸測試見 `supabase/tests/85_diaries_timeline.sql` §7。
+- **`food_first`（LS-325）是單一孩子，不是連結表**：`child_food_records.child_id`
+  是這張表自己的 `NOT NULL` 單一欄位（複合外鍵 `(family_id, child_id)` 同樣
+  `on delete cascade`，跟上面幾張連結表一致），沒有 `child_food_records_children`
+  這種多對多連結表——一筆飲食紀錄恆對應一個孩子，不需要。`get_family_timeline` 的
+  `child_ids` 對 `food_first` 恆為單元素陣列（見 §3「`feed_items`」）；`p_child_id`
+  篩選仍然走 `feed_item_children`（同 `diary`／`album`／`media` 三種 kind 共用
+  同一張表、同一套 keyset 分頁機制，只是 `food_first` 每個項目在這張表裡恆為
+  一列，不會有多列），維持 §0 選擇「trigger 維護的扁平表」而不是查詢時 join 的
+  一致性，不是為 `food_first` 另開一條路徑。
 
 ---
 
@@ -2916,6 +3075,7 @@ create_child(uuid, text, date, text)
 create_comment(uuid, text, uuid, text)
 create_diary_entry(uuid, uuid[], text, date)
 create_invite(uuid, text, timestamptz, integer)
+delete_child_food_record(uuid)
 delete_growth_record(uuid)
 delete_my_account()
 finalize_account_deletion(uuid)
@@ -2923,6 +3083,7 @@ get_family_quota(uuid)
 get_family_timeline(uuid, uuid, timestamptz, uuid, integer)
 get_my_join_request()
 get_reaction_counts(uuid, text, uuid[])
+list_child_food_records(uuid)
 list_children(uuid)
 list_comments(uuid, text, uuid, timestamptz, uuid, integer)
 list_growth_records(uuid, integer, date, uuid)
@@ -2950,6 +3111,7 @@ unblock_user(uuid, uuid)
 update_child(uuid, text, date, text)
 update_comment(uuid, text)
 update_diary_entry(uuid, text, date, uuid[])
+upsert_child_food_record(uuid, text, date, uuid, text, text)
 upsert_growth_record(uuid, uuid, date, numeric, numeric, numeric, text)
 withdraw_join(uuid)
 -->
@@ -2961,6 +3123,7 @@ album_summaries
 albums
 app_settings
 blocked_users
+child_food_records
 children
 comments
 content_reports
@@ -2972,6 +3135,7 @@ families
 family_members
 feed_item_children
 feed_items
+food_catalog
 growth_records
 invites
 join_requests
