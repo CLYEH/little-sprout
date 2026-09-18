@@ -121,16 +121,19 @@ struct GrowthRecordsListView: View {
         .scrollContentBackground(.hidden)
     }
 
+    /// Notes `IUdB6`「Header」的「Title」節點是 Pencil 對系統 large navigationTitle 的稿面
+    /// 示意（同 01/04 等「標題 系統 large」畫面的既有慣例——Notes 逐字寫「標題 系統 large」，
+    /// 不是要求另外用 body content 畫一次），這裡只畫「Subtitle」；`.navigationTitle("成長
+    /// 紀錄")`（見 `body`）已經是那顆系統標題。R1 模擬器實測抓到的真實 bug：一開始兩者都畫，
+    /// 畫面上「成長紀錄」重複印兩次（系統大標題＋這裡的 body Text）。
     private var header: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.tight) {
-            Text("成長紀錄")
-                .appFont(.display, weight: .bold)
-                .foregroundStyle(Color.lsTextPrimary)
-            Text("\(childName) · 共 \(growthStore.records.count) 筆紀錄。左滑或點一列都可以編輯、刪除。")
-                .appFont(.note)
-                .foregroundStyle(Color.lsTextSecondary)
-        }
-        .padding(.bottom, AppSpacing.item)
+        // Notes `Text("\(count)")` 對 `Int` 插值會套用 Text 的預設數字 FormatStyle（含千分
+        // 位）——`String(...)` 先轉成字串插值，避開這條數字格式化路徑（同 `yearDivider(_:)`
+        // 的既有理由）。
+        Text("\(childName) · 共 \(String(growthStore.records.count)) 筆紀錄。左滑或點一列都可以編輯、刪除。")
+            .appFont(.note)
+            .foregroundStyle(Color.lsTextSecondary)
+            .padding(.bottom, AppSpacing.item)
     }
 
     @ViewBuilder
@@ -144,9 +147,11 @@ struct GrowthRecordsListView: View {
     }
 
     /// Notes 沿用 `cmp/Day Divider` 年份郵戳（同 `GrowthHistorySection.GrowthYearDivider`，
-    /// 兩處各自實作，見型別文件註解）。
+    /// 兩處各自實作，見型別文件註解）。R1 模擬器實測抓到的真實 bug：`Text("\(year)年")`
+    /// 對 `Int` 插值會套用 `Text` 的預設數字 `FormatStyle`（含千分位），2026 顯示成
+    /// 「2,026年」——先 `String(year)` 轉成字串插值，避開這條數字格式化路徑。
     private func yearDivider(_ year: Int) -> some View {
-        Text("\(year)年")
+        Text("\(String(year))年")
             .appFont(.meta, weight: .bold)
             .foregroundStyle(Color.lsTextSecondary)
             .padding(.horizontal, AppSpacing.group)

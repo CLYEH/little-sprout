@@ -8,19 +8,21 @@ import SwiftUI
 ///
 /// 畫面級屬性（Notes `mfafV`→`zgN6U`，逐條落地）：隱藏 Tab Bar ✗（sheet 呈現，本身沒有 Tab
 /// Bar 可隱藏）；標題自訂 Head Title（`.appFont(.lead, weight: .bold)`，見 `header`）；釘底
-/// 動作帶＝Save／Cancel 於 sheet 內固定 Status Slot（56pt）之後，不是系統 `.toolbar`；失敗
-/// 文案鍵 23514／LS051／LS052／LS053（見 `statusText`，`AppError.map` 已把這幾碼映射進
-/// `LSErrorCode`／`42501`/`23514` 既有分流，這裡只需要把 `growthStore.saveState` 的
-/// `.failure` 顯示出來，不需要另外對碼）；深色靠 token 全自動反轉，不另畫分支；AX3 特例
-/// Range Warning Slot／Status Slot 改 `fit_content`（見 `slotHeight`）。
+/// 動作帶＝Save／Cancel（`actions`，見 `body`），不是系統 `.toolbar`；失敗文案鍵 23514／
+/// LS051／LS052／LS053（見 `statusText`，`AppError.map` 已把這幾碼映射進 `LSErrorCode`／
+/// `42501`/`23514` 既有分流，這裡只需要把 `growthStore.saveState` 的 `.failure` 顯示出來，
+/// 不需要另外對碼）；深色靠 token 全自動反轉，不另畫分支；AX3 特例 Range Warning Slot／
+/// Status Slot 改 `fit_content`（見 `Self.slotHeight`）。
 ///
 /// **Grabber 自畫**，同 `DeleteConfirmationSheet`／`ContentActionsSheet` 既有理由（LS-190
 /// R2）：系統 `.presentationDragIndicator` 會被 `tap-target-check.sh` 誤判成 <44pt 違規。
 ///
-/// **四態儲存鈕同座標**（Notes `GpxTB`／`hQpxd`：「四板 Actions 絕對 y 皆為 42750」）：
-/// Range Warning Slot 與 Status Slot 兩個插槽**永遠渲染**（不因為內容是否為空而增減），一般
-/// 字級固定 56pt 高、AX3 改 `fit_content`（見 `slotHeight`）——base／全空／超出範圍／深色四種
-/// 內容分支下 Footer／Actions 的垂直位置因此逐像素一致，不需要另外用 `GeometryReader` 對齊。
+/// **四態儲存鈕同座標**（Notes `GpxTB`／`hQpxd`：「四板 Actions 絕對 y 皆為 42750」）：只有
+/// `actions`（Save／Cancel）釘在 `ScrollView` 外——R1 模擬器實測 AX3 下發現原本「兩個插槽
+/// 固定 56pt、其餘也固定在 ScrollView 外」的寫法會讓外層 VStack 空間不足時反過來擠壓 Footer，
+/// Status Slot 文字被截斷成「⋯」（`body` 文件註解細節）；改成日期／量測群組／備註／Status
+/// Slot 全部收進同一個 ScrollView，只有 Actions 在外，Actions 的位置完全不受表單內容或字級
+/// 影響，比原本更直接地保證「四態同座標」。
 struct GrowthMeasurementFormView: View {
     let growthStore: GrowthStore
     /// nil＝新增；非 nil＝編輯這一筆（帶入既有值，`upsert_growth_record` 的 `p_id` 走這個
@@ -72,21 +74,32 @@ struct GrowthMeasurementFormView: View {
     /// 完整換行，不裁切）。
     private var isAX3: Bool { dynamicTypeSize >= .accessibility3 }
 
+    /// R1 模擬器實測抓到的真實 bug（AX3）：原本只有「日期欄＋量測群組」在 `ScrollView` 裡，
+    /// Note Field／Status Slot／Actions 都在 ScrollView 外的固定 Footer——AX3 下三個量測欄＋
+    /// 備註欄本身都長高很多，Footer 這個「固定」區塊反而被外層 VStack 擠壓到低於自己需要的
+    /// 高度，Status Slot 的文字被逼著截斷成「⋯」。改成**只有 Actions（Save／Cancel）釘底**
+    /// （Notes GpxTB「釘底動作帶」字面意思），其餘（日期／量測群組／備註／Status Slot）全部
+    /// 收進同一個 `ScrollView`——這樣 Actions 的垂直位置只由自己的高度決定，完全不受
+    /// 表單內容多寡／字級影響，比原本「兩個插槽各自固定高度」更直接地保證「四態儲存鈕同座標」
+    /// （不管哪個插槽的文字多長，Actions 都在 ScrollView 之外、同一個位置）。
     var body: some View {
         VStack(spacing: 0) {
             grabber
-            header
-                .padding(.horizontal, AppSpacing.screenPad)
-                .padding(.bottom, AppSpacing.item)
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.section) {
+                    header
                     dateField
                     measurementGroup
+                    VStack(alignment: .leading, spacing: AppSpacing.item) {
+                        noteField
+                        statusSlot
+                    }
                 }
                 .padding(.horizontal, AppSpacing.screenPad)
+                .padding(.top, AppSpacing.item)
             }
             .clipped()
-            footer
+            actions
                 .padding(.horizontal, AppSpacing.screenPad)
                 .padding(.top, AppSpacing.item)
                 .padding(.bottom, AppSpacing.item)
@@ -164,22 +177,41 @@ struct GrowthMeasurementFormView: View {
     private var measurementGroup: some View {
         VStack(alignment: .leading, spacing: AppSpacing.item) {
             LabeledTextField(
-                label: "身高（cm）", placeholder: "請輸入身高", text: $heightText, helpText: nil,
+                label: "身高（cm）", placeholder: "請輸入身高", text: measurementBinding($heightText), helpText: nil,
                 keyboardType: .decimalPad
             )
             .disabled(growthStore.saveState.isSubmitting)
             LabeledTextField(
-                label: "體重（kg）", placeholder: "請輸入體重", text: $weightText, helpText: nil,
+                label: "體重（kg）", placeholder: "請輸入體重", text: measurementBinding($weightText), helpText: nil,
                 keyboardType: .decimalPad
             )
             .disabled(growthStore.saveState.isSubmitting)
             LabeledTextField(
-                label: "頭圍（cm）", placeholder: "請輸入頭圍", text: $headText, helpText: nil,
+                label: "頭圍（cm）", placeholder: "請輸入頭圍", text: measurementBinding($headText), helpText: nil,
                 keyboardType: .decimalPad
             )
             .disabled(growthStore.saveState.isSubmitting)
             rangeWarningSlot
         }
+    }
+
+    /// 同 `CreateChildView.nameField` 既有慣例：使用者開始打字（三個量測欄任何一個）就清掉
+    /// `showsEmptyMessage`——R1 模擬器實測抓到的真實 bug：全空送出一次後 Status Slot 升級成
+    /// 「請至少填寫…」，接著在身高欄打了 180，Range Warning Slot 正確跳出來，但 Status Slot
+    /// 沒有跟著退回中性提示，兩則訊息同時出現、互相矛盾。不能只看單一欄位是否非空——使用者
+    /// 可能是在清空這一欄、靠另一欄符合「至少一項」，因此用 `hasAtLeastOneValue`（三欄合併
+    /// 判斷）而不是「這欄非空」。
+    private func measurementBinding(_ base: Binding<String>) -> Binding<String> {
+        Binding(
+            get: { base.wrappedValue },
+            set: { newValue in
+                base.wrappedValue = newValue
+                // `base.wrappedValue` 已寫入新值——`hasAtLeastOneValue` 這裡讀到的是三個
+                // `@State` 即時值（三欄合併判斷，不是「這欄非空」；使用者可能正在清空這一欄、
+                // 靠另一欄符合「至少一項」）。
+                if hasAtLeastOneValue { showsEmptyMessage = false }
+            }
+        )
     }
 
     /// Notes `i9Rxq`（C-2）：Measurement Group 下方的群組級固定槽，恆存在，平時 icon 隱藏、
@@ -197,15 +229,7 @@ struct GrowthMeasurementFormView: View {
         .frame(height: isAX3 ? nil : Self.slotHeight)
     }
 
-    // MARK: - Footer
-
-    private var footer: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.item) {
-            noteField
-            statusSlot
-            actions
-        }
-    }
+    // MARK: - Footer（Note Field／Status Slot 收在 ScrollView 內，Actions 釘底——見 body）
 
     private var noteField: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
