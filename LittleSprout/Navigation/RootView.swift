@@ -345,7 +345,7 @@ struct SectionContentView: View {
             TimelineView(
                 familyStore: familyStore, childrenStore: childrenStore, timelineStore: timelineStore,
                 diaryAPIClient: diaryAPIClient, mediaUploadService: mediaUploadService,
-                safetyAPIClient: safetyAPIClient, commentAPIClient: commentAPIClient
+                safetyAPIClient: safetyAPIClient, commentAPIClient: commentAPIClient, albumsStore: albumsStore
             )
         case .albums:
             AlbumsView(

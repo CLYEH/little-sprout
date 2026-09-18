@@ -44,7 +44,11 @@
 # 算放行。LS-251 實測：30 個變體板 → 8 個正典畫面（`Import/01`…`Import/06b`），且合成的跨群組撞號夾具（`Import / 01`
 # ＋ `Growth / 01`）驗證不再誤併。
 #
-# 欄位格式（隱藏 Tab Bar／標題型態／釘底動作帶／失敗文案鍵／深色特例／AX3 特例／iPad 重排放大）見
+# LS-322（LS-96 池項 0e87afd9／LS-317 收尾②）：畫面級屬性清單加「資料落點」必列欄——同一支再驗第四件事，對每個
+# 「已在畫面級屬性段列出」的新增正典畫面，含 member 板名的那一行是否也提到「資料落點」子字串；只對本 PR 新增的正典
+# 畫面要求，既有畫面（不在 new_screen_boards() 清單）天然白名單、不回溯。
+#
+# 欄位格式（隱藏 Tab Bar／標題型態／釘底動作帶／失敗文案鍵／深色特例／AX3 特例／iPad 重排放大／資料落點）見
 # docs/COLLABORATION.md §1 與 .claude/agents/ui-designer.md Notes 段；本 gate 只驗「這個正典畫面有沒有被提到」，
 # 不驗欄位內容是否填齊——欄位完整度是 ios-dev handoff／merge-reviewer 的責任（handoff_evidence_check.py 認「畫面
 # 級屬性（逐條勾選）」子段）。盲區：(5) 衍生群組（`A11y`／`Stress`）與基準群組同編號即歸併，不同編號（或名稱型
