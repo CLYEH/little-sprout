@@ -48,6 +48,7 @@
 		10CB97ED4D75A21D2579F3CF /* DiaryCardVideoBadgeGeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17ADF30BD9D82AA5300EFF5B /* DiaryCardVideoBadgeGeometryTests.swift */; };
 		10E2D7F9A2832475BCC8728F /* DayDividerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9229E1129C9AC40092028D3 /* DayDividerView.swift */; };
 		122228B365A31F42DE831B94 /* GrowthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E012562C48BDE4F68E6F4E5 /* GrowthStore.swift */; };
+		124F4F3F8F76781A2273A4EB /* GrowthDetailViewerGatingRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C2B83FEEFC0C21A583FCA6 /* GrowthDetailViewerGatingRegressionTests.swift */; };
 		1290BE425DE9479722124001 /* SupabaseDiaryAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA263D0058EB232AD178E89C /* SupabaseDiaryAPIClientTests.swift */; };
 		1330DE1A2C8A701F1C64DE82 /* TapTargetGateScreenName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 962EAB3D4E7C6E203A5790AE /* TapTargetGateScreenName.swift */; };
 		13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */; };
@@ -694,6 +695,7 @@
 		40A93111BE0EAB8358E68B44 /* GrowthMeasurementFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthMeasurementFormView.swift; sourceTree = "<group>"; };
 		40E13DE0D017682C31FBABE1 /* VideoTrimmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoTrimmer.swift; sourceTree = "<group>"; };
 		41B7B10C2108552F0A805115 /* DeleteAccountFlowModelRaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountFlowModelRaceTests.swift; sourceTree = "<group>"; };
+		42C2B83FEEFC0C21A583FCA6 /* GrowthDetailViewerGatingRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthDetailViewerGatingRegressionTests.swift; sourceTree = "<group>"; };
 		42EC894F62DC55A74654ED99 /* SettingsIconsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsIconsTests.swift; sourceTree = "<group>"; };
 		44CF5C61ADF3E932C1795C96 /* DiaryPhotoReorderMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryPhotoReorderMath.swift; sourceTree = "<group>"; };
 		451694C23C0044D0DCDD0356 /* DiaryComposerStorePublishTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStorePublishTests.swift; sourceTree = "<group>"; };
@@ -1387,6 +1389,7 @@
 				4F79950DF786C7BA12A3C979 /* GrowthAgeNBSPRegressionTests.swift */,
 				1EF6B48B968BD623EFF6F1F8 /* GrowthCurveTests.swift */,
 				A9798A0DE1FC0C8AD57FDEA9 /* GrowthDetailTitleRegressionTests.swift */,
+				42C2B83FEEFC0C21A583FCA6 /* GrowthDetailViewerGatingRegressionTests.swift */,
 				7EC5441D002D7983E0FC9847 /* GrowthEmptyStateCopyTests.swift */,
 				C714D87C85DC97C0A9FB123E /* GrowthIdentityFreshnessRegressionTests.swift */,
 				5F5EDB155A72F057F906BF04 /* GrowthInitialLoadingStateRegressionTests.swift */,
@@ -2515,6 +2518,7 @@
 				8923EF57530FAA260F9E65DB /* GrowthAgeNBSPRegressionTests.swift in Sources */,
 				2446A9D3B7C5A02D2E49FB77 /* GrowthCurveTests.swift in Sources */,
 				504A11810A6DD21E682A2E57 /* GrowthDetailTitleRegressionTests.swift in Sources */,
+				124F4F3F8F76781A2273A4EB /* GrowthDetailViewerGatingRegressionTests.swift in Sources */,
 				CE1464663C70214024056BDC /* GrowthEmptyStateCopyTests.swift in Sources */,
 				4E128F1D0AD9913386F289B7 /* GrowthIdentityFreshnessRegressionTests.swift in Sources */,
 				8305F04B569996859D2C9862 /* GrowthInitialLoadingStateRegressionTests.swift in Sources */,
