@@ -1,0 +1,312 @@
+{
+  "ticket": "LS-321",
+  "round": 3,
+  "head_sha": "2f4611eb336782d4a354224d89cf04505cef72af",
+  "total_nodes": 14259,
+  "tree_hash": "16a984e56655df3a",
+  "scan_scope": "boards",
+  "scan_note": "R3b（同一輪次的收斂子輪）：orchestrator 裁決 M-3 原採納值 20×38.33 撐大按鈕至 73.33pt，違反裁決 75d743ee/28401151 明訂『(c) 保留 (a) 的 cmp/Button Primary accent 外殼與 60pt 高』不變量，退回收斂。R3b 改依 25/23 等比縮放 envelope 至 13.04×24.99（收在按鈕原內容列 25pt 內，不觸發長高），按鈕/Action Bar/Body/Home Indicator 全部回到 R2 數值（60/93/619/818→852）。LS-289 唯讀快照 dump 法：pen-snapshot-dump.js 全文（未修改）送 execute（SNAP_BATCH_ROWS 預設 400）→ 56 個 SNAP<n> 行、SNAP-DONE total_rows=22094（與 r3a／VR R2 同值，佐證未新增/刪除節點）→ node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash 16a984e56655df3a --total-nodes 14259 --boards A3ICAN,hwr76,HEj70,X6iCY。boards 涵蓋本 PR 對 .pen 有變更的全部四塊頂層板。sibling_intersection=48／row_overflow=16／cross_parent_collision=6／corner_anchor=8/64/0／ref_hits=32 與 r3a 及 VR R2 獨立重掃逐值相同，證實 R3b 的收斂修改未引入任何新的兄弟碰撞、橫列溢出或跨 parent 碰撞。tree_hash 由 scripts/gates/design_tree_hash.py 對已落地 commit 2f4611e 的 design/littlesprout.pen 離線重算（單次計算，dump 與離線重算之間無任何寫入，同一稿態）。原四板 pVSXP/ZXdu2/yfZyT/OysBA 未觸碰，不掃入；紅線（o8zYlX/OKSJI/EJMa0/四板/variables/themes）用 sha256 逐節點比對 r2(a5441b8) vs r3b(HEAD) 全部 SAME。",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 48,
+      "classes": 8,
+      "flagged": [
+        {
+          "node_a": "R6zI1C",
+          "node_b": "SpOXX",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TL",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TL @ Print Cell",
+          "count": 6,
+          "classification": "既有沖印品母題重疊（角托 corner-out 外擴壓過含照片 Print Cell 的 Photo Wrap 邊緣），A3ICAN 由 Copy(pVSXP) 繼承，非本輪新增"
+        },
+        {
+          "node_a": "R6zI1C",
+          "node_b": "k9IsaG",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TR",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TR @ Print Cell",
+          "count": 6,
+          "classification": "既有沖印品母題重疊，同上，非本輪新增"
+        },
+        {
+          "node_a": "SpOXX/sD5Ma",
+          "node_b": "SpOXX/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "SpOXX",
+          "parent_name": "Corner TL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部既定疊層（Shape 與 Edge 描邊重疊），跨 A3ICAN/hwr76/HEj70/pVSXP 繼承同一母題，非本輪新增"
+        },
+        {
+          "node_a": "k9IsaG/sD5Ma",
+          "node_b": "k9IsaG/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "k9IsaG",
+          "parent_name": "Corner TR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部既定疊層，同上，非本輪新增"
+        },
+        {
+          "node_a": "YKCz5/sD5Ma",
+          "node_b": "YKCz5/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "YKCz5",
+          "parent_name": "Corner BL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部既定疊層，同上，非本輪新增"
+        },
+        {
+          "node_a": "zJPBe/sD5Ma",
+          "node_b": "zJPBe/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "zJPBe",
+          "parent_name": "Corner BR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部既定疊層，同上，非本輪新增"
+        },
+        {
+          "node_a": "BeE1r",
+          "node_b": "XVUTl",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TL",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TL @ Blank Print Cell",
+          "count": 2,
+          "classification": "既有沖印品母題重疊（角托 corner-out 外擴壓過空狀態 Blank Print Cell 的 Photo Wrap 邊緣），hwr76/HEj70 由 Copy(ZXdu2) 繼承，非本輪新增"
+        },
+        {
+          "node_a": "BeE1r",
+          "node_b": "GkUPf",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TR",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TR @ Blank Print Cell",
+          "count": 2,
+          "classification": "既有沖印品母題重疊，同上，非本輪新增"
+        }
+      ],
+      "result_hash": "77330085eb91da6a"
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 16,
+      "classes": 4,
+      "flagged": [
+        {
+          "node": "k9IsaG",
+          "name": "Corner TR",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overflow": 5,
+          "class": "Print Cell :: Corner TR",
+          "count": 6,
+          "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，A3ICAN 由 Copy(pVSXP) 繼承，非本輪新增"
+        },
+        {
+          "node": "zJPBe",
+          "name": "Corner BR",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overflow": 5,
+          "class": "Print Cell :: Corner BR",
+          "count": 6,
+          "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，同上，非本輪新增"
+        },
+        {
+          "node": "GkUPf",
+          "name": "Corner TR",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overflow": 5,
+          "class": "Blank Print Cell :: Corner TR",
+          "count": 2,
+          "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，hwr76/HEj70 由 Copy(ZXdu2) 繼承，非本輪新增"
+        },
+        {
+          "node": "eNI19",
+          "name": "Corner BR",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overflow": 5,
+          "class": "Blank Print Cell :: Corner BR",
+          "count": 2,
+          "classification": "角托 corner-out 5pt 既定設計外擴，非缺陷，同上，非本輪新增"
+        }
+      ],
+      "result_hash": "232e76876939762e"
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 6,
+      "classes": 4,
+      "flagged": [
+        {
+          "node_a": "xVb7H",
+          "node_b": "SpOXX",
+          "name_a": "Spacer Section",
+          "name_b": "Corner TL",
+          "parent_a": "F8bebp",
+          "parent_b": "TE7TZ",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            21,
+            5
+          ],
+          "class": "Spacer Section × Corner TL @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 2,
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b 新增或修改"
+        },
+        {
+          "node_a": "xVb7H",
+          "node_b": "k9IsaG",
+          "name_a": "Spacer Section",
+          "name_b": "Corner TR",
+          "parent_a": "F8bebp",
+          "parent_b": "TE7TZ",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            26,
+            5
+          ],
+          "class": "Spacer Section × Corner TR @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 2,
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b 新增或修改"
+        },
+        {
+          "node_a": "pH8A7",
+          "node_b": "TZNq0",
+          "name_a": "Corner BL",
+          "name_b": "Spacer Bottom",
+          "parent_a": "v9YaK",
+          "parent_b": "F8bebp",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            26,
+            5
+          ],
+          "class": "Corner BL × Spacer Bottom @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 1,
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b 新增或修改"
+        },
+        {
+          "node_a": "qJcGp",
+          "node_b": "TZNq0",
+          "name_a": "Corner BR",
+          "name_b": "Spacer Bottom",
+          "parent_a": "v9YaK",
+          "parent_b": "F8bebp",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            21,
+            5
+          ],
+          "class": "Corner BR × Spacer Bottom @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 1,
+          "classification": "A3ICAN 既有版面元素（Spacer Section／Spacer Bottom 與角托 corner-out 外擴）跨 parent 交集，R2 落地時已存在，非本輪 R3/R3b 新增或修改"
+        }
+      ],
+      "result_hash": "6e2058041ab9c42b"
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "A3ICAN",
+        "hwr76",
+        "HEj70",
+        "X6iCY"
+      ],
+      "containers": 8,
+      "points": 64,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 32,
+      "ref_hits_defs": 0,
+      "document_containers": 8,
+      "document_points": 64,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": [],
+      "result_hash": "23b60d866b52a6df"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "A3ICAN",
+        "hwr76",
+        "HEj70",
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "985584a1926aaf5f"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "A3ICAN",
+        "hwr76",
+        "HEj70",
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "dba486d347f8a0dd"
+    }
+  }
+}

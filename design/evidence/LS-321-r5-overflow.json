@@ -1,0 +1,77 @@
+{
+  "ticket": "LS-321",
+  "round": 5,
+  "head_sha": "a8a9f464e70edf11a117184f71f6b70f8fdc61b4",
+  "scanned_nodes": 141,
+  "scan_scope": "boards",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "5b2197c20ff7e473"
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "49052ea15797423a"
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "4ec111ba04645433"
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "X6iCY"
+      ],
+      "containers": 0,
+      "points": 0,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 0,
+      "ref_hits_defs": 0,
+      "document_containers": 0,
+      "document_points": 0,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": [],
+      "result_hash": "8cac2a1415309e68"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "014ba12f3c48a6e8"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "449aa360f1d69866"
+    }
+  },
+  "total_nodes": 14137,
+  "tree_hash": "6a02246cd59ebfed",
+  "flags": {
+    "cross_all": false,
+    "custom_overlay_re": false
+  },
+  "scan_note": "snapshot mode，dump sha256=2e6bb1d365c4fcb6efb8bb698ffc14a199bc8c184ddf41b512baf5051ac9b6d9；本輪（r5，定案輪）只刪除三張比較稿（原 A3ICAN／hwr76／HEj70）與 Notes 對應兩列（原 quxHT／X9deNI），未新增或修改任何印品類板；--boards X6iCY 為本輪唯一被本 PR 觸碰的頂層節點（Import Notes 板，TCs7A 定案段改寫處）。LS-289 快照法：pen-snapshot-dump.js 全文未修改送 execute，SNAP_BATCH_ROWS 預設 400，55 批＋SNAP-DONE，total_rows=21862，未分批（非 SCAN_BATCH／SCAN_BATCH_ROOTS）。tree_hash／total_nodes 由落地 commit a8a9f46 用 scripts/gates/design_tree_hash.py 對已落地 .pen 離線重算（14137 節點），與 dump 之間無任何寫入，同一稿態。corner_anchor ref_hits=0／document_containers=0 為預期：X6iCY 是純文字 Notes 板，不含任何沖印品／角托節點，SUMMARY 已印對應 WARNING，屬 boards 限縮模式的已知限制（非停擺）。"
+}

@@ -1,0 +1,317 @@
+{
+  "scanned_nodes": 373,
+  "scan_scope": "boards",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "boards",
+      "document_count": 48,
+      "classes": 8,
+      "flagged": [
+        {
+          "node_a": "R6zI1C",
+          "node_b": "SpOXX",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TL",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TL @ Print Cell",
+          "count": 6,
+          "classification": "既有沖印品母題角托 corner-out 與相片疊層（Photo Wrap × Corner），Copy(pVSXP/ZXdu2) 原樣繼承，非本輪新增（本輪已用同一支腳本對 pVSXP/ZXdu2 交叉核對，見 scan_note）"
+        },
+        {
+          "node_a": "R6zI1C",
+          "node_b": "k9IsaG",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TR",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TR @ Print Cell",
+          "count": 6,
+          "classification": "既有沖印品母題角托 corner-out 與相片疊層（Photo Wrap × Corner），Copy(pVSXP/ZXdu2) 原樣繼承，非本輪新增（本輪已用同一支腳本對 pVSXP/ZXdu2 交叉核對，見 scan_note）"
+        },
+        {
+          "node_a": "SpOXX/sD5Ma",
+          "node_b": "SpOXX/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "SpOXX",
+          "parent_name": "Corner TL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TL",
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部兩層裝飾（Shape×Edge，角托本體疊光層）本就疊放，Copy 原樣繼承，非本輪新增"
+        },
+        {
+          "node_a": "k9IsaG/sD5Ma",
+          "node_b": "k9IsaG/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "k9IsaG",
+          "parent_name": "Corner TR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner TR",
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部兩層裝飾（Shape×Edge，角托本體疊光層）本就疊放，Copy 原樣繼承，非本輪新增"
+        },
+        {
+          "node_a": "YKCz5/sD5Ma",
+          "node_b": "YKCz5/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "YKCz5",
+          "parent_name": "Corner BL",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BL",
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部兩層裝飾（Shape×Edge，角托本體疊光層）本就疊放，Copy 原樣繼承，非本輪新增"
+        },
+        {
+          "node_a": "zJPBe/sD5Ma",
+          "node_b": "zJPBe/DhOiK",
+          "name_a": "Corner Shape",
+          "name_b": "Corner Edge",
+          "parent": "zJPBe",
+          "parent_name": "Corner BR",
+          "overlap": [
+            26,
+            26
+          ],
+          "class": "Corner Shape × Corner Edge @ Corner BR",
+          "count": 8,
+          "classification": "cmp/Photo Corner 元件內部兩層裝飾（Shape×Edge，角托本體疊光層）本就疊放，Copy 原樣繼承，非本輪新增"
+        },
+        {
+          "node_a": "BeE1r",
+          "node_b": "XVUTl",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TL",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TL @ Blank Print Cell",
+          "count": 2,
+          "classification": "既有沖印品母題角托 corner-out 與相片疊層（Photo Wrap × Corner），Copy(pVSXP/ZXdu2) 原樣繼承，非本輪新增（本輪已用同一支腳本對 pVSXP/ZXdu2 交叉核對，見 scan_note）"
+        },
+        {
+          "node_a": "BeE1r",
+          "node_b": "GkUPf",
+          "name_a": "Photo Wrap",
+          "name_b": "Corner TR",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overlap": [
+            13,
+            13
+          ],
+          "class": "Photo Wrap × Corner TR @ Blank Print Cell",
+          "count": 2,
+          "classification": "既有沖印品母題角托 corner-out 與相片疊層（Photo Wrap × Corner），Copy(pVSXP/ZXdu2) 原樣繼承，非本輪新增（本輪已用同一支腳本對 pVSXP/ZXdu2 交叉核對，見 scan_note）"
+        }
+      ],
+      "result_hash": "03f61dd6872b2a1e"
+    },
+    "row_overflow": {
+      "scope": "boards",
+      "document_count": 16,
+      "classes": 4,
+      "flagged": [
+        {
+          "node": "k9IsaG",
+          "name": "Corner TR",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overflow": 5,
+          "class": "Print Cell :: Corner TR",
+          "count": 6,
+          "classification": "角托 corner-out 5pt 越過紙緣，母題規則④既定設計（$corner-out=5），Copy(pVSXP/ZXdu2) 原樣繼承，非本輪新增"
+        },
+        {
+          "node": "zJPBe",
+          "name": "Corner BR",
+          "parent": "TE7TZ",
+          "parent_name": "Print Cell",
+          "overflow": 5,
+          "class": "Print Cell :: Corner BR",
+          "count": 6,
+          "classification": "角托 corner-out 5pt 越過紙緣，母題規則④既定設計（$corner-out=5），Copy(pVSXP/ZXdu2) 原樣繼承，非本輪新增"
+        },
+        {
+          "node": "GkUPf",
+          "name": "Corner TR",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overflow": 5,
+          "class": "Blank Print Cell :: Corner TR",
+          "count": 2,
+          "classification": "角托 corner-out 5pt 越過紙緣，母題規則④既定設計（$corner-out=5），Copy(pVSXP/ZXdu2) 原樣繼承，非本輪新增"
+        },
+        {
+          "node": "eNI19",
+          "name": "Corner BR",
+          "parent": "y5aFDx",
+          "parent_name": "Blank Print Cell",
+          "overflow": 5,
+          "class": "Blank Print Cell :: Corner BR",
+          "count": 2,
+          "classification": "角托 corner-out 5pt 越過紙緣，母題規則④既定設計（$corner-out=5），Copy(pVSXP/ZXdu2) 原樣繼承，非本輪新增"
+        }
+      ],
+      "result_hash": "aff193d804d2c5e2"
+    },
+    "cross_parent_collision": {
+      "scope": "boards",
+      "document_count": 6,
+      "classes": 4,
+      "flagged": [
+        {
+          "node_a": "xVb7H",
+          "node_b": "SpOXX",
+          "name_a": "Spacer Section",
+          "name_b": "Corner TL",
+          "parent_a": "F8bebp",
+          "parent_b": "TE7TZ",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            21,
+            5
+          ],
+          "class": "Spacer Section × Corner TL @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 2,
+          "classification": "Spacer Section/Bottom 與相鄰 Print Cell 角托的既有跨 parent 重疊——已用同一支腳本加 pVSXP 交叉核對，pVSXP 本身即有相同 6 筆（2×Corner TL/2×Corner TR/1×Corner BL/1×Corner BR，各 e.g. QOgzb×DHfo9／QOgzb×GsLq1／HauTE×DHfo9／v1R53×GsLq1），證實為 Copy 繼承的既有母題重疊，非本輪 Body 864→880 高度調整新增（該調整只在 Spacer Bottom 之後增加空白，未移動 Spacer Section/Photo Grid/Spacer Bottom 的既有絕對座標）"
+        },
+        {
+          "node_a": "xVb7H",
+          "node_b": "k9IsaG",
+          "name_a": "Spacer Section",
+          "name_b": "Corner TR",
+          "parent_a": "F8bebp",
+          "parent_b": "TE7TZ",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            26,
+            5
+          ],
+          "class": "Spacer Section × Corner TR @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 2,
+          "classification": "Spacer Section/Bottom 與相鄰 Print Cell 角托的既有跨 parent 重疊——已用同一支腳本加 pVSXP 交叉核對，pVSXP 本身即有相同 6 筆（2×Corner TL/2×Corner TR/1×Corner BL/1×Corner BR，各 e.g. QOgzb×DHfo9／QOgzb×GsLq1／HauTE×DHfo9／v1R53×GsLq1），證實為 Copy 繼承的既有母題重疊，非本輪 Body 864→880 高度調整新增（該調整只在 Spacer Bottom 之後增加空白，未移動 Spacer Section/Photo Grid/Spacer Bottom 的既有絕對座標）"
+        },
+        {
+          "node_a": "pH8A7",
+          "node_b": "TZNq0",
+          "name_a": "Corner BL",
+          "name_b": "Spacer Bottom",
+          "parent_a": "v9YaK",
+          "parent_b": "F8bebp",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            26,
+            5
+          ],
+          "class": "Corner BL × Spacer Bottom @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 1,
+          "classification": "Spacer Section/Bottom 與相鄰 Print Cell 角托的既有跨 parent 重疊——已用同一支腳本加 pVSXP 交叉核對，pVSXP 本身即有相同 6 筆（2×Corner TL/2×Corner TR/1×Corner BL/1×Corner BR，各 e.g. QOgzb×DHfo9／QOgzb×GsLq1／HauTE×DHfo9／v1R53×GsLq1），證實為 Copy 繼承的既有母題重疊，非本輪 Body 864→880 高度調整新增（該調整只在 Spacer Bottom 之後增加空白，未移動 Spacer Section/Photo Grid/Spacer Bottom 的既有絕對座標）"
+        },
+        {
+          "node_a": "qJcGp",
+          "node_b": "TZNq0",
+          "name_a": "Corner BR",
+          "name_b": "Spacer Bottom",
+          "parent_a": "v9YaK",
+          "parent_b": "F8bebp",
+          "board": "A3ICAN",
+          "board_name": "LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "overlap": [
+            21,
+            5
+          ],
+          "class": "Corner BR × Spacer Bottom @ LS-321 / 15 相簿詳情 · (b) Button Import 滿版變體（比較稿，不進實作）",
+          "count": 1,
+          "classification": "Spacer Section/Bottom 與相鄰 Print Cell 角托的既有跨 parent 重疊——已用同一支腳本加 pVSXP 交叉核對，pVSXP 本身即有相同 6 筆（2×Corner TL/2×Corner TR/1×Corner BL/1×Corner BR，各 e.g. QOgzb×DHfo9／QOgzb×GsLq1／HauTE×DHfo9／v1R53×GsLq1），證實為 Copy 繼承的既有母題重疊，非本輪 Body 864→880 高度調整新增（該調整只在 Spacer Bottom 之後增加空白，未移動 Spacer Section/Photo Grid/Spacer Bottom 的既有絕對座標）"
+        }
+      ],
+      "result_hash": "fae37554b65313df"
+    },
+    "corner_anchor": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "A3ICAN",
+        "hwr76",
+        "HEj70",
+        "X6iCY"
+      ],
+      "containers": 8,
+      "points": 64,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 32,
+      "ref_hits_defs": 0,
+      "document_containers": 8,
+      "document_points": 64,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": [],
+      "result_hash": "b0792ad706ebf693"
+    },
+    "text_occlusion": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "A3ICAN",
+        "hwr76",
+        "HEj70",
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "2518a1f22e03ff13"
+    },
+    "board_clip": {
+      "scope": "boards",
+      "document_count": 0,
+      "boards": [
+        "A3ICAN",
+        "hwr76",
+        "HEj70",
+        "X6iCY"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "6867a423e391f091"
+    }
+  },
+  "total_nodes": 14259,
+  "tree_hash": "ea51b27a0a39cf3f",
+  "flags": {
+    "cross_all": false,
+    "custom_overlay_re": false
+  },
+  "scan_note": "snapshot mode，dump sha256=ae32e7ebdb0b08d8077e6699ddcc619d32d73b40335c14649ca19d4abe39e476；LS-289 快照法：pen-snapshot-dump.js 全文（未修改）送 Pencil execute 得 56 個 SNAP<n> 行（total_rows=22094），貼進同一份 dump 檔後 node scripts/design/overflow-scan.js --from-snapshot --tree-hash --total-nodes --boards A3ICAN,hwr76,HEj70,X6iCY 跑六支（本票 R2 觸碰的 3 塊畫面板＋Notes 板 X6iCY）。tree_hash/total_nodes 用 scripts/gates/design_tree_hash.py 對 head_sha a5441b84 那次落地 commit 離線重算（與 dump 同一稿態，dump 前後無任何寫入）。cross_parent_collision 6 筆全數只出現在 A3ICAN；另加 pVSXP,ZXdu2 兩板重跑同一支腳本核對（不落收據，僅供分類依據），pVSXP 本身即有相同 6 筆，證實為 Copy 繼承的既有母題重疊、非本輪 Body 864→880 調整新增。",
+  "ticket": "LS-321",
+  "round": 2,
+  "head_sha": "a5441b84ad64ec55e7f475b04f6d22d2b893e35a"
+}
