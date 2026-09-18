@@ -418,8 +418,10 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   完整清單見本票 PR handoff）。**純資訊，附免責聲明（文案在 iOS 端呈現），不構成
   醫療建議**——不要在此基礎上做任何自動化的「擋止／警告」邏輯以外的醫療判斷。
 - 內容來源：`supabase/seed-data/food_catalog.csv`（人類可讀，供使用者過目），
-  `scripts/ops/food-catalog-sql.py` 轉成 migration 內的 `INSERT`；兩者一致性見
-  `supabase/tests/117_food_encyclopedia.sql` §1。
+  `scripts/ops/food-catalog-sql.py` 轉成 migration 內的 `INSERT`；兩者一致性由
+  `supabase/tests/run.sh` 在跑 `117_food_encyclopedia.sql` 之前、host 端動態產生
+  執行機械驗證（標記 §1；該檔本身從 §2 開始，見其檔頭，merge-review R1
+  informational i2 訂正）。
 
 ### `child_food_records`（LS-325，LS-310 F4a／F5b）
 - 每寶貝每食物一筆「第一次吃到」記錄：`first_tried_on`（必填）／`media_id`（選填，

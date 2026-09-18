@@ -73,8 +73,10 @@
 --    「套用到哪支 migration」直接回答，不需要另外一套「seed 資料同步」機制。CSV
 --    （`supabase/seed-data/food_catalog.csv`）是這份清單的人類可讀來源與使用者過目
 --    介面，`scripts/ops/food-catalog-sql.py` 把它轉成下面第 2 段的 INSERT——兩者一致性
---    由 `supabase/tests/117_food_encyclopedia.sql` §1 機械驗證（呼叫同一支腳本、逐列
---    比對，不是靠人工目視）。
+--    由 `supabase/tests/run.sh` 在跑 `117_food_encyclopedia.sql` 之前，host 端呼叫同一支
+--    腳本動態產生並執行機械驗證（標記為 §1；`117_food_encyclopedia.sql` 本檔從 §2
+--    開始，見該檔檔頭，merge-review R1 informational i2：不是文字直接寫在該檔案內，
+--    不是靠人工目視）。
 --
 -- d) `list_child_food_records`／`upsert_child_food_record` 皆 `security invoker`
 --    （同 `list_growth_records`／`upsert_growth_record` 的既有慣例）——完全依賴
@@ -112,7 +114,8 @@ comment on table public.food_catalog is
   `snack_drink`），依國健署副食品引入順序排 `sort_order`。`id` 同時是 app 插圖資產名
   （F3a），v1 不開放自訂（F1a）。內容來源：`supabase/seed-data/food_catalog.csv`（人類
   可讀，供使用者過目），由 `scripts/ops/food-catalog-sql.py` 轉成下面第 2 段的 INSERT
-  ——兩者一致性見 `supabase/tests/117_food_encyclopedia.sql` §1。全表唯讀：
+  ——兩者一致性見 `supabase/tests/run.sh`（跑 `117_food_encyclopedia.sql` 之前
+  host 端動態產生執行，標記 §1，見該檔檔頭）。全表唯讀：
   `authenticated` 只有 SELECT，沒有任何寫入 grant（只有本 migration、以表擁有者身分
   執行的 INSERT 寫過這張表）。`allergens`／`min_age_months` 純資訊、附免責聲明（F2a，
   文案在 iOS 端呈現，不在後端），不構成醫療建議。';
@@ -126,8 +129,9 @@ grant select on public.food_catalog to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 2. food_catalog seed（由 scripts/ops/food-catalog-sql.py 依
---    supabase/seed-data/food_catalog.csv 生成；本區塊與 CSV 逐列一致，見
---    supabase/tests/117_food_encyclopedia.sql §1——改動清單一律先改 CSV，
+--    supabase/seed-data/food_catalog.csv 生成；本區塊與 CSV 逐列一致，由
+--    supabase/tests/run.sh 動態產生執行機械驗證（標記 §1，見
+--    117_food_encyclopedia.sql 檔頭）——改動清單一律先改 CSV，
 --    重新跑一次腳本貼過來，不要手改下面的 INSERT）
 -- ---------------------------------------------------------------------------
 insert into public.food_catalog (id, name_zh, category, sort_order, allergens, min_age_months)
