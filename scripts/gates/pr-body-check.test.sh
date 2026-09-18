@@ -402,6 +402,17 @@ else
   fi
 fi
 
+# ⑪ LS-327（來源 LS-96 池項 9b6b435e）：完整 UUID（含連字號）首段恰為 8 位純數字時，候選須是首段（不受
+#   LS256-DIGIT-FILTER 排除，因為它是合法 UUID 首段、不是裸 run id）；其後 12 位 hex 尾段（非純數字，過去會
+#   漏過純數字過濾器單獨冒充候選）不得外洩成獨立候選。PR #486 第 72 行原句（拿掉 `（可反查重貼 e5761e66）`
+#   之後的版本）與 LS-315 同一 PR 的 CI run id（35289196077，無連字號）是驗收明定的兩個具體實例。
+PR486_LINE='- i1：記入待辦池 LS-96 `16074303-698d-49ae-9a1e-391cb3fbadf9`，本輪不修——`AlbumsView` 進場會重載，不會殘留錯誤態'
+expect 0 '⑪a PR #486 第 72 行原句（格式）：完整 UUID 首段全為數字，格式仍綠' '皆帶 comment id' "${H}${PR486_LINE}"$'\n' --branch "$B"
+vexpect 1 '⑪a --verify：PR #486 第 72 行原句——候選須為首段 16074303、不含尾段 391cb3fbadf9（驗收明定）' '候選：16074303；LS-96 現有 4 則' 'test-token-not-real' "${H}${PR486_LINE}"$'\n'
+expect 1 '⑪b 裸 CI run id 35289196077（LS-315 PR #486，無連字號）→ 不算候選' '沒有 comment id' "${H}- i1：記入 LS-96（run 35289196077）"$'\n' --branch "$B"
+expect 0 '⑪b 裸 run id 與真 id 並列 → 候選只有真 id、格式綠' '皆帶 comment id' "${H}- i1：記入 LS-96（run 35289196077）\`9f348e36\`"$'\n' --branch "$B"
+vexpect 0 '⑪c 同行兩個完整 UUID：首段皆為候選，任一可驗即過' '9f348e36 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`00000001-0000-0000-0000-000000000000\`、\`9f348e36-82b6-4926-931b-5bfe1637e1f1\`"$'\n'
+
 # ⑨ mutation（LS-211）：拿掉逐行印 ⚠ 未反查 的迴圈 → ⑥a2 的正樣本必須消失，證明是這段迴圈在印。
 mut9="$work/pr-body-check.no-warn-loop.sh"
 awk '
@@ -423,6 +434,6 @@ else
 fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pr-body-check 自測通過（119 組樣本）"
+  echo "✓ pr-body-check 自測通過（124 組樣本）"
 fi
 exit "$fail"
