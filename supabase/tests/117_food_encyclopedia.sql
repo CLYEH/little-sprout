@@ -476,6 +476,21 @@ begin
     raise exception 'FAIL：軟刪後 food_first 項目應該從時間軸消失，實際仍有 %', v_n;
   end if;
   raise notice 'ok：軟刪後 food_first 項目從時間軸消失';
+
+  -- (d) 軟刪後 p_child_id 篩選也消失，在真正通過 RLS 的 authenticated 身分下呼叫
+  --     （merge-review R1 informational i1：(c) 的檢查是在 reset role 之後以
+  --     postgres 身分呼叫，繞過 RLS，且沒斷言 p_child_id 篩選；這裡沿用會封鎖過
+  --     viewer 的 v_owner 身分，讓 v_has_blocks=true 分支也一起走到）。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  select count(*) into v_n from public.get_family_timeline(v_family, v_child, null, null, 1000)
+   where kind = 'food_first'::public.feed_kind and ref_id = v_id;
+  reset role;
+  if v_n <> 0 then
+    raise exception 'FAIL：軟刪後用 p_child_id 篩選（authenticated 身分，走 RLS）food_first 項目也應該消失，實際仍有 %', v_n;
+  end if;
+  raise notice 'ok：軟刪後 p_child_id 篩選（authenticated 身分，走 RLS）也看不到 food_first 項目';
 end;
 $$;
 
