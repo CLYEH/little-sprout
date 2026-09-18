@@ -426,6 +426,15 @@ begin
   v_id := (public.upsert_child_food_record(v_child, 'avocado', current_date, null, '第一次吃酪梨', 'liked')).id;
   reset role;
 
+  -- comment_count CASE 短路的回歸（merge-review R1 M1）：放一則 target_id 恰好等於
+  -- 這筆 food_first ref_id 的留言（comments.target_id 沒有指向具體表的外鍵），讓
+  -- comment_count 子查詢裡較便宜的 family_id／target_id 條件對 food_first 列成立、
+  -- 一定會評估到 target_type 那條轉型——拿掉 CASE 短路時這裡撞 22P02，不再依賴
+  -- planner 剛好選了哪支索引（fixture 資料量下 target_type 是最後才評估的 Filter，
+  -- 沒有這一列就永遠評估不到，mutation 會假綠）。
+  insert into public.comments (family_id, target_type, target_id, author_id, body)
+  values (v_family, 'diary', v_id, 'a0000000-0000-4000-8000-000000000002', 'LS-325 cast probe');
+
   -- (a) 出現在「全部」時間軸，child_ids 恆為 [child]，comment_count 恆為 0
   --     （A 家 owner 在 fixtures 本身就封鎖了 viewer，這條查詢天生走
   --     v_has_blocks=true 分支，見 00_fixtures.sql：對應 20260903091317_

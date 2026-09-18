@@ -763,10 +763,14 @@ $$;
 --      日後的票），若不改這一行，任何一頁時間軸只要出現一筆 food_first 項目，這句
 --      轉型就會對該列撞 22P02（invalid_text_representation）、讓整支 RPC 呼叫直接
 --      失敗——不是「food_first 那一列的 comment_count 算錯」這種局部問題，是**整個
---      呼叫**（該頁全部列，不分 kind）都拿不到結果。這不是假設性風險：本機
---      `supabase db reset` 實測過，只要 feed_items 裡混進一筆 kind='food_first'
---      的列，不改這行的版本在 p_child_id 為 null 的「全部」分頁必定撞這個錯誤（見
---      supabase/tests/117_food_encyclopedia.sql §6）。CASE 短路讓 food_first 這個
+--      呼叫**（該頁全部列，不分 kind）都拿不到結果。這不是假設性風險，但會不會撞到
+--      取決於 planner 評估 filter 的順序，不是「只要混進一筆就必定撞」：fixture
+--      資料量下 comments 從不指向 food_first，target_type 這句轉型排在 Filter 最
+--      後一條，天生評估不到；只要有一列留言讓 family_id／target_id 兩個較便宜的
+--      條件對 food_first 列成立，轉型就一定會被求值、撞上這個錯誤——
+--      `supabase/tests/117_food_encyclopedia.sql` §8 已放一筆這樣的留言把情境釘成
+--      回歸測試（merge-review R1 M1；原註解寫「必定」與引用「§6」皆與實測不符，已
+--      訂正為 §8 並補上前提）。CASE 短路讓 food_first 這個
 --      分支永遠不求值到右邊的轉型（Postgres 只評估 CASE 命中的那個分支），比對
 --      結果因此是 NULL（WHERE 視為不成立），comment_count 自然是 0——這也正確反映
 --      「food_first 卡片目前不能被留言」的事實，不是繞過錯誤、是語意上就該是 0。
