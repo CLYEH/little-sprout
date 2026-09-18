@@ -242,9 +242,27 @@ struct ChildGrowthDetailView: View {
                 }
                 if !growthStore.isEmpty {
                     VStack(alignment: .leading, spacing: AppSpacing.item) {
-                        Text("歷史紀錄")
-                            .appFont(.body)
-                            .foregroundStyle(Color.lsTextPrimary)
+                        HStack {
+                            Text("歷史紀錄")
+                                .appFont(.body)
+                                .foregroundStyle(Color.lsTextPrimary)
+                            Spacer(minLength: 0)
+                            // R1 merge-review i1：06 之前完全沒有編輯／刪除路徑——
+                            // `GrowthHistorySection` 是純顯示，打錯的紀錄永遠改不了。沿用同一
+                            // 支 03 列表 View（同 compact 版的「查看全部紀錄」入口），不另畫
+                            // 新版面。
+                            NavigationLink {
+                                GrowthRecordsListView(
+                                    growthStore: growthStore, childName: child.name,
+                                    currentUserID: currentUserID, isFamilyOwner: isFamilyOwner
+                                )
+                            } label: {
+                                Text("查看全部紀錄")
+                                    .appFont(.body, weight: .semibold)
+                                    .foregroundStyle(Color.lsAccent)
+                                    .frame(minHeight: 44)
+                            }
+                        }
                         GrowthHistorySection(records: growthStore.records)
                     }
                 }
