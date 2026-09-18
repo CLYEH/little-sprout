@@ -94,6 +94,9 @@ ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 # 「稿有、實作漏」（推入式畫面隱藏 Tab Bar、Tab-root 只用自訂標題、失敗文案分支），設計稿 Notes 板有寫、
 # ios-dev 沒逐條對、merge-reviewer 沒查。ios-dev：實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選——
 # 那句被刪即紅。merge-reviewer：對 handoff 勾選表抽兩列重放——那句被刪即紅。
+# LS-327（LS-96 池項 dfff5ab3，來源 LS-321 R3 designer 實測）：ui-designer／visual-reviewer 正文各補一句——
+# instance 巢狀 descendants 覆寫路徑對 `Export`／`TakeScreenshot` 子節點 id 會回元件預設值（與 `Get`／整板
+# 截圖不一致），一律整板截圖再依 `Get` 絕對座標裁切；那句被刪即紅。
 BODY_RULES=
 # LS-254：五份（ios-dev／ui-designer／visual-reviewer／merge-reviewer／qa）正文須含「禁派 fork」——fork 繼承整份派工單、會把它當
 # 自己的任務平行執行（LS-234 R7 同一 .pen／branch 雙寫；LS-188／LS-192 越權改檔，三起皆為 worker 自己派的 fork）；PreToolUse
@@ -174,7 +177,9 @@ qa|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期�
 merge-reviewer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
 dead-code-sweeper|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
 ui-designer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
-visual-reviewer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅"
+visual-reviewer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
+ui-designer|instance 內覆寫的子節點不可直接|LS-327（LS-96 池項 dfff5ab3）：instance 巢狀 descendants 覆寫路徑對 Export／TakeScreenshot 子節點 id 會回元件預設值，一律整板截圖再依 Get 絕對座標裁切（LS-321 R3 designer 實測），那句被刪即紅
+visual-reviewer|instance 內覆寫的子節點不可直接|LS-327（LS-96 池項 dfff5ab3）：同上，審查時也要留意 instance 覆寫路徑的截圖陷阱，那句被刪即紅"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，
