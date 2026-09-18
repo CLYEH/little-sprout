@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// 把 `get_family_timeline` 的指標（`kind`／`ref_id`）組裝成完整內容（`TimelineEntry`）。
 ///
@@ -23,13 +24,27 @@ enum TimelineContentAssembler {
         var media: [UUID: MediaContent] = [:]
     }
 
+    /// LS-329：`FeedKind` 尚無法辨識的值（見該型別文件註解）——`subsystem` 用 bundle id，
+    /// 找不到時退回硬編字面值，同 `PushNotificationStore.logger` 既有理由。
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.leoyeh.littlesprout", category: "timeline"
+    )
+
     static func assemble(
         pointers: [TimelineFeedPointer], apiClient: TimelineAPIClient
     ) async throws -> [TimelineEntry] {
-        guard !pointers.isEmpty else { return [] }
-        let byKind = Dictionary(grouping: pointers, by: \.kind)
+        // LS-329：`.unknown` kind 的指標在這裡就濾掉、記一行 log（只含 kind 字串，不含
+        // 使用者內容）——不進入下面的分組／批次查詢，也不會以任何形式出現在 `entries`
+        // 裡，確保它不會走進 `openComments`／`InteractionRow` 等需要 ref 詳情的路徑。
+        let knownPointers = pointers.filter { pointer in
+            guard case .unknown(let rawKind) = pointer.kind else { return true }
+            logger.warning("LS-329 時間軸略過未知 feed kind：\(rawKind, privacy: .public)")
+            return false
+        }
+        guard !knownPointers.isEmpty else { return [] }
+        let byKind = Dictionary(grouping: knownPointers, by: \.kind)
         let maps = try await fetchContentMaps(byKind: byKind, apiClient: apiClient)
-        return buildEntries(pointers: pointers, maps: maps)
+        return buildEntries(pointers: knownPointers, maps: maps)
     }
 
     /// 三支批次查詢（diary／album／media）用 `withThrowingTaskGroup` 平行發出，見
@@ -68,6 +83,10 @@ enum TimelineContentAssembler {
             case .diary: content = maps.diaries[pointer.refId].map(TimelineEntry.Content.diary)
             case .album: content = maps.albums[pointer.refId].map(TimelineEntry.Content.album)
             case .media: content = maps.media[pointer.refId].map(TimelineEntry.Content.media)
+            // LS-329：`assemble` 已經把 `.unknown` 的指標濾掉，不會有 pointer 帶著
+            // `.unknown` 的 kind 走到這裡——這個分支只是滿足編譯器窮舉要求（`FeedKind`
+            // 加了 `.unknown` case 之後這個 switch 若不補分支不會過編譯）。
+            case .unknown: content = nil
             }
             return TimelineEntry(
                 kind: pointer.kind, refId: pointer.refId, occurredAt: pointer.occurredAt,

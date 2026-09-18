@@ -2,8 +2,40 @@ import Foundation
 
 /// `get_family_timeline` 回傳的 `kind` 欄——`public.feed_kind` enum，PostgREST 序列化成
 /// JSON 字串（見 `docs/API.md` §4 `get_family_timeline`）。
-enum FeedKind: String, Decodable, Sendable, Hashable {
+///
+/// LS-329：後端 `feed_kind` 之後新增值（例如 LS-325 `food_first`）時，尚未更新的已安裝
+/// app 版本仍會收到含新字串的回應——原本合成的 `String` rawValue `Decodable` 遇到無法
+/// match 的字串會直接 throw，讓外層 `[TimelineFeedPointer]` 整批解碼失敗、時間軸整頁
+/// 顯示錯誤（不是「少一筆」這麼輕微）。改手寫 `init(from:)`：辨識不出的字串放進
+/// `.unknown(rawValue)`，讓外層陣列解碼繼續成功；呼叫端
+/// （`TimelineContentAssembler.assemble`）把 `.unknown` 這筆濾掉並記一行 log，不顯示、
+/// 也不讓它走進任何需要 ref 詳情的導頁（見該檔）。無法再用 `String` 做 raw value 型別
+/// （帶關聯值的 case 不能與 raw value 並存），`rawValue` 改手寫計算屬性，語意對既有呼叫端
+/// （`CommentsSheetView`／`InteractionRow`／`TimelineStore+Reactions`／`TimelineEntry.id`）
+/// 透明——這些呼叫端只會拿到已知 kind 的 entry（`.unknown` 在更早的階段就被濾掉），
+/// `.unknown` 分支在這裡只是滿足編譯器窮舉要求，不是預期路徑。
+enum FeedKind: Decodable, Sendable, Hashable {
     case diary, album, media
+    case unknown(String)
+
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "diary": self = .diary
+        case "album": self = .album
+        case "media": self = .media
+        default: self = .unknown(raw)
+        }
+    }
+
+    var rawValue: String {
+        switch self {
+        case .diary: return "diary"
+        case .album: return "album"
+        case .media: return "media"
+        case .unknown(let raw): return raw
+        }
+    }
 }
 
 enum MediaType: String, Decodable, Sendable, Equatable {

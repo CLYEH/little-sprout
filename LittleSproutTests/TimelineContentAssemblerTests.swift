@@ -209,6 +209,46 @@ final class TimelineContentAssemblerTests: XCTestCase {
         XCTAssertNotNil(entries[2].content)
     }
 
+    /// LS-329：`.unknown` kind 的指標（例如後端新增 `food_first`，本 build 尚不認識）該被
+    /// `assemble` 濾掉——不出現在最終 `entries` 裡，也不影響同一頁其餘已知 kind 的組裝。
+    /// 對應票文驗收「回應含一筆 food_first＋兩筆已知 → 解碼成功、顯示 2 筆」的「顯示 2 筆」
+    /// 這一半；解碼本身不失敗那一半見
+    /// `SupabaseTimelineAPIClientTests.test_fetchTimelinePointers_unknownKind_decodesAlongsideKnownKinds`。
+    func test_assemble_unknownKindPointer_skippedAndKnownKindsSurvive() async throws {
+        let stub = StubTimelineAPIClient()
+        stub.setFetchDiariesHandler { [diaryID] _ in
+            [DiaryRow(id: diaryID, body: "x", entryDate: Date(), createdAt: Date())]
+        }
+        stub.setFetchAlbumsHandler { [albumID] _ in
+            [AlbumRow(id: albumID, title: "y", coverMediaId: nil)]
+        }
+        let now = Date()
+        let pointers = [
+            pointer(kind: .unknown("food_first"), refId: UUID(), occurredAt: now),
+            pointer(kind: .diary, refId: diaryID, occurredAt: now.addingTimeInterval(-60)),
+            pointer(kind: .album, refId: albumID, occurredAt: now.addingTimeInterval(-120))
+        ]
+
+        let entries = try await TimelineContentAssembler.assemble(pointers: pointers, apiClient: stub)
+
+        XCTAssertEqual(entries.count, 2, "未知 kind 那一筆該被濾掉，只剩 2 筆已知 kind")
+        XCTAssertEqual(entries.map(\.kind), [.diary, .album])
+    }
+
+    /// 邊界情況：整頁全是未知 kind（例如舊 app 遇到一支尚未支援的全新 feed kind 版本）——
+    /// 該退化成空列表，不崩潰、不 throw。
+    func test_assemble_allUnknownKinds_returnsEmptyWithoutThrowing() async throws {
+        let stub = StubTimelineAPIClient()
+        let pointers = [
+            pointer(kind: .unknown("food_first"), refId: UUID()),
+            pointer(kind: .unknown("mystery_kind"), refId: UUID())
+        ]
+
+        let entries = try await TimelineContentAssembler.assemble(pointers: pointers, apiClient: stub)
+
+        XCTAssertTrue(entries.isEmpty, "全部未知 kind 應退化成空列表，不崩潰")
+    }
+
     func test_assemble_batchFailure_propagatesError() async {
         let stub = StubTimelineAPIClient()
         stub.setFetchDiariesHandler { _ in throw AppError.server(message: "boom", code: nil) }
