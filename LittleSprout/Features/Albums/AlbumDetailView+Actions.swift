@@ -58,42 +58,28 @@ extension AlbumDetailView {
     }
 
     // MARK: - 加入照片（LS-303 R2：觸發相機膠卷批次匯入，見 `AlbumDetailView.swift` 檔頭）
+    //
+    // LS-315：Action Bar／iPad 行內兩版改 ref 同一元件 `ImportEntryButton`（`cmp/Button
+    // Import` 第四使用點，Notes `TCs7A`：「之後的實作票應直接 ref cmp/Button Import，不得
+    // 各自發明」）——取代原本各自發明的 accent 填色樣式。merge-review R2 i2：`loadPicked`
+    // 已無呼叫端（見型別文件註解），原本讀它的 `isLoadingPickedItems` 停用旗標一併順手刪，
+    // 不留一顆永遠是 false 的死旗標。
 
     var addPhotosBarButton: some View {
-        PrimaryButton(
-            icon: "photo.badge.plus", title: "加入照片", isLoading: isLoadingPickedItems,
-            loadingTitle: "照片載入中…", action: { showsBatchImport = true }
-        )
+        // merge-review R2 M1：Action Bar 版稿面（`ve8YN`／`xcGEY`／`iXdTJ`／`EZqDj`）instance
+        // 都是 `width:"fill_container"`——`fillsWidth: true` 撐滿動作帶，不是 hug-content。
+        ImportEntryButton(label: "加入照片", fillsWidth: true) { showsBatchImport = true }
     }
 
-    /// iPad「行內」版（Notes `rFiLJ` `RbEqx`：`width:fit_content`，不像 Action Bar 版滿版）。
+    /// iPad「行內」版（Notes `rFiLJ` `RbEqx`：`width:fit_content`，不像 Action Bar 版滿版）——
+    /// `ImportEntryButton` 本身即 hug-content 緊湊 pill，天然符合這個既有取捨。
     var addPhotosInlineButton: some View {
-        Button {
-            showsBatchImport = true
-        } label: {
-            HStack(spacing: AppSpacing.label) {
-                Image(systemName: "photo.badge.plus").appIconFrame(.medium)
-                Text("加入照片").appFont(.body, weight: .semibold)
-            }
-            .frame(minHeight: 48)
-            .padding(.horizontal, AppSpacing.item)
-            .contentShape(Rectangle())
-        }
-        .foregroundStyle(Color.lsOnAccent)
-        .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-        // merge-review R2 m1：同 `addPhotosBarButton`——loading 期間停用，不讓使用者開出
-        // 第二批 picker 跟第一批交錯。
-        .disabled(isLoadingPickedItems)
+        ImportEntryButton(label: "加入照片") { showsBatchImport = true }
     }
 
     /// PhotosPicker 挑選結果 → `MediaUploadService` 佇列（沿 `DiaryEditorView+Photos
     /// .loadPicked` 既有路徑，這裡不需要 20 張上限那一套——相簿沒有單篇張數上限，佇列本身的
     /// 並發／重試已經是 `UploadQueueStore` 的職責）。
-    ///
-    /// **merge-review R2 m1**：`isLoadingPickedItems` 包住整個迴圈——`addPhotosBarButton`／
-    /// `addPhotosInlineButton` 都讀這顆旗標停用，擋下「使用者在第一批還在解碼時開第二批
-    /// picker，兩批非按開始順序完成，後完成的那批把 `uploadQueueStore` 整個換掉」（同
-    /// `DiaryEditorView+Photos.loadPicked` 既有的 M3／m6 修法）。
     ///
     /// **LS-237 修（池 `1aa74165` m2）**：不支援的格式（`.unsupportedFormat`）與載入失敗
     /// （`PickedItemLoader.load` 回 `nil`）原本都靜默 `continue`，使用者選 5 張佇列只出現
@@ -116,9 +102,7 @@ extension AlbumDetailView {
     /// 檔頭文件註解（完整的併發上限／生命週期問題說明在那裡，這裡不重複）。
     @MainActor
     func loadPicked(_ items: [PhotosPickerItem], detailStore: AlbumDetailStore) async {
-        isLoadingPickedItems = true
         skippedItemCount = 0
-        defer { isLoadingPickedItems = false }
         var loaded: [PickedItemLoader.LoadedItem?] = []
         for item in items {
             loaded.append(await PickedItemLoader.load(item))

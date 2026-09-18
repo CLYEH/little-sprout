@@ -34,7 +34,8 @@ final class TapTargetGateTests: XCTestCase {
     }
 
     /// LS-126 delta 復審 m2：`TimelineView` 整體仍在 `tap-target-exemptions.txt`（其餘元件
-    /// 需要 seed 資料），這裡只蓋 Header 建立鈕（`.preview()` 空狀態即可渲染）。
+    /// 需要 seed 資料），這裡只蓋 Header 兩顆鈕（`.preview()` 空狀態即可渲染）——LS-315 起
+    /// 加上「匯入」鈕，與原本的「新增回憶」建立鈕一起量測。
     func testTimelineViewDefaultState() {
         assertAllTappablesMeetMinimum(.timelineDefaultState)
     }

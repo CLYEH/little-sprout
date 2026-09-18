@@ -80,6 +80,59 @@ final class AlbumsStoreTests: XCTestCase {
         XCTAssertNil(stub.fetchAlbumsCalls.last?.cursor, "第一頁不應帶游標")
     }
 
+    // MARK: - refreshIfEmpty
+
+    /// LS-315 R3（merge-review R2 m1）：`TimelineImportAlbumsRegressionTests` 原始碼字面守衛
+    /// 換成這裡的行為測試——`albums` 還沒載過（空）時應該補打一次 `fetchAlbums`。mutation
+    /// 對照：把 `refreshIfEmpty` 的 `guard albums.isEmpty` 反過來寫（`!albums.isEmpty`）會讓
+    /// 這支測試轉紅（空清單時反而不打），也會讓下面「非空不重打」那支轉紅（非空時反而會打）。
+    func test_refreshIfEmpty_whenAlbumsEmpty_fetchesOnce() async {
+        let stub = StubAlbumsAPIClient()
+        stub.setFetchAlbumsHandler { _, _, _ in [] }
+        let store = AlbumsStore(apiClient: stub)
+
+        let result = await store.refreshIfEmpty(familyID: familyID)
+
+        XCTAssertTrue(result)
+        XCTAssertEqual(stub.fetchAlbumsCalls.count, 1, "albums 空時應該補打一次 fetchAlbums")
+    }
+
+    /// merge-review R2 m1：已經有清單之後不該每次點擊都重打一次 RPC。
+    func test_refreshIfEmpty_whenAlbumsNonEmpty_doesNotFetchAgain() async {
+        let stub = StubAlbumsAPIClient()
+        stub.setFetchAlbumsHandler { _, _, _ in [albumRow(createdAt: Date())] }
+        let store = AlbumsStore(apiClient: stub)
+        await store.refresh(familyID: familyID)
+        XCTAssertEqual(stub.fetchAlbumsCalls.count, 1)
+
+        let result = await store.refreshIfEmpty(familyID: familyID)
+
+        XCTAssertFalse(result)
+        XCTAssertEqual(stub.fetchAlbumsCalls.count, 1, "已有相簿時不應該重打 fetchAlbums")
+    }
+
+    /// merge-review R2 m2：第一次 refresh 還在飛行中時再點一次「匯入」，不該再起一個 refresh
+    /// 把前一次的結果丟棄。用 `AlbumsTestAsyncGate` 精準卡住第一次，不用 `Task.sleep` 猜時間。
+    func test_refreshIfEmpty_whenRefreshInFlight_doesNotFetchAgain() async {
+        let stub = StubAlbumsAPIClient()
+        let gate = AlbumsTestAsyncGate()
+        stub.setFetchAlbumsHandler { _, _, _ in
+            await gate.wait()
+            return []
+        }
+        let store = AlbumsStore(apiClient: stub)
+
+        let firstTask = Task { await store.refreshIfEmpty(familyID: familyID) }
+        while store.refreshState != .submitting { await Task.yield() }
+
+        let secondResult = await store.refreshIfEmpty(familyID: familyID)
+        XCTAssertFalse(secondResult, "第一次還在飛行中，第二次應該被守門擋下")
+
+        await gate.open()
+        _ = await firstTask.value
+        XCTAssertEqual(stub.fetchAlbumsCalls.count, 1, "in-flight 時第二次呼叫不應該重打 RPC")
+    }
+
     // MARK: - loadMore
 
     func test_loadMore_usesLastAlbumAsCursor_andAppends() async {

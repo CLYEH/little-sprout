@@ -64,4 +64,25 @@ final class AlbumDetailViewTests: XCTestCase {
         // 取消後應該回到詳情頁——「更多」選單仍在（沒有被 pop 回列表）。
         XCTAssertTrue(app.buttons["更多操作"].waitForExistence(timeout: 5))
     }
+
+    /// merge-review R2 M1：Action Bar 版稿面（`ve8YN`／`xcGEY`／`iXdTJ`／`EZqDj`）instance
+    /// 都是 `width:"fill_container"`——改 ref `ImportEntryButton`（hug-content pill）時把這個
+    /// 滿版幾何弄丟了，動作帶從整條主鈕縮成置中小 pill。量 `XCUIElement.frame` 確認撐滿。
+    func testAddPhotosBarButtonFillsActionBarWidth() {
+        let app = TapTargetMeasurement.launch(.albumDetailOwner)
+        TapTargetMeasurement.assertScreenRendered(.albumDetailOwner, in: app)
+
+        let button = app.buttons["加入照片"]
+        XCTAssertTrue(button.waitForExistence(timeout: 5))
+        let windowWidth = app.windows.firstMatch.frame.width
+        // `AppSpacing.screenPad`（24pt）字面值同步寫在這裡——UI test 跟 app target 分離
+        // 行程，不能 `import LittleSprout` 引用（同 `DiaryCardVideoBadgeGeometryTests`
+        // 既有理由）。
+        let screenPad: CGFloat = 24
+        XCTAssertGreaterThan(
+            button.frame.width, windowWidth - screenPad * 2 - 1,
+            "「加入照片」Action Bar 版應撐滿動作帶寬度（fill_container，merge-review R2 M1），"
+                + "不是縮成 hug-content pill"
+        )
+    }
 }
