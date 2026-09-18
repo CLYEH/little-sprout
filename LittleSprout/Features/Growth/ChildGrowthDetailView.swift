@@ -55,6 +55,11 @@ struct ChildGrowthDetailView: View {
     /// LS-313：owner 可以刪除（不能編輯）任何一筆，同「owner／作者權限沿 LS-57」——沿
     /// `ChildrenStore.isOwner` 既有慣例傳入，這支畫面本身不依賴 `ChildrenStore`。
     var isFamilyOwner = false
+    /// R1 merge-review m3：`upsert_growth_record` 只允許 owner／member 寫入（`growth_records_
+    /// insert` RLS）——viewer 按「新增量測」必得 `42501`。沿 `editDestination` 既有先例，
+    /// 由呼叫端傳入 `childrenStore.canManageChildren`（同一組 owner／member 判斷），這支畫面
+    /// 本身不依賴 `ChildrenStore`。
+    var canManageChildren = false
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -64,13 +69,14 @@ struct ChildGrowthDetailView: View {
 
     init(
         child: Child, apiClient: GrowthAPIClient, editDestination: (() -> AnyView)? = nil,
-        currentUserID: UUID? = nil, isFamilyOwner: Bool = false
+        currentUserID: UUID? = nil, isFamilyOwner: Bool = false, canManageChildren: Bool = false
     ) {
         self.child = child
         self.apiClient = apiClient
         self.editDestination = editDestination
         self.currentUserID = currentUserID
         self.isFamilyOwner = isFamilyOwner
+        self.canManageChildren = canManageChildren
     }
 
     #if DEBUG
@@ -78,7 +84,7 @@ struct ChildGrowthDetailView: View {
     /// `loadIfNeeded()`（假 client 固定回傳 `[]`，會把種好的示範資料覆蓋成空狀態）。
     init(
         previewGrowthStore store: GrowthStore, editDestination: (() -> AnyView)? = nil,
-        currentUserID: UUID? = nil, isFamilyOwner: Bool = false
+        currentUserID: UUID? = nil, isFamilyOwner: Bool = false, canManageChildren: Bool = true
     ) {
         self.child = Child(
             id: store.childID, name: store.childName, birthday: store.childBirthday,
@@ -88,6 +94,7 @@ struct ChildGrowthDetailView: View {
         self.editDestination = editDestination
         self.currentUserID = currentUserID
         self.isFamilyOwner = isFamilyOwner
+        self.canManageChildren = canManageChildren
         self._growthStore = State(initialValue: store)
     }
     #endif
@@ -182,8 +189,10 @@ struct ChildGrowthDetailView: View {
 
     private func actionsCompact(_ growthStore: GrowthStore) -> some View {
         VStack(spacing: AppSpacing.group) {
-            PrimaryButton(icon: "plus", title: "新增量測") {
-                showsAddMeasurement = true
+            if canManageChildren {
+                PrimaryButton(icon: "plus", title: "新增量測") {
+                    showsAddMeasurement = true
+                }
             }
             NavigationLink {
                 GrowthRecordsListView(
@@ -226,8 +235,10 @@ struct ChildGrowthDetailView: View {
                         .foregroundStyle(Color.lsTextPrimary)
                     latestValuesRow(growthStore)
                 }
-                PrimaryButton(icon: "plus", title: "新增量測") {
-                    showsAddMeasurement = true
+                if canManageChildren {
+                    PrimaryButton(icon: "plus", title: "新增量測") {
+                        showsAddMeasurement = true
+                    }
                 }
                 if !growthStore.isEmpty {
                     VStack(alignment: .leading, spacing: AppSpacing.item) {

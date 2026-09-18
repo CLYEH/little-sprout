@@ -90,7 +90,11 @@ struct GrowthRecordsListView: View {
     var body: some View {
         Group {
             if growthStore.records.isEmpty {
-                emptyState
+                if case .failure = growthStore.loadState {
+                    failureState
+                } else {
+                    emptyState
+                }
             } else {
                 list
             }
@@ -229,6 +233,35 @@ struct GrowthRecordsListView: View {
                 .appFont(.body)
                 .foregroundStyle(Color.lsTextSecondary)
                 .multilineTextAlignment(.center)
+        }
+        .padding(.horizontal, AppSpacing.screenPad)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// R1 merge-review m4：01 讀取失敗時（例如離線）`growthStore.records` 也是空的，使用者仍
+    /// 可能已經按過「查看全部紀錄」進到這裡——不能顯示上面 `emptyState` 那句「還沒有紀錄」
+    /// （那是「這個孩子真的還沒量過」的語意，跟「讀取失敗」是兩件不同的事，同 LS-312 M2
+    /// 既有語彙：`ChildGrowthDetailView.failureBanner` 錯誤文案＋「重新載入」，這裡沒有骨架卡
+    /// 可以疊，改整頁置中呈現）。
+    private var failureState: some View {
+        VStack(spacing: AppSpacing.item) {
+            Image(systemName: "exclamationmark.circle")
+                .appIconFrame(.large)
+                .foregroundStyle(Color.lsTextSecondary)
+            if case .failure(let error) = growthStore.loadState {
+                Text(error.userFacingMessage)
+                    .appFont(.body)
+                    .foregroundStyle(Color.lsTextSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            Button {
+                Task { await growthStore.refresh() }
+            } label: {
+                Text("重新載入")
+                    .appFont(.body, weight: .semibold)
+                    .foregroundStyle(Color.lsTextPrimary)
+                    .frame(minHeight: 48)
+            }
         }
         .padding(.horizontal, AppSpacing.screenPad)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

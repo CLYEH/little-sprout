@@ -57,4 +57,21 @@ final class GrowthMeasurementPrefillRegressionTests: XCTestCase {
             "editingRecord 帶值時要格式化成一位小數字串，nil 時才是空字串（新增態）"
         )
     }
+
+    /// R1 merge-review m2：驗收「範圍軟提醒不擋儲存」（品牌第 8 條）——mutation：若 `submit()`
+    /// 加一行 `guard rangeWarning == nil else { return }`（或任何以 `rangeWarning` 為條件擋下
+    /// 儲存的寫法），這支測試會抓到；`submit()` 目前唯一讀的驗證狀態是 `hasAtLeastOneValue`／
+    /// `showsEmptyMessage`，完全不該出現 `rangeWarning` 這個字面。
+    func test_submit_neverGatesOnRangeWarning() throws {
+        let source = try sourceText(relativePath: "LittleSprout/Features/Growth/GrowthMeasurementFormView.swift")
+
+        XCTAssertFalse(
+            source.contains("guard rangeWarning"),
+            "submit() 不該用 rangeWarning 擋下儲存——軟性提醒永遠不能 disable 儲存"
+        )
+        XCTAssertFalse(
+            source.contains("rangeWarning == nil"),
+            "submit() 不該用 rangeWarning 擋下儲存——軟性提醒永遠不能 disable 儲存"
+        )
+    }
 }

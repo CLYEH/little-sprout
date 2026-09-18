@@ -34,12 +34,35 @@ final class GrowthMeasurementValidationTests: XCTestCase {
 
     // MARK: - rangeWarning（軟提醒，不擋儲存——這支只驗訊息本身，「不擋儲存」是 View 層
     // `submit()` 從不讀這支函式的回傳值來決定要不要呼叫 API 的行為面保證，見
-    // `GrowthMeasurementFormView.submit()`）
+    // `GrowthMeasurementPrefillRegressionTests.test_submit_neverGatesOnRangeWarning`）
 
-    /// mutation：若門檻判斷從 `>` 改成 `>=`，這支測試會抓到——Notes 例句用的 180.0 剛好要能
-    /// 觸發，門檻本身（130.0）不該被觸發到。
+    /// R1 merge-review m2（修正舊註解——原本聲稱能抓 `>`→`>=` 的 mutation，但輸入離門檻很
+    /// 遠，抓不到；`ClosedRange.contains` 也不是 `>`/`>=` 的形狀）：一般常見量測值（遠在
+    /// 區間內）不該觸發，邊界精確值見下面 `test_rangeWarning_exactlyAtBoundaries_nil`。
     func test_rangeWarning_withinNormalRange_nil() {
         XCTAssertNil(GrowthMeasurementValidation.rangeWarning(heightCm: 78.5, weightKg: 9.6, headCm: 45.0))
+    }
+
+    /// R1 merge-review m2：邊界值本身（區間端點）不該觸發——`ClosedRange.contains` 是雙端
+    /// 包含，剛好等於上限／下限都算「在範圍內」。mutation：若把 `heightRange` 的
+    /// `30.0...200.0` 誤改成不含端點的判斷，這支測試會抓到。
+    func test_rangeWarning_exactlyAtBoundaries_nil() {
+        XCTAssertNil(GrowthMeasurementValidation.rangeWarning(heightCm: 30.0, weightKg: nil, headCm: nil))
+        XCTAssertNil(GrowthMeasurementValidation.rangeWarning(heightCm: 200.0, weightKg: nil, headCm: nil))
+        XCTAssertNil(GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: 1.0, headCm: nil))
+        XCTAssertNil(GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: 150.0, headCm: nil))
+        XCTAssertNil(GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: nil, headCm: 25.0))
+        XCTAssertNil(GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: nil, headCm: 70.0))
+    }
+
+    /// 緊貼邊界外一格——剛好超出區間就該觸發，門檻不能鬆一格。
+    func test_rangeWarning_justOutsideBoundaries_triggers() {
+        XCTAssertNotNil(GrowthMeasurementValidation.rangeWarning(heightCm: 29.9, weightKg: nil, headCm: nil))
+        XCTAssertNotNil(GrowthMeasurementValidation.rangeWarning(heightCm: 200.1, weightKg: nil, headCm: nil))
+        XCTAssertNotNil(GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: 0.9, headCm: nil))
+        XCTAssertNotNil(GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: 150.1, headCm: nil))
+        XCTAssertNotNil(GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: nil, headCm: 24.9))
+        XCTAssertNotNil(GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: nil, headCm: 70.1))
     }
 
     /// R1 merge-review M4：門檻改成年齡無關的合理區間（上下限皆有）；orchestrator 裁決
@@ -75,5 +98,43 @@ final class GrowthMeasurementValidationTests: XCTestCase {
 
     func test_rangeWarning_allNil_nil() {
         XCTAssertNil(GrowthMeasurementValidation.rangeWarning(heightCm: nil, weightKg: nil, headCm: nil))
+    }
+
+    // MARK: - parsedMeasurement（R1 merge-review m1）
+
+    /// mutation：若拿掉逗號正規化這一步，這支測試會抓到——逗號小數點地區的裝置會打出這種
+    /// 文字，不能被靜默解析成 nil。
+    func test_parsedMeasurement_commaDecimalSeparator_parsesAsDot() {
+        XCTAssertEqual(GrowthMeasurementValidation.parsedMeasurement(from: "9,6"), 9.6)
+    }
+
+    /// mutation：若拿掉四捨五入到一位小數這一步，這支測試會抓到——票文「小數一位」，兩位小數
+    /// 的輸入要被收斂成一位，不能整段原封不動存進去。
+    func test_parsedMeasurement_twoDecimalPlaces_roundsToOneDecimal() {
+        XCTAssertEqual(GrowthMeasurementValidation.parsedMeasurement(from: "9.66"), 9.7)
+    }
+
+    /// mutation：若拿掉 `value > 0` 這個條件，這支測試會抓到——DB `growth_records_height_
+    /// positive` 等 CHECK 約束擋 0，前端要先擋，不能等 RPC 回 `23514`。
+    func test_parsedMeasurement_zero_returnsNil() {
+        XCTAssertNil(GrowthMeasurementValidation.parsedMeasurement(from: "0"))
+    }
+
+    /// mutation：若拿掉上限判斷，這支測試會抓到——超出 `numeric` 欄位容量的值前端要先擋，不能
+    /// 等 RPC 回 `22003`。
+    func test_parsedMeasurement_overUpperLimit_returnsNil() {
+        XCTAssertNil(GrowthMeasurementValidation.parsedMeasurement(from: "1000"))
+    }
+
+    func test_parsedMeasurement_empty_returnsNil() {
+        XCTAssertNil(GrowthMeasurementValidation.parsedMeasurement(from: ""))
+    }
+
+    func test_parsedMeasurement_garbage_returnsNil() {
+        XCTAssertNil(GrowthMeasurementValidation.parsedMeasurement(from: "abc"))
+    }
+
+    func test_parsedMeasurement_validOneDecimal_unchanged() {
+        XCTAssertEqual(GrowthMeasurementValidation.parsedMeasurement(from: "78.5"), 78.5)
     }
 }

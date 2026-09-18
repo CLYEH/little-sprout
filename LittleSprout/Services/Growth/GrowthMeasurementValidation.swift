@@ -15,6 +15,28 @@ enum GrowthMeasurementValidation {
         heightCm != nil || weightKg != nil || headCm != nil
     }
 
+    /// R1 merge-review m1：decimalPad 在小數點用逗號的地區（裝置 `Locale` 十進位分隔字元為
+    /// `,`）會打出像 `"9,6"` 這樣的文字，`Double("9,6")` 解析為 `nil`、被靜默當成沒填——這裡
+    /// 先把逗號正規化成半形點再解析（codebase 沒有現成的 Locale-aware 數字解析慣例，用最小
+    /// 改法處理這一種分隔字元差異，不用整套 `NumberFormatter`）。解析成功後四捨五入到一位
+    /// 小數（票文「小數一位」——避免打兩位小數存進去，`%.1f` 只是顯示格式化，實際存的值沒被
+    /// 改，下次編輯回填、原封不動存回去，跟畫面顯示的一位小數不一致）；並擋 `<= 0`（`growth_
+    /// records_height_positive` 等 DB CHECK 約束的前端版本，給清楚的「沒填」而不是等 RPC 回
+    /// `23514`）與超出 `numeric` 欄位容量的超大值（`height_cm`／`head_cm` 是 `numeric(5,1)`、
+    /// `weight_kg` 是 `numeric(5,2)`——三項共用同一個保守上限 `maxValidValue`，遠低於兩者的
+    /// 實際容量，也遠超過任何真實人體量測值，前端擋下比等 RPC 回 `22003` 友善）。回傳 `nil`
+    /// 代表這個字串目前不是有效輸入，同「這欄沒填」一視同仁處理（不擋儲存，見型別文件註解，
+    /// 只是這個值不會被送出）。
+    static func parsedMeasurement(from text: String) -> Double? {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return nil }
+        let normalized = trimmed.replacingOccurrences(of: ",", with: ".")
+        guard let value = Double(normalized), value > 0, value <= maxValidValue else { return nil }
+        return (value * 10).rounded() / 10
+    }
+
+    private static let maxValidValue = 999.9
+
     /// 「超出合理範圍」的軟性提醒——刻意用固定絕對門檻，不是依年齡換算的百分位（票文「不做：
     /// 參考帶」已排除百分位計算）。R1 merge-review M4（orchestrator 裁決 `d55ff9ac` 第 5 條）：
     /// 這是單純的**手誤攔截**，不是同齡比較——上限擋「多打一個位數」（例如想輸入 18.0 kg 體重

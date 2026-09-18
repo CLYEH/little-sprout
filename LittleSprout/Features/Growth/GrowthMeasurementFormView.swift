@@ -75,9 +75,12 @@ struct GrowthMeasurementFormView: View {
         return calendar.date(from: components)
     }
 
-    private var heightValue: Double? { Double(heightText.trimmingCharacters(in: .whitespaces)) }
-    private var weightValue: Double? { Double(weightText.trimmingCharacters(in: .whitespaces)) }
-    private var headValue: Double? { Double(headText.trimmingCharacters(in: .whitespaces)) }
+    /// R1 merge-review m1：改用 `GrowthMeasurementValidation.parsedMeasurement(from:)`——原本
+    /// 直接 `Double(text)` 不吃逗號小數點、沒有限一位小數、也沒有擋 0／超上限（見該函式文件
+    /// 註解）。
+    private var heightValue: Double? { GrowthMeasurementValidation.parsedMeasurement(from: heightText) }
+    private var weightValue: Double? { GrowthMeasurementValidation.parsedMeasurement(from: weightText) }
+    private var headValue: Double? { GrowthMeasurementValidation.parsedMeasurement(from: headText) }
 
     private var hasAtLeastOneValue: Bool {
         GrowthMeasurementValidation.hasAtLeastOneValue(heightCm: heightValue, weightKg: weightValue, headCm: headValue)
