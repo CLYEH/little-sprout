@@ -232,7 +232,10 @@ struct ImportGroupDatePickerSheet: View {
     var body: some View {
         VStack(spacing: AppSpacing.block) {
             Text("選擇日期").appFont(.lead, weight: .bold).foregroundStyle(Color.lsTextPrimary)
-            DatePicker("這群的日期", selection: $selection, displayedComponents: .date)
+            // merge-review R1 M1：稿面／票文都沒有「未來日期」情境，但 wheel 可以無限往後滾——
+            // 未夾上界會讓這一群的 `taken_at` 撞後端 `media_taken_at_range_check` 整批被拒
+            // （同 `CreateChildView.BirthdayPickerSheet` 既有寫法，`in: ...Date()`）。
+            DatePicker("這群的日期", selection: $selection, in: ...Date(), displayedComponents: .date)
                 .datePickerStyle(.wheel)
                 .labelsHidden()
             Button {

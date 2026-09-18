@@ -31,5 +31,30 @@ extension TapTargetGateHarness {
     static var importPermissionDeniedHost: some View {
         ImportPermissionDeniedView()
     }
+
+    // LS-304：04／05——`ImportPreviewFixture.makeBatch()`（`Import04ProgressView.swift`
+    // `#if DEBUG`）建一份 session／store 對得上的固定樣本，同 `#Preview` 共用。
+    @MainActor
+    @ViewBuilder
+    static var importProgressDefaultHost: some View {
+        let fixture = ImportPreviewFixture.makeBatch()
+        Import04ProgressView(
+            session: fixture.session, store: fixture.store,
+            onLeaveInBackground: {}, onAllItemsFinished: {}, onCancelledImport: {}
+        )
+    }
+
+    @MainActor
+    @ViewBuilder
+    static var importProgressCancelConfirmHost: some View {
+        Import04bCancelConfirmView(uploadedCount: 34, remainingCount: 94, onKeepGoing: {}, onConfirmCancel: {})
+    }
+
+    @MainActor
+    @ViewBuilder
+    static var importSummaryWithFailuresHost: some View {
+        let fixture = ImportPreviewFixture.makeBatch(completed: 5, uploading: 0, waiting: 0, failed: [.network, .quota])
+        Import05SummaryView(session: fixture.session, store: fixture.store, onDone: {})
+    }
 }
 #endif

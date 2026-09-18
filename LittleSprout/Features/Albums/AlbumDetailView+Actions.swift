@@ -211,9 +211,9 @@ extension AlbumDetailView {
             apiClient: albumsStore.apiClient
         )
         detailStore = store
-        // LS-303 R3（merge-review R2 M2）：與 `detailStore` 同一刻建立，同壽命——見
-        // `LegacyAlbumUploadImportCoordinator` 檔頭文件註解「生命週期」段。
-        legacyImportCoordinator = LegacyAlbumUploadImportCoordinator(
+        // LS-304：與 `detailStore` 同一刻建立，同壽命——見 `AlbumImportUploadCoordinator`
+        // 檔頭文件註解「生命週期」段。
+        importUploadCoordinator = AlbumImportUploadCoordinator(
             familyID: familyID, mediaUploadService: mediaUploadService, albumsStore: albumsStore
         )
         albumsStore.subscribeDetailStore(albumID: albumID, store)

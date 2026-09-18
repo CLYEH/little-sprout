@@ -1,8 +1,10 @@
 import Foundation
 
 /// LS-303 R4（merge-review R3 M1／M2，orchestrator 裁決 `8579e30e`）：「加入照片」單張即傳
-/// （`AlbumDetailView+Actions.loadPicked`）與批次匯入過渡管線（`LegacyAlbumUploadImportCoordinator`）
-/// 改共用同一份 app 層級 `UploadQueueStore`（掛在 `AlbumsStore`——`LittleSproutApp.swift`
+/// （`AlbumDetailView+Actions.loadPicked`）與批次匯入過渡管線（`LegacyAlbumUploadImportCoordinator`，
+/// LS-304 已移除、由 `AlbumImportUploadCoordinator` 取代——下面 M1／M2 兩段描述的是當時 R3
+/// 版本的問題與修法，非現況呼叫端，見 merge-review R1 i5）改共用同一份 app 層級
+/// `UploadQueueStore`（掛在 `AlbumsStore`——`LittleSproutApp.swift`
 /// 唯一建構點、登入後一路存活到登出，同 `attachUploadedMedia` 本來就是 `AlbumsStore` 的職責），
 /// 不再各自 new 一份：
 ///
