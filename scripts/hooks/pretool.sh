@@ -2,7 +2,7 @@
 # PreToolUse fail-closed gate（LS-88 縮減版；LS-104 R1 精修「只在命令位置比對」；LS-104 R2
 # 修 merge-reviewer R1 comment 的 2 blocker/3 major——Linear LS-104 comment
 # 7a97f88a-d928-4e15-b656-a7d7be6eecb6）：只做三條「漏做會出事、字面可辨、後果不可逆」的
-# 規則，其餘（H4–H11）在 Harness 待辦池 LS-96，等事故再升。讀 stdin 的 hook JSON
+# 規則，其餘（H5–H11）在 Harness 待辦池 LS-96，等事故再升。讀 stdin 的 hook JSON
 # （`tool_name`／`tool_input`），逐條比對規則表，任一命中即 deny；全部不命中才 allow。
 #
 # 規則表：
@@ -34,6 +34,12 @@
 #               為真 → 放行；holder 是 `--hold`（`cmd=hold:*`）、守門 pid 活著、holder `worktree=` 與
 #               呼叫端目前目錄（hook JSON `cwd` 起算、沿命令追蹤 `cd`／`pushd`）所在 worktree 頂層
 #               相同 → 放行；否則 deny，訊息指向 `supabase-lock.sh -- <cmd>` 或 `--hold`。
+#   H4（Bash，LS-322，源自 LS-315；R2 加正規化，merge-review comment 9f4a1e38 M1）：命令文字
+#               去除引號字元、壓縮空白後含 `pgrep -f [p]ush-gate` 或 `pgrep -f [x]codebuild`
+#               （LS-312 定案的 self-match 迴避寫法，含雙引號／多空白等風格變體）卻不含
+#               `worktrees/LS-` 範圍字面，即 deny——這種等待迴圈會等到別票的 xcodebuild／
+#               push-gate（LS-315 四支迴圈疊到 3h53m）。純命令文字比對（不走命令位置分析，直接
+#               在本檔案 `case` 裡判，不送進 pretool_engine.py）。
 #
 # 前處理與命令位置判定（R2 全部移到 scripts/hooks/pretool_engine.py，本檔案只呼叫，見
 # `run_bash_engine`；下面是設計摘要，完整細節與每一條的理由見該檔案檔頭大段註解）：
@@ -232,6 +238,30 @@ case "$tool_name" in
     if [ -n "${DENY_MSG:-}" ]; then
       final_deny "$DENY_MSG"
     fi
+    # H4（LS-322，源自 LS-315 三次停工；R2 merge-review comment 9f4a1e38 M1）：等待 push
+    # gate／xcodebuild 的背景迴圈若用全域 `pgrep -f '[p]ush-gate'`／`'[x]codebuild'`（LS-312
+    # 定案的 self-match 迴避寫法）卻沒帶 `worktrees/LS-` 範圍字面，會等到別票的行程（LS-315：
+    # 四支迴圈疊到 3h53m）。純文字比對，不必送進 pretool_engine.py 的命令位置分析——**先正規化
+    # 再比對**（R1 M1：原版只用引號字面 `case` 比對，只認單引號＋單一空白這一種寫法，`pgrep -f
+    # "[x]codebuild"`（雙引號）、`pgrep -f  '[x]codebuild'`（`-f` 後多一空白）這兩種常見風格
+    # 變體全部被放行、LS-315 根因原樣可重演）：去掉所有 `'`／`"` 引號字元、把連續空白壓成單一
+    # 空格，讓兩種寫法都能命中同一個（不含引號的）字面模式。**殘留已知盲區**（reviewer 已確認
+    # 可接受，不擋本輪合併）：`pgrep -f'[x]codebuild'`（`-f` 與引號之間本來就無空白）正規化後
+    # 仍是 `pgrep -f[x]codebuild`（去引號後沒有空白可壓），比原版收斂但未完全消除同類盲區。
+    # 純 bash 參數展開做正規化，不倚賴外部 tr／sed（同本檔案其餘 bash 側邏輯的零外部依賴慣例；
+    # R2 首版用 tr 曾在 PATH 清空／py-only 限縮 PATH 的既有 fail-closed 自測裡把「無關命令仍
+    # allow」的空輸出斷言撞出 stderr 噪音，見 merge-review R2 自測回歸修正）。
+    h4_norm=${command//\"/}
+    h4_norm=${h4_norm//\'/}
+    while [[ $h4_norm == *"  "* ]]; do h4_norm=${h4_norm//  / }; done
+    case "$h4_norm" in
+      *"pgrep -f [p]ush-gate"*|*"pgrep -f [x]codebuild"*)
+        case "$h4_norm" in
+          *"worktrees/LS-"*) ;;
+          *) final_deny "H4：pgrep -f 等待 push-gate／xcodebuild 未帶 worktrees/LS-<n> 範圍字面，會等到別票的行程（LS-315 根因），見 ${COLL_REF}" ;;
+        esac
+        ;;
+    esac
     ;;
   Read)
     base=${file_path##*/}
