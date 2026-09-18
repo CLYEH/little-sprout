@@ -403,6 +403,47 @@ json32l="$(PATROL_USAGE_FILE="$work/usage-l.json" bash "$patrol" --repo "$repo" 
 jq_ok '㉜l --json usage.seven_day=98（pretty-print 仍解析）' "$json32l" '.usage.seven_day == 98'
 jq_ok '㉜l --json usage.stale=false（written_at 是剛寫入的，未過期）' "$json32l" '.usage.stale == false'
 
+# ㉜m（LS-330，範圍 3；LS-96 池項 `cd0e2847`(2)）：patrol.sh:1055-1062 written_at 的「無 jq → grep
+#     備援」分支先前零測試覆蓋（㉜a-l 全程式跑在有 jq 的機器上，只驗過 jq 分支）。這裡把 PATH 換成
+#     「複製一份、唯獨排掉 jq」的替身目錄——只把 jq 移出 PATH 不夠：只在較前面的目錄擺一個不可執行
+#     的同名檔，bash 的 command -v 會略過它繼續往後面找到真 jq（LS-330 實測確認）；只砍掉 jq 所在的
+#     那一個 PATH 目錄也不夠，那個目錄在不同機器上可能與 git／grep／sed 等其他必要工具共用（如
+#     Ubuntu 常見的 /usr/bin）。替身目錄完整複製「當下 PATH 每個目錄底下可解析到的每個檔名」但唯獨
+#     跳過 jq，逼真的讓 `command -v jq` 在 patrol.sh 的子行程裡找不到，其餘工具（git／sed／grep／
+#     date／mktemp…）都還在。斷言結果與 ㉜l 的 jq 分支同一組資料（98%，達 WARN）算出同一個結果，
+#     證明兩條分支等價（不是走 grep 分支就换了一套判準）。
+if command -v jq >/dev/null 2>&1; then
+  nojq_dir="$work/nojq-bin"
+  mkdir -p "$nojq_dir"
+  ( IFS=':'
+    for d in $PATH; do
+      [ -d "$d" ] || continue
+      for f in "$d"/*; do
+        [ -e "$f" ] || continue
+        name=${f##*/}
+        [ "$name" = "jq" ] && continue
+        [ -e "$nojq_dir/$name" ] && continue
+        ln -s "$f" "$nojq_dir/$name" 2>/dev/null
+      done
+    done
+  )
+  if PATH="$nojq_dir" command -v jq >/dev/null 2>&1; then
+    echo "✗ ㉜m 替身 PATH 建置失敗：command -v jq 仍找得到（本機有多個 jq 安裝，替身目錄沒排乾淨）" >&2
+    fail=1
+  else
+    usage_mk 98 "$u_now" > "$work/usage-m.json"
+    brief32m="$(PATH="$nojq_dir" PATROL_USAGE_FILE="$work/usage-m.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+    has   '㉜m PATH 無 jq（grep 備援分支）仍解析出 98% → 97 級警示，與 ㉜l 的 jq 分支同結果' "$brief32m" '⚠ [用量] 週用量 98%（重置 '
+    hasnt '㉜m PATH 無 jq 不誤判「探針無資料」' "$brief32m" '探針無資料'
+    json32m="$(PATH="$nojq_dir" PATROL_USAGE_FILE="$work/usage-m.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+    jq_ok '㉜m --json usage.seven_day=98（PATH 無 jq，patrol.sh 走 grep 分支算出，斷言本身用測試機的真 jq 驗）' "$json32m" '.usage.seven_day == 98'
+    jq_ok '㉜m --json usage.stale=false（written_at 走 grep 分支仍正確判出未過期）' "$json32m" '.usage.stale == false'
+  fi
+else
+  jq_skipped=$((jq_skipped + 1))
+  echo "SKIP：本機無 jq，㉜m（PATH 去 jq 測 grep 備援）與既有 jq 分支已無差異可比，略過"
+fi
+
 # ㉜i（LS-314；使用者 2026-09-17 指示「檢查當前 session 的 home」）預設路徑跟 CLAUDE_CONFIG_DIR 走：PATROL_USAGE_FILE
 #      未設、CLAUDE_CONFIG_DIR 指向暫存目錄時，讀的是 <該目錄>/usage-cache.json（多帳號各自 config dir，寫死 ~/.claude 會讀到
 #      別的帳號）；探針無資料訊息也要指到同一個目錄的 statusline-command.sh。用 env -u 拿掉本檔上方為隔離本機真檔而 export 的
