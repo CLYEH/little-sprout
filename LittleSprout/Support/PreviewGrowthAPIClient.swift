@@ -9,6 +9,20 @@ import Foundation
 /// `PreviewDiaryAPIClient` 本來就不是 `private` 的既有先例。
 final class PreviewGrowthAPIClient: GrowthAPIClient, @unchecked Sendable {
     func listGrowthRecords(childID: UUID, limit: Int) async throws -> [GrowthRecord] { [] }
+
+    /// 同 `PreviewChildAPIClient.createChild`／`.updateChild` 的角色——不打真網路，原樣把輸入
+    /// 組成一列回傳（`input.id` 為 nil 時視為新增，配一個新 `UUID`；非 nil 時視為編輯，沿用原
+    /// `id`，`familyID`／`authorID`／`createdAt` 用不影響呈現的假值即可，呼叫端只在乎
+    /// `heightCm`／`weightKg`／`headCm`／`note`／`measuredOn` 這幾項）。
+    func upsertGrowthRecord(childID: UUID, input: GrowthMeasurementInput) async throws -> GrowthRecord {
+        GrowthRecord(
+            id: input.id ?? UUID(), familyID: UUID(), childID: childID, authorID: GrowthStore.previewAuthorID,
+            measuredOn: input.measuredOn, heightCm: input.heightCm, weightKg: input.weightKg,
+            headCm: input.headCm, note: input.note, createdAt: Date(), updatedAt: Date()
+        )
+    }
+
+    func deleteGrowthRecord(id: UUID) async throws {}
 }
 
 extension GrowthStore {
@@ -24,15 +38,18 @@ extension GrowthStore {
     }
 
     /// Notes 統一示範資料集（`G1tRP9`）：陳小安，「今天」＝2026-08-20，出生 2025-04-20，
-    /// 6 筆量測月齡 1/4/7/10/13/16（每 3 個月一筆，13mo 僅頭圍）——01／06 populated harness
-    /// host／截圖對稿都用這組資料，逐字對齊 Notes 數值。
+    /// 6 筆量測月齡 1/4/7/10/13/16（每 3 個月一筆，13mo 僅頭圍）——01／03／06 populated harness
+    /// host／截圖對稿都用這組資料，逐字對齊 Notes 數值。全部 6 筆的 `authorID` 都是
+    /// `GrowthStore.previewAuthorID`（LS-313）：harness／`#Preview` 把「目前登入者」也設成這個
+    /// id（見 `ChildGrowthDetailView(previewGrowthStore:currentUserID:)`），才能同時展示 03
+    /// 記錄列表「編輯」（僅作者）與「刪除」（作者或 owner）兩種動作列。
     @MainActor
     static func previewSeededWithDemoRecords(
         childID: UUID = UUID(), childName: String = "陳小安"
     ) -> GrowthStore {
         let store = GrowthStore.preview(childID: childID, childName: childName)
         let familyID = UUID()
-        let authorID = UUID()
+        let authorID = GrowthStore.previewAuthorID
         func record(_ measuredOn: String, height: Double?, weight: Double?, head: Double?) -> GrowthRecord {
             let date = BirthdayFormat.date(fromWireString: measuredOn)!
             return GrowthRecord(
