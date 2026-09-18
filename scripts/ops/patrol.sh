@@ -1009,7 +1009,9 @@ fi
 #      ≥ PATROL_USAGE_STOP（預設 99）→ 印 99 級行，指示 orchestrator 停下所有工作＋寫交接；≥ PATROL_USAGE_WARN
 #      （預設 97）→ 印 97 級行，指示不派新任務、在飛跑完只記票（usage-budget-winddown 步驟）。**未達門檻
 #      brief 與人類全文模式一行都不印**（使用者明示零訊號，避免撞用量上限被強制中斷、在飛工作全損）；--json
-#      一律帶 usage 物件（seven_day／five_hour／resets_at／written_at／stale／last_known）供自測。快取缺／空／
+#      一律帶 usage 物件（seven_day／five_hour／resets_at／written_at／stale／last_known）供自測——`last_known`
+#      **只在 `stale=true` 時才給最後已知的 seven_day 值，非 stale 時恆為 `null`**（LS-322，源自 LS-318 dead-code
+#      sweep comment 572dc2bc Finding 1：原本恆等於 `seven_day`，兩者同一份資料、欄位語意重複無意義）。快取缺／空／
 #      不可解析＝探針壞掉，是這段唯一允許的非門檻訊號（安全裝置失效必須被看見，同本檔其餘「探針失敗仍要標」
 #      的既有慣例）。written_at 早於 PATROL_USAGE_MAX_AGE_MIN（預設 120）分鐘但快取本身可解析＝過期、不是壞掉
 #      （LS-318；LS-96 池項 a1d7da12：閒置 session 只跑巡檢、cron 不刷新 statusline 屬正常）——改印「探針過期
@@ -1025,11 +1027,18 @@ usage_warn="${PATROL_USAGE_WARN:-97}"
 usage_stop="${PATROL_USAGE_STOP:-99}"
 usage_max_age="${PATROL_USAGE_MAX_AGE_MIN:-120}"
 usage_seven=; usage_seven_resets=; usage_five=; usage_written_at=; usage_stale=false; usage_reason=
-usage_extract() {  # $1=json $2=父鍵 $3=欄位 -> 數字或空（jq -c 緊湊格式，先框住命名子物件再抓值，避免同名欄位跨物件誤抓）
-  local obj
-  obj=$(printf '%s' "$1" | grep -oE "\"$2\":\{[^}]*\}" | head -1)
+usage_extract() {  # $1=json $2=父鍵 $3=欄位 -> 數字或空（jq -c 緊湊格式或 `jq .` pretty-print 皆可解析，
+                    # 先框住命名子物件再抓值，避免同名欄位跨物件誤抓）。LS-322（源自 LS-318 QA a87d836d）：
+                    # 原本只認緊湊單行——pretty-print（`jq .`）把子物件拆成多行，grep 逐行比對配不到，整份
+                    # 誤判「JSON 不可解析」。**不改走 jq 解析數值**：jq 會把 `97.0` 正規化成 `97`（trailing
+                    # zero 消失），直接採用 jq 算出的值會讓既有靠字面格式釘住的自測（㉜b／㉜i 等，斷言訊息
+                    # 含「97.0%」）全部改判失敗——實測踩到才發現，改採「先把換行壓成空白、放寬冒號後可接
+                    # 空白」的純字面修法，兩種格式都吃、且不動既有格式（zero 外部依賴，grep／sed 皆可）。
+  local flat obj
+  flat=${1//$'\n'/ }
+  obj=$(printf '%s' "$flat" | grep -oE "\"$2\"[[:space:]]*:[[:space:]]*\\{[^}]*\\}" | head -1)
   [ -n "$obj" ] || return 0
-  printf '%s' "$obj" | grep -oE "\"$3\":-?[0-9.]+" | head -1 | sed -E 's/.*://'
+  printf '%s' "$obj" | grep -oE "\"$3\"[[:space:]]*:[[:space:]]*-?[0-9.]+" | head -1 | sed -E 's/.*://; s/^[[:space:]]+//'
 }
 usage_fmt_time() {  # epoch→本地時間；macOS -r 吃 epoch、GNU 走 -d @epoch（同 supabase-lock.sh fmt_hm 既有慣例）
   [ -n "${1:-}" ] || { printf '?'; return; }
@@ -1042,7 +1051,13 @@ elif [ ! -s "$usage_file" ]; then
   usage_reason="快取檔為空：${usage_file}"
 else
   usage_json=$(cat "$usage_file" 2>/dev/null)
-  usage_written_at=$(printf '%s' "$usage_json" | grep -oE '"written_at":[0-9]+' | head -1 | sed -E 's/.*://')
+  # written_at 是頂層純量（非巢狀物件），走同一套 jq 優先／grep 備援——`jq .` pretty-print 會在
+  # `:` 後多插一個空白（`"written_at": 123`），舊版 grep 的緊鄰比對連單行都配不到，不只是換行問題。
+  if command -v jq >/dev/null 2>&1; then
+    usage_written_at=$(printf '%s' "$usage_json" | jq -r '.written_at // empty' 2>/dev/null)
+  else
+    usage_written_at=$(printf '%s' "$usage_json" | grep -oE '"written_at":[0-9]+' | head -1 | sed -E 's/.*://')
+  fi
   usage_seven=$(usage_extract "$usage_json" seven_day used_percentage)
   usage_seven_resets=$(usage_extract "$usage_json" seven_day resets_at)
   usage_five=$(usage_extract "$usage_json" five_hour used_percentage)
@@ -1407,7 +1422,7 @@ case "$MODE" in
       "$([ -n "$pr_skip" ] && json_str "$pr_skip" || printf null)" "$J_PRS" "$J_WTS" "$(json_str "$lock_line")" "$(json_num "$supa_containers")" "$(json_num "$supa_skew_m")" "$([ -n "$hold_label" ] && json_str "$hold_label" || printf null)" "$(json_num "$hold_expires")" "$(json_num "$lock_waiters")" "$(json_num "$lock_waiters_max_min")" "$J_SIM" "$J_ORPHAN" "$([ -n "$sim_linear_note" ] && json_str "$sim_linear_note" || printf null)" "$sim_default" "$(json_num "$sim_rt_mismatch")" "$J_BOOT" "$(json_num "$boot_flagged")" \
       "$(json_num "$disk_avail_gb")" "$DISK_MIN_GB" "$(json_num "$disk_devices_gb")" "$(json_num "$disk_derived_gb")" "$disk_dedicated" "$(json_str "$disk_flag")" \
       "$([ "$pencil_ran" -eq 1 ] && printf true || printf false)" "$([ -n "$PENCIL_LINE" ] && json_str "$PENCIL_LINE" || printf null)" "$(json_num "$pencil_rc")" \
-      "$(usage_json_num "$usage_seven")" "$(usage_json_num "$usage_five")" "$(usage_json_num "$usage_seven_resets")" "$(usage_json_num "$usage_written_at")" "$([ "$usage_stale" = true ] && printf true || printf false)" "$(usage_json_num "$usage_seven")" \
+      "$(usage_json_num "$usage_seven")" "$(usage_json_num "$usage_five")" "$(usage_json_num "$usage_seven_resets")" "$(usage_json_num "$usage_written_at")" "$([ "$usage_stale" = true ] && printf true || printf false)" "$([ "$usage_stale" = true ] && usage_json_num "$usage_seven" || printf null)" \
       "$J_REDS" "$J_FLAGS"
     ;;
   brief)

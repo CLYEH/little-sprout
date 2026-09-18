@@ -313,7 +313,14 @@ fi
 #      「探針無資料」——閒置 session 只跑巡檢、cron 不刷新 statusline 屬正常，改印「探針過期（最後已知
 #      NN%…）」並沿最後已知值套用同一組 97／99 門檻（動作句併同一行）：㉜e 改（50%，未達門檻→只印過期行
 #      本身）、㉜j 新增（98%，達 WARN→過期行帶 97 級指示）、㉜k 新增（50%，只印過期行一行，同 ㉜c 的單行
-#      不重疊斷言精神）----
+#      不重疊斷言精神）。LS-322（源自 LS-318 QA a87d836d）：`usage_extract` 原本假設子物件整段在同一行、
+#      冒號後緊接數值——pretty-print（`jq .`）換行＋插空白會配不到，誤判「JSON 不可解析」；改成先把換行
+#      壓成空白、放寬冒號後可接空白，兩種格式都吃且不動既有字面格式（不改走 jq 解析數值：jq 會把 `97.0`
+#      正規化成 `97`，直接採用會讓 ㉜b／㉜i 這類靠字面格式釘住的斷言全部改判失敗）：㉜l 新增（pretty-print
+#      快取仍正確解析）。同一批順便修 `usage.last_known`（LS-322，源自 LS-318 dead-code sweep comment
+#      572dc2bc Finding 1）：原本恆等於 `seven_day`（兩者同一份資料，欄位語意重複無意義），改成 non-stale
+#      時恆為 `null`、stale 時才給最後已知值——㉜a 補 last_known=null 斷言、㉜e 的既有 last_known=50 斷言
+#      改標明「stale 時才給值」語意 ----
 usage_mk() { printf '{"rate_limits":{"seven_day":{"used_percentage":%s,"resets_at":1789902000},"five_hour":{"used_percentage":5,"resets_at":1789589400}},"written_at":%s}' "$1" "$2"; }
 u_now=$(date +%s)
 
@@ -327,6 +334,9 @@ json32a="$(PATROL_USAGE_FILE="$work/usage-a.json" bash "$patrol" --repo "$repo" 
 jq_ok '㉜a --json usage.seven_day=96.9、stale=false' "$json32a" '.usage.seven_day == 96.9 and .usage.stale == false'
 # LS-316（LS-96 池項 a1d7da12 第 3 條）：--json 對 .usage.five_hour 原本零斷言——usage_mk 固定寫 5，這裡釘住它。
 jq_ok '㉜a --json usage.five_hour=5' "$json32a" '.usage.five_hour == 5'
+# LS-322（源自 LS-318 dead-code sweep comment 572dc2bc Finding 1）：non-stale 時 last_known 恆為 null——
+# 原本恆等於 seven_day（同一份資料重複兩次，欄位語意無意義），改成只在 stale 時才給最後已知值。
+jq_ok '㉜a --json usage.last_known=null（非 stale，LS-322）' "$json32a" '.usage.last_known == null'
 
 # ㉜b 97.0（達 WARN，未達 STOP）→ 97 級警示行（不派新任務；usage-budget-winddown 步驟 3）
 usage_mk 97.0 "$u_now" > "$work/usage-b.json"
@@ -364,7 +374,7 @@ has   '㉜e 過期（200s 前，上限 1 分）、50%（未達門檻）→ 探�
 hasnt '㉜e 不再誤報「探針無資料」（LS-318 修正前的舊行為）' "$brief32e" '探針無資料'
 json32e="$(PATROL_USAGE_FILE="$work/usage-e.json" PATROL_USAGE_MAX_AGE_MIN=1 bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
 jq_ok '㉜e --json usage.stale=true' "$json32e" '.usage.stale == true'
-jq_ok '㉜e --json usage.last_known=50（LS-318）' "$json32e" '.usage.last_known == 50'
+jq_ok '㉜e --json usage.last_known=50（stale 時才給最後已知值，LS-318／LS-322）' "$json32e" '.usage.last_known == 50'
 
 # ㉜j（LS-318 新增）過期＋98%（達 WARN、未達 STOP）→ 過期行內嵌 97 級指示（同一行，不是另開一行）
 usage_mk 98 "$u_old" > "$work/usage-j.json"
@@ -381,6 +391,17 @@ n32k=$(printf '%s\n' "$brief32k" | grep -c '\[用量\]')
 if [ "$n32k" -eq 1 ]; then echo "✓ ㉜k 過期＋50%（未達門檻）→ 只印過期行一行"; else echo "✗ ㉜k [用量] 行數應為 1，實得 ${n32k}" >&2; fail=1; fi
 hasnt '㉜k 未達門檻不帶「不派新任務」字樣' "$brief32k" '不派新任務'
 hasnt '㉜k 未達門檻不帶「停下所有工作」字樣' "$brief32k" '停下所有工作'
+
+# ㉜l（LS-322，源自 LS-318 QA a87d836d）pretty-print 快取（`jq .` 多行輸出，statusline 端寫入慣例是
+#     `jq -c` 單行，但手工／他工具寫入可能是多行）仍能正確解析——用 98%（達 WARN）驗證真的讀到值，
+#     不是把「解析不到」誤判成「探針無資料」（LS-318 修正前的舊行為）。
+usage_mk 98 "$u_now" | jq . > "$work/usage-l.json"
+brief32l="$(PATROL_USAGE_FILE="$work/usage-l.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has '㉜l pretty-print 快取（jq . 多行）仍解析出 98% → 97 級警示（不是探針無資料）' "$brief32l" '⚠ [用量] 週用量 98%（重置 '
+hasnt '㉜l 不誤判「探針無資料」' "$brief32l" '探針無資料'
+json32l="$(PATROL_USAGE_FILE="$work/usage-l.json" bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '㉜l --json usage.seven_day=98（pretty-print 仍解析）' "$json32l" '.usage.seven_day == 98'
+jq_ok '㉜l --json usage.stale=false（written_at 是剛寫入的，未過期）' "$json32l" '.usage.stale == false'
 
 # ㉜i（LS-314；使用者 2026-09-17 指示「檢查當前 session 的 home」）預設路徑跟 CLAUDE_CONFIG_DIR 走：PATROL_USAGE_FILE
 #      未設、CLAUDE_CONFIG_DIR 指向暫存目錄時，讀的是 <該目錄>/usage-cache.json（多帳號各自 config dir，寫死 ~/.claude 會讀到

@@ -57,11 +57,16 @@ base（merge-base）快照裡（同 NBSP 的 `touched_roots` 判斷新增/變更
 段 → 所有正典畫面全部列為缺失；段落存在但某正典畫面的所有 member 都沒被提到 → 只列該正典畫面（訊息印「<基底群> / <編號或去裝飾名>」
 ＋代表描述文字＋全部 member 板 id，方便回頭對應稿內哪些板）。
 
+**LS-322（LS-96 池項 0e87afd9／LS-317 收尾②）「資料落點」欄**：`screen_data_binding_missing()` 對每個「已在畫面級屬性段列出」
+（不在 `screen_attr_missing()` 缺列清單內）的正典畫面，找出含任一 member 板名的那一行（以換行切），該行未含「資料落點」子字串即
+缺列——不驗欄位內容是否落到正確的表／RPC，只驗「有沒有寫這欄」。只對本 PR 新增的正典畫面（`new_screen_boards()` 清單）要求，既有
+畫面天然白名單（不在清單內，不回溯補列）。
+
 輸出：每筆缺失一行「✗ 板 <rootId>（名稱）／節點 <textId>／缺失 id <token>：<子句>」；沿革 info 行以「（沿革）」開頭；署名 NBSP
 違規一行「✗ 署名 NBSP：板 …／節點|實例 …：「<內容>」<單位> 前 <codepoints>」、舊債以「（舊債）署名 NBSP：」開頭；畫面級屬性缺列
 一行「✗ 畫面級屬性缺列：正典畫面 <基底群> / <編號或去裝飾名>（<代表描述文字>；板 id：<member id 逗號列>）——Notes 未含「畫面級屬性」
-段，或段內未提及任一變體名稱」；
-最後一行摘要。exit 0＝無缺失且無 NBSP／畫面級屬性違規；1＝有缺失或違規；2＝參數／git／JSON 錯誤（fail closed）。
+段，或段內未提及任一變體名稱」；資料落點缺列一行「✗ 資料落點缺列：正典畫面 …——Notes「畫面級屬性」段該列未提及「資料落點」欄」；
+最後一行摘要。exit 0＝無缺失且無 NBSP／畫面級屬性／資料落點違規；1＝有缺失或違規；2＝參數／git／JSON 錯誤（fail closed）。
 
 用法：design_notes_check.py --pen <repo 相對路徑> --head <sha> --base <merge-base sha> [--history <sha> ...]
   --head／--base／--history 皆以 `git show <sha>:<pen>` 讀快照（在 repo 內執行）；--history 為本 PR 範圍內觸碰 .pen 的
@@ -98,6 +103,10 @@ SPACE = " "
 # 非空白字元），不窄化到特定群組字面（「Import」「Growth」……）——票文字面只給範例，不是列舉。
 SCREEN_BOARD_NAME_RE = re.compile(r"^\S[^/]*/\s*\S")
 SCREEN_ATTR_HEADING_RE = re.compile(r"畫面級屬性")
+# LS-322（LS-96 池項 0e87afd9／LS-317 收尾②）：畫面級屬性清單新增「資料落點」必列欄——
+# LS-251 稿有「指定寶貝」chip 但 schema 沒地方放，LS-304 R1 才發現。只對本 PR 新增的正典畫面
+# 要求（同 screen_attr_missing 的 canonical_boards 清單，既有畫面天然白名單、不回溯）。
+DATA_BINDING_RE = re.compile(r"資料落點")
 # LS-300 R2（merge-review R1 M1）：正典畫面歸併——深色／AX3／iPad 等衍生變體去掉這些裝飾字樣後視為同一正典畫面
 # （見 canonicalize_screen_name）。裝飾樣式：編號後綴 `-iPad`（如 `01-iPad`）、`· 深色`、`· Dynamic Type AX3（…）`
 # （AX3 字級附註內容不定，用 `[^）]*` 吃掉整個全形括號）、裝置註記 `(iPhone)`／`(iPad …)`（半形括號、內容不定）、
@@ -317,6 +326,33 @@ def screen_attr_missing(head_doc, canonical_boards):
     return [(bg, key, display, members) for bg, key, display, members in canonical_boards if not any(name in scoped for _, name in members)]  # DESIGN-NOTES-SCREEN-ATTR-CHECK
 
 
+def screen_data_binding_missing(head_doc, canonical_boards):
+    """LS-322（LS-96 池項 0e87afd9／LS-317 收尾②）：畫面級屬性清單「資料落點」欄——每個正典畫面
+    在「畫面級屬性」段落內、含任一 member 板名的那一**行**（以換行切，同 Notes 慣用一畫面一行的
+    格式）必須也提到「資料落點」子字串（不驗欄位內容完不完整，只驗「有沒有寫這欄」，同
+    screen_attr_missing 的粒度）。只對本 PR 新增的正典畫面（canonical_boards，即
+    new_screen_boards() 的清單）要求——既有（本 PR 未新增）的畫面板不在這份清單內，天然白名單，
+    不回溯補列。段落完全不存在、或某正典畫面完全沒被提到（那一行找不到）已由 screen_attr_missing
+    整批列為缺失，這裡不重複列——只挑「有列但缺資料落點欄」這一種情況。"""
+    if not canonical_boards:
+        return []
+    chunks = []
+    for board in notes_boards(head_doc):
+        for t in text_nodes(board):
+            chunks.append(t["content"])
+    joined = "\n".join(chunks)
+    m = SCREEN_ATTR_HEADING_RE.search(joined)
+    if not m:
+        return []
+    lines = joined[m.start():].split("\n")
+    missing = []
+    for bg, key, display, members in canonical_boards:
+        row = next((ln for ln in lines if any(name in ln for _, name in members)), None)
+        if row is not None and not DATA_BINDING_RE.search(row):
+            missing.append((bg, key, display, members))
+    return missing
+
+
 def check(head_doc, head_ids, dead_candidates):
     missing = []
     history = []
@@ -402,15 +438,28 @@ def main(argv):
             % (bg, key, display, member_ids), file=sys.stderr
         )
 
-    summary = "Notes 板 %d 塊、head id %d、本 PR 範圍曾存在而 head 已無的 id %d、沿革引用 %d、缺失 %d、署名 NBSP 違規 %d（舊債 %d）、新增正典畫面 %d、畫面級屬性缺列 %d" % (
-        len(boards), len(head_ids), len(dead_candidates), len(history), len(missing), len(nbsp_bad), len(nbsp_old), len(new_boards), len(screen_missing))
+    # LS-322：畫面級屬性「資料落點」欄——只對「已有列（不在 screen_missing 裡）」的正典畫面檢查，
+    # 避免與上面整批缺列重複點名同一個正典畫面。
+    listed_boards = [b for b in new_boards if b not in screen_missing]
+    data_binding_missing = screen_data_binding_missing(head_doc, listed_boards)
+    for bg, key, display, members in data_binding_missing:
+        member_ids = "、".join(mid for mid, _ in members)
+        print(
+            "✗ 資料落點缺列：正典畫面 %s / %s（%s；板 id：%s）——Notes「畫面級屬性」段該列未提及「資料落點」欄（LS-322）"
+            % (bg, key, display, member_ids), file=sys.stderr
+        )
+
+    summary = "Notes 板 %d 塊、head id %d、本 PR 範圍曾存在而 head 已無的 id %d、沿革引用 %d、缺失 %d、署名 NBSP 違規 %d（舊債 %d）、新增正典畫面 %d、畫面級屬性缺列 %d、資料落點缺列 %d" % (
+        len(boards), len(head_ids), len(dead_candidates), len(history), len(missing), len(nbsp_bad), len(nbsp_old), len(new_boards), len(screen_missing), len(data_binding_missing))
     problems = []
     if missing:
         problems.append("Notes 引用了本 PR 刪掉的節點 id，改成現行 id，或在同一子句用沿革標記（原／當時／已刪除／取代舊，或寫成「舊 id→新 id」把舊 id 放在箭頭左側）說明它已不存在（LS-168）")
     if nbsp_bad:
         problems.append("本 PR 觸碰的板／元件上，cmp/Card Album／cmp/Card Diary 署名的 歲／個月 前空白含 U+0020——改成 U+00A0（允許 U+2060／換行）後重落地（LS-202）")
     if screen_missing:
-        problems.append("新增正典畫面未在 Notes「畫面級屬性」段逐畫面列出——每個畫面補一列（板名｜隱藏 Tab Bar｜標題｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大），深色／AX3／iPad 變體記在該列欄位、不必各自成行，格式見 docs/COLLABORATION.md §1（LS-300）")
+        problems.append("新增正典畫面未在 Notes「畫面級屬性」段逐畫面列出——每個畫面補一列（板名｜隱藏 Tab Bar｜標題｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大｜資料落點），深色／AX3／iPad 變體記在該列欄位、不必各自成行，格式見 docs/COLLABORATION.md §1（LS-300）")
+    if data_binding_missing:
+        problems.append("新增正典畫面已列在「畫面級屬性」段，但該列缺「資料落點」欄——每個可編輯欄位落到 docs/API.md §2 哪張表／哪支 RPC，或明寫「無持久化（純 UI 狀態）」（LS-322，源自 LS-251「指定寶貝」chip 沒地方放、LS-304 R1 才發現）")
     if problems:
         print("✗ design-notes gate：%s——%s" % (summary, "；".join(problems)), file=sys.stderr)
         return 1
