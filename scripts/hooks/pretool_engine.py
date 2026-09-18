@@ -192,6 +192,28 @@ H3B_WHAT_FALLBACK ="本機 Supabase 容器操作（docker exec／psql 54322／su
 # fallback 掃描，不會誤 deny，但沒必要）。
 ALIAS_DEFINED_RE = re.compile(r"(?:^|[;&|\n])\s*alias(?:[ \t]|$)")
 
+# ---- H4（LS-330，源自 LS-322／LS-327／LS-315 三次停工；R6 收斂進 pretool_engine.py 的 token 化判定）----
+# 精確模式（命令位置認得是 `pgrep`）：掃該段全部 token，任一 token 符合「純小寫字母旗標組（含 f）」
+# 即 H4_FLAG_RE、任一 token 以 `[x]codebuild`／`[p]ush-gate` 開頭即 H4_TARGET_RE——兩者在同一段（同一次
+# pgrep 呼叫）內任意出現皆算命中，不要求相鄰（LS-330 修「分開旗標」繞過：`pgrep -f -l '[x]codebuild'`
+# 把 -f／-l 拆成兩個獨立 token，舊版字面比對要求旗標與 target 中間恰一個空白，這裡兩者只要同段出現即可）；
+# H4_JOINED_RE 額外處理旗標與 target 黏在同一個 token 的形狀（`-f'[x]codebuild'`——`-f` 與引號之間本來就
+# 無空白，tokenizer 會把「未加引號的 -f」與「引號內的 [x]codebuild」併成同一個 token
+# `-f[x]codebuild`，舊版字面比對的已知盲區、R6 收斂）。tab 分隔旗標與 target 的寫法不需要特別處理：
+# tokenize_segments 本來就把 tab 當成空白同等的斷詞字元（見該函式 `ch in (" ", "\t")` 分支），token 化後
+# 與空白分隔的寫法完全同形。
+H4_FLAG_RE = re.compile(r"^-[a-z]*f[a-z]*$")
+H4_TARGET_RE = re.compile(r"^(?:\[x\]codebuild|\[p\]ush-gate)")
+H4_JOINED_RE = re.compile(r"^-[a-z]*f[a-z]*(?:\[x\]codebuild|\[p\]ush-gate)")
+H4_SCOPE_RE = re.compile(r"worktrees/LS-")
+# 命令位置認不得時的整段字面比對（同 H1–H3b 的退回機制精神，寧嚴勿鬆）：三個子字串各自獨立找得到即算命中
+# （不要求相鄰，同精確模式的「同段任意出現」放寬）。目的是不讓「認不得命令位置」的形狀（`eval "pgrep -f …"`
+# 這類間接執行）反而漏掉 H4 保護——舊版純字面比對（LS-322–LS-327）本來就是對整條命令做字面掃描、完全不管
+# 命令位置，R6 改走 token 化後若不補這條，等於縮小了涵蓋範圍（回歸）。
+FB_H4_PGREP_RE = re.compile(r"(?:^|[^A-Za-z0-9_])pgrep(?:[^A-Za-z0-9_]|$)")
+FB_H4_FLAG_RE = re.compile(r"(?:^|[ \t])-[a-z]*f[a-z]*(?:[ \t]|$|['\"])")
+FB_H4_TARGET_RE = re.compile(r"\[x\]codebuild|\[p\]ush-gate")
+
 MAX_DEPTH = 8
 
 
@@ -623,7 +645,7 @@ def resolve_position(tokens):
 
 
 # ============================================================================
-# H1/H2/H3：命令位置可信時的精確 token 比對
+# H1/H2/H3/H4：命令位置可信時的精確 token 比對
 # ============================================================================
 def check_precise(cmd, tokens):
     has_no_verify = has_dash_n = has_commit = has_push = has_force = has_protected = False
@@ -633,6 +655,7 @@ def check_precise(cmd, tokens):
     docker_exec = docker_target = docker_readonly = False
     psql_local = connstr_local = supa_local = supa_linked = False
     supa_lifecycle = False   # LS-184：supabase stop／start／db start
+    h4_flag_seen = h4_target_seen = False   # H4（LS-330）：pgrep 段內任意出現即算，見檔頭 H4_* 常數說明
     expect_redir = False
     prevtok = ""
     awaiting_c_payload = False
@@ -725,6 +748,19 @@ def check_precise(cmd, tokens):
             if text in H3B_SUPABASE_LIFECYCLE:
                 supa_lifecycle = True
 
+        # H4（LS-330）：旗標與 target 只要同一段（同一次 pgrep 呼叫）內任意出現即算，不要求相鄰——見
+        # 檔頭 H4_* 常數說明「分開旗標」繞過的修法。H4_JOINED_RE 額外處理旗標與 target 黏在同一個
+        # token 的形狀（一次比對同時滿足兩個條件）。
+        if cmd == "pgrep":
+            if H4_JOINED_RE.match(text):
+                h4_flag_seen = True
+                h4_target_seen = True
+            else:
+                if H4_FLAG_RE.match(text):
+                    h4_flag_seen = True
+                if H4_TARGET_RE.match(text):
+                    h4_target_seen = True
+
         # R3 F1／R4（見 SHELLC_SHELLS 定義處說明）：cmd（命令位置）已經是 bash/sh/zsh/dash/ksh
         # 才會進到這個函式；不再要求 `-c` 緊接在 shell 名稱後面——`-e -c`／`-o pipefail -c`／
         # `--norc -c` 這類前面插旗標、或 `-lc`／`-cx` 這類併入短旗標團的寫法，都在這裡被同一條
@@ -762,6 +798,10 @@ def check_precise(cmd, tokens):
     if supa_lifecycle:
         return ("H3B_TRIGGER", "supabase stop／start（起停共用的本機容器，會打斷 lock 持有者的 reset／測試，LS-184）")
 
+    # H4（LS-330）：放行與否（worktrees/LS- 範圍字面）由 evaluate() 的 _h4_check 決定
+    if h4_flag_seen and h4_target_seen:
+        return ("H4_TRIGGER", None)
+
     return ("OK", None)
 
 
@@ -796,6 +836,11 @@ def check_fallback(raw):
         return "H3B_TRIGGER"
     if FB_SUPABASE_LIFECYCLE_RE.search(raw):   # LS-184：stop／start 不受 --linked 豁免
         return "H3B_TRIGGER"
+
+    # H4（LS-330）：命令位置認不得的段落（如 `eval "pgrep -f …"`）退回整段字面比對，三個子字串各自獨立
+    # 找得到即算（同精確模式「同段任意出現」的放寬），避免縮小舊版純字面比對本來就有的涵蓋範圍（回歸）。
+    if FB_H4_PGREP_RE.search(raw) and FB_H4_FLAG_RE.search(raw) and FB_H4_TARGET_RE.search(raw):
+        return "H4_TRIGGER"
 
     return None
 
@@ -843,6 +888,10 @@ def evaluate(cmd, depth, wrapper_haystack, cwd=None):
                 reason = _h3b_check(wrapper_haystack, cur_dir, payload)
                 if reason:
                     return reason
+            if kind == "H4_TRIGGER":
+                reason = _h4_check(wrapper_haystack)
+                if reason:
+                    return reason
             if kind == "RECURSE":
                 if depth >= MAX_DEPTH:
                     return f"H0：巢狀 bash/sh -c 超過安全深度上限，fail-closed，見 {COLL_REF}"
@@ -886,11 +935,14 @@ def evaluate(cmd, depth, wrapper_haystack, cwd=None):
 
 
 def _resolve_trigger(reason, wrapper_haystack, cur_dir):
-    """check_fallback 的回傳：H3／H3b 的觸發記號換成實際 deny 理由（或 None＝包裝／持有者放行），其餘原樣。"""
+    """check_fallback 的回傳：H3／H3b／H4 的觸發記號換成實際 deny 理由（或 None＝包裝／持有者／範圍放行），
+    其餘原樣。"""
     if reason == "H3_TRIGGER":
         return _h3_check(wrapper_haystack)
     if reason == "H3B_TRIGGER":
         return _h3b_check(wrapper_haystack, cur_dir, H3B_WHAT_FALLBACK)
+    if reason == "H4_TRIGGER":
+        return _h4_check(wrapper_haystack)
     return reason
 
 
@@ -916,6 +968,16 @@ def _cd_target(tokens, cur_dir):
             p = os.path.join(cur_dir, p)
         return os.path.normpath(p)
     return os.path.expanduser("~")
+
+
+def _h4_check(wrapper_haystack):
+    """H4（LS-330）：整條命令（heredoc／comment 已剝除，同 wrapper_haystack）只要含 `worktrees/LS-` 字面
+    即放行——純子字串比對，quote 字元不影響比對結果（quote 只是額外字元，不會遮蔽子字串本身），不需要
+    額外正規化。"""
+    if H4_SCOPE_RE.search(wrapper_haystack):
+        return None
+    return (f"H4：pgrep -f 等待 push-gate／xcodebuild 未帶 worktrees/LS-<n> 範圍字面，"
+            f"會等到別票的行程（LS-315 根因），見 {COLL_REF}")
 
 
 def _h3_check(wrapper_haystack):
