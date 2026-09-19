@@ -169,6 +169,27 @@ fi
 rm -rf "$missing_py_work"
 
 # ============================================================
+# R6（LS-330）：python3 缺席時 H4 退回「現行 bash 字面判定」當後備——不是死 code：python3 整段缺席時
+# H1–H3b 既有 fail-closed 本來就會 deny 一切（見上面 F2 的 nopy 組），這裡驗的是 H4 自己的 bash 字面
+# 判定分支確實被走到、給出 H4 專屬理由（不是巧合撞上 H0 的通用理由），證明 pretool.sh 真的保留了這段
+# 後備邏輯，不是被 engine 取代後留下的死 code。
+# ============================================================
+out=$(printf '%s' "$(bash_json "while pgrep -f '[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")" | env PATH="$work/nopy" "$bash_bin" "$pretool" 2>&1); got=$?
+if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecisionReason":"H4：'*) true ;; *) false ;; esac; then
+  echo '✓ R6：python3 缺席＋H4 違規命令（無範圍）→ deny，理由是 H4 自己的 bash 字面判定（不是 H0 通用理由）'
+else
+  echo "✗ R6：python3 缺席時 H4 退回 bash 字面判定應給出 H4 專屬理由（實得 exit ${got}：${out}）" >&2
+  fail=1
+fi
+out=$(printf '%s' "$(bash_json "while pgrep -f '[x]codebuild .*ABCD' 2>/dev/null | grep -q worktrees/LS-315; do sleep 20; done")" | env PATH="$work/nopy" "$bash_bin" "$pretool" 2>&1); got=$?
+if [ "$got" -eq 2 ] && case "$out" in *'"permissionDecisionReason":"H0：'*) true ;; *) false ;; esac; then
+  echo '✓ R6：python3 缺席＋H4 帶 worktrees/LS- 範圍（H4 後備自己判 allow，但仍被 H1–H3b 的 H0 deny-一切接手，理由是 H0 不是 H4）'
+else
+  echo "✗ R6：python3 缺席＋H4 帶範圍應仍 deny（理由是 H0，不是 H4；實得 exit ${got}：${out}）" >&2
+  fail=1
+fi
+
+# ============================================================
 # R1 F3（blocker）：.env／run.sh 邊界要求後接空白或行尾，漏放引號／分號／重導向／命令替換
 # ============================================================
 expect 'F3① cat .env;（deny）' 2 "$(bash_json 'cat .env; echo hi')"
@@ -691,10 +712,20 @@ rm -rf "$ls184_work"
 
 # ============================================================
 # H4（LS-322，源自 LS-315 三次停工）：pgrep -f 等待 push-gate／xcodebuild 未帶
-# worktrees/LS- 範圍字面 → deny；帶了 → allow（LS-322 定案寫法）。純命令文字比對。
+# worktrees/LS- 範圍字面 → deny；帶了 → allow（LS-322 定案寫法）。
 # R2（merge-review comment 9f4a1e38）：M1 加正規化（去引號、壓縮空白）補雙引號／多空白兩種
-# 風格變體的 deny／allow 各一組（H4⑥⑧、H4⑦⑨）；H4⑩ 對照殘留已知盲區（-f 與引號間本無空白，
-# reviewer 已確認可接受）；H4⑪（minor）鎖住 echo 純引述字面仍被誤擋的已知現況，不修。
+# 風格變體的 deny／allow 各一組（H4⑥⑧、H4⑦⑨）。
+# R6（LS-330，池 `816e23c4`）：H4 改由 pretool_engine.py 的 token 化判定（見該檔案 H4_* 常數與
+# check_precise／check_fallback），一次收掉三種殘留繞過。**注意**：H4①–⑩⑫–⑳（沿用既有 while 迴圈寫法）
+# 命令位置都是 `while`（shell 保留字，`resolve_position` 判 recognized=False），一律走 `check_fallback`
+# 的 FB_H4_* 整段字面比對，不會走 `check_precise` 的 pgrep 分支／`H4_JOINED_RE`——H4⑩ 改判 deny、H4⑱⑳
+# 的分開旗標／tab 負例，抓到的都是 FB_H4_FLAG_RE／FB_H4_TARGET_RE（fallback），不是 H4_JOINED_RE（merge-review
+# R1 M1 實測：把 check_precise 的整段 pgrep 分支拿掉、或把 H4_JOINED_RE 改成永不命中，H4①–㉑ 222/222 仍綠）。
+# 真正命中 `check_precise`／`H4_JOINED_RE` 的 token 路徑改用命令位置直接是 `pgrep`（或遞迴進 `$(...)` 之後）
+# 的形狀——見下面 H4㉒–㉕。H4⑪ 維持 deny（見該則就地補充的說明：payload 其實是無效 JSON，走的是 H0
+# fail-closed，不是 H4 的 echo 誤擋——LS-330 實測發現的既有測試瑕疵，這裡不動它原本的斷言）；H4⑪b 的
+# payload 不含 `pgrep` 也不含 `-f` 旗標，其實測不到「echo 引數裡的 pgrep 字面不誤擋」（拿掉
+# `cmd == "pgrep"` 條件一樣 allow，merge-review R1 M1(b)）——真正驗證這件事的是下面的 H4⑪c。
 # ============================================================
 expect 'H4① 全域 pgrep -f [x]codebuild（deny，LS-315 根因形狀）' 2 \
   "$(bash_json "while pgrep -f '[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")"
@@ -715,13 +746,24 @@ expect 'H4⑧ 雙引號、帶 worktrees/LS-315 範圍（allow，M1 正例：修�
   "$(bash_json 'while pgrep -f \"[x]codebuild\" 2>/dev/null | grep -q worktrees/LS-315; do sleep 20; done')"
 expect 'H4⑨ -f 後多一空白、帶 worktrees/LS-42 範圍（allow，M1 正例）' 0 \
   "$(bash_json "while pgrep -f  '[x]codebuild' 2>/dev/null | grep -q worktrees/LS-42; do sleep 20; done")"
-expect 'H4⑩ 對照：-f 與引號之間本來就無空白、無範圍（allow，殘留已知盲區，R1 M1 已確認可接受不擋本輪）' 0 \
+expect 'H4⑩（R6／LS-330 改判）-f 與引號之間本來就無空白、無範圍（deny：命令位置是 while、走 check_fallback 的 FB_H4_FLAG_RE／FB_H4_TARGET_RE 整段字面比對抓到，不是 H4_JOINED_RE 的 token 路徑——H4_JOINED_RE 的覆蓋見 H4㉓）' 2 \
   "$(bash_json "while pgrep -f'[x]codebuild' >/dev/null 2>&1; do sleep 20; done")"
 # ---- R2（merge-review comment 9f4a1e38 minor）：H4 無「引號內字面」豁免（不同 H1–H3b 走
 # pretool_engine.py 的命令位置分析），純引述這個字面模式（無 worktree 範圍）仍會被誤擋——已知、
-# 接受的過度擋方向，補一則負例鎖住現況（見 PR body 風險段說明不豁免的理由） ----
-expect 'H4⑪ echo 純引述字面、無範圍（deny，minor：已知過度擋，不修——見 PR body 風險段）' 2 \
+# 接受的過度擋方向，補一則負例鎖住現況（見 PR body 風險段說明不豁免的理由）。R6（LS-330）就地補充：
+# 這組 payload 實測其實是無效 JSON（`echo` 引數裡 `'\''` 這個標準單引號跳脫寫法，被 bash_json 的
+# printf %s 原樣塞進 JSON 字串值後，`\'` 不是合法 JSON escape，jq／python3 兩邊解析都直接報錯）——
+# 真正命中的是 H0「jq／python3 皆無法解析 tool_input」fail-closed，不是 H4 的 echo 辨識，斷言碰巧還是
+# deny 所以一直是綠的，但標籤原本寫的理由是錯的。這裡只更正說明文字，不動斷言本身（跟 H4 邏輯無關，
+# 修正 JSON 建構屬既有測試瑕疵、非本票範圍）；engine 是否真能分辨 echo 不是 pgrep，改用下面全新、
+# JSON 合法的 H4⑪b 驗證 ----
+expect 'H4⑪ echo 純引述字面、無範圍（deny，但實際命中的是 H0 JSON 解析失敗，見上方 R6／LS-330 說明——payload 本身是無效 JSON，不是 H4 的 echo 誤擋；斷言不變，只更正標籤）' 2 \
   "$(bash_json "echo 'pgrep -f '\\''[x]codebuild'\\'' documentation example, no worktree here'")"
+# ---- H4⑪b（R6／LS-330 新增）：JSON 合法版的等價案例——`echo` 命令位置不是 `pgrep`，check_precise
+# 只在 cmd == "pgrep" 時才累計 h4_flag_seen／h4_target_seen，這裡驗證 engine 真的分辨得出來（allow），
+# 不是因為 H0 fail-closed 才綠（上面 H4⑪ 那組碰巧命中 H0，驗不到這件事） ----
+expect 'H4⑪b echo 引數含 [x]codebuild 字面、無範圍（allow：命令位置是 echo 不是 pgrep，engine 不誤判）' 0 \
+  "$(bash_json 'echo [x]codebuild documentation example, no worktree here')"
 # ---- LS-327（池 6c522429，來源 LS-322 R2 2e65a5b9 實測）：上一版只認獨立 -f，`pgrep -lf`／
 # `pgrep -fl`（旗標與 -f 合寫成短旗標組）未帶 worktrees/LS- 範圍字面也被放行，會等到別票的行程
 # （同 H4①②③④ 的根因，只是旗標寫法不同）；-af 為另一種常見合寫順序，一併鎖住 ----
@@ -737,6 +779,44 @@ expect 'H4⑯ 帶 worktrees/LS-42 範圍字面的 pgrep -fl [p]ush-gate（allow�
   "$(bash_json "while pgrep -fl '[p]ush-gate' 2>/dev/null | grep -q worktrees/LS-42; do sleep 20; done")"
 expect 'H4⑰ pgrep -l（不含 f 的短旗標組）即使 target 是 [x]codebuild 字面也不誤擋（allow，LS-327：只有含 f 的旗標組才觸發）' 0 \
   "$(bash_json "pgrep -l '[x]codebuild'")"
+# ---- R6（LS-330，池 `816e23c4`）：補「分開旗標」（`-f`／`-l` 拆成兩個獨立 token，舊版字面比對要求
+# 旗標與 target 中間恰一個空白，這個形狀就繞過去了）與 tab 分隔的負／正例——H4⑱⑲⑳㉑ 沿用既有 while
+# 迴圈寫法，命令位置是 `while`（保留字），一律走 check_fallback 的 FB_H4_FLAG_RE／FB_H4_TARGET_RE（`[ \t]`
+# 已含 tab，同一組 fallback regex 涵蓋空白與 tab 兩種分隔）；真正命中 check_precise 的 token 路徑（分開
+# 旗標／tab 皆同段任意出現即算，不要求相鄰）的案例見下面 H4㉒（分開旗標）／H4㉔（tab，遞迴進 $(...)
+# 之後）----
+expect 'H4⑱ 分開旗標 pgrep -f -l [x]codebuild（deny：命令位置是 while，走 check_fallback；token 路徑的分開旗標覆蓋見 H4㉒）' 2 \
+  "$(bash_json "while pgrep -f -l '[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")"
+expect 'H4⑲ 分開旗標＋worktrees/LS-42 範圍（allow，LS-330 正例：修法不誤擋合法寫法）' 0 \
+  "$(bash_json "while pgrep -f -l '[x]codebuild .*ABCD' 2>/dev/null | grep -q worktrees/LS-42; do sleep 20; done")"
+# h4_tab 是字面兩個字元 `\`＋`t`（不是真正的 tab byte）：bash_json 的 printf %s 不會幫忙做 JSON
+# escape，若直接塞一個真的 tab byte 進 JSON 字串值，控制字元未跳脫在嚴格 JSON 語法下本身就是壞
+# JSON（jq／python3 兩邊都會直接解析失敗、退回 H0，測不到 H4 的 tab 分支——LS-330 實測踩到）；
+# 寫成字面 `\t` 讓 JSON 解析器自己把它還原成真正的 tab byte，pretool_engine.py 收到的 command 字串
+# 才會含實際 tab，交給 tokenize_segments 的既有斷詞邏輯處理。
+h4_tab='\t'
+expect 'H4⑳ tab 分隔 pgrep\t-f\t[x]codebuild（deny：命令位置是 while，走 check_fallback；token 路徑的 tab 覆蓋見 H4㉔）' 2 \
+  "$(bash_json "while pgrep${h4_tab}-f${h4_tab}'[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")"
+expect 'H4㉑ tab 分隔＋worktrees/LS-315 範圍（allow，LS-330 正例）' 0 \
+  "$(bash_json "while pgrep${h4_tab}-f${h4_tab}'[x]codebuild .*ABCD' 2>/dev/null | grep -q worktrees/LS-315; do sleep 20; done")"
+
+# ---- merge-review R1 M1（LS-330）：上面 H4 的 deny 例全部以 `while` 開頭——`while` 是 shell 保留字、命令位置
+# 認不得，一律走 check_fallback 的 FB_H4_* 整段字面比對；check_precise 的 token 化 H4 分支（含 H4_JOINED_RE）
+# 沒有任何 deny 例覆蓋（把該分支整段拿掉 222/222 仍綠）。這裡補命令位置直接是 pgrep 的 deny／allow 例，
+# token 路徑壞掉時會轉紅 ----
+expect 'H4㉒ 命令位置 pgrep、分開旗標、無範圍（deny，check_precise token 路徑）' 2 \
+  "$(bash_json "pgrep -f -l '[x]codebuild' | wc -l")"
+expect 'H4㉓ 命令位置 pgrep、-f 緊接引號、無範圍（deny，H4_JOINED_RE）' 2 \
+  "$(bash_json "pgrep -f'[p]ush-gate' >/dev/null")"
+expect 'H4㉔ echo $(...) 內 pgrep、tab 分隔、無範圍（deny，遞迴後 check_precise）' 2 \
+  "$(bash_json "echo \$(pgrep${h4_tab}-fl${h4_tab}'[x]codebuild')")"
+expect 'H4㉕ 命令位置 pgrep、分開旗標、帶 worktrees/LS-42 範圍（allow，token 路徑正例）' 0 \
+  "$(bash_json "pgrep -f -l '[x]codebuild.*worktrees/LS-42' | wc -l")"
+# ---- merge-review R1 M1(b)：H4⑪b 的 payload 不含 pgrep 也不含 -f 旗標，舊版字面 hook 同樣 allow、拿掉
+# `cmd == "pgrep"` 條件的 engine 也 allow——驗不到「echo 引數裡的 pgrep 字面不誤擋」。這則 payload 真的含
+# 旗標與 target、JSON 合法（無 '\'' 跳脫） ----
+expect 'H4⑪c echo 引數含 pgrep -f [x]codebuild 字面、無範圍（allow：命令位置是 echo，旗標與 target 都在但不累計）' 0 \
+  "$(bash_json 'echo pgrep -f [x]codebuild documentation example, no worktree here')"
 
 if [ "$fail" -eq 0 ]; then
   if [ "${i6_skipped:-0}" -gt 0 ]; then

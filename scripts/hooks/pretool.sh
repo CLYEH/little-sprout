@@ -34,12 +34,14 @@
 #               為真 → 放行；holder 是 `--hold`（`cmd=hold:*`）、守門 pid 活著、holder `worktree=` 與
 #               呼叫端目前目錄（hook JSON `cwd` 起算、沿命令追蹤 `cd`／`pushd`）所在 worktree 頂層
 #               相同 → 放行；否則 deny，訊息指向 `supabase-lock.sh -- <cmd>` 或 `--hold`。
-#   H4（Bash，LS-322，源自 LS-315；R2 加正規化，merge-review comment 9f4a1e38 M1）：命令文字
-#               去除引號字元、壓縮空白後含 `pgrep -f [p]ush-gate` 或 `pgrep -f [x]codebuild`
-#               （LS-312 定案的 self-match 迴避寫法，含雙引號／多空白等風格變體）卻不含
-#               `worktrees/LS-` 範圍字面，即 deny——這種等待迴圈會等到別票的 xcodebuild／
-#               push-gate（LS-315 四支迴圈疊到 3h53m）。純命令文字比對（不走命令位置分析，直接
-#               在本檔案 `case` 裡判，不送進 pretool_engine.py）。
+#   H4（Bash，LS-330，源自 LS-322／LS-327／LS-315）：某段命令位置為 `pgrep` 且該段任一 token 是純
+#               小寫字母旗標組（含 `f`，`-f`／`-lf`／`-fl`／`-af`／…皆算，分開寫、合寫、旗標與 target
+#               黏在同一個 token 皆偵測得到）、且該段任一 token 以 `[x]codebuild`／`[p]ush-gate` 開頭
+#               （LS-312 定案的 self-match 迴避寫法），整條命令（heredoc／comment 已剝除）卻不含
+#               `worktrees/LS-` 範圍字面，即 deny——這種等待迴圈會等到別票的 xcodebuild／push-gate
+#               （LS-315 四支迴圈疊到 3h53m）。R6 起併入 pretool_engine.py 的 token 化判定（沿 H1–H3b
+#               既有 API，見該檔案 H4_* 常數與 check_precise／check_fallback 的說明）；本檔案只在
+#               python3 不存在時退回舊版整段字面比對（見下方 Bash 分支對 H4 的說明）。
 #
 # 前處理與命令位置判定（R2 全部移到 scripts/hooks/pretool_engine.py，本檔案只呼叫，見
 # `run_bash_engine`；下面是設計摘要，完整細節與每一條的理由見該檔案檔頭大段註解）：
@@ -233,53 +235,47 @@ fi
 
 case "$tool_name" in
   Bash)
-    # R2：全部 H1/H2/H3 判定收斂到 pretool_engine.py（見 run_bash_engine 與該檔案檔頭註解）。
+    # H4（LS-330，源自 LS-322／LS-327；LS-315 三次停工）：等待 push gate／xcodebuild 的背景迴圈若用
+    # 全域 `pgrep -f '[p]ush-gate'`／`'[x]codebuild'`（LS-312 定案的 self-match 迴避寫法）卻沒帶
+    # `worktrees/LS-` 範圍字面，會等到別票的行程（LS-315：四支迴圈疊到 3h53m）。R6 起改由
+    # pretool_engine.py 的 token 化判定收掉（一次涵蓋分開旗標／引號緊鄰／tab 等字面變體，見該檔案
+    # H4_* 常數與 check_precise／check_fallback 的說明）——下面這段是「現行 bash 字面判定」的舊版
+    # 邏輯，**只在 python3 真的不存在時**才當後備跑一次（維持 H4 保護不因 python3 缺席而整段消失；
+    # python3 存在時 H4 已併入 run_bash_engine 同一次呼叫，這裡不重跑，避免與 engine 的新判定結果
+    # 打架——engine 這輪刻意改判的兩格（H4⑩ 引號緊鄰改 deny、H4⑪ echo 純引述字面改 allow）若兩套
+    # 邏輯同時生效、任一喊 deny 就 deny，會蓋掉 engine 的新判定，等於白改）。python3 缺席時
+    # run_bash_engine 本身的 H1–H3b fail-closed 仍會讓任何命令一律 deny（不動，見該函式與 F2
+    # 自測）——這裡先讓 H4 有機會給出具體理由，沒中則照舊往下交給 run_bash_engine 的 H0 deny-all。
+    if ! command -v python3 >/dev/null 2>&1; then
+      h4_norm=${command//\"/}
+      h4_norm=${h4_norm//\'/}
+      while [[ $h4_norm == *"  "* ]]; do h4_norm=${h4_norm//  / }; done
+      h4_pgrep_trigger=0
+      h4_scan=$h4_norm
+      while [[ $h4_scan == *"pgrep -"* ]]; do
+        h4_scan=${h4_scan#*"pgrep -"}
+        h4_flag=${h4_scan%% *}
+        h4_tail=${h4_scan#"$h4_flag"}
+        h4_tail=${h4_tail# }
+        h4_target=${h4_tail%% *}
+        if [[ $h4_flag == *f* && $h4_flag != *[!a-z]* ]] \
+          && { [[ $h4_target == "[x]codebuild"* ]] || [[ $h4_target == "[p]ush-gate"* ]]; }; then
+          h4_pgrep_trigger=1
+          break
+        fi
+      done
+      if [ "$h4_pgrep_trigger" -eq 1 ]; then
+        case "$h4_norm" in
+          *"worktrees/LS-"*) ;;
+          *) final_deny "H4：pgrep -f 等待 push-gate／xcodebuild 未帶 worktrees/LS-<n> 範圍字面，會等到別票的行程（LS-315 根因；python3 缺席，H4 退回現行 bash 字面判定），見 ${COLL_REF}" ;;
+        esac
+      fi
+    fi
+    # H1/H2/H3/H3b/H4 全部收斂到 pretool_engine.py（見 run_bash_engine 與該檔案檔頭註解）；python3
+    # 缺席時本身就 fail-closed（deny 一切，見上方對 H4 的說明與 F2 自測），H4 不會漏保護。
     run_bash_engine "$command"
     if [ -n "${DENY_MSG:-}" ]; then
       final_deny "$DENY_MSG"
-    fi
-    # H4（LS-322，源自 LS-315 三次停工；R2 merge-review comment 9f4a1e38 M1）：等待 push
-    # gate／xcodebuild 的背景迴圈若用全域 `pgrep -f '[p]ush-gate'`／`'[x]codebuild'`（LS-312
-    # 定案的 self-match 迴避寫法）卻沒帶 `worktrees/LS-` 範圍字面，會等到別票的行程（LS-315：
-    # 四支迴圈疊到 3h53m）。純文字比對，不必送進 pretool_engine.py 的命令位置分析——**先正規化
-    # 再比對**（R1 M1：原版只用引號字面 `case` 比對，只認單引號＋單一空白這一種寫法，`pgrep -f
-    # "[x]codebuild"`（雙引號）、`pgrep -f  '[x]codebuild'`（`-f` 後多一空白）這兩種常見風格
-    # 變體全部被放行、LS-315 根因原樣可重演）：去掉所有 `'`／`"` 引號字元、把連續空白壓成單一
-    # 空格，讓兩種寫法都能命中同一個（不含引號的）字面模式。**殘留已知盲區**（reviewer 已確認
-    # 可接受，不擋本輪合併）：`pgrep -f'[x]codebuild'`（`-f` 與引號之間本來就無空白）正規化後
-    # 仍是 `pgrep -f[x]codebuild`（去引號後沒有空白可壓），比原版收斂但未完全消除同類盲區。
-    # 純 bash 參數展開做正規化，不倚賴外部 tr／sed（同本檔案其餘 bash 側邏輯的零外部依賴慣例；
-    # R2 首版用 tr 曾在 PATH 清空／py-only 限縮 PATH 的既有 fail-closed 自測裡把「無關命令仍
-    # allow」的空輸出斷言撞出 stderr 噪音，見 merge-review R2 自測回歸修正）。
-    h4_norm=${command//\"/}
-    h4_norm=${h4_norm//\'/}
-    while [[ $h4_norm == *"  "* ]]; do h4_norm=${h4_norm//  / }; done
-    # LS-327（池 6c522429，來源 LS-322 R2 2e65a5b9 實測）：上一版只認獨立 `-f`，`pgrep -lf`／
-    # `pgrep -fl`（旗標與 -f 合寫成短旗標組）未帶 worktrees/LS- 範圍字面也被放行。改為掃描整段
-    # 命令文字裡「`pgrep -`＋純小寫字母短旗標組（含 f）＋單一空白＋target」這個形狀，旗標組
-    # 允許任意字母組合（`-f`／`-lf`／`-fl`／`-af`／…都算）；target 為 `[x]codebuild` 或
-    # `[p]ush-gate` 字面。沿用原版「旗標與 target 之間須有單一空白」的假設（`-f` 與引號之間本來
-    # 就無空白的殘留盲區——如 `pgrep -f'[x]codebuild'`——沿用不修，reviewer 已確認可接受）。純
-    # bash 參數展開＋`[[ ]]` glob 判斷，不倚賴外部 tr／sed（PATH 限縮的 fail-closed 自測要求）。
-    h4_pgrep_trigger=0
-    h4_scan=$h4_norm
-    while [[ $h4_scan == *"pgrep -"* ]]; do
-      h4_scan=${h4_scan#*"pgrep -"}
-      h4_flag=${h4_scan%% *}
-      h4_tail=${h4_scan#"$h4_flag"}
-      h4_tail=${h4_tail# }
-      h4_target=${h4_tail%% *}
-      if [[ $h4_flag == *f* && $h4_flag != *[!a-z]* ]] \
-        && { [[ $h4_target == "[x]codebuild"* ]] || [[ $h4_target == "[p]ush-gate"* ]]; }; then
-        h4_pgrep_trigger=1
-        break
-      fi
-    done
-    if [ "$h4_pgrep_trigger" -eq 1 ]; then
-      case "$h4_norm" in
-        *"worktrees/LS-"*) ;;
-        *) final_deny "H4：pgrep -f 等待 push-gate／xcodebuild 未帶 worktrees/LS-<n> 範圍字面，會等到別票的行程（LS-315 根因），見 ${COLL_REF}" ;;
-      esac
     fi
     ;;
   Read)

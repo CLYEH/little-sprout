@@ -1051,12 +1051,14 @@ elif [ ! -s "$usage_file" ]; then
   usage_reason="快取檔為空：${usage_file}"
 else
   usage_json=$(cat "$usage_file" 2>/dev/null)
-  # written_at 是頂層純量（非巢狀物件），走同一套 jq 優先／grep 備援——`jq .` pretty-print 會在
-  # `:` 後多插一個空白（`"written_at": 123`），舊版 grep 的緊鄰比對連單行都配不到，不只是換行問題。
+  # written_at 是頂層純量（非巢狀物件，值本身不會像 usage_extract 那樣因為巢狀物件展開而被拆到下一行，
+  # `jq .` pretty-print 只會在 `:` 後多插一個空白，見 LS-330 merge-review R1 m2 實測），走同一套 jq
+  # 優先／grep 備援：grep 備援放寬冒號後可接空白（同 usage_extract 的既有慣例），`jq .` 與 `jq -c` 兩種
+  # 格式都吃。
   if command -v jq >/dev/null 2>&1; then
     usage_written_at=$(printf '%s' "$usage_json" | jq -r '.written_at // empty' 2>/dev/null)
   else
-    usage_written_at=$(printf '%s' "$usage_json" | grep -oE '"written_at":[0-9]+' | head -1 | sed -E 's/.*://')
+    usage_written_at=$(printf '%s' "$usage_json" | grep -oE '"written_at"[[:space:]]*:[[:space:]]*[0-9]+' | head -1 | sed -E 's/.*:[[:space:]]*//')
   fi
   usage_seven=$(usage_extract "$usage_json" seven_day used_percentage)
   usage_seven_resets=$(usage_extract "$usage_json" seven_day resets_at)
