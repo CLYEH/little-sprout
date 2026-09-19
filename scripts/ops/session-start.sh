@@ -33,11 +33,16 @@ json_str() {
 # `.git/config`——從任一 worktree 執行 `git config` 寫的就是同一份檔案，對主 checkout 與所有現存、未來的
 # worktree 立即生效，不需要另外掛「建立 worktree 時的包裝」（實測見 handoff）。這裡每次 SessionStart 冪等
 # 檢查一次：已是目標值就跳過、不重複寫入；設定失敗只印警告、不擋 session（fail-soft，同本檔其餘邏輯一致）。
-# LS-333（源自 LS-313 R2／R3，池項 f99a2749）：`ServerAliveCountMax=20`（10 分鐘容忍）仍在 163 支 UI tap-target
-# 測試的 20–40 分鐘 push gate 期間被斷線兩次——把 CountMax 拉高到 120（60 分鐘容忍）當第二道防線；主要修法是
-# ios-dev.md 新規約「push 前先跑 push-gate.sh 暖快取」，讓 git push 觸發的 pre-push hook 只是重放快取、秒過，
-# 不再讓 SSH 閒置整段測試時間。`scripts/ops/patrol.sh` 對這個值另有機械檢查（同 core.hooksPath 慣例），兩處
-# 常數各自一份，改這裡務必同步改那邊。
+# LS-333 R2（源自 LS-313 R2／R3，池項 f99a2749；merge-review R1 m1 訂正）：`ServerAliveCountMax` 只計算「送出
+# keepalive 後伺服器沒回應」的次數、一收到回覆就歸零——實測（`GIT_TRACE=1 git ls-remote` 對 GitHub 開連線閒置
+# 12 秒）證明 GitHub 每次都正常回應 keepalive（type 81 REQUEST_SUCCESS），連 CountMax=1 都不會斷線。LS-313
+# R2／R3 的 `Connection reset by peer` 是在 keepalive 正常往返的情況下被對端重置，**不是** CountMax 不夠大——
+# 拉高這個值對那次斷線沒有作用（PLAUSIBLE：GitHub 對 receive-pack 的閒置等待時間本身有上限）。真正有效的修法
+# 是 ios-dev.md 的規約 (a)：push 前先跑 push-gate.sh 暖 tree-hash 快取，讓 `git push` 觸發的 pre-push hook 只是
+# 重放快取、秒過，把 SSH 連線閒置的時間從 20–40 分鐘收斂到幾秒。這裡把 CountMax 由 20 拉高到 120 純粹當「伺服器
+# 真的不回應 keepalive」時的第二道防線（如：對端行程掛掉、極端網路狀況）——`ServerAliveInterval=30` 仍保留，
+# 用來防 NAT／中間設備對閒置連線的斷線，與 GitHub 端主動 reset 是兩回事。`scripts/ops/patrol.sh` 對這個值另有
+# 機械檢查（同 core.hooksPath 慣例），兩處常數各自一份，改這裡務必同步改那邊。
 ssh_note=
 # LS209-SSH-KEEPALIVE-START
 SSH_KEEPALIVE_CMD='ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=120'
