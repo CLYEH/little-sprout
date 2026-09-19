@@ -21,7 +21,7 @@ import SwiftUI
 /// `ChildrenManagementView` 的導覽情境），呼叫端各自決定要推去哪裡。
 ///
 /// 「編輯」刻意放在 Identity Header（body content），不是系統 `ToolbarItem`——同
-/// `GrowthAddMeasurementPlaceholderView`「取消」鈕文件註解點名的既有教訓：系統 nav bar bar
+/// `GrowthMeasurementFormView`「取消」鈕文件註解點名的既有教訓：系統 nav bar bar
 /// button item 熱區不受 `.frame()` 影響，R1 曾放在 `ToolbarItem` 實測量到 56×36pt，低於 44pt
 /// 下限（`TapTargetGateTests.testChildrenManagementViewRowOpensDetailNotEdit` 抓到）。
 ///
@@ -48,6 +48,18 @@ struct ChildGrowthDetailView: View {
     /// 非 nil 時 Identity Header 顯示「編輯」入口，推向這個閉包建出的畫面；nil 時（例如
     /// harness／`#Preview` 的獨立展示）不顯示這顆鈕。
     var editDestination: (() -> AnyView)?
+    /// LS-313：03 記錄列表判斷「這筆是不是我的」（`GrowthRecord.authorID == currentUserID`）
+    /// 才顯示「編輯」動作列——同 `ContentActions.swift` 的既有精神。nil＝視為「不是任何一筆的
+    /// 作者」（例如尚未查到登入者身分時的保守預設）。
+    var currentUserID: UUID?
+    /// LS-313：owner 可以刪除（不能編輯）任何一筆，同「owner／作者權限沿 LS-57」——沿
+    /// `ChildrenStore.isOwner` 既有慣例傳入，這支畫面本身不依賴 `ChildrenStore`。
+    var isFamilyOwner = false
+    /// R1 merge-review m3：`upsert_growth_record` 只允許 owner／member 寫入（`growth_records_
+    /// insert` RLS）——viewer 按「新增量測」必得 `42501`。沿 `editDestination` 既有先例，
+    /// 由呼叫端傳入 `childrenStore.canManageChildren`（同一組 owner／member 判斷），這支畫面
+    /// 本身不依賴 `ChildrenStore`。
+    var canManageChildren = false
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -55,22 +67,34 @@ struct ChildGrowthDetailView: View {
     @State private var selectedMetric: GrowthMetric = .height
     @State private var showsAddMeasurement = false
 
-    init(child: Child, apiClient: GrowthAPIClient, editDestination: (() -> AnyView)? = nil) {
+    init(
+        child: Child, apiClient: GrowthAPIClient, editDestination: (() -> AnyView)? = nil,
+        currentUserID: UUID? = nil, isFamilyOwner: Bool = false, canManageChildren: Bool = false
+    ) {
         self.child = child
         self.apiClient = apiClient
         self.editDestination = editDestination
+        self.currentUserID = currentUserID
+        self.isFamilyOwner = isFamilyOwner
+        self.canManageChildren = canManageChildren
     }
 
     #if DEBUG
     /// harness／`#Preview` 專用：直接注入已種好資料的 store，不走一次 async
     /// `loadIfNeeded()`（假 client 固定回傳 `[]`，會把種好的示範資料覆蓋成空狀態）。
-    init(previewGrowthStore store: GrowthStore, editDestination: (() -> AnyView)? = nil) {
+    init(
+        previewGrowthStore store: GrowthStore, editDestination: (() -> AnyView)? = nil,
+        currentUserID: UUID? = nil, isFamilyOwner: Bool = false, canManageChildren: Bool = true
+    ) {
         self.child = Child(
             id: store.childID, name: store.childName, birthday: store.childBirthday,
             avatarURL: nil, deletedAt: nil, createdAt: Date()
         )
         self.apiClient = PreviewGrowthAPIClient()
         self.editDestination = editDestination
+        self.currentUserID = currentUserID
+        self.isFamilyOwner = isFamilyOwner
+        self.canManageChildren = canManageChildren
         self._growthStore = State(initialValue: store)
     }
     #endif
@@ -99,7 +123,13 @@ struct ChildGrowthDetailView: View {
             await loadIfNeeded()
         }
         .sheet(isPresented: $showsAddMeasurement) {
-            GrowthAddMeasurementPlaceholderView()
+            // LS-313：`showsAddMeasurement` 只在 `actionsCompact`／`regularLayout`（`content(_:)`
+            // 底下已解開 `growthStore` 的分支）才會被設成 `true`，這裡的 `growthStore` 理論上
+            // 一定非 nil；`if let` 純粹是為了在極端時序（sheet 呈現動畫期間 `child.id` 剛好變
+            // 而觸發 `.task(id:)` 重建 store）下不 force-unwrap 崩潰，不是期待常態走到 else。
+            if let growthStore {
+                GrowthMeasurementFormView(growthStore: growthStore)
+            }
         }
     }
 
@@ -148,7 +178,7 @@ struct ChildGrowthDetailView: View {
                     isEmptyState: growthStore.isEmpty, childName: child.name,
                     plotHeight: chartPlotHeight
                 )
-                actionsCompact
+                actionsCompact(growthStore)
             }
             .padding(.horizontal, AppSpacing.screenPad)
             .padding(.top, AppSpacing.item)
@@ -157,13 +187,18 @@ struct ChildGrowthDetailView: View {
         .appBackground()
     }
 
-    private var actionsCompact: some View {
+    private func actionsCompact(_ growthStore: GrowthStore) -> some View {
         VStack(spacing: AppSpacing.group) {
-            PrimaryButton(icon: "plus", title: "新增量測") {
-                showsAddMeasurement = true
+            if canManageChildren {
+                PrimaryButton(icon: "plus", title: "新增量測") {
+                    showsAddMeasurement = true
+                }
             }
             NavigationLink {
-                GrowthRecordsListPlaceholderView()
+                GrowthRecordsListView(
+                    growthStore: growthStore, childName: child.name,
+                    currentUserID: currentUserID, isFamilyOwner: isFamilyOwner
+                )
             } label: {
                 Text("查看全部紀錄")
                     .appFont(.body, weight: .medium)
@@ -200,14 +235,34 @@ struct ChildGrowthDetailView: View {
                         .foregroundStyle(Color.lsTextPrimary)
                     latestValuesRow(growthStore)
                 }
-                PrimaryButton(icon: "plus", title: "新增量測") {
-                    showsAddMeasurement = true
+                if canManageChildren {
+                    PrimaryButton(icon: "plus", title: "新增量測") {
+                        showsAddMeasurement = true
+                    }
                 }
                 if !growthStore.isEmpty {
                     VStack(alignment: .leading, spacing: AppSpacing.item) {
-                        Text("歷史紀錄")
-                            .appFont(.body)
-                            .foregroundStyle(Color.lsTextPrimary)
+                        HStack {
+                            Text("歷史紀錄")
+                                .appFont(.body)
+                                .foregroundStyle(Color.lsTextPrimary)
+                            Spacer(minLength: 0)
+                            // R1 merge-review i1：06 之前完全沒有編輯／刪除路徑——
+                            // `GrowthHistorySection` 是純顯示，打錯的紀錄永遠改不了。沿用同一
+                            // 支 03 列表 View（同 compact 版的「查看全部紀錄」入口），不另畫
+                            // 新版面。
+                            NavigationLink {
+                                GrowthRecordsListView(
+                                    growthStore: growthStore, childName: child.name,
+                                    currentUserID: currentUserID, isFamilyOwner: isFamilyOwner
+                                )
+                            } label: {
+                                Text("查看全部紀錄")
+                                    .appFont(.body, weight: .semibold)
+                                    .foregroundStyle(Color.lsAccent)
+                                    .frame(minHeight: 44)
+                            }
+                        }
                         GrowthHistorySection(records: growthStore.records)
                     }
                 }
@@ -300,7 +355,10 @@ struct ChildGrowthDetailView: View {
 #if DEBUG
 #Preview("01 有資料") {
     NavigationStack {
-        ChildGrowthDetailView(previewGrowthStore: .previewSeededWithDemoRecords())
+        ChildGrowthDetailView(
+            previewGrowthStore: .previewSeededWithDemoRecords(),
+            currentUserID: GrowthStore.previewAuthorID, isFamilyOwner: true
+        )
     }
 }
 

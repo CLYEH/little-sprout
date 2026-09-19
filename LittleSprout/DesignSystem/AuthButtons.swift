@@ -2,7 +2,9 @@ import SwiftUI
 
 /// `cmp/Button Primary`：實心 accent，全 app「一畫面一 accent」的唯一主要動作。
 struct PrimaryButton: View {
-    let icon: String
+    /// LS-313：改為可選——02 新增／編輯量測 sheet 的「儲存」鈕（Notes `mmyXk` i-7）拿掉裝飾性
+    /// 的 check 圖示，改純文字。`nil`＝不畫 `Image`（既有呼叫端一律傳非 nil 字串，行為不變）。
+    var icon: String?
     let title: String
     var isLoading = false
     // LS-107：07c「產生中」用「正在產生邀請碼…」取代這裡原本寫死的「正在處理…」（cmp/Button
@@ -16,7 +18,7 @@ struct PrimaryButton: View {
             HStack(spacing: AppSpacing.label) {
                 if isLoading {
                     ProgressView().tint(Color.lsOnAccent)
-                } else {
+                } else if let icon {
                     Image(systemName: icon).appIconFrame(.medium)
                 }
                 Text(isLoading ? loadingTitle : title).appFont(.body)

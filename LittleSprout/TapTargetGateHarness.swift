@@ -114,8 +114,9 @@ enum TapTargetGateHarness {
         case .commentsSheetOwnerNotReady: commentsSheetOwnerNotReadyHost
         case .growthDetailPopulated: growthDetailPopulatedHost
         case .growthDetailEmpty: growthDetailEmptyHost
-        case .growthAddMeasurementPlaceholder: growthAddMeasurementPlaceholderHost
-        case .growthRecordsListPlaceholder: growthRecordsListPlaceholderHost
+        case .growthMeasurementForm: growthMeasurementFormHost
+        case .growthRecordsList: growthRecordsListHost
+        case .growthRecordActionsSheet: growthRecordActionsSheetHost
         case .childrenManagementPopulated: childrenManagementPopulatedHost
         case .selfTestTooSmall:
             selfTestTooSmallHost

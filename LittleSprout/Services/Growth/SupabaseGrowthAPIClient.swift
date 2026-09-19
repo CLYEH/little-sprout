@@ -20,6 +20,29 @@ final class SupabaseGrowthAPIClient: GrowthAPIClient {
             throw AppError.map(error)
         }
     }
+
+    func upsertGrowthRecord(childID: UUID, input: GrowthMeasurementInput) async throws -> GrowthRecord {
+        do {
+            let params = UpsertGrowthRecordParams(
+                id: input.id, childID: childID, measuredOn: BirthdayFormat.wireString(from: input.measuredOn),
+                heightCm: input.heightCm, weightKg: input.weightKg, headCm: input.headCm, note: input.note
+            )
+            let response: PostgrestResponse<GrowthRecord> = try await client
+                .rpc("upsert_growth_record", params: params)
+                .execute()
+            return response.value
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    func deleteGrowthRecord(id: UUID) async throws {
+        do {
+            try await client.rpc("delete_growth_record", params: ["p_id": id]).execute()
+        } catch {
+            throw AppError.map(error)
+        }
+    }
 }
 
 // MARK: - Wire payloads
@@ -35,5 +58,40 @@ private struct ListGrowthRecordsParams: Encodable {
     enum CodingKeys: String, CodingKey {
         case childID = "p_child_id"
         case limit = "p_limit"
+    }
+}
+
+/// `upsert_growth_record` 的 7 個具名參數在 SQL 端**全部沒有預設值**（見 migration）——同
+/// `CreateChildParams`／`UpdateChildParams` 的既有理由（該檔文件註解），這裡手動實作
+/// `encode(to:)`，`id`／`heightCm`／`weightKg`／`headCm`／`note` 一律用 `encode(_:forKey:)`
+/// （不是 `encodeIfPresent`），`nil` 時送明確的 JSON `null`，讓 PostgREST 收到全部 7 個 key。
+private struct UpsertGrowthRecordParams: Encodable {
+    let id: UUID?
+    let childID: UUID
+    let measuredOn: String
+    let heightCm: Double?
+    let weightKg: Double?
+    let headCm: Double?
+    let note: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id = "p_id"
+        case childID = "p_child_id"
+        case measuredOn = "p_measured_on"
+        case heightCm = "p_height_cm"
+        case weightKg = "p_weight_kg"
+        case headCm = "p_head_cm"
+        case note = "p_note"
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(childID, forKey: .childID)
+        try container.encode(measuredOn, forKey: .measuredOn)
+        try container.encode(heightCm, forKey: .heightCm)
+        try container.encode(weightKg, forKey: .weightKg)
+        try container.encode(headCm, forKey: .headCm)
+        try container.encode(note, forKey: .note)
     }
 }

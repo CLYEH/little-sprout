@@ -22,7 +22,15 @@ extension ChildrenManagementView {
             child: child, apiClient: growthAPIClient,
             editDestination: childrenStore.canManageChildren
                 ? { AnyView(EditChildView(childrenStore: childrenStore, child: child)) }
-                : nil
+                : nil,
+            // LS-313：03 記錄列表的「編輯」（僅作者）／「刪除」（作者或 owner）動作列要知道
+            // 「目前登入者是誰」「是不是這個家庭的 owner」——`familyStore.ownerUserID`（見該檔
+            // 文件註解，命名雖是 `ownerUserID`，實際存的是「目前登入者」的 id，不是家庭
+            // owner）／`childrenStore.isOwner` 兩個既有屬性直接轉手。
+            currentUserID: familyStore.ownerUserID, isFamilyOwner: childrenStore.isOwner,
+            // R1 merge-review m3：viewer 按「新增量測」必得 42501（insert policy 只認
+            // owner／member）——同上面 `editDestination` 用的判斷，viewer 兩顆鈕都不該看到。
+            canManageChildren: childrenStore.canManageChildren
         )
     }
 }

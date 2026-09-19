@@ -1,0 +1,18 @@
+-- LS-325（LS-310 F5b 後端先行）—— feed_kind 新增 'food_first' 值。
+--
+-- 獨立成自己的檔案／自己的交易，不跟下一支 migration（20260918205141_food_encyclopedia.sql）
+-- 合併——理由與 20260903091313_notification_kind_report.sql 檔頭逐字相同：PostgreSQL 對
+-- ALTER TYPE ... ADD VALUE 有限制，新增的列舉值要嘛在同一個交易內完全不被「需要排序位置」
+-- 的操作使用（比較、當實際值儲存／轉型），要嘛等這個交易 commit 之後才能用；在同一個交易裡
+-- 新增又使用會直接噴 `unsafe use of new value` 錯誤。下一支 migration 會：
+--   (a) 定義 `child_food_records` 的 AFTER INSERT/UPDATE/DELETE trigger，函式本體把常數
+--       'food_first' 轉型成 public.feed_kind 寫進 feed_items／feed_item_children；
+--   (b) `CREATE OR REPLACE FUNCTION get_family_timeline` 的 `case p.kind when 'food_first'
+--       ...` 分支要把字面值拿去跟 `p.kind`（型別已經是 public.feed_kind）比較。
+-- 兩者都是「使用」，為了不必去賭這些用法算不算 PostgreSQL 判定的邊界，直接拆成兩支各自
+-- 獨立 commit 的 migration，安全邊際最大。
+--
+-- 用途：`child_food_records` 第一次記錄（第一次吃到某食物）在時間軸上產生一張
+-- 'food_first' 卡片，供 `get_family_timeline` 回傳、iOS 依 kind 分組渲染（LS-310 iOS
+-- 實作票的範圍，本票只做後端）。
+alter type public.feed_kind add value 'food_first';
