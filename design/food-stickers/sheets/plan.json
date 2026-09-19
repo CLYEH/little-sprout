@@ -1,0 +1,647 @@
+[
+ {
+  "sheet": "sheet-01",
+  "foods": [
+   {
+    "id": "rice_cereal",
+    "name_zh": "米精",
+    "category": "grain_root"
+   },
+   {
+    "id": "rice_porridge",
+    "name_zh": "白粥",
+    "category": "grain_root"
+   },
+   {
+    "id": "oatmeal",
+    "name_zh": "燕麥粥",
+    "category": "grain_root"
+   },
+   {
+    "id": "white_rice",
+    "name_zh": "白米飯",
+    "category": "grain_root"
+   },
+   {
+    "id": "brown_rice",
+    "name_zh": "糙米飯",
+    "category": "grain_root"
+   },
+   {
+    "id": "purple_sweet_potato",
+    "name_zh": "紫地瓜",
+    "category": "grain_root"
+   },
+   {
+    "id": "potato",
+    "name_zh": "馬鈴薯",
+    "category": "grain_root"
+   },
+   {
+    "id": "pumpkin",
+    "name_zh": "南瓜",
+    "category": "grain_root"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-02",
+  "foods": [
+   {
+    "id": "taro",
+    "name_zh": "芋頭",
+    "category": "grain_root"
+   },
+   {
+    "id": "yam",
+    "name_zh": "山藥",
+    "category": "grain_root"
+   },
+   {
+    "id": "corn",
+    "name_zh": "玉米",
+    "category": "grain_root"
+   },
+   {
+    "id": "quinoa",
+    "name_zh": "藜麥",
+    "category": "grain_root"
+   },
+   {
+    "id": "noodles",
+    "name_zh": "麵條",
+    "category": "grain_root"
+   },
+   {
+    "id": "bread",
+    "name_zh": "吐司麵包",
+    "category": "grain_root"
+   },
+   {
+    "id": "steamed_bun",
+    "name_zh": "白饅頭",
+    "category": "grain_root"
+   },
+   {
+    "id": "spinach",
+    "name_zh": "菠菜",
+    "category": "vegetable"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-03",
+  "foods": [
+   {
+    "id": "broccoli",
+    "name_zh": "花椰菜",
+    "category": "vegetable"
+   },
+   {
+    "id": "cauliflower",
+    "name_zh": "白花椰菜",
+    "category": "vegetable"
+   },
+   {
+    "id": "napa_cabbage",
+    "name_zh": "大白菜",
+    "category": "vegetable"
+   },
+   {
+    "id": "bok_choy",
+    "name_zh": "青江菜",
+    "category": "vegetable"
+   },
+   {
+    "id": "water_spinach",
+    "name_zh": "空心菜",
+    "category": "vegetable"
+   },
+   {
+    "id": "cabbage",
+    "name_zh": "高麗菜",
+    "category": "vegetable"
+   },
+   {
+    "id": "lettuce",
+    "name_zh": "萵苣",
+    "category": "vegetable"
+   },
+   {
+    "id": "tomato",
+    "name_zh": "番茄",
+    "category": "vegetable"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-04",
+  "foods": [
+   {
+    "id": "cucumber",
+    "name_zh": "小黃瓜",
+    "category": "vegetable"
+   },
+   {
+    "id": "eggplant",
+    "name_zh": "茄子",
+    "category": "vegetable"
+   },
+   {
+    "id": "bitter_melon",
+    "name_zh": "苦瓜",
+    "category": "vegetable"
+   },
+   {
+    "id": "loofah",
+    "name_zh": "絲瓜",
+    "category": "vegetable"
+   },
+   {
+    "id": "white_radish",
+    "name_zh": "白蘿蔔",
+    "category": "vegetable"
+   },
+   {
+    "id": "mushroom",
+    "name_zh": "香菇",
+    "category": "vegetable"
+   },
+   {
+    "id": "green_bean",
+    "name_zh": "四季豆",
+    "category": "vegetable"
+   },
+   {
+    "id": "pea",
+    "name_zh": "豌豆",
+    "category": "vegetable"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-05",
+  "foods": [
+   {
+    "id": "apple",
+    "name_zh": "蘋果",
+    "category": "fruit"
+   },
+   {
+    "id": "papaya",
+    "name_zh": "木瓜",
+    "category": "fruit"
+   },
+   {
+    "id": "avocado",
+    "name_zh": "酪梨",
+    "category": "fruit"
+   },
+   {
+    "id": "pear",
+    "name_zh": "水梨",
+    "category": "fruit"
+   },
+   {
+    "id": "peach",
+    "name_zh": "桃子",
+    "category": "fruit"
+   },
+   {
+    "id": "orange",
+    "name_zh": "橘子",
+    "category": "fruit"
+   },
+   {
+    "id": "watermelon",
+    "name_zh": "西瓜",
+    "category": "fruit"
+   },
+   {
+    "id": "cantaloupe",
+    "name_zh": "哈密瓜",
+    "category": "fruit"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-06",
+  "foods": [
+   {
+    "id": "mango",
+    "name_zh": "芒果",
+    "category": "fruit"
+   },
+   {
+    "id": "guava",
+    "name_zh": "芭樂",
+    "category": "fruit"
+   },
+   {
+    "id": "dragon_fruit",
+    "name_zh": "火龍果",
+    "category": "fruit"
+   },
+   {
+    "id": "kiwi",
+    "name_zh": "奇異果",
+    "category": "fruit"
+   },
+   {
+    "id": "strawberry",
+    "name_zh": "草莓",
+    "category": "fruit"
+   },
+   {
+    "id": "pineapple",
+    "name_zh": "鳳梨",
+    "category": "fruit"
+   },
+   {
+    "id": "persimmon",
+    "name_zh": "柿子",
+    "category": "fruit"
+   },
+   {
+    "id": "lemon",
+    "name_zh": "檸檬",
+    "category": "fruit"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-07",
+  "foods": [
+   {
+    "id": "grape",
+    "name_zh": "葡萄",
+    "category": "fruit"
+   },
+   {
+    "id": "egg_yolk",
+    "name_zh": "蛋黃",
+    "category": "protein"
+   },
+   {
+    "id": "egg_white",
+    "name_zh": "蛋白",
+    "category": "protein"
+   },
+   {
+    "id": "chicken_breast",
+    "name_zh": "雞胸肉",
+    "category": "protein"
+   },
+   {
+    "id": "chicken_thigh",
+    "name_zh": "雞腿肉",
+    "category": "protein"
+   },
+   {
+    "id": "pork_lean",
+    "name_zh": "豬里肌肉",
+    "category": "protein"
+   },
+   {
+    "id": "pork_liver",
+    "name_zh": "豬肝",
+    "category": "protein"
+   },
+   {
+    "id": "beef",
+    "name_zh": "牛肉",
+    "category": "protein"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-08",
+  "foods": [
+   {
+    "id": "duck",
+    "name_zh": "鴨肉",
+    "category": "protein"
+   },
+   {
+    "id": "sea_bass",
+    "name_zh": "鱸魚",
+    "category": "protein"
+   },
+   {
+    "id": "salmon",
+    "name_zh": "鮭魚",
+    "category": "protein"
+   },
+   {
+    "id": "tilapia",
+    "name_zh": "吳郭魚",
+    "category": "protein"
+   },
+   {
+    "id": "mackerel",
+    "name_zh": "鯖魚",
+    "category": "protein"
+   },
+   {
+    "id": "shrimp",
+    "name_zh": "蝦",
+    "category": "protein"
+   },
+   {
+    "id": "crab",
+    "name_zh": "螃蟹",
+    "category": "protein"
+   },
+   {
+    "id": "clam",
+    "name_zh": "蛤蜊",
+    "category": "protein"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-09",
+  "foods": [
+   {
+    "id": "squid",
+    "name_zh": "花枝",
+    "category": "protein"
+   },
+   {
+    "id": "tofu",
+    "name_zh": "豆腐",
+    "category": "protein"
+   },
+   {
+    "id": "soy_milk",
+    "name_zh": "豆漿",
+    "category": "protein"
+   },
+   {
+    "id": "edamame",
+    "name_zh": "毛豆",
+    "category": "protein"
+   },
+   {
+    "id": "red_beans",
+    "name_zh": "紅豆",
+    "category": "protein"
+   },
+   {
+    "id": "fresh_milk",
+    "name_zh": "鮮奶",
+    "category": "dairy"
+   },
+   {
+    "id": "cheese",
+    "name_zh": "起司",
+    "category": "dairy"
+   },
+   {
+    "id": "butter",
+    "name_zh": "奶油",
+    "category": "dairy"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-10",
+  "foods": [
+   {
+    "id": "cream",
+    "name_zh": "鮮奶油",
+    "category": "dairy"
+   },
+   {
+    "id": "milk_pudding",
+    "name_zh": "布丁",
+    "category": "dairy"
+   },
+   {
+    "id": "cottage_cheese",
+    "name_zh": "茅屋起司",
+    "category": "dairy"
+   },
+   {
+    "id": "sesame_oil",
+    "name_zh": "芝麻油",
+    "category": "fat_nut"
+   },
+   {
+    "id": "olive_oil",
+    "name_zh": "橄欖油",
+    "category": "fat_nut"
+   },
+   {
+    "id": "whole_peanuts",
+    "name_zh": "整顆花生",
+    "category": "fat_nut"
+   },
+   {
+    "id": "almond_butter",
+    "name_zh": "杏仁醬",
+    "category": "fat_nut"
+   },
+   {
+    "id": "whole_almonds",
+    "name_zh": "整顆杏仁",
+    "category": "fat_nut"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-11",
+  "foods": [
+   {
+    "id": "walnuts",
+    "name_zh": "核桃",
+    "category": "fat_nut"
+   },
+   {
+    "id": "cashews",
+    "name_zh": "腰果",
+    "category": "fat_nut"
+   },
+   {
+    "id": "tahini",
+    "name_zh": "芝麻醬",
+    "category": "fat_nut"
+   },
+   {
+    "id": "sunflower_seed_butter",
+    "name_zh": "葵花籽醬",
+    "category": "fat_nut"
+   },
+   {
+    "id": "steamed_egg",
+    "name_zh": "蒸蛋",
+    "category": "tw_home"
+   },
+   {
+    "id": "fish_soup",
+    "name_zh": "魚湯",
+    "category": "tw_home"
+   },
+   {
+    "id": "braised_pork_sauce",
+    "name_zh": "滷肉燥",
+    "category": "tw_home"
+   },
+   {
+    "id": "rice_noodle_soup",
+    "name_zh": "米粉湯",
+    "category": "tw_home"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-12",
+  "foods": [
+   {
+    "id": "radish_cake",
+    "name_zh": "蘿蔔糕",
+    "category": "tw_home"
+   },
+   {
+    "id": "danzai_noodle",
+    "name_zh": "擔仔麵",
+    "category": "tw_home"
+   },
+   {
+    "id": "oyster_omelet",
+    "name_zh": "蚵仔煎",
+    "category": "tw_home"
+   },
+   {
+    "id": "braised_pork_rice",
+    "name_zh": "滷肉飯",
+    "category": "tw_home"
+   },
+   {
+    "id": "taiwanese_meatball",
+    "name_zh": "肉圓",
+    "category": "tw_home"
+   },
+   {
+    "id": "tempura",
+    "name_zh": "甜不辣",
+    "category": "tw_home"
+   },
+   {
+    "id": "fish_ball",
+    "name_zh": "魚丸",
+    "category": "tw_home"
+   },
+   {
+    "id": "century_egg",
+    "name_zh": "皮蛋",
+    "category": "tw_home"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-13",
+  "foods": [
+   {
+    "id": "salted_egg",
+    "name_zh": "鹹蛋",
+    "category": "tw_home"
+   },
+   {
+    "id": "three_cup_chicken",
+    "name_zh": "三杯雞",
+    "category": "tw_home"
+   },
+   {
+    "id": "wonton_soup",
+    "name_zh": "餛飩湯",
+    "category": "tw_home"
+   },
+   {
+    "id": "taiwanese_congee",
+    "name_zh": "鹹粥",
+    "category": "tw_home"
+   },
+   {
+    "id": "scallion_pancake",
+    "name_zh": "蔥油餅",
+    "category": "tw_home"
+   },
+   {
+    "id": "honey",
+    "name_zh": "蜂蜜",
+    "category": "snack_drink"
+   },
+   {
+    "id": "popsicle",
+    "name_zh": "冰棒",
+    "category": "snack_drink"
+   },
+   {
+    "id": "ice_cream",
+    "name_zh": "冰淇淋",
+    "category": "snack_drink"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-14",
+  "foods": [
+   {
+    "id": "sponge_cake",
+    "name_zh": "海綿蛋糕",
+    "category": "snack_drink"
+   },
+   {
+    "id": "cookies",
+    "name_zh": "餅乾",
+    "category": "snack_drink"
+   },
+   {
+    "id": "soda",
+    "name_zh": "汽水",
+    "category": "snack_drink"
+   },
+   {
+    "id": "fruit_juice",
+    "name_zh": "果汁",
+    "category": "snack_drink"
+   },
+   {
+    "id": "herbal_jelly",
+    "name_zh": "仙草凍",
+    "category": "snack_drink"
+   },
+   {
+    "id": "aiyu_jelly",
+    "name_zh": "愛玉",
+    "category": "snack_drink"
+   },
+   {
+    "id": "barley_tea",
+    "name_zh": "麥仔茶",
+    "category": "snack_drink"
+   },
+   {
+    "id": "black_tea",
+    "name_zh": "紅茶",
+    "category": "snack_drink"
+   }
+  ]
+ },
+ {
+  "sheet": "sheet-15",
+  "foods": [
+   {
+    "id": "mung_bean_soup",
+    "name_zh": "綠豆湯",
+    "category": "snack_drink"
+   },
+   {
+    "id": "red_bean_soup",
+    "name_zh": "紅豆湯",
+    "category": "snack_drink"
+   }
+  ]
+ }
+]
