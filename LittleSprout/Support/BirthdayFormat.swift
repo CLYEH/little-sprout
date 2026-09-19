@@ -8,9 +8,10 @@ import Foundation
 /// 「3 月 11 日 16:00 UTC」，送到後端 `::date` 轉型後變成 3 月 11 日——跨夜位移的生日錯誤。
 ///
 /// 這裡刻意把 `birthday` 全程用「UTC 固定時區」代表「一個日曆日」：只在使用者從
-/// `DatePicker`（local time）選出新日期那一刻，用 `Calendar.current` 抽出年月日（使用者
-/// 實際選的那一天），之後的字串化／解析／顯示一律用 UTC，不再受裝置時區影響——兩段刻意
-/// 用不同 calendar，切換的界線只有這一處。
+/// `DatePicker`（local time）選出新日期那一刻，用固定西曆＋（可注入的）本地時區抽出年月日
+/// （使用者實際選的那一天——曆法固定西曆是 LS-331 修正，見 `wireString` 文件註解），之後的
+/// 字串化／解析／顯示一律用 UTC，不再受裝置時區影響——兩段刻意用不同 calendar，切換的界線
+/// 只有這一處。
 enum BirthdayFormat {
     private static let wireFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -28,8 +29,16 @@ enum BirthdayFormat {
     }
 
     /// 把 `DatePicker` 選出的（裝置本地時區）`Date` 轉成 RPC 要送出的 `"yyyy-MM-dd"` 字串。
-    static func wireString(from pickedDate: Date, calendar: Calendar = .current) -> String {
-        let components = calendar.dateComponents([.year, .month, .day], from: pickedDate)
+    ///
+    /// LS-331：年月日一律用固定的 `Calendar(identifier: .gregorian)` 抽取，只借用（可注入的）
+    /// `timeZone` 決定「哪一天」——裝置若把曆法設成民國曆／佛曆／和曆，`Calendar.current` 的
+    /// `.year` 元件會是曆法原生年號（115／2569／8），若直接拿來組字串送出去，DB 存的年份就
+    /// 壞掉。呼叫端要注入時區就注入 `TimeZone`，不注入 `Calendar`——這樣曆法識別碼永遠不會
+    /// 有機會流進這支函式，結構上排除了整類 bug，不是只防目前已知的三種曆法。
+    static func wireString(from pickedDate: Date, timeZone: TimeZone = .current) -> String {
+        var extractionCalendar = Calendar(identifier: .gregorian)
+        extractionCalendar.timeZone = timeZone
+        let components = extractionCalendar.dateComponents([.year, .month, .day], from: pickedDate)
         let utcDate = utcCalendar.date(from: components) ?? pickedDate
         return wireFormatter.string(from: utcDate)
     }
