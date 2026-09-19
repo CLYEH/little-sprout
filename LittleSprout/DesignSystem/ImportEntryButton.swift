@@ -45,7 +45,13 @@ struct ImportEntryButton: View {
         Button(action: action) {
             HStack(spacing: AppSpacing.tight) {
                 importMark
-                Text(label).appFont(.body, weight: .semibold).foregroundStyle(Color.lsTextPrimary)
+                // LS-343：同 `TimelineView.createMemoryButton` 的理由（該檔文件註解，含已知
+                // 限制與 `timelineButtonCompressionProxyHost` 的 mutation 驗證方式）。
+                Text(label)
+                    .appFont(.body, weight: .semibold)
+                    .foregroundStyle(Color.lsTextPrimary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .frame(maxWidth: fillsWidth ? .infinity : nil)
             .padding(.vertical, AppSpacing.controlPaddingTap)

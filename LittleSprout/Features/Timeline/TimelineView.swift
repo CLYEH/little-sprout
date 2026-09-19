@@ -182,7 +182,7 @@ struct TimelineView: View {
     /// `gap:6`／`padding:[9.5,16]`／icon 18×18 純加號，無外框圓），不是原本的全寬色塊——
     /// `padding-vertical` 對到既有 token `controlPaddingTap`（同一組值，`JoinWaitingView` 已有
     /// 相同 padding＋icon＋semibold 文字的先例）；icon 換成裸 `"plus"` `.small`（18pt）對應
-    /// lucide 的純加號，不用會多畫一個圓的 `plus.circle.fill`。
+    /// lucide 的純加號，不用會多畫一個圓的 `plus.circle.fill`（LS-343：曾在窄寬度壓縮換行）。
     private var createMemoryButton: some View {
         Button { showsDiaryEditor = true } label: {
             HStack(spacing: AppSpacing.tight) {
@@ -192,7 +192,7 @@ struct TimelineView: View {
                 // 的合併 label，字串比對就對不上，隱藏成純裝飾（同 `PhotoCardView` 已有
                 // 的 `accessibilityHidden` 先例：圖示旁邊已有文字時圖示本身不需要再唸一次）。
                 Image(systemName: "plus").appIconFrame(.small).accessibilityHidden(true)
-                Text("新增回憶").appFont(.body, weight: .semibold)
+                Text("新增回憶").appFont(.body, weight: .semibold).lineLimit(1).fixedSize(horizontal: true, vertical: false)
             }
             .padding(.vertical, AppSpacing.controlPaddingTap)
             .padding(.horizontal, AppSpacing.item)
