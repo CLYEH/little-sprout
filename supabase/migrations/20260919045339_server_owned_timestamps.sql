@@ -121,10 +121,18 @@ grant insert (family_id, blocker_id, blocked_id) on public.blocked_users to auth
 -- 沒有其他值進得去」。
 --
 -- 沒有既有的通用 `set_updated_at()` trigger 可以重用（檢查過
--- `supabase/migrations` 全庫，`updated_at` 目前只有 `growth_records`／`child_
--- food_records`／`device_tokens` 三張表有，過去都是各自在 RPC 本體手寫
--- `now()`，沒有共用 trigger 函式）——新建 `private.touch_updated_at()`，比照本
--- repo其餘共用 trigger 函式（`private.enforce_deletion_attribution()`／
+-- `supabase/migrations` 全庫，**client 可寫**的 `updated_at` 目前只有
+-- `growth_records`／`child_food_records`／`device_tokens` 三張表有，過去都是
+-- 各自在 RPC 本體手寫 `now()`，沒有共用 trigger 函式——R2 訂正（merge-review R1
+-- m2）：`app_settings.updated_at`（`20260904212530_suspension_and_
+-- registrations.sql:141`）與 `orphan_scan_cursor.updated_at`（`20260906050606_
+-- soft_delete_unreferenced_media.sql:257`）這兩欄也存在，只是對 `authenticated`
+-- 完全沒有 grant（`orphan_scan_cursor` 只有 `service_role`；`app_settings` 對
+-- `authenticated` 無任何寫入 grant，見各自 migration），不影響「client 可寫的
+-- `updated_at` 只有這三張」這個結論，R1 版本這句話少了「client 可寫」四個字，
+-- 讀起來像是宣稱全庫只有三欄，訂正措辭，不影響決策本身）——新建 `private.
+-- touch_updated_at()`，比照本
+-- repo 其餘共用 trigger 函式（`private.enforce_deletion_attribution()`／
 -- `private.enforce_child_not_deleted()`／`private.enforce_not_suspended()`）
 -- 的既有形狀：`security definer`、`set search_path = ''`、不知道也不需要知道自己
 -- 掛在哪張表上，只依賴呼叫端已經有 `updated_at` 這個同名欄位，可以直接掛在任何
@@ -152,12 +160,50 @@ $$;
 -- deleted`／`not_suspended` 之後——`t` > `d`／`c`／`n`），確保這支 trigger 一律
 -- 在其餘 BEFORE UPDATE trigger 都跑完、判斷完之後才把 `updated_at` 定案，不影響
 -- 那些既有 trigger 內部依賴「新舊列差異」的邏輯。
+--
+-- **R2 訂正（merge-review R1 m1，blocker 等級的行為缺陷，reviewer 實跑重現）**：
+-- R1 版本掛的是無條件 `before update`（沒有 `of <cols>`），任何一句 UPDATE，
+-- 不論碰了哪些欄位，都會觸發這支 trigger 把 `updated_at` 刷新成 `now()`——包含
+-- **FK 的 RI（referential integrity）動作**，不只是使用者主動編輯內容。
+-- `growth_records.author_id`／`deleted_by` 兩欄都是 `references public.profiles
+-- (id) on delete set null`：作者刪除帳號時，`auth.users` → `profiles`（on delete
+-- cascade）→ 這兩欄被 Postgres 自動下一句 `UPDATE ... SET author_id = NULL`（或
+-- `deleted_by = NULL`），這句 UPDATE 本身跟「使用者編輯了這筆紀錄」完全無關，卻一樣
+-- 會被 R1 版本的無條件 trigger 誤判成「內容被動過」而刷新 `updated_at`。
+-- reviewer 實測重現：一筆 `updated_at` 手動回填成過去值的成長紀錄，只要刪除其
+-- 作者帳號，`updated_at` 就會跳成 `now()`——`LittleSprout/Services/Growth/
+-- GrowthCurve.swift` 的 `deduplicatedByDay` 在同一天有多筆量測時取 `updatedAt`
+-- 最大的那筆當代表值，同一個孩子同一天若有兩位作者的量測、其中一位刪除帳號，
+-- 圖表上顯示的量測值會被換成已刪除作者的舊資料，不是真正「最後編輯」的那筆。
+--
+-- 修法：改成 `before update of <內容欄位…>, updated_at`——只列「使用者透過
+-- `upsert_*` RPC 或原始 `PATCH` 可能編輯的欄位」加上 `updated_at` 自己，
+-- **不列** `author_id`／`deleted_by`／`family_id`／`child_id` 這類治理／FK 欄位
+-- （這些欄位的 grant 本來就沒開放給 `authenticated` 直接寫，唯一會改到它們的正是
+-- RI 動作與 `enforce_deletion_attribution()` trigger，不該被這支 trigger 誤判成
+-- 內容編輯）。Postgres 的 `UPDATE OF col1, col2` 觸發條件是「這句 UPDATE 的 SET
+-- 子句是否提到列出的欄位」，不是「值有沒有真的改變」——FK RI 動作的 SET 子句只會
+-- 提到 `author_id`／`deleted_by`，不會提到 `updated_at` 或任何內容欄位，因此不會
+-- 觸發這支 trigger；`upsert_growth_record`／`upsert_child_food_record` 的 UPDATE／
+-- `DO UPDATE` 陳述式與任何原始 `PATCH` 只要 SET 子句碰到 `updated_at`（票面要
+-- 堵的洞）或任一內容欄位，一樣會觸發、一樣被強制覆寫成 `now()`——防禦效果不變，
+-- 只是不再被 RI 動作誤觸發。連帶效果（非壞事）：`delete_growth_record`／
+-- `delete_child_food_record` 的軟刪 UPDATE 只 `SET deleted_at = now()`，同樣不在
+-- 這份欄位清單裡，軟刪不會刷新 `updated_at`——已刪除的列不會出現在任何查詢結果
+-- （`deleted_at is null` 過濾），不影響任何可見行為。
+--
+-- `device_tokens` 不需要比照收斂（見下方獨立段落）：它唯一的 FK（`user_id
+-- references public.profiles (id) on delete cascade`）是 cascade 不是 set null，
+-- 使用者帳號刪除時整列會直接被刪掉，不會產生會誤觸發這支 trigger 的 RI UPDATE，
+-- 沒有對應的缺陷可修。
 create trigger growth_records_touch_updated_at
-  before update on public.growth_records
+  before update of measured_on, height_cm, weight_kg, head_cm, note, updated_at
+  on public.growth_records
   for each row execute function private.touch_updated_at();
 
 create trigger child_food_records_touch_updated_at
-  before update on public.child_food_records
+  before update of first_tried_on, media_id, note, reaction, updated_at
+  on public.child_food_records
   for each row execute function private.touch_updated_at();
 
 -- `device_tokens` 跟上面兩張表不同：`authenticated` 對它是整表 INSERT／UPDATE
