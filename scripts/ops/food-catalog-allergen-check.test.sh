@@ -5,11 +5,15 @@
 # 涵蓋範圍（票文範圍 1／3）：
 #   A. 真實 CSV（supabase/seed-data/food_catalog.csv）跑 check-allergens 全過（exit 0）
 #      ——基準：LS-342 對現況 274 列跑過一次，見 handoff。
-#   B. 合成夾具：一列名稱含「魚」但 allergens 空、且不在白名單 → check-allergens
-#      exit 1，訊息點名該 id 與缺的 allergen（CSV 端 deny）。
+#   B. 合成夾具：一列名稱含「魚」但 allergens 空、且不在白名單 → **實際跑 CLI**
+#      （`python3 food-catalog-sql.py check-allergens`，用 `FOOD_CATALOG_CSV_PATH`
+#      環境變數指向合成 CSV），驗真正的出口碼與 stderr——不是繞過 CLI 直接呼叫
+#      `check_rows()`（R1 merge-review informational i2：呼叫 `check_rows()` 測不到
+#      `raise SystemExit(1)` 被改壞的情況，CLI 出口碼才是 CI `rules` job 實際依賴
+#      的介面）。
 #   C. 合成夾具：SOY_SAUCE_DISH_IDS 其中一個 id（braised_pork_rice）allergens 空
-#      → exit 1，訊息點名「醬油調味慣例列」（顯式 id 清單路徑的 deny，不是關鍵字
-#      路徑）。
+#      → 同樣實跑 CLI，exit 1，訊息點名「醬油調味慣例列」（顯式 id 清單路徑的
+#      deny，不是關鍵字路徑）。
 #   D. 白名單真的有作用：用真實 CSV 裡的 flying_squid（魷魚，allergens 空，靠
 #      WHITELIST 的 (flying_squid, fish) 例外通過）單獨跑 check_rows() 不紅；把
 #      WHITELIST 那個條目拿掉重跑同一列 → 紅（Mutation：白名單拿掉一條 → 紅，
@@ -18,6 +22,11 @@
 #      allergen 的 raise exception——證明 SQL 是從同一份規則產生，不是另外手寫
 #      （單一來源）。Mutation：拿掉 WHITELIST 的 flying_squid 條目重新產生 → SQL
 #      不再含排除子句，證明兩條路徑（Python 直跑／產生 SQL）真的吃同一份資料。
+#   F. R1 merge-review minor m1：`KEYWORD_RULES` 的 `desc` 若含 `%` 與單引號（例如
+#      日後有人寫「含 100% 全麥字」這種說明），`generate_sql_do_block()` 產生的
+#      SQL 必須正確跳脫（`%%`／`''`），不能讓 RAISE 因為佔位符數量對不上而
+#      `too few parameters specified for RAISE`，也不能讓未跳脫的 `'` 弄壞 SQL
+#      語法。
 #
 # 依賴：純標準庫，`python3` 直接呼叫（不需要 uv／第三方套件，同 food-catalog-sql.py
 # 檔頭的既有宣告）。
@@ -40,59 +49,27 @@ else
   printf '%s\n' "$out_a" | sed 's/^/    /' >&2
 fi
 
-# ==== B. 合成夾具：名稱含「魚」但 allergens 空、不在白名單 → deny ====
+# ==== B. 合成夾具：名稱含「魚」但 allergens 空、不在白名單 → 實跑 CLI deny ====
 synth_b="${work}/food_catalog_b.csv"
 cat > "$synth_b" <<'CSV'
 id,name_zh,category,sort_order,allergens,min_age_months
 ls342_test_fish,測試魚,protein,1,,
 CSV
-b_out="$(python3 - "$script" "$synth_b" <<'PY'
-import importlib.util
-import sys
-
-script_path, csv_path = sys.argv[1], sys.argv[2]
-spec = importlib.util.spec_from_file_location("food_catalog_sql", script_path)
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
-
-mod.CSV_PATH = csv_path
-rows = mod.load_rows()
-violations = mod.food_catalog_rules.check_rows(rows)
-for v in violations:
-    print(v)
-sys.exit(1 if violations else 0)
-PY
-)"
+b_out="$(FOOD_CATALOG_CSV_PATH="$synth_b" python3 "$script" check-allergens 2>&1)"
 b_rc=$?
-expect_exit 1 "$b_rc" "B. 名稱含「魚」但 allergens 空的合成列 → check_rows 紅"
+expect_exit 1 "$b_rc" "B. 名稱含「魚」但 allergens 空的合成列 → CLI check-allergens 紅（實際出口碼）"
 expect_has "$b_out" "ls342_test_fish" "B. 錯誤訊息點名 id"
 expect_has "$b_out" "'fish'" "B. 錯誤訊息點名缺的 allergen（fish）"
 
-# ==== C. 合成夾具：醬油調味慣例列（顯式 id 清單）allergens 空 → deny ====
+# ==== C. 合成夾具：醬油調味慣例列（顯式 id 清單）allergens 空 → 實跑 CLI deny ====
 synth_c="${work}/food_catalog_c.csv"
 cat > "$synth_c" <<'CSV'
 id,name_zh,category,sort_order,allergens,min_age_months
 braised_pork_rice,滷肉飯,tw_home,1,,
 CSV
-c_out="$(python3 - "$script" "$synth_c" <<'PY'
-import importlib.util
-import sys
-
-script_path, csv_path = sys.argv[1], sys.argv[2]
-spec = importlib.util.spec_from_file_location("food_catalog_sql", script_path)
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
-
-mod.CSV_PATH = csv_path
-rows = mod.load_rows()
-violations = mod.food_catalog_rules.check_rows(rows)
-for v in violations:
-    print(v)
-sys.exit(1 if violations else 0)
-PY
-)"
+c_out="$(FOOD_CATALOG_CSV_PATH="$synth_c" python3 "$script" check-allergens 2>&1)"
 c_rc=$?
-expect_exit 1 "$c_rc" "C. 醬油調味慣例列（braised_pork_rice）allergens 空 → check_rows 紅"
+expect_exit 1 "$c_rc" "C. 醬油調味慣例列（braised_pork_rice）allergens 空 → CLI check-allergens 紅（實際出口碼）"
 expect_has "$c_out" "醬油調味慣例列" "C. 錯誤訊息點名是醬油調味慣例列規則（不是關鍵字規則）"
 
 # ==== D. 白名單真的有作用：真實 flying_squid 通過；拿掉白名單條目 → 紅 ====
@@ -143,6 +120,33 @@ print(mod.generate_sql_do_block())
 PY
 )"
 expect_not_has "$e_out" "flying_squid" "E3. Mutation：拿掉 WHITELIST 條目後重新產生 SQL，flying_squid 排除子句消失（證明 SQL 真的吃同一份資料，不是另外手寫的靜態文字）"
+
+# ==== F. R1 minor m1：desc 含 % 與單引號時，產生的 SQL 正確跳脫 ====
+f_out="$(python3 - "$root" <<'PY'
+import importlib.util
+import sys
+
+root = sys.argv[1]
+spec = importlib.util.spec_from_file_location(
+    "food_catalog_rules", root + "/scripts/ops/food_catalog_rules.py"
+)
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+
+mod.KEYWORD_RULES = mod.KEYWORD_RULES + [
+    ("wheat", ["ls342測試關鍵字"], "含 100% 全麥字＋單引號'測試'說明")
+]
+print(mod.generate_sql_do_block())
+PY
+)"
+expect_has "$f_out" "含 100%% 全麥字＋單引號''測試''說明" "F1. desc 內的 % 跳脫成 %%、單引號跳脫成 ''（不是原樣貼進 RAISE 格式字串）"
+expect_not_has "$f_out" "100% 全麥字" "F2. 未跳脫版本（單個 %）不應出現在輸出裡"
+
+# F3：跳脫後，這一行只剩 1 個「真正的」RAISE 參數佔位符（v_bad 那個）——desc 裡的 %%
+# 先消掉（跳脫後的字面 %，不是佔位符），數剩下的 % 應該恰好 1 個。
+f_line="$(printf '%s\n' "$f_out" | grep -F "100%% 全麥字")"
+remaining="$(printf '%s' "$f_line" | sed 's/%%/@/g' | tr -cd '%' | wc -c | tr -d ' ')"
+expect_has "$remaining" "1" "F3. 跳脫後只剩 1 個真正的 RAISE 參數佔位符（v_bad），desc 裡的 %% 不會被誤算成佔位符"
 
 echo ""
 echo "food-catalog-allergen-check 自測：${selftest_helpers_n} 項，失敗 ${selftest_helpers_fail}"

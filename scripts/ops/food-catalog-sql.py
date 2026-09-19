@@ -36,7 +36,10 @@
                                                     > 純 Python／CSV，不需要 DB：對 CSV 目前內容跑
                                                       food_catalog_rules.py 的過敏原啟發式規則（LS-342），
                                                       有違規時把每一列印到 stderr 並 exit 1，供 CI
-                                                      `rules` job（無 DB）與本機快速檢查使用。
+                                                      `rules` job（無 DB）與本機快速檢查使用。環境變數
+                                                      `FOOD_CATALOG_CSV_PATH` 可覆寫讀取路徑（自測用合成
+                                                      CSV 跑真正的 CLI 出口碼，不必 monkeypatch，LS-342
+                                                      R2 informational i2）。
   python3 scripts/ops/food-catalog-sql.py check-allergens-sql
                                                     > 把同一份規則（food_catalog_rules.py）轉成一段 SQL
                                                       DO 區塊，對 public.food_catalog 目前內容（DB 現況）
@@ -47,6 +50,7 @@
 標準庫 csv／sys 就夠）。
 """
 import csv
+import os
 import pathlib
 import sys
 
@@ -54,7 +58,10 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import food_catalog_rules  # noqa: E402
 
-CSV_PATH = HERE.parent.parent / "supabase" / "seed-data" / "food_catalog.csv"
+CSV_PATH = pathlib.Path(
+    os.environ.get("FOOD_CATALOG_CSV_PATH")
+    or (HERE.parent.parent / "supabase" / "seed-data" / "food_catalog.csv")
+)
 
 COLUMNS = ["id", "name_zh", "category", "sort_order", "allergens", "min_age_months"]
 
