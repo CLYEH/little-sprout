@@ -102,11 +102,16 @@ begin
     raise exception 'FAIL：food_catalog 有 % 列 category 不在 8 個合法值內', v_bad_category;
   end if;
 
+  -- LS-347：10 個合法值（原 8 個＋sesame／mango，`food_catalog_allergens_valid`
+  -- 見 20260919131439_food_catalog_allergen_sesame_mango.sql）。
   select count(*) into v_bad_allergen
     from public.food_catalog
-   where not (allergens <@ array['egg', 'milk', 'peanut', 'tree_nut', 'shellfish', 'fish', 'wheat', 'soy']::text[]);
+   where not (allergens <@ array[
+     'egg', 'milk', 'peanut', 'tree_nut', 'shellfish', 'fish', 'wheat', 'soy',
+     'sesame', 'mango'
+   ]::text[]);
   if v_bad_allergen > 0 then
-    raise exception 'FAIL：food_catalog 有 % 列 allergens 含 8 個過敏原以外的值', v_bad_allergen;
+    raise exception 'FAIL：food_catalog 有 % 列 allergens 含 10 個過敏原以外的值', v_bad_allergen;
   end if;
 
   select count(distinct sort_order) into v_distinct_sort from public.food_catalog;

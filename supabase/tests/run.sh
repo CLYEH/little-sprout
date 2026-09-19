@@ -230,6 +230,78 @@ SQL
       cat "$tmp/117_allergen_verify.sql.out" >&2
       exit 1
     fi
+
+    # LS-347：新規則（sesame／mango）各一支 DB 端 deny，手法同上（cod 清空 fish）——
+    # 清空既有正確標記，證明 check-allergens-sql 真的會抓；交易不 COMMIT，不落地。
+    sesame_mutation="$tmp/117_sesame_mutation.sql"
+    sesame_mutation_out="$tmp/117_sesame_mutation.sql.out"
+    {
+      echo '\set ON_ERROR_STOP on'
+      echo 'begin;'
+      echo "update public.food_catalog set allergens = '{}'::text[] where id = 'sesame_oil';"
+      cat "$allergen_check"
+    } > "$sesame_mutation"
+    if run_sql "$sesame_mutation" > "$sesame_mutation_out" 2>&1; then
+      echo "  ✗ food_catalog 過敏原啟發式檢查 mutation 應該要紅（sesame_oil 的 sesame 被清空），實際仍綠：" >&2
+      sed 's/^/    /' "$sesame_mutation_out" >&2
+      exit 1
+    fi
+    if ! grep -q "FAIL：名稱含芝麻字但 allergens 缺 sesame" "$sesame_mutation_out"; then
+      echo "  ✗ food_catalog 過敏原啟發式檢查 mutation 紅了，但訊息不是預期的 sesame 規則：" >&2
+      sed 's/^/    /' "$sesame_mutation_out" >&2
+      exit 1
+    fi
+    sed 's/^/    /' "$sesame_mutation_out"
+    echo "  ✓ food_catalog 過敏原啟發式檢查 mutation（sesame_oil 清空 sesame → 紅，訊息點名 sesame 規則）"
+
+    mango_mutation="$tmp/117_mango_mutation.sql"
+    mango_mutation_out="$tmp/117_mango_mutation.sql.out"
+    {
+      echo '\set ON_ERROR_STOP on'
+      echo 'begin;'
+      echo "update public.food_catalog set allergens = '{}'::text[] where id = 'mango';"
+      cat "$allergen_check"
+    } > "$mango_mutation"
+    if run_sql "$mango_mutation" > "$mango_mutation_out" 2>&1; then
+      echo "  ✗ food_catalog 過敏原啟發式檢查 mutation 應該要紅（mango 的 mango 被清空），實際仍綠：" >&2
+      sed 's/^/    /' "$mango_mutation_out" >&2
+      exit 1
+    fi
+    if ! grep -q "FAIL：名稱含芒果字但 allergens 缺 mango" "$mango_mutation_out"; then
+      echo "  ✗ food_catalog 過敏原啟發式檢查 mutation 紅了，但訊息不是預期的 mango 規則：" >&2
+      sed 's/^/    /' "$mango_mutation_out" >&2
+      exit 1
+    fi
+    sed 's/^/    /' "$mango_mutation_out"
+    echo "  ✓ food_catalog 過敏原啟發式檢查 mutation（mango 清空 mango → 紅，訊息點名 mango 規則）"
+
+    sesame_mango_verify="$tmp/117_sesame_mango_verify.sql"
+    cat > "$sesame_mango_verify" <<'SQL'
+\set ON_ERROR_STOP on
+do $$
+declare
+  v_sesame_oil text[];
+  v_mango text[];
+begin
+  select allergens into v_sesame_oil from public.food_catalog where id = 'sesame_oil';
+  if v_sesame_oil is distinct from array['sesame']::text[] then
+    raise exception 'FAIL：mutation 測試後 sesame_oil 的 allergens 被污染，實際 %', v_sesame_oil;
+  end if;
+  select allergens into v_mango from public.food_catalog where id = 'mango';
+  if v_mango is distinct from array['mango']::text[] then
+    raise exception 'FAIL：mutation 測試後 mango 的 allergens 被污染，實際 %', v_mango;
+  end if;
+  raise notice 'ok：mutation 測試未污染 DB（sesame_oil 仍是 {sesame}，mango 仍是 {mango}）';
+end;
+$$;
+SQL
+    if run_sql "$sesame_mango_verify" > "$tmp/117_sesame_mango_verify.sql.out" 2>&1; then
+      sed 's/^/    /' "$tmp/117_sesame_mango_verify.sql.out"
+    else
+      echo "  ✗ mutation 測試後污染驗證失敗：" >&2
+      cat "$tmp/117_sesame_mango_verify.sql.out" >&2
+      exit 1
+    fi
   fi
   echo "→ $name"
   if run_sql "$f" > "$out" 2>&1; then
@@ -276,6 +348,12 @@ fi
 sed 's/^/    /' "$commit_dup_out"
 echo "  ✓ sort_order/probe_commit_duplicate（COMMIT 時仍重複 → 23505，未提交的交易不會污染資料）"
 
+# LS-96 池項 25fea8c7（i1'）：m2 的相對式斷言（總數＝相異數）失去「總列數飄移」
+# 偵測——sort_order 唯一時，殘留列（不論前綴）都測不出來。改成「count(*) 應等於
+# CSV 目前列數」，不硬編 274（不論日後擴充食物清單到幾列，CSV 是活的來源），與
+# ls342_probe_% 前綴檢查互補：前者抓「多／少了幾列」，後者抓「殘留的是哪種列」。
+csv_row_count=$(($(wc -l < "$here/../seed-data/food_catalog.csv") - 1))
+
 sort_order_verify="$tmp/sort_order_verify.sql"
 cat > "$sort_order_verify" <<'SQL'
 \set ON_ERROR_STOP on
@@ -292,14 +370,18 @@ begin
   if v_total <> v_distinct then
     raise exception 'FAIL：sort_order 探針後 food_catalog 出現重複 sort_order，% 列但只有 % 個相異值', v_total, v_distinct;
   end if;
+  if v_total <> __CSV_ROW_COUNT__ then
+    raise exception 'FAIL：sort_order 探針後 food_catalog 列數（%）與 CSV（__CSV_ROW_COUNT__ 列）不符，可能有列數飄移（殘留或遺失，不論前綴）', v_total;
+  end if;
   select count(*) into v_probe from public.food_catalog where id like 'ls342_probe_%';
   if v_probe <> 0 then
     raise exception 'FAIL：sort_order 探針的臨時列 ls342_probe_%% 竟然殘留在資料庫，% 筆', v_probe;
   end if;
-  raise notice 'ok：sort_order 探針未污染資料庫（% 列／% 個相異值、無殘留臨時列）', v_total, v_distinct;
+  raise notice 'ok：sort_order 探針未污染資料庫（% 列／% 個相異值、與 CSV 列數一致、無殘留臨時列）', v_total, v_distinct;
 end;
 $$;
 SQL
+sed -i.bak "s/__CSV_ROW_COUNT__/${csv_row_count}/g" "$sort_order_verify" && rm -f "$sort_order_verify.bak"
 if run_sql "$sort_order_verify" > "$tmp/sort_order_verify.sql.out" 2>&1; then
   sed 's/^/    /' "$tmp/sort_order_verify.sql.out"
 else
