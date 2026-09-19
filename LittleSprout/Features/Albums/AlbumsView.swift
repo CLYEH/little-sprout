@@ -16,6 +16,15 @@ import SwiftUI
 /// entry-conditions.md ⑬（`SectionTabBarTests.testAlbumsRootShowsAlbumsHeadingExactlyOnce`
 /// 已隨之改寫）。
 ///
+/// **LS-344 R2（merge-review R1 M1）**：只在 compact 隱藏——iPad（regular）的
+/// `RootView.SectionSplitView` detail 欄用同一個 `NavigationStack` 顯示這支畫面，無條件隱藏
+/// nav bar 會連「顯示側邊欄」鈕一起藏掉，收起側邊欄後整個 iPad 相簿頁沒有可點的路徑回其他
+/// 分頁（只剩左緣右滑手勢，違反 entry-conditions.md ⑬「非手勢替代路徑」）。同
+/// `ChildrenManagementView`／`SettingsView` 既有的 compact-only 慣例，`AlbumsView` 用單一
+/// `body`（不像那兩檔分 `compactLayout`／`regularLayout`），改用
+/// `horizontalSizeClass == .compact` 條件式 `Visibility`。iPad 上相簿頁是否仍有標題重複——
+/// 本票刻意不修（同寶貝／設定兩頁），見 handoff「未完成」。
+///
 /// Tab Bar 顯示／隱藏由 `RootView.SectionTabView` 統一處理（掛在每個分頁的根內容上），這裡
 /// 不需要另外處理。
 struct AlbumsView: View {
@@ -39,9 +48,9 @@ struct AlbumsView: View {
             scrollArea(columns: horizontalSizeClass == .regular ? 2 : 1)
         }
         .appBackground()
-        // LS-344：見上方型別文件註解——隱藏系統 nav bar，避免跟 `headerRow` 自畫的「相簿」疊出
-        // 兩個標題（同 `TimelineView.body` 既有的 `.toolbar(.hidden, for: .navigationBar)`）。
-        .toolbar(.hidden, for: .navigationBar)
+        // LS-344 R2：見上方型別文件註解——只在 compact 隱藏系統 nav bar，iPad（regular）保留
+        // 給「顯示側邊欄」鈕（merge-review R1 M1）。
+        .toolbar(horizontalSizeClass == .compact ? .hidden : .automatic, for: .navigationBar)
         .task(id: familyStore.myFamily?.id) {
             guard let familyID = familyStore.myFamily?.id else { return }
             await albumsStore.refresh(familyID: familyID)
