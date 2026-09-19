@@ -352,7 +352,10 @@ echo "  ✓ sort_order/probe_commit_duplicate（COMMIT 時仍重複 → 23505，
 # 偵測——sort_order 唯一時，殘留列（不論前綴）都測不出來。改成「count(*) 應等於
 # CSV 目前列數」，不硬編 274（不論日後擴充食物清單到幾列，CSV 是活的來源），與
 # ls342_probe_% 前綴檢查互補：前者抓「多／少了幾列」，後者抓「殘留的是哪種列」。
-csv_row_count=$(($(wc -l < "$here/../seed-data/food_catalog.csv") - 1))
+# LS-347 merge-review R1 m1：改用 food-catalog-sql.py row-count（沿用 load_rows()
+# 既有的 CSV 讀取路徑，csv.DictReader 讀到最後一行不論有沒有尾換行都正確）取代
+# `wc -l`（`wc -l` 只數換行符，缺尾換行的 CSV 會少算 1，且沒有第二套算法要維護）。
+csv_row_count="$(python3 "$here/../../scripts/ops/food-catalog-sql.py" row-count)"
 
 sort_order_verify="$tmp/sort_order_verify.sql"
 cat > "$sort_order_verify" <<'SQL'

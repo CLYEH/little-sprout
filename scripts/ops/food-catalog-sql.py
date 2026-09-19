@@ -48,6 +48,12 @@
                                                       DO 區塊，對 public.food_catalog 目前內容（DB 現況）
                                                       跑同樣的檢查（供 supabase/tests/run.sh 使用，理由
                                                       與 check 相同）。
+  python3 scripts/ops/food-catalog-sql.py row-count
+                                                    > 印出 CSV 目前列數（單一整數，無其他輸出）——供
+                                                      supabase/tests/run.sh 的 sort_order 探針飄移偵測
+                                                      使用，沿用 load_rows() 既有的 CSV 讀取路徑，不論
+                                                      檔尾有沒有換行都正確（LS-347 merge-review R1 m1：
+                                                      原本 bash 端用 `wc -l` 推算會少算缺尾換行的檔案）。
 
 不用任何第三方套件（Rule 12 對 Python 套件安裝的規定不適用——這裡完全不需要安裝套件，
 標準庫 csv／sys 就夠）。
@@ -128,6 +134,13 @@ def main():
     if mode == "check-allergens-sql":
         sys.stdout.write(food_catalog_rules.generate_sql_do_block())
         return
+    if mode == "row-count":
+        # LS-347 merge-review R1 m1：run.sh 原本用 `wc -l` 推算 CSV 列數（隱含「檔尾
+        # 有換行」的假設，缺尾換行會少算 1）。改讓 run.sh 呼叫這個模式，沿用
+        # load_rows()（csv.DictReader）既有的 CSV 讀取路徑——不論檔尾有沒有換行都
+        # 讀得到最後一行，不必在 bash 端另外維護第二套「數列數」的算法。
+        print(len(load_rows()))
+        return
 
     rows = load_rows()
     if only_new_base:
@@ -202,7 +215,9 @@ def main():
         print("end;")
         print("$$;")
         return
-    raise SystemExit(f"未知模式：{mode}（用 insert／check／check-allergens／check-allergens-sql）")
+    raise SystemExit(
+        f"未知模式：{mode}（用 insert／check／check-allergens／check-allergens-sql／row-count）"
+    )
 
 
 if __name__ == "__main__":

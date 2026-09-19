@@ -36,6 +36,9 @@
 #   J. LS-96 池項 25fea8c7 i2'：`SOY_SAUCE_DISH_IDS` 為空時，`generate_sql_do_block()`
 #      不再產生 `where id in ()` 這種恆假子句（也不再產生醬油慣例列的 raise
 #      exception）——整段略過，其餘規則與收尾（raise notice／end／$$）正常產生。
+#   K. LS-347 merge-review R1 m1：`food-catalog-sql.py row-count`（供
+#      `supabase/tests/run.sh` 取代原本的 `wc -l`）對「CSV 檔尾沒有換行」仍正確
+#      回報列數——沿用 `load_rows()` 的 `csv.DictReader`，不受尾換行影響。
 #
 # 依賴：純標準庫，`python3` 直接呼叫（不需要 uv／第三方套件，同 food-catalog-sql.py
 # 檔頭的既有宣告）。
@@ -218,6 +221,21 @@ PY
 expect_not_has "$j_out" "id in ()" "J1. Mutation：SOY_SAUCE_DISH_IDS 清空後，產生的 SQL 不含恆假子句 \`id in ()\`（拿掉 generate_sql_do_block() 的 guard，這裡會變紅——原本的無 guard 版本會產生 \`where id in ()\`）"
 expect_not_has "$j_out" "屬醬油調味慣例列" "J2. SOY_SAUCE_DISH_IDS 清空後，醬油慣例列的 raise exception 也一併消失"
 expect_has "$j_out" "raise notice 'ok" "J3. 其餘收尾（raise notice／end／\$\$）仍正常產生，guard 沒有連帶炸掉整個 SQL 區塊"
+
+# ==== K. LS-347 merge-review R1 m1：row-count 模式對「CSV 無尾換行」仍正確 ====
+# synth_k 故意用 printf（不是 heredoc）、最後一列刻意不接 \n——`wc -l` 對這種檔案
+# 只數得到 2 個換行符（會少算最後一列），`row-count`（沿用 load_rows() 的
+# csv.DictReader）讀到 EOF 不論有沒有尾換行都正確，應回報 2。
+synth_k="${work}/food_catalog_k.csv"
+printf 'id,name_zh,category,sort_order,allergens,min_age_months\nls347_nlt_a,測試A,grain_root,1,,\nls347_nlt_b,測試B,grain_root,2,,' > "$synth_k"
+k_newline_count="$(tr -cd '\n' < "$synth_k" | wc -c | tr -d ' ')"
+expect_has "$k_newline_count" "2" "K0. 夾具本身確實缺尾換行（只有 2 個換行符，對應表頭＋第 1 列，最後一列沒有換行）"
+k_out="$(FOOD_CATALOG_CSV_PATH="$synth_k" python3 "$script" row-count 2>&1)"
+if [ "$k_out" = "2" ]; then
+  ok "K1. row-count 對無尾換行的 CSV 仍正確回報 2 列（沿用 load_rows()，不受尾換行影響；\`wc -l\` 手法會少算成 1）"
+else
+  fail "K1. row-count 對無尾換行的 CSV 應回報 2（實得 ${k_out}）"
+fi
 
 echo ""
 echo "food-catalog-allergen-check 自測：${selftest_helpers_n} 項，失敗 ${selftest_helpers_fail}"
