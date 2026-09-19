@@ -118,20 +118,34 @@ BODY_RULES=
 # 失敗點／時間軸是否隨 mutation 改變」（`xcodebuild` 可能沒把改動編進 UITest bundle，只看 exit code 會把舊 bundle 的紅或
 # 假綠當成重放結果）與「macOS 沒有 timeout 指令」（`timeout 600 xcodebuild …` 在 macOS exit 127＝整個測試沒跑過，LS-266 R2
 # 實際發生）；兩句被刪即紅。
+# LS-341（scope 1，池項 `6f876c86`）：下方主迴圈起，每條字樣改驗正文「恰好出現一次」（0 次與 ≥2 次都紅）——此前只驗
+# 「有沒有出現」（`grep -qF`），同一段規約被貼兩次時刪掉其中一份仍綠（LS-333 R1 實際發生：複製貼上型規約消失偵測不到）。
+# 對現況 74 條逐一跑過新檢查，4 條在目標正文裡本來就出現 ≥2 次、逐條核對後確認皆為合法重複（非複製貼上），標記
+# 第四欄 `multi`（該條只要求 ≥1 次，不要求恰好 1 次；其餘 70 條不受影響仍要求恰好 1 次）：
+#   - `ios-dev`「禁派 fork」原本在 `ios-dev.md` 同一行內出現兩次（標題標籤＋句中重申同一詞組）——這條改寫 ios-dev.md
+#     本身消掉字面重複（見該檔），沒有標記 multi。
+#   - `qa`「supabase-lock.sh --hold」在 `qa.md` 兩個不同段落各自出現一次：一般驗收流程段（QA 自己 `--hold`）與
+#     `qa-e2e.sh` 端到端腳本的內部行為說明段（腳本自己會沿用既有 hold）——語境不同、非誤貼，標記 multi。
+#   - `qa`「qa-e2e.sh」在 `qa.md` 四個不同段落各自提及（驗收流程優先序、回歸冒煙四主流程、LS-270 背景說明、
+#     截圖規則）——核心腳本名稱在文件裡反覆被引用本屬預期，標記 multi。
+#   - `ui-designer`「收工 Pen 停在票檔」在 `ui-designer.md` 兩個不同段落各自出現一次：步驟 5 的指示本身、與
+#     handoff「Pen 路徑」欄要求回報的格式說明——標記 multi。
+# 字串資料每一行都是下面主迴圈直接讀的實際規則列，註解只能寫在這裡（LS170-BODY-RULES-START／END 區塊內是
+# 原樣多行字串值，不能夾雜 `#` 開頭的行內註解，會被解析成一條假規則）。
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold|LS-170：互動式本機驗證（模擬器對本機容器的多步驟操作）前先 supabase-lock.sh --hold，收工 --release
 ios-dev|pr-body-check.sh <f> --branch <分支> --verify|LS-186：gh pr create/edit 前先用完整旗標跑 pr-body-check.sh 並直接看 exit code
 merge-reviewer|supabase-lock.sh --hold|LS-170：互動式本機驗證前先 supabase-lock.sh --hold，收工 --release
-qa|supabase-lock.sh --hold|LS-170：互動式本機驗證前先 supabase-lock.sh --hold，收工 --release
+qa|supabase-lock.sh --hold|LS-170：互動式本機驗證前先 supabase-lock.sh --hold，收工 --release|multi
 ios-dev|本機容器操作同樣要在 lock 內|LS-183：docker exec／psql／supabase functions serve 等本機容器操作同樣要在 lock 內
 merge-reviewer|本機容器操作同樣要在 lock 內|LS-183：docker exec／psql／supabase functions serve 等本機容器操作同樣要在 lock 內
 qa|本機容器操作同樣要在 lock 內|LS-183：docker exec／psql／supabase functions serve 等本機容器操作同樣要在 lock 內
 ios-dev|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
 merge-reviewer|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
 qa|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
-qa|qa-e2e.sh|LS-158：多步驟驗收（登入／發佈／瀏覽）優先 qa-e2e.sh 端到端驅動，mobile-mcp 降為輔助
+qa|qa-e2e.sh|LS-158：多步驟驗收（登入／發佈／瀏覽）優先 qa-e2e.sh 端到端驅動，mobile-mcp 降為輔助|multi
 ui-designer|--kill 只在 orchestrator 明示時|LS-180：切檔一律不殺 Pen 行程，--kill／--force-reload 只在 orchestrator 明示時使用
-ui-designer|收工 Pen 停在票檔|LS-180：設計票期間 Pen 停在票檔，收工不切回主 checkout
+ui-designer|收工 Pen 停在票檔|LS-180：設計票期間 Pen 停在票檔，收工不切回主 checkout|multi
 visual-reviewer|--kill 只在 orchestrator 明示時|LS-180：切檔一律不殺 Pen 行程，--kill／--force-reload 只在 orchestrator 明示時使用
 ios-dev|DB 測試 handoff 必附通道|LS-204：handoff 的「已驗證」欄必抄 run.sh 印出的「→ 連線方式：<通道>」那一行
 merge-reviewer|DB 測試 handoff 必附通道|LS-204：實作者 handoff 沒抄連線通道就先問清楚再採信結果
@@ -297,9 +311,20 @@ done <<BODY_EOF
 $BODY_RULES
 BODY_EOF
 m=0
-while IFS='|' read -r agent literal hint; do
+while IFS='|' read -r agent literal rest; do
   [ -n "$agent" ] || continue
   m=$((m + 1))
+  # LS-341 R2 m1：`rest` 是第三個 `|` 之後「整段原文」（3 個 read 目標變數、最後一個吸收剩餘全部，含內部任何
+  # `|`）——LS-308 六條規則的 hint 本身就含字面 `|`（`linear-post.sh get|comment|state`），若改成 4 個 read 目標
+  # 變數（agent／literal／hint／multi）會在 hint 內第一個 `|` 就被切斷，`hint` 只剩前半、`multi` 吃掉後半（含
+  # 「comment|state 備援…」），印出的提示因此斷在一段不存在的命令、誤導修的人（判斷方向仍 fail-closed：含 `|`
+  # 的殘段不可能等於 `multi`，不影響紅綠，但誤導文字本身是問題）。改成只在 `rest` 結尾比對字面 `|multi` 尾綴——
+  # 4 條標記 multi 的規則其 hint 原文都不會恰好以「|multi」結尾（不是巧合，是我們自己寫的），其餘規則的 hint
+  # 即使內部含 `|` 也原封不動保留。
+  multi=; hint=$rest
+  case "$rest" in
+    *'|multi') multi=multi; hint=${rest%'|multi'} ;;
+  esac
   f="${dir}/${agent}.md"
   [ -r "$f" ] || continue
   body=$(awk '{ sub(/\r$/, "") } NR == 1 && $0 == "---" { fm = 1; next } fm && $0 == "---" { fm = 0; b = 1; next } b { print }' "$f")
@@ -307,10 +332,22 @@ while IFS='|' read -r agent literal hint; do
   # 命中即退出、printf 收 SIGPIPE 以 141 結束，整條管線判紅——`$body` 最大 36 KB（ui-designer.md），
   # merge-review R1 在 ubuntu:24.04 實測 30 次紅 2 次（訊息是「正文缺某句」但那句明明在），改成
   # here-string 後 30 次 0 紅。macOS 的 BSD grep 讀完才退出，所以本機永遠看不到。
-  if grep -qF -- "$literal" <<<"$body"; then
-    echo "  ${agent}.md：正文含「${literal}」"
+  # LS-341：改用 `-o` 列出全部命中再數行——`-o` 不像 `-q` 提前結束讀取，同一個 here-string 理由仍成立
+  # （不會有上述 SIGPIPE 誤判）；`wc -l` 對零命中的空輸出回 0，不需要另外處理「完全沒找到」的分支。
+  count=$(grep -o -F -- "$literal" <<<"$body" | wc -l | tr -d '[:space:]')
+  if [ "$multi" = multi ]; then
+    # 標記允許多次（見上方 BODY_RULES 前的清單與理由）：只要求 ≥1 次，不要求恰好 1 次。
+    if [ "$count" -ge 1 ]; then
+      echo "  ${agent}.md：正文含「${literal}」（出現 ${count} 次，本條標記允許多次）"
+    else
+      hits+="    ${agent}.md：正文缺「${literal}」（${hint:-規約段被刪或未寫}；frontmatter 內出現不算）"$'\n'
+    fi
   else
-    hits+="    ${agent}.md：正文缺「${literal}」（${hint:-規約段被刪或未寫}；frontmatter 內出現不算）"$'\n'
+    case "$count" in
+      0) hits+="    ${agent}.md：正文缺「${literal}」（${hint:-規約段被刪或未寫}；frontmatter 內出現不算）"$'\n' ;;
+      1) echo "  ${agent}.md：正文含「${literal}」" ;;
+      *) hits+="    ${agent}.md：正文含「${literal}」出現 ${count} 次，應恰好 1 次（LS-341：同一句被誤複製貼上時、刪掉其中一份仍會綠——若確實需要在多處提及，替這條 BODY_RULES 加第四欄 \`multi\` 並在上方清單記理由）"$'\n' ;;
+    esac
   fi
 done <<BODY_EOF
 $BODY_RULES
