@@ -97,6 +97,10 @@ ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 # LS-327（LS-96 池項 dfff5ab3，來源 LS-321 R3 designer 實測）：ui-designer／visual-reviewer 正文各補一句——
 # instance 巢狀 descendants 覆寫路徑對 `Export`／`TakeScreenshot` 子節點 id 會回元件預設值（與 `Get`／整板
 # 截圖不一致），一律整板截圖再依 `Get` 絕對座標裁切；那句被刪即紅。
+# LS-333（源自 LS-313 R2／R3、池項 f99a2749）：ios-dev 正文另須含兩句——「先前景跑 push-gate.sh 建快取、快取命中後再
+# git push」（163 支 UI tap-target 測試的 push gate 跑 20–40 分鐘，pre-push hook 執行期間 SSH 閒置被對端重置；先暖
+# tree-hash 快取讓 git push 觸發的 pre-push hook 秒過，不再讓 SSH 閒置整段測試時間）與「不看背景通知的 exit code」
+# （判斷 push 是否成功一律以 git log -1 origin/<branch> 對照本機 HEAD）；各自被刪即紅。
 BODY_RULES=
 # LS-254：五份（ios-dev／ui-designer／visual-reviewer／merge-reviewer／qa）正文須含「禁派 fork」——fork 繼承整份派工單、會把它當
 # 自己的任務平行執行（LS-234 R7 同一 .pen／branch 雙寫；LS-188／LS-192 越權改檔，三起皆為 worker 自己派的 fork）；PreToolUse
@@ -179,7 +183,9 @@ dead-code-sweeper|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗�
 ui-designer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
 visual-reviewer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
 ui-designer|instance 內覆寫的子節點不可直接|LS-327（LS-96 池項 dfff5ab3）：instance 巢狀 descendants 覆寫路徑對 Export／TakeScreenshot 子節點 id 會回元件預設值，一律整板截圖再依 Get 絕對座標裁切（LS-321 R3 designer 實測），那句被刪即紅
-visual-reviewer|instance 內覆寫的子節點不可直接|LS-327（LS-96 池項 dfff5ab3）：同上，審查時也要留意 instance 覆寫路徑的截圖陷阱，那句被刪即紅"
+visual-reviewer|instance 內覆寫的子節點不可直接|LS-327（LS-96 池項 dfff5ab3）：同上，審查時也要留意 instance 覆寫路徑的截圖陷阱，那句被刪即紅
+ios-dev|先前景跑 push-gate.sh 建快取、快取命中後再 git push|LS-333（源自 LS-313 R2／R3，池項 f99a2749）：163 支 UI tap-target 測試的 push gate 跑 20–40 分鐘，pre-push hook 執行期間 SSH 閒置被對端重置（exit 141），先暖 tree-hash 快取讓 git push 觸發的 pre-push hook 秒過，那句被刪即紅
+ios-dev|不看背景通知的 exit code|LS-333：判斷 push 是否成功一律以 git log -1 origin/<branch> 對照本機 HEAD，背景通知顯示的 exit 0 可能只是尾端指令自己的、不是 git push 本身，那句被刪即紅"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，

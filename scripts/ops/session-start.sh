@@ -33,14 +33,19 @@ json_str() {
 # `.git/config`——從任一 worktree 執行 `git config` 寫的就是同一份檔案，對主 checkout 與所有現存、未來的
 # worktree 立即生效，不需要另外掛「建立 worktree 時的包裝」（實測見 handoff）。這裡每次 SessionStart 冪等
 # 檢查一次：已是目標值就跳過、不重複寫入；設定失敗只印警告、不擋 session（fail-soft，同本檔其餘邏輯一致）。
+# LS-333（源自 LS-313 R2／R3，池項 f99a2749）：`ServerAliveCountMax=20`（10 分鐘容忍）仍在 163 支 UI tap-target
+# 測試的 20–40 分鐘 push gate 期間被斷線兩次——把 CountMax 拉高到 120（60 分鐘容忍）當第二道防線；主要修法是
+# ios-dev.md 新規約「push 前先跑 push-gate.sh 暖快取」，讓 git push 觸發的 pre-push hook 只是重放快取、秒過，
+# 不再讓 SSH 閒置整段測試時間。`scripts/ops/patrol.sh` 對這個值另有機械檢查（同 core.hooksPath 慣例），兩處
+# 常數各自一份，改這裡務必同步改那邊。
 ssh_note=
 # LS209-SSH-KEEPALIVE-START
-SSH_KEEPALIVE_CMD='ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20'
+SSH_KEEPALIVE_CMD='ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=120'
 if git -C "$root" rev-parse --git-dir >/dev/null 2>&1; then
   cur_ssh_cmd=$(git -C "$root" config --get core.sshCommand 2>/dev/null || true)
   if [ "$cur_ssh_cmd" != "$SSH_KEEPALIVE_CMD" ]; then
     if git -C "$root" config core.sshCommand "$SSH_KEEPALIVE_CMD" 2>/dev/null; then
-      ssh_note="✓ 已設定 git core.sshCommand（SSH keepalive：ServerAliveInterval=30／ServerAliveCountMax=20）——push gate 執行期間 SSH 閒置不再被斷線（LS-191／LS-209）。"
+      ssh_note="✓ 已設定 git core.sshCommand（SSH keepalive：ServerAliveInterval=30／ServerAliveCountMax=120）——push gate 執行期間 SSH 閒置不再被斷線（LS-191／LS-209／LS-333）。"
     else
       ssh_note="⚠ 無法設定 git core.sshCommand（SSH keepalive）——push gate 執行期間可能因 SSH 閒置斷線，需要時手動 \`git config core.sshCommand \"${SSH_KEEPALIVE_CMD}\"\`（LS-191）。"
     fi

@@ -35,6 +35,8 @@
 #   主 checkout（main）落後 origin/main 也標：agent 定義與 harness 讀自主 checkout，落後就派工＝用舊規約（§2）。
 #   hooks    core.hooksPath 不是 .githooks（或其絕對路徑）、或 .githooks/{commit-msg,pre-commit,pre-push} 任一缺／不可執行即標：
 #            hooks 沒裝時本機 commit／push gate 靜默不跑、只剩 CI 攔（LS-87 G5）。worktree 共用同一份 config，主 checkout 驗一次即可。
+#   ssh keepalive  core.sshCommand 不是 session-start.sh 設定的期望值（ServerAliveInterval=30／ServerAliveCountMax=120）
+#            即標：push gate 執行期間 SSH 閒置可能被對端重置（LS-333，源自 LS-313 R2／R3）。同 hooks 慣例，worktree 共用一份 config。
 #   三分支   祖先鏈 test ⊂ development、main ⊂ development（晉升＝promote.sh 的 FF push，LS-85）：test 有 commit 不在 development
 #            立即標（test 只能由 development FF 而來，出現＝手動 push／舊式 back-merge）；main 有 commit 不在 development 是 hotfix
 #            併入後待 back-merge、屬預期，最早那筆 first-parent（＝最早未 back-merge 的 PR merge）超過 stale 才標；main 不在 test
@@ -348,6 +350,23 @@ esac
 for h in commit-msg pre-commit pre-push; do
   [ -x "${ROOT}/.githooks/${h}" ] || hooks_flag="${hooks_flag:+${hooks_flag}；}⚠ .githooks/${h} 缺或不可執行 → chmod +x .githooks/${h}"
 done
+# ---- SSH keepalive（LS-333，源自 LS-313 R2／R3、池項 f99a2749：163 支 UI tap-target 測試的 push gate 跑
+# 20–40 分鐘，pre-push hook 執行期間 SSH 閒置被對端重置、exit 141）：core.sshCommand 由 session-start.sh 冪等
+# 設定（LS-209 起），這裡只驗現值是否仍是期望值——期望值須與 session-start.sh 的 SSH_KEEPALIVE_CMD 同步更新，
+# 兩處各自一份常數（bash 腳本間無 import，同既有 .githooks 字面重複的慣例）。config 由所有 worktree 共用，
+# 看主 checkout 即可 ----
+ssh_cmd=
+ssh_flag=
+# LS333-SSH-KEEPALIVE-START
+ssh_cmd=$(git -C "$ROOT" config --get core.sshCommand 2>/dev/null || true)
+SSH_KEEPALIVE_EXPECT='ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=120'
+case "$ssh_cmd" in
+  "$SSH_KEEPALIVE_EXPECT") ;;
+  '') ssh_flag="⚠ core.sshCommand 未設定（push gate 執行期間 SSH 閒置可能被斷線）→ git config core.sshCommand \"${SSH_KEEPALIVE_EXPECT}\"（LS-333；SessionStart hook 會自動補設）" ;;
+  *) ssh_flag="⚠ core.sshCommand 是「${ssh_cmd}」而非「${SSH_KEEPALIVE_EXPECT}」→ git config core.sshCommand \"${SSH_KEEPALIVE_EXPECT}\"（LS-333）" ;;
+esac
+[ -n "$ssh_flag" ] && add_flag "[ssh-keepalive] ${ssh_flag}"
+# LS333-SSH-KEEPALIVE-END
 # ---- 螢幕鎖定（LS-220：鎖定會讓模擬器 Keychain SecItem* 回 -34018，QA e2e 逾時訊息與 session 沒建立長得
 # 一模一樣，見 docs/COLLABORATION.md §4-b 排障順序 (b)；ioreg 查不到該鍵＝未鎖定，不視為錯誤）----
 # LS-220 merge-review R2 M1：`CGSSessionScreenIsLocked` 這鍵實際印在 `IOConsoleUsers` 這個內嵌 dict
@@ -1456,6 +1475,8 @@ case "$MODE" in
     echo "  ${mc_branch} 落後 origin/main ${mc_behind} dirty=${mc_dirty}  ${mc_flag:-ok}"
     echo "== gate hooks（core.hooksPath＝.githooks 且三支 hook 可執行；沒裝＝本機 gate 靜默不跑，LS-87）"
     echo "  hooksPath=${hooks_path:-（未設定）}  ${hooks_flag:-ok}"
+    echo "== SSH keepalive（core.sshCommand；push gate 期間 SSH 閒置被斷線，LS-333／LS-209）"
+    echo "  sshCommand=${ssh_cmd:-（未設定）}  ${ssh_flag:-ok}"
     echo "== 螢幕鎖定（LS-220；鎖定中會讓模擬器 Keychain 回 -34018，長得像 QA e2e 逾時失敗，§4-b 排障順序 (b)）"
     echo "  ${screen_lock_flag:-ok}"
     echo "== worktree（local vs remote／未 push／dirty 停滯；base＝hotfix→origin/main、其餘→origin/development）"

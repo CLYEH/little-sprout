@@ -6,10 +6,13 @@
 # LS-209（push 韌性）：本 gate（尤其 unit tests 那步）常跑 8–10 分鐘，期間 SSH 連線閒置會被 GitHub 斷線——
 # `git push` 中途印兩次 `Connection closed by remote host`（exit 141）才成功（LS-191 R4 實測三次 push）。
 # `scripts/ops/session-start.sh` 已在每次 SessionStart 冪等設定 repo 層 `git config core.sshCommand
-# "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20"`（全 repo 共用單一 config，不需要對每個
-# worktree 分別設；不改使用者全域 `~/.gitconfig`）——正常情況下這裡不必再做什麼；忘記跑過 SessionStart
-# 的環境（如手動起的 shell）可手動補設同一行，或直接 `GIT_SSH_COMMAND="ssh -o ServerAliveInterval=30
-# -o ServerAliveCountMax=20" git push` 單次覆寫。
+# "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=120"`（全 repo 共用單一 config，不需要對每個
+# worktree 分別設；不改使用者全域 `~/.gitconfig`；LS-333 起 CountMax 由 20 拉高到 120——163 支 UI
+# tap-target 測試的 20–40 分鐘 push gate 曾在 CountMax=20 下仍被斷線兩次）——正常情況下這裡不必再做什麼；
+# 忘記跑過 SessionStart 的環境（如手動起的 shell）可手動補設同一行，或直接
+# `GIT_SSH_COMMAND="ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=120" git push` 單次覆寫。
+# **LS-333 主要修法**：`git push` 前一律先前景跑本腳本暖 tree-hash 快取（見 ios-dev.md），讓 `git push`
+# 觸發的 pre-push hook 只是重放快取、秒過，不再讓 SSH 閒置整段測試時間；上面的 keepalive 調校是第二道防線。
 set -euo pipefail
 
 # LS-73：pre-push hook 由 git 啟動時會 export GIT_DIR／GIT_WORK_TREE／GIT_INDEX_FILE（linked worktree 指向
