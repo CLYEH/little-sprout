@@ -60,7 +60,7 @@ final class TimelineStore {
     /// `InteractionRow` 需要目前的 `familyID` 才能呼叫 `toggleReaction`／`reactors`，改成
     /// `private(set)` 讓它能直接讀，不必往下多穿一層參數。
     private(set) var familyID: UUID?
-    private var childID: UUID?
+    private(set) var childID: UUID?  // LS-328：改 private(set)（原 private），理由同 familyID
     private var loadingDurations: Set<UUID> = []
     /// LS-216：`toggleReaction` in-flight 去重（連點忽略，見該方法文件註解）。R4：不再是純
     /// `private`——`toggleReaction`／`loadReactionCounts` 拆去 `TimelineStore+Reactions.swift`
@@ -139,6 +139,8 @@ final class TimelineStore {
     }
 
     private var inFlightRefreshes: [RefreshKey: InFlightRefresh] = [:]
+
+    var importRefresh = TimelineImportRefreshState()  // LS-328：見 TimelineStore+Import.swift（同 reactionStates 拆檔慣例）
 
     init(
         apiClient: TimelineAPIClient,
