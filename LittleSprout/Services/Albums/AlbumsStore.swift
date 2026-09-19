@@ -51,6 +51,11 @@ final class AlbumsStore {
     var sharedUploadQueueStoreInstance: UploadQueueStore?
     /// entry id（`PendingUpload.id`）→ 這筆完成後要掛進哪本相簿，見上。
     var pendingUploadAlbumIDs: [UUID: UUID] = [:]
+    /// LS-328：`LittleSproutApp.init()` 唯一寫入點——`sharedUploadQueueStore` 的
+    /// `onUploadSucceeded` 掛鉤用它通知時間軸批次匯入完成，見該檔文件註解。`weak`（同
+    /// `detailStoreByAlbumID` 既有理由）：`AlbumsStore` 不需要延長 `TimelineStore` 的壽命，
+    /// 兩者都是 app 層級全程存活，沒有誰依賴誰活得更久的關係。
+    weak var timelineStore: TimelineStore?
 
     /// LS-237 修（池 `4fafaa19`(a)）：每本相簿下一個要用的 `sortOrder`，`.pending` 是「正在
     /// 打第一次 `fetchMaxSortOrder` 查詢、還不知道基底值」、`.ready` 是「已經知道基底，之後
