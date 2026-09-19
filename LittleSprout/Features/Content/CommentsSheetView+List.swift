@@ -59,7 +59,9 @@ extension CommentsSheetView {
             rowTapped(comment)
         } label: {
             HStack(alignment: .top, spacing: AppSpacing.group) {
-                ProfilePrintChip(size: avatarSize)
+                ProfilePrintChip(
+                    size: avatarSize, avatarURL: familyStore.avatarDisplayURL(rawValue: comment.authorAvatarURL)
+                )
                 VStack(alignment: .leading, spacing: AppSpacing.tight) {
                     HStack(spacing: AppSpacing.tight) {
                         Text(comment.authorDisplayName).appFont(.note, weight: .semibold)

@@ -79,6 +79,27 @@ final class SupabaseCommentAPIClientTests: XCTestCase {
         XCTAssertEqual(rows.count, 1)
         XCTAssertEqual(rows[0].authorDisplayName, "陳志明")
         XCTAssertEqual(rows[0].body, "好可愛喔！")
+        XCTAssertNil(rows[0].authorAvatarURL, "fixture 的 author_avatar_url 是 null")
+    }
+
+    /// LS-345 R2（merge-review R1 M1）：`author_avatar_url` 有值時要解碼出來——mutation：把
+    /// `CommentRecord` 的 `authorAvatarURL` CodingKey 拿掉（回到只解 4 個欄位的舊寫法），這支
+    /// 測試會抓到。
+    func test_listComments_decodesAuthorAvatarURL() async throws {
+        let client = TestSupabaseClient.make { [familyID, targetID] _ in
+            MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [{"id":"11111111-1111-1111-1111-111111111111","author_id":"22222222-2222-2222-2222-222222222222",
+              "author_display_name":"陳志明","author_avatar_url":"family-a/avatars/user-a.jpg","body":"好可愛喔！",
+              "created_at":"2026-09-12T10:00:00.000Z"}]
+            """.utf8))
+        }
+        let apiClient = SupabaseCommentAPIClient(client: client)
+
+        let rows = try await apiClient.listComments(
+            familyID: familyID, targetType: "diary", targetID: targetID, cursor: nil, limit: 20
+        )
+
+        XCTAssertEqual(rows[0].authorAvatarURL, "family-a/avatars/user-a.jpg")
     }
 
     func test_listComments_loadEarlier_sendsCursorParams() async throws {

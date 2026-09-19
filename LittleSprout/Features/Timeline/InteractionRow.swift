@@ -30,6 +30,8 @@ struct InteractionRow: View {
     let kind: FeedKind
     let refId: UUID
     let timelineStore: TimelineStore
+    /// LS-345 R2：只為了轉手給 `LikersListSheet` 顯示按讚者真實頭像——見該型別文件註解。
+    let familyStore: FamilyStore
     /// LS-218：`TimelineView.openComments(kind:refId:)` 接住這個回呼，開出
     /// `CommentsSheetView`（票文 scope 1）。
     var onOpenComments: () -> Void = {}
@@ -79,7 +81,10 @@ struct InteractionRow: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .sheet(isPresented: $likersSheetPresented) {
-            LikersListSheet(kind: kind, refId: refId, timelineStore: timelineStore, likeCount: reaction.count)
+            LikersListSheet(
+                kind: kind, refId: refId, timelineStore: timelineStore, familyStore: familyStore,
+                likeCount: reaction.count
+            )
         }
         .alert(
             "按讚失敗",
@@ -225,7 +230,7 @@ struct InteractionRow: View {
         ReactionState(count: 3, reactedByMe: false), forKey: TimelineEntry.id(kind: .diary, refId: refId)
     )
     return VStack(alignment: .leading, spacing: AppSpacing.section) {
-        InteractionRow(kind: .diary, refId: refId, timelineStore: store)
+        InteractionRow(kind: .diary, refId: refId, timelineStore: store, familyStore: .preview())
     }
     .padding()
 }

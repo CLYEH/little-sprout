@@ -17,6 +17,8 @@ struct DiaryCardView: View {
     /// 徽章、且無縮圖的舊影片要能讀時長，需要 `TimelineStore`（同 `PhotoCardView` 已有的
     /// 依賴）。LS-216：`InteractionRow` 也靠它讀／寫愛心狀態與 `familyID`。
     let timelineStore: TimelineStore
+    /// LS-345 R2：只為了轉手給 `InteractionRow`／`LikersListSheet`——見該型別文件註解。
+    let familyStore: FamilyStore
     /// LS-216：這篇日記的 id——`DiaryContent` 本身不帶 id（純顯示模型），`InteractionRow`
     /// 需要它組 target key／呼叫 `toggle_reaction`，由呼叫端（`TimelineView`）用
     /// `TimelineEntry.refId` 傳入。
@@ -68,7 +70,10 @@ struct DiaryCardView: View {
             // LS-216：`.combine` 只圍住上面這段「純顯示」內容——`InteractionRow` 留在範圍
             // 外（見型別文件註解），三顆按鈕才能各自被 VoiceOver 獨立唸出、獨立操作。
             .accessibilityElement(children: .combine)
-            InteractionRow(kind: .diary, refId: refId, timelineStore: timelineStore, onOpenComments: onOpenComments)
+            InteractionRow(
+                kind: .diary, refId: refId, timelineStore: timelineStore, familyStore: familyStore,
+                onOpenComments: onOpenComments
+            )
         }
         .padding(AppSpacing.insetCard)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -243,6 +248,7 @@ struct DiaryCardView: View {
             Child(id: UUID(), name: "陳小安", birthday: Date(), avatarURL: nil, deletedAt: nil, createdAt: Date())
         ],
         timelineStore: .preview(),
+        familyStore: .preview(),
         refId: UUID(),
         previewRowWidth: 320 - 2 * AppSpacing.insetCard
     )

@@ -72,6 +72,7 @@ extension TapTargetGateHarness {
                     ),
                     taggedChildren: [],
                     timelineStore: .preview(durationLoader: { _ in CMTime(seconds: 754, preferredTimescale: 600) }),
+                    familyStore: .preview(),
                     refId: UUID(),
                     // merge-review R3（`add3f2c1` m1）：`DiaryCardView` 不再自己量寬，改由
                     // 呼叫端（正式路徑是 `TimelineView.feedContentWidth`）算好傳入——這裡比照

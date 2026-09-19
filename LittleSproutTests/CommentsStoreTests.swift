@@ -9,7 +9,8 @@ private let commentsStoreTestsAuthorID = UUID()
 
 private func makeCommentRow(id: UUID, createdAt: Date, body: String = "留言") -> CommentRecord {
     CommentRecord(
-        id: id, authorID: commentsStoreTestsAuthorID, authorDisplayName: "陳志明", body: body, createdAt: createdAt
+        id: id, authorID: commentsStoreTestsAuthorID, authorDisplayName: "陳志明", authorAvatarURL: nil,
+        body: body, createdAt: createdAt
     )
 }
 
