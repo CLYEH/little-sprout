@@ -32,6 +32,12 @@
 --     一起平移，並說明理由」的後者：不平移的話 74–122 會跟新的 vegetable/fruit/protein
 --     區間（17–225）重疊。
 --
+-- `allergens` 判準（沿用既有慣例，merge-review R1 minor 1 訂正）：`braised_pork_sauce`
+-- （滷肉燥）／`braised_pork_rice`（滷肉飯）／`three_cup_chicken`（三杯雞）等既有列
+-- 純粹因為以醬油調味而標 `soy`——本表把「醬油調味」視為 `soy` 過敏原的觸發條件，不論
+-- 是主料還是調味。依此判準，`pork_floss`（肉鬆）／`fish_floss`（魚鬆）的標準作法是
+-- 醬油滷製後炒乾，兩列一併標 `soy`（魚鬆本身另標 `fish`）。
+--
 -- Idempotency：沿用 `20260918205141_food_encyclopedia.sql` 第 2 段既有 seed 慣例——
 -- 純 `insert`，不用 `on conflict do nothing`。理由：Supabase 的 migration 是
 -- append-only 帳本，由 `supabase_migrations.schema_migrations` 保證每支檔案對每個
@@ -203,8 +209,8 @@ values
 ('black_soybean', '黑豆', 'protein', 221, array['soy']::text[], null),
 ('mung_bean', '綠豆', 'protein', 222, '{}'::text[], null),
 ('chickpea', '鷹嘴豆', 'protein', 223, '{}'::text[], null),
-('pork_floss', '肉鬆', 'protein', 224, '{}'::text[], null),
-('fish_floss', '魚鬆', 'protein', 225, array['fish']::text[], null);
+('pork_floss', '肉鬆', 'protein', 224, array['soy']::text[], null),
+('fish_floss', '魚鬆', 'protein', 225, array['fish','soy']::text[], null);
 
 -- ---------------------------------------------------------------------------
 -- 2. 既有 105 列的 sort_order 調整（`spinach` 剛好新舊值都是 17，不出現在下面清單；
