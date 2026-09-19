@@ -5,6 +5,16 @@ import SwiftUI
 /// 從 `InviteFamilyView.swift` 拆分的既有慣例。`SettingsView` 是這幾個型別目前唯一的呼叫端，
 /// 因此不再標 `private`（跨檔案要能引用），但仍不對外公開任何 API 意圖。
 
+/// LS-345：`profileSection`（`SettingsView.swift`）呼叫端要接上的頭像 URL——抽成獨立、非
+/// `private` 的計算屬性單純是為了讓單元測試能直接核對「有 `avatarURL` 的 profile 進到這裡後
+/// 頭像來源非空」這條線有接上（`SettingsView.swift` 貼近 SwiftLint `file_length` 上限，見上方
+/// 檔頭註解，本體留在 `profileSection`，這裡只放這顆屬性）。
+extension SettingsView {
+    var profileAvatarURL: URL? {
+        familyStore.avatarDisplayURL(rawValue: familyStore.myProfile?.avatarURL)
+    }
+}
+
 /// Regular（iPad）sidebar 的五區——與五個 `SettingsSectionBlock` 一一對應。跟 app 層
 /// `AppSection`（時間軸／相簿／寶貝／設定）是兩層不同的導覽狀態，故意不合併：合併會讓
 /// 「設定」這個 tab 的內部子導覽跟 app 層的 tab 選取耦合，其餘三個 tab 沒有這個概念。
@@ -59,10 +69,14 @@ struct SettingsSectionBlock<Content: View>: View {
 /// 跟其餘列不同（沒有用 `SettingsRowView`）：左側是頭像沖印框而不是 SF Symbol icon。
 struct ProfileSummaryRow: View {
     let displayName: String
+    /// LS-345：`profiles.avatar_url` 已簽好的可顯示 URL（呼叫端傳 `familyStore
+    /// .avatarDisplayURL(rawValue:)` 的結果，同 `FamilyMembersView`／`BlockListView` 既有
+    /// 慣例）；nil 時 `ProfilePrintChip` 退回 SF Symbol 佔位。
+    var avatarURL: URL?
 
     var body: some View {
         HStack(spacing: AppSpacing.group) {
-            ProfilePrintChip()
+            ProfilePrintChip(avatarURL: avatarURL)
             VStack(alignment: .leading, spacing: AppSpacing.tight) {
                 Text(displayName)
                     .appFont(.body, weight: .semibold)
@@ -82,12 +96,20 @@ struct ProfileSummaryRow: View {
     }
 }
 
-/// `cmp/Profile Print`（`OePXK`）60×60 沖印小卡：`$print-paper` 底＋45×45 相片區（目前沒有
-/// 真實頭像資料，見 `SettingsView.displayName` 文件註解，用 SF Symbol 占位）＋兩顆對角角托
+/// `cmp/Profile Print`（`OePXK`）60×60 沖印小卡：`$print-paper` 底＋45×45 相片區＋兩顆對角角托
 /// （16.4pt，`PhotoCornerShape` 既有形狀，只取 topLeading／bottomTrailing 兩個，對應稿面
 /// `GEBcf` ref 的 Mount TL／Mount BR）。「加入於 YYYY/M」壓印字未實作：那需要 `profiles
 /// .created_at`，同樣是 02 頁的範圍，見 `SettingsView.displayName` 文件註解——記入 handoff
 /// 「未完成」。
+///
+/// **LS-345**：45×45 相片區改吃 `avatarURL`——有值就顯示照片，沒有（或簽名還沒回來）退回
+/// SF Symbol 佔位（同 `ChildAvatarView`／LS-67 E3「有圖顯示圖／無圖顯示縮寫」既有先例）。
+/// `AsyncImage` 直接掛在 `ZStack` 裡、不包在 `if let avatarURL` 條件分支內——同
+/// `ChildAvatarView` 文件註解點名的 LS-273 教訓（`avatarURL` 由 nil 變成非 nil 時若靠
+/// `if let` 新建 `AsyncImage`，換頭像後的下載 task 可能被同一瞬間的 transition 取消且不重試）。
+/// 呼叫端目前只有 `ProfileSummaryRow`（設定頁「個人」列）真的傳非 nil 值；留言列表
+/// （`CommentsSheetView+List`／`+Footer`）與按讚名單（`LikersListSheet`）依 LS-177 Notes
+/// `MJ-1` 定案一律顯示佔位、不傳 `avatarURL`（票文範圍 3 核可稿沒畫頭像，本票不加）。
 ///
 /// LS-216：加 `size` 參數（預設 60，既有呼叫端 `ProfilePrintChip()` 行為不變）——LS-177
 /// Handoff Notes `d5RNKR`「AX3 頭像／送出鈕覆寫」定案 `scale = size/60`（元件原生 60px
@@ -97,6 +119,8 @@ struct ProfileSummaryRow: View {
 /// 30×30 圓角 1.333／角托 10.93／外移 2.53）逐一核對過一致。
 struct ProfilePrintChip: View {
     var size: CGFloat = 60
+    /// LS-345：見型別文件註解「LS-345」段。
+    var avatarURL: URL?
 
     private var scale: CGFloat { size / 60 }
     private var cornerSize: CGFloat { 16.4 * scale }
@@ -105,9 +129,13 @@ struct ProfilePrintChip: View {
     var body: some View {
         ZStack {
             Color.lsSurface2
-            Image(systemName: "person.fill")
-                .font(.system(size: 22 * scale))
-                .foregroundStyle(Color.lsTextSecondary.opacity(0.5))
+            AsyncImage(url: avatarURL) { phase in
+                if case .success(let image) = phase {
+                    image.resizable().scaledToFill()
+                } else {
+                    placeholderIcon
+                }
+            }
         }
         .frame(width: 45 * scale, height: 45 * scale)
         .clipShape(RoundedRectangle(cornerRadius: 2 * scale))
@@ -118,6 +146,12 @@ struct ProfilePrintChip: View {
         .overlay(corner(.bottomTrailing, alignment: .bottomTrailing, out: cornerOut))
         .frame(width: size, height: size)
         .accessibilityHidden(true)
+    }
+
+    private var placeholderIcon: some View {
+        Image(systemName: "person.fill")
+            .font(.system(size: 22 * scale))
+            .foregroundStyle(Color.lsTextSecondary.opacity(0.5))
     }
 
     private func corner(_ corner: PhotoCorner, alignment: Alignment, out: CGFloat) -> some View {

@@ -513,6 +513,8 @@
 		F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */; };
 		F346107C7C4ED65779715E73 /* JoinCodePhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604B48C433197767C7EAA5D6 /* JoinCodePhaseTests.swift */; };
 		F3549AB9A9912E8CFBAF3B2D /* PickedItemLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */; };
+		1662434763E5BD3D73C47AA1 /* ProfileAvatarDisplayRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4361C061F9A2011A262CC4D /* ProfileAvatarDisplayRegressionTests.swift */; };
+		F37CEF4EA9791BC981197F63 /* ProfilePrintChipStructureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F50DBBBEECC9063F5BDDBC9 /* ProfilePrintChipStructureTests.swift */; };
 		F400886C67EB440F0BF36A5A /* CommentRowActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D1271C2CC39AA7D7D71E59 /* CommentRowActions.swift */; };
 		F462FED59ADC341536F34B8A /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76C79515621CA9052803B7EA /* AppError.swift */; };
 		F4F8DB0821FDA59E9EB1B08C /* AlbumsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283015CC749C2FA945FE395B /* AlbumsModels.swift */; };
@@ -590,6 +592,8 @@
 		0E8702562330091E614920D1 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
 		0E964E54E8EEC6170EC3E8F3 /* FamilyMembersView+LeavePrecheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FamilyMembersView+LeavePrecheck.swift"; sourceTree = "<group>"; };
 		0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickedItemLoaderTests.swift; sourceTree = "<group>"; };
+		D4361C061F9A2011A262CC4D /* ProfileAvatarDisplayRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileAvatarDisplayRegressionTests.swift; sourceTree = "<group>"; };
+		1F50DBBBEECC9063F5BDDBC9 /* ProfilePrintChipStructureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePrintChipStructureTests.swift; sourceTree = "<group>"; };
 		0EDCB1C873A0DB57A3165E54 /* MediaUploadService+Duration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MediaUploadService+Duration.swift"; sourceTree = "<group>"; };
 		0F379004A37B44A1986570C5 /* ReportReasonSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportReasonSheet.swift; sourceTree = "<group>"; };
 		109FCD489FF3BBF139A763F4 /* ImportThumbnailLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportThumbnailLayout.swift; sourceTree = "<group>"; };
@@ -1438,6 +1442,8 @@
 				891013E5A75CD7CC488037D0 /* PendingAccountDeletionTests.swift */,
 				02B3DBEF3C2CD98113BE8D21 /* PhotoLibraryAccessServiceTests.swift */,
 				0ED4F4FC901701044230BA42 /* PickedItemLoaderTests.swift */,
+				D4361C061F9A2011A262CC4D /* ProfileAvatarDisplayRegressionTests.swift */,
+				1F50DBBBEECC9063F5BDDBC9 /* ProfilePrintChipStructureTests.swift */,
 				AB59B9D30E351F20B3ECF494 /* PushNotificationStoreRegistrationTests.swift */,
 				BAB640AAAE61BC9D1CAAF2EE /* PushNotificationStoreTests.swift */,
 				68CC5B8416F7028D1103B61C /* PushPrepromptPolicyTests.swift */,
@@ -2573,6 +2579,8 @@
 				03097B461382E3D453B7B548 /* PendingAccountDeletionTests.swift in Sources */,
 				A873C142170732BB14C66243 /* PhotoLibraryAccessServiceTests.swift in Sources */,
 				F3549AB9A9912E8CFBAF3B2D /* PickedItemLoaderTests.swift in Sources */,
+				1662434763E5BD3D73C47AA1 /* ProfileAvatarDisplayRegressionTests.swift in Sources */,
+				F37CEF4EA9791BC981197F63 /* ProfilePrintChipStructureTests.swift in Sources */,
 				7F8E845A38B45C8D778EF745 /* PushNotificationStoreRegistrationTests.swift in Sources */,
 				31F7E61AFC2E73BA85D322BD /* PushNotificationStoreTests.swift in Sources */,
 				57EBF6862351A27816C83A1A /* PushPrepromptPolicyTests.swift in Sources */,

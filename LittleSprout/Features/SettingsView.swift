@@ -238,7 +238,7 @@ struct SettingsView: View {
                     ProfileEditView(familyStore: familyStore, familyID: familyID)
                 }
             } label: {
-                ProfileSummaryRow(displayName: displayName)
+                ProfileSummaryRow(displayName: displayName, avatarURL: profileAvatarURL)
             }
             // LS-188：垂直置中 UITest 用（多行副標樣本）——整列合併成一顆 button，label 會
             // 隨姓名變，同 `QAAccessibilityID.timelineDiaryCard` 的既有理由。
