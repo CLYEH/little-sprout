@@ -3,12 +3,27 @@ import SwiftUI
 /// 相簿 tab 首頁（LS-165，依 LS-142 稿）——取代原本的 `ContentUnavailableView` 佔位：卡片列表
 /// （封面沖印品＋張數＋署名列＋扇影厚度分級）、空狀態（Blank Print）、「新增相簿」入口。
 ///
-/// 標題比照時間軸／寶貝管理（`design/littlesprout.pen` `puHZ5` Notes `Jembn`）：不是系統
-/// `navigationTitle`，是 Header Row 內的自畫 Title；但仍不隱藏系統 nav bar（同
-/// `ChildrenManagementView`——不像 `TimelineView`額外 `.toolbar(.hidden, for: .navigationBar)`
-/// 那樣，那支只服務時間軸自己的雙標題衝突，見該檔文件註解），系統 nav bar 標題交給
-/// `SectionContentView.content` 既有的 `.navigationTitle(section.title)` 提供
-/// entry-conditions.md ⑬（`SectionTabBarTests.testAlbumsRootShowsAlbumsHeading` 依此斷言）。
+/// 標題比照時間軸（`design/littlesprout.pen` `puHZ5` Notes `Jembn`）：不是系統
+/// `navigationTitle`，是 Header Row 內的自畫 Title。
+///
+/// LS-344 訂正：本檔文件註解原本寫「仍不隱藏系統 nav bar」，理由是讓
+/// `SectionContentView.content` 既有的 `.navigationTitle(section.title)` 供應
+/// entry-conditions.md ⑬ 的非手勢替代路徑——但這樣系統 large title「相簿」與
+/// `headerRow` 自畫的「相簿」會同時疊在畫面最上緣（實機 iPhone 12 Pro／iOS 26.5.2
+/// 與模擬器 iOS 26.5 皆可重現，跟 OS 版本無關，是本檔一直以來的邏輯錯誤）。改成跟
+/// `TimelineView` 同一種寫法：隱藏系統 nav bar，`titleText` 自己的
+/// `.accessibilityAddTraits(.isHeader)`（見下）才是唯一的 heading 訊號來源，一樣滿足
+/// entry-conditions.md ⑬（`SectionTabBarTests.testAlbumsRootShowsAlbumsHeadingExactlyOnce`
+/// 已隨之改寫）。
+///
+/// **LS-344 R2（merge-review R1 M1）**：只在 compact 隱藏——iPad（regular）的
+/// `RootView.SectionSplitView` detail 欄用同一個 `NavigationStack` 顯示這支畫面，無條件隱藏
+/// nav bar 會連「顯示側邊欄」鈕一起藏掉，收起側邊欄後整個 iPad 相簿頁沒有可點的路徑回其他
+/// 分頁（只剩左緣右滑手勢，違反 entry-conditions.md ⑬「非手勢替代路徑」）。同
+/// `ChildrenManagementView`／`SettingsView` 既有的 compact-only 慣例，`AlbumsView` 用單一
+/// `body`（不像那兩檔分 `compactLayout`／`regularLayout`），改用
+/// `horizontalSizeClass == .compact` 條件式 `Visibility`。iPad 上相簿頁是否仍有標題重複——
+/// 本票刻意不修（同寶貝／設定兩頁），見 handoff「未完成」。
 ///
 /// Tab Bar 顯示／隱藏由 `RootView.SectionTabView` 統一處理（掛在每個分頁的根內容上），這裡
 /// 不需要另外處理。
@@ -33,6 +48,9 @@ struct AlbumsView: View {
             scrollArea(columns: horizontalSizeClass == .regular ? 2 : 1)
         }
         .appBackground()
+        // LS-344 R2：見上方型別文件註解——只在 compact 隱藏系統 nav bar，iPad（regular）保留
+        // 給「顯示側邊欄」鈕（merge-review R1 M1）。
+        .toolbar(horizontalSizeClass == .compact ? .hidden : .automatic, for: .navigationBar)
         .task(id: familyStore.myFamily?.id) {
             guard let familyID = familyStore.myFamily?.id else { return }
             await albumsStore.refresh(familyID: familyID)
