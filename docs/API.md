@@ -375,10 +375,19 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   `delete_growth_record()` RPC。直接 `.update()` 這幾欄以外的欄位一律 `42501`
   （欄位級 grant 未開放）。**`updated_at` 這欄的 grant 只保證「能不能碰」，不保證
   「碰的時候寫的是什麼值」——LS-337 起額外掛了 `private.touch_updated_at()`
-  BEFORE UPDATE trigger 無條件強制 `new.updated_at := now()`，直接 `PATCH`
+  BEFORE UPDATE trigger 強制 `new.updated_at := now()`，直接 `PATCH`
   這一欄（不經過 `upsert_growth_record`）不會被 `42501` 擋下，但寫入的值一律是
   `now()`，呼叫端指定的值（例如 `'1970-01-01'`）不會生效，見
-  `20260919045339_server_owned_timestamps.sql`。**
+  `20260919045339_server_owned_timestamps.sql`。**這支 trigger 只掛
+  `before update of measured_on, height_cm, weight_kg, head_cm, note,
+  updated_at`（R2，merge-review R1 m1）——只在 UPDATE 陳述式的 SET 子句碰到
+  這幾欄時才觸發，**不是無條件 `before update`**：`author_id`／`deleted_by`
+  被 FK `on delete set null`（作者刪除帳號時的 RI 動作）或
+  `delete_growth_record()` 的軟刪 UPDATE 改動時，SET 子句不含上面任何一欄，
+  這支 trigger 不會觸發，`updated_at` 不會被那些動作意外刷新（R1 版本是無條件
+  `before update`，reviewer 實測出「作者刪帳號會把 `updated_at` 刷新成
+  `now()`，讓 `GrowthCurve.deduplicatedByDay` 把已刪除作者的舊量測值當成當天
+  最新一筆」這個缺陷，見 migration 檔頭該段的完整記載）。
 - **軟刪沿用 LS-57**：`deleted_by` 由 `private.enforce_deletion_attribution()`
   共用 trigger（20260825040000_deletion_attribution.sql）推導寫入，規則與
   `diaries`/`albums`/`comments` 相同——作者只能軟刪自己的，owner 對任何一筆的
