@@ -34,13 +34,25 @@
 --
 -- 兩段式（`NOT VALID` + `VALIDATE CONSTRAINT`，沿用
 -- `media_taken_at_range_check` 既有慣例，見 20260913163828_media_taken_at_
--- hardening.sql）：正式站現況（orchestrator 09-19 唯讀查詢，LS-331 comment
--- `8f56a6fe`）年份 <1900 或 >2100 皆 0 筆，理論上直接 `ADD CONSTRAINT`（不帶
--- `NOT VALID`）也不會失敗；但沒有在這支 migration 裡重新驗證過就不能假設「查詢
--- 當下」與「這支 migration 實際套用當下」之間沒有新資料寫入（即使視窗很小）。
--- `NOT VALID` 讓新 CHECK 只對之後的 INSERT/UPDATE 生效，既有列由下一句
--- `VALIDATE CONSTRAINT` 單獨掃描驗證，掃描失敗時只有那一句紅、能明確定位是哪
--- 一欄的既有資料出問題，不會讓整支 migration 因為某一欄卡住而連帶擋住其餘三欄。
+-- hardening.sql）——**訂正（merge-review R1 m1）：這裡拆兩段其實沒有實質好處，
+-- 純粹是沿用先例保持一致**。實測（supabase CLI 2.115.0，本機 PG 17.6）：
+--   (a) `supabase migration up`／`db reset` 把每支 migration 檔包在**同一個
+--       交易**裡套用——這四支 CHECK 的任何一句 `VALIDATE CONSTRAINT` 失敗，
+--       **整支 migration 回滾**（連同檔案開頭的四句 `ADD CONSTRAINT ... NOT
+--       VALID` 一起復原，該 migration 版本也不會被記錄），不是「只有失敗的
+--       那一欄不生效、其餘三欄照常」；四支要嘛一起生效，要嘛一起不生效。
+--   (b) 拆兩段在這裡也沒有鎖的好處：`ADD CONSTRAINT ... NOT VALID` 拿到的
+--       `ACCESS EXCLUSIVE` 鎖會一直持有到整支 migration 交易 `commit` 為止，
+--       同一交易裡緊接著的 `VALIDATE CONSTRAINT` 並不會提早釋放它——真正
+--       「先拿 `ACCESS EXCLUSIVE`（瞬間）、再用只需 `SHARE UPDATE EXCLUSIVE`
+--       的 `VALIDATE` 分開跑」這種寫法，必須是兩支**各自獨立的交易**（例如
+--       拆成兩支 migration 檔，或同一 session 手動分兩次 commit），不能靠
+--       同一支 migration 檔裡的兩句話做到。
+-- 失敗時的行為因此是 fail-closed：驗證不過就整支不生效，補救方式是修正資料、
+-- 重新 `db push`，不存在「三欄已生效、一欄卡住」這種中間狀態需要另外處理。
+-- 正式站四欄現有資料量極小（`children` 3 列／`diaries` 8 列／
+-- `growth_records`／`child_food_records` 各 0 列，LS-331 comment `8f56a6fe`），
+-- 鎖持有時間可忽略，因此不需要為了鎖的理由把這支拆成多支 migration 檔。
 --
 -- ---------------------------------------------------------------------------
 -- 1. children.birthday
