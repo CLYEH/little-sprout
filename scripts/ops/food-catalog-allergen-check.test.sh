@@ -27,6 +27,15 @@
 #      SQL 必須正確跳脫（`%%`／`''`），不能讓 RAISE 因為佔位符數量對不上而
 #      `too few parameters specified for RAISE`，也不能讓未跳脫的 `'` 弄壞 SQL
 #      語法。
+#   G／H. LS-347：新規則（sesame／mango）各一支 CSV 端 deny——合成夾具名稱含
+#      「芝麻」／「芒果」但 allergens 空、不在白名單 → 實跑 CLI，exit 1，訊息點名
+#      對應 allergen（DB 端 deny 見 supabase/tests/run.sh，理由同既有 cod／
+#      braised_pork_rice 兩支）。
+#   I. LS-96 池項 25fea8c7 m1'：`FOOD_CATALOG_CSV_PATH` 覆寫時，`ok` 成功訊息印出
+#      實際讀到的路徑——不是空泛地宣稱「通過」，讓殘留的環境變數覆寫無所遁形。
+#   J. LS-96 池項 25fea8c7 i2'：`SOY_SAUCE_DISH_IDS` 為空時，`generate_sql_do_block()`
+#      不再產生 `where id in ()` 這種恆假子句（也不再產生醬油慣例列的 raise
+#      exception）——整段略過，其餘規則與收尾（raise notice／end／$$）正常產生。
 #
 # 依賴：純標準庫，`python3` 直接呼叫（不需要 uv／第三方套件，同 food-catalog-sql.py
 # 檔頭的既有宣告）。
@@ -144,9 +153,71 @@ expect_not_has "$f_out" "100% 全麥字" "F2. 未跳脫版本（單個 %）不�
 
 # F3：跳脫後，這一行只剩 1 個「真正的」RAISE 參數佔位符（v_bad 那個）——desc 裡的 %%
 # 先消掉（跳脫後的字面 %，不是佔位符），數剩下的 % 應該恰好 1 個。
+# LS-96 池項 25fea8c7 i3'：原本用 expect_has（子字串比對）——"1" 命中 "10"／"11"／
+# "21" 也會過，改成精確比對（不引入新 helper，selftest-helpers.sh 沒有 expect_eq；
+# `[ ... -eq ... ]` 已足夠，見檔頭）。
 f_line="$(printf '%s\n' "$f_out" | grep -F "100%% 全麥字")"
 remaining="$(printf '%s' "$f_line" | sed 's/%%/@/g' | tr -cd '%' | wc -c | tr -d ' ')"
-expect_has "$remaining" "1" "F3. 跳脫後只剩 1 個真正的 RAISE 參數佔位符（v_bad），desc 裡的 %% 不會被誤算成佔位符"
+if [ "$remaining" -eq 1 ] 2>/dev/null; then
+  ok "F3. 跳脫後只剩 1 個真正的 RAISE 參數佔位符（v_bad），desc 裡的 %% 不會被誤算成佔位符"
+else
+  fail "F3. 跳脫後只剩 1 個真正的 RAISE 參數佔位符（期望 1，實得 ${remaining}）"
+fi
+
+# ==== G. 合成夾具：名稱含「芝麻」但 allergens 空、不在白名單 → 實跑 CLI deny（LS-347）====
+synth_g="${work}/food_catalog_g.csv"
+cat > "$synth_g" <<'CSV'
+id,name_zh,category,sort_order,allergens,min_age_months
+ls347_test_sesame,測試芝麻醬,fat_nut,1,,
+CSV
+g_out="$(FOOD_CATALOG_CSV_PATH="$synth_g" python3 "$script" check-allergens 2>&1)"
+g_rc=$?
+expect_exit 1 "$g_rc" "G. 名稱含「芝麻」但 allergens 空的合成列 → CLI check-allergens 紅（實際出口碼）"
+expect_has "$g_out" "ls347_test_sesame" "G. 錯誤訊息點名 id"
+expect_has "$g_out" "'sesame'" "G. 錯誤訊息點名缺的 allergen（sesame）"
+
+# ==== H. 合成夾具：名稱含「芒果」但 allergens 空、不在白名單 → 實跑 CLI deny（LS-347）====
+synth_h="${work}/food_catalog_h.csv"
+cat > "$synth_h" <<'CSV'
+id,name_zh,category,sort_order,allergens,min_age_months
+ls347_test_mango,測試芒果乾,fruit,1,,
+CSV
+h_out="$(FOOD_CATALOG_CSV_PATH="$synth_h" python3 "$script" check-allergens 2>&1)"
+h_rc=$?
+expect_exit 1 "$h_rc" "H. 名稱含「芒果」但 allergens 空的合成列 → CLI check-allergens 紅（實際出口碼）"
+expect_has "$h_out" "ls347_test_mango" "H. 錯誤訊息點名 id"
+expect_has "$h_out" "'mango'" "H. 錯誤訊息點名缺的 allergen（mango）"
+
+# ==== I. LS-96 池項 25fea8c7 m1'：FOOD_CATALOG_CSV_PATH 覆寫時，ok 訊息印出實際路徑 ====
+synth_i="${work}/food_catalog_i.csv"
+cat > "$synth_i" <<'CSV'
+id,name_zh,category,sort_order,allergens,min_age_months
+ls347_test_plain,測試白飯,grain_root,1,,
+CSV
+i_out="$(FOOD_CATALOG_CSV_PATH="$synth_i" python3 "$script" check-allergens 2>&1)"
+i_rc=$?
+expect_exit 0 "$i_rc" "I. 合成 CSV（無違規）check-allergens 通過"
+expect_has "$i_out" "$synth_i" "I. ok 訊息印出實際讀到的路徑（覆寫用的合成 CSV，不是預設路徑）——拿掉這個修法，訊息會只寫死『CSV 端』不帶路徑，殘留的環境變數覆寫會無聲量錯資料"
+
+# ==== J. LS-96 池項 25fea8c7 i2'：SOY_SAUCE_DISH_IDS 為空時，整段略過而非 `in ()` ====
+j_out="$(python3 - "$root" <<'PY'
+import importlib.util
+import sys
+
+root = sys.argv[1]
+spec = importlib.util.spec_from_file_location(
+    "food_catalog_rules", root + "/scripts/ops/food_catalog_rules.py"
+)
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+
+mod.SOY_SAUCE_DISH_IDS = frozenset()
+print(mod.generate_sql_do_block())
+PY
+)"
+expect_not_has "$j_out" "id in ()" "J1. Mutation：SOY_SAUCE_DISH_IDS 清空後，產生的 SQL 不含恆假子句 \`id in ()\`（拿掉 generate_sql_do_block() 的 guard，這裡會變紅——原本的無 guard 版本會產生 \`where id in ()\`）"
+expect_not_has "$j_out" "屬醬油調味慣例列" "J2. SOY_SAUCE_DISH_IDS 清空後，醬油慣例列的 raise exception 也一併消失"
+expect_has "$j_out" "raise notice 'ok" "J3. 其餘收尾（raise notice／end／\$\$）仍正常產生，guard 沒有連帶炸掉整個 SQL 區塊"
 
 echo ""
 echo "food-catalog-allergen-check 自測：${selftest_helpers_n} 項，失敗 ${selftest_helpers_fail}"
