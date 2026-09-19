@@ -127,7 +127,9 @@ struct SettingsView: View {
 
     // MARK: - Compact（iPhone，`t5wI4`/`Rx5mP`/`z9tytH`）
 
-    /// LS-344：`header` 自畫標題曾與系統 large title 重複，理由同 `AlbumsView` 文件註解。
+    /// LS-344：`header`（`SettingsView+Header.swift`）自畫標題曾與系統 large title 重複，理由
+    /// 同 `AlbumsView` 文件註解；只在 compact 隱藏系統 nav bar——`regularBody` 是本檔既有的
+    /// iPad 已知限制（merge-review R1 B1／R2），iPad 是否同病記入 handoff「未完成」。
     private var compactBody: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -147,23 +149,8 @@ struct SettingsView: View {
             .padding(.top, 8)
             .padding(.bottom, AppSpacing.block)
         }
-        .background(Color.lsBackground).toolbar(.hidden, for: .navigationBar) // LS-344，只套 compact
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.label) {
-            Text("設定")
-                .appFont(.display, weight: .bold)
-                .foregroundStyle(Color.lsTextPrimary).accessibilityAddTraits(.isHeader) // LS-344
-            Text(headerSubtitle)
-                .appFont(.body)
-                .foregroundStyle(Color.lsTextSecondary)
-        }
-    }
-
-    private var headerSubtitle: String {
-        guard let name = familyStore.myFamily?.name else { return "你的帳號與家庭設定都在這裡。" }
-        return "「\(name)」的帳號與家庭設定都在這裡。"
+        .background(Color.lsBackground)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     // MARK: - Regular（iPad，`B2DckT`）
