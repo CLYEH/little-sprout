@@ -2,10 +2,13 @@
 # Handoff 逐項證據 gate（LS-211）。實際解析邏輯在 handoff_evidence_check.py（python3，跨 macOS／
 # ubuntu-latest 都內建，同 privacy-manifest-check.sh 呼叫 privacy_manifest_check.py 的既有慣例）。
 #
-# 用法：handoff-evidence-check.sh <handoff.md> [--repo <dir>]
+# 用法：handoff-evidence-check.sh <handoff.md> [--repo <dir>] [--ref <sha>]
 #   <handoff.md>  待查的 handoff／QA 裁決／merge-review verdict 文字檔（可先用 mcp__linear__list_comments
 #                 抓 comment 原文存成 scratchpad 檔案再餵給本腳本）。
 #   --repo <dir>  驗證測試名存在的 repo 根目錄；預設當前 git repo（`git rev-parse --show-toplevel`）。
+#   --ref <sha>   （LS-346）測試名／白名單路徑改驗這個 commit 的樹狀態（`git grep`／`git ls-tree`／
+#                 `git cat-file -e`），不是工作樹目前狀態——在主 checkout 上審查一個只存在於 PR 分支、
+#                 尚未併入 base 的新檔案時用這個，取代優先建議的 `--repo <票 worktree>`。
 # exit：0＝全過；1＝任一列項缺『怎麼驗』證據、引用的測試名在 repo 內找不到，或引用的白名單目錄路徑
 #      （見 --help）在 repo 內找不到；2＝參數／環境錯誤（fail closed）。
 # 自測：handoff-evidence-check.test.sh（CI rules job）。qa／merge-reviewer 定義規定「貼 comment 前先跑本腳本、
@@ -17,16 +20,19 @@ set -uo pipefail
 case "${1:-}" in
   --help|-h)
     cat <<'EOF'
-用法：handoff-evidence-check.sh <handoff.md> [--repo <dir>]
+用法：handoff-evidence-check.sh <handoff.md> [--repo <dir>] [--ref <sha>]
 解析 handoff／QA 裁決／merge-review verdict 裡「已驗證」等價段落（## 已驗證｜**已驗證**｜「已驗證」
 行起，或標題含「驗收」／「查實」如「逐條驗收」「逐條查實」）的每一個列項，要求每項至少含一種
 「怎麼驗」證據：測試名（存在性驗證，見 handoff_evidence_check.py 檔頭）、路徑（.png/.log/.test.sh/
 scratchpad//evidence//.swift/.py/.sh/.md/.yml/.json，子字串比對不驗證存在）、白名單目錄路徑（必須
 驗證真的存在且未逃出 --repo：supabase/functions/**/*.ts、supabase/migrations/*.sql、
 supabase/tests/*.sql、supabase/**/*.sh、docs/**/*.md、.claude/**/*.md、scripts/**/*.sh、
-.github/workflows/*.yml），或命令（xcodebuild／bash scripts/／gh run view／.xcresult）。
+.github/workflows/*.yml），或命令（xcodebuild／bash scripts/／gh run view／.xcresult／
+mcp__linear__list_comments／get_issue／linear-post.sh get（須另有票號或 comment id），LS-346 補）。
 LS-300：另認一個可選子段「畫面級屬性（逐條勾選）」（標題含「畫面級屬性」）——存在時逐列驗板名／
 ✓✗／證據三者；不存在時不影響既有 handoff（不強制要求）。
+--ref <sha>（LS-346）：測試名與白名單路徑改驗該 commit 的樹狀態，不是工作樹目前狀態——涵蓋只存在於
+PR 分支、尚未併入 base 的新檔案；未帶時行為與此前完全相同。
 exit：0＝全過；1＝有違規（含引用的白名單路徑不存在、畫面級屬性子段缺板名／✓✗／證據）；2＝參數／環境錯誤。
 EOF
     exit 0
