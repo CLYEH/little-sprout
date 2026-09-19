@@ -3,12 +3,18 @@ import SwiftUI
 /// 相簿 tab 首頁（LS-165，依 LS-142 稿）——取代原本的 `ContentUnavailableView` 佔位：卡片列表
 /// （封面沖印品＋張數＋署名列＋扇影厚度分級）、空狀態（Blank Print）、「新增相簿」入口。
 ///
-/// 標題比照時間軸／寶貝管理（`design/littlesprout.pen` `puHZ5` Notes `Jembn`）：不是系統
-/// `navigationTitle`，是 Header Row 內的自畫 Title；但仍不隱藏系統 nav bar（同
-/// `ChildrenManagementView`——不像 `TimelineView`額外 `.toolbar(.hidden, for: .navigationBar)`
-/// 那樣，那支只服務時間軸自己的雙標題衝突，見該檔文件註解），系統 nav bar 標題交給
-/// `SectionContentView.content` 既有的 `.navigationTitle(section.title)` 提供
-/// entry-conditions.md ⑬（`SectionTabBarTests.testAlbumsRootShowsAlbumsHeading` 依此斷言）。
+/// 標題比照時間軸（`design/littlesprout.pen` `puHZ5` Notes `Jembn`）：不是系統
+/// `navigationTitle`，是 Header Row 內的自畫 Title。
+///
+/// LS-344 訂正：本檔文件註解原本寫「仍不隱藏系統 nav bar」，理由是讓
+/// `SectionContentView.content` 既有的 `.navigationTitle(section.title)` 供應
+/// entry-conditions.md ⑬ 的非手勢替代路徑——但這樣系統 large title「相簿」與
+/// `headerRow` 自畫的「相簿」會同時疊在畫面最上緣（實機 iPhone 12 Pro／iOS 26.5.2
+/// 與模擬器 iOS 26.5 皆可重現，跟 OS 版本無關，是本檔一直以來的邏輯錯誤）。改成跟
+/// `TimelineView` 同一種寫法：隱藏系統 nav bar，`titleText` 自己的
+/// `.accessibilityAddTraits(.isHeader)`（見下）才是唯一的 heading 訊號來源，一樣滿足
+/// entry-conditions.md ⑬（`SectionTabBarTests.testAlbumsRootShowsAlbumsHeadingExactlyOnce`
+/// 已隨之改寫）。
 ///
 /// Tab Bar 顯示／隱藏由 `RootView.SectionTabView` 統一處理（掛在每個分頁的根內容上），這裡
 /// 不需要另外處理。
@@ -33,6 +39,9 @@ struct AlbumsView: View {
             scrollArea(columns: horizontalSizeClass == .regular ? 2 : 1)
         }
         .appBackground()
+        // LS-344：見上方型別文件註解——隱藏系統 nav bar，避免跟 `headerRow` 自畫的「相簿」疊出
+        // 兩個標題（同 `TimelineView.body` 既有的 `.toolbar(.hidden, for: .navigationBar)`）。
+        .toolbar(.hidden, for: .navigationBar)
         .task(id: familyStore.myFamily?.id) {
             guard let familyID = familyStore.myFamily?.id else { return }
             await albumsStore.refresh(familyID: familyID)

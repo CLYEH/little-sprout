@@ -127,6 +127,7 @@ struct SettingsView: View {
 
     // MARK: - Compact（iPhone，`t5wI4`/`Rx5mP`/`z9tytH`）
 
+    /// LS-344：`header` 自畫標題曾與系統 large title 重複，理由同 `AlbumsView` 文件註解。
     private var compactBody: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -146,14 +147,14 @@ struct SettingsView: View {
             .padding(.top, 8)
             .padding(.bottom, AppSpacing.block)
         }
-        .background(Color.lsBackground)
+        .background(Color.lsBackground).toolbar(.hidden, for: .navigationBar) // LS-344，只套 compact
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
             Text("設定")
                 .appFont(.display, weight: .bold)
-                .foregroundStyle(Color.lsTextPrimary)
+                .foregroundStyle(Color.lsTextPrimary).accessibilityAddTraits(.isHeader) // LS-344
             Text(headerSubtitle)
                 .appFont(.body)
                 .foregroundStyle(Color.lsTextSecondary)
