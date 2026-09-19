@@ -29,7 +29,9 @@ struct TimelineView: View {
     /// LS-315：`.importBatchFlow` 需要——同 `AlbumDetailView` 既有呼叫端傳法。
     let albumsStore: AlbumsStore
 
-    @State private var selectedChildID: UUID?
+    /// LS-328：改成非 `private`——搬去 `TimelineView+Import.swift` 的 `emptyOrLoadingState`
+    /// 需要讀，理由同 `showsImportBatch` 既有跨檔案 extension 存取層級註解。
+    @State var selectedChildID: UUID?
     @State private var showsDiaryEditor = false
     /// LS-315：Header「匯入」鈕觸發，見 `importEntryButton`（`TimelineView+Import.swift`）／
     /// `.importBatchFlow`。不是 `private`——`TimelineView+Import.swift` 需要讀寫，同
@@ -78,6 +80,12 @@ struct TimelineView: View {
         // 兩處都補 `.accessibilityAddTraits(.isHeader)` 保留 heading 語意（不然 VoiceOver
         // 會少一個原本系統 large title 免費附帶的 heading landmark）。
         .toolbar(.hidden, for: .navigationBar)
+        // LS-328：批次匯入在時間軸不在畫面上時完成，回到畫面時補一次 refresh（見
+        // `TimelineStore+Import.swift`）——`TabView`＋`.tabItem`（`RootView.SectionTabView`）
+        // 切換分頁時，未選取分頁的根內容會收到 `onDisappear`／選回來時收到 `onAppear`，同
+        // `screenDidAppear()`／`screenDidDisappear()` 這裡假設的觸發時機。
+        .onAppear { timelineStore.screenDidAppear() }
+        .onDisappear { timelineStore.screenDidDisappear() }
         .task(id: familyStore.myFamily?.id) {
             guard let familyID = familyStore.myFamily?.id else { return }
             await refreshChildrenAndEnsureImportCoordinator(familyID: familyID)
@@ -334,54 +342,6 @@ struct TimelineView: View {
                         await timelineStore.loadMore()
                     }
             }
-        }
-    }
-
-    /// merge-review R1 m1：`refreshState == .failure` 之前跟「還沒有回憶」共用同一個空狀態
-    /// 文案——離線或 RPC 500 會被呈現成「你家還沒有內容」，且沒有重試入口。失敗時改顯示
-    /// 錯誤訊息＋「重新載入」，跟 `DiaryDetailView` 的行內錯誤提示一致（同一套語彙：
-    /// `$text-primary` ＋ circle-alert，不用 danger，見 brand skill 規則 8）。
-    @ViewBuilder
-    private var emptyOrLoadingState: some View {
-        switch timelineStore.refreshState {
-        case .submitting:
-            ProgressView()
-                .frame(maxWidth: .infinity)
-        case .failure(let error):
-            VStack(spacing: AppSpacing.item) {
-                HStack(spacing: AppSpacing.tight) {
-                    Image(systemName: "exclamationmark.circle").appIconFrame(.small)
-                    Text(error.userFacingMessage).appFont(.note)
-                }
-                .foregroundStyle(Color.lsTextPrimary)
-                // merge-review R2-M2：同 `loadMoreTrigger` 的「重新載入」——label closure
-                // 加 padding＋`contentShape`，不是裸 `Button(_:action:)`。merge-review R3
-                // r3-m1：padding token 同上方 `loadMoreTrigger` 的理由，改用
-                // `AppSpacing.item`（同 `SettingsView` 登出鈕），命中區 ≈52.3pt。
-                Button {
-                    Task {
-                        guard let familyID = familyStore.myFamily?.id else { return }
-                        await timelineStore.refresh(familyID: familyID, childID: selectedChildID)
-                    }
-                } label: {
-                    Text("重新載入")
-                        .appFont(.body, weight: .semibold)
-                        .padding(.vertical, AppSpacing.item)
-                        .padding(.horizontal, AppSpacing.item)
-                        .contentShape(Rectangle())
-                }
-            }
-            .frame(maxWidth: .infinity)
-        case .idle, .success:
-            // LS-315：文案改依 Notes `F77gCE`（00b 空狀態）逐字抄值，「匯入」領頭、不加按鈕
-            // （C1c 裁決：空狀態不另造 CTA，靠文案指路到 Header 既有兩顆入口鈕）——00b 板
-            // 完整的「Empty Print」卡面視覺（相框樣式、獨立標題／壓印小字）不在本票範圍，
-            // Body 幾何各依來源板不追齊（見票文範圍 5、Notes `MCbLu`），標題另依 `tZQNc` 抄值。
-            ContentUnavailableView(
-                "這裡還沒有任何回憶",
-                systemImage: "photo.stack",
-                description: Text("點上方的「匯入」把手機裡的舊照片搬進來，或點「新增回憶」寫下第一篇日記。")
-            )
         }
     }
 }
