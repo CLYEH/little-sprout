@@ -80,6 +80,54 @@ final class SupabaseTimelineAPIClientTests: XCTestCase {
         XCTAssertEqual(pointers[0].commentCount, 0)
     }
 
+    /// LS-329：後端 `feed_kind` 新增值（例如 LS-325 `food_first`）時，尚未更新的已安裝
+    /// app 版本仍會收到含新字串的回應——辨識不出的 `kind` 字串不該讓整批
+    /// `[TimelineFeedPointer]` 解碼失敗（時間軸整頁顯示錯誤），應解碼為 `FeedKind.unknown`
+    /// 讓陣列繼續解出其餘已知 kind 的列（見 `FeedKind` 文件註解）。這裡驗證的是解碼層——
+    /// `.unknown` 這筆該不該顯示是 `TimelineContentAssembler.assemble` 的職責，見
+    /// `TimelineContentAssemblerTests.test_assemble_unknownKindPointer_skippedAndKnownKindsSurvive`。
+    func test_fetchTimelinePointers_unknownKind_decodesAlongsideKnownKinds() async throws {
+        let unknownRefID = UUID(uuidString: "99999999-9999-9999-9999-999999999999")!
+        let albumRefID = UUID(uuidString: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")!
+        let client = TestSupabaseClient.make { [refID, unknownRefID, albumRefID] _ in
+            MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [
+              {
+                "kind": "food_first",
+                "ref_id": "\(unknownRefID.uuidString)",
+                "occurred_at": "2026-09-19T08:00:00Z",
+                "child_ids": []
+              },
+              {
+                "kind": "diary",
+                "ref_id": "\(refID.uuidString)",
+                "occurred_at": "2026-09-19T07:00:00Z",
+                "child_ids": []
+              },
+              {
+                "kind": "album",
+                "ref_id": "\(albumRefID.uuidString)",
+                "occurred_at": "2026-09-19T06:00:00Z",
+                "child_ids": []
+              }
+            ]
+            """.utf8))
+        }
+        let apiClient = SupabaseTimelineAPIClient(client: client)
+
+        let pointers = try await apiClient.fetchTimelinePointers(
+            familyID: familyID, childID: nil, cursor: nil, limit: 20
+        )
+
+        XCTAssertEqual(pointers.count, 3, "未知 kind（如 food_first）不該讓整批解碼失敗")
+        guard case .unknown(let rawKind) = pointers[0].kind else {
+            return XCTFail("辨識不出的 kind 字串應解碼為 .unknown，實際是 \(pointers[0].kind)")
+        }
+        XCTAssertEqual(rawKind, "food_first")
+        XCTAssertEqual(pointers[1].kind, .diary)
+        XCTAssertEqual(pointers[2].kind, .album)
+    }
+
     func test_fetchTimelinePointers_withCursorAndChildID_sendsBothCursorKeysTogether() async throws {
         let cursorRefID = UUID(uuidString: "66666666-6666-6666-6666-666666666666")!
         let client = TestSupabaseClient.make { [familyID, childID, cursorRefID] request in
