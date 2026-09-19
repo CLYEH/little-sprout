@@ -197,4 +197,52 @@ final class MediaChildrenMarkingTrackerTests: XCTestCase {
         // 只有原本失敗的那一群被重送——第三次呼叫仍是那一筆 entry 對應的 media，不是把已成功
         // 的群也重送一次（呼叫次數固定在 3：第一次失敗、第二次成功、第三次重試，不是 4）。
     }
+
+    // MARK: - m2（merge-review R1）：LS044（寶貝已軟刪）不可重試——重送也不會成功
+
+    /// 統計列「N 張寶貝標記未完成」仍要算 LS044（照片確實沒有標記，這是事實），但
+    /// 「重試標記」鈕用的計數要排除它。
+    func test_LS044MarkingFailure_countsInTotalButNotInRetryable() async {
+        let apiStub = StubAlbumsAPIClient()
+        apiStub.setSetMediaChildrenBatchHandler { _ in
+            throw AppError.validationRetryable(message: "寶貝已移除，無法歸屬新內容", code: "LS044")
+        }
+        let tracker = MediaChildrenMarkingTracker(apiClient: apiStub, onMarked: {})
+        let key = MediaChildrenMarkingTracker.GroupKey()
+        let entryID = UUID()
+
+        tracker.beginGroup(key, babyIDs: [UUID()])
+        tracker.registerEntry(key, entryID: entryID)
+        tracker.finishRegisteringGroup(key)
+        tracker.handleUploadSucceeded(entryID: entryID, mediaID: UUID())
+
+        await waitUntil { tracker.failedMarkingMediaCount(in: [entryID]) == 1 }
+        XCTAssertEqual(
+            tracker.retryableFailedMarkingCount(in: [entryID]), 0,
+            "LS044 重送也不會成功，不該算進「重試標記」鈕的可重試計數"
+        )
+    }
+
+    /// 「重試標記」不重送 LS044 的群——原樣重送不可能成功，白打一次請求沒有意義。
+    func test_retryFailedMarking_skipsNonRetryableLS044Group() async {
+        let apiStub = StubAlbumsAPIClient()
+        apiStub.setSetMediaChildrenBatchHandler { _ in
+            throw AppError.validationRetryable(message: "寶貝已移除，無法歸屬新內容", code: "LS044")
+        }
+        let tracker = MediaChildrenMarkingTracker(apiClient: apiStub, onMarked: {})
+        let key = MediaChildrenMarkingTracker.GroupKey()
+        let entryID = UUID()
+
+        tracker.beginGroup(key, babyIDs: [UUID()])
+        tracker.registerEntry(key, entryID: entryID)
+        tracker.finishRegisteringGroup(key)
+        tracker.handleUploadSucceeded(entryID: entryID, mediaID: UUID())
+        await waitUntil { apiStub.setMediaChildrenBatchCalls.count == 1 }
+
+        tracker.retryFailedMarking(in: [entryID])
+
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(apiStub.setMediaChildrenBatchCalls.count, 1, "LS044 的群不該被「重試標記」重送")
+        XCTAssertEqual(tracker.failedMarkingMediaCount(in: [entryID]), 1, "沒有重送，失敗計數維持不變")
+    }
 }
