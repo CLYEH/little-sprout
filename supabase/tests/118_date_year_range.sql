@@ -278,13 +278,21 @@ begin
   end if;
   raise notice 'ok：first_tried_on=2200-01-01（上限本身）新增成功，讀回值不失真';
 
-  -- ---- 更新路徑：INSERT ... ON CONFLICT DO UPDATE（同 child_id/food_id='banana'
-  -- 再呼叫一次）一樣受 CHECK 約束，不只純新增 ----
+  -- ---- 更新路徑：child_food_records.first_tried_on 有欄位級 UPDATE grant
+  -- （20260918205141_food_encyclopedia.sql:386），client 可以直接 .update()
+  -- 這欄，不只透過 upsert_child_food_record RPC——訂正（merge-review R1 m2）：
+  -- 原本這裡想用 upsert_child_food_record 對同一組 (child_id, food_id) 再呼叫
+  -- 一次，測 `INSERT ... ON CONFLICT DO UPDATE` 的 DO UPDATE 分支，但 CHECK
+  -- 在衝突仲裁「之前」就先對擬插入列求值——撞到的其實是跟新增分支完全相同的
+  -- 擋法，DO UPDATE 根本沒被執行到，並沒有真的驗到 UPDATE 路徑。改成直接以
+  -- 作者身分對 v_row（上面 2200-01-01 那筆）下 UPDATE，才是真正的欄位級
+  -- UPDATE 直寫路徑，RLS 的 child_food_records_update policy（僅原作者本人，
+  -- 仍是該家庭 owner/member）先放行，CHECK 才擋下這個值 ----
   begin
-    perform public.upsert_child_food_record(v_child, 'banana', date '0008-01-01', null, null, null);
-    raise exception 'FAIL：upsert_child_food_record 撞 ON CONFLICT DO UPDATE 分支把 first_tried_on 改成 0008-01-01 竟然成功';
+    update public.child_food_records set first_tried_on = date '0008-01-01' where id = v_row.id;
+    raise exception 'FAIL：直接 UPDATE first_tried_on=0008-01-01 竟然成功';
   exception when check_violation then
-    raise notice 'ok：upsert_child_food_record 的 ON CONFLICT DO UPDATE 分支 first_tried_on=0008-01-01 一樣被擋下';
+    raise notice 'ok：直接 UPDATE（欄位級 grant 直寫路徑）first_tried_on=0008-01-01 一樣被擋下';
   end;
 
   reset role;
