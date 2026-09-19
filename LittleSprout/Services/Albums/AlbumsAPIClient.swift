@@ -32,6 +32,9 @@ import Foundation
 ///                              呼叫端是 `AlbumsStore.createAlbum` 的補償路徑（merge-review R1
 ///                              M2）：`createAlbum` 成功但 `setAlbumChildren` 失敗時，軟刪剛
 ///                              建立的相簿，避免留下一本標記不到寶貝、卻仍出現在列表的孤兒相簿。
+///   - `setMediaChildrenBatch` → RPC `set_media_children_batch(p_items)`（LS-319，見
+///                              docs/API.md §4）——批次匯入「指定寶貝」上傳完成後的標記，
+///                              呼叫端見 `MediaChildrenMarkingTracker`。
 ///
 /// 錯誤一律映射為 `AppError`，不直接往外拋 PostgREST 的 error 型別。
 protocol AlbumsAPIClient: Sendable {
@@ -92,4 +95,18 @@ protocol AlbumsAPIClient: Sendable {
     /// `SupabaseFamilyAPIClient.requireUpdatedRow`（`families_update` 同一種 USING 過濾語意，
     /// 已有的既有解法，這裡沿用同一組理由與慣例，不重複貼一遍）。
     func updateAlbumTitle(albumID: UUID, title: String) async throws
+
+    // MARK: - LS-319（批次匯入「指定寶貝」）
+
+    /// 批次設定多張照片的寶貝標記（全覆蓋語意，見 docs/API.md §4 `set_media_children_batch`）
+    /// ——`items` 對應 RPC `p_items`（`[{"media_id":...,"child_ids":[...]}]`），單一交易全成功
+    /// 或全失敗。呼叫端負責 ≤500 筆分批（見 `MediaChildrenMarkingTracker`），這裡單純轉呼叫
+    /// 一次 RPC，不在這層做分批。空陣列直接 no-op，不打任何請求。
+    func setMediaChildrenBatch(items: [MediaChildrenBatchItem]) async throws
+}
+
+/// `set_media_children_batch` 的 `p_items` 陣列裡的一筆（見 docs/API.md §4）。
+struct MediaChildrenBatchItem: Equatable, Sendable {
+    let mediaID: UUID
+    let childIDs: [UUID]
 }

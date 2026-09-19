@@ -17,6 +17,7 @@ private final class PreviewAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable
     func fetchMaxSortOrder(albumID: UUID) async throws -> Int? { nil }
     func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws {}
     func updateAlbumTitle(albumID: UUID, title: String) async throws {}
+    func setMediaChildrenBatch(items: [MediaChildrenBatchItem]) async throws {}
 }
 
 extension AlbumsStore {
