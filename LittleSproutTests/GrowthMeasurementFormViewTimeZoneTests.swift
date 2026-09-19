@@ -53,16 +53,20 @@ final class GrowthMeasurementFormViewTimeZoneTests: XCTestCase {
     /// `1483-09-04`／和曆 `4044-09-04`）——`dateFieldLabel` 只顯示月日，使用者看不出來；
     /// `growth_records.measured_on` 沒有年份 `CHECK`，DB 照單全收。
     ///
-    /// 修法同 `wireString`：`localMidnight` 一律用固定 `Calendar(identifier: .gregorian)`
-    /// 重組，只借用注入的 `timeZone`——曆法識別碼結構上不再可能流進這支函式，行為層因此無法
-    /// 用任何 `Calendar` 注入重現這個 bug（跟 `BirthdayFormatTests
-    /// .test_wireString_source_extractsWithFixedGregorianCalendar` 同樣的盲區），改用原始碼
-    /// 文字守衛：mutation 把 `Calendar(identifier: .gregorian)` 改回 `Calendar.current`／
-    /// `.autoupdatingCurrent`，或重新開放注入 `Calendar`，這支測試轉紅。「固定西曆＋指定時區」
-    /// 組合抽到檔案層級的 `fixedGregorianCalendar(timeZone:)`（避免 `localMidnight` 重複兩次、
-    /// 也避免 `GrowthMeasurementFormView` struct body 過長），所以這裡分兩段守：
-    /// `fixedGregorianCalendar` 本體要用固定西曆；`localMidnight` 本體要呼叫它、不能繞過去。
-    func test_localMidnight_source_reconstructsWithFixedGregorianCalendar() throws {
+    /// merge-review R1 M2：`localMidnight` 原本在這裡重新實作一次「固定西曆＋指定時區」的換算
+    /// ——跟 `BirthdayFormat.localMidnight(from:timeZone:)`（`EditChildView` 同型 bug 的修法）
+    /// 算法逐字相同，只差回傳型別，而且這份重複的實作完全沒有行為測試守著自己的邏輯本體（只靠
+    /// `test_localMidnight_negativeOffsetTimeZone_keepsSameCalendarDay`／
+    /// `test_localMidnight_roundTripsThroughWireStringInNegativeOffsetTimeZone` 兩支「黑箱」測試
+    /// 從外部行為驗證，把 `localMidnight` 換算本體整支挖空成 no-op 這兩支測試也抓不到——見
+    /// `BirthdayFormatTests` M2 討論）。收斂成直接呼叫 `BirthdayFormat.localMidnight`，只留一份
+    /// 實作，換算本身的行為覆蓋交給 `BirthdayFormatTests`／
+    /// `EditChildViewBirthdayTimeZoneTests.test_seededBirthday_labelShowsSameCalendarDay`（該測試
+    /// 直接把 `localMidnight` 挖空成 no-op 會轉紅）。這裡改成原始碼文字守衛：mutation 把
+    /// `localMidnight` 本體改回自行用 `Calendar(identifier: .gregorian)` 重組（不呼叫
+    /// `BirthdayFormat.localMidnight`），這支測試轉紅——確保接線沒有被繞過、不會又漂移出第二份
+    /// 重複實作。
+    func test_localMidnight_source_delegatesToBirthdayFormat() throws {
         let testFileURL = URL(fileURLWithPath: "\(#filePath)")
         let worktreeRoot = testFileURL
             .deletingLastPathComponent() // LittleSproutTests/
@@ -72,33 +76,17 @@ final class GrowthMeasurementFormViewTimeZoneTests: XCTestCase {
         )
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
-        let helperCode = try functionBody(
-            in: source, signaturePrefix: "private func fixedGregorianCalendar(", closeBraceMarker: "\n}"
-        )
-        XCTAssertTrue(
-            helperCode.contains("Calendar(identifier: .gregorian)"),
-            "fixedGregorianCalendar 必須用固定西曆組 Calendar（LS-331 merge-review R1 X1）"
-        )
-
         let code = try functionBody(in: source, signaturePrefix: "static func localMidnight(")
         XCTAssertTrue(
-            code.contains("fixedGregorianCalendar(timeZone:"),
-            "localMidnight 必須透過 fixedGregorianCalendar(timeZone:) 重組回填日期，不能繞過去直接" +
-                "組裝置曆法的 Calendar（LS-331 merge-review R1 X1）"
+            code.contains("BirthdayFormat.localMidnight(from: utcDate, timeZone: timeZone)"),
+            "localMidnight 必須直接委派給 BirthdayFormat.localMidnight，不能自行重組一份西曆換算" +
+                "（LS-334 merge-review R1 M2：重複實作會各自漂移，且完全沒有行為測試守著）"
         )
-
-        for forbidden in ["Calendar.current", ".autoupdatingCurrent", "calendar: Calendar"] {
-            XCTAssertFalse(
-                code.contains(forbidden),
-                "localMidnight 不得出現 \(forbidden)——裝置曆法會流進回填日期，跟 wireString 修好後" +
-                    "會把 2026-09-04 存成 3937-09-04（LS-331 merge-review R1 X1）"
-            )
-            XCTAssertFalse(
-                helperCode.contains(forbidden),
-                "fixedGregorianCalendar 不得出現 \(forbidden)——裝置曆法會流進所有借用它的呼叫端" +
-                    "（LS-331 merge-review R1 X1）"
-            )
-        }
+        XCTAssertFalse(
+            code.contains("Calendar(identifier: .gregorian)"),
+            "localMidnight 不得自行組 Calendar——換算邏輯只能活在 BirthdayFormat.localMidnight 這一份" +
+                "（LS-334 merge-review R1 M2）"
+        )
     }
 
     /// 從原始碼抽出一個函式的本體（簽名到同縮排層級的結尾大括號），過濾掉註解行——同

@@ -161,8 +161,8 @@ final class BirthdayFormatTests: XCTestCase {
     /// private helper 之後，`wireString` 本體不再直接出現 `Calendar(identifier: .gregorian)`
     /// 字面──改成兩段守：helper 本體要用固定西曆組 `Calendar`；`wireString` 本體要呼叫
     /// `fixedGregorianCalendar(timeZone:)`、不能繞過去（同
-    /// `GrowthMeasurementFormViewTimeZoneTests.test_localMidnight_source_reconstructsWithFixedGregorianCalendar`
-    /// 既有兩段守的理由）。
+    /// `GrowthMeasurementFormViewTimeZoneTests.test_localMidnight_source_delegatesToBirthdayFormat`
+    /// 既有的原始碼文字守衛理由）。
     func test_wireString_source_extractsWithFixedGregorianCalendar() throws {
         let source = try birthdayFormatSource()
 
