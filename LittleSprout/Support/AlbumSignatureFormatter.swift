@@ -31,19 +31,23 @@ enum AlbumSignatureFormatter {
     }
 
     /// 單一寶貝的「暱稱 · 年齡」片段。
-    static func segment(for child: Child, asOf date: Date, calendar: Calendar = .current) -> String {
-        let age = hardenedAge(BirthdayFormat.ageDescription(birthday: child.birthday, now: date, calendar: calendar))
+    ///
+    /// LS-334：改吃 `timeZone: TimeZone`，不再吃 `calendar: Calendar`——同
+    /// `BirthdayFormat.wireString`／`ageDescription` 原則，裝置曆法識別碼不會有機會流進
+    /// `BirthdayFormat.ageDescription`。
+    static func segment(for child: Child, asOf date: Date, timeZone: TimeZone = .current) -> String {
+        let age = hardenedAge(BirthdayFormat.ageDescription(birthday: child.birthday, now: date, timeZone: timeZone))
         return "\(child.name) · \(age)"
     }
 
     /// 署名列文字——`isOneLinePerPerson` 為 true（AX3）時多寶貝改用 `\n` 分隔，否則用「、」。
     /// 零寶貝回傳單一半形空白（保留高度，見型別文件註解）。
     static func signatureText(
-        children: [Child], asOf date: Date, isOneLinePerPerson: Bool, calendar: Calendar = .current
+        children: [Child], asOf date: Date, isOneLinePerPerson: Bool, timeZone: TimeZone = .current
     ) -> String {
         guard !children.isEmpty else { return " " }
         let separator = isOneLinePerPerson ? "\n" : "、"
-        return children.map { segment(for: $0, asOf: date, calendar: calendar) }.joined(separator: separator)
+        return children.map { segment(for: $0, asOf: date, timeZone: timeZone) }.joined(separator: separator)
     }
 
     /// Caption 文字——相簿名＋張數，AX3 各自成行（`\n`），一般字級用「·」同列。

@@ -19,9 +19,11 @@ enum MultiChildCaptionFormatter {
         let age: String
     }
 
-    static func segments(children: [Child], asOf date: Date, calendar: Calendar = .current) -> [Segment] {
+    /// LS-334：改吃 `timeZone: TimeZone`，不再吃 `calendar: Calendar`——同
+    /// `AlbumSignatureFormatter.segment` 的既有理由。
+    static func segments(children: [Child], asOf date: Date, timeZone: TimeZone = .current) -> [Segment] {
         children.map { child in
-            let age = BirthdayFormat.ageDescription(birthday: child.birthday, now: date, calendar: calendar)
+            let age = BirthdayFormat.ageDescription(birthday: child.birthday, now: date, timeZone: timeZone)
                 .replacingOccurrences(of: " ", with: "\u{00A0}")
             return Segment(name: child.name, age: age)
         }
@@ -32,8 +34,8 @@ enum MultiChildCaptionFormatter {
     /// 一階剛好落在這裡）／`$text-secondary`。用 SwiftUI 語意字級（`.body`／`.footnote`）
     /// 而不是絕對 pt 值，兩者本身就會隨 Dynamic Type 縮放，不需要另外套
     /// `@ScaledMetric`（那只能在 View body 內取得環境，這裡是純函式）。
-    static func attributed(children: [Child], asOf date: Date, calendar: Calendar = .current) -> AttributedString {
-        let segs = segments(children: children, asOf: date, calendar: calendar)
+    static func attributed(children: [Child], asOf date: Date, timeZone: TimeZone = .current) -> AttributedString {
+        let segs = segments(children: children, asOf: date, timeZone: timeZone)
         var result = AttributedString()
         for (index, seg) in segs.enumerated() {
             if index > 0 {

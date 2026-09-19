@@ -23,16 +23,6 @@ import SwiftUI
 /// Status Slot 文字被截斷成「⋯」（`body` 文件註解細節）；改成日期／量測群組／備註／Status
 /// Slot 全部收進同一個 ScrollView，只有 Actions 在外，Actions 的位置完全不受表單內容或字級
 /// 影響，比原本更直接地保證「四態同座標」。
-///
-/// LS-331 merge-review R1 X1：`localMidnight` 兩段都要組「固定西曆＋指定時區」的 `Calendar`
-/// （同 `BirthdayFormat.wireString` 原則），抽成檔案層級小函式避免重複，放在 struct 外——
-/// 不是共用狀態，純粹是這個組合本身值得有名字。
-private func fixedGregorianCalendar(timeZone: TimeZone) -> Calendar {
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = timeZone
-    return calendar
-}
-
 struct GrowthMeasurementFormView: View {
     let growthStore: GrowthStore
     /// nil＝新增；非 nil＝編輯這一筆（帶入既有值，`upsert_growth_record` 的 `p_id` 走這個
@@ -75,16 +65,13 @@ struct GrowthMeasurementFormView: View {
     /// `BirthdayFormat.wireString(from:timeZone:)`）——先把 UTC 午夜的年月日抽出來，換成
     /// 「裝置本地時區同一組年月日的午夜」，兩處抽出的年月日才會跟原始 `measuredOn` 一致。
     ///
-    /// LS-331 merge-review R1 X1：重組一律用固定 `Calendar(identifier: .gregorian)`，只借用
-    /// 注入的 `timeZone`（同 `wireString` 原則）——原本用裝置曆法（`calendar: Calendar =
-    /// .current`）重組，被舊版 `wireString`（同樣吃裝置曆法）的錯誤抵銷；`wireString` 修好後
-    /// 這裡若還吃裝置曆法，民國曆使用者編輯既有量測不改日期直接存，會把 `2026-09-04` 存成
-    /// `3937-09-04`（DB 無年份 CHECK）。不設 `private`，`GrowthMeasurementFormViewTimeZoneTests`
-    /// 直接呼叫驗證。
+    /// LS-334 merge-review R1 M2：原本在這裡重新實作一次「固定西曆＋指定時區」的換算，跟
+    /// `BirthdayFormat.localMidnight(from:timeZone:)`（`EditChildView` 同型 bug 的修法）算法
+    /// 逐字相同，只差回傳型別——兩份實作會各自漂移。改成直接呼叫 `BirthdayFormat.localMidnight`，
+    /// 只留一份實作與一組行為測試（`BirthdayFormatTests`／`EditChildViewBirthdayTimeZoneTests`）。
+    /// 不設 `private`，`GrowthMeasurementFormViewTimeZoneTests` 直接呼叫驗證接線。
     static func localMidnight(from utcDate: Date, timeZone: TimeZone = .current) -> Date? {
-        let components = fixedGregorianCalendar(timeZone: TimeZone(identifier: "UTC")!)
-            .dateComponents([.year, .month, .day], from: utcDate)
-        return fixedGregorianCalendar(timeZone: timeZone).date(from: components)
+        BirthdayFormat.localMidnight(from: utcDate, timeZone: timeZone)
     }
 
     /// R1 merge-review m1：改用 `GrowthMeasurementValidation.parsedMeasurement(from:)`——原本

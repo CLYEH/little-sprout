@@ -13,10 +13,10 @@ import XCTest
 /// 實測算出（不是猜的字面值）——這是 Foundation 曆法計算本身的行為，測試在意的是「這支
 /// 純函式在這些邊界上的輸出被鎖住、之後改動會被看見」，不是重新驗證 Foundation 的正確性。
 final class ChildAgeFormatterTests: XCTestCase {
-    private func utcCalendar() -> Calendar {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC")!
-        return calendar
+    /// LS-334：`ageDescription` 改吃 `timeZone: TimeZone`，不再吃 `calendar: Calendar`——這裡
+    /// 的既有 `utcCalendar()` 助手已無呼叫端，換成同樣固定 UTC 的 `utcTimeZone()`。
+    private func utcTimeZone() -> TimeZone {
+        TimeZone(identifier: "UTC")!
     }
 
     private func date(_ wireString: String) -> Date {
@@ -28,7 +28,7 @@ final class ChildAgeFormatterTests: XCTestCase {
     func test_ageDescription_onBirthday_returnsZeroMonthsOld() {
         let birthday = date("2024-06-15")
         let today = date("2024-06-15")
-        let age = BirthdayFormat.ageDescription(birthday: birthday, now: today, calendar: utcCalendar())
+        let age = BirthdayFormat.ageDescription(birthday: birthday, now: today, timeZone: utcTimeZone())
 
         XCTAssertEqual(age, "0 個月大")
     }
@@ -39,7 +39,7 @@ final class ChildAgeFormatterTests: XCTestCase {
     func test_ageDescription_underOneMonth_crossingMonthBoundary_returnsZeroMonthsOld() {
         let birthday = date("2024-05-25")
         let today = date("2024-06-20")
-        let age = BirthdayFormat.ageDescription(birthday: birthday, now: today, calendar: utcCalendar())
+        let age = BirthdayFormat.ageDescription(birthday: birthday, now: today, timeZone: utcTimeZone())
 
         XCTAssertEqual(age, "0 個月大")
     }
@@ -50,7 +50,7 @@ final class ChildAgeFormatterTests: XCTestCase {
     func test_ageDescription_leapDayBirthday_turnsOneOnFeb28OfNonLeapYear() {
         let birthday = date("2024-02-29")
         let firstBirthday = date("2025-02-28")
-        let age = BirthdayFormat.ageDescription(birthday: birthday, now: firstBirthday, calendar: utcCalendar())
+        let age = BirthdayFormat.ageDescription(birthday: birthday, now: firstBirthday, timeZone: utcTimeZone())
 
         XCTAssertEqual(age, "1 歲")
     }
@@ -60,7 +60,7 @@ final class ChildAgeFormatterTests: XCTestCase {
     func test_ageDescription_leapDayBirthday_secondNonLeapYear_turnsTwo() {
         let birthday = date("2024-02-29")
         let secondBirthday = date("2026-02-28")
-        let age = BirthdayFormat.ageDescription(birthday: birthday, now: secondBirthday, calendar: utcCalendar())
+        let age = BirthdayFormat.ageDescription(birthday: birthday, now: secondBirthday, timeZone: utcTimeZone())
 
         XCTAssertEqual(age, "2 歲")
     }
@@ -70,7 +70,7 @@ final class ChildAgeFormatterTests: XCTestCase {
     func test_ageDescription_monthEndBirthday_turnsOneMonthOnFeb28OfNonLeapYear() {
         let birthday = date("2023-01-31")
         let oneMonthLater = date("2023-02-28")
-        let age = BirthdayFormat.ageDescription(birthday: birthday, now: oneMonthLater, calendar: utcCalendar())
+        let age = BirthdayFormat.ageDescription(birthday: birthday, now: oneMonthLater, timeZone: utcTimeZone())
 
         XCTAssertEqual(age, "1 個月大")
     }
@@ -80,7 +80,7 @@ final class ChildAgeFormatterTests: XCTestCase {
     func test_ageDescription_acrossYearBoundary_wholeYearNoExtraMonths() {
         let birthday = date("2022-12-20")
         let today = date("2024-01-05")
-        let age = BirthdayFormat.ageDescription(birthday: birthday, now: today, calendar: utcCalendar())
+        let age = BirthdayFormat.ageDescription(birthday: birthday, now: today, timeZone: utcTimeZone())
 
         XCTAssertEqual(age, "1 歲")
     }
@@ -90,7 +90,7 @@ final class ChildAgeFormatterTests: XCTestCase {
     func test_ageDescription_acrossYearBoundary_yearsAndMonths() {
         let birthday = date("2022-12-20")
         let today = date("2024-01-20")
-        let age = BirthdayFormat.ageDescription(birthday: birthday, now: today, calendar: utcCalendar())
+        let age = BirthdayFormat.ageDescription(birthday: birthday, now: today, timeZone: utcTimeZone())
 
         XCTAssertEqual(age, "1 歲 1 個月")
     }
