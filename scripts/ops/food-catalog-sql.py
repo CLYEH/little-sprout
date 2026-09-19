@@ -39,7 +39,10 @@
                                                       `rules` job（無 DB）與本機快速檢查使用。環境變數
                                                       `FOOD_CATALOG_CSV_PATH` 可覆寫讀取路徑（自測用合成
                                                       CSV 跑真正的 CLI 出口碼，不必 monkeypatch，LS-342
-                                                      R2 informational i2）。
+                                                      R2 informational i2；這個覆寫對 insert／check／
+                                                      check-allergens 三個模式皆生效——`ok` 訊息印出實際
+                                                      讀到的路徑，避免殘留的環境變數覆寫讓人誤以為驗的是
+                                                      正式 CSV，LS-96 池項 25fea8c7 m1'）。
   python3 scripts/ops/food-catalog-sql.py check-allergens-sql
                                                     > 把同一份規則（food_catalog_rules.py）轉成一段 SQL
                                                       DO 區塊，對 public.food_catalog 目前內容（DB 現況）
@@ -117,7 +120,10 @@ def main():
             for v in violations:
                 print(v, file=sys.stderr)
             raise SystemExit(1)
-        print(f"ok：food_catalog 過敏原啟發式檢查通過（CSV 端，{len(rows)} 列，LS-342）")
+        print(
+            f"ok：food_catalog 過敏原啟發式檢查通過（CSV 端，{len(rows)} 列，LS-342，"
+            f"讀取路徑：{CSV_PATH}）"
+        )
         return
     if mode == "check-allergens-sql":
         sys.stdout.write(food_catalog_rules.generate_sql_do_block())
