@@ -347,12 +347,17 @@ final class BirthdayFormatTests: XCTestCase {
     /// 用任何 `Calendar` 注入在行為層重現，改用原始碼文字守衛：mutation 把
     /// `fixedGregorianCalendar(timeZone: timeZone)` 改回 `Calendar.current`／
     /// `.autoupdatingCurrent`，或重新開放注入 `calendar: Calendar` 參數，這支測試轉紅。
+    ///
+    /// merge-review R1 m1：`closeBraceMarker` 改用預設值——原本錨在「下一支函式的宣告行」，
+    /// 而不是這支函式自己的結尾大括號。`components(separatedBy:).first` 在錨點不存在時會靜默
+    /// 回傳整份檔案剩餘內容，日後只要把 `ageDescriptionForTesting` 改名／搬動順序，這支守衛
+    /// 檢查的區段就會悄悄換成「從這裡到檔尾」，語意整個跑掉。這支 production 入口本體是單行
+    /// body，預設的 `"\n    }"` 一定會命中自己的結尾，不需要自訂錨點。
     func test_ageDescription_source_extractsWithFixedGregorianCalendar() throws {
         let source = try birthdayFormatSource()
         let code = try functionBody(
             in: source,
-            signaturePrefix: "static func ageDescription(birthday: Date, now: Date = Date(), timeZone:",
-            closeBraceMarker: "\n    static func ageDescription(birthday: Date, now: Date,"
+            signaturePrefix: "static func ageDescription(birthday: Date, now: Date = Date(), timeZone:"
         )
 
         XCTAssertTrue(
