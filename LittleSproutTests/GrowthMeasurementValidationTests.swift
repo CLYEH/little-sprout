@@ -137,4 +137,38 @@ final class GrowthMeasurementValidationTests: XCTestCase {
     func test_parsedMeasurement_validOneDecimal_unchanged() {
         XCTAssertEqual(GrowthMeasurementValidation.parsedMeasurement(from: "78.5"), 78.5)
     }
+
+    // MARK: - submitDecision（merge-review R2 finding：非空但無效的欄位不能被靜默當成「沒填」）
+
+    /// 編輯既有筆時把身高打成 0（或 1000、`9..6`），體重照舊——現況會存成 `height_cm = NULL`
+    /// （`upsert_growth_record` 的 update 分支 `height_cm = p_height_cm`），既有身高被靜默清掉。
+    func test_submitDecision_nonEmptyInvalidField_isInvalidNotSilentlyDropped() {
+        for bad in ["0", "0.0", "1000", "9..6", "abc"] {
+            XCTAssertEqual(
+                GrowthMeasurementValidation.submitDecision(heightText: bad, weightText: "12.5", headText: ""),
+                .invalid, "身高「\(bad)」非空但無效，不能被當成沒填、只存體重"
+            )
+        }
+    }
+
+    /// 全空仍是 `.empty`（「請至少填寫…」），不是 `.invalid`。
+    func test_submitDecision_allBlank_isEmpty() {
+        XCTAssertEqual(
+            GrowthMeasurementValidation.submitDecision(heightText: " ", weightText: "", headText: ""), .empty
+        )
+    }
+
+    /// 品牌第 8 條：超出合理範圍（軟提醒）照樣 `.save`——這是「範圍提醒不擋儲存」的行為面測試。
+    func test_submitDecision_outOfSoftRange_stillSaves() {
+        XCTAssertNotNil(GrowthMeasurementValidation.rangeWarning(heightCm: 250.0, weightKg: nil, headCm: nil))
+        XCTAssertEqual(
+            GrowthMeasurementValidation.submitDecision(heightText: "250", weightText: "", headText: ""),
+            .save(heightCm: 250.0, weightKg: nil, headCm: nil)
+        )
+    }
+
+    /// 四捨五入到一位後變 0（`0.04`→`0.0`）不能送出——`value > 0` 要檢查四捨五入後的值，否則撞 DB `23514`。
+    func test_parsedMeasurement_roundsToZero_returnsNil() {
+        XCTAssertNil(GrowthMeasurementValidation.parsedMeasurement(from: "0.04"))
+    }
 }

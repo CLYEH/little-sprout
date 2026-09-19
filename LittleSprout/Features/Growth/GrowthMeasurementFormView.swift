@@ -41,6 +41,7 @@ struct GrowthMeasurementFormView: View {
     /// 升級成回話式提醒（`$text-primary`，Notes B-4：「不再逐欄標紅…改為…回話列語彙」）。輸入
     /// 之後（任一項非空）或再次按下儲存都會清掉，不需要额外的「使用者是否碰過欄位」追蹤。
     @State private var showsEmptyMessage = false
+    @State private var showsInvalidMessage = false
     @State private var statusScrollRequest = 0
 
     init(growthStore: GrowthStore, editingRecord: GrowthRecord? = nil) {
@@ -235,6 +236,7 @@ struct GrowthMeasurementFormView: View {
                 // `@State` 即時值（三欄合併判斷，不是「這欄非空」；使用者可能正在清空這一欄、
                 // 靠另一欄符合「至少一項」）。
                 if hasAtLeastOneValue { showsEmptyMessage = false }
+                showsInvalidMessage = false
             }
         )
     }
@@ -290,13 +292,14 @@ struct GrowthMeasurementFormView: View {
 
     private var statusText: String {
         if case .failure(let error) = growthStore.saveState { return error.userFacingMessage }
+        if showsInvalidMessage { return "數值看起來不對：請填大於 0 的數字，最多一位小數。" }
         if showsEmptyMessage { return "請至少填寫身高、體重、頭圍其中一項，才能儲存這筆紀錄。" }
         return "身高、體重、頭圍至少需要填寫一項。"
     }
 
     private var statusIsEmphasized: Bool {
         if case .failure = growthStore.saveState { return true }
-        return showsEmptyMessage
+        return showsEmptyMessage || showsInvalidMessage
     }
 
     /// Notes `x7FXr`／`i9Rxq`：一般字級兩個插槽固定 56pt（`.frame(height:)` 用同一個常數，
@@ -327,16 +330,21 @@ struct GrowthMeasurementFormView: View {
 
     private func submit() {
         guard !growthStore.saveState.isSubmitting else { return }
-        guard hasAtLeastOneValue else {
-            showsEmptyMessage = true
+        let decision = GrowthMeasurementValidation.submitDecision(
+            heightText: heightText, weightText: weightText, headText: headText
+        )
+        guard case let .save(heightCm, weightKg, headCm) = decision else {
+            showsEmptyMessage = decision == .empty
+            showsInvalidMessage = decision == .invalid
             statusScrollRequest += 1
             return
         }
         showsEmptyMessage = false
+        showsInvalidMessage = false
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
         let input = GrowthMeasurementInput(
             id: editingRecord?.id, measuredOn: measuredOn,
-            heightCm: heightValue, weightKg: weightValue, headCm: headValue,
+            heightCm: heightCm, weightKg: weightKg, headCm: headCm,
             note: trimmedNote.isEmpty ? nil : trimmedNote
         )
         Task {
@@ -348,32 +356,6 @@ struct GrowthMeasurementFormView: View {
     private func cancel() {
         guard !growthStore.saveState.isSubmitting else { return }
         dismiss()
-    }
-}
-
-/// 測量日期的系統日期選擇器——同 `BirthdayPickerSheet` 既有理由與版式（見該檔文件註解），
-/// 這裡不重用它：那支是專門給「生日」欄位寫的標籤（`"生日"`／`"選擇生日"`），成長量測是不同
-/// 欄位語意，重用會讓兩個不相關情境共用同一組硬寫文案。`in: ...Date()`——量測日期不能選未來
-/// （同生日欄位「不能選未來」的既有理由：量測這件事只會發生在過去或今天）。
-private struct GrowthMeasurementDatePickerSheet: View {
-    @Binding var selection: Date
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            DatePicker("測量日期", selection: $selection, in: ...Date(), displayedComponents: .date)
-                .datePickerStyle(.wheel)
-                .labelsHidden()
-                .padding(AppSpacing.screenPad)
-                .navigationTitle("選擇測量日期")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("完成") { dismiss() }
-                    }
-                }
-        }
-        .presentationDetents([.medium])
     }
 }
 

@@ -31,11 +31,32 @@ enum GrowthMeasurementValidation {
         let trimmed = text.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return nil }
         let normalized = trimmed.replacingOccurrences(of: ",", with: ".")
-        guard let value = Double(normalized), value > 0, value <= maxValidValue else { return nil }
-        return (value * 10).rounded() / 10
+        guard let value = Double(normalized) else { return nil }
+        let rounded = (value * 10).rounded() / 10
+        guard rounded > 0, rounded <= maxValidValue else { return nil }
+        return rounded
     }
 
     private static let maxValidValue = 999.9
+
+    /// 送出判定（純函式，`GrowthMeasurementFormView.submit()` 轉呼叫）——刻意不收 `rangeWarning`：
+    /// 範圍提醒是軟性的，不參與「能不能存」的判斷（品牌第 8 條）。
+    enum SubmitDecision: Equatable {
+        case save(heightCm: Double?, weightKg: Double?, headCm: Double?)
+        case empty
+        case invalid
+    }
+
+    static func submitDecision(heightText: String, weightText: String, headText: String) -> SubmitDecision {
+        let texts = [heightText, weightText, headText]
+        let values = texts.map(parsedMeasurement(from:))
+        let hasInvalid = zip(texts, values).contains { text, value in
+            value == nil && !text.trimmingCharacters(in: .whitespaces).isEmpty
+        }
+        if hasInvalid { return .invalid }
+        guard hasAtLeastOneValue(heightCm: values[0], weightKg: values[1], headCm: values[2]) else { return .empty }
+        return .save(heightCm: values[0], weightKg: values[1], headCm: values[2])
+    }
 
     /// 「超出合理範圍」的軟性提醒——刻意用固定絕對門檻，不是依年齡換算的百分位（票文「不做：
     /// 參考帶」已排除百分位計算）。R1 merge-review M4（orchestrator 裁決 `d55ff9ac` 第 5 條）：

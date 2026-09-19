@@ -285,6 +285,7 @@
 		8467E723667649B1DED23A33 /* EULAAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3430D5B33F6693A06536C073 /* EULAAPIClient.swift */; };
 		85336150B2495BA6105983AF /* InvitePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9B81015EBB68F05A715D7F /* InvitePhase.swift */; };
 		856028BA2632449FEDA2CBF6 /* SupabaseMediaUploadServiceThumbnailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B08E2AF6C54AAD3D290BA2 /* SupabaseMediaUploadServiceThumbnailTests.swift */; };
+		85B9E26BBBF2DFC02DFF398C /* GrowthMeasurementDatePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F7E15199F2E7CF91BAE7AA /* GrowthMeasurementDatePickerSheet.swift */; };
 		87BC02F8CF41F90D569BEA84 /* BabyChipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6FEB0AA729D73E382DB2760 /* BabyChipView.swift */; };
 		87E501CF0FB428B9FB3A0DCF /* MockURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */; };
 		88A188770092CA21AD9CC704 /* ChildAgeFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1EF5E70745F2D0DCAA3405 /* ChildAgeFormatterTests.swift */; };
@@ -1031,6 +1032,7 @@
 		E317AB1BE868959971AB28D1 /* Import04ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Import04ProgressView.swift; sourceTree = "<group>"; };
 		E370C40A50599B3900EAAF0F /* ChildrenManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenManagementView.swift; sourceTree = "<group>"; };
 		E466449A44696816AA484F94 /* OTPVerificationModelRateLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModelRateLimitTests.swift; sourceTree = "<group>"; };
+		E5F7E15199F2E7CF91BAE7AA /* GrowthMeasurementDatePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthMeasurementDatePickerSheet.swift; sourceTree = "<group>"; };
 		E60A9F24D8B2759B3E482F5E /* CommentsSheetView+Footer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommentsSheetView+Footer.swift"; sourceTree = "<group>"; };
 		E6E38A2A74FC3F66515AF1D2 /* GrowthMeasurementValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthMeasurementValidationTests.swift; sourceTree = "<group>"; };
 		E715D59C5D776BF6611E5E33 /* InteractionRowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionRowUITests.swift; sourceTree = "<group>"; };
@@ -1181,6 +1183,7 @@
 				6A6790ACCC855EC78DA5C69D /* GrowthChartCardView.swift */,
 				C5CC6176A3A7D8EB71B8A0AC /* GrowthHistorySection.swift */,
 				A9A7B3867A645071BDFCEBA3 /* GrowthLatestValueCard.swift */,
+				E5F7E15199F2E7CF91BAE7AA /* GrowthMeasurementDatePickerSheet.swift */,
 				40A93111BE0EAB8358E68B44 /* GrowthMeasurementFormView.swift */,
 				2CA72632AD0E93264F6CB920 /* GrowthRecordActionsSheet.swift */,
 				00DD2838106A56B026EE518E /* GrowthRecordDeleteConfirmationSheet.swift */,
@@ -2222,6 +2225,7 @@
 				16C912D8489E8ADB71BC246B /* GrowthEmptyStateCopy.swift in Sources */,
 				670899692547E092C2301C53 /* GrowthHistorySection.swift in Sources */,
 				B21993CA0DC6C40D52D51108 /* GrowthLatestValueCard.swift in Sources */,
+				85B9E26BBBF2DFC02DFF398C /* GrowthMeasurementDatePickerSheet.swift in Sources */,
 				951C19F22A52329C09D48391 /* GrowthMeasurementFormView.swift in Sources */,
 				17CF00CEC3E64D6F84968019 /* GrowthMeasurementValidation.swift in Sources */,
 				AB5623669EE9FE161120DAA9 /* GrowthRecord.swift in Sources */,
