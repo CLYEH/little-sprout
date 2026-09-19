@@ -84,6 +84,11 @@ struct TimelineView: View {
         // `TimelineStore+Import.swift`）——`TabView`＋`.tabItem`（`RootView.SectionTabView`）
         // 切換分頁時，未選取分頁的根內容會收到 `onDisappear`／選回來時收到 `onAppear`，同
         // `screenDidAppear()`／`screenDidDisappear()` 這裡假設的觸發時機。
+        // i4（merge-review R1）：跟下面 `.task(id:)` 有部分重疊——那顆本來就會在每次
+        // `onAppear` 重新起跑（切分頁再切回來會重新 refresh），這裡真正補到的是
+        // `.task(id:)` **不**重跑的情況（familyID／selectedChildID 都沒變、只是分頁切回
+        // 來）；兩者若同時觸發會被既有 in-flight 合流成一次請求，不會重複發送，不要因為
+        // 「看起來多打一次」就把這兩行拿掉。
         .onAppear { timelineStore.screenDidAppear() }
         .onDisappear { timelineStore.screenDidDisappear() }
         .task(id: familyStore.myFamily?.id) {
