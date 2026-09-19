@@ -34,8 +34,10 @@ json_str() {
 # worktree 立即生效，不需要另外掛「建立 worktree 時的包裝」（實測見 handoff）。這裡每次 SessionStart 冪等
 # 檢查一次：已是目標值就跳過、不重複寫入；設定失敗只印警告、不擋 session（fail-soft，同本檔其餘邏輯一致）。
 # LS-333 R2（源自 LS-313 R2／R3，池項 f99a2749；merge-review R1 m1 訂正）：`ServerAliveCountMax` 只計算「送出
-# keepalive 後伺服器沒回應」的次數、一收到回覆就歸零——實測（`GIT_TRACE=1 git ls-remote` 對 GitHub 開連線閒置
-# 12 秒）證明 GitHub 每次都正常回應 keepalive（type 81 REQUEST_SUCCESS），連 CountMax=1 都不會斷線。LS-313
+# keepalive 後伺服器沒回應」的次數、一收到回覆就歸零——實測（`ssh -vvv -o ServerAliveInterval=3 -o ServerAliveCountMax=1
+# git@github.com "git-upload-pack '<owner>/<repo>.git'"`，stdin 以 `sleep 12 |` 保持開啟、閒置 12 秒）GitHub 每次都回應
+# keepalive（type 81 REQUEST_SUCCESS），連 CountMax=1 都沒斷線（`GIT_TRACE=1 git ls-remote` 只用來確認 git 實際採用的
+# ssh 命令，量不到 keepalive）。LS-313
 # R2／R3 的 `Connection reset by peer` 是在 keepalive 正常往返的情況下被對端重置，**不是** CountMax 不夠大——
 # 拉高這個值對那次斷線沒有作用（PLAUSIBLE：GitHub 對 receive-pack 的閒置等待時間本身有上限）。真正有效的修法
 # 是 ios-dev.md 的規約 (a)：push 前先跑 push-gate.sh 暖 tree-hash 快取，讓 `git push` 觸發的 pre-push hook 只是
