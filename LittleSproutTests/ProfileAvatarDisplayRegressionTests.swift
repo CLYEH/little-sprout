@@ -56,20 +56,39 @@ final class ProfileAvatarDisplayRegressionTests: XCTestCase {
     /// 樹（同 `GrowthDetailViewerGatingRegressionTests`／`GrowthIdentityFreshnessRegressionTests`
     /// 文件註解點名的既有理由），這裡用原始碼文字守衛。
     ///
-    /// mutation：把 `profileSection` 的 `ProfileSummaryRow(...)` 改回不帶 `avatarURL:`（LS-345
-    /// 之前的舊寫法），這支測試會抓到。
+    /// **LS-345 R2（merge-review R1 m1）**：這條線改成兩段——`profileSection`
+    /// （`SettingsView.swift`）呼叫 `profileSummaryRowWithAvatarRefresh(displayName:)`（放到
+    /// `SettingsView+Profile.swift` 是檔案行數理由，見該檔文件註解），這顆函式內部才真的組
+    /// `ProfileSummaryRow(displayName:avatarURL:)`。兩段都要各自守，任一段被拿掉都要紅。
+    ///
+    /// mutation：把 `profileSection` 改回直接呼叫
+    /// `ProfileSummaryRow(displayName: displayName)`（不經 `profileSummaryRowWithAvatarRefresh`，
+    /// LS-345 之前的舊寫法），或把 `profileSummaryRowWithAvatarRefresh` 內部改回不帶
+    /// `avatarURL:`，這支測試都會抓到。
     func test_profileSection_passesProfileAvatarURLToProfileSummaryRow() throws {
-        let testFileURL = URL(fileURLWithPath: "\(#filePath)")
+        let settingsViewSource = try sourceText(relativePath: "LittleSprout/Features/SettingsView.swift")
+        let profileExtensionSource = try sourceText(
+            relativePath: "LittleSprout/Features/Settings/SettingsView+Profile.swift"
+        )
+
+        XCTAssertTrue(
+            settingsViewSource.contains("profileSummaryRowWithAvatarRefresh(displayName: displayName)"),
+            "profileSection 要透過 profileSummaryRowWithAvatarRefresh(displayName:) 顯示「個人」列"
+        )
+        let expectedCall = "ProfileSummaryRow(displayName: displayName, avatarURL: profileAvatarURL)"
+        XCTAssertTrue(
+            profileExtensionSource.contains(expectedCall),
+            "profileSummaryRowWithAvatarRefresh 要把 profileAvatarURL 轉手給 ProfileSummaryRow，否則設定頁" +
+                "「個人」列永遠顯示 SF Symbol 佔位，即使 profiles.avatar_url 已經有值"
+        )
+    }
+
+    private func sourceText(relativePath: String, file: StaticString = #filePath) throws -> String {
+        let testFileURL = URL(fileURLWithPath: "\(file)")
         let worktreeRoot = testFileURL
             .deletingLastPathComponent() // LittleSproutTests/
             .deletingLastPathComponent() // worktree 根目錄
-        let sourceURL = worktreeRoot.appendingPathComponent("LittleSprout/Features/SettingsView.swift")
-        let source = try String(contentsOf: sourceURL, encoding: .utf8)
-
-        XCTAssertTrue(
-            source.contains("ProfileSummaryRow(displayName: displayName, avatarURL: profileAvatarURL)"),
-            "profileSection 要把 profileAvatarURL 轉手給 ProfileSummaryRow，否則設定頁「個人」列" +
-                "永遠顯示 SF Symbol 佔位，即使 profiles.avatar_url 已經有值"
-        )
+        let sourceURL = worktreeRoot.appendingPathComponent(relativePath)
+        return try String(contentsOf: sourceURL, encoding: .utf8)
     }
 }
