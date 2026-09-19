@@ -355,7 +355,11 @@ done
 # 設定（LS-209 起），這裡只驗現值是否仍是期望值——期望值須與 session-start.sh 的 SSH_KEEPALIVE_CMD 同步更新，
 # 兩處各自一份常數（bash 腳本間無 import，同既有 .githooks 字面重複的慣例）。config 由所有 worktree 共用，
 # 看主 checkout 即可 ----
-ssh_cmd=
+# LS-341（F2，LS-96 池項 67acf376，來源 LS-333 dead-code sweep 38627731）：`ssh_cmd=` 的預先宣告已刪——
+# 標記區塊第一行（下方）就無條件覆寫，讀不到未覆寫前的值。`ssh_flag=` 保留、沒有刪：池項原文認定它也是
+# 死碼，但下方 case 三支只有 2 支會賦值（`"$SSH_KEEPALIVE_EXPECT") ;;`，即 core.sshCommand 已是期望值的
+# 健康／常見情境不賦值），若也拿掉這行預宣告，實測在 `set -uo pipefail` 下 `[ -n "$ssh_flag" ]`（下方）會
+# 對完全未賦值的變數丟「unbound variable」讓整支 patrol.sh 崩潰——這是最常見的健康狀態，不是邊角案例。
 ssh_flag=
 # LS333-SSH-KEEPALIVE-START
 ssh_cmd=$(git -C "$ROOT" config --get core.sshCommand 2>/dev/null || true)

@@ -583,6 +583,15 @@ expect 'R5F1-f 對照：csh 呼叫純腳本不受影響（allow，OK 兜底沒�
 # heredoc 與 echo 內字面（LS-104 只在命令位置比對）。持有者判定用假 lock 目錄（SUPABASE_LOCK_DIR）＋假
 # worktree（含 .git 檔）＋ hook JSON 的 cwd（bash_json_cwd），不碰真 lock；holder pid 用 1（活著、但
 # 不是任何人的祖先——是 ancestor 就會走 H3 既有重入放行，測不到 worktree 腿）。
+# LS-341（scope 2，LS-96 池項 0532b34a，來源 LS-325 QA 60693711）：下面 (a)/(b)/(c) 與 LS-184 (s) 兩段的
+# deny 正樣本（應 deny 的 H3b 觸發）過去沒有帶 SUPABASE_LOCK_DIR 覆寫——pretool_engine.py 的 _holder_fields()
+# 在沒有這個環境變數時會退回真正的 /tmp/supabase-lock-<project_id>（讀 supabase/config.toml 的 project_id）；
+# `PRETOOL_CWD` 在這些樣本裡也是空字串（bash_json 不帶 cwd 欄位），engine 因此退回 os.getcwd()（跑自測那個
+# shell 的實際目前目錄）。QA 若在自己的票 worktree 真的 `--hold` 住真實 lock、又剛好在同一個 worktree 跑
+# pretool.test.sh，這 20 條正樣本的「worktree 腿」判定會被真實鎖狀態誤判成「呼叫端＝持有者」，deny 全部變
+# allow、exit 1（`--release` 後重跑立刻恢復全綠）。修法：固定一個空的隔離 lock 目錄（絕對不含 holder 檔）
+# 覆寫 SUPABASE_LOCK_DIR，讓 _holder_fields() 永遠讀到「沒有 holder」，樣本不再看真實鎖狀態的臉色。
+h3b_iso_lockdir=$(mktemp -d)   # 永遠沒有 holder 檔——_holder_fields() 找不到就回 None（同「free」），與真實 lock 完全隔離
 # ============================================================
 bash_json_cwd() { printf '{"tool_name":"Bash","cwd":"%s","tool_input":{"command":"%s"}}' "$1" "$2"; }
 h3b_work=$(mktemp -d)
@@ -592,38 +601,38 @@ h3b_lock="$h3b_work/lock"; mkdir -p "$h3b_lock"
 h3b_wt=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$h3b_work/wt")
 printf 'pid=1\nworktree=%s\ncmd=hold:LS-183 test\n' "$h3b_wt" > "$h3b_lock/holder"
 
-# ---- 正樣本 (a) docker exec 進 supabase_* 容器 ----
+# ---- 正樣本 (a) docker exec 進 supabase_* 容器（LS-341：帶隔離 SUPABASE_LOCK_DIR，不受真實鎖狀態影響）----
 expect 'H3b-a① docker exec -it supabase_db_… psql（deny）' 2 \
-  "$(bash_json 'docker exec -it supabase_db_little-sprout psql -U postgres -c \"select 1\"')"
+  "$(bash_json 'docker exec -it supabase_db_little-sprout psql -U postgres -c \"select 1\"')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-a② docker compose exec supabase-db（deny，連字號前綴）' 2 \
-  "$(bash_json 'docker compose exec supabase-db psql -U postgres')"
+  "$(bash_json 'docker compose exec supabase-db psql -U postgres')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-a③ pg_isready 藏在 bash -c 引號 payload 內（deny，唯讀例外只認 exact token）' 2 \
-  "$(bash_json 'docker exec -i supabase_db_little-sprout bash -c \"pg_isready; psql -U postgres -c x\"')"
+  "$(bash_json 'docker exec -i supabase_db_little-sprout bash -c \"pg_isready; psql -U postgres -c x\"')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-a④ 括號黏連 (docker exec …)（deny，命令位置認不得→退回整段字面比對）' 2 \
-  "$(bash_json '(docker exec supabase_db_x psql -U postgres)')"
+  "$(bash_json '(docker exec supabase_db_x psql -U postgres)')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-a⑤ bash -c 包住 docker exec（deny，遞迴）' 2 \
-  "$(bash_json 'bash -c \"docker exec supabase_db_x psql -U postgres\"')"
+  "$(bash_json 'bash -c \"docker exec supabase_db_x psql -U postgres\"')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-a⑥ 多行：docker exec 在第二行（deny）' 2 \
-  "$(bash_json 'echo prep\ndocker exec supabase_db_x psql -U postgres')"
+  "$(bash_json 'echo prep\ndocker exec supabase_db_x psql -U postgres')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 # ---- 正樣本 (b) psql／連線字串打 54322 ----
-expect 'H3b-b① psql -h 127.0.0.1 -p 54322（deny）' 2 "$(bash_json 'psql -h 127.0.0.1 -p 54322 -U postgres -c \"select 1\"')"
+expect 'H3b-b① psql -h 127.0.0.1 -p 54322（deny）' 2 "$(bash_json 'psql -h 127.0.0.1 -p 54322 -U postgres -c \"select 1\"')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-b② psql 連線字串 localhost:54322（deny；樣本不帶密碼——pre-commit secrets 掃描會擋 user:pass@host 形狀）' 2 \
-  "$(bash_json 'psql postgresql://postgres@localhost:54322/postgres')"
+  "$(bash_json 'psql postgresql://postgres@localhost:54322/postgres')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-b③ PGPASSWORD=… psql --port=54322（deny，賦值前綴不影響命令位置）' 2 \
-  "$(bash_json 'PGPASSWORD=postgres psql -h localhost --port=54322 -U postgres')"
+  "$(bash_json 'PGPASSWORD=postgres psql -h localhost --port=54322 -U postgres')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-b④ pg_dump 連線字串 :54322（deny，連線字串不限 psql）' 2 \
-  "$(bash_json 'pg_dump postgresql://postgres@127.0.0.1:54322/postgres -f x.sql')"
+  "$(bash_json 'pg_dump postgresql://postgres@127.0.0.1:54322/postgres -f x.sql')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-b⑤ DATABASE_URL=postgres://…:54322 node（deny，VAR= 前綴的連線字串）' 2 \
-  "$(bash_json 'DATABASE_URL=postgres://postgres@127.0.0.1:54322/postgres node x.js')"
+  "$(bash_json 'DATABASE_URL=postgres://postgres@127.0.0.1:54322/postgres node x.js')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-b⑥ for … do psql -p 54322（deny，shell 關鍵字開頭→退回整段字面比對）' 2 \
-  "$(bash_json 'for i in 1; do psql -p 54322; done')"
+  "$(bash_json 'for i in 1; do psql -p 54322; done')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 # ---- 正樣本 (c) supabase 本機子命令無 --linked ----
-expect 'H3b-c① supabase functions serve（deny）' 2 "$(bash_json 'supabase functions serve')"
-expect 'H3b-c② supabase db query（deny）' 2 "$(bash_json 'supabase db query \"select 1\"')"
-expect 'H3b-c③ supabase db dump（deny）' 2 "$(bash_json 'supabase db dump -f x.sql')"
-expect 'H3b-c④ supabase migration up（deny）' 2 "$(bash_json 'supabase migration up')"
+expect 'H3b-c① supabase functions serve（deny）' 2 "$(bash_json 'supabase functions serve')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
+expect 'H3b-c② supabase db query（deny）' 2 "$(bash_json 'supabase db query \"select 1\"')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
+expect 'H3b-c③ supabase db dump（deny）' 2 "$(bash_json 'supabase db dump -f x.sql')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
+expect 'H3b-c④ supabase migration up（deny）' 2 "$(bash_json 'supabase migration up')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-c⑤ supabase db query --db-url 打 54322（deny，--db-url 非 --linked、連線字串亦命中）' 2 \
-  "$(bash_json 'supabase db query --db-url postgresql://postgres@127.0.0.1:54322/postgres \"select 1\"')"
+  "$(bash_json 'supabase db query --db-url postgresql://postgres@127.0.0.1:54322/postgres \"select 1\"')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 # ---- 負樣本：包裝過 ----
 expect 'H3b-n① supabase-lock.sh -- docker exec …（allow，包裝字面）' 0 \
   "$(bash_json 'bash scripts/ops/supabase-lock.sh -- docker exec -i supabase_db_little-sprout psql -U postgres -c \"select 1\"')"
@@ -638,6 +647,10 @@ expect 'H3b-h② cwd＝holder worktree 子目錄（allow，比對的是 worktree
   "$(bash_json_cwd "$h3b_work/wt/sub" 'psql -h 127.0.0.1 -p 54322 -U postgres')" SUPABASE_LOCK_DIR="$h3b_lock"
 expect 'H3b-h③ cd <holder worktree> && docker exec（allow，沿命令追蹤 cd）' 0 \
   "$(bash_json_cwd "$h3b_work/other" "cd $h3b_work/wt && docker exec supabase_db_x psql -U postgres")" SUPABASE_LOCK_DIR="$h3b_lock"
+# LS-341（scope 2，池項 0532b34a「補一條持有者直通正樣本明確測這條路徑」）：h①-h③ 只覆蓋過 (a)/(b) 觸發（docker
+# exec／psql）的持有者 worktree 放行；(c) 類觸發（supabase 本機子命令無 --linked）沒有對應的持有者直通樣本，補一條。
+expect 'H3b-h③b cwd＝holder worktree 根、(c) 類觸發 supabase functions serve（allow，worktree 腿同樣適用於 (c)）' 0 \
+  "$(bash_json_cwd "$h3b_work/wt" 'supabase functions serve')" SUPABASE_LOCK_DIR="$h3b_lock"
 expect 'H3b-h④ 對照：cwd 在別的目錄（deny，同一把 hold）' 2 \
   "$(bash_json_cwd "$h3b_work/other" 'docker exec -i supabase_db_little-sprout psql -U postgres')" SUPABASE_LOCK_DIR="$h3b_lock"
 expect 'H3b-h⑤ 對照：cd 目的地含變數（deny，目的地判不出→不視為持有者 worktree）' 2 \
@@ -694,12 +707,14 @@ ls184_work=$(mktemp -d)
 mkdir -p "$ls184_work/wt" "$ls184_work/other"; : > "$ls184_work/wt/.git"
 ls184_lock="$ls184_work/lock"; mkdir -p "$ls184_lock"
 printf 'pid=1\nworktree=%s\ncmd=hold:LS-184 test\n' "$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$ls184_work/wt")" > "$ls184_lock/holder"
-expect 'H3b-s① supabase stop（deny）' 2 "$(bash_json 'supabase stop')"
-expect 'H3b-s② supabase start -x studio（deny）' 2 "$(bash_json 'supabase start -x studio')"
-expect 'H3b-s③ supabase db start（deny）' 2 "$(bash_json 'supabase db start')"
+# LS-341（scope 2）：s①-⑤ 同樣帶隔離 SUPABASE_LOCK_DIR（見上方 (a)/(b)/(c) 段的理由——沒有覆寫時會退回真實
+# /tmp/supabase-lock-<project_id>，被真實持有的 lock 狀態干擾）。
+expect 'H3b-s① supabase stop（deny）' 2 "$(bash_json 'supabase stop')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
+expect 'H3b-s② supabase start -x studio（deny）' 2 "$(bash_json 'supabase start -x studio')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
+expect 'H3b-s③ supabase db start（deny）' 2 "$(bash_json 'supabase db start')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-s④ bash -c 包 stop && start 未經 wrapper（deny，qa.md 重建容器句的裸跑形狀，遞迴）' 2 \
-  "$(bash_json 'bash -c \"supabase stop && supabase start\"')"
-expect 'H3b-s⑤ (supabase stop) 括號黏連→退回整段字面比對（deny）' 2 "$(bash_json '(supabase stop)')"
+  "$(bash_json 'bash -c \"supabase stop && supabase start\"')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
+expect 'H3b-s⑤ (supabase stop) 括號黏連→退回整段字面比對（deny）' 2 "$(bash_json '(supabase stop)')" SUPABASE_LOCK_DIR="$h3b_iso_lockdir"
 expect 'H3b-s⑥ 對照：cwd 在別的目錄、同一把 hold（deny）' 2 \
   "$(bash_json_cwd "$ls184_work/other" 'supabase start')" SUPABASE_LOCK_DIR="$ls184_lock"
 expect 'H3b-s⑦ 包裝 supabase-lock.sh -- bash -c "supabase stop && supabase start"（allow，qa.md 原句）' 0 \
@@ -708,7 +723,7 @@ expect 'H3b-s⑧ cwd＝holder worktree 內 supabase stop（allow，持有者 wor
   "$(bash_json_cwd "$ls184_work/wt" 'supabase stop')" SUPABASE_LOCK_DIR="$ls184_lock"
 expect 'H3b-s⑨ supabase status -o env（allow，status 不是 start）' 0 "$(bash_json 'supabase status -o env')"
 expect 'H3b-s⑩ echo 引號內字面 supabase stop（allow）' 0 "$(bash_json "echo 'H3b：supabase stop 要包 lock'")"
-rm -rf "$ls184_work"
+rm -rf "$ls184_work" "$h3b_iso_lockdir"
 
 # ============================================================
 # H4（LS-322，源自 LS-315 三次停工）：pgrep -f 等待 push-gate／xcodebuild 未帶
