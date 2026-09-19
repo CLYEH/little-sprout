@@ -96,8 +96,15 @@ final class SectionTabBarTests: XCTestCase {
     /// LS-344：相簿／寶貝／設定三個 tab 根頁曾經系統 nav bar large title 與自畫 header 同時
     /// 存在（票面實機截圖；模擬器 iOS 26.5 可重現，見 handoff）。斷言分兩層（見上方型別文件
     /// 註解）：①至少存在一顆在畫面最上緣 header 區的同名文字（entry-conditions.md ⑬ 的非手勢
-    /// 替代路徑）②這個字串在畫面上「只出現一次」——`tabLabel` 為 nil 時（時間軸，預設分頁）
-    /// 不需要點擊。
+    /// 替代路徑）②「畫面最上緣 header 區」內這個字串只出現一次——`tabLabel` 為 nil 時（時間軸，
+    /// 預設分頁）不需要點擊。
+    ///
+    /// **LS-344 R2（merge-review R1 i1）**：②原本掃整個畫面（`app.staticTexts.matching(label
+    /// ==)`.count），日後若畫面內容剛好含跟 tab 名同字串（例如使用者把相簿取名「相簿」）會
+    /// 誤紅——跟①一樣把比對範圍限定在 `frame.minY < 100` 的最上緣 header 區，語意也更貼近
+    /// 「標題區只有一顆」而非「整個畫面只有一顆」。`XCUIElementQuery` 的 predicate 無法直接
+    /// 對 `frame`（需要即時 snapshot，不是 accessibility 靜態屬性）過濾，先用 `label ==`
+    /// 縮小候選、再用 `allElementsBoundByIndex` 逐一讀 `frame` 在 Swift 端篩選。
     private func assertTabRootHeadingAppearsExactlyOnce(
         tabLabel: String?, expectedHeading: String, file: StaticString = #filePath, line: UInt = #line
     ) {
@@ -115,11 +122,14 @@ final class SectionTabBarTests: XCTestCase {
             "「\(expectedHeading)」heading 應該出現在畫面最上緣的 header 區（不是巧合出現在畫面其他位置的同名文字）",
             file: file, line: line
         )
-        let matches = app.staticTexts.matching(NSPredicate(format: "label == %@", expectedHeading))
+        let candidates = app.staticTexts.matching(NSPredicate(format: "label == %@", expectedHeading))
+            .allElementsBoundByIndex
+        let headerAreaMatches = candidates.filter { $0.frame.minY < 100 }
         XCTAssertEqual(
-            matches.count, 1,
-            "「\(expectedHeading)」標題應該只出現一次——系統 nav bar large title 與自畫 header 不得同時可見" +
-            "（LS-344：實機 iPhone 12 Pro／iOS 26.5.2 回報相簿／寶貝／設定三頁重複顯示）",
+            headerAreaMatches.count, 1,
+            "「\(expectedHeading)」標題在畫面最上緣 header 區（minY < 100）應該只出現一次——系統 nav bar" +
+            " large title 與自畫 header 不得同時可見（LS-344：實機 iPhone 12 Pro／iOS 26.5.2 回報相簿／" +
+            "寶貝／設定三頁重複顯示）",
             file: file, line: line
         )
     }
