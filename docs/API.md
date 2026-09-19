@@ -441,20 +441,28 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
 - **全表唯讀**：`authenticated` 只有 `SELECT`（`using (true)`，不分家庭——這是
   app 內建的全域目錄，不是家庭範圍資料），沒有任何寫入 grant；唯一寫入路徑是本表
   的 migration seed（`postgres`／表擁有者身分，繞過 RLS）。
-- `allergens text[]`：8 種常見過敏原（`egg`／`milk`／`peanut`／`tree_nut`／
-  `shellfish`／`fish`／`wheat`／`soy`）的子集，`check` 約束（`<@`）；`min_age_months`：
-  「一歲前不建議」的品項填 `12`，其餘 `null`（票面「不確定的醫學標記寧可保守」，
-  完整清單見本票 PR handoff）。**純資訊，附免責聲明（文案在 iOS 端呈現），不構成
-  醫療建議**——不要在此基礎上做任何自動化的「擋止／警告」邏輯以外的醫療判斷。
-  新增／編輯品項時，名稱含魚／蝦蟹貝／大豆製品／蛋／奶／花生／堅果／麵麥字
-  卻沒標對應過敏原會被機械擋下（`scripts/ops/food_catalog_rules.py` 單一規則
-  來源，LS-342；CSV 端 `food-catalog-sql.py check-allergens` 在 CI `rules` job
-  無需 DB 即可擋，DB 端 `check-allergens-sql` 在 `run.sh` 對現況資料跑同一套
-  規則）——例外白名單逐筆列 id＋理由（同檔 `WHITELIST`），不接受萬用字元。
+- `allergens text[]`：10 種過敏原（`egg`／`milk`／`peanut`／`tree_nut`／
+  `shellfish`／`fish`／`wheat`／`soy`／`sesame`／`mango`，LS-347 起）的子集，
+  `check` 約束（`<@`）——對齊台灣食品過敏原強制標示「食品過敏原標示規定」11 類
+  （出處與生效日見 `20260919131439_food_catalog_allergen_sesame_mango.sql` 檔頭）
+  中除亞硫酸鹽（添加物殘留量標示，不適用本表原型食物）以外的 10 類；`shellfish`
+  沿用既有命名對應「甲殼類」，範圍略寬（LS-325 起也涵蓋蛤／蚵／牡蠣等雙殼貝類）、
+  不改名。`min_age_months`：「一歲前不建議」的品項填 `12`，其餘 `null`（票面
+  「不確定的醫學標記寧可保守」，完整清單見本票 PR handoff）。**純資訊，附免責
+  聲明（文案在 iOS 端呈現），不構成醫療建議**——不要在此基礎上做任何自動化的
+  「擋止／警告」邏輯以外的醫療判斷。新增／編輯品項時，名稱含魚／蝦蟹貝／大豆
+  製品／蛋／奶／花生／堅果／麵麥／芝麻／芒果字卻沒標對應過敏原會被機械擋下
+  （`scripts/ops/food_catalog_rules.py` 單一規則來源，LS-342／LS-347；CSV 端
+  `food-catalog-sql.py check-allergens` 在 CI `rules` job 無需 DB 即可擋，DB 端
+  `check-allergens-sql` 在 `run.sh` 對現況資料跑同一套規則）——例外白名單逐筆
+  列 id＋理由（同檔 `WHITELIST`），不接受萬用字元。
   **`wheat` 的語意是「含麩質穀物代理」**（對齊台灣食品過敏原強制標示「含麩質之
   穀物及其製品」：小麥／大麥／黑麥／燕麥），不是字面「小麥」——`barley_tea`
   （麥仔茶）與 `oatmeal`（燕麥粥）皆標 `wheat`；藜麥（`quinoa`）非含麩質穀物，
   不標（LS-342 R2，merge-review R1 major m1／orchestrator 裁決 (a)）。
+  `sesame_oil`（芝麻油）／`tahini`（芝麻醬）標 `sesame`；`mango`（芒果）標
+  `mango`（LS-347，補既有漏標——`sesame`／`mango` 兩個列舉值加入前，
+  `food_catalog_allergens_valid` 這三列的 allergens 皆為空）。
 - 內容來源：`supabase/seed-data/food_catalog.csv`（人類可讀，供使用者過目），
   `scripts/ops/food-catalog-sql.py` 轉成 migration 內的 `INSERT`；兩者一致性由
   `supabase/tests/run.sh` 在跑 `117_food_encyclopedia.sql` 之前、host 端動態產生
