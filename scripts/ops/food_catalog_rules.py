@@ -16,12 +16,15 @@
      相同（docker exec 通道下 psql 看不到 host 的 CSV 檔案路徑，兩邊都是「host 端
      先產生 SQL 文字，再交給既有 `run_sql()` 執行」）。
 
-規則對應現有 `food_catalog_allergens_valid` check constraint 的 8 個合法值
-（`egg`／`milk`／`peanut`／`tree_nut`／`shellfish`／`fish`／`wheat`／`soy`）。
-票文另提到「芝麻→sesame」——**刻意不實作**：`'sesame'` 不在這個列舉裡，而本票
-範圍明講「不做：新增 allergen 列舉值」，兩者衝突時以「不做」為準。含「芝麻」的
-兩列（`sesame_oil`／`tahini`）現況 `allergens` 皆為空，沒有規則會檢查它們——這是
-已知留白，不是本票要修的漏標（若日後要支援，需要先開票新增列舉值，非本票範圍）。
+規則對應現有 `food_catalog_allergens_valid` check constraint 的合法值——LS-347
+起共 10 個（`egg`／`milk`／`peanut`／`tree_nut`／`shellfish`／`fish`／`wheat`／
+`soy`／`sesame`／`mango`）。`sesame`／`mango` 是 LS-347 新增（LS-342 範圍明講
+「不做：新增 allergen 列舉值」，當時把「芝麻→sesame」的缺口記入 LS-96 池項
+`9fb5f0b3` i1；LS-347 盤點台灣食品過敏原強制標示 11 類（衛福部「食品過敏原標示
+規定」，出處與生效日見
+`supabase/migrations/20260919131439_food_catalog_allergen_sesame_mango.sql`
+檔頭與本票 PR body）後開新 migration 補這兩個列舉值＋補標 `sesame_oil`／
+`tahini`／`mango` 三列）。
 
 過敏原關鍵字刻意選「複合詞」而非單一「豆」字：豆腐／豆干／豆皮／豆漿／納豆／
 黃豆／毛豆——避免像豌豆、紅豆、綠豆、豆薯、鷹嘴豆這類「豆」字但非黃豆製品的
@@ -41,12 +44,13 @@
 （藜科植物種子，pseudocereal），維持白名單。日後新增品項判斷是否標 `wheat`，
 一律以「是否為含麩質穀物或其製品」為準，不是「名稱字面是否為小麥」。
 
-基準結果（對現況 274 列跑過一次，見 LS-342 handoff；R2 依上述 `wheat` 定義更新）：
-規則命中且原本沒有過敏原標記的 6 筆裡，5 筆（頭足類 2 筆含「魚」字、音譯詞
-`portobello` 含「貝」字、蔬菜品種名 `cream_bok_choy` 含「奶」字、`quinoa` 含
-「麥」字但非含麩質穀物）是規則本身的已知例外，逐筆列在 `WHITELIST` 並附理由；
-第 6 筆 `oatmeal` 經 orchestrator 裁決判定為既有漏標，已用新 migration 補標、
-不再是白名單條目（見上段）。
+基準結果（對現況 274 列跑過一次，見 LS-342 handoff；R2 依上述 `wheat` 定義更新；
+LS-347 加入 `sesame`／`mango` 規則後重跑，見本票 handoff）：規則命中且原本沒有過敏原
+標記的筆數裡，5 筆（頭足類 2 筆含「魚」字、音譯詞 `portobello` 含「貝」字、蔬菜品種
+名 `cream_bok_choy` 含「奶」字、`quinoa` 含「麥」字但非含麩質穀物）是規則本身的已知
+例外，逐筆列在 `WHITELIST` 並附理由；`oatmeal`（LS-342）、`sesame_oil`／`tahini`／
+`mango`（LS-347）四筆經 orchestrator 裁決判定為既有漏標，已各自用新 migration 補標、
+不是白名單條目。
 """
 from __future__ import annotations
 
@@ -61,6 +65,10 @@ KEYWORD_RULES: list[tuple[str, list[str], str]] = [
     ("peanut", ["花生"], "名稱含花生字"),
     ("tree_nut", ["杏仁", "核桃", "腰果", "開心果", "榛果", "夏威夷豆", "胡桃", "堅果"], "名稱含堅果字"),
     ("wheat", ["麵", "麥", "吐司", "饅頭"], "名稱含麵／麥製品字"),
+    # LS-347：台灣食品過敏原強制標示 11 類新增的兩項（見檔頭出處）。關鍵字用完整
+    # 詞「芝麻」／「芒果」而非單字，274 列現況掃過沒有其他列命中（見本票 handoff）。
+    ("sesame", ["芝麻"], "名稱含芝麻字"),
+    ("mango", ["芒果"], "名稱含芒果字"),
 ]
 
 # 「醬油調味慣例列」——不是名稱關鍵字，見檔頭說明。日後若再有同類判斷（例如
@@ -167,21 +175,29 @@ def generate_sql_do_block() -> str:
             "",
         ]
 
-    soy_ids = ", ".join(_sql_quote(rid) for rid in sorted(SOY_SAUCE_DISH_IDS))
-    soy_exempt_ids = sorted(rid for (rid, a) in WHITELIST if a == "soy" and rid in SOY_SAUCE_DISH_IDS)
-    soy_exempt_clause = ""
-    if soy_exempt_ids:
-        soy_exempt_list = ", ".join(_sql_quote(rid) for rid in soy_exempt_ids)
-        soy_exempt_clause = f"\n     and id not in ({soy_exempt_list})"
+    # LS-96 池項 25fea8c7（i2'）：SOY_SAUCE_DISH_IDS 為空時整段略過——PostgreSQL 的
+    # `where id in ()` 是合法但恆假的 SQL，不會語法錯；這道 guard 純粹是「規則表沒有
+    # 醬油慣例列時，產生的 SQL 不該留一段永遠 no-op 的檢查」，也讓自測能斷言「清空
+    # 常數 → 這段完全消失」（拿掉 guard 就會在該情境下重新出現 `id in ()`，見自測 G）。
+    if SOY_SAUCE_DISH_IDS:
+        soy_ids = ", ".join(_sql_quote(rid) for rid in sorted(SOY_SAUCE_DISH_IDS))
+        soy_exempt_ids = sorted(rid for (rid, a) in WHITELIST if a == "soy" and rid in SOY_SAUCE_DISH_IDS)
+        soy_exempt_clause = ""
+        if soy_exempt_ids:
+            soy_exempt_list = ", ".join(_sql_quote(rid) for rid in soy_exempt_ids)
+            soy_exempt_clause = f"\n     and id not in ({soy_exempt_list})"
+        lines += [
+            "  select string_agg(id || '（' || name_zh || '）', ', ') into v_bad",
+            "    from public.food_catalog",
+            f"   where id in ({soy_ids})",
+            f"     and not ('soy' = any(allergens)){soy_exempt_clause};",
+            "  if v_bad is not null then",
+            "    raise exception 'FAIL：屬醬油調味慣例列但 allergens 缺 soy：%', v_bad;",
+            "  end if;",
+            "",
+        ]
+
     lines += [
-        "  select string_agg(id || '（' || name_zh || '）', ', ') into v_bad",
-        "    from public.food_catalog",
-        f"   where id in ({soy_ids})",
-        f"     and not ('soy' = any(allergens)){soy_exempt_clause};",
-        "  if v_bad is not null then",
-        "    raise exception 'FAIL：屬醬油調味慣例列但 allergens 缺 soy：%', v_bad;",
-        "  end if;",
-        "",
         "  raise notice 'ok：food_catalog 過敏原啟發式檢查通過（LS-342，%d 條關鍵字規則＋%d 條醬油慣例列＋%d 條白名單例外）';"
         % (len(KEYWORD_RULES), len(SOY_SAUCE_DISH_IDS), len(WHITELIST)),
         "end;",
