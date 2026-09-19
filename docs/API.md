@@ -69,12 +69,12 @@
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
-| `growth_records`（LS-255） | 我所屬家庭**未刪**的成長紀錄（身高／體重／頭圍） | owner／member（`author_id` 必須是自己） | 僅內容欄位（`measured_on`／`height_cm`／`weight_kg`／`head_cm`／`note`），**僅原作者本人**（owner 不在這條路徑——見 §3「為什麼 growth_records 用了真 RLS」） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_growth_record` RPC（作者本人，或該家庭 owner——不限作者，見 §4） | 真 RLS 直接開放 INSERT／UPDATE（不是 diaries/albums/comments/children 那種 RPC-only 收斂）：`deleted_at`／`deleted_by` 兩欄對 authenticated 無 UPDATE grant，唯一寫入路徑是 `delete_growth_record`（`SECURITY DEFINER`）；設計理由見 §3 |
+| `growth_records`（LS-255） | 我所屬家庭**未刪**的成長紀錄（身高／體重／頭圍） | owner／member（`author_id` 必須是自己） | 僅內容欄位（`measured_on`／`height_cm`／`weight_kg`／`head_cm`／`note`），**僅原作者本人**（owner 不在這條路徑——見 §3「為什麼 growth_records 用了真 RLS」） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_growth_record` RPC（作者本人，或該家庭 owner——不限作者，見 §4） | 真 RLS 直接開放 INSERT／UPDATE（不是 diaries/albums/comments/children 那種 RPC-only 收斂）：`deleted_at`／`deleted_by` 兩欄對 authenticated 無 UPDATE grant，唯一寫入路徑是 `delete_growth_record`（`SECURITY DEFINER`）；設計理由見 §3。**`updated_at` 自 LS-337 起由 `private.touch_updated_at()` BEFORE UPDATE trigger 強制 `now()`**——欄位級 grant 仍開放（`upsert_growth_record` 的 UPDATE 陳述式需要），直接 `PATCH` 這一欄不會被 `42501` 擋下，但寫入的值一律被覆寫，呼叫端指定的值不會生效 |
 | `food_catalog`（LS-325） | 任一登入使用者，全表 | 🔒 **唯讀**（只有本 migration 以表擁有者身分寫入 seed，`authenticated` 無任何寫入 grant） | 🔒 唯讀 | 🔒 唯讀 | 飲食圖鑑靜態目錄，約 120 種台灣常見食物，8 類，v1 不開放自訂（LS-310 F1a）；`id` 同時是插圖資產名（F3a）；`allergens`／`min_age_months` 純資訊，附免責聲明（F2a）。見 §3 |
-| `child_food_records`（LS-325） | 我所屬家庭**未刪**的飲食圖鑑記錄（每寶貝每食物一筆「第一次吃到」） | owner／member（`author_id` 必須是自己）；建議走 `upsert_child_food_record` RPC（自然鍵 upsert，見 §4） | 僅內容欄位（`first_tried_on`／`media_id`／`note`／`reaction`），**僅原作者本人**（owner 不在這條路徑，同 `growth_records`） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_child_food_record` RPC（作者本人，或該家庭 owner） | 權限模型逐字沿用 `growth_records`（見 §3）；同一寶貝同一食物最多一筆未軟刪紀錄（partial unique index），軟刪後可再新增；時間軸產生 `food_first` 卡片，見 §3「`feed_items`」／§4 `get_family_timeline` |
-| `media` | 我所屬家庭**尚未軟刪**的檔案中繼資料，**上傳者自己的例外**——不論是否已軟刪都看得到自己上傳的列（`deleted_at is null or uploaded_by = auth.uid()`，LS-155 R2 起；與 `children` 全員可見已軟刪列的例外不同，這裡只有上傳者本人是例外，見 §3「`media_select` 過濾」段落的已知殘留缺口） | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | **文件承諾「owner 任意列」，實際只對 owner 自己上傳的列與尚未軟刪的別人的列成立**（一般刪除走 `deleted_at`）——owner 對「別人上傳、已軟刪」的列直接 `DELETE` 會因為 R2 的 `media_select` 把該列藏起來而**靜默影響 0 列**（LS-155 R2 review m1 實測，見 §3 殘留缺口段落）；真正的 owner moderation 請走 `remove_content_as_owner('media', id)`（`SECURITY DEFINER`，不受這個限制） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3；寶貝標記唯一路徑是 `set_media_children`／`set_media_children_batch` RPC（見下 `media_children` 列與 §4） |
+| `child_food_records`（LS-325） | 我所屬家庭**未刪**的飲食圖鑑記錄（每寶貝每食物一筆「第一次吃到」） | owner／member（`author_id` 必須是自己）；建議走 `upsert_child_food_record` RPC（自然鍵 upsert，見 §4） | 僅內容欄位（`first_tried_on`／`media_id`／`note`／`reaction`），**僅原作者本人**（owner 不在這條路徑，同 `growth_records`） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_child_food_record` RPC（作者本人，或該家庭 owner） | 權限模型逐字沿用 `growth_records`（見 §3）；同一寶貝同一食物最多一筆未軟刪紀錄（partial unique index），軟刪後可再新增；時間軸產生 `food_first` 卡片，見 §3「`feed_items`」／§4 `get_family_timeline`。**`updated_at` 自 LS-337 起同 `growth_records`，由共用的 `private.touch_updated_at()` trigger 強制 `now()`** |
+| `media` | 我所屬家庭**尚未軟刪**的檔案中繼資料，**上傳者自己的例外**——不論是否已軟刪都看得到自己上傳的列（`deleted_at is null or uploaded_by = auth.uid()`，LS-155 R2 起；與 `children` 全員可見已軟刪列的例外不同，這裡只有上傳者本人是例外，見 §3「`media_select` 過濾」段落的已知殘留缺口） | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | **文件承諾「owner 任意列」，實際只對 owner 自己上傳的列與尚未軟刪的別人的列成立**（一般刪除走 `deleted_at`）——owner 對「別人上傳、已軟刪」的列直接 `DELETE` 會因為 R2 的 `media_select` 把該列藏起來而**靜默影響 0 列**（LS-155 R2 review m1 實測，見 §3 殘留缺口段落）；真正的 owner moderation 請走 `remove_content_as_owner('media', id)`（`SECURITY DEFINER`，不受這個限制） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3；寶貝標記唯一路徑是 `set_media_children`／`set_media_children_batch` RPC（見下 `media_children` 列與 §4）；**`created_at` 自 LS-337 起欄位級 INSERT grant 已排除**（伺服器專屬，見 §3） |
 | `media_children`（LS-317） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_media_children`／`set_media_children_batch`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（同上，直接 DELETE 已被 revoke） | 照片／影片 ↔ 孩子多對多標記，沿 `album_children`（LS-121）先例；`media` 本身沒有 hybrid 模式，授權門檻是「上傳者本人且當下仍有上傳權，或該家庭 owner」（同 `media_update` policy，不是建立者分支），見 §8 |
-| `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對別人相簿的內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8 |
+| `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己；**`created_at` 自 LS-337 起欄位級 INSERT grant 已排除**，伺服器專屬，見 §3） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對別人相簿的內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8 |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
 | `album_summaries`（LS-200，view） | 我所屬家庭的相簿，逐列多帶 `visible_media_count`／`latest_media_id`／`latest_thumb_path`／`latest_storage_path`／`cover_thumb_path`／`cover_storage_path` 六個彙總欄——只算呼叫者依 RLS 看得到的 media | ❌ 沒有寫入語意（view，無 INSERT grant） | ❌ 同上 | ❌ 同上 | `security_invoker=true`，`albums_select`／`album_media_select`／`media_select` 三條既有 policy 逐使用者生效，取代 client 端 `album_media(count)` 內嵌 aggregate 的連結列計數口徑（LS-165 R2）；**欄位於 `CREATE VIEW` 當下凍結**，`albums` 加欄需重建 view 才會補上，見 §3「albums / diaries」 |
 | `album_children`（LS-121） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_album_children`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（`set_album_children`，直接 DELETE 已被 revoke） | 相簿 ↔ 孩子多對多標記，取代舊版 `albums.child_id` 單一欄位；見 §8 |
@@ -83,11 +83,11 @@
 | `diary_children`（LS-121） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`create_diary_entry`／`update_diary_entry`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（`update_diary_entry`，直接 DELETE 已被 revoke） | 日記 ↔ 孩子多對多標記，取代舊版 `diaries.child_id` 單一欄位；見 §8 |
 | `comments` | 我所屬家庭 | 🔒 **RPC-only**（`create_comment`，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`body`）僅作者本人用 `update_comment`；軟刪／還原（`deleted_at`）作者自己的或 owner 任何一則，皆用 `set_comment_deleted`（直接 UPDATE 已被 revoke） | owner-only（硬刪，policy 未變） | LS-58 收斂：取代 LS-52 的 hybrid 模式，理由與 `diaries` 同型（見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」）；Viewer 仍能呼叫 `create_comment`／`update_comment`，符合 PLAN §3。**LS-57**：owner 軟刪的留言，作者無法自行還原（`LS027`），見 §4 |
 | `reactions` | 我所屬家庭 | 🔒 **RPC-only**（`toggle_reaction`，直接 INSERT 已被 revoke） | ❌ 無 update policy（沒有可改的內容欄位） | 🔒 **RPC-only**（`toggle_reaction`，直接 DELETE 已被 revoke） | LS-58：加入／收回都收斂進 `toggle_reaction`，不再需要呼叫端自己處理 `23505`（見 §4） |
-| `device_tokens` | 僅自己的裝置 | ⚠️ 見下方 | 僅自己 | 僅自己 | **換裝置／換帳號登入請務必呼叫 `register_device_token` RPC，不要直接 INSERT／UPSERT**（見 §4） |
+| `device_tokens` | 僅自己的裝置 | ⚠️ 見下方 | 僅自己 | 僅自己 | **換裝置／換帳號登入請務必呼叫 `register_device_token` RPC，不要直接 INSERT／UPSERT**（見 §4）。**`updated_at` 自 LS-337 起由 `private.touch_updated_at()` trigger（掛 BEFORE INSERT OR UPDATE，因為本表對 `authenticated` 是整表 grant，INSERT 也碰得到這欄）強制 `now()`**，直接 `.insert()`／`.update()` 自己的裝置列帶自訂 `updated_at` 不會被拒，但寫入值一律被覆寫 |
 | `feed_items` | 我所屬家庭的時間軸 | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | 沒有任何 client 可寫入的路徑，連 grant 都沒有；混排查詢建議走 `get_family_timeline` RPC（見 §4），不要直接 `.from("feed_items")` 拼 keyset 條件。**LS-121**：`child_id` 欄位已移除（一個項目可以標多個孩子，單一欄位不再成立），單寶貝篩選改走 `feed_item_children`（見下） |
 | `feed_item_children`（LS-121） | 我所屬家庭的時間軸，依孩子展開 | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | `get_family_timeline` 的 `p_child_id` 篩選查詢引擎，不建議 client 直接查這張表；見 §8 |
-| `content_reports` | 自己送出的＋（若是 owner）自家的 | **任何家庭成員**；建議走 `report_content` RPC（去重＋跨家庭檢查，見 §4） | 僅 `status` 欄，owner-only，且只能改成 `resolved`（不能 `dismissed`） | ❌ 無 delete policy | 駁回（`dismissed`）保留給平台方用 `service_role`／Dashboard 處理；owner 也可用 `remove_content_as_owner` RPC 移除內容並連帶標記相關檢舉 resolved |
-| `blocked_users` | 僅自己封鎖的名單（`blocker_id = 我`） | 僅自己；建議走 `block_user` RPC（冪等） | ❌ 無 update policy | 僅自己；建議走 `unblock_user` RPC（冪等） | 被封鎖者看不到自己被封鎖；封鎖後對方內容在時間軸／留言／相簿三處查詢一律過濾，見 §3 |
+| `content_reports` | 自己送出的＋（若是 owner）自家的 | **任何家庭成員**；建議走 `report_content` RPC（去重＋跨家庭檢查，見 §4）；**`created_at` 自 LS-337 起欄位級 INSERT grant 已排除**（低優先子項，同 `albums`／`media` 修法） | 僅 `status` 欄，owner-only，且只能改成 `resolved`（不能 `dismissed`） | ❌ 無 delete policy | 駁回（`dismissed`）保留給平台方用 `service_role`／Dashboard 處理；owner 也可用 `remove_content_as_owner` RPC 移除內容並連帶標記相關檢舉 resolved |
+| `blocked_users` | 僅自己封鎖的名單（`blocker_id = 我`） | 僅自己；建議走 `block_user` RPC（冪等）；**`created_at` 自 LS-337 起欄位級 INSERT grant 已排除**（同上） | ❌ 無 update policy | 僅自己；建議走 `unblock_user` RPC（冪等） | 被封鎖者看不到自己被封鎖；封鎖後對方內容在時間軸／留言／相簿三處查詢一律過濾，見 §3 |
 | `join_requests` | 自己送出的申請＋（若是 owner）自家的待審申請 | 🔒 **RPC-only**（`request_join`） | 🔒 **RPC-only**（`approve_join`／`reject_join`／`withdraw_join`） | 🔒 無 delete policy | 沒有任何 client 直接寫入路徑，grant 只有 SELECT |
 | `notification_events` | 🔒 **完全不可讀**（成員無 grant 也無 policy） | 🔒 唯讀（trigger 維護） | 🔒 唯讀 | 🔒 唯讀 | LS-58：推播彙總佇列的資料面，只給 `service_role`（LS-22 的 Edge Function）讀寫；見 §3 |
 
@@ -369,11 +369,25 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   `family_id`／`child_id`／`author_id`／`measured_on`／`height_cm`／`weight_kg`／
   `head_cm`／`note`；`UPDATE` 開放五個內容欄位＋`updated_at`（`measured_on`／
   `height_cm`／`weight_kg`／`head_cm`／`note`／`updated_at`——`updated_at` 開放
-  只是因為 `upsert_growth_record` 同一句 UPDATE 會把它 SET 成 `now()`，呼叫端
-  參數列表沒有 `p_updated_at` 可以指定別的值）——`deleted_at`／`deleted_by`／
+  是因為 `upsert_growth_record` 同一句 UPDATE 要 SET 這欄，Postgres 要求 SET
+  子句提到的每一欄都要欄位級 UPDATE 權限）——`deleted_at`／`deleted_by`／
   `family_id`／`child_id`／`author_id` 一律不可直接寫，唯一寫入路徑是
   `delete_growth_record()` RPC。直接 `.update()` 這幾欄以外的欄位一律 `42501`
-  （欄位級 grant 未開放）。
+  （欄位級 grant 未開放）。**`updated_at` 這欄的 grant 只保證「能不能碰」，不保證
+  「碰的時候寫的是什麼值」——LS-337 起額外掛了 `private.touch_updated_at()`
+  BEFORE UPDATE trigger 強制 `new.updated_at := now()`，直接 `PATCH`
+  這一欄（不經過 `upsert_growth_record`）不會被 `42501` 擋下，但寫入的值一律是
+  `now()`，呼叫端指定的值（例如 `'1970-01-01'`）不會生效，見
+  `20260919045339_server_owned_timestamps.sql`。**這支 trigger 只掛
+  `before update of measured_on, height_cm, weight_kg, head_cm, note,
+  updated_at`（R2，merge-review R1 m1）——只在 UPDATE 陳述式的 SET 子句碰到
+  這幾欄時才觸發，**不是無條件 `before update`**：`author_id`／`deleted_by`
+  被 FK `on delete set null`（作者刪除帳號時的 RI 動作）或
+  `delete_growth_record()` 的軟刪 UPDATE 改動時，SET 子句不含上面任何一欄，
+  這支 trigger 不會觸發，`updated_at` 不會被那些動作意外刷新（R1 版本是無條件
+  `before update`，reviewer 實測出「作者刪帳號會把 `updated_at` 刷新成
+  `now()`，讓 `GrowthCurve.deduplicatedByDay` 把已刪除作者的舊量測值當成當天
+  最新一筆」這個缺陷，見 migration 檔頭該段的完整記載）。
 - **軟刪沿用 LS-57**：`deleted_by` 由 `private.enforce_deletion_attribution()`
   共用 trigger（20260825040000_deletion_attribution.sql）推導寫入，規則與
   `diaries`/`albums`/`comments` 相同——作者只能軟刪自己的，owner 對任何一筆的
@@ -472,9 +486,18 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
 ### `media`
 - `storage_path` 必須符合 `{family_id}/{yyyy}/{mm}/{media_id}.{ext}`（見 §6），且有
   `CHECK` 強制前綴＝`family_id`。
+- **`created_at` 自 LS-337 起是伺服器專屬（欄位級 INSERT grant 已排除，一律吃
+  `default now()`）**：R1（LS-6）當時是整表 INSERT grant，成員可以直接
+  `.insert({..., created_at: 'infinity'})` 把一列偽造成任意時間，`infinity` 會
+  卡進 `feed_items.occurred_at`（`coalesce(taken_at, created_at)`）排序第一名，
+  永久佔住時間軸頂端且讓 iOS 對 `occurred_at` 的非 optional `Date` 解碼失敗——見
+  `20260919045339_server_owned_timestamps.sql` 檔頭。直接 `.insert()` 這一欄一律
+  `42501`，不受 `taken_at`／`storage_path` 等其餘欄位的 INSERT 影響（見下）。
 - **`taken_at`（EXIF 原始拍攝時間，nullable，LS-262 補強）**：client 上傳時可選擇
-  回填（欄位級 UPDATE grant 早已開放，見上方表格；INSERT 沒有欄位限制，可與
-  `storage_path`／`byte_size` 等一起一次寫入）；無 EXIF 或尚未回填留 `NULL`。
+  回填（欄位級 UPDATE grant 早已開放，見上方表格；INSERT 欄位級 grant 涵蓋這欄，
+  可與 `storage_path`／`byte_size` 等一起一次寫入——**跟 `created_at` 是兩個不同
+  欄位，LS-337 的收斂只排除 `created_at`，不影響這欄**）；無 EXIF 或尚未回填留
+  `NULL`。
   **邊界 CHECK（`media_taken_at_range_check`）**：`taken_at is null or (taken_at
   between '1970-01-01' and now() + interval '1 day')`——早於 1970 或晚於「現在
   ＋1 天」一律 `23514`（`+1 天` 是裝置時鐘與伺服器時鐘飄移的容忍緩衝，不是允許
@@ -736,7 +759,9 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   - **`deleted_by`／還原鎖**：`deleted_at` 被誰設下，由
     `private.enforce_deletion_attribution()` trigger 記在新欄位 `deleted_by`
     （**無法透過 `UPDATE` 指定**——R2 起這一欄同樣無 UPDATE 欄位級 grant，見下。
-    `INSERT` 方向不受影響：`albums` 對 `authenticated` 仍是整表 INSERT grant，
+    `INSERT` 方向這一點不受影響：`albums` 對 `authenticated` 自 LS-337 起已改成
+    欄位級 INSERT grant（只排除 `created_at`，見上方「三套寫入模型」段落與
+    `20260919045339_server_owned_timestamps.sql`），`deleted_by` 仍在允許清單裡，
     建立者技術上可以在新增時自己塞一個 `deleted_by` 值，但 `albums_insert` 的
     WITH CHECK 是 `created_by = auth.uid() and family_id in
     contributor_family_ids()`，只能在自己所屬的家庭、以自己的名義新建一列，這一列
@@ -917,6 +942,13 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - **不要**直接 `.upsert()` 或 `.insert()`／`.delete()` 這張表。同一支裝置換帳號登入時，
   三條直接路徑都走不通（見 §4 `register_device_token` 的說明），會留下跨帳號的推播
   外洩風險。**永遠透過 `register_device_token` RPC**。
+- **`updated_at` 自 LS-337 起是伺服器專屬**：這張表對 `authenticated` 是整表
+  INSERT／UPDATE grant（不是欄位級），直接 `.insert()`／`.update()` 自己的裝置列
+  帶自訂 `updated_at`（例如 `'infinity'`）不會被 grant 擋下（`device_tokens_
+  insert`／`_update` policy 只檢查 `user_id = auth.uid()`），但 `private.touch_
+  updated_at()` trigger（`BEFORE INSERT OR UPDATE`）一律強制寫成 `now()`，呼叫端
+  指定的值不會生效。這欄目前沒有任何讀取端依賴它排序或判斷過期，修法純粹是關掉
+  一個能寫入任意值的洞，不是修復已知的資料完整性問題。
 
 ### `feed_items`
 - 純唯讀，`kind ∈ album|media|diary|food_first`（`food_first` 為 LS-325 起新增的
@@ -1029,13 +1061,16 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 - `content_reports`：任何家庭成員都能送出檢舉（`reporter_id` 必須是自己）；owner 只能
   把 `status` 改成 `resolved`（無法 `dismissed`——那是平台方的權限，走 `service_role`／
   Dashboard，不在這份 API 契約範圍內）。**LS-149 起建議走 `report_content` RPC**（見
-  §4）而不是直接 `.insert()`——直接 INSERT 仍然可用（grant／policy 都沒動），但
+  §4）而不是直接 `.insert()`——直接 INSERT 仍然可用（grant／policy 大致沒動；
+  **例外：`created_at` 自 LS-337 起欄位級 INSERT grant 已排除**，直接 `.insert()`
+  帶這欄一律 `42501`，同 `albums`／`media` 的低優先子項修法，見 §2），但
   `report_content` 多做了同人同內容去重（同一人對同一內容已有一筆 `pending` 報告時，
   直接回傳既有那筆的 id，不重複新增）與跨家庭目標檢查（`LS026`）。
 - `blocked_users`：被封鎖者**看不到**自己被封鎖（policy 只讓 `blocker_id = 我` 的人
   讀寫），UI 不要試圖查「誰封鎖了我」。**LS-149 起建議走 `block_user`／`unblock_user`
   RPC**（見 §4）——直接 `.insert()`／`.delete()` 仍然可用（LS-149 刻意沒有收回既有
-  grant／policy，理由見 migration 檔頭「設計裁量」第 3 點），RPC 版本的差異只在冪等
+  grant／policy，理由見 migration 檔頭「設計裁量」第 3 點；**例外同上**：
+  `created_at` 自 LS-337 起已排除），RPC 版本的差異只在冪等
   （`ON CONFLICT DO NOTHING`／對不存在的列 `DELETE` 皆是 no-op，不會撞
   `23505`／噴錯）。
 - **封鎖過濾（LS-149；reactions 由 LS-225 補上）**：被封鎖者的內容在下列查詢一律
@@ -1346,7 +1381,8 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `private.enforce_deletion_attribution()` trigger 統一推導寫入，**無法透過
   `UPDATE`（不論是這支 RPC 內部還是直接 `.update()`）指定**——R2 起這欄同樣無
   UPDATE 欄位級 grant。**`INSERT` 方向不受這個保證涵蓋**（merge-reviewer PR #98
-  review R3 F4）：`albums` 對 `authenticated` 仍是整表 INSERT grant，建立者
+  review R3 F4）：`albums` 對 `authenticated` 自 LS-337 起是欄位級 INSERT grant
+  （只排除 `created_at`，`deleted_by` 仍在允許清單裡，見 §2「三套寫入模型」），建立者
   `insert into albums (…, deleted_by) values (…)` 技術上會成功，但
   `albums_insert` 的 WITH CHECK 只允許 `created_by = auth.uid()` 且屬於自己
   contributor 的家庭——新建的這一列本來就是他自己的，塞一個任意 `deleted_by`

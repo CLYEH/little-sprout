@@ -723,13 +723,24 @@ begin
   if not has_table_privilege('authenticated', 'public.albums', 'select') then
     raise exception 'FAIL 回歸：authenticated 失去 albums 的 SELECT grant';
   end if;
-  if not has_table_privilege('authenticated', 'public.albums', 'insert') then
-    raise exception 'FAIL 回歸：authenticated 失去 albums 的 INSERT grant';
+  -- LS-337：albums 的表級 INSERT grant 已收回（只留欄位級子集合，排除
+  -- created_at——見 20260919045339_server_owned_timestamps.sql），has_table_
+  -- privilege 對整表 INSERT 因此從 true 變成 false，跟上面 UPDATE 現況變化同一種
+  -- 寫法；`title` 仍必須是欄位級可寫（建立相簿的路徑），`created_at` 必須不可寫
+  -- （成員竄改 `infinity` 這種值卡進時間軸第一名的洞，見該 migration 檔頭）。
+  if has_table_privilege('authenticated', 'public.albums', 'insert') then
+    raise exception 'FAIL 回歸（LS-337）：authenticated 竟然還有 albums 的表級 INSERT grant——應該已收回整表 INSERT、只留欄位級子集合（排除 created_at）';
+  end if;
+  if not has_column_privilege('authenticated', 'public.albums', 'title', 'insert') then
+    raise exception 'FAIL 回歸：authenticated 失去 albums.title 的欄位級 INSERT——建立相簿的路徑會跟著壞掉';
+  end if;
+  if has_column_privilege('authenticated', 'public.albums', 'created_at', 'insert') then
+    raise exception 'FAIL（LS-337）：authenticated 竟然還能 INSERT albums.created_at——應該已收回，created_at 一律吃 default now()';
   end if;
   if not has_table_privilege('authenticated', 'public.albums', 'delete') then
     raise exception 'FAIL 回歸：authenticated 失去 albums 的 DELETE grant（owner 硬刪的路徑）';
   end if;
-  raise notice 'ok 回歸：albums 的 SELECT/INSERT/DELETE 表級 grant 原封不動，UPDATE 已收斂成欄位級子集合（LS-57 R2）——縮權靠 policy 窄化＋欄位級 grant 兩層，不再只靠 policy';
+  raise notice 'ok 回歸：albums 的 SELECT/DELETE 表級 grant 原封不動，UPDATE（LS-57 R2）／INSERT（LS-337）皆已收斂成欄位級子集合——縮權靠 policy 窄化＋欄位級 grant 兩層，不再只靠 policy';
 
   -- LS-58：comments 的 INSERT／UPDATE grant 已被整個 revoke（RPC-only，同 diaries）。
   if has_table_privilege('authenticated', 'public.comments', 'insert') then
