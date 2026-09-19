@@ -13,9 +13,22 @@ import XCTest
 ///
 /// mutation（改回 `AlbumsView` 無條件 `.toolbar(.hidden, for: .navigationBar)`）：這條測試轉紅
 /// （見 PR 討論／handoff 貼的失敗原文）。
+///
+/// 只在 iPad idiom 執行（`XCTSkipUnless`，同 `LegalDocumentSheetUITests
+/// .testLegalDocumentSheet_onIPad_contentColumnWidthMatchesDesign` 既有先例）：
+/// `.environment(\.horizontalSizeClass, .regular)` 只覆寫 size class，`NavigationSplitView`
+/// 在實體螢幕窄（如 push-gate／CI 常態用的 iPhone 專屬機）時仍會自行收成單欄——sidebar 的
+/// `List` 根本不會渲染，`app.staticTexts["相簿"]` 找不到（實測：push-gate 在
+/// `LS-344-iPhone17Pro` 上跑這條紅在這一步）。`UIDevice.current.userInterfaceIdiom` 量的是
+/// 執行這支測試的模擬器本身，才是判斷式的正確依據；要驗證這支測試本身，需在 iPad 模擬器上跑
+/// `-only-testing:LittleSproutUITests/AlbumsIPadSidebarRegressionTests`。
 @MainActor
 final class AlbumsIPadSidebarRegressionTests: XCTestCase {
-    func testAlbumsDetailKeepsSidebarToggleAfterHidingSidebar() {
+    func testAlbumsDetailKeepsSidebarToggleAfterHidingSidebar() throws {
+        try XCTSkipUnless(
+            UIDevice.current.userInterfaceIdiom == .pad,
+            "iPad 專屬版面測試，非 iPad 裝置（例如 push-gate 常態用的 iPhone 專屬機）略過"
+        )
         let app = TapTargetMeasurement.launch(.sectionSplitView)
         TapTargetMeasurement.assertScreenRendered(.sectionSplitView, in: app)
         // sidebar 的 `List(selection:)` row 是 `Cell`（不是 `Button`），label 落在裡面的
