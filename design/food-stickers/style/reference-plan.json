@@ -1,0 +1,45 @@
+{
+ "sheet": "reference-sheet",
+ "foods": [
+  {
+   "id": "sweet_potato",
+   "name_zh": "地瓜",
+   "category": "grain_root"
+  },
+  {
+   "id": "carrot",
+   "name_zh": "紅蘿蔔",
+   "category": "vegetable"
+  },
+  {
+   "id": "banana",
+   "name_zh": "香蕉",
+   "category": "fruit"
+  },
+  {
+   "id": "whole_egg",
+   "name_zh": "全蛋",
+   "category": "protein"
+  },
+  {
+   "id": "yogurt",
+   "name_zh": "優格",
+   "category": "dairy"
+  },
+  {
+   "id": "peanut_butter",
+   "name_zh": "花生醬",
+   "category": "fat_nut"
+  },
+  {
+   "id": "tofu_pudding",
+   "name_zh": "豆花",
+   "category": "tw_home"
+  },
+  {
+   "id": "rice_cracker",
+   "name_zh": "米餅",
+   "category": "snack_drink"
+  }
+ ]
+}

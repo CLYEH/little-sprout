@@ -50,6 +50,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      # LS-338：food-sticker-crop.py 的自測要 `uv run`（PEP 723 inline metadata 拉 Pillow）——runner 是否已內建
+      # uv 不保證，用官方 action 顯式裝一份，不碰 pip（Rule 12）。只有這一支自測需要，放在 checkout 之後、
+      # 所有 step 之前，成本（單一 action、有 cache）低於「賭 runner 內建」的不確定性。
+      - uses: astral-sh/setup-uv@v5
+
       - name: PR direction matrix
         if: github.event_name == 'pull_request'
         run: |
@@ -187,7 +192,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／food-sticker-crop）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -277,6 +282,9 @@ jobs:
           # LS-270（LS-96 池項 `d4c1add5`／`e850cb7f`(3)）：`pipefail` ＋ `| grep -q` 偵測自己的自測（夾具正負
           # 各一——票文指定的 mutation 就是「拿掉 set -o pipefail → 無 ⚠」；另含純註解行不算／非 *.test.sh 不掃）
           bash scripts/gates/pipefail-grep-q-check.test.sh || rc=1
+          # LS-338：食物圖鑑貼紙裁切腳本自測（真實參考樣張／sheet-15 單列夾具＋合成「少一張」夾具＋
+          # sort_reading_order() 單元測試＋mutation：拿掉 REGION-COUNT-CHECK 標記行）
+          bash scripts/design/food-sticker-crop.test.sh || rc=1
           exit "$rc"
 
       # LS-267（LS-96 池項 `c0d883e1`；根因來自 LS-264 merge-review R1 M1）：上面兩個自測 step 列舉的清單與
