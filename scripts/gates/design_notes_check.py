@@ -305,15 +305,11 @@ def new_screen_boards(base_doc, head_doc):
     return [(bg, key, groups[(bg, key)]["display"], groups[(bg, key)]["members"]) for bg, key in order]
 
 
-def screen_attr_missing(head_doc, canonical_boards):
-    """LS-300（R3，merge-review R2 M2）：Notes 板文字裡「畫面級屬性」段（`SCREEN_ATTR_HEADING_RE` 首次命中之後的
-    文字，跨全部 Notes 板、依 `notes_boards`／`text_nodes` 既有順序串接）是否提到每個正典畫面的**任一** member
-    板名（子字串比對；member 越多、放行條件越寬鬆是刻意的——ui-designer 只要在 Notes 提到其中一個變體名稱，這個
-    正典畫面就算有列，不必每個深色／AX3／iPad 變體各自出現）。段落完全不存在 → 全部正典畫面皆列為缺失；段落存在
-    但某正典畫面的所有 member 都沒出現在該段之後的文字裡 → 只列該正典畫面。回傳缺失的
-    `[(base_group, key, display, members), ...]` 子集（保留 canonical_boards 的順序）。"""
-    if not canonical_boards:
-        return []
+def _screen_attr_section(head_doc):
+    """LS-330（LS-96 池項 `cd0e2847`(1)）：`screen_attr_missing`／`screen_data_binding_missing` 共用的
+    段落擷取——Notes 板文字裡「畫面級屬性」段（`SCREEN_ATTR_HEADING_RE` 首次命中之後的文字，跨全部
+    Notes 板、依 `notes_boards`／`text_nodes` 既有順序串接）。段落不存在回傳 `None`；存在回傳從標題
+    命中處到文字結尾的子字串（供呼叫端各自決定要整段子字串比對還是逐行切）。"""
     chunks = []
     for board in notes_boards(head_doc):
         for t in text_nodes(board):
@@ -321,30 +317,38 @@ def screen_attr_missing(head_doc, canonical_boards):
     joined = "\n".join(chunks)
     m = SCREEN_ATTR_HEADING_RE.search(joined)
     if not m:
+        return None
+    return joined[m.start():]
+
+
+def screen_attr_missing(head_doc, canonical_boards):
+    """LS-300（R3，merge-review R2 M2）：「畫面級屬性」段（見 `_screen_attr_section`）是否提到每個正典畫面的
+    **任一** member 板名（子字串比對；member 越多、放行條件越寬鬆是刻意的——ui-designer 只要在 Notes 提到其中
+    一個變體名稱，這個正典畫面就算有列，不必每個深色／AX3／iPad 變體各自出現）。段落完全不存在 → 全部正典畫面
+    皆列為缺失；段落存在但某正典畫面的所有 member 都沒出現在該段之後的文字裡 → 只列該正典畫面。回傳缺失的
+    `[(base_group, key, display, members), ...]` 子集（保留 canonical_boards 的順序）。"""
+    if not canonical_boards:
+        return []
+    scoped = _screen_attr_section(head_doc)
+    if scoped is None:
         return list(canonical_boards)
-    scoped = joined[m.start():]
     return [(bg, key, display, members) for bg, key, display, members in canonical_boards if not any(name in scoped for _, name in members)]  # DESIGN-NOTES-SCREEN-ATTR-CHECK
 
 
 def screen_data_binding_missing(head_doc, canonical_boards):
     """LS-322（LS-96 池項 0e87afd9／LS-317 收尾②）：畫面級屬性清單「資料落點」欄——每個正典畫面
-    在「畫面級屬性」段落內、含任一 member 板名的那一**行**（以換行切，同 Notes 慣用一畫面一行的
-    格式）必須也提到「資料落點」子字串（不驗欄位內容完不完整，只驗「有沒有寫這欄」，同
+    在「畫面級屬性」段落（見 `_screen_attr_section`）內、含任一 member 板名的那一**行**（以換行切，同
+    Notes 慣用一畫面一行的格式）必須也提到「資料落點」子字串（不驗欄位內容完不完整，只驗「有沒有寫這欄」，同
     screen_attr_missing 的粒度）。只對本 PR 新增的正典畫面（canonical_boards，即
     new_screen_boards() 的清單）要求——既有（本 PR 未新增）的畫面板不在這份清單內，天然白名單，
     不回溯補列。段落完全不存在、或某正典畫面完全沒被提到（那一行找不到）已由 screen_attr_missing
     整批列為缺失，這裡不重複列——只挑「有列但缺資料落點欄」這一種情況。"""
     if not canonical_boards:
         return []
-    chunks = []
-    for board in notes_boards(head_doc):
-        for t in text_nodes(board):
-            chunks.append(t["content"])
-    joined = "\n".join(chunks)
-    m = SCREEN_ATTR_HEADING_RE.search(joined)
-    if not m:
+    scoped = _screen_attr_section(head_doc)
+    if scoped is None:
         return []
-    lines = joined[m.start():].split("\n")
+    lines = scoped.split("\n")
     missing = []
     for bg, key, display, members in canonical_boards:
         row = next((ln for ln in lines if any(name in ln for _, name in members)), None)
