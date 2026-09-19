@@ -277,8 +277,9 @@ final class BirthdayFormatTests: XCTestCase {
     // MARK: - LS-334：裝置曆法非西曆時年齡算術（民國／佛曆／和曆）
 
     /// 生日 2024-03-12、今天 2026-09-19（LS-334 票文指定的實測組合）：西曆算出來是「2 歲 6
-    /// 個月」。這裡直接呼叫 internal 的 `extractionCalendar:` 重載（只給測試注入非西曆曆法，
-    /// 見該函式文件註解）重現舊行為的根因——曆法識別碼一旦流進「抽今天年月日」這一步，
+    /// 個月」。這裡直接呼叫 `ageDescriptionForTesting(extractionCalendar:)` 重載（merge-review
+    /// R1 m2：只給測試注入非西曆曆法，見該函式文件註解）重現舊行為的根因——曆法識別碼一旦流進
+    /// 「抽今天年月日」這一步，
     /// `.year` 元件是曆法原生年號，被直接塞進固定西曆的 `utcCalendar.date(from:)` 建構「今天
     /// UTC 午夜」，算出來的不是真正的西元今天。production 只會呼叫 `timeZone:` 版本，同一組
     /// 輸入透過它得到的必須是對的「2 歲 6 個月」——不管裝置曆法設成什麼，曆法識別碼結構上
@@ -289,7 +290,7 @@ final class BirthdayFormatTests: XCTestCase {
         let now = try referenceNow(timeZone: timeZone)
         let roc = nonGregorianCalendar(.republicOfChina, timeZoneIdentifier: "Asia/Taipei")
 
-        let buggy = BirthdayFormat.ageDescription(birthday: birthday, now: now, extractionCalendar: roc)
+        let buggy = BirthdayFormat.ageDescriptionForTesting(birthday: birthday, now: now, extractionCalendar: roc)
         XCTAssertEqual(
             buggy, "0 個月大",
             "重現 LS-334 舊行為：民國曆年份元件（115）流進抽取步驟，比生日西元年還早，被 max(0, …) 夾成 0"
@@ -306,7 +307,7 @@ final class BirthdayFormatTests: XCTestCase {
         let now = try referenceNow(timeZone: timeZone)
         let buddhist = nonGregorianCalendar(.buddhist, timeZoneIdentifier: "Asia/Taipei")
 
-        let buggy = BirthdayFormat.ageDescription(birthday: birthday, now: now, extractionCalendar: buddhist)
+        let buggy = BirthdayFormat.ageDescriptionForTesting(birthday: birthday, now: now, extractionCalendar: buddhist)
         XCTAssertEqual(
             buggy, "545 歲 6 個月",
             "重現 LS-334 舊行為：佛曆年份元件（2569）比西元年多 543，年齡多算出 545 歲"
@@ -324,7 +325,7 @@ final class BirthdayFormatTests: XCTestCase {
         let now = try referenceNow(timeZone: timeZone)
         let japanese = nonGregorianCalendar(.japanese, timeZoneIdentifier: "Asia/Taipei")
 
-        let buggy = BirthdayFormat.ageDescription(birthday: birthday, now: now, extractionCalendar: japanese)
+        let buggy = BirthdayFormat.ageDescriptionForTesting(birthday: birthday, now: now, extractionCalendar: japanese)
         XCTAssertEqual(
             buggy, "0 個月大",
             "重現 LS-334 舊行為：令和年號（8）流進抽取步驟，比生日西元年還早，被 max(0, …) 夾成 0"

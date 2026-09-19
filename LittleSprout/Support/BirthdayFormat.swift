@@ -102,14 +102,17 @@ enum BirthdayFormat {
     /// `wireString` 原則，呼叫端要注入就注入 `TimeZone`，不注入 `Calendar`——曆法識別碼結構上
     /// 不會流進正式路徑。
     static func ageDescription(birthday: Date, now: Date = Date(), timeZone: TimeZone = .current) -> String {
-        ageDescription(birthday: birthday, now: now, extractionCalendar: fixedGregorianCalendar(timeZone: timeZone))
+        ageDescriptionForTesting(
+            birthday: birthday, now: now, extractionCalendar: fixedGregorianCalendar(timeZone: timeZone)
+        )
     }
 
-    /// LS-334：`extractionCalendar` 只給測試注入非西曆曆法，證明「若曆法識別碼流進抽取步驟」
-    /// 會算錯（`BirthdayFormatTests` 民國曆／佛曆／和曆案例）——正式程式碼只會呼叫上面那個
-    /// `timeZone:` 版本，`fixedGregorianCalendar(timeZone:)` 結構上排除了曆法識別碼，這個重載
-    /// 不會被生產路徑呼叫到。
-    static func ageDescription(birthday: Date, now: Date, extractionCalendar: Calendar) -> String {
+    /// merge-review R1 m2：`extractionCalendar` 只給測試注入非西曆曆法，證明「若曆法識別碼流進
+    /// 抽取步驟」會算錯（`BirthdayFormatTests` 民國曆／佛曆／和曆案例）——正式程式碼只會呼叫上面
+    /// 那個 `timeZone:` 版本，`fixedGregorianCalendar(timeZone:)` 結構上排除了曆法識別碼。函式名
+    /// 加上 `ForTesting` 後綴（而不是與 `timeZone:` 版本同名靠 internal 存取層級擋），讓生產程式碼
+    /// 呼叫端一望即知不該用這支——同名重載只靠文件註解擋不住日後誤呼叫。
+    static func ageDescriptionForTesting(birthday: Date, now: Date, extractionCalendar: Calendar) -> String {
         let todayComponents = extractionCalendar.dateComponents([.year, .month, .day], from: now)
         let todayUTC = utcCalendar.date(from: todayComponents) ?? now
         let diff = utcCalendar.dateComponents([.year, .month], from: birthday, to: todayUTC)
