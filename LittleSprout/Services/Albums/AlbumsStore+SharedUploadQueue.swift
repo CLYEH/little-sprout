@@ -38,6 +38,9 @@ extension AlbumsStore {
                 // 有沒有相簿連結，跟下面「只在有登記 albumID 才 attachUploadedMedia」的職責
                 // 邊界不同，見 `TimelineStore+Import.swift` 檔頭文件註解。
                 self.timelineStore?.handleImportBatchMediaUploaded()
+                // LS-319：批次匯入「指定寶貝」——群裡的成功上傳都要回報給追蹤器，才能判斷
+                // 「這一群是否已經全部終局」，見 `MediaChildrenMarkingTracker` 檔頭文件註解。
+                self.mediaChildrenMarker.handleUploadSucceeded(entryID: entryID, mediaID: mediaID)
                 guard let albumID = self.pendingUploadAlbumIDs.removeValue(forKey: entryID) else { return }
                 Task { await self.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: mediaID) }
             },
@@ -45,6 +48,10 @@ extension AlbumsStore {
             // `UploadQueueStore.onUploadFailedTerminal` 文件註解。
             onUploadFailedTerminal: { [weak self] entryID in
                 self?.pendingUploadAlbumIDs.removeValue(forKey: entryID)
+                // LS-319：終局失敗（含 04b 取消當下對 `.uploading` 項目的同一個掛鉤，見
+                // `UploadQueueStore.cancelPendingImportItems` 文件註解）也要回報，讓群的
+                // 「已終局筆數」正確前進，不會永遠卡在等這一筆。
+                self?.mediaChildrenMarker.handleUploadFailedTerminal(entryID: entryID)
             }
         )
         sharedUploadQueueStoreInstance = store
