@@ -436,7 +436,17 @@ jobs:
           # reviewer 與實作者各在 `ubuntu:24.04`（只裝 git＋curl）實跑全綠（LS-264 當時 58 組；LS-267 加
           # `LS_QA_PSQL_BIN` seam 後 ⑦f 不再 SKIP、另加 ⑦g，現為 63 組——這行數字以實跑輸出為準）。
           bash scripts/ops/qa-e2e.test.sh || rc=1
+          # LS-342：food_catalog 過敏原啟發式規則自測（純 CSV／Python，不需要 DB；夾具正負樣本＋
+          # 兩個 mutation：白名單拿掉一條轉紅、SQL 生成器同步失去排除子句）
+          bash scripts/ops/food-catalog-allergen-check.test.sh || rc=1
           exit "$rc"
+
+      # LS-342：對 supabase/seed-data/food_catalog.csv 現況跑過敏原啟發式規則——CI 無 DB 的
+      # rules job 也能擋新增食物漏標過敏原（不必等 db job 起容器）；DB 端的等價檢查與 mutation
+      # deny 測試在 supabase/tests/run.sh（117_food_encyclopedia.sql 特例區塊）。
+      - name: food_catalog 過敏原啟發式檢查（CSV 端，無需 DB，LS-342）
+        if: ${{ !cancelled() }}
+        run: python3 scripts/ops/food-catalog-sql.py check-allergens
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
       # errcode 三方雙向對帳（本機 push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、

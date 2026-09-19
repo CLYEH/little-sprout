@@ -429,10 +429,15 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
 - 飲食圖鑑靜態目錄，274 種台灣常見食物，8 類（`grain_root`／`vegetable`／
   `fruit`／`protein`／`dairy`／`fat_nut`／`tw_home`／`snack_drink`），`sort_order`
   依類別分一段連續區間、類內依引入順序或（`vegetable`／`fruit`／`protein` 三類，
-  LS-339 起）依細分主題排序（類內遞增，不保證跨類連續；本表沒有 unique
-  constraint 保護 `sort_order`，全域無重複是目前 CSV／migration 維護出來的結果，
-  由 `117_food_encyclopedia.sql` 機械驗證）。`id` 是英文 slug（例如
-  `pumpkin`），同時是 app 插圖資產名（F3a）；v1 不開放自訂（F1a）。
+  LS-339 起）依細分主題排序（類內遞增，不保證跨類連續）。`sort_order` **全域
+  唯一**，`unique (sort_order) deferrable initially deferred`（LS-342，
+  `20260919094213_food_catalog_sort_order_unique.sql`）——deferred 到 COMMIT
+  才檢查，允許單一交易內先 INSERT 新列、再用一支 UPDATE 把既有列移到新位置這種
+  跨陳述式的暫時重複（同 `20260919073805_food_catalog_expansion.sql` 檔頭「為
+  什麼是 deferrable initially deferred」段的推導），COMMIT 時仍重複則 `23505`；
+  另有 `117_food_encyclopedia.sql` 的全域無重複量測與 `sort_order/` 目錄兩支
+  正反探針（`supabase/tests/run.sh`）。`id` 是英文 slug（例如 `pumpkin`），同時
+  是 app 插圖資產名（F3a）；v1 不開放自訂（F1a）。
 - **全表唯讀**：`authenticated` 只有 `SELECT`（`using (true)`，不分家庭——這是
   app 內建的全域目錄，不是家庭範圍資料），沒有任何寫入 grant；唯一寫入路徑是本表
   的 migration seed（`postgres`／表擁有者身分，繞過 RLS）。
@@ -441,6 +446,11 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   「一歲前不建議」的品項填 `12`，其餘 `null`（票面「不確定的醫學標記寧可保守」，
   完整清單見本票 PR handoff）。**純資訊，附免責聲明（文案在 iOS 端呈現），不構成
   醫療建議**——不要在此基礎上做任何自動化的「擋止／警告」邏輯以外的醫療判斷。
+  新增／編輯品項時，名稱含魚／蝦蟹貝／大豆製品／蛋／奶／花生／堅果／麵麥字
+  卻沒標對應過敏原會被機械擋下（`scripts/ops/food_catalog_rules.py` 單一規則
+  來源，LS-342；CSV 端 `food-catalog-sql.py check-allergens` 在 CI `rules` job
+  無需 DB 即可擋，DB 端 `check-allergens-sql` 在 `run.sh` 對現況資料跑同一套
+  規則）——例外白名單逐筆列 id＋理由（同檔 `WHITELIST`），不接受萬用字元。
 - 內容來源：`supabase/seed-data/food_catalog.csv`（人類可讀，供使用者過目），
   `scripts/ops/food-catalog-sql.py` 轉成 migration 內的 `INSERT`；兩者一致性由
   `supabase/tests/run.sh` 在跑 `117_food_encyclopedia.sql` 之前、host 端動態產生

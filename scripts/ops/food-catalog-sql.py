@@ -32,6 +32,16 @@
                                                       allergens，不論資料是哪一支 migration 寫入的，
                                                       因為比的是 DB 現況與目前 CSV 現況，天然涵蓋「多支
                                                       migration 累加」）
+  python3 scripts/ops/food-catalog-sql.py check-allergens
+                                                    > 純 Python／CSV，不需要 DB：對 CSV 目前內容跑
+                                                      food_catalog_rules.py 的過敏原啟發式規則（LS-342），
+                                                      有違規時把每一列印到 stderr 並 exit 1，供 CI
+                                                      `rules` job（無 DB）與本機快速檢查使用。
+  python3 scripts/ops/food-catalog-sql.py check-allergens-sql
+                                                    > 把同一份規則（food_catalog_rules.py）轉成一段 SQL
+                                                      DO 區塊，對 public.food_catalog 目前內容（DB 現況）
+                                                      跑同樣的檢查（供 supabase/tests/run.sh 使用，理由
+                                                      與 check 相同）。
 
 不用任何第三方套件（Rule 12 對 Python 套件安裝的規定不適用——這裡完全不需要安裝套件，
 標準庫 csv／sys 就夠）。
@@ -41,6 +51,9 @@ import pathlib
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import food_catalog_rules  # noqa: E402
+
 CSV_PATH = HERE.parent.parent / "supabase" / "seed-data" / "food_catalog.csv"
 
 COLUMNS = ["id", "name_zh", "category", "sort_order", "allergens", "min_age_months"]
@@ -89,6 +102,19 @@ def main():
             raise SystemExit("insert 模式只接受 --only-new <base-csv> 這一種額外參數")
     elif mode != "insert" and len(args) > 1:
         raise SystemExit(f"{mode} 模式不接受額外參數")
+
+    if mode == "check-allergens":
+        rows = load_rows()
+        violations = food_catalog_rules.check_rows(rows)
+        if violations:
+            for v in violations:
+                print(v, file=sys.stderr)
+            raise SystemExit(1)
+        print(f"ok：food_catalog 過敏原啟發式檢查通過（CSV 端，{len(rows)} 列，LS-342）")
+        return
+    if mode == "check-allergens-sql":
+        sys.stdout.write(food_catalog_rules.generate_sql_do_block())
+        return
 
     rows = load_rows()
     if only_new_base:
@@ -163,7 +189,7 @@ def main():
         print("end;")
         print("$$;")
         return
-    raise SystemExit(f"未知模式：{mode}（用 insert／check）")
+    raise SystemExit(f"未知模式：{mode}（用 insert／check／check-allergens／check-allergens-sql）")
 
 
 if __name__ == "__main__":
