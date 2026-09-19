@@ -285,6 +285,9 @@ jobs:
           # LS-338：食物圖鑑貼紙裁切腳本自測（真實參考樣張／sheet-15 單列夾具＋合成「少一張」夾具＋
           # sort_reading_order() 單元測試＋mutation：拿掉 REGION-COUNT-CHECK 標記行）
           bash scripts/design/food-sticker-crop.test.sh || rc=1
+          # LS-340 R2 i3（merge-review 1c80d549）：check-consistency 先前沒掛進任何 CI／gate，只能手動跑；
+          # 274 個 id 對帳＋每張可開啟／384×384／RGBA 的驗證現在每個 PR 都跑，<1 秒。
+          uv run scripts/design/food-sticker-crop.py check-consistency || rc=1
           exit "$rc"
 
       # LS-267（LS-96 池項 `c0d883e1`；根因來自 LS-264 merge-review R1 M1）：上面兩個自測 step 列舉的清單與
