@@ -285,15 +285,18 @@ declare
   v_distinct int;
   v_probe int;
 begin
+  -- LS-342 R2（merge-review m2）：不硬編列數（未來擴充食物清單會讓這裡誤報成
+  -- 「探針污染資料庫」）——只斷言「列數＝相異 sort_order 數」（無重複，不論
+  -- 現在總共幾列），與 117_food_encyclopedia.sql 既有的同類檢查同一種相對式寫法。
   select count(*), count(distinct sort_order) into v_total, v_distinct from public.food_catalog;
-  if v_total <> 274 or v_distinct <> 274 then
-    raise exception 'FAIL：sort_order 探針後 food_catalog 應仍是 274 列／274 個相異值，實際 % 列／% 個相異值', v_total, v_distinct;
+  if v_total <> v_distinct then
+    raise exception 'FAIL：sort_order 探針後 food_catalog 出現重複 sort_order，% 列但只有 % 個相異值', v_total, v_distinct;
   end if;
   select count(*) into v_probe from public.food_catalog where id like 'ls342_probe_%';
   if v_probe <> 0 then
     raise exception 'FAIL：sort_order 探針的臨時列 ls342_probe_%% 竟然殘留在資料庫，% 筆', v_probe;
   end if;
-  raise notice 'ok：sort_order 探針未污染資料庫（274 列／274 個相異值、無殘留臨時列）';
+  raise notice 'ok：sort_order 探針未污染資料庫（% 列／% 個相異值、無殘留臨時列）', v_total, v_distinct;
 end;
 $$;
 SQL
