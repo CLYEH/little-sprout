@@ -451,6 +451,10 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   來源，LS-342；CSV 端 `food-catalog-sql.py check-allergens` 在 CI `rules` job
   無需 DB 即可擋，DB 端 `check-allergens-sql` 在 `run.sh` 對現況資料跑同一套
   規則）——例外白名單逐筆列 id＋理由（同檔 `WHITELIST`），不接受萬用字元。
+  **`wheat` 的語意是「含麩質穀物代理」**（對齊台灣食品過敏原強制標示「含麩質之
+  穀物及其製品」：小麥／大麥／黑麥／燕麥），不是字面「小麥」——`barley_tea`
+  （麥仔茶）與 `oatmeal`（燕麥粥）皆標 `wheat`；藜麥（`quinoa`）非含麩質穀物，
+  不標（LS-342 R2，merge-review R1 major m1／orchestrator 裁決 (a)）。
 - 內容來源：`supabase/seed-data/food_catalog.csv`（人類可讀，供使用者過目），
   `scripts/ops/food-catalog-sql.py` 轉成 migration 內的 `INSERT`；兩者一致性由
   `supabase/tests/run.sh` 在跑 `117_food_encyclopedia.sql` 之前、host 端動態產生

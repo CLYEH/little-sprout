@@ -32,11 +32,21 @@
 過敏原的觸發條件，不論是主料還是調味」）記錄的判準延伸，所以用顯式 id 清單
 （`SOY_SAUCE_DISH_IDS`）表示，不是用猜字面（也不是萬用字元）。
 
-基準結果（對現況 274 列跑過一次，見 LS-342 handoff）：規則命中的項目裡，
-「還沒有正確過敏原標記」的全部是這份規則自己的已知例外（頭足類含「魚」字、
-音譯詞含「貝」字、蔬菜品種名含「奶」字、燕麥／藜麥含「麥」字但非小麥製品），
-逐筆列在 `WHITELIST` 並附理由；沒有找到任何真正的既有漏標，不需要 orchestrator
-裁決資料本身。
+**`wheat` 的語意定義（R1 major m1／orchestrator 裁決 (a)，2026-09-19）**：這條規則
+對齊台灣食品過敏原強制標示「含麩質之穀物及其製品」——小麥、大麥、黑麥、燕麥——
+不是字面「小麥」。這與本表既有的 `barley_tea`（麥仔茶，LS-325 seed 既有標記
+`wheat`）一致。因此燕麥（`oatmeal`）**不是**例外：LS-342 R2 已補一支 migration
+（`20260919102837_food_catalog_oatmeal_wheat.sql`）把 `oatmeal` 的 allergens 補上
+`wheat`，`("oatmeal", "wheat")` 白名單條目已移除。藜麥（`quinoa`）不是含麩質穀物
+（藜科植物種子，pseudocereal），維持白名單。日後新增品項判斷是否標 `wheat`，
+一律以「是否為含麩質穀物或其製品」為準，不是「名稱字面是否為小麥」。
+
+基準結果（對現況 274 列跑過一次，見 LS-342 handoff；R2 依上述 `wheat` 定義更新）：
+規則命中且原本沒有過敏原標記的 6 筆裡，5 筆（頭足類 2 筆含「魚」字、音譯詞
+`portobello` 含「貝」字、蔬菜品種名 `cream_bok_choy` 含「奶」字、`quinoa` 含
+「麥」字但非含麩質穀物）是規則本身的已知例外，逐筆列在 `WHITELIST` 並附理由；
+第 6 筆 `oatmeal` 經 orchestrator 裁決判定為既有漏標，已用新 migration 補標、
+不再是白名單條目（見上段）。
 """
 from __future__ import annotations
 
@@ -69,8 +79,7 @@ WHITELIST: dict[tuple[str, str], str] = {
     ("octopus", "fish"): "頭足類（章魚），非魚類，理由同 flying_squid",
     ("portobello", "shellfish"): "波特貝勒菇（洋菇）為音譯詞，名稱含「貝」字純屬音譯巧合，非貝類海鮮",
     ("cream_bok_choy", "milk"): "奶油白菜為蔬菜品種俗名（類似奶油萵苣），非乳製品調味，不含奶",
-    ("oatmeal", "wheat"): "燕麥非小麥，現行 8 類過敏原無獨立燕麥項目，不對應 wheat",
-    ("quinoa", "wheat"): "藜麥為藜科植物種子（pseudocereal），非小麥製品",
+    ("quinoa", "wheat"): "藜麥為藜科植物種子（pseudocereal），不是含麩質穀物；本表 wheat 採「含麩質穀物代理」定義（對齊台灣食品過敏原強制標示：小麥／大麥／黑麥／燕麥，見檔頭；R1 major m1／orchestrator 裁決 (a)）",
 }
 
 
