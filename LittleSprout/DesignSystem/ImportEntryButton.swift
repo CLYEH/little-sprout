@@ -45,8 +45,8 @@ struct ImportEntryButton: View {
         Button(action: action) {
             HStack(spacing: AppSpacing.tight) {
                 importMark
-                // LS-343：同 `TimelineView.createMemoryButton` 的理由（該檔文件註解，含已知
-                // 限制與 `timelineButtonCompressionProxyHost` 的 mutation 驗證方式）。
+                // LS-343：同 `TimelineView.createMemoryButton` 的理由（該檔文件註解「LS-343」
+                // 段——390／375pt＋Dynamic Type S／XS 重現條件與機制，非舊 iOS／顯示縮放）。
                 Text(label)
                     .appFont(.body, weight: .semibold)
                     .foregroundStyle(Color.lsTextPrimary)

@@ -163,6 +163,15 @@ struct TimelineView: View {
     /// 「Header Actions Group」（`gap:$sp-item`）裡與「新增回憶」同列、Import 在左；不合列
     /// 時（`aGkJ1` AX3 板實測三列全帶文字）改三列堆疊，閱讀序 Title／匯入／新增回憶一致
     /// （Notes `orXbN` R4：VR R3 `7e36fccc` i-7 動作序對調，Import 領先 Create）。
+    ///
+    /// **LS-343**（merge-review R1 重現＋量測，b975e587）：iPhone 12 Pro（390pt）／iPhone SE
+    /// （375pt）在 Dynamic Type **`S`／`XS`（比預設 `L` 小一級）**——不是舊 iOS、不是顯示縮放、
+    /// 也不是候選 1/2 切換門檻改變——候選 1 的 `HStack` 在小字級下，按鈕群（右側那個內層
+    /// `HStack`）的可壓縮幅度會掉到比標題小，於是先分到「剩餘寬 ÷ 子項數」的窄提案、中文逐字
+    /// 換行，即使整列還空著一大段（重現截圖：標題與匯入鈕之間有可見空白）。`M`／`L`／`XL` 不
+    /// 重現（原 R1 只掃了這段，漏網）。修法（`createMemoryButton`／`ImportEntryButton` 的
+    /// `Text` 補 `lineLimit(1)`／`fixedSize(horizontal:)`）讓兩顆鈕永遠回報未換行的自然寬度，
+    /// 不會被按鈕群的收縮順序坑到；真的放不下時交由候選 2（既有三列堆疊）接手。
     private var headerRow: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .center) {
@@ -195,7 +204,9 @@ struct TimelineView: View {
     /// `gap:6`／`padding:[9.5,16]`／icon 18×18 純加號，無外框圓），不是原本的全寬色塊——
     /// `padding-vertical` 對到既有 token `controlPaddingTap`（同一組值，`JoinWaitingView` 已有
     /// 相同 padding＋icon＋semibold 文字的先例）；icon 換成裸 `"plus"` `.small`（18pt）對應
-    /// lucide 的純加號，不用會多畫一個圓的 `plus.circle.fill`（LS-343：曾在窄寬度壓縮換行）。
+    /// lucide 的純加號，不用會多畫一個圓的 `plus.circle.fill`（LS-343：390／375pt＋Dynamic
+    /// Type S／XS 曾被壓縮換行，見 `headerRow` 文件註解「LS-343」段與下方 `Text` 修飾字；
+    /// mutation 證據見 `TimelineHeaderNarrowWidthUITests`）。
     private var createMemoryButton: some View {
         Button { showsDiaryEditor = true } label: {
             HStack(spacing: AppSpacing.tight) {
