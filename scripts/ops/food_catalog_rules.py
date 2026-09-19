@@ -123,6 +123,14 @@ def _sql_quote(s: str) -> str:
     return "'" + s.replace("'", "''") + "'"
 
 
+def _sql_literal_escape(s: str) -> str:
+    """給要內插進 `raise exception '...'` 訊息本體（不是另外加引號包起來的獨立
+    字面）的文字用：`'` 要雙寫（SQL 字串字面跳脫），`%` 要雙寫（RAISE 格式字串
+    佔位符跳脫，否則多出來的 `%` 會被當成少一個參數的佔位符，R1 merge-review m1：
+    `too few parameters specified for RAISE`）。"""
+    return s.replace("'", "''").replace("%", "%%")
+
+
 def generate_sql_do_block() -> str:
     """把 KEYWORD_RULES／SOY_SAUCE_DISH_IDS／WHITELIST 轉成一段對
     `public.food_catalog` 現況跑檢查的 SQL `do $$ ... $$`（DB 端 deny 路徑）。
@@ -154,7 +162,7 @@ def generate_sql_do_block() -> str:
             f"   where ({name_like})",
             f"     and not ('{allergen}' = any(allergens)){exempt_clause};",
             "  if v_bad is not null then",
-            f"    raise exception 'FAIL：{desc}但 allergens 缺 {allergen}：%', v_bad;",
+            f"    raise exception 'FAIL：{_sql_literal_escape(desc)}但 allergens 缺 {allergen}：%', v_bad;",
             "  end if;",
             "",
         ]
