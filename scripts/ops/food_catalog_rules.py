@@ -178,7 +178,9 @@ def generate_sql_do_block() -> str:
     # LS-96 池項 25fea8c7（i2'）：SOY_SAUCE_DISH_IDS 為空時整段略過——PostgreSQL 的
     # `where id in ()` 是合法但恆假的 SQL，不會語法錯；這道 guard 純粹是「規則表沒有
     # 醬油慣例列時，產生的 SQL 不該留一段永遠 no-op 的檢查」，也讓自測能斷言「清空
-    # 常數 → 這段完全消失」（拿掉 guard 就會在該情境下重新出現 `id in ()`，見自測 G）。
+    # 常數 → 這段完全消失」（拿掉 guard 就會在該情境下重新出現 `id in ()`，見自測 J1，
+    # merge-review R1 m3：此處原誤標「見自測 G」——G 段是 sesame CSV 端 deny，不是
+    # 這道 guard 的守門測試）。
     if SOY_SAUCE_DISH_IDS:
         soy_ids = ", ".join(_sql_quote(rid) for rid in sorted(SOY_SAUCE_DISH_IDS))
         soy_exempt_ids = sorted(rid for (rid, a) in WHITELIST if a == "soy" and rid in SOY_SAUCE_DISH_IDS)
