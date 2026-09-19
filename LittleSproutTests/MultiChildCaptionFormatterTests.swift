@@ -29,7 +29,7 @@ final class MultiChildCaptionFormatterTests: XCTestCase {
     func test_attributed_singleChild_usesMiddleDotFormat() {
         let anan = child(name: "陳小安", birthday: date("2024-06-02"))
         let attributed = MultiChildCaptionFormatter.attributed(
-            children: [anan], asOf: date("2026-09-02"), calendar: utcCalendar
+            children: [anan], asOf: date("2026-09-02"), timeZone: utcCalendar.timeZone
         )
         // 2024-06-02 → 2026-09-02：2 歲 3 個月。
         XCTAssertEqual(String(attributed.characters), "陳小安 · 2\u{00A0}歲\u{00A0}3\u{00A0}個月")
@@ -39,7 +39,7 @@ final class MultiChildCaptionFormatterTests: XCTestCase {
         let anan = child(name: "陳小安", birthday: date("2024-06-02"))
         let xuan = child(name: "陳小軒", birthday: date("2020-01-15"))
         let attributed = MultiChildCaptionFormatter.attributed(
-            children: [anan, xuan], asOf: date("2026-09-02"), calendar: utcCalendar
+            children: [anan, xuan], asOf: date("2026-09-02"), timeZone: utcCalendar.timeZone
         )
         let text = String(attributed.characters)
         XCTAssertFalse(text.contains("·"), "多寶貝格式不用「·」")
@@ -52,7 +52,7 @@ final class MultiChildCaptionFormatterTests: XCTestCase {
     func test_attributed_youngChild_monthsOnlyForm() {
         let baby = child(name: "小寶", birthday: date("2026-05-02"))
         let attributed = MultiChildCaptionFormatter.attributed(
-            children: [baby], asOf: date("2026-09-02"), calendar: utcCalendar
+            children: [baby], asOf: date("2026-09-02"), timeZone: utcCalendar.timeZone
         )
         XCTAssertEqual(String(attributed.characters), "小寶 · 4\u{00A0}個月大")
     }
@@ -62,7 +62,7 @@ final class MultiChildCaptionFormatterTests: XCTestCase {
     func test_segments_age_hasNoRegularSpace() {
         let anan = child(name: "陳小安", birthday: date("2024-06-02"))
         let segments = MultiChildCaptionFormatter.segments(
-            children: [anan], asOf: date("2026-09-02"), calendar: utcCalendar
+            children: [anan], asOf: date("2026-09-02"), timeZone: utcCalendar.timeZone
         )
         XCTAssertEqual(segments.count, 1)
         XCTAssertFalse(segments[0].age.contains(" "), "年齡段不應含一般空格（避免斷行拆開數字與單位）")
@@ -74,7 +74,7 @@ final class MultiChildCaptionFormatterTests: XCTestCase {
     func test_attributed_ageRun_usesDownsteppedFontAndSecondaryColor() {
         let anan = child(name: "陳小安", birthday: date("2024-06-02"))
         let attributed = MultiChildCaptionFormatter.attributed(
-            children: [anan], asOf: date("2026-09-02"), calendar: utcCalendar
+            children: [anan], asOf: date("2026-09-02"), timeZone: utcCalendar.timeZone
         )
         let plain = String(attributed.characters)
         XCTAssertTrue(plain.contains("陳小安"))
