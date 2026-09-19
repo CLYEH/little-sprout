@@ -83,6 +83,10 @@ enum TapTargetGateScreenName: String {
     // `AuthenticatedRootView`（compact），一次覆蓋 tab bar 四顆 cell 的點擊區，也是
     // `TabRootHeadingTests`（entry-conditions.md ⑬）共用的同一個 host。
     case sectionTabView = "SectionTabView"
+    // LS-344 R2（merge-review R1 M1 回歸測試用）：`RootView.SectionSplitView`（iPad regular
+    // 寬度，sidebar＋detail）——`.sectionTabView` 強制 compact，測不到 detail 欄收起側邊欄後
+    // 是否還有路可以回其他分頁。
+    case sectionSplitView = "SectionSplitView"
     // merge-review R1 M1 回歸測試用：`.sectionTabView` 的 `timelineStore` 是空狀態，時間軸
     // 沒有任何日記卡可點，無法真的 push 進 `DiaryDetailView`——這個變體額外 seed 一筆日記
     // （`TimelineStore.seedForPreview(entries:)`，`TimelineStore.swift` DEBUG-only），讓
