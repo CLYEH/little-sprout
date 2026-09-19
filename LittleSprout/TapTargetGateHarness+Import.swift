@@ -54,7 +54,21 @@ extension TapTargetGateHarness {
     @ViewBuilder
     static var importSummaryWithFailuresHost: some View {
         let fixture = ImportPreviewFixture.makeBatch(completed: 5, uploading: 0, waiting: 0, failed: [.network, .quota])
-        Import05SummaryView(session: fixture.session, store: fixture.store, onDone: {})
+        let marker = AlbumsStore.preview().mediaChildrenMarker
+        Import05SummaryView(session: fixture.session, store: fixture.store, marker: marker, onDone: {})
+    }
+
+    /// LS-319：05 完成摘要頁疊「寶貝標記未完成」——`seedFailedMarkingForPreview` 直接灌狀態
+    /// （不經過真正的 RPC，見該方法文件註解），`entryIDs` 取這份 fixture 真正的
+    /// `session.entryIDSet` 子集，讓「N 張寶貝標記未完成」與「重試標記（N）」對得上。
+    @MainActor
+    @ViewBuilder
+    static var importSummaryWithMarkingFailureHost: some View {
+        let fixture = ImportPreviewFixture.makeBatch(completed: 5, uploading: 0, waiting: 0, failed: [.network, .quota])
+        let marker = AlbumsStore.preview().mediaChildrenMarker
+        let markedEntryIDs = Array(fixture.session.entryIDs.prefix(2))
+        marker.seedFailedMarkingForPreview(entryIDs: markedEntryIDs, mediaIDs: markedEntryIDs)
+        return Import05SummaryView(session: fixture.session, store: fixture.store, marker: marker, onDone: {})
     }
 }
 #endif

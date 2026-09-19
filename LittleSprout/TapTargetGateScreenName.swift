@@ -118,6 +118,10 @@ enum TapTargetGateScreenName: String {
     // LS-304：05 完成摘要頁——固定樣本含失敗列，「回到時間軸」／「重試失敗項」／逐列重試
     // 皆有代表性。
     case importSummaryWithFailures = "Import05SummaryView"
+    // LS-319：05 完成摘要頁疊「寶貝標記未完成」——同 `.albumDetailPopulated`／
+    // `.albumDetailStress` 既有先例，變體態用不以 "View" 結尾的 rawValue，registry gate
+    // 只要求基底檔名（上面那個 case）至少出現一次。
+    case importSummaryWithMarkingFailure = "Import05SummaryViewMarkingFailure"
     // LS-164：帳號密碼登入畫面（審核帳號用）——初始態不需要任何 seed 資料（`.preview()`
     // 免登入即可建構，同 `createChild`／`createAlbum` 的既有理由），Email／密碼欄與登入鈕
     // 一開畫面就有代表性。

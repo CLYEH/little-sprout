@@ -77,6 +77,7 @@ enum TapTargetGateHarness {
         case .importProgressDefault: importProgressDefaultHost
         case .importProgressCancelConfirm: importProgressCancelConfirmHost
         case .importSummaryWithFailures: importSummaryWithFailuresHost
+        case .importSummaryWithMarkingFailure: importSummaryWithMarkingFailureHost
         case .passwordSignIn: passwordSignInHost
         case .welcome: welcomeHost
         case .profileEdit: profileEditHost
