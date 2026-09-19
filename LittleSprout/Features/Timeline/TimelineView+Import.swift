@@ -45,4 +45,56 @@ extension TimelineView {
         }
         await childrenStore.refresh(familyID: familyID)
     }
+
+    /// LS-328：搬自 `TimelineView.swift`（同檔頭理由，`TimelineView.swift` 已頂 SwiftLint
+    /// `file_length` 上限，抽這支騰出空間給批次匯入 `onAppear`／`onDisappear` 兩行）——內容
+    /// 本身未改動。不是 `private`：跨檔案 extension 存取層級，同 `importEntryButton`。
+    ///
+    /// merge-review R1 m1：`refreshState == .failure` 之前跟「還沒有回憶」共用同一個空狀態
+    /// 文案——離線或 RPC 500 會被呈現成「你家還沒有內容」，且沒有重試入口。失敗時改顯示
+    /// 錯誤訊息＋「重新載入」，跟 `DiaryDetailView` 的行內錯誤提示一致（同一套語彙：
+    /// `$text-primary` ＋ circle-alert，不用 danger，見 brand skill 規則 8）。
+    @ViewBuilder
+    var emptyOrLoadingState: some View {
+        switch timelineStore.refreshState {
+        case .submitting:
+            ProgressView()
+                .frame(maxWidth: .infinity)
+        case .failure(let error):
+            VStack(spacing: AppSpacing.item) {
+                HStack(spacing: AppSpacing.tight) {
+                    Image(systemName: "exclamationmark.circle").appIconFrame(.small)
+                    Text(error.userFacingMessage).appFont(.note)
+                }
+                .foregroundStyle(Color.lsTextPrimary)
+                // merge-review R2-M2：同 `loadMoreTrigger` 的「重新載入」——label closure
+                // 加 padding＋`contentShape`，不是裸 `Button(_:action:)`。merge-review R3
+                // r3-m1：padding token 同上方 `loadMoreTrigger` 的理由，改用
+                // `AppSpacing.item`（同 `SettingsView` 登出鈕），命中區 ≈52.3pt。
+                Button {
+                    Task {
+                        guard let familyID = familyStore.myFamily?.id else { return }
+                        await timelineStore.refresh(familyID: familyID, childID: selectedChildID)
+                    }
+                } label: {
+                    Text("重新載入")
+                        .appFont(.body, weight: .semibold)
+                        .padding(.vertical, AppSpacing.item)
+                        .padding(.horizontal, AppSpacing.item)
+                        .contentShape(Rectangle())
+                }
+            }
+            .frame(maxWidth: .infinity)
+        case .idle, .success:
+            // LS-315：文案改依 Notes `F77gCE`（00b 空狀態）逐字抄值，「匯入」領頭、不加按鈕
+            // （C1c 裁決：空狀態不另造 CTA，靠文案指路到 Header 既有兩顆入口鈕）——00b 板
+            // 完整的「Empty Print」卡面視覺（相框樣式、獨立標題／壓印小字）不在本票範圍，
+            // Body 幾何各依來源板不追齊（見票文範圍 5、Notes `MCbLu`），標題另依 `tZQNc` 抄值。
+            ContentUnavailableView(
+                "這裡還沒有任何回憶",
+                systemImage: "photo.stack",
+                description: Text("點上方的「匯入」把手機裡的舊照片搬進來，或點「新增回憶」寫下第一篇日記。")
+            )
+        }
+    }
 }

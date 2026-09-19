@@ -136,6 +136,32 @@ final class AlbumsStoreSharedUploadQueueTests: XCTestCase {
         XCTAssertNil(store.pendingUploadAlbumIDs[entryID], "終局失敗後對照表項目應該被移除")
     }
 
+    /// LS-328：`onUploadSucceeded` 要通知 `timelineStore`——不管這筆有沒有掛相簿（這裡刻意
+    /// **不** `registerPendingAlbum`，驗證跟下面「只有登記過 albumID 才 attachMedia」是不同
+    /// 分支，見 `AlbumsStore+SharedUploadQueue.swift` 該掛鉤文件註解）。去抖／dirty 內部邏輯
+    /// 見 `TimelineStoreImportRefreshTests.swift`，這裡只驗證 wiring 本身真的接上。
+    func test_onUploadSucceeded_notifiesTimelineStore_regardlessOfAlbumRegistration() async {
+        let apiStub = StubAlbumsAPIClient()
+        let store = AlbumsStore(apiClient: apiStub)
+        let mediaService = StubMediaUploadService()
+        let timelineStub = StubTimelineAPIClient()
+        timelineStub.setFetchPointersHandler { _, _, _, _ in [] }
+        let timelineStore = TimelineStore(apiClient: timelineStub)
+        timelineStore.importRefresh.debounceDelay = {}
+        store.timelineStore = timelineStore
+
+        let queue = store.sharedUploadQueueStore(familyID: familyID, mediaUploadService: mediaService)
+        queue.enqueue([
+            PendingUpload(
+                kind: .photo(data: Data("x".utf8), fileExtension: "jpg"), thumbnail: nil,
+                pixelSize: PixelSize(width: 4, height: 3)
+            )
+        ])
+
+        await waitUntil { timelineStore.importRefresh.debounceToken > 0 }
+        XCTAssertGreaterThan(timelineStore.importRefresh.debounceToken, 0, "上傳成功應該通知時間軸，不管有沒有掛相簿")
+    }
+
     /// 沒有登記過的 entry（理論上不該發生，防禦性測試）完成後不該呼叫 `attachMedia`——
     /// `pendingUploadAlbumIDs.removeValue` 找不到就整個 guard 落空。
     func test_onUploadSucceeded_unregisteredEntry_doesNotCallAttachMedia() async {

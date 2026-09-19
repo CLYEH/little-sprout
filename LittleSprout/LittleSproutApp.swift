@@ -74,8 +74,12 @@ struct LittleSproutApp: App {
             apiClient: SupabaseChildAPIClient(client: client),
             avatarUploadService: SupabaseChildAvatarUploadService(client: client)
         ))
-        _timelineStore = State(initialValue: TimelineStore(apiClient: SupabaseTimelineAPIClient(client: client)))
-        _albumsStore = State(initialValue: AlbumsStore(apiClient: SupabaseAlbumsAPIClient(client: client)))
+        let timelineStore = TimelineStore(apiClient: SupabaseTimelineAPIClient(client: client))
+        _timelineStore = State(initialValue: timelineStore)
+        let albumsStore = AlbumsStore(apiClient: SupabaseAlbumsAPIClient(client: client))
+        // LS-328：批次匯入完成後通知時間軸自動刷新，見 `AlbumsStore.timelineStore` 文件註解。
+        albumsStore.timelineStore = timelineStore
+        _albumsStore = State(initialValue: albumsStore)
         _eulaStore = State(initialValue: EULAStore(apiClient: SupabaseEULAAPIClient(client: client)))
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)
         growthAPIClient = SupabaseGrowthAPIClient(client: client)

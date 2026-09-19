@@ -163,6 +163,73 @@ while IFS= read -r f; do
       sed 's/^/    /' "$csv_out" >&2
       exit 1
     fi
+
+    # LS-342：過敏原啟發式檢查（DB 端）——同一份規則（scripts/ops/food_catalog_rules.py）
+    # 由 food-catalog-sql.py check-allergens-sql 產生 SQL，對 public.food_catalog 現況
+    # （多支 migration 累加後的結果）跑檢查。理由同上（docker exec 通道看不到 host CSV）。
+    allergen_check="$tmp/117_allergen_check.sql"
+    allergen_out="$tmp/117_allergen_check.sql.out"
+    echo "→ food_catalog 過敏原啟發式檢查（DB 端，host 端產生）"
+    if ! python3 "$here/../../scripts/ops/food-catalog-sql.py" check-allergens-sql > "$allergen_check" 2>"$tmp/117_allergen_gen.err"; then
+      echo "  ✗ food-catalog-sql.py check-allergens-sql 產生失敗：" >&2
+      cat "$tmp/117_allergen_gen.err" >&2
+      exit 1
+    fi
+    if run_sql "$allergen_check" > "$allergen_out" 2>&1; then
+      sed 's/^/    /' "$allergen_out"
+      echo "  ✓ food_catalog 過敏原啟發式檢查（現況）"
+    else
+      echo "  ✗ food_catalog 過敏原啟發式檢查失敗：" >&2
+      sed 's/^/    /' "$allergen_out" >&2
+      exit 1
+    fi
+
+    # mutation（deny 路徑）：拿掉一筆既有正確標記（cod 的 fish），證明檢查真的會抓。
+    # DB 側改動包在 begin; 內、靠 ON_ERROR_STOP 中止，連線結束自動捨棄，不落地（同既有
+    # LS-339 merge-review 的手法）。
+    allergen_mutation="$tmp/117_allergen_mutation.sql"
+    allergen_mutation_out="$tmp/117_allergen_mutation.sql.out"
+    {
+      echo '\set ON_ERROR_STOP on'
+      echo 'begin;'
+      echo "update public.food_catalog set allergens = '{}'::text[] where id = 'cod';"
+      cat "$allergen_check"
+    } > "$allergen_mutation"
+    if run_sql "$allergen_mutation" > "$allergen_mutation_out" 2>&1; then
+      echo "  ✗ food_catalog 過敏原啟發式檢查 mutation 應該要紅（cod 的 fish 被清空），實際仍綠：" >&2
+      sed 's/^/    /' "$allergen_mutation_out" >&2
+      exit 1
+    fi
+    if ! grep -q "FAIL：名稱含魚類字但 allergens 缺 fish" "$allergen_mutation_out"; then
+      echo "  ✗ food_catalog 過敏原啟發式檢查 mutation 紅了，但訊息不是預期的 fish 規則：" >&2
+      sed 's/^/    /' "$allergen_mutation_out" >&2
+      exit 1
+    fi
+    sed 's/^/    /' "$allergen_mutation_out"
+    echo "  ✓ food_catalog 過敏原啟發式檢查 mutation（cod 清空 fish → 紅，訊息點名 fish 規則）"
+
+    allergen_verify="$tmp/117_allergen_verify.sql"
+    cat > "$allergen_verify" <<'SQL'
+\set ON_ERROR_STOP on
+do $$
+declare
+  v_allergens text[];
+begin
+  select allergens into v_allergens from public.food_catalog where id = 'cod';
+  if v_allergens is distinct from array['fish']::text[] then
+    raise exception 'FAIL：mutation 測試後 cod 的 allergens 被污染，實際 %', v_allergens;
+  end if;
+  raise notice 'ok：mutation 測試未污染 DB（cod 仍是 {fish}）';
+end;
+$$;
+SQL
+    if run_sql "$allergen_verify" > "$tmp/117_allergen_verify.sql.out" 2>&1; then
+      sed 's/^/    /' "$tmp/117_allergen_verify.sql.out"
+    else
+      echo "  ✗ mutation 測試後污染驗證失敗：" >&2
+      cat "$tmp/117_allergen_verify.sql.out" >&2
+      exit 1
+    fi
   fi
   echo "→ $name"
   if run_sql "$f" > "$out" 2>&1; then
@@ -174,6 +241,72 @@ while IFS= read -r f; do
     exit 1
   fi
 done < <(printf '%s\n' "$here"/[0-9]*_*.sql | sort -V)
+
+# ---------------------------------------------------------------------------
+# LS-342：food_catalog.sort_order deferrable unique 正反兩面探針（不放進上面
+# `[0-9]*_*.sql` 的主迴圈：反面探針預期失敗，主迴圈的判定方向是「非 0 就中止」，
+# 兩種判定方向不能共用同一個迴圈）。
+# ---------------------------------------------------------------------------
+sort_order_dir="$here/sort_order"
+reorder_ok="$sort_order_dir/probe_reorder_ok.sql"
+reorder_ok_out="$tmp/probe_reorder_ok.sql.out"
+echo "→ sort_order/probe_reorder_ok（交易內跨陳述式暫時重複，COMMIT 應成功）"
+if run_sql "$reorder_ok" > "$reorder_ok_out" 2>&1; then
+  sed 's/^/    /' "$reorder_ok_out"
+  echo "  ✓ sort_order/probe_reorder_ok"
+else
+  echo "  ✗ sort_order/probe_reorder_ok 失敗（既有重排模式被 deferred unique 擋下）：" >&2
+  sed 's/^/    /' "$reorder_ok_out" >&2
+  exit 1
+fi
+
+commit_dup="$sort_order_dir/probe_commit_duplicate.sql"
+commit_dup_out="$tmp/probe_commit_duplicate.sql.out"
+echo "→ sort_order/probe_commit_duplicate（COMMIT 時仍重複，預期 23505）"
+if run_sql "$commit_dup" > "$commit_dup_out" 2>&1; then
+  echo "  ✗ sort_order/probe_commit_duplicate 應該要在 COMMIT 時失敗（23505），實際成功：" >&2
+  sed 's/^/    /' "$commit_dup_out" >&2
+  exit 1
+fi
+if ! grep -qE '(23505|food_catalog_sort_order_unique)' "$commit_dup_out"; then
+  echo "  ✗ sort_order/probe_commit_duplicate 失敗了，但訊息不是預期的 23505／constraint 名稱：" >&2
+  sed 's/^/    /' "$commit_dup_out" >&2
+  exit 1
+fi
+sed 's/^/    /' "$commit_dup_out"
+echo "  ✓ sort_order/probe_commit_duplicate（COMMIT 時仍重複 → 23505，未提交的交易不會污染資料）"
+
+sort_order_verify="$tmp/sort_order_verify.sql"
+cat > "$sort_order_verify" <<'SQL'
+\set ON_ERROR_STOP on
+do $$
+declare
+  v_total int;
+  v_distinct int;
+  v_probe int;
+begin
+  -- LS-342 R2（merge-review m2）：不硬編列數（未來擴充食物清單會讓這裡誤報成
+  -- 「探針污染資料庫」）——只斷言「列數＝相異 sort_order 數」（無重複，不論
+  -- 現在總共幾列），與 117_food_encyclopedia.sql 既有的同類檢查同一種相對式寫法。
+  select count(*), count(distinct sort_order) into v_total, v_distinct from public.food_catalog;
+  if v_total <> v_distinct then
+    raise exception 'FAIL：sort_order 探針後 food_catalog 出現重複 sort_order，% 列但只有 % 個相異值', v_total, v_distinct;
+  end if;
+  select count(*) into v_probe from public.food_catalog where id like 'ls342_probe_%';
+  if v_probe <> 0 then
+    raise exception 'FAIL：sort_order 探針的臨時列 ls342_probe_%% 竟然殘留在資料庫，% 筆', v_probe;
+  end if;
+  raise notice 'ok：sort_order 探針未污染資料庫（% 列／% 個相異值、無殘留臨時列）', v_total, v_distinct;
+end;
+$$;
+SQL
+if run_sql "$sort_order_verify" > "$tmp/sort_order_verify.sql.out" 2>&1; then
+  sed 's/^/    /' "$tmp/sort_order_verify.sql.out"
+else
+  echo "  ✗ sort_order 探針後污染驗證失敗：" >&2
+  cat "$tmp/sort_order_verify.sql.out" >&2
+  exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # LS-110 R1 F2：96_profiles_auto_create.sql 的六段情境測試都是以 $db_user（本機／CI
