@@ -1,6 +1,16 @@
 import Foundation
 @testable import LittleSprout
+import os
 import XCTest
+
+/// 測試專用、可跨並行情境安全存取的小盒子——模擬「伺服器在請求開始那一刻的狀態」，供下面
+/// 兩支 M1 回歸測試的 stub handler 讀（同 `TimelineStoreRefreshDedupTests.swift`
+/// `SendableFlagBox` 的既有作法，這裡多一個語意明確的名字）。
+private final class ServerSnapshotState: @unchecked Sendable {
+    private let lock = OSAllocatedUnfairLock(initialState: false)
+    func markLastPhotoLanded() { lock.withLock { $0 = true } }
+    var hasLastPhoto: Bool { lock.withLock { $0 } }
+}
 
 /// LS-328（源自 LS-315 R3 `957707ef` 風險 1）：批次匯入完成後時間軸去抖刷新／不在畫面上補
 /// refresh——`TimelineStoreTests` 是同一個測試對象，拆成獨立檔案純粹是為了 SwiftLint
@@ -90,28 +100,97 @@ extension TimelineStoreTests {
         )
     }
 
-    /// race：時間軸在畫面上時，批次完成通知（去抖後）與使用者同時下拉刷新要合流成一次真的
-    /// 請求，不能各自發——`handleImportBatchMediaUploaded` 呼叫 `refresh(familyID:childID:)`
-    /// 刻意不 force，沿用 LS-266 既有 in-flight 合流（見 `TimelineStore+Import.swift` 檔頭
-    /// 文件註解）。mutation（改成 `force: true`）：`fetchPointersCalls.count` 會變成 2。
-    func test_handleImportBatchMediaUploaded_concurrentWithPullToRefresh_dedupesToSingleAPICall() async {
+    /// **M1（merge-review R1，PR #505）核心釘樁**：去抖到期的 `refresh` 不 force，可能合流進
+    /// 「發起於這張照片落地之前」的舊一輪——LS-266 R2 B1 的世代比對只擋「已被淘汰的世代」，
+    /// 擋不下「同世代、但發起時間早於這次伺服器端狀態改變」（同 `refreshWithCurrentFilter()`
+    /// 文件註解 LS-266 R2 i1 那句話）。若合流後不補救，最後一張要等下次手動下拉才出現——
+    /// 正是本票要修的那個現象，這裡的斷言直接釘住「使用者最終看得到」這件事。
+    ///
+    /// 情境：①「倒數第二張」完成觸發第一輪 refresh，卡在 handler 裡（那一刻伺服器還沒有
+    /// 最後一張）；②卡著的時候最後一張真的落地；③批次完成通知（`debounceDelay` 是空操作，
+    /// 立即觸發）合流進①那一輪（`generation` 不會因合流而遞增）；④開閘讓①完成（拿到不含
+    /// 最後一張的舊快照）——若沒有 M1 修法，流程到此結束，entries 永遠不含最後一張。
+    /// mutation（拿掉 `if generation == generationBefore { await refresh(force: true) }`
+    /// 那段）：這裡的斷言會轉紅。
+    func test_handleImportBatchMediaUploaded_mergesIntoStaleInFlightRound_forcesFollowUpToIncludeLatestPhoto() async {
+        let stub = StubTimelineAPIClient()
+        stub.setFetchPointersHandler { _, _, _, _ in [] }
+        let store = TimelineStore(apiClient: stub)
+        let familyID = UUID()
+        _ = await store.refresh(familyID: familyID, childID: nil)
+        store.importRefresh.debounceDelay = {}
+        store.screenDidAppear()
+
+        let gate = AsyncGate()
+        let state = ServerSnapshotState()
+        let lastPhotoID = UUID()
+        stub.setFetchPointersHandler { _, _, _, _ in
+            // 在請求開始那一刻對伺服器狀態取快照（同 `await` 前先讀），才能模擬「這一輪發起
+            // 時伺服器還沒有最後一張」——不是請求完成那一刻。
+            let hasLast = state.hasLastPhoto
+            await gate.wait()
+            guard hasLast else { return [] }
+            return [TimelineFeedPointer(kind: .media, refId: lastPhotoID, occurredAt: Date(), childIds: [])]
+        }
+
+        // ①：卡在 handler 裡，此刻伺服器還沒有最後一張。
+        let staleRound = store.handleImportBatchMediaUploaded()
+        await gate.waitForWaiters(count: 1)
+
+        // ②：最後一張這時落地。③：批次完成通知合流進①。
+        state.markLastPhotoLanded()
+        let finalNotification = store.handleImportBatchMediaUploaded()
+
+        // ④：放行①，讓合流與（若 M1 修法在）補救的 force 都跑完。
+        await gate.open()
+        _ = await (staleRound.value, finalNotification.value)
+
+        XCTAssertTrue(
+            store.entries.map(\.refId).contains(lastPhotoID),
+            "批次完成後即使合流到照片落地前發起的舊一輪，使用者最終也要看到最後一張，不能停在舊快照"
+        )
+    }
+
+    /// race（依 M1 修法後的新語意重寫，原本斷言「只打一次」——那條斷言釘住的其實是 M1 的
+    /// 缺陷本身：使用者下拉刷新先發起、最後一張緊接著落地時，若堅持「只打一次」就等於堅持
+    /// 用下拉當下的舊快照，使用者看不到最後一張）：時間軸在畫面上時，批次完成通知（去抖後）
+    /// 與使用者下拉刷新併發——合流成一次請求本身沒問題（沿用 LS-266 既有 in-flight 合流），
+    /// 但若最後一張在合流之後才落地，必須再補一次才能讓使用者看到；請求數要有上界（不是
+    /// 每次都無限重打）。mutation（拿掉 M1 修法的補救段）：第一個斷言（看得到最後一張）轉紅。
+    func test_handleImportBatchMediaUploaded_concurrentWithPullToRefresh_lastPhotoVisibleWithBoundedRequests() async {
         let stub = StubTimelineAPIClient()
         let gate = AsyncGate()
+        let state = ServerSnapshotState()
+        let lastPhotoID = UUID()
         stub.setFetchPointersHandler { _, _, _, _ in
+            let hasLast = state.hasLastPhoto
             await gate.wait()
-            return []
+            guard hasLast else { return [] }
+            return [TimelineFeedPointer(kind: .media, refId: lastPhotoID, occurredAt: Date(), childIds: [])]
         }
         let store = TimelineStore(apiClient: stub)
         let familyID = UUID()
         store.importRefresh.debounceDelay = {}
         store.screenDidAppear()
 
+        // 使用者下拉刷新先發起——此刻最後一張還沒落地。
         let pullToRefresh = Task { await store.refresh(familyID: familyID, childID: nil) }
         await gate.waitForWaiters(count: 1)
+
+        // 最後一張這時落地，批次完成通知緊接著觸發——合流進下拉刷新那一輪。
+        state.markLastPhotoLanded()
         let importTriggered = store.handleImportBatchMediaUploaded()
+
         await gate.open()
         _ = await (pullToRefresh.value, importTriggered.value)
 
-        XCTAssertEqual(stub.fetchPointersCalls.count, 1, "同時發生的下拉刷新與批次完成通知應該合流成一次請求")
+        XCTAssertTrue(
+            store.entries.map(\.refId).contains(lastPhotoID),
+            "批次完成通知與下拉刷新併發時，最後一張最終也要出現，不能停在下拉當下（合流時）的舊快照"
+        )
+        XCTAssertLessThanOrEqual(
+            stub.fetchPointersCalls.count, 2,
+            "去抖合流之後的補救最多只該再多打一次請求（下拉本身一次＋必要時補一次），不是無限重打"
+        )
     }
 }
