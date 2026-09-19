@@ -716,13 +716,16 @@ rm -rf "$ls184_work"
 # R2（merge-review comment 9f4a1e38）：M1 加正規化（去引號、壓縮空白）補雙引號／多空白兩種
 # 風格變體的 deny／allow 各一組（H4⑥⑧、H4⑦⑨）。
 # R6（LS-330，池 `816e23c4`）：H4 改由 pretool_engine.py 的 token 化判定（見該檔案 H4_* 常數與
-# check_precise／check_fallback），一次收掉三種殘留繞過——H4⑩ 從「已知盲區、allow」改判 deny（旗標
-# 與 target 黏在同一個 token 的形狀，token 化後可以精確辨識，不再需要「旗標與 target 之間須有空白」
-# 這個假設）；H4⑱⑲ 補「分開旗標」（`pgrep -f -l …`）負例；H4⑳㉑ 補 tab 分隔負例（tokenizer 本來就把
-# tab 當空白同等的斷詞字元，token 化後與空白分隔寫法同形，正例／負例各一組確認真的收斂）。H4⑪
-# 維持 deny（見該則就地補充的說明：payload 其實是無效 JSON，走的是 H0 fail-closed，不是 H4 的 echo
-# 誤擋——LS-330 實測發現的既有測試瑕疵，這裡不動它原本的斷言，另外用 H4⑪b 補一組真正能通過 JSON
-# 解析的等價案例，驗證 engine 確實分辨得出命令位置不是 pgrep）。
+# check_precise／check_fallback），一次收掉三種殘留繞過。**注意**：H4①–⑩⑫–⑳（沿用既有 while 迴圈寫法）
+# 命令位置都是 `while`（shell 保留字，`resolve_position` 判 recognized=False），一律走 `check_fallback`
+# 的 FB_H4_* 整段字面比對，不會走 `check_precise` 的 pgrep 分支／`H4_JOINED_RE`——H4⑩ 改判 deny、H4⑱⑳
+# 的分開旗標／tab 負例，抓到的都是 FB_H4_FLAG_RE／FB_H4_TARGET_RE（fallback），不是 H4_JOINED_RE（merge-review
+# R1 M1 實測：把 check_precise 的整段 pgrep 分支拿掉、或把 H4_JOINED_RE 改成永不命中，H4①–㉑ 222/222 仍綠）。
+# 真正命中 `check_precise`／`H4_JOINED_RE` 的 token 路徑改用命令位置直接是 `pgrep`（或遞迴進 `$(...)` 之後）
+# 的形狀——見下面 H4㉒–㉕。H4⑪ 維持 deny（見該則就地補充的說明：payload 其實是無效 JSON，走的是 H0
+# fail-closed，不是 H4 的 echo 誤擋——LS-330 實測發現的既有測試瑕疵，這裡不動它原本的斷言）；H4⑪b 的
+# payload 不含 `pgrep` 也不含 `-f` 旗標，其實測不到「echo 引數裡的 pgrep 字面不誤擋」（拿掉
+# `cmd == "pgrep"` 條件一樣 allow，merge-review R1 M1(b)）——真正驗證這件事的是下面的 H4⑪c。
 # ============================================================
 expect 'H4① 全域 pgrep -f [x]codebuild（deny，LS-315 根因形狀）' 2 \
   "$(bash_json "while pgrep -f '[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")"
@@ -743,7 +746,7 @@ expect 'H4⑧ 雙引號、帶 worktrees/LS-315 範圍（allow，M1 正例：修�
   "$(bash_json 'while pgrep -f \"[x]codebuild\" 2>/dev/null | grep -q worktrees/LS-315; do sleep 20; done')"
 expect 'H4⑨ -f 後多一空白、帶 worktrees/LS-42 範圍（allow，M1 正例）' 0 \
   "$(bash_json "while pgrep -f  '[x]codebuild' 2>/dev/null | grep -q worktrees/LS-42; do sleep 20; done")"
-expect 'H4⑩（R6／LS-330 改判）-f 與引號之間本來就無空白、無範圍（deny：token 化後 -f 與 [x]codebuild 黏在同一個 token，H4_JOINED_RE 精確辨識得到，不再是盲區）' 2 \
+expect 'H4⑩（R6／LS-330 改判）-f 與引號之間本來就無空白、無範圍（deny：命令位置是 while、走 check_fallback 的 FB_H4_FLAG_RE／FB_H4_TARGET_RE 整段字面比對抓到，不是 H4_JOINED_RE 的 token 路徑——H4_JOINED_RE 的覆蓋見 H4㉓）' 2 \
   "$(bash_json "while pgrep -f'[x]codebuild' >/dev/null 2>&1; do sleep 20; done")"
 # ---- R2（merge-review comment 9f4a1e38 minor）：H4 無「引號內字面」豁免（不同 H1–H3b 走
 # pretool_engine.py 的命令位置分析），純引述這個字面模式（無 worktree 範圍）仍會被誤擋——已知、
@@ -776,12 +779,13 @@ expect 'H4⑯ 帶 worktrees/LS-42 範圍字面的 pgrep -fl [p]ush-gate（allow�
   "$(bash_json "while pgrep -fl '[p]ush-gate' 2>/dev/null | grep -q worktrees/LS-42; do sleep 20; done")"
 expect 'H4⑰ pgrep -l（不含 f 的短旗標組）即使 target 是 [x]codebuild 字面也不誤擋（allow，LS-327：只有含 f 的旗標組才觸發）' 0 \
   "$(bash_json "pgrep -l '[x]codebuild'")"
-# ---- R6（LS-330，池 `816e23c4`）：H1–H3b 既有的「命令位置認得就精確 token 比對」搬進 H4——H4⑱⑲
-# 補「分開旗標」繞過（`-f`／`-l` 拆成兩個獨立 token，中間插了別的旗標，舊版字面比對要求旗標與
-# target 中間恰一個空白，這個形狀就繞過去了；token 化後兩者只要同段出現即算，不要求相鄰）；H4⑳㉑
-# 補 tab 分隔（tokenize_segments 本來就把 tab 當空白同等的斷詞字元，token 化後與空白分隔寫法同形，
-# 正負例各一組確認真的收斂，不是巧合放行）----
-expect 'H4⑱ 分開旗標 pgrep -f -l [x]codebuild（deny，LS-330：-f／-l 各自獨立 token，同段任意出現即算，不要求相鄰）' 2 \
+# ---- R6（LS-330，池 `816e23c4`）：補「分開旗標」（`-f`／`-l` 拆成兩個獨立 token，舊版字面比對要求
+# 旗標與 target 中間恰一個空白，這個形狀就繞過去了）與 tab 分隔的負／正例——H4⑱⑲⑳㉑ 沿用既有 while
+# 迴圈寫法，命令位置是 `while`（保留字），一律走 check_fallback 的 FB_H4_FLAG_RE／FB_H4_TARGET_RE（`[ \t]`
+# 已含 tab，同一組 fallback regex 涵蓋空白與 tab 兩種分隔）；真正命中 check_precise 的 token 路徑（分開
+# 旗標／tab 皆同段任意出現即算，不要求相鄰）的案例見下面 H4㉒（分開旗標）／H4㉔（tab，遞迴進 $(...)
+# 之後）----
+expect 'H4⑱ 分開旗標 pgrep -f -l [x]codebuild（deny：命令位置是 while，走 check_fallback；token 路徑的分開旗標覆蓋見 H4㉒）' 2 \
   "$(bash_json "while pgrep -f -l '[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")"
 expect 'H4⑲ 分開旗標＋worktrees/LS-42 範圍（allow，LS-330 正例：修法不誤擋合法寫法）' 0 \
   "$(bash_json "while pgrep -f -l '[x]codebuild .*ABCD' 2>/dev/null | grep -q worktrees/LS-42; do sleep 20; done")"
@@ -791,10 +795,28 @@ expect 'H4⑲ 分開旗標＋worktrees/LS-42 範圍（allow，LS-330 正例：�
 # 寫成字面 `\t` 讓 JSON 解析器自己把它還原成真正的 tab byte，pretool_engine.py 收到的 command 字串
 # 才會含實際 tab，交給 tokenize_segments 的既有斷詞邏輯處理。
 h4_tab='\t'
-expect 'H4⑳ tab 分隔 pgrep\t-f\t[x]codebuild（deny，LS-330：tab 與空白同形，token 化後仍抓得到）' 2 \
+expect 'H4⑳ tab 分隔 pgrep\t-f\t[x]codebuild（deny：命令位置是 while，走 check_fallback；token 路徑的 tab 覆蓋見 H4㉔）' 2 \
   "$(bash_json "while pgrep${h4_tab}-f${h4_tab}'[x]codebuild .*ABCD' >/dev/null 2>&1; do sleep 20; done")"
 expect 'H4㉑ tab 分隔＋worktrees/LS-315 範圍（allow，LS-330 正例）' 0 \
   "$(bash_json "while pgrep${h4_tab}-f${h4_tab}'[x]codebuild .*ABCD' 2>/dev/null | grep -q worktrees/LS-315; do sleep 20; done")"
+
+# ---- merge-review R1 M1（LS-330）：上面 H4 的 deny 例全部以 `while` 開頭——`while` 是 shell 保留字、命令位置
+# 認不得，一律走 check_fallback 的 FB_H4_* 整段字面比對；check_precise 的 token 化 H4 分支（含 H4_JOINED_RE）
+# 沒有任何 deny 例覆蓋（把該分支整段拿掉 222/222 仍綠）。這裡補命令位置直接是 pgrep 的 deny／allow 例，
+# token 路徑壞掉時會轉紅 ----
+expect 'H4㉒ 命令位置 pgrep、分開旗標、無範圍（deny，check_precise token 路徑）' 2 \
+  "$(bash_json "pgrep -f -l '[x]codebuild' | wc -l")"
+expect 'H4㉓ 命令位置 pgrep、-f 緊接引號、無範圍（deny，H4_JOINED_RE）' 2 \
+  "$(bash_json "pgrep -f'[p]ush-gate' >/dev/null")"
+expect 'H4㉔ echo $(...) 內 pgrep、tab 分隔、無範圍（deny，遞迴後 check_precise）' 2 \
+  "$(bash_json "echo \$(pgrep${h4_tab}-fl${h4_tab}'[x]codebuild')")"
+expect 'H4㉕ 命令位置 pgrep、分開旗標、帶 worktrees/LS-42 範圍（allow，token 路徑正例）' 0 \
+  "$(bash_json "pgrep -f -l '[x]codebuild.*worktrees/LS-42' | wc -l")"
+# ---- merge-review R1 M1(b)：H4⑪b 的 payload 不含 pgrep 也不含 -f 旗標，舊版字面 hook 同樣 allow、拿掉
+# `cmd == "pgrep"` 條件的 engine 也 allow——驗不到「echo 引數裡的 pgrep 字面不誤擋」。這則 payload 真的含
+# 旗標與 target、JSON 合法（無 '\'' 跳脫） ----
+expect 'H4⑪c echo 引數含 pgrep -f [x]codebuild 字面、無範圍（allow：命令位置是 echo，旗標與 target 都在但不累計）' 0 \
+  "$(bash_json 'echo pgrep -f [x]codebuild documentation example, no worktree here')"
 
 if [ "$fail" -eq 0 ]; then
   if [ "${i6_skipped:-0}" -gt 0 ]; then
