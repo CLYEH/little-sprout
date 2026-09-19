@@ -505,7 +505,10 @@ declare
     'public.transfer_ownership(uuid, uuid)',
     -- LS-255：deleted_at／deleted_by 對 authenticated 無 UPDATE grant，唯一寫入路徑，
     -- 且「owner 可移除他人紀錄」無法只靠 author-scoped RLS 表達，見 migration 檔頭第 0 段
-    'public.delete_growth_record(uuid)'
+    'public.delete_growth_record(uuid)',
+    -- LS-325：邏輯逐字沿用 delete_growth_record，理由相同，見 20260918205141_
+    -- food_encyclopedia.sql 檔頭第 0 段 d
+    'public.delete_child_food_record(uuid)'
   ];
   v_invoker_rpcs text[] := array[
     'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)',
@@ -514,7 +517,11 @@ declare
     'public.get_family_quota(uuid)',  -- LS-149：純讀取，依賴既有 families_select RLS
     -- LS-255：依賴 growth_records_select／_insert／_update 三條真 RLS，見 migration 檔頭第 0 段
     'public.list_growth_records(uuid, integer, date, uuid)',
-    'public.upsert_growth_record(uuid, uuid, date, numeric, numeric, numeric, text)'
+    'public.upsert_growth_record(uuid, uuid, date, numeric, numeric, numeric, text)',
+    -- LS-325：依賴 child_food_records_select／_insert／_update 三條真 RLS，見
+    -- 20260918205141_food_encyclopedia.sql 檔頭第 0 段 d
+    'public.list_child_food_records(uuid)',
+    'public.upsert_child_food_record(uuid, text, date, uuid, text, text)'
   ];
   -- v_service_role_rpcs（union，LS-151 R2／R3＋LS-153 R3——兩票各自新增這個
   -- 分類，併入 development 時合併成一個陣列）：public schema 裡不是給

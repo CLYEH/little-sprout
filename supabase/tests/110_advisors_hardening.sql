@@ -171,6 +171,7 @@ declare
     'public.create_comment(uuid, text, uuid, text)',
     'public.create_diary_entry(uuid, uuid[], text, date)',
     'public.create_invite(uuid, text, timestamptz, integer)',
+    'public.delete_child_food_record(uuid)',
     'public.delete_growth_record(uuid)',
     'public.delete_my_account()',
     'public.get_my_join_request()',
