@@ -114,9 +114,21 @@ final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
     /// 照樣 `registerPendingAlbum`／`session.append`／`store.enqueue`，使用者按了取消、畫面
     /// 已關，相簿之後仍會多出這幾張（見 handoff m1）。這幾筆算「取消時放棄」，不計入
     /// `droppedCount`（不是格式不支援／讀取失敗）。
+    /// **LS-319**（票文範圍 1）：群的 `babyIDs` 非空時，向 `AlbumsStore.mediaChildrenMarker`
+    /// 登記這一群的識別碼＋`babyIDs`（`beginGroup`）、每產生一筆上傳就登記一次
+    /// （`registerEntry`，必須在 `store.enqueue` 之前，見該型別文件註解），identifier 迴圈跑完
+    /// （不論是否被 04b 取消）呼叫 `finishRegisteringGroup`——追蹤器自己判斷「這一群何時全部
+    /// 終局」，這裡只負責照實回報事件，不在這裡做任何完成判斷。`babyIDs` 為空的群完全不呼叫
+    /// 這三支（票文「babyIDs 為空的群不呼叫」）。
     private func enqueue(group: ImportPlan.Group, into store: UploadQueueStore, session: ImportBatchSession) async {
         let anchorDate = min(group.anchorDate, Date())
         let albumID = group.albumID
+        let marker = albumsStore.mediaChildrenMarker
+        let markingGroupKey = MediaChildrenMarkingTracker.GroupKey()
+        let tracksBabyIDs = !group.babyIDs.isEmpty
+        if tracksBabyIDs {
+            marker.beginGroup(markingGroupKey, babyIDs: group.babyIDs)
+        }
         var droppedCount = 0
         for identifier in group.assetLocalIdentifiers {
             if session.isCancelled { break }
@@ -136,9 +148,15 @@ final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
                 if let albumID {
                     albumsStore.registerPendingAlbum(entryID: upload.id, albumID: albumID)
                 }
+                if tracksBabyIDs {
+                    marker.registerEntry(markingGroupKey, entryID: upload.id)
+                }
                 session.append(upload.id)
             }
             store.enqueue(uploads)
+        }
+        if tracksBabyIDs {
+            marker.finishRegisteringGroup(markingGroupKey)
         }
         session.markGroupResolved(droppedCount: droppedCount)
     }

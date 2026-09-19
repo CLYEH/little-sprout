@@ -56,6 +56,11 @@ final class AlbumsStore {
     /// `detailStoreByAlbumID` 既有理由）：`AlbumsStore` 不需要延長 `TimelineStore` 的壽命，
     /// 兩者都是 app 層級全程存活，沒有誰依賴誰活得更久的關係。
     weak var timelineStore: TimelineStore?
+    /// LS-319：批次匯入「指定寶貝」上傳完成後標記追蹤器——app 層級共用，理由與生命週期同
+    /// `sharedUploadQueueStoreInstance`（見 `MediaChildrenMarkingTracker` 檔頭文件註解）。
+    /// 建構本身在 `init` 完成（見下）；`onMarked` 閉包要捕捉 `self.timelineStore`，只能在
+    /// `self` 完全初始化之後才賦值，見 `init` 最後一行。
+    let mediaChildrenMarker: MediaChildrenMarkingTracker
 
     /// LS-237 修（池 `4fafaa19`(a)）：每本相簿下一個要用的 `sortOrder`，`.pending` 是「正在
     /// 打第一次 `fetchMaxSortOrder` 查詢、還不知道基底值」、`.ready` 是「已經知道基底，之後
@@ -104,6 +109,11 @@ final class AlbumsStore {
     init(apiClient: AlbumsAPIClient, now: @escaping @MainActor () -> Date = Date.init) {
         self.apiClient = apiClient
         self.now = now
+        mediaChildrenMarker = MediaChildrenMarkingTracker(apiClient: apiClient, onMarked: {})
+        // `self` 到這裡才算完全初始化（所有 stored property 都已賦值）——`onMarked` 補上真正
+        // 要做的事（見 `mediaChildrenMarker` 文件註解），不能提早到上面那行（此時 `self` 尚未
+        // 初始化完成，不能被閉包捕捉）。
+        mediaChildrenMarker.onMarked = { [weak self] in self?.timelineStore?.handleImportBatchMediaUploaded() }
     }
 
     /// 第一頁／換家庭時呼叫——整批換掉 `albums`。
@@ -367,6 +377,7 @@ final class AlbumsStore {
         // 不清掉這兩個屬性，登出換帳號後上傳仍會打舊家庭的 familyID。
         sharedUploadQueueStoreInstance = nil
         pendingUploadAlbumIDs = [:]
+        mediaChildrenMarker.reset()
     }
 
     #if DEBUG

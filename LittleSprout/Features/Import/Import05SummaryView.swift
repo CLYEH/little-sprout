@@ -11,6 +11,10 @@ import SwiftUI
 struct Import05SummaryView: View {
     let session: ImportBatchSession
     let store: UploadQueueStore
+    /// LS-319：批次匯入「指定寶貝」標記追蹤器——「N 張寶貝標記未完成」與「重試標記」讀寫這個
+    /// 物件，範圍只看跟這個批次（`session.entryIDSet`）有交集的群，見 `MediaChildrenMarkingTracker
+    /// .failedMarkingMediaCount(in:)` 文件註解。
+    let marker: MediaChildrenMarkingTracker
     var onViewStorage: () -> Void = {}
     let onDone: () -> Void
 
@@ -26,6 +30,13 @@ struct Import05SummaryView: View {
             return false
         }
     }
+    /// LS-319：只算跟這個批次有交集的標記失敗群——上傳失敗（`failedRows`）與標記失敗是兩件
+    /// 不同的事（票文範圍 2：上傳失敗不計入標記失敗），這裡刻意不共用 `failedRows` 的計算。
+    /// 統計列用這個（不分是否可重試，照片確實沒有標記是事實）。
+    private var markingFailedCount: Int { marker.failedMarkingMediaCount(in: session.entryIDSet) }
+    /// LS-319 R2（merge-review R1 m2）：「重試標記」鈕只在還有**可重試**的失敗群時才顯示——
+    /// `LS044`（寶貝已軟刪）原樣重送永遠不會成功，沿既有「重試失敗項排除 LS002」的 tier 慣例。
+    private var retryableMarkingFailedCount: Int { marker.retryableFailedMarkingCount(in: session.entryIDSet) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -110,6 +121,19 @@ struct Import05SummaryView: View {
                         .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
                 }
             }
+            if markingFailedCount > 0 {
+                // LS-319：照片本身已上傳成功，只是寶貝標記沒有落地——沿用「N 張沒有成功」那一
+                // 列的元件語彙（exclamationmark.circle.fill＋lsDanger），這裡另起一行不跟
+                // `failedRows` 混在一起，理由同上（上傳失敗與標記失敗是兩件不同的事）。稿面
+                // （LS-251 05 板）沒有這一列，沿用既有「失敗項＋重試」元件語彙頂上，實作細節見
+                // handoff 畫面級屬性段，交 orchestrator 判斷是否需要補設計。
+                HStack(spacing: AppSpacing.label) {
+                    Image(systemName: "exclamationmark.circle.fill").appIconFrame(.small)
+                        .foregroundStyle(Color.lsDanger)
+                    Text("\(markingFailedCount) 張寶貝標記未完成")
+                        .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
+                }
+            }
         }
         .padding(AppSpacing.insetCard)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -174,6 +198,30 @@ struct Import05SummaryView: View {
                             .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
                     )
                 }
+                if retryableMarkingFailedCount > 0 {
+                    // LS-319（票文範圍 2）：「重試標記」只重送標記失敗的群，不重新上傳（上傳
+                    // 早就成功了，見 `MediaChildrenMarkingTracker.retryFailedMarking(in:)` 文件
+                    // 註解）——沿用「重試失敗項（N）」按鈕的元件語彙（同背景／邊框／字級），
+                    // 只換文案與觸發對象，同上一段理由，交 orchestrator 判斷是否需要補設計。
+                    // m2（merge-review R1）：只在還有可重試的失敗群時才顯示，`LS044` 排除。
+                    Button {
+                        marker.retryFailedMarking(in: session.entryIDSet)
+                    } label: {
+                        HStack(spacing: AppSpacing.label) {
+                            Image(systemName: "arrow.clockwise").appIconFrame(.medium)
+                            Text("重試標記（\(retryableMarkingFailedCount)）").appNumericFont(.body, weight: .bold)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .padding(.vertical, AppSpacing.controlPaddingMedium)
+                        .contentShape([.interaction, .accessibility], Rectangle())
+                    }
+                    .foregroundStyle(Color.lsTextPrimary)
+                    .background(Color.lsAccentSoft, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
+                            .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
+                    )
+                }
             }
             .padding(.vertical, AppSpacing.item)
             .padding(.horizontal, AppSpacing.screenPad)
@@ -185,11 +233,15 @@ struct Import05SummaryView: View {
 #if DEBUG
 #Preview("有失敗") {
     let fixture = ImportPreviewFixture.makeBatch(completed: 5, uploading: 0, waiting: 0, failed: [.network, .quota])
-    Import05SummaryView(session: fixture.session, store: fixture.store, onDone: {})
+    Import05SummaryView(
+        session: fixture.session, store: fixture.store, marker: AlbumsStore.preview().mediaChildrenMarker, onDone: {}
+    )
 }
 
 #Preview("全成功") {
     let fixture = ImportPreviewFixture.makeBatch(completed: 7, uploading: 0, waiting: 0, failed: [])
-    Import05SummaryView(session: fixture.session, store: fixture.store, onDone: {})
+    Import05SummaryView(
+        session: fixture.session, store: fixture.store, marker: AlbumsStore.preview().mediaChildrenMarker, onDone: {}
+    )
 }
 #endif
