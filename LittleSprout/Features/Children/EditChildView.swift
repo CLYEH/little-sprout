@@ -204,7 +204,7 @@ struct EditChildView: View {
                         Image(systemName: "calendar")
                             .appIconFrame(.medium)
                             .foregroundStyle(Color.lsTextSecondary)
-                        Text(BirthdayFormat.displayString(from: birthday))
+                        Text(BirthdayFormat.displayString(from: birthday, timeZone: .current))
                             .appFont(.body)
                             .foregroundStyle(Color.lsTextPrimary)
                     }

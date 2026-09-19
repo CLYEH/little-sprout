@@ -71,13 +71,21 @@ enum BirthdayFormat {
         return fixedGregorianCalendar(timeZone: timeZone).date(from: components) ?? utcDate
     }
 
-    /// 顯示用「2024年3月12日」——固定用 UTC 抽年月日，不吃裝置時區（否則同一個 `Date`
-    /// 在不同時區的裝置上可能顯示成前一天／後一天）。
-    static func displayString(from date: Date, locale: Locale = Locale(identifier: "zh_Hant_TW")) -> String {
+    /// 顯示用「2024年3月12日」——預設用 UTC 抽年月日，不吃裝置時區（否則同一個 UTC 午夜的
+    /// `Date` 在不同時區的裝置上可能顯示成前一天／後一天）。
+    ///
+    /// LS-334 merge-review R1 M1：`timeZone` 必須跟著被顯示的 `Date` 代表的是哪一種午夜走。
+    /// wire 解碼出來的（UTC 午夜）用預設值；`localMidnight(from:)` 換算過、或 `DatePicker`
+    /// 綁定的「本地午夜」要傳 `.current`，否則正 UTC 位移的裝置（Asia/Taipei UTC+8）會把本地
+    /// 午夜換回「前一天下午」，畫面少一天。
+    static func displayString(
+        from date: Date, locale: Locale = Locale(identifier: "zh_Hant_TW"),
+        timeZone: TimeZone = TimeZone(identifier: "UTC")!
+    ) -> String {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.locale = locale
-        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.timeZone = timeZone
         formatter.dateFormat = "y年M月d日"
         return formatter.string(from: date)
     }

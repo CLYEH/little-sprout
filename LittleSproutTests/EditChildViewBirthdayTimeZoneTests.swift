@@ -14,10 +14,12 @@ import XCTest
 /// `_birthday = State(initialValue: child.birthday)`，這支測試會抓到。
 ///
 /// `BirthdayFormat.localMidnight(from:timeZone:)` 本體（純函式，UTC 午夜→本地午夜換算是否
-/// 正確）已有等效覆蓋，見 `GrowthMeasurementFormViewTimeZoneTests
-/// .test_localMidnight_negativeOffsetTimeZone_keepsSameCalendarDay` 的同型驗證
-/// （`GrowthMeasurementFormView.localMidnight` 與 `BirthdayFormat.localMidnight` 算法逐字相同：
-/// 固定西曆抽 UTC 年月日、再用固定西曆＋注入時區重組），這裡不重複驗證換算本身，只驗接線。
+/// 正確）的直接行為覆蓋見本檔 `test_seededBirthday_labelShowsSameCalendarDay`（merge-review R1
+/// M2：`GrowthMeasurementFormViewTimeZoneTests` 先前宣稱的「等效覆蓋」不成立——那支測試呼叫的
+/// 是 `GrowthMeasurementFormView.localMidnight`，是另一支函式，把 `BirthdayFormat.localMidnight`
+/// 挖空成 no-op 不會讓它變紅。`GrowthMeasurementFormView.localMidnight` 現已收斂成直接呼叫
+/// `BirthdayFormat.localMidnight`，見 `GrowthMeasurementFormViewTimeZoneTests
+/// .test_localMidnight_source_delegatesToBirthdayFormat`，這裡不重複驗證換算本身，只驗接線。
 final class EditChildViewBirthdayTimeZoneTests: XCTestCase {
     private func sourceText() throws -> String {
         let testFileURL = URL(fileURLWithPath: "\(#filePath)")
@@ -47,5 +49,38 @@ final class EditChildViewBirthdayTimeZoneTests: XCTestCase {
             source.contains("_birthday = State(initialValue: child.birthday)"),
             "EditChildView.init 不應該再直接把 child.birthday（UTC 午夜）塞進 @State（LS-334）"
         )
+    }
+
+    /// merge-review R1 M1：`init` 改塞本地午夜之後，生日欄標籤（`EditChildView.swift:207`）
+    /// 必須跟著改用裝置時區抽年月日。mutation：改回 `displayString(from: birthday)`
+    /// （預設 UTC），這支測試轉紅。
+    func test_birthdayField_labelUsesLocalTimeZone() throws {
+        let source = try sourceText()
+        XCTAssertTrue(
+            source.contains("BirthdayFormat.displayString(from: birthday, timeZone: .current)"),
+            "生日欄標籤必須用裝置時區抽年月日——`birthday` 這個 @State 是本地午夜（LS-334 R1 M1）"
+        )
+    }
+
+    /// merge-review R1 M1（行為層）：`localMidnight` 換算出來的本地午夜，經生日欄標籤與
+    /// `wireString` 兩條路都必須回到 DB 裡的同一天。head 現況在正 UTC 位移（Asia/Taipei
+    /// UTC+8 是主客群）標籤少一天；把 `localMidnight` 改成 no-op 則負 UTC 位移
+    /// （America/New_York）標籤與 wire 都少一天——兩個方向都由這支測試守住。
+    func test_seededBirthday_labelShowsSameCalendarDay() throws {
+        let stored = try XCTUnwrap(BirthdayFormat.date(fromWireString: "2024-03-12"))
+        let expected = BirthdayFormat.displayString(from: stored)
+        for identifier in ["UTC", "Asia/Taipei", "Pacific/Kiritimati", "Asia/Kolkata",
+                           "America/New_York", "Pacific/Pago_Pago"] {
+            let timeZone = try XCTUnwrap(TimeZone(identifier: identifier))
+            let seeded = BirthdayFormat.localMidnight(from: stored, timeZone: timeZone)
+            XCTAssertEqual(
+                BirthdayFormat.displayString(from: seeded, timeZone: timeZone), expected,
+                "\(identifier)：生日欄標籤必須顯示 DB 裡的那一天"
+            )
+            XCTAssertEqual(
+                BirthdayFormat.wireString(from: seeded, timeZone: timeZone), "2024-03-12",
+                "\(identifier)：不碰生日欄直接儲存必須寫回原日期"
+            )
+        }
     }
 }
