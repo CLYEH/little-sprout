@@ -66,7 +66,19 @@ extension TimelineStore {
         importRefresh.isOnScreen = true
         guard importRefresh.isDirty, let familyID else { return nil }
         importRefresh.isDirty = false
-        return Task { await refresh(familyID: familyID, childID: childID) }
+        // m1（merge-review R2）：跟 `handleImportBatchMediaUploaded()` 的 `isOnScreen` 分支
+        // 同一個破口——這裡的 `refresh` 也不 force，一樣可能合流進「發起於照片落地之前」的
+        // 舊一輪，而 `isDirty` 在發動前就已經清掉，合流回來後沒有人會再補。修法對稱：
+        // `generation` 沒變代表這次呼叫是加入別人那一輪（可能拿到舊快照），就再補一次
+        // `force: true`。這裡沒有 debounce token 要比對（`screenDidAppear()` 不是去抖呼叫，
+        // 每次呼叫都是獨立事件），跟上面分支的差異只有這一點。
+        return Task {
+            let generationBefore = generation
+            await refresh(familyID: familyID, childID: childID)
+            if generation == generationBefore {
+                await refresh(familyID: familyID, childID: childID, force: true)
+            }
+        }
     }
 
     /// `TimelineView.onDisappear` 呼叫。

@@ -193,4 +193,57 @@ extension TimelineStoreTests {
             "去抖合流之後的補救最多只該再多打一次請求（下拉本身一次＋必要時補一次），不是無限重打"
         )
     }
+
+    /// **m1（merge-review R2，同一缺陷類別的第二條路徑）核心釘樁**：`screenDidAppear()` 的
+    /// dirty 補刷新同樣不 force，一樣可能合流進「發起於照片落地之前」的舊一輪——而 `isDirty`
+    /// 在發動前就已經清掉，合流回來之後沒有人會再補，症狀跟 M1 完全相同。
+    ///
+    /// 情境（對照 reviewer probe）：①時間軸在畫面上，某張完成觸發第 k 輪 refresh，卡在
+    /// handler 裡（此刻伺服器還沒有最後一張）；②使用者切到別的分頁（`screenDidDisappear()`），
+    /// 第 k 輪還沒回來；③下一張這時落地，批次完成通知（畫面外）標記 `isDirty`（中途斷言
+    /// `isDirty` 確實被標起來，證明前置成立）；④使用者切回來（`screenDidAppear()`）清掉
+    /// `isDirty` 並發 refresh——合流進第 k 輪，拿到②之前的舊快照。mutation（拿掉
+    /// `screenDidAppear()` 補 force 那段）：這裡的斷言會轉紅。
+    func test_screenDidAppear_dirtyRefreshOnReappear_mergesIntoStaleRound_stillShowsLastPhoto() async {
+        let stub = StubTimelineAPIClient()
+        stub.setFetchPointersHandler { _, _, _, _ in [] }
+        let store = TimelineStore(apiClient: stub)
+        let familyID = UUID()
+        _ = await store.refresh(familyID: familyID, childID: nil)
+        store.importRefresh.debounceDelay = {}
+        store.screenDidAppear()
+
+        let gate = AsyncGate()
+        let state = ServerSnapshotState()
+        let lastPhotoID = UUID()
+        stub.setFetchPointersHandler { _, _, _, _ in
+            let hasLast = state.hasLastPhoto
+            await gate.wait()
+            guard hasLast else { return [] }
+            return [TimelineFeedPointer(kind: .media, refId: lastPhotoID, occurredAt: Date(), childIds: [])]
+        }
+
+        // ①：畫面上，某張完成觸發第 k 輪 refresh，卡在 handler 裡。
+        let roundK = store.handleImportBatchMediaUploaded()
+        await gate.waitForWaiters(count: 1)
+
+        // ②：使用者切到別的分頁，第 k 輪還沒回來。
+        store.screenDidDisappear()
+
+        // ③：最後一張這時落地，畫面外的批次完成通知只標記 isDirty。
+        state.markLastPhotoLanded()
+        await store.handleImportBatchMediaUploaded().value
+        XCTAssertTrue(store.importRefresh.isDirty, "離屏完成應該先標記 isDirty，前置條件才成立")
+
+        // ④：使用者切回來，清掉 isDirty 並合流進第 k 輪。
+        let reappear = store.screenDidAppear()
+
+        await gate.open()
+        _ = await (roundK.value, reappear?.value)
+
+        XCTAssertTrue(
+            store.entries.map(\.refId).contains(lastPhotoID),
+            "離屏完成、回屏補刷新時合流到舊一輪，使用者最終仍該看到最後一張"
+        )
+    }
 }
