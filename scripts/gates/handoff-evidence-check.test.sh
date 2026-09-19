@@ -1247,16 +1247,16 @@ expect 0 '㉓b linear-post.sh get（省略 bash 前綴）→ 綠' \
 - 條件 1：`linear-post.sh get LS-96 --comments` 讀取備援通道原文核對
 '
 
-# ㉓c mutation 負控：LINEAR_EVIDENCE_RE 改成永不命中，㉓a（不與既有子字串重疊的那條）必須改判缺證據
+# ㉓c mutation 負控：LINEAR_READ_TOOL_RE 改成永不命中，㉓a（不與既有子字串重疊的那條）必須改判缺證據
 mut_linear="$work/handoff_evidence_check.no-linear.py"
-sed -E 's/^LINEAR_EVIDENCE_RE = re\.compile\(.*\)  # HANDOFF-EVIDENCE-LINEAR$/LINEAR_EVIDENCE_RE = re.compile(r"ZZZ_NEVER_MATCH_ZZZ")  # HANDOFF-EVIDENCE-LINEAR-MUTATED/' "$py" > "$mut_linear"
+sed -E 's/^LINEAR_READ_TOOL_RE = re\.compile\(.*\)  # HANDOFF-EVIDENCE-LINEAR-READONLY$/LINEAR_READ_TOOL_RE = re.compile(r"ZZZ_NEVER_MATCH_ZZZ")  # HANDOFF-EVIDENCE-LINEAR-MUTATED/' "$py" > "$mut_linear"
 if grep -qF 'HANDOFF-EVIDENCE-LINEAR-MUTATED' "$mut_linear"; then
   printf '%s' '## 已驗證
 - 條件 1：`mcp__linear__list_comments` 讀 LS-96 comment 65763a3f 原文核對，兩則池項皆存在
 ' > "$work/mut23.md"
   out23="$(python3 "$mut_linear" "$work/mut23.md" --repo "$R" 2>&1)"; rc23=$?
   if [ "$rc23" -eq 1 ] && has "$out23" '缺『怎麼驗』證據'; then
-    echo "✓ ㉓c mutant（LINEAR_EVIDENCE_RE 拿掉）：純 mcp__linear__ 引用改判缺證據——證明 ㉓a 是這條規則造成的"
+    echo "✓ ㉓c mutant（LINEAR_READ_TOOL_RE 拿掉）：純 mcp__linear__ 引用改判缺證據——證明 ㉓a 是這條規則造成的"
   else
     echo "✗ ㉓c mutant 未如預期翻轉（實得 exit ${rc23}）" >&2
     printf '%s\n' "$out23" | sed 's/^/    /' >&2
@@ -1266,6 +1266,21 @@ else
   echo "✗ ㉓c mutate：找不到插入點，負控本身無效" >&2
   fail=1
 fi
+
+# ㉓d（merge-review R1 i1）：寫入類工具 `mcp__linear__save_comment` 不再算數（只提及工具名、沒有
+#     指出讀了哪一則）——R1 版 `mcp__linear__\w+` 會誤判這條有證據，R2 收斂成只認讀取類工具名 → 紅
+expect 1 '㉓d mcp__linear__save_comment（寫入類工具，非讀取）→ 缺證據，紅' \
+  '缺『怎麼驗』證據' \
+  '## 已驗證
+- 條件 1：已用 `mcp__linear__save_comment` 把結論貼回 LS-96
+'
+
+# ㉓e：讀取類工具但沒有任何票號／comment id 形狀（純泛泛敘述）→ 缺證據，紅
+expect 1 '㉓e mcp__linear__list_comments 但無票號／comment id → 缺證據，紅' \
+  '缺『怎麼驗』證據' \
+  '## 已驗證
+- 條件 1：用 `mcp__linear__list_comments` 讀過，看起來沒問題
+'
 
 # ==== ㉔ LS-346（範圍 2(b)，來源 LS-334 R1／R2、LS-339 R1／R2）：`--ref <sha>` 驗只存在於特定 commit
 #        的測試名／白名單路徑——`--repo` 指主 checkout 時，只在 PR 分支上的新檔案原本一律判不存在 ====
@@ -1344,6 +1359,49 @@ if grep -qF 'HANDOFF-REF-MUTATION-MARK' "$mut_ref"; then
   fi
 else
   echo "✗ ㉔e mutate：找不到插入點，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ㉕ LS-346 R2（merge-review R1 m7）：`--ref` 給不存在的 sha 要先驗、明講「ref 不存在」——
+#        不能讓白名單路徑那條把它誤導成「路徑不存在」====
+badref='0000000000000000000000000000000000dead'
+expect_ref 2 '㉕a --ref 給不存在的 sha＋測試名候選 → exit 2，訊息明講 ref 不存在（不是「找不到」）' \
+  "--ref ${badref} 不是" \
+  '## 已驗證
+- 條件 1：`RefOnlyTests` 涵蓋新流程
+' "$badref"
+expect_ref 2 '㉕b --ref 給不存在的 sha＋白名單路徑候選 → 同樣 exit 2、訊息明講 ref 不存在（R1 未修前這裡誤判成「docs/PLAN.md 在 repo 內找不到」）' \
+  "--ref ${badref} 不是" \
+  '## 已驗證
+- 條件 1：見 docs/PLAN.md 說明
+' "$badref"
+
+# ㉕c mutation 負控：拿掉「先驗 --ref」那段（找不到插入點視為已無這段），㉕b 必須改判「路徑不存在」
+#     而非「ref 不存在」——證明㉕b 現在的正確訊息是這段驗證造成的，不是巧合命中別條錯誤路徑
+mut_badref="$work/handoff_evidence_check.no-ref-validate.py"
+python3 - "$py" "$mut_badref" <<'PY'
+import sys
+src_path, dst_path = sys.argv[1], sys.argv[2]
+src = open(src_path, encoding="utf-8").read()
+start = src.index("    if ref is not None:\n        try:\n            proc = subprocess.run([\"git\", \"-C\", repo, \"cat-file\", \"-e\"")
+end = src.index("    lines = text.splitlines()", start)
+mutated = src[:start] + src[end:]
+open(dst_path, "w", encoding="utf-8").write(mutated)
+PY
+if ! grep -qF '不是 %s 內存在的 commit' "$mut_badref"; then
+  printf '%s' '## 已驗證
+- 條件 1：見 docs/PLAN.md 說明
+' > "$work/mut25.md"
+  out25="$(python3 "$mut_badref" "$work/mut25.md" --repo "$R" --ref "$badref" 2>&1)"; rc25=$?
+  if [ "$rc25" -eq 1 ] && has "$out25" '在 repo 內找不到'; then
+    echo "✓ ㉕c mutant（拿掉先驗 --ref 那段）：㉕b 改判成舊的誤導訊息「路徑不存在」——證明㉕b 現在的正確訊息是這段驗證造成的"
+  else
+    echo "✗ ㉕c mutant 未如預期翻轉（實得 exit ${rc25}）" >&2
+    printf '%s\n' "$out25" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ㉕c mutate：找不到插入點，負控本身無效" >&2
   fail=1
 fi
 

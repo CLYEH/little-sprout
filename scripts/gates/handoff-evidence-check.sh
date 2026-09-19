@@ -28,7 +28,7 @@ scratchpad//evidence//.swift/.py/.sh/.md/.yml/.json，子字串比對不驗證�
 驗證真的存在且未逃出 --repo：supabase/functions/**/*.ts、supabase/migrations/*.sql、
 supabase/tests/*.sql、supabase/**/*.sh、docs/**/*.md、.claude/**/*.md、scripts/**/*.sh、
 .github/workflows/*.yml），或命令（xcodebuild／bash scripts/／gh run view／.xcresult／
-mcp__linear__<工具名>／linear-post.sh get，LS-346 補後兩者）。
+mcp__linear__list_comments／get_issue／linear-post.sh get（須另有票號或 comment id），LS-346 補）。
 LS-300：另認一個可選子段「畫面級屬性（逐條勾選）」（標題含「畫面級屬性」）——存在時逐列驗板名／
 ✓✗／證據三者；不存在時不影響既有 handoff（不強制要求）。
 --ref <sha>（LS-346）：測試名與白名單路徑改驗該 commit 的樹狀態，不是工作樹目前狀態——涵蓋只存在於

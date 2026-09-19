@@ -123,10 +123,14 @@
       成 `linear-post.sh get LS-96 --comments`）；真實樣本 LS-330 R2 已驗證 6「`mcp__linear__list_comments`
       LS-96 取得 `65763a3f-…`」、LS-339 R1 派工單 5「用 `mcp__linear__list_comments` 讀 LS-96 comment
       `708422e5` 原文」皆被誤判缺證據，兩次的 reviewer 都得在 comment 末尾另外聲明「這是工具限制不是缺
-      證據」。新增 `mcp__linear__\\w+`（涵蓋 `list_comments`／`get_issue`／`save_comment` 等任一 MCP 工具
-      名）與 `linear-post\\.sh\\s+get\\b`（涵蓋省略 `bash ` 前綴的引用寫法；帶 `bash ` 前綴的既有寫法本來就
-      被 (c) 的 `bash scripts/` 子字串涵蓋，這裡是加法不影響既有行為）兩個子字串，同 (c) 命令證據一樣**不
-      驗證真的執行過**（同 `xcodebuild` 這類既有命令證據的既有限制）。
+      證據」。新增 `mcp__linear__(?:list_comments|get_issue)\\b`（**R2（merge-review R1 i1）收斂為讀取類
+      工具**——首版 `mcp__linear__\\w+` 連 `mcp__linear__save_comment` 這類寫入工具都算，實測「已用
+      save_comment 把結論貼回票」與純提及工具名的空泛敘述皆被誤判有證據，票文要的明明是「讀了一則
+      comment」）與 `linear-post\\.sh\\s+get\\b`（涵蓋省略 `bash ` 前綴的引用寫法；帶 `bash ` 前綴的既有
+      寫法本來就被 (c) 的 `bash scripts/` 子字串涵蓋，這裡是加法不影響既有行為），**且要求同一列項另有
+      一個像票號或 comment id 的形狀**（`LS-\\d+` 或 8 碼十六進位片段，見 `LINEAR_ID_RE`——真實樣本
+      LS-330／LS-339 皆同時提到票號與 comment 短 id，此要求不會誤傷）——同 (c) 命令證據一樣**不驗證真的
+      執行過**（同 `xcodebuild` 這類既有命令證據的既有限制），id 也不驗證真的存在於 Linear（機械做不到）。
 
 段落偵測（涵蓋三種實際慣例，見 LS-211 handoff 附的真實樣本與 merge-review R1 `b212dd78`）：
   - CLAUDE.md 的 ios-dev handoff 格式：字面「已驗證」開頭的段（`## 已驗證`／`**已驗證**`／純文字
@@ -255,7 +259,16 @@ PATH_ANCHOR_RE = re.compile(
 # （含 `/` 與 `.`）、`scripts/tools/format-check`（含 `/`）等真實路徑寫法仍會命中。
 COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|\.xcresult|\bgit\s+(?:log|diff|status|push|fetch|merge-base|ls-remote|worktree|grep|merge-tree)\b|\b(?:node|python3|swift)\s+\S*[./]\S*")  # HANDOFF-EVIDENCE-COMMAND
 # LS-346（範圍 2(a)）：讀 Linear comment 當「怎麼驗」依據——白名單原本無法表達這種證據形態，見檔頭 (d)。
-LINEAR_EVIDENCE_RE = re.compile(r"mcp__linear__\w+|linear-post\.sh\s+get\b")  # HANDOFF-EVIDENCE-LINEAR
+# LS-346 R2（merge-review R1 i1）：R1 版 `LINEAR_EVIDENCE_RE = mcp__linear__\w+|linear-post\.sh\s+get\b`
+# 收得太寬——票文要的是「讀了一則 Linear comment」，`mcp__linear__\w+` 連寫入類工具
+# （`mcp__linear__save_comment`）都算，實測「已用 save_comment 把結論貼回票」也判綠。改成只認讀取類
+# 工具名（`list_comments`／`get_issue`）與 `linear-post.sh get`，且要求同一列項另外出現一個「像
+# comment／issue id 的形狀」（票號 `LS-\d+` 或 8 碼十六進位片段，兩者任一即算——真實樣本 LS-330／
+# LS-339 皆同時提到票號與 comment 短 id）：純提及工具名但沒有指出讀了哪一則的敘述（如「看起來沒問題
+# （mcp__linear__x）」）不再算數。與 (a) 測試名候選的存在性驗證不同層級——這裡只是 `has_evidence()`
+# 的布林判斷，不驗證那個 id 真的存在於 Linear（機械做不到，同 N9 既有限制）。
+LINEAR_READ_TOOL_RE = re.compile(r"mcp__linear__(?:list_comments|get_issue)\b|linear-post\.sh\s+get\b")  # HANDOFF-EVIDENCE-LINEAR-READONLY
+LINEAR_ID_RE = re.compile(r"\bLS-\d+\b|\b[0-9a-f]{8}\b")  # HANDOFF-EVIDENCE-LINEAR-ID
 
 # ---- R2（merge-review R1 F1）：候選過濾——glob 形狀／同句否定詞／mutation 語境不驗存在性 ----
 NEGATION_WORDS = ("沒有", "無", "不存在", "未")
@@ -558,7 +571,8 @@ def path_exists_in_repo(repo, p, ref=None):
 
 
 def has_evidence(text):
-    return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or PATH_ANCHOR_RE.search(text) or COMMAND_RE.search(text) or LINEAR_EVIDENCE_RE.search(text))  # HANDOFF-HAS-EVIDENCE-PATH-ANCHOR
+    linear_evidence = LINEAR_READ_TOOL_RE.search(text) and LINEAR_ID_RE.search(text)  # HANDOFF-EVIDENCE-LINEAR-CHECK
+    return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or PATH_ANCHOR_RE.search(text) or COMMAND_RE.search(text) or linear_evidence)  # HANDOFF-HAS-EVIDENCE-PATH-ANCHOR
 
 
 def resolve_repo(repo):
@@ -581,6 +595,20 @@ def run(path, repo, ref=None):
         fail("讀不到 %s（%s）" % (path, exc))
 
     repo = resolve_repo(repo)
+    # LS-346 R2（merge-review R1 m7）：`--ref` 給不存在的 sha 時，先驗一次再往下走——不驗的話，測試名
+    # 路徑（`_git_ls_files`／`test_name_exists` 的 `git ls-tree`／`git grep <ref>`）會 fail closed exit 2
+    # （`git ls-tree` 對壞 ref 直接非 0），但白名單路徑（`path_exists_in_repo` 的 `git cat-file -e
+    # <ref>:<path>`）只拿得到「非 0」，被當成「路徑不存在」判紅——實測「`docs/PLAN.md`＋壞 sha」得到
+    # exit 1「`docs/PLAN.md` 在 repo 內找不到」，把「ref 不存在」誤導成「路徑不存在」。這裡開頭就驗
+    # `--ref` 本身是不是一個存在的 commit（`git cat-file -e <ref>^{commit}`），不存在就 exit 2 明講，
+    # 兩條白名單／測試名路徑都不會再各自產生誤導訊息。
+    if ref is not None:
+        try:
+            proc = subprocess.run(["git", "-C", repo, "cat-file", "-e", "%s^{commit}" % ref], capture_output=True)
+        except OSError as exc:
+            fail("呼叫 git cat-file 失敗（%s）" % exc)
+        if proc.returncode != 0:
+            fail("--ref %s 不是 %s 內存在的 commit（git cat-file -e %s^{commit} 失敗）——檢查 sha 或分支是否已 fetch" % (ref, repo, ref))
     lines = text.splitlines()
     section = find_section(lines)
     if section is None:
@@ -612,7 +640,7 @@ def run(path, repo, ref=None):
                 "scripts/**/*.sh、.github/workflows/*.yml），或 "
                 "xcodebuild／bash scripts/／gh run view／git log|diff|status|push|fetch|merge-base|"
                 "ls-remote|worktree|grep|merge-tree／node|python3|swift <path>／.xcresult 命令，或 "
-                "mcp__linear__<工具名>／linear-post.sh get）" % line_no,
+                "mcp__linear__list_comments／get_issue／linear-post.sh get，需另有票號或 comment id）" % line_no,
                 file=sys.stderr,
             )
             ok = False
