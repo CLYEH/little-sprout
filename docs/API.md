@@ -330,6 +330,11 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   `INSERT`/`UPDATE` 冒出標準 `23514`/`23502`（見 §5 標準碼表；雖然 `children` 已是
   RPC-only、不是「允許直寫的表」，但 RPC 參數映射進 `INSERT`/`UPDATE` 撞到表上的
   `CHECK`/`NOT NULL` 時，冒出來的仍是同一組標準碼，呼叫端的處理方式不變）。
+- **`birthday` 年份範圍 CHECK（LS-336，源自 LS-331 merge-review R1 X1）**：
+  `children_birthday_year_range`——`birthday` 必須落在 `1900-01-01`～`2200-01-01`
+  之間（含兩端），DB 端擋住裝置曆法換算錯誤把 `0115-…`／`2569-…`／`3937-…`
+  這類年份寫進 DB（LS-331 已修 client 端，這裡是不依賴 client 一定寫對的最後
+  一道防線）；違反同樣是標準碼 `23514`，不新開 `LSnnn` 碼。
 
 ### `growth_records`（LS-255，LS-250 後端先行）
 - 身高／體重／頭圍量測記錄，`family_id, child_id` 複合外鍵綁定同家庭的孩子
@@ -389,8 +394,10 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   （`growth_records_measurement_required`）；每一項若有填必須是正值
   （`growth_records_height_positive`／`_weight_positive`／`_head_positive`）；
   `note` 若有填必須是 1–2000 字（`btrim` 後，`growth_records_note_length`，
-  LS-255 R2 merge-review R1 m3 登記，沿 `comments.body` 同量級的既有慣例）——
-  違反皆為標準碼 `23514`。
+  LS-255 R2 merge-review R1 m3 登記，沿 `comments.body` 同量級的既有慣例）；
+  `measured_on` 必須落在 `1900-01-01`～`2200-01-01` 之間（含兩端，
+  `growth_records_measured_on_year_range`，LS-336，源自 LS-331 merge-review R1
+  X1，理由與邊界選擇同 `children.birthday`）——違反皆為標準碼 `23514`。
 - **同一孩子同一天允許多筆**：`measured_on` 沒有唯一約束，「同一天多筆時 UI 只
   取最後一筆」由呼叫端（LS-252 核可稿的規則）處理，後端不去重；
   `list_growth_records` 的分頁保證回傳每一筆（見 §4，R2 修過 M1 的跨頁邊界
@@ -455,6 +462,12 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   （`food_first` 不是 `content_target_type` 的成員，本票不擴充留言／按讚到食物卡片，
   見 §4 `get_family_timeline`）；軟刪／還原（若日後開放）連動 `feed_items`，同
   `diaries`／`albums`／`media` 既有寫法。見 §3「`feed_items`」。
+- **`first_tried_on` 年份範圍 CHECK（LS-336，源自 LS-331 merge-review R1 X1）**：
+  `child_food_records_first_tried_on_year_range`——`first_tried_on` 必須落在
+  `1900-01-01`～`2200-01-01` 之間（含兩端），理由與邊界選擇同 `children.
+  birthday`（見上方 `children` 段）；違反同樣是標準碼 `23514`，不新開 `LSnnn`
+  碼（沿用本表 `note`／`reaction` 兩支既有 CHECK 的同一組裁量，見 migration
+  檔頭）。
 
 ### `media`
 - `storage_path` 必須符合 `{family_id}/{yyyy}/{mm}/{media_id}.{ext}`（見 §6），且有
@@ -760,6 +773,10 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
     `family_id` 也因此已經不可能被移動（`update_diary_entry` 簽章本來就不接受
     `family_id` 參數），trigger 對 `diaries` 是額外一層防線，不是解決一個當下真的
     存在的入口，見 migration 說明。
+  - **`entry_date` 年份範圍 CHECK（LS-336，源自 LS-331 merge-review R1 X1）**：
+    `diaries_entry_date_year_range`——`entry_date` 必須落在
+    `1900-01-01`～`2200-01-01` 之間（含兩端），理由與邊界選擇同 `children.
+    birthday`（見上方 `children` 段），違反同樣是標準碼 `23514`。
 
 **為什麼 `albums`／`comments`／`diaries` 曾經、現在用了不同的寫入模型**：`comments`
 自 LS-58 起已經改用跟 `diaries` 相同的 RPC-only 模式，取代 LS-52 當時採用的 hybrid
@@ -2358,7 +2375,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | 碼 | 常見觸發情境 |
 |---|---|
 | `23502`（`not_null_violation`） | 必填欄位留空，例如 `children.birthday`、`media.byte_size` |
-| `23514`（`check_violation`） | 違反欄位 `CHECK`，例如 `families.name` 長度、`media.width/height > 0`、`diaries.body` 長度、`media.taken_at` 邊界（早於 1970 或晚於 now()+1 天，`media_taken_at_range_check`，LS-262） |
+| `23514`（`check_violation`） | 違反欄位 `CHECK`，例如 `families.name` 長度、`media.width/height > 0`、`diaries.body` 長度、`media.taken_at` 邊界（早於 1970 或晚於 now()+1 天，`media_taken_at_range_check`，LS-262）、`children.birthday`／`diaries.entry_date`／`growth_records.measured_on`／`child_food_records.first_tried_on` 年份範圍（1900-01-01～2200-01-01，`<table>_<col>_year_range`，LS-336） |
 | `22P02`（`invalid_text_representation`） | enum 欄位傳了不合法的字串（例如 `role` 不是 `owner/member/viewer`） |
 | `23505`（`unique_violation`） | 例如 `blocked_users` 重複封鎖同一人（`reactions` 自 LS-58 起不會了——直接 INSERT 已被 revoke，`toggle_reaction` 用 advisory lock 序列化，不會撞這個碼） |
 | `23503`（`foreign_key_violation`） | 例如 `albums.child_id` 指到別家的孩子（複合外鍵擋下） |
