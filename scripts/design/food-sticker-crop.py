@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["Pillow"]
+# dependencies = ["Pillow==10.3.0"]
 # ///
 """LS-338 食物圖鑑貼紙裁切腳本——sticker sheet（一張多種食物、透明背景）→ 單張彩色 PNG，決定性、不靠模型判斷。
 
 背景：LS-332 的 `tools/crop_sheet_draft.py` 只處理 8 食物的樣張，且會多產生一份灰階版（App 端已經即時
-`.saturation(0)` 去飽和，灰階檔是多餘輸出，見票文 comment `009f10f2`）。本腳本整理成正式流程，涵蓋 15 張
-sheet＋1 張參考樣張，共 122 個食物 id。
+`.saturation(0)` 去飽和，灰階檔是多餘輸出，見票文 comment `009f10f2`）。本腳本整理成正式流程；LS-338
+涵蓋 15 張 sheet＋1 張參考樣張（122 個食物 id），LS-340 擴充 19 張 sheet（152 個食物 id），張數／食物數
+一律讀 `plan.json`，不在程式裡寫死。
 
 決定性轉換（每一步都可重放、不依賴模型判斷）：
   1. 對每張 sheet：alpha ≥ 128 的像素做四連通連通區塊標記（純 Python 兩遍掃描＋union-find，見
@@ -16,6 +17,9 @@ sheet＋1 張參考樣張，共 122 個食物 id。
   2. 依列（row）再依欄（column）排序，對應食物 id 清單：sort by row 排序演算法是「找 y 中心排序後最大的
      間隔（gap）」——若最大間隔小於門檻（圖高 15%）判定為單一列（例如 sheet-15 只有 2 個食物並排，用
      y 中位數切割會誤判成兩列，這裡改用最大間隔偵測就不會誤切）；超過門檻才切成兩列，各列再依 x 排序。
+     若 `plan.json` 該筆帶 `grid`（`{"rows": R, "cols": C}`），分列結果（列數＋各列個數）須與 `grid` 相符，
+     不符即 exit 非 0（LS-338 merge-review m3：版型跑掉時，光靠區塊數對不出「id 對錯圖」，需要對列分組
+     也做合理性檢查，見 `split_into_rows()`／`crop_sheet()` 的 `GRID-CHECK` 標記）。
   3. 裁切：每個區塊的遮罩膨脹 6px（四鄰接、6 次疊代，等同保留白邊抗鋸齒）；alpha < 32 清成 0、
      alpha ≥ 200 拉成 255；依膨脹後遮罩裁出 bounding box，等比縮放置中到正方形畫布，四周留 6% 邊。
   4. 輸出：`design/food-stickers/stickers/<food_id>.png`，RGBA、不產生灰階版（App 端即時處理）。
@@ -24,17 +28,20 @@ sheet＋1 張參考樣張，共 122 個食物 id。
 用不到它的進階功能；連通區塊標記與膨脹都用純 Python 實作（見下方兩個函式），在 1536×1024 的 sheet 上
 實測每張 <0.3s（labeling）＋<0.1s（單一區塊局部膨脹，只在該區塊 bounding box 的局部陣列上做，不是對
 整張圖）。CI／自測一律用 `uv run` 執行本檔（本檔頭的 PEP 723 inline metadata 宣告依賴），不裝系統套件、
-不碰 pip（不確定 ubuntu-latest runner 內建是否有 Pillow，用 uv 現拉最保險）。
+不碰 pip（不確定 ubuntu-latest runner 內建是否有 Pillow，用 uv 現拉最保險）。**Pillow 釘死 `==10.3.0`**
+（LS-338 merge-review m2）：版控內 122 張成品就是用這個版本產出，不同 Pillow 版本 PNG 編碼層不同會讓
+「像素沒變、blob 全變」的整批 churn（實測 Pillow 12.3.0 重切像素相同、位元全不同）；重切前先對齊這個
+版本，日後要升級 Pillow 得連同全部既有成品一起重切、逐檔 `cmp` 驗過再一起 commit，不能只改依賴宣告。
 
 用法：
   uv run scripts/design/food-sticker-crop.py crop [--sheet <sheet-01|reference-sheet>] [--plan PATH]
       [--reference-plan PATH] [--sheets-dir PATH] [--style-dir PATH] [--out-dir PATH]
-    不帶 --sheet＝裁全部 15 張＋參考樣張（122 個 id）。帶 --sheet＝只重跑那一張（供使用者點名重生單張
-    sheet 後重新裁切，覆寫該張 8 個 id 對應的輸出檔，其餘檔案不動）。
+    不帶 --sheet＝裁 `plan.json`＋`reference-plan.json` 定義的所有 sheet（目前 34＋1 張，274 個 id）。
+    帶 --sheet＝只重跑那一張（供使用者點名重生單張 sheet 後重新裁切，覆寫該張對應的輸出檔，其餘檔案不動）。
   uv run scripts/design/food-sticker-crop.py check-consistency [--stickers-dir PATH] [--csv PATH]
     驗 stickers/ 目錄的檔名集合與 food_catalog.csv 的 id 集合一一對應（無缺無多），否則 exit 非 0。
 
-自測：scripts/design/food-sticker-crop.test.sh（用真正的參考樣張＋合成夾具；不含 15 張正式 sheet，維持
+自測：scripts/design/food-sticker-crop.test.sh（用真正的參考樣張＋合成夾具；不含正式 sheet 原始檔，維持
 夾具體積小）。
 """
 from __future__ import annotations
@@ -155,27 +162,32 @@ def region_bboxes(labels: list[int], n: int, w: int, h: int):
     return minx, miny, maxx, maxy
 
 
-def sort_reading_order(centers_y: list[float], centers_x: list[float], height: int) -> list[int]:
-    """依列（row）再依欄（column）排序，回傳 0-based index 順序。
+def split_into_rows(centers_y: list[float], height: int) -> list[list[int]]:
+    """依 y 中心把 0-based index 分成 1 或 2 列（列內部未排序，僅依 y 由小到大排在一起）。
 
     列偵測：y 中心排序後找最大的相鄰間隔；間隔 < 圖高 * ROW_GAP_RATIO 視為單一列（sheet-15 的 2 食物
     並排正是這個情況——沒有第二列，用 y 中位數切割會把它們硬切成兩列各一個）。超過門檻才切成兩列，
-    切點就是最大間隔的位置；各列內部再依 x 由小到大排序，列與列之間由上到下串接。
+    切點就是最大間隔的位置。供 `sort_reading_order()` 排序、以及 `crop_sheet()` 對照 `plan.json` 的
+    `grid` 欄位做列分組合理性檢查（LS-338 merge-review m3）共用。
     """
     n = len(centers_y)
     order = sorted(range(n), key=lambda i: centers_y[i])
     if n <= 1:
-        return order
+        return [order]
     ys_sorted = [centers_y[i] for i in order]
     gaps = [(ys_sorted[i + 1] - ys_sorted[i], i) for i in range(n - 1)]
     max_gap, split_idx = max(gaps)
     threshold = height * ROW_GAP_RATIO
     if max_gap < threshold:
-        rows = [order]
-    else:
-        rows = [order[: split_idx + 1], order[split_idx + 1 :]]
+        return [order]
+    return [order[: split_idx + 1], order[split_idx + 1 :]]
+
+
+def sort_reading_order(centers_y: list[float], centers_x: list[float], height: int) -> list[int]:
+    """依列（row）再依欄（column）排序，回傳 0-based index 順序（列由 `split_into_rows()` 決定，各列
+    內部再依 x 由小到大排序，列與列之間由上到下串接）。"""
     result: list[int] = []
-    for row in rows:
+    for row in split_into_rows(centers_y, height):
         result.extend(sorted(row, key=lambda i: centers_x[i]))
     return result
 
@@ -207,8 +219,9 @@ def dilate_local(mask_rows: list[list[bool]], iterations: int) -> list[list[bool
     return cur
 
 
-def crop_sheet(sheet_path: Path, ids: list[str], out_dir: Path) -> list[str]:
-    """裁一張 sheet，回傳實際寫出的檔名（依食物 id）。區塊數不符時丟 CropError。"""
+def crop_sheet(sheet_path: Path, ids: list[str], out_dir: Path, grid: dict | None = None) -> list[str]:
+    """裁一張 sheet，回傳實際寫出的檔名（依食物 id）。區塊數不符、或列分組與 `grid`（若有）不符時丟
+    CropError。"""
     im = Image.open(sheet_path).convert("RGBA")
     w, h = im.size
     alpha = im.getchannel("A").tobytes()
@@ -221,6 +234,18 @@ def crop_sheet(sheet_path: Path, ids: list[str], out_dir: Path) -> list[str]:
     minx, miny, maxx, maxy = region_bboxes(labels, n, w, h)
     centers_y = [(miny[i] + maxy[i]) / 2 for i in range(1, n + 1)]
     centers_x = [(minx[i] + maxx[i]) / 2 for i in range(1, n + 1)]
+
+    if grid is not None:  # GRID-CHECK（自測 mutation 標記，見 food-sticker-crop.test.sh）
+        rows = split_into_rows(centers_y, h)
+        actual_sizes = [len(r) for r in rows]
+        expected_sizes = [grid["cols"]] * grid["rows"]
+        if actual_sizes != expected_sizes:
+            raise CropError(
+                f"{sheet_path.name}：列分組 {actual_sizes}（共 {len(rows)} 列）與 plan.json 的 grid "
+                f"{grid['rows']}x{grid['cols']} 不符（預期每列 {expected_sizes}）——版型可能跑掉，"
+                f"id 對應到圖的順序不可信"
+            )
+
     order = sort_reading_order(centers_y, centers_x, h)
 
     pix = im.load()
@@ -271,18 +296,19 @@ def crop_sheet(sheet_path: Path, ids: list[str], out_dir: Path) -> list[str]:
 
 
 def load_jobs(plan_path: Path, reference_plan_path: Path, sheets_dir: Path, style_dir: Path):
-    """讀 plan.json（＋reference-plan.json）回傳 job list：[(sheet_name, image_path, [food_id, ...]), ...]。"""
+    """讀 plan.json（＋reference-plan.json）回傳 job list：
+    [(sheet_name, image_path, [food_id, ...], grid_or_None), ...]。"""
     jobs = []
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     for entry in plan:
         name = entry["sheet"]
         ids = [f["id"] for f in entry["foods"]]
-        jobs.append((name, sheets_dir / f"{name}.png", ids))
+        jobs.append((name, sheets_dir / f"{name}.png", ids, entry.get("grid")))
     if reference_plan_path.exists():
         ref = json.loads(reference_plan_path.read_text(encoding="utf-8"))
         name = ref["sheet"]
         ids = [f["id"] for f in ref["foods"]]
-        jobs.append((name, style_dir / f"{name}.png", ids))
+        jobs.append((name, style_dir / f"{name}.png", ids, ref.get("grid")))
     return jobs
 
 
@@ -295,12 +321,12 @@ def cmd_crop(args: argparse.Namespace) -> int:
             return 2
 
     total_written = 0
-    for name, image_path, ids in jobs:
+    for name, image_path, ids, grid in jobs:
         if not image_path.exists():
             print(f"✗ food-sticker-crop：找不到圖檔「{image_path}」（sheet「{name}」）", file=sys.stderr)
             return 2
         try:
-            written = crop_sheet(image_path, ids, args.out_dir)
+            written = crop_sheet(image_path, ids, args.out_dir, grid=grid)
         except CropError as exc:
             print(f"✗ food-sticker-crop：{exc}", file=sys.stderr)
             return 1
@@ -329,8 +355,24 @@ def cmd_check_consistency(args: argparse.Namespace) -> int:
     if extra:
         print(f"✗ food-sticker-crop check-consistency：多 {len(extra)} 個（stickers/ 有、CSV 沒有）：{', '.join(extra)}", file=sys.stderr)
         rc = 1
+
+    # i2（LS-338 merge-review）：id 集合對得上不代表每張圖本身可用——逐張驗可開啟／384×384／RGBA。
+    bad: list[str] = []
+    for food_id in sorted(csv_ids & sticker_ids):
+        path = args.stickers_dir / f"{food_id}.png"
+        try:
+            with Image.open(path) as im:
+                im.load()
+                if im.size != (CANVAS, CANVAS) or im.mode != "RGBA":
+                    bad.append(f"{food_id}（{im.size[0]}x{im.size[1]} {im.mode}）")
+        except Exception as exc:  # noqa: BLE001 — 任何開檔／解碼失敗都算壞檔，訊息點名原因
+            bad.append(f"{food_id}（無法開啟：{exc}）")
+    if bad:
+        print(f"✗ food-sticker-crop check-consistency：{len(bad)} 個檔案不是可開啟的 {CANVAS}x{CANVAS} RGBA：{', '.join(bad)}", file=sys.stderr)
+        rc = 1
+
     if rc == 0:
-        print(f"✓ food-sticker-crop check-consistency：{len(sticker_ids)} 個 id 與 food_catalog.csv 一一對應")
+        print(f"✓ food-sticker-crop check-consistency：{len(sticker_ids)} 個 id 與 food_catalog.csv 一一對應，且皆為可開啟的 {CANVAS}x{CANVAS} RGBA")
     return rc
 
 

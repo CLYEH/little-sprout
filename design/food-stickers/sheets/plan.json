@@ -42,7 +42,11 @@
     "name_zh": "南瓜",
     "category": "grain_root"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-02",
@@ -87,7 +91,11 @@
     "name_zh": "菠菜",
     "category": "vegetable"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-03",
@@ -132,7 +140,11 @@
     "name_zh": "番茄",
     "category": "vegetable"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-04",
@@ -177,7 +189,11 @@
     "name_zh": "豌豆",
     "category": "vegetable"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-05",
@@ -222,7 +238,11 @@
     "name_zh": "哈密瓜",
     "category": "fruit"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-06",
@@ -267,7 +287,11 @@
     "name_zh": "檸檬",
     "category": "fruit"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-07",
@@ -312,7 +336,11 @@
     "name_zh": "牛肉",
     "category": "protein"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-08",
@@ -357,7 +385,11 @@
     "name_zh": "蛤蜊",
     "category": "protein"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-09",
@@ -402,7 +434,11 @@
     "name_zh": "奶油",
     "category": "dairy"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-10",
@@ -447,7 +483,11 @@
     "name_zh": "整顆杏仁",
     "category": "fat_nut"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-11",
@@ -492,7 +532,11 @@
     "name_zh": "米粉湯",
     "category": "tw_home"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-12",
@@ -537,7 +581,11 @@
     "name_zh": "皮蛋",
     "category": "tw_home"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-13",
@@ -582,7 +630,11 @@
     "name_zh": "冰淇淋",
     "category": "snack_drink"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-14",
@@ -627,7 +679,11 @@
     "name_zh": "紅茶",
     "category": "snack_drink"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 2,
+   "cols": 4
+  }
  },
  {
   "sheet": "sheet-15",
@@ -642,6 +698,10 @@
     "name_zh": "紅豆湯",
     "category": "snack_drink"
    }
-  ]
+  ],
+  "grid": {
+   "rows": 1,
+   "cols": 2
+  }
  }
 ]

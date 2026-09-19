@@ -41,5 +41,9 @@
    "name_zh": "米餅",
    "category": "snack_drink"
   }
- ]
+ ],
+ "grid": {
+  "rows": 2,
+  "cols": 4
+ }
 }

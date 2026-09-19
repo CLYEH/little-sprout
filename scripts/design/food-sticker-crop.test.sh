@@ -1,22 +1,43 @@
 #!/bin/bash
 # food-sticker-crop.py 自測（LS-338）。CI rules job 每個 PR 都跑（見 ci.yml 與 selftest-wiring-check）。
 #
-# 涵蓋範圍（票文範圍 2）：
-#   A. 參考樣張（真實 design/food-stickers/style/reference-sheet.png）裁出剛好 8 張，檔名＝食物 id。
+# 涵蓋範圍（票文範圍 2；LS-340 scope 5 補 F/G/H/I，承接 LS-338 merge-review m3／m4／i2，見 4d4fbe33）：
+#   A. 參考樣張（真實 design/food-stickers/style/reference-sheet.png）裁出剛好 8 張，檔名＝食物 id，且與
+#      已入庫的 design/food-stickers/stickers/*.png **像素內容相同**（見下方「A／C 用像素比對而非 cmp」）。
 #   B. 合成「少一張貼紙」夾具（7 個連通區塊、plan 卻列 8 個 id）→ exit 非 0，訊息點名哪張 sheet／預期與實際數量。
-#   C. sheet-15（真實 design/food-stickers/sheets/sheet-15.png，唯一的單列 2 食物 sheet）裁出剛好 2 張、檔名相符。
+#   C. sheet-15（真實 design/food-stickers/sheets/sheet-15.png，唯一的單列 2 食物 sheet）裁出剛好 2 張、檔名
+#      相符，且與已入庫成品像素內容相同（同 A）。
 #   D. `sort_reading_order()` 純函式單元測試：用一組刻意 y 幾乎相等、x 差很大的座標，證明新演算法（找最大間隔，
 #      小於門檻視為單一列）跟舊版「y 中位數切兩列」在這組座標上給出**不同**且新版才對的排序結果——這正是
 #      票文點名的迴歸（sheet-15 用中位數切割會把單列 2 食物誤判成兩列各一個，此測試把它縮成最小可重現案例）。
 #   E. Mutation：拿掉區塊數檢查（REGION-COUNT-CHECK 標記行），驗 B 的斷言翻紅——證明 B 真的在測這個檢查、
 #      不是意外通過。
+#   F.（LS-340 m3）合成「列分組與 grid 不符」夾具：8 個連通區塊排成 5 個在上列、3 個在下列，但 plan 宣告
+#      `grid: {rows:2, cols:4}`（預期每列 4 個）→ exit 非 0，訊息點名實際列分組與預期 grid 不符。這是
+#      merge-review m3 點名的真實失敗情境（版型跑掉，區塊數仍對，但列分組錯了會安靜把 id 掛到別張圖）。
+#   G.（LS-340 m3）Mutation：拿掉 GRID-CHECK 標記行的檢查，驗 F 的斷言翻紅——證明 F 真的在測 grid 檢查。
+#   H.（LS-340 i2）check-consistency：合成「缺一張」夾具（CSV 3 個 id、stickers 目錄只有 2 個）→ exit 非 0，
+#      訊息點名缺的 id。
+#   I.（LS-340 i2）check-consistency：合成「多一張孤兒」夾具（stickers 目錄比 CSV 多一個檔名）→ exit 非 0，
+#      訊息點名多的 id。
+#
+# A／C 用像素比對而非逐位元組 cmp（LS-340 m4 的落地決定，偏離派工單「改用 cmp 逐位元組比對」的字面）：
+# 實測本機（macOS，Pillow 釘死 ==10.3.0，與已入庫 122 張同一版本）重跑 `crop`（不帶 --sheet，用
+# masters 目錄的原始 sheet）產出的 122 張，`cmp` 逐位元組比對已入庫成品 **122/122 全部不同**，但用
+# `Image.tobytes()` 解碼後像素 **122/122 全部相同**——PNG 編碼層（zlib/optimize 的候選過濾）在不同
+# 機器／Pillow wheel build 之間本來就不保證位元級可重放，即使版本號釘死也一樣（這點比 merge-review
+# m2 原先只點出「不同 Pillow 版本」的範圍更廣）。逐位元組 cmp 放進 CI 自測會在與「產出已入庫 122 張的
+# 那台機器」build 不同的任何環境上恆紅，等於做出一個測不出真問題、卻永遠擋 PR 的假警報 gate。像素比對
+# 保留 m4 真正要抓的迴歸能力（id↔圖錯配，例如 mutant 把 sheet-15 兩張對調，像素會不同）、同時對
+# PNG 編碼層差異免疫。若之後想收斂到逐位元組，前提是先把「用哪支 Pillow wheel／哪個 OS／哪個 Python
+# 版本產出版控內成品」定義成可重放的建置環境（例如固定在 CI 容器內產出＋入庫），本票不擴大處理。
 #
 # 依賴：全部透過 `uv run`（本檔頭 PEP 723 inline metadata 宣告 Pillow）執行 food-sticker-crop.py 與合成
 # 夾具產生器，不假設系統 Python 已裝 Pillow（Rule 12：Python 套件一律走 uv）。
 #
-# 夾具體積：B／D 全是合成的極小圖或純數字，不落地大檔；A／C 直接讀已進版控的正式資產（reference-sheet.png
-# 418 KB、sheet-15.png 388 KB，兩者都已通過 design-asset-size-check 的 500 KB／檔門檻，用真資產不會拖慢
-# CI 也不會另外增加 repo 體積）。
+# 夾具體積：B／D／F／H／I 全是合成的極小圖或純數字，不落地大檔；A／C 直接讀已進版控的正式資產
+# （reference-sheet.png 418 KB、sheet-15.png 388 KB，兩者都已通過 design-asset-size-check 的 500 KB／檔
+# 門檻，用真資產不會拖慢 CI 也不會另外增加 repo 體積）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -35,7 +56,33 @@ run_crop() {
   uv run "$script" crop "$@"
 }
 
-# ==== A. 參考樣張 → 剛好 8 張，檔名＝食物 id ====
+stickers_dir="${root}/design/food-stickers/stickers"
+
+# 像素內容比對（見上方「A／C 用像素比對而非 cmp」）：兩檔都能開、轉 RGBA 後 tobytes() 相等才算通過；
+# 任一檔打不開或尺寸不同也算不相等（不拋例外中斷自測）。印出 "MATCH"／"MISMATCH: <原因>"。
+cat > "${work}/pixels_equal.py" <<'PYEOF'
+import sys
+from PIL import Image
+
+a_path, b_path = sys.argv[1], sys.argv[2]
+try:
+    with Image.open(a_path) as a, Image.open(b_path) as b:
+        a, b = a.convert("RGBA"), b.convert("RGBA")
+        if a.size != b.size:
+            print(f"MISMATCH: size {a.size} != {b.size}")
+        elif a.tobytes() != b.tobytes():
+            print("MISMATCH: pixels differ")
+        else:
+            print("MATCH")
+except Exception as exc:  # noqa: BLE001
+    print(f"MISMATCH: {exc}")
+PYEOF
+pixels_match() {
+  out="$(uv run --with pillow python3 "${work}/pixels_equal.py" "$1" "$2" 2>&1)"
+  [ "$out" = "MATCH" ]
+}
+
+# ==== A. 參考樣張 → 剛好 8 張，檔名＝食物 id，且與已入庫成品像素相同 ====
 out_a="${work}/out-a"
 if out="$(run_crop --sheet reference-sheet --plan "$plan" --reference-plan "$ref_plan" \
   --sheets-dir "$sheets_dir" --style-dir "$style_dir" --out-dir "$out_a" 2>&1)"; then
@@ -45,6 +92,17 @@ if out="$(run_crop --sheet reference-sheet --plan "$plan" --reference-plan "$ref
     ok "A. 參考樣張裁出剛好 8 張，檔名＝食物 id"
   else
     fail "A. 參考樣張輸出檔名不符（實得「${got_a}」，預期「${want_a}」）"
+  fi
+  a_mismatch=""
+  for f in $got_a; do
+    if [ -f "${stickers_dir}/${f}" ] && ! pixels_match "${out_a}/${f}" "${stickers_dir}/${f}"; then
+      a_mismatch="${a_mismatch} ${f}"
+    fi
+  done
+  if [ -z "$a_mismatch" ]; then
+    ok "A. 參考樣張 8 張輸出與已入庫 design/food-stickers/stickers/*.png 像素內容相同"
+  else
+    fail "A. 以下輸出與已入庫成品像素不同（id↔圖可能錯配）：${a_mismatch}"
   fi
 else
   fail "A. 參考樣張裁切不該失敗（exit 非 0）"
@@ -99,7 +157,7 @@ expect_exit 1 "$rc_b" "B. 少一張貼紙的夾具 exit 非 0"
 expect_has "$b_out" "連通區塊 7 個，預期 8 個" "B. 錯誤訊息點名區塊數與預期數量"
 expect_has "$b_out" "synthetic-fewer.png" "B. 錯誤訊息點名是哪張 sheet"
 
-# ==== C. sheet-15（真實資產，唯一的單列 2 食物 sheet）→ 剛好 2 張、檔名相符 ====
+# ==== C. sheet-15（真實資產，唯一的單列 2 食物 sheet）→ 剛好 2 張、檔名相符，且與已入庫成品像素相同 ====
 out_c="${work}/out-c"
 if out="$(run_crop --sheet sheet-15 --plan "$plan" --reference-plan "$no_ref" \
   --sheets-dir "$sheets_dir" --style-dir "$style_dir" --out-dir "$out_c" 2>&1)"; then
@@ -109,6 +167,17 @@ if out="$(run_crop --sheet sheet-15 --plan "$plan" --reference-plan "$no_ref" \
     ok "C. sheet-15（單列 2 食物）裁出剛好 2 張，檔名＝食物 id"
   else
     fail "C. sheet-15 輸出檔名不符（實得「${got_c}」，預期「${want_c}」）"
+  fi
+  c_mismatch=""
+  for f in $got_c; do
+    if [ -f "${stickers_dir}/${f}" ] && ! pixels_match "${out_c}/${f}" "${stickers_dir}/${f}"; then
+      c_mismatch="${c_mismatch} ${f}"
+    fi
+  done
+  if [ -z "$c_mismatch" ]; then
+    ok "C. sheet-15 2 張輸出與已入庫成品像素內容相同（m4 點名的中位數法 mutant 會讓兩張對調，此斷言會抓到）"
+  else
+    fail "C. 以下輸出與已入庫成品像素不同（id↔圖可能錯配）：${c_mismatch}"
   fi
 else
   fail "C. sheet-15 裁切不該失敗（exit 非 0）"
@@ -158,6 +227,114 @@ if grep -qF 'REGION-COUNT-CHECK-MUTATED' "$mut"; then
 else
   fail "E. 找不到 REGION-COUNT-CHECK 標記行，負控本身無效"
 fi
+
+# ==== F. 合成「列分組與 grid 不符」夾具：8 個連通區塊排成 5 上／3 下，plan 宣告 grid 2x4 → exit 非 0 ====
+cat > "${work}/gen_mismatch.py" <<'PYEOF'
+import sys
+from PIL import Image, ImageDraw
+
+path = sys.argv[1]
+im = Image.new("RGBA", (420, 300), (0, 0, 0, 0))
+draw = ImageDraw.Draw(im)
+# 版型跑掉的情境：8 個食物本該是 4x2（每列 4 個），但這張圖實際排成 5 個在上列、3 個在下列
+# （兩個 y 高度層、只有一條 gap，gap-based 分列演算法會老實地切成 5/3 兩組）。
+top_xs = [30, 110, 190, 270, 350]
+bottom_xs = [60, 170, 280]
+for x in top_xs:
+    draw.ellipse([x - 20, 60 - 20, x + 20, 60 + 20], fill=(200, 120, 60, 255))
+for x in bottom_xs:
+    draw.ellipse([x - 20, 220 - 20, x + 20, 220 + 20], fill=(200, 120, 60, 255))
+im.save(path)
+PYEOF
+uv run --with pillow python3 "${work}/gen_mismatch.py" "${synth_dir}/synthetic-mismatch.png"
+
+cat > "${work}/plan-mismatch.json" <<'JSONEOF'
+[
+ {"sheet": "synthetic-mismatch", "grid": {"rows": 2, "cols": 4}, "foods": [
+   {"id": "g1", "name_zh": "1", "category": "x"},
+   {"id": "g2", "name_zh": "2", "category": "x"},
+   {"id": "g3", "name_zh": "3", "category": "x"},
+   {"id": "g4", "name_zh": "4", "category": "x"},
+   {"id": "g5", "name_zh": "5", "category": "x"},
+   {"id": "g6", "name_zh": "6", "category": "x"},
+   {"id": "g7", "name_zh": "7", "category": "x"},
+   {"id": "g8", "name_zh": "8", "category": "x"}
+ ]}
+]
+JSONEOF
+
+out_f="${work}/out-f"
+f_out="$(run_crop --sheet synthetic-mismatch --plan "${work}/plan-mismatch.json" --reference-plan "$no_ref" \
+  --sheets-dir "$synth_dir" --style-dir "$synth_dir" --out-dir "$out_f" 2>&1)"; rc_f=$?
+expect_exit 1 "$rc_f" "F. 列分組（5/3）與宣告 grid（2x4）不符的夾具 exit 非 0"
+expect_has "$f_out" "列分組 [5, 3]" "F. 錯誤訊息點名實際列分組"
+expect_has "$f_out" "grid 2x4 不符" "F. 錯誤訊息點名預期 grid"
+
+# ==== G. Mutation：拿掉 GRID-CHECK 標記行的檢查 → F 的斷言翻紅 ====
+mut_grid="${work}/food-sticker-crop.no-grid-check.py"
+awk '
+  index($0, "# GRID-CHECK") > 0 { print "    if False:  # GRID-CHECK-MUTATED"; next }
+  { print }
+' "$script" > "$mut_grid"
+if grep -qF 'GRID-CHECK-MUTATED' "$mut_grid"; then
+  out_g="${work}/out-g"
+  g_out="$(uv run --with pillow python3 "$mut_grid" crop --sheet synthetic-mismatch \
+    --plan "${work}/plan-mismatch.json" --reference-plan "$no_ref" \
+    --sheets-dir "$synth_dir" --style-dir "$synth_dir" --out-dir "$out_g" 2>&1)"; rc_g=$?
+  if [ "$rc_g" -eq 0 ]; then
+    ok "G. mutant（拿掉 grid 檢查）：F 的夾具改判 exit 0——證明 F 的斷言真的在測 grid 檢查"
+  else
+    fail "G. mutant 未如預期翻轉（拿掉 grid 檢查後仍 exit ${rc_g}，負控本身無效）"
+    printf '%s\n' "$g_out" | sed 's/^/    /' >&2
+  fi
+else
+  fail "G. 找不到 GRID-CHECK 標記行，負控本身無效"
+fi
+
+# ==== H／I. check-consistency：合成「缺一張」「多一張孤兒」夾具 → 各自 exit 非 0、訊息點名 id ====
+cat > "${work}/gen_solid.py" <<'PYEOF'
+import sys
+from PIL import Image
+
+path = sys.argv[1]
+Image.new("RGBA", (384, 384), (200, 120, 60, 255)).save(path)
+PYEOF
+
+csv_h="${work}/food_catalog-missing.csv"
+cat > "$csv_h" <<'CSVEOF'
+id,name_zh,category,sort_order,allergens,min_age_months
+c1,1,x,1,,6
+c2,2,x,2,,6
+c3,3,x,3,,6
+CSVEOF
+stickers_h="${work}/stickers-missing"
+mkdir -p "$stickers_h"
+uv run --with pillow python3 "${work}/gen_solid.py" "${stickers_h}/c1.png"
+uv run --with pillow python3 "${work}/gen_solid.py" "${stickers_h}/c2.png"
+# c3.png 故意不產生，模擬「CSV 有、stickers/ 沒有」
+
+h_out="$(uv run "$script" check-consistency --stickers-dir "$stickers_h" --csv "$csv_h" 2>&1)"; rc_h=$?
+expect_exit 1 "$rc_h" "H. 缺一張的夾具（CSV 3 個 id、stickers/ 只有 2 個）exit 非 0"
+expect_has "$h_out" "缺 1 個" "H. 錯誤訊息點名缺幾個"
+expect_has "$h_out" "c3" "H. 錯誤訊息點名缺的是哪個 id"
+
+csv_i="${work}/food_catalog-orphan.csv"
+cat > "$csv_i" <<'CSVEOF'
+id,name_zh,category,sort_order,allergens,min_age_months
+c1,1,x,1,,6
+c2,2,x,2,,6
+CSVEOF
+stickers_i="${work}/stickers-orphan"
+mkdir -p "$stickers_i"
+uv run --with pillow python3 "${work}/gen_solid.py" "${stickers_i}/c1.png"
+uv run --with pillow python3 "${work}/gen_solid.py" "${stickers_i}/c2.png"
+uv run --with pillow python3 "${work}/gen_solid.py" "${stickers_i}/orphan.png"
+# orphan.png 不在 csv_i 裡，模擬「stickers/ 有、CSV 沒有」
+
+i_out="$(uv run "$script" check-consistency --stickers-dir "$stickers_i" --csv "$csv_i" 2>&1)"; rc_i=$?
+expect_exit 1 "$rc_i" "I. 多一張孤兒的夾具（stickers/ 比 CSV 多一個檔名）exit 非 0"
+expect_has "$i_out" "多 1 個" "I. 錯誤訊息點名多幾個"
+expect_has "$i_out" "orphan" "I. 錯誤訊息點名多的是哪個 id"
 
 if [ "$selftest_helpers_fail" -eq 0 ]; then
   echo "✓ food-sticker-crop 自測通過（${selftest_helpers_n} 組樣本）"
