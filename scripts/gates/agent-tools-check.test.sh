@@ -33,6 +33,11 @@
 #   鍵盤攔截點擊）——各自缺即紅；同一 mutant 下負樣本變綠；正文必含字樣總數 71→73。
 # LS-333（㊲，池項 7d9ab42d，來源 LS-329 R1 M1）：merge-reviewer 正文須含分頁過濾游標句——缺即紅；同一
 #   mutant 下負樣本變綠；正文必含字樣總數 73→74。
+# LS-341（㊳㊴，scope 1，池項 6f876c86）：BODY_RULES 主迴圈改驗「恰好出現一次」——0 次（既有邏輯）與 ≥2 次
+#   （本票新邏輯）都紅，新訊息點名出現次數；第四欄標記 `multi` 的規則（qa 的 supabase-lock.sh --hold／
+#   qa-e2e.sh、ui-designer 的收工 Pen 停在票檔）只要求 ≥1 次。mutant：把新增的 `*)` 判斷分支改成無動作，
+#   證明「≥2 次紅」是這條新邏輯造成的、不是巧合命中別條規則；正文必含字樣總數維持 74（沒有新增規則，只是
+#   既有規則改嚴）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -773,6 +778,47 @@ if [ "$got" -eq 0 ] && ! grep -qF '下一頁游標取自原始指標而非過濾
 else
   echo "✗ ㊲ mutant（分頁過濾游標句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
+reset
+
+# ---- ㊳ LS-341（scope 1，池項 6f876c86）：BODY_RULES 改驗「恰好出現一次」——非 multi 規則若正文出現 ≥2 次須紅
+#      （此前只驗「有沒有出現」，同一段被貼兩次時刪掉其中一份仍綠：LS-333 R1 實際發生）。用既有非 multi 規則
+#      DBCHAN（ios-dev|DB 測試 handoff 必附通道）示範：正文把該句多貼一次（出現 2 次）→ exit 1，新訊息點名次數 ----
+reset; mk ios-dev "$IOS_TOOLS" "${IOS_BODY} ${DBCHAN}"; expect 1 '㊳ DBCHAN 句在正文重複貼一次（出現 2 次）→ exit 1，訊息點名次數' 'ios-dev.md：正文含「DB 測試 handoff 必附通道」出現 2 次，應恰好 1 次'
+# mutation：把新增的「≥2 次」判斷分支（`case … *) hits+=…應恰好 1 次…` 那一行）改成無動作 `*) ;;`——等於退回
+# LS-341 之前「只驗有沒有出現」的舊邏輯——上面「重複貼」的負樣本必須變綠，證明紅是這條新邏輯造成的，不是巧合
+# 命中別條規則。
+mut_exactly1="$work/agent-tools-check.no-exactly-once.sh"
+awk '{ if (index($0, "應恰好 1 次") > 0) { print "      *) ;;" } else { print } }' "$checker" > "$mut_exactly1"
+if grep -q '^      \*) ;;$' "$mut_exactly1" && ! grep -q '應恰好 1 次' "$mut_exactly1"; then
+  ok '㊳ mutant 確實已拿掉「≥2 次」判斷分支'
+else
+  echo "✗ ㊳ mutant 拿掉分支失敗（負控本身無效）" >&2; fail=1
+fi
+reset; mk ios-dev "$IOS_TOOLS" "${IOS_BODY} ${DBCHAN}"
+out="$(bash "$mut_exactly1" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && grep -qF '✓ agent-tools gate 通過' <<<"$out" && ! grep -qF '應恰好 1 次' <<<"$out"; then
+  ok '㊳ mutant：拿掉「≥2 次」判斷後「重複貼」的負樣本變綠（新邏輯確實是紅的原因）'
+else
+  echo "✗ ㊳ mutant 應 exit 0 且不印「應恰好 1 次」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset
+
+# ---- ㊴ LS-341：BODY_RULES 第四欄 `multi`（合法重複，非誤貼——真 repo 三條：qa 的 supabase-lock.sh --hold／
+#      qa-e2e.sh、ui-designer 的收工 Pen 停在票檔）——只要求 ≥1 次，不要求恰好 1 次；標記 multi 不等於免檢查，
+#      完全缺席仍紅。真 repo 三條要驗真 repo（不帶目錄參數＝ .claude/agents），不能用 `expect`（固定測 $agents 夾具）----
+out="$(bash "$checker" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && has "$out" 'qa.md：正文含「supabase-lock.sh --hold」（出現 2 次，本條標記允許多次）' && has "$out" 'ui-designer.md：正文含「收工 Pen 停在票檔」（出現 2 次，本條標記允許多次）'; then
+  ok '㊴ 真 repo：multi 規則各自出現多次仍通過、印出次數'
+else
+  echo "✗ ㊴ 真 repo：multi 規則應通過並印出次數（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+out="$(bash "$checker" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && has "$out" 'qa.md：正文含「qa-e2e.sh」（出現 4 次，本條標記允許多次）'; then
+  ok '㊴ 真 repo：qa-e2e.sh（multi）出現 4 次仍通過、印出次數'
+else
+  echo "✗ ㊴ 真 repo：qa-e2e.sh 應通過並印出 4 次（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '㊴ multi 規則仍要求至少 1 次：qa 正文完全缺 qa-e2e.sh → exit 1（標記多次不等於不檢查）' 'qa.md：正文缺「qa-e2e.sh」'
 reset
 
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過
