@@ -38,7 +38,12 @@ struct EditChildView: View {
         self.childrenStore = childrenStore
         self.child = child
         _name = State(initialValue: child.name)
-        _birthday = State(initialValue: child.birthday)
+        // LS-334（LS-96 池項 `0a14168d`(1)）：`child.birthday` 是 UTC 午夜，但這個 `@State`
+        // 全程被當成「裝置本地時區的 Date」餵給 `BirthdayPickerSheet`／`submit()` 的
+        // `wireString(from:timeZone:)`——先用 `BirthdayFormat.localMidnight(from:)` 換成本地
+        // 午夜，兩段抽出的年月日才會一致；裝置在負 UTC 時區、使用者不碰生日欄直接儲存，否則會
+        // 少一天（見該函式文件註解）。
+        _birthday = State(initialValue: BirthdayFormat.localMidnight(from: child.birthday))
     }
 
     var body: some View {
