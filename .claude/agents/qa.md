@@ -41,8 +41,6 @@ LS-129／130 QA（`4cb41a06`／`d731c417`）BLOCKED 當時記成「mobile-mcp �
 
 **兩個 mobile-mcp 操作陷阱（LS-333，源自 LS-315 QA 實測）**：`simctl launch` 後緊接 mobile-mcp，WDA 會與新 scene 競態、app 被背景化——`simctl launch` 後先用 `mobile_list_elements_on_screen` 或短暫等待確認畫面已渲染，再進行下一步 mobile-mcp 操作，不要緊接著連續呼叫。鍵盤彈出時會攔截下層按鈕的點擊——鍵盤顯示中要點擊下方按鈕前先收鍵盤（如按 Return／點空白處）再點，不要對著被鍵盤蓋住的區域直接點擊。
 
-**兩個 mobile-mcp 操作陷阱（LS-333，源自 LS-315 QA 實測）**：`simctl launch` 後緊接 mobile-mcp，WDA 會與新 scene 競態、app 被背景化——`simctl launch` 後先用 `mobile_list_elements_on_screen` 或短暫等待確認畫面已渲染，再進行下一步 mobile-mcp 操作，不要緊接著連續呼叫。鍵盤彈出時會攔截下層按鈕的點擊——鍵盤顯示中要點擊下方按鈕前先收鍵盤（如按 Return／點空白處）再點，不要對著被鍵盤蓋住的區域直接點擊。
-
 ## 視覺驗收（UI 票必做）
 1. 在模擬器 build & run 實際渲染：要走多步驟才到得了的畫面（登入後／發佈後／詳情）先用 `qa-e2e.sh` 情境（上方「端到端驅動」，每步自動截圖），**mobile-mcp 只做單步互動與補截圖**（啟動 app、切到目標畫面、截圖）；mobile-mcp 未載入時退回 `xcrun simctl io booted screenshot <路徑>.png` 再用 Read 檢視。截圖一律存 `.claude/evidence/<票號>/<輪次>/`（如 `.claude/evidence/LS-46/qa1/home.png`；先 `mkdir -p` 該目錄——simctl 不會替你建父目錄，mobile-mcp 則用 `mobile_save_screenshot` 的 `saveTo` 指到同一路徑、同樣先建目錄；`saveTo` **必須用絕對路徑**——它由 mobile-mcp server 進程解析，不是你的 worktree cwd，給相對路徑會落到 server 進程所在目錄、悄悄存錯地方，LS-69 N2；worktree 內已 ignore，不得 git add）。碰本機 DB 的畫面（登入／時間軸／上傳／留言）在 `--hold` 內操作（驗收流程 5，LS-159）：開始前 `bash scripts/ops/supabase-lock.sh --status` 應顯示你的 label，沒有就先 `--hold`——否則其他 worktree 的 reset 會在你操作到一半時洗掉 session。
 2. 截圖與該票設計稿比對：**優先比對 visual-reviewer 匯出到 `.claude/evidence/<票號>/r<n>-review/` 的 PNG**（orchestrator 派工時給輪次與路徑；evidence 是 worktree 相對、已 ignore，不在你的 checkout 時請 orchestrator 提供）；需要時再用 Pencil MCP **唯讀**截圖（已跑過上方 `pen-read.sh` 強制重新載入後，以 `execute` 的 TakeScreenshot／Get 取圖，存 `.claude/evidence/<票號>/qa<n>/`；.pen 絕不用 Read/Grep 開、不得寫入）。比對項：版面結構、字級層次、間距、色彩、各狀態（空／載入／錯誤）。
