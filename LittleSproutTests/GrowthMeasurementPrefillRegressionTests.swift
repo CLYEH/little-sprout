@@ -58,20 +58,29 @@ final class GrowthMeasurementPrefillRegressionTests: XCTestCase {
         )
     }
 
-    /// R1 merge-review m2：驗收「範圍軟提醒不擋儲存」（品牌第 8 條）——mutation：若 `submit()`
-    /// 加一行 `guard rangeWarning == nil else { return }`（或任何以 `rangeWarning` 為條件擋下
-    /// 儲存的寫法），這支測試會抓到；`submit()` 目前唯一讀的驗證狀態是 `hasAtLeastOneValue`／
-    /// `showsEmptyMessage`，完全不該出現 `rangeWarning` 這個字面。
+    /// R1 merge-review m2／R2 merge-review R2-m2：驗收「範圍軟提醒不擋儲存」（品牌第 8 條）。
+    /// 原本只認兩種字面寫法（`guard rangeWarning`／`rangeWarning == nil`）——重放驗證：在
+    /// `submit()` 加一行 `if rangeWarning != nil { return }`，全量 1217 支測試仍 0 failures
+    /// （這種寫法沒被兩個字面比對抓到）。改成抓 `submit()` 函式本體（精確從簽名到同縮排層級
+    /// 的結尾大括號）完全不含 `rangeWarning` 這個識別字——合法情況下 `submit()` 只讀
+    /// `GrowthMeasurementValidation.submitDecision(...)` 的回傳值，完全不需要出現
+    /// `rangeWarning`，不管用什麼寫法（guard／if／三元）讀它都算違規。
     func test_submit_neverGatesOnRangeWarning() throws {
         let source = try sourceText(relativePath: "LittleSprout/Features/Growth/GrowthMeasurementFormView.swift")
 
+        guard let signatureRange = source.range(of: "private func submit() {") else {
+            return XCTFail("找不到 submit() 函式簽名，檔案可能被重新命名")
+        }
+        let afterSignature = source[signatureRange.upperBound...]
+        guard let endRange = afterSignature.range(of: "\n    }\n") else {
+            return XCTFail("找不到 submit() 函式的結尾（4 空白縮排的右大括號）")
+        }
+        let body = afterSignature[..<endRange.lowerBound]
+
         XCTAssertFalse(
-            source.contains("guard rangeWarning"),
-            "submit() 不該用 rangeWarning 擋下儲存——軟性提醒永遠不能 disable 儲存"
-        )
-        XCTAssertFalse(
-            source.contains("rangeWarning == nil"),
-            "submit() 不該用 rangeWarning 擋下儲存——軟性提醒永遠不能 disable 儲存"
+            body.contains("rangeWarning"),
+            "submit() 函式本體不該出現 rangeWarning 這個字面——不管用什麼寫法擋，只要讀到它就代表" +
+                "拿軟性提醒做送出判斷，違反品牌第 8 條「不 disable 儲存」"
         )
     }
 }
