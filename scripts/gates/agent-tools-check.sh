@@ -207,7 +207,7 @@ ios-dev|不看背景通知的 exit code|LS-333：判斷 push 是否成功一律�
 qa|WDA 會與新 scene 競態、app 被背景化|LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：simctl launch 後緊接 mobile-mcp 互動會撞上這個陷阱，先等畫面渲染或用 mobile_list_elements_on_screen 確認再操作，那句被刪即紅
 qa|鍵盤彈出時會攔截下層按鈕的點擊|LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：鍵盤顯示中先收鍵盤再點下方按鈕，不要對著被蓋住的區域直接點，那句被刪即紅
 merge-reviewer|下一頁游標取自原始指標而非過濾後結果|LS-333（池項 7d9ab42d，來源 LS-329 R1 M1）：對分頁結果做過濾的變更，確認測試涵蓋整頁被濾空與游標正確性，那句被刪即紅
-qa|字級矩陣至少含 xSmall、預設、AX3|LS-346（來源 LS-343）：只驗預設與放大會漏掉「比預設小」那端的回歸（隱私權政策列在窄機型被 Tab Bar 遮住只在 Small／xSmall 重現），那句被刪即紅"
+qa|字級矩陣至少含 xSmall、預設、AX3|LS-346（來源 LS-343 verdict b975e587）：只驗預設與放大會漏掉「比預設小」那端的回歸（LS-343 時間軸 Header 在 390pt 只有 Small／XS 字級破版，與範圍 4 的機型寬度問題是兩件事），那句被刪即紅"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，
