@@ -78,6 +78,8 @@ OLD=2020-01-01T00:00:00Z   # 老到必超過 stale 的時間戳（commit 日期�
 OLD_T=202001010000         # 同一天，給 touch -t（POSIX，macOS／GNU 皆可）
 gold() { env GIT_AUTHOR_DATE="$OLD" GIT_COMMITTER_DATE="$OLD" git -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
 STALE=30
+# LS-333：patrol.sh 的 ssh-keepalive 檢查期望值（同 session-start.sh 的 SSH_KEEPALIVE_CMD）；⑬b 與 ⑥b 收尾都用它
+SSH_KEEPALIVE_OK='ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=120'
 
 has()   { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✓ $1"; else echo "✗ ${1}（輸出應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; fi; }
 hasnt() { if printf '%s' "$2" | grep -qF -- "$3"; then echo "✗ ${1}（輸出不應含「${3}」）" >&2; printf '%s\n' "$2" | sed 's/^/    /' >&2; fail=1; else echo "✓ $1"; fi; }
@@ -103,6 +105,8 @@ repo="$work/repo"; g clone -q "$remote" "$repo"
 mkdir -p "$repo/.githooks"
 for h in commit-msg pre-commit pre-push; do printf '#!/bin/sh\nexit 0\n' > "$repo/.githooks/$h"; chmod +x "$repo/.githooks/$h"; done
 g -C "$repo" config core.hooksPath .githooks
+# SSH keepalive 裝好（LS-333：同 session-start.sh 冪等設定的期望值）——⑬b 之前一律視為正常
+g -C "$repo" config core.sshCommand "$SSH_KEEPALIVE_OK"
 wts="$repo/.claude/worktrees"; mkdir -p "$wts"
 wt() { g -C "$repo" worktree add "$@" >/dev/null 2>&1 || { echo "✗ 建 worktree 失敗：$*" >&2; exit 1; }; }
 
@@ -539,13 +543,13 @@ jq_ok '⑥ repo 不存在：仍合法 JSON、context 說明失敗＋仍提醒建
 
 # ---- ⑥b LS-209（push 韌性）：SessionStart hook 冪等設定 core.sshCommand（SSH keepalive），不改使用者全域
 #        ~/.gitconfig；已是目標值就不重複寫、context 不重複提醒；設定寫進的是 $repo 自己的（合成）git config，
-#        不碰真的 ~/.gitconfig ----
+#        不碰真的 ~/.gitconfig。LS-333：目標值 ServerAliveCountMax 由 20 拉高到 120 ----
 g -C "$repo" config --unset core.sshCommand 2>/dev/null || true
 hjssh1="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$hook" 2>/dev/null)"
-jq_ok '⑥b 首次跑：context 印已設定 core.sshCommand（keepalive）' "$hjssh1" '.hookSpecificOutput.additionalContext | test("已設定 git core.sshCommand") and test("ServerAliveInterval=30") and test("ServerAliveCountMax=20")'
+jq_ok '⑥b 首次跑：context 印已設定 core.sshCommand（keepalive）' "$hjssh1" '.hookSpecificOutput.additionalContext | test("已設定 git core.sshCommand") and test("ServerAliveInterval=30") and test("ServerAliveCountMax=120")'
 cur_ssh=$(g -C "$repo" config --get core.sshCommand)
-if [ "$cur_ssh" = "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20" ]; then echo "✓ ⑥b repo 層 core.sshCommand 確實被設定成目標值"; else echo "✗ ⑥b core.sshCommand 值不符（實得「${cur_ssh}」）" >&2; fail=1; fi
-if git config --global --get core.sshCommand >/dev/null 2>&1 && [ "$(git config --global --get core.sshCommand 2>/dev/null)" = "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20" ]; then echo "✗ ⑥b 不該動到使用者全域 ~/.gitconfig" >&2; fail=1; else echo "✓ ⑥b 未動到使用者全域 ~/.gitconfig"; fi
+if [ "$cur_ssh" = "$SSH_KEEPALIVE_OK" ]; then echo "✓ ⑥b repo 層 core.sshCommand 確實被設定成目標值"; else echo "✗ ⑥b core.sshCommand 值不符（實得「${cur_ssh}」）" >&2; fail=1; fi
+if git config --global --get core.sshCommand >/dev/null 2>&1 && [ "$(git config --global --get core.sshCommand 2>/dev/null)" = "$SSH_KEEPALIVE_OK" ]; then echo "✗ ⑥b 不該動到使用者全域 ~/.gitconfig" >&2; fail=1; else echo "✓ ⑥b 未動到使用者全域 ~/.gitconfig"; fi
 hjssh2="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$hook" 2>/dev/null)"
 jq_ok '⑥b 已是目標值時第二次跑不再重複提醒（冪等）' "$hjssh2" '.hookSpecificOutput.additionalContext | test("已設定 git core.sshCommand") | not'
 cur_ssh2=$(g -C "$repo" config --get core.sshCommand)
@@ -554,7 +558,7 @@ g -C "$repo" config core.sshCommand 'old-custom-value'
 hjssh3="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$hook" 2>/dev/null)"
 jq_ok '⑥b 既有非目標值（如舊自訂值）→ 仍會被覆寫成目標值並提醒' "$hjssh3" '.hookSpecificOutput.additionalContext | test("已設定 git core.sshCommand")'
 cur_ssh3=$(g -C "$repo" config --get core.sshCommand)
-[ "$cur_ssh3" = "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20" ] && echo "✓ ⑥b 舊自訂值被覆寫成目標值" || { echo "✗ ⑥b 舊自訂值未被覆寫（實得「${cur_ssh3}」）" >&2; fail=1; }
+[ "$cur_ssh3" = "$SSH_KEEPALIVE_OK" ] && echo "✓ ⑥b 舊自訂值被覆寫成目標值" || { echo "✗ ⑥b 舊自訂值未被覆寫（實得「${cur_ssh3}」）" >&2; fail=1; }
 hjssh_norepo="$(printf '{}' | CLAUDE_PROJECT_DIR="$work/nope" bash "$hook" 2>/dev/null)"
 jq_ok '⑥b repo 不存在時不因 core.sshCommand 這段而炸——仍合法 JSON、fail-soft' "$hjssh_norepo" '.hookSpecificOutput.hookEventName == "SessionStart"'
 # mutation：拿掉 LS209-SSH-KEEPALIVE 整段（標記區塊，同 patrol.sh 的 LS209-PEN-WRONG 慣例）→ 上面「首次跑印已設定」
@@ -567,8 +571,10 @@ g -C "$repo" config --unset core.sshCommand 2>/dev/null || true
 hjssh_mut="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$mut_hook" 2>/dev/null)"
 jq_ok '⑥b mutant：拿掉設定段後不再印已設定訊息（證明這段確實是原因）' "$hjssh_mut" '.hookSpecificOutput.additionalContext | test("已設定 git core.sshCommand") | not'
 if [ -z "$(g -C "$repo" config --get core.sshCommand 2>/dev/null)" ]; then echo "✓ ⑥b mutant：拿掉設定段後 core.sshCommand 確實未被設定"; else echo "✗ ⑥b mutant 應該沒有設定 core.sshCommand" >&2; fail=1; fi
-# 還原：讓後續 ⑦ 之後的測試不受本段影響（本來就不該有值，但保險起見還原成本段前的狀態）
-g -C "$repo" config --unset core.sshCommand 2>/dev/null || true
+# 還原：本段測試過程中改動過 core.sshCommand 多次（unset／老值／mutant unset），還原成 fixture 原本設定的目標值
+# （LS-333：baseline 現在預設「已裝好」，不是本來就不該有值——不還原會讓後續 ⑦ 之後所有測試都被 patrol.sh 新的
+# ssh-keepalive 檢查誤標）
+g -C "$repo" config core.sshCommand "$SSH_KEEPALIVE_OK"
 
 # ---- ⑦ 主 checkout pull 之後：落後標記與 pull 指示消失（負向）----
 g -C "$repo" pull -q --ff-only origin main
@@ -676,6 +682,35 @@ out13="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)
 hasnt '⑬ 裝回去 → 不再標' "$out13" '[hooks]'
 hj13="$(printf '{}' | CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" PATROL_FETCH_TIMEOUT=2 bash "$hook" 2>/dev/null)"
 jq_ok '⑬ 裝好後 hook 不再指示' "$hj13" '.hookSpecificOutput.additionalContext | test("gate hooks 未裝好") | not'
+
+# ---- ⑬b LS-333（源自 LS-313 R2／R3、池項 f99a2749）：SSH keepalive 安裝檢查——core.sshCommand 未設／設錯都標，
+#      改回期望值就消失；mutation：拿掉 patrol.sh 的檢查段後同一份負樣本必須變綠 ----
+g -C "$repo" config --unset core.sshCommand
+outssh="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑬b core.sshCommand 未設定 → SSH keepalive 段 ⚠' "$outssh" 'sshCommand=（未設定）  ⚠ core.sshCommand 未設定'
+has   '⑬b 指示含設定指令' "$outssh" "git config core.sshCommand \"${SSH_KEEPALIVE_OK}\""
+briefssh="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '⑬b --brief 也印 [ssh-keepalive]' "$briefssh" '[ssh-keepalive] ⚠'
+jsonssh="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --json "$STALE" 2>/dev/null)"
+jq_ok '⑬b --json：flags 含一筆 [ssh-keepalive]' "$jsonssh" '([.flags[] | select(startswith("[ssh-keepalive]"))] | length == 1)'
+g -C "$repo" config core.sshCommand 'old-custom-ssh-value'
+outssh="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '⑬b core.sshCommand 設錯 → ⚠ 印現值' "$outssh" 'core.sshCommand 是「old-custom-ssh-value」而非'
+g -C "$repo" config core.sshCommand "$SSH_KEEPALIVE_OK"
+outssh="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '⑬b 裝回期望值 → 不再標' "$outssh" '[ssh-keepalive]'
+# mutation：拿掉 LS333-SSH-KEEPALIVE 整段 → 未設定時也不再標，證明 ⑬b 的紅確實來自這段檢查
+mut_patrol_ssh="$work/patrol.no-ssh-keepalive.sh"
+awk 'index($0, "LS333-SSH-KEEPALIVE-START") > 0 { skip = 1 } skip != 1 { print } index($0, "LS333-SSH-KEEPALIVE-END") > 0 { skip = 0 }' "$patrol" > "$mut_patrol_ssh"
+if grep -q 'LS333-SSH-KEEPALIVE-START' "$mut_patrol_ssh" || grep -q 'SSH_KEEPALIVE_EXPECT=' "$mut_patrol_ssh"; then
+  echo "✗ ⑬b mutant 仍含 ssh-keepalive 檢查段（awk 拿掉失敗，負控本身無效）" >&2; fail=1
+else
+  echo "✓ ⑬b mutant 確實已拿掉 ssh-keepalive 檢查段"
+fi
+g -C "$repo" config --unset core.sshCommand
+outssh_mut="$(bash "$mut_patrol_ssh" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '⑬b mutant：拿掉檢查段後 core.sshCommand 未設定也不再標（證明這段確實是原因）' "$outssh_mut" '[ssh-keepalive]'
+g -C "$repo" config core.sshCommand "$SSH_KEEPALIVE_OK"
 
 # ---- ⑫ 三分支祖先鏈漂移（LS-85 G5；放在 ⑩ 之前——⑩ 之後 origin 指向黑洞，這裡要真的 fetch）----
 # 現況：main 領先 development 1 commit（① 的 'main moves'，剛 commit）→ 未達 stale：不標、只印待 back-merge；test ⊂ development 成立

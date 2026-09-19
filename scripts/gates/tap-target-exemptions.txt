@@ -13,7 +13,7 @@ ForkView：三岔路導覽邏輯（依 deep link／家庭狀態切換），追�
 InviteFamilyView：需要 FamilyStore preview 帶邀請碼產生狀態，追蹤於 LS-96
 JoinCodeView：表單流程，追蹤於 LS-96
 JoinWaitingView：需要模擬待審核狀態，追蹤於 LS-96
-TimelineView：日分組卡片／捲底載入／失敗態重新載入鈕需要多筆假資料與捲動狀態才有代表性，仍排除；Header「新增回憶」建立鈕不需要 seed 資料，已另拉 TapTargetGateScreenName.timelineDefaultState case 正式量測（LS-126 delta 復審 m2），追蹤於 LS-96
+TimelineView：日分組卡片／捲底載入／失敗態重新載入鈕需要多筆假資料與捲動狀態才有代表性，仍排除；Header「新增回憶」建立鈕與「匯入」鈕（LS-315）皆不需要 seed 資料，已另拉 TapTargetGateScreenName.timelineDefaultState case 正式量測（LS-126 delta 復審 m2；LS-315 起一併涵蓋 importEntryButton），追蹤於 LS-96
 DayDividerView：純顯示元件，無互動元件，追蹤於 LS-96
 DiaryCardView：導覽由外層 TimelineView 的 NavigationLink 負責（該處已走 tap-target-check 涵蓋的互動路徑）；LS-216 起底部另掛 InteractionRow（Like Toggle／Count Zone／Comment Button），由 TapTargetGateScreenName.timelineInteractionRow 量測，不另掛獨立 harness case 量這支檔案本身，追蹤於 LS-96
 AlbumCardView：導覽由外層 AlbumsView／TimelineView 負責；LS-216 起底部另掛 InteractionRow，同 DiaryCardView 理由由 TapTargetGateScreenName.timelineInteractionRow 涵蓋，追蹤於 LS-96
