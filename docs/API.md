@@ -1959,7 +1959,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `list_growth_records` 既有慣例）；`p_child_id` 傳一個自己不屬於的家庭的孩子不會
   報錯，只會回傳 0 列。
 - **用途**：依 `child_id` 列出未刪的飲食紀錄，`first_tried_on desc, id desc`
-  排序。**不分頁**——食物目錄約 120 種是天花板，單一孩子的「已嘗試」列數遠低於
+  排序。**不分頁**——食物目錄 274 種是天花板，單一孩子的「已嘗試」列數遠低於
   需要 keyset 分頁的量級（對比 `growth_records`／`comments` 那種隨時間無上限
   增長的列表）。回傳整列（含 `food_id`／`author_id` 等），排序／依 `food_catalog`
   的 `category`／`sort_order` 分類呈現留給呼叫端。
