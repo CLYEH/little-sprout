@@ -821,6 +821,37 @@ fi
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '㊴ multi 規則仍要求至少 1 次：qa 正文完全缺 qa-e2e.sh → exit 1（標記多次不等於不檢查）' 'qa.md：正文缺「qa-e2e.sh」'
 reset
 
+# ---- ㊵ LS-341 R2 m1（merge-review R1 458d27a4）：hint 內本身含字面 `|` 的規則（LINEARFALLBACK，六份都有，
+#      hint 原文含「linear-post.sh get|comment|state」）違規時，印出的提示必須是完整原文，不能被誤判斷成第四欄
+#      切斷——真 repo 的 ios-dev|並在 handoff 註明走備援 這條就是這個形狀 ----
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR} ${PUSHCACHE}"
+expect 1 '㊵ ios-dev 缺 LINEARFALLBACK 句 → 提示含完整 hint（內部的 | 沒被切斷）' \
+  'ios-dev.md：正文缺「並在 handoff 註明走備援」（LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅；frontmatter 內出現不算）'
+# mutation：把 read 目標變數改回 R1 的 4 欄寫法（agent／literal／hint／multi），拿掉本票新加的 `multi=; hint=$rest`
+# ／`case` 解析段——上面 ㊵ 的完整 hint 斷言必須變紅（hint 在 hint 內第一個 `|` 就被切斷，斷言字串裡
+# 「get|comment|state」再也不會完整出現在同一行）。
+mut_m1="$work/agent-tools-check.old-4field-read.sh"
+awk '
+  $0 == "while IFS=\x27|\x27 read -r agent literal rest; do" { print "while IFS=\x27|\x27 read -r agent literal hint multi; do"; skip = 0; next }
+  /^  # LS-341 R2 m1：/ { skip = 1 }
+  skip && /^  esac$/ { skip = 0; next }
+  skip { next }
+  { print }
+' "$checker" > "$mut_m1"
+if grep -q "read -r agent literal hint multi; do" "$mut_m1" && ! grep -q 'multi=; hint=\$rest' "$mut_m1"; then
+  ok '㊵ mutant 確實已改回 4 欄 read（拿掉新的 rest／case 解析段）'
+else
+  echo "✗ ㊵ mutant 改寫失敗（awk 未命中，負控本身無效）" >&2; fail=1
+fi
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR} ${PUSHCACHE}"
+out="$(bash "$mut_m1" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && ! has "$out" 'linear-post.sh get|comment|state 備援，那句被刪即紅'; then
+  ok '㊵ mutant：4 欄 read 下提示的 hint 被切斷（缺「get|comment|state 備援，那句被刪即紅」這段），證明本票新解析段確實是原因'
+else
+  echo "✗ ㊵ mutant 應仍 exit 1 但提示的 hint 被切斷（實得 exit ${got}，是否含完整 hint：$(has "$out" 'linear-post.sh get|comment|state 備援，那句被刪即紅' && echo yes || echo no)）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset
+
 # R1 I-3：正文規則表多一個不在工具表的 agent（mutant 在 BODY_RULES 首行後插 `nobody|x`）→ exit 2 fail closed，不得靜默跳過
 mut3="$work/agent-tools-check.body-not-subset.sh"
 awk '{ print } /^BODY_RULES="ios-dev\|/ { print "nobody|x" }' "$checker" > "$mut3"

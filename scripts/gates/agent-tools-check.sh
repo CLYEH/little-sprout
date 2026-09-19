@@ -311,9 +311,20 @@ done <<BODY_EOF
 $BODY_RULES
 BODY_EOF
 m=0
-while IFS='|' read -r agent literal hint multi; do
+while IFS='|' read -r agent literal rest; do
   [ -n "$agent" ] || continue
   m=$((m + 1))
+  # LS-341 R2 m1：`rest` 是第三個 `|` 之後「整段原文」（3 個 read 目標變數、最後一個吸收剩餘全部，含內部任何
+  # `|`）——LS-308 六條規則的 hint 本身就含字面 `|`（`linear-post.sh get|comment|state`），若改成 4 個 read 目標
+  # 變數（agent／literal／hint／multi）會在 hint 內第一個 `|` 就被切斷，`hint` 只剩前半、`multi` 吃掉後半（含
+  # 「comment|state 備援…」），印出的提示因此斷在一段不存在的命令、誤導修的人（判斷方向仍 fail-closed：含 `|`
+  # 的殘段不可能等於 `multi`，不影響紅綠，但誤導文字本身是問題）。改成只在 `rest` 結尾比對字面 `|multi` 尾綴——
+  # 4 條標記 multi 的規則其 hint 原文都不會恰好以「|multi」結尾（不是巧合，是我們自己寫的），其餘規則的 hint
+  # 即使內部含 `|` 也原封不動保留。
+  multi=; hint=$rest
+  case "$rest" in
+    *'|multi') multi=multi; hint=${rest%'|multi'} ;;
+  esac
   f="${dir}/${agent}.md"
   [ -r "$f" ] || continue
   body=$(awk '{ sub(/\r$/, "") } NR == 1 && $0 == "---" { fm = 1; next } fm && $0 == "---" { fm = 0; b = 1; next } b { print }' "$f")
