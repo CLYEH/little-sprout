@@ -291,7 +291,7 @@ begin
   end if;
   select count(*) into v_probe from public.food_catalog where id like 'ls342_probe_%';
   if v_probe <> 0 then
-    raise exception 'FAIL：sort_order 探針的臨時列 ls342_probe_% 竟然殘留在資料庫，% 筆', v_probe;
+    raise exception 'FAIL：sort_order 探針的臨時列 ls342_probe_%% 竟然殘留在資料庫，% 筆', v_probe;
   end if;
   raise notice 'ok：sort_order 探針未污染資料庫（274 列／274 個相異值、無殘留臨時列）';
 end;
