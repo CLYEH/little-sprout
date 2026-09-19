@@ -75,9 +75,11 @@ $$;
 -- LS-339：id 唯一（雖已是 primary key，這裡另外斷言一次——與 §1 CSV↔DB 一致性、
 -- 下面 sort_order 唯一性同屬「不是只信任 constraint，直接量測資料現況」）、
 -- category／allergens 合法值（雖已是 check constraint，理由同上）、sort_order 在
--- 274 列全域範圍內無重複（本表沒有 unique index 保護這一點，是這段唯一真的可能被
--- 未來手動編輯 CSV／migration 撞出重複的地方，見本票 migration 檔頭「sort_order」段
--- 的既有慣例說明）。
+-- 274 列全域範圍內無重複——LS-342 起 `food_catalog_sort_order_unique`
+-- （`unique (sort_order) deferrable initially deferred`，見
+-- `20260919094213_food_catalog_sort_order_unique.sql`）已經是 DB 層強制約束，這裡
+-- 的量測是「交易內即時量測現況」而非唯一防線（deferred 到 COMMIT 才檢查，這裡在
+-- 交易中段量測，兩者互補，不是重複）。
 do $$
 declare
   v_total int;
