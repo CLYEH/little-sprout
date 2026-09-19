@@ -16,12 +16,22 @@
 
 用法：
   python3 scripts/ops/food-catalog-sql.py insert   > 一段 `insert into public.food_catalog (...) values (...);`
-  python3 scripts/ops/food-catalog-sql.py values   > 只印 VALUES 的每一列（給測試比對用，不含 insert 前綴／分號）
+                                                      （目前 CSV 全部列）
+  python3 scripts/ops/food-catalog-sql.py insert --only-new <base-csv>
+                                                    > 同上，但只印 id 不存在於 <base-csv> 的列——
+                                                      LS-339：新增一批品項時，拿舊版 CSV（例如
+                                                      `git show <前一支 migration 的 commit>:supabase/
+                                                      seed-data/food_catalog.csv > /tmp/old.csv`）當
+                                                      base，只產生「這支新 migration 該 INSERT 的列」，
+                                                      不必手動從全量 insert 輸出裡挑出新增的部分。
   python3 scripts/ops/food-catalog-sql.py check    > 一段自我完整的 DO 區塊，逐列比對 public.food_catalog
                                                       與 CSV 目前內容（供 supabase/tests/run.sh 在跑
                                                       117_food_encyclopedia.sql 之前，host 端動態產生後
                                                       交給既有的 run_sql() 執行——兩種連線通道皆適用，
-                                                      理由見上）
+                                                      理由見上；比對涵蓋全部欄位含 sort_order／
+                                                      allergens，不論資料是哪一支 migration 寫入的，
+                                                      因為比的是 DB 現況與目前 CSV 現況，天然涵蓋「多支
+                                                      migration 累加」）
 
 不用任何第三方套件（Rule 12 對 Python 套件安裝的規定不適用——這裡完全不需要安裝套件，
 標準庫 csv／sys 就夠）。
@@ -69,13 +79,26 @@ def load_rows():
 
 
 def main():
-    mode = sys.argv[1] if len(sys.argv) > 1 else "insert"
+    args = sys.argv[1:]
+    mode = args[0] if args else "insert"
+    only_new_base = None
+    if mode == "insert" and len(args) > 1:
+        if len(args) == 3 and args[1] == "--only-new":
+            only_new_base = args[2]
+        else:
+            raise SystemExit("insert 模式只接受 --only-new <base-csv> 這一種額外參數")
+    elif mode != "insert" and len(args) > 1:
+        raise SystemExit(f"{mode} 模式不接受額外參數")
+
     rows = load_rows()
+    if only_new_base:
+        with open(only_new_base, newline="", encoding="utf-8") as f:
+            base_ids = {r["id"] for r in csv.DictReader(f)}
+        rows = [r for r in rows if r["id"] not in base_ids]
+        if not rows:
+            raise SystemExit(f"--only-new：{only_new_base} 與目前 CSV 沒有差異（0 筆新增列）")
+
     values = [row_to_values(r) for r in rows]
-    if mode == "values":
-        for v in values:
-            print(v + ",")
-        return
     if mode == "insert":
         print("insert into public.food_catalog (id, name_zh, category, sort_order, allergens, min_age_months)")
         print("values")
@@ -140,7 +163,7 @@ def main():
         print("end;")
         print("$$;")
         return
-    raise SystemExit(f"未知模式：{mode}（用 insert／values／check）")
+    raise SystemExit(f"未知模式：{mode}（用 insert／check）")
 
 
 if __name__ == "__main__":

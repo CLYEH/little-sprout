@@ -70,7 +70,7 @@
 | `invites` | owner 看自家的邀請碼 | 🔒 **RPC-only**（`create_invite`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 路徑**（policy 與 grant 兩層都關，LS-37） | owner 撤銷（DELETE，cascade 掉底下的 pending 申請） | 撤銷邀請碼＝DELETE 該列，沒有「軟撤銷」欄位 |
 | `children` | 我所屬家庭的孩子；**不分角色、不分軟刪與否**——owner／member／viewer 都讀得到全部列，含已軟刪的（`deleted_at`／`deleted_by` 對所有人都是可見的唯讀旗標，R1 I3/I4） | 🔒 **RPC-only**（`create_child`，owner／member 皆可，直接 INSERT 已被 revoke） | 🔒 **RPC-only**：內容（`name`／`birthday`／`avatar_url`）owner／member 皆可用 `update_child`；軟刪／還原（`deleted_at`／`deleted_by`）僅 owner 用 `set_child_deleted`（直接 UPDATE 已被 revoke） | 🔒 **無 DELETE 路徑**（R1 I5：直接硬刪會繞過 30 天保護，policy 與 grant 兩層都關，連 owner 也沒有） | LS-66 收斂：`family_id` 建立後不可變（trigger 額外把關）；軟刪 30 天內可還原（重複軟刪 no-op，不刷新時鐘，見 §4），超過拿 `LS043`；已軟刪的孩子不能再被指定為新內容的標記（`LS044`，LS-121 起守門搬到 `diary_children`／`album_children` 連結表的 `BEFORE INSERT` trigger）；既有標記不隨軟刪連動，見 §8 |
 | `growth_records`（LS-255） | 我所屬家庭**未刪**的成長紀錄（身高／體重／頭圍） | owner／member（`author_id` 必須是自己） | 僅內容欄位（`measured_on`／`height_cm`／`weight_kg`／`head_cm`／`note`），**僅原作者本人**（owner 不在這條路徑——見 §3「為什麼 growth_records 用了真 RLS」） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_growth_record` RPC（作者本人，或該家庭 owner——不限作者，見 §4） | 真 RLS 直接開放 INSERT／UPDATE（不是 diaries/albums/comments/children 那種 RPC-only 收斂）：`deleted_at`／`deleted_by` 兩欄對 authenticated 無 UPDATE grant，唯一寫入路徑是 `delete_growth_record`（`SECURITY DEFINER`）；設計理由見 §3。**`updated_at` 自 LS-337 起由 `private.touch_updated_at()` BEFORE UPDATE trigger 強制 `now()`**——欄位級 grant 仍開放（`upsert_growth_record` 的 UPDATE 陳述式需要），直接 `PATCH` 這一欄不會被 `42501` 擋下，但寫入的值一律被覆寫，呼叫端指定的值不會生效 |
-| `food_catalog`（LS-325） | 任一登入使用者，全表 | 🔒 **唯讀**（只有本 migration 以表擁有者身分寫入 seed，`authenticated` 無任何寫入 grant） | 🔒 唯讀 | 🔒 唯讀 | 飲食圖鑑靜態目錄，約 120 種台灣常見食物，8 類，v1 不開放自訂（LS-310 F1a）；`id` 同時是插圖資產名（F3a）；`allergens`／`min_age_months` 純資訊，附免責聲明（F2a）。見 §3 |
+| `food_catalog`（LS-325，LS-339 起 274 種） | 任一登入使用者，全表 | 🔒 **唯讀**（只有 migration 以表擁有者身分寫入 seed，`authenticated` 無任何寫入 grant） | 🔒 唯讀 | 🔒 唯讀 | 飲食圖鑑靜態目錄，274 種台灣常見食物（蔬菜 91／水果 46／蛋白質 72／其餘 5 類 65），8 類，v1 不開放自訂（LS-310 F1a）；`id` 同時是插圖資產名（F3a）；`allergens`／`min_age_months` 純資訊，附免責聲明（F2a）。見 §3 |
 | `child_food_records`（LS-325） | 我所屬家庭**未刪**的飲食圖鑑記錄（每寶貝每食物一筆「第一次吃到」） | owner／member（`author_id` 必須是自己）；建議走 `upsert_child_food_record` RPC（自然鍵 upsert，見 §4） | 僅內容欄位（`first_tried_on`／`media_id`／`note`／`reaction`），**僅原作者本人**（owner 不在這條路徑，同 `growth_records`） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_child_food_record` RPC（作者本人，或該家庭 owner） | 權限模型逐字沿用 `growth_records`（見 §3）；同一寶貝同一食物最多一筆未軟刪紀錄（partial unique index），軟刪後可再新增；時間軸產生 `food_first` 卡片，見 §3「`feed_items`」／§4 `get_family_timeline`。**`updated_at` 自 LS-337 起同 `growth_records`，由共用的 `private.touch_updated_at()` trigger 強制 `now()`** |
 | `media` | 我所屬家庭**尚未軟刪**的檔案中繼資料，**上傳者自己的例外**——不論是否已軟刪都看得到自己上傳的列（`deleted_at is null or uploaded_by = auth.uid()`，LS-155 R2 起；與 `children` 全員可見已軟刪列的例外不同，這裡只有上傳者本人是例外，見 §3「`media_select` 過濾」段落的已知殘留缺口） | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | **文件承諾「owner 任意列」，實際只對 owner 自己上傳的列與尚未軟刪的別人的列成立**（一般刪除走 `deleted_at`）——owner 對「別人上傳、已軟刪」的列直接 `DELETE` 會因為 R2 的 `media_select` 把該列藏起來而**靜默影響 0 列**（LS-155 R2 review m1 實測，見 §3 殘留缺口段落）；真正的 owner moderation 請走 `remove_content_as_owner('media', id)`（`SECURITY DEFINER`，不受這個限制） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3；寶貝標記唯一路徑是 `set_media_children`／`set_media_children_batch` RPC（見下 `media_children` 列與 §4）；**`created_at` 自 LS-337 起欄位級 INSERT grant 已排除**（伺服器專屬，見 §3） |
 | `media_children`（LS-317） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_media_children`／`set_media_children_batch`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（同上，直接 DELETE 已被 revoke） | 照片／影片 ↔ 孩子多對多標記，沿 `album_children`（LS-121）先例；`media` 本身沒有 hybrid 模式，授權門檻是「上傳者本人且當下仍有上傳權，或該家庭 owner」（同 `media_update` policy，不是建立者分支），見 §8 |
@@ -425,10 +425,13 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   `delete_growth_record` RPC——這支失敗時**會**丟出明確的 `42501`，不會有「靜默
   0 列」這種模稜兩可的結果。
 
-### `food_catalog`（LS-325，LS-310 F1a／F2a／F3a）
-- 飲食圖鑑靜態目錄，約 120 種台灣常見食物，8 類（`grain_root`／`vegetable`／
+### `food_catalog`（LS-325，LS-310 F1a／F2a／F3a；LS-339 起 274 種）
+- 飲食圖鑑靜態目錄，274 種台灣常見食物，8 類（`grain_root`／`vegetable`／
   `fruit`／`protein`／`dairy`／`fat_nut`／`tw_home`／`snack_drink`），`sort_order`
-  依國健署副食品引入順序排（類內遞增，不保證跨類連續）。`id` 是英文 slug（例如
+  依類別分一段連續區間、類內依引入順序或（`vegetable`／`fruit`／`protein` 三類，
+  LS-339 起）依細分主題排序（類內遞增，不保證跨類連續；本表沒有 unique
+  constraint 保護 `sort_order`，全域無重複是目前 CSV／migration 維護出來的結果，
+  由 `117_food_encyclopedia.sql` 機械驗證）。`id` 是英文 slug（例如
   `pumpkin`），同時是 app 插圖資產名（F3a）；v1 不開放自訂（F1a）。
 - **全表唯讀**：`authenticated` 只有 `SELECT`（`using (true)`，不分家庭——這是
   app 內建的全域目錄，不是家庭範圍資料），沒有任何寫入 grant；唯一寫入路徑是本表
@@ -1956,7 +1959,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `list_growth_records` 既有慣例）；`p_child_id` 傳一個自己不屬於的家庭的孩子不會
   報錯，只會回傳 0 列。
 - **用途**：依 `child_id` 列出未刪的飲食紀錄，`first_tried_on desc, id desc`
-  排序。**不分頁**——食物目錄約 120 種是天花板，單一孩子的「已嘗試」列數遠低於
+  排序。**不分頁**——食物目錄 274 種是天花板，單一孩子的「已嘗試」列數遠低於
   需要 keyset 分頁的量級（對比 `growth_records`／`comments` 那種隨時間無上限
   增長的列表）。回傳整列（含 `food_id`／`author_id` 等），排序／依 `food_catalog`
   的 `category`／`sort_order` 分類呈現留給呼叫端。

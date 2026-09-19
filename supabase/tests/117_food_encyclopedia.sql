@@ -31,12 +31,12 @@ begin
       json_build_object('sub', v_role, 'role', 'authenticated')::text, true);
     set local role authenticated;
     select count(*) into v_n from public.food_catalog;
-    if v_n <> 122 then
-      raise exception 'FAIL：% 讀 food_catalog 應看到 122 列，實際 %', v_role, v_n;
+    if v_n <> 274 then
+      raise exception 'FAIL：% 讀 food_catalog 應看到 274 列，實際 %', v_role, v_n;
     end if;
     reset role;
   end loop;
-  raise notice 'ok：owner／member／viewer 皆可讀到全部 122 列 food_catalog';
+  raise notice 'ok：owner／member／viewer 皆可讀到全部 274 列 food_catalog（LS-339 起 122→274）';
 end;
 $$;
 
@@ -69,6 +69,83 @@ begin
   end;
   reset role;
   raise notice 'ok：即使是 owner，直接 INSERT food_catalog 也被擋下（42501）';
+end;
+$$;
+
+-- LS-339：id 唯一（雖已是 primary key，這裡另外斷言一次——與 §1 CSV↔DB 一致性、
+-- 下面 sort_order 唯一性同屬「不是只信任 constraint，直接量測資料現況」）、
+-- category／allergens 合法值（雖已是 check constraint，理由同上）、sort_order 在
+-- 274 列全域範圍內無重複（本表沒有 unique index 保護這一點，是這段唯一真的可能被
+-- 未來手動編輯 CSV／migration 撞出重複的地方，見本票 migration 檔頭「sort_order」段
+-- 的既有慣例說明）。
+do $$
+declare
+  v_total int;
+  v_distinct_id int;
+  v_bad_category int;
+  v_bad_allergen int;
+  v_distinct_sort int;
+begin
+  select count(*), count(distinct id) into v_total, v_distinct_id from public.food_catalog;
+  if v_total <> v_distinct_id then
+    raise exception 'FAIL：food_catalog 有重複 id（% 列，% 個相異 id）', v_total, v_distinct_id;
+  end if;
+
+  select count(*) into v_bad_category
+    from public.food_catalog
+   where category not in (
+     'grain_root', 'vegetable', 'fruit', 'protein', 'dairy', 'fat_nut', 'tw_home', 'snack_drink'
+   );
+  if v_bad_category > 0 then
+    raise exception 'FAIL：food_catalog 有 % 列 category 不在 8 個合法值內', v_bad_category;
+  end if;
+
+  select count(*) into v_bad_allergen
+    from public.food_catalog
+   where not (allergens <@ array['egg', 'milk', 'peanut', 'tree_nut', 'shellfish', 'fish', 'wheat', 'soy']::text[]);
+  if v_bad_allergen > 0 then
+    raise exception 'FAIL：food_catalog 有 % 列 allergens 含 8 個過敏原以外的值', v_bad_allergen;
+  end if;
+
+  select count(distinct sort_order) into v_distinct_sort from public.food_catalog;
+  if v_distinct_sort <> v_total then
+    raise exception 'FAIL：food_catalog 的 sort_order 有重複（% 列，% 個相異值）', v_total, v_distinct_sort;
+  end if;
+
+  raise notice 'ok：274 列 id 唯一、category／allergens 皆合法值、sort_order 全域無重複';
+end;
+$$;
+
+-- LS-339：新增列的 allergens 抽查（魚→fish、蝦蟹貝→shellfish、雞蛋豆腐→soy;egg，
+-- 票面範圍 4 的規則）。
+do $$
+declare
+  v_bad text;
+begin
+  select string_agg(id, ', ') into v_bad
+    from public.food_catalog
+   where id in ('milkfish', 'cod', 'saury', 'tuna', 'eel')  -- 魚
+     and allergens <> array['fish']::text[];
+  if v_bad is not null then
+    raise exception 'FAIL：魚類 % 的 allergens 不是 {fish}', v_bad;
+  end if;
+
+  select string_agg(id, ', ') into v_bad
+    from public.food_catalog
+   where id in ('oyster', 'scallop', 'abalone', 'lobster')  -- 蝦蟹貝
+     and allergens <> array['shellfish']::text[];
+  if v_bad is not null then
+    raise exception 'FAIL：蝦蟹貝類 % 的 allergens 不是 {shellfish}', v_bad;
+  end if;
+
+  if not exists (
+    select 1 from public.food_catalog
+     where id = 'egg_tofu' and allergens = array['soy', 'egg']::text[]
+  ) then
+    raise exception 'FAIL：egg_tofu（雞蛋豆腐）的 allergens 應為 {soy,egg}';
+  end if;
+
+  raise notice 'ok：新增列 allergens 抽查（魚／蝦蟹貝／雞蛋豆腐）通過';
 end;
 $$;
 
