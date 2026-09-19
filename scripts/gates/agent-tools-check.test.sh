@@ -29,6 +29,8 @@
 # LS-333（㉝㉞，源自 LS-313 R2／R3、池項 f99a2749）：ios-dev 正文須含兩句——push-gate.sh 建快取的 push 前置動作、
 #   判斷 push 成功不看背景通知 exit code——各自缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠；正文必含
 #   字樣總數 69→71。
+# LS-333（㉟㊱，池項 5ec3954d①，來源 LS-315 QA 實測）：qa 正文須含兩句陷阱原文（WDA 與 simctl launch 競態、
+#   鍵盤攔截點擊）——各自缺即紅；同一 mutant 下負樣本變綠；正文必含字樣總數 71→73。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -165,6 +167,10 @@ VR_BODY="${VR_BODY} ${SCREENSHOT_INSTANCE}"
 SSHPUSHCACHE='先前景跑 push-gate.sh 建快取、快取命中後再 git push。'
 PUSHVERIFY='判斷 push 是否成功一律以 `git log -1 origin/<branch>` 對照本機 HEAD，不看背景通知的 exit code。'
 IOS_BODY="${IOS_BODY} ${SSHPUSHCACHE} ${PUSHVERIFY}"
+# LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：qa 正文另須含兩句陷阱原文；併進 QA_BODY
+WDARACE='`simctl launch` 後緊接 mobile-mcp，WDA 會與新 scene 競態、app 被背景化。'
+KBINTERCEPT='鍵盤彈出時會攔截下層按鈕的點擊。'
+QA_BODY="${QA_BODY} ${WDARACE} ${KBINTERCEPT}"
 # LS-209：ios-dev 新增 tools: 白名單（移除 mcp__pencil__*）——取代舊的 `NONE`（無 tools: 行＝繼承全部工具，其中
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求
 # （Bash／Read／Edit／Write／Grep／Glob／Agent／三支 Linear 工具），這裡的乾淨清單須包含全部才能當合法基準。
@@ -223,7 +229,7 @@ reset; printf -- '---\nname: qa\ntools:\n  - Bash\nmodel: sonnet\n---\n' > "$age
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '③ 違規時不印通過' 'qa.md：tools: 缺 Bash' '' '✓ agent-tools gate 通過'
 
 # ---- ⑤ LS-170 正文必含字樣：ios-dev／merge-reviewer／qa（R2 (a)）正文缺 `supabase-lock.sh --hold` 即紅 ----
-reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（71 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 71 條）'
+reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（73 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 73 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
@@ -513,7 +519,7 @@ fi
 
 # ---- ㉓ LS-256（LS-96 池項 a7e9e910 i1／e4155ed8(1)）：dead-code-sweeper 是六份定義中原唯一未釘「禁派 fork」的（LS-254 票文只列五份）
 #        ——補釘同一條規則；tools 白名單無 Agent，與 merge-reviewer／qa 同型（需要並行回報 orchestrator 拆派）。----
-reset; expect 0 '㉓ dead-code-sweeper 正文含禁派 fork 句 → 印「正文含」（總數 71 條）' 'dead-code-sweeper.md：正文含「禁派 fork」' '正文必含字樣 71 條）'
+reset; expect 0 '㉓ dead-code-sweeper 正文含禁派 fork 句 → 印「正文含」（總數 73 條）' 'dead-code-sweeper.md：正文含「禁派 fork」' '正文必含字樣 73 條）'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '㉓ dead-code-sweeper 缺該句 → exit 1，工具齊全不救（regression：LS-254 前這份無正文規則、任何正文都過）' 'dead-code-sweeper.md：正文缺「禁派 fork」' '' 'dead-code-sweeper.md：tools: 缺'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "禁派fork（無空白）"; expect 1 '㉓ 字樣須整句「禁派 fork」（含空白）→ exit 1' 'dead-code-sweeper.md：正文缺「禁派 fork」'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}"
@@ -542,7 +548,7 @@ reset
 #      macOS 永遠綠，跑 1 次很可能剛好抽到綠）。「≥10 次」是規則的重點，只寫「跑一次」不算。----
 MR_BASE="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254}"
 MR_NO_UBUNTU="${MR_BASE} ${UITESTMUT} ${NOTIMEOUT}"
-reset; expect 0 '㉕ merge-reviewer 正文含 ubuntu ≥10 次句 → 印「正文含」（總數 71 條）' 'merge-reviewer.md：正文含「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」' '正文必含字樣 71 條）'
+reset; expect 0 '㉕ merge-reviewer 正文含 ubuntu ≥10 次句 → 印「正文含」（總數 73 條）' 'merge-reviewer.md：正文含「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」' '正文必含字樣 73 條）'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_NO_UBUNTU"; expect 1 '㉕ merge-reviewer 缺該句 → exit 1（其餘必含字樣齊全不救）' 'merge-reviewer.md：正文缺「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」' '' 'merge-reviewer.md：正文缺「禁派 fork」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_NO_UBUNTU} ${UBUNTU1}"; expect 1 '㉕ 只寫「跑一次確認」不算（次數是規則的重點）→ exit 1' 'merge-reviewer.md：正文缺「shell 自測在 ubuntu:24.04 通道跑 ≥10 次」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_NO_UBUNTU"
@@ -558,7 +564,7 @@ reset
 #      「UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變」（xcodebuild 可能沒把改動編進 UITest
 #      bundle，只看 exit code 會把舊 bundle 的紅或假綠當成重放結果）與「macOS 沒有 timeout 指令」
 #      （`timeout 600 xcodebuild …` exit 127＝整個測試沒跑過，LS-266 R2 實際發生）。兩句各自獨立缺席都要紅。----
-reset; expect 0 '㉖ merge-reviewer 正文含兩句 → 印「正文含」（總數 71 條）' 'merge-reviewer.md：正文含「UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變」' '正文必含字樣 71 條）'
+reset; expect 0 '㉖ merge-reviewer 正文含兩句 → 印「正文含」（總數 73 條）' 'merge-reviewer.md：正文含「UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變」' '正文必含字樣 73 條）'
 reset; expect 0 '㉖ merge-reviewer 正文含 macOS 無 timeout 句 → 印「正文含」' 'merge-reviewer.md：正文含「macOS 沒有 timeout 指令」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_BASE} ${UBUNTU10} ${NOTIMEOUT}"; expect 1 '㉖ 缺 UITest mutation 判準句 → exit 1（LS-209 舊的「一律自己重放」句在也不救）' 'merge-reviewer.md：正文缺「UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變」' '' 'merge-reviewer.md：正文缺「handoff 申報的 mutation 一律自己重放，對不上列 major」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${MR_BASE} ${UBUNTU10} ${UITESTMUT}"; expect 1 '㉖ 缺 macOS 無 timeout 句 → exit 1（另一句在也不救）' 'merge-reviewer.md：正文缺「macOS 沒有 timeout 指令」' '' 'merge-reviewer.md：正文缺「UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變」'
@@ -573,7 +579,7 @@ reset
 
 # ---- ㉗ LS-299（源自 LS-96 池項 26bbff68）：三份正文須含 `scripts/ops/ci-wait.sh`（等 CI 一律前景分段
 #        輪詢，取代 `gh run watch`，09-15 三次事故：LS-286／287／295）----
-reset; expect 0 '㉗ 三份正文含 scripts/ops/ci-wait.sh → 印「正文含」（總數 71 條）' 'ios-dev.md：正文含「scripts/ops/ci-wait.sh」' '正文必含字樣 71 條）'
+reset; expect 0 '㉗ 三份正文含 scripts/ops/ci-wait.sh → 印「正文含」（總數 73 條）' 'ios-dev.md：正文含「scripts/ops/ci-wait.sh」' '正文必含字樣 73 條）'
 reset; expect 0 '㉗ qa／merge-reviewer 正文含 scripts/ops/ci-wait.sh → 印「正文含」' 'qa.md：正文含「scripts/ops/ci-wait.sh」' 'merge-reviewer.md：正文含「scripts/ops/ci-wait.sh」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254}"; expect 1 '㉗ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「scripts/ops/ci-wait.sh」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254}"; expect 1 '㉗ qa 缺該句 → exit 1' 'qa.md：正文缺「scripts/ops/ci-wait.sh」'
@@ -590,7 +596,7 @@ fi
 # ---- ㉘ LS-300（LS-96 池項 3aa46c78）：ios-dev 正文須含「實作新畫面必逐條對 Notes「畫面級屬性」並在
 #        handoff 勾選」、merge-reviewer 正文須含「對 handoff 勾選表抽兩列重放」（LS-125／126 QA 視覺 FAIL
 #        四項全是「稿有、實作漏」，設計稿 Notes 板有寫、ios-dev 沒逐條對、merge-reviewer 沒查）----
-reset; expect 0 '㉘ ios-dev 正文含「實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選」→ 印「正文含」（總數 71 條）' 'ios-dev.md：正文含「實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選」' '正文必含字樣 71 條）'
+reset; expect 0 '㉘ ios-dev 正文含「實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選」→ 印「正文含」（總數 73 條）' 'ios-dev.md：正文含「實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選」' '正文必含字樣 73 條）'
 reset; expect 0 '㉘ merge-reviewer 正文含「對 handoff 勾選表抽兩列重放」→ 印「正文含」' 'merge-reviewer.md：正文含「對 handoff 勾選表抽兩列重放」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT}"; expect 1 '㉘ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${UBUNTU10} ${UITESTMUT} ${NOTIMEOUT} ${CIWAIT}"; expect 1 '㉘ merge-reviewer 缺該句 → exit 1，其餘句子齊全不救' 'merge-reviewer.md：正文缺「對 handoff 勾選表抽兩列重放」' '' 'merge-reviewer.md：正文缺「scripts/ops/ci-wait.sh」'
@@ -611,7 +617,7 @@ fi
 
 # ---- ㉙ LS-306 A2：ios-dev 正文須含 push-gate.sh 開始前的進度句（含「逾時被背景化就前景重跑 push，
 #      快取秒過」——push-gate.sh 步驟 2 的實際 echo 同句）----
-reset; expect 0 '㉙ ios-dev 正文含 push-gate 進度句 → 印「正文含」（總數 71 條）' 'ios-dev.md：正文含「逾時被背景化就前景重跑 push，快取秒過」' '正文必含字樣 71 條）'
+reset; expect 0 '㉙ ios-dev 正文含 push-gate 進度句 → 印「正文含」（總數 73 條）' 'ios-dev.md：正文含「逾時被背景化就前景重跑 push，快取秒過」' '正文必含字樣 73 條）'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR}"; expect 1 '㉙ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「逾時被背景化就前景重跑 push，快取秒過」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
@@ -646,7 +652,7 @@ reset
 # ---- ㉛ LS-308 B2：六份 agent 定義正文皆須含 mcp__linear__* 備援句（Linear MCP token 過期時改用
 #      bash scripts/ops/linear-post.sh get|comment|state，並在 handoff 註明走備援）——各自缺即紅、其餘句子
 #      齊全不救；同一 mutant 下負樣本變綠；正文必含字樣總數 61→67 ----
-reset; expect 0 '㉛ 六份正文含 mcp__linear__* 備援句 → 印「正文含」（總數 71 條）' 'ios-dev.md：正文含「並在 handoff 註明走備援」' '正文必含字樣 71 條）'
+reset; expect 0 '㉛ 六份正文含 mcp__linear__* 備援句 → 印「正文含」（總數 73 條）' 'ios-dev.md：正文含「並在 handoff 註明走備援」' '正文必含字樣 73 條）'
 reset; expect 0 '㉛ 其餘五份也印「正文含」' 'qa.md：正文含「並在 handoff 註明走備援」' 'dead-code-sweeper.md：正文含「並在 handoff 註明走備援」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR} ${PUSHCACHE}"; expect 1 '㉛ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「並在 handoff 註明走備援」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${UBUNTU10} ${UITESTMUT} ${NOTIMEOUT} ${CIWAIT} ${REPLAYSCREENATTR}"; expect 1 '㉛ merge-reviewer 缺該句 → exit 1' 'merge-reviewer.md：正文缺「並在 handoff 註明走備援」'
@@ -677,7 +683,7 @@ reset
 # ---- ㉜ LS-327（LS-96 池項 dfff5ab3）：ui-designer／visual-reviewer 正文須含 instance 覆寫子節點的擷取
 #      限制句（Export／TakeScreenshot 子節點 id 會回元件預設值）——各自缺即紅、其餘句子齊全不救；同一
 #      mutant 下負樣本變綠；正文必含字樣總數 67→69 ----
-reset; expect 0 '㉜ ui-designer／visual-reviewer 正文含 instance 覆寫子節點句 → 印「正文含」（總數 71 條）' 'ui-designer.md：正文含「instance 內覆寫的子節點不可直接」' 'visual-reviewer.md：正文含「instance 內覆寫的子節點不可直接」'
+reset; expect 0 '㉜ ui-designer／visual-reviewer 正文含 instance 覆寫子節點句 → 印「正文含」（總數 73 條）' 'ui-designer.md：正文含「instance 內覆寫的子節點不可直接」' 'visual-reviewer.md：正文含「instance 內覆寫的子節點不可直接」'
 reset; mk ui-designer NONE "${KILL} ${STAY} ${NOFORK254} ${EDITID} ${CIWAIT} ${LINEARFALLBACK}"; expect 1 '㉜ ui-designer 缺該句 → exit 1，其餘句子齊全不救' 'ui-designer.md：正文缺「instance 內覆寫的子節點不可直接」' '' 'ui-designer.md：正文缺「scripts/ops/ci-wait.sh」'
 reset; mk visual-reviewer NONE "${KILL} ${NOFORK254} ${EDITID} ${CIWAIT} ${LINEARFALLBACK}"; expect 1 '㉜ visual-reviewer 缺該句 → exit 1' 'visual-reviewer.md：正文缺「instance 內覆寫的子節點不可直接」'
 reset; mk ui-designer NONE "${KILL} ${STAY} ${NOFORK254} ${EDITID} ${CIWAIT} ${LINEARFALLBACK}"
@@ -698,7 +704,7 @@ reset
 
 # ---- ㉝ LS-333（源自 LS-313 R2／R3，池項 f99a2749）：ios-dev 正文須含「先前景跑 push-gate.sh 建快取、快取命中後
 #      再 git push」——缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠 ----
-reset; expect 0 '㉝ ios-dev 正文含 push-gate 快取前置句 → 印「正文含」（總數 71 條）' 'ios-dev.md：正文含「先前景跑 push-gate.sh 建快取、快取命中後再 git push」' '正文必含字樣 71 條）'
+reset; expect 0 '㉝ ios-dev 正文含 push-gate 快取前置句 → 印「正文含」（總數 73 條）' 'ios-dev.md：正文含「先前景跑 push-gate.sh 建快取、快取命中後再 git push」' '正文必含字樣 73 條）'
 IOS_MINUS_SSHPUSHCACHE="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR} ${PUSHCACHE} ${LINEARFALLBACK} ${PUSHVERIFY}"
 reset; mk ios-dev "$IOS_TOOLS" "$IOS_MINUS_SSHPUSHCACHE"; expect 1 '㉝ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「先前景跑 push-gate.sh 建快取、快取命中後再 git push」' '' 'ios-dev.md：正文缺「不看背景通知的 exit code」'
 reset; mk ios-dev "$IOS_TOOLS" "$IOS_MINUS_SSHPUSHCACHE"
@@ -711,7 +717,7 @@ fi
 reset
 
 # ---- ㉞ LS-333：ios-dev 正文須含「不看背景通知的 exit code」——缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠 ----
-reset; expect 0 '㉞ ios-dev 正文含 push 成功判準句 → 印「正文含」（總數 71 條）' 'ios-dev.md：正文含「不看背景通知的 exit code」' '正文必含字樣 71 條）'
+reset; expect 0 '㉞ ios-dev 正文含 push 成功判準句 → 印「正文含」（總數 73 條）' 'ios-dev.md：正文含「不看背景通知的 exit code」' '正文必含字樣 73 條）'
 IOS_MINUS_PUSHVERIFY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR} ${PUSHCACHE} ${LINEARFALLBACK} ${SSHPUSHCACHE}"
 reset; mk ios-dev "$IOS_TOOLS" "$IOS_MINUS_PUSHVERIFY"; expect 1 '㉞ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「不看背景通知的 exit code」' '' 'ios-dev.md：正文缺「先前景跑 push-gate.sh 建快取、快取命中後再 git push」'
 reset; mk ios-dev "$IOS_TOOLS" "$IOS_MINUS_PUSHVERIFY"
@@ -720,6 +726,33 @@ if [ "$got" -eq 0 ] && ! grep -qF '不看背景通知的 exit code' <<<"$out"; t
   ok '㉞ mutant：拿掉規則後「缺 push 成功判準句」的負樣本變綠'
 else
   echo "✗ ㉞ mutant（push 成功判準句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset
+
+# ---- ㉟ LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：qa 正文須含「WDA 會與新 scene 競態、app 被背景化」——
+#      缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠 ----
+reset; expect 0 '㉟ qa 正文含 WDA 競態陷阱句 → 印「正文含」（總數 73 條）' 'qa.md：正文含「WDA 會與新 scene 競態、app 被背景化」' '正文必含字樣 73 條）'
+QA_MINUS_WDARACE="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${LINEARFALLBACK} ${KBINTERCEPT}"
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_MINUS_WDARACE"; expect 1 '㉟ qa 缺該句 → exit 1，其餘句子齊全不救' 'qa.md：正文缺「WDA 會與新 scene 競態、app 被背景化」' '' 'qa.md：正文缺「鍵盤彈出時會攔截下層按鈕的點擊」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_MINUS_WDARACE"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! grep -qF 'WDA 會與新 scene 競態、app 被背景化' <<<"$out"; then
+  ok '㉟ mutant：拿掉規則後「缺 WDA 競態陷阱句」的負樣本變綠'
+else
+  echo "✗ ㉟ mutant（WDA 競態陷阱句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+reset
+
+# ---- ㊱ LS-333：qa 正文須含「鍵盤彈出時會攔截下層按鈕的點擊」——缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠 ----
+reset; expect 0 '㊱ qa 正文含鍵盤攔截陷阱句 → 印「正文含」（總數 73 條）' 'qa.md：正文含「鍵盤彈出時會攔截下層按鈕的點擊」' '正文必含字樣 73 條）'
+QA_MINUS_KBINTERCEPT="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${LINEARFALLBACK} ${WDARACE}"
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_MINUS_KBINTERCEPT"; expect 1 '㊱ qa 缺該句 → exit 1，其餘句子齊全不救' 'qa.md：正文缺「鍵盤彈出時會攔截下層按鈕的點擊」' '' 'qa.md：正文缺「WDA 會與新 scene 競態、app 被背景化」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_MINUS_KBINTERCEPT"
+out="$(bash "$mut" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! grep -qF '鍵盤彈出時會攔截下層按鈕的點擊' <<<"$out"; then
+  ok '㊱ mutant：拿掉規則後「缺鍵盤攔截陷阱句」的負樣本變綠'
+else
+  echo "✗ ㊱ mutant（鍵盤攔截陷阱句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 reset
 
