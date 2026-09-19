@@ -44,19 +44,17 @@ extension TapTargetGateHarness {
     }
 
     /// LS-343（mutation 敏感度補強）：`timelineHeaderNarrow390Host`／`375Host` 走完整
-    /// `headerRow` 的 `ViewThatFits`——實測（PR body「未驗」段附階梯掃描證據）本機可用的
-    /// 模擬器 runtime（iOS 26.x）上，`ViewThatFits` 對候選 1「放得下」的判定本來就是用兩顆鈕
-    /// 未換行的自然寬度比較，`lineLimit(1)`／`fixedSize(horizontal:)` 拿掉與否對候選 1/候選 2
-    /// 的切換門檻完全沒有影響（340–402pt 階梯掃描找到的切換點在兩種寫法下同一個值），無法在
-    /// 這個 runtime 上對那兩個 host 的 mutation 測出紅。這裡繞開 `ViewThatFits`：直接把
-    /// `importEntryButton` 塞進遠小於自然寬度的 `.frame(width: 60)` 容器——`.frame(width:)`
-    /// 是「提案」不是「裁切」，沒有 `fixedSize` 的 `Text` 會照單全收這個窄提案換行壓縮（鈕量測
-    /// 寬跌到接近容器寬、高度被撐高）；有 `fixedSize` 的 `Text` 會無視提案回報自己未換行的
-    /// 自然寬度，讓鈕整體往外溢出這個窄容器（鈕量測寬遠大於容器、高度維持單行）。這是修飾字
-    /// 本身效果的決定性測試，不受 `ViewThatFits` 版本差異影響——`createMemoryButton` 走的是
-    /// 同一段 `Text` 修飾字寫法（`TimelineView.swift`），不另外重複量測。`importEntryButton`
-    /// 不是 `private`（跨檔案 extension 既有理由），`createMemoryButton` 維持 `private`，
-    /// 沒有為了這支 harness 額外開放存取層級。
+    /// `headerRow` 的 `ViewThatFits`——本機可用的模擬器 runtime（iOS 26.x）上，`ViewThatFits`
+    /// 對候選 1「放得下」的判定本來就是用兩顆鈕未換行的自然寬度比較，`lineLimit(1)`／
+    /// `fixedSize(horizontal:)` 拿掉與否對候選 1/候選 2 的切換門檻沒有影響（那兩支 host 的
+    /// mutation-sensitive 覆蓋改靠加 S／XS 字級版本，見 `TimelineHeaderNarrowWidthUITests`
+    /// 文件註解「重現條件」段）。這裡另外繞開 `ViewThatFits`：直接把兩顆鈕各自塞進遠小於自然
+    /// 寬度的 `.frame(width: 60)` 容器（`TimelineView.debugHeaderButtonsForCompressionProxy`，
+    /// 同檔案內存取 `createMemoryButton`，不放寬其 `private` 存取層級）——`.frame(width:)` 是
+    /// 「提案」不是「裁切」，沒有 `fixedSize` 的 `Text` 會照單全收這個窄提案換行壓縮（鈕量測寬
+    /// 跌到接近容器寬、高度被撐高）；有 `fixedSize` 的 `Text` 會無視提案回報自己未換行的自然
+    /// 寬度，讓鈕整體往外溢出這個窄容器（鈕量測寬遠大於容器、高度維持單行）。這是修飾字本身
+    /// 效果的決定性測試，不受 `ViewThatFits` 版本差異影響。
     @MainActor
     @ViewBuilder
     static var timelineButtonCompressionProxyHost: some View {
@@ -67,10 +65,7 @@ extension TapTargetGateHarness {
             albumsStore: .preview()
         )
         NavigationStack {
-            VStack(alignment: .leading, spacing: AppSpacing.item) {
-                view.importEntryButton.frame(width: 60)
-            }
-            .padding()
+            view.debugHeaderButtonsForCompressionProxy.padding()
         }
     }
 

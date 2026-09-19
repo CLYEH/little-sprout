@@ -363,6 +363,19 @@ struct TimelineView: View {
 }
 
 #if DEBUG
+extension TimelineView {
+    /// LS-343（merge-review R1 m1）：`TapTargetGateHarness+Timeline.swift` 的
+    /// `timelineButtonCompressionProxyHost` 用——同檔案內才能存取 `createMemoryButton`
+    /// （維持 `private`，不為了 harness 放寬存取層級，同 `importMark` 這類元件內部拆分的
+    /// 既有慣例）。`.frame(width: 60)` 遠小於兩顆鈕的自然寬度，見 harness 那支文件註解。
+    var debugHeaderButtonsForCompressionProxy: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.item) {
+            importEntryButton.frame(width: 60)
+            createMemoryButton.frame(width: 60)
+        }
+    }
+}
+
 #Preview {
     NavigationStack {
         TimelineView(

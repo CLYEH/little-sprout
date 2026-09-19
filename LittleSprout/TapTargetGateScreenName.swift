@@ -50,7 +50,7 @@ enum TapTargetGateScreenName: String {
     // 文件註解）。
     case timelineHeaderNarrow390 = "TimelineViewHeaderNarrow390"
     case timelineHeaderNarrow375 = "TimelineViewHeaderNarrow375"
-    // LS-343：`ViewThatFits` 決策無關的補強量測——把 `importEntryButton` 塞進遠小於自然寬度的
+    // LS-343：`ViewThatFits` 決策無關的補強量測——把兩顆鈕各自塞進遠小於自然寬度的
     // `.frame(width: 60)`，直接驗證 `lineLimit(1)`／`fixedSize(horizontal:)` 本身有沒有
     // 生效（見 `TapTargetGateHarness+Timeline.swift` 的 `timelineButtonCompressionProxyHost`
     // 文件註解，說明為什麼需要繞開 `headerRow` 另外測這個）。
