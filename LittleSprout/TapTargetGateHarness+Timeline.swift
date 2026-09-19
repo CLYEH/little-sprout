@@ -9,6 +9,66 @@ import SwiftUI
 /// 不到）——同 `TapTargetGateHarness+Albums.swift` 拆分後的既有作法，改用預設（internal）
 /// 存取層級，範圍仍只在本 module 內，`TapTargetGateHarness.hostView(for:)` 才呼叫得到。
 extension TapTargetGateHarness {
+    /// LS-343：390pt（iPhone 12 Pro 實機回報）／375pt（iPhone SE／16e）窄寬度 proxy——同
+    /// `TapTargetGateHarness+Legal.swift` 的 `legalDocumentNarrowContainerHost` 既有手法，
+    /// `.frame(width:)` 鎖住外層容器寬度，不需要真的換模擬器機型即可重現「Header 兩顆鈕在窄
+    /// 寬度下被換行壓縮」這個 wiring 缺陷。`TimelineView` 本身沒有 `debugForced` 這類參數（不是
+    /// iPad 分支、不需要），直接框外層 `NavigationStack` 即可——`.preview()` 三個 store 皆空
+    /// 狀態，同 `timelineDefaultStateHost` 的既有理由（`ChildFilterBar` 不會渲染，Header 兩顆鈕
+    /// 是唯一可點元件）。
+    @MainActor
+    @ViewBuilder
+    static var timelineHeaderNarrow390Host: some View {
+        timelineHost(forcedWidth: 390)
+    }
+
+    /// LS-343：同上，375pt（iPhone SE 3／16e 邏輯寬度）。
+    @MainActor
+    @ViewBuilder
+    static var timelineHeaderNarrow375Host: some View {
+        timelineHost(forcedWidth: 375)
+    }
+
+    @MainActor
+    @ViewBuilder
+    private static func timelineHost(forcedWidth: CGFloat) -> some View {
+        NavigationStack {
+            TimelineView(
+                familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
+                diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
+                safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
+                albumsStore: .preview()
+            )
+        }
+        .frame(width: forcedWidth)
+    }
+
+    /// LS-343（mutation 敏感度補強）：`timelineHeaderNarrow390Host`／`375Host` 走完整
+    /// `headerRow` 的 `ViewThatFits`——本機可用的模擬器 runtime（iOS 26.x）上，`ViewThatFits`
+    /// 對候選 1「放得下」的判定本來就是用兩顆鈕未換行的自然寬度比較，`lineLimit(1)`／
+    /// `fixedSize(horizontal:)` 拿掉與否對候選 1/候選 2 的切換門檻沒有影響（那兩支 host 的
+    /// mutation-sensitive 覆蓋改靠加 S／XS 字級版本，見 `TimelineHeaderNarrowWidthUITests`
+    /// 文件註解「重現條件」段）。這裡另外繞開 `ViewThatFits`：直接把兩顆鈕各自塞進遠小於自然
+    /// 寬度的 `.frame(width: 60)` 容器（`TimelineView.debugHeaderButtonsForCompressionProxy`，
+    /// 同檔案內存取 `createMemoryButton`，不放寬其 `private` 存取層級）——`.frame(width:)` 是
+    /// 「提案」不是「裁切」，沒有 `fixedSize` 的 `Text` 會照單全收這個窄提案換行壓縮（鈕量測寬
+    /// 跌到接近容器寬、高度被撐高）；有 `fixedSize` 的 `Text` 會無視提案回報自己未換行的自然
+    /// 寬度，讓鈕整體往外溢出這個窄容器（鈕量測寬遠大於容器、高度維持單行）。這是修飾字本身
+    /// 效果的決定性測試，不受 `ViewThatFits` 版本差異影響。
+    @MainActor
+    @ViewBuilder
+    static var timelineButtonCompressionProxyHost: some View {
+        let view = TimelineView(
+            familyStore: .preview(), childrenStore: .preview(), timelineStore: .preview(),
+            diaryAPIClient: PreviewDiaryAPIClient(), mediaUploadService: PreviewMediaUploadService(),
+            safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
+            albumsStore: .preview()
+        )
+        NavigationStack {
+            view.debugHeaderButtonsForCompressionProxy.padding()
+        }
+    }
+
     /// LS-216：`InteractionRow`——三種卡片（日記／相簿／照片）各一筆，`已按讚`／`未按讚`／
     /// `計數 0` 三種愛心狀態都覆蓋到，同 `seededTimelineStore`（`TapTargetGateHarness.swift`）
     /// 拆出 plain function 的既有理由（`@ViewBuilder` body 不能塞裸的 seeding 呼叫）。
