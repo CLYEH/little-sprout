@@ -65,7 +65,7 @@ extension QADriver {
         // 斷言詳情頁頭像已換圖：詳情頁 Identity Header 頭像同 session 存檔後不刷新是另一個已知 app 缺口
         // （LS-345 範圍 5，另票在修、尚未併入），換圖的斷言留到下面「返回列表」之後（LS-345 併入後如需
         // 加強，可在這裡再補一段詳情頁頭像 digest 比對）。
-        try returnToListFromDetail(snapName: "child-detail-after-save")
+        try returnToListFromDetail(childName: childName, snapName: "child-detail-after-save")
         // merge-review R1 m4：重啟**前**先量一次同一列，讓「同 session 沒刷新」這件事有機械紀錄。
         // 這個值等於 `rowBefore` ＝ app 缺口仍在（LS-96 `126f7201`(1)）；哪天它等於 `rowAfter`，
         // 就是把下面那段重啟換回「同 session 直接比對」嚴格版的訊號（見 relaunchAndOpenChildrenTab 註解）。
@@ -187,7 +187,7 @@ extension QADriver {
         try tapWhenHittable(app.buttons["移除這個寶貝"], "收尾：「移除這個寶貝」（編輯頁最下方）", timeout: 20)
         try require(app.buttons["移除，30 天內可還原"], "收尾：移除確認 sheet 的確認鈕", timeout: 20).tap()
         // LS-346 範圍 1：同「runChildAvatar()」存檔那段的理由——`returnToListFromDetail` 見該函式文件註解。
-        try returnToListFromDetail(snapName: nil)
+        try returnToListFromDetail(childName: name, snapName: nil)
         guard childRow(named: name).waitForNonExistence(timeout: 30) else {
             attachHierarchy(reason: "cleanup-child-still-listed")
             snap("fail-cleanup")
@@ -292,10 +292,17 @@ extension QADriver {
     /// 詳情頁、再退一層回列表」這段，抽出來避免重複（也讓 `runChildAvatar()` 過 SwiftLint
     /// `function_body_length`）。`snapName` 給 nil 時不額外截圖（`deleteChild` 用得到的收尾截圖已在
     /// 別處，不需要這裡再截一張）。
-    private func returnToListFromDetail(snapName: String?) throws {
+    ///
+    /// merge-review R1 m6：返回鍵改用 `app.navigationBars[childName]` 綁定「詳情頁那個導覽列」再取
+    /// 它的第一顆鈕，不用 `app.navigationBars.buttons.firstMatch`（不綁身分，日後詳情頁導覽列加左側
+    /// 元件、或移除確認 sheet 尚未收完導致 `navigationBars` 多重匹配時，會點錯鈕且訊息看不出點錯了）。
+    /// `ChildGrowthDetailView`（compact layout）的 `navigationTitle` 固定是 `child.name`（見該檔文件
+    /// 註解「標題 01／04 系統 large（`child.name`）」），本情境全程跑 iPhone，不會撞上「06 iPad 例外」
+    /// 改用空字串標題那個分支。
+    private func returnToListFromDetail(childName: String, snapName: String?) throws {
         try require(app.buttons["編輯"], "回到寶貝詳情頁（導覽列右上「編輯」入口）", timeout: 60)
         if let snapName { snap(snapName) }
-        app.navigationBars.buttons.firstMatch.tap()
+        app.navigationBars[childName].buttons.firstMatch.tap()
         try require(childrenHeading, "從詳情頁返回寶貝列表", timeout: 30)
     }
 
