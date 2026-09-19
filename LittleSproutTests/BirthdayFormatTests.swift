@@ -156,22 +156,62 @@ final class BirthdayFormatTests: XCTestCase {
     /// 比照 `GrowthAgeNBSPRegressionTests` 既有的原始碼文字守衛：mutation 把
     /// `Calendar(identifier: .gregorian)` 改回 `Calendar.current`／`.autoupdatingCurrent`，或重新開放
     /// 注入 `Calendar`，這支測試轉紅。
+    ///
+    /// LS-334：`fixedGregorianCalendar(timeZone:)` 抽成 `wireString`／`ageDescription` 共用的
+    /// private helper 之後，`wireString` 本體不再直接出現 `Calendar(identifier: .gregorian)`
+    /// 字面──改成兩段守：helper 本體要用固定西曆組 `Calendar`；`wireString` 本體要呼叫
+    /// `fixedGregorianCalendar(timeZone:)`、不能繞過去（同
+    /// `GrowthMeasurementFormViewTimeZoneTests.test_localMidnight_source_reconstructsWithFixedGregorianCalendar`
+    /// 既有兩段守的理由）。
     func test_wireString_source_extractsWithFixedGregorianCalendar() throws {
+        let source = try birthdayFormatSource()
+
+        let helperCode = try functionBody(in: source, signaturePrefix: "private static func fixedGregorianCalendar(")
+        XCTAssertTrue(
+            helperCode.contains("Calendar(identifier: .gregorian)"),
+            "fixedGregorianCalendar 必須用固定西曆組 Calendar（LS-331／LS-334）"
+        )
+
+        let code = try functionBody(
+            in: source, signaturePrefix: "static func wireString(from pickedDate: Date, timeZone:"
+        )
+        XCTAssertTrue(
+            code.contains("fixedGregorianCalendar(timeZone: timeZone)"),
+            "wireString 必須透過 fixedGregorianCalendar(timeZone:) 抽年月日，不能繞過去直接組裝置曆法的" +
+                " Calendar（LS-331／LS-334）"
+        )
+
+        for forbidden in ["Calendar.current", ".autoupdatingCurrent", "calendar: Calendar"] {
+            XCTAssertFalse(
+                code.contains(forbidden), "wireString 不得出現 \(forbidden)——裝置曆法會流進 wire 年份（LS-331）"
+            )
+            XCTAssertFalse(
+                helperCode.contains(forbidden),
+                "fixedGregorianCalendar 不得出現 \(forbidden)——裝置曆法會流進所有借用它的呼叫端（LS-331／LS-334）"
+            )
+        }
+    }
+
+    /// 讀取 `BirthdayFormat.swift` 原始碼——`test_wireString_source_extractsWithFixedGregorianCalendar`／
+    /// `test_ageDescription_source_extractsWithFixedGregorianCalendar` 共用同一份檔案內容。
+    private func birthdayFormatSource() throws -> String {
         let sourceURL = URL(fileURLWithPath: "\(#filePath)")
             .deletingLastPathComponent() // LittleSproutTests/
             .deletingLastPathComponent() // worktree 根目錄
             .appendingPathComponent("LittleSprout/Support/BirthdayFormat.swift")
-        let source = try String(contentsOf: sourceURL, encoding: .utf8)
-        let afterSignature = try XCTUnwrap(source.components(separatedBy: "static func wireString(").dropFirst().first)
-        let region = try XCTUnwrap(afterSignature.components(separatedBy: "static func date(fromWireString").first)
-        let code = region.split(separator: "\n")
+        return try String(contentsOf: sourceURL, encoding: .utf8)
+    }
+
+    /// 從原始碼抽出一個函式的本體（簽名到同縮排層級的結尾大括號），過濾掉註解行——同
+    /// `GrowthMeasurementFormViewTimeZoneTests` 既有的原始碼文字守衛慣例。
+    private func functionBody(
+        in source: String, signaturePrefix: String, closeBraceMarker: String = "\n    }"
+    ) throws -> String {
+        let afterSignature = try XCTUnwrap(source.components(separatedBy: signaturePrefix).dropFirst().first)
+        let region = try XCTUnwrap(afterSignature.components(separatedBy: closeBraceMarker).first)
+        return region.split(separator: "\n")
             .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
             .joined(separator: "\n")
-
-        XCTAssertTrue(code.contains("Calendar(identifier: .gregorian)"), "wireString 必須用固定西曆抽年月日（LS-331）")
-        for forbidden in ["Calendar.current", ".autoupdatingCurrent", "calendar: Calendar"] {
-            XCTAssertFalse(code.contains(forbidden), "wireString 不得出現 \(forbidden)——裝置曆法會流進 wire 年份（LS-331）")
-        }
     }
 
     func test_dateFromWireString_invalidString_returnsNil() {
@@ -308,22 +348,12 @@ final class BirthdayFormatTests: XCTestCase {
     /// `fixedGregorianCalendar(timeZone: timeZone)` 改回 `Calendar.current`／
     /// `.autoupdatingCurrent`，或重新開放注入 `calendar: Calendar` 參數，這支測試轉紅。
     func test_ageDescription_source_extractsWithFixedGregorianCalendar() throws {
-        let sourceURL = URL(fileURLWithPath: "\(#filePath)")
-            .deletingLastPathComponent() // LittleSproutTests/
-            .deletingLastPathComponent() // worktree 根目錄
-            .appendingPathComponent("LittleSprout/Support/BirthdayFormat.swift")
-        let source = try String(contentsOf: sourceURL, encoding: .utf8)
-        let afterSignature = try XCTUnwrap(
-            source.components(
-                separatedBy: "static func ageDescription(birthday: Date, now: Date = Date(), timeZone:"
-            ).dropFirst().first
+        let source = try birthdayFormatSource()
+        let code = try functionBody(
+            in: source,
+            signaturePrefix: "static func ageDescription(birthday: Date, now: Date = Date(), timeZone:",
+            closeBraceMarker: "\n    static func ageDescription(birthday: Date, now: Date,"
         )
-        let region = try XCTUnwrap(
-            afterSignature.components(separatedBy: "static func ageDescription(birthday: Date, now: Date,").first
-        )
-        let code = region.split(separator: "\n")
-            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
-            .joined(separator: "\n")
 
         XCTAssertTrue(
             code.contains("fixedGregorianCalendar(timeZone: timeZone)"),
