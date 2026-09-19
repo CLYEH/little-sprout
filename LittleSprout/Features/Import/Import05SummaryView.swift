@@ -32,7 +32,11 @@ struct Import05SummaryView: View {
     }
     /// LS-319：只算跟這個批次有交集的標記失敗群——上傳失敗（`failedRows`）與標記失敗是兩件
     /// 不同的事（票文範圍 2：上傳失敗不計入標記失敗），這裡刻意不共用 `failedRows` 的計算。
+    /// 統計列用這個（不分是否可重試，照片確實沒有標記是事實）。
     private var markingFailedCount: Int { marker.failedMarkingMediaCount(in: session.entryIDSet) }
+    /// LS-319 R2（merge-review R1 m2）：「重試標記」鈕只在還有**可重試**的失敗群時才顯示——
+    /// `LS044`（寶貝已軟刪）原樣重送永遠不會成功，沿既有「重試失敗項排除 LS002」的 tier 慣例。
+    private var retryableMarkingFailedCount: Int { marker.retryableFailedMarkingCount(in: session.entryIDSet) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -194,17 +198,18 @@ struct Import05SummaryView: View {
                             .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
                     )
                 }
-                if markingFailedCount > 0 {
+                if retryableMarkingFailedCount > 0 {
                     // LS-319（票文範圍 2）：「重試標記」只重送標記失敗的群，不重新上傳（上傳
                     // 早就成功了，見 `MediaChildrenMarkingTracker.retryFailedMarking(in:)` 文件
                     // 註解）——沿用「重試失敗項（N）」按鈕的元件語彙（同背景／邊框／字級），
                     // 只換文案與觸發對象，同上一段理由，交 orchestrator 判斷是否需要補設計。
+                    // m2（merge-review R1）：只在還有可重試的失敗群時才顯示，`LS044` 排除。
                     Button {
                         marker.retryFailedMarking(in: session.entryIDSet)
                     } label: {
                         HStack(spacing: AppSpacing.label) {
                             Image(systemName: "arrow.clockwise").appIconFrame(.medium)
-                            Text("重試標記（\(markingFailedCount)）").appNumericFont(.body, weight: .bold)
+                            Text("重試標記（\(retryableMarkingFailedCount)）").appNumericFont(.body, weight: .bold)
                         }
                         .frame(maxWidth: .infinity, minHeight: 48)
                         .padding(.vertical, AppSpacing.controlPaddingMedium)

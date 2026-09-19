@@ -48,10 +48,20 @@ extension AlbumsStore {
             // `UploadQueueStore.onUploadFailedTerminal` 文件註解。
             onUploadFailedTerminal: { [weak self] entryID in
                 self?.pendingUploadAlbumIDs.removeValue(forKey: entryID)
-                // LS-319：終局失敗（含 04b 取消當下對 `.uploading` 項目的同一個掛鉤，見
-                // `UploadQueueStore.cancelPendingImportItems` 文件註解）也要回報，讓群的
-                // 「已終局筆數」正確前進，不會永遠卡在等這一筆。
+                // LS-319：不可重試失敗（含 04b 取消當下對 `.uploading` 項目的同一個掛鉤，見
+                // `UploadQueueStore.cancelPendingImportItems` 文件註解）計入群的「已解決筆數」，
+                // 讓群不會永遠卡在等這一筆。**R2（merge-review R1 M1）訂正**：這支掛鉤只涵蓋
+                // 「這筆永遠不會再被重試」的情況——可重試失敗（`.network`／`.server`）不會呼叫
+                // 這裡，原本的敘述「讓群…正確前進」對那種情況並不成立，見下面
+                // `onUploadFailedRetryable` 掛鉤與 `MediaChildrenMarkingTracker` 檔頭「M1」段。
                 self?.mediaChildrenMarker.handleUploadFailedTerminal(entryID: entryID)
+            },
+            // LS-319 R2（merge-review R1 M1）：可重試失敗——不移除 `pendingUploadAlbumIDs`
+            // 登記（這筆理論上還可能成功並掛進相簿，跟 `onUploadFailedTerminal` 不同）；只讓
+            // 標記追蹤器知道「這筆暫時卡住了」，不永久擋住同群其餘已成功項目的標記，見
+            // `MediaChildrenMarkingTracker.handleUploadFailedRetryable(entryID:)` 文件註解。
+            onUploadFailedRetryable: { [weak self] entryID in
+                self?.mediaChildrenMarker.handleUploadFailedRetryable(entryID: entryID)
             }
         )
         sharedUploadQueueStoreInstance = store
