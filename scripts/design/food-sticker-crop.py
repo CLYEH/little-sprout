@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["Pillow==10.3.0"]
+# dependencies = ["Pillow==11.3.0"]
 # ///
 """LS-338 食物圖鑑貼紙裁切腳本——sticker sheet（一張多種食物、透明背景）→ 單張彩色 PNG，決定性、不靠模型判斷。
 
@@ -28,10 +28,15 @@
 用不到它的進階功能；連通區塊標記與膨脹都用純 Python 實作（見下方兩個函式），在 1536×1024 的 sheet 上
 實測每張 <0.3s（labeling）＋<0.1s（單一區塊局部膨脹，只在該區塊 bounding box 的局部陣列上做，不是對
 整張圖）。CI／自測一律用 `uv run` 執行本檔（本檔頭的 PEP 723 inline metadata 宣告依賴），不裝系統套件、
-不碰 pip（不確定 ubuntu-latest runner 內建是否有 Pillow，用 uv 現拉最保險）。**Pillow 釘死 `==10.3.0`**
-（LS-338 merge-review m2）：版控內 122 張成品就是用這個版本產出，不同 Pillow 版本 PNG 編碼層不同會讓
-「像素沒變、blob 全變」的整批 churn（實測 Pillow 12.3.0 重切像素相同、位元全不同）；重切前先對齊這個
-版本，日後要升級 Pillow 得連同全部既有成品一起重切、逐檔 `cmp` 驗過再一起 commit，不能只改依賴宣告。
+不碰 pip（不確定 ubuntu-latest runner 內建是否有 Pillow，用 uv 現拉最保險）。**Pillow 釘死 `==11.3.0`**
+（LS-338 merge-review m2；版本號由 LS-340 R2 merge-review `1c80d549` M1 實測校正——版控內全部 274 張
+成品都是這個版本產出，逐版掃描 10.3.0／10.4.0／11.0.0 重切皆與版控不同、11.3.0／12.0.0 起才相同）：
+不同 Pillow 版本 PNG 編碼層不同會讓「像素沒變、blob 全變」的整批 churn（實測 Pillow 12.3.0 重切像素
+相同、位元全不同）；重切前先對齊這個版本，日後要升級 Pillow 得連同全部既有成品一起重切、逐檔 `cmp`
+驗過再一起 commit，不能只改依賴宣告。**位元級可重放只在「同 OS／同 Pillow wheel build」內成立**：
+同一台機器、同一個 Pillow 版本重切，`cmp` 逐位元組相同；跨平台（例如 macOS 與 Linux 容器同為
+Pillow 11.3.0）重切，`cmp` 不同但像素（`Image.tobytes()`）相同——PNG 編碼層（zlib/optimize 的候選
+篩選）不保證跨平台位元重放，這也是為什麼 CI 自測驗證輸出正確性要用像素比對而非 `cmp`。
 
 用法：
   uv run scripts/design/food-sticker-crop.py crop [--sheet <sheet-01|reference-sheet>] [--plan PATH]
