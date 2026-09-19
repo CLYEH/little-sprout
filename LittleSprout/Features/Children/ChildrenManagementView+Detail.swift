@@ -30,7 +30,12 @@ extension ChildrenManagementView {
             currentUserID: familyStore.ownerUserID, isFamilyOwner: childrenStore.isOwner,
             // R1 merge-review m3：viewer 按「新增量測」必得 42501（insert policy 只認
             // owner／member）——同上面 `editDestination` 用的判斷，viewer 兩顆鈕都不該看到。
-            canManageChildren: childrenStore.canManageChildren
+            canManageChildren: childrenStore.canManageChildren,
+            // LS-345：Identity Header 頭像——同 `ChildrenManagementView` 列表列既有慣例
+            // （`ChildAvatarView(name: child.name, avatarURL: childrenStore.avatarURL(for:
+            // child))`），這裡是同一份 `avatarSignedURLs` 快取轉手，換頭像存檔後
+            // `childrenStore` 重簽完 `childDetail(for:)` 重繪就會拿到新值，不需要 pop／push。
+            avatarURL: childrenStore.avatarURL(for: child)
         )
     }
 }

@@ -60,6 +60,13 @@ struct ChildGrowthDetailView: View {
     /// 由呼叫端傳入 `childrenStore.canManageChildren`（同一組 owner／member 判斷），這支畫面
     /// 本身不依賴 `ChildrenStore`。
     var canManageChildren = false
+    /// LS-345：Identity Header 頭像——同 `currentUserID`／`isFamilyOwner`／`canManageChildren`
+    /// 既有先例，由呼叫端（`childDetail(for:)`）傳 `childrenStore.avatarURL(for: child)`，這支
+    /// 畫面本身仍不依賴 `ChildrenStore`。nil（沒有頭像，或簽名還沒回來）時 `ChildAvatarView`
+    /// 退回姓名縮寫圓——同 `child`／`currentUserID` 的新鮮度規則：呼叫端每次重繪都重新算一次，
+    /// 換頭像存檔後不需要 pop／push 就會反映新值（見 `GrowthIdentityFreshnessRegressionTests`
+    /// 檔頭「姓名／生日一律讀 child」的同一套機制，這裡是同一機制的頭像版）。
+    var avatarURL: URL?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -69,7 +76,8 @@ struct ChildGrowthDetailView: View {
 
     init(
         child: Child, apiClient: GrowthAPIClient, editDestination: (() -> AnyView)? = nil,
-        currentUserID: UUID? = nil, isFamilyOwner: Bool = false, canManageChildren: Bool = false
+        currentUserID: UUID? = nil, isFamilyOwner: Bool = false, canManageChildren: Bool = false,
+        avatarURL: URL? = nil
     ) {
         self.child = child
         self.apiClient = apiClient
@@ -77,6 +85,7 @@ struct ChildGrowthDetailView: View {
         self.currentUserID = currentUserID
         self.isFamilyOwner = isFamilyOwner
         self.canManageChildren = canManageChildren
+        self.avatarURL = avatarURL
     }
 
     #if DEBUG
@@ -84,7 +93,8 @@ struct ChildGrowthDetailView: View {
     /// `loadIfNeeded()`（假 client 固定回傳 `[]`，會把種好的示範資料覆蓋成空狀態）。
     init(
         previewGrowthStore store: GrowthStore, editDestination: (() -> AnyView)? = nil,
-        currentUserID: UUID? = nil, isFamilyOwner: Bool = false, canManageChildren: Bool = true
+        currentUserID: UUID? = nil, isFamilyOwner: Bool = false, canManageChildren: Bool = true,
+        avatarURL: URL? = nil
     ) {
         self.child = Child(
             id: store.childID, name: store.childName, birthday: store.childBirthday,
@@ -95,6 +105,7 @@ struct ChildGrowthDetailView: View {
         self.currentUserID = currentUserID
         self.isFamilyOwner = isFamilyOwner
         self.canManageChildren = canManageChildren
+        self.avatarURL = avatarURL
         self._growthStore = State(initialValue: store)
     }
     #endif
@@ -307,7 +318,7 @@ struct ChildGrowthDetailView: View {
     /// 本體——那支還餵著 `childRowContent` 的 `Pill` 等既有畫面，會擴散到票外。
     private func identityHeader() -> some View {
         HStack(spacing: AppSpacing.group) {
-            ChildAvatarView(name: child.name, size: 64)
+            ChildAvatarView(name: child.name, size: 64, avatarURL: avatarURL)
             VStack(alignment: .leading, spacing: AppSpacing.tight) {
                 Text(child.name)
                     .appFont(.display, weight: .bold)

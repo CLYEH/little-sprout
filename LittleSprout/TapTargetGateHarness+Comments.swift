@@ -106,15 +106,15 @@ private final class PopulatedCommentAPIClient: CommentAPIClient, @unchecked Send
         let now = Date()
         return [
             CommentRecord(
-                id: UUID(), authorID: authorID, authorDisplayName: "陳志明",
+                id: UUID(), authorID: authorID, authorDisplayName: "陳志明", authorAvatarURL: nil,
                 body: "已經在收拾了，明天見！", createdAt: now
             ),
             CommentRecord(
-                id: UUID(), authorID: UUID(), authorDisplayName: "林美玲",
+                id: UUID(), authorID: UUID(), authorDisplayName: "林美玲", authorAvatarURL: nil,
                 body: "看起來玩得好開心～下次約一起去！", createdAt: now.addingTimeInterval(-3600)
             ),
             CommentRecord(
-                id: UUID(), authorID: authorID, authorDisplayName: "陳志明",
+                id: UUID(), authorID: authorID, authorDisplayName: "陳志明", authorAvatarURL: nil,
                 body: "好可愛喔！挖沙工具記得多帶幾個，上次那組被沖到海裡了 😄",
                 createdAt: now.addingTimeInterval(-7200)
             )

@@ -163,15 +163,19 @@ final class CommentsStore {
     /// 程式化呼叫（例如 UITest）繞過按鈕直接呼叫這支的情況。
     ///
     /// - Returns: 是否真的送出成功（呼叫端用來決定要不要清空輸入框並捲到底）。
+    /// LS-345 R2：新增 `authorAvatarURL`（預設 nil，既有呼叫端不受影響）——樂觀插入的那一列
+    /// 同 `authorDisplayName` 既有慣例，由呼叫端（`CommentsSheetView+Footer.sendTapped()`）從
+    /// `familyStore.members` 查自己那一筆的 `avatarURL` 傳進來，送出當下就能顯示自己的真實頭像
+    /// （不必等重開 sheet）。
     @discardableResult
-    func send(body: String, authorID: UUID, authorDisplayName: String) async -> Bool {
+    func send(body: String, authorID: UUID, authorDisplayName: String, authorAvatarURL: String? = nil) async -> Bool {
         let trimmed = body.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
         sendState = .submitting
         let optimisticID = UUID()
         let optimistic = CommentRecord(
             id: optimisticID, authorID: authorID, authorDisplayName: authorDisplayName,
-            body: trimmed, createdAt: Date()
+            authorAvatarURL: authorAvatarURL, body: trimmed, createdAt: Date()
         )
         comments.append(optimistic)
         do {
@@ -181,7 +185,7 @@ final class CommentsStore {
             if let index = comments.firstIndex(where: { $0.id == optimisticID }) {
                 comments[index] = CommentRecord(
                     id: newID, authorID: authorID, authorDisplayName: authorDisplayName,
-                    body: trimmed, createdAt: optimistic.createdAt
+                    authorAvatarURL: authorAvatarURL, body: trimmed, createdAt: optimistic.createdAt
                 )
             }
             sendState = .idle

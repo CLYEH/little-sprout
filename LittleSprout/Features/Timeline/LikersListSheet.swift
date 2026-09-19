@@ -2,9 +2,14 @@ import SwiftUI
 
 /// 按讚名單（LS-216 依 LS-177 稿 `GZ3pb`；Handoff Notes `EclPC` 節「按讚名單」`uLBa2`）——
 /// 點擊互動列的 `Count Zone`（計數 >0 時）開啟，純資訊性列表：顯示按讚者姓名＋
-/// `ProfilePrintChip` 沖印占位頭像（`size: 40`，同 Notes `d5RNKR` 定案 scale），不含任何
-/// 動作（不能移除／封鎖）。資料直接 SELECT `reactions` join `profiles`（RLS 隔離即可，
-/// 無需新 RPC，見 `TimelineAPIClient.reactors`），不快取——每次開啟重查一次。
+/// `ProfilePrintChip`（`size: 40`，同 Notes `d5RNKR` 定案 scale），不含任何動作（不能移除／
+/// 封鎖）。資料直接 SELECT `reactions` join `profiles`（RLS 隔離即可，無需新 RPC，見
+/// `TimelineAPIClient.reactors`），不快取——每次開啟重查一次。
+///
+/// **LS-345 R2**：頭像從「一律沖印佔位」改成真的顯示——見 `ReactorRow`／`CommentAPIClient`
+/// 文件註解的 MJ-1 查證訂正。新增 `familyStore` 依賴只為了這件事：`avatarDisplayURL
+/// (rawValue:)` 換簽名 URL、`.task` 補查 `members`（同 `CommentsSheetView` 既有慣例，理由見
+/// 該檔）確保按讚者的頭像路徑已在 `avatarSignedURLs` 快取裡。
 ///
 /// 自畫 grabber＋`.presentationDetents([.medium, .large])`＋隱藏系統拖曳指示——同
 /// `ContentActionsSheet` 既有理由（系統 `.presentationDragIndicator` 會被 tap-target gate
@@ -13,6 +18,7 @@ struct LikersListSheet: View {
     let kind: FeedKind
     let refId: UUID
     let timelineStore: TimelineStore
+    let familyStore: FamilyStore
     /// 開啟當下互動列已知的計數——開場標題（「N 人按了愛心」）先用這個值，避免查詢完成前
     /// 短暫顯示「0 人」；`reactors` 陣列載入完成後標題改用實際筆數（兩者理論上一致，只有
     /// 極罕見的同時按讚／收回才會有一瞬間落差，不特別處理）。
@@ -45,6 +51,11 @@ struct LikersListSheet: View {
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.hidden)
         .task { await load() }
+        // LS-345 R2：同 `CommentsSheetView` 既有 guard 慣例——確保按讚者的頭像路徑已簽好。
+        .task {
+            guard familyStore.members.isEmpty else { return }
+            await familyStore.refreshMembers()
+        }
     }
 
     private var grabber: some View {
@@ -94,7 +105,7 @@ struct LikersListSheet: View {
 
     private func likerRow(_ reactor: ReactorRow) -> some View {
         HStack(spacing: AppSpacing.group) {
-            ProfilePrintChip(size: 40)
+            ProfilePrintChip(size: 40, avatarURL: familyStore.avatarDisplayURL(rawValue: reactor.avatarURL))
             Text(reactor.displayName)
                 .appFont(.body, weight: .semibold)
                 .foregroundStyle(Color.lsTextPrimary)
@@ -128,7 +139,7 @@ struct LikersListSheet: View {
     let store = TimelineStore.preview()
     let refId = UUID()
     return Color.clear.sheet(isPresented: .constant(true)) {
-        LikersListSheet(kind: .diary, refId: refId, timelineStore: store, likeCount: 4)
+        LikersListSheet(kind: .diary, refId: refId, timelineStore: store, familyStore: .preview(), likeCount: 4)
     }
 }
 #endif

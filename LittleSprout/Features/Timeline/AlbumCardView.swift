@@ -9,6 +9,8 @@ import SwiftUI
 struct AlbumCardView: View {
     let content: AlbumContent
     let timelineStore: TimelineStore
+    /// LS-345 R2：只為了轉手給 `InteractionRow`／`LikersListSheet`——見該型別文件註解。
+    let familyStore: FamilyStore
     /// LS-216：這本相簿的 id——`AlbumContent` 本身不帶 id（純顯示模型），理由同
     /// `DiaryCardView.refId` 文件註解。
     let refId: UUID
@@ -30,7 +32,10 @@ struct AlbumCardView: View {
                     .truncationMode(.tail)
             }
             .accessibilityElement(children: .combine)
-            InteractionRow(kind: .album, refId: refId, timelineStore: timelineStore, onOpenComments: onOpenComments)
+            InteractionRow(
+                kind: .album, refId: refId, timelineStore: timelineStore, familyStore: familyStore,
+                onOpenComments: onOpenComments
+            )
         }
     }
 }
@@ -41,7 +46,10 @@ struct AlbumCardView: View {
 // （改前只用 `AlbumContent(...)`，不需要），本票加 `timelineStore` 參數後若不補圍欄，
 // Release 組態會因為 `.preview()` 不存在而編譯失敗。同 `DiaryCardView.swift` 既有寫法。
 #Preview {
-    AlbumCardView(content: AlbumContent(title: "2026 夏天的海邊", cover: nil), timelineStore: .preview(), refId: UUID())
+    AlbumCardView(
+        content: AlbumContent(title: "2026 夏天的海邊", cover: nil), timelineStore: .preview(),
+        familyStore: .preview(), refId: UUID()
+    )
         .padding()
 }
 #endif

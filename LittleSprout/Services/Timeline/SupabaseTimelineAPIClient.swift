@@ -142,7 +142,7 @@ final class SupabaseTimelineAPIClient: TimelineAPIClient {
         do {
             let response: PostgrestResponse<[ReactorRow]> = try await client
                 .from("reactions")
-                .select("user_id, profiles(display_name)")
+                .select("user_id, profiles(display_name, avatar_url)")
                 .eq("family_id", value: familyID)
                 .eq("target_type", value: targetType)
                 .eq("target_id", value: targetID)

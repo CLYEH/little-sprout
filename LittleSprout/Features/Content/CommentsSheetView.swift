@@ -127,6 +127,17 @@ struct CommentsSheetView: View {
             }
         }
         .task { await store.loadInitial() }
+        // LS-345 R2：留言作者頭像（`commentRow`）與自己的頭像（`footer`）都要靠
+        // `familyStore.avatarSignedURLs` 這份快取——同 `SettingsView.swift` 既有的補查 guard
+        // 慣例（已經查過就不重打），確保開留言 sheet 不必先去過設定頁／家庭成員頁，頭像也簽得到。
+        .task {
+            guard familyStore.members.isEmpty else { return }
+            await familyStore.refreshMembers()
+        }
+        .task {
+            guard familyStore.myProfile == nil else { return }
+            await familyStore.refreshProfile()
+        }
         .onChange(of: store.knownExactCount) { _, newValue in
             guard let newValue else { return }
             timelineStore.setCommentCount(newValue, forKey: targetKey)
