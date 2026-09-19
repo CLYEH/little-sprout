@@ -56,7 +56,16 @@ extension QADriver {
         snap("avatar-picked")
 
         try require(app.buttons["儲存變更"], "儲存變更").tap()
-        try require(childrenHeading, "存檔後回到寶貝列表", timeout: 60)
+        // LS-346 範圍 1（過時修正）：`EditChildView` 自 LS-312 起是從「寶貝詳情」頁的 Identity Header
+        // 用 `NavigationLink(destination:)` 推入（見 `openEditPageFromRow`），不再是列表列本身的目的地。
+        // `submit()` 成功後只呼叫一次 `dismiss()`，只會彈回**一層**——存檔後的落點是寶貝詳情頁，不是寶貝
+        // 列表；原本直接等 `childrenHeading` 在這個導覽路徑下必定 60 秒逾時（實測見
+        // `.claude/evidence/LS-334/qa-e2e/child-avatar-20260919-192328/screens/child-avatar-17-fail.png`，
+        // QA 誤歸因到無關的 LS-345）。`returnToListFromDetail` 先斷言「回到詳情頁」這個結構性事實——**不**
+        // 斷言詳情頁頭像已換圖：詳情頁 Identity Header 頭像同 session 存檔後不刷新是另一個已知 app 缺口
+        // （LS-345 範圍 5，另票在修、尚未併入），換圖的斷言留到下面「返回列表」之後（LS-345 併入後如需
+        // 加強，可在這裡再補一段詳情頁頭像 digest 比對）。
+        try returnToListFromDetail(snapName: "child-detail-after-save")
         // merge-review R1 m4：重啟**前**先量一次同一列，讓「同 session 沒刷新」這件事有機械紀錄。
         // 這個值等於 `rowBefore` ＝ app 缺口仍在（LS-96 `126f7201`(1)）；哪天它等於 `rowAfter`，
         // 就是把下面那段重啟換回「同 session 直接比對」嚴格版的訊號（見 relaunchAndOpenChildrenTab 註解）。
@@ -177,7 +186,8 @@ extension QADriver {
         try openEditPageFromRow(named: name)
         try tapWhenHittable(app.buttons["移除這個寶貝"], "收尾：「移除這個寶貝」（編輯頁最下方）", timeout: 20)
         try require(app.buttons["移除，30 天內可還原"], "收尾：移除確認 sheet 的確認鈕", timeout: 20).tap()
-        try require(childrenHeading, "收尾：移除後回到寶貝列表", timeout: 60)
+        // LS-346 範圍 1：同「runChildAvatar()」存檔那段的理由——`returnToListFromDetail` 見該函式文件註解。
+        try returnToListFromDetail(snapName: nil)
         guard childRow(named: name).waitForNonExistence(timeout: 30) else {
             attachHierarchy(reason: "cleanup-child-still-listed")
             snap("fail-cleanup")
@@ -274,6 +284,19 @@ extension QADriver {
         try tapWhenHittable(childRow(named: name), "寶貝列表上的「\(name)」列", timeout: 30)
         try tapWhenHittable(app.buttons["編輯"], "寶貝詳情頁導覽列右上「編輯」", timeout: 30)
         try require(app.staticTexts["編輯寶貝資料"], "編輯寶貝資料頁")
+    }
+
+    /// LS-346 範圍 1：`EditChildView` 的「儲存變更」／`DeleteChildSheet` 的「移除，30 天內可還原」都只
+    /// `dismiss()` 一層，落點是寶貝詳情頁（Identity Header「編輯」入口仍在），不是寶貝列表——
+    /// `runChildAvatar()`（存檔後）／`deleteChild(named:)`（移除確認後）兩處呼叫端都需要「先確認回到
+    /// 詳情頁、再退一層回列表」這段，抽出來避免重複（也讓 `runChildAvatar()` 過 SwiftLint
+    /// `function_body_length`）。`snapName` 給 nil 時不額外截圖（`deleteChild` 用得到的收尾截圖已在
+    /// 別處，不需要這裡再截一張）。
+    private func returnToListFromDetail(snapName: String?) throws {
+        try require(app.buttons["編輯"], "回到寶貝詳情頁（導覽列右上「編輯」入口）", timeout: 60)
+        if let snapName { snap(snapName) }
+        app.navigationBars.buttons.firstMatch.tap()
+        try require(childrenHeading, "從詳情頁返回寶貝列表", timeout: 30)
     }
 
     private func openChildrenTab() throws {
