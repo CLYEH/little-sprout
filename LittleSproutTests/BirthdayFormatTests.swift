@@ -136,6 +136,10 @@ final class BirthdayFormatTests: XCTestCase {
     /// 這裡確認解析結果不會因為之後拿哪種曆法去讀它而漂移。
     func test_dateFromWireString_sameDayAcrossNonGregorianCalendars() throws {
         let parsed = try XCTUnwrap(BirthdayFormat.date(fromWireString: "2026-09-19"))
+        let gregorianUTCMidnight = try XCTUnwrap(
+            utcCalendar().date(from: DateComponents(year: 2026, month: 9, day: 19))
+        )
+        XCTAssertEqual(parsed, gregorianUTCMidnight, "wire 字串必須以固定西曆解析——不是裝置曆法的「2026 年」（LS-331）")
 
         for identifier: Calendar.Identifier in [.republicOfChina, .buddhist, .japanese] {
             var altCalendar = Calendar(identifier: identifier)
@@ -143,6 +147,30 @@ final class BirthdayFormatTests: XCTestCase {
             let components = altCalendar.dateComponents([.era, .year, .month, .day], from: parsed)
             let roundTripped = try XCTUnwrap(altCalendar.date(from: components))
             XCTAssertEqual(roundTripped, parsed, "\(identifier) 曆法下抽出年月日重建後應仍是同一天")
+        }
+    }
+
+    /// LS-331 merge-review R1：上面三支曆法測試餵給 `wireString` 的是同一個絕對時間點＋同一個時區，
+    /// 測試程序裡 `Calendar.current` 恆為西曆（CI／本機模擬器皆是），所以「`wireString` 內部改回
+    /// `Calendar.current` 抽年月日」這個回歸在行為層測不到（測試程序無法安全切換 `Calendar.current`）。
+    /// 比照 `GrowthAgeNBSPRegressionTests` 既有的原始碼文字守衛：mutation 把
+    /// `Calendar(identifier: .gregorian)` 改回 `Calendar.current`／`.autoupdatingCurrent`，或重新開放
+    /// 注入 `Calendar`，這支測試轉紅。
+    func test_wireString_source_extractsWithFixedGregorianCalendar() throws {
+        let sourceURL = URL(fileURLWithPath: "\(#filePath)")
+            .deletingLastPathComponent() // LittleSproutTests/
+            .deletingLastPathComponent() // worktree 根目錄
+            .appendingPathComponent("LittleSprout/Support/BirthdayFormat.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+        let afterSignature = try XCTUnwrap(source.components(separatedBy: "static func wireString(").dropFirst().first)
+        let region = try XCTUnwrap(afterSignature.components(separatedBy: "static func date(fromWireString").first)
+        let code = region.split(separator: "\n")
+            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
+            .joined(separator: "\n")
+
+        XCTAssertTrue(code.contains("Calendar(identifier: .gregorian)"), "wireString 必須用固定西曆抽年月日（LS-331）")
+        for forbidden in ["Calendar.current", ".autoupdatingCurrent", "calendar: Calendar"] {
+            XCTAssertFalse(code.contains(forbidden), "wireString 不得出現 \(forbidden)——裝置曆法會流進 wire 年份（LS-331）")
         }
     }
 
