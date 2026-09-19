@@ -119,12 +119,15 @@ struct ChildrenManagementView: View {
     /// `editDestination` gate。
     private func childRow(_ child: Child) -> some View {
         NavigationLink(value: ChildrenRoute.detail(child.id)) {
-            childRowContent(child, showsChevron: true)
+            childRowContent(child)
         }
         .buttonStyle(.plain)
     }
 
-    private func childRowContent(_ child: Child, showsChevron: Bool) -> some View {
+    /// LS-313 順手項（LS-312 dead-code sweep `ac07c0ac` finding 1）：`showsChevron` 參數已是
+    /// 死參數——R2 m1（`329f967`）收斂寶貝詳情為唯讀畫面後，`false`（不顯示 chevron）那條呼叫
+    /// 路徑已被砍掉，全 repo 只剩上面這一個永遠傳 `true` 的呼叫點，改成無條件渲染 chevron。
+    private func childRowContent(_ child: Child) -> some View {
         HStack(spacing: AppSpacing.group) {
             ChildAvatarView(name: child.name, avatarURL: childrenStore.avatarURL(for: child))
             VStack(alignment: .leading, spacing: AppSpacing.tight) {
@@ -134,11 +137,9 @@ struct ChildrenManagementView: View {
                 Pill(icon: "birthday.cake", text: BirthdayFormat.ageDescription(birthday: child.birthday))
             }
             Spacer(minLength: 0)
-            if showsChevron {
-                Image(systemName: "chevron.right")
-                    .appIconFrame(.medium)
-                    .foregroundStyle(Color.lsTextSecondary)
-            }
+            Image(systemName: "chevron.right")
+                .appIconFrame(.medium)
+                .foregroundStyle(Color.lsTextSecondary)
         }
         .padding(.vertical, AppSpacing.item)
         .padding(.horizontal, AppSpacing.insetCard)

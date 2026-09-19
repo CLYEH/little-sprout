@@ -98,6 +98,48 @@ final class GrowthCurveTests: XCTestCase {
         XCTAssertEqual(points.map(\.value), [52.0, 62.5, 68.5, 73.0, 78.5])
     }
 
+    /// R2 merge-review R2-m1：同一天先存身高、再存體重是兩筆不同記錄——`curvePoints` 若改回
+    /// 呼叫整筆 `deduplicatedByDay`，同日去重只留下 `updatedAt` 較新的那一筆（體重那筆），身高
+    /// 那個點就此消失（`metric.value(in:)` 對體重那筆讀身高是 nil）。逐項去重（現況）兩個點都
+    /// 該在，互不影響。
+    func test_curvePoints_sameDayDifferentMetric_bothPointsPresent() {
+        let birthday = date("2025-04-20")
+        let sameDay = "2026-08-20"
+        let heightRecord = record(measuredOn: sameDay, height: 78.5, updatedAt: date("2026-01-01"))
+        let weightRecord = record(measuredOn: sameDay, weight: 9.6, updatedAt: date("2026-01-02"))
+        let records = [heightRecord, weightRecord]
+
+        let heightPoints = GrowthCurve.curvePoints(for: .height, records: records, birthday: birthday)
+        let weightPoints = GrowthCurve.curvePoints(for: .weight, records: records, birthday: birthday)
+
+        XCTAssertEqual(heightPoints.map(\.value), [78.5], "身高的曲線點不該被同一天後存的體重那筆蓋掉")
+        XCTAssertEqual(weightPoints.map(\.value), [9.6], "體重的曲線點也該在，兩項互不影響")
+    }
+
+    // MARK: - 03 列表排序（R2 merge-review R2-m1，`GrowthRecordsListView.rowItems` 轉呼叫）
+
+    /// mutation：把 `allRecordsNewestFirst` 改回呼叫整筆 `deduplicatedByDay`，這支測試會抓到
+    /// ——同一天兩筆不同量測項都要列出，不去重。
+    func test_allRecordsNewestFirst_sameDayTwoRecords_bothPresentSortedByCreatedAt() {
+        let sameDay = "2026-08-20"
+        let older = record(measuredOn: sameDay, height: 78.5, updatedAt: date("2026-01-01"))
+        let newer = record(measuredOn: sameDay, weight: 9.6, updatedAt: date("2026-01-02"))
+
+        let result = GrowthCurve.allRecordsNewestFirst([older, newer])
+
+        XCTAssertEqual(result.count, 2, "同一天兩筆都要列出，不能被去重成 1 筆")
+        XCTAssertEqual(result.map(\.id), [newer.id, older.id], "同日以 createdAt 遞減排序，較晚存的排前面")
+    }
+
+    func test_allRecordsNewestFirst_differentDays_sortedByMeasuredOnDescending() {
+        let earlier = record(measuredOn: "2026-05-20", height: 70.0)
+        let later = record(measuredOn: "2026-08-20", height: 78.5)
+
+        let result = GrowthCurve.allRecordsNewestFirst([earlier, later])
+
+        XCTAssertEqual(result.map(\.id), [later.id, earlier.id])
+    }
+
     // MARK: - 最新值與較上次差 ▲▼
 
     /// 逐字對齊 Notes `db1ET`：身高最新 16mo 78.5，「上一筆有值」是 10mo 73.0（13mo 缺身高）

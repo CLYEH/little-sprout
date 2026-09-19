@@ -270,8 +270,17 @@ enum TapTargetGateScreenName: String {
     // LS-312：最新值卡／Segmented／新增量測／查看全部紀錄皆有代表性；04 為空狀態變體。
     case growthDetailPopulated = "ChildGrowthDetailView"
     case growthDetailEmpty = "ChildGrowthDetailViewEmpty"
-    case growthAddMeasurementPlaceholder = "GrowthAddMeasurementPlaceholderView"
-    case growthRecordsListPlaceholder = "GrowthRecordsListPlaceholderView"
+    // LS-313：取代 LS-312 的兩個空殼 placeholder case——02 新增量測 sheet／03 記錄列表現在是
+    // 真的表單／清單，日期欄／三個量測欄／Save／Cancel／列操作（swipe 揭露＋點列開
+    // `GrowthRecordActionsSheet`）都有代表性可量。
+    case growthMeasurementForm = "GrowthMeasurementFormView"
+    case growthRecordsList = "GrowthRecordsListView"
+    // LS-313：03c 列操作表（非手勢替代路徑）——新版面（編輯／刪除／取消三列），同
+    // `ContentActionsSheet` 的既有先例（也是 `*Sheet.swift`，不在 `tap-target-registry-check.sh`
+    // 自動掃描範圍內，但仍手動註冊，理由同該檔）；`GrowthRecordDeleteConfirmationSheet`
+    // （03b）純粹轉呼叫既有 `DeleteConfirmationSheet`（已由 `.deleteDiaryConfirmation`／
+    // `.deleteCommentConfirmation` 兩個既有 case 覆蓋同一段版面程式碼），不另掛 case。
+    case growthRecordActionsSheet = "GrowthRecordActionsSheet"
     case childrenManagementPopulated = "ChildrenManagementView"  // LS-312：populated，1 個寶貝
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
