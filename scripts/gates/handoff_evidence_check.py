@@ -117,6 +117,16 @@
       不是驗證，仍不算證據」的決定**——LS-289 真實 handoff 顯示 `git log --oneline` 用來佐證「commit
       確實存在」是合理的怎麼驗依據，與 `git diff --stat` 佐證「變更範圍」同一等級；舊決定的既有負樣本
       （原 ②m）已同步改判正樣本，見 `handoff-evidence-check.test.sh`）。
+  (d) **LS-346（範圍 2(a)，來源 LS-330 R2／LS-339 R1／R2 共 4 次誤判）**：讀一則 Linear comment 當「怎麼驗」
+      依據——之前的白名單完全表達不了這種證據形態（`mcp__linear__list_comments`／`mcp__linear__get_issue`
+      是 MCP 工具呼叫，不是 shell 命令；`linear-post.sh get` 雖走 `bash scripts/` 子字串但常被省略前綴只寫
+      成 `linear-post.sh get LS-96 --comments`）；真實樣本 LS-330 R2 已驗證 6「`mcp__linear__list_comments`
+      LS-96 取得 `65763a3f-…`」、LS-339 R1 派工單 5「用 `mcp__linear__list_comments` 讀 LS-96 comment
+      `708422e5` 原文」皆被誤判缺證據，兩次的 reviewer 都得在 comment 末尾另外聲明「這是工具限制不是缺
+      證據」。新增 `mcp__linear__\\w+`（涵蓋 `list_comments`／`get_issue`／`save_comment` 等任一 MCP 工具
+      名）與 `linear-post\\.sh\\s+get\\b`（涵蓋省略 `bash ` 前綴的引用寫法；帶 `bash ` 前綴的既有寫法本來就
+      被 (c) 的 `bash scripts/` 子字串涵蓋，這裡是加法不影響既有行為）兩個子字串，同 (c) 命令證據一樣**不
+      驗證真的執行過**（同 `xcodebuild` 這類既有命令證據的既有限制）。
 
 段落偵測（涵蓋三種實際慣例，見 LS-211 handoff 附的真實樣本與 merge-review R1 `b212dd78`）：
   - CLAUDE.md 的 ios-dev handoff 格式：字面「已驗證」開頭的段（`## 已驗證`／`**已驗證**`／純文字
@@ -158,6 +168,19 @@
 `ok=True`、無訊息）——舊 handoff（LS-300 之前的既有樣本，票文範圍 3 第三條夾具）不因為沒寫這個新子段而被
 追溯判紅。已知限制：只驗格式（有沒有板名／勾選符號／證據），不驗板名是否真的對應 Notes 板名子字串（那是
 `design-notes-check.sh` 的職責、發生在設計 PR 而非本 handoff 上）、也不驗勾選的 ✓／✗ 是否符合實際實作（同 N9）。
+
+`--ref <sha>`（LS-346，範圍 2(b)，來源 LS-334 R1／R2、LS-339 R1／R2 共 4 次誤判）：測試名與白名單路徑
+（(a)／(b2)）的存在性驗證預設看 `--repo` 的**工作樹目前狀態**（`git ls-files`／`git grep`／`os.path.isfile`，
+未帶 `--repo` 就是當下 `git rev-parse --show-toplevel`——merge-reviewer／QA 常年在主 checkout 上跑本腳本，
+此時只存在於 PR 分支、尚未併入 base 的新檔案一律被誤判「不存在」，兩人只能在 comment 末尾手寫「這是工具限制」
+解釋。帶 `--ref <sha>`（審查的 head commit）時改看**該 commit 當下的樹狀態**：測試名判定的 grep 步驟改成
+`git -C <repo> grep -P <pattern> <ref> -- . <excludes>`（git 原生支援對 tree-ish 掃描，語法與掃工作樹相同，
+只是多一個 tree-ish 引數）、同名檔案／同名目錄改用 `git -C <repo> ls-tree -r --name-only <ref>` 取代
+`git ls-files`；白名單路徑（(b2)）的存在性改用 `git -C <repo> cat-file -e <ref>:<path>`（rc=0 即存在，
+`path_within_repo` 的正規化／逃逸邊界檢查對候選路徑字串本身不變，只是最終存在性判斷換了通道）。未給 `--ref`
+時行為與 LS-346 之前完全相同（純加法，不影響既有呼叫）。`--repo <票 worktree>` 仍是優先建議做法（見
+`.claude/agents/merge-reviewer.md`／`qa.md`）——`--ref` 是給「只能在主 checkout 跑」（例如沒有該票 worktree
+可用）時的替代通道，兩者可搭配使用（`--repo` 指主 checkout、`--ref` 指審查的 head sha）。
 
 exit：0＝全過；1＝任一項缺證據、引用的測試名不存在、引用的白名單路徑（見 (b2)）不存在，或「畫面級屬性（逐條
 勾選）」子段任一列缺板名／勾選符號／證據；2＝找不到檔案／不在 git repo 且未給 --repo（fail closed）。
@@ -231,6 +254,8 @@ PATH_ANCHOR_RE = re.compile(
 # `scripts/design/pen-snapshot-dump`（無副檔名但含 `/`）、`scripts/gates/handoff_evidence_check.py`
 # （含 `/` 與 `.`）、`scripts/tools/format-check`（含 `/`）等真實路徑寫法仍會命中。
 COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|\.xcresult|\bgit\s+(?:log|diff|status|push|fetch|merge-base|ls-remote|worktree|grep|merge-tree)\b|\b(?:node|python3|swift)\s+\S*[./]\S*")  # HANDOFF-EVIDENCE-COMMAND
+# LS-346（範圍 2(a)）：讀 Linear comment 當「怎麼驗」依據——白名單原本無法表達這種證據形態，見檔頭 (d)。
+LINEAR_EVIDENCE_RE = re.compile(r"mcp__linear__\w+|linear-post\.sh\s+get\b")  # HANDOFF-EVIDENCE-LINEAR
 
 # ---- R2（merge-review R1 F1）：候選過濾——glob 形狀／同句否定詞／mutation 語境不驗存在性 ----
 NEGATION_WORDS = ("沒有", "無", "不存在", "未")
@@ -410,13 +435,19 @@ def test_name_candidates(block):
     return sorted(out.items())
 
 
-def _git_ls_files(repo):
+def _git_ls_files(repo, ref=None):
+    # LS-346（範圍 2(b)）：帶 `--ref` 時改列該 commit 的樹狀態（`git ls-tree`），不是工作樹目前的
+    # index／檔案系統——涵蓋「只存在於 PR 分支、尚未併入 base」的新檔案。
+    if ref is not None:
+        cmd = ["git", "-C", repo, "ls-tree", "-r", "--name-only", ref]
+    else:
+        cmd = ["git", "-C", repo, "ls-files"]
     try:
-        proc = subprocess.run(["git", "-C", repo, "ls-files"], capture_output=True, text=True)
+        proc = subprocess.run(cmd, capture_output=True, text=True)
     except OSError as exc:
-        fail("呼叫 git ls-files 失敗（%s）" % exc)
+        fail("呼叫 %s 失敗（%s）" % (" ".join(cmd), exc))
     if proc.returncode != 0:
-        fail("git ls-files 失敗（exit %d）：%s" % (proc.returncode, proc.stderr.strip()[:300]))
+        fail("%s 失敗（exit %d）：%s" % (" ".join(cmd), proc.returncode, proc.stderr.strip()[:300]))
     return proc.stdout.splitlines()
 
 
@@ -427,7 +458,7 @@ def _git_ls_files(repo):
 GREP_EXCLUDE_PATHSPECS = (":(exclude)*.test.sh", ":(exclude)*.test.js")
 
 
-def test_name_exists(repo, name):
+def test_name_exists(repo, name, ref=None):
     # 用 --perl-regexp（-P）而非 -E：macOS 內建 git 2.47 的 -E（POSIX ERE）不支援 `\b`（單字邊界是
     # GNU／PCRE 擴充語法，非 POSIX 標準），實測 `git grep -q -E 'class Foo\b'` 對存在的 Foo 仍回
     # exit 1（誤判不存在）；`-P` 才真的支援 `\b`（實測 rc=0）。
@@ -435,8 +466,14 @@ def test_name_exists(repo, name):
     # 不同名的檔案（真實案例：`TimelineStoreVideoTests.swift` 內部其實是 `extension TimelineStoreTests`）。
     kinds = ("func", "class", "struct", "enum", "extension")
     pattern = "|".join(r"%s %s\b" % (k, re.escape(name)) for k in kinds)
+    # LS-346（範圍 2(b)）：帶 `--ref` 時 `git grep` 直接對該 tree-ish 掃（git 原生支援，語法只差多一個
+    # tree-ish 位置引數，pathspec 排除寫法不變）——掃的是審查 head 當下的樹，不是工作樹目前狀態。
+    grep_cmd = ["git", "-C", repo, "grep", "-q", "-P", pattern]
+    if ref is not None:
+        grep_cmd.append(ref)
+    grep_cmd += ["--", ".", *GREP_EXCLUDE_PATHSPECS]
     try:
-        proc = subprocess.run(["git", "-C", repo, "grep", "-q", "-P", pattern, "--", ".", *GREP_EXCLUDE_PATHSPECS], capture_output=True)  # HANDOFF-GREP-EXCLUDE
+        proc = subprocess.run(grep_cmd, capture_output=True)  # HANDOFF-GREP-EXCLUDE
     except OSError as exc:
         fail("呼叫 git grep 失敗（%s）" % exc)
     if proc.returncode == 0:
@@ -448,7 +485,7 @@ def test_name_exists(repo, name):
     # `SettingsViewPadTests.swift`（若存在）都會命中，任何「真實檔名的可變長度後綴」都被誤判成存在
     # （reviewer 實測 `IPadTests`／`PadTests` 皆因 `SettingsViewIPadTests.swift` 判為 True）。
     target = name + ".swift"
-    all_files = _git_ls_files(repo)
+    all_files = _git_ls_files(repo, ref)
     for relpath in all_files:
         if relpath.split("/")[-1] == target:  # HANDOFF-BASENAME-EQ
             return True
@@ -501,15 +538,27 @@ def path_within_repo(repo, p):
     return full == repo_abs or full.startswith(repo_abs + os.sep)  # HANDOFF-PATH-BOUNDARY-CHECK
 
 
-def path_exists_in_repo(repo, p):
-    """白名單路徑存在性驗證——正規化候選後先確認未逃出 `--repo`（見 `path_within_repo`），
-    再用 `os.path.isfile` 驗證真的存在。"""
-    full = os.path.normpath(os.path.join(os.path.abspath(repo), p))
-    return path_within_repo(repo, p) and os.path.isfile(full)
+def path_exists_in_repo(repo, p, ref=None):
+    """白名單路徑存在性驗證——正規化候選後先確認未逃出 `--repo`（見 `path_within_repo`），候選字串
+    本身的正規化／逃逸邊界檢查不論有沒有帶 `--ref` 都一樣先做。沒帶 `--ref` 用 `os.path.isfile` 驗證
+    工作樹上真的存在；帶 `--ref`（LS-346，範圍 2(b)）改用 `git cat-file -e <ref>:<path>`（rc=0 即存在）
+    驗證該 commit 的樹狀態——涵蓋「只存在於 PR 分支、尚未併入 base」的新檔案，這是本項存在性驗證唯一
+    需要改用 git 物件庫查詢通道的地方（其餘候選收集／skip 判準都只是文字層級的正規表示式比對，與
+    `--ref` 無關）。"""
+    if not path_within_repo(repo, p):
+        return False
+    if ref is None:
+        full = os.path.normpath(os.path.join(os.path.abspath(repo), p))
+        return os.path.isfile(full)
+    try:
+        proc = subprocess.run(["git", "-C", repo, "cat-file", "-e", "%s:%s" % (ref, p)], capture_output=True)  # HANDOFF-PATH-EXISTS-REF
+    except OSError as exc:
+        fail("呼叫 git cat-file 失敗（%s）" % exc)
+    return proc.returncode == 0
 
 
 def has_evidence(text):
-    return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or PATH_ANCHOR_RE.search(text) or COMMAND_RE.search(text))  # HANDOFF-HAS-EVIDENCE-PATH-ANCHOR
+    return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or PATH_ANCHOR_RE.search(text) or COMMAND_RE.search(text) or LINEAR_EVIDENCE_RE.search(text))  # HANDOFF-HAS-EVIDENCE-PATH-ANCHOR
 
 
 def resolve_repo(repo):
@@ -524,7 +573,7 @@ def resolve_repo(repo):
     return proc.stdout.strip()
 
 
-def run(path, repo):
+def run(path, repo, ref=None):
     try:
         with open(path, "r", encoding="utf-8") as f:
             text = f.read()
@@ -549,11 +598,11 @@ def run(path, repo):
     for line_no, block in items:
         missing_evidence = not has_evidence(block)  # HANDOFF-MISSING-EVIDENCE-CHECK
         candidates = test_name_candidates(block)
-        bad_names = [n for n, skip in candidates if not skip and not test_name_exists(repo, n)]  # HANDOFF-BADNAMES-CHECK
+        bad_names = [n for n, skip in candidates if not skip and not test_name_exists(repo, n, ref)]  # HANDOFF-BADNAMES-CHECK
         # R4（LS-228）：白名單目錄路徑（supabase/functions|migrations|tests、supabase（.sh）、docs、
         # .claude、scripts、.github/workflows）必須驗證真的存在於 repo（且未逃出 --repo，見 F5），
-        # 不存在仍判紅並點名哪個路徑。
-        bad_paths = [p for p, skip in path_anchor_candidates(block) if not skip and not path_exists_in_repo(repo, p)]  # HANDOFF-PATH-EXISTS
+        # 不存在仍判紅並點名哪個路徑。LS-346（範圍 2(b)）：帶 `--ref` 時驗證該 commit 的樹狀態。
+        bad_paths = [p for p, skip in path_anchor_candidates(block) if not skip and not path_exists_in_repo(repo, p, ref)]  # HANDOFF-PATH-EXISTS
         if missing_evidence:
             print(
                 "✗ handoff-evidence-check：第 %d 行起的列項缺『怎麼驗』證據（須含測試名、"
@@ -562,22 +611,24 @@ def run(path, repo):
                 "supabase/tests/*.sql、supabase/**/*.sh、docs/**/*.md、.claude/**/*.md、"
                 "scripts/**/*.sh、.github/workflows/*.yml），或 "
                 "xcodebuild／bash scripts/／gh run view／git log|diff|status|push|fetch|merge-base|"
-                "ls-remote|worktree|grep|merge-tree／node|python3|swift <path>／.xcresult 命令）" % line_no,
+                "ls-remote|worktree|grep|merge-tree／node|python3|swift <path>／.xcresult 命令，或 "
+                "mcp__linear__<工具名>／linear-post.sh get）" % line_no,
                 file=sys.stderr,
             )
             ok = False
+        ref_suffix = "、--ref %s" % ref if ref is not None else ""
         for name in bad_names:
             print(
                 "✗ handoff-evidence-check：第 %d 行引用的測試名 `%s` 在 repo 內找不到"
-                "（`func/class/struct/enum/extension %s`、同名檔案、同名目錄皆無——git -C %s）"
-                % (line_no, name, name, repo),
+                "（`func/class/struct/enum/extension %s`、同名檔案、同名目錄皆無——git -C %s%s）"
+                % (line_no, name, name, repo, ref_suffix),
                 file=sys.stderr,
             )
             ok = False
         for p in bad_paths:
             print(
-                "✗ handoff-evidence-check：第 %d 行引用的路徑 `%s` 在 repo 內找不到（--repo %s）"
-                % (line_no, p, repo),
+                "✗ handoff-evidence-check：第 %d 行引用的路徑 `%s` 在 repo 內找不到（--repo %s%s）"
+                % (line_no, p, repo, ref_suffix),
                 file=sys.stderr,
             )
             ok = False
@@ -596,6 +647,7 @@ def run(path, repo):
 def main(argv):
     args = argv[1:]
     repo = None
+    ref = None
     path = None
     it = iter(args)
     for a in it:
@@ -608,13 +660,19 @@ def main(argv):
             except StopIteration:
                 fail("--repo 缺值")
             continue
+        if a == "--ref":  # LS-346（範圍 2(b)）
+            try:
+                ref = next(it)
+            except StopIteration:
+                fail("--ref 缺值")
+            continue
         if path is not None:
             fail("只接受一個 handoff 檔（多給了 %s）" % a)
         path = a
     if path is None:
-        fail("用法：handoff_evidence_check.py <handoff.md> [--repo <dir>]")
+        fail("用法：handoff_evidence_check.py <handoff.md> [--repo <dir>] [--ref <sha>]")
 
-    ok = run(path, repo)
+    ok = run(path, repo, ref)
     sys.exit(0 if ok else 1)
 
 
