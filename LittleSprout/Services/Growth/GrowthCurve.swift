@@ -115,10 +115,27 @@ enum GrowthCurve {
         return (0...3).map { lower + step * Double($0) }
     }
 
-    /// 06 iPad「歷史紀錄」（Notes `jrsot`）與未來 2/2 記錄列表共用的顯示順序：同日去重後
-    /// 依 `measuredOn` 遞減（最新在最上面）。
+    /// 06 iPad「歷史紀錄」（Notes `jrsot`，`GrowthHistorySection` 唯一呼叫端）純顯示列表的順序：
+    /// 同日整筆去重後依 `measuredOn` 遞減（最新在最上面）。R2 merge-review i1（記入 LS-96）：
+    /// 06 仍是整筆去重，同一天兩筆會漏列其中一筆——03（`GrowthRecordsListView`）已改用不去重的
+    /// `allRecordsNewestFirst`，不再共用這支。
     static func historyRecords(_ records: [GrowthRecord]) -> [GrowthRecord] {
         deduplicatedByDay(records).sorted { $0.measuredOn > $1.measuredOn }
+    }
+
+    /// R2 merge-review R2-m1（orchestrator 裁決 `8036a6f0`）：03 列表「同日多筆全列、不去重」
+    /// 的排序邏輯抽成純函式，讓 `GrowthRecordsListView.rowItems` 只轉呼叫、不在 View 內重複
+    /// 實作——View 是 private computed var，沒有 ViewInspector 測不到，這支純函式可以直接測，
+    /// 呼叫點是否真的改回整筆去重的 `historyRecords` 則另外用原始碼字面守衛驗證（見
+    /// `GrowthRecordsRowOrderRegressionTests`）。依 `measuredOn` 遞減排序，同日以 `createdAt`
+    /// 遞減 tie-break（較晚存的排前面，同 `latestValuesByDay` 的 tie-break 依據一致，不是任意
+    /// 選一個）。
+    static func allRecordsNewestFirst(_ records: [GrowthRecord]) -> [GrowthRecord] {
+        records.sorted { lhs, rhs in
+            if lhs.measuredOn != rhs.measuredOn { return lhs.measuredOn > rhs.measuredOn }
+            if lhs.createdAt != rhs.createdAt { return lhs.createdAt > rhs.createdAt }
+            return lhs.id.uuidString < rhs.id.uuidString
+        }
     }
 
     /// X 軸刻度密度（Notes `hv1vr`）：一般字級全部標出；AX3 密度改「每隔一個標（含首尾）」——

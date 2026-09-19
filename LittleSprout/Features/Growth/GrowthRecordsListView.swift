@@ -3,8 +3,9 @@ import SwiftUI
 /// 03 記錄列表（LS-313，`design/littlesprout.pen` Notes `h5BNyi`→`IUdB6`〔亮〕／`xAacW`〔暗〕；
 /// 抄值段 `ABhaR`）。取代 LS-312 的 `GrowthRecordsListPlaceholderView` 空殼——年份郵戳分組、
 /// 滑動編輯／刪除、點一列開列操作表（`GrowthRecordActionsSheet`，非手勢替代路徑，Notes
-/// `z1QNs`／M-12）。iPad（06）不出這個入口，歷史紀錄併入右欄（`GrowthHistorySection`），這支
-/// 畫面只有 `ChildGrowthDetailView.actionsCompact`（iPhone）會推。
+/// `z1QNs`／M-12）。R2 merge-review i1（`a887f39`）之前 iPad（06）沒有這個入口，只靠
+/// `GrowthHistorySection` 純顯示；現在 `ChildGrowthDetailView.actionsCompact`（iPhone）與
+/// `regularLayout`（iPad「查看全部紀錄」連結）都會推這支畫面。
 ///
 /// **不用 `cmp/Growth Record Row` 共用元件**（同 `GrowthHistorySection` 文件註解的既有
 /// 決策）：06 的 `GrowthHistoryRow`（該檔 `private`）與這裡各自實作、手動同步——Notes 原文
@@ -54,20 +55,14 @@ struct GrowthRecordsListView: View {
     /// R1 merge-review M2：不用 `GrowthCurve.historyRecords`（整筆同日去重）——03 是「管理」
     /// 這些記錄的地方，同一天先存身高、再存體重是兩筆不同記錄，都要能各自被看到、編輯、刪除，
     /// 不能被同日去重藏起來。全列 `growthStore.records`，以記錄 `id` 為鍵（`RowItem.id`）；
-    /// 依 `measuredOn` 遞減排序，同日以 `createdAt` 遞減 tie-break（較晚存的排前面，同
-    /// `GrowthCurve.latestValuesByDay` 的 tie-break 依據一致，不是任意選一個），年份變化時
-    /// 插入一個郵戳列。
+    /// 排序邏輯抽成 `GrowthCurve.allRecordsNewestFirst`（R2 merge-review R2-m1，該函式文件
+    /// 註解有完整理由），這裡只轉呼叫，年份變化時插入一個郵戳列。
     private var rowItems: [RowItem] {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
-        let sorted = growthStore.records.sorted { lhs, rhs in
-            if lhs.measuredOn != rhs.measuredOn { return lhs.measuredOn > rhs.measuredOn }
-            if lhs.createdAt != rhs.createdAt { return lhs.createdAt > rhs.createdAt }
-            return lhs.id.uuidString < rhs.id.uuidString
-        }
         var items: [RowItem] = []
         var lastYear: Int?
-        for record in sorted {
+        for record in GrowthCurve.allRecordsNewestFirst(growthStore.records) {
             let year = calendar.component(.year, from: record.measuredOn)
             if year != lastYear {
                 items.append(.yearDivider(year))
