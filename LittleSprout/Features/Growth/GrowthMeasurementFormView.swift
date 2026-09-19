@@ -23,6 +23,16 @@ import SwiftUI
 /// Status Slot 文字被截斷成「⋯」（`body` 文件註解細節）；改成日期／量測群組／備註／Status
 /// Slot 全部收進同一個 ScrollView，只有 Actions 在外，Actions 的位置完全不受表單內容或字級
 /// 影響，比原本更直接地保證「四態同座標」。
+///
+/// LS-331 merge-review R1 X1：`localMidnight` 兩段都要組「固定西曆＋指定時區」的 `Calendar`
+/// （同 `BirthdayFormat.wireString` 原則），抽成檔案層級小函式避免重複，放在 struct 外——
+/// 不是共用狀態，純粹是這個組合本身值得有名字。
+private func fixedGregorianCalendar(timeZone: TimeZone) -> Calendar {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = timeZone
+    return calendar
+}
+
 struct GrowthMeasurementFormView: View {
     let growthStore: GrowthStore
     /// nil＝新增；非 nil＝編輯這一筆（帶入既有值，`upsert_growth_record` 的 `p_id` 走這個
@@ -60,20 +70,21 @@ struct GrowthMeasurementFormView: View {
         value.map { String(format: "%.1f", $0) } ?? ""
     }
 
-    /// R1 merge-review M1：`editingRecord.measuredOn` 是 UTC 午夜（`GrowthRecord` 解碼慣例，
-    /// 同 `Child.birthday`），但 `measuredOn` 這個 `@State` 全程被 `dateFieldLabel`（裝置本地
-    /// 時區的 `Calendar(identifier: .gregorian)`）與送出時的 `BirthdayFormat.wireString(from:
-    /// calendar: .current)` 當成「裝置本地時區的 Date」在用。在負時區裝置（例如
-    /// America/New_York）直接把 UTC 午夜塞進去，本地時區抽出的年月日會退回一天。這裡先把
-    /// UTC 午夜的年月日抽出來，換成「裝置本地時區同一組年月日的午夜」，之後兩處用本地時區
-    /// 抽出的年月日才會跟原始 `measuredOn` 一致（往返不變）。`calendar` 參數同 `BirthdayFormat.
-    /// wireString(from:calendar:)` 既有理由——預設 `.current`，測試才能注入固定時區；不設
-    /// `private`，`GrowthMeasurementFormViewTimeZoneTests` 需要直接呼叫這支純函式驗證。
-    static func localMidnight(from utcDate: Date, calendar: Calendar = .current) -> Date? {
-        var utcCalendar = Calendar(identifier: .gregorian)
-        utcCalendar.timeZone = TimeZone(identifier: "UTC")!
-        let components = utcCalendar.dateComponents([.year, .month, .day], from: utcDate)
-        return calendar.date(from: components)
+    /// R1 merge-review M1：`editingRecord.measuredOn` 是 UTC 午夜，但 `measuredOn` 這個
+    /// `@State` 全程被當成「裝置本地時區的 Date」在用（`dateFieldLabel`／送出時的
+    /// `BirthdayFormat.wireString(from:timeZone:)`）——先把 UTC 午夜的年月日抽出來，換成
+    /// 「裝置本地時區同一組年月日的午夜」，兩處抽出的年月日才會跟原始 `measuredOn` 一致。
+    ///
+    /// LS-331 merge-review R1 X1：重組一律用固定 `Calendar(identifier: .gregorian)`，只借用
+    /// 注入的 `timeZone`（同 `wireString` 原則）——原本用裝置曆法（`calendar: Calendar =
+    /// .current`）重組，被舊版 `wireString`（同樣吃裝置曆法）的錯誤抵銷；`wireString` 修好後
+    /// 這裡若還吃裝置曆法，民國曆使用者編輯既有量測不改日期直接存，會把 `2026-09-04` 存成
+    /// `3937-09-04`（DB 無年份 CHECK）。不設 `private`，`GrowthMeasurementFormViewTimeZoneTests`
+    /// 直接呼叫驗證。
+    static func localMidnight(from utcDate: Date, timeZone: TimeZone = .current) -> Date? {
+        let components = fixedGregorianCalendar(timeZone: TimeZone(identifier: "UTC")!)
+            .dateComponents([.year, .month, .day], from: utcDate)
+        return fixedGregorianCalendar(timeZone: timeZone).date(from: components)
     }
 
     /// R1 merge-review m1：改用 `GrowthMeasurementValidation.parsedMeasurement(from:)`——原本
