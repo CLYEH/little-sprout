@@ -302,7 +302,10 @@ else
   brief31c="$(bash "$mut31c" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
   bad31c=$(printf '%s\n' "$brief31c" | grep '^\[' | grep -vE '⚠|✗|→')
   if [ -n "$bad31c" ]; then
-    echo "✓ ㉛c mutant（拿掉 add_flag 補標記）：出現 ⚠／✗／→ 全無的旗標行（如「$(printf '%s' "$bad31c" | head -1 | cut -c1-60)…」）——證明 (c) 的綠來自那段保證"
+    # LS-341（ad28d574②，來源 LS-333 handoff 336e242c）：改前是 `cut -c1-60`——C／POSIX locale（無 UTF-8
+    # locale 的 Ubuntu 容器）下 `cut -c` 以位元組切，會切在中文字元中間印出亂碼；只影響這行成功訊息的可讀性，
+    # 不影響 exit code 與斷言（`[ -n "$bad31c" ]` 早已判過）。直接印完整第一行，不做長度切截。
+    echo "✓ ㉛c mutant（拿掉 add_flag 補標記）：出現 ⚠／✗／→ 全無的旗標行（如「$(printf '%s' "$bad31c" | head -1)」）——證明 (c) 的綠來自那段保證"
   else
     echo "✗ ㉛c mutant 未如預期翻轉——add_flag 的補標記可能已零覆蓋" >&2; fail=1
   fi
