@@ -30,11 +30,30 @@ extension TimelineStore {
     func handleImportBatchMediaUploaded() -> Task<Void, Never> {
         importRefresh.debounceToken += 1
         let myToken = importRefresh.debounceToken
+        // i2（merge-review R1，informational）：故意不用 `[weak self]`——`TimelineStore` 是
+        // app 層級全程存活，這個 Task 不會造成循環參照，頂多讓它在登出瞬間多活
+        // `debounceDelay()` 那麼久；目前沒有呼叫端會取消這個 Task，不處理。
         return Task {
             await importRefresh.debounceDelay()
+            // i1（merge-review R1）：familyID 為 nil 時這裡不標記 isDirty——初次登入還沒
+            // refresh 過，`TimelineView.task(id:)` 本來就會在 familyID 到位後自動做第一次
+            // 載入，不需要靠這裡的 dirty 機制補；真正要在意的是「已經 refresh 過、只是 token
+            // 過期」那一種情形，不是這裡。
             guard myToken == importRefresh.debounceToken, let familyID else { return }
             if importRefresh.isOnScreen {
+                // M1（merge-review R1）：`refresh` 不 force，可能合流進「發起於這張照片落地
+                // 之前」的舊一輪（LS-266 R2 B1 的世代比對只擋「已被淘汰的世代」，擋不下「同
+                // 世代、但發起時間早於這次伺服器端狀態改變」——同 `refreshWithCurrentFilter()`
+                // 文件註解 LS-266 R2 i1 那句話）。合流時 `generation` 不會遞增（見 `refresh`
+                // 內 `!force` 分支），藉此分辨「這次呼叫是不是真的發起了新一輪」：若沒有
+                // （代表拿到的是舊快照，可能不含最後一張），且沒有更新的通知進來
+                // （`myToken` 仍是最新），就再補一次 `force: true`，保證使用者最終看到伺服器
+                // 當下的真實狀態，不必等下一次手動下拉。
+                let generationBefore = generation
                 await refresh(familyID: familyID, childID: childID)
+                if generation == generationBefore, myToken == importRefresh.debounceToken {
+                    await refresh(familyID: familyID, childID: childID, force: true)
+                }
             } else {
                 importRefresh.isDirty = true
             }
