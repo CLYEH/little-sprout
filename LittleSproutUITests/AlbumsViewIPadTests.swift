@@ -21,9 +21,15 @@ import XCTest
 /// `List` 根本不會渲染，`app.staticTexts["相簿"]` 找不到（實測：push-gate 在
 /// `LS-344-iPhone17Pro` 上跑這條紅在這一步）。`UIDevice.current.userInterfaceIdiom` 量的是
 /// 執行這支測試的模擬器本身，才是判斷式的正確依據；要驗證這支測試本身，需在 iPad 模擬器上跑
-/// `-only-testing:LittleSproutUITests/AlbumsIPadSidebarRegressionTests`。
+/// `-only-testing:LittleSproutUITests/AlbumsViewIPadTests`。
+///
+/// **LS-344 R3（merge-review R2 M1）**：類別名必須以 `IPadTests` 結尾——CI `ci-ipad` job 與 push-gate
+/// 的 iPad best-effort 都用 `scripts/gates/list-ipad-tests.sh` 依名稱自動選測試，舊名
+/// `AlbumsIPadSidebarRegressionTests` 選不到、iPhone job 又被上面的 `XCTSkipUnless` 略過，等於在任何
+/// CI 都沒跑過。取 `AlbumsViewIPadTests`（而非別的字首）是讓 push-gate 去掉 `IPadTests` 字尾猜 SUT 時
+/// 對得上 `AlbumsView.swift`，改到它就觸發本機 best-effort iPad 補跑（同 `SettingsViewIPadTests` 慣例）。
 @MainActor
-final class AlbumsIPadSidebarRegressionTests: XCTestCase {
+final class AlbumsViewIPadTests: XCTestCase {
     func testAlbumsDetailKeepsSidebarToggleAfterHidingSidebar() throws {
         try XCTSkipUnless(
             UIDevice.current.userInterfaceIdiom == .pad,
