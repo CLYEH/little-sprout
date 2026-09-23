@@ -32,6 +32,7 @@
 # 票號比對：整字——`LS-63` 不被 `LS-630` 滿足；大小寫敏感（分支 regex 亦然）。檔頭段之後貼錯內容（第二段起
 #   是別票的 body）看不出來，靠 merge-reviewer scope 維度。
 #
+# LS-351 R2 hotfix 理由：hotfix/* 分支（`-backmerge-*` 豁免）body 必有非空 `Hotfix-reason:` 行（格式模式即驗）。
 # LS-351 新 gate 門檻（--verify 才跑，見檔尾 (d)）：branch 對 base 的 diff 新增 scripts/gates/<name>.sh（非 *.test.sh）時，
 #   body 必有 `Incidents:` 行列 ≥2 個同型事故（LS-<n>／≥8 位 hex 池項 id，本票不算）——§7「單次事故不開 gate」。
 #
@@ -171,6 +172,22 @@ if ! printf '%s' "$head_text" | grep -qE "(^|[^A-Za-z0-9])${ticket}([^0-9]|$)"; 
   red_exit
 fi
 echo "✓ PR body 檔頭段含本票票號 ${ticket}"
+
+# ---- LS-351 R2（orchestrator 裁定，LS-354 池項 42904905）：hotfix/* 只限巡檢判定「擋住在飛工作」的 harness fix
+# （§2）——body 必有非空的 `Hotfix-reason:` 行（容 `- `／`**Hotfix-reason:**`／全形冒號），一句寫明擋住哪張在飛票／PR。
+# 本地合併版 back-merge 分支 `hotfix/LS-<n>-backmerge-*`（§2 規定的命名）不是 fix，豁免。
+case "$branch" in
+  hotfix/LS-*-backmerge-*) ;;
+  hotfix/*)
+    hr_line=$(grep -m1 -E '^[[:space:]]*([-*][[:space:]]+)?(\*\*)?Hotfix-reason[[:space:]]*(:|：)' "$file" || true)
+    hr_text=$(printf '%s' "$hr_line" | sed -E 's/^[[:space:]]*([-*][[:space:]]+)?(\*\*)?Hotfix-reason[[:space:]]*(:|：)(\*\*)?//; s/[[:space:]]+$//; s/^[[:space:]]+//')
+    if [ -z "$hr_text" ]; then
+      echo "✗ pr-body-check：hotfix 分支（${branch}）的 PR body 需有非空的 \`Hotfix-reason:\` 行，一句寫明擋住哪張在飛票／PR——harness 預設走 feature|fix/* → development，只有巡檢判定擋住在飛工作的 fix 才走 hotfix（COLLABORATION §2，LS-351）。" >&2
+      [ -n "$hr_line" ] && echo "    | ${hr_line}" >&2
+      red_exit
+    fi
+    echo "✓ hotfix 分支附 Hotfix-reason" ;;
+esac
 
 # ---- LS-140：申報可驗證——全 body 逐行掃 (a) 池項行要 comment id、(b)「已修」行要 commit SHA ----
 # LS-351：待辦池 LS-96 封存（docs/archive/linear/LS-96-pool-2026-09.md），新池 LS-354。兩個票號都算池項行；--verify
@@ -450,14 +467,15 @@ fi
 
 # ---- --verify (d)：LS-351 新 gate 門檻——branch 對 base 的 diff **新增** `scripts/gates/<name>.sh`（直屬、非 *.test.sh；
 # lib/ 助手不算）時，body 必有 `Incidents:` 行（容 `- `／`**Incidents:**`／全形冒號）列 ≥2 個同型事故：`LS-<n>` 票號
-# 或 ≥8 位 hex 池項 id（同規則 (a) 的候選抽法，純數字不算）；本票票號不算——事故是開 gate 之前發生過的那幾次。
+# 或 ≥8 位 hex 池項 id（同規則 (a) 的候選抽法，純數字不算）；本票票號與池票號（LS-354／LS-96）不算——事故是開 gate 之前發生過的那幾次。
 # §7「單次事故不開 gate，同型 ≥2 次才開」的機械面。base 同 (c)（解析不到整段略過，CI 以 origin/$BASE 必解得到）。
 if [ -n "${design_ref_base_sha:-}" ]; then
   new_gates=$(git diff --name-only --diff-filter=A "$design_ref_base_sha"..."$design_ref_head" -- scripts/gates 2>/dev/null \
     | grep -E '^scripts/gates/[^/]+\.sh$' | grep -vE '\.test\.sh$' | paste -s -d' ' - || true)
   if [ -n "$new_gates" ]; then
     inc_line=$(grep -m1 -E '^[[:space:]]*([-*][[:space:]]+)?(\*\*)?Incidents[[:space:]]*(:|：)' "$file" || true)
-    inc_ls=$(printf '%s' "$inc_line" | grep -oE 'LS-[1-9][0-9]*' | grep -vxF "$ticket" || true)
+    # R2 m1：池票號（LS-354／LS-96）是池項 id 的容器、不是事故——「LS-96 池項 `<id>`」只算 1 個（id 本身）
+    inc_ls=$(printf '%s' "$inc_line" | grep -oE 'LS-[1-9][0-9]*' | grep -vxF -e "$ticket" -e "$pool" -e "$legacy_pool" || true)
     inc_hex=$(pool_id_candidates "$(printf '%s' "$inc_line" | LC_ALL=C sed -E 's/LS-[0-9]+//g')" | tr ',' '\n')
     inc_n=$(printf '%s\n%s\n' "$inc_ls" "$inc_hex" | grep -v '^$' | sort -u | grep -c . || true)
     if [ "${inc_n:-0}" -ge 2 ]; then

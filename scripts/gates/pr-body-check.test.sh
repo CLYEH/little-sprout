@@ -14,6 +14,8 @@
 #   run id 與真 id 並列時候選清單不含 run id；退回「純數字也算候選」即紅。(b) --verify 無 LINEAR_API_KEY 且有池項候選未反查 → exit 3
 #   （訊息含「exit 3＝未反查，不是違規」）、無池項候選 → 0、git 半段紅 → 仍 1（違規優先）；退回 exit 0 即紅（⑥a／⑥a2 同步改期望 3）。
 # LS-351（⑥j）：待辦池 LS-96 封存、新池 LS-354——兩個票號都算池項行、--verify 以兩池 comment id 聯集比對（在飛 PR 寫舊池 id 不誤紅）。
+# LS-351 R2（⑫i–l、⑬）：Incidents 行的池票號不算事故、只修改既有 gate 不觸發（各帶 mutation）；hotfix/* 分支 body 必有非空
+#   Hotfix-reason 行、-backmerge-* 豁免（mutation：hotfix 判斷失效即綠）。
 # LS-351（⑫）：新增 scripts/gates/<name>.sh 的 PR body 須有 `Incidents:` 行列 ≥2 個同型事故（本票不算、純數字不算、只加自測／lib 不觸發）；
 #   mutation 拿掉該段即綠。
 set -uo pipefail
@@ -42,7 +44,8 @@ expect() {
   fi
 }
 
-B=hotfix/LS-63-scratchpad
+# LS-351 R2：預設用 fix/ 分支——hotfix/* 另需 Hotfix-reason 行（⑬ 專測），這裡測的是與分支型別無關的規則
+B=fix/LS-63-scratchpad
 
 # ① 應放行：三種實際 PR body 形狀
 expect 0 '① Ticket: 行在第一行（PR #90 形狀）' 'LS-63' $'Ticket: LS-63 — Harness：暫存檔名帶票號\n\n## 變更\n- 東西\n' --branch "$B"
@@ -453,12 +456,18 @@ fi
 Rg="$work/grepo"; mkdir -p "$Rg"
 gg() { git -C "$Rg" -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
 gg init -q -b base
-gg commit -q --allow-empty -m 'chore: LS-63 base'
+mkdir -p "$Rg/scripts/gates"
+printf '#!/bin/bash\n' > "$Rg/scripts/gates/old-check.sh"
+gg add -A; gg commit -q -m 'chore: LS-63 base'
 gg checkout -q -b "$B"
 mkdir -p "$Rg/scripts/gates/lib"
 printf '#!/bin/bash\n' > "$Rg/scripts/gates/new-check.sh"
 gg add -A; gg commit -q -m 'feat(gates): LS-63 new-check'
-gg checkout -q -b hotfix/LS-63-onlytests base
+# R2 m2：base 已有 old-check.sh、分支只修改它 → 不是「新增 gate」，不觸發 (d)
+gg checkout -q -b fix/LS-63-modonly base
+printf '# changed\n' >> "$Rg/scripts/gates/old-check.sh"
+gg add -A; gg commit -q -m 'fix(gates): LS-63 modify old-check'
+gg checkout -q -b fix/LS-63-onlytests base
 printf '#!/bin/bash\n' > "$Rg/scripts/gates/new-check.test.sh"
 printf '#!/bin/bash\n' > "$Rg/scripts/gates/lib/helper.sh"
 gg add -A; gg commit -q -m 'test(gates): LS-63 only tests'
@@ -483,7 +492,46 @@ gexpect 0 '⑫c Incidents 列 2 個票號 → 綠' 'Incidents 行列 2 個同型
 gexpect 1 '⑫d 本票票號不算（LS-63＋LS-292 只算 1 個）' '實得 1 個' "${T}Incidents: LS-63、LS-292"$'\n'
 gexpect 0 '⑫e 票號＋8 位 hex 池項 id 混列、列點＋粗體＋全形冒號形狀 → 綠' 'Incidents 行列 2 個同型事故' "${T}- **Incidents：** LS-292、池項 \`9f348e36\`"$'\n'
 gexpect 1 '⑫f 純數字（run id）不算池項 id' '實得 1 個' "${T}Incidents: LS-292（run 17654321987）"$'\n'
-gexpect 0 '⑫g 只新增 *.test.sh 與 lib/ 助手 → 不觸發' '' "${T}說明"$'\n' hotfix/LS-63-onlytests
+gexpect 0 '⑫g 只新增 *.test.sh 與 lib/ 助手 → 不觸發' '' "${T}說明"$'\n' fix/LS-63-onlytests
+# R2 m1：池票號（LS-96／LS-354）不算事故——「LS-96 池項 `<id>`」只算 1 個
+gexpect 1 '⑫i 池票號不算事故：Incidents: LS-96 池項 <id> 只算 1 個 → 紅' '實得 1 個' "${T}Incidents: LS-96 池項 \`9f348e36\`"$'\n'
+gexpect 1 '⑫i 新池票號同理：Incidents: LS-354 池項 <id> 只算 1 個 → 紅' '實得 1 個' "${T}Incidents: LS-354 池項 \`a3543543\`"$'\n'
+# R2 m2：只修改既有 gate → 不觸發
+gexpect 0 '⑫j 只修改既有 gate（base 已有 old-check.sh）→ 不觸發 (d)' '' "${T}說明"$'\n' fix/LS-63-modonly
+# ⑫k mutation（m1）：拿掉池票號排除 → ⑫i 變成算 2 個、不再紅（無 key 只剩「未反查」exit 3）
+mut12k="$work/pr-body-check.no-pool-exclude.sh"
+sed 's/ -e "\$pool" -e "\$legacy_pool"//' "$check" > "$mut12k"
+if cmp -s "$check" "$mut12k"; then
+  echo "✗ ⑫k mutant 沒被正確合成" >&2; fail=1
+else
+  GCHECK="$mut12k" gexpect 3 '⑫k mutant（拿掉池票號排除）：⑫i 同一份 body 不再紅——證明 ⑫i 的紅來自這條排除' '' "${T}Incidents: LS-96 池項 \`9f348e36\`"$'\n'
+fi
+# ⑫l mutation（m2）：拿掉 --diff-filter=A → 只修改既有 gate 也被當成新增而紅
+mut12l="$work/pr-body-check.no-diff-filter.sh"
+sed 's/ --diff-filter=A//' "$check" > "$mut12l"
+if cmp -s "$check" "$mut12l"; then
+  echo "✗ ⑫l mutant 沒被正確合成" >&2; fail=1
+else
+  GCHECK="$mut12l" gexpect 1 '⑫l mutant（拿掉 --diff-filter=A）：⑫j 誤紅——證明 ⑫j 的綠來自只看新增' '需有 `Incidents:` 行' "${T}說明"$'\n' fix/LS-63-modonly
+fi
+
+# ⑬ LS-351 R2：hotfix/* 分支 body 必有非空 Hotfix-reason 行；-backmerge-* 豁免；fix/* 不要求（上面全部樣本即是）
+HB=hotfix/LS-63-urgent
+expect 1 '⑬a hotfix 分支無 Hotfix-reason → 紅' '需有非空的 `Hotfix-reason:` 行' $'Ticket: LS-63\n\n說明\n' --branch "$HB"
+expect 1 '⑬b Hotfix-reason 空值 → 紅' '需有非空的 `Hotfix-reason:` 行' $'Ticket: LS-63\n\nHotfix-reason:   \n' --branch "$HB"
+expect 1 '⑬b 粗體包住但無內容 → 紅' '需有非空的 `Hotfix-reason:` 行' $'Ticket: LS-63\n\n**Hotfix-reason:**\n' --branch "$HB"
+expect 0 '⑬c 列點＋粗體＋全形冒號＋內容 → 綠' 'hotfix 分支附 Hotfix-reason' $'Ticket: LS-63\n\n- **Hotfix-reason：** 擋住 LS-999 在飛 PR #1 的 CI\n' --branch "$HB"
+expect 0 '⑬d 本地合併版 back-merge 分支豁免' '' $'Ticket: LS-63\n\n說明\n' --branch hotfix/LS-63-backmerge-development
+# ⑬e mutation：hotfix 分支型別判斷失效（case 永不命中）→ ⑬a 變綠
+mut13="$work/pr-body-check.no-hotfix-reason.sh"
+sed 's#^  hotfix/\*)$#  hotfix/NEVER-MATCH*)#' "$check" > "$mut13"
+if cmp -s "$check" "$mut13"; then
+  echo "✗ ⑬e mutant 沒被正確合成" >&2; fail=1
+else
+  printf '%s' $'Ticket: LS-63\n\n說明\n' > "$work/body13"
+  out13="$(bash "$mut13" --branch "$HB" "$work/body13" 2>&1)"; got13=$?
+  if [ "$got13" -eq 0 ]; then echo "✓ ⑬e mutant（hotfix 判斷失效）：⑬a 同一份 body 變綠——證明 ⑬a 的紅來自這段"; else echo "✗ ⑬e mutant 應 exit 0（實得 ${got13}）" >&2; printf '%s\n' "$out13" | sed 's/^/    /' >&2; fail=1; fi
+fi
 # ⑫h mutation：拿掉 (d) 段 → ⑫a 變綠，證明紅來自這段
 mut12="$work/pr-body-check.no-incidents.sh"
 sed 's/^if \[ -n "\${design_ref_base_sha:-}" \]; then$/if false; then  # LS-351 mutation/' "$check" > "$mut12"
@@ -494,6 +542,6 @@ else
 fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pr-body-check 自測通過（136 組樣本）"
+  echo "✓ pr-body-check 自測通過（147 組樣本）"
 fi
 exit "$fail"
