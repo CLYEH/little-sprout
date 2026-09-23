@@ -54055,7 +54055,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "https://images.unsplash.com/photo-1638339972126-fbf92a92dd74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjQ1Mzl8&ixlib=rb-4.1.0&q=80&w=1080",
+                "url": "appstore-photos/demo-timeline-v2.jpg",
                 "mode": "fill"
               },
               "children": [
@@ -54116,7 +54116,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安在公園盪鞦韆 · 2 歲 3 個月",
+                  "content": "小安摸阿嬤的臉 · 2 歲 3 個月",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "600"
@@ -66287,7 +66287,7 @@
           "width": "fill_container",
           "descendants": {
             "VywUw": {
-              "content": "在阿嬤家後院用水管噴水玩到全身濕透，笑到停不下來，還說明年夏天要再來一次 · 3 歲 0 個月"
+              "content": "在阿嬤家廚房等點心，一直伸手摸阿嬤的臉，笑到停不下來，還說明天要再來一次 · 3 歲 0 個⁠月"
             },
             "SNbd8": {
               "y": 261
