@@ -9,7 +9,8 @@ mtime 在近 N 天內的檔。專案 slug 由 git-common-dir 推導（主 checko
 
 agent 辨識：主 session 記為 main；subagent 優先讀同名 `agent-*.meta.json` 的 `agentType`，沒有 sidecar 才退回
 「首則 user 訊息含 agent 名稱」（原 LS-350 做法）；都認不出記為 subagent:?。
-同一 message.id 在 transcript 內會重複出現（串流分段），只計一次。
+同一 message.id 在 transcript 內會重複出現（串流分段，每個 content block 一行），只計一次，且以**最後一行**的
+usage 為準——output_tokens 只有最後一行是終值，前面幾行是串流中途的值（LS-353 R1 M1：first-wins 實測少算約 4 倍）。
 
 估值用下方 PRICES（API 牌價，$／百萬 token）；前提假設：用量方案的額度扣減大致依 API 牌價（未經官方確認）。
 model 以「最長前綴」對表，避免 claude-opus-5-5 被 claude-opus-5 那列吃掉（LS-350 原版依 dict 順序取第一個
@@ -98,7 +99,8 @@ def main():
             t = agent_from_meta(path)
             agent = ("subagent:" + t) if t else "subagent:?"
         need_prompt = agent == "subagent:?"
-        seen = set()
+        pending = {}  # message.id → (model, usage)；同 id 後出現的行覆寫前面的（最後一行才是終值）
+        rows = []     # 沒有 message.id 的 assistant 行，各自計
         with open(path, encoding="utf-8", errors="ignore") as f:
             for line in f:
                 try:
@@ -116,19 +118,19 @@ def main():
                     continue
                 msg = o.get("message") or {}
                 mid = msg.get("id")
+                entry = (msg.get("model", "?"), msg.get("usage") or {})
                 if mid:
-                    if mid in seen:
-                        continue
-                    seen.add(mid)
-                model = msg.get("model", "?")
-                u = msg.get("usage") or {}
-                for k in KEYS:
-                    v = u.get(k, 0) or 0
-                    by_model[model][k] += v
-                    by_agent[agent][k] += v
-                by_model[model]["turns"] += 1
-                by_agent[agent]["turns"] += 1
-                by_agent[agent]["cost_micro"] += int(cost(model, {k: u.get(k, 0) or 0 for k in KEYS}) * 1e6)
+                    pending[mid] = entry
+                else:
+                    rows.append(entry)
+        for model, u in list(pending.values()) + rows:
+            vals = {k: u.get(k, 0) or 0 for k in KEYS}
+            for k in KEYS:
+                by_model[model][k] += vals[k]
+                by_agent[agent][k] += vals[k]
+            by_model[model]["turns"] += 1
+            by_agent[agent]["turns"] += 1
+            by_agent[agent]["cost_micro"] += int(cost(model, vals) * 1e6)
 
     print("files=%d days=%d root=%s" % (files, args.days, root))
     print("\n== by model（M tokens；est $ 依檔頭牌價表）")
