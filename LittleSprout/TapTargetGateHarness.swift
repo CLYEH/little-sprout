@@ -44,6 +44,12 @@ enum TapTargetGateHarness {
             createChildHost
         case .timelineDefaultState:
             timelineDefaultStateHost
+        case .timelineHeaderNarrow390:
+            timelineHeaderNarrow390Host
+        case .timelineHeaderNarrow375:
+            timelineHeaderNarrow375Host
+        case .timelineButtonCompressionProxy:
+            timelineButtonCompressionProxyHost
         case .albumsDefaultState:
             albumsDefaultStateHost
         case .albumsPopulatedState:
