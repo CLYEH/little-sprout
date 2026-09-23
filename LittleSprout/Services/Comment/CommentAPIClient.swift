@@ -63,10 +63,19 @@ struct CommentRecord: Identifiable, Equatable, Decodable, Sendable {
     let authorID: UUID?
     let authorDisplayName: String
     /// Storage 路徑或 OAuth 公開網址，語意同 `Profile.avatarURL`——呼叫端一律經
-    /// `FamilyStore.avatarDisplayURL(rawValue:)` 轉換，不直接拿來建 `URL`。作者已離開家庭時
-    /// `author_display_name` 仍保留當時的值（見 `list_comments` definer 文件），頭像同理原樣
-    /// 保留，不特別為「已離開／被封鎖」另做遮蔽——與現行 `author_display_name` 的顯示規則
-    /// 一致（沿用現行規則，不新增判斷分支）。
+    /// `FamilyStore.avatarDisplayURL(rawValue:)` 轉換，不直接拿來建 `URL`。
+    ///
+    /// **被封鎖者由伺服器整列過濾，client 不處理**：`list_comments`（definer，
+    /// `20260913010217_comment_count.sql`）先算 `v_blocked_ids`（`private.blocked_pairs()`），
+    /// 主查詢與 `total_count` 都排除作者在其中的留言——被我封鎖的人的留言整則不會回來，自然也
+    /// 沒有 `author_avatar_url`；按讚名單同理由 `reactions_select` RLS 的 `blocked_pairs` 述詞
+    /// （`20260906124837_reactions_block_filter.sql`）整列濾掉。不要把這層過濾搬到 client。
+    ///
+    /// **不另做遮蔽的只有已離開家庭／已刪帳號**：已離開家庭的作者 `author_display_name` 仍保留
+    /// 當時的值（見 `list_comments` definer 文件），頭像路徑同理原樣回傳；但
+    /// `FamilyStore.avatarSignedURLs` 只簽 `myProfile`＋現任 `members` 的路徑，
+    /// `avatarDisplayURL(rawValue:)` 對它回 nil → 沖印佔位。已刪帳號走 `left join
+    /// public.profiles`，此欄為 nil → 佔位。
     let authorAvatarURL: String?
     let body: String
     let createdAt: Date

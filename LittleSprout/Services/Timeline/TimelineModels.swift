@@ -369,8 +369,9 @@ struct ReactorRow: Decodable, Sendable, Equatable, Identifiable {
     /// 一位按讚者離開了家庭，不成比例。改用 `try?` 吞掉「拿不到巢狀容器」或「拿不到
     /// display_name」兩種情況，顯示名稱退回「家人」（純資訊性列表，仍能看到「有 N 人按讚」，
     /// 只是其中一位顯示為通用稱呼，不影響功能）。**LS-345 R2**：`avatarURL` 沿用同一個
-    /// `try?` 巢狀容器——拿不到 profile 時頭像同樣是 nil（退回沖印佔位），與顯示名稱的降級
-    /// 規則一致，不另外判斷「被封鎖／已離開」。
+    /// `try?` 巢狀容器——拿不到 profile（已離開家庭）時頭像同樣是 nil（退回沖印佔位），與顯示
+    /// 名稱的降級規則一致。被封鎖者不走這條：`reactions_select` RLS 的 `blocked_pairs` 述詞
+    /// （`20260906124837_reactions_block_filter.sql`）已把整列濾掉，client 不另外判斷。
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         userID = try container.decode(UUID.self, forKey: .userID)
