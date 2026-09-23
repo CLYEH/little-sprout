@@ -10,6 +10,9 @@
 # `merge-base`／`ls-remote`／`worktree`／`grep`，取代 LS-256「`git log` 不算證據」的決定）與
 # `node`／`python3`／`swift <path>`（R2／merge-review R1 a7e72913 B1 收窄為路徑形狀）；(b) 補 `.test.js`
 # （R2 informational-1：`.test.py` 因與既有 `\.py\b` 重複已移除）——拿掉任一即①aj-①am 紅（見⑰/⑱/⑲ mutation）。
+# LS-352（㉓-㉕）：rubric 自檢段——缺段（--require-selfcheck）→紅、少一條→紅、完整→綠、rubric 多一條而 handoff
+# 沒跟上→紅（資料面負控）、拿掉缺條判定→少一條樣本變綠（程式面 mutation）；另對真 docs/REVIEW-RUBRIC.md 斷言
+# 四維度、可解析、含 LS-333 分頁過濾游標句（原由 agent-tools-check 釘在 merge-reviewer.md，搬家後改釘這裡）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -1228,6 +1231,136 @@ if grep -qF 'missing = []  # HANDOFF-SCREEN-ATTR-MUTATION-MARK' "$mut_screenattr
 else
   echo "✗ ㉒ mutate：找不到插入點，負控本身無效" >&2
   fail=1
+fi
+
+# ==== ㉓ LS-352：rubric 自檢段（條目從 rubric 解析、不寫死）====
+# 夾具 rubric：兩個維度、三條。自檢段樣本對 $R（合成 repo）驗證據存在性。
+RUB="$work/rubric.md"
+cat > "$RUB" <<'EOF'
+# 夾具 rubric
+- 說明行（不是條目）
+
+## R1 Race condition
+
+- R1.1 actor 隔離
+- R1.2 快取一致性
+
+## R2 運算效能
+
+- R2.1 N+1 查詢
+EOF
+SC_OK='## 已驗證
+- 條件 1：`FooTests` 全綠
+
+## 自檢（依 docs/REVIEW-RUBRIC.md）
+- R1.1｜通過｜`FooTests.testBar` 覆蓋 actor 隔離
+- R1.2｜不適用｜本票不碰快取（`git diff --stat main` 無 Cache 檔）
+- R2.1｜已知未處理｜N+1 留給下票，見 Fixture/FooTests.swift:3
+'
+# expect_sc <期望 exit> <名稱> <輸出必含|''> <handoff 內容> [額外參數…]
+expect_sc() {
+  local want=$1 name=$2 must=$3 body=$4 out got
+  shift 4
+  printf '%s' "$body" > "$work/handoff-sc.md"
+  out="$(bash "$check" "$work/handoff-sc.md" --repo "$R" "$@" 2>&1)"
+  got=$?
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; }; then
+    echo "✓ ${name}"
+  else
+    echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}，實得 ${got}）" >&2
+    printf '%s\n' "$out" | sed 's/^/    /' >&2
+    fail=1
+  fi
+}
+
+expect_sc 0 '㉓a 自檢段完整（三條皆有編號／狀態／證據）＋--require-selfcheck → 綠' '✓ 自檢段 3 條與 rubric 逐條對上' "$SC_OK" --rubric "$RUB" --require-selfcheck
+
+expect_sc 1 '㉓b 缺自檢段＋--require-selfcheck → 紅，列出 rubric 全部條目' '找不到「## 自檢（依 docs/REVIEW-RUBRIC.md）」段落（--require-selfcheck）——須逐條寫 rubric 全部 3 條：R1.1、R1.2、R2.1' \
+'## 已驗證
+- 條件 1：`FooTests` 全綠
+' --rubric "$RUB" --require-selfcheck
+
+expect_sc 0 '㉓c 缺自檢段但未帶 --require-selfcheck（QA 裁決／verdict 形狀）→ 不追溯判紅' '' \
+'## 已驗證
+- 條件 1：`FooTests` 全綠
+' --rubric "$RUB"
+
+SC_MINUS_ONE="${SC_OK/'- R1.2｜不適用｜本票不碰快取（`git diff --stat main` 無 Cache 檔）
+'/}"
+[ "$SC_MINUS_ONE" != "$SC_OK" ] || { echo "✗ ㉓d 夾具：拿掉 R1.2 失敗（負樣本本身無效）" >&2; fail=1; }
+expect_sc 1 '㉓d 自檢段少一條（R1.2）→ 紅，點名缺哪一條' '自檢段缺 rubric 條目 R1.2（rubric 3 條、自檢段對上 2 條' "$SC_MINUS_ONE" --rubric "$RUB" --require-selfcheck
+
+# ㉓e 資料面 mutation 負控：rubric 多一條（R2.2）而 handoff 沒跟上 → 紅並點名 R2.2——證明條目數確實讀自 rubric、非寫死
+RUB_PLUS="$work/rubric-plus.md"
+{ cat "$RUB"; echo '- R2.2 OFFSET 分頁'; } > "$RUB_PLUS"
+expect_sc 1 '㉓e rubric 多一條（R2.2）而 handoff 沒跟上 → 紅，點名 R2.2' '自檢段缺 rubric 條目 R2.2（rubric 4 條、自檢段對上 3 條' "$SC_OK" --rubric "$RUB_PLUS" --require-selfcheck
+
+expect_sc 1 '㉓f 自檢段多一條不在 rubric 的 R9.9 → 紅，點名' '自檢段的 R9.9 不在 rubric' "${SC_OK}- R9.9｜通過｜\`FooTests\`
+" --rubric "$RUB"
+
+expect_sc 1 '㉓g 列項缺狀態（沒寫通過／不適用／已知未處理）→ 紅' '自檢段第 5 行 R1.1 缺 狀態（通過／不適用／已知未處理）' "${SC_OK/'R1.1｜通過｜'/'R1.1｜'}" --rubric "$RUB"
+
+expect_sc 1 '㉓h 列項缺證據（只有狀態）→ 紅' '自檢段第 5 行 R1.1 缺 證據（測試名／file:line／路徑／指令）' "${SC_OK/'- R1.1｜通過｜`FooTests.testBar` 覆蓋 actor 隔離'/'- R1.1｜通過｜看起來沒問題'}" --rubric "$RUB"
+
+expect_sc 1 '㉓i 自檢段引用不存在的測試名 → 紅（同「已驗證」段存在性規則）' '自檢段第 5 行 R1.1 引用的測試名 `GhostTests` 在 repo 內找不到' "${SC_OK/'`FooTests.testBar`'/'`GhostTests`'}" --rubric "$RUB"
+
+expect_sc 1 '㉓j 列項沒有 R<n>.<m> 編號起頭 → 紅' '自檢段第 5 行的列項不是以 R<n>.<m> 編號起頭' "${SC_OK/'- R1.1｜'/'- 第一條｜'}" --rubric "$RUB"
+
+# ㉓k LS-292 BOLD_ONLY_RE 形狀的粗體標題（粗體＋括號附註＋冒號）也認得
+expect_sc 0 '㉓k 粗體標題「**自檢**（依 docs/REVIEW-RUBRIC.md）：」（LS-292 形狀）→ 綠' '✓ 自檢段 3 條與 rubric 逐條對上' "${SC_OK/'## 自檢（依 docs/REVIEW-RUBRIC.md）'/'**自檢**（依 docs/REVIEW-RUBRIC.md）：'}" --rubric "$RUB" --require-selfcheck
+
+# ㉓l 標題關鍵字錨在開頭：「已驗證（含自檢）」不會被當成自檢段（否則缺段被誤判為已存在）
+expect_sc 1 '㉓l 「## 已驗證（含自檢）」不算自檢段 → --require-selfcheck 仍紅' '找不到「## 自檢（依 docs/REVIEW-RUBRIC.md）」段落' \
+'## 已驗證（含自檢）
+- 條件 1：`FooTests` 全綠
+' --rubric "$RUB" --require-selfcheck
+
+printf '# 空 rubric\n\n## R1 x\n\n沒有條目\n' > "$work/rubric-empty.md"
+expect_sc 2 '㉓m rubric 解析不到任何條目 → exit 2（fail closed，不當成 0 條放行）' '解析不到任何 `- R<n>.<m>` 條目' "$SC_OK" --rubric "$work/rubric-empty.md"
+printf '# 重複\n\n## R1 x\n\n- R1.1 a\n- R1.1 b\n' > "$work/rubric-dup.md"
+expect_sc 2 '㉓n rubric 編號重複 → exit 2' '條目編號 R1.1 重複' "$SC_OK" --rubric "$work/rubric-dup.md"
+
+# ==== ㉔ 程式面 mutation 負控：拿掉「缺哪條」判定（absent 恆為空）→ ㉓d 少一條的樣本改判綠，證明紅是這條檢查造成的 ====
+mut_sccount="$work/handoff_evidence_check.no-selfcheck-count.py"
+awk '
+  index($0, "# HANDOFF-SELFCHECK-COUNT") > 0 { print "    absent = []  # HANDOFF-SELFCHECK-MUTATION-MARK"; print; next }
+  { print }
+' "$py" > "$mut_sccount"
+if grep -qF 'absent = []  # HANDOFF-SELFCHECK-MUTATION-MARK' "$mut_sccount"; then
+  printf '%s' "$SC_MINUS_ONE" > "$work/mut24.md"
+  out24="$(python3 "$mut_sccount" "$work/mut24.md" --repo "$R" --rubric "$RUB" --require-selfcheck 2>&1)"; rc24=$?
+  if [ "$rc24" -eq 0 ]; then
+    echo "✓ ㉔ mutant（拿掉缺條判定）：㉓d 少一條的樣本改判綠——證明紅是這條檢查造成的"
+  else
+    echo "✗ ㉔ mutant 未如預期翻轉（實得 exit ${rc24}）" >&2
+    printf '%s\n' "$out24" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ㉔ mutate：找不到 HANDOFF-SELFCHECK-COUNT 插入點，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ㉕ 真 rubric（docs/REVIEW-RUBRIC.md）：四維度、可解析、含 LS-333 分頁過濾游標句（R1.5——原由 agent-tools-check
+#        釘在 merge-reviewer.md，LS-352 搬進 rubric 後改在這裡釘，句子被刪即紅）====
+real_rubric="${root}/docs/REVIEW-RUBRIC.md"
+dims=$(grep -cE '^## R[0-9]+ ' "$real_rubric" || true)
+if [ "$dims" -eq 4 ]; then echo "✓ ㉕ 真 rubric 四個維度標題"; else echo "✗ ㉕ 真 rubric 維度標題應為 4（實得 ${dims}）" >&2; fail=1; fi
+rub_text="$(cat "$real_rubric")"
+if has "$rub_text" '下一頁游標取自原始指標而非過濾後結果' && has "$rub_text" '本檔是 ios-dev 自檢與 merge-reviewer 審查的單一來源，改條目請同步自測'; then
+  echo "✓ ㉕ 真 rubric 含分頁過濾游標句與單一來源檔頭"
+else
+  echo "✗ ㉕ 真 rubric 缺分頁過濾游標句或單一來源檔頭" >&2; fail=1
+fi
+real_ids=$(grep -cE '^- R[0-9]+\.[0-9]+ ' "$real_rubric" || true)
+printf '%s' "## 已驗證
+- 條件 1：\`FooTests\` 全綠
+" > "$work/real-rubric.md"
+out25="$(bash "$check" "$work/real-rubric.md" --repo "$R" --rubric "$real_rubric" --require-selfcheck 2>&1)"; rc25=$?
+if [ "$rc25" -eq 1 ] && has "$out25" "須逐條寫 rubric 全部 ${real_ids} 條" && [ "$real_ids" -gt 0 ]; then
+  echo "✓ ㉕ 真 rubric 可解析（${real_ids} 條，與 grep 計數一致），缺段時列出全部條目"
+else
+  echo "✗ ㉕ 真 rubric 解析結果與 grep 計數（${real_ids}）不符（exit ${rc25}）" >&2; printf '%s\n' "$out25" | sed 's/^/    /' >&2; fail=1
 fi
 
 if [ "$fail" -eq 0 ]; then
