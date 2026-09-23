@@ -2,6 +2,7 @@
 """Export Done/Canceled Linear issues (team LS) to markdown files, then optionally archive them.
 
 usage: linear-archive.py --export DIR [--cutoff ISO] [--archive] [--dry-run]
+       linear-archive.py --issue LS-<n> --out FILE   (single issue, any state: description + all comments; LS-351 pool archive)
   --export DIR   write DIR/LS-<n>.md per issue + DIR/README.md index
   --cutoff ISO   only issues completed/canceled before this UTC instant (default 2026-09-13T16:00:00Z = 09-14 00:00 Taipei)
   --dry-run      only list what would be exported/archived
@@ -138,12 +139,25 @@ def md(issue):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--export", required=True)
+    ap.add_argument("--export")
+    ap.add_argument("--issue", help="single issue identifier (e.g. LS-96); requires --out")
+    ap.add_argument("--out", help="output file for --issue")
     ap.add_argument("--cutoff", default="2026-09-13T16:00:00Z")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--archive", action="store_true")
     a = ap.parse_args()
+    if a.issue:
+        if not a.out or a.export or a.archive:
+            ap.error("--issue requires --out and cannot be combined with --export/--archive")
+    elif not a.export:
+        ap.error("--export is required (or use --issue/--out)")
     key = load_key()
+    if a.issue:
+        full = fetch_issue(key, a.issue)
+        with open(a.out, "w") as f:
+            f.write(md(full))
+        print(f"  ✓ {full['identifier']} 留言 {len(full['comments'])} → {a.out}")
+        return
     issues = list_issues(key, a.cutoff)
     issues.sort(key=lambda i: int(i["identifier"].split("-")[1]))
     print(f"候選 {len(issues)} 張（completed/canceled 早於 {a.cutoff}）")

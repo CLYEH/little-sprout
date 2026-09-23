@@ -13,6 +13,11 @@
 # LS-256（⑩；LS-96 池項 010d927d(2)(3)）：(a) LS-96 行的純數字 token（GitHub run id）不算 comment id 候選——只有 run id 的池項行格式紅、
 #   run id 與真 id 並列時候選清單不含 run id；退回「純數字也算候選」即紅。(b) --verify 無 LINEAR_API_KEY 且有池項候選未反查 → exit 3
 #   （訊息含「exit 3＝未反查，不是違規」）、無池項候選 → 0、git 半段紅 → 仍 1（違規優先）；退回 exit 0 即紅（⑥a／⑥a2 同步改期望 3）。
+# LS-351（⑥j）：待辦池 LS-96 封存、新池 LS-354——兩個票號都算池項行、--verify 以兩池 comment id 聯集比對（在飛 PR 寫舊池 id 不誤紅）。
+# LS-351 R2（⑫i–l、⑬）：Incidents 行的池票號不算事故、只修改既有 gate 不觸發（各帶 mutation）；hotfix/* 分支 body 必有非空
+#   Hotfix-reason 行、-backmerge-* 豁免（mutation：hotfix 判斷失效即綠）。
+# LS-351（⑫）：新增 scripts/gates/<name>.sh 的 PR body 須有 `Incidents:` 行列 ≥2 個同型事故（本票不算、純數字不算、只加自測／lib 不觸發）；
+#   mutation 拿掉該段即綠。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -39,7 +44,8 @@ expect() {
   fi
 }
 
-B=hotfix/LS-63-scratchpad
+# LS-351 R2：預設用 fix/ 分支——hotfix/* 另需 Hotfix-reason 行（⑬ 專測），這裡測的是與分支型別無關的規則
+B=fix/LS-63-scratchpad
 
 # ① 應放行：三種實際 PR body 形狀
 expect 0 '① Ticket: 行在第一行（PR #90 形狀）' 'LS-63' $'Ticket: LS-63 — Harness：暫存檔名帶票號\n\n## 變更\n- 東西\n' --branch "$B"
@@ -107,7 +113,7 @@ expect 1 '⑤a 同義詞「待辦池」缺 id → 紅' '必附 comment id' "${H}
 expect 1 '⑤a 只有 7 位 hex 不夠（LS-96 行要 ≥8）' '第 4 行' "${H}- i1：記入 LS-96 \`9f348e3\`"$'\n' --branch "$B"
 expect 1 '⑤a hex 嵌在更長英數串裡不算獨立 token' '沒有 comment id' "${H}- i1：記入 LS-96 x9f348e36y"$'\n' --branch "$B"
 expect 1 '⑤a 大寫 hex 不算（Linear id／git SHA 皆小寫）' '沒有 comment id' "${H}- i1：記入 LS-96 9F348E36"$'\n' --branch "$B"
-expect 0 '⑤a LS-960 不是 LS-96（整字比對），無 id 也綠' 'LS-96 行 0 條' "${H}- 承 LS-960 的做法"$'\n' --branch "$B"
+expect 0 '⑤a LS-960 不是 LS-96（整字比對），無 id 也綠' 'LS-354 行 0 條' "${H}- 承 LS-960 的做法"$'\n' --branch "$B"
 expect 1 '⑤a 紅時點名行號並回顯該行' '    | - i1：記入 LS-96 待辦池' "${H}- i1：記入 LS-96 待辦池"$'\n' --branch "$B"
 expect 1 '⑤a 負向提及也會中（全 body 掃取捨）→ 提示改寫措辭＋止血指示' '改寫措辭' "${H}- 不另立 LS-96 池項"$'\n' --branch "$B"
 expect 1 '⑤a 紅時附「CI 不會自動重跑」止血指示' 'close/reopen' "${H}- 不另立 LS-96 池項"$'\n' --branch "$B"
@@ -132,6 +138,10 @@ cat > "$work/fx/page1.json" <<'EOF'
 EOF
 cat > "$work/fx/page2.json" <<'EOF'
 {"data":{"issue":{"identifier":"LS-96","comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[{"id":"9f348e36-82b6-4926-931b-5bfe1637e1f1"},{"id":"fd2fe81e-5592-443c-8b5b-1d518214c650"}]}}}}
+EOF
+# LS-351：新池 LS-354（單頁 1 則）——--verify 以 LS-354＋舊池 LS-96 的 comment id 聯集比對
+cat > "$work/fx/pool354.json" <<'EOF'
+{"data":{"issue":{"identifier":"LS-354","comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[{"id":"a3543543-aaaa-4bbb-8ccc-000000000354"}]}}}}
 EOF
 cat > "$work/bin/curl" <<EOF
 #!/bin/bash
@@ -168,6 +178,7 @@ while [ \$# -gt 0 ]; do
   shift
 done
 case "\$data" in
+  *'"id": "LS-354"'*) cat "\$fx/pool354.json" ;;
   *'CURSOR1'*) cat "\$fx/page2.json" ;;
   *'"after": null'*) cat "\$fx/page1.json" ;;
   *) echo '{"errors":[{"message":"stub curl：認不出的 query"}]}' ;;
@@ -242,8 +253,9 @@ rm -f "$V/.env"
 
 : > "$CURL_STUB_LOG"
 vexpect 0 '⑥b 有 key：id 只在第 2 頁 → 綠（分頁到底）' '9f348e36 存在（9f348e36-82b6-4926-931b-5bfe1637e1f1）' 'test-token-not-real' "$both"
-if [ "$(grep -cF '"after": null' "$CURL_STUB_LOG")" -eq 1 ] && [ "$(grep -cF 'CURSOR1' "$CURL_STUB_LOG")" -eq 1 ]; then
-  echo "✓ ⑥b curl 兩次：第 1 頁 after=null、第 2 頁帶 endCursor"
+if [ "$(grep -cF '"after": null' "$CURL_STUB_LOG")" -eq 2 ] && [ "$(grep -cF 'CURSOR1' "$CURL_STUB_LOG")" -eq 1 ] \
+   && [ "$(grep -cF '"id": "LS-354"' "$CURL_STUB_LOG")" -eq 1 ] && [ "$(grep -cF '"id": "LS-96"' "$CURL_STUB_LOG")" -eq 2 ]; then
+  echo "✓ ⑥b curl 三次：LS-354 一頁＋LS-96 第 1 頁 after=null、第 2 頁帶 endCursor（LS-351：兩池聯集）"
 else
   echo "✗ ⑥b 分頁呼叫形狀不對" >&2; sed 's/^/    /' "$CURL_STUB_LOG" >&2; fail=1
 fi
@@ -254,8 +266,14 @@ else
 fi
 vexpect 0 '⑥b id 在第 1 頁（前綴比對）' 'c2ee062d 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`c2ee062d\`"$'\n'
 vexpect 0 '⑥b 完整 UUID 也能比對' 'fd2fe81e 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`fd2fe81e-5592-443c-8b5b-1d518214c650\`"$'\n'
-vexpect 1 '⑥c id 不在 LS-96 → 紅 exit 1' '在 LS-96 找不到' 'test-token-not-real' "${H}- i1：記入 LS-96 \`deadbeef00\`"$'\n'
-vexpect 1 '⑥c 找不到時列出候選與 LS-96 comment 總數' '候選：deadbeef00；LS-96 現有 4 則' 'test-token-not-real' "${H}- i1：記入 LS-96 \`deadbeef00\`"$'\n'
+vexpect 1 '⑥c id 不在任一池 → 紅 exit 1' '在 LS-354／LS-96 找不到' 'test-token-not-real' "${H}- i1：記入 LS-96 \`deadbeef00\`"$'\n'
+vexpect 1 '⑥c 找不到時列出候選與兩池 comment 總數' '候選：deadbeef00；兩池現有 5 則' 'test-token-not-real' "${H}- i1：記入 LS-96 \`deadbeef00\`"$'\n'
+: > "$CURL_STUB_LOG"
+# ⑥j LS-351：新池 LS-354——「記入 LS-354 <id>」格式規則同 LS-96、--verify 在 LS-354 找得到即綠；舊池 id 寫在 LS-354 行也綠（聯集）
+expect 1 '⑥j 記入 LS-354 缺 id → 紅（新池同受規則 (a)）' '沒有 comment id' "${H}- i1：記入 LS-354 待辦池"$'\n' --branch "$B"
+expect 1 '⑥j 缺 id 時指示記入新池 LS-354' '記入 LS-354 必附 comment id' "${H}- i1：記入待辦池"$'\n' --branch "$B"
+vexpect 0 '⑥j --verify：LS-354 的 comment id 存在 → 綠' 'a3543543 存在' 'test-token-not-real' "${H}- i1：記入待辦池 LS-354 \`a3543543\`"$'\n'
+vexpect 0 '⑥j --verify：在飛 PR 仍寫舊池 LS-96 的 id → 綠（聯集，不誤紅）' '9f348e36 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`9f348e36\`"$'\n'
 : > "$CURL_STUB_LOG"
 vexpect 0 '⑥d body 沒有 LS-96 行 → 不打 Linear' '「已修」行 1 條' 'test-token-not-real' "${H}- m1：已修 \`${sha_in}\`"$'\n'
 if [ -s "$CURL_STUB_LOG" ]; then echo "✗ ⑥d 沒有 LS-96 行不應呼叫 curl" >&2; sed 's/^/    /' "$CURL_STUB_LOG" >&2; fail=1; else echo "✓ ⑥d 沒有 LS-96 行不呼叫 curl"; fi
@@ -408,7 +426,7 @@ fi
 #   之後的版本）與 LS-315 同一 PR 的 CI run id（35289196077，無連字號）是驗收明定的兩個具體實例。
 PR486_LINE='- i1：記入待辦池 LS-96 `16074303-698d-49ae-9a1e-391cb3fbadf9`，本輪不修——`AlbumsView` 進場會重載，不會殘留錯誤態'
 expect 0 '⑪a PR #486 第 72 行原句（格式）：完整 UUID 首段全為數字，格式仍綠' '皆帶 comment id' "${H}${PR486_LINE}"$'\n' --branch "$B"
-vexpect 1 '⑪a --verify：PR #486 第 72 行原句——候選須為首段 16074303、不含尾段 391cb3fbadf9（驗收明定）' '候選：16074303；LS-96 現有 4 則' 'test-token-not-real' "${H}${PR486_LINE}"$'\n'
+vexpect 1 '⑪a --verify：PR #486 第 72 行原句——候選須為首段 16074303、不含尾段 391cb3fbadf9（驗收明定）' '候選：16074303；兩池現有 5 則' 'test-token-not-real' "${H}${PR486_LINE}"$'\n'
 expect 1 '⑪b 裸 CI run id 35289196077（LS-315 PR #486，無連字號）→ 不算候選' '沒有 comment id' "${H}- i1：記入 LS-96（run 35289196077）"$'\n' --branch "$B"
 expect 0 '⑪b 裸 run id 與真 id 並列 → 候選只有真 id、格式綠' '皆帶 comment id' "${H}- i1：記入 LS-96（run 35289196077）\`9f348e36\`"$'\n' --branch "$B"
 vexpect 0 '⑪c 同行兩個完整 UUID：首段皆為候選，任一可驗即過' '9f348e36 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`00000001-0000-0000-0000-000000000000\`、\`9f348e36-82b6-4926-931b-5bfe1637e1f1\`"$'\n'
@@ -433,7 +451,97 @@ else
   fi
 fi
 
+# ⑫ LS-351 新 gate 門檻（--verify (d)）：branch 對 base 的 diff 新增 scripts/gates/<name>.sh（直屬、非 *.test.sh）時，
+#   body 必有 `Incidents:` 行列 ≥2 個同型事故（LS-<n>／≥8 位 hex 池項 id，本票不算）；只加自測／lib 助手不觸發。
+Rg="$work/grepo"; mkdir -p "$Rg"
+gg() { git -C "$Rg" -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
+gg init -q -b base
+mkdir -p "$Rg/scripts/gates"
+printf '#!/bin/bash\n' > "$Rg/scripts/gates/old-check.sh"
+gg add -A; gg commit -q -m 'chore: LS-63 base'
+gg checkout -q -b "$B"
+mkdir -p "$Rg/scripts/gates/lib"
+printf '#!/bin/bash\n' > "$Rg/scripts/gates/new-check.sh"
+gg add -A; gg commit -q -m 'feat(gates): LS-63 new-check'
+# R2 m2：base 已有 old-check.sh、分支只修改它 → 不是「新增 gate」，不觸發 (d)
+gg checkout -q -b fix/LS-63-modonly base
+printf '# changed\n' >> "$Rg/scripts/gates/old-check.sh"
+gg add -A; gg commit -q -m 'fix(gates): LS-63 modify old-check'
+gg checkout -q -b fix/LS-63-onlytests base
+printf '#!/bin/bash\n' > "$Rg/scripts/gates/new-check.test.sh"
+printf '#!/bin/bash\n' > "$Rg/scripts/gates/lib/helper.sh"
+gg add -A; gg commit -q -m 'test(gates): LS-63 only tests'
+gg checkout -q "$B"
+# gexpect <期望 exit> <名稱> <輸出必含> <body> [<分支>]：在 $Rg 以 --base base --verify 跑（無 LINEAR key、body 無池項行，不打 curl）
+gexpect() {
+  local want=$1 name=$2 must=$3 body=$4 br=${5:-$B} out got
+  printf '%s' "$body" > "$work/gbody"
+  out="$( (cd "$Rg" && git -c advice.detachedHead=false checkout -q "$br" && LINEAR_API_KEY='' bash "${GCHECK:-$check}" --branch "$br" --verify --base base "$work/gbody" 2>&1) )"; got=$?
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; }; then
+    echo "✓ ${name}"
+  else
+    echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}，實得 ${got}）" >&2
+    printf '%s\n' "$out" | sed 's/^/    /' >&2
+    fail=1
+  fi
+}
+T=$'Ticket: LS-63\n\n'
+gexpect 1 '⑫a 新增 gate、body 無 Incidents 行 → 紅' '需有 `Incidents:` 行列 ≥2 個同型事故' "${T}說明"$'\n'
+gexpect 1 '⑫b Incidents 只列 1 個 → 紅、點名實得 1' '實得 1 個' "${T}Incidents: LS-292"$'\n'
+gexpect 0 '⑫c Incidents 列 2 個票號 → 綠' 'Incidents 行列 2 個同型事故' "${T}Incidents: LS-292、LS-294"$'\n'
+gexpect 1 '⑫d 本票票號不算（LS-63＋LS-292 只算 1 個）' '實得 1 個' "${T}Incidents: LS-63、LS-292"$'\n'
+gexpect 0 '⑫e 票號＋8 位 hex 池項 id 混列、列點＋粗體＋全形冒號形狀 → 綠' 'Incidents 行列 2 個同型事故' "${T}- **Incidents：** LS-292、池項 \`9f348e36\`"$'\n'
+gexpect 1 '⑫f 純數字（run id）不算池項 id' '實得 1 個' "${T}Incidents: LS-292（run 17654321987）"$'\n'
+gexpect 0 '⑫g 只新增 *.test.sh 與 lib/ 助手 → 不觸發' '' "${T}說明"$'\n' fix/LS-63-onlytests
+# R2 m1：池票號（LS-96／LS-354）不算事故——「LS-96 池項 `<id>`」只算 1 個
+gexpect 1 '⑫i 池票號不算事故：Incidents: LS-96 池項 <id> 只算 1 個 → 紅' '實得 1 個' "${T}Incidents: LS-96 池項 \`9f348e36\`"$'\n'
+gexpect 1 '⑫i 新池票號同理：Incidents: LS-354 池項 <id> 只算 1 個 → 紅' '實得 1 個' "${T}Incidents: LS-354 池項 \`a3543543\`"$'\n'
+# R2 m2：只修改既有 gate → 不觸發
+gexpect 0 '⑫j 只修改既有 gate（base 已有 old-check.sh）→ 不觸發 (d)' '' "${T}說明"$'\n' fix/LS-63-modonly
+# ⑫k mutation（m1）：拿掉池票號排除 → ⑫i 變成算 2 個、不再紅（無 key 只剩「未反查」exit 3）
+mut12k="$work/pr-body-check.no-pool-exclude.sh"
+sed 's/ -e "\$pool" -e "\$legacy_pool"//' "$check" > "$mut12k"
+if cmp -s "$check" "$mut12k"; then
+  echo "✗ ⑫k mutant 沒被正確合成" >&2; fail=1
+else
+  GCHECK="$mut12k" gexpect 3 '⑫k mutant（拿掉池票號排除）：⑫i 同一份 body 不再紅——證明 ⑫i 的紅來自這條排除' '' "${T}Incidents: LS-96 池項 \`9f348e36\`"$'\n'
+fi
+# ⑫l mutation（m2）：拿掉 --diff-filter=A → 只修改既有 gate 也被當成新增而紅
+mut12l="$work/pr-body-check.no-diff-filter.sh"
+sed 's/ --diff-filter=A//' "$check" > "$mut12l"
+if cmp -s "$check" "$mut12l"; then
+  echo "✗ ⑫l mutant 沒被正確合成" >&2; fail=1
+else
+  GCHECK="$mut12l" gexpect 1 '⑫l mutant（拿掉 --diff-filter=A）：⑫j 誤紅——證明 ⑫j 的綠來自只看新增' '需有 `Incidents:` 行' "${T}說明"$'\n' fix/LS-63-modonly
+fi
+
+# ⑬ LS-351 R2：hotfix/* 分支 body 必有非空 Hotfix-reason 行；-backmerge-* 豁免；fix/* 不要求（上面全部樣本即是）
+HB=hotfix/LS-63-urgent
+expect 1 '⑬a hotfix 分支無 Hotfix-reason → 紅' '需有非空的 `Hotfix-reason:` 行' $'Ticket: LS-63\n\n說明\n' --branch "$HB"
+expect 1 '⑬b Hotfix-reason 空值 → 紅' '需有非空的 `Hotfix-reason:` 行' $'Ticket: LS-63\n\nHotfix-reason:   \n' --branch "$HB"
+expect 1 '⑬b 粗體包住但無內容 → 紅' '需有非空的 `Hotfix-reason:` 行' $'Ticket: LS-63\n\n**Hotfix-reason:**\n' --branch "$HB"
+expect 0 '⑬c 列點＋粗體＋全形冒號＋內容 → 綠' 'hotfix 分支附 Hotfix-reason' $'Ticket: LS-63\n\n- **Hotfix-reason：** 擋住 LS-999 在飛 PR #1 的 CI\n' --branch "$HB"
+expect 0 '⑬d 本地合併版 back-merge 分支豁免' '' $'Ticket: LS-63\n\n說明\n' --branch hotfix/LS-63-backmerge-development
+# ⑬e mutation：hotfix 分支型別判斷失效（case 永不命中）→ ⑬a 變綠
+mut13="$work/pr-body-check.no-hotfix-reason.sh"
+sed 's#^  hotfix/\*)$#  hotfix/NEVER-MATCH*)#' "$check" > "$mut13"
+if cmp -s "$check" "$mut13"; then
+  echo "✗ ⑬e mutant 沒被正確合成" >&2; fail=1
+else
+  printf '%s' $'Ticket: LS-63\n\n說明\n' > "$work/body13"
+  out13="$(bash "$mut13" --branch "$HB" "$work/body13" 2>&1)"; got13=$?
+  if [ "$got13" -eq 0 ]; then echo "✓ ⑬e mutant（hotfix 判斷失效）：⑬a 同一份 body 變綠——證明 ⑬a 的紅來自這段"; else echo "✗ ⑬e mutant 應 exit 0（實得 ${got13}）" >&2; printf '%s\n' "$out13" | sed 's/^/    /' >&2; fail=1; fi
+fi
+# ⑫h mutation：拿掉 (d) 段 → ⑫a 變綠，證明紅來自這段
+mut12="$work/pr-body-check.no-incidents.sh"
+sed 's/^if \[ -n "\${design_ref_base_sha:-}" \]; then$/if false; then  # LS-351 mutation/' "$check" > "$mut12"
+if ! grep -q 'LS-351 mutation' "$mut12"; then
+  echo "✗ ⑫h mutant 沒被正確合成" >&2; fail=1
+else
+  GCHECK="$mut12" gexpect 0 '⑫h mutant（拿掉 Incidents 段）：⑫a 同一份 body 變綠——證明 ⑫a 的紅來自這段' '' "${T}說明"$'\n'
+fi
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pr-body-check 自測通過（124 組樣本）"
+  echo "✓ pr-body-check 自測通過（147 組樣本）"
 fi
 exit "$fail"
