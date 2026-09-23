@@ -6,6 +6,7 @@
 # 要 orchestrator 用 MCP list_issues 對照，這裡只印提醒。自測：scripts/ops/patrol.test.sh（合成 repo，掛 CI rules job）。
 #
 # 用法：patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>] [--linear]
+#        patrol.sh --weekly [--repo <path>]
 #   stale_minutes  幾分鐘沒動算停滯（預設 45）
 #   --brief        只印表頭＋異常行（hook 注入 context 用）；全正常時末行「巡檢：無異常」
 #   --json         單一 JSON 物件（欄位見檔尾 json 分支；LS-198 加 sim_linear_note＝專屬模擬器段這輪有沒有問 Linear），不依賴 jq
@@ -18,6 +19,8 @@
 #                  合併未支援（Linear 半段是獨立 JSON 物件，契約不合併）——這裡只印警告，另跑
 #                  `patrol-linear.sh --json`。LS-187 起專屬模擬器段也靠它（`patrol-linear.sh --closed <n,…>`）查
 #                  「worktree 仍在的票是否已 Done／Canceled」——patrol.sh 自己仍不碰 token；缺 key 只用 worktree 判定。
+#   --weekly       週報模式（LS-352）：只印一行 scripts/ops/review-rounds-report.sh 的審查輪次摘要（近 7 天 main 的
+#                  fix commit 裡 R2+／R3+ 比例）後結束，不跑其餘巡檢段——既有 human／brief／json 輸出格式不變。
 #
 # 停滯判定（§4-b 三型態；stale＝上面的分鐘數）：
 #   PR       CONFLICTING／UNSTABLE／BEHIND／CHANGES_REQUESTED 立即標；CLEAN 且 APPROVED 立即標「可併」；
@@ -45,7 +48,7 @@
 # exit 0＝巡檢完成（有無異常都 0，異常在輸出）；2＝參數／repo 錯誤。
 set -uo pipefail
 
-STALE=45; MODE=human; DO_FETCH=1; DO_PR=1; REPO=; DO_LINEAR=0
+STALE=45; MODE=human; DO_FETCH=1; DO_PR=1; REPO=; DO_LINEAR=0; DO_WEEKLY=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --brief) MODE=brief ;;
@@ -53,11 +56,12 @@ while [ $# -gt 0 ]; do
     --no-fetch) DO_FETCH=0 ;;
     --no-pr) DO_PR=0 ;;
     --linear) DO_LINEAR=1 ;;
+    --weekly) DO_WEEKLY=1 ;;
     --repo)
       [ -n "${2:-}" ] || { echo "✗ patrol：--repo 缺值" >&2; exit 2; }
       REPO=$2; shift ;;
     -h|--help)
-      echo "用法：patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>] [--linear]（說明見檔頭註解）"; exit 0 ;;
+      echo "用法：patrol.sh [stale_minutes] [--brief|--json] [--no-fetch] [--no-pr] [--repo <path>] [--linear]｜patrol.sh --weekly [--repo <path>]（說明見檔頭註解）"; exit 0 ;;
     -*) echo "✗ patrol：未知參數 $1" >&2; exit 2 ;;
     *)
       case "$1" in ''|*[!0-9]*) echo "✗ patrol：stale 分鐘須為整數（得到「$1」）" >&2; exit 2 ;; esac
@@ -71,6 +75,12 @@ done
 common=$(git -C "$REPO" rev-parse --git-common-dir 2>/dev/null) || { echo "✗ patrol：${REPO} 不是 git repo" >&2; exit 2; }
 case "$common" in /*) ;; *) common="${REPO}/${common}" ;; esac
 ROOT=$(cd "$(dirname "$common")" && pwd)
+
+# LS-352：週報模式——只印審查輪次摘要一行就結束（不動其餘段的輸出格式）。
+if [ "$DO_WEEKLY" -eq 1 ]; then
+  bash "$(dirname "${BASH_SOURCE[0]}")/review-rounds-report.sh" --repo "$ROOT"
+  exit $?
+fi
 now=$(date +%s)
 
 # ---- 小工具（bash 3.2；不依賴 jq／date -j／date -d）----

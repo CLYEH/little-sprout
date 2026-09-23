@@ -7,6 +7,8 @@
 # gate hooks 沒裝（core.hooksPath 不是 .githooks／hook 不可執行）不標或裝好了誤標（LS-87）、
 # >1 台非 demo-* 模擬器同時 Booted 卻沒標、demo-* 沒被豁免、或只有一台就誤標（LS-100）、
 # 或 SessionStart hook 輸出不合法 JSON／非 0 退出／settings.json 沒掛上——這裡會紅。
+# LS-352（㉝）：review-rounds-report.sh 的 fix／R2+／R3+ 計數（PR2 不算、feat 不算、--days 視窗、零 fix 印「—」、
+# ref 不存在 exit 2）＋ patrol.sh --weekly 只印那一行＋拿掉英數邊界的 mutation 負控。
 # 合成 repo：file:// 裸 repo 當 origin（main／development／test），clone 當主 checkout，八個 worktree 各一種形狀；最後把 origin 指向會掛住的 ext:: 位址驗 fetch 看門狗。
 set -uo pipefail
 
@@ -2396,6 +2398,55 @@ if grep -q -- '--branch feature/LS-285-a' "$calls30l"; then
 else
   echo "✗ ㉚l-c 沒看到 --branch feature/LS-285-a 的查詢" >&2
   fail=1
+fi
+
+# ==== ㉝ LS-352：review-rounds-report.sh（審查輪次報表）＋ patrol.sh --weekly ====
+# 合成 repo：main 上 6 支近期 fix（R2／R3／R1／無標記／PR2（不算）／R12）＋1 支 feat R5（非 fix 不算）＋1 支 30 天前的 fix R4
+#（--days 7 排除、--days 60 納入）。期望：近 7 天 fix 6｜R2+ 3（50.0%）｜R3+ 2（33.3%）；近 60 天 fix 7｜R2+ 4（57.1%）｜R3+ 3（42.9%）。
+report="${root}/scripts/ops/review-rounds-report.sh"
+rr="$work/rr-repo"
+git init -q -b main "$rr"
+rr_commit() { git -C "$rr" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m "$1"; }
+old_date="$(( $(date +%s) - 30 * 86400 )) +0000"
+GIT_COMMITTER_DATE="$old_date" GIT_AUTHOR_DATE="$old_date" rr_commit 'fix(a): LS-9 R4 m1 舊修正'
+rr_commit 'fix(a): LS-1 R2 m1 甲'
+rr_commit 'fix(a): LS-1 R3 M1 乙'
+rr_commit 'fix(a): LS-1 R1 丙'
+rr_commit 'fix(a): LS-2 無標記'
+rr_commit 'fix(a): LS-3 見 PR2 說明（PR2 不是輪次標記）'
+rr_commit 'feat(a): LS-4 R5 非 fix 不計'
+rr_commit 'fix: LS-5 R12 兩位數輪次'
+out31="$(bash "$report" --repo "$rr" 2>&1)"
+has '㉝a 近 7 天（預設）：fix 6｜R2+ 3（50.0%）｜R3+ 2（33.3%）——PR2 不算、feat 不算、30 天前不算' "$out31" 'review-rounds（近 7 天，main）：fix commit 6｜R2+ 3（50.0%）｜R3+ 2（33.3%）'
+out31b="$(bash "$report" --repo "$rr" --days 60 2>&1)"
+has '㉝b --days 60 納入 30 天前的 fix R4：fix 7｜R2+ 4（57.1%）｜R3+ 3（42.9%）' "$out31b" 'review-rounds（近 60 天，main）：fix commit 7｜R2+ 4（57.1%）｜R3+ 3（42.9%）'
+git init -q -b main "$work/rr-empty"
+git -C "$work/rr-empty" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m 'feat(a): LS-1 only feat'
+has '㉝c 零 fix commit → 比例印「—」不除以零' "$(bash "$report" --repo "$work/rr-empty" 2>&1)" 'fix commit 0｜R2+ 0（—）｜R3+ 0（—）'
+bash "$report" --repo "$rr" --ref nope >/dev/null 2>&1; rc31=$?
+if [ "$rc31" -eq 2 ]; then echo "✓ ㉝d ref 不存在 → exit 2（fail closed）"; else echo "✗ ㉝d ref 不存在應 exit 2（實得 ${rc31}）" >&2; fail=1; fi
+bash "$report" --days abc >/dev/null 2>&1; rc31=$?
+if [ "$rc31" -eq 2 ]; then echo "✓ ㉝e --days 非整數 → exit 2"; else echo "✗ ㉝e --days 非整數應 exit 2（實得 ${rc31}）" >&2; fail=1; fi
+# ㉝f patrol.sh --weekly 印同一行、且不跑其餘巡檢段（輸出只有這一行）
+out31f="$(bash "$patrol" --weekly --repo "$rr" 2>&1)"; rc31=$?
+if [ "$rc31" -eq 0 ] && [ "$out31f" = "$out31" ]; then
+  echo "✓ ㉝f patrol.sh --weekly 只印 review-rounds 那一行（與直接呼叫報表一致）"
+else
+  echo "✗ ㉝f patrol.sh --weekly 應只印報表那一行（exit ${rc31}）" >&2; printf '%s\n' "$out31f" | sed 's/^/    /' >&2; fail=1
+fi
+# ㉝g mutation 負控：拿掉輪次標記前一字元須為非英數字的邊界（`[^A-Za-z0-9]R` → `.R`，任一字元皆可）→ PR2 被誤算成 R2，
+# ㉝a 的 R2+ 從 3 變 4——證明邊界判定確實是「PR2 不算」的原因
+mut31="$work/review-rounds-report.no-boundary.sh"
+awk 'index($0, "# REVIEW-ROUNDS-MARKER") > 0 { sub(/\[\^A-Za-z0-9\]R/, ".R") } { print }' "$report" > "$mut31"
+if grep -qF 'match(s, /.R[0-9]+/)' "$mut31"; then
+  out31g="$(bash "$mut31" --repo "$rr" 2>&1)"
+  if case "$out31g" in *'R2+ 4（66.7%）'*) true ;; *) false ;; esac; then
+    echo "✓ ㉝g mutant（拿掉英數邊界）：PR2 被誤算、R2+ 3→4——證明邊界判定是原因"
+  else
+    echo "✗ ㉝g mutant 未如預期翻轉" >&2; printf '%s\n' "$out31g" | sed 's/^/    /' >&2; fail=1
+  fi
+else
+  echo "✗ ㉝g mutate：找不到 REVIEW-ROUNDS-MARKER 邊界字面，負控本身無效" >&2; fail=1
 fi
 
 if [ "$fail" -eq 0 ]; then
