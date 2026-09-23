@@ -7,8 +7,8 @@
 # gate hooks 沒裝（core.hooksPath 不是 .githooks／hook 不可執行）不標或裝好了誤標（LS-87）、
 # >1 台非 demo-* 模擬器同時 Booted 卻沒標、demo-* 沒被豁免、或只有一台就誤標（LS-100）、
 # 或 SessionStart hook 輸出不合法 JSON／非 0 退出／settings.json 沒掛上——這裡會紅。
-# LS-352（㉝）：review-rounds-report.sh 的 fix／R2+／R3+ 計數（PR2 不算、feat 不算、--days 視窗、零 fix 印「—」、
-# ref 不存在 exit 2）＋ patrol.sh --weekly 只印那一行＋拿掉英數邊界的 mutation 負控。
+# LS-352（㉝）：review-rounds-report.sh 的 fix／R2+／R3+ 計數（PR2／rubric 編號 R2.1／feat 不算、--days 視窗、零 fix 印「—」、
+# --target-r2 目標不寫死、ref 不存在 exit 2）＋ patrol.sh --weekly 只印那一行＋前空白／後不接 `.` 兩支 mutation 負控。
 # 合成 repo：file:// 裸 repo 當 origin（main／development／test），clone 當主 checkout，八個 worktree 各一種形狀；最後把 origin 指向會掛住的 ext:: 位址驗 fetch 看門狗。
 set -uo pipefail
 
@@ -2401,8 +2401,9 @@ else
 fi
 
 # ==== ㉝ LS-352：review-rounds-report.sh（審查輪次報表）＋ patrol.sh --weekly ====
-# 合成 repo：main 上 6 支近期 fix（R2／R3／R1／無標記／PR2（不算）／R12）＋1 支 feat R5（非 fix 不算）＋1 支 30 天前的 fix R4
-#（--days 7 排除、--days 60 納入）。期望：近 7 天 fix 6｜R2+ 3（50.0%）｜R3+ 2（33.3%）；近 60 天 fix 7｜R2+ 4（57.1%）｜R3+ 3（42.9%）。
+# 合成 repo：main 上 8 支近期 fix（R2／R3／R1／無標記／PR2（不算）／R12／R2.1 rubric 編號（不算，R2）／R3-m1 連字號形狀（算））
+# ＋1 支 feat R5（非 fix 不算）＋1 支 30 天前的 fix R4（--days 7 排除、--days 60 納入）。
+# 期望：近 7 天 fix 8｜R2+ 4（50.0%）｜R3+ 3（37.5%）；近 60 天 fix 9｜R2+ 5（55.6%）｜R3+ 4（44.4%）。
 report="${root}/scripts/ops/review-rounds-report.sh"
 rr="$work/rr-repo"
 git init -q -b main "$rr"
@@ -2416,17 +2417,22 @@ rr_commit 'fix(a): LS-2 無標記'
 rr_commit 'fix(a): LS-3 見 PR2 說明（PR2 不是輪次標記）'
 rr_commit 'feat(a): LS-4 R5 非 fix 不計'
 rr_commit 'fix: LS-5 R12 兩位數輪次'
+rr_commit 'fix(a): LS-7 補 R2.1 自檢證據（rubric 條目編號不是輪次）'
+rr_commit 'fix(a): LS-8 R3-m1 連字號形狀——仍是輪次'
 out31="$(bash "$report" --repo "$rr" 2>&1)"
-has '㉝a 近 7 天（預設）：fix 6｜R2+ 3（50.0%）｜R3+ 2（33.3%）——PR2 不算、feat 不算、30 天前不算' "$out31" 'review-rounds（近 7 天，main）：fix commit 6｜R2+ 3（50.0%）｜R3+ 2（33.3%）'
+has '㉝a 近 7 天（預設）：fix 8｜R2+ 4（50.0%，目標 < 30%）｜R3+ 3（37.5%）——PR2／R2.1／feat／30 天前不算，R3-m1 算' "$out31" 'review-rounds（近 7 天，main）：fix commit 8｜R2+ 4（50.0%，目標 < 30%）｜R3+ 3（37.5%）'
 out31b="$(bash "$report" --repo "$rr" --days 60 2>&1)"
-has '㉝b --days 60 納入 30 天前的 fix R4：fix 7｜R2+ 4（57.1%）｜R3+ 3（42.9%）' "$out31b" 'review-rounds（近 60 天，main）：fix commit 7｜R2+ 4（57.1%）｜R3+ 3（42.9%）'
+has '㉝b --days 60 納入 30 天前的 fix R4：fix 9｜R2+ 5（55.6%）｜R3+ 4（44.4%）' "$out31b" 'review-rounds（近 60 天，main）：fix commit 9｜R2+ 5（55.6%，目標 < 30%）｜R3+ 4（44.4%）'
+has '㉝b2 --target-r2 覆寫驗收目標（不寫死）' "$(bash "$report" --repo "$rr" --target-r2 22.5 2>&1)" 'R2+ 4（50.0%，目標 < 22.5%）'
 git init -q -b main "$work/rr-empty"
 git -C "$work/rr-empty" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m 'feat(a): LS-1 only feat'
-has '㉝c 零 fix commit → 比例印「—」不除以零' "$(bash "$report" --repo "$work/rr-empty" 2>&1)" 'fix commit 0｜R2+ 0（—）｜R3+ 0（—）'
+has '㉝c 零 fix commit → 比例印「—」不除以零' "$(bash "$report" --repo "$work/rr-empty" 2>&1)" 'fix commit 0｜R2+ 0（—，目標 < 30%）｜R3+ 0（—）'
 bash "$report" --repo "$rr" --ref nope >/dev/null 2>&1; rc31=$?
 if [ "$rc31" -eq 2 ]; then echo "✓ ㉝d ref 不存在 → exit 2（fail closed）"; else echo "✗ ㉝d ref 不存在應 exit 2（實得 ${rc31}）" >&2; fail=1; fi
 bash "$report" --days abc >/dev/null 2>&1; rc31=$?
 if [ "$rc31" -eq 2 ]; then echo "✓ ㉝e --days 非整數 → exit 2"; else echo "✗ ㉝e --days 非整數應 exit 2（實得 ${rc31}）" >&2; fail=1; fi
+bash "$report" --repo "$rr" --target-r2 abc >/dev/null 2>&1; rc31=$?
+if [ "$rc31" -eq 2 ]; then echo "✓ ㉝e2 --target-r2 非數字 → exit 2"; else echo "✗ ㉝e2 --target-r2 非數字應 exit 2（實得 ${rc31}）" >&2; fail=1; fi
 # ㉝f patrol.sh --weekly 印同一行、且不跑其餘巡檢段（輸出只有這一行）
 out31f="$(bash "$patrol" --weekly --repo "$rr" 2>&1)"; rc31=$?
 if [ "$rc31" -eq 0 ] && [ "$out31f" = "$out31" ]; then
@@ -2434,20 +2440,32 @@ if [ "$rc31" -eq 0 ] && [ "$out31f" = "$out31" ]; then
 else
   echo "✗ ㉝f patrol.sh --weekly 應只印報表那一行（exit ${rc31}）" >&2; printf '%s\n' "$out31f" | sed 's/^/    /' >&2; fail=1
 fi
-# ㉝g mutation 負控：拿掉輪次標記前一字元須為非英數字的邊界（`[^A-Za-z0-9]R` → `.R`，任一字元皆可）→ PR2 被誤算成 R2，
-# ㉝a 的 R2+ 從 3 變 4——證明邊界判定確實是「PR2 不算」的原因
-mut31="$work/review-rounds-report.no-boundary.sh"
-awk 'index($0, "# REVIEW-ROUNDS-MARKER") > 0 { sub(/\[\^A-Za-z0-9\]R/, ".R") } { print }' "$report" > "$mut31"
-if grep -qF 'match(s, /.R[0-9]+/)' "$mut31"; then
-  out31g="$(bash "$mut31" --repo "$rr" 2>&1)"
-  if case "$out31g" in *'R2+ 4（66.7%）'*) true ;; *) false ;; esac; then
-    echo "✓ ㉝g mutant（拿掉英數邊界）：PR2 被誤算、R2+ 3→4——證明邊界判定是原因"
-  else
-    echo "✗ ㉝g mutant 未如預期翻轉" >&2; printf '%s\n' "$out31g" | sed 's/^/    /' >&2; fail=1
+# mut31 <代號> <說明> <mutant 檔名片段> <原字面> <替換字面> <mutant 輸出應含>：在 REVIEW-ROUNDS-MARKER 那一行做
+# 固定字串替換（python3，不經 awk regex 跳脫），先驗 mutant 真的換到了才跑。
+mut31() {
+  local tag=$1 desc=$2 name=$3 from=$4 to=$5 want=$6 m out
+  m="$work/review-rounds-report.${name}.sh"
+  python3 -c 'import sys
+src, dst, a, b = sys.argv[1:5]
+out = []
+for line in open(src, encoding="utf-8"):
+    if "# REVIEW-ROUNDS-MARKER" in line:
+        line = line.replace(a, b)
+    out.append(line)
+open(dst, "w", encoding="utf-8").write("".join(out))' "$report" "$m" "$from" "$to"
+  if ! grep -qF -- "$to" "$m"; then
+    echo "✗ ${tag} mutate：REVIEW-ROUNDS-MARKER 行找不到「${from}」，負控本身無效" >&2; fail=1; return
   fi
-else
-  echo "✗ ㉝g mutate：找不到 REVIEW-ROUNDS-MARKER 邊界字面，負控本身無效" >&2; fail=1
-fi
+  out="$(bash "$m" --repo "$rr" 2>&1)"
+  case "$out" in
+    *"$want"*) echo "✓ ${tag} ${desc}" ;;
+    *) echo "✗ ${tag} mutant 未如預期翻轉（應含「${want}」）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1 ;;
+  esac
+}
+# ㉝g mutation：拿掉「前一字元是空白」（`/ R` → `/.R`，任一字元皆可）→ PR2 被誤算、R2+ 4→5——證明前空白判定是「PR2 不算」的原因
+mut31 '㉝g' 'mutant（拿掉前空白）：PR2 被誤算、R2+ 4→5' no-space '/ R[0-9]+' '/.R[0-9]+' 'R2+ 5（62.5%'
+# ㉝h mutation（LS-352 R2）：拿掉「後面不接 `.`」（`[^0-9.]` → `[^0-9]`）→ rubric 編號 R2.1 被誤算成第 2 輪、R2+ 4→5
+mut31 '㉝h' 'mutant（拿掉後不接 `.`）：R2.1 被誤算成輪次、R2+ 4→5' no-dot '[^0-9.]' '[^0-9]' 'R2+ 5（62.5%'
 
 if [ "$fail" -eq 0 ]; then
   if [ "$jq_skipped" -gt 0 ]; then
