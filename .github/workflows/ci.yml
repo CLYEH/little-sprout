@@ -11,9 +11,13 @@ on:
     branches: [development, test, main]
   push:
     branches: [development, test, main]
-  # 這裡不加 workflow_dispatch（LS-139 R2 minor 1）：dispatch 打在 PR head SHA 會讓四個 job 在同一 SHA 各貼第二筆同名
-  # check-run，rules 的 PR 專屬 gate 被 if: 跳過卻仍 success／skipped（GitHub required checks 把 skipped 視為 Success），
-  # 頂掉真 PR run。要在併入前實跑 Release 編譯路徑，用獨立 workflow release-build-dispatch.yml（job 名不撞 required checks）。
+  # LS-350：workflow_dispatch＝「強制全跑、不吃 tree 快取」的繞過口，**只准 development／test／main**。
+  # LS-139 R2 minor 1 當初不加 dispatch 的顧慮仍成立、只是縮到工作分支：dispatch 打在 PR head SHA 會讓各 job 在同一
+  # SHA 各貼第二筆同名 check-run，rules 的 PR 專屬 gate 被 if: 跳過卻仍 success，頂掉真 PR run。保護分支上的 push run
+  # 本來就沒有 PR 上下文，dispatch run 與它同形、不會頂掉更嚴的結果。所以：dispatch 在工作分支上 rules 第一步與
+  # ci-dedup（mode=blocked）讓每個 job 都紅（寧可紅、不可假綠）；要在併入前實跑 Release 編譯路徑，仍用獨立 workflow
+  # release-build-dispatch.yml（job 名不撞 required checks）。
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -46,6 +50,14 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       GH_TOKEN: ${{ github.token }}
     steps:
+      # LS-350：workflow_dispatch 只准保護分支（理由見檔頭 on: 註解）。工作分支 dispatch 的 rules check-run 必須紅，
+      # 不能以「PR 專屬 step 全跳過」的綠頂掉真 PR run。
+      - name: workflow_dispatch 限 development／test／main（LS-350）
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/development' && github.ref != 'refs/heads/test' && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::workflow_dispatch 只限 development／test／main（本次 ${GITHUB_REF}）——工作分支 dispatch 會頂掉真 PR run 的同名 check-run（LS-139 R2）。PR 要強制全跑：刪掉命中的 ci-tree-<tree> artifact 後 rerun（COLLABORATION §7）"
+          exit 1
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -192,7 +204,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／food-sticker-crop）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／food-sticker-crop）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -231,6 +243,8 @@ jobs:
           bash scripts/gates/tap-target-check.test.sh || rc=1
           bash scripts/gates/tap-target-registry-check.test.sh || rc=1
           bash scripts/gates/ui-test-trigger.test.sh || rc=1
+          # LS-350：CI 去重判定（tree 相同→命中／tree 不同→未命中／混改→不略過＋mutation）
+          bash scripts/gates/ci-cache-check.test.sh || rc=1
           bash scripts/gates/design-landing-check.test.sh || rc=1
           bash scripts/gates/design-evidence-check.test.sh || rc=1
           # LS-168：Notes 板節點 id 存在性 gate 自測（合成 repo：活 id／死 id／沿革標記三案＋mutation）
@@ -250,6 +264,7 @@ jobs:
           bash scripts/gates/design-asset-size-check.test.sh || rc=1
           # LS-186：db job 的 db reset 包裝（54322 port 綁定競態才重試一次；假 supabase／sleep 驗呼叫序列與 exit code，不碰容器）
           bash scripts/ci/db-reset-retry.test.sh || rc=1
+          bash scripts/ci/db-start-retry.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
           # LS-154：主 checkout 禁寫 hook（W1–W5 正負樣本＋開關＋fail-closed＋mutation；臨時 repo fixture）
           bash scripts/hooks/main-checkout-guard.test.sh || rc=1
@@ -428,6 +443,8 @@ jobs:
           # LS-308 B1：Linear MCP token 過期時的 GraphQL 備援（本機假伺服器，不打正式 Linear API）
           bash scripts/ops/linear-post.test.sh || rc=1
           bash scripts/ops/patrol-linear.test.sh || rc=1
+          # LS-351 範圍 2：gate 30 天攔截盤點（stub gh＋合成 repo；含 mutation）
+          bash scripts/ops/gate-usage-report.test.sh || rc=1
           bash scripts/ops/cleanup-merged.test.sh || rc=1
           # LS-235：正式站 purge-storage 排程健康度巡檢腳本自測（全 fixture 化，不連線任何真正的 Supabase 專案）
           bash scripts/ops/prod-purge-health.test.sh || rc=1
@@ -442,7 +459,21 @@ jobs:
           # reviewer 與實作者各在 `ubuntu:24.04`（只裝 git＋curl）實跑全綠（LS-264 當時 58 組；LS-267 加
           # `LS_QA_PSQL_BIN` seam 後 ⑦f 不再 SKIP、另加 ⑦g，現為 63 組——這行數字以實跑輸出為準）。
           bash scripts/ops/qa-e2e.test.sh || rc=1
+          # LS-342：food_catalog 過敏原啟發式規則自測（純 CSV／Python，不需要 DB；夾具正負樣本＋
+          # 兩個 mutation：白名單拿掉一條轉紅、SQL 生成器同步失去排除子句）
+          bash scripts/ops/food-catalog-allergen-check.test.sh || rc=1
+          # LS-353：subagent 實際 model／effort 查詢與 model 用量估值兩支 ops 腳本的自測（假 transcript 夾具＋
+          # mutation：最新比對反轉／不讀 meta.json／牌價改回第一個前綴相符／不去重 message.id）
+          bash scripts/ops/agent-model-check.test.sh || rc=1
+          bash scripts/ops/model-usage-report.test.sh || rc=1
           exit "$rc"
+
+      # LS-342：對 supabase/seed-data/food_catalog.csv 現況跑過敏原啟發式規則——CI 無 DB 的
+      # rules job 也能擋新增食物漏標過敏原（不必等 db job 起容器）；DB 端的等價檢查與 mutation
+      # deny 測試在 supabase/tests/run.sh（117_food_encyclopedia.sql 特例區塊）。
+      - name: food_catalog 過敏原啟發式檢查（CSV 端，無需 DB，LS-342）
+        if: ${{ !cancelled() }}
+        run: python3 scripts/ops/food-catalog-sql.py check-allergens
 
       # LS-54 N4′／LS-56：docs/API.md §5 錯誤碼表 ↔ LSErrorCode rawValue ↔ migrations
       # errcode 三方雙向對帳（本機 push-gate 的伺服器端兜底）。所有 PR 都跑：純檔案比對、
@@ -630,6 +661,43 @@ jobs:
             done <<< "$pens"
           fi
 
+  # LS-350：CI 去重判定（ubuntu，約 20 秒）。輸出給 db／lint／ci／ci-ipad 決定要不要真的跑：
+  #   mode=hit          同 tree（git rev-parse HEAD^{tree}）已有完整全綠 run（ci-tree-<tree> artifact，見 ci-tree-record）
+  #                     → db／lint／ci／ci-ipad 改在 ubuntu 上只印「沿用 run <id>（tree <sha>）」即 success
+  #   mode=harness-skip PR diff 全在 harness 路徑、未動 macOS job 機制檔 → lint／ci／ci-ipad 同上略過，db 照跑
+  #   mode=blocked      workflow_dispatch 打在工作分支 → 各 job 第一步紅
+  #   mode=full         其餘；workflow_dispatch（保護分支）一律 full＝強制全跑
+  # 判定細節與「為何用 artifact 而非 actions/cache／commit status」見 scripts/gates/ci-cache-check.sh 檔頭。
+  # 下游 job 不用 job 層 if: 整包跳過：skipped 的 check-run conclusion 是 skipped，promote.sh 只認 success（LS-85），
+  # 所以 job 照跑、以 runs-on 表達式改派 ubuntu，所有實際 step 以 skip_* 條件跳過，conclusion 仍是 success。
+  # 本 job 若自己失敗（outputs 為空），下游以 `!cancelled()` 照跑、空值落在 macOS／全跑那一側（fail-safe＝多跑）。
+  ci-dedup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      mode: ${{ steps.decide.outputs.mode }}
+      tree: ${{ steps.decide.outputs.tree }}
+      source_run: ${{ steps.decide.outputs.source_run }}
+      skip_macos: ${{ steps.decide.outputs.skip_macos }}
+      skip_db: ${{ steps.decide.outputs.skip_db }}
+      record: ${{ steps.decide.outputs.record }}
+      message: ${{ steps.decide.outputs.message }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 判定（ci-cache-check.sh，LS-350）
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          base_args=()
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then base_args=(--base "origin/$GITHUB_BASE_REF"); fi
+          bash scripts/gates/ci-cache-check.sh --event "$GITHUB_EVENT_NAME" --ref "$GITHUB_REF" "${base_args[@]}" --output "$GITHUB_OUTPUT"
+
   # DB migration gate 的執行面（LS-11）：CI 實際跑 supabase/tests/run.sh（RLS 隔離／owner
   # 不變量／trigger／併發／RLS plan 效能），把 §7 對照表「migration 必附 RLS 測試」從
   # 「有沒有動測試檔」的弱驗證，補強成「測試真的綠」。
@@ -638,13 +706,28 @@ jobs:
   # check，GitHub 永遠等不到這個 job 的結果，PR 會卡死。所以「這個 repo 有沒有 supabase/」
   # 的判斷放在 job 內的第一個 step（用 step outputs 讓後面 step 決定要不要跑），job 本身一律執行。
   db:
+    needs: ci-dedup
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      # LS-350：同 tree 沿用／harness-only 略過時只印來源、不跑實際 step（mode=blocked 在這步紅）。
+      - name: CI 去重（LS-350）
+        if: needs.ci-dedup.outputs.skip_db == 'true'
+        env:
+          MODE: ${{ needs.ci-dedup.outputs.mode }}
+          MSG: ${{ needs.ci-dedup.outputs.message }}
+        run: |
+          echo "$MSG"
+          [ "$MODE" != blocked ]
 
+      - uses: actions/checkout@v4
+        if: needs.ci-dedup.outputs.skip_db != 'true'
+
+      # LS-350：下面所有 step 都以這兩個偵測 step 的 outputs 為條件；沿用時兩者不跑、outputs 為空，後面全跳過。
       - name: 偵測 supabase/ 目錄
         id: detect
+        if: needs.ci-dedup.outputs.skip_db != 'true'
         run: |
           if [ ! -d supabase ]; then
             echo "無 supabase/ 目錄，略過"
@@ -655,6 +738,7 @@ jobs:
 
       - name: 偵測 supabase/functions/ 目錄
         id: detect-functions
+        if: needs.ci-dedup.outputs.skip_db != 'true'
         run: |
           if [ ! -d supabase/functions ]; then
             echo "無 supabase/functions/ 目錄，略過"
@@ -713,9 +797,19 @@ jobs:
         if: steps.detect.outputs.skip == 'false'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
 
+      # LS-351 追加（LS-354 池項 76ed9a99）：PR #519 的 db job 連四次（run 35897884534 attempt 1–4）撞 ghcr 共享出口限流
+      # `toomanyrequests … allowed: 44000/minute`。改拉 Supabase 官方在 public.ecr.aws 的鏡像避開 ghcr 共享出口限流：
+      # setup-cli 把 SUPABASE_INTERNAL_IMAGE_REGISTRY=ghcr.io 寫進 $GITHUB_ENV，這裡在它之後再寫一次覆蓋（後寫者生效，
+      # 對其後所有 step 有效，含 db reset）。docker login ghcr.io 對 CLI 內部 pull 無效（run 35904976443 已 Login Succeeded
+      # 仍四次撞限流，反證），已拿掉。限流時仍由 db-start-retry.sh 退避重試 3 次（30／60／120 秒，其他錯誤立即紅；
+      # 自測 db-start-retry.test.sh 掛 rules job）。
+      - name: supabase 映像改拉 public.ecr.aws（避開 ghcr 共享出口限流，LS-351）
+        if: steps.detect.outputs.skip == 'false'
+        run: echo "SUPABASE_INTERNAL_IMAGE_REGISTRY=public.ecr.aws" >> "$GITHUB_ENV"
+
       - name: supabase db start（只起 DB，比 supabase start 快；測試資料直接灌 auth.users，不需要 Auth/Storage service）
         if: steps.detect.outputs.skip == 'false'
-        run: supabase db start
+        run: bash scripts/ci/db-start-retry.sh
 
       # LS-186：reset 重建 db 容器時 runner docker 對 54322 舊綁定偶爾未釋放 →「address already in use」（LS-184 run 33934840343，
       # rerun 即綠、純 flake）。抽成 scripts/ci/db-reset-retry.sh：失敗且輸出含該字串才 stop --no-backup → sleep 10 → db start →
@@ -775,11 +869,24 @@ jobs:
           retention-days: 90
 
   lint:
-    runs-on: macos-26
+    needs: ci-dedup
+    if: ${{ !cancelled() }}
+    runs-on: ${{ needs.ci-dedup.outputs.skip_macos == 'true' && 'ubuntu-latest' || 'macos-26' }}
     timeout-minutes: 15
     steps:
+      # LS-350：同 tree 沿用／harness-only 略過時只印來源、不跑實際 step（mode=blocked 在這步紅）。
+      - name: CI 去重（LS-350）
+        if: needs.ci-dedup.outputs.skip_macos == 'true'
+        env:
+          MODE: ${{ needs.ci-dedup.outputs.mode }}
+          MSG: ${{ needs.ci-dedup.outputs.message }}
+        run: |
+          echo "$MSG"
+          [ "$MODE" != blocked ]
       - uses: actions/checkout@v4
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
       - name: SwiftLint（有 Swift 檔就跑，不綁 Xcode 專案存在與否）
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
         run: |
           if [ -z "$(git ls-files '*.swift')" ]; then
             echo "無 Swift 檔，略過"
@@ -789,13 +896,25 @@ jobs:
           swiftlint lint --strict
 
   ci:
-    runs-on: macos-26
+    needs: ci-dedup
+    if: ${{ !cancelled() }}
+    runs-on: ${{ needs.ci-dedup.outputs.skip_macos == 'true' && 'ubuntu-latest' || 'macos-26' }}
     timeout-minutes: 50
     steps:
+      # LS-350：同 tree 沿用／harness-only 略過時只印來源、不跑實際 step（mode=blocked 在這步紅）。
+      - name: CI 去重（LS-350）
+        if: needs.ci-dedup.outputs.skip_macos == 'true'
+        env:
+          MODE: ${{ needs.ci-dedup.outputs.mode }}
+          MSG: ${{ needs.ci-dedup.outputs.message }}
+        run: |
+          echo "$MSG"
+          [ "$MODE" != blocked ]
       # LS-95 merge-review R1 m3：full history（同 rules job）——下面「Release 組態編譯 gate」（LS-139）與「點擊目標 gate」
       # 步驟要對 PR 的 base ref 做 git diff 判斷是否真的碰了 Swift（判定見 scripts/gates/ui-test-trigger.sh，LS-137），
       # 預設的淺 clone（depth 1）沒有 base ref 的歷史，diff 會失敗或不可靠。
       - uses: actions/checkout@v4
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
         with:
           fetch-depth: 0
 
@@ -807,6 +926,7 @@ jobs:
       # 「invalid developer directory」錯誤，不會指出「去改 .xcode-version」——先檢查目錄是否存在，
       # 不存在就明確報錯並列出這台 runner 實際可用的 Xcode 版本。
       - name: xcode-select（讀 .xcode-version 單一來源，LS-106）
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
         run: |
           pin="$(tr -d '[:space:]' < .xcode-version)"
           dev="/Applications/Xcode_${pin}.app/Contents/Developer"
@@ -818,6 +938,7 @@ jobs:
       # 生成物 byte-identical（LS-5 review 實證），不會 flaky。反向漂移（GUI 改
       # .xcodeproj 沒回填 project.yml）同樣會被抓到。
       - name: XcodeGen 漂移檢查（project.yml ↔ .xcodeproj）
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
         run: |
           if [ ! -f project.yml ]; then
             echo "無 project.yml，略過"
@@ -837,6 +958,7 @@ jobs:
 
       - name: Build & Test
         id: build_and_test
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
         run: |
           if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
             echo "::warning::尚未建立 Xcode 專案，略過 build/test（Phase 0-1 完成後生效）"
@@ -926,6 +1048,7 @@ jobs:
       # Build & Test 同一份，SPM 已解析；Release 產物另在 Release-iphonesimulator）。排在點擊目標 gate 之前：
       # Release 編譯錯先紅，不必等 5 分鐘的 UI 測試。
       - name: Release 組態編譯 gate（LS-139：#Preview 引 DEBUG-only mock 在 Release 紅＝PR 紅）
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
         run: |
           if [ -n "${GITHUB_BASE_REF:-}" ]; then
             git fetch --quiet origin "$GITHUB_BASE_REF" 2>/dev/null || true
@@ -950,6 +1073,7 @@ jobs:
 
       - name: 點擊目標 gate（LS-95：≥44pt，長輩硬約束）
         id: tap_target_gate
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
         run: |
           if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
             echo "::warning::尚未建立 Xcode 專案，略過（Phase 0-1 完成後生效）"
@@ -1008,7 +1132,7 @@ jobs:
       # rules job 那些步驟用 `!cancelled()` 是因為它們是會再花數分鐘重跑一輪自測的重量級步驟，兩者
       # 取捨基礎不同、不是同一慣例硬套。
       - name: 印各 test bundle 耗時（LittleSproutTests／LittleSproutUITests，LS-257）
-        if: ${{ always() }}
+        if: ${{ always() && needs.ci-dedup.outputs.skip_macos != 'true' }}
         run: |
           print_duration() {
             local label="$1" bundle="$2" json start finish
@@ -1041,14 +1165,27 @@ jobs:
   # 裡加一步）：required check 對「這條路徑有沒有守住」是獨立、可單獨重跑的訊號；同一個 runner 上兩種
   # 機型輪流跑也會拉長 `ci` job 關鍵路徑。
   ci-ipad:
-    runs-on: macos-26
+    needs: ci-dedup
+    if: ${{ !cancelled() }}
+    runs-on: ${{ needs.ci-dedup.outputs.skip_macos == 'true' && 'ubuntu-latest' || 'macos-26' }}
     timeout-minutes: 30
     steps:
+      # LS-350：同 tree 沿用／harness-only 略過時只印來源、不跑實際 step（mode=blocked 在這步紅）。
+      - name: CI 去重（LS-350）
+        if: needs.ci-dedup.outputs.skip_macos == 'true'
+        env:
+          MODE: ${{ needs.ci-dedup.outputs.mode }}
+          MSG: ${{ needs.ci-dedup.outputs.message }}
+        run: |
+          echo "$MSG"
+          [ "$MODE" != blocked ]
       - uses: actions/checkout@v4
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
         with:
           fetch-depth: 0
 
       - name: xcode-select（讀 .xcode-version 單一來源，同 ci job，LS-106）
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
         run: |
           pin="$(tr -d '[:space:]' < .xcode-version)"
           dev="/Applications/Xcode_${pin}.app/Contents/Developer"
@@ -1058,6 +1195,7 @@ jobs:
 
       - name: iPad 回歸測試（LS-209：機型 iPad Air 11-inch (M3)，測試清單由 scripts/gates/list-ipad-tests.sh 自動產生）
         id: ipad_test
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
         run: |
           if ! ls -d ./*.xcodeproj >/dev/null 2>&1 && ! ls -d ./*.xcworkspace >/dev/null 2>&1; then
             echo "::warning::尚未建立 Xcode 專案，略過（Phase 0-1 完成後生效）"
@@ -1133,3 +1271,28 @@ jobs:
           path: ci-ipad-test.xcresult
           retention-days: 3
           if-no-files-found: warn
+
+  # LS-350：登記 tree 快取——只在「完整 run」（ci-dedup mode=full 且 record=true：push／dispatch，或 PR 且
+  # ui-test-trigger 判定要跑 UITests）且 db／lint／ci／ci-ipad 四個 job 全 success 時，上傳名為 ci-tree-<tree> 的
+  # artifact；之後同 tree 的 run（FF 晉升、空 merge commit、PR 併入後 base 未動的 development merge commit）由
+  # ci-dedup 查到即沿用。沿用 run 本身不再登記（mode=hit）。本 job 不是 required check，skipped 無妨。
+  # retention 14 天：晉升鏈（PR → development → test → main）通常一兩天內走完，過期只代表多跑一次，不影響正確性。
+  ci-tree-record:
+    needs: [ci-dedup, db, lint, ci, ci-ipad]
+    if: ${{ !cancelled() && needs.ci-dedup.outputs.mode == 'full' && needs.ci-dedup.outputs.record == 'true' && needs.db.result == 'success' && needs.lint.result == 'success' && needs.ci.result == 'success' && needs.ci-ipad.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 寫登記內容
+        env:
+          TREE: ${{ needs.ci-dedup.outputs.tree }}
+        run: |
+          [ -n "$TREE" ] || { echo "::error::ci-dedup 沒給 tree，不登記"; exit 1; }
+          printf 'tree=%s\nrun=%s\nsha=%s\nevent=%s\nref=%s\n' "$TREE" "$GITHUB_RUN_ID" "$GITHUB_SHA" "$GITHUB_EVENT_NAME" "$GITHUB_REF" > ci-tree.txt
+          cat ci-tree.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-tree-${{ needs.ci-dedup.outputs.tree }}
+          path: ci-tree.txt
+          retention-days: 14
+          if-no-files-found: error

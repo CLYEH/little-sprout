@@ -53,6 +53,7 @@
 		1330DE1A2C8A701F1C64DE82 /* TapTargetGateScreenName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 962EAB3D4E7C6E203A5790AE /* TapTargetGateScreenName.swift */; };
 		13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F8559FAFC3A462A0C31CC0 /* AppSectionTests.swift */; };
 		142912236FD2EC5C05876953 /* ImportGroupCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800AE1A5E8467A78A7C59E70 /* ImportGroupCardView.swift */; };
+		1443649E1BA8C29E939A9F96 /* TimelineHeaderNarrowWidthUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8957BB73DA2238B8164D675D /* TimelineHeaderNarrowWidthUITests.swift */; };
 		1479FC018F029C307777A43C /* ImportBatchFlowModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C4B969F26400E2ECFC1C204 /* ImportBatchFlowModifier.swift */; };
 		14B08B21052BB635301A3267 /* ImportBatchFlowContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B4FD1A160314E1159650AC /* ImportBatchFlowContainer.swift */; };
 		1510716340F45287B110E3F9 /* InviteCodeField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B6EDB33CABFA69510857AF /* InviteCodeField.swift */; };
@@ -134,6 +135,7 @@
 		362CE45092746F10A364D13C /* SupabaseFamilyAPIClientProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CFC8787191D904A091D87BB /* SupabaseFamilyAPIClientProfileTests.swift */; };
 		365EEBA0356A6D011613BAAB /* TimelineDayGrouping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87513375A08C97FF0C5EB35F /* TimelineDayGrouping.swift */; };
 		366FC5A0184274A239278F3E /* ImportDateGroupingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89356DF123DCA440A1440E4 /* ImportDateGroupingTests.swift */; };
+		367D59A4F380BF0A371733E7 /* TimelineStore+Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EE1D73C47DCC06AABE04A7 /* TimelineStore+Import.swift */; };
 		36A6AB2697A55FA8B1A33AD1 /* SettingsView+Sidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 069E688841B40CFFC7D7A689 /* SettingsView+Sidebar.swift */; };
 		36F437FAC0A2870CF4374058 /* FamilyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF2B62443AA0559B13A0839 /* FamilyStore.swift */; };
 		37FDE6D5C5BDF814BB1A700C /* SettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DD92F585174EABEB3BA92CA /* SettingsViewTests.swift */; };
@@ -450,6 +452,7 @@
 		D2D031850A6315F0D1C90D70 /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01951470E7861A632283E1A /* ProfileEditView.swift */; };
 		D2E1CC90D6A00B31BE3D2C01 /* ContentActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C5A7E72B680DAB0AF3701 /* ContentActions.swift */; };
 		D34A9C68A1E7558AC7FA664B /* SettingsView+Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C569AB8BA23817265C5402 /* SettingsView+Profile.swift */; };
+		D39FCE963C19F67B1E7E3CE3 /* TimelineStoreImportRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D9C1DF3A30F5BC6061B8A3 /* TimelineStoreImportRefreshTests.swift */; };
 		D474041A04FE18B1355B57DF /* DiaryEditorView+ActionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5EF32644DBA7C9FCFDD88B4 /* DiaryEditorView+ActionBar.swift */; };
 		D66065353A119BE1100868EE /* ForkView+SuspendedFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514ED60074321190C12F6C27 /* ForkView+SuspendedFooter.swift */; };
 		D6DBB2DFC19DAA2956A090C3 /* TapTargetGateScreenName+Sentinel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7E1CA72F92999CE2AA46B51 /* TapTargetGateScreenName+Sentinel.swift */; };
@@ -752,6 +755,7 @@
 		587FCE8EABA329312D4C5197 /* DeleteAccountFlowModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountFlowModel.swift; sourceTree = "<group>"; };
 		599FF146CDF65A58E0FBDA1B /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
 		59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
+		59D9C1DF3A30F5BC6061B8A3 /* TimelineStoreImportRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreImportRefreshTests.swift; sourceTree = "<group>"; };
 		5C145E4F8790E4886DC169E0 /* PreviewDiaryAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewDiaryAPIClient.swift; sourceTree = "<group>"; };
 		5C86411F014B2DEBB3EF70F2 /* TimelineStoreVideoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreVideoTests.swift; sourceTree = "<group>"; };
 		5D7480F3CE0820B854D10C3C /* UploadQueueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueStore.swift; sourceTree = "<group>"; };
@@ -847,6 +851,7 @@
 		891013E5A75CD7CC488037D0 /* PendingAccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingAccountDeletionTests.swift; sourceTree = "<group>"; };
 		8935226D375AB85EFBC17CC3 /* QADriver+LoginLanding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "QADriver+LoginLanding.swift"; sourceTree = "<group>"; };
 		893682752F0A665802D5D435 /* AlbumsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsStoreTests.swift; sourceTree = "<group>"; };
+		8957BB73DA2238B8164D675D /* TimelineHeaderNarrowWidthUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineHeaderNarrowWidthUITests.swift; sourceTree = "<group>"; };
 		8AFA10890A15EC69C5CB0BF9 /* MasonryLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasonryLayout.swift; sourceTree = "<group>"; };
 		8BECC7D79F1B9E53EABE6120 /* AvatarPickerLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarPickerLoader.swift; sourceTree = "<group>"; };
 		8C74E777AB0094919EC703B2 /* AppConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigTests.swift; sourceTree = "<group>"; };
@@ -934,6 +939,7 @@
 		B2584887C616FAF64E990665 /* FamilyStoreProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreProfileTests.swift; sourceTree = "<group>"; };
 		B25D6169D65B86B668496E26 /* DeleteAccountFlowView+Status.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DeleteAccountFlowView+Status.swift"; sourceTree = "<group>"; };
 		B29793798CE839C104E800B1 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
+		B2EE1D73C47DCC06AABE04A7 /* TimelineStore+Import.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimelineStore+Import.swift"; sourceTree = "<group>"; };
 		B37A0B885565FC49E94ADC8A /* AvatarPrintCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarPrintCard.swift; sourceTree = "<group>"; };
 		B382FF9798D526E3A1B37E63 /* TimelineView+Comments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimelineView+Comments.swift"; sourceTree = "<group>"; };
 		B3D1CF439EB21C3FF7D50400 /* SettingsViewIPadTests+SidebarTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsViewIPadTests+SidebarTab.swift"; sourceTree = "<group>"; };
@@ -1166,6 +1172,7 @@
 				38210395D04923BEFD0ED94B /* TapTargetGateTests.swift */,
 				C8613F9B6DA141E7F034F153 /* TapTargetMeasurement.swift */,
 				C724829E078617E6E3A23478 /* TimelineHeaderAX3UITests.swift */,
+				8957BB73DA2238B8164D675D /* TimelineHeaderNarrowWidthUITests.swift */,
 				3317934C4CA67E11E562E23B /* TimelineImportEntryUITests.swift */,
 				02633BBE20BEAB5636EA3944 /* UploadQueueSheetUITests.swift */,
 				CD32CF0062A6378825FCFA76 /* QA */,
@@ -1477,6 +1484,7 @@
 				947DF9E9DBEDFFD993312829 /* TimelineModelsTests.swift */,
 				116A0E8C201D8E30C990620A /* TimelineStoreCommentCountTests.swift */,
 				BDC172B024E0A7F8F373D603 /* TimelineStoreDeleteDiaryTests.swift */,
+				59D9C1DF3A30F5BC6061B8A3 /* TimelineStoreImportRefreshTests.swift */,
 				4B64D96ADE299BAA5D4FE329 /* TimelineStoreReactionTests.swift */,
 				D2F9F3FB9139CAE156CCD645 /* TimelineStoreReactorsTests.swift */,
 				211BD68F4C6453D2D071BDE3 /* TimelineStoreRefreshDedupTests.swift */,
@@ -1763,6 +1771,7 @@
 				1E1A187F8B4D813F1BCB0135 /* TimelineContentAssembler.swift */,
 				131C968476EFA7FF91F30E97 /* TimelineModels.swift */,
 				D4F8DC307DA209CD5559A0E6 /* TimelineStore.swift */,
+				B2EE1D73C47DCC06AABE04A7 /* TimelineStore+Import.swift */,
 				E8EFE62F69B6F11D9FEEB069 /* TimelineStore+Reactions.swift */,
 			);
 			path = Timeline;
@@ -2379,6 +2388,7 @@
 				365EEBA0356A6D011613BAAB /* TimelineDayGrouping.swift in Sources */,
 				5EC1E966C14830184690D16B /* TimelineModels.swift in Sources */,
 				2D6B7200292271FD2DCEC9C1 /* TimelineRoute.swift in Sources */,
+				367D59A4F380BF0A371733E7 /* TimelineStore+Import.swift in Sources */,
 				C306914EB8F752FFED8EB54C /* TimelineStore+Reactions.swift in Sources */,
 				7C07BF69FAFB75E77DA11249 /* TimelineStore.swift in Sources */,
 				74E602F347273C1919B3B01A /* TimelineView+Comments.swift in Sources */,
@@ -2447,6 +2457,7 @@
 				5C9E6ED512A86D8A37DC15EA /* TapTargetGateTests.swift in Sources */,
 				08EA70433C9FFE03998E1074 /* TapTargetMeasurement.swift in Sources */,
 				2D5098229799C3778225F930 /* TimelineHeaderAX3UITests.swift in Sources */,
+				1443649E1BA8C29E939A9F96 /* TimelineHeaderNarrowWidthUITests.swift in Sources */,
 				C0DB8C9DEF3898A082A02411 /* TimelineImportEntryUITests.swift in Sources */,
 				FC29BEFB2E6B8EFF9F451EE8 /* UploadQueueSheetUITests.swift in Sources */,
 				0A228566E448CAE5C07A187F /* XCUIElement+Waits.swift in Sources */,
@@ -2628,6 +2639,7 @@
 				BD41888F467081226405ED53 /* TimelineModelsTests.swift in Sources */,
 				909B752A8D46A54F5460A537 /* TimelineStoreCommentCountTests.swift in Sources */,
 				6231319895327822C90C4541 /* TimelineStoreDeleteDiaryTests.swift in Sources */,
+				D39FCE963C19F67B1E7E3CE3 /* TimelineStoreImportRefreshTests.swift in Sources */,
 				A32CCA725D57371D04861B00 /* TimelineStoreReactionTests.swift in Sources */,
 				DE783F8E8B2C8B18F49DBA29 /* TimelineStoreReactorsTests.swift in Sources */,
 				CC64619A176860EA247A36AE /* TimelineStoreRefreshDedupTests.swift in Sources */,

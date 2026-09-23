@@ -142,7 +142,7 @@ file_has '⑧ patrol_linear.py：cycle 對帳 (c)(d) 訊息帶 ⚠' "${root}/scr
 # 不帶標記的獨立行更直接。這裡釘住這個決定本身：若哪天改成獨立一行印出且沒帶標記，這裡要跟著紅。
 sample9=$(printf '%s\n' \
   '  lane:harness    上限1 在飛0  候補：（無候補）' \
-  '    → 開票：lane:harness 空 1 輪（無候補）——來源候選：LS-96#33334444「尚未落地的候選」（P2 池項尚未升票）［已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2］')
+  '    → 開票：lane:harness 空 1 輪（無候補）——來源候選：LS-354#33334444「尚未落地的候選」（P2 池項尚未升票）［已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2］')
 kept9=$(printf '%s\n' "$sample9" | bash "$pf")
 has '⑨ 「已落地：」附註隨同一條 → 開票行一起通過過濾（裁定：進 context）' "$kept9" '已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2'
 

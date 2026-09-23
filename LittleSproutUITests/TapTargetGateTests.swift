@@ -40,6 +40,17 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.timelineDefaultState)
     }
 
+    /// LS-343：390pt／375pt 窄寬度變體——沿用既有的最短邊 ≥44pt 通用檢查當基礎覆蓋；「寬 ≥ 高、
+    /// 不被壓成直排」的專屬斷言在 `TimelineHeaderNarrowWidthUITests`（該檔文件註解說明為什麼
+    /// 這支通用檢查測不出直排壓縮）。
+    func testTimelineViewHeaderNarrow390() {
+        assertAllTappablesMeetMinimum(.timelineHeaderNarrow390)
+    }
+
+    func testTimelineViewHeaderNarrow375() {
+        assertAllTappablesMeetMinimum(.timelineHeaderNarrow375)
+    }
+
     /// LS-136：`SectionTabBar`（`cmp/Tab Bar` 全字級純 icon）四顆 cell 的預設態點擊區。
     func testSectionTabView() {
         assertAllTappablesMeetMinimum(.sectionTabView)

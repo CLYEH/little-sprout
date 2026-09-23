@@ -1,7 +1,7 @@
 id,name_zh,category,sort_order,allergens,min_age_months
 rice_cereal,米精,grain_root,1,,
 rice_porridge,白粥,grain_root,2,,
-oatmeal,燕麥粥,grain_root,3,,
+oatmeal,燕麥粥,grain_root,3,wheat,
 white_rice,白米飯,grain_root,4,,
 brown_rice,糙米飯,grain_root,5,,
 sweet_potato,地瓜,grain_root,6,,

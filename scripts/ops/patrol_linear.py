@@ -15,9 +15,9 @@ stub gh 慣例），不必真的打 Linear。唯一的本機寫入是 `<root>/.c
 LS-144「開票責任」：lane 在飛 0 且無可派候補（無候補，或候補全被擋——`hold:user` 使用者裁決、
 待 Spec／待結構／blockedBy 未解／`需 Design gate` 無核可稿）時，動作清單多印一行
 `→ 開票：lane:<x> 空 n 輪（…）——來源候選：…`（連續空 ≥2 輪升 ⚠），並機械列出來源候選：
-design／ui＝Backlog 中票文含正典標記 `**UI 票：需 Design gate**` 且尚無 lane:design 票承接者；harness＝LS-96 池項
+design／ui＝Backlog 中票文含正典標記 `**UI 票：需 Design gate**` 且尚無 lane:design 票承接者；harness＝LS-354 池項（LS-351 起接替 LS-96）
 `P1 ·`／`P2 ·` 且尚未被任何票引用 comment id 前綴者；backend＝Backlog Story 含後端關鍵字且尚無
-lane:backend 子票者（關鍵字啟發式，只列、不判）。來源候選需要的額外查詢（已結案票、LS-96
+lane:backend 子票者（關鍵字啟發式，只列、不判）。來源候選需要的額外查詢（已結案票、LS-354
 comments）只在有 lane 需要時才打、且 best-effort（查詢失敗只在該行註明，不打掉整份報表，
 同 cycle_progress() 的例外）。不自動建票——建票仍由 orchestrator 判斷 scope（§4-b 模板第 4 步）。
 
@@ -51,9 +51,14 @@ BACKLOG_STATES = ("Backlog", "Spec")
 # cycle 對帳 (a) 的「active」定義抄自 §4-b 巡檢 cron 模板本文（狀態名稱，不是 state.type）
 ACTIVE_STATE_NAMES = ("Ready", "In Progress", "In Review", "QA", "Design", "Spec")
 SIZE_RANK = {"size:S": 0, "size:M": 1, "size:L": 2}
-SKIP_ISSUE = "LS-96"  # 常駐待辦池：永不列為候補、永不派（§5-b「harness 優先序」）
+SKIP_ISSUE = "LS-354"  # 常駐待辦池（LS-351 起接替封存的 LS-96）：永不列為候補、永不派（§5-b「harness 優先序」）
 # LS-144：使用者裁決暫不動的票——補位與開票候選皆跳過並註明「使用者裁決」（§5-b）。
 HOLD_LABEL = "hold:user"
+# LS-351（§5-b「harness 配額」）：lane:harness 每 cycle 開票數 ≤ 該 cycle 總票數 20%（向上取整）。
+HARNESS_LANE = "lane:harness"
+HARNESS_QUOTA_PERCENT = 20
+# LS-351 R2（§5-b「入口收斂」）：待辦池 comment 數超過此門檻即需封存重開（重貼沿用 40＋約一個 cycle 新增量）。
+POOL_ARCHIVE_THRESHOLD = 80
 # LS-144：Story 票文的正典粗體標記 `**UI 票：需 Design gate**`（LS-19／20／22／24 皆此形）＝沒有核可設計稿不得
 # 實作（CLAUDE.md design gate）。帶此標記的 Backlog 票永不列為候補（實作票是核可後另開的子票，Story 本身不派
 # ——LS-142 驗收段的流程），只作為 design／ui lane 的開票來源。LS-96 池項 b2993155（P1）的機械修法即此條。
@@ -63,8 +68,8 @@ HOLD_LABEL = "hold:user"
 # 折衷：必須在 `**UI 票：需…Design gate**` 粗體內、「需」與「Design gate」之間容忍 ≤6 字（先過／先通過）；「不需」「另票，需」
 # 都不在這個粗體形內，仍不命中。
 DESIGN_GATE_RE = re.compile(r"\*\*UI 票：需.{0,6}Design gate\*\*")
-POOL_PRIORITY_RE = re.compile(r"\bP([1-4])\s*·")  # LS-96 池項格式：`Pn ·`（§5-b「入口收斂」）；body 首個 match
-POOL_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P([1-4])\s*·")  # 行首列點項 `- Pn ·`（R2 N1：一則多項取最小級）
+POOL_PRIORITY_RE = re.compile(r"\bP([1-4])\s*[·｜]")  # 池項格式：LS-96 舊式 `Pn ·`／LS-354 `Pn ｜`（§5-b「入口收斂」）；body 首個 match
+POOL_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P([1-4])\s*[·｜]")  # 行首列點項 `- Pn ·`（R2 N1：一則多項取最小級）
 # 池內公告（銷除／銷案／已升票）會引述被銷除項的 `P1 ·`，不是池項（R1 F2 live 62ecf8f1）。R2 N3：不錨 body 開頭（公告以日期／
 # 票號起頭就漏），改看 body 前 2 行有沒有這些字樣；只看前 2 行是避免正文提到「已升票」的真池項被當公告藏掉。
 POOL_ANNOUNCE_RE = re.compile(r"銷除|銷案|已升票")
@@ -139,7 +144,7 @@ query($teamKey: String!, $number: Float!) {
 }
 """
 
-# LS-144：LS-96 待辦池 comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
+# LS-144：待辦池（LS-354）comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
 POOL_COMMENTS_QUERY = """
 query($id: String!, $after: String) {
   issue(id: $id) {
@@ -180,7 +185,7 @@ query($cycleId: ID!) {
 # （不受該 filter 限制）。first:250 是合理上限（cycle 週期短，實務不會超過）。
 CYCLE_ISSUES_QUERY = """
 query($cycleId: String!) {
-  cycle(id: $cycleId) { issues(first: 250) { nodes { state { type } } } }
+  cycle(id: $cycleId) { issues(first: 250) { nodes { state { type } labels { nodes { name } } } } }
 }
 """
 
@@ -304,14 +309,14 @@ def fetch_cycle_documents(token, cycle_id):
     return data["documents"]["nodes"]
 
 
-def fetch_cycle_issue_states(token, cycle_id):
+def fetch_cycle_issues(token, cycle_id):
     data = gql(token, CYCLE_ISSUES_QUERY, {"cycleId": cycle_id})
     cyc = data.get("cycle") or {}
-    return [n["state"]["type"] for n in (cyc.get("issues") or {}).get("nodes", [])]
+    return (cyc.get("issues") or {}).get("nodes", [])
 
 
 def cycle_progress(token, current):
-    """回傳 (完成票數, 總票數)；current 為 None／缺 id，或底層查詢本身失敗（GraphQL 錯誤／curl
+    """回傳 (完成票數, 總票數, lane:harness 票數)（LS-351：第三項供 harness 配額，見 harness_quota()）；current 為 None／缺 id，或底層查詢本身失敗（GraphQL 錯誤／curl
     失敗／回應格式不對，即 gql() 對這次呼叫 sys.exit(1)）都回 (None, None)——這是巡檢摘要的附加
     資訊，真正 best-effort：查不到只讓「票數」印「不明」，不擋主流程、不打掉整份報表（R2 m4：
     這裡之前只處理了 current 為 None 的情況，docstring 卻宣稱『查不到不 fail loud』，實際上
@@ -319,14 +324,25 @@ def cycle_progress(token, current):
     的放大器；改用 try/except SystemExit 真正吸收掉，只有這個查詢享有這個例外，其餘查詢仍照舊
     fail loud）。"""
     if not current or not current.get("id"):
-        return None, None
+        return None, None, None
     try:
-        states = fetch_cycle_issue_states(token, current["id"])
+        nodes = fetch_cycle_issues(token, current["id"])
     except SystemExit:
-        return None, None
-    total = len(states)
-    done = sum(1 for t in states if t == "completed")
-    return done, total
+        return None, None, None
+    total = len(nodes)
+    done = sum(1 for n in nodes if n["state"]["type"] == "completed")
+    harness = sum(1 for n in nodes if HARNESS_LANE in label_names(n))
+    return done, total, harness
+
+
+def harness_quota(total, harness):
+    """LS-351（§5-b「harness 配額」）：回傳 {"opened", "limit"} 或 None（不判定）。上限＝當前 cycle 總票數
+    （任何狀態，同 cycle 一行的「總數」）× 20% 向上取整；已開＝其中帶 lane:harness 的票數。cycle 票數查不到
+    （cycle_progress() 失敗）或為 0（比例未定義——0 的 20% 會永遠禁止第一張票）都回 None＝不判定（fail-open，
+    lane 表照常印候補，不假裝有配額訊號）。"""
+    if total is None or harness is None or total == 0:
+        return None
+    return {"opened": harness, "limit": -(-total * HARNESS_QUOTA_PERCENT // 100)}
 
 
 def parse_iso(ts):
@@ -741,7 +757,7 @@ def is_pool_announcement(comment):
 
 
 def pool_sources(comments, all_issues):
-    """(b) harness：LS-96 池項 comment 等級為 P1／P2、且尚未升票者。等級＝body 首個 `Pn ·` 與各行首列點
+    """(b) harness：待辦池（LS-354）池項 comment 等級為 P1／P2、且尚未升票者。等級＝body 首個 `Pn ·` 與各行首列點
     `- Pn ·` 的最小級（R2 N1：live 163 則中 8 則是一則多項混級，如 `- P3 ·` 後接 `- P2 ·`，取最小級才不會把真 P2
     藏掉；P3 池項文中段引用「P1 ·」既非首個 match 也不在行首，不升級）。公告（is_pool_announcement()：前 2 行含
     「銷除／銷案／已升票」）整則跳過。「已升票」＝任一票（open 或已結案）的標題／票文含該 comment id 前 8 碼（agent
@@ -766,7 +782,7 @@ def pool_sources(comments, all_issues):
             continue
         if any(o is not c and is_pool_announcement(o) and prefix in (o.get("body") or "") for o in comments):
             continue  # R3：只有公告能銷除別則——非公告池項正文提到別則 id＋「銷案」字樣不算（live bcb97555 誤藏 2 條真 P2）
-        item = re.search(r"\bP%d\s*·" % level, body)  # 摘要取最小級那一項的文字
+        item = re.search(r"\bP%d\s*[·｜]" % level, body)  # 摘要取最小級那一項的文字
         snippet = " ".join(body[item.end():].split())[:60]
         out.append({
             "id": "%s#%s" % (SKIP_ISSUE, prefix), "title": snippet,
@@ -779,7 +795,7 @@ def pool_sources(comments, all_issues):
 
 
 # LS-287：pool_sources() 的「已被未封存票 description 引用」是查 Linear 票文；這裡再補第二層——查 repo
-# 本身（腳本檔頭「來源 LS-96 池項 <id>」等）是否已經落地實作。兩層互補，都判定為已升票／已落地，
+# 本身（腳本檔頭「來源 LS-96／LS-354 池項 <id>」等）是否已經落地實作。兩層互補，都判定為已升票／已落地，
 # 不列為候選（09-15 兩輪列出的 12 候選中 5 個其實 LS-141／180／140／226 已做掉，orchestrator 每輪重複
 # 人工排除）。只查 repo 內會被 agent／人翻閱到的位置，不掃整個 repo（避免誤命中 .pen／二進位或無關檔案）。
 POOL_LANDED_PATHS = ["scripts/", ".github/", "docs/COLLABORATION.md", "docs/PLAN.md", ".claude/agents/"]
@@ -986,7 +1002,7 @@ def cycle_reconciliation(token, issues, current, now_epoch):
 # ---------------- 開票結構（section 4）----------------
 
 def ticket_structure(issues):
-    """R1 I1：LS-96（常駐待辦池）永不派、永不進 cycle，票文本身不打算補 size／project——結構檢查
+    """R1 I1：常駐待辦池（SKIP_ISSUE）永不派、永不進 cycle，票文本身不打算補 size／project——結構檢查
     豁免它，否則每輪都命中 (e) 且永遠不會被清掉，會訓練出「結構段可以忽略」的習慣。"""
     result = {"a": [], "b": [], "c": [], "d": [], "e": []}
     for issue in issues:
@@ -1067,6 +1083,10 @@ def build_report(token, root, team_key, team_id, sim_lines):
             return backend_sources(issues, alls, root=root), notes
         return design_gate_sources(issues, alls, root=root), notes  # lane:design／lane:ui 共用同一份來源
 
+    # R1 F1：cycle 一行（票數 完成/總數）；LS-351 起同一次查詢順帶算 harness 配額，所以提前到 lane 迴圈之前。
+    tickets_done, tickets_total, tickets_harness = cycle_progress(token, current)
+    quota = harness_quota(tickets_total, tickets_harness)
+
     state = load_state(root)
     streaks = state.get("open_ticket_empty_rounds")
     if not isinstance(streaks, dict):
@@ -1090,6 +1110,13 @@ def build_report(token, root, team_key, team_id, sim_lines):
             )
             candidates_shown = in_cycle_ok if in_cycle_ok else all_ok
             cand_display = [i["identifier"] for i in candidates_shown]
+        # LS-351 harness 配額：cycle 外候補（scope+ 會把新票加進 cycle）在已開 ≥ 上限時擋；cycle 內候補本來就算在
+        # 已開裡，只有已開 > 上限（本來就超額）才擋。被擋＝不列候補、不補位，改印一行「harness 配額已滿」。
+        quota_blocked = False
+        if lane == HARNESS_LANE and quota is not None and candidates_shown and not ready_dispatch:
+            if (needs_scope and quota["opened"] >= quota["limit"]) or quota["opened"] > quota["limit"]:
+                quota_blocked = True
+                candidates_shown, cand_display, needs_scope = [], [], False
         pending = lane_pending(issues, lane)
         entry = {
             "limit": limit,
@@ -1104,6 +1131,7 @@ def build_report(token, root, team_key, team_id, sim_lines):
             "hold": pending["hold"],
             "blocked_by_unresolved": pending["blocked"],
             "open_ticket": None,
+            "harness_quota": dict(quota, full=quota["opened"] >= quota["limit"]) if (lane == HARNESS_LANE and quota) else None,
             "actions": [],
         }
         # R2 m1：current 為 None 時（無法判定當前 cycle）不產生動作——與 cycle_reconciliation()
@@ -1125,7 +1153,17 @@ def build_report(token, root, team_key, team_id, sim_lines):
         # 連續空輪數存 .claude/patrol-state.json（每 lane 一個計數；有在飛或有候補即歸零），≥2 輪升 ⚠。
         # 不看 current 是否可判定——lane 空著就是停擺，與能不能派工（需 cycle）是兩件事。
         # LS-298 scope 4：ready_dispatch 有值時 lane 其實被佔用（worktree 已建、待派），不算「空」，不印開票。
-        if wip == 0 and not candidates_shown and not ready_dispatch:
+        # LS-351：harness 配額已滿（已開 ≥ 上限）時連「開票」也不印——開新 harness 票正是配額要擋的事。
+        if lane == HARNESS_LANE and quota is not None and not candidates_shown and not ready_dispatch \
+                and wip == 0 and quota["opened"] >= quota["limit"]:
+            quota_blocked = True
+        if quota_blocked:
+            entry["actions"].append(
+                "→ harness 配額已滿（%d/%d）：本 cycle 不補位、不開 harness 票——不列候選（§5-b，上限＝cycle 票數 %d%% 向上取整）"
+                % (quota["opened"], quota["limit"], HARNESS_QUOTA_PERCENT)
+            )
+            rounds = 0
+        elif wip == 0 and not candidates_shown and not ready_dispatch:
             rounds = int(streaks.get(lane) or 0) + 1
             blocked = []
             if pending["hold"]:
@@ -1148,6 +1186,11 @@ def build_report(token, root, team_key, team_id, sim_lines):
         lanes[lane] = entry
 
     state["open_ticket_empty_rounds"] = streaks
+
+    # LS-351 R2：待辦池則數（與開票來源共用同一次 lazy 查詢，harness lane 已查過就不再打）。
+    pool_list, pool_err = pool_comments()
+    pool_size = {"issue": SKIP_ISSUE, "count": None if pool_err else len(pool_list),
+                 "threshold": POOL_ARCHIVE_THRESHOLD, "error": pool_err}
     save_state(root, state)
 
     actions = list(cycle_actions) + list(lane_actions)
@@ -1156,7 +1199,6 @@ def build_report(token, root, team_key, team_id, sim_lines):
     remaining_days = None
     if current and current.get("endsAt"):
         remaining_days = (parse_iso(current["endsAt"]) - now_epoch) / 86400.0
-    tickets_done, tickets_total = cycle_progress(token, current)
 
     return {
         "skipped": False,
@@ -1175,6 +1217,7 @@ def build_report(token, root, team_key, team_id, sim_lines):
         "lanes": lanes,
         "structure": structure,
         "booted_simulator_flags": sim_lines,
+        "pool_size": pool_size,
         "actions": actions,
     }
 
@@ -1210,9 +1253,13 @@ def format_lane_line(lane, entry):
     # LS-144：多兩欄——待Design（需 Design gate 無核可稿）、hold:user（使用者裁決，補位與開票候選皆跳過）
     pend_design = ", ".join(entry["pending_design"]) if entry["pending_design"] else "無"
     hold = ("%s（使用者裁決）" % ", ".join(entry["hold"])) if entry["hold"] else "無"
-    return "  %-14s 上限%d 在飛%d  候補：%s  待Spec：%s  待結構：%s  待Design：%s  %s：%s" % (
+    line = "  %-14s 上限%d 在飛%d  候補：%s  待Spec：%s  待結構：%s  待Design：%s  %s：%s" % (
         lane, entry["limit"], entry["wip"], cand, pend_spec, pend_structure, pend_design, HOLD_LABEL, hold
     )
+    hq = entry.get("harness_quota")
+    if hq:
+        line += "  配額：%d/%d%s" % (hq["opened"], hq["limit"], "（已滿）" if hq["full"] else "")
+    return line
 
 
 def mark(prefix, items, text):
@@ -1221,14 +1268,28 @@ def mark(prefix, items, text):
     return "%s%s%s" % (prefix, "⚠ " if items else "", text)
 
 
+def format_pool_size(ps):
+    """LS-351 R2：待辦池 > 門檻印 ⚠（過得了 patrol-filter）；讀不到也印 ⚠（巡檢慣例：讀不到不得靜默）；≤ 門檻零訊號。"""
+    if not ps:
+        return None
+    if ps.get("error"):
+        return "⚠ 待辦池 %s 則數讀不到（%s）" % (ps["issue"], ps["error"])
+    if ps["count"] > ps["threshold"]:
+        return "⚠ 待辦池 %s %d 則 > %d，需封存重開（linear-archive.py）" % (ps["issue"], ps["count"], ps["threshold"])
+    return None
+
+
 def format_human(report, brief=False):
     lines = []
+    pool_line = format_pool_size(report.get("pool_size"))
     cc = report["current_cycle"]
     if brief:
         lines.append("巡檢（Linear 半段）%s" % format_cycle_line(cc))
         lines.append("Lane 狀態：")
         for lane, entry in report["lanes"].items():
             lines.append(format_lane_line(lane, entry))
+        if pool_line:
+            lines.append(pool_line)
         lines.append("動作清單：")
         if report["actions"]:
             lines.extend(report["actions"])
@@ -1278,6 +1339,9 @@ def format_human(report, brief=False):
     else:
         lines.append("  （無異常）")
 
+    if pool_line:
+        lines.append("== 待辦池")
+        lines.append("  " + pool_line)
     lines.append("== 動作清單（逐行執行）")
     if report["actions"]:
         lines.extend(report["actions"])

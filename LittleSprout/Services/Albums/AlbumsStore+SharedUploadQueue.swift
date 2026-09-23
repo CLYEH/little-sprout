@@ -33,7 +33,12 @@ extension AlbumsStore {
         let store = UploadQueueStore(
             familyID: familyID, mediaUploadService: mediaUploadService,
             onUploadSucceeded: { [weak self] entryID, mediaID in
-                guard let self, let albumID = self.pendingUploadAlbumIDs.removeValue(forKey: entryID) else { return }
+                guard let self else { return }
+                // LS-328：不管這筆有沒有掛相簿都要通知——時間軸顯示所有未軟刪 media，不限
+                // 有沒有相簿連結，跟下面「只在有登記 albumID 才 attachUploadedMedia」的職責
+                // 邊界不同，見 `TimelineStore+Import.swift` 檔頭文件註解。
+                self.timelineStore?.handleImportBatchMediaUploaded()
+                guard let albumID = self.pendingUploadAlbumIDs.removeValue(forKey: entryID) else { return }
                 Task { await self.attachUploadedMedia(albumID: albumID, familyID: familyID, mediaID: mediaID) }
             },
             // LS-303 R5（merge-review R4 i1）：不可重試失敗終局同樣從對照表移除，理由見

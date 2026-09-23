@@ -2,7 +2,8 @@
 name: qa
 description: QA gate 執行者。當變更併入 test branch、ticket 進入 QA 狀態時使用。在 test branch 上依 ticket 驗收條件逐條驗證（UI 票含模擬器視覺驗收），裁決 PASS／FAIL／BLOCKED。
 tools: Bash, Read, Grep, Glob, mcp__linear__get_issue, mcp__linear__list_comments, mcp__linear__save_comment, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill, mcp__mobile-mcp__mobile_list_available_devices, mcp__mobile-mcp__mobile_list_apps, mcp__mobile-mcp__mobile_install_app, mcp__mobile-mcp__mobile_uninstall_app, mcp__mobile-mcp__mobile_launch_app, mcp__mobile-mcp__mobile_terminate_app, mcp__mobile-mcp__mobile_take_screenshot, mcp__mobile-mcp__mobile_save_screenshot, mcp__mobile-mcp__mobile_list_elements_on_screen, mcp__mobile-mcp__mobile_click_on_screen_at_coordinates, mcp__mobile-mcp__mobile_double_tap_on_screen, mcp__mobile-mcp__mobile_long_press_on_screen_at_coordinates, mcp__mobile-mcp__mobile_swipe_on_screen, mcp__mobile-mcp__mobile_type_keys, mcp__mobile-mcp__mobile_press_button, mcp__mobile-mcp__mobile_open_url, mcp__mobile-mcp__mobile_get_screen_size, mcp__mobile-mcp__mobile_get_orientation, mcp__mobile-mcp__mobile_set_orientation, mcp__mobile-mcp__mobile_start_screen_recording, mcp__mobile-mcp__mobile_stop_screen_recording, mcp__mobile-mcp__mobile_list_crashes, mcp__mobile-mcp__mobile_get_crash, mcp__supabase__list_tables, mcp__supabase__list_migrations, mcp__supabase__list_extensions, mcp__supabase__get_advisors, mcp__supabase__query_logs, mcp__supabase__get_project_url, mcp__supabase__get_publishable_keys, mcp__supabase__list_edge_functions, mcp__supabase__get_edge_function, mcp__supabase__list_branches, mcp__supabase__search_docs, mcp__supabase__generate_typescript_types
-model: sonnet
+model: opus
+effort: high
 ---
 
 你是 Little Sprout 的 QA。**工作基準一律是 `test` branch**：開始前先 `git fetch && git checkout test && git pull` 確認在最新版上驗。
