@@ -30591,6 +30591,176 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "Q0Ilp",
+          "name": "N LS-296 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "VcHxQ",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-296 沿革（元件預設示範照換 LS-247 家族）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "lonnR",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NLd9I",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 盤點",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "O55jy7",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【範圍 1 盤點（換圖前稿態，LS-296 R1）】以 python 直接解析 design/littlesprout.pen 明文 JSON 產生、非手寫：逐一走訪 ref 實例，槽位判定 override＝實例 descendants[槽位] 帶 fill；inherit＝未帶、跟元件預設走；隱藏＝槽位或其元件內祖先 enabled 最終為 false（實例覆寫優先）或實例自身／板內祖先 enabled:false。無任何實例以 children 整段替換這六個槽位的祖先。六個預設槽位共 148 筆實例×槽位：\n・cmp/Card Diary（qtCd7）Photo A SBo3L：換前預設＝unsplash photo-1775830979860-f07146977e31；實例 24＝已 override 2／未 override 可見 0／未 override 隱藏 22\n・cmp/Card Diary（qtCd7）Photo B h9c6d：換前預設＝unsplash photo-1756277790825-4e1f6453bbd6；實例 24＝已 override 2／未 override 可見 0／未 override 隱藏 22\n・cmp/Card Diary（qtCd7）Thumb C ekqx4：換前預設＝unsplash photo-1761208663281-619e6532aff3；實例 24＝已 override 2／未 override 可見 0／未 override 隱藏 22\n・cmp/Card Album（bhroo）Photo Wrap s8eO3j：換前預設＝unsplash photo-1560785496-3c9d27877182；實例 34＝已 override 27／未 override 可見 7／未 override 隱藏 0\n・cmp/Card Photo（umJHD）Photo Wrap bjq5n：換前預設＝unsplash photo-1638339972126-fbf92a92dd74；實例 11＝已 override 5／未 override 可見 6／未 override 隱藏 0\n・cmp/Profile Print（OePXK）Photo MN0WF：換前預設＝unsplash photo-1552611324-6a146aea5f04；實例 31＝已 override 0／未 override 可見 31／未 override 隱藏 0",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "P9eC46",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "J6w86V",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 盤點",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "U8YA2e",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【未 override 且可見的實例（換預設後跟著變）】A33la：k1phed（Card Photo）、Z9Xuy（Card Album）；FiBvh：R0UbU（Profile Print）、J9qWt（Profile Print）、PEdSZ（Profile Print）、J2VEkA（Profile Print）；GZ3pb：bsbDd（Profile Print）、A6eWx（Profile Print）、E1O3h（Profile Print）、b5aNE（Profile Print）；Rx5mP：vgbkF（Profile Print）；SHbqU：NZCev（Profile Print）、r9GgFS（Profile Print）、arKGn（Profile Print）、TRHtx（Profile Print）；TnxXE：N6CYtr（Profile Print）；Tr8Kd：q3tlmR（Card Photo）；V4Ktak：ngQDX（Card Photo）、bOKfx（Card Album）；a67Na：pqE2P（Card Photo）、zfSO1（Card Album）；aGkJ1：hO6Sr（Card Photo）、jGudh（Card Album）；dHSyh：l3ekZq（Profile Print）；e1cOqx：VXdf0（Card Album）；f10d1D：V2uFs（Profile Print）、DmAlI（Profile Print）、q5ndkJ（Profile Print）、O2U5BN（Profile Print）；lKoZG：NBUy0（Card Photo）、uvL4p（Card Album）；t5wI4：lE7FJ（Profile Print）；wY7f8：vlX7W（Profile Print）、BJPDT（Profile Print）、Tv1Hv（Profile Print）、c6fBj1（Profile Print）；y66AzT：qDB1i（Profile Print）；y7KAW：FW1X8（Profile Print）；yXSht：MYxf1（Card Album）；z20bG：hbUOc（Profile Print）、RQh9Z（Profile Print）、y4mVT5（Profile Print）、sgQ6k（Profile Print）；z9tytH：nGPjb（Profile Print）。App Store 11 板（c2yk3s／y9r9Fq／Bm7Lx／ZRyXL／Q9Zw3f／Vn4TL／mWZy3／BnjqP／b59DUk／ak7RI／H73kPC）內沒有任何未 override 實例，本票不動。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RV1Yi",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "H5tmVE",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 盤點",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "eBGmn",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【未 override 但不可見的實例】皆為 cmp/Card Diary——元件預設 Photos Row lEgJp 為 enabled:false，以下實例沒有開啟，三個縮圖槽 SBo3L／h9c6d／ekqx4 不渲染：A33la：P47Wf、lZacZ；HLXo3：kmbyt、wZOV3；IgqGF：A0dNY、TEX4L；Qzz3r：mecrt、u85mDn；Tr8Kd：LL4lr；V4Ktak：FIeHM、o3QzV；VZ0wV：C0Iq53、To3Z8；a67Na：rGi9s；aGkJ1：mEgPV、xNqOC；e1cOqx：cgAuy；go7f9：ARVAU、rsoPm；lKoZG：MiQyy、gw8vW；yXSht：c2pJ7R。開啟 Photos Row 的 2 個 Card Diary 實例三槽皆已 override（LS-280 海報來源），本票不動。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lxjUD",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "JO3jZ",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 盤點",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "n4nWR1",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【已 override fill 的實例（本票不動）】cmp/Card Photo 5 個；cmp/Card Diary 2 個；cmp/Card Album 27 個。逐筆清單以同一支盤點腳本重跑即得（指令見 LS-296 R1 handoff）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
