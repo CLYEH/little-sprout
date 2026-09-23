@@ -105,6 +105,13 @@ ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 # （simctl launch 後緊接 mobile-mcp 互動會撞上）與「鍵盤彈出時會攔截下層按鈕的點擊」；各自被刪即紅。
 # LS-333（池項 7d9ab42d，來源 LS-329 R1 M1）：merge-reviewer 正文另須含「下一頁游標取自原始指標而非過濾後結果」——
 # 對分頁結果做過濾的變更，確認測試涵蓋整頁被濾空與游標正確性；那句被刪即紅。
+# LS-352：四維度檢查項（含上一條分頁過濾游標句，現為 rubric R1.5）搬到 `docs/REVIEW-RUBRIC.md` 單一來源，merge-reviewer.md
+# 不再保留副本——上一條改釘 merge-reviewer 正文的引用句「四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`」（被刪即紅）；
+# 游標句本身改由 handoff-evidence-check.test.sh 對真 rubric 斷言（本 gate 只看 .claude/agents/*.md，看不到 docs/）。
+# LS-352：ios-dev 正文須含 handoff 自檢段標題「## 自檢（依 docs/REVIEW-RUBRIC.md）」（交件前自跑四維度 rubric，逐條附證據；
+# 段落本身由 handoff-evidence-check.sh --require-selfcheck 驗）；那句被刪即紅。
+# LS-352：merge-reviewer 正文須含「自檢已宣告通過的項只抽驗、不重寫」（同句含 informational 一律記 LS-354 池、不得要求本 PR 修）；
+# 那句被刪即紅。
 BODY_RULES=
 # LS-254：五份（ios-dev／ui-designer／visual-reviewer／merge-reviewer／qa）正文須含「禁派 fork」——fork 繼承整份派工單、會把它當
 # 自己的任務平行執行（LS-234 R7 同一 .pen／branch 雙寫；LS-188／LS-192 越權改檔，三起皆為 worker 自己派的 fork）；PreToolUse
@@ -206,7 +213,9 @@ ios-dev|先前景跑 push-gate.sh 建快取、快取命中後再 git push|LS-333
 ios-dev|不看背景通知的 exit code|LS-333：判斷 push 是否成功一律以 git log -1 origin/<branch> 對照本機 HEAD，背景通知顯示的 exit 0 可能只是尾端指令自己的、不是 git push 本身，那句被刪即紅
 qa|WDA 會與新 scene 競態、app 被背景化|LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：simctl launch 後緊接 mobile-mcp 互動會撞上這個陷阱，先等畫面渲染或用 mobile_list_elements_on_screen 確認再操作，那句被刪即紅
 qa|鍵盤彈出時會攔截下層按鈕的點擊|LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：鍵盤顯示中先收鍵盤再點下方按鈕，不要對著被蓋住的區域直接點，那句被刪即紅
-merge-reviewer|下一頁游標取自原始指標而非過濾後結果|LS-333（池項 7d9ab42d，來源 LS-329 R1 M1）：對分頁結果做過濾的變更，確認測試涵蓋整頁被濾空與游標正確性，那句被刪即紅"
+merge-reviewer|四維度檢查項的單一來源是 \`docs/REVIEW-RUBRIC.md\`|LS-352：四維度檢查項（含 LS-333 的分頁過濾游標句 R1.5）移到 docs/REVIEW-RUBRIC.md 單一來源，merge-reviewer.md 只引用、不抄；引用句被刪即紅（rubric 內容本身由 handoff-evidence-check.test.sh 對真檔斷言）
+ios-dev|## 自檢（依 docs/REVIEW-RUBRIC.md）|LS-352：handoff 必含 rubric 自檢段，逐條對 docs/REVIEW-RUBRIC.md 每個 R<n>.<m> 寫通過／不適用／已知未處理＋證據，handoff-evidence-check.sh --require-selfcheck 機械驗；那句被刪即紅
+merge-reviewer|自檢已宣告通過的項只抽驗、不重寫|LS-352：ios-dev 自檢段宣告通過的項只抽驗、不從頭重審；informational 一律記 LS-354 池、不得要求本 PR 修，那句被刪即紅"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，

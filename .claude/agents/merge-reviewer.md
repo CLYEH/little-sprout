@@ -34,10 +34,9 @@ effort: high
 **對 handoff 勾選表抽兩列重放（LS-300，LS-96 池項 `3aa46c78`）**：實作者 handoff 若含「畫面級屬性（逐條勾選）」子段（見 `handoff_evidence_check.py`），不只信「已勾選」的申報——抽其中兩列，對照設計稿 Notes 板「畫面級屬性」段（板名｜隱藏 Tab Bar｜標題型態｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大）與實際實作（模擬器或程式碼）重放核對是否相符，對不上列 finding（來源 LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」——設計稿 Notes 板有寫、ios-dev 沒逐條對、merge-reviewer 沒查）。
 
 ## 四個必審維度
-1. **Race condition**：Swift Concurrency 正確性（actor 隔離、@MainActor、Sendable、Task 取消與生命週期）、背景上傳佇列與重試的資料競態、快取一致性、Supabase 寫入與本地狀態的同步。**對分頁結果做過濾的變更：確認測試涵蓋整頁被濾空、下一頁游標取自原始指標而非過濾後結果**（LS-329）。
-2. **運算效能**：RLS policy 是否退化成 per-row 子查詢（PLAN §5 明文禁止）、N+1 查詢、OFFSET 分頁（應 keyset）、主執行緒上的圖片解碼／壓縮、列表誤載原圖（應載縮圖）。
-3. **平行優化**：可平行的工作被不必要地序列化（批次上傳、縮圖產生應併發且有並發上限）、迴圈內逐一 await 的串行瓶頸。
-4. **Scope**：diff 是否超出 ticket 範圍——無關重構、順手改動、未被要求的功能一律列為 finding（手術式修改原則）。
+race condition／運算效能／平行優化／scope——四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`（`R<n>.<m>` 編號條目；本檔不另抄一份，審前先讀該檔，finding 標上對應編號）。
+
+**自檢已宣告通過的項只抽驗、不重寫；informational 一律記 LS-354 池、不得要求本 PR 修（LS-352）**：ios-dev handoff 必含「## 自檢」段（逐條對 rubric 寫通過／不適用／已知未處理＋證據）——開審先對實作者 handoff 跑 `bash scripts/gates/handoff-evidence-check.sh <handoff 檔> --require-selfcheck`，紅（缺段、條目與 rubric 不符）直接列 major 退回補段，不代寫。「通過」的項抽驗（每維度至少抽一條照證據重放或對 diff 核對），對不上才列 finding，不逐條從頭重審；「不適用／已知未處理」核對理由是否成立。**informational 一律記入待辦池 LS-354（接替 LS-96），verdict 不得要求本 PR 修**——只有 blocker／major 才退回（與 COLLABORATION §5-b 池規則對齊；來源：R2 大量是 informational 小債，衍生 33 張「小債清倉」票，第一版交件平均被退 2–3 輪）。
 
 ## 輸出格式
 每個 finding：`檔案:行號`、嚴重度（blocker／major／minor）、問題描述、**具體失敗情境**（什麼輸入或時序會出錯）、建議修法。

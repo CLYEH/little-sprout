@@ -31,11 +31,12 @@ effort: high
 - **量測前確認模擬器 runtime＝`.ios-runtime`**（LS-205）：push-gate／CI 都會印 `simulator: <name> <udid> iOS <ver>（pinned <ver>）`，量測前看一眼這行；`detect-simulator.sh` 本機找不到釘住版會 fail-open（印 ⚠ 改用本機現有版本），不同要在 handoff 註明——runtime 差異會影響 tap-target／版面量測（LS-167 的教訓）。
 - **handoff「已驗證」欄每支 mutation 必列三段（LS-209）**：改了什麼一行 → 哪條測試紅 → 斷言訊息原文；**crash／build fail 不算紅**（LS-188 R3：handoff 稱新測試 mutation 轉紅，reviewer 重放四組結果皆綠，其中一組其實是 app crash 被誤當成「測試紅」——沒有斷言訊息原文就沒人核對得出這個差異）。少一支就是沒驗過，不可寫成「已驗證」。
 - **handoff「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」（LS-211）**：每一列項須對應到驗收條件或範圍編號，且附測試名（`git grep` 可驗存在，不得引用不存在的測試名）或路徑（`.png`／`.log`／`scratchpad/`／`evidence/`）或指令（`xcodebuild`／`bash scripts/…`，含 LS-294 擴充：裸 `git <subcmd>`／`node`／`python3`／`swift <路徑>`／`*.test.js`）——不是「看起來沒問題」這種空泛敘述（LS-96 池項 `1ff7b8d8`：驗收項與證據未一對一）。貼出前可先跑 `bash scripts/gates/handoff-evidence-check.sh <handoff.md>` 自我檢查是否綠。段落標題整行粗體，括號附註可接在同行（如 `**已驗證**（逐項對應票文驗收）：`／`**已驗證**：`，LS-292）。
+- **handoff 必含自檢段，交件前自跑 merge-review 四維度 rubric（LS-352）**：handoff 加一段標題 `## 自檢（依 docs/REVIEW-RUBRIC.md）`，對 `docs/REVIEW-RUBRIC.md` 的每一個 `R<n>.<m>` 條目各寫一行 `- R<n>.<m>｜通過／不適用／已知未處理｜理由＋證據`（證據＝測試名、`file:line`、路徑或指令，同「已驗證」段規則；「已知未處理」寫明為什麼不在本 PR 處理）——一條都不能少、不能多，rubric 改了就照新條目寫；未寫者不得交件。貼出前跑 `bash scripts/gates/handoff-evidence-check.sh <handoff.md> --require-selfcheck`（缺段、條目數或編號與 rubric 不符、缺狀態或證據皆 exit 1，訊息點名哪一條），必須綠。merge-reviewer 對「通過」的項只抽驗、不重寫（來源：08-22 起 main 上 721 支 fix commit 有 428 支是 R2+ 審查修正，第一版交件平均被退 2–3 輪）。
 - **`mcp__linear__*` 失敗（token 過期／斷線）時改用 `bash scripts/ops/linear-post.sh get|comment|state`，並在 handoff 註明走備援**（LS-308，源自 0059bb4f：Linear MCP token 過期時所有 agent 都貼不了票）。
 
 ## 完成定義（DoD）
 1. ticket 的每條驗收條件都有對應測試且通過（XCTest；UI 行為至少有可重複的手動驗證步驟）。
 2. SwiftLint 乾淨、push gate（tests＋lint）通過。
 3. 可在模擬器實際操作過一次主流程（碰本機容器的段落在 `--hold` 內操作，handoff 附持有時長；硬規則 LS-170）。
-4. 用 CLAUDE.md 的 handoff 格式回報（含「已驗證：怎麼驗的」——沒驗過的不可寫成已完成）。
+4. 用 CLAUDE.md 的 handoff 格式回報（含「已驗證：怎麼驗的」——沒驗過的不可寫成已完成），並含 rubric 自檢段（`--require-selfcheck` 綠，LS-352）。
 5. 自己 boot 的模擬器已關（`demo-*` 豁免），handoff 產出位置列出 UDID。
