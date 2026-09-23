@@ -13,6 +13,7 @@
 # LS-256（⑩；LS-96 池項 010d927d(2)(3)）：(a) LS-96 行的純數字 token（GitHub run id）不算 comment id 候選——只有 run id 的池項行格式紅、
 #   run id 與真 id 並列時候選清單不含 run id；退回「純數字也算候選」即紅。(b) --verify 無 LINEAR_API_KEY 且有池項候選未反查 → exit 3
 #   （訊息含「exit 3＝未反查，不是違規」）、無池項候選 → 0、git 半段紅 → 仍 1（違規優先）；退回 exit 0 即紅（⑥a／⑥a2 同步改期望 3）。
+# LS-351（⑥j）：待辦池 LS-96 封存、新池 LS-354——兩個票號都算池項行、--verify 以兩池 comment id 聯集比對（在飛 PR 寫舊池 id 不誤紅）。
 # LS-351（⑫）：新增 scripts/gates/<name>.sh 的 PR body 須有 `Incidents:` 行列 ≥2 個同型事故（本票不算、純數字不算、只加自測／lib 不觸發）；
 #   mutation 拿掉該段即綠。
 set -uo pipefail
@@ -109,7 +110,7 @@ expect 1 '⑤a 同義詞「待辦池」缺 id → 紅' '必附 comment id' "${H}
 expect 1 '⑤a 只有 7 位 hex 不夠（LS-96 行要 ≥8）' '第 4 行' "${H}- i1：記入 LS-96 \`9f348e3\`"$'\n' --branch "$B"
 expect 1 '⑤a hex 嵌在更長英數串裡不算獨立 token' '沒有 comment id' "${H}- i1：記入 LS-96 x9f348e36y"$'\n' --branch "$B"
 expect 1 '⑤a 大寫 hex 不算（Linear id／git SHA 皆小寫）' '沒有 comment id' "${H}- i1：記入 LS-96 9F348E36"$'\n' --branch "$B"
-expect 0 '⑤a LS-960 不是 LS-96（整字比對），無 id 也綠' 'LS-96 行 0 條' "${H}- 承 LS-960 的做法"$'\n' --branch "$B"
+expect 0 '⑤a LS-960 不是 LS-96（整字比對），無 id 也綠' 'LS-354 行 0 條' "${H}- 承 LS-960 的做法"$'\n' --branch "$B"
 expect 1 '⑤a 紅時點名行號並回顯該行' '    | - i1：記入 LS-96 待辦池' "${H}- i1：記入 LS-96 待辦池"$'\n' --branch "$B"
 expect 1 '⑤a 負向提及也會中（全 body 掃取捨）→ 提示改寫措辭＋止血指示' '改寫措辭' "${H}- 不另立 LS-96 池項"$'\n' --branch "$B"
 expect 1 '⑤a 紅時附「CI 不會自動重跑」止血指示' 'close/reopen' "${H}- 不另立 LS-96 池項"$'\n' --branch "$B"
@@ -134,6 +135,10 @@ cat > "$work/fx/page1.json" <<'EOF'
 EOF
 cat > "$work/fx/page2.json" <<'EOF'
 {"data":{"issue":{"identifier":"LS-96","comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[{"id":"9f348e36-82b6-4926-931b-5bfe1637e1f1"},{"id":"fd2fe81e-5592-443c-8b5b-1d518214c650"}]}}}}
+EOF
+# LS-351：新池 LS-354（單頁 1 則）——--verify 以 LS-354＋舊池 LS-96 的 comment id 聯集比對
+cat > "$work/fx/pool354.json" <<'EOF'
+{"data":{"issue":{"identifier":"LS-354","comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[{"id":"a3543543-aaaa-4bbb-8ccc-000000000354"}]}}}}
 EOF
 cat > "$work/bin/curl" <<EOF
 #!/bin/bash
@@ -170,6 +175,7 @@ while [ \$# -gt 0 ]; do
   shift
 done
 case "\$data" in
+  *'"id": "LS-354"'*) cat "\$fx/pool354.json" ;;
   *'CURSOR1'*) cat "\$fx/page2.json" ;;
   *'"after": null'*) cat "\$fx/page1.json" ;;
   *) echo '{"errors":[{"message":"stub curl：認不出的 query"}]}' ;;
@@ -244,8 +250,9 @@ rm -f "$V/.env"
 
 : > "$CURL_STUB_LOG"
 vexpect 0 '⑥b 有 key：id 只在第 2 頁 → 綠（分頁到底）' '9f348e36 存在（9f348e36-82b6-4926-931b-5bfe1637e1f1）' 'test-token-not-real' "$both"
-if [ "$(grep -cF '"after": null' "$CURL_STUB_LOG")" -eq 1 ] && [ "$(grep -cF 'CURSOR1' "$CURL_STUB_LOG")" -eq 1 ]; then
-  echo "✓ ⑥b curl 兩次：第 1 頁 after=null、第 2 頁帶 endCursor"
+if [ "$(grep -cF '"after": null' "$CURL_STUB_LOG")" -eq 2 ] && [ "$(grep -cF 'CURSOR1' "$CURL_STUB_LOG")" -eq 1 ] \
+   && [ "$(grep -cF '"id": "LS-354"' "$CURL_STUB_LOG")" -eq 1 ] && [ "$(grep -cF '"id": "LS-96"' "$CURL_STUB_LOG")" -eq 2 ]; then
+  echo "✓ ⑥b curl 三次：LS-354 一頁＋LS-96 第 1 頁 after=null、第 2 頁帶 endCursor（LS-351：兩池聯集）"
 else
   echo "✗ ⑥b 分頁呼叫形狀不對" >&2; sed 's/^/    /' "$CURL_STUB_LOG" >&2; fail=1
 fi
@@ -256,8 +263,14 @@ else
 fi
 vexpect 0 '⑥b id 在第 1 頁（前綴比對）' 'c2ee062d 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`c2ee062d\`"$'\n'
 vexpect 0 '⑥b 完整 UUID 也能比對' 'fd2fe81e 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`fd2fe81e-5592-443c-8b5b-1d518214c650\`"$'\n'
-vexpect 1 '⑥c id 不在 LS-96 → 紅 exit 1' '在 LS-96 找不到' 'test-token-not-real' "${H}- i1：記入 LS-96 \`deadbeef00\`"$'\n'
-vexpect 1 '⑥c 找不到時列出候選與 LS-96 comment 總數' '候選：deadbeef00；LS-96 現有 4 則' 'test-token-not-real' "${H}- i1：記入 LS-96 \`deadbeef00\`"$'\n'
+vexpect 1 '⑥c id 不在任一池 → 紅 exit 1' '在 LS-354／LS-96 找不到' 'test-token-not-real' "${H}- i1：記入 LS-96 \`deadbeef00\`"$'\n'
+vexpect 1 '⑥c 找不到時列出候選與兩池 comment 總數' '候選：deadbeef00；兩池現有 5 則' 'test-token-not-real' "${H}- i1：記入 LS-96 \`deadbeef00\`"$'\n'
+: > "$CURL_STUB_LOG"
+# ⑥j LS-351：新池 LS-354——「記入 LS-354 <id>」格式規則同 LS-96、--verify 在 LS-354 找得到即綠；舊池 id 寫在 LS-354 行也綠（聯集）
+expect 1 '⑥j 記入 LS-354 缺 id → 紅（新池同受規則 (a)）' '沒有 comment id' "${H}- i1：記入 LS-354 待辦池"$'\n' --branch "$B"
+expect 1 '⑥j 缺 id 時指示記入新池 LS-354' '記入 LS-354 必附 comment id' "${H}- i1：記入待辦池"$'\n' --branch "$B"
+vexpect 0 '⑥j --verify：LS-354 的 comment id 存在 → 綠' 'a3543543 存在' 'test-token-not-real' "${H}- i1：記入待辦池 LS-354 \`a3543543\`"$'\n'
+vexpect 0 '⑥j --verify：在飛 PR 仍寫舊池 LS-96 的 id → 綠（聯集，不誤紅）' '9f348e36 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`9f348e36\`"$'\n'
 : > "$CURL_STUB_LOG"
 vexpect 0 '⑥d body 沒有 LS-96 行 → 不打 Linear' '「已修」行 1 條' 'test-token-not-real' "${H}- m1：已修 \`${sha_in}\`"$'\n'
 if [ -s "$CURL_STUB_LOG" ]; then echo "✗ ⑥d 沒有 LS-96 行不應呼叫 curl" >&2; sed 's/^/    /' "$CURL_STUB_LOG" >&2; fail=1; else echo "✓ ⑥d 沒有 LS-96 行不呼叫 curl"; fi
@@ -410,7 +423,7 @@ fi
 #   之後的版本）與 LS-315 同一 PR 的 CI run id（35289196077，無連字號）是驗收明定的兩個具體實例。
 PR486_LINE='- i1：記入待辦池 LS-96 `16074303-698d-49ae-9a1e-391cb3fbadf9`，本輪不修——`AlbumsView` 進場會重載，不會殘留錯誤態'
 expect 0 '⑪a PR #486 第 72 行原句（格式）：完整 UUID 首段全為數字，格式仍綠' '皆帶 comment id' "${H}${PR486_LINE}"$'\n' --branch "$B"
-vexpect 1 '⑪a --verify：PR #486 第 72 行原句——候選須為首段 16074303、不含尾段 391cb3fbadf9（驗收明定）' '候選：16074303；LS-96 現有 4 則' 'test-token-not-real' "${H}${PR486_LINE}"$'\n'
+vexpect 1 '⑪a --verify：PR #486 第 72 行原句——候選須為首段 16074303、不含尾段 391cb3fbadf9（驗收明定）' '候選：16074303；兩池現有 5 則' 'test-token-not-real' "${H}${PR486_LINE}"$'\n'
 expect 1 '⑪b 裸 CI run id 35289196077（LS-315 PR #486，無連字號）→ 不算候選' '沒有 comment id' "${H}- i1：記入 LS-96（run 35289196077）"$'\n' --branch "$B"
 expect 0 '⑪b 裸 run id 與真 id 並列 → 候選只有真 id、格式綠' '皆帶 comment id' "${H}- i1：記入 LS-96（run 35289196077）\`9f348e36\`"$'\n' --branch "$B"
 vexpect 0 '⑪c 同行兩個完整 UUID：首段皆為候選，任一可驗即過' '9f348e36 存在' 'test-token-not-real' "${H}- i1：記入 LS-96 \`00000001-0000-0000-0000-000000000000\`、\`9f348e36-82b6-4926-931b-5bfe1637e1f1\`"$'\n'
@@ -481,6 +494,6 @@ else
 fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pr-body-check 自測通過（132 組樣本）"
+  echo "✓ pr-body-check 自測通過（136 組樣本）"
 fi
 exit "$fail"

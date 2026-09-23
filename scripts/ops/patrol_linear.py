@@ -15,9 +15,9 @@ stub gh 慣例），不必真的打 Linear。唯一的本機寫入是 `<root>/.c
 LS-144「開票責任」：lane 在飛 0 且無可派候補（無候補，或候補全被擋——`hold:user` 使用者裁決、
 待 Spec／待結構／blockedBy 未解／`需 Design gate` 無核可稿）時，動作清單多印一行
 `→ 開票：lane:<x> 空 n 輪（…）——來源候選：…`（連續空 ≥2 輪升 ⚠），並機械列出來源候選：
-design／ui＝Backlog 中票文含正典標記 `**UI 票：需 Design gate**` 且尚無 lane:design 票承接者；harness＝LS-96 池項
+design／ui＝Backlog 中票文含正典標記 `**UI 票：需 Design gate**` 且尚無 lane:design 票承接者；harness＝LS-354 池項（LS-351 起接替 LS-96）
 `P1 ·`／`P2 ·` 且尚未被任何票引用 comment id 前綴者；backend＝Backlog Story 含後端關鍵字且尚無
-lane:backend 子票者（關鍵字啟發式，只列、不判）。來源候選需要的額外查詢（已結案票、LS-96
+lane:backend 子票者（關鍵字啟發式，只列、不判）。來源候選需要的額外查詢（已結案票、LS-354
 comments）只在有 lane 需要時才打、且 best-effort（查詢失敗只在該行註明，不打掉整份報表，
 同 cycle_progress() 的例外）。不自動建票——建票仍由 orchestrator 判斷 scope（§4-b 模板第 4 步）。
 
@@ -51,7 +51,7 @@ BACKLOG_STATES = ("Backlog", "Spec")
 # cycle 對帳 (a) 的「active」定義抄自 §4-b 巡檢 cron 模板本文（狀態名稱，不是 state.type）
 ACTIVE_STATE_NAMES = ("Ready", "In Progress", "In Review", "QA", "Design", "Spec")
 SIZE_RANK = {"size:S": 0, "size:M": 1, "size:L": 2}
-SKIP_ISSUE = "LS-96"  # 常駐待辦池：永不列為候補、永不派（§5-b「harness 優先序」）
+SKIP_ISSUE = "LS-354"  # 常駐待辦池（LS-351 起接替封存的 LS-96）：永不列為候補、永不派（§5-b「harness 優先序」）
 # LS-144：使用者裁決暫不動的票——補位與開票候選皆跳過並註明「使用者裁決」（§5-b）。
 HOLD_LABEL = "hold:user"
 # LS-351（§5-b「harness 配額」）：lane:harness 每 cycle 開票數 ≤ 該 cycle 總票數 20%（向上取整）。
@@ -66,8 +66,8 @@ HARNESS_QUOTA_PERCENT = 20
 # 折衷：必須在 `**UI 票：需…Design gate**` 粗體內、「需」與「Design gate」之間容忍 ≤6 字（先過／先通過）；「不需」「另票，需」
 # 都不在這個粗體形內，仍不命中。
 DESIGN_GATE_RE = re.compile(r"\*\*UI 票：需.{0,6}Design gate\*\*")
-POOL_PRIORITY_RE = re.compile(r"\bP([1-4])\s*·")  # LS-96 池項格式：`Pn ·`（§5-b「入口收斂」）；body 首個 match
-POOL_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P([1-4])\s*·")  # 行首列點項 `- Pn ·`（R2 N1：一則多項取最小級）
+POOL_PRIORITY_RE = re.compile(r"\bP([1-4])\s*[·｜]")  # 池項格式：LS-96 舊式 `Pn ·`／LS-354 `Pn ｜`（§5-b「入口收斂」）；body 首個 match
+POOL_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P([1-4])\s*[·｜]")  # 行首列點項 `- Pn ·`（R2 N1：一則多項取最小級）
 # 池內公告（銷除／銷案／已升票）會引述被銷除項的 `P1 ·`，不是池項（R1 F2 live 62ecf8f1）。R2 N3：不錨 body 開頭（公告以日期／
 # 票號起頭就漏），改看 body 前 2 行有沒有這些字樣；只看前 2 行是避免正文提到「已升票」的真池項被當公告藏掉。
 POOL_ANNOUNCE_RE = re.compile(r"銷除|銷案|已升票")
@@ -142,7 +142,7 @@ query($teamKey: String!, $number: Float!) {
 }
 """
 
-# LS-144：LS-96 待辦池 comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
+# LS-144：待辦池（LS-354）comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
 POOL_COMMENTS_QUERY = """
 query($id: String!, $after: String) {
   issue(id: $id) {
@@ -755,7 +755,7 @@ def is_pool_announcement(comment):
 
 
 def pool_sources(comments, all_issues):
-    """(b) harness：LS-96 池項 comment 等級為 P1／P2、且尚未升票者。等級＝body 首個 `Pn ·` 與各行首列點
+    """(b) harness：待辦池（LS-354）池項 comment 等級為 P1／P2、且尚未升票者。等級＝body 首個 `Pn ·` 與各行首列點
     `- Pn ·` 的最小級（R2 N1：live 163 則中 8 則是一則多項混級，如 `- P3 ·` 後接 `- P2 ·`，取最小級才不會把真 P2
     藏掉；P3 池項文中段引用「P1 ·」既非首個 match 也不在行首，不升級）。公告（is_pool_announcement()：前 2 行含
     「銷除／銷案／已升票」）整則跳過。「已升票」＝任一票（open 或已結案）的標題／票文含該 comment id 前 8 碼（agent
@@ -780,7 +780,7 @@ def pool_sources(comments, all_issues):
             continue
         if any(o is not c and is_pool_announcement(o) and prefix in (o.get("body") or "") for o in comments):
             continue  # R3：只有公告能銷除別則——非公告池項正文提到別則 id＋「銷案」字樣不算（live bcb97555 誤藏 2 條真 P2）
-        item = re.search(r"\bP%d\s*·" % level, body)  # 摘要取最小級那一項的文字
+        item = re.search(r"\bP%d\s*[·｜]" % level, body)  # 摘要取最小級那一項的文字
         snippet = " ".join(body[item.end():].split())[:60]
         out.append({
             "id": "%s#%s" % (SKIP_ISSUE, prefix), "title": snippet,
@@ -793,7 +793,7 @@ def pool_sources(comments, all_issues):
 
 
 # LS-287：pool_sources() 的「已被未封存票 description 引用」是查 Linear 票文；這裡再補第二層——查 repo
-# 本身（腳本檔頭「來源 LS-96 池項 <id>」等）是否已經落地實作。兩層互補，都判定為已升票／已落地，
+# 本身（腳本檔頭「來源 LS-96／LS-354 池項 <id>」等）是否已經落地實作。兩層互補，都判定為已升票／已落地，
 # 不列為候選（09-15 兩輪列出的 12 候選中 5 個其實 LS-141／180／140／226 已做掉，orchestrator 每輪重複
 # 人工排除）。只查 repo 內會被 agent／人翻閱到的位置，不掃整個 repo（避免誤命中 .pen／二進位或無關檔案）。
 POOL_LANDED_PATHS = ["scripts/", ".github/", "docs/COLLABORATION.md", "docs/PLAN.md", ".claude/agents/"]
@@ -1000,7 +1000,7 @@ def cycle_reconciliation(token, issues, current, now_epoch):
 # ---------------- 開票結構（section 4）----------------
 
 def ticket_structure(issues):
-    """R1 I1：LS-96（常駐待辦池）永不派、永不進 cycle，票文本身不打算補 size／project——結構檢查
+    """R1 I1：常駐待辦池（SKIP_ISSUE）永不派、永不進 cycle，票文本身不打算補 size／project——結構檢查
     豁免它，否則每輪都命中 (e) 且永遠不會被清掉，會訓練出「結構段可以忽略」的習慣。"""
     result = {"a": [], "b": [], "c": [], "d": [], "e": []}
     for issue in issues:

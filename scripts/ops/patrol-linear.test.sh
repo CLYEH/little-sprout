@@ -6,10 +6,10 @@
 #
 # 覆蓋：候補排序（priority 同分取 size S→M→L 再 createdAt）、blockedBy 未 Done → 跳過、Canceled 視為
 # 已解、缺 size 的 lane:harness 票列結構 (e)、cycle 外（非本 cycle）的 active 票列 cycle 對帳 (a)、
-# LS-96 永遠不列為候補、分頁（兩頁 issues 合併）、無 LINEAR_API_KEY → 略過且不呼叫 curl。
+# LS-354 永遠不列為候補、分頁（兩頁 issues 合併）、無 LINEAR_API_KEY → 略過且不呼叫 curl。
 # ⑩（LS-144 開票責任）：lane 空＋無候補 → 印「→ 開票」並列來源；lane 空＋候補全 hold:user → 印開票行且註明
 # 「使用者裁決」；lane 有在飛 → 不印；第二輪升 ⚠（.claude/patrol-state.json 計數）；「需 Design gate」票歸
-# 待Design 不進候補；設計票（open 或已 Done）已承接的 Story 不列；LS-96 池項 P1／P2 才列、被票引用或池內銷除
+# 待Design 不進候補；設計票（open 或已 Done）已承接的 Story 不列；LS-354 池項 P1／P2 才列、被票引用或池內銷除
 # 不列；附加查詢失敗 fail-soft（JSON 仍合法、行內註明）。R1 負樣本：「不需 Design gate」／「另票，需 Design gate」
 # 票不得進待Design（F1）；銷除公告自身引述「P1 ·」不列、P3 池項文中引用「P1 ·」不升級（F2）；Canceled 設計票不算承接（F3）。
 # R2 負樣本：混級 comment（`- P3 ·` 後接 `- P2 ·`）以最小級 P2 列出（N1）；「**UI 票：需先過 Design gate**」變體歸待Design、
@@ -99,7 +99,7 @@ cat > "$fx/issues_page1.json" <<'EOF'
 EOF
 
 # page2（after=CURSOR1）：LS-204（blockedBy 已 Canceled——視為已解，priority Urgent 應排第一）、
-# LS-205（缺 size：候補排最後＋結構 (e) 命中）、LS-96（常駐待辦池，priority 故意設最高也永不列為候補，
+# LS-205（缺 size：候補排最後＋結構 (e) 命中）、LS-354（常駐待辦池，priority 故意設最高也永不列為候補，
 # R1 I1 起結構 (e) 豁免它——它自己也缺 size 但不該再被列出）、LS-210（lane:backend、In Progress、
 # cycle=4≠目前 cycle 5 → cycle 對帳 (a) 命中）、LS-206（缺「## 驗收」→ R1 F1 待 Spec）、
 # LS-207（缺 project → R1 F1 待結構）、LS-211（R1 I2：lane:backend、Backlog、cycle=4≠目前 cycle 5，
@@ -115,7 +115,7 @@ cat > "$fx/issues_page2.json" <<'EOF'
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
    "inverseRelations":{"nodes":[]}},
-  {"identifier":"LS-96","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+  {"identifier":"LS-354","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}},
   {"identifier":"LS-210","title":"backend in progress","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
@@ -232,15 +232,15 @@ check("② 候補排序（priority 同分，size S 排在 size M 之前：202 �
       harness["candidates"].index("LS-202") < harness["candidates"].index("LS-201"))
 check("② 候補排序（缺 size 排最後）", harness["candidates"][-1] == "LS-205")
 check("② blockedBy 未 Done → 跳過（LS-203 不在候補）", "LS-203" not in harness["candidates"])
-check("② LS-96 永不列為候補", "LS-96" not in harness["candidates"])
+check("② LS-354 永不列為候補", "LS-354" not in harness["candidates"])
 check("② lane:harness WIP=0、選中 LS-204、動作含 save_issue Ready",
       harness["wip"] == 0 and harness["chosen"] == "LS-204"
       and any("save_issue LS-204 state=Ready cycle=5" in a for a in harness["actions"]))
 
 structure_e = set(d["structure"]["e"])
 check("② 缺 size 的 lane:harness 票列結構 (e)（LS-205 命中）", "LS-205" in structure_e)
-check("② R1 I1：LS-96 常駐待辦池結構檢查豁免，不列 (e)（否則永遠清不掉、訓練出忽略習慣）",
-      "LS-96" not in structure_e)
+check("② R1 I1：LS-354 常駐待辦池結構檢查豁免，不列 (e)（否則永遠清不掉、訓練出忽略習慣）",
+      "LS-354" not in structure_e)
 
 check("② R1 F1：current_cycle 附帶剩餘天數／票數 完成-總數",
       isinstance((d.get("current_cycle") or {}).get("remaining_days"), (int, float))
@@ -717,7 +717,7 @@ fi
 
 # ---- ⑩ LS-144 開票責任：lane 空＋無候補／候補全 hold:user → 印「→ 開票」並列來源；lane 有在飛 → 不印；
 #        連續空第二輪升 ⚠；「需 Design gate」歸待Design；設計票已承接的 Story 不列；池項 P1／P2 才列、
-#        被票引用或池內銷除不列；附加查詢（已結案票／LS-96 comments）失敗 fail-soft ----
+#        被票引用或池內銷除不列；附加查詢（已結案票／LS-354 comments）失敗 fail-soft ----
 repo_ot="$work/repo_ot"
 git init -q -b main "$repo_ot"
 git -C "$repo_ot" config user.email test@example.com
@@ -745,7 +745,7 @@ EOF
 #   LS-974 lane:ui Backlog Story「需 Design gate」＋票文含「RPC」、無 backend 子票 → design／ui 來源＋backend 來源
 #   LS-975 lane:ui Backlog Story「需 Design gate」，已結案設計票 LS-981 標題整字提到它 → 不列來源
 #   LS-976 lane:product Story 含「RLS」關鍵字，已結案 backend 子票 LS-977（parent=LS-976）→ 不列 backend 來源
-#   LS-96  常駐待辦池（skip）→ harness lane 無候補 → 印開票並列池項來源
+#   LS-354  常駐待辦池（skip）→ harness lane 無候補 → 印開票並列池項來源
 cat > "$fx_ot/issues_page1.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
   {"identifier":"LS-970","title":"Story：孩子檔案 CRUD","description":"PLAN。**UI 票：需 Design gate**（孩子卡片）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
@@ -776,7 +776,7 @@ cat > "$fx_ot/issues_page1.json" <<'EOF'
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:product"}]},
    "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
    "inverseRelations":{"nodes":[]}},
-  {"identifier":"LS-96","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+  {"identifier":"LS-354","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}}
 ]}}}
@@ -786,16 +786,17 @@ EOF
 # LS-970 仍列來源。
 cat > "$fx_ot/closed_issues.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
-  {"identifier":"LS-980","title":"Harness：已升票的池項","description":"來源 LS-96 池項 `bbbbbbbb`。","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:harness"}]},"parent":null},
+  {"identifier":"LS-980","title":"Harness：已升票的池項","description":"來源 LS-354 池項 `bbbbbbbb`。","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:harness"}]},"parent":null},
   {"identifier":"LS-981","title":"設計：登入頁（LS-975 畫面群）","description":"已核可","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:design"}]},"parent":null},
   {"identifier":"LS-977","title":"Task：LS-976 後端 RLS","description":"done","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:backend"}]},"parent":{"identifier":"LS-976"}},
   {"identifier":"LS-982","title":"設計：孩子卡片（LS-970 畫面群）","description":"取消","state":{"name":"Canceled","type":"canceled"},"labels":{"nodes":[{"name":"lane:design"}]},"parent":null}
 ]}}}
 EOF
-# LS-96 comments：aaaa P1（有效）、bbbb P2（被 LS-980 引用 → 不列）、cccc P3（不列）、eeee P1 但 dddd「銷除…已升為」
+# LS-354 comments：aaaa P1（有效）、bbbb P2（被 LS-980 引用 → 不列）、cccc P3（不列）、eeee P1 但 dddd「銷除…已升為」
 # 提到它（不列）、dddd 本身是銷除公告且引述「P1 ·」——且**不以「銷除」開頭**（日期／票號起頭，R2 N3：前 2 行含字樣即公告，不列）、
 # ffff P2 較早建立（有效，排在 P1 之後）、abababab P3 池項文中引用「P1 ·」（既非首個 match 也不在行首 → 不升級、不列）、
 # cdcdcdcd 混級：首項 `- P3 ·`、次項 `- P2 ·`（R2 N1：取行首各項最小級 → 以 P2 列出，摘要取 P2 那項）。
+# 0a0a0a0a／0b0b0b0b：LS-354 新格式 `Pn ｜ 來源 …`（LS-351）——P2 列出（依建立時間排在 ffff 後）、P3 不列。
 # efefefef 非公告池項（P3）在第 3 行提到 `aaaaaaaa` 並帶「銷案」字樣——前 2 行無公告字樣所以不是公告（R3：只有公告能銷除
 # 別則 → aaaa 仍列；live bcb97555 第 3 行更正文提到 ca993eba／d8634a08 的誤藏實例）。
 cat > "$fx_ot/pool_comments.json" <<'EOF'
@@ -808,6 +809,8 @@ cat > "$fx_ot/pool_comments.json" <<'EOF'
   {"id":"ffffffff-0000-4000-8000-000000000006","createdAt":"2026-09-01T00:00:00.000Z","body":"入池 2026-09-01：\n- P2 · 第二個有效池項 · 估 size:M"},
   {"id":"abababab-0000-4000-8000-000000000007","createdAt":"2026-09-02T05:00:00.000Z","body":"入池：P3 · 純效率項——文中引用他則「P1 · 某某」只是舉例，不是升級"},
   {"id":"cdcdcdcd-0000-4000-8000-000000000008","createdAt":"2026-09-02T06:00:00.000Z","body":"入池 2026-09-02（LS-121 收尾）：\n- P3 · docs 錯誤碼表範例過時 · 估 size:S\n- P2 · **mutation 自證機械化** · 再發生一次即升獨立票 · 估 size:M"},
+  {"id":"0a0a0a0a-0000-4000-8000-000000000010","createdAt":"2026-09-01T12:00:00.000Z","body":"P2 ｜ 來源 LS-351（R1 i1）｜ LS-354 新格式池項 ｜ 建議處置"},
+  {"id":"0b0b0b0b-0000-4000-8000-000000000011","createdAt":"2026-09-01T13:00:00.000Z","body":"P3 ｜ 來源 LS-351（R1 i2）｜ 新格式 P3 不列 ｜ 建議處置"},
   {"id":"efefefef-0000-4000-8000-000000000009","createdAt":"2026-09-02T07:00:00.000Z","body":"入池：P3 · 純效率項\n- 細節：只是效率\n- 對照：同型 `aaaaaaaa` 尚未銷案，僅提及、不是公告"}
 ]}}}}
 EOF
@@ -871,14 +874,14 @@ check("⑩ backend lane 候補全 hold:user → 開票行註明「使用者裁�
 check("⑩ backend 來源候選＝含後端關鍵字且無 backend 子票的 Story（LS-974）；LS-976 已有已結案 backend 子票 LS-977 → 不列",
       ids(backend["open_ticket"]["sources"]) == ["LS-974"] and "RPC" in backend["open_ticket"]["sources"][0]["why"])
 
-check("⑩ harness lane 無候補（只有 LS-96）→ 開票行理由「無候補」",
+check("⑩ harness lane 無候補（只有 LS-354）→ 開票行理由「無候補」",
       harness["open_ticket"] is not None and harness["open_ticket"]["blocked"] == []
       and any(a.startswith("→ 開票：lane:harness 空 1 輪（無候補）") for a in d["actions"]))
 check("⑩ 池項來源：P1 aaaa、P2 ffff、P2 cdcdcdcd（P1 先、同級依建立時間）；bbbb 被 LS-980 引用、cccc 是 P3、eeee 被池內公告銷除、dddd 是公告（非「銷除」開頭，前 2 行含字樣）、abababab 是 P3 只在文中引用 P1 ·、efefefef 非公告提到 aaaa＋「銷案」不能銷除 aaaa → 皆不列／aaaa 仍列",
-      ids(harness["open_ticket"]["sources"]) == ["LS-96#aaaaaaaa", "LS-96#ffffffff", "LS-96#cdcdcdcd"]
+      ids(harness["open_ticket"]["sources"]) == ["LS-354#aaaaaaaa", "LS-354#ffffffff", "LS-354#0a0a0a0a", "LS-354#cdcdcdcd"]
       and harness["open_ticket"]["sources"][0]["why"] == "P1 池項尚未升票"
       and harness["open_ticket"]["sources"][0]["title"].startswith("**候補不驗 Design gate**"))
-mixed = [s for s in harness["open_ticket"]["sources"] if s["id"] == "LS-96#cdcdcdcd"]
+mixed = [s for s in harness["open_ticket"]["sources"] if s["id"] == "LS-354#cdcdcdcd"]
 check("⑩ R2 N1 混級 comment（首項 - P3 ·、次項 - P2 ·）以最小級 P2 列出，摘要取 P2 那項",
       len(mixed) == 1 and mixed[0]["why"] == "P2 池項尚未升票" and mixed[0]["title"].startswith("**mutation 自證機械化**"))
 check("⑩ 第一輪不升 ⚠", not any("⚠ 開票" in a for a in d["actions"]))
@@ -1180,11 +1183,11 @@ git init -q -b main "$repo_landed"
 git -C "$repo_landed" config user.email test@example.com
 git -C "$repo_landed" config user.name Test
 mkdir -p "$repo_landed/scripts/ops"
-# 「11112222」已被這支腳本檔頭引用（模擬 cleanup-merged.sh／pen-read.sh 之類「來源 LS-96 池項 <id>」的慣例）；
+# 「11112222」已被這支腳本檔頭引用（模擬 cleanup-merged.sh／pen-read.sh 之類「來源 LS-354 池項 <id>」的慣例）；
 # 「33334444」不出現在 repo 任何地方，應維持現行輸出（夾具 (b)）。
 cat > "$repo_landed/scripts/ops/fake-landed-LS287.sh" <<'EOF'
 #!/bin/bash
-# 假腳本（LS-287 自測用）：來源 LS-96 池項 11112222
+# 假腳本（LS-287 自測用）：來源 LS-354 池項 11112222
 echo hi
 EOF
 git -C "$repo_landed" add scripts/ops/fake-landed-LS287.sh
@@ -1201,7 +1204,7 @@ cat > "$fx_landed/closed_issues.json" <<'EOF'
 EOF
 cat > "$fx_landed/issues_page1.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
-  {"identifier":"LS-96","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+  {"identifier":"LS-354","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}}
 ]}}}
@@ -1250,7 +1253,7 @@ def check(name, cond):
 harness = d["lanes"]["lane:harness"]["open_ticket"]
 ids = [s["id"] for s in harness["sources"]]
 check("⑬(a) 已落地的池項（11112222）從候選移除，只剩未落地的（33334444）（夾具 b：未命中維持現行）",
-      ids == ["LS-96#33334444"])
+      ids == ["LS-354#33334444"])
 check("⑬(a) 開票行的 notes 印「已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2」",
       any(n.startswith("已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2") for n in harness["notes"]))
 check("⑬(a) 動作清單的「→ 開票」行含已落地附註（同段一行，重用 notes［…］）",
@@ -1274,7 +1277,7 @@ else
   out13m="$(PATH="$work/bin_landed:$PATH" bash "$mutdir13/scripts/ops/patrol-linear.sh" --repo "$repo_landed" --json 2>&1)"
   export OUT13M="$out13m"
   mut13err="$work/ls287-mut-err"
-  if python3 -c 'import json,os; d=json.loads(os.environ["OUT13M"]); ids=[s["id"] for s in d["lanes"]["lane:harness"]["open_ticket"]["sources"]]; assert ids==["LS-96#11112222","LS-96#33334444"], ids' 2>"$mut13err"; then
+  if python3 -c 'import json,os; d=json.loads(os.environ["OUT13M"]); ids=[s["id"] for s in d["lanes"]["lane:harness"]["open_ticket"]["sources"]]; assert ids==["LS-354#11112222","LS-354#33334444"], ids' 2>"$mut13err"; then
     echo "✓ ⑬(b) mutant（拿掉 repo-grep 排除）：已落地的 11112222 也被列出——證明 ⑬(a) 的綠來自這段機械排除"
   else
     echo "✗ ⑬(b) mutant 未如預期翻轉" >&2; cat "$mut13err" >&2; printf '%s\n' "$out13m" | sed 's/^/    /' >&2; fail=1
@@ -1321,7 +1324,7 @@ EOF
 # 子票（父票欄＝LS-994、lane:backend）→ 應印「已落地」。
 cat > "$fx_degraded/issues_page1.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
-  {"identifier":"LS-96","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+  {"identifier":"LS-354","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}},
   {"identifier":"LS-993","title":"Story：無法判定的候選","description":"後端需要 RPC 支援。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
@@ -1446,7 +1449,7 @@ cat > "$fx_landed2/closed_issues.json" <<'EOF'
 EOF
 cat > "$fx_landed2/issues_page1.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
-  {"identifier":"LS-96","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+  {"identifier":"LS-354","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}},
   {"identifier":"LS-996","title":"Story：反引號 token 命中","description":"後端需要 RPC 支援 `fancy_measurement_table`。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
@@ -1623,7 +1626,7 @@ else
   fi
 fi
 
-# ---- ⑰（LS-302，LS-96 池項 `7503e269`(1)）extract_backtick_tokens() 最小長度 ≥6＋黑名單：正負夾具
+# ---- ⑰（LS-302，LS-354 池項 `7503e269`(1)）extract_backtick_tokens() 最小長度 ≥6＋黑名單：正負夾具
 #      直接呼叫函式（純函式、無外部相依，不必經過完整 CLI／假 repo）----
 py17="$(ROOT="$root" python3 - <<'PYEOF'
 import os, sys

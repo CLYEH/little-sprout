@@ -37,7 +37,7 @@
 #
 # LS-140 申報可驗證（來源 LS-96 池項 9f348e36／fd2fe81e：LS-125 R2 handoff 申報「記入 LS-96」四條實際一則沒寫、
 #   R3 申報「已修」但 commit 裡沒有該變更，都靠 merge-reviewer 逐條到 LS-96 查實才抓到）。檔頭段之外再對全 body 逐行掃：
-#   (a) 含 `LS-96`（整字）／「入池」／「待辦池」的行必須帶 ≥8 位小寫 hex 的 comment id（獨立英數 token；UUID 首段即可；
+#   (a) 含 `LS-354`／`LS-96`（整字；LS-351 起新池 LS-354、舊池 LS-96 封存仍認）／「入池」／「待辦池」的行必須帶 ≥8 位小寫 hex 的 comment id（獨立英數 token；UUID 首段即可；
 #       **純數字 token 不算候選**——GitHub run id（`17654321987`）也是 ≥8 位 [0-9a-f]，LS-234 R7 被當成 comment id 反查，LS-256）；
 #   (b) 含「已修」的行必須帶 7–40 位小寫 hex 的 commit SHA，且只認**同一行「已修」之後的第一個 hex token**：「已修 `7c2ff80`」
 #       「**已修**（commit `7c2ff80`）」「已修：`7c2ff80`」「已修，改用 X。commit `7c2ff80`。」「| 已修：… | `7c2ff80` |」都算；
@@ -47,7 +47,7 @@
 #       請寫在 SHA 之後）。
 #   刻意全 body 掃、不辨「處置語境」（判語境太脆）：引用而非申報的行（「LS-138 已修」「不另立 LS-96 池項」）會誤中，
 #   由 agent 改寫措辭避開字樣或補 id；LS-96 行多個 hex token 時任一可驗即過、「已修」行只看第一個「已修」之後的第一個 hex。
-#   --verify 反查：(a) 用 LINEAR_API_KEY 打 Linear GraphQL 列出 LS-96 全部 comment id（分頁）做前綴比對——`comment(id:)`
+#   --verify 反查：(a) 用 LINEAR_API_KEY 打 Linear GraphQL 列出 LS-354 與 LS-96 全部 comment id（分頁、兩池聯集）做前綴比對——`comment(id:)`
 #   只吃完整 UUID、不吃 agent 慣寫的 8 位前綴（2026-09-03 實測回「Entity not found: Comment」）；(b) 候選 SHA 須
 #   `git cat-file -e <sha>^{commit}` 且 `git merge-base --is-ancestor <sha> HEAD`（CI 的 HEAD 是 PR merge ref，PR commits
 #   皆為祖先；已在 base 上的 commit 也是祖先——盲區，COLLABORATION §7）；「已修」之後的第一個 hex 不是 commit object（comment id
@@ -172,8 +172,11 @@ if ! printf '%s' "$head_text" | grep -qE "(^|[^A-Za-z0-9])${ticket}([^0-9]|$)"; 
 fi
 echo "✓ PR body 檔頭段含本票票號 ${ticket}"
 
-# ---- LS-140：申報可驗證——全 body 逐行掃 (a) LS-96 行要 comment id、(b)「已修」行要 commit SHA ----
-pool=LS-96
+# ---- LS-140：申報可驗證——全 body 逐行掃 (a) 池項行要 comment id、(b)「已修」行要 commit SHA ----
+# LS-351：待辦池 LS-96 封存（docs/archive/linear/LS-96-pool-2026-09.md），新池 LS-354。兩個票號都算池項行；--verify
+# 以兩池 comment id 的聯集比對——在飛 PR 的 body 仍可能寫「記入 LS-96 <id>」，只認新池會把合法申報誤判紅。
+pool=LS-354
+legacy_pool=LS-96
 # 一行內的獨立英數 token 中，全為小寫 hex 且長度在 {$2,$3} 者，逗號串（$3 空＝無上限）。LC_ALL=C：CJK 位元組 ≥0x80，
 # 永不落在 [0-9A-Za-z]，token 邊界因此穩定；反引號／括號／連字號都是邊界，UUID 首段、`sha` 皆可抽出。
 hex_tokens() {
@@ -208,7 +211,7 @@ while IFS= read -r line || [ -n "$line" ]; do
   line=${line%$'\r'}
   is_pool=0
   case "$line" in *入池*|*待辦池*) is_pool=1 ;; esac
-  if [ "$is_pool" -eq 0 ] && printf '%s' "$line" | grep -qE "(^|[^A-Za-z0-9])${pool}([^0-9]|$)"; then is_pool=1; fi
+  if [ "$is_pool" -eq 0 ] && printf '%s' "$line" | grep -qE "(^|[^A-Za-z0-9])(${pool}|${legacy_pool})([^0-9]|$)"; then is_pool=1; fi
   if [ "$is_pool" -eq 1 ]; then
     # LS-256（010d927d(3)）：純數字 token（GitHub run id、行號）不是 comment id 候選——Linear comment id 是 UUID，首 8 位
     # 全為數字的機率 (10/16)^8≈2.3%，寧可漏這 2.3% 也不讓 run id 冒充候選（冒充後格式綠、--verify 才紅在「找不到」）。
@@ -301,10 +304,11 @@ if [ -n "$pool_claims" ]; then
     work=$(mktemp -d) || { echo "✗ pr-body-check：mktemp 失敗" >&2; exit 2; }
     trap 'rm -rf "$work"' EXIT
     # 只讀（GraphQL query）、分頁到底、一行一個 id 到 $work/ids；任何失敗 exit 2（fail closed）。
-    python3 - "$pool" > "$work/ids" <<'PY'
+    # 舊池在前：LS-207 R2 的跨分頁共用重試預算自測（⑥h）以「第 2 頁」為觀察點，舊池才有多頁
+    python3 - "$legacy_pool" "$pool" > "$work/ids" <<'PY'
 import json, os, subprocess, sys, time
 
-pool = sys.argv[1]
+pools = sys.argv[1:]
 token = os.environ.get("LINEAR_API_KEY", "")
 url = "https://api.linear.app/graphql"
 query = ("query($id: String!, $after: String) { issue(id: $id) { identifier "
@@ -364,8 +368,9 @@ def curl_with_retry(argv, input_str):
         retries_used[0] += 1
 
 
-after = None
-while True:
+for pool in pools:
+  after = None
+  while True:
     body = json.dumps({"query": query, "variables": {"id": pool, "after": after}})
     # token 只走 stdin config（-K -），不進 argv（patrol_linear.py R1 F3：ps 讀得到 argv）
     proc = curl_with_retry(
@@ -396,7 +401,7 @@ while True:
     after = cursor
 PY
     rc=$?
-    [ "$rc" -eq 0 ] || { echo "✗ pr-body-check：${pool} comment 清單取得失敗（exit ${rc}）——fail closed" >&2; exit 2; }
+    [ "$rc" -eq 0 ] || { echo "✗ pr-body-check：${pool}／${legacy_pool} comment 清單取得失敗（exit ${rc}）——fail closed" >&2; exit 2; }
     total=$(grep -c . "$work/ids")
     while read -r ln toks; do
       [ -n "$ln" ] || continue
@@ -405,9 +410,9 @@ PY
         if grep -q "^${t}" "$work/ids"; then ok=$t; break; fi
       done
       if [ -n "$ok" ]; then
-        echo "✓ 第 ${ln} 行 ${pool} comment ${ok} 存在（$(grep -m1 "^${ok}" "$work/ids")）"
+        echo "✓ 第 ${ln} 行池項 comment ${ok} 存在（$(grep -m1 "^${ok}" "$work/ids")）"
       else
-        echo "✗ pr-body-check：第 ${ln} 行的 comment id 在 ${pool} 找不到（候選：${toks}；${pool} 現有 ${total} 則 comment）——id 要抄 save_comment 回傳的 id（前 8 位以上）；寫錯票或根本沒寫都會落到這裡。" >&2
+        echo "✗ pr-body-check：第 ${ln} 行的 comment id 在 ${pool}／${legacy_pool} 找不到（候選：${toks}；兩池現有 ${total} 則 comment）——id 要抄 save_comment 回傳的 id（前 8 位以上）；新申報一律記入 ${pool}；寫錯票或根本沒寫都會落到這裡。" >&2
         fail=1
       fi
     done <<< "$pool_claims"
