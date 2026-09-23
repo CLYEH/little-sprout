@@ -30759,16 +30759,6 @@
                   "fontWeight": "normal"
                 }
               ]
-            },
-            {
-              "type": "text",
-              "id": "EULbr",
-              "name": "nudge",
-              "fill": "#2B141C",
-              "content": "x",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "normal"
             }
           ]
         }
@@ -53753,7 +53743,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                "url": "appstore-photos/demo-album-newborn.jpg",
                 "mode": "fill"
               }
             },
@@ -53773,7 +53763,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "上禮拜的動物園一日遊 · 12 張相片",
+                  "content": "弟弟出生的第一週 · 8 張相片",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "600"
