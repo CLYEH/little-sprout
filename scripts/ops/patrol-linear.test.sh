@@ -14,6 +14,8 @@
 # 票不得進待Design（F1）；銷除公告自身引述「P1 ·」不列、P3 池項文中引用「P1 ·」不升級（F2）；Canceled 設計票不算承接（F3）。
 # R2 負樣本：混級 comment（`- P3 ·` 後接 `- P2 ·`）以最小級 P2 列出（N1）；「**UI 票：需先過 Design gate**」變體歸待Design、
 # 「**UI 票：不需 Design gate**」不歸（N2）；公告不以「銷除」開頭（日期／票號起頭）仍被跳過（N3）。
+# ⑱（LS-351）：harness 配額（cycle 票數 20% 向上取整）超額時不列候選、不補位、不開票，印「harness 配額已滿（已開/上限）」；
+#   cycle 內候補只在本來就超額時擋；cycle 0 票不判定；mutation 拿掉判定即翻轉。
 # ⑬（LS-287）：harness 池項來源候選再多一層排除——id 前 8 碼若已被 repo 腳本檔頭等引用（`git grep`）視為已落地，
 # 從候選移除並在「→ 開票」行附註「已落地：…」；未命中維持現行；mutation 證明綠來自這段排除本身。
 set -uo pipefail
@@ -1648,6 +1650,122 @@ PYEOF
 )"
 printf '%s\n' "$py17"
 if [ "$(tail -1 <<<"$py17")" = OK ]; then :; else fail=1; fi
+
+# ---- ⑱（LS-351，§5-b「harness 配額」）lane:harness 每 cycle 開票數 ≤ cycle 總票數 20%（向上取整）：
+#      超額時不列候選、不補位、不開票，改印「→ harness 配額已滿（已開/上限）」。夾具以 cycle_issues 的 labels
+#      控制「已開」、以節點數控制「總數」；issues 控制候補是 cycle 內或 cycle 外（scope+）。----
+q_repo="$work/repo_quota"
+git init -q -b main "$q_repo"
+git -C "$q_repo" config user.email test@example.com
+git -C "$q_repo" config user.name Test
+: > "$q_repo/.gitkeep"; git -C "$q_repo" add .gitkeep; git -C "$q_repo" -c commit.gpgsign=false commit -q -m 'chore: init'
+printf 'LINEAR_API_KEY=test-token-not-real\n' > "$q_repo/.env"
+mkdir -p "$work/bin_quota"
+cat > "$work/bin_quota/curl" <<'EOF'
+#!/bin/bash
+fx="${QUOTA_FX:?}"
+data=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --data) data=$2; shift ;;
+  esac
+  shift
+done
+case "$data" in
+  *'comments('*) echo '{"data":{"issue":{"comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}}' ;;
+  *'documents('*) echo '{"data":{"documents":{"nodes":[{"id":"doc-1","title":"Cycle 5 規劃"}]}}}' ;;
+  *'cycle(id:'*) cat "$fx/cycle_issues.json" ;;
+  *'cycles('*) echo '{"data":{"team":{"cycles":{"nodes":[{"id":"cyc-5","number":5,"startsAt":"2020-01-01T00:00:00.000Z","endsAt":"2099-01-01T00:00:00.000Z","isActive":true}]}}}}' ;;
+  *'type: { in: ['*) echo '{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}' ;;
+  *'issues('*) cat "$fx/issues.json" ;;
+  *) echo '{"errors":[{"message":"stub curl：認不出的 query"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_quota/curl"
+
+# quota_fx <目錄> <cycle 總票數> <其中 harness 數> <harness 候補的 cycle 號（5＝cycle 內、4＝cycle 外、none＝無候補）>
+quota_fx() {
+  local d=$1 total=$2 harness=$3 cand_cycle=$4 i=0 nodes="" sep=""
+  mkdir -p "$d"
+  # 不用 `seq 1 "$total"`：total=0 時 BSD seq 會倒數印出 1 0（GNU 印空），兩平台結果不同
+  while [ "$i" -lt "$total" ]; do
+    i=$((i + 1))
+    if [ "$i" -le "$harness" ]; then
+      nodes="${nodes}${sep}{\"state\":{\"type\":\"started\"},\"labels\":{\"nodes\":[{\"name\":\"lane:harness\"}]}}"
+    else
+      nodes="${nodes}${sep}{\"state\":{\"type\":\"started\"},\"labels\":{\"nodes\":[{\"name\":\"lane:backend\"}]}}"
+    fi
+    sep=","
+  done
+  printf '{"data":{"cycle":{"issues":{"nodes":[%s]}}}}' "$nodes" > "$d/cycle_issues.json"
+  if [ "$cand_cycle" = none ]; then
+    printf '{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}' > "$d/issues.json"
+  else
+    printf '{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[{"identifier":"LS-9181","title":"harness 候補","description":"## 驗收\\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z","state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"},{"name":"size:S"}]},"cycle":{"id":"cyc-%s","number":%s},"project":{"name":"Harness"},"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}}]}}}' "$cand_cycle" "$cand_cycle" > "$d/issues.json"
+  fi
+}
+# quota_run <fixture 目錄> [patrol-linear.sh 路徑]：--json 輸出
+quota_run() {
+  QUOTA_FX="$1" PATH="$work/bin_quota:$PATH" bash "${2:-$plsh}" --repo "$q_repo" --json 2>&1
+}
+# quota_check <名稱> <json> <python 斷言運算式（h＝lane:harness entry）>
+quota_check() {
+  local name=$1 json=$2 expr=$3
+  if QJ="$json" python3 -c 'import json,os,sys; d=json.loads(os.environ["QJ"]); h=d["lanes"]["lane:harness"]; sys.exit(0 if ('"$expr"') else 1)' 2>"$work/quota-err"; then
+    echo "✓ ${name}"
+  else
+    echo "✗ ${name}" >&2; cat "$work/quota-err" >&2; printf '%s\n' "$json" | sed 's/^/    /' >&2; fail=1
+  fi
+}
+
+# ⑱a cycle 10 票、harness 2（上限 ceil(10×20%)=2，已開 2＝已滿）＋cycle 外候補 → scope+ 會多開一張 → 擋
+quota_fx "$work/fxq_a" 10 2 4
+out18a="$(quota_run "$work/fxq_a")"
+quota_check '⑱a 已開 2/上限 2＋cycle 外候補 → 不列候選、不選中' "$out18a" 'h["candidates"] == [] and h["chosen"] is None'
+quota_check '⑱a 動作印「harness 配額已滿（2/2）」且無 save_issue' "$out18a" 'any("harness 配額已滿（2/2）" in a for a in h["actions"]) and not any("save_issue" in a for a in h["actions"])'
+quota_check '⑱a 被配額擋不算「lane 空」、不印開票' "$out18a" 'h["open_ticket"] is None'
+quota_check '⑱a JSON 帶 harness_quota（opened 2／limit 2／full）' "$out18a" 'h["harness_quota"] == {"opened": 2, "limit": 2, "full": True}'
+
+# ⑱b 向上取整：cycle 6 票、harness 1（上限 ceil(1.2)=2，未滿）＋cycle 外候補 → 照常選中＋scope+
+quota_fx "$work/fxq_b" 6 1 4
+out18b="$(quota_run "$work/fxq_b")"
+quota_check '⑱b 已開 1/上限 2（6 票×20% 向上取整）→ 照常選中 LS-9181（scope+）' "$out18b" 'h["chosen"] == "LS-9181" and any("scope+" in a for a in h["actions"]) and not any("配額已滿" in a for a in h["actions"])'
+
+# ⑱c cycle 內候補：已開 2＝上限 2（候補本身已算在已開裡）→ 不擋；已開 3＞上限 2 → 擋
+quota_fx "$work/fxq_c" 10 2 5
+out18c="$(quota_run "$work/fxq_c")"
+quota_check '⑱c cycle 內候補、已開 2＝上限 2 → 照常選中（已算在配額內）' "$out18c" 'h["chosen"] == "LS-9181"'
+quota_fx "$work/fxq_c2" 10 3 5
+out18c2="$(quota_run "$work/fxq_c2")"
+quota_check '⑱c cycle 內候補、已開 3＞上限 2（本來就超額）→ 擋、印 3/2' "$out18c2" 'h["chosen"] is None and any("harness 配額已滿（3/2）" in a for a in h["actions"])'
+
+# ⑱d harness lane 空（無候補、在飛 0）且已滿 → 不印「→ 開票：lane:harness」，改印配額行
+quota_fx "$work/fxq_d" 5 1 none
+out18d="$(quota_run "$work/fxq_d")"
+quota_check '⑱d lane 空且已開 1/上限 1 → 不開票、印配額行' "$out18d" 'h["open_ticket"] is None and any("harness 配額已滿（1/1）" in a for a in h["actions"]) and not any("開票：lane:harness" in a for a in d["actions"])'
+
+# ⑱e cycle 0 票（比例未定義）→ 不判定（harness_quota null），照常補位
+quota_fx "$work/fxq_e" 0 0 4
+out18e="$(quota_run "$work/fxq_e")"
+quota_check '⑱e cycle 0 票 → 配額不判定、照常選中' "$out18e" 'h["harness_quota"] is None and h["chosen"] == "LS-9181"'
+
+# ⑱f human 模式：lane 表 harness 行附「配額：2/2（已滿）」、動作行以 → 開頭（過得了 patrol-filter.sh）
+out18h="$(QUOTA_FX="$work/fxq_a" PATH="$work/bin_quota:$PATH" bash "$plsh" --repo "$q_repo" 2>&1)"
+expect_has "$out18h" '配額：2/2（已滿）' '⑱f human：lane:harness 行附「配額：2/2（已滿）」'
+expect_has "$out18h" '→ harness 配額已滿（2/2）' '⑱f human：動作清單印「→ harness 配額已滿（2/2）」'
+
+# ⑱g mutation：harness_quota() 恆回 None（拿掉配額判定）→ ⑱a 的 cycle 外候補被選中——證明 ⑱a 的綠來自配額判定
+mutdir18="$work/mut18"
+rm -rf "$mutdir18"; mkdir -p "$mutdir18"
+cp -R "${root}/scripts" "$mutdir18/scripts"
+sed 's/^def harness_quota(total, harness):$/def harness_quota(total, harness):\n    return None  # LS-351 mutation test (quota disabled)/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir18/scripts/ops/patrol_linear.py"
+if ! grep -q 'LS-351 mutation test (quota disabled)' "$mutdir18/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑱g mutant 沒被正確合成" >&2; fail=1
+else
+  out18m="$(quota_run "$work/fxq_a" "$mutdir18/scripts/ops/patrol-linear.sh")"
+  quota_check '⑱g mutant（拿掉配額判定）：已滿仍選中 LS-9181——證明 ⑱a 的綠來自配額判定' "$out18m" 'h["chosen"] == "LS-9181"'
+fi
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2

@@ -54,6 +54,9 @@ SIZE_RANK = {"size:S": 0, "size:M": 1, "size:L": 2}
 SKIP_ISSUE = "LS-96"  # 常駐待辦池：永不列為候補、永不派（§5-b「harness 優先序」）
 # LS-144：使用者裁決暫不動的票——補位與開票候選皆跳過並註明「使用者裁決」（§5-b）。
 HOLD_LABEL = "hold:user"
+# LS-351（§5-b「harness 配額」）：lane:harness 每 cycle 開票數 ≤ 該 cycle 總票數 20%（向上取整）。
+HARNESS_LANE = "lane:harness"
+HARNESS_QUOTA_PERCENT = 20
 # LS-144：Story 票文的正典粗體標記 `**UI 票：需 Design gate**`（LS-19／20／22／24 皆此形）＝沒有核可設計稿不得
 # 實作（CLAUDE.md design gate）。帶此標記的 Backlog 票永不列為候補（實作票是核可後另開的子票，Story 本身不派
 # ——LS-142 驗收段的流程），只作為 design／ui lane 的開票來源。LS-96 池項 b2993155（P1）的機械修法即此條。
@@ -180,7 +183,7 @@ query($cycleId: ID!) {
 # （不受該 filter 限制）。first:250 是合理上限（cycle 週期短，實務不會超過）。
 CYCLE_ISSUES_QUERY = """
 query($cycleId: String!) {
-  cycle(id: $cycleId) { issues(first: 250) { nodes { state { type } } } }
+  cycle(id: $cycleId) { issues(first: 250) { nodes { state { type } labels { nodes { name } } } } }
 }
 """
 
@@ -304,14 +307,14 @@ def fetch_cycle_documents(token, cycle_id):
     return data["documents"]["nodes"]
 
 
-def fetch_cycle_issue_states(token, cycle_id):
+def fetch_cycle_issues(token, cycle_id):
     data = gql(token, CYCLE_ISSUES_QUERY, {"cycleId": cycle_id})
     cyc = data.get("cycle") or {}
-    return [n["state"]["type"] for n in (cyc.get("issues") or {}).get("nodes", [])]
+    return (cyc.get("issues") or {}).get("nodes", [])
 
 
 def cycle_progress(token, current):
-    """回傳 (完成票數, 總票數)；current 為 None／缺 id，或底層查詢本身失敗（GraphQL 錯誤／curl
+    """回傳 (完成票數, 總票數, lane:harness 票數)（LS-351：第三項供 harness 配額，見 harness_quota()）；current 為 None／缺 id，或底層查詢本身失敗（GraphQL 錯誤／curl
     失敗／回應格式不對，即 gql() 對這次呼叫 sys.exit(1)）都回 (None, None)——這是巡檢摘要的附加
     資訊，真正 best-effort：查不到只讓「票數」印「不明」，不擋主流程、不打掉整份報表（R2 m4：
     這裡之前只處理了 current 為 None 的情況，docstring 卻宣稱『查不到不 fail loud』，實際上
@@ -319,14 +322,25 @@ def cycle_progress(token, current):
     的放大器；改用 try/except SystemExit 真正吸收掉，只有這個查詢享有這個例外，其餘查詢仍照舊
     fail loud）。"""
     if not current or not current.get("id"):
-        return None, None
+        return None, None, None
     try:
-        states = fetch_cycle_issue_states(token, current["id"])
+        nodes = fetch_cycle_issues(token, current["id"])
     except SystemExit:
-        return None, None
-    total = len(states)
-    done = sum(1 for t in states if t == "completed")
-    return done, total
+        return None, None, None
+    total = len(nodes)
+    done = sum(1 for n in nodes if n["state"]["type"] == "completed")
+    harness = sum(1 for n in nodes if HARNESS_LANE in label_names(n))
+    return done, total, harness
+
+
+def harness_quota(total, harness):
+    """LS-351（§5-b「harness 配額」）：回傳 {"opened", "limit"} 或 None（不判定）。上限＝當前 cycle 總票數
+    （任何狀態，同 cycle 一行的「總數」）× 20% 向上取整；已開＝其中帶 lane:harness 的票數。cycle 票數查不到
+    （cycle_progress() 失敗）或為 0（比例未定義——0 的 20% 會永遠禁止第一張票）都回 None＝不判定（fail-open，
+    lane 表照常印候補，不假裝有配額訊號）。"""
+    if total is None or harness is None or total == 0:
+        return None
+    return {"opened": harness, "limit": -(-total * HARNESS_QUOTA_PERCENT // 100)}
 
 
 def parse_iso(ts):
@@ -1067,6 +1081,10 @@ def build_report(token, root, team_key, team_id, sim_lines):
             return backend_sources(issues, alls, root=root), notes
         return design_gate_sources(issues, alls, root=root), notes  # lane:design／lane:ui 共用同一份來源
 
+    # R1 F1：cycle 一行（票數 完成/總數）；LS-351 起同一次查詢順帶算 harness 配額，所以提前到 lane 迴圈之前。
+    tickets_done, tickets_total, tickets_harness = cycle_progress(token, current)
+    quota = harness_quota(tickets_total, tickets_harness)
+
     state = load_state(root)
     streaks = state.get("open_ticket_empty_rounds")
     if not isinstance(streaks, dict):
@@ -1090,6 +1108,13 @@ def build_report(token, root, team_key, team_id, sim_lines):
             )
             candidates_shown = in_cycle_ok if in_cycle_ok else all_ok
             cand_display = [i["identifier"] for i in candidates_shown]
+        # LS-351 harness 配額：cycle 外候補（scope+ 會把新票加進 cycle）在已開 ≥ 上限時擋；cycle 內候補本來就算在
+        # 已開裡，只有已開 > 上限（本來就超額）才擋。被擋＝不列候補、不補位，改印一行「harness 配額已滿」。
+        quota_blocked = False
+        if lane == HARNESS_LANE and quota is not None and candidates_shown and not ready_dispatch:
+            if (needs_scope and quota["opened"] >= quota["limit"]) or quota["opened"] > quota["limit"]:
+                quota_blocked = True
+                candidates_shown, cand_display, needs_scope = [], [], False
         pending = lane_pending(issues, lane)
         entry = {
             "limit": limit,
@@ -1104,6 +1129,7 @@ def build_report(token, root, team_key, team_id, sim_lines):
             "hold": pending["hold"],
             "blocked_by_unresolved": pending["blocked"],
             "open_ticket": None,
+            "harness_quota": dict(quota, full=quota["opened"] >= quota["limit"]) if (lane == HARNESS_LANE and quota) else None,
             "actions": [],
         }
         # R2 m1：current 為 None 時（無法判定當前 cycle）不產生動作——與 cycle_reconciliation()
@@ -1125,7 +1151,17 @@ def build_report(token, root, team_key, team_id, sim_lines):
         # 連續空輪數存 .claude/patrol-state.json（每 lane 一個計數；有在飛或有候補即歸零），≥2 輪升 ⚠。
         # 不看 current 是否可判定——lane 空著就是停擺，與能不能派工（需 cycle）是兩件事。
         # LS-298 scope 4：ready_dispatch 有值時 lane 其實被佔用（worktree 已建、待派），不算「空」，不印開票。
-        if wip == 0 and not candidates_shown and not ready_dispatch:
+        # LS-351：harness 配額已滿（已開 ≥ 上限）時連「開票」也不印——開新 harness 票正是配額要擋的事。
+        if lane == HARNESS_LANE and quota is not None and not candidates_shown and not ready_dispatch \
+                and wip == 0 and quota["opened"] >= quota["limit"]:
+            quota_blocked = True
+        if quota_blocked:
+            entry["actions"].append(
+                "→ harness 配額已滿（%d/%d）：本 cycle 不補位、不開 harness 票——不列候選（§5-b，上限＝cycle 票數 %d%% 向上取整）"
+                % (quota["opened"], quota["limit"], HARNESS_QUOTA_PERCENT)
+            )
+            rounds = 0
+        elif wip == 0 and not candidates_shown and not ready_dispatch:
             rounds = int(streaks.get(lane) or 0) + 1
             blocked = []
             if pending["hold"]:
@@ -1156,7 +1192,6 @@ def build_report(token, root, team_key, team_id, sim_lines):
     remaining_days = None
     if current and current.get("endsAt"):
         remaining_days = (parse_iso(current["endsAt"]) - now_epoch) / 86400.0
-    tickets_done, tickets_total = cycle_progress(token, current)
 
     return {
         "skipped": False,
@@ -1210,9 +1245,13 @@ def format_lane_line(lane, entry):
     # LS-144：多兩欄——待Design（需 Design gate 無核可稿）、hold:user（使用者裁決，補位與開票候選皆跳過）
     pend_design = ", ".join(entry["pending_design"]) if entry["pending_design"] else "無"
     hold = ("%s（使用者裁決）" % ", ".join(entry["hold"])) if entry["hold"] else "無"
-    return "  %-14s 上限%d 在飛%d  候補：%s  待Spec：%s  待結構：%s  待Design：%s  %s：%s" % (
+    line = "  %-14s 上限%d 在飛%d  候補：%s  待Spec：%s  待結構：%s  待Design：%s  %s：%s" % (
         lane, entry["limit"], entry["wip"], cand, pend_spec, pend_structure, pend_design, HOLD_LABEL, hold
     )
+    hq = entry.get("harness_quota")
+    if hq:
+        line += "  配額：%d/%d%s" % (hq["opened"], hq["limit"], "（已滿）" if hq["full"] else "")
+    return line
 
 
 def mark(prefix, items, text):
