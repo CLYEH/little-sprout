@@ -60,9 +60,10 @@ extension CommentsSheetView {
         let body = draft
         let viewerMember = familyStore.members.first { $0.userID == viewerUserID }
         let authorDisplayName = viewerMember?.displayName ?? "我"
-        // LS-345 R2：樂觀插入那一列的頭像——同 `authorDisplayName` 既有慣例查 `familyStore
-        // .members`，送出當下就能顯示自己的真實頭像，不必等重開 sheet。
-        let authorAvatarURL = viewerMember?.avatarURL
+        // LS-345 R2：樂觀插入那一列的頭像，送出當下就能顯示自己的真實頭像，不必等重開 sheet。
+        // R3（merge-review R2 i2）：作者就是 viewer 自己，改取 `myProfile`（與上方 `footer`
+        // 同源，`FamilyStore.updateAvatar` 換頭像時會寫它）——`members` 可能是換頭像前查的舊值。
+        let authorAvatarURL = familyStore.myProfile?.avatarURL
         Task {
             let success = await store.send(
                 body: body, authorID: viewerUserID, authorDisplayName: authorDisplayName,

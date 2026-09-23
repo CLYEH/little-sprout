@@ -47,9 +47,10 @@ final class CommentAndLikerAvatarWiringTests: XCTestCase {
             source.contains("authorAvatarURL: authorAvatarURL"),
             "sendTapped() 要把查到的 authorAvatarURL 轉手給 store.send(...)，樂觀插入那一列才有頭像"
         )
+        // LS-345 R3（merge-review R2 i2）：改取 `myProfile`——`members` 可能是換頭像前查的舊值。
         XCTAssertTrue(
-            source.contains("let authorAvatarURL = viewerMember?.avatarURL"),
-            "authorAvatarURL 要從 familyStore.members 查自己那一筆——同 authorDisplayName 既有慣例"
+            source.contains("let authorAvatarURL = familyStore.myProfile?.avatarURL"),
+            "authorAvatarURL 要取 familyStore.myProfile（換頭像時即時更新），不是可能過時的 members 快取"
         )
     }
 
