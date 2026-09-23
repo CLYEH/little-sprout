@@ -56,6 +56,8 @@ struct LikersListSheet: View {
             guard familyStore.members.isEmpty else { return }
             await familyStore.refreshMembers()
         }
+        // LS-345 R3（merge-review R2 m2）：簽名 URL 過期重簽——理由同 `CommentsSheetView` 同款 task。
+        .task { await familyStore.refreshAvatarSignedURLs() }
     }
 
     private var grabber: some View {

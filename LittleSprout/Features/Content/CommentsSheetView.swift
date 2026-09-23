@@ -138,6 +138,11 @@ struct CommentsSheetView: View {
             guard familyStore.myProfile == nil else { return }
             await familyStore.refreshProfile()
         }
+        // LS-345 R3（merge-review R2 m2）：上面兩顆 guard task 只在第一次補查，簽名 URL TTL
+        // 3600 秒——app 開著超過一小時再開 sheet，快取裡是過期 URL、頭像全退回佔位且
+        // `.failure` 重試救不了（重試的是同一個過期 URL）。同 `SettingsView+Profile.swift`
+        // `profileSummaryRowWithAvatarRefresh` 的無條件重簽，開 sheet 跑一次。
+        .task { await familyStore.refreshAvatarSignedURLs() }
         .onChange(of: store.knownExactCount) { _, newValue in
             guard let newValue else { return }
             timelineStore.setCommentCount(newValue, forKey: targetKey)

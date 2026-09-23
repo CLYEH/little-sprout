@@ -64,6 +64,33 @@ final class CommentAndLikerAvatarWiringTests: XCTestCase {
         )
     }
 
+    /// LS-345 R3（merge-review R2 m2）：簽名 URL TTL 3600 秒，既有兩顆補查 task 都帶
+    /// `guard ... isEmpty/nil`、只在第一次跑——app 開著超過一小時再開留言 sheet，
+    /// `avatarSignedURLs` 裡是過期 URL，所有作者頭像退回佔位且 `.failure` 重試救不了。
+    /// 開 sheet 要無條件重簽一次（同設定頁 `profileSummaryRowWithAvatarRefresh`）。
+    ///
+    /// mutation：拿掉 `CommentsSheetView` 的 `.task { await familyStore.refreshAvatarSignedURLs() }`，
+    /// 這支測試會抓到。
+    func test_commentsSheet_resignsAvatarURLsOnAppear() throws {
+        let source = try sourceText(relativePath: "LittleSprout/Features/Content/CommentsSheetView.swift")
+
+        XCTAssertTrue(
+            source.contains(".task { await familyStore.refreshAvatarSignedURLs() }"),
+            "CommentsSheetView 開 sheet 要無條件重簽 avatarSignedURLs，否則簽名 URL 過期後留言作者頭像全退回佔位"
+        )
+    }
+
+    /// 同上，按讚名單版。mutation：拿掉 `LikersListSheet` 的
+    /// `.task { await familyStore.refreshAvatarSignedURLs() }`，這支測試會抓到。
+    func test_likersListSheet_resignsAvatarURLsOnAppear() throws {
+        let source = try sourceText(relativePath: "LittleSprout/Features/Timeline/LikersListSheet.swift")
+
+        XCTAssertTrue(
+            source.contains(".task { await familyStore.refreshAvatarSignedURLs() }"),
+            "LikersListSheet 開 sheet 要無條件重簽 avatarSignedURLs，否則簽名 URL 過期後按讚者頭像全退回佔位"
+        )
+    }
+
     /// mutation：把 `SupabaseTimelineAPIClient.reactors(...)` 的 `.select(...)` 改回不取
     /// `avatar_url`，這支測試會抓到——`ReactorRow.avatarURL` 永遠解不到值（`TimelineModelsTests`
     /// 的解碼測試餵的是合成 JSON，不會被這個 mutation 影響，需要這支另外守住 select 字串本身）。
