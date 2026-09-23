@@ -3,7 +3,9 @@
 #
 # 來源：PR #519 的 `db` job 連四次（run 35897884534 attempt 1–4，含 20 分鐘退避後 rerun）撞
 # `failed to pull docker image from all registries: ghcr.io/supabase/postgres … toomanyrequests`，擋住併入。
-# ci.yml 在這一步之前先 `docker login ghcr.io`（GITHUB_TOKEN，認證後限流額度遠高於匿名）；這支再補退避重試。
+# ci.yml 在這一步之前把 SUPABASE_INTERNAL_IMAGE_REGISTRY 改成 public.ecr.aws（改拉 Supabase 官方 ECR Public 鏡像，
+# 避開 ghcr 共享出口限流）；docker login ghcr.io 對 CLI 內部 pull 無效（run 35904976443 Login Succeeded 仍撞限流，
+# 反證），不再使用。限流時這支再退避重試 3 次。
 #
 # 行為：跑 `supabase db start`；失敗且輸出含 `toomanyrequests` 才重試，最多 3 次、間隔 30／60／120 秒，每次重試前印
 # 「→ ghcr 限流，第 n 次重試」；其他錯誤原樣立即失敗（exit code 不改寫）。3 次重試後仍限流 → 印 ✗ 並以最後一次的
@@ -29,6 +31,7 @@ run_start() {
   return "${PIPESTATUS[0]}"
 }
 
+echo "db-start-retry：SUPABASE_INTERNAL_IMAGE_REGISTRY=${SUPABASE_INTERNAL_IMAGE_REGISTRY:-（未設，CLI 預設）}"
 run_start; rc=$?
 attempt=0
 while [ "$rc" -ne 0 ]; do

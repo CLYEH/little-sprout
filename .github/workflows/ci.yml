@@ -723,16 +723,15 @@ jobs:
         if: steps.detect.outputs.skip == 'false'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
 
-      # LS-351 追加（LS-354 池項 76ed9a99）：PR #519 的 db job 連四次（run 35897884534 attempt 1–4）撞 ghcr 匿名拉映像
-      # 限流 `toomanyrequests`。先以 GITHUB_TOKEN 登入 ghcr（可拉公開映像，認證後限流額度遠高於匿名；repo 預設 token
-      # 權限 read 已含 packages: read），再由 db-start-retry.sh 對 `toomanyrequests` 退避重試（30／60／120 秒、最多 3 次，
-      # 其他錯誤立即紅；自測 db-start-retry.test.sh 掛 rules job）。
-      - name: 登入 ghcr（降低匿名拉映像限流，LS-351）
+      # LS-351 追加（LS-354 池項 76ed9a99）：PR #519 的 db job 連四次（run 35897884534 attempt 1–4）撞 ghcr 共享出口限流
+      # `toomanyrequests … allowed: 44000/minute`。改拉 Supabase 官方在 public.ecr.aws 的鏡像避開 ghcr 共享出口限流：
+      # setup-cli 把 SUPABASE_INTERNAL_IMAGE_REGISTRY=ghcr.io 寫進 $GITHUB_ENV，這裡在它之後再寫一次覆蓋（後寫者生效，
+      # 對其後所有 step 有效，含 db reset）。docker login ghcr.io 對 CLI 內部 pull 無效（run 35904976443 已 Login Succeeded
+      # 仍四次撞限流，反證），已拿掉。限流時仍由 db-start-retry.sh 退避重試 3 次（30／60／120 秒，其他錯誤立即紅；
+      # 自測 db-start-retry.test.sh 掛 rules job）。
+      - name: supabase 映像改拉 public.ecr.aws（避開 ghcr 共享出口限流，LS-351）
         if: steps.detect.outputs.skip == 'false'
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GHCR_USER: ${{ github.actor }}
-        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+        run: echo "SUPABASE_INTERNAL_IMAGE_REGISTRY=public.ecr.aws" >> "$GITHUB_ENV"
 
       - name: supabase db start（只起 DB，比 supabase start 快；測試資料直接灌 auth.users，不需要 Auth/Storage service）
         if: steps.detect.outputs.skip == 'false'
