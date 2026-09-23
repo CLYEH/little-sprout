@@ -5,7 +5,8 @@
 # ③ harness＋Swift 混改→不略過。另補：harness-only→略過、harness-only 但動到 ci.yml→不略過、dispatch 在保護分支
 # →強制全跑（即使快取有）、dispatch 在工作分支→blocked、gh 失敗→照跑、過期 artifact 不算、PR 且 UI 觸發判定略過
 # →record=false、參數錯 exit 2。
-# mutation：key 改成 commit sha（HEAD）→ ① 必翻成未命中；混改判定改成「任一 harness 即略過」→ ③ 必翻成略過。
+# mutation：key 改成 commit sha（HEAD）→ ① 必翻成未命中；混改判定改成「任一 harness 即略過」→ ③b 必翻成略過；
+# 不可略過清單拿掉 docs/legal／.swift → R1 M1 兩夾具必翻成略過。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -115,6 +116,13 @@ expect_has "$outs" "skip_macos=false" "③ 混改：skip_macos=false" || fail=1
 expect_has "$out" "非 harness-only（含 LittleSprout/A.swift）" "③ 混改：點名非 harness 檔" || fail=1
 expect_has "$outs" "record=true" "③ 混改含 Swift：UI 觸發判定要跑→完整集合可登記" || fail=1
 
+# ③b 混改（非 Swift 的非 harness 檔：project.yml）→ 不略過。③ 的 Swift 檔自 R1 M1 起也會被不可略過清單的 .swift
+# 擋下（雙重保護），M2 要單獨證明「混改規則」本身，所以用這個不含 .swift 的夾具
+pr_case mixed2 scripts/ops/x.sh project.yml
+run "$checker" --event pull_request --base main
+expect_has "$outs" "mode=full" "③b 混改（project.yml）：mode=full（不略過）" || fail=1
+expect_has "$out" "非 harness-only（含 project.yml）" "③b 混改：點名非 harness 檔" || fail=1
+
 # harness-only → 略過 macOS，db 照跑
 pr_case harness scripts/ops/x.sh docs/d.md CLAUDE.md .claude/agents/a.md
 run "$checker" --event pull_request --base main
@@ -127,8 +135,18 @@ expect_has "$outs" "record=false" "harness-only：不登記" || fail=1
 pr_case mech scripts/ops/x.sh .github/workflows/ci.yml
 run "$checker" --event pull_request --base main
 expect_has "$outs" "mode=full" "機制檔：不略過" || fail=1
-expect_has "$out" "機制檔 .github/workflows/ci.yml" "機制檔：點名" || fail=1
+expect_has "$out" "不可略過檔 .github/workflows/ci.yml" "機制檔：點名" || fail=1
 expect_has "$outs" "record=false" "機制檔：PR 無 UI 變更→非完整集合不登記" || fail=1
+
+# R1 M1：harness 目錄下但 macOS job 會讀到的檔 → 不略過
+pr_case legal docs/legal/terms-of-service.md
+run "$checker" --event pull_request --base main
+expect_has "$outs" "mode=full" "不可略過：docs/legal/ 改動不略過（app bundle＋LegalMarkdownDocumentTests）" || fail=1
+expect_has "$out" "不可略過檔 docs/legal/terms-of-service.md" "不可略過：點名 docs/legal 檔" || fail=1
+pr_case swift scripts/ops/review-demo-genvideo.swift docs/d.md
+run "$checker" --event pull_request --base main
+expect_has "$outs" "mode=full" "不可略過：scripts/ 下的 .swift 不略過（swiftlint --strict 範圍）" || fail=1
+expect_has "$out" "不可略過檔 scripts/ops/review-demo-genvideo.swift" "不可略過：點名 .swift 檔" || fail=1
 
 # 非 harness、非 UI（supabase/）→ 全跑但不登記
 pr_case db supabase/migrations/1.sql
@@ -156,9 +174,19 @@ expect_not_has "$outs" "mode=hit" "M1 key 改 commit sha：① 翻成未命中�
 # M2：混改判定改「任一 harness 即略過」→ ③ 必翻成略過
 sed '/# CI-CACHE-MIXED$/s/grep -Ev "\$harness"/grep -E "^$"/' "$checker" > "$mut"
 if ! grep -q 'grep -E "^\$" | grep -m1' "$mut"; then fail "M2 mutant 沒建成（CI-CACHE-MIXED 行形狀變了）"; fi
-git -C "$repo" checkout -q pr-mixed
+git -C "$repo" checkout -q pr-mixed2
 run "$mut" --event pull_request --base main
-expect_has "$outs" "mode=harness-skip" "M2 混改判定放寬：③ 翻成略過（證明 ③ 釘住混改規則）" || fail=1
+expect_has "$outs" "mode=harness-skip" "M2 混改判定放寬：③b 翻成略過（證明 ③b 釘住混改規則）" || fail=1
+
+# M3：不可略過清單拿掉 docs/legal 與 .swift → 兩個 R1 M1 夾具必翻成略過
+sed '/# CI-CACHE-MECH$/s/|docs\/legal\/\.\*|\.\*\\\.swift)/)/' "$checker" > "$mut"
+if grep -q 'docs/legal' <(grep 'CI-CACHE-MECH$' "$mut"); then fail "M3 mutant 沒建成（CI-CACHE-MECH 行形狀變了）"; fi
+git -C "$repo" checkout -q pr-legal
+run "$mut" --event pull_request --base main
+expect_has "$outs" "mode=harness-skip" "M3 拿掉 docs/legal：legal 夾具翻成略過（證明夾具釘住該規則）" || fail=1
+git -C "$repo" checkout -q pr-swift
+run "$mut" --event pull_request --base main
+expect_has "$outs" "mode=harness-skip" "M3 拿掉 .swift：swift 夾具翻成略過（證明夾具釘住該規則）" || fail=1
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ ci-cache-check.test.sh：有失敗" >&2

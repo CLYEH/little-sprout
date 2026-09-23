@@ -23,7 +23,7 @@
 #      workflow_run.id，正好是「tree → 成功 run」的對照表。
 #      查詢失敗（gh／jq 錯、無 repo）一律當未命中照跑（fail-safe 方向＝多跑，不是少跑）。
 #   3. harness-only PR（只 pull_request）：`<base>...HEAD` 變更清單非空、每一個都在 harness 路徑、且沒有任何
-#      一個是「macOS job 自己會執行的機制檔」→ mode=harness-skip（略過 lint／ci／ci-ipad；rules、db 照跑）。
+#      一個是「macOS job 自己會執行／讀到的不可略過檔」（機制檔、docs/legal/**、*.swift）→ mode=harness-skip（略過 lint／ci／ci-ipad；rules、db 照跑）。
 #      harness 路徑沿 docs/COLLABORATION.md §2「Harness 變更例外」清單放寬到目錄層級：CLAUDE.md、docs/、
 #      .claude/、scripts/、.githooks/、.github/、.mcp.json。混改（任一檔不在 harness 路徑，例如 Swift／
 #      xcodeproj／supabase/）一律不略過。push 事件不套路徑過濾：push run 是進 test／main 的 SHA 的完整 gate。
@@ -110,7 +110,10 @@ if [ "$event" = pull_request ]; then
   changed=$(git -c core.quotePath=false diff --name-only --no-renames "${base}...HEAD" 2>/dev/null) || {
     emit full false false false "" "::warning::CI 去重：git diff ${base}...HEAD 失敗，照全跑（不登記快取）"; }
   harness='^(CLAUDE\.md$|docs/|\.claude/|scripts/|\.githooks/|\.github/|\.mcp\.json$)'   # CI-CACHE-HARNESS
-  mech='^(\.github/workflows/ci\.yml|scripts/gates/(ci-cache-check|detect-simulator|ui-test-trigger|tap-target-check|list-ipad-tests|pick-ipad-runtime)\.sh|scripts/gates/tap-target-exemptions\.txt)$'
+  # 不可略過清單（macOS job 會讀到的 harness 路徑檔，與機制檔同一處維護；LS-350 R1 M1）：
+  #   docs/legal/**  project.yml 打包進 app bundle，LittleSproutTests/LegalMarkdownDocumentTests 斷言其 version
+  #   *.swift        任何路徑的 Swift 檔都在 lint job `swiftlint lint --strict` 範圍內（例：scripts/ops/review-demo-genvideo.swift）
+  mech='^(\.github/workflows/ci\.yml|scripts/gates/(ci-cache-check|detect-simulator|ui-test-trigger|tap-target-check|list-ipad-tests|pick-ipad-runtime)\.sh|scripts/gates/tap-target-exemptions\.txt|docs/legal/.*|.*\.swift)$'   # CI-CACHE-MECH
   files=$(printf '%s\n' "$changed" | grep '[^[:space:]]' || true)
   n=$(printf '%s\n' "$files" | grep -c '[^[:space:]]' || true)
   non_harness=$(printf '%s\n' "$files" | grep -Ev "$harness" | grep -m1 '[^[:space:]]' || true)   # CI-CACHE-MIXED
@@ -119,7 +122,7 @@ if [ "$event" = pull_request ]; then
     emit harness-skip true false false "" "→ CI 去重：harness-only PR（${n} 個檔皆在 harness 路徑）——略過 lint／ci／ci-ipad 的 macOS 執行，rules／db 照跑；併入後的 push run 仍全跑"
   fi
   if [ -n "$non_harness" ]; then echo "→ CI 去重：非 harness-only（含 ${non_harness}），不略過"; fi
-  if [ -z "$non_harness" ] && [ -n "$mech_hit" ]; then echo "→ CI 去重：diff 動到 macOS job 機制檔 ${mech_hit}，不略過"; fi
+  if [ -z "$non_harness" ] && [ -n "$mech_hit" ]; then echo "→ CI 去重：diff 動到 macOS job 機制檔／不可略過檔 ${mech_hit}，不略過"; fi
   urc=0; bash "${here}/ui-test-trigger.sh" --base "$base" >/dev/null 2>&1 || urc=$?
   if [ "$urc" -eq 3 ]; then
     emit full false false false "" "→ CI 去重：未命中（tree ${tree}）——全跑；本 PR 的 UITests／Release／iPad 依 ui-test-trigger 略過，非完整集合，不登記快取"
