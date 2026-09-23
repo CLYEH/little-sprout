@@ -22,8 +22,8 @@ import XCTest
 /// accessibility trait 的 API（實測：`.accessibilityAddTraits(.isHeader)` 不會把
 /// `elementType` 從 `.staticText` 提升成獨立型別，不像 `.isSelected` 有專屬的
 /// `XCUIElement.isSelected` 屬性可查），所以斷言分兩層：①「這顆文字位在畫面最上緣 header 區」
-/// 的位置斷言（沿用既有手法，跟 sentinel 的純文字存在斷言不是同一件事）②「這個字串在畫面上
-/// 只出現一次」的計數斷言——①單獨並不會在「系統 nav bar 重新冒出來」時轉紅（自畫 header 那顆
+/// 的位置斷言（沿用既有手法，跟 sentinel 的純文字存在斷言不是同一件事）②「系統 nav bar 裡沒有
+/// 同名文字」的計數斷言——①單獨並不會在「系統 nav bar 重新冒出來」時轉紅（自畫 header 那顆
 /// 文字位置沒變，只是多了一顆在別處），必須靠②才抓得到「拿掉修法＝系統 nav bar 沒被隱藏」這個
 /// mutation（LS-344 票文範圍 3：機械斷言＋mutation 紅→綠）。
 @MainActor
@@ -96,15 +96,14 @@ final class SectionTabBarTests: XCTestCase {
     /// LS-344：相簿／寶貝／設定三個 tab 根頁曾經系統 nav bar large title 與自畫 header 同時
     /// 存在（票面實機截圖；模擬器 iOS 26.5 可重現，見 handoff）。斷言分兩層（見上方型別文件
     /// 註解）：①至少存在一顆在畫面最上緣 header 區的同名文字（entry-conditions.md ⑬ 的非手勢
-    /// 替代路徑）②「畫面最上緣 header 區」內這個字串只出現一次——`tabLabel` 為 nil 時（時間軸，
-    /// 預設分頁）不需要點擊。
+    /// 替代路徑）②系統 nav bar 裡沒有同名文字——`tabLabel` 為 nil 時（時間軸，預設分頁）不需要點擊。
     ///
-    /// **LS-344 R2（merge-review R1 i1）**：②原本掃整個畫面（`app.staticTexts.matching(label
-    /// ==)`.count），日後若畫面內容剛好含跟 tab 名同字串（例如使用者把相簿取名「相簿」）會
-    /// 誤紅——跟①一樣把比對範圍限定在 `frame.minY < 100` 的最上緣 header 區，語意也更貼近
-    /// 「標題區只有一顆」而非「整個畫面只有一顆」。`XCUIElementQuery` 的 predicate 無法直接
-    /// 對 `frame`（需要即時 snapshot，不是 accessibility 靜態屬性）過濾，先用 `label ==`
-    /// 縮小候選、再用 `allElementsBoundByIndex` 逐一讀 `frame` 在 Swift 端篩選。
+    /// **LS-344 R3（merge-review R2 M2）**：R2 把②限縮成「`frame.minY < 100` 內只有一顆」，但這一帶
+    /// 只放得下一顆標題——系統標題一出現，自畫 header 就被擠出範圍，永遠數不到 2：reviewer 用
+    /// `.navigationBarTitleDisplayMode(.inline)` mutation（系統小標題＋自畫 header 兩顆同時可見）
+    /// 證明它仍綠。改查 `app.navigationBars.staticTexts`：系統標題不論大／小標題都長在 nav bar 裡，
+    /// 自畫 header 與畫面內容（R1 i1 擔心的「相簿取名叫『相簿』」）都不在 nav bar 裡，所以不必再用
+    /// 座標過濾，也不會誤紅。
     private func assertTabRootHeadingAppearsExactlyOnce(
         tabLabel: String?, expectedHeading: String, file: StaticString = #filePath, line: UInt = #line
     ) {
@@ -122,14 +121,12 @@ final class SectionTabBarTests: XCTestCase {
             "「\(expectedHeading)」heading 應該出現在畫面最上緣的 header 區（不是巧合出現在畫面其他位置的同名文字）",
             file: file, line: line
         )
-        let candidates = app.staticTexts.matching(NSPredicate(format: "label == %@", expectedHeading))
-            .allElementsBoundByIndex
-        let headerAreaMatches = candidates.filter { $0.frame.minY < 100 }
+        let navBarTitleCount = app.navigationBars.staticTexts
+            .matching(NSPredicate(format: "label == %@", expectedHeading)).count
         XCTAssertEqual(
-            headerAreaMatches.count, 1,
-            "「\(expectedHeading)」標題在畫面最上緣 header 區（minY < 100）應該只出現一次——系統 nav bar" +
-            " large title 與自畫 header 不得同時可見（LS-344：實機 iPhone 12 Pro／iOS 26.5.2 回報相簿／" +
-            "寶貝／設定三頁重複顯示）",
+            navBarTitleCount, 0,
+            "系統 nav bar 裡不應該有「\(expectedHeading)」——自畫 header 已是唯一標題，系統標題（large 或" +
+            " inline）不得同時可見（LS-344：實機 iPhone 12 Pro／iOS 26.5.2 回報相簿／寶貝／設定三頁重複顯示）",
             file: file, line: line
         )
     }
