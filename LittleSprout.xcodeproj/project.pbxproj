@@ -142,6 +142,7 @@
 		383D474495FF59BAEC37E1FC /* AlbumsStore+SharedUploadQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDEDB59C473A3AA37FB56B6D /* AlbumsStore+SharedUploadQueue.swift */; };
 		384B1ADE35047F3FCE169968 /* StubAlbumsAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 726954960B96E7CE9697A154 /* StubAlbumsAPIClient.swift */; };
 		38CA95B73E034159909A0F90 /* EmailSignInModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A890D7141A740E1F67B93BD7 /* EmailSignInModel.swift */; };
+		38E404F3F903DA90D492F85B /* SupabaseAlbumsMediaChildrenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FA02F76382E9C615C1006F2 /* SupabaseAlbumsMediaChildrenTests.swift */; };
 		38FACDC15B0DA2AF7A373639 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351A5DED54BE71EBD0A9161 /* SettingsView.swift */; };
 		39D4FEB1C8077F6F5E099C78 /* LegalMarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 624688AFC3955A62AA8C6193 /* LegalMarkdownDocument.swift */; };
 		3A97FE1AF8ADB0D3FD7B39F2 /* PendingAccountDeletionResumerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA736FBC40A77EA45DCD9D90 /* PendingAccountDeletionResumerTests.swift */; };
@@ -162,6 +163,7 @@
 		436172C28A928E0E3A10A848 /* EditAlbumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2891A7543CE21E976FD0230D /* EditAlbumView.swift */; };
 		43621C7CFEA05589A089468C /* AlbumDetailView+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B3A90CF3954DCB0BDF70BD /* AlbumDetailView+Actions.swift */; };
 		438D01DAE187ACB9C62F340E /* ImportMediaTranscoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6523817390A888A70BC1244 /* ImportMediaTranscoderTests.swift */; };
+		43AFC7F070246738BEAE87E4 /* ImportCoordinatorMediaChildrenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4F3D0935EF809179CB9651 /* ImportCoordinatorMediaChildrenTests.swift */; };
 		445CCD7D25B4D867E0CFB4E9 /* FamilyStore+Invite.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC5A903489F554F9E012A50 /* FamilyStore+Invite.swift */; };
 		44C357BA4C7DCAC0714533C9 /* QADriver+Browse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2715027B36DF1738FEBE4F59 /* QADriver+Browse.swift */; };
 		4555637044E82521E0F26A7D /* SafetyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C291ED26F4607951FB92E77F /* SafetyModels.swift */; };
@@ -257,6 +259,7 @@
 		70945C61665FA5585BD948CE /* PreviewAccountAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F72010F01102E14833D40AE4 /* PreviewAccountAPIClient.swift */; };
 		70A9A544D42C882AAF8E01BC /* BirthdayFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD928203A33BAF4F43BDB5D /* BirthdayFormatTests.swift */; };
 		723D9BF3536E69706CDB5FFC /* EULAStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369CBDFE007B61C9401815AE /* EULAStore.swift */; };
+		7254CBC6D45D7DEDBFF35C17 /* MediaChildrenMarkingTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4064D125E377462ADE8239D /* MediaChildrenMarkingTrackerTests.swift */; };
 		7329308266E6C8D0966F82FE /* InviteFamilyView+PendingApprovals.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF7806F951789DC6E905A8FA /* InviteFamilyView+PendingApprovals.swift */; };
 		743E06DCB634D775FB5F8D62 /* ChildAvatarViewStructureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E854A344C6B7C3A322E9BB7B /* ChildAvatarViewStructureTests.swift */; };
 		74E602F347273C1919B3B01A /* TimelineView+Comments.swift in Sources */ = {isa = PBXBuildFile; fileRef = B382FF9798D526E3A1B37E63 /* TimelineView+Comments.swift */; };
@@ -382,6 +385,7 @@
 		B0D70EB20B4074F89886D5B5 /* ChildrenStoreAvatarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A580FB25AD23E59B1A979C /* ChildrenStoreAvatarTests.swift */; };
 		B0FA3B419745F9D231E75C58 /* VideoTrimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E13DE0D017682C31FBABE1 /* VideoTrimmer.swift */; };
 		B1B5FCC8B7A31A61D4969EE3 /* AvatarPickerLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BECC7D79F1B9E53EABE6120 /* AvatarPickerLoader.swift */; };
+		B1BC76912A412C16079BB249 /* MediaChildrenMarkingTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05C7A9F53D8E6918A436B6E3 /* MediaChildrenMarkingTracker.swift */; };
 		B1C19A2319494642B99A46EB /* WelcomeView+PasswordSignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FB942E7809A7A51E7E182B9 /* WelcomeView+PasswordSignIn.swift */; };
 		B21993CA0DC6C40D52D51108 /* GrowthLatestValueCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A7B3867A645071BDFCEBA3 /* GrowthLatestValueCard.swift */; };
 		B2440B7844509AC9B75634CF /* TapTargetGateHarness+DiaryDetailVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF160356D53B7385FF16C6C2 /* TapTargetGateHarness+DiaryDetailVideo.swift */; };
@@ -571,6 +575,7 @@
 		03ECD2ECF46482E7BE076F73 /* DeleteAccountFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountFlowView.swift; sourceTree = "<group>"; };
 		0507B2F97DF5468321E35CF3 /* MultiChildCaptionFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiChildCaptionFormatterTests.swift; sourceTree = "<group>"; };
 		051C77F4F02C900469E71445 /* AttributionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributionSheet.swift; sourceTree = "<group>"; };
+		05C7A9F53D8E6918A436B6E3 /* MediaChildrenMarkingTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaChildrenMarkingTracker.swift; sourceTree = "<group>"; };
 		060BC7E72C5EC6ED52FB6E41 /* TapTargetGateHarness+DeleteAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+DeleteAccount.swift"; sourceTree = "<group>"; };
 		0694D8B3FF373E24A5D98E12 /* DiaryPhotoReorderMathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryPhotoReorderMathTests.swift; sourceTree = "<group>"; };
 		069E688841B40CFFC7D7A689 /* SettingsView+Sidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsView+Sidebar.swift"; sourceTree = "<group>"; };
@@ -586,6 +591,7 @@
 		0B87EFC5D19454F29DAAFE38 /* TapTargetGateHarness+Content.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Content.swift"; sourceTree = "<group>"; };
 		0C0777CD557C2FE037CDA135 /* PreviewFamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewFamilyAPIClient.swift; sourceTree = "<group>"; };
 		0C27A476B9FC174AD3BAB3E9 /* VideoDurationBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDurationBadge.swift; sourceTree = "<group>"; };
+		0D4F3D0935EF809179CB9651 /* ImportCoordinatorMediaChildrenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportCoordinatorMediaChildrenTests.swift; sourceTree = "<group>"; };
 		0D61A6C472115192338A97F4 /* PhotoLibraryAccessService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryAccessService.swift; sourceTree = "<group>"; };
 		0DD82679EDD789F70A8A8999 /* ReportInboxAssemblerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportInboxAssemblerTests.swift; sourceTree = "<group>"; };
 		0DE21E4A220A9C7AF7F79450 /* JoinWaitingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinWaitingView.swift; sourceTree = "<group>"; };
@@ -861,6 +867,7 @@
 		8D538922363578E9E2B88FCC /* SupabaseSafetyAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseSafetyAPIClientTests.swift; sourceTree = "<group>"; };
 		8E6A0CCB93FDADE5B2C126BC /* JoinCodePhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinCodePhase.swift; sourceTree = "<group>"; };
 		8E9F5D419E50A0CC051AAFE4 /* LegalDocumentKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentKind.swift; sourceTree = "<group>"; };
+		8FA02F76382E9C615C1006F2 /* SupabaseAlbumsMediaChildrenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAlbumsMediaChildrenTests.swift; sourceTree = "<group>"; };
 		8FD268EF45ACA8D3FE3F11E2 /* PhotoCornerShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCornerShape.swift; sourceTree = "<group>"; };
 		90B3A90CF3954DCB0BDF70BD /* AlbumDetailView+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AlbumDetailView+Actions.swift"; sourceTree = "<group>"; };
 		90C0E7B83A1C6FD1BC4C91E8 /* CommentsErrorPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentsErrorPresentationTests.swift; sourceTree = "<group>"; };
@@ -903,6 +910,7 @@
 		A1FE65622DA3D1DE00028F27 /* PrintPhotoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintPhotoCard.swift; sourceTree = "<group>"; };
 		A3089761759D436F793AB403 /* TimelineImportUploadCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineImportUploadCoordinatorTests.swift; sourceTree = "<group>"; };
 		A3FB5A5983F1F8C9C04E3BC2 /* UploadQueueStoreVideoCompressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueStoreVideoCompressionTests.swift; sourceTree = "<group>"; };
+		A4064D125E377462ADE8239D /* MediaChildrenMarkingTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaChildrenMarkingTrackerTests.swift; sourceTree = "<group>"; };
 		A4406AC95C6E540F317CE828 /* AlbumDetailStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailStore.swift; sourceTree = "<group>"; };
 		A50E6303411CD369F8AFC507 /* FamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyAPIClient.swift; sourceTree = "<group>"; };
 		A5718C2E6D09354F5950BEA5 /* ChildrenRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenRoute.swift; sourceTree = "<group>"; };
@@ -1214,6 +1222,7 @@
 				4003B3FC529D43AB4260F485 /* ImportMediaTranscoder.swift */,
 				C1E409F3F92DD7A8DB9461DB /* ImportModels.swift */,
 				32978B2ED82A8D83AE72C77A /* ImportThumbnailProvider.swift */,
+				05C7A9F53D8E6918A436B6E3 /* MediaChildrenMarkingTracker.swift */,
 				0D61A6C472115192338A97F4 /* PhotoLibraryAccessService.swift */,
 			);
 			path = Import;
@@ -1420,6 +1429,7 @@
 				C83589E845F988100234ED0A /* ImportBatchFlowContainerRegressionTests.swift */,
 				2D6237BF6EAC92E8D4DCB382 /* ImportBatchFlowModifierRegressionTests.swift */,
 				79F1BC387F13AB7F3D41FD4C /* ImportBatchSessionTests.swift */,
+				0D4F3D0935EF809179CB9651 /* ImportCoordinatorMediaChildrenTests.swift */,
 				D89356DF123DCA440A1440E4 /* ImportDateGroupingTests.swift */,
 				3B854436402C5E2BF4FFF0A8 /* ImportEntrySourceTests.swift */,
 				D6523817390A888A70BC1244 /* ImportMediaTranscoderTests.swift */,
@@ -1434,6 +1444,7 @@
 				7D8E6D658192216FDCE4EA85 /* LegalDocumentSheetLayoutTests.swift */,
 				01518BAA679CF14F5113257E /* LegalMarkdownDocumentTests.swift */,
 				406CB9884861695DA9690318 /* MasonryLayoutTests.swift */,
+				A4064D125E377462ADE8239D /* MediaChildrenMarkingTrackerTests.swift */,
 				2E42EA52EA5C7F06F992E88B /* MediaDraftTempStorageTests.swift */,
 				0507B2F97DF5468321E35CF3 /* MultiChildCaptionFormatterTests.swift */,
 				A5C9C0FFAC9911BA268EBA27 /* OTPVerificationModelLockoutTests.swift */,
@@ -1457,6 +1468,7 @@
 				3937323EACD7FED565CE10D5 /* StorageUsageFormattingTests.swift */,
 				349D50973057FF7C3329F069 /* SupabaseAlbumsAPIClientTests.swift */,
 				D66CEB537C54030E42729822 /* SupabaseAlbumsAPIClientUpdateAlbumTitleTests.swift */,
+				8FA02F76382E9C615C1006F2 /* SupabaseAlbumsMediaChildrenTests.swift */,
 				10BC44040357E3B0C3EF9BC3 /* SupabaseAuthServiceTests.swift */,
 				D1CD6635FE0F483577B007AB /* SupabaseChildAPIClientTests.swift */,
 				D75234ADADB6EE19F2977CB2 /* SupabaseChildAvatarUploadServiceTests.swift */,
@@ -2288,6 +2300,7 @@
 				F90747ADA6446C8F7FA27137 /* LittleSproutApp.swift in Sources */,
 				ABFCA2E9F71A13308E8FF2EE /* MasonryLayout.swift in Sources */,
 				CB8CF24ABEB5FA5604FB027C /* MasonryPhotoWallView.swift in Sources */,
+				B1BC76912A412C16079BB249 /* MediaChildrenMarkingTracker.swift in Sources */,
 				9B182287DA20BCEAB63F63B5 /* MediaDraftTempStorage.swift in Sources */,
 				E780FC18B0D21CFFEF8888CA /* MediaUploadService+Duration.swift in Sources */,
 				0EE0C2A820CA284AEDA95B34 /* MediaUploadService+Payloads.swift in Sources */,
@@ -2557,6 +2570,7 @@
 				F868DF1A2FDACBEEEE02D7DD /* ImportBatchFlowContainerRegressionTests.swift in Sources */,
 				8D36946B41D68D83B6E45986 /* ImportBatchFlowModifierRegressionTests.swift in Sources */,
 				8024BC8C023748B3862D0042 /* ImportBatchSessionTests.swift in Sources */,
+				43AFC7F070246738BEAE87E4 /* ImportCoordinatorMediaChildrenTests.swift in Sources */,
 				366FC5A0184274A239278F3E /* ImportDateGroupingTests.swift in Sources */,
 				BFD28F5A7684AC7AF7DA1FF7 /* ImportEntrySourceTests.swift in Sources */,
 				438D01DAE187ACB9C62F340E /* ImportMediaTranscoderTests.swift in Sources */,
@@ -2572,6 +2586,7 @@
 				AD2482F08334232B51CE8912 /* LegalDocumentSheetLayoutTests.swift in Sources */,
 				C95AB29553DF8C462D11C361 /* LegalMarkdownDocumentTests.swift in Sources */,
 				9BB090E59FEDC90C7BD801AE /* MasonryLayoutTests.swift in Sources */,
+				7254CBC6D45D7DEDBFF35C17 /* MediaChildrenMarkingTrackerTests.swift in Sources */,
 				504526865C4E36877D62D018 /* MediaDraftTempStorageTests.swift in Sources */,
 				87E501CF0FB428B9FB3A0DCF /* MockURLProtocol.swift in Sources */,
 				A9DD648DEC1C15C2232BA6D8 /* MultiChildCaptionFormatterTests.swift in Sources */,
@@ -2611,6 +2626,7 @@
 				64BCBF29279ECB24DF6646AD /* StubTimelineAPIClient.swift in Sources */,
 				3520499B34E4DFD4F5CA28CE /* SupabaseAlbumsAPIClientTests.swift in Sources */,
 				013FBEE38E6C45968FFF18A6 /* SupabaseAlbumsAPIClientUpdateAlbumTitleTests.swift in Sources */,
+				38E404F3F903DA90D492F85B /* SupabaseAlbumsMediaChildrenTests.swift in Sources */,
 				F27F45599214FDECF551569C /* SupabaseAuthServiceTests.swift in Sources */,
 				A5A4BBD45115AEF64171B683 /* SupabaseChildAPIClientTests.swift in Sources */,
 				785AEF7CC537CF0D7CFE3605 /* SupabaseChildAvatarUploadServiceTests.swift in Sources */,

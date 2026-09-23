@@ -16,6 +16,7 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
     typealias FetchMaxSortOrderHandler = @Sendable (UUID) async throws -> Int?
     typealias AttachMediaHandler = @Sendable (UUID, UUID, UUID, Int) async throws -> Void
     typealias UpdateAlbumTitleHandler = @Sendable (UUID, String) async throws -> Void
+    typealias SetMediaChildrenBatchHandler = @Sendable ([MediaChildrenBatchItem]) async throws -> Void
 
     struct FetchAlbumsCall: Equatable {
         let familyID: UUID
@@ -45,6 +46,10 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         let title: String
     }
 
+    struct SetMediaChildrenBatchCall: Equatable {
+        let items: [MediaChildrenBatchItem]
+    }
+
     private struct Box {
         var fetchAlbumsHandler: FetchAlbumsHandler = { _, _, _ in [] }
         var fetchAlbumsCalls: [FetchAlbumsCall] = []
@@ -65,6 +70,8 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         var attachMediaCalls: [AttachMediaCall] = []
         var updateAlbumTitleHandler: UpdateAlbumTitleHandler = { _, _ in }
         var updateAlbumTitleCalls: [UpdateAlbumTitleCall] = []
+        var setMediaChildrenBatchHandler: SetMediaChildrenBatchHandler = { _ in }
+        var setMediaChildrenBatchCalls: [SetMediaChildrenBatchCall] = []
     }
 
     private let box = OSAllocatedUnfairLock(initialState: Box())
@@ -117,6 +124,10 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         box.withLock { $0.updateAlbumTitleCalls }
     }
 
+    var setMediaChildrenBatchCalls: [SetMediaChildrenBatchCall] {
+        box.withLock { $0.setMediaChildrenBatchCalls }
+    }
+
     func setFetchAlbumMediaLinksHandler(_ handler: @escaping FetchAlbumMediaLinksHandler) {
         box.withLock { $0.fetchAlbumMediaLinksHandler = handler }
     }
@@ -135,6 +146,10 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
 
     func setUpdateAlbumTitleHandler(_ handler: @escaping UpdateAlbumTitleHandler) {
         box.withLock { $0.updateAlbumTitleHandler = handler }
+    }
+
+    func setSetMediaChildrenBatchHandler(_ handler: @escaping SetMediaChildrenBatchHandler) {
+        box.withLock { $0.setMediaChildrenBatchHandler = handler }
     }
 
     func fetchAlbums(familyID: UUID, cursor: AlbumsCursor?, limit: Int) async throws -> [AlbumListingRow] {
@@ -198,5 +213,11 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         box.withLock { $0.updateAlbumTitleCalls.append(UpdateAlbumTitleCall(albumID: albumID, title: title)) }
         let handler = box.withLock { $0.updateAlbumTitleHandler }
         try await handler(albumID, title)
+    }
+
+    func setMediaChildrenBatch(items: [MediaChildrenBatchItem]) async throws {
+        box.withLock { $0.setMediaChildrenBatchCalls.append(SetMediaChildrenBatchCall(items: items)) }
+        let handler = box.withLock { $0.setMediaChildrenBatchHandler }
+        try await handler(items)
     }
 }

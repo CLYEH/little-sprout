@@ -65,6 +65,14 @@ final class UploadQueueStore {
     /// `.videoExportTimedOut`）的 entry 永遠不會再被重試，對照表項目同樣該清掉。可重試失敗
     /// （`retry(_:)`／`retryAllRetryable()` 之後還可能成功）不觸發，保留登記供之後成功時查表。
     let onUploadFailedTerminal: @MainActor (_ id: UUID) -> Void
+    /// LS-319 R2（merge-review R1 M1）：additive 掛鉤——可重試失敗（`retry(_:)`／
+    /// `retryAllRetryable()` 之後還可能成功，`payload` 因此保留不清）也需要讓呼叫端知道「這筆
+    /// 暫時卡住了」，跟 `onUploadFailedTerminal` 的「這筆永遠不會再被重試」語意不同，不能共用
+    /// 同一個掛鉤（既有呼叫端若把兩者混在一起，會誤判「還可能成功」的項目為「已經確定失敗」，
+    /// 提早清掉自己的對照表）。預設空閉包，不影響既有呼叫端。可能對同一個 `id` 重複觸發（每次
+    /// 重試又失敗都算一次），呼叫端自己決定要不要去重（見 `MediaChildrenMarkingTracker
+    /// .handleUploadFailedRetryable(entryID:)` 文件註解）。
+    let onUploadFailedRetryable: @MainActor (_ id: UUID) -> Void
     /// LS-284：影片項目上傳前的壓縮步驟，注入點同 `DiaryComposerStore.videoPreparer`——正式
     /// 路徑預設呼叫 `VideoTrimmer.compressedForUpload`，測試才需要在不準備真影片檔的前提下
     /// 釘住「壓縮結果（含壓完仍超限的錯誤）怎麼往下接」。壓縮本身的行為由 `VideoTrimmerTests`
@@ -107,6 +115,7 @@ final class UploadQueueStore {
         now: @escaping @MainActor () -> Date = Date.init,
         onUploadSucceeded: @escaping @MainActor (_ id: UUID, _ mediaID: UUID) -> Void = { _, _ in },
         onUploadFailedTerminal: @escaping @MainActor (_ id: UUID) -> Void = { _ in },
+        onUploadFailedRetryable: @escaping @MainActor (_ id: UUID) -> Void = { _ in },
         videoExportTimeout: Duration = .seconds(600),
         videoPreparer: @escaping @Sendable (URL) async throws -> VideoTrimmer.UploadSource = { fileURL in
             try await VideoTrimmer.compressedForUpload(fileURL: fileURL)
@@ -118,6 +127,7 @@ final class UploadQueueStore {
         self.now = now
         self.onUploadSucceeded = onUploadSucceeded
         self.onUploadFailedTerminal = onUploadFailedTerminal
+        self.onUploadFailedRetryable = onUploadFailedRetryable
         self.videoExportTimeout = videoExportTimeout
         self.videoPreparer = videoPreparer
     }
@@ -293,6 +303,11 @@ final class UploadQueueStore {
             // LS-303 R5（merge-review R4 i1）：終局失敗（不可重試）也讓呼叫端清 entry→albumID
             // 對照表，同 `onUploadSucceeded` 的查表清理，見該屬性文件註解。
             if case .failed = state { onUploadFailedTerminal(id) }
+        } else if case .failed = state {
+            // LS-319 R2（merge-review R1 M1）：可重試失敗——`payload` 還留著（上面 `if` 沒進去），
+            // 呼叫端可能需要知道「這筆暫時卡住了」（例如批次匯入的寶貝標記：不能讓卡住的一筆
+            // 永遠擋住同群其餘已成功項目送出標記，見 `onUploadFailedRetryable` 文件註解）。
+            onUploadFailedRetryable(id)
         }
         advance()
     }

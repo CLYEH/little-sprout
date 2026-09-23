@@ -64,6 +64,8 @@ extension TapTargetGateScreenName {
         case .importProgressCancelConfirm: return .staticText("要取消整批匯入嗎？")
         // 05 大標題——固定樣本一開畫面就渲染。
         case .importSummaryWithFailures: return .staticText("匯入完成")
+        // 同 `.importSummaryWithFailures`：疊了標記失敗狀態，大標題不受影響，一樣渲染。
+        case .importSummaryWithMarkingFailure: return .staticText("匯入完成")
         case .passwordSignIn: return .staticText("帳號密碼登入")
         // Doc Title——`LegalDocumentSheet` 載入完成後必定渲染，不依賴檔案實際內容。
         case .legalDocumentSheet: return .staticText("使用條款")
