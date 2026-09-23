@@ -442,6 +442,10 @@ jobs:
           # LS-342：food_catalog 過敏原啟發式規則自測（純 CSV／Python，不需要 DB；夾具正負樣本＋
           # 兩個 mutation：白名單拿掉一條轉紅、SQL 生成器同步失去排除子句）
           bash scripts/ops/food-catalog-allergen-check.test.sh || rc=1
+          # LS-353：subagent 實際 model／effort 查詢與 model 用量估值兩支 ops 腳本的自測（假 transcript 夾具＋
+          # mutation：最新比對反轉／不讀 meta.json／牌價改回第一個前綴相符／不去重 message.id）
+          bash scripts/ops/agent-model-check.test.sh || rc=1
+          bash scripts/ops/model-usage-report.test.sh || rc=1
           exit "$rc"
 
       # LS-342：對 supabase/seed-data/food_catalog.csv 現況跑過敏原啟發式規則——CI 無 DB 的
