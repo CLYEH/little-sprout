@@ -243,6 +243,8 @@ Merge gate 有任一 blocker/major finding → REQUEST_CHANGES，不得合併。
 
 hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-verify` 繞過，所以**本機 hook 只是快速回饋，CI `rules` job 才是強制層**——凡標「hook＋CI」者兩層皆有。
 
+**gate 退役條件（LS-351，使用者 2026-09-23 裁決）**：30 天零攔截且無同型事故的 gate 列退役候選。盤點工具 `bash scripts/ops/gate-usage-report.sh [--days 30]`（只讀）：對 `scripts/gates/*.sh`／`scripts/hooks/*.sh`（排除 `*.test.sh`）統計攔截次數——CI 來源＝`gh run list --status failure` 各 run 的 `--log-failed` 中帶時間戳、非腳本回顯、非自測 step 的 ✗／`::error` 行出現 gate 名；本機 hook 無 log，退而以 `git log --all` commit 訊息同行含 gate 名＋攔／擋／紅字樣（且該 commit 沒改動 gate 檔本身）為近似；輸出 markdown 表（gate｜攔截次數｜來源｜退役候選 Y/N），「無同型事故」與最終名單交使用者裁決後另票刪除，腳本不刪任何 gate。自測 `gate-usage-report.test.sh`（stub gh＋合成 repo，含 mutation）。盲區：git log 近似是下限（本機被擋後改好再 commit 多半不留字），候選須人判。
+
 | 前饋規則 | 機械反饋 gate | 狀態 |
 |---|---|---|
 | 保護分支禁直接 commit；`test`／`main` 禁非 FF 推送、禁繞過 promote.sh（§2） | pre-commit hook（`commit-gate` 擋在 main／test／development 上 commit）＋GitHub branch protection（development 必須走 PR；test／main required checks 對推上去的 SHA 生效＋enforce_admins＋禁 force-push／刪除）；非 FF／繞過 promote.sh 由下列「晉升 FF」列的 push-gate 擋 | ✅ |

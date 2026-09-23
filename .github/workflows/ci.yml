@@ -425,6 +425,8 @@ jobs:
           # LS-308 B1：Linear MCP token 過期時的 GraphQL 備援（本機假伺服器，不打正式 Linear API）
           bash scripts/ops/linear-post.test.sh || rc=1
           bash scripts/ops/patrol-linear.test.sh || rc=1
+          # LS-351 範圍 2：gate 30 天攔截盤點（stub gh＋合成 repo；含 mutation）
+          bash scripts/ops/gate-usage-report.test.sh || rc=1
           bash scripts/ops/cleanup-merged.test.sh || rc=1
           # LS-235：正式站 purge-storage 排程健康度巡檢腳本自測（全 fixture 化，不連線任何真正的 Supabase 專案）
           bash scripts/ops/prod-purge-health.test.sh || rc=1
