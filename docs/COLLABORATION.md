@@ -245,6 +245,8 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 
 **gate 退役條件（LS-351，使用者 2026-09-23 裁決）**：30 天零攔截且無同型事故的 gate 列退役候選。盤點工具 `bash scripts/ops/gate-usage-report.sh [--days 30]`（只讀）：對 `scripts/gates/*.sh`／`scripts/hooks/*.sh`（排除 `*.test.sh`）統計攔截次數——CI 來源＝`gh run list --status failure` 各 run 的 `--log-failed` 中帶時間戳、非腳本回顯、非自測 step 的 ✗／`::error` 行出現 gate 名；本機 hook 無 log，退而以 `git log --all` commit 訊息同行含 gate 名＋攔／擋／紅字樣（且該 commit 沒改動 gate 檔本身）為近似；輸出 markdown 表（gate｜攔截次數｜來源｜退役候選 Y/N），「無同型事故」與最終名單交使用者裁決後另票刪除，腳本不刪任何 gate。自測 `gate-usage-report.test.sh`（stub gh＋合成 repo，含 mutation）。盲區：git log 近似是下限（本機被擋後改好再 commit 多半不留字），候選須人判。
 
+**新 gate 門檻（LS-351）：單次事故不開 gate，同型 ≥2 次才開**——§0「新增重要規則＝同時新增它的 gate」只適用於已重複發生的規則；單次事故記入待辦池（§5-b「入口收斂」）等第二次。機械面：`scripts/gates/pr-body-check.sh --verify` 對 diff **新增** `scripts/gates/<name>.sh`（直屬、非 `*.test.sh`，`lib/` 助手不算）的 PR 要求 body 有 `Incidents:` 行列 ≥2 個同型事故（`LS-<n>` 票號或 ≥8 位 hex 池項 id；本票票號、純數字不算），不足即紅（CI `rules` job 同一步驟）；自測 `pr-body-check.test.sh` ⑫（含 mutation）。盲區：只驗「列了 ≥2 個」，不驗那些事故是否真的同型（merge-reviewer scope 維度）；gate 放在 `scripts/hooks/`／`scripts/ops/` 或改寫既有 gate 擴大攔截面不觸發。
+
 | 前饋規則 | 機械反饋 gate | 狀態 |
 |---|---|---|
 | 保護分支禁直接 commit；`test`／`main` 禁非 FF 推送、禁繞過 promote.sh（§2） | pre-commit hook（`commit-gate` 擋在 main／test／development 上 commit）＋GitHub branch protection（development 必須走 PR；test／main required checks 對推上去的 SHA 生效＋enforce_admins＋禁 force-push／刪除）；非 FF／繞過 promote.sh 由下列「晉升 FF」列的 push-gate 擋 | ✅ |

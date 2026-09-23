@@ -32,6 +32,9 @@
 # 票號比對：整字——`LS-63` 不被 `LS-630` 滿足；大小寫敏感（分支 regex 亦然）。檔頭段之後貼錯內容（第二段起
 #   是別票的 body）看不出來，靠 merge-reviewer scope 維度。
 #
+# LS-351 新 gate 門檻（--verify 才跑，見檔尾 (d)）：branch 對 base 的 diff 新增 scripts/gates/<name>.sh（非 *.test.sh）時，
+#   body 必有 `Incidents:` 行列 ≥2 個同型事故（LS-<n>／≥8 位 hex 池項 id，本票不算）——§7「單次事故不開 gate」。
+#
 # LS-140 申報可驗證（來源 LS-96 池項 9f348e36／fd2fe81e：LS-125 R2 handoff 申報「記入 LS-96」四條實際一則沒寫、
 #   R3 申報「已修」但 commit 裡沒有該變更，都靠 merge-reviewer 逐條到 LS-96 查實才抓到）。檔頭段之外再對全 body 逐行掃：
 #   (a) 含 `LS-96`（整字）／「入池」／「待辦池」的行必須帶 ≥8 位小寫 hex 的 comment id（獨立英數 token；UUID 首段即可；
@@ -435,6 +438,28 @@ if design_ref_base_sha=$(git merge-base "$design_ref_base" "$design_ref_head" 2>
     [ -n "$head_sha" ] && design_ref_args+=(--head-sha "$head_sha")
     if ! bash "${self_dir}/design-ref-check.sh" "${design_ref_args[@]}"; then
       echo "  design-ref-check 未通過（見上方 ✗ 各行）——body 的 Design: 行板名／id 須與 design/littlesprout.pen 頂層節點一致（LS-316）。" >&2
+      fail=1
+    fi
+  fi
+fi
+
+# ---- --verify (d)：LS-351 新 gate 門檻——branch 對 base 的 diff **新增** `scripts/gates/<name>.sh`（直屬、非 *.test.sh；
+# lib/ 助手不算）時，body 必有 `Incidents:` 行（容 `- `／`**Incidents:**`／全形冒號）列 ≥2 個同型事故：`LS-<n>` 票號
+# 或 ≥8 位 hex 池項 id（同規則 (a) 的候選抽法，純數字不算）；本票票號不算——事故是開 gate 之前發生過的那幾次。
+# §7「單次事故不開 gate，同型 ≥2 次才開」的機械面。base 同 (c)（解析不到整段略過，CI 以 origin/$BASE 必解得到）。
+if [ -n "${design_ref_base_sha:-}" ]; then
+  new_gates=$(git diff --name-only --diff-filter=A "$design_ref_base_sha"..."$design_ref_head" -- scripts/gates 2>/dev/null \
+    | grep -E '^scripts/gates/[^/]+\.sh$' | grep -vE '\.test\.sh$' | paste -s -d' ' - || true)
+  if [ -n "$new_gates" ]; then
+    inc_line=$(grep -m1 -E '^[[:space:]]*([-*][[:space:]]+)?(\*\*)?Incidents[[:space:]]*(:|：)' "$file" || true)
+    inc_ls=$(printf '%s' "$inc_line" | grep -oE 'LS-[1-9][0-9]*' | grep -vxF "$ticket" || true)
+    inc_hex=$(pool_id_candidates "$(printf '%s' "$inc_line" | LC_ALL=C sed -E 's/LS-[0-9]+//g')" | tr ',' '\n')
+    inc_n=$(printf '%s\n%s\n' "$inc_ls" "$inc_hex" | grep -v '^$' | sort -u | grep -c . || true)
+    if [ "${inc_n:-0}" -ge 2 ]; then
+      echo "✓ 新增 gate（${new_gates}）：Incidents 行列 ${inc_n} 個同型事故"
+    else
+      echo "✗ pr-body-check：本 PR 新增 gate（${new_gates}），PR body 需有 \`Incidents:\` 行列 ≥2 個同型事故（LS-<n> 票號或 ≥8 位 hex 池項 id；本票 ${ticket} 不算），實得 ${inc_n:-0} 個——單次事故不開 gate、同型 ≥2 次才開（COLLABORATION §7，LS-351）。" >&2
+      [ -n "$inc_line" ] && echo "    | ${inc_line}" >&2
       fail=1
     fi
   fi

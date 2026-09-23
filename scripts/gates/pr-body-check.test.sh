@@ -13,6 +13,8 @@
 # LS-256（⑩；LS-96 池項 010d927d(2)(3)）：(a) LS-96 行的純數字 token（GitHub run id）不算 comment id 候選——只有 run id 的池項行格式紅、
 #   run id 與真 id 並列時候選清單不含 run id；退回「純數字也算候選」即紅。(b) --verify 無 LINEAR_API_KEY 且有池項候選未反查 → exit 3
 #   （訊息含「exit 3＝未反查，不是違規」）、無池項候選 → 0、git 半段紅 → 仍 1（違規優先）；退回 exit 0 即紅（⑥a／⑥a2 同步改期望 3）。
+# LS-351（⑫）：新增 scripts/gates/<name>.sh 的 PR body 須有 `Incidents:` 行列 ≥2 個同型事故（本票不算、純數字不算、只加自測／lib 不觸發）；
+#   mutation 拿掉該段即綠。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -433,7 +435,52 @@ else
   fi
 fi
 
+# ⑫ LS-351 新 gate 門檻（--verify (d)）：branch 對 base 的 diff 新增 scripts/gates/<name>.sh（直屬、非 *.test.sh）時，
+#   body 必有 `Incidents:` 行列 ≥2 個同型事故（LS-<n>／≥8 位 hex 池項 id，本票不算）；只加自測／lib 助手不觸發。
+Rg="$work/grepo"; mkdir -p "$Rg"
+gg() { git -C "$Rg" -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
+gg init -q -b base
+gg commit -q --allow-empty -m 'chore: LS-63 base'
+gg checkout -q -b "$B"
+mkdir -p "$Rg/scripts/gates/lib"
+printf '#!/bin/bash\n' > "$Rg/scripts/gates/new-check.sh"
+gg add -A; gg commit -q -m 'feat(gates): LS-63 new-check'
+gg checkout -q -b hotfix/LS-63-onlytests base
+printf '#!/bin/bash\n' > "$Rg/scripts/gates/new-check.test.sh"
+printf '#!/bin/bash\n' > "$Rg/scripts/gates/lib/helper.sh"
+gg add -A; gg commit -q -m 'test(gates): LS-63 only tests'
+gg checkout -q "$B"
+# gexpect <期望 exit> <名稱> <輸出必含> <body> [<分支>]：在 $Rg 以 --base base --verify 跑（無 LINEAR key、body 無池項行，不打 curl）
+gexpect() {
+  local want=$1 name=$2 must=$3 body=$4 br=${5:-$B} out got
+  printf '%s' "$body" > "$work/gbody"
+  out="$( (cd "$Rg" && git -c advice.detachedHead=false checkout -q "$br" && LINEAR_API_KEY='' bash "${GCHECK:-$check}" --branch "$br" --verify --base base "$work/gbody" 2>&1) )"; got=$?
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || printf '%s' "$out" | grep -qF -- "$must"; }; then
+    echo "✓ ${name}"
+  else
+    echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}，實得 ${got}）" >&2
+    printf '%s\n' "$out" | sed 's/^/    /' >&2
+    fail=1
+  fi
+}
+T=$'Ticket: LS-63\n\n'
+gexpect 1 '⑫a 新增 gate、body 無 Incidents 行 → 紅' '需有 `Incidents:` 行列 ≥2 個同型事故' "${T}說明"$'\n'
+gexpect 1 '⑫b Incidents 只列 1 個 → 紅、點名實得 1' '實得 1 個' "${T}Incidents: LS-292"$'\n'
+gexpect 0 '⑫c Incidents 列 2 個票號 → 綠' 'Incidents 行列 2 個同型事故' "${T}Incidents: LS-292、LS-294"$'\n'
+gexpect 1 '⑫d 本票票號不算（LS-63＋LS-292 只算 1 個）' '實得 1 個' "${T}Incidents: LS-63、LS-292"$'\n'
+gexpect 0 '⑫e 票號＋8 位 hex 池項 id 混列、列點＋粗體＋全形冒號形狀 → 綠' 'Incidents 行列 2 個同型事故' "${T}- **Incidents：** LS-292、池項 \`9f348e36\`"$'\n'
+gexpect 1 '⑫f 純數字（run id）不算池項 id' '實得 1 個' "${T}Incidents: LS-292（run 17654321987）"$'\n'
+gexpect 0 '⑫g 只新增 *.test.sh 與 lib/ 助手 → 不觸發' '' "${T}說明"$'\n' hotfix/LS-63-onlytests
+# ⑫h mutation：拿掉 (d) 段 → ⑫a 變綠，證明紅來自這段
+mut12="$work/pr-body-check.no-incidents.sh"
+sed 's/^if \[ -n "\${design_ref_base_sha:-}" \]; then$/if false; then  # LS-351 mutation/' "$check" > "$mut12"
+if ! grep -q 'LS-351 mutation' "$mut12"; then
+  echo "✗ ⑫h mutant 沒被正確合成" >&2; fail=1
+else
+  GCHECK="$mut12" gexpect 0 '⑫h mutant（拿掉 Incidents 段）：⑫a 同一份 body 變綠——證明 ⑫a 的紅來自這段' '' "${T}說明"$'\n'
+fi
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ pr-body-check 自測通過（124 組樣本）"
+  echo "✓ pr-body-check 自測通過（132 組樣本）"
 fi
 exit "$fail"
