@@ -122,6 +122,11 @@ final class SettingsViewTests: XCTestCase {
 
         let privacyRow = app.buttons["隱私權政策"]
         XCTAssertTrue(privacyRow.waitForExistence(timeout: 5), "設定頁「法律」區應有可點擊的「隱私權政策」列")
+        // LS-346 範圍 4：`waitForHittable` 不會自動捲動（見 `XCUIElement+Waits.swift` 文件註解
+        // 「LS-269」）——「隱私權政策」列在窄機型（390pt，如 iPhone 14／12 Pro）的「法律」區位置
+        // 落在初始畫面之外，本機實測 iPhone 17 Pro 綠、iPhone 14 紅（同 runtime iOS 26.5）。先捲到
+        // 看得見再檢查可點擊，同 `DeleteConfirmationAX3UITests.scrollUntilHittable` 既有寫法。
+        scrollUntilHittable(privacyRow, in: app)
         XCTAssertTrue(privacyRow.waitForHittable(timeout: 10), "「隱私權政策」列應該可點擊")
         privacyRow.tap()
 
@@ -203,5 +208,20 @@ final class SettingsViewTests: XCTestCase {
                 + " \(Self.centeringToleranceInPoints)pt——不是置中在列高正中央",
             file: file, line: line
         )
+    }
+
+    /// LS-346 範圍 4：捲到該元素可命中為止——同 `DeleteConfirmationAX3UITests.scrollUntilHittable`
+    /// 既有寫法（LS-267 informational：跨檔重複 private helper 不擋，是否抽共用交人判斷）。
+    private func scrollUntilHittable(_ element: XCUIElement, in app: XCUIApplication) {
+        var previousMinY: CGFloat?
+        for _ in 0..<6 {
+            if element.isHittable { return }
+            let minY = element.frame.minY
+            if let previousMinY, previousMinY == minY {
+                return
+            }
+            previousMinY = minY
+            app.swipeUp()
+        }
     }
 }

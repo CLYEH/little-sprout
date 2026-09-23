@@ -297,6 +297,9 @@ jobs:
           # LS-270（LS-96 池項 `d4c1add5`／`e850cb7f`(3)）：`pipefail` ＋ `| grep -q` 偵測自己的自測（夾具正負
           # 各一——票文指定的 mutation 就是「拿掉 set -o pipefail → 無 ⚠」；另含純註解行不算／非 *.test.sh 不掃）
           bash scripts/gates/pipefail-grep-q-check.test.sh || rc=1
+          # LS-346：ios-dev.md「背景 push gate 等待迴圈」不會自我比對（GNU/Linux pgrep 預設不排除祖先
+          # 行程，只有 ubuntu-latest 這個通道能重現 LS-344 回報的自我比對，mutation 拿掉 $_self 排除）
+          bash scripts/gates/wait-loop-selfmatch.test.sh || rc=1
           # LS-338：食物圖鑑貼紙裁切腳本自測（真實參考樣張／sheet-15 單列夾具＋合成「少一張」夾具＋
           # sort_reading_order() 單元測試＋mutation：拿掉 REGION-COUNT-CHECK 標記行）
           bash scripts/design/food-sticker-crop.test.sh || rc=1
