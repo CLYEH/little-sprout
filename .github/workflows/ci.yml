@@ -250,6 +250,7 @@ jobs:
           bash scripts/gates/design-asset-size-check.test.sh || rc=1
           # LS-186：db job 的 db reset 包裝（54322 port 綁定競態才重試一次；假 supabase／sleep 驗呼叫序列與 exit code，不碰容器）
           bash scripts/ci/db-reset-retry.test.sh || rc=1
+          bash scripts/ci/db-start-retry.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
           # LS-154：主 checkout 禁寫 hook（W1–W5 正負樣本＋開關＋fail-closed＋mutation；臨時 repo fixture）
           bash scripts/hooks/main-checkout-guard.test.sh || rc=1
@@ -722,9 +723,20 @@ jobs:
         if: steps.detect.outputs.skip == 'false'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
 
+      # LS-351 追加（LS-354 池項 76ed9a99）：PR #519 的 db job 連四次（run 35897884534 attempt 1–4）撞 ghcr 匿名拉映像
+      # 限流 `toomanyrequests`。先以 GITHUB_TOKEN 登入 ghcr（可拉公開映像，認證後限流額度遠高於匿名；repo 預設 token
+      # 權限 read 已含 packages: read），再由 db-start-retry.sh 對 `toomanyrequests` 退避重試（30／60／120 秒、最多 3 次，
+      # 其他錯誤立即紅；自測 db-start-retry.test.sh 掛 rules job）。
+      - name: 登入 ghcr（降低匿名拉映像限流，LS-351）
+        if: steps.detect.outputs.skip == 'false'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
       - name: supabase db start（只起 DB，比 supabase start 快；測試資料直接灌 auth.users，不需要 Auth/Storage service）
         if: steps.detect.outputs.skip == 'false'
-        run: supabase db start
+        run: bash scripts/ci/db-start-retry.sh
 
       # LS-186：reset 重建 db 容器時 runner docker 對 54322 舊綁定偶爾未釋放 →「address already in use」（LS-184 run 33934840343，
       # rerun 即綠、純 flake）。抽成 scripts/ci/db-reset-retry.sh：失敗且輸出含該字串才 stop --no-backup → sleep 10 → db start →
