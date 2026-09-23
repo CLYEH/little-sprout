@@ -18,18 +18,20 @@
 - **ui-designer 與 visual-reviewer 開工必先用 Skill 工具載入專案 skill `little-sprout-brand`**（`.claude/skills/little-sprout-brand/`：LS-46 定案的 tokens 與實測對比、字標與品牌、沖印品母題、長輩硬約束、專案版 slop 禁例、實作進場條件 12 項；載入失敗不得靜默、handoff／verdict 明說），skill 本體與兩份定義的接線由 `scripts/gates/brand-skill-check.sh` 在 CI 驗（LS-30，§7）。
 - **worker agent（所有 subagent）研究用 `Explore`（唯讀）、禁派 `fork`**（LS-254）：fork 繼承整份派工單、會把它當自己的任務平行執行；任何子 agent 不得寫檔／commit／改 PR／貼 Linear（qa／merge-reviewer 的 `tools:` 本無 `Agent`，需要並行回報 orchestrator 拆派）。orchestrator 自己的 fork 不受限。機械面：PreToolUse `fork-guard.sh`（§7）。
 
-**Agent model 政策**（agent 定義檔的 `model:` 為預設；orchestrator 派工時得以 Agent 工具的 `model` 參數覆寫升級）：
+**Agent model 政策**（LS-353 改版；agent 定義檔 frontmatter 的 `model:`／`effort:` 為預設；orchestrator 派工時得以 Agent 工具的 `model` 參數覆寫）：
 
-| Agent | 預設 | 升級到 opus 的時機（orchestrator 手動判斷） |
-|---|---|---|
-| ui-designer | sonnet | 建立全新設計語言／資訊架構大改版時 |
-| ios-dev | sonnet | 併發或架構性的票（背景上傳佇列、導航骨架、RLS 設計）、同一票 sonnet 兩次未過 gate、hotfix |
-| merge-reviewer | opus | review 是安全網；純文件 diff 可降 sonnet |
-| qa | sonnet | 驗收含併發時序或安全（RLS）判斷時 |
-| dead-code-sweeper | sonnet | 大型 feature 批次或跨模組重構後的巡檢 |
-| visual-reviewer | opus | 視覺判斷是對抗審查的核心能力 |
+| Agent | 預設 model | 預設 effort | 降級到 sonnet 的時機（orchestrator 手動判斷） |
+|---|---|---|---|
+| ui-designer | opus | high | 無需設計稿判斷的機械小債（Notes 板文字修補、token 名稱對齊） |
+| ios-dev | opus | high | 無需設計稿的機械小債（字串替換、純文件修補）、腳本回報型任務 |
+| merge-reviewer | opus | high | 純文件 diff review |
+| qa | opus | high | 腳本回報型驗收（不需截圖判讀，只跑腳本／gate 回報） |
+| dead-code-sweeper | sonnet | （不設，沿模型預設） | 已是 sonnet；大型 feature 批次或跨模組重構後的巡檢可升 opus |
+| visual-reviewer | opus | high | 不降級：視覺判斷是對抗審查的核心能力 |
 
-降級同理：機械性小任務（批次改名、跑腳本回報）可用 haiku。Agent 工具另有 `fable` 層（orchestrator 自己跑的模型，成本為 opus 兩倍；本表未納入預設）——要把某輪派工升到 fable 時同樣在派工訊息註明理由。升降級都要在派工訊息中註明理由。
+`opus` 別名（Claude Code 2.1.280 起）現指 Opus 5.5（`claude-opus-5-5`）；Opus 5.5 的 API 預設 effort 為 medium（低於 Opus 5 的 high），全域 `effortLevel` 是否傳給 subagent 未證實，因此 agent 定義檔一律以 frontmatter `effort:` 明寫（sweeper 除外）。實際生效的 model／effort 以 `bash scripts/ops/agent-model-check.sh <agent>` 從 transcript 查證；按 model／agent 彙總 token 與牌價估值用 `python3 scripts/ops/model-usage-report.py`。
+
+降級同理：機械性小任務（批次改名、跑腳本回報）可用 haiku。Agent 工具另有 `fable` 層（orchestrator 自己跑的模型 Fable 5.1，成本約 opus 的 2.5 倍：Opus 5.5 $4／$20 vs Fable 5.1 $10／$50，每百萬 input／output token；本表未納入預設）——要把某輪派工升到 fable 時同樣在派工訊息註明理由。升降級都要在派工訊息中註明理由。
 
 **審查類 agent 的 Linear 權限**（LS-60）：merge-reviewer 與 dead-code-sweeper 具 Linear 讀票（`get_issue`／`list_comments`）權與 `save_comment` 寫回權（sweeper 自 LS-157 起直貼巡檢結果，不再由 orchestrator 代貼）；兩者皆**無** `save_issue`（不得改狀態或票文）。審查依據以票文為準，不得只憑 commit／PR body 推斷。
 
