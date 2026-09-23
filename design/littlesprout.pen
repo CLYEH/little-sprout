@@ -30759,6 +30759,16 @@
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "text",
+              "id": "EULbr",
+              "name": "nudge",
+              "fill": "#2B141C",
+              "content": "x",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -53320,7 +53330,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTB8&ixlib=rb-4.1.0&q=80&w=1080",
+                "url": "appstore-photos/demo-hero-portrait.jpg",
                 "mode": "fill"
               },
               "cornerRadius": "$radius-md"
@@ -53335,7 +53345,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTF8&ixlib=rb-4.1.0&q=80&w=1080",
+                "url": "appstore-photos/demo-grid-invite.jpg",
                 "mode": "fill"
               },
               "cornerRadius": "$radius-md"
@@ -53385,7 +53395,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                    "url": "appstore-photos/demo-grid-join.jpg",
                     "mode": "fill"
                   },
                   "cornerRadius": "$radius-md"
