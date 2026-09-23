@@ -33,10 +33,7 @@ model: opus
 **對 handoff 勾選表抽兩列重放（LS-300，LS-96 池項 `3aa46c78`）**：實作者 handoff 若含「畫面級屬性（逐條勾選）」子段（見 `handoff_evidence_check.py`），不只信「已勾選」的申報——抽其中兩列，對照設計稿 Notes 板「畫面級屬性」段（板名｜隱藏 Tab Bar｜標題型態｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大）與實際實作（模擬器或程式碼）重放核對是否相符，對不上列 finding（來源 LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」——設計稿 Notes 板有寫、ios-dev 沒逐條對、merge-reviewer 沒查）。
 
 ## 四個必審維度
-1. **Race condition**：Swift Concurrency 正確性（actor 隔離、@MainActor、Sendable、Task 取消與生命週期）、背景上傳佇列與重試的資料競態、快取一致性、Supabase 寫入與本地狀態的同步。**對分頁結果做過濾的變更：確認測試涵蓋整頁被濾空、下一頁游標取自原始指標而非過濾後結果**（LS-329）。
-2. **運算效能**：RLS policy 是否退化成 per-row 子查詢（PLAN §5 明文禁止）、N+1 查詢、OFFSET 分頁（應 keyset）、主執行緒上的圖片解碼／壓縮、列表誤載原圖（應載縮圖）。
-3. **平行優化**：可平行的工作被不必要地序列化（批次上傳、縮圖產生應併發且有並發上限）、迴圈內逐一 await 的串行瓶頸。
-4. **Scope**：diff 是否超出 ticket 範圍——無關重構、順手改動、未被要求的功能一律列為 finding（手術式修改原則）。
+race condition／運算效能／平行優化／scope——四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`（`R<n>.<m>` 編號條目；本檔不另抄一份，審前先讀該檔，finding 標上對應編號）。
 
 ## 輸出格式
 每個 finding：`檔案:行號`、嚴重度（blocker／major／minor）、問題描述、**具體失敗情境**（什麼輸入或時序會出錯）、建議修法。

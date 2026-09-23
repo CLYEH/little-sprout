@@ -178,9 +178,10 @@ IOS_BODY="${IOS_BODY} ${SSHPUSHCACHE} ${PUSHVERIFY}"
 WDARACE='`simctl launch` 後緊接 mobile-mcp，WDA 會與新 scene 競態、app 被背景化。'
 KBINTERCEPT='鍵盤彈出時會攔截下層按鈕的點擊。'
 QA_BODY="${QA_BODY} ${WDARACE} ${KBINTERCEPT}"
-# LS-333（池項 7d9ab42d，來源 LS-329 R1 M1）：merge-reviewer 正文另須含分頁過濾游標句；併進 MR_BODY
-PAGINATIONFILTER='對分頁結果做過濾的變更：確認測試涵蓋整頁被濾空、下一頁游標取自原始指標而非過濾後結果（LS-329）。'
-MR_BODY="${MR_BODY} ${PAGINATIONFILTER}"
+# LS-333（池項 7d9ab42d，來源 LS-329 R1 M1）原本釘 merge-reviewer 正文的分頁過濾游標句；LS-352 起四維度檢查項搬到
+# docs/REVIEW-RUBRIC.md（游標句＝R1.5），這條改釘 merge-reviewer 正文的 rubric 引用句；併進 MR_BODY
+RUBRICREF='四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`（本檔不另抄一份）。'
+MR_BODY="${MR_BODY} ${RUBRICREF}"
 # LS-209：ios-dev 新增 tools: 白名單（移除 mcp__pencil__*）——取代舊的 `NONE`（無 tools: 行＝繼承全部工具，其中
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求
 # （Bash／Read／Edit／Write／Grep／Glob／Agent／三支 Linear 工具），這裡的乾淨清單須包含全部才能當合法基準。
@@ -766,17 +767,18 @@ else
 fi
 reset
 
-# ---- ㊲ LS-333（池項 7d9ab42d，來源 LS-329 R1 M1）：merge-reviewer 正文須含「下一頁游標取自原始指標而非過濾後
-#      結果」——缺即紅；同一 mutant 下負樣本變綠 ----
-reset; expect 0 '㊲ merge-reviewer 正文含分頁過濾游標句 → 印「正文含」（總數 74 條）' 'merge-reviewer.md：正文含「下一頁游標取自原始指標而非過濾後結果」' '正文必含字樣 74 條）'
-MR_MINUS_PAGINATIONFILTER="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${UBUNTU10} ${UITESTMUT} ${NOTIMEOUT} ${CIWAIT} ${REPLAYSCREENATTR} ${LINEARFALLBACK}"
-reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_MINUS_PAGINATIONFILTER"; expect 1 '㊲ merge-reviewer 缺該句 → exit 1' 'merge-reviewer.md：正文缺「下一頁游標取自原始指標而非過濾後結果」'
-reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_MINUS_PAGINATIONFILTER"
+# ---- ㊲ LS-333→LS-352：merge-reviewer 正文須含 rubric 引用句「四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`」
+#      （LS-333 的游標句搬進 rubric R1.5，改由 handoff-evidence-check.test.sh 對真 rubric 斷言）——缺即紅；同一
+#      mutant 下負樣本變綠 ----
+reset; expect 0 '㊲ merge-reviewer 正文含 rubric 引用句 → 印「正文含」（總數 74 條）' 'merge-reviewer.md：正文含「四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`」' '正文必含字樣 74 條）'
+MR_MINUS_RUBRICREF="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${UBUNTU10} ${UITESTMUT} ${NOTIMEOUT} ${CIWAIT} ${REPLAYSCREENATTR} ${LINEARFALLBACK}"
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_MINUS_RUBRICREF"; expect 1 '㊲ merge-reviewer 缺該句 → exit 1' 'merge-reviewer.md：正文缺「四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`」'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_MINUS_RUBRICREF"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! grep -qF '下一頁游標取自原始指標而非過濾後結果' <<<"$out"; then
-  ok '㊲ mutant：拿掉規則後「缺分頁過濾游標句」的負樣本變綠'
+if [ "$got" -eq 0 ] && ! grep -qF '四維度檢查項的單一來源是' <<<"$out"; then
+  ok '㊲ mutant：拿掉規則後「缺 rubric 引用句」的負樣本變綠'
 else
-  echo "✗ ㊲ mutant（分頁過濾游標句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+  echo "✗ ㊲ mutant（rubric 引用句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 reset
 
