@@ -34,5 +34,7 @@ ios-dev handoff「## 自檢（依 docs/REVIEW-RUBRIC.md）」段每條一行：`
 
 ## R4 Scope
 
+判定規則：diff 超出 ticket 範圍——無關重構、順手改動、未被要求的功能一律列為 finding（手術式修改原則），不得歸 informational 記池後照樣 APPROVE（LS-352 R2，merge-review R1 M1：搬家時這句曾遺失）。
+
 - R4.1 diff 是否超出 ticket 範圍：無關重構、順手改動（手術式修改原則）。
 - R4.2 未被要求的功能。

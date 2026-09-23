@@ -12,7 +12,8 @@
 # （R2 informational-1：`.test.py` 因與既有 `\.py\b` 重複已移除）——拿掉任一即①aj-①am 紅（見⑰/⑱/⑲ mutation）。
 # LS-352（㉓-㉕）：rubric 自檢段——缺段（--require-selfcheck）→紅、少一條→紅、完整→綠、rubric 多一條而 handoff
 # 沒跟上→紅（資料面負控）、拿掉缺條判定→少一條樣本變綠（程式面 mutation）；另對真 docs/REVIEW-RUBRIC.md 斷言
-# 四維度、可解析、含 LS-333 分頁過濾游標句（原由 agent-tools-check 釘在 merge-reviewer.md，搬家後改釘這裡）。
+# 四維度、可解析、含 LS-333 分頁過濾游標句（原由 agent-tools-check 釘在 merge-reviewer.md，搬家後改釘這裡）與 Scope
+# 「一律列為 finding」判定規則（R2，merge-review R1 M1）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -1351,6 +1352,13 @@ if has "$rub_text" '下一頁游標取自原始指標而非過濾後結果' && h
   echo "✓ ㉕ 真 rubric 含分頁過濾游標句與單一來源檔頭"
 else
   echo "✗ ㉕ 真 rubric 缺分頁過濾游標句或單一來源檔頭" >&2; fail=1
+fi
+# LS-352 R2（merge-review R1 M1）：Scope 維度的強制字樣——原 merge-reviewer.md「無關重構、順手改動、未被要求的功能一律
+# 列為 finding」搬家時遺失，疊加「informational 一律記池」後順手重構可被記池照樣 APPROVE；這裡釘住，被刪即紅。
+if has "$rub_text" '無關重構、順手改動、未被要求的功能一律列為 finding'; then
+  echo "✓ ㉕ 真 rubric 的 Scope 維度含「一律列為 finding」判定規則"
+else
+  echo "✗ ㉕ 真 rubric 缺 Scope 判定規則「無關重構、順手改動、未被要求的功能一律列為 finding」" >&2; fail=1
 fi
 real_ids=$(grep -cE '^- R[0-9]+\.[0-9]+ ' "$real_rubric" || true)
 printf '%s' "## 已驗證
