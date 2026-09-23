@@ -264,6 +264,7 @@ jobs:
           bash scripts/gates/design-asset-size-check.test.sh || rc=1
           # LS-186：db job 的 db reset 包裝（54322 port 綁定競態才重試一次；假 supabase／sleep 驗呼叫序列與 exit code，不碰容器）
           bash scripts/ci/db-reset-retry.test.sh || rc=1
+          bash scripts/ci/db-start-retry.test.sh || rc=1
           bash scripts/hooks/pretool.test.sh || rc=1
           # LS-154：主 checkout 禁寫 hook（W1–W5 正負樣本＋開關＋fail-closed＋mutation；臨時 repo fixture）
           bash scripts/hooks/main-checkout-guard.test.sh || rc=1
@@ -439,6 +440,8 @@ jobs:
           # LS-308 B1：Linear MCP token 過期時的 GraphQL 備援（本機假伺服器，不打正式 Linear API）
           bash scripts/ops/linear-post.test.sh || rc=1
           bash scripts/ops/patrol-linear.test.sh || rc=1
+          # LS-351 範圍 2：gate 30 天攔截盤點（stub gh＋合成 repo；含 mutation）
+          bash scripts/ops/gate-usage-report.test.sh || rc=1
           bash scripts/ops/cleanup-merged.test.sh || rc=1
           # LS-235：正式站 purge-storage 排程健康度巡檢腳本自測（全 fixture 化，不連線任何真正的 Supabase 專案）
           bash scripts/ops/prod-purge-health.test.sh || rc=1
@@ -791,9 +794,19 @@ jobs:
         if: steps.detect.outputs.skip == 'false'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
 
+      # LS-351 追加（LS-354 池項 76ed9a99）：PR #519 的 db job 連四次（run 35897884534 attempt 1–4）撞 ghcr 共享出口限流
+      # `toomanyrequests … allowed: 44000/minute`。改拉 Supabase 官方在 public.ecr.aws 的鏡像避開 ghcr 共享出口限流：
+      # setup-cli 把 SUPABASE_INTERNAL_IMAGE_REGISTRY=ghcr.io 寫進 $GITHUB_ENV，這裡在它之後再寫一次覆蓋（後寫者生效，
+      # 對其後所有 step 有效，含 db reset）。docker login ghcr.io 對 CLI 內部 pull 無效（run 35904976443 已 Login Succeeded
+      # 仍四次撞限流，反證），已拿掉。限流時仍由 db-start-retry.sh 退避重試 3 次（30／60／120 秒，其他錯誤立即紅；
+      # 自測 db-start-retry.test.sh 掛 rules job）。
+      - name: supabase 映像改拉 public.ecr.aws（避開 ghcr 共享出口限流，LS-351）
+        if: steps.detect.outputs.skip == 'false'
+        run: echo "SUPABASE_INTERNAL_IMAGE_REGISTRY=public.ecr.aws" >> "$GITHUB_ENV"
+
       - name: supabase db start（只起 DB，比 supabase start 快；測試資料直接灌 auth.users，不需要 Auth/Storage service）
         if: steps.detect.outputs.skip == 'false'
-        run: supabase db start
+        run: bash scripts/ci/db-start-retry.sh
 
       # LS-186：reset 重建 db 容器時 runner docker 對 54322 舊綁定偶爾未釋放 →「address already in use」（LS-184 run 33934840343，
       # rerun 即綠、純 flake）。抽成 scripts/ci/db-reset-retry.sh：失敗且輸出含該字串才 stop --no-backup → sleep 10 → db start →

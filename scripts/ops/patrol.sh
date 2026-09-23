@@ -344,7 +344,7 @@ if [ "$mc_dirty" -gt 0 ]; then
   if [ "$mc_dirty" -eq 1 ] && [ "$mc_dirty_files" = "design/littlesprout.pen" ]; then
     mc_flag="${mc_flag:+${mc_flag}；}⚠ 主 checkout design/littlesprout.pen 未提交（Pen 寫回 → bash scripts/ops/pen-open.sh --restore）"
   else
-    mc_flag="${mc_flag:+${mc_flag}；}⚠ 主 checkout 有 ${mc_dirty} 個未提交變更（harness 改動也該在 hotfix worktree）"
+    mc_flag="${mc_flag:+${mc_flag}；}⚠ 主 checkout 有 ${mc_dirty} 個未提交變更（harness 改動也該在票 worktree）"
   fi
 fi
 [ -n "$mc_flag" ] && add_flag "[主 checkout] ${mc_flag}"
