@@ -600,7 +600,7 @@ def main():
     except Deny as dn:
         emit_deny(
             f"{dn.rule}：主 checkout 禁寫（{dn.detail}）——請在自己的 worktree（.claude/worktrees/LS-<n>）作業；"
-            f"harness 改動走 hotfix worktree（COLLABORATION §2 Worktree 規約／§7）；明確需要時以 "
+            f"harness 改動同樣在票 worktree（COLLABORATION §2 Worktree 規約／§7）；明確需要時以 "
             f"`{SWITCH}=1 <cmd>` 或 `env {SWITCH}=1 <cmd>` 開頭（整條命令最前面；Write／Edit 只認環境變數）放行該次"
         )
     flush_notes()

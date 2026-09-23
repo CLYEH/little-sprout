@@ -24,6 +24,10 @@ extension TapTargetGateScreenName {
         case .diaryEditor: return .staticText("寫日記")
         case .createChild: return .staticText("幫寶貝建立檔案")
         case .timelineDefaultState: return .button("新增回憶")
+        // LS-343：同 `.timelineDefaultState`——窄寬度變體不受 seed 資料影響，一定會渲染。
+        case .timelineHeaderNarrow390: return .button("新增回憶")
+        case .timelineHeaderNarrow375: return .button("新增回憶")
+        case .timelineButtonCompressionProxy: return .button(QAAccessibilityID.timelineImportPhotos)
         case .albumsDefaultState: return .button("新增相簿")
         // 不用相簿標題（`.staticText("上禮拜的動物園一日遊")`）：`AlbumSummaryCardView`
         // 整卡是 `.accessibilityElement(children: .combine)`，Caption／Signature 兩行文字
@@ -63,6 +67,8 @@ extension TapTargetGateScreenName {
         case .importProgressCancelConfirm: return .staticText("要取消整批匯入嗎？")
         // 05 大標題——固定樣本一開畫面就渲染。
         case .importSummaryWithFailures: return .staticText("匯入完成")
+        // 同 `.importSummaryWithFailures`：疊了標記失敗狀態，大標題不受影響，一樣渲染。
+        case .importSummaryWithMarkingFailure: return .staticText("匯入完成")
         case .passwordSignIn: return .staticText("帳號密碼登入")
         // Doc Title——`LegalDocumentSheet` 載入完成後必定渲染，不依賴檔案實際內容。
         case .legalDocumentSheet: return .staticText("使用條款")

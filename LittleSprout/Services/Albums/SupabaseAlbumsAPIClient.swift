@@ -234,6 +234,22 @@ final class SupabaseAlbumsAPIClient: AlbumsAPIClient {
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.string(from: date)
     }
+
+    // MARK: - LS-319（批次匯入「指定寶貝」）
+
+    /// 空陣列不打請求——`MediaChildrenMarkingTracker` 只在有東西要標記時才呼叫，這裡再擋一層
+    /// 不信任呼叫端（同 `MediaUploadService.softDeleteMedia` 既有的「空陣列合法 no-op」慣例）。
+    func setMediaChildrenBatch(items: [MediaChildrenBatchItem]) async throws {
+        guard !items.isEmpty else { return }
+        do {
+            let params = SetMediaChildrenBatchParams(
+                items: items.map { SetMediaChildrenBatchItemPayload(mediaID: $0.mediaID, childIDs: $0.childIDs) }
+            )
+            try await client.rpc("set_media_children_batch", params: params).execute()
+        } catch {
+            throw AppError.map(error)
+        }
+    }
 }
 
 private struct CreateAlbumPayload: Encodable {
@@ -279,6 +295,29 @@ private struct SetAlbumDeletedParams: Encodable {
     enum CodingKeys: String, CodingKey {
         case albumID = "p_album_id"
         case deleted = "p_deleted"
+    }
+}
+
+/// `set_media_children_batch(p_items jsonb)` 的 `p_items` 陣列裡的一筆（LS-319，見
+/// docs/API.md §4）——不巢狀在 `SetMediaChildrenBatchParams` 裡面：SwiftLint `nesting` 只准
+/// 巢狀一層，`CodingKeys` 若再巢狀進去就是兩層。
+private struct SetMediaChildrenBatchItemPayload: Encodable {
+    let mediaID: UUID
+    let childIDs: [UUID]
+
+    enum CodingKeys: String, CodingKey {
+        case mediaID = "media_id"
+        case childIDs = "child_ids"
+    }
+}
+
+/// `set_media_children_batch(p_items jsonb)`（LS-319）——`p_items` 形狀見 docs/API.md §4：
+/// `[{"media_id": "<uuid>", "child_ids": ["<uuid>", ...]}]`。
+private struct SetMediaChildrenBatchParams: Encodable {
+    let items: [SetMediaChildrenBatchItemPayload]
+
+    enum CodingKeys: String, CodingKey {
+        case items = "p_items"
     }
 }
 

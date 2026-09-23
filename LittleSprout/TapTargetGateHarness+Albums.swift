@@ -238,6 +238,7 @@ final class AlbumDetailScreenshotAPIClient: AlbumsAPIClient, @unchecked Sendable
     func updateAlbumTitle(albumID: UUID, title: String) async throws {}
     func attachMedia(albumID: UUID, familyID: UUID, mediaID: UUID, sortOrder: Int) async throws {}
     func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] { [:] }
+    func setMediaChildrenBatch(items: [MediaChildrenBatchItem]) async throws {}
 
     func fetchAlbumMediaLinks(albumID: UUID) async throws -> [AlbumMediaLinkRow] {
         mediaIDs.enumerated().map { index, id in

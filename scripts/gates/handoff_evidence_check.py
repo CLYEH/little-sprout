@@ -159,8 +159,20 @@
 追溯判紅。已知限制：只驗格式（有沒有板名／勾選符號／證據），不驗板名是否真的對應 Notes 板名子字串（那是
 `design-notes-check.sh` 的職責、發生在設計 PR 而非本 handoff 上）、也不驗勾選的 ✓／✗ 是否符合實際實作（同 N9）。
 
+rubric 自檢段（LS-352）：ios-dev handoff 須含標題以「自檢」開頭的段落（`## 自檢（依 docs/REVIEW-RUBRIC.md）`
+或 `**自檢**（…）：`，沿用 `is_heading_line`／`BOLD_ONLY_RE`（LS-292）同一套標題判定；關鍵字錨在標題開頭，避免
+「已驗證（含自檢）」這類標題被誤認）。條目從 rubric（預設 `<repo>/docs/REVIEW-RUBRIC.md`，`--rubric` 可覆寫）解析、
+不寫死：`## ` 維度標題下的 `- R<n>.<m> …` 行各算一條（編號唯一；第一個 `## ` 之前出現條目、重複編號、零條目皆
+exit 2，fail closed）。自檢段每個 `-` 列項須 (1) 以 `R<n>.<m>` 起頭；(2) 含狀態「通過／不適用／已知未處理」之一；
+(3) 有證據（`has_evidence` 或 `file:line`），且引用的測試名／白名單路徑同「已驗證」段一樣驗存在。整段編號集合須
+與 rubric 完全相同——缺哪條、多哪條（不在 rubric）、重複哪條，逐條點名。段落**存在時一律驗**；段落不存在時只有
+帶 `--require-selfcheck`（ios-dev 交件前自驗、merge-reviewer 驗實作者 handoff 時帶）才判紅——QA 裁決／
+merge-review verdict 不是 ios-dev handoff、不需要這段，預設不追溯判紅。已知限制：只驗格式與編號對應，驗不出
+「宣告通過」是否屬實（同 N9；merge-reviewer 對通過項抽驗補這一塊）。
+
 exit：0＝全過；1＝任一項缺證據、引用的測試名不存在、引用的白名單路徑（見 (b2)）不存在，或「畫面級屬性（逐條
-勾選）」子段任一列缺板名／勾選符號／證據；2＝找不到檔案／不在 git repo 且未給 --repo（fail closed）。
+勾選）」子段任一列缺板名／勾選符號／證據，或自檢段缺段（`--require-selfcheck`）／條目與 rubric 不符／列項缺編號、
+狀態或證據；2＝找不到檔案／不在 git repo 且未給 --repo／rubric 讀不到或格式錯（fail closed）。
 """
 import os
 import re
@@ -244,6 +256,15 @@ SCREEN_ATTR_CHECKMARK_RE = re.compile(r"[✓✗]")
 # ios-dev 手誤打成半形「|」時，原版只認全形會誤判「缺板名」（fail-closed 方向，不誤放行，風險本來就低）——
 # 這裡放寬成兩者皆認，減少這種手誤造成的假紅。
 SCREEN_ATTR_SEP_RE = re.compile(r"[｜|]")
+
+# ---- LS-352：rubric 自檢段判定 ----
+SELFCHECK_KEYWORD_RE = re.compile(r"^\s*自檢")  # HANDOFF-SELFCHECK-KEYWORD
+DEFAULT_RUBRIC = os.path.join("docs", "REVIEW-RUBRIC.md")
+RUBRIC_DIM_RE = re.compile(r"^##\s+\S")
+RUBRIC_ITEM_RE = re.compile(r"^-\s+(R\d+\.\d+)(?=\s|$)")
+SELFCHECK_ITEM_ID_RE = re.compile(r"^-\s+[*`]*(R\d+\.\d+)(?![\d.])")
+SELFCHECK_STATUS_RE = re.compile(r"通過|不適用|已知未處理")  # HANDOFF-SELFCHECK-STATUS
+FILE_LINE_RE = re.compile(r"[\w./-]+\.\w+:\d+")
 
 
 def fail(msg):
@@ -362,6 +383,94 @@ def check_screen_attrs(lines):
             )
         else:
             messages.append("✓ 「畫面級屬性（逐條勾選）」第 %d 行起的列項合規（板名 %s）" % (line_no, board_name))
+    return ok, messages
+
+
+def parse_rubric(path):
+    """LS-352：回傳 rubric 條目編號清單（依出現順序）。格式錯一律 fail（exit 2）——rubric 是自檢段
+    的比對基準，基準本身壞掉時不能靜默當成「0 條」放行。"""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            rubric_lines = f.read().splitlines()
+    except OSError as exc:
+        fail("讀不到 rubric %s（%s）" % (path, exc))
+    ids = []
+    seen_dim = False
+    for no, line in enumerate(rubric_lines, 1):
+        if RUBRIC_DIM_RE.match(line):
+            seen_dim = True
+            continue
+        m = RUBRIC_ITEM_RE.match(line.strip())
+        if not m:
+            continue
+        if not seen_dim:
+            fail("rubric %s 第 %d 行的條目 %s 不在任何 `## ` 維度標題之下" % (path, no, m.group(1)))
+        if m.group(1) in ids:
+            fail("rubric %s 第 %d 行條目編號 %s 重複" % (path, no, m.group(1)))
+        ids.append(m.group(1))
+    if not ids:
+        fail("rubric %s 解析不到任何 `- R<n>.<m>` 條目" % path)
+    return ids
+
+
+def check_selfcheck(lines, repo, rubric_path, required):
+    """LS-352：rubric 自檢段（見檔頭「rubric 自檢段」）。回傳 `(ok, messages)`。"""
+    section = find_section_by_keyword(lines, SELFCHECK_KEYWORD_RE)
+    if section is None:
+        if not required:
+            return True, []
+        ids = parse_rubric(rubric_path)
+        return False, [
+            "✗ handoff-evidence-check：找不到「## 自檢（依 docs/REVIEW-RUBRIC.md）」段落（--require-selfcheck）"
+            "——須逐條寫 rubric 全部 %d 條：%s" % (len(ids), "、".join(ids))
+        ]
+    rubric_ids = parse_rubric(rubric_path)
+    start, end = section
+    items = split_items(lines, start, end)
+    ok = True
+    messages = []
+    seen = []
+    for line_no, block in items:
+        first = block.splitlines()[0].strip() if block else ""
+        m = SELFCHECK_ITEM_ID_RE.match(first)
+        if not m:
+            ok = False
+            messages.append("✗ handoff-evidence-check：自檢段第 %d 行的列項不是以 R<n>.<m> 編號起頭" % line_no)
+            continue
+        rid = m.group(1)
+        if rid in seen:
+            ok = False
+            messages.append("✗ handoff-evidence-check：自檢段第 %d 行 %s 重複" % (line_no, rid))
+            continue
+        seen.append(rid)
+        missing = []
+        if not SELFCHECK_STATUS_RE.search(block):
+            missing.append("狀態（通過／不適用／已知未處理）")
+        if not (has_evidence(block) or FILE_LINE_RE.search(block)):
+            missing.append("證據（測試名／file:line／路徑／指令）")
+        bad_names = [n for n, skip in test_name_candidates(block) if not skip and not test_name_exists(repo, n)]
+        bad_paths = [q for q, skip in path_anchor_candidates(block) if not skip and not path_exists_in_repo(repo, q)]
+        if missing or bad_names or bad_paths:
+            ok = False
+            if missing:
+                messages.append("✗ handoff-evidence-check：自檢段第 %d 行 %s 缺 %s" % (line_no, rid, "、".join(missing)))
+            for n in bad_names:
+                messages.append("✗ handoff-evidence-check：自檢段第 %d 行 %s 引用的測試名 `%s` 在 repo 內找不到" % (line_no, rid, n))
+            for q in bad_paths:
+                messages.append("✗ handoff-evidence-check：自檢段第 %d 行 %s 引用的路徑 `%s` 在 repo 內找不到" % (line_no, rid, q))
+    absent = [r for r in rubric_ids if r not in seen]
+    extra = [r for r in seen if r not in rubric_ids]
+    if absent:  # HANDOFF-SELFCHECK-COUNT
+        ok = False
+        messages.append(
+            "✗ handoff-evidence-check：自檢段缺 rubric 條目 %s（rubric %d 條、自檢段對上 %d 條——rubric：%s）"
+            % ("、".join(absent), len(rubric_ids), len(rubric_ids) - len(absent), rubric_path)
+        )
+    if extra:
+        ok = False
+        messages.append("✗ handoff-evidence-check：自檢段的 %s 不在 rubric（%s）" % ("、".join(extra), rubric_path))
+    if ok:
+        messages.append("✓ 自檢段 %d 條與 rubric 逐條對上（%s）" % (len(rubric_ids), rubric_path))
     return ok, messages
 
 
@@ -524,7 +633,7 @@ def resolve_repo(repo):
     return proc.stdout.strip()
 
 
-def run(path, repo):
+def run(path, repo, rubric=None, require_selfcheck=False):
     try:
         with open(path, "r", encoding="utf-8") as f:
             text = f.read()
@@ -590,12 +699,21 @@ def run(path, repo):
         print(msg, file=sys.stderr if msg.startswith("✗") else sys.stdout)
     ok = ok and screen_ok
 
+    # LS-352：rubric 自檢段——存在一律驗；不存在只有 --require-selfcheck 才紅（見 check_selfcheck）。
+    rubric_path = rubric if rubric is not None else os.path.join(repo, DEFAULT_RUBRIC)
+    sc_ok, sc_messages = check_selfcheck(lines, repo, rubric_path, require_selfcheck)
+    for msg in sc_messages:
+        print(msg, file=sys.stderr if msg.startswith("✗") else sys.stdout)
+    ok = ok and sc_ok
+
     return ok
 
 
 def main(argv):
     args = argv[1:]
     repo = None
+    rubric = None
+    require_selfcheck = False
     path = None
     it = iter(args)
     for a in it:
@@ -608,13 +726,22 @@ def main(argv):
             except StopIteration:
                 fail("--repo 缺值")
             continue
+        if a == "--rubric":
+            try:
+                rubric = next(it)
+            except StopIteration:
+                fail("--rubric 缺值")
+            continue
+        if a == "--require-selfcheck":
+            require_selfcheck = True
+            continue
         if path is not None:
             fail("只接受一個 handoff 檔（多給了 %s）" % a)
         path = a
     if path is None:
-        fail("用法：handoff_evidence_check.py <handoff.md> [--repo <dir>]")
+        fail("用法：handoff_evidence_check.py <handoff.md> [--repo <dir>] [--rubric <path>] [--require-selfcheck]")
 
-    ok = run(path, repo)
+    ok = run(path, repo, rubric, require_selfcheck)
     sys.exit(0 if ok else 1)
 
 

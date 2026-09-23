@@ -42,6 +42,19 @@ enum TapTargetGateScreenName: String {
     // 任何 feed 資料，`.preview()` 空狀態就會渲染，是這個畫面唯一「不需要 seed 就有代表性」
     // 的可點元件，量測成本低，值得單獨拉一個 case 出來蓋。
     case timelineDefaultState = "TimelineViewDefaultState"
+    // LS-343：390pt（iPhone 12 Pro 實機回報寬度）／375pt（iPhone SE／16e）窄寬度變體——不是
+    // 獨立檔案，不需要另外具名排除（同 `.settingsMemberRole`／`.uploadQueueSheetNormal` 等既有
+    // 變體 case 的先例）。`.frame(width:)` 直接鎖住外層容器寬度，不需要真的換模擬器機型即可
+    // 重現／釘住「窄寬度下 Header 兩顆鈕被換行壓縮」這個 wiring 缺陷（同 `.legalDocument
+    // NarrowContainer` 的既有 320pt 窄容器 proxy 手法，見 `TapTargetGateHarness+Legal.swift`
+    // 文件註解）。
+    case timelineHeaderNarrow390 = "TimelineViewHeaderNarrow390"
+    case timelineHeaderNarrow375 = "TimelineViewHeaderNarrow375"
+    // LS-343：`ViewThatFits` 決策無關的補強量測——把兩顆鈕各自塞進遠小於自然寬度的
+    // `.frame(width: 60)`，直接驗證 `lineLimit(1)`／`fixedSize(horizontal:)` 本身有沒有
+    // 生效（見 `TapTargetGateHarness+Timeline.swift` 的 `timelineButtonCompressionProxyHost`
+    // 文件註解，說明為什麼需要繞開 `headerRow` 另外測這個）。
+    case timelineButtonCompressionProxy = "TimelineViewButtonCompressionProxy"
     // LS-165：`AlbumsView` 從 `ContentUnavailableView` 佔位換成正式內容——原本
     // `tap-target-exemptions.txt` 的排除理由（「placeholder 畫面，無互動元件」）不再成立，
     // 改直接註冊。rawValue 逐字等於檔名（`AlbumsView`），`tap-target-registry-check.sh` 認得
@@ -122,6 +135,10 @@ enum TapTargetGateScreenName: String {
     // LS-304：05 完成摘要頁——固定樣本含失敗列，「回到時間軸」／「重試失敗項」／逐列重試
     // 皆有代表性。
     case importSummaryWithFailures = "Import05SummaryView"
+    // LS-319：05 完成摘要頁疊「寶貝標記未完成」——同 `.albumDetailPopulated`／
+    // `.albumDetailStress` 既有先例，變體態用不以 "View" 結尾的 rawValue，registry gate
+    // 只要求基底檔名（上面那個 case）至少出現一次。
+    case importSummaryWithMarkingFailure = "Import05SummaryViewMarkingFailure"
     // LS-164：帳號密碼登入畫面（審核帳號用）——初始態不需要任何 seed 資料（`.preview()`
     // 免登入即可建構，同 `createChild`／`createAlbum` 的既有理由），Email／密碼欄與登入鈕
     // 一開畫面就有代表性。

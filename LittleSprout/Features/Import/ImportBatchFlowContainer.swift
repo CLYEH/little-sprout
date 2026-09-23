@@ -74,7 +74,7 @@ struct ImportBatchFlowContainer: View {
         case .summary(let session):
             if let store = albumsStore.sharedUploadQueueStoreInstance {
                 Import05SummaryView(
-                    session: session, store: store,
+                    session: session, store: store, marker: albumsStore.mediaChildrenMarker,
                     onDone: {
                         // merge-review R1 M3(c)：離開摘要頁前釋放這個批次終局項目的縮圖，見
                         // `UploadQueueStore.releaseThumbnails(for:)` 文件註解。
