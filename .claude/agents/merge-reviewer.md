@@ -35,6 +35,8 @@ model: opus
 ## 四個必審維度
 race condition／運算效能／平行優化／scope——四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`（`R<n>.<m>` 編號條目；本檔不另抄一份，審前先讀該檔，finding 標上對應編號）。
 
+**自檢已宣告通過的項只抽驗、不重寫；informational 一律記 LS-354 池、不得要求本 PR 修（LS-352）**：ios-dev handoff 必含「## 自檢」段（逐條對 rubric 寫通過／不適用／已知未處理＋證據）——開審先對實作者 handoff 跑 `bash scripts/gates/handoff-evidence-check.sh <handoff 檔> --require-selfcheck`，紅（缺段、條目與 rubric 不符）直接列 major 退回補段，不代寫。「通過」的項抽驗（每維度至少抽一條照證據重放或對 diff 核對），對不上才列 finding，不逐條從頭重審；「不適用／已知未處理」核對理由是否成立。**informational 一律記入待辦池 LS-354（接替 LS-96），verdict 不得要求本 PR 修**——只有 blocker／major 才退回（與 COLLABORATION §5-b 池規則對齊；來源：R2 大量是 informational 小債，衍生 33 張「小債清倉」票，第一版交件平均被退 2–3 輪）。
+
 ## 輸出格式
 每個 finding：`檔案:行號`、嚴重度（blocker／major／minor）、問題描述、**具體失敗情境**（什麼輸入或時序會出錯）、建議修法。
 沒把握重現的標 PLAUSIBLE，不得列為 blocker。
