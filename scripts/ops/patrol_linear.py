@@ -57,6 +57,8 @@ HOLD_LABEL = "hold:user"
 # LS-351（§5-b「harness 配額」）：lane:harness 每 cycle 開票數 ≤ 該 cycle 總票數 20%（向上取整）。
 HARNESS_LANE = "lane:harness"
 HARNESS_QUOTA_PERCENT = 20
+# LS-351 R2（§5-b「入口收斂」）：待辦池 comment 數超過此門檻即需封存重開（重貼沿用 40＋約一個 cycle 新增量）。
+POOL_ARCHIVE_THRESHOLD = 80
 # LS-144：Story 票文的正典粗體標記 `**UI 票：需 Design gate**`（LS-19／20／22／24 皆此形）＝沒有核可設計稿不得
 # 實作（CLAUDE.md design gate）。帶此標記的 Backlog 票永不列為候補（實作票是核可後另開的子票，Story 本身不派
 # ——LS-142 驗收段的流程），只作為 design／ui lane 的開票來源。LS-96 池項 b2993155（P1）的機械修法即此條。
@@ -1184,6 +1186,11 @@ def build_report(token, root, team_key, team_id, sim_lines):
         lanes[lane] = entry
 
     state["open_ticket_empty_rounds"] = streaks
+
+    # LS-351 R2：待辦池則數（與開票來源共用同一次 lazy 查詢，harness lane 已查過就不再打）。
+    pool_list, pool_err = pool_comments()
+    pool_size = {"issue": SKIP_ISSUE, "count": None if pool_err else len(pool_list),
+                 "threshold": POOL_ARCHIVE_THRESHOLD, "error": pool_err}
     save_state(root, state)
 
     actions = list(cycle_actions) + list(lane_actions)
@@ -1210,6 +1217,7 @@ def build_report(token, root, team_key, team_id, sim_lines):
         "lanes": lanes,
         "structure": structure,
         "booted_simulator_flags": sim_lines,
+        "pool_size": pool_size,
         "actions": actions,
     }
 
@@ -1260,14 +1268,28 @@ def mark(prefix, items, text):
     return "%s%s%s" % (prefix, "⚠ " if items else "", text)
 
 
+def format_pool_size(ps):
+    """LS-351 R2：待辦池 > 門檻印 ⚠（過得了 patrol-filter）；讀不到也印 ⚠（巡檢慣例：讀不到不得靜默）；≤ 門檻零訊號。"""
+    if not ps:
+        return None
+    if ps.get("error"):
+        return "⚠ 待辦池 %s 則數讀不到（%s）" % (ps["issue"], ps["error"])
+    if ps["count"] > ps["threshold"]:
+        return "⚠ 待辦池 %s %d 則 > %d，需封存重開（linear-archive.py）" % (ps["issue"], ps["count"], ps["threshold"])
+    return None
+
+
 def format_human(report, brief=False):
     lines = []
+    pool_line = format_pool_size(report.get("pool_size"))
     cc = report["current_cycle"]
     if brief:
         lines.append("巡檢（Linear 半段）%s" % format_cycle_line(cc))
         lines.append("Lane 狀態：")
         for lane, entry in report["lanes"].items():
             lines.append(format_lane_line(lane, entry))
+        if pool_line:
+            lines.append(pool_line)
         lines.append("動作清單：")
         if report["actions"]:
             lines.extend(report["actions"])
@@ -1317,6 +1339,9 @@ def format_human(report, brief=False):
     else:
         lines.append("  （無異常）")
 
+    if pool_line:
+        lines.append("== 待辦池")
+        lines.append("  " + pool_line)
     lines.append("== 動作清單（逐行執行）")
     if report["actions"]:
         lines.extend(report["actions"])

@@ -14,6 +14,7 @@
 # 票不得進待Design（F1）；銷除公告自身引述「P1 ·」不列、P3 池項文中引用「P1 ·」不升級（F2）；Canceled 設計票不算承接（F3）。
 # R2 負樣本：混級 comment（`- P3 ·` 後接 `- P2 ·`）以最小級 P2 列出（N1）；「**UI 票：需先過 Design gate**」變體歸待Design、
 # 「**UI 票：不需 Design gate**」不歸（N2）；公告不以「銷除」開頭（日期／票號起頭）仍被跳過（N3）。
+# ⑲（LS-351 R2）：待辦池 LS-354 則數 > 80 印 ⚠ 封存重開（human／brief／json）、恰 80 零訊號、查詢失敗印 ⚠ 讀不到；mutation 拿掉判定即消失。
 # ⑱（LS-351）：harness 配額（cycle 票數 20% 向上取整）超額時不列候選、不補位、不開票，印「harness 配額已滿（已開/上限）」；
 #   cycle 內候補只在本來就超額時擋；cycle 0 票不判定；mutation 拿掉判定即翻轉。
 # ⑬（LS-287）：harness 池項來源候選再多一層排除——id 前 8 碼若已被 repo 腳本檔頭等引用（`git grep`）視為已落地，
@@ -1768,6 +1769,65 @@ if ! grep -q 'LS-351 mutation test (quota disabled)' "$mutdir18/scripts/ops/patr
 else
   out18m="$(quota_run "$work/fxq_a" "$mutdir18/scripts/ops/patrol-linear.sh")"
   quota_check '⑱g mutant（拿掉配額判定）：已滿仍選中 LS-9181——證明 ⑱a 的綠來自配額判定' "$out18m" 'h["chosen"] == "LS-9181"'
+fi
+
+# ---- ⑲（LS-351 R2）待辦池（LS-354）則數 > 80 印「⚠ 待辦池 LS-354 <n> 則 > 80，需封存重開」；≤ 80 零訊號；讀不到印 ⚠ ----
+mkdir -p "$work/bin_pool"
+cat > "$work/bin_pool/curl" <<'EOF'
+#!/bin/bash
+data=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --data) data=$2; shift ;;
+  esac
+  shift
+done
+case "$data" in
+  *'comments('*)
+    [ "${POOL_N:?}" = fail ] && { echo '{"errors":[{"message":"stub：池查詢失敗"}]}'; exit 0; }
+    nodes=""; sep=""; i=0
+    while [ "$i" -lt "$POOL_N" ]; do
+      i=$((i + 1))
+      nodes="${nodes}${sep}{\"id\":\"$(printf '%08x' "$i")-0000-4000-8000-000000000000\",\"createdAt\":\"2026-09-01T00:00:00.000Z\",\"body\":\"P3 ｜ 來源 LS-1（x）｜ y ｜ z\"}"
+      sep=","
+    done
+    printf '{"data":{"issue":{"comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[%s]}}}}' "$nodes" ;;
+  *'documents('*) echo '{"data":{"documents":{"nodes":[{"id":"doc-1","title":"Cycle 5 規劃"}]}}}' ;;
+  *'cycle(id:'*) echo '{"data":{"cycle":{"issues":{"nodes":[]}}}}' ;;
+  *'cycles('*) echo '{"data":{"team":{"cycles":{"nodes":[{"id":"cyc-5","number":5,"startsAt":"2020-01-01T00:00:00.000Z","endsAt":"2099-01-01T00:00:00.000Z","isActive":true}]}}}}' ;;
+  *'type: { in: ['*) echo '{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}' ;;
+  *'issues('*) echo '{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}' ;;
+  *) echo '{"errors":[{"message":"stub curl：認不出的 query"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_pool/curl"
+pool_run() { POOL_N="$1" PATH="$work/bin_pool:$PATH" bash "${3:-$plsh}" --repo "$q_repo" ${2:+"$2"} 2>&1; }
+
+out19a="$(pool_run 81)"
+expect_has "$out19a" '⚠ 待辦池 LS-354 81 則 > 80，需封存重開（linear-archive.py）' '⑲a 81 則 > 80 → human 印 ⚠ 封存重開'
+out19ab="$(pool_run 81 --brief)"
+expect_has "$out19ab" '⚠ 待辦池 LS-354 81 則 > 80' '⑲a 81 則 → --brief 也印（cron 讀 brief／過濾式）'
+out19aj="$(pool_run 81 --json)"
+if PJ="$out19aj" python3 -c 'import json,os,sys; d=json.loads(os.environ["PJ"]); p=d["pool_size"]; sys.exit(0 if (p["count"]==81 and p["threshold"]==80 and p["issue"]=="LS-354") else 1)'; then
+  echo "✓ ⑲a --json 帶 pool_size（count 81／threshold 80／issue LS-354）"
+else
+  echo "✗ ⑲a --json pool_size 不符" >&2; printf '%s\n' "$out19aj" | tail -5 | sed 's/^/    /' >&2; fail=1
+fi
+out19b="$(pool_run 80)"
+expect_not_has "$out19b" '待辦池 LS-354' '⑲b 恰 80 則（未超過）→ 零訊號'
+out19c="$(pool_run fail)"
+expect_has "$out19c" '⚠ 待辦池 LS-354 則數讀不到' '⑲c 池查詢失敗 → 印 ⚠ 讀不到（不靜默）'
+# ⑲d mutation：format_pool_size() 恆回 None → ⑲a 的 ⚠ 消失
+mutdir19="$work/mut19"
+rm -rf "$mutdir19"; mkdir -p "$mutdir19"
+cp -R "${root}/scripts" "$mutdir19/scripts"
+sed 's/^def format_pool_size(ps):$/def format_pool_size(ps):\n    return None  # LS-351 mutation test (pool size disabled)/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir19/scripts/ops/patrol_linear.py"
+if ! grep -q 'LS-351 mutation test (pool size disabled)' "$mutdir19/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑲d mutant 沒被正確合成" >&2; fail=1
+else
+  out19m="$(pool_run 81 '' "$mutdir19/scripts/ops/patrol-linear.sh")"
+  expect_not_has "$out19m" '待辦池 LS-354 81 則' '⑲d mutant（拿掉則數判定）：81 則不再印 ⚠——證明 ⑲a 的綠來自這段'
 fi
 
 if [ "$fail" -ne 0 ]; then
