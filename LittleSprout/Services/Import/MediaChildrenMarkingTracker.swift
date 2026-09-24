@@ -118,6 +118,10 @@ final class MediaChildrenMarkingTracker {
     /// `retryFailedMarking(in:)` 對外讀寫（見下）——不直接對外開放整份字典，呼叫端不需要知道
     /// `FailedGroup` 這個內部型別。
     private var failedGroups: [GroupKey: FailedGroup] = [:]
+    /// LS-373 D5：「補上寶貝」已送出、RPC 還沒回來的群——期間 `failedGroups` 仍保留該群（05 的
+    /// 統計子列與 Marking Section 版面不動，Notes `x73Dy6`），按鈕靠 `isRetryingMarking(in:)`
+    /// 切停用態；`mark` 寫回結果的同一段同步程式碼裡移除，成功時列與停用態一起消失。
+    private var inFlightRetryKeys: Set<GroupKey> = []
 
     init(apiClient: AlbumsAPIClient, onMarked: @escaping () -> Void) {
         self.apiClient = apiClient
@@ -215,12 +219,14 @@ final class MediaChildrenMarkingTracker {
                 try await apiClient.setMediaChildrenBatch(items: items)
             }
             failedGroups.removeValue(forKey: key)
+            inFlightRetryKeys.remove(key)
             onMarked()
         } catch {
             let isRetryable = Self.isMarkingErrorRetryable(error)
             failedGroups[key] = FailedGroup(
                 entryIDs: entryIDs, mediaIDs: mediaIDs, babyIDs: babyIDs, isRetryable: isRetryable
             )
+            inFlightRetryKeys.remove(key)
         }
     }
 
@@ -257,18 +263,30 @@ final class MediaChildrenMarkingTracker {
             .reduce(0) { $0 + $1.mediaIDs.count }
     }
 
-    /// 「重試標記」——只重送跟這個批次有交集、且可重試的失敗群，不動其他批次、不重新上傳
-    /// （上傳早就終局了，見檔頭文件註解）。
+    /// 「補上寶貝」——只重送跟這個批次有交集、且可重試的失敗群，不動其他批次、不重新上傳
+    /// （上傳早就終局了，見檔頭文件註解）。LS-373 D5：送出時不從 `failedGroups` 移除（R1 版本
+    /// 按下即移除，列瞬間消失、失敗再出現），改記進 `inFlightRetryKeys`，結果回來才一起更新；
+    /// 已在進行中的群不重送（連點／重入）。
     func retryFailedMarking(in entryIDs: Set<UUID>) {
         let keysToRetry = failedGroups.keys.filter { key in
-            guard let group = failedGroups[key], group.isRetryable else { return false }
+            guard !inFlightRetryKeys.contains(key), let group = failedGroups[key], group.isRetryable else {
+                return false
+            }
             return !group.entryIDs.isDisjoint(with: entryIDs)
         }
         for key in keysToRetry {
-            guard let group = failedGroups.removeValue(forKey: key) else { continue }
+            guard let group = failedGroups[key] else { continue }
+            inFlightRetryKeys.insert(key)
             Task {
                 await self.mark(key: key, entryIDs: group.entryIDs, mediaIDs: group.mediaIDs, babyIDs: group.babyIDs)
             }
+        }
+    }
+
+    /// LS-373 D5：這個批次有沒有「補上寶貝」請求還在進行中——05 按鈕停用＋「正在補上寶貝…」。
+    func isRetryingMarking(in entryIDs: Set<UUID>) -> Bool {
+        inFlightRetryKeys.contains { key in
+            failedGroups[key].map { !$0.entryIDs.isDisjoint(with: entryIDs) } ?? false
         }
     }
 
@@ -278,6 +296,7 @@ final class MediaChildrenMarkingTracker {
         groups = [:]
         pendingRetryableEntries = [:]
         failedGroups = [:]
+        inFlightRetryKeys = []
     }
 }
 

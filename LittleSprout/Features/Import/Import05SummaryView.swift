@@ -227,16 +227,23 @@ struct Import05SummaryView: View {
     /// 只重送標記失敗且可重試的群，不重新上傳（見 `MediaChildrenMarkingTracker
     /// .retryFailedMarking(in:)` 文件註解）。
     private func fillBabiesButton(count: Int) -> some View {
-        let presentation = Import05SummaryContent.fillBabiesButton(count: count, isInFlight: false)
+        // D5（Notes `x73Dy6`／`XG9yu`）：請求進行中整顆停用、icon 位置換 ProgressView、label 改
+        // 「正在補上寶貝…」，icon 與字 $text-secondary；版面不動（列與段落等結果回來才更新）。
+        let isInFlight = marker.isRetryingMarking(in: session.entryIDSet)
+        let presentation = Import05SummaryContent.fillBabiesButton(count: count, isInFlight: isInFlight)
         return Button {
             marker.retryFailedMarking(in: session.entryIDSet)
         } label: {
             HStack(spacing: AppSpacing.label) {
-                Image(systemName: "arrow.clockwise").appIconFrame(.medium)
+                if isInFlight {
+                    ProgressView().controlSize(.small).tint(Color.lsTextSecondary).appIconFrame(.medium)
+                } else {
+                    Image(systemName: "arrow.clockwise").appIconFrame(.medium)
+                }
                 Text(presentation.title).appNumericFont(.body, weight: .semibold)
                     .multilineTextAlignment(.leading)
             }
-            .foregroundStyle(Color.lsTextPrimary)
+            .foregroundStyle(isInFlight ? Color.lsTextSecondary : Color.lsTextPrimary)
             .padding(.vertical, AppSpacing.controlPaddingTap)
             .padding(.horizontal, AppSpacing.tight)
             .frame(minHeight: 48, alignment: .leading)
