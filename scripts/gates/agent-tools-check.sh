@@ -215,7 +215,8 @@ qa|WDA 會與新 scene 競態、app 被背景化|LS-333（池項 5ec3954d①，�
 qa|鍵盤彈出時會攔截下層按鈕的點擊|LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：鍵盤顯示中先收鍵盤再點下方按鈕，不要對著被蓋住的區域直接點，那句被刪即紅
 merge-reviewer|四維度檢查項的單一來源是 \`docs/REVIEW-RUBRIC.md\`|LS-352：四維度檢查項（含 LS-333 的分頁過濾游標句 R1.5）移到 docs/REVIEW-RUBRIC.md 單一來源，merge-reviewer.md 只引用、不抄；引用句被刪即紅（rubric 內容本身由 handoff-evidence-check.test.sh 對真檔斷言）
 ios-dev|## 自檢（依 docs/REVIEW-RUBRIC.md）|LS-352：handoff 必含 rubric 自檢段，逐條對 docs/REVIEW-RUBRIC.md 每個 R<n>.<m> 寫通過／不適用／已知未處理＋證據，handoff-evidence-check.sh --require-selfcheck 機械驗；那句被刪即紅
-merge-reviewer|自檢已宣告通過的項只抽驗、不重寫|LS-352：ios-dev 自檢段宣告通過的項只抽驗、不從頭重審；informational 一律記 LS-354 池、不得要求本 PR 修，那句被刪即紅"
+merge-reviewer|自檢已宣告通過的項只抽驗、不重寫|LS-352：ios-dev 自檢段宣告通過的項只抽驗、不從頭重審；informational 一律記 LS-354 池、不得要求本 PR 修，那句被刪即紅
+qa|字級矩陣至少含 xSmall、預設、AX3|LS-346（來源 LS-343 verdict b975e587）：只驗預設與放大會漏掉「比預設小」那端的回歸（LS-343 時間軸 Header 在 390pt 只有 Small／XS 字級破版，與範圍 4 的機型寬度問題是兩件事），那句被刪即紅"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，

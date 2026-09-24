@@ -1234,7 +1234,182 @@ else
   fail=1
 fi
 
-# ==== ㉓ LS-352：rubric 自檢段（條目從 rubric 解析、不寫死）====
+# ==== ㉓ LS-346（範圍 2(a)，來源 LS-330 R2／LS-339 R1／R2 共 4 次誤判）：讀一則 Linear comment 當
+#        「怎麼驗」依據——白名單原本表達不了這種證據形態 ====
+# ㉓a `mcp__linear__list_comments`（MCP 工具呼叫，不含 .sh/.png 等既有子字串，乾淨孤立驗這條新規則）→ 綠
+expect 0 '㉓a mcp__linear__list_comments 當證據（不與既有子字串重疊）→ 綠' \
+  '第 2 行起的列項有證據' \
+  '## 已驗證
+- 條件 1：`mcp__linear__list_comments` 讀 LS-96 comment 65763a3f 原文核對，兩則池項皆存在
+'
+
+# ㉓b `linear-post.sh get`（省略 `bash ` 前綴的備援通道引用寫法）——同時被既有 `.sh` 子字串涵蓋，
+#     不是孤立樣本，但真實樣本就長這樣（LS-96 池項），一併收錄避免日後漏測
+expect 0 '㉓b linear-post.sh get（省略 bash 前綴）→ 綠' \
+  '第 2 行起的列項有證據' \
+  '## 已驗證
+- 條件 1：`linear-post.sh get LS-96 --comments` 讀取備援通道原文核對
+'
+
+# ㉓c mutation 負控：LINEAR_READ_TOOL_RE 改成永不命中，㉓a（不與既有子字串重疊的那條）必須改判缺證據
+mut_linear="$work/handoff_evidence_check.no-linear.py"
+sed -E 's/^LINEAR_READ_TOOL_RE = re\.compile\(.*\)  # HANDOFF-EVIDENCE-LINEAR-READONLY$/LINEAR_READ_TOOL_RE = re.compile(r"ZZZ_NEVER_MATCH_ZZZ")  # HANDOFF-EVIDENCE-LINEAR-MUTATED/' "$py" > "$mut_linear"
+if grep -qF 'HANDOFF-EVIDENCE-LINEAR-MUTATED' "$mut_linear"; then
+  printf '%s' '## 已驗證
+- 條件 1：`mcp__linear__list_comments` 讀 LS-96 comment 65763a3f 原文核對，兩則池項皆存在
+' > "$work/mut23.md"
+  out23="$(python3 "$mut_linear" "$work/mut23.md" --repo "$R" 2>&1)"; rc23=$?
+  if [ "$rc23" -eq 1 ] && has "$out23" '缺『怎麼驗』證據'; then
+    echo "✓ ㉓c mutant（LINEAR_READ_TOOL_RE 拿掉）：純 mcp__linear__ 引用改判缺證據——證明 ㉓a 是這條規則造成的"
+  else
+    echo "✗ ㉓c mutant 未如預期翻轉（實得 exit ${rc23}）" >&2
+    printf '%s\n' "$out23" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ㉓c mutate：找不到插入點，負控本身無效" >&2
+  fail=1
+fi
+
+# ㉓d（merge-review R1 i1）：寫入類工具 `mcp__linear__save_comment` 不再算數（只提及工具名、沒有
+#     指出讀了哪一則）——R1 版 `mcp__linear__\w+` 會誤判這條有證據，R2 收斂成只認讀取類工具名 → 紅
+expect 1 '㉓d mcp__linear__save_comment（寫入類工具，非讀取）→ 缺證據，紅' \
+  '缺『怎麼驗』證據' \
+  '## 已驗證
+- 條件 1：已用 `mcp__linear__save_comment` 把結論貼回 LS-96
+'
+
+# ㉓e：讀取類工具但沒有任何票號／comment id 形狀（純泛泛敘述）→ 缺證據，紅
+expect 1 '㉓e mcp__linear__list_comments 但無票號／comment id → 缺證據，紅' \
+  '缺『怎麼驗』證據' \
+  '## 已驗證
+- 條件 1：用 `mcp__linear__list_comments` 讀過，看起來沒問題
+'
+
+# ==== ㉔ LS-346（範圍 2(b)，來源 LS-334 R1／R2、LS-339 R1／R2）：`--ref <sha>` 驗只存在於特定 commit
+#        的測試名／白名單路徑——`--repo` 指主 checkout 時，只在 PR 分支上的新檔案原本一律判不存在 ====
+# 在 $R 之上另加一個 commit（新增測試名＋白名單路徑各一），再退回上一個 commit（模擬「主 checkout
+# 還沒併入這個 commit」的狀態）——之前所有 expect() 樣本都建在較早那個 commit 上，這裡退回不影響它們
+# （它們已經跑完）。
+mkdir -p "$R/RefOnlyFixture"
+cat > "$R/RefOnlyFixture/RefOnlyTests.swift" <<'EOF'
+import XCTest
+final class RefOnlyTests: XCTestCase {}
+EOF
+printf '# ref-only fixture\n' > "$R/docs/ref-only.md"
+git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false add -A
+git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q -m 'chore(harness): LS-346 ref-only fixture'
+ref_only_sha=$(git -C "$R" rev-parse HEAD)
+git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false checkout -q HEAD^
+
+expect_ref() {   # 同 expect()，多帶 --ref
+  local want=$1 name=$2 must=$3 body=$4 ref=$5 out got
+  printf '%s' "$body" > "$work/handoff-ref.md"
+  out="$(bash "$check" "$work/handoff-ref.md" --repo "$R" --ref "$ref" 2>&1)"
+  got=$?
+  if [ "$got" -eq "$want" ] && { [ -z "$must" ] || has "$out" "$must"; }; then
+    echo "✓ ${name}"
+  else
+    echo "✗ ${name}（期望 exit ${want}${must:+、輸出含「${must}」}，實得 ${got}）" >&2
+    printf '%s\n' "$out" | sed 's/^/    /' >&2
+    fail=1
+  fi
+}
+
+expect 1 '㉔a 未帶 --ref：測試名只存在於較新 commit，對主 checkout（較舊 HEAD）判不存在 → 紅' \
+  '在 repo 內找不到' \
+  '## 已驗證
+- 條件 1：`RefOnlyTests` 涵蓋新流程
+'
+expect_ref 0 '㉔b 帶 --ref <sha>：同一份 handoff 改判找到（該 commit 的樹狀態）→ 綠' \
+  '第 2 行起的列項有證據' \
+  '## 已驗證
+- 條件 1：`RefOnlyTests` 涵蓋新流程
+' "$ref_only_sha"
+expect 1 '㉔c 未帶 --ref：白名單路徑 docs/ref-only.md 只存在於較新 commit → 紅' \
+  '在 repo 內找不到' \
+  '## 已驗證
+- 條件 1：見 docs/ref-only.md 說明
+'
+expect_ref 0 '㉔d 帶 --ref：docs/ref-only.md 改判存在 → 綠' \
+  '第 2 行起的列項有證據' \
+  '## 已驗證
+- 條件 1：見 docs/ref-only.md 說明
+' "$ref_only_sha"
+
+# ㉔e mutation 負控：把 `--ref` 分支硬改成一律當作沒給（`main()` 呼叫 `run()` 之前插入 `ref = None`
+#     覆寫），㉔b／㉔d 必須改判紅——證明 ㉔b／㉔d 是 --ref 分支本身造成的，不是巧合
+mut_ref="$work/handoff_evidence_check.no-ref.py"
+python3 - "$py" "$mut_ref" <<'PY'
+import sys
+src_path, dst_path = sys.argv[1], sys.argv[2]
+src = open(src_path, encoding="utf-8").read()
+anchor = "    ok = run(path, repo, ref, rubric, require_selfcheck)"
+assert src.count(anchor) == 1, "插入點不唯一或不存在，負控本身無效"
+mutated = src.replace(anchor, "    ref = None  # HANDOFF-REF-MUTATION-MARK\n" + anchor, 1)
+open(dst_path, "w", encoding="utf-8").write(mutated)
+PY
+if grep -qF 'HANDOFF-REF-MUTATION-MARK' "$mut_ref"; then
+  printf '%s' '## 已驗證
+- 條件 1：`RefOnlyTests` 涵蓋新流程
+' > "$work/mut24.md"
+  out24="$(python3 "$mut_ref" "$work/mut24.md" --repo "$R" --ref "$ref_only_sha" 2>&1)"; rc24=$?
+  if [ "$rc24" -eq 1 ] && has "$out24" '在 repo 內找不到'; then
+    echo "✓ ㉔e mutant（--ref 被強制清空）：㉔b 改判紅——證明 --ref 分支是 load-bearing 的"
+  else
+    echo "✗ ㉔e mutant 未如預期翻轉（實得 exit ${rc24}）" >&2
+    printf '%s\n' "$out24" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ㉔e mutate：找不到插入點，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ㉕ LS-346 R2（merge-review R1 m7）：`--ref` 給不存在的 sha 要先驗、明講「ref 不存在」——
+#        不能讓白名單路徑那條把它誤導成「路徑不存在」====
+badref='0000000000000000000000000000000000dead'
+expect_ref 2 '㉕a --ref 給不存在的 sha＋測試名候選 → exit 2，訊息明講 ref 不存在（不是「找不到」）' \
+  "--ref ${badref} 不是" \
+  '## 已驗證
+- 條件 1：`RefOnlyTests` 涵蓋新流程
+' "$badref"
+expect_ref 2 '㉕b --ref 給不存在的 sha＋白名單路徑候選 → 同樣 exit 2、訊息明講 ref 不存在（R1 未修前這裡誤判成「docs/PLAN.md 在 repo 內找不到」）' \
+  "--ref ${badref} 不是" \
+  '## 已驗證
+- 條件 1：見 docs/PLAN.md 說明
+' "$badref"
+
+# ㉕c mutation 負控：拿掉「先驗 --ref」那段（找不到插入點視為已無這段），㉕b 必須改判「路徑不存在」
+#     而非「ref 不存在」——證明㉕b 現在的正確訊息是這段驗證造成的，不是巧合命中別條錯誤路徑
+mut_badref="$work/handoff_evidence_check.no-ref-validate.py"
+python3 - "$py" "$mut_badref" <<'PY'
+import sys
+src_path, dst_path = sys.argv[1], sys.argv[2]
+src = open(src_path, encoding="utf-8").read()
+start = src.index("    if ref is not None:\n        try:\n            proc = subprocess.run([\"git\", \"-C\", repo, \"cat-file\", \"-e\"")
+end = src.index("    lines = text.splitlines()", start)
+mutated = src[:start] + src[end:]
+open(dst_path, "w", encoding="utf-8").write(mutated)
+PY
+if ! grep -qF '不是 %s 內存在的 commit' "$mut_badref"; then
+  printf '%s' '## 已驗證
+- 條件 1：見 docs/PLAN.md 說明
+' > "$work/mut25.md"
+  out25="$(python3 "$mut_badref" "$work/mut25.md" --repo "$R" --ref "$badref" 2>&1)"; rc25=$?
+  if [ "$rc25" -eq 1 ] && has "$out25" '在 repo 內找不到'; then
+    echo "✓ ㉕c mutant（拿掉先驗 --ref 那段）：㉕b 改判成舊的誤導訊息「路徑不存在」——證明㉕b 現在的正確訊息是這段驗證造成的"
+  else
+    echo "✗ ㉕c mutant 未如預期翻轉（實得 exit ${rc25}）" >&2
+    printf '%s\n' "$out25" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ㉕c mutate：找不到插入點，負控本身無效" >&2
+  fail=1
+fi
+
+# ==== ㉖ LS-352：rubric 自檢段（條目從 rubric 解析、不寫死）====
 # 夾具 rubric：兩個維度、三條。自檢段樣本對 $R（合成 repo）驗證據存在性。
 RUB="$work/rubric.md"
 cat > "$RUB" <<'EOF'
@@ -1274,54 +1449,54 @@ expect_sc() {
   fi
 }
 
-expect_sc 0 '㉓a 自檢段完整（三條皆有編號／狀態／證據）＋--require-selfcheck → 綠' '✓ 自檢段 3 條與 rubric 逐條對上' "$SC_OK" --rubric "$RUB" --require-selfcheck
+expect_sc 0 '㉖a 自檢段完整（三條皆有編號／狀態／證據）＋--require-selfcheck → 綠' '✓ 自檢段 3 條與 rubric 逐條對上' "$SC_OK" --rubric "$RUB" --require-selfcheck
 
-expect_sc 1 '㉓b 缺自檢段＋--require-selfcheck → 紅，列出 rubric 全部條目' '找不到「## 自檢（依 docs/REVIEW-RUBRIC.md）」段落（--require-selfcheck）——須逐條寫 rubric 全部 3 條：R1.1、R1.2、R2.1' \
+expect_sc 1 '㉖b 缺自檢段＋--require-selfcheck → 紅，列出 rubric 全部條目' '找不到「## 自檢（依 docs/REVIEW-RUBRIC.md）」段落（--require-selfcheck）——須逐條寫 rubric 全部 3 條：R1.1、R1.2、R2.1' \
 '## 已驗證
 - 條件 1：`FooTests` 全綠
 ' --rubric "$RUB" --require-selfcheck
 
-expect_sc 0 '㉓c 缺自檢段但未帶 --require-selfcheck（QA 裁決／verdict 形狀）→ 不追溯判紅' '' \
+expect_sc 0 '㉖c 缺自檢段但未帶 --require-selfcheck（QA 裁決／verdict 形狀）→ 不追溯判紅' '' \
 '## 已驗證
 - 條件 1：`FooTests` 全綠
 ' --rubric "$RUB"
 
 SC_MINUS_ONE="${SC_OK/'- R1.2｜不適用｜本票不碰快取（`git diff --stat main` 無 Cache 檔）
 '/}"
-[ "$SC_MINUS_ONE" != "$SC_OK" ] || { echo "✗ ㉓d 夾具：拿掉 R1.2 失敗（負樣本本身無效）" >&2; fail=1; }
-expect_sc 1 '㉓d 自檢段少一條（R1.2）→ 紅，點名缺哪一條' '自檢段缺 rubric 條目 R1.2（rubric 3 條、自檢段對上 2 條' "$SC_MINUS_ONE" --rubric "$RUB" --require-selfcheck
+[ "$SC_MINUS_ONE" != "$SC_OK" ] || { echo "✗ ㉖d 夾具：拿掉 R1.2 失敗（負樣本本身無效）" >&2; fail=1; }
+expect_sc 1 '㉖d 自檢段少一條（R1.2）→ 紅，點名缺哪一條' '自檢段缺 rubric 條目 R1.2（rubric 3 條、自檢段對上 2 條' "$SC_MINUS_ONE" --rubric "$RUB" --require-selfcheck
 
-# ㉓e 資料面 mutation 負控：rubric 多一條（R2.2）而 handoff 沒跟上 → 紅並點名 R2.2——證明條目數確實讀自 rubric、非寫死
+# ㉖e 資料面 mutation 負控：rubric 多一條（R2.2）而 handoff 沒跟上 → 紅並點名 R2.2——證明條目數確實讀自 rubric、非寫死
 RUB_PLUS="$work/rubric-plus.md"
 { cat "$RUB"; echo '- R2.2 OFFSET 分頁'; } > "$RUB_PLUS"
-expect_sc 1 '㉓e rubric 多一條（R2.2）而 handoff 沒跟上 → 紅，點名 R2.2' '自檢段缺 rubric 條目 R2.2（rubric 4 條、自檢段對上 3 條' "$SC_OK" --rubric "$RUB_PLUS" --require-selfcheck
+expect_sc 1 '㉖e rubric 多一條（R2.2）而 handoff 沒跟上 → 紅，點名 R2.2' '自檢段缺 rubric 條目 R2.2（rubric 4 條、自檢段對上 3 條' "$SC_OK" --rubric "$RUB_PLUS" --require-selfcheck
 
-expect_sc 1 '㉓f 自檢段多一條不在 rubric 的 R9.9 → 紅，點名' '自檢段的 R9.9 不在 rubric' "${SC_OK}- R9.9｜通過｜\`FooTests\`
+expect_sc 1 '㉖f 自檢段多一條不在 rubric 的 R9.9 → 紅，點名' '自檢段的 R9.9 不在 rubric' "${SC_OK}- R9.9｜通過｜\`FooTests\`
 " --rubric "$RUB"
 
-expect_sc 1 '㉓g 列項缺狀態（沒寫通過／不適用／已知未處理）→ 紅' '自檢段第 5 行 R1.1 缺 狀態（通過／不適用／已知未處理）' "${SC_OK/'R1.1｜通過｜'/'R1.1｜'}" --rubric "$RUB"
+expect_sc 1 '㉖g 列項缺狀態（沒寫通過／不適用／已知未處理）→ 紅' '自檢段第 5 行 R1.1 缺 狀態（通過／不適用／已知未處理）' "${SC_OK/'R1.1｜通過｜'/'R1.1｜'}" --rubric "$RUB"
 
-expect_sc 1 '㉓h 列項缺證據（只有狀態）→ 紅' '自檢段第 5 行 R1.1 缺 證據（測試名／file:line／路徑／指令）' "${SC_OK/'- R1.1｜通過｜`FooTests.testBar` 覆蓋 actor 隔離'/'- R1.1｜通過｜看起來沒問題'}" --rubric "$RUB"
+expect_sc 1 '㉖h 列項缺證據（只有狀態）→ 紅' '自檢段第 5 行 R1.1 缺 證據（測試名／file:line／路徑／指令）' "${SC_OK/'- R1.1｜通過｜`FooTests.testBar` 覆蓋 actor 隔離'/'- R1.1｜通過｜看起來沒問題'}" --rubric "$RUB"
 
-expect_sc 1 '㉓i 自檢段引用不存在的測試名 → 紅（同「已驗證」段存在性規則）' '自檢段第 5 行 R1.1 引用的測試名 `GhostTests` 在 repo 內找不到' "${SC_OK/'`FooTests.testBar`'/'`GhostTests`'}" --rubric "$RUB"
+expect_sc 1 '㉖i 自檢段引用不存在的測試名 → 紅（同「已驗證」段存在性規則）' '自檢段第 5 行 R1.1 引用的測試名 `GhostTests` 在 repo 內找不到' "${SC_OK/'`FooTests.testBar`'/'`GhostTests`'}" --rubric "$RUB"
 
-expect_sc 1 '㉓j 列項沒有 R<n>.<m> 編號起頭 → 紅' '自檢段第 5 行的列項不是以 R<n>.<m> 編號起頭' "${SC_OK/'- R1.1｜'/'- 第一條｜'}" --rubric "$RUB"
+expect_sc 1 '㉖j 列項沒有 R<n>.<m> 編號起頭 → 紅' '自檢段第 5 行的列項不是以 R<n>.<m> 編號起頭' "${SC_OK/'- R1.1｜'/'- 第一條｜'}" --rubric "$RUB"
 
-# ㉓k LS-292 BOLD_ONLY_RE 形狀的粗體標題（粗體＋括號附註＋冒號）也認得
-expect_sc 0 '㉓k 粗體標題「**自檢**（依 docs/REVIEW-RUBRIC.md）：」（LS-292 形狀）→ 綠' '✓ 自檢段 3 條與 rubric 逐條對上' "${SC_OK/'## 自檢（依 docs/REVIEW-RUBRIC.md）'/'**自檢**（依 docs/REVIEW-RUBRIC.md）：'}" --rubric "$RUB" --require-selfcheck
+# ㉖k LS-292 BOLD_ONLY_RE 形狀的粗體標題（粗體＋括號附註＋冒號）也認得
+expect_sc 0 '㉖k 粗體標題「**自檢**（依 docs/REVIEW-RUBRIC.md）：」（LS-292 形狀）→ 綠' '✓ 自檢段 3 條與 rubric 逐條對上' "${SC_OK/'## 自檢（依 docs/REVIEW-RUBRIC.md）'/'**自檢**（依 docs/REVIEW-RUBRIC.md）：'}" --rubric "$RUB" --require-selfcheck
 
-# ㉓l 標題關鍵字錨在開頭：「已驗證（含自檢）」不會被當成自檢段（否則缺段被誤判為已存在）
-expect_sc 1 '㉓l 「## 已驗證（含自檢）」不算自檢段 → --require-selfcheck 仍紅' '找不到「## 自檢（依 docs/REVIEW-RUBRIC.md）」段落' \
+# ㉖l 標題關鍵字錨在開頭：「已驗證（含自檢）」不會被當成自檢段（否則缺段被誤判為已存在）
+expect_sc 1 '㉖l 「## 已驗證（含自檢）」不算自檢段 → --require-selfcheck 仍紅' '找不到「## 自檢（依 docs/REVIEW-RUBRIC.md）」段落' \
 '## 已驗證（含自檢）
 - 條件 1：`FooTests` 全綠
 ' --rubric "$RUB" --require-selfcheck
 
 printf '# 空 rubric\n\n## R1 x\n\n沒有條目\n' > "$work/rubric-empty.md"
-expect_sc 2 '㉓m rubric 解析不到任何條目 → exit 2（fail closed，不當成 0 條放行）' '解析不到任何 `- R<n>.<m>` 條目' "$SC_OK" --rubric "$work/rubric-empty.md"
+expect_sc 2 '㉖m rubric 解析不到任何條目 → exit 2（fail closed，不當成 0 條放行）' '解析不到任何 `- R<n>.<m>` 條目' "$SC_OK" --rubric "$work/rubric-empty.md"
 printf '# 重複\n\n## R1 x\n\n- R1.1 a\n- R1.1 b\n' > "$work/rubric-dup.md"
-expect_sc 2 '㉓n rubric 編號重複 → exit 2' '條目編號 R1.1 重複' "$SC_OK" --rubric "$work/rubric-dup.md"
+expect_sc 2 '㉖n rubric 編號重複 → exit 2' '條目編號 R1.1 重複' "$SC_OK" --rubric "$work/rubric-dup.md"
 
-# ==== ㉔ 程式面 mutation 負控：拿掉「缺哪條」判定（absent 恆為空）→ ㉓d 少一條的樣本改判綠，證明紅是這條檢查造成的 ====
+# ==== ㉗ 程式面 mutation 負控：拿掉「缺哪條」判定（absent 恆為空）→ ㉖d 少一條的樣本改判綠，證明紅是這條檢查造成的 ====
 mut_sccount="$work/handoff_evidence_check.no-selfcheck-count.py"
 awk '
   index($0, "# HANDOFF-SELFCHECK-COUNT") > 0 { print "    absent = []  # HANDOFF-SELFCHECK-MUTATION-MARK"; print; next }
@@ -1331,34 +1506,34 @@ if grep -qF 'absent = []  # HANDOFF-SELFCHECK-MUTATION-MARK' "$mut_sccount"; the
   printf '%s' "$SC_MINUS_ONE" > "$work/mut24.md"
   out24="$(python3 "$mut_sccount" "$work/mut24.md" --repo "$R" --rubric "$RUB" --require-selfcheck 2>&1)"; rc24=$?
   if [ "$rc24" -eq 0 ]; then
-    echo "✓ ㉔ mutant（拿掉缺條判定）：㉓d 少一條的樣本改判綠——證明紅是這條檢查造成的"
+    echo "✓ ㉗ mutant（拿掉缺條判定）：㉖d 少一條的樣本改判綠——證明紅是這條檢查造成的"
   else
-    echo "✗ ㉔ mutant 未如預期翻轉（實得 exit ${rc24}）" >&2
+    echo "✗ ㉗ mutant 未如預期翻轉（實得 exit ${rc24}）" >&2
     printf '%s\n' "$out24" | sed 's/^/    /' >&2
     fail=1
   fi
 else
-  echo "✗ ㉔ mutate：找不到 HANDOFF-SELFCHECK-COUNT 插入點，負控本身無效" >&2
+  echo "✗ ㉗ mutate：找不到 HANDOFF-SELFCHECK-COUNT 插入點，負控本身無效" >&2
   fail=1
 fi
 
-# ==== ㉕ 真 rubric（docs/REVIEW-RUBRIC.md）：四維度、可解析、含 LS-333 分頁過濾游標句（R1.5——原由 agent-tools-check
+# ==== ㉘ 真 rubric（docs/REVIEW-RUBRIC.md）：四維度、可解析、含 LS-333 分頁過濾游標句（R1.5——原由 agent-tools-check
 #        釘在 merge-reviewer.md，LS-352 搬進 rubric 後改在這裡釘，句子被刪即紅）====
 real_rubric="${root}/docs/REVIEW-RUBRIC.md"
 dims=$(grep -cE '^## R[0-9]+ ' "$real_rubric" || true)
-if [ "$dims" -eq 4 ]; then echo "✓ ㉕ 真 rubric 四個維度標題"; else echo "✗ ㉕ 真 rubric 維度標題應為 4（實得 ${dims}）" >&2; fail=1; fi
+if [ "$dims" -eq 4 ]; then echo "✓ ㉘ 真 rubric 四個維度標題"; else echo "✗ ㉘ 真 rubric 維度標題應為 4（實得 ${dims}）" >&2; fail=1; fi
 rub_text="$(cat "$real_rubric")"
 if has "$rub_text" '下一頁游標取自原始指標而非過濾後結果' && has "$rub_text" '本檔是 ios-dev 自檢與 merge-reviewer 審查的單一來源，改條目請同步自測'; then
-  echo "✓ ㉕ 真 rubric 含分頁過濾游標句與單一來源檔頭"
+  echo "✓ ㉘ 真 rubric 含分頁過濾游標句與單一來源檔頭"
 else
-  echo "✗ ㉕ 真 rubric 缺分頁過濾游標句或單一來源檔頭" >&2; fail=1
+  echo "✗ ㉘ 真 rubric 缺分頁過濾游標句或單一來源檔頭" >&2; fail=1
 fi
 # LS-352 R2（merge-review R1 M1）：Scope 維度的強制字樣——原 merge-reviewer.md「無關重構、順手改動、未被要求的功能一律
 # 列為 finding」搬家時遺失，疊加「informational 一律記池」後順手重構可被記池照樣 APPROVE；這裡釘住，被刪即紅。
 if has "$rub_text" '無關重構、順手改動、未被要求的功能一律列為 finding'; then
-  echo "✓ ㉕ 真 rubric 的 Scope 維度含「一律列為 finding」判定規則"
+  echo "✓ ㉘ 真 rubric 的 Scope 維度含「一律列為 finding」判定規則"
 else
-  echo "✗ ㉕ 真 rubric 缺 Scope 判定規則「無關重構、順手改動、未被要求的功能一律列為 finding」" >&2; fail=1
+  echo "✗ ㉘ 真 rubric 缺 Scope 判定規則「無關重構、順手改動、未被要求的功能一律列為 finding」" >&2; fail=1
 fi
 real_ids=$(grep -cE '^- R[0-9]+\.[0-9]+ ' "$real_rubric" || true)
 printf '%s' "## 已驗證
@@ -1366,9 +1541,39 @@ printf '%s' "## 已驗證
 " > "$work/real-rubric.md"
 out25="$(bash "$check" "$work/real-rubric.md" --repo "$R" --rubric "$real_rubric" --require-selfcheck 2>&1)"; rc25=$?
 if [ "$rc25" -eq 1 ] && has "$out25" "須逐條寫 rubric 全部 ${real_ids} 條" && [ "$real_ids" -gt 0 ]; then
-  echo "✓ ㉕ 真 rubric 可解析（${real_ids} 條，與 grep 計數一致），缺段時列出全部條目"
+  echo "✓ ㉘ 真 rubric 可解析（${real_ids} 條，與 grep 計數一致），缺段時列出全部條目"
 else
-  echo "✗ ㉕ 真 rubric 解析結果與 grep 計數（${real_ids}）不符（exit ${rc25}）" >&2; printf '%s\n' "$out25" | sed 's/^/    /' >&2; fail=1
+  echo "✗ ㉘ 真 rubric 解析結果與 grep 計數（${real_ids}）不符（exit ${rc25}）" >&2; printf '%s\n' "$out25" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ==== ㉙ LS-346 merge main（LS-352 自檢段 × LS-346 --ref）：自檢段引用的測試名存在性也要照 --ref 驗——
+#        否則「已驗證」段帶 --ref 綠、自檢段同一個只存在於 PR 分支的測試名仍判不存在（LS-346 要修的同一類誤判）====
+SC_REF='## 已驗證
+- 條件 1：`FooTests` 全綠
+
+## 自檢（依 docs/REVIEW-RUBRIC.md）
+- R1.1｜通過｜`RefOnlyTests` 覆蓋 actor 隔離
+- R1.2｜不適用｜本票不碰快取（`git diff --stat main` 無 Cache 檔）
+- R2.1｜已知未處理｜N+1 留給下票，見 Fixture/FooTests.swift:3
+'
+expect_sc 1 '㉙a 自檢段引用只存在於較新 commit 的測試名、未帶 --ref → 紅' '自檢段第 5 行 R1.1 引用的測試名 `RefOnlyTests` 在 repo 內找不到' "$SC_REF" --rubric "$RUB"
+expect_sc 0 '㉙b 同一份 handoff 帶 --ref <sha> → 自檢段也改看該 commit 樹狀態 → 綠' '✓ 自檢段 3 條與 rubric 逐條對上' "$SC_REF" --rubric "$RUB" --ref "$ref_only_sha"
+# ㉙c mutation 負控：check_selfcheck 呼叫點拿掉 ref 引數（退回合併前的 LS-352 原樣），㉙b 必須改判紅
+mut_scref="$work/handoff_evidence_check.no-selfcheck-ref.py"
+sed 's/check_selfcheck(lines, repo, rubric_path, require_selfcheck, ref)/check_selfcheck(lines, repo, rubric_path, require_selfcheck)  # HANDOFF-SCREF-MUTATED/' "$py" > "$mut_scref"
+if grep -qF 'HANDOFF-SCREF-MUTATED' "$mut_scref"; then
+  printf '%s' "$SC_REF" > "$work/mut29.md"
+  out29="$(python3 "$mut_scref" "$work/mut29.md" --repo "$R" --rubric "$RUB" --ref "$ref_only_sha" 2>&1)"; rc29=$?
+  if [ "$rc29" -eq 1 ] && has "$out29" '引用的測試名 `RefOnlyTests` 在 repo 內找不到'; then
+    echo "✓ ㉙c mutant（自檢段不傳 ref）：㉙b 改判紅——證明自檢段的 --ref 串接是 load-bearing 的"
+  else
+    echo "✗ ㉙c mutant 未如預期翻轉（實得 exit ${rc29}）" >&2
+    printf '%s\n' "$out29" | sed 's/^/    /' >&2
+    fail=1
+  fi
+else
+  echo "✗ ㉙c mutate：找不到插入點，負控本身無效" >&2
+  fail=1
 fi
 
 if [ "$fail" -eq 0 ]; then
