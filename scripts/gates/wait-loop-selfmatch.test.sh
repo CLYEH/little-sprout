@@ -1,6 +1,8 @@
 #!/bin/bash
 # LS-346 範圍 3：驗證 ios-dev.md 記載的「背景 push gate 等待迴圈」（`.claude/agents/ios-dev.md` 的
 # 「背景 push gate 等待迴圈限 worktree 範圍」段落）不會因為「另一條同 pattern 的等待迴圈」而卡住。
+# LS-358：該段落已由 `scripts/ops/push-gate-wait.sh` 取代（ios-dev.md 收成一條指向腳本的規則），① 改檢查腳本的
+# `gate_running()`；②–⑤ 驗的是過濾寫法本身，不變。腳本自己的範圍／sibling／舊迴圈情境另見 push-gate-wait.test.sh。
 #
 # 背景（LS-346 R2，源自 merge-review R1 M1 否證 R1 版修法）：LS-344 agent 回報迴圈用
 # `pgrep -f 'worktrees/LS-<n>/'` 找自己 worktree 下的 xcodebuild／push-gate 行程時會卡住不退出。
@@ -33,34 +35,33 @@ fail=0
 # shellcheck source=lib/selftest-helpers.sh
 source "${root}/scripts/gates/lib/selftest-helpers.sh"
 
-doc="${root}/.claude/agents/ios-dev.md"
+doc="${root}/scripts/ops/push-gate-wait.sh"
 [ -f "$doc" ] || { echo "✗ 找不到 ${doc}" >&2; exit 2; }
 doc_text="$(cat "$doc")"
 
 # ---- ① 文件與修法同步 ----
 if has "$doc_text" "grep -v 'pgrep -f'"; then
-  echo "✓ ① ios-dev.md 記載的等待迴圈含 grep -v 'pgrep -f' 過濾（sibling／自我比對修法落地）"
+  echo "✓ ① push-gate-wait.sh 的等待判定含 grep -v 'pgrep -f' 過濾（sibling／自我比對修法落地）"
 else
-  echo "✗ ① ios-dev.md 找不到 grep -v 'pgrep -f' 過濾寫法——文件與修法不同步" >&2
+  echo "✗ ① push-gate-wait.sh 找不到 grep -v 'pgrep -f' 過濾寫法——腳本與修法不同步" >&2
   fail=1
 fi
-# 只取「等待迴圈那條命令自己」的文字窗口（`_ws=$SECONDS` 到那句的「真的跑完了」）判斷有沒有用
-# bracket 寫法——不能對整份文件做無範圍的字面掃描：同一段稍後還有一句正常說明 H4 只認
-# `[x]codebuild`／`[p]ush-gate` 兩個特定 bracket target（那是在描述「H4 認得出這兩種」，不是建議
-# 這樣寫），整份文件掃描會把這句正確的說明文字誤判成「還在用 bracket 寫法」。
+# 只取「等待判定那段程式自己」的文字窗口（LS-358 起是 push-gate-wait.sh 的 `gate_running() {` 到函式結尾）
+# 判斷有沒有用 bracket 寫法——不對整份檔案做無範圍的字面掃描（舊版掃 ios-dev.md 時，同段有一句正常說明
+# H4 只認 `[x]codebuild`／`[p]ush-gate` 兩個 bracket target，整份掃描會誤判；範圍限定的做法沿用）。
 snippet="$(python3 - "$doc" <<'PY'
 import sys
 doc = open(sys.argv[1], encoding="utf-8").read()
 try:
-    start = doc.index("_ws=$SECONDS; while")
-    end = doc.index("真的跑完了", start) + len("真的跑完了")
+    start = doc.index("gate_running() {")
+    end = doc.index("\n}\n", start) + 2
     print(doc[start:end])
 except ValueError:
     pass
 PY
 )"
 if [ -z "$snippet" ]; then
-  echo '✗ ① 在 ios-dev.md 找不到等待迴圈命令片段（_ws=$SECONDS; while … 真的跑完了）——無法檢查是否用了 bracket 寫法' >&2
+  echo '✗ ① 在 push-gate-wait.sh 找不到 gate_running() 函式本體——無法檢查是否用了 bracket 寫法' >&2
   fail=1
 elif has "$snippet" '[x]codebuild' || has "$snippet" '[p]ush-gate'; then
   echo "✗ ① 等待迴圈命令本身仍出現 [x]codebuild／[p]ush-gate bracket 自我迴避寫法——LS-330 i7 已裁定淘汰" >&2
