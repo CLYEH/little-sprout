@@ -134,6 +134,7 @@ enum TapTargetGateHarness {
         case .foodBookDairy: foodBookDairyHost
         case .foodBookViewer: foodBookViewerHost
         case .photoCardBabyCaption: photoCardBabyCaptionHost
+        case .diaryCardBabyCaption: diaryCardBabyCaptionHost
         case .selfTestTooSmall:
             selfTestTooSmallHost
         case .selfTestGood:

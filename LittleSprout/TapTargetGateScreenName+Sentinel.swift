@@ -139,6 +139,7 @@ extension TapTargetGateScreenName {
         case .foodBookViewer: return .staticText("這本圖鑑由家人記錄，你可以隨時翻看。")
         // fixture 共用的頂端標題（feed fixture 除外，見 `photoCardBabyCaptionHost` 文件註解）。
         case .photoCardBabyCaption: return .staticText("照片卡署名")
+        case .diaryCardBabyCaption: return .staticText("日記卡署名")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
