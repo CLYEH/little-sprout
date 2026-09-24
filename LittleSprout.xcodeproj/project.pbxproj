@@ -532,6 +532,7 @@
 		F400886C67EB440F0BF36A5A /* CommentRowActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D1271C2CC39AA7D7D71E59 /* CommentRowActions.swift */; };
 		F462FED59ADC341536F34B8A /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76C79515621CA9052803B7EA /* AppError.swift */; };
 		F4F8DB0821FDA59E9EB1B08C /* AlbumsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283015CC749C2FA945FE395B /* AlbumsModels.swift */; };
+		F5B5827A5E681A20EAC5B5BD /* DiaryEditorAddPhotoContrastTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48AB78E328CC27084B31E15 /* DiaryEditorAddPhotoContrastTests.swift */; };
 		F72DC9FECA93AF65A84657C6 /* BlockConfirmSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7527E2B1A3FCC80DBEB44EB5 /* BlockConfirmSheet.swift */; };
 		F868DF1A2FDACBEEEE02D7DD /* ImportBatchFlowContainerRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C83589E845F988100234ED0A /* ImportBatchFlowContainerRegressionTests.swift */; };
 		F8D5F0487378C2EFFBD10FCE /* AlbumRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9795ABABAFD0B3104AB74A21 /* AlbumRoute.swift */; };
@@ -1032,6 +1033,7 @@
 		D27995DD952B5001B0D8C952 /* GrowthMeasurementPrefillRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthMeasurementPrefillRegressionTests.swift; sourceTree = "<group>"; };
 		D2F9F3FB9139CAE156CCD645 /* TimelineStoreReactorsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreReactorsTests.swift; sourceTree = "<group>"; };
 		D3E2CD07A3D49AF4B16C0D9A /* MultiChildCaptionFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiChildCaptionFormatter.swift; sourceTree = "<group>"; };
+		D48AB78E328CC27084B31E15 /* DiaryEditorAddPhotoContrastTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryEditorAddPhotoContrastTests.swift; sourceTree = "<group>"; };
 		D4B8B83A763BF11381A8A48B /* QAAccessibilityID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QAAccessibilityID.swift; sourceTree = "<group>"; };
 		D4F8DC307DA209CD5559A0E6 /* TimelineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStore.swift; sourceTree = "<group>"; };
 		D500E43E6BE915800BDC015C /* TimelineDayGroupingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineDayGroupingTests.swift; sourceTree = "<group>"; };
@@ -1420,6 +1422,7 @@
 				92463C497E79C1E1108BD80C /* DiaryDetailPresentationBindingsTests.swift */,
 				6D07A1233EF216E629B32629 /* DiaryDetailSheetIDTests.swift */,
 				8C7ACE26EA3E828F870C6BB9 /* DiaryDurationFormatTests.swift */,
+				D48AB78E328CC27084B31E15 /* DiaryEditorAddPhotoContrastTests.swift */,
 				B65A9E81D3E3B5D92B0B6BDE /* DiaryEditorViewLifecycleTests.swift */,
 				0694D8B3FF373E24A5D98E12 /* DiaryPhotoReorderMathTests.swift */,
 				5E035A6914D8ED45DF6CDD63 /* DiaryPublishErrorMessageTests.swift */,
@@ -2574,6 +2577,7 @@
 				F1FFE704E0C50F3418A04669 /* DiaryDetailPresentationBindingsTests.swift in Sources */,
 				08E2C4433BFD3E5DEC7DFF47 /* DiaryDetailSheetIDTests.swift in Sources */,
 				E714FA8B1BBAA5D64425BB5C /* DiaryDurationFormatTests.swift in Sources */,
+				F5B5827A5E681A20EAC5B5BD /* DiaryEditorAddPhotoContrastTests.swift in Sources */,
 				D0AF78E3C840FDAE433B1A61 /* DiaryEditorViewLifecycleTests.swift in Sources */,
 				C649CAC4FC01FF528483B208 /* DiaryPhotoReorderMathTests.swift in Sources */,
 				C3792CB1B45DFB0A21CDD8F6 /* DiaryPublishErrorMessageTests.swift in Sources */,
