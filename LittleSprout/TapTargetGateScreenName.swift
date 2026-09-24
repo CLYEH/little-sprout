@@ -306,6 +306,13 @@ enum TapTargetGateScreenName: String {
     // `.deleteCommentConfirmation` 兩個既有 case 覆蓋同一段版面程式碼），不另掛 case。
     case growthRecordActionsSheet = "GrowthRecordActionsSheet"
     case childrenManagementPopulated = "ChildrenManagementView"  // LS-312：populated，1 個寶貝
+    // LS-379：飲食圖鑑 02（示範資料 38／274，穀物根莖）——8 顆分頁＋16 格（吃過／還沒吃）皆可量。
+    // 深色／02b 乳製品（一歲後標記）／02c viewer 三個變體同一支檔案，供 `FoodBookUITests` 截圖與
+    // 行為斷言（同 `.settingsMemberRole` 等既有變體 case 的先例，不另外具名排除）。
+    case foodBook = "FoodBookView"
+    case foodBookDark = "FoodBookViewDark"
+    case foodBookDairy = "FoodBookViewDairy"
+    case foodBookViewer = "FoodBookViewViewer"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"

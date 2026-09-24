@@ -133,6 +133,10 @@ extension TapTargetGateScreenName {
         case .growthRecordsList: return .staticText("成長紀錄")
         case .growthRecordActionsSheet: return .button("取消")
         case .childrenManagementPopulated: return .staticText("寶貝")
+        // LS-379：body 自畫的 display 標題（系統標題已由零尺寸 principal 關掉，見 `FoodBookView`）。
+        case .foodBook, .foodBookDark: return .staticText("飲食圖鑑")
+        case .foodBookDairy: return .staticText("吃過 1／7")
+        case .foodBookViewer: return .staticText("這本圖鑑由家人記錄，你可以隨時翻看。")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
