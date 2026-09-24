@@ -139,6 +139,28 @@ final class GrowthStoreTests: XCTestCase {
         XCTAssertEqual(store.records.first?.heightCm, 78.5)
     }
 
+    /// LS-335（LS-313 R3-m3）：DEBUG preview／harness 的假 client 回傳的 `measuredOn` 要跟真 RPC
+    /// 一樣是 UTC 午夜。02 表單送出的是「本地午夜」（Asia/Taipei 的 8/20 00:00＝UTC 8/19 16:00），
+    /// 原樣回傳的話 03 列表（`measuredOnHistoryLabel` 用 UTC 抽年月日）會顯示 8/19——編輯後退一天。
+    /// mutation：拿掉 `PreviewGrowthAPIClient.upsertGrowthRecord` 的正規化（原樣回傳
+    /// `input.measuredOn`），這支測試轉紅。
+    func test_save_previewClientInPositiveOffsetTimeZone_keepsSameCalendarDay() async throws {
+        let taipei = try XCTUnwrap(TimeZone(identifier: "Asia/Taipei"))
+        let store = makeStore(apiClient: PreviewGrowthAPIClient(timeZone: taipei))
+        let utcMidnight = try XCTUnwrap(BirthdayFormat.date(fromWireString: "2026-08-20"))
+        let pickedLocalMidnight = BirthdayFormat.localMidnight(from: utcMidnight, timeZone: taipei)
+
+        let succeeded = await store.save(GrowthMeasurementInput(
+            id: UUID(), measuredOn: pickedLocalMidnight, heightCm: 78.5, weightKg: nil, headCm: nil, note: nil
+        ))
+
+        XCTAssertTrue(succeeded)
+        XCTAssertEqual(
+            store.records.first?.measuredOn, utcMidnight,
+            "UTC+8 選的 8/20 存回來要是 UTC 午夜的 8/20，不是 UTC 8/19 16:00（UTC 抽年月日會退一天）"
+        )
+    }
+
     /// R1 merge-review M2：同一天先存身高、再存體重是兩筆不同記錄——`records.count` 要是 2
     /// （03 列表要能各自列出、編輯、刪除，不是被同日去重成 1），且最新值卡要能逐項各自讀到
     /// 自己那筆的值。`weightRecord.createdAt` 刻意晚於 `heightRecord.createdAt`：舊寫法

@@ -8,16 +8,31 @@ import Foundation
 /// preview／harness host 需要直接建構這個型別當 `growthAPIClient` 參數——同
 /// `PreviewDiaryAPIClient` 本來就不是 `private` 的既有先例。
 final class PreviewGrowthAPIClient: GrowthAPIClient, @unchecked Sendable {
+    /// 表單送出的 `measuredOn` 是哪個時區的「本地午夜」——預設裝置時區（同
+    /// `BirthdayFormat.wireString(from:timeZone:)` 預設值）；只有測試會注入固定時區。
+    private let timeZone: TimeZone
+
+    init(timeZone: TimeZone = .current) {
+        self.timeZone = timeZone
+    }
+
     func listGrowthRecords(childID: UUID, limit: Int) async throws -> [GrowthRecord] { [] }
 
     /// 同 `PreviewChildAPIClient.createChild`／`.updateChild` 的角色——不打真網路，原樣把輸入
     /// 組成一列回傳（`input.id` 為 nil 時視為新增，配一個新 `UUID`；非 nil 時視為編輯，沿用原
     /// `id`，`familyID`／`authorID`／`createdAt` 用不影響呈現的假值即可，呼叫端只在乎
     /// `heightCm`／`weightKg`／`headCm`／`note`／`measuredOn` 這幾項）。
+    ///
+    /// LS-335（LS-313 R3-m3）：`measuredOn` 比照真 RPC 的來回（`SupabaseGrowthAPIClient` 送
+    /// `wireString`、後端回 `date`、`date(fromWireString:)` 解成 UTC 午夜）先正規化成 UTC 午夜
+    /// ——原樣回傳本地午夜的話，UTC+ 時區（例 Asia/Taipei 的 8/20 00:00＝UTC 8/19 16:00）之後
+    /// 一律用 UTC 抽年月日的顯示（`measuredOnHistoryLabel` 等）會退一天。
     func upsertGrowthRecord(childID: UUID, input: GrowthMeasurementInput) async throws -> GrowthRecord {
-        GrowthRecord(
+        let wireDay = BirthdayFormat.wireString(from: input.measuredOn, timeZone: timeZone)
+        return GrowthRecord(
             id: input.id ?? UUID(), familyID: UUID(), childID: childID, authorID: GrowthStore.previewAuthorID,
-            measuredOn: input.measuredOn, heightCm: input.heightCm, weightKg: input.weightKg,
+            measuredOn: BirthdayFormat.date(fromWireString: wireDay) ?? input.measuredOn,
+            heightCm: input.heightCm, weightKg: input.weightKg,
             headCm: input.headCm, note: input.note, createdAt: Date(), updatedAt: Date()
         )
     }
