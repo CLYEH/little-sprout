@@ -151,6 +151,16 @@ R7 掃過全部 393 寬、非 A11y/Stress 的螢幕板：27 張有實心 accent�
 - **`$print-ink`／`$on-photo` 不掛 theme**，深色模式自動套用相同視覺，不需要另外做一份深色示範（詳情頁只在 iPhone 淺色示範一次，dark 對應格沿用同一 token 邏輯）。
 - **行為規格（稿面畫不出來，寫在這裡）**：時間軸卡片上的影片項不自動播放、不內嵌播放器——card 本身仍是一張沖印品照片（縮圖用影片首格畫面），徽章只是靜態標示。編輯器選到超過 1 分鐘的影片時，回話列「影片最長 1 分鐘，會保留前 60 秒」（示範板「LS-21 / 12g 日記編輯器 · 影片超過 1 分鐘」），行為只提示不阻擋——裁切動作在後端／發佈時處理，編輯器內不剪輯。
 
+## 縮圖張數疊字（LS-296 R3，使用者 2026-09-24 核可 C1a）
+
+同樣是疊在固定尺寸縮圖上的字，**角落小徽章**與**蓋滿整格的張數暗蓋**分兩條規則，別混用（單一來源：`design/littlesprout.pen` Notes `sErBN`「LS-296 R3 · 計數」）：
+
+- **角落徽章維持固定尺寸、不隨 Dynamic Type 放大**：影片徽章文字固定 `$fs-imprint` 12（見上節）、選取勾號 Selected Badge 圖示 14pt（上節所引先例）——只佔一角、屬「印在縮圖上的標記」。
+- **張數暗蓋（`cmp/Card Diary` 第三格 More Count `CQpms`、Import 縮圖列 More Cell「+N」）走 `$fs-note` 17 粗體、隨 Dynamic Type 放大**——「還有幾張」是要讀的資訊，適用十條第 6 條（寫著數量的字 ≥17），不是廠牌壓印字。
+- **長短形看可用寬度，不看字級名稱**：SwiftUI `ViewThatFits(in: .horizontal) { Text("還有 N 張"); Text("+N") }`，放得下長形就顯示「還有 N 張」，放不下才退「+N」；短形仍放不下（64pt 格遇 AX3 多位數）時 `.lineLimit(1).minimumScaleFactor(0.5)` 收進格內，不裁字、不溢出。稿面對照：96 寬縮圖預設字級長形寬 69（`WitwS`），AX3 40pt 長形寬 162 放不下→「+2」寬 48（`MiQyy`／`xNqOC`）。
+- **VoiceOver 兩形一律讀「還有 N 張」**（`accessibilityLabel` 固定長形）。
+- 本條取代 Import Notes `iSOb3`／`R5OnW` 原「縮圖疊字 +N 一律 `$fs-imprint` 12」的寫法（chip 頭像姓名縮寫字不在本條，仍 12）；Import 各板稿面 12pt「+N」與現行實作（`ImportMoreCell`、`DiaryCardView`）的對齊記在 LS-354（comment `10a36cc6`）。
+
 ## 邀請碼
 
 - **定案（使用者 2026-08-25 裁決，LS-89）：6 碼、3+3 分組、32 字元表** `23456789ABCDEFGHJKLMNPQRSTUVWXYZ`（排除易混的 0／O／1／I，Crockford 式；稿上 `h7EnT`【R2】另排 Q／L 的 30 字元集未採用，字母表以後端為準）＝ 6 × 5 bit ＝ **30 bit**。安全前提是**核准必開**（固定文案、無開關）：30 bit 只在「加入須管理者核准」下成立，若日後開放直進則升 8 碼。
