@@ -71718,7 +71718,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "R2 依 VR R1（comment 08d0e396）與 orchestrator 裁決修改：M-2 採用（署名改 secondary／regular／fs-note，見定案 3）；M-1 採用（實作契約四點＋壓測字串改 ageDescription 實際產出，AX3 重量、角托 y 重算）；M-3 採用、限照片卡（放不下一行就一行一人，見定案 1）；M-4 採用（g57BHa 加無標籤 feed 摘錄）；m-1 標明素材限制（範例板條）；m-2 補三位長名字＋拉丁名卡；m-3 印品高改寫成實況（定案 2）；i-1 超範圍一處已於既有實例條申報、PR body 同步。規格板 R1 的三塊已刪除重建，現行為 g57BHa／u0yYg／ai2w5。",
+                  "content": "R2 依 VR R1（comment 08d0e396）與 orchestrator 裁決修改：M-2 採用（署名改 secondary／regular／fs-note，見定案 3）；M-1 採用（實作契約四點＋壓測字串改 ageDescription 實際產出，AX3 重量、角托 y 重算）；M-3 採用、限照片卡（放不下一行就一行一人，見定案 1）；M-4 採用（g57BHa 加無標籤 feed 摘錄）；m-1 標明素材限制（範例板條）；m-2 補三位長名字＋拉丁名卡；m-3 印品高改寫成實況（定案 2）；i-1 超範圍一處已於既有實例條申報、PR body 同步。規格板 R1 的三塊已刪除重建，現行為 g57BHa／u0yYg／ai2w5。另：ai2w5 feed 摘錄的 Day Divider e29JW 的 Stamp Wrap（OCYqN）加字面 width 覆寫＝lKoZG 的 f9KM0G 實測 333.80（LS-201 lyu44 R3 記錄的 Pencil fit_content 寬度解析不一致，同一修法；Stamp 溢出 +2.30→0.28pt，低於 0.5 容差）。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -213505,7 +213505,12 @@
                   "id": "e29JW",
                   "type": "ref",
                   "ref": "oLN0e",
-                  "name": "Day Divider"
+                  "name": "Day Divider",
+                  "descendants": {
+                    "OCYqN": {
+                      "width": 333.8000638528543
+                    }
+                  }
                 },
                 {
                   "type": "frame",
