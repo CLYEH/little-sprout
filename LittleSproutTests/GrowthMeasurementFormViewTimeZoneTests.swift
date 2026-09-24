@@ -87,6 +87,9 @@ final class GrowthMeasurementFormViewTimeZoneTests: XCTestCase {
             "localMidnight 不得自行組 Calendar——換算邏輯只能活在 BirthdayFormat.localMidnight 這一份" +
                 "（LS-334 merge-review R1 M2）"
         )
+        // LS-335（LS-331 merge-review R2 `ab72a0f8` m1）：保留委派字面、再用
+        // `var local: Calendar = .current` 重組的寫法，上面兩條都不命中。
+        assertNoDeviceCalendar(code, in: "GrowthMeasurementFormView.localMidnight")
     }
 
     /// 從原始碼抽出一個函式的本體（簽名到同縮排層級的結尾大括號），過濾掉註解行——同

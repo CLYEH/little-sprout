@@ -353,6 +353,7 @@
 		9FBD13DAC2A6AA64AF1B238C /* AvatarPrintCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37A0B885565FC49E94ADC8A /* AvatarPrintCard.swift */; };
 		A072CAE8E88A1550D5569E21 /* SettingsView+Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = D932148DF52E3E22084EA4D3 /* SettingsView+Header.swift */; };
 		A1236061B097AAC7DC3DC06D /* ImportThumbnailLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109FCD489FF3BBF139A763F4 /* ImportThumbnailLayout.swift */; };
+		A13CB2C22B1C3096DF1C9EFD /* DeviceCalendarSourceGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68C02C27EDFD1C4D9346B650 /* DeviceCalendarSourceGuard.swift */; };
 		A16C9A6C91DC96DF2F26892A /* InvitePhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3E5645BA736D2FB572634A /* InvitePhaseTests.swift */; };
 		A2A3A634EB00BF28AADD37DE /* RootView+AuthenticatedGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BFD27CD53D1339A7A55EB8 /* RootView+AuthenticatedGate.swift */; };
 		A32CCA725D57371D04861B00 /* TimelineStoreReactionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B64D96ADE299BAA5D4FE329 /* TimelineStoreReactionTests.swift */; };
@@ -794,6 +795,7 @@
 		65B134F4114955711989F4A4 /* FamilyStoreInviteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreInviteTests.swift; sourceTree = "<group>"; };
 		669695C5807128CB808DA8B4 /* SettingsSidebarRowStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSidebarRowStyleTests.swift; sourceTree = "<group>"; };
 		673C41FF62F64795F7752D25 /* PickedItemLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickedItemLoader.swift; sourceTree = "<group>"; };
+		68C02C27EDFD1C4D9346B650 /* DeviceCalendarSourceGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCalendarSourceGuard.swift; sourceTree = "<group>"; };
 		68CC5B8416F7028D1103B61C /* PushPrepromptPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushPrepromptPolicyTests.swift; sourceTree = "<group>"; };
 		694B9025A186F1BE1D429EED /* AppSectionUniquenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSectionUniquenessTests.swift; sourceTree = "<group>"; };
 		6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClient.swift; sourceTree = "<group>"; };
@@ -1398,6 +1400,7 @@
 				FC6B2DBBC978E2E01973D4FE /* DeleteAccountFlowModelResumeTests.swift */,
 				63CDD3E63AAEAD23512BDFBA /* DeleteAccountFlowModelTests.swift */,
 				118638BDAF3AB058A5A805C0 /* DeleteAccountStepTests.swift */,
+				68C02C27EDFD1C4D9346B650 /* DeviceCalendarSourceGuard.swift */,
 				EC531A82AD0092B3665DA94F /* DiaryCardVideoBadgeTests.swift */,
 				A1C80FBB4835B68D0EE95FD6 /* DiaryComposerStoreDraftCleanupTests.swift */,
 				715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */,
@@ -2548,6 +2551,7 @@
 				BCCC6A1B7C284C355C6509FF /* DeleteAccountFlowModelResumeTests.swift in Sources */,
 				28E5FB900660E9320FF010BB /* DeleteAccountFlowModelTests.swift in Sources */,
 				465231FBA40D8963063C864B /* DeleteAccountStepTests.swift in Sources */,
+				A13CB2C22B1C3096DF1C9EFD /* DeviceCalendarSourceGuard.swift in Sources */,
 				79E33F2B40465C6912BDC6D6 /* DiaryCardVideoBadgeTests.swift in Sources */,
 				7F08F478DF8A0C469FDD0E57 /* DiaryComposerStoreDraftCleanupTests.swift in Sources */,
 				AE349DC5C77A050FEB6B3158 /* DiaryComposerStorePublishRetryTests.swift in Sources */,

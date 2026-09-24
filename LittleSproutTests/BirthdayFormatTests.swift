@@ -181,15 +181,30 @@ final class BirthdayFormatTests: XCTestCase {
                 " Calendar（LS-331／LS-334）"
         )
 
-        for forbidden in ["Calendar.current", ".autoupdatingCurrent", "calendar: Calendar"] {
-            XCTAssertFalse(
-                code.contains(forbidden), "wireString 不得出現 \(forbidden)——裝置曆法會流進 wire 年份（LS-331）"
-            )
-            XCTAssertFalse(
-                helperCode.contains(forbidden),
-                "fixedGregorianCalendar 不得出現 \(forbidden)——裝置曆法會流進所有借用它的呼叫端（LS-331／LS-334）"
-            )
-        }
+        assertNoDeviceCalendar(code, in: "wireString")
+        assertNoDeviceCalendar(helperCode, in: "fixedGregorianCalendar")
+    }
+
+    /// LS-335（LS-331 merge-review R2 `ab72a0f8` m1）：LS-334 之後「UTC 午夜 → 本地午夜」的重組
+    /// 只活在 `BirthdayFormat.localMidnight`（`GrowthMeasurementFormView`／`EditChildView` 都委派
+    /// 過來），它與 `utcCalendar` 同樣測不到「改回裝置曆法」的回歸（測試程序 `Calendar.current`
+    /// 恆為西曆）——比照 `wireString` 守同一份禁用清單。mutation：`localMidnight` 重組改成
+    /// `var local: Calendar = .current`，這支測試轉紅。
+    func test_localMidnight_source_reconstructsWithFixedGregorianCalendar() throws {
+        let source = try birthdayFormatSource()
+
+        let code = try functionBody(
+            in: source, signaturePrefix: "static func localMidnight(from utcDate: Date, timeZone:"
+        )
+        XCTAssertTrue(
+            code.contains("fixedGregorianCalendar(timeZone: timeZone)"),
+            "localMidnight 必須透過 fixedGregorianCalendar(timeZone:) 重組本地午夜（LS-331／LS-334）"
+        )
+        assertNoDeviceCalendar(code, in: "localMidnight")
+        assertNoDeviceCalendar(
+            try functionBody(in: source, signaturePrefix: "private static var utcCalendar: Calendar {"),
+            in: "utcCalendar"
+        )
     }
 
     /// 讀取 `BirthdayFormat.swift` 原始碼——`test_wireString_source_extractsWithFixedGregorianCalendar`／
@@ -365,11 +380,6 @@ final class BirthdayFormatTests: XCTestCase {
             code.contains("fixedGregorianCalendar(timeZone: timeZone)"),
             "ageDescription 的 production 入口必須用 fixedGregorianCalendar(timeZone: timeZone) 抽取（LS-334）"
         )
-        for forbidden in ["Calendar.current", ".autoupdatingCurrent", "calendar: Calendar"] {
-            XCTAssertFalse(
-                code.contains(forbidden),
-                "ageDescription 的 production 入口不得出現 \(forbidden)——裝置曆法會流進年齡算術（LS-334）"
-            )
-        }
+        assertNoDeviceCalendar(code, in: "ageDescription 的 production 入口")
     }
 }
