@@ -1235,6 +1235,45 @@ ok("LS-289 in-Pencil 路徑 vs snapshot 路徑：同一份 FIX 快照，scanAll 
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+ok("LS-361 --from-snapshot --scan-scope document --boards：全稿快照不限縮（scanned_nodes=173、SUMMARY 印 scan_scope=document、document_* 為全稿數），corner_anchor／text_occlusion／board_clip 三支的 in-scope 限 boards（flagged 空、document_flagged 非空）——等同 scanAll(FIX,{boards,scanScope:\"document\"})，設計端不必自寫 driver（LS-296 R1 缺口）；不給旗標沿現行（有 --boards 即 boards）；--scan-scope boards 明示＝預設；非法值 exit 2、boards 缺 --boards exit 1", () => {
+  const fs = require("fs"); const os = require("os"); const { spawnSync } = require("child_process");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "LS-361-scope-"));
+  const dumpPath = path.join(dir, "dump.json");
+  fs.writeFileSync(dumpPath, JSON.stringify(toSnapshotRows(FIX)));
+  const TREE_HASH = "0123456789abcdef";
+  const script = path.join(__dirname, "overflow-scan.js");
+  const run = (extra, out) => spawnSync("node", [script, "--from-snapshot", dumpPath, "--tree-hash", TREE_HASH, "--total-nodes", "173"].concat(extra, out ? ["--out", out] : []), { encoding: "utf8" });
+
+  const outDocBoards = path.join(dir, "receipt-doc-boards.json");
+  const r = run(["--boards", "B1,B2", "--scan-scope", "document"], outDocBoards);
+  assert.strictEqual(r.status, 0, r.stderr);
+  const summary = r.stderr.split("\n")[0];
+  assert.ok(/^SUMMARY total_nodes=173 scanned_nodes=173 scan_scope=document /.test(summary), "SUMMARY 應印 scan_scope=document 且快照未限縮：" + summary);
+  assert.ok(/ text_occlusion=0\/1 board_clip=0\/2 corner_anchor=4\/32\/0 document=10\/80\/1 /.test(summary) && / boards=\["B1","B2"\] /.test(summary), "三支 in-scope 限 boards、document_* 為全稿：" + summary);
+  const receipt = JSON.parse(fs.readFileSync(outDocBoards, "utf8"));
+  const expect = M.withResultHashes(Object.assign(M.compactResult(M.scanAll(FIX, Object.assign({}, FIX_OPTS, { scanScope: "document" }))), { tree_hash: TREE_HASH }));
+  for (const k of M.SCAN_KEYS) assert.deepStrictEqual(receipt.scans[k], expect.scans[k], "scope=document＋boards：" + k);
+  assert.strictEqual(receipt.scan_scope, "document");
+  for (const k of ["corner_anchor", "text_occlusion", "board_clip"]) {
+    const sc = receipt.scans[k];
+    assert.deepStrictEqual([sc.scope, sc.boards], ["document", ["B1", "B2"]], k + "：scope／boards");
+    assert.ok(sc.flagged.length === 0 && sc.document_flagged.length > 0, k + "：in-scope flagged 限 boards（空）、document_flagged 為全稿（非空）");
+  }
+  assert.strictEqual(receipt.scans.corner_anchor.document_containers, 10, "document_containers 為全稿數（boards 限縮時只有 4）");
+
+  // 不給旗標＝沿現行：有 --boards 即 boards；--scan-scope boards 明示結果逐位元同預設
+  const outDefault = path.join(dir, "receipt-default.json"), outExplicit = path.join(dir, "receipt-explicit.json");
+  assert.strictEqual(run(["--boards", "B1,B2"], outDefault).status, 0);
+  assert.strictEqual(run(["--boards", "B1,B2", "--scan-scope", "boards"], outExplicit).status, 0);
+  assert.strictEqual(JSON.parse(fs.readFileSync(outDefault, "utf8")).scan_scope, "boards");
+  assert.strictEqual(fs.readFileSync(outExplicit, "utf8"), fs.readFileSync(outDefault, "utf8"), "--scan-scope boards 明示＝預設");
+
+  assert.strictEqual(run(["--boards", "B1,B2", "--scan-scope", "all"]).status, 2, "非法 --scan-scope");
+  assert.strictEqual(run(["--scan-scope"]).status, 2, "--scan-scope 缺值");
+  assert.strictEqual(run(["--scan-scope", "boards"]).status, 1, "boards 但沒 --boards：scanAll throw");
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 ok("LS-289 mutation：snapshot 解析的座標欄位錯位（x/w 欄位對調，模擬 parseSnapshotDump／pen-snapshot-dump.js 兩端欄位順序沒對齊的 bug）→ 節點 AABB 全部跑掉，scanAll 六支的 result_hash 至少一支跟著變——證明欄位順序是有負載的，這種錯位一定會被同稿態比對抓紅（不會靜默算出同一份收據）", () => {
   const rows = toSnapshotRows(FIX);
   const good = M.parseSnapshotDump(JSON.stringify(rows));
