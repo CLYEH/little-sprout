@@ -4,7 +4,7 @@ import XCTest
 
 /// LS-169：年齡標記邊界測試——`BirthdayFormat.ageDescription` 已經是純函式（時間軸底部
 /// 年齡列 `ChildrenManagementView.childRowContent`／`sidebarContent`，多寶貝 caption
-/// `MultiChildCaptionFormatter.segments` 都吃它），這裡補票文點名的五類邊界，既有
+/// `AlbumSignatureFormatter.segment` 都吃它），這裡補票文點名的五類邊界，既有
 /// `BirthdayFormatTests`／`MultiChildCaptionFormatterTests` 沒蓋到：生日當天、未滿一個月、
 /// 閏年 2/29 生日在平年、月底生日跨月（1/31→2 月）、跨年。全程固定 UTC `Calendar`，不用
 /// 裝置目前時區／`Date()`，避免因為跑測試當下的日期而 flake。

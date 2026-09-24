@@ -56,8 +56,9 @@ struct DiaryCardView: View {
         VStack(alignment: .leading, spacing: AppSpacing.group) {
             VStack(alignment: .leading, spacing: AppSpacing.group) {
                 if !taggedChildren.isEmpty {
+                    // LS-374：不設 lineLimit——稿面 Multi Caption（`x7k2o6`）`fixed-width` 隨內容長高，
+                    // 年齡改 `$fs-note` 後三位寶貝在 AX3 超過兩行，截斷會吃掉寶貝名字。
                     Text(MultiChildCaptionFormatter.attributed(children: taggedChildren, asOf: content.entryDate))
-                        .lineLimit(2)
                 }
                 Text(content.body)
                     .appFont(.body)
