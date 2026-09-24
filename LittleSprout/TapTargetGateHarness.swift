@@ -129,6 +129,10 @@ enum TapTargetGateHarness {
         case .growthRecordsList: growthRecordsListHost
         case .growthRecordActionsSheet: growthRecordActionsSheetHost
         case .childrenManagementPopulated: childrenManagementPopulatedHost
+        case .foodBook: foodBookHost
+        case .foodBookDark: foodBookDarkHost
+        case .foodBookDairy: foodBookDairyHost
+        case .foodBookViewer: foodBookViewerHost
         case .photoCardBabyCaption: photoCardBabyCaptionHost
         case .selfTestTooSmall:
             selfTestTooSmallHost

@@ -306,6 +306,13 @@ enum TapTargetGateScreenName: String {
     // `.deleteCommentConfirmation` 兩個既有 case 覆蓋同一段版面程式碼），不另掛 case。
     case growthRecordActionsSheet = "GrowthRecordActionsSheet"
     case childrenManagementPopulated = "ChildrenManagementView"  // LS-312：populated，1 個寶貝
+    // LS-379：飲食圖鑑 02（示範資料 38／274，穀物根莖）——8 顆分頁＋16 格（吃過／還沒吃）皆可量。
+    // 深色／02b 乳製品（一歲後標記）／02c viewer 三個變體同一支檔案，供 `FoodBookUITests` 截圖與
+    // 行為斷言（同 `.settingsMemberRole` 等既有變體 case 的先例，不另外具名排除）。
+    case foodBook = "FoodBookView"
+    case foodBookDark = "FoodBookViewDark"
+    case foodBookDairy = "FoodBookViewDairy"
+    case foodBookViewer = "FoodBookViewViewer"
     // LS-365：時間軸照片卡壓印行寶貝署名——同 `.diaryCardVideoBadges` 既有先例，不是點擊目標
     // 測試，借這條通道餵 `PhotoCardBabyCaptionUITests` 量折行像素與截圖對稿；fixture（一位／
     // 兩位／三位長名／未標記／相簿卡回歸／feed）由 `LS_PHOTO_CARD_CAPTION_FIXTURE` 選，見
