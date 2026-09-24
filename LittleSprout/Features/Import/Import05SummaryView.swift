@@ -177,6 +177,7 @@ struct Import05SummaryView: View {
         ZStack {
             Text(verbatim: "\u{00A0}").appFont(.note).hidden()
             Image(systemName: systemName).appIconFrame(.small).foregroundStyle(color)
+                .accessibilityHidden(true)
         }
     }
 
@@ -249,7 +250,7 @@ struct Import05SummaryView: View {
             .frame(minHeight: 48, alignment: .leading)
             .contentShape([.interaction, .accessibility], Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(FillBabiesButtonStyle())
         .disabled(presentation.isDisabled)
     }
 
@@ -297,6 +298,16 @@ struct Import05SummaryView: View {
             .padding(.horizontal, AppSpacing.screenPad)
         }
         .background(Color.lsSurface)
+    }
+}
+
+/// LS-373 D5：「補上寶貝」進行中停用時不再疊系統的 disabled 淡化——`.plain` 會把
+/// $text-secondary 再調淡，對比掉到稿面（Notes `XG9yu`：淺色 7.91:1／深色 8.78:1）以下；停用的
+/// 視覺由 label 自己換色（$text-secondary）＋ProgressView 表達。按壓回饋同 `.plain`（同
+/// `InteractionRow` 的 `CountZoneButtonStyle` 先例，LS-371）。
+private struct FillBabiesButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.opacity(configuration.isPressed ? 0.6 : 1)
     }
 }
 
