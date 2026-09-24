@@ -22,8 +22,17 @@ import SwiftUI
 /// 分頁（只剩左緣右滑手勢，違反 entry-conditions.md ⑬「非手勢替代路徑」）。同
 /// `ChildrenManagementView`／`SettingsView` 既有的 compact-only 慣例，`AlbumsView` 用單一
 /// `body`（不像那兩檔分 `compactLayout`／`regularLayout`），改用
-/// `horizontalSizeClass == .compact` 條件式 `Visibility`。iPad 上相簿頁是否仍有標題重複——
-/// 本票刻意不修（同寶貝／設定兩頁），見 handoff「未完成」。
+/// `horizontalSizeClass == .compact` 條件式 `Visibility`。
+///
+/// **LS-355**：上面 R2 留下的 iPad 副作用——nav bar 沒隱藏，系統 large title「相簿」與
+/// `headerRow` 自畫的「相簿」又疊成兩個。稿面 `X9PfG`（14-iPad 相簿）Content Pane 只有
+/// Header Row 的自畫 Title（`Zztlt`）＋「新增相簿」鈕，沒有系統標題，所以保留自畫、關掉系統
+/// 那顆：regular 時標題改 `.inline`（不再有 large title 區），再用零尺寸的 `.principal` 項目佔掉
+/// inline 標題的位置（不能用 `EmptyView()`——實測 iOS 26.5 會把它當成沒有 principal 項目，
+/// inline「相簿」照樣出現）——nav bar 本身仍在，側欄開關鈕不受影響（不走無條件 `.toolbar(.hidden)`，
+/// 那是 LS-344 R1 M1 被退的原因）。`.navigationTitle("相簿")`（`SectionContentView`）不動，
+/// 只是不顯示。iOS 18 的 `.toolbar(removing: .title)` 語意更直接，但部署目標是 iOS 17。
+/// 回歸測試：`AlbumsViewIPadTests.testAlbumsRootShowsAlbumsTitleExactlyOnceInSplitView`。
 ///
 /// Tab Bar 顯示／隱藏由 `RootView.SectionTabView` 統一處理（掛在每個分頁的根內容上），這裡
 /// 不需要另外處理。
@@ -51,6 +60,15 @@ struct AlbumsView: View {
         // LS-344 R2：見上方型別文件註解——只在 compact 隱藏系統 nav bar，iPad（regular）保留
         // 給「顯示側邊欄」鈕（merge-review R1 M1）。
         .toolbar(horizontalSizeClass == .compact ? .hidden : .automatic, for: .navigationBar)
+        // LS-355：iPad（regular）nav bar 留著，但不顯示系統標題——見上方型別文件註解。
+        .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .automatic)
+        .toolbar {
+            if horizontalSizeClass == .regular {
+                ToolbarItem(placement: .principal) {
+                    Color.clear.frame(width: 0, height: 0).accessibilityHidden(true)
+                }
+            }
+        }
         .task(id: familyStore.myFamily?.id) {
             guard let familyID = familyStore.myFamily?.id else { return }
             await albumsStore.refresh(familyID: familyID)
