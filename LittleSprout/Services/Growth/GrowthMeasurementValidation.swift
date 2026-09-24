@@ -58,6 +58,42 @@ enum GrowthMeasurementValidation {
         return .save(heightCm: values[0], weightKg: values[1], headCm: values[2])
     }
 
+    /// LS-335（LS-313 R3-m2）：`GrowthMeasurementFormView.submit()` 的整段決策（表單文字 →
+    /// 要不要送、送什麼）抽成純函式——原本 `submit()` 在 View 內自己解 `submitDecision` 再組
+    /// `GrowthMeasurementInput`，repo 裡沒有任何測試能證明它真的走 `submitDecision`：把
+    /// `submit()` 接回 R2 行為（只擋全空、無效值靜默當沒填送出）全套單元測試仍綠。`submit()`
+    /// 現在只轉呼叫這支並依結果設旗標／送出，決策本身由 `GrowthMeasurementValidationTests`
+    /// 直接測。
+    enum Submission: Equatable {
+        case send(GrowthMeasurementInput)
+        case empty
+        case invalid
+    }
+
+    /// 表單四個文字欄原樣收成一個值——純粹是 SwiftLint `function_parameter_count`（上限 5），
+    /// 同 `GrowthMeasurementInput` 文件註解的既有理由。
+    struct FormTexts {
+        var height: String
+        var weight: String
+        var head: String
+        var note: String
+    }
+
+    static func submission(_ texts: FormTexts, editingID: UUID?, measuredOn: Date) -> Submission {
+        switch submitDecision(heightText: texts.height, weightText: texts.weight, headText: texts.head) {
+        case .empty:
+            return .empty
+        case .invalid:
+            return .invalid
+        case let .save(heightCm, weightKg, headCm):
+            let trimmedNote = texts.note.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .send(GrowthMeasurementInput(
+                id: editingID, measuredOn: measuredOn, heightCm: heightCm, weightKg: weightKg, headCm: headCm,
+                note: trimmedNote.isEmpty ? nil : trimmedNote
+            ))
+        }
+    }
+
     /// 「超出合理範圍」的軟性提醒——刻意用固定絕對門檻，不是依年齡換算的百分位（票文「不做：
     /// 參考帶」已排除百分位計算）。R1 merge-review M4（orchestrator 裁決 `d55ff9ac` 第 5 條）：
     /// 這是單純的**手誤攔截**，不是同齡比較——上限擋「多打一個位數」（例如想輸入 18.0 kg 體重

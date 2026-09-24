@@ -5,7 +5,7 @@ import Foundation
 /// 忽略，見 `docs/API.md` §4 該 RPC 說明），另外當成 `upsertGrowthRecord(childID:input:)` 的
 /// 第一個參數。抽成一個型別純粹是 SwiftLint `function_parameter_count`（上限 5）——不是語意上
 /// 真的需要一個「輸入模型」物件，欄位維持 `var`＋逐一具名建構，同一般函式參數的使用方式。
-struct GrowthMeasurementInput: Sendable {
+struct GrowthMeasurementInput: Sendable, Equatable {
     /// nil＝新增；非 nil＝編輯這一筆（`upsert_growth_record` 的 `p_id`）。
     var id: UUID?
     var measuredOn: Date

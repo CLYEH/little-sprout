@@ -328,23 +328,16 @@ struct GrowthMeasurementFormView: View {
 
     private func submit() {
         guard !growthStore.saveState.isSubmitting else { return }
-        let decision = GrowthMeasurementValidation.submitDecision(
-            heightText: heightText, weightText: weightText, headText: headText
+        let submission = GrowthMeasurementValidation.submission(
+            .init(height: heightText, weight: weightText, head: headText, note: note),
+            editingID: editingRecord?.id, measuredOn: measuredOn
         )
-        guard case let .save(heightCm, weightKg, headCm) = decision else {
-            showsEmptyMessage = decision == .empty
-            showsInvalidMessage = decision == .invalid
+        showsEmptyMessage = submission == .empty
+        showsInvalidMessage = submission == .invalid
+        guard case let .send(input) = submission else {
             statusScrollRequest += 1
             return
         }
-        showsEmptyMessage = false
-        showsInvalidMessage = false
-        let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
-        let input = GrowthMeasurementInput(
-            id: editingRecord?.id, measuredOn: measuredOn,
-            heightCm: heightCm, weightKg: weightKg, headCm: headCm,
-            note: trimmedNote.isEmpty ? nil : trimmedNote
-        )
         Task {
             let saved = await growthStore.save(input)
             if saved { dismiss() } else { statusScrollRequest += 1 }
