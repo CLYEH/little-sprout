@@ -30594,7 +30594,7 @@
         },
         {
           "type": "frame",
-          "id": "Q0Ilp",
+          "id": "Z7Nou9",
           "name": "N LS-296 沿革",
           "width": "fill_container",
           "layout": "vertical",
@@ -30608,7 +30608,7 @@
           "children": [
             {
               "type": "text",
-              "id": "VcHxQ",
+              "id": "o3jcX4",
               "name": "H",
               "fill": "#2B141C",
               "content": "LS-296 沿革（元件預設示範照換 LS-247 家族）",
@@ -30618,14 +30618,14 @@
             },
             {
               "type": "frame",
-              "id": "lonnR",
+              "id": "nlTob",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "NLd9I",
+                  "id": "REpqN",
                   "name": "stamp",
                   "fill": "#8E2447",
                   "textGrowth": "fixed-width",
@@ -30639,7 +30639,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "O55jy7",
+                  "id": "dxfpk",
                   "name": "l",
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
@@ -30654,14 +30654,14 @@
             },
             {
               "type": "frame",
-              "id": "P9eC46",
+              "id": "X8UqC",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "J6w86V",
+                  "id": "R7RNT",
                   "name": "stamp",
                   "fill": "#8E2447",
                   "textGrowth": "fixed-width",
@@ -30675,7 +30675,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "U8YA2e",
+                  "id": "vKJch",
                   "name": "l",
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
@@ -30690,14 +30690,14 @@
             },
             {
               "type": "frame",
-              "id": "RV1Yi",
+              "id": "I8DGd",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "H5tmVE",
+                  "id": "s52UB",
                   "name": "stamp",
                   "fill": "#8E2447",
                   "textGrowth": "fixed-width",
@@ -30711,7 +30711,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "eBGmn",
+                  "id": "l1bI6",
                   "name": "l",
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
@@ -30726,14 +30726,14 @@
             },
             {
               "type": "frame",
-              "id": "lxjUD",
+              "id": "T8nKN",
               "name": "i",
               "width": "fill_container",
               "gap": 10,
               "children": [
                 {
                   "type": "text",
-                  "id": "JO3jZ",
+                  "id": "gsbSQ",
                   "name": "stamp",
                   "fill": "#8E2447",
                   "textGrowth": "fixed-width",
@@ -30747,12 +30747,120 @@
                 },
                 {
                   "type": "text",
-                  "id": "n4nWR1",
+                  "id": "FTBOm",
                   "name": "l",
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【已 override fill 的實例（本票不動）】cmp/Card Photo 5 個；cmp/Card Diary 2 個；cmp/Card Album 27 個。逐筆清單以同一支盤點腳本重跑即得（指令見 LS-296 R1 handoff）。",
+                  "content": "【已 override fill 的實例（本票不動）】cmp/Card Photo 5 個；cmp/Card Diary 2 個；cmp/Card Album 27 個；逐筆清單以同一支盤點腳本重跑即得。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TelP2",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "mWvTJ",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 換圖",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "z556u",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【範圍 2 換圖（LS-296 R1）】素材只取 LS-247 三張定稿（design/appstore-photos/hero.jpg／invite.jpg／join.jpg）的裁切，不新生圖；元件定義節點以 Update 改 fill，id 不變。\n・cmp/Card Diary（qtCd7）SBo3L→appstore-photos/demo-hero-portrait.jpg、h9c6d→demo-grid-invite.jpg、ekqx4→demo-grid-join.jpg：三家族各一張，沿用 LS-280 使用者已核可的 WitwS 組合（既有檔，未新增）。元件預設 Photos Row lEgJp 仍為 enabled:false，所以 22 個未 override 實例看不到這三張；預設日記本文 p2odx「溜滑梯…挖沙工具」未改（照片列關閉時不構成圖文矛盾，開啟照片列的實例一律自帶本文 override）。\n・cmp/Card Album（bhroo）s8eO3j→appstore-photos/demo-album-newborn.jpg（新裁切：invite.jpg (700,190,2130,989)→1024×572，阿公親吻新生兒）；預設 caption MIxHp「上禮拜的動物園一日遊 · 12 張相片」→「弟弟出生的第一週 · 8 張相片」，沿用 LS-280 eBgN8 文案，署名 wQVzs「小安 · 2 歲 3 個月」不變（相簿以小安視角記弟弟出生）。\n・cmp/Card Photo（umJHD）bjq5n→appstore-photos/demo-timeline-v2.jpg（既有 hero.jpg 裁切）；預設 caption VywUw「小安在公園盪鞦韆」→「小安摸阿嬤的臉 · 2 歲 3 個月」（同 LS-280 Oh3Om）。Stress Tr8Kd 的 q3tlmR/VywUw 長文 override 原寫戶外「後院用水管噴水」，改成同長度的廚房情境「在阿嬤家廚房等點心，一直伸手摸阿嬤的臉，笑到停不下來，還說明天要再來一次」，年齡片語前的「·」與後續空白改 NBSP，換行時「·」領銜下一行（LS-201 慣例）；現況折成 3 行、年齡片語自成末行。\n・cmp/Profile Print（OePXK）MN0WF→appstore-photos/demo-profile-grandma.jpg（新裁切：hero.jpg (380,0,1080,700)→512×512，阿嬤正臉笑）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "D2DBiV",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "E9xjbt",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 量測",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "yDbgA",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【色溫驗收量測（LS-296 R1）】方法：整板 Export scale 2，依 Get(resolveInstances) 絕對座標裁出照片，再與 clip:true 祖先求交集判斷是否真的渲染；四角 patch 內縮短邊 20%（避開圓角與角托壓邊）、邊長取短邊 1/8；sRGB→CIELAB(D65)→CIEDE2000。參考色＝hero.jpg 全圖均值（hero 家族）；另列 hero／invite／join 三張均值（LS-247 家族）。\n・真正渲染的未 override 實例共 33 個：Card Photo 6 個全圖均值 ΔE00 2.66（對 LS-247 家族 5.47）；Profile Print 27 個 8.71–9.06（家族 3.05–3.51）。Card Album 的 7 個未 override 實例全部在捲動模擬的 clip 容器外、不渲染，只在元件定義板 bhroo 可見：5.17（家族 3.43）。另有 4 個 Profile Print（FW1X8、qDB1i、RQh9Z、y4mVT5）同樣被裁掉。\n・換前對照（元件定義板 Export）：Card Photo 11.40→2.66、Card Album 16.82→5.17（全圖均值對 hero）。\n・判準定義待 VR／orchestrator 確認：若「四角 ≤10」讀成每個角各自對 hero 全圖均值，任何照片都過不了——hero.jpg 自己的 TL 角就是 33.26（窗光），Card Photo 各角 6.67–27.54、Profile Print 4.27–20.86；四角合併均值對 hero 四角合併均值則為 11.85–13.17。本輪用 LS-280 R2 的全圖均值口徑，全數 ≤10。逐筆數字存於 .claude/evidence/LS-296/r1/LS-296-r1-de00.json（gitignored）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eKgCd",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "v3g0aB",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 未決",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "yMi27",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【已知殘留與未決（LS-296 R1）】①留言 sheet／按讚名單的所有頭像（陳志明、林美玲、王大明、小安…）都吃同一個 Profile Print 預設，換前是同一位陌生女性，換後是同一張阿嬤臉——「每個人同一張臉」是既有問題，換成家族照片後更容易被注意到；逐人 override 不在本票範圍，建議另開票。②z20bG（僅供海報合成的留言 sheet）四顆頭像跟著變成阿嬤，但由它合成的 App Store 海報槽位圖 appstore-slots/comments-iphone-v3.jpg 是既有的扁平圖、本票不重生（App Store 11 板不在範圍），兩者目前不同步。③已 override 的實例（Card Album 27、Card Photo 5、Card Diary 2；其中 LS-280 改過的 eBgN8、Oh3Om、sJpxU、QNEky 已是 LS-247 家族）與稿內不是 ref 實例、直接帶舊 unsplash 網址的 frame 維持原樣，本票範圍只到元件預設與未 override 實例。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
