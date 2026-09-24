@@ -177432,7 +177432,7 @@
             0,
             16,
             0,
-            0
+            "$screen-pad"
           ],
           "children": [
             {
@@ -177600,7 +177600,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "circle-alert",
+                              "icon": "baby",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -177610,7 +177610,7 @@
                           "type": "text",
                           "id": "Z6BSGI",
                           "name": "Stat Marking Inline",
-                          "fill": "$text-primary",
+                          "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "其中 3 張的寶貝沒有指定成功",
@@ -177959,39 +177959,51 @@
                 },
                 {
                   "type": "frame",
-                  "id": "pGovG",
-                  "name": "Retry Group",
+                  "id": "w50qt",
+                  "name": "Marking Notes",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "nNTpf",
-                      "name": "Marking Note",
+                      "id": "KFmXV",
+                      "name": "Marking Sentence 1",
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "照片都已經匯入了。\n重試只會補上寶貝，不會重新上傳。",
+                      "content": "照片都匯入了。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
                     },
                     {
-                      "id": "i0FUp",
-                      "type": "ref",
-                      "ref": "qe9yS",
-                      "name": "Retry Marking Button",
-                      "descendants": {
-                        "breqI": {
-                          "icon": "refresh-cw"
-                        },
-                        "hIhVd": {
-                          "content": "重試指定寶貝（3）"
-                        }
-                      }
+                      "type": "text",
+                      "id": "R4Rix7",
+                      "name": "Marking Sentence 2",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "補上寶貝不會重新上傳照片。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "id": "I8MyXS",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Fill Babies Button",
+                  "descendants": {
+                    "breqI": {
+                      "icon": "refresh-cw"
+                    },
+                    "hIhVd": {
+                      "content": "補上寶貝⁠（3）"
+                    }
+                  }
                 }
               ]
             }
@@ -178135,7 +178147,7 @@
             0,
             16,
             0,
-            0
+            "$screen-pad"
           ],
           "children": [
             {
@@ -178303,7 +178315,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "circle-alert",
+                              "icon": "baby",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -178313,7 +178325,7 @@
                           "type": "text",
                           "id": "bpmL4",
                           "name": "Stat Marking Inline",
-                          "fill": "$text-primary",
+                          "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "其中 3 張的寶貝沒有指定成功",
@@ -178662,39 +178674,51 @@
                 },
                 {
                   "type": "frame",
-                  "id": "Q0hLO",
-                  "name": "Retry Group",
+                  "id": "TyLuR",
+                  "name": "Marking Notes",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "deZvG",
-                      "name": "Marking Note",
+                      "id": "pmq91",
+                      "name": "Marking Sentence 1",
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "照片都已經匯入了。\n重試只會補上寶貝，不會重新上傳。",
+                      "content": "照片都匯入了。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
                     },
                     {
-                      "id": "nPaVK",
-                      "type": "ref",
-                      "ref": "qe9yS",
-                      "name": "Retry Marking Button",
-                      "descendants": {
-                        "breqI": {
-                          "icon": "refresh-cw"
-                        },
-                        "hIhVd": {
-                          "content": "重試指定寶貝（3）"
-                        }
-                      }
+                      "type": "text",
+                      "id": "PseUI",
+                      "name": "Marking Sentence 2",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "補上寶貝不會重新上傳照片。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "id": "LJzQQ",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Fill Babies Button",
+                  "descendants": {
+                    "breqI": {
+                      "icon": "refresh-cw"
+                    },
+                    "hIhVd": {
+                      "content": "補上寶貝⁠（3）"
+                    }
+                  }
                 }
               ]
             }
@@ -178838,7 +178862,7 @@
             0,
             16,
             0,
-            0
+            "$screen-pad"
           ],
           "children": [
             {
@@ -179006,7 +179030,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "circle-alert",
+                              "icon": "baby",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -179016,7 +179040,7 @@
                           "type": "text",
                           "id": "CL4Ho",
                           "name": "Stat Marking Inline",
-                          "fill": "$text-primary",
+                          "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "其中 3 張的寶貝沒有指定成功",
@@ -179367,42 +179391,54 @@
                 },
                 {
                   "type": "frame",
-                  "id": "lh3wm",
-                  "name": "Retry Group",
+                  "id": "Fsix4",
+                  "name": "Marking Notes",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "vDSyq",
-                      "name": "Marking Note",
+                      "id": "C9POu",
+                      "name": "Marking Sentence 1",
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "照片都已經匯入了。\n重試只會補上寶貝，不會重新上傳。",
+                      "content": "照片都匯入了。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
                     },
                     {
-                      "id": "V7Xth",
-                      "type": "ref",
-                      "ref": "qe9yS",
-                      "name": "Retry Marking Button",
+                      "type": "text",
+                      "id": "qi8yi",
+                      "name": "Marking Sentence 2",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "descendants": {
-                        "breqI": {
-                          "icon": "refresh-cw"
-                        },
-                        "hIhVd": {
-                          "content": "重試指定寶貝（3）",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container"
-                        }
-                      }
+                      "content": "補上寶貝不會重新上傳照片。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "id": "D5Ppv",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Fill Babies Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "breqI": {
+                      "icon": "refresh-cw"
+                    },
+                    "hIhVd": {
+                      "content": "補上寶貝⁠（3）",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container"
+                    }
+                  }
                 }
               ]
             }
@@ -180385,7 +180421,7 @@
             0,
             16,
             0,
-            0
+            "$screen-pad"
           ],
           "justifyContent": "space_between",
           "alignItems": "center",
@@ -180549,7 +180585,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "circle-alert",
+                              "icon": "baby",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -180559,7 +180595,7 @@
                           "type": "text",
                           "id": "NAtFz",
                           "name": "Stat Marking Inline",
-                          "fill": "$text-primary",
+                          "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "其中 3 張的寶貝沒有指定成功",
@@ -180908,39 +180944,51 @@
                 },
                 {
                   "type": "frame",
-                  "id": "zhUHK",
-                  "name": "Retry Group",
+                  "id": "S71LDs",
+                  "name": "Marking Notes",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "t5XJj",
-                      "name": "Marking Note",
+                      "id": "qhQJW",
+                      "name": "Marking Sentence 1",
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "照片都已經匯入了。\n重試只會補上寶貝，不會重新上傳。",
+                      "content": "照片都匯入了。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
                     },
                     {
-                      "id": "q1nqkq",
-                      "type": "ref",
-                      "ref": "qe9yS",
-                      "name": "Retry Marking Button",
-                      "descendants": {
-                        "breqI": {
-                          "icon": "refresh-cw"
-                        },
-                        "hIhVd": {
-                          "content": "重試指定寶貝（3）"
-                        }
-                      }
+                      "type": "text",
+                      "id": "Q8UJA7",
+                      "name": "Marking Sentence 2",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "補上寶貝不會重新上傳照片。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "id": "DODeH",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Fill Babies Button",
+                  "descendants": {
+                    "breqI": {
+                      "icon": "refresh-cw"
+                    },
+                    "hIhVd": {
+                      "content": "補上寶貝⁠（3）"
+                    }
+                  }
                 }
               ]
             }
@@ -211066,7 +211114,7 @@
             0,
             16,
             0,
-            0
+            "$screen-pad"
           ],
           "children": [
             {
@@ -211235,7 +211283,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "circle-alert",
+                              "icon": "baby",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -211245,7 +211293,7 @@
                           "type": "text",
                           "id": "dT3RH",
                           "name": "Stat Marking Inline",
-                          "fill": "$text-primary",
+                          "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "其中 3 張的寶貝沒有指定成功",
@@ -211286,79 +211334,63 @@
                 },
                 {
                   "type": "frame",
-                  "id": "t65VGA",
-                  "name": "Retry Group",
+                  "id": "l0DoOu",
+                  "name": "Marking Notes",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": "$sp-label",
                   "children": [
                     {
                       "type": "text",
-                      "id": "QnTPe",
-                      "name": "Marking Note",
+                      "id": "vFwor",
+                      "name": "Marking Sentence 1",
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "照片都已經匯入了。其中 2 張可以重試，\n只會補上寶貝，不會重新上傳。",
+                      "content": "照片都匯入了。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
                     },
                     {
-                      "id": "MqPwv",
-                      "type": "ref",
-                      "ref": "qe9yS",
-                      "name": "Retry Marking Button",
-                      "descendants": {
-                        "breqI": {
-                          "icon": "refresh-cw"
-                        },
-                        "hIhVd": {
-                          "content": "重試指定寶貝（2）"
-                        }
-                      }
+                      "type": "text",
+                      "id": "Z9zao",
+                      "name": "Marking Sentence 2",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "其中 1 張選的寶貝已經移除了，沒辦法指定。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "vyVFa",
+                      "name": "Marking Sentence 3",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "另外 2 張可以補上寶貝，不會重新上傳。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
                     }
                   ]
                 },
                 {
-                  "type": "frame",
-                  "id": "aUx62",
-                  "name": "Removed Row",
-                  "width": "fill_container",
-                  "gap": "$sp-label",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "GpZCG",
-                      "name": "Icon Line Box",
-                      "height": 25,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "I2ezMl",
-                          "name": "Removed Icon",
-                          "width": 18,
-                          "height": 18,
-                          "icon": "circle-minus",
-                          "library": "lucide",
-                          "fill": "$text-primary"
-                        }
-                      ]
+                  "id": "xnOYi",
+                  "type": "ref",
+                  "ref": "qe9yS",
+                  "name": "Fill Babies Button",
+                  "descendants": {
+                    "breqI": {
+                      "icon": "refresh-cw"
                     },
-                    {
-                      "type": "text",
-                      "id": "OI5fZ",
-                      "name": "Removed Note",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "另外 1 張沒辦法指定：\n選的寶貝已經移除了。",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
+                    "hIhVd": {
+                      "content": "補上寶貝⁠（2）"
                     }
-                  ]
+                  }
                 }
               ]
             }
