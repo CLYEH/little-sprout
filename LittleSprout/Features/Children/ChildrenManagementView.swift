@@ -18,7 +18,8 @@ struct ChildrenManagementView: View {
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showsRemovedList = false
-    @State private var selectedChildID: UUID?
+    /// 不標 `private`：`ChildrenManagementView+Regular.swift` 的 `sidebarRow` 要寫入（同 `+Detail` 拆檔先例）。
+    @State var selectedChildID: UUID?
 
     var body: some View {
         Group {
@@ -44,7 +45,7 @@ struct ChildrenManagementView: View {
     /// （iPad）走的是內層 `NavigationSplitView`（`sidebarContent` 自己的 `.navigationTitle`），
     /// 疊在外層既有 `NavigationStack`／`NavigationSplitView` 之上已知行為複雜（見
     /// `regularLayout` 文件註解），本票只驗證了實機回報的 compact 這條路徑，iPad 是否同病記入
-    /// handoff「未完成」，不在本票盲改。
+    /// handoff「未完成」，不在本票盲改。（LS-370 已拿掉內層 split，iPad 見 `regularLayout`。）
     private var compactLayout: some View {
         ScrollableFillView {
             VStack(alignment: .leading, spacing: 0) {
@@ -79,7 +80,8 @@ struct ChildrenManagementView: View {
         }
     }
 
-    private var headerSection: some View {
+    /// 不標 `private`：iPad 版（`ChildrenManagementView+Regular.swift`）左欄也用。
+    var headerSection: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
             Text("寶貝")
                 .appFont(.display, weight: .bold)
@@ -233,70 +235,6 @@ struct ChildrenManagementView: View {
         }
         .foregroundStyle(Color.lsOnAccent)
         .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-    }
-
-    // MARK: - Regular (iPad)
-
-    /// 簡化版 iPad master-detail（見本檔文件註解的實作註記）：與 09-iPad 稿面的結構一致
-    /// （左欄清單／新增，右欄詳情）。LS-312 導覽入口接線起，右欄改顯示寶貝詳情
-    /// （`childDetail(for:)`，同 compact 版），「編輯」從詳情頁導覽列右上進入——與 compact
-    /// 版同一套目的地，不再各自維護一份。未逐像素比照稿面把 09b「取消」文字鈕挪動位置——
-    /// 這是本票在時間預算下的已知簡化，記於 handoff 風險欄。
-    private var regularLayout: some View {
-        NavigationSplitView {
-            sidebarContent
-        } detail: {
-            NavigationStack {
-                if let selectedChildID, let child = childForID(selectedChildID) {
-                    childDetail(for: child)
-                } else {
-                    ContentUnavailableView(
-                        "選擇一個寶貝",
-                        // LS-160：與 LS-150 已核可的寶貝 tab icon 語彙一致（AppSection.children.systemImage）。
-                        systemImage: "stroller.fill",
-                        description: Text("在左側選擇要編輯的寶貝檔案。")
-                    )
-                }
-            }
-        }
-    }
-
-    private var sidebarContent: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.block) {
-            headerSection
-                .padding(.horizontal, AppSpacing.screenPadLarge)
-                .padding(.top, AppSpacing.screenPadLarge)
-            List(childrenStore.activeChildren, selection: $selectedChildID) { child in
-                HStack(spacing: AppSpacing.group) {
-                    ChildAvatarView(name: child.name, avatarURL: childrenStore.avatarURL(for: child))
-                    VStack(alignment: .leading, spacing: AppSpacing.tight) {
-                        Text(child.name).appFont(.body, weight: .bold).foregroundStyle(Color.lsTextPrimary)
-                        Text(BirthdayFormat.ageDescription(birthday: child.birthday))
-                            .appFont(.note)
-                            .foregroundStyle(Color.lsTextSecondary)
-                    }
-                }
-                .tag(child.id)
-            }
-            .listStyle(.plain)
-            if childrenStore.canManageChildren {
-                NavigationLink {
-                    CreateChildView(childrenStore: childrenStore)
-                } label: {
-                    HStack(spacing: AppSpacing.label) {
-                        Image(systemName: "person.crop.circle.badge.plus").appIconFrame(.medium)
-                        Text("新增寶貝").appFont(.body)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, AppSpacing.controlPaddingCTA)
-                }
-                .foregroundStyle(Color.lsOnAccent)
-                .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-                .padding(.horizontal, AppSpacing.screenPadLarge)
-                .padding(.bottom, AppSpacing.item)
-            }
-        }
-        .navigationTitle("寶貝")
     }
 }
 

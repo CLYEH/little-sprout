@@ -70,6 +70,8 @@ enum TapTargetGateHarness {
             sectionTabViewHost
         case .sectionSplitView:
             sectionSplitViewHost
+        case .sectionSplitViewWithChildren:
+            sectionSplitViewWithChildrenHost
         case .sectionTabViewWithDiary:
             sectionTabViewWithDiaryHost
         case .diaryCardVideoBadges:
