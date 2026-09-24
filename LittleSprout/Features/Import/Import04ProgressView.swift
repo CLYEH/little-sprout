@@ -155,7 +155,7 @@ struct Import04ProgressView: View {
                 .appFont(.note).foregroundStyle(Color.lsTextSecondary)
             if droppedCount > 0 {
                 // merge-review R1 M2＋LS-96 池項 `a997f824`(1)：比照
-                // `AlbumDetailView+Actions.skippedItemsReplyRow` 同型解法——讀不到／不支援
+                // `DiaryComposerStore.unsupportedFormatSkippedCount`＋回話列同型解法——讀不到／不支援
                 // 格式／轉檔失敗的 asset 不靜默丟，這裡補一行讓使用者知道少了幾張、為什麼。
                 HStack(alignment: .top, spacing: AppSpacing.label) {
                     Image(systemName: "exclamationmark.circle").appIconFrame(.small)

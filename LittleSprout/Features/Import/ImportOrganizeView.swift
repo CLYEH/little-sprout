@@ -173,7 +173,7 @@ struct ImportOrganizeView: View {
 
     /// merge-review R1 i3：`itemIdentifier` 缺失的筆數不再塞假 id 進 `ImportPlan`（會讓
     /// 「共 N 張」比實際可匯入的張數多），改成整筆捨棄並在這裡告知使用者——同
-    /// `AlbumDetailView+Actions.skippedItemsReplyRow` 既有視覺語彙（exclamationmark.circle
+    /// `DiaryEditorView+Photos.replyRow` 既有視覺語彙（exclamationmark.circle
     /// ＋note 字級）。
     private var droppedItemsReplyRow: some View {
         HStack(spacing: AppSpacing.label) {
