@@ -40,10 +40,14 @@ Opus 5.5 會一直往前做，所以「什麼時候該停」要事先講清楚�
 - **停下問**：測試紅且無法解釋；票文與稿面／範圍補記矛盾；要做破壞性操作（刪資料、force-push、動 repo 以外）。
 - **不准做**：`--no-verify`、手動 push `test`／`main`、跨 worktree 編輯、切 Pen active 檔（非設計票）。
 
+- 寫法：`繼續：測試綠就往下做，不用回報。停下問：稿面契約與程式現況矛盾、push gate 紅超過 2 次。不准：改 design/、碰 Pen、動 supabase。`
+- 反例：`有問題隨時回報。`（沒有界線，agent 不是每步停就是一路做到底）
+
 ### 4. 未證實的發現標 PLAUSIBLE，並說看過哪裡
 
 審查與 QA 派工單固定帶：`凡無法自己重現或量到的結論一律標 PLAUSIBLE，並寫出你看過哪些檔案、跑過哪些命令。` reviewer 的 verdict 分級（blocker／major／minor／informational）與 PLAUSIBLE 標記同時存在。
 
+- 寫法：`凡無法自己重現或量到的結論一律標 PLAUSIBLE，並寫出你看過哪些檔案、跑過哪些命令。`
 - 反例：讓 reviewer 用「應該沒問題」帶過。
 
 ### 5. 設計退修用排除清單，不用形容詞
@@ -57,9 +61,15 @@ Opus 5.5 會一直往前做，所以「什麼時候該停」要事先講清楚�
 
 一次要看很多檔／很多板／很多票時，一件一個 subagent（Agent 工具可並行），回報進來先核對它附的證據（檔案:行、comment id、截圖路徑）再採信，最後彙整成一張表。ios-dev 派 Explore 子 agent 做研究同理。
 
+- 寫法：`40 板分四個 Explore 子 agent，每個回一張表：板 id、缺項、引據行號；你只彙整，不自己再看一遍。`
+- 反例：`把全稿 40 板都看過一遍，有問題列出來。`（單一 context 讀不完，後半段靠印象）
+
 ### 7. checklist 落檔
 
 長任務的進度要寫在檔案，不是留在對話：本專案＝scratchpad `LS-<n>-handoff.md`（六段）＋ Linear comment。派工單固定要求「每完成一項就更新 handoff 對應段」，設計票另加「每項落地即 commit＋push」。
+
+- 寫法：`每完成範圍一項就更新 scratchpad LS-<n>-handoff.md 的「已完成」段（附 commit sha＋檔:行），設計票每板落地即 commit＋push。`
+- 反例：`最後一次把 handoff 寫好交給我。`（中途被回收或 context 滿，進度全在對話裡）
 
 ### 8. 不索取內部推理
 
