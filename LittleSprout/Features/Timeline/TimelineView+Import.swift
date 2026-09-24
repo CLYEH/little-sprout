@@ -27,8 +27,8 @@ extension TimelineView {
     /// R3（merge-review R2 M1）：`.importBatchFlow` 的 `uploadCoordinator` 引數解析——抽出成
     /// 純函式，讓「NoOp 只在 `importUploadCoordinator` 還沒建立好之前當保底」這件事可以用
     /// 型別斷言驗證（`TimelineImportUploadCoordinatorTests`），不必靠原始碼字串比對（同
-    /// `TimelineImportAlbumsRegressionTests` 被拿掉的理由——這裡一開始就換成能做到行為測試
-    /// 的寫法，不重蹈那支測試的弱點）。
+    /// `AlbumsStoreTests.test_refreshIfEmpty_*` 取代原始碼字面守衛的理由——這裡一開始就換成
+    /// 能做到行為測試的寫法）。
     static func resolveUploadCoordinator(_ real: AlbumImportUploadCoordinator?) -> ImportUploadCoordinator {
         real ?? NoOpImportUploadCoordinator()
     }

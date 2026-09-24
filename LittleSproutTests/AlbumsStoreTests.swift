@@ -82,7 +82,7 @@ final class AlbumsStoreTests: XCTestCase {
 
     // MARK: - refreshIfEmpty
 
-    /// LS-315 R3（merge-review R2 m1）：`TimelineImportAlbumsRegressionTests` 原始碼字面守衛
+    /// LS-315 R3（merge-review R2 m1）：時間軸匯入入口原本的原始碼字面守衛測試（已刪）
     /// 換成這裡的行為測試——`albums` 還沒載過（空）時應該補打一次 `fetchAlbums`。mutation
     /// 對照：把 `refreshIfEmpty` 的 `guard albums.isEmpty` 反過來寫（`!albums.isEmpty`）會讓
     /// 這支測試轉紅（空清單時反而不打），也會讓下面「非空不重打」那支轉紅（非空時反而會打）。
