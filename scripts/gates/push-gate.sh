@@ -286,11 +286,11 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
     echo "✗ push gate：快取未命中（tree ${push_gate_cache_key}；LS_PUSH_GATE_CACHE_ONLY=1，不跑 unit tests；LS-358）"
     exit 4
   fi
-  # LS-306 A2：開始前印一行進度。LS-358：時長口徑只留這一處（09-24 實測 log：僅 unit tests 2–4 分；diff 含
-  # Features／DesignSystem 另跑點擊目標 gate，合計約 24 分）；提示依呼叫路徑分流（merge-review i1）——pre-push
+  # LS-306 A2：開始前印一行進度。LS-358：時長口徑只留這一處（09-24 實測 log：僅 unit tests 2–4 分〈LS-346／348〉；
+  # diff 含 Features／DesignSystem 另跑點擊目標 gate，合計 24–27 分〈LS-324／344／345 約 24 分、LS-358 probe 27 分〉）；提示依呼叫路徑分流（merge-review i1）——pre-push
   # （.githooks/pre-push 設 PUSH_GATE_VIA_PRE_PUSH=1）走到這裡＝git push 途中快取未命中、SSH 會閒置整段測試，
   # 要中止；其餘路徑（push-gate-wait.sh 脫離啟動、手動執行）照常跑完。
-  push_gate_eta="僅 unit tests 約 2–4 分；diff 含 Features／DesignSystem 另跑點擊目標 gate，合計約 25 分"
+  push_gate_eta="僅 unit tests 約 2–4 分；diff 含 Features／DesignSystem 另跑點擊目標 gate，合計約 25–30 分"
   if [ "${PUSH_GATE_VIA_PRE_PUSH:-0}" = 1 ]; then
     echo "→ push gate：unit tests 開始（$(date '+%H:%M:%S')，${push_gate_eta}）——git push 途中快取未命中，SSH 會閒置整段測試：中止這次 push，改跑 bash scripts/ops/push-gate-wait.sh 暖快取（LS-358）"
   else

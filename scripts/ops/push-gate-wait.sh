@@ -16,7 +16,7 @@
 #
 # ① 預設模式：本 worktree 沒有 push gate 在跑、這個 tree 也還沒有結果 → 在 worktree 內以**絕對路徑**、stdin 接
 #    /dev/null 脫離啟動 push-gate.sh（輸出＋`push-gate rc=<n>` 寫進 log；log 第一行記 tree），然後前景最多等
-#    --max-seconds 秒。gate 常跑 2–25 分，遠超 Bash 工具 10 分上限——舊流程是「前景跑到被截斷、殘留行程在背景
+#    --max-seconds 秒。gate 含點擊目標量測時遠超 Bash 工具 10 分上限（時長口徑只記在 push-gate.sh 進度句）——舊流程是「前景跑到被截斷、殘留行程在背景
 #    繼續跑、再手寫 pgrep 迴圈等它」，正是 ios-dev.md「不得依賴截斷後的自動背景化」禁止的形狀；這裡改成 gate
 #    一開始就脫離、每次呼叫都在上限內自己乾淨回傳，同一支命令重呼叫即可接續等待，不會重複啟動第二輪。
 #    「在跑」的判定只看命令列含 `<worktree 絕對路徑>/`（帶尾斜線，LS-341）且含 xcodebuild／push-gate 的行程，
