@@ -82,7 +82,7 @@ R7 掃過全部 393 寬、非 A11y/Stress 的螢幕板：27 張有實心 accent�
 - 每顆角托一顆，R＝角托邊長×3，opacity＝0.03＋0.50×lit(角座標)；lit 以 viewport 座標算（窗光在 55,17，橢圓 668×1150）。池深＝那個角的光強度——規則自己執行自己。
 - 池畫在紙層、不覆蓋照片本體；冷色照片（F16 壓測）幾何上不可能被污染。地板 0.03（等於「這裡沒有落差」）；0.08 在 iPad 上會變一層假的均勻粉霧。
 - Lab Imprint 置中是為了避開池的暗角（深色 α≈0.36 時 print-ink-secondary 掉到 3.47:1）。
-- **白邊上靠左的文字列一律內縮到角托淨空之外**（LS-372）：`cmp/Card Album`／`cmp/Card Photo` 的 Imprint Row 左右 padding `$sp-item` 16，字起點距紙緣 24（照片仍在 `print-edge` 8），落在角托涵蓋區淨寬 21（同 Stack Sheet 21 淨空）之外——「字寫在兩顆角托之間」。同 Lab Imprint 置中，是版面避開暗角、不改池子。實測深色署名最左帶 4.67→5.25（Pen）；iOS 幾何（R78、α0 0.36）4.14→4.79；成立上限 BL α0≤0.40（lit() 規則下卡片左下角 viewport y≥311）。量法與逐帶數字見 `design/littlesprout.pen` Notes `kHDk4` LS-372 段。新增帶文字的沖印品若字要靠左，比照此內縮。
+- **有左下角托的印品，白邊上靠左的文字列要避開 BL 池暗角**（LS-372）：判準是可驗的對比——「字起點 × 字形底緣那一點，在該卡 bottomLeading 池 α0 下對紙 ≥4.5:1」，不是幾何淨空。`cmp/Card Album`／`cmp/Card Photo` 的 Imprint Row 左右 padding `$sp-group` 12，字起點距紙緣 20（照片仍在 `print-edge` 8），與 `cmp/Card Diary` 的 `$inset-card` 20 同軸，整條 feed 文字軸在板 x＝44；右側 12 只為對稱。此內縮在該卡 α0 < 0.372 成立（稿面元件池 0.293 → 5.16；歡迎頁 `.welcome` 0.36 → 4.60）。**池 α 必須是每卡常數**——捲動清單內的印品不得依 viewport 動態算 lit()。同 Lab Imprint 置中，是版面避開暗角、不改池子。只適用有 BL 角托（因而有 BL 池）的印品；對角 TL／BR 兩顆角托的印品（例：Food 04）沒有 BL 池，字照常貼紙緣 8。量法與逐帶數字見 `design/littlesprout.pen` Notes `kHDk4` LS-372 段。
 
 ## 一畫面一顆實心主鈕
 
