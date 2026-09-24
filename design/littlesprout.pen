@@ -177521,43 +177521,99 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "AHQE3",
-                  "name": "Stat 成功",
+                  "id": "l2nLL",
+                  "name": "Success Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
                   "gap": "$sp-label",
-                  "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "vm3K9",
-                      "name": "Stat Icon",
-                      "width": 32,
-                      "height": 32,
-                      "icon": "circle-check",
-                      "library": "lucide",
-                      "fill": "$success"
+                      "type": "frame",
+                      "id": "AHQE3",
+                      "name": "Stat 成功",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "vm3K9",
+                          "name": "Stat Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "circle-check",
+                          "library": "lucide",
+                          "fill": "$success"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "aIvQz",
+                          "name": "Stat 成功 Text",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "oE3ag",
+                              "name": "Stat Count",
+                              "fill": "$text-primary",
+                              "content": "123 張",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-display",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "m6lfNy",
+                              "name": "Stat Label",
+                              "fill": "$text-secondary",
+                              "content": "已成功匯入",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
                     },
                     {
                       "type": "frame",
-                      "id": "aIvQz",
-                      "name": "Stat 成功 Text",
-                      "layout": "vertical",
+                      "id": "D45LkN",
+                      "name": "Stat 寶貝未指定",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        40
+                      ],
                       "children": [
                         {
-                          "type": "text",
-                          "id": "oE3ag",
-                          "name": "Stat Count",
-                          "fill": "$text-primary",
-                          "content": "126 張",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-display",
-                          "fontWeight": "700"
+                          "type": "frame",
+                          "id": "L5iJ1Y",
+                          "name": "Icon Line Box",
+                          "height": 25,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "KJBZO",
+                              "name": "Stat Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "circle-alert",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "m6lfNy",
-                          "name": "Stat Label",
-                          "fill": "$text-secondary",
-                          "content": "已成功匯入",
+                          "id": "Z6BSGI",
+                          "name": "Stat Marking Inline",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "其中 3 張的寶貝沒有指定成功",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "normal"
@@ -177592,6 +177648,67 @@
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "LbgZW",
+                  "name": "Stat 沒有加入",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "q5eKz",
+                      "name": "Icon Line Box",
+                      "height": 25,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "H83V3b",
+                          "name": "Stat Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-minus",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Q3ZFJ",
+                      "name": "Stat Dropped Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "xc0WW",
+                          "name": "Stat Dropped Inline",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "3 張沒有加入",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "UblTg",
+                          "name": "Stat Dropped Reason",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "格式不支援或讀取失敗",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -177814,6 +177931,69 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "yykVB",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "IpMe2",
+              "name": "Marking Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RpfmF",
+                  "name": "Section Header",
+                  "fill": "$text-secondary",
+                  "content": "這 3 張的寶貝沒有指定成功",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "pGovG",
+                  "name": "Retry Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "nNTpf",
+                      "name": "Marking Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "照片都已經匯入了。\n重試只會補上寶貝，不會重新上傳。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "id": "i0FUp",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Retry Marking Button",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "refresh-cw"
+                        },
+                        "hIhVd": {
+                          "content": "重試指定寶貝（3）"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -177853,7 +178033,7 @@
                   "width": "fill_container",
                   "descendants": {
                     "s9bME2": {
-                      "icon": "clock"
+                      "icon": "clock-3"
                     },
                     "w7CUP": {
                       "content": "回到時間軸"
@@ -177871,7 +178051,7 @@
                       "icon": "refresh-cw"
                     },
                     "yxwnz": {
-                      "content": "重試失敗項（2）"
+                      "content": "重試失敗項（1）"
                     }
                   }
                 }
@@ -178044,43 +178224,99 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "v6P7lV",
-                  "name": "Stat 成功",
+                  "id": "Fxkjw",
+                  "name": "Success Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
                   "gap": "$sp-label",
-                  "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "ghAlG",
-                      "name": "Stat Icon",
-                      "width": 32,
-                      "height": 32,
-                      "icon": "circle-check",
-                      "library": "lucide",
-                      "fill": "$success"
+                      "type": "frame",
+                      "id": "v6P7lV",
+                      "name": "Stat 成功",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "ghAlG",
+                          "name": "Stat Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "circle-check",
+                          "library": "lucide",
+                          "fill": "$success"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jomJ5",
+                          "name": "Stat 成功 Text",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "SuVgC",
+                              "name": "Stat Count",
+                              "fill": "$text-primary",
+                              "content": "123 張",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-display",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "shEjS",
+                              "name": "Stat Label",
+                              "fill": "$text-secondary",
+                              "content": "已成功匯入",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
                     },
                     {
                       "type": "frame",
-                      "id": "jomJ5",
-                      "name": "Stat 成功 Text",
-                      "layout": "vertical",
+                      "id": "ydMf2",
+                      "name": "Stat 寶貝未指定",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        40
+                      ],
                       "children": [
                         {
-                          "type": "text",
-                          "id": "SuVgC",
-                          "name": "Stat Count",
-                          "fill": "$text-primary",
-                          "content": "126 張",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-display",
-                          "fontWeight": "700"
+                          "type": "frame",
+                          "id": "R3E9f",
+                          "name": "Icon Line Box",
+                          "height": 25,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "uMHF1",
+                              "name": "Stat Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "circle-alert",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "shEjS",
-                          "name": "Stat Label",
-                          "fill": "$text-secondary",
-                          "content": "已成功匯入",
+                          "id": "bpmL4",
+                          "name": "Stat Marking Inline",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "其中 3 張的寶貝沒有指定成功",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "normal"
@@ -178115,6 +178351,67 @@
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "h4wu4c",
+                  "name": "Stat 沒有加入",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "fq17o",
+                      "name": "Icon Line Box",
+                      "height": 25,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "H3umGI",
+                          "name": "Stat Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-minus",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b3hwSX",
+                      "name": "Stat Dropped Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "q59BN",
+                          "name": "Stat Dropped Inline",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "3 張沒有加入",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "bsre1",
+                          "name": "Stat Dropped Reason",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "格式不支援或讀取失敗",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -178337,6 +178634,69 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "q1ZRm",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "QPU5Y",
+              "name": "Marking Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "R064We",
+                  "name": "Section Header",
+                  "fill": "$text-secondary",
+                  "content": "這 3 張的寶貝沒有指定成功",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "Q0hLO",
+                  "name": "Retry Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "deZvG",
+                      "name": "Marking Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "照片都已經匯入了。\n重試只會補上寶貝，不會重新上傳。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "id": "nPaVK",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Retry Marking Button",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "refresh-cw"
+                        },
+                        "hIhVd": {
+                          "content": "重試指定寶貝（3）"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -178376,7 +178736,7 @@
                   "width": "fill_container",
                   "descendants": {
                     "s9bME2": {
-                      "icon": "clock"
+                      "icon": "clock-3"
                     },
                     "w7CUP": {
                       "content": "回到時間軸"
@@ -178394,7 +178754,7 @@
                       "icon": "refresh-cw"
                     },
                     "yxwnz": {
-                      "content": "重試失敗項（2）"
+                      "content": "重試失敗項（1）"
                     }
                   }
                 }
@@ -178567,43 +178927,99 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "Mjw4t",
-                  "name": "Stat 成功",
+                  "id": "dCutl",
+                  "name": "Success Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
                   "gap": "$sp-label",
-                  "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "QscT2",
-                      "name": "Stat Icon",
-                      "width": 32,
-                      "height": 32,
-                      "icon": "circle-check",
-                      "library": "lucide",
-                      "fill": "$success"
+                      "type": "frame",
+                      "id": "Mjw4t",
+                      "name": "Stat 成功",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "QscT2",
+                          "name": "Stat Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "circle-check",
+                          "library": "lucide",
+                          "fill": "$success"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "BH6wS",
+                          "name": "Stat 成功 Text",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "jDt7Z",
+                              "name": "Stat Count",
+                              "fill": "$text-primary",
+                              "content": "123 張",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-display",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CUMuH",
+                              "name": "Stat Label",
+                              "fill": "$text-secondary",
+                              "content": "已成功匯入",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
                     },
                     {
                       "type": "frame",
-                      "id": "BH6wS",
-                      "name": "Stat 成功 Text",
-                      "layout": "vertical",
+                      "id": "ZSsa0",
+                      "name": "Stat 寶貝未指定",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        40
+                      ],
                       "children": [
                         {
-                          "type": "text",
-                          "id": "jDt7Z",
-                          "name": "Stat Count",
-                          "fill": "$text-primary",
-                          "content": "126 張",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-display",
-                          "fontWeight": "700"
+                          "type": "frame",
+                          "id": "TW18G",
+                          "name": "Icon Line Box",
+                          "height": 58,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "z4LQj",
+                              "name": "Stat Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "circle-alert",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "CUMuH",
-                          "name": "Stat Label",
-                          "fill": "$text-secondary",
-                          "content": "已成功匯入",
+                          "id": "CL4Ho",
+                          "name": "Stat Marking Inline",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "其中 3 張的寶貝沒有指定成功",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "normal"
@@ -178638,6 +179054,67 @@
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "M3WpK6",
+                  "name": "Stat 沒有加入",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ZVLIE",
+                      "name": "Icon Line Box",
+                      "height": 58,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "QOPAV",
+                          "name": "Stat Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-minus",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b55apE",
+                      "name": "Stat Dropped Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "F2y8Lo",
+                          "name": "Stat Dropped Inline",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "3 張沒有加入",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "mEV4z",
+                          "name": "Stat Dropped Reason",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "格式不支援或讀取失敗",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -178740,18 +179217,31 @@
                           ]
                         },
                         {
-                          "id": "IRnD5",
-                          "type": "ref",
-                          "ref": "qe9yS",
-                          "name": "Retry Button",
-                          "descendants": {
-                            "breqI": {
-                              "icon": "refresh-cw"
+                          "type": "frame",
+                          "id": "re29Z",
+                          "name": "Quota Link",
+                          "layout": "vertical",
+                          "gap": 1,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "FAK64",
+                              "name": "Link Label",
+                              "fill": "$text-primary",
+                              "content": "查看儲存空間",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "600"
                             },
-                            "hIhVd": {
-                              "content": "重試"
+                            {
+                              "type": "rectangle",
+                              "id": "LaOTD",
+                              "name": "Link Underline",
+                              "fill": "$text-primary",
+                              "width": 240,
+                              "height": 1
                             }
-                          }
+                          ]
                         }
                       ]
                     }
@@ -178847,6 +179337,74 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "y6dQW9",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "Su2EX",
+              "name": "Marking Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "trS9q",
+                  "name": "Section Header",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "這 3 張的寶貝沒有指定成功",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "lh3wm",
+                  "name": "Retry Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vDSyq",
+                      "name": "Marking Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "照片都已經匯入了。\n重試只會補上寶貝，不會重新上傳。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "id": "V7Xth",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Retry Marking Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "refresh-cw"
+                        },
+                        "hIhVd": {
+                          "content": "重試指定寶貝（3）",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -178886,7 +179444,7 @@
                   "width": "fill_container",
                   "descendants": {
                     "s9bME2": {
-                      "icon": "clock"
+                      "icon": "clock-3"
                     },
                     "w7CUP": {
                       "content": "回到時間軸"
@@ -178904,7 +179462,7 @@
                       "icon": "refresh-cw"
                     },
                     "yxwnz": {
-                      "content": "重試失敗項（2）"
+                      "content": "重試失敗項（1）"
                     }
                   }
                 }
@@ -179912,43 +180470,99 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "Q9fXcM",
-                  "name": "Stat 成功",
+                  "id": "b0D25x",
+                  "name": "Success Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
                   "gap": "$sp-label",
-                  "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "crZMz",
-                      "name": "Stat Icon",
-                      "width": 32,
-                      "height": 32,
-                      "icon": "circle-check",
-                      "library": "lucide",
-                      "fill": "$success"
+                      "type": "frame",
+                      "id": "Q9fXcM",
+                      "name": "Stat 成功",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "crZMz",
+                          "name": "Stat Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "circle-check",
+                          "library": "lucide",
+                          "fill": "$success"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "DBqm2",
+                          "name": "Stat 成功 Text",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Evov8",
+                              "name": "Stat Count",
+                              "fill": "$text-primary",
+                              "content": "123 張",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-display",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "YIEPk",
+                              "name": "Stat Label",
+                              "fill": "$text-secondary",
+                              "content": "已成功匯入",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
                     },
                     {
                       "type": "frame",
-                      "id": "DBqm2",
-                      "name": "Stat 成功 Text",
-                      "layout": "vertical",
+                      "id": "O684RP",
+                      "name": "Stat 寶貝未指定",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        40
+                      ],
                       "children": [
                         {
-                          "type": "text",
-                          "id": "Evov8",
-                          "name": "Stat Count",
-                          "fill": "$text-primary",
-                          "content": "126 張",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-display",
-                          "fontWeight": "700"
+                          "type": "frame",
+                          "id": "n9m3Dr",
+                          "name": "Icon Line Box",
+                          "height": 25,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "ywP78",
+                              "name": "Stat Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "circle-alert",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
                         },
                         {
                           "type": "text",
-                          "id": "YIEPk",
-                          "name": "Stat Label",
-                          "fill": "$text-secondary",
-                          "content": "已成功匯入",
+                          "id": "NAtFz",
+                          "name": "Stat Marking Inline",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "其中 3 張的寶貝沒有指定成功",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "normal"
@@ -179983,6 +180597,67 @@
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ahrBE",
+                  "name": "Stat 沒有加入",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ynf4Z",
+                      "name": "Icon Line Box",
+                      "height": 25,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "TCzFr",
+                          "name": "Stat Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-minus",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v1KPvg",
+                      "name": "Stat Dropped Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "jtdM3",
+                          "name": "Stat Dropped Inline",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "3 張沒有加入",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "rUvLW",
+                          "name": "Stat Dropped Reason",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "格式不支援或讀取失敗",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -180205,6 +180880,69 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "eU7n0",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "afVPC",
+              "name": "Marking Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "J6vrBN",
+                  "name": "Section Header",
+                  "fill": "$text-secondary",
+                  "content": "這 3 張的寶貝沒有指定成功",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "zhUHK",
+                  "name": "Retry Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "t5XJj",
+                      "name": "Marking Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "照片都已經匯入了。\n重試只會補上寶貝，不會重新上傳。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "id": "q1nqkq",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Retry Marking Button",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "refresh-cw"
+                        },
+                        "hIhVd": {
+                          "content": "重試指定寶貝（3）"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -180245,7 +180983,7 @@
                   "width": 280,
                   "descendants": {
                     "s9bME2": {
-                      "icon": "clock"
+                      "icon": "clock-3"
                     },
                     "w7CUP": {
                       "content": "回到時間軸"
@@ -180263,7 +181001,7 @@
                       "icon": "refresh-cw"
                     },
                     "yxwnz": {
-                      "content": "重試失敗項（2）"
+                      "content": "重試失敗項（1）"
                     }
                   }
                 }
