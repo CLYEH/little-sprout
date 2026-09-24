@@ -107,9 +107,7 @@ struct PhotoCardSignature: View {
     var body: some View {
         Group {
             if children.isEmpty {
-                // identifier 掛著：`.accessibilityHidden` 失效時 UITest 會找到它（未標記不念）。
                 Text(AlbumSignatureFormatter.signatureText(children: [], asOf: asOf, isOneLinePerPerson: false))
-                    .accessibilityIdentifier(QAAccessibilityID.photoCardSignature)
                     .accessibilityHidden(true)
             } else {
                 ViewThatFits(in: .horizontal) {

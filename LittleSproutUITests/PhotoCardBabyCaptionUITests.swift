@@ -107,7 +107,13 @@ final class PhotoCardBabyCaptionUITests: XCTestCase {
             XCTAssertTrue(untaggedCard.waitForExistence(timeout: 10), "[\(size)] 未標記照片卡沒渲染")
             XCTAssertFalse(
                 untagged.descendants(matching: .any)[QAAccessibilityID.photoCardSignature].exists,
-                "[\(size)] 未標記的空白署名行要 accessibilityHidden，不念「未標記」"
+                "[\(size)] 未標記卡不該有署名元素"
+            )
+            let blankTexts = untaggedCard.staticTexts.allElementsBoundByIndex
+                .filter { $0.label.trimmingCharacters(in: .whitespaces).isEmpty }
+            XCTAssertTrue(
+                blankTexts.isEmpty,
+                "[\(size)] 未標記的空白署名行要 accessibilityHidden，不該留一個空白 VoiceOver 節點（\(blankTexts.count) 個）"
             )
             attachScreenshot(untagged, name: "none-\(size)")
             let untaggedHeight = untaggedCard.frame.height
