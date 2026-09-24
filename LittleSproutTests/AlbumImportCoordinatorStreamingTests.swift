@@ -8,7 +8,7 @@ import XCTest
 /// 檔頭：主檔逼近 SwiftLint `type_body_length` 上限（同 `TapTargetGateScreenName+Sentinel.swift`
 /// 既有拆檔慣例）。helper（`waitUntil`／`fakeLoader`／`group`）與主檔各自一份，非共用抽象
 /// （同族兩處各自一份輕量 helper 是這個 codebase 一貫作法，見
-/// `AlbumDetailView+Actions.skippedItemsReplyRow` 檔頭「各自完整協定」的既有先例）。
+/// `AlbumsAPIClient` 檔頭「各自完整」協定的既有先例）。
 @MainActor
 final class AlbumImportCoordinatorStreamingTests: XCTestCase {
     private let familyID = UUID(uuidString: "55555555-5555-5555-5555-555555555555")!

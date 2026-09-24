@@ -173,7 +173,7 @@ struct ImportOrganizeView: View {
 
     /// merge-review R1 i3：`itemIdentifier` 缺失的筆數不再塞假 id 進 `ImportPlan`（會讓
     /// 「共 N 張」比實際可匯入的張數多），改成整筆捨棄並在這裡告知使用者——同
-    /// `AlbumDetailView+Actions.skippedItemsReplyRow` 既有視覺語彙（exclamationmark.circle
+    /// `DiaryEditorView+Photos.replyRow` 既有視覺語彙（exclamationmark.circle
     /// ＋note 字級）。
     private var droppedItemsReplyRow: some View {
         HStack(spacing: AppSpacing.label) {
@@ -233,28 +233,17 @@ struct ImportOrganizeView: View {
 
     // MARK: - 釘底主鈕（93pt，Notes「畫面級屬性」01 列）
 
-    /// LS-303 R4（merge-review R3 M3，orchestrator 裁決 `8579e30e` 收回 R3 的「主鈕
-    /// disabled」）：`uploadCoordinator.requiresAlbumSelection`（LS-304 起沒有任何實作覆寫
-    /// 成 `true`——這個限制原本只有過渡版 `LegacyAlbumUploadImportCoordinator`，已隨它移除
-    /// 失效，見 `ImportUploadCoordinator.requiresAlbumSelection` 文件註解；這個 guard 保留
-    /// 是讓型別本身描述完整的介面空間，非死碼——若未來任何實作有這個限制，這裡不需要跟著
-    /// 改）。**不 disable 主鈕**（品牌不可協商第 8 條，同 `ImportGroupCardView` 寶貝 chip 那套
-    /// 回話列 idiom）——主鈕永遠可按，按下時才判斷：條件不成立就顯示回話列並停留整理頁，
-    /// 不呼叫 `uploadCoordinator.startImport`／不進下一態。
-    private var missingAlbumSelection: Bool {
-        uploadCoordinator.requiresAlbumSelection && plan.hasUnskippedGroupsWithoutAlbum
-    }
-
     /// LS-303 R5（merge-review R4 i4）：全部群都被略過時 `pendingAssetCount == 0`——同樣是
     /// 使用者可修正的狀態（取消略過任一群即可），非本票 M3 finding 所指「這批一張都沒有的
-    /// in-flight 概念」，改回品牌不可協商第 8 條同一套 idiom：不 disable，按下才提示。
+    /// in-flight 概念」，改回品牌不可協商第 8 條同一套 idiom：不 disable，按下才提示
+    /// （LS-303 R4 merge-review R3 M3，orchestrator 裁決 `8579e30e` 收回 R3 的「主鈕
+    /// disabled」；同 `ImportGroupCardView` 寶貝 chip 那套回話列 idiom）——主鈕永遠可按，按下
+    /// 時才判斷：條件不成立就顯示回話列並停留整理頁，不呼叫 `uploadCoordinator.startImport`／
+    /// 不進下一態。
     private var noPendingAssets: Bool { plan.pendingAssetCount == 0 }
 
-    /// 使用者已經按過一次主鈕、但當下有未略過群沒相簿——`missingAlbumSelection` 一旦回到
-    /// false（使用者改了相簿或略過那群）這個回話列就跟著消失，不需要另外重置。
-    @State private var didAttemptImportWithMissingAlbum = false
-    /// 同上，對應 `noPendingAssets`。兩者互斥：`hasUnskippedGroupsWithoutAlbum` 只計未略過
-    /// 且非空的群，`pendingAssetCount == 0` 時不會有這種群存在。
+    /// 使用者已經按過一次主鈕、但當下沒有任何要匯入的照片——`noPendingAssets` 一旦回到
+    /// false（使用者取消略過任一群）這個回話列就跟著消失，不需要另外重置。
     @State private var didAttemptImportWithNoPendingAssets = false
 
     private var ctaBar: some View {
@@ -266,22 +255,10 @@ struct ImportOrganizeView: View {
                     Text("沒有要匯入的照片，先取消一個略過的日期")
                         .appFont(.note).foregroundStyle(Color.lsTextPrimary)
                 }
-            } else if didAttemptImportWithMissingAlbum && missingAlbumSelection {
-                // 同 `ImportGroupCardView` 寶貝 chip 那套回話列語彙（`exclamationmark.circle`
-                // ＋`lsTextPrimary`，R3 M3 finding 指出的「不同語彙」在這裡訂正）。
-                HStack(spacing: AppSpacing.label) {
-                    Image(systemName: "exclamationmark.circle").appIconFrame(.small)
-                        .foregroundStyle(Color.lsTextPrimary)
-                    Text("本版需先選相簿").appFont(.note).foregroundStyle(Color.lsTextPrimary)
-                }
             }
             Button {
                 guard !noPendingAssets else {
                     didAttemptImportWithNoPendingAssets = true
-                    return
-                }
-                guard !missingAlbumSelection else {
-                    didAttemptImportWithMissingAlbum = true
                     return
                 }
                 // LS-304：不再 `dismiss()`——整理頁是批次匯入流程（`ImportBatchFlowContainer`）

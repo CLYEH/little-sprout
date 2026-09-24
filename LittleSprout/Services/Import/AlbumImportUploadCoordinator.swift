@@ -5,8 +5,8 @@ import UniformTypeIdentifiers
 
 /// LS-304：`ImportUploadCoordinator` 的正式實作——取代 LS-303 R3 的過渡管線
 /// （`LegacyAlbumUploadImportCoordinator`，本票移除）。把 `startImport(plan:)` 收到的每一個
-/// 未略過群，展開成 `UploadQueueStore`（`AlbumsStore.sharedUploadQueueStore`，同「加入照片」
-/// 單張即傳共用同一份實例，理由見 `AlbumsStore+SharedUploadQueue.swift` 檔頭文件註解）能吃
+/// 未略過群，展開成 `UploadQueueStore`（`AlbumsStore.sharedUploadQueueStore`，app 層級
+/// 單一實例，理由見 `AlbumsStore+SharedUploadQueue.swift` 檔頭文件註解）能吃
 /// 的 `PendingUpload`：
 ///
 /// - **`taken_at`**（票文範圍 1）：每群的 `anchorDate`（已知日期群＝EXIF 分組日；日期不明群

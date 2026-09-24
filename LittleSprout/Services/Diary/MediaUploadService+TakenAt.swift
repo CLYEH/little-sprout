@@ -5,7 +5,7 @@ import Foundation
 /// `MediaUploadService.swift` 拆出（SwiftLint `file_length`，理由同
 /// `MediaUploadService+SoftDelete.swift`／`MediaUploadService+Duration.swift` 檔頭既有慣例）。
 extension MediaUploadService {
-    /// 既有呼叫端（日記編輯器單張即傳、「加入照片」）不需要指定 `taken_at`——呼叫這個 4-arg
+    /// 既有呼叫端（日記編輯器單張即傳，`DiaryComposerStore`）不需要指定 `taken_at`——呼叫這個 4-arg
     /// 版本等同 `takenAt: nil`（沿既有行為，`media.taken_at` 留空）。協定要求本身不能帶預設
     /// 參數值（Swift 對 protocol requirement 的限制），這裡用轉呼叫的便利多載補上。
     func uploadPhoto(familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {

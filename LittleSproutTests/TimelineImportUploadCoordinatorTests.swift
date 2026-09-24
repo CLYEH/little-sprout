@@ -12,7 +12,7 @@ import XCTest
 /// `importUploadCoordinator` 這個 `@State` 傳進 `.importBatchFlow`」這件事本身做執行期斷言
 /// ——但「NoOp 只在還沒建立好之前當保底、建立好之後一定要用真的」這條規則本身是可以抽成一個
 /// 不依賴 `@State`／View 生命週期的純函式，直接用型別斷言驗證，不必回頭走原始碼字面比對
-/// （同 `TimelineImportAlbumsRegressionTests` 被拿掉的理由）。剩下「`body` 有沒有正確呼叫
+/// （同 `AlbumsStoreTests.test_refreshIfEmpty_*` 取代原始碼字面守衛的理由）。剩下「`body` 有沒有正確呼叫
 /// 這支函式」由模擬器實跑（時間軸 → 匯入 → 開始匯入 → 04 進度頁推進到 05）覆蓋。
 final class TimelineImportUploadCoordinatorTests: XCTestCase {
     @MainActor

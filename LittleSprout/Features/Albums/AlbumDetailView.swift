@@ -1,4 +1,3 @@
-import PhotosUI
 import SwiftUI
 
 /// 相簿詳情（LS-166，依 LS-142 稿：`pVSXP`／`yfZyT`／`ZXdu2`／`w0NxC`／`OysBA`／`rFiLJ`／
@@ -10,11 +9,9 @@ import SwiftUI
 /// `ImportOrganizeView`），入口來源 `.albumDetail(albumID:)` 讓整理頁相簿列預設這本相簿
 /// （可改）——取代原本「PhotosPicker → `MediaUploadService` → LS-167 `UploadQueueSheetView`」
 /// 單張即傳流程。原流程專屬的觸發狀態（`showsPhotosPicker`／`pickerSelection`）已隨
-/// `.photosPicker`／`.onChange` 一併移除；`loadPicked`／`partitionPickedItems`／
-/// `UploadQueueStore` 管線本體保留未刪（`AlbumDetailView+Actions.swift`）：2/2
-/// （`ImportUploadCoordinator` 真正實作，blockedBy 本票）大概率會重用這條既有上傳佇列
-/// 管線，本輪不預先猜測介面砍掉重練；目前從這個畫面已無路徑觸發，記入 LS-96 待辦池供
-/// dead-code-sweeper／2/2 收尾時一併處理。
+/// `.photosPicker`／`.onChange` 一併移除；其餘單張即傳管線（`loadPicked`／
+/// `partitionPickedItems`／`skippedItemsReplyRow`／上傳佇列 sheet）LS-304 改走
+/// `AlbumImportUploadCoordinator` 獨立管線後未被重用，已於 LS-323 刪除。
 ///
 /// **整支畫面完全自畫導覽**（`.navigationBarBackButtonHidden(true)`＋`.toolbar(.hidden, for:
 /// .navigationBar)`，同 `DiaryEditorView` 既有先例）——Notes `kHDk4` `OHMPk`：「用 cmp/Nav
@@ -42,8 +39,7 @@ struct AlbumDetailView: View {
     let childrenStore: ChildrenStore
     let mediaUploadService: MediaUploadService
 
-    // LS-166：`showsEditAlbum`／`showsDeleteConfirmation`／
-    // `uploadQueueStore`／`showsUploadQueueSheet`／`dismiss`／`isOwner` 不標 `private`——
+    // LS-166：`showsEditAlbum`／`showsDeleteConfirmation`／`dismiss`／`isOwner` 不標 `private`——
     // `AlbumDetailView+Actions.swift`（Nav Row／更多選單／加入照片，跨檔案 extension）需要
     // 讀寫，Swift 的 `private` 以檔案為界，同 `DiaryDetailView`／`DiaryDetailView
     // +ContentActions.swift` 既有拆檔慣例（該檔文件註解）。LS-237：`detailStore`／
@@ -56,12 +52,6 @@ struct AlbumDetailView: View {
     /// fail loud 違反）——加這顆旗標驅動一個明確的錯誤態＋「重新載入」，見 `body`／
     /// `AlbumDetailView+Actions.seedLoadFailureState`／`.loadDetailStoreIfNeeded()`。
     @State var seedLoadFailed = false
-    @State var uploadQueueStore: UploadQueueStore?
-    @State var showsUploadQueueSheet = false
-    /// LS-237 修（池 `1aa74165` m2）：這批 `loadPicked` 裡有幾個項目因為格式不支援或載入
-    /// 失敗被跳過——沿 `DiaryComposerStore.unsupportedFormatSkippedCount` 既有解法（見
-    /// `AlbumDetailView+Actions.loadPicked`），每次開新一批時歸零。
-    @State var skippedItemCount = 0
     @State var showsEditAlbum = false
     @State var showsDeleteConfirmation = false
     /// LS-303 R2（merge-review R1 M2，orchestrator 裁決 `c997f234`）：「加入照片」鈕觸發，
@@ -110,11 +100,6 @@ struct AlbumDetailView: View {
                         onDeleted: albumDeleted
                     )
                 }
-                .sheet(isPresented: $showsUploadQueueSheet) {
-                    if let uploadQueueStore {
-                        UploadQueueSheetView(store: uploadQueueStore)
-                    }
-                }
                 .importBatchFlow(
                     isActive: $showsBatchImport, childrenStore: childrenStore, albumsStore: albumsStore,
                     entrySource: .albumDetail(albumID: albumID, albumName: detailStore.title),
@@ -156,7 +141,6 @@ struct AlbumDetailView: View {
 
     private var actionBar: some View {
         VStack(spacing: AppSpacing.label) {
-            if skippedItemCount > 0 { skippedItemsReplyRow }
             addPhotosBarButton
         }
         .padding(.vertical, AppSpacing.item)
@@ -176,7 +160,6 @@ struct AlbumDetailView: View {
                     titleText(store)
                     metaRow(store)
                     addPhotosInlineButton
-                    if skippedItemCount > 0 { skippedItemsReplyRow }
                 }
                 photoGridOrEmptyState(store, containerWidth: contentWidth)
             }
@@ -306,7 +289,7 @@ struct AlbumDetailView: View {
             .accessibilityHidden(true)
     }
 
-    // Nav Row（自畫返回鍵＋更多選單）／加入照片／PhotosPicker 接線見
+    // Nav Row（自畫返回鍵＋更多選單）／加入照片見
     // `AlbumDetailView+Actions.swift`（拆檔理由見該檔文件註解）。
 
     private var widthMeasurement: some View {

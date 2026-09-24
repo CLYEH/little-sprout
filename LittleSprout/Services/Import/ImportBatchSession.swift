@@ -28,8 +28,8 @@ final class ImportBatchSession {
     private(set) var resolvedGroupCount = 0
     /// merge-review R1 M2：讀不到／不支援格式／轉檔失敗的 asset 數——`AlbumImportUploadCoordinator
     /// .enqueue(group:...)` 對每個 identifier 讀出 0 筆時累加，不靜默丟（LS-96 池項
-    /// `a997f824`(1) 指派本票的處置：比照 `AlbumDetailView+Actions.skippedItemsReplyRow`
-    /// 同型解法，04／05 用這個數字補一行「N 張沒有加入」）。
+    /// `a997f824`(1) 指派本票的處置：比照 `DiaryComposerStore.unsupportedFormatSkippedCount`
+    /// ＋回話列同型解法，04／05 用這個數字補一行「N 張沒有加入」）。
     private(set) var droppedCount = 0
     /// merge-review R2 M4：04b「取消整批匯入」確認後設為 true——`AlbumImportUploadCoordinator
     /// .enqueueGroups`／`enqueue` 的兩層迴圈開頭都檢查這個旗標，還沒排到／還沒讀完的群不再

@@ -172,8 +172,8 @@ final class AlbumImportUploadCoordinatorTests: XCTestCase {
     // MARK: - 略過群沒有相簿也一樣不入列
 
     func test_startImport_groupWithoutAlbum_stillEnqueues_becauseAlbumIsOptionalNow() async {
-        // LS-304：正式版不再要求「每群都指定相簿」（`requiresAlbumSelection` 沒有實作覆寫成
-        // `true`，同 C3a「預設不放相簿」）——沒有 albumID 的群一樣會入列，只是不呼叫
+        // LS-304：正式版不再要求「每群都指定相簿」（同 C3a「預設不放相簿」；過渡期的
+        // `requiresAlbumSelection` 擴充點已於 LS-323 刪除）——沒有 albumID 的群一樣會入列，只是不呼叫
         // `registerPendingAlbum`。
         let apiStub = StubAlbumsAPIClient()
         let albumsStore = AlbumsStore(apiClient: apiStub)
@@ -190,14 +190,6 @@ final class AlbumImportUploadCoordinatorTests: XCTestCase {
         await waitUntil { session.isFullyEnqueued }
         XCTAssertEqual(session.entryIDs.count, 1)
         XCTAssertTrue(albumsStore.pendingUploadAlbumIDs.isEmpty, "沒有相簿的群不該登記任何 entry→albumID")
-    }
-
-    func test_requiresAlbumSelection_defaultsFalse() {
-        let coordinator = AlbumImportUploadCoordinator(
-            familyID: familyID, mediaUploadService: StubMediaUploadService(),
-            albumsStore: AlbumsStore(apiClient: StubAlbumsAPIClient())
-        )
-        XCTAssertFalse(coordinator.requiresAlbumSelection, "LS-304 正式版不需要 Legacy 過渡期的相簿限制")
     }
 
     // MARK: - merge-review R1 M2：讀不到／不支援格式不靜默丟，計入 droppedCount

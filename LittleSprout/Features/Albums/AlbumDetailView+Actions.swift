@@ -1,8 +1,7 @@
-import PhotosUI
 import SwiftUI
 
 /// LS-166：`AlbumDetailView` 的 Nav Row（自畫返回鍵＋更多選單）／加入照片（Action Bar 版與
-/// iPad 行內版）／PhotosPicker → `UploadQueueStore` 接線——拆到獨立檔案，同
+/// iPad 行內版）——拆到獨立檔案，同
 /// `DiaryDetailView`／`DiaryDetailView+ContentActions.swift` 既有拆檔理由（`AlbumDetailView.swift`
 /// 本體已有 compact／iPad 兩套版面＋Header／Meta／Grid／空狀態，疊上這條流程會超過 SwiftLint
 /// `type_body_length`／`file_length` 上限）。
@@ -85,96 +84,6 @@ extension AlbumDetailView {
         }
         .foregroundStyle(Color.lsOnAccent)
         .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-    }
-
-    /// PhotosPicker 挑選結果 → `MediaUploadService` 佇列（沿 `DiaryEditorView+Photos
-    /// .loadPicked` 既有路徑，這裡不需要 20 張上限那一套——相簿沒有單篇張數上限，佇列本身的
-    /// 並發／重試已經是 `UploadQueueStore` 的職責）。
-    ///
-    /// **LS-237 修（池 `1aa74165` m2）**：不支援的格式（`.unsupportedFormat`）與載入失敗
-    /// （`PickedItemLoader.load` 回 `nil`）原本都靜默 `continue`，使用者選 5 張佇列只出現
-    /// 3 張、無任何回饋——沿 `DiaryComposerStore.unsupportedFormatSkippedCount`＋常駐回話列
-    /// 的既有解法，兩種情況都算進 `skippedItemCount`（`DiaryEditorView+Photos.loadPicked`
-    /// 只計 `.unsupportedFormat` 一種，這裡兩種都計，因為兩者對使用者來說是同一件事：「選了
-    /// 但沒加入」，不需要細分原因）。分類邏輯抽成 `partitionPickedItems(_:)`（見該方法文件
-    /// 註解）——`PhotosPickerItem` 本身無法在單元測試建構假值，但載入完成「之後」的分類
-    /// 純粹是資料轉換，不需要真的跑一次 picker。
-    ///
-    /// **R2 訂正（merge-review R1 i1）**：`skippedItemCount` 原本只在整批載入**完成後**才
-    /// 賦值——若使用者這一批還在解碼時，畫面上仍掛著「上一批」的舊回話列，會被誤以為是這一批
-    /// 的結果。同 `DiaryComposerStore.beginLoadingPickedItems()` 既有作法，在新一批開始時就
-    /// 先歸零。
-    ///
-    /// **LS-303 R4（merge-review R3 M1／M2）**：不再各自 `makeUploadQueueStore` 建立一份
-    /// 專屬 store——改拿 `albumsStore.sharedUploadQueueStore(...)`（app 層級單一實例，批次
-    /// 匯入過渡管線 `LegacyAlbumUploadImportCoordinator` 也拿同一份），`enqueue` 前逐筆
-    /// `registerPendingAlbum` 登記要掛進哪本相簿，見 `AlbumsStore+SharedUploadQueue.swift`
-    /// 檔頭文件註解（完整的併發上限／生命週期問題說明在那裡，這裡不重複）。
-    @MainActor
-    func loadPicked(_ items: [PhotosPickerItem], detailStore: AlbumDetailStore) async {
-        skippedItemCount = 0
-        var loaded: [PickedItemLoader.LoadedItem?] = []
-        for item in items {
-            loaded.append(await PickedItemLoader.load(item))
-        }
-        let (uploads, skippedCount) = Self.partitionPickedItems(loaded)
-        skippedItemCount = skippedCount
-        guard !uploads.isEmpty else { return }
-        let queue = albumsStore.sharedUploadQueueStore(
-            familyID: detailStore.familyID, mediaUploadService: mediaUploadService
-        )
-        uploadQueueStore = queue
-        for upload in uploads {
-            albumsStore.registerPendingAlbum(entryID: upload.id, albumID: detailStore.albumID)
-        }
-        queue.enqueue(uploads)
-        showsUploadQueueSheet = true
-    }
-
-    /// 抽成靜態純函式方便單元測試（同 `CommentsSheetView.headCommentCountText` 既有慣例）
-    /// ——把「載入完成後怎麼分類」跟「怎麼載入」拆開：`nil`（載入失敗）與 `.unsupportedFormat`
-    /// 都算略過，其餘兩種組成 `PendingUpload` 送進上傳佇列。
-    static func partitionPickedItems(
-        _ loaded: [PickedItemLoader.LoadedItem?]
-    ) -> (uploads: [PendingUpload], skippedCount: Int) {
-        var uploads: [PendingUpload] = []
-        var skippedCount = 0
-        for item in loaded {
-            guard let item else {
-                skippedCount += 1
-                continue
-            }
-            switch item {
-            case .unsupportedFormat:
-                skippedCount += 1
-            case .photo(let data, let fileExtension, let pixelSize, let previewImage):
-                uploads.append(PendingUpload(
-                    kind: .photo(data: data, fileExtension: fileExtension), thumbnail: previewImage,
-                    pixelSize: pixelSize
-                ))
-            case .video(let fileURL, let fileExtension, _, let pixelSize, let previewImage):
-                uploads.append(PendingUpload(
-                    kind: .video(fileURL: fileURL, fileExtension: fileExtension), thumbnail: previewImage,
-                    pixelSize: pixelSize
-                ))
-            }
-        }
-        return (uploads, skippedCount)
-    }
-
-    /// LS-237 修（池 `1aa74165` m2）：同 `DiaryEditorView+Photos.replyRow` 既有視覺語彙
-    /// （exclamationmark.circle＋note 字級），這裡不共用那支——它是 `DiaryEditorView` 的
-    /// instance method，跨型別呼叫不到，同族兩處各自一份輕量視圖是這個 codebase 一貫的作法
-    /// （見 `AlbumsAPIClient` 檔頭「各自完整協定」的既有先例）。
-    var skippedItemsReplyRow: some View {
-        HStack(alignment: .top, spacing: AppSpacing.label) {
-            Image(systemName: "exclamationmark.circle")
-                .appIconFrame(.small)
-                .foregroundStyle(Color.lsTextPrimary)
-            Text("有 \(skippedItemCount) 個檔案沒有加入（格式不支援或載入失敗，僅支援 JPEG／PNG／HEIC／MP4／MOV）")
-                .appFont(.note, weight: .semibold)
-                .foregroundStyle(Color.lsTextPrimary)
-        }
     }
 
     /// 刪除成功後收尾——回上一頁（列表本身仍持有舊快取，`AlbumsStore.albums` 直到下次
