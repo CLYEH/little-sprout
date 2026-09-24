@@ -74,6 +74,9 @@ struct ChildGrowthDetailView: View {
     @State private var growthStore: GrowthStore?
     @State private var selectedMetric: GrowthMetric = .height
     @State private var showsAddMeasurement = false
+    /// LS-379：飲食圖鑑暫時入口用（見 `ChildGrowthDetailView+FoodBookDebugEntry.swift`）；不標 `private`，
+    /// 跨檔 extension 要讀。
+    @Environment(\.foodAPIClient) var foodAPIClient
 
     init(
         child: Child, apiClient: GrowthAPIClient, editDestination: (() -> AnyView)? = nil,
@@ -194,6 +197,7 @@ struct ChildGrowthDetailView: View {
                     plotHeight: chartPlotHeight
                 )
                 actionsCompact(growthStore)
+                foodBookDebugEntry()
             }
             .padding(.horizontal, AppSpacing.screenPad)
             .padding(.top, AppSpacing.item)
@@ -281,6 +285,7 @@ struct ChildGrowthDetailView: View {
                         GrowthHistorySection(records: growthStore.records)
                     }
                 }
+                foodBookDebugEntry()
             }
             .padding(.horizontal, AppSpacing.screenPadLarge)
             .padding(.top, AppSpacing.item)

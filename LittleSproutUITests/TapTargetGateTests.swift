@@ -297,6 +297,16 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.growthRecordActionsSheet)
     }
 
+    /// LS-379：飲食圖鑑 02——返回鍵、8 顆分頁、16 格（吃過／還沒吃）。
+    func testFoodBookView() {
+        assertAllTappablesMeetMinimum(.foodBook)
+    }
+
+    /// LS-379：02c viewer——空位不是按鈕，剩下的分頁／吃過格子仍 ≥44pt。
+    func testFoodBookViewViewer() {
+        assertAllTappablesMeetMinimum(.foodBookViewer)
+    }
+
     /// LS-312：populated（1 個寶貝）——`ChildrenManagementView` 取代原本 tap-target-exemptions.txt
     /// 的排除，量測「陳小安」列（進寶貝詳情）＋「新增寶貝」主鈕。
     func testChildrenManagementViewPopulated() {
