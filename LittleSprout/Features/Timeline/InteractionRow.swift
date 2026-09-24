@@ -152,15 +152,15 @@ struct InteractionRow: View {
     /// no-op，不受影響；只影響看不見的點擊區，不改變 `Count Zone` 本身沒有背景色塊、純文字
     /// 置中的視覺。
     ///
-    /// LS-371：計數 0 時**不掛 `.disabled`**——`.disabled` 會讓 SwiftUI 把 `.plain` 按鈕整顆淡化
-    /// 約 50%，計數「0」對底只剩 2.47–3.19:1（LS-366 QA `06a94284`），低於長輩硬約束 4.5:1；計數
-    /// 是資訊、不是可用與否的提示，稿面 `IgqGF`／`VZ0wV`／`Qzz3r` 的 `Count Zone` 也只有一種
+    /// LS-371：計數 0 時仍掛 `.disabled`，但**不用 `.plain`**——`.plain` 會把 disabled 按鈕整顆
+    /// 淡化約 50%，計數「0」對底只剩 2.47–3.19:1（LS-366 QA `06a94284`），低於長輩硬約束 4.5:1；
+    /// 計數是資訊、不是可用與否的提示，稿面 `IgqGF`／`VZ0wV`／`Qzz3r` 的 `Count Zone` 也只有一種
     /// 未按讚樣式、沒有淡化態（守在 `InteractionRowContrastTests`
-    /// `.test_countZone_renderedCountMeetsElderContrast_inAllReactionStates`）。
-    /// 改用 `.allowsHitTesting(reaction.count > 0)` 保留 `.disabled` 原本的點擊行為：0 讚時點在
-    /// 計數上的 tap 穿透給外層卡片（開詳情），不會變成一塊點了沒反應的死區——新貼文多停在 0 讚，
-    /// 短卡片的正中央常常就落在 Count Zone 上（`SectionTabBarPushRegressionTests` 點卡片中心
-    /// 導覽即依賴這個行為）。其他不經 hit test 觸發 action 的途徑（例如 VoiceOver 啟用）仍由 `guard` 擋住。
+    /// `.test_countZone_renderedCountMeetsElderContrast_inAllReactionStates`）。`CountZoneButtonStyle`
+    /// 不看 `isEnabled`、不套 disabled 外觀；`.disabled` 保留它另外兩個作用：①無障礙標為不可用
+    /// （VoiceOver 唸「暗淡」，不是一顆點兩下沒反應的按鈕，LS-371 merge-review R1 m1）；②0 讚時點在
+    /// 計數上的 tap 穿透給外層卡片（開詳情），短卡片正中央不會變成死區（`SectionTabBarPushRegressionTests`
+    /// 點卡片中心導覽即依賴這個行為）。
     private var countZone: some View {
         Button {
             guard reaction.count > 0 else { return }
@@ -173,8 +173,8 @@ struct InteractionRow: View {
                 .frame(minWidth: 48, minHeight: 48)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .allowsHitTesting(reaction.count > 0)
+        .buttonStyle(CountZoneButtonStyle())
+        .disabled(reaction.count == 0)
         .accessibilityIdentifier(QAAccessibilityID.interactionRowElement(kind: kind.rawValue, element: "countZone"))
         .accessibilityLabel("\(reaction.count) 人按了愛心")
         .accessibilityHint(reaction.count > 0 ? "顯示按讚名單" : "")
@@ -238,6 +238,14 @@ struct InteractionRow: View {
                 toggleError = AppError.map(error)
             }
         }
+    }
+}
+
+/// LS-371：`Count Zone` 專用——直接回傳 label，不依 `isEnabled` 淡化（見 `InteractionRow.countZone`
+/// 文件註解）。
+private struct CountZoneButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
     }
 }
 

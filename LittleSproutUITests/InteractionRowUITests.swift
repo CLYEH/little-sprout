@@ -92,21 +92,33 @@ final class InteractionRowUITests: XCTestCase {
 
     /// Count Zone 計數 0 時（照片卡種子）點擊不應該開啟按讚名單 sheet——票文 scope 3。
     ///
-    /// LS-371：Count Zone 不再掛 `.disabled`（會把計數「0」淡化到 2.47–3.19:1，見
-    /// `InteractionRow.countZone` 文件註解），改用 `.allowsHitTesting(count > 0)`：0 讚時 tap
-    /// 穿透給外層卡片、不開名單——所以 `isEnabled` 改斷言為 true（未淡化），「點了不開 sheet」不變。
+    /// LS-371（merge-review R1 m1／m2）：0 讚時 Count Zone 掛 `.disabled`＋不淡化的
+    /// `CountZoneButtonStyle`（見 `InteractionRow.countZone` 文件註解），這支驗三個意圖：
+    /// ①無障礙上是「不可用」（VoiceOver 唸暗淡，不是點兩下沒反應的按鈕）；②計數「0」在畫面上
+    /// 照樣看得清楚——對元件截圖、量字心像素對底色 ≥4.5:1（`.plain` 的 disabled 淡化只剩
+    /// 2.47–3.19:1）；③點了不開名單。
     func testCountZone_withZeroCount_doesNotOpenLikersSheet() {
         let app = TapTargetMeasurement.launch(.timelineInteractionRow)
         TapTargetMeasurement.assertScreenRendered(.timelineInteractionRow, in: app)
 
         let mediaCountZone = app.buttons[QAAccessibilityID.interactionRowElement(kind: "media", element: "countZone")]
         XCTAssertTrue(mediaCountZone.waitForExistence(timeout: 10))
-        XCTAssertTrue(mediaCountZone.isEnabled, "計數 0 時 Count Zone 不應該是 disabled（disabled 會淡化計數，LS-371）")
+        scrollUntilAllHittable([mediaCountZone], in: app)
+        XCTAssertEqual(mediaCountZone.label, "0 人按了愛心")
+        XCTAssertFalse(
+            mediaCountZone.isEnabled,
+            "計數 0 時 Count Zone 在無障礙上應標為不可用（VoiceOver 唸暗淡），不是一顆點了沒反應的按鈕（LS-371 m1）"
+        )
+        let ratio = maxTextContrast(in: mediaCountZone)
+        XCTAssertGreaterThanOrEqual(
+            ratio, 4.5,
+            "計數「0」在畫面上只有 \(String(format: "%.2f", ratio)):1，低於長輩硬約束 4.5:1——被淡化了（LS-371）"
+        )
 
         mediaCountZone.tap()
 
-        // LS-237 修（池 `08cad41e`(2)）：同上一支的理由（風險更低——Count Zone 在計數 0 時
-        // 不接 hit test（LS-371 前是 disabled），tap 穿透給卡片本體、不會開名單）——`.exists` 一次性快照在「若真的開啟
+        // LS-237 修（池 `08cad41e`(2)）：同上一支的理由（風險更低——Count Zone 本身就是
+        // disabled，理論上 tap 不會有任何系統層級效果）——`.exists` 一次性快照在「若真的開啟
         // 了 sheet」的情境下，開啟動畫還沒跑完的瞬間量到「不存在」也可能只是還沒畫出來，改用
         // `waitForExistence` 積極輪詢一段時間再判斷「真的沒有出現」，同 `SettingsViewTests`
         // 等既有「等一段時間確認不存在」的既有慣例（見該檔案系列 `XCTAssertFalse(...
@@ -233,4 +245,43 @@ final class InteractionRowUITests: XCTestCase {
     }
 
     // `assertNoOverlap` 抽到 `Support/AssertNoOverlap.swift`（LS-268，池 `f07c26d1`）。
+
+    /// LS-371：對元件截圖，回傳「最深／最亮的字心像素」對底色（元件左上角像素——Count Zone 文字
+    /// 置中、四角一定是底）的 WCAG 對比。截圖先重畫進 8-bit sRGB 點陣統一色彩空間。
+    private func maxTextContrast(in element: XCUIElement) -> Double {
+        guard let image = element.screenshot().image.cgImage,
+              let space = CGColorSpace(name: CGColorSpace.sRGB) else {
+            XCTFail("元件截圖沒有 cgImage")
+            return 0
+        }
+        let (width, height) = (image.width, image.height)
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let drawn = bytes.withUnsafeMutableBytes { raw -> Bool in
+            guard let context = CGContext(
+                data: raw.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                bytesPerRow: width * 4, space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else { return false }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard drawn else {
+            XCTFail("無法建立 sRGB 點陣 context")
+            return 0
+        }
+        func luminance(_ offset: Int) -> Double {
+            func linear(_ value: UInt8) -> Double {
+                let channel = Double(value) / 255
+                return channel <= 0.04045 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
+            }
+            return 0.2126 * linear(bytes[offset]) + 0.7152 * linear(bytes[offset + 1])
+                + 0.0722 * linear(bytes[offset + 2])
+        }
+        let background = luminance(0)
+        var best = 1.0
+        for pixel in 0..<(width * height) {
+            let lum = luminance(pixel * 4)
+            best = max(best, (max(lum, background) + 0.05) / (min(lum, background) + 0.05))
+        }
+        return best
+    }
 }
