@@ -78,7 +78,10 @@ struct PrintPhotoCard: View {
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(accessibilityLabel)
                     .accessibilityAddTraits(.isImage)
+                // LS-389（LS-372 Notes `SLL6R` ①）：壓印行文字在 printEdge 之內再內縮 `$sp-group`，
+                // 字起點離紙左緣 20、避開左下角染料池最暗處，並與日記卡 `$inset-card` 同軸；照片不動。
                 imprintCaption
+                    .padding(.horizontal, AppSpacing.group)
             } else {
                 photo
                 if showsImprint {

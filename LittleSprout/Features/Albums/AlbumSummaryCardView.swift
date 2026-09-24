@@ -44,7 +44,11 @@ struct AlbumSummaryCardView: View {
     private var printCard: some View {
         VStack(alignment: .leading, spacing: 7) {
             photo
+            // LS-389（LS-372 Notes `SLL6R` ①）：Caption／Signature 在 printEdge 之內再內縮
+            // `$sp-group`，字起點離紙左緣 20、避開左下角染料池最暗處，並與日記卡 `$inset-card`
+            // 同軸；照片不動。
             captionBlock
+                .padding(.horizontal, AppSpacing.group)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, AppSpacing.printEdge)
