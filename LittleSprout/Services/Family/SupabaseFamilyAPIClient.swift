@@ -64,18 +64,22 @@ final class SupabaseFamilyAPIClient: FamilyAPIClient {
             .execute()
     }
 
+    /// LS-348：登入落點第一批請求之一（與 EULA 檢查併發），`PGRST303` 暫態重送一次（見
+    /// `retryingOnceOnTransientJWTRejection`）。
     func fetchMyFamily() async throws -> Family? {
         do {
             // families_select 的 RLS 把結果收斂到「id in (private.family_ids())」（見
             // supabase/migrations/20260822120200_rls_policies.sql）——呼叫者看不到自己不在
             // 其中的家庭，這裡不需要另外帶 user_id 篩選條件。Phase 1 單一家庭 MVP：一個使用者
             // 最多一個家庭，取 created_at 最早的一筆即可（正常情況下也只會有一筆）。
-            let response: PostgrestResponse<[Family]> = try await client
-                .from("families")
-                .select()
-                .order("created_at", ascending: true)
-                .limit(1)
-                .execute()
+            let response: PostgrestResponse<[Family]> = try await retryingOnceOnTransientJWTRejection {
+                try await client
+                    .from("families")
+                    .select()
+                    .order("created_at", ascending: true)
+                    .limit(1)
+                    .execute()
+            }
             return response.value.first
         } catch {
             throw AppError.map(error)
