@@ -9,7 +9,7 @@ import XCTest
 /// 修法：拿掉內層 split，左右兩欄改在外層 detail 欄內用 `HStack` 畫；nav bar 保留（外層「顯示側邊欄」
 /// 鈕的容身處，LS-344 R1 M1），`.inline`＋零尺寸 principal 關掉系統標題（同 LS-355／LS-369）。所以這裡
 /// 同時鎖三件事：標題只出現一次（nav bar 內 0、頁內自畫 1）、外層側欄收起後仍有開關鈕能走回、左欄點寶貝
-/// 後右欄顯示詳情（拿掉內層 split 後 `List(selection:)` 仍要能驅動右欄）。
+/// 後右欄顯示詳情（拿掉內層 split 後左欄改 `Button` 列寫 `selectedChildID`，仍要能驅動右欄）。
 ///
 /// 共用 `TapTargetGateHarness.sectionSplitViewWithChildrenHost`（`.sectionSplitViewWithChildren`：強制
 /// regular、走生產路徑 `AuthenticatedRootView` → `SectionSplitView`，seed 兩個寶貝）。
@@ -78,7 +78,7 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
         )
     }
 
-    /// 拿掉內層 `NavigationSplitView` 後，左欄 `List(selection:)` 不再是 split 側欄——鎖住點選寶貝列
+    /// 拿掉內層 `NavigationSplitView` 後，左欄改 `Button` 列（`ChildrenManagementView+Regular.swift`）——鎖住點選寶貝列
     /// 仍會驅動右欄顯示該寶貝詳情（`ChildGrowthDetailView` 06 版的「最新紀錄」區塊；preview 成長 API 回空，
     /// 「查看全部紀錄」只在有紀錄時出現，不能拿來當判準），而不是停在佔位。
     func testSelectingChildShowsDetailInRightColumn() throws {
@@ -105,7 +105,7 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
     private func launchOnChildren(file: StaticString = #filePath, line: UInt = #line) -> XCUIApplication {
         let app = TapTargetMeasurement.launch(.sectionSplitViewWithChildren)
         TapTargetMeasurement.assertScreenRendered(.sectionSplitViewWithChildren, in: app)
-        // sidebar 的 `List(selection:)` row 是 `Cell`，label 落在裡面的 `StaticText`（同 `AlbumsViewIPadTests`）。
+        // 外層 sidebar 的 `List(selection:)` row 是 `Cell`，label 落在裡面的 `StaticText`（同 `AlbumsViewIPadTests`）。
         app.cells.staticTexts["寶貝"].firstMatch.tap()
         XCTAssertTrue(
             app.staticTexts[Self.childName].firstMatch.waitForExistence(timeout: 5),

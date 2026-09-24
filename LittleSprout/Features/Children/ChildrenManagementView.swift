@@ -18,7 +18,8 @@ struct ChildrenManagementView: View {
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showsRemovedList = false
-    @State private var selectedChildID: UUID?
+    /// 不標 `private`：`ChildrenManagementView+Regular.swift` 的 `sidebarRow` 要寫入（同 `+Detail` 拆檔先例）。
+    @State var selectedChildID: UUID?
 
     var body: some View {
         Group {
@@ -285,19 +286,16 @@ struct ChildrenManagementView: View {
             headerSection
                 .padding(.horizontal, AppSpacing.screenPadLarge)
                 .padding(.top, AppSpacing.screenPadLarge)
-            List(childrenStore.activeChildren, selection: $selectedChildID) { child in
-                HStack(spacing: AppSpacing.group) {
-                    ChildAvatarView(name: child.name, avatarURL: childrenStore.avatarURL(for: child))
-                    VStack(alignment: .leading, spacing: AppSpacing.tight) {
-                        Text(child.name).appFont(.body, weight: .bold).foregroundStyle(Color.lsTextPrimary)
-                        Text(BirthdayFormat.ageDescription(birthday: child.birthday))
-                            .appFont(.note)
-                            .foregroundStyle(Color.lsTextSecondary)
+            // LS-370：不用 `List(selection:)`，理由見 `ChildrenManagementView+Regular.swift`。
+            ScrollView {
+                VStack(spacing: AppSpacing.tight) {
+                    ForEach(childrenStore.activeChildren) { child in
+                        sidebarRow(child)
                     }
                 }
-                .tag(child.id)
+                .padding(.leading, AppSpacing.screenPadLarge)
+                .padding(.trailing, AppSpacing.block)
             }
-            .listStyle(.plain)
             if childrenStore.canManageChildren {
                 NavigationLink {
                     CreateChildView(childrenStore: childrenStore)

@@ -414,6 +414,7 @@
 		B9E34C05BFD746FB7B9C7F06 /* EditChildAvatarFieldContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E62ED61585669EC87D192B4 /* EditChildAvatarFieldContent.swift */; };
 		BA25637DB60CFE6147BF647D /* AlbumDetailViewPartitionPickedItemsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDC40A75E4ED58DECBBE351 /* AlbumDetailViewPartitionPickedItemsTests.swift */; };
 		BA9894A590C79F2FDA2FB85D /* ApprovalStatusRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1154E2337B7278510C8971B1 /* ApprovalStatusRow.swift */; };
+		BAEB05C63132C664FDFDDA26 /* ChildrenManagementView+Regular.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64CA2F68418F9193F1C034E /* ChildrenManagementView+Regular.swift */; };
 		BB12C06995D331D1D4B2453C /* AvatarLoadCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC634C1AC693267EBF2A0A6 /* AvatarLoadCoordinatorTests.swift */; };
 		BB2352EE2A36E552094AE5A5 /* PasswordSignInModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55ABA1362A5D5A948083DC7B /* PasswordSignInModel.swift */; };
 		BB88105C2DD7C0CC1F500705 /* VideoTrimmerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A01A57459C021E561433E6 /* VideoTrimmerTests.swift */; };
@@ -1080,6 +1081,7 @@
 		E466449A44696816AA484F94 /* OTPVerificationModelRateLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationModelRateLimitTests.swift; sourceTree = "<group>"; };
 		E5F7E15199F2E7CF91BAE7AA /* GrowthMeasurementDatePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthMeasurementDatePickerSheet.swift; sourceTree = "<group>"; };
 		E60A9F24D8B2759B3E482F5E /* CommentsSheetView+Footer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommentsSheetView+Footer.swift"; sourceTree = "<group>"; };
+		E64CA2F68418F9193F1C034E /* ChildrenManagementView+Regular.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChildrenManagementView+Regular.swift"; sourceTree = "<group>"; };
 		E6E38A2A74FC3F66515AF1D2 /* GrowthMeasurementValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthMeasurementValidationTests.swift; sourceTree = "<group>"; };
 		E715D59C5D776BF6611E5E33 /* InteractionRowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionRowUITests.swift; sourceTree = "<group>"; };
 		E854A344C6B7C3A322E9BB7B /* ChildAvatarViewStructureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildAvatarViewStructureTests.swift; sourceTree = "<group>"; };
@@ -1853,6 +1855,7 @@
 				56D5F16A89805E3F5F5C23F3 /* ChildFilterBar.swift */,
 				E370C40A50599B3900EAAF0F /* ChildrenManagementView.swift */,
 				72F9EC8AA39EA1ADB2DE75A8 /* ChildrenManagementView+Detail.swift */,
+				E64CA2F68418F9193F1C034E /* ChildrenManagementView+Regular.swift */,
 				A5718C2E6D09354F5950BEA5 /* ChildrenRoute.swift */,
 				278A962343297A6DC3C456F7 /* CreateChildView.swift */,
 				191A7E61B14173F039A11C97 /* CreateChildView+Avatar.swift */,
@@ -2222,6 +2225,7 @@
 				F083097FC5D3ECC171AD16AF /* ChildGrowthDetailView.swift in Sources */,
 				64D6D2FDC63635DAF3C32F5B /* ChildModels.swift in Sources */,
 				0B0F470E634F9F528174A8B8 /* ChildrenManagementView+Detail.swift in Sources */,
+				BAEB05C63132C664FDFDDA26 /* ChildrenManagementView+Regular.swift in Sources */,
 				62BE6DE6EE39A3F3B1ACB424 /* ChildrenManagementView.swift in Sources */,
 				FEC0EF51D7A2C74FCD452DC9 /* ChildrenRoute.swift in Sources */,
 				CCBD3BF36B2ADF0FDDF37424 /* ChildrenStore.swift in Sources */,
