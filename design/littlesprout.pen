@@ -53970,6 +53970,10 @@
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-tight",
+              "padding": [
+                0,
+                "$sp-item"
+              ],
               "alignItems": "center",
               "children": [
                 {
@@ -53996,7 +54000,7 @@
                   "width": "fill_container(0)",
                   "content": "小安 · 2 歲 3 個⁠月",
                   "fontFamily": "$font",
-                  "fontSize": "$fs-note",
+                  "fontSize": "$fs-body",
                   "fontWeight": "normal"
                 }
               ]
@@ -54323,6 +54327,10 @@
               "name": "Imprint Row",
               "width": "fill_container",
               "gap": "$sp-tight",
+              "padding": [
+                0,
+                "$sp-item"
+              ],
               "alignItems": "center",
               "children": [
                 {
@@ -56853,27 +56861,27 @@
                                       }
                                     },
                                     "MIxHp": {
-                                      "content": "弟弟出生的第一週 · 8 張相片"
+                                      "content": "弟弟出生的第一週 · 8 張⁠相⁠片"
                                     },
                                     "Qjdzx": {
                                       "width": 212.5,
-                                      "y": 239,
+                                      "y": 264,
                                       "enabled": true
                                     },
                                     "o5O1GD": {
                                       "width": 212.5,
-                                      "y": 232,
+                                      "y": 257,
                                       "enabled": true
                                     },
                                     "JgUK8": {
                                       "x": 233.5
                                     },
                                     "mlORb": {
-                                      "y": 211
+                                      "y": 236
                                     },
                                     "atAkU": {
                                       "x": 233.5,
-                                      "y": 211
+                                      "y": 236
                                     }
                                   }
                                 }
@@ -66557,6 +66565,10 @@
               "width": "fill_container",
               "layout": "vertical",
               "gap": "$sp-label",
+              "padding": [
+                0,
+                "$sp-item"
+              ],
               "children": [
                 {
                   "type": "text",
@@ -71863,6 +71875,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "LS-21 / 11 時間軸 (iPhone)（僅列本票改動的照片卡欄位，其餘欄位沿用 LS-21 稿、本票未改）｜隱藏 Tab Bar ✗｜標題 沿用｜釘底動作帶 無｜失敗文案鍵 沿用｜深色 LS-21 / 11 時間軸 · 深色 照片卡紙與墨不反轉｜AX3 照片卡署名兩行（「小安」／「· 2 歲 3 個月」）｜iPad 11-iPad 卡寬 254.5 同規則｜資料落點 照片卡署名同上列（feed_items.child_ids＋children，唯讀）",
+                  "lineHeight": 1.5,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "wJieh",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "MY63u",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-372 後續",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "a8i0t",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "LS-372（相簿卡深色署名被染料池暗角壓到 4.1:1）一併處理照片卡：Imprint Row（KRUtz）左右 padding＝$sp-item 16，caption 起點距紙緣 24、欄寬 329→297；上方定案 1 的「欄寬 329」自此讀作 297（兩位短名字串接 280＜297 仍一行）。量測與理由見 LS-142 Notes（kHDk4）LS-372 段。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -96580,6 +96628,320 @@
               "fontWeight": "normal"
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "g0wwW",
+          "name": "N LS-372 相簿卡／照片卡文字避開染料池暗角",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "YquIx",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-372 相簿卡／照片卡文字避開染料池暗角（R1）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "AgS9H",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "CuL5T",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-372 R1｜量法",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "S7fHP",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "量測方法：Pen 渲染 Export 4×（Xldkz 相簿·深色、V4Ktak 時間軸·深色），以印品紙左緣為 x=0 逐 10pt 帶；每帶在字形縱向範圍內（署名 y＝紙高−27.25～−11.75）取「非字形、落在紙色→池色直線上」的最暗像素當背景，對 $print-ink-secondary #553040 算 WCAG 2.1 對比。另以解析模型 α(d)＝α0×(1−d/R) 對照 iOS 幾何（正圓 R＝78、α0＝PrintPhotoCard.MountPoolOpacity.welcome 的 bottomLeading 0.36）。臨界：深色紙 #E8D9D4 疊 #0D0609 α＝0.2614 時對 #553040 恰 4.5:1。量測腳本與圖檔在 .claude/evidence/LS-372/r1（gitignored）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qzU0K",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "I2jZ8p",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-372 R1｜改前",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "L7FQX",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "文字起點距紙緣 8。Pen 稿（元件 BL 池 α0 0.293，稿面橢圓 rx78／ry88）實測署名 wQVzs 各帶：[8,18) 4.67｜[18,28) 5.01｜[28,38) 5.49｜[38,48) 5.99｜[48,58) 6.45；照片卡 VywUw 同幾何 4.73｜5.06｜5.54｜5.99｜6.45。iOS 模型（α0 0.36）：4.14｜4.51｜4.99｜5.53｜6.13——對上 LS-368 回報的 4.05–4.49。結論：稿面過線但最左帶只剩 0.17 餘裕，實作沿用較深的 .welcome 池就跌破；缺陷在版面（字壓進角落），不在 token。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qUPaZ",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "WYRJQ",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-372 R1｜定案 b",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "eHwkA",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "採 (b) 署名列避開角落，不動染料池：cmp/Card Album 的 Imprint Row（IXmLN）與 cmp/Card Photo 的 Imprint Row（KRUtz）左右 padding＝$sp-item 16，文字起點距紙緣 24（照片仍在 8）。落點理由：角托涵蓋區扣掉 5pt 出血後淨寬 21（同疊紙 Stack Sheet 兩端 21 淨空），字從 21 之外起寫＝「字寫在兩顆角托之間」；16 是節奏值、綁 token，不用倒推餘數 13；$sp-group 12（起點 20）試過，仍在 21 淨空內、iOS 模型只剩 4.6，不採。照片卡一併處理：同一幾何、同一缺陷（改前 4.73），且時間軸上兩種卡相鄰，字起點不一致會差 16pt。LS-367 五個整列替換的 Imprint Row（RCwHt／YLaNY／i0ijn4／LE07a／A8jhK）不吃元件定義，逐一同步 padding。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Ihgfs",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "HoVyu",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-372 R1｜改後",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "V54XH",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Pen 實測：署名 [24,34) 5.25｜[34,44) 5.73｜[44,54) 6.25｜[54,64) 6.79；照片卡 5.30｜5.74｜6.25｜6.81——深色署名列全段 ≥5.25。iOS 模型 α0 0.36 起點 4.79；本內縮成立上限 α0≤0.40（起點處恰 4.5）。依 lit() 規則 α0＝0.03＋0.50×lit，卡片左下角在 viewport y≥311 即 α0≤0.40；現稿深色卡左下角最高者 y＝426（Xldkz J4vk0），全數在上限內。淺色不受影響（淺色臨界 α 0.78）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "d5zKX",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "xCQkX",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-372 R1｜為何不選 a",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "KdxsA",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "染料池 α 由 lit() 規則導出（brand motifs.md「池深＝那個角的光強度，規則自己執行自己」），全稿沖印品共用；調透明度或位置等於改 LS-46 核可的母題規則，且要重量 Card Diary、LS-326 04 詳情印品、Profile Print、歡迎頁 01 家族。先例同向：Lab Imprint 置中就是「版面避開暗角」而非改池子。全稿掃描（每個含 mount-pool 漸層的紙面 × 其內可見文字，對四角池估 α）：深色板上落進 BL／BR 池、又用 $print-ink-secondary 的文字只有這兩個元件；用 $print-ink 的 Caption 臨界 α 0.4225 高於任何池值，不受影響；Card Diary／Profile Print／04 印品不在列。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "R8uPe",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "rKsa0",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-372 R1｜連帶",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "yw1DL",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "文字欄寬 329→297（iPhone）、238.5→206.5（iPad 254.5 卡）。LS-367 定案 1 的「欄寬 329」自本票起讀作 297：「小安 · 2 歲 3 個月、小明 · 8 個月大」實測 280＜297，仍一行。iPad 四張相簿卡 caption 換行——eBgN8、WiBHO、WLGMV 為本票新換行，qteWo 原本就斷在「12 / 張相片」——一律改用 LS-201 同一條折行字元：名稱＋U+0020＋「·」＋U+00A0＋張數＋U+00A0＋張⁠相⁠片（字間 U+2060），「·」領銜下一行、不留孤字。印品高 eBgN8 232→257、WiBHO 288→313、WLGMV 263→288，角托 BL／BR 與疊紙 y 覆寫同步（236／257／264；292／313／320／327；267／288／295／302）。iPad 相簿格是兩欄瀑布流，單欄變高不牽動另一欄。AX3 板（IjWOp／lKoZG／ai2w5）實測印品高不變。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "em6UJ",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "R7qV8W",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-372 R1｜順手",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Q4K77",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "wQVzs 字級 token $fs-note→$fs-body（兩者皆 17，畫面不變）。沿革：$fs-note 是狀態文字用（還可以用幾次／錯在哪），署名是內文；LS-367 VR 指出、池 i-7 舊債。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yW5rB",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "YUL37",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-372 R1｜ios-dev",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "SLL6R",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "AlbumSummaryCardView 與 PhotoCardView 印品白邊上的文字列（Caption／Signature）在 printEdge 8 之內再加水平 16（$sp-item），照片不動。MountPoolOpacity 不必改；AlbumSummaryCardView 目前沿用 .welcome（0.494／0.288／0.36／0.236），與稿面元件 0.393／0.259／0.293／0.197 不同——本票不處理此差異（內縮後兩組值皆過線），若日後改用 lit() 動態算 α，上限 0.40 見「改後」。caption 折行字元比照署名（LS-201）。無新增畫面、無資料落點變更。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
         }
       ]
     },
@@ -98011,7 +98373,7 @@
                               }
                             },
                             "MIxHp": {
-                              "content": "上禮拜的動物園一日遊 · 12 張相片"
+                              "content": "上禮拜的動物園一日遊 · 12 張⁠相⁠片"
                             },
                             "wQVzs": {
                               "enabled": true,
@@ -98210,7 +98572,7 @@
                               }
                             },
                             "MIxHp": {
-                              "content": "阿公阿嬤家過年 · 34 張相片"
+                              "content": "阿公阿嬤家過年 · 34 張⁠相⁠片"
                             },
                             "wQVzs": {
                               "enabled": true,
@@ -98219,27 +98581,27 @@
                             "Qjdzx": {
                               "enabled": false,
                               "width": 216.5,
-                              "y": 295
+                              "y": 320
                             },
                             "o5O1GD": {
                               "enabled": false,
                               "width": 216.5,
-                              "y": 288
+                              "y": 313
                             },
                             "JgUK8": {
                               "x": 233.5
                             },
                             "mlORb": {
-                              "y": 267
+                              "y": 292
                             },
                             "atAkU": {
                               "x": 233.5,
-                              "y": 267
+                              "y": 292
                             },
                             "mTljh": {
                               "enabled": false,
                               "width": 216.5,
-                              "y": 302
+                              "y": 327
                             }
                           }
                         },
@@ -98274,7 +98636,7 @@
                               }
                             },
                             "MIxHp": {
-                              "content": "第一次騎腳踏車 · 5 張相片"
+                              "content": "第一次騎腳踏車 · 5 張⁠相⁠片"
                             },
                             "wQVzs": {
                               "enabled": true,
@@ -98283,27 +98645,27 @@
                             "Qjdzx": {
                               "enabled": false,
                               "width": 216.5,
-                              "y": 270
+                              "y": 295
                             },
                             "o5O1GD": {
                               "enabled": false,
                               "width": 216.5,
-                              "y": 263
+                              "y": 288
                             },
                             "JgUK8": {
                               "x": 233.5
                             },
                             "mlORb": {
-                              "y": 242
+                              "y": 267
                             },
                             "atAkU": {
                               "x": 233.5,
-                              "y": 242
+                              "y": 267
                             },
                             "mTljh": {
                               "enabled": false,
                               "width": 216.5,
-                              "y": 277
+                              "y": 302
                             }
                           }
                         },
@@ -212778,6 +213140,10 @@
                       "width": "fill_container",
                       "layout": "vertical",
                       "gap": "$sp-label",
+                      "padding": [
+                        0,
+                        "$sp-item"
+                      ],
                       "children": [
                         {
                           "type": "text",
@@ -213095,6 +213461,10 @@
                       "width": "fill_container",
                       "layout": "vertical",
                       "gap": "$sp-label",
+                      "padding": [
+                        0,
+                        "$sp-item"
+                      ],
                       "children": [
                         {
                           "type": "text",
@@ -213383,6 +213753,10 @@
                       "width": "fill_container",
                       "layout": "vertical",
                       "gap": "$sp-item",
+                      "padding": [
+                        0,
+                        "$sp-item"
+                      ],
                       "children": [
                         {
                           "type": "text",
@@ -213455,6 +213829,10 @@
                       "width": "fill_container",
                       "layout": "vertical",
                       "gap": "$sp-item",
+                      "padding": [
+                        0,
+                        "$sp-item"
+                      ],
                       "children": [
                         {
                           "type": "text",
