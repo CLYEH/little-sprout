@@ -65,10 +65,15 @@ final class AlbumDetailViewTests: XCTestCase {
         XCTAssertTrue(app.buttons["更多操作"].waitForExistence(timeout: 5))
     }
 
-    /// merge-review R2 M1：Action Bar 版稿面（`ve8YN`／`xcGEY`／`iXdTJ`／`EZqDj`）instance
-    /// 都是 `width:"fill_container"`——改 ref `ImportEntryButton`（hug-content pill）時把這個
-    /// 滿版幾何弄丟了，動作帶從整條主鈕縮成置中小 pill。量 `XCUIElement.frame` 確認撐滿。
-    func testAddPhotosBarButtonFillsActionBarWidth() {
+    /// LS-324（LS-321 使用者裁決 C1a）：Action Bar 版稿面（`ve8YN`／`xcGEY`／`iXdTJ`／`EZqDj`）
+    /// 皆為 `cmp/Button Primary`（`OKSJI`）instance、`width:"fill_container"`、h=60——「加入照片」
+    /// 是頁內主要動作，不是 `cmp/Button Import` 那顆 48pt 次要匯入鈕（LS-315 曾誤換成它）。
+    /// 量 `XCUIElement.frame`：寬度撐滿動作帶（LS-315 R2 M1 的滿版幾何）＋高度落在實心主鈕
+    /// 區間（`PrimaryButton` 高度由 `controlPaddingCTA` 17.5×2＋22pt icon 框推導，iOS 26.5
+    /// 實測 57.0pt；稿面 h=60 的 3pt 差是 `PrimaryButton` 全 app 既有的漂移、非本票引入）——
+    /// 次要匯入鈕只有 48pt 點擊區，換回去會轉紅；區間上限放到 61.5 讓日後把 `PrimaryButton`
+    /// 對齊到 60 時這支不必跟著改。
+    func testAddPhotosBarButtonIsFullWidthPrimaryButton() {
         let app = TapTargetMeasurement.launch(.albumDetailOwner)
         TapTargetMeasurement.assertScreenRendered(.albumDetailOwner, in: app)
 
@@ -83,6 +88,12 @@ final class AlbumDetailViewTests: XCTestCase {
             button.frame.width, windowWidth - screenPad * 2 - 1,
             "「加入照片」Action Bar 版應撐滿動作帶寬度（fill_container，merge-review R2 M1），"
                 + "不是縮成 hug-content pill"
+        )
+        let height = button.frame.height
+        XCTAssertTrue(
+            (55...61.5).contains(height),
+            "「加入照片」應為實心主鈕 cmp/Button Primary（OKSJI，LS-321 裁決 C1a），"
+                + "不是 48pt 的 cmp/Button Import 次要匯入鈕；實測高度 \(height)pt"
         )
     }
 }
