@@ -48,7 +48,8 @@ extension TimelineView {
             )
         case .media(let content):
             PhotoCardView(
-                content: content, timelineStore: timelineStore, familyStore: familyStore,
+                content: content, taggedChildren: taggedChildren(for: entry), occurredAt: entry.occurredAt,
+                timelineStore: timelineStore, familyStore: familyStore,
                 onOpenComments: { openComments(kind: .media, refId: entry.refId) }
             )
         case nil:

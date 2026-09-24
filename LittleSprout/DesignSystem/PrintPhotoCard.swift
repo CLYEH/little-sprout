@@ -19,6 +19,13 @@ struct PrintPhotoCard: View {
     /// 占位圖（沿用既有行為，見下）。
     var remoteURL: URL?
     var accessibilityLabel: String = "家庭照片"
+    /// LS-365：壓印行改放呼叫端給的內容（時間軸照片卡的寶貝署名，LS-367 Notes `L0xP2`），取代
+    /// `showsImprint` 的「LITTLE SPROUT」廠牌字。給了這個就不看 `showsImprint`。無障礙結構隨之
+    /// 改變：照片本身仍是一個 `.isImage` 元素，壓印內容留給呼叫端自己決定怎麼念（署名要念成
+    /// 獨立一句、留白要隱藏）——原本整張卡 `.ignore` 會把壓印內容一起吞掉。
+    /// `AnyView`：本元件的 `MountPoolOpacity` 有外部呼叫端以 `PrintPhotoCard.MountPoolOpacity`
+    /// 引用，改成泛型型別會讓那些引用全部要補型別參數，單一呼叫端不值得。
+    var imprintCaption: AnyView?
 
     struct MountPoolOpacity {
         let topLeading: Double
@@ -46,11 +53,31 @@ struct PrintPhotoCard: View {
         )
     }
 
+    @ViewBuilder
     var body: some View {
+        if imprintCaption != nil {
+            printBody.accessibilityElement(children: .contain)
+        } else {
+            printBody
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(imprintAccessibilityLabel)
+                .accessibilityAddTraits(.isImage)
+        }
+    }
+
+    private var printBody: some View {
         VStack(spacing: 7) {
-            photo
-            if showsImprint {
-                imprintRow
+            if let imprintCaption {
+                photo
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(accessibilityLabel)
+                    .accessibilityAddTraits(.isImage)
+                imprintCaption
+            } else {
+                photo
+                if showsImprint {
+                    imprintRow
+                }
             }
         }
         .padding(.top, AppSpacing.printEdge)
@@ -63,9 +90,6 @@ struct PrintPhotoCard: View {
         .background(mountPoolGlow.clipped())
         .background(Color.lsPrintPaper)
         .overlay(PhotoCornerOverlay(size: cornerSize))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(imprintAccessibilityLabel)
-        .accessibilityAddTraits(.isImage)
     }
 
     private var photo: some View {
