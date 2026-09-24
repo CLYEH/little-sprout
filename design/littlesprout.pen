@@ -56523,6 +56523,7 @@
               "type": "frame",
               "id": "uHmFx",
               "name": "Content Pane",
+              "clip": true,
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
