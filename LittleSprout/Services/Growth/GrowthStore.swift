@@ -24,9 +24,9 @@ enum GrowthOperationState: Equatable {
 @MainActor
 @Observable
 final class GrowthStore {
+    /// LS-335：只留 `childID`——姓名／生日一律由呼叫端讀 `child`（見 `ChildGrowthDetailView`
+    /// 文件註解「姓名／生日一律讀 child」），store 不再持有會過期的快照。
     let childID: UUID
-    let childName: String
-    let childBirthday: Date
     private let apiClient: GrowthAPIClient
     /// 一次抓齊的上限——demo／實際使用者資料量遠低於這個值；真的超過時曲線與記錄列表只會少
     /// 畫／少列出最舊的幾筆，不是崩潰。`list_growth_records` 支援的 `p_before`／`p_before_id`
@@ -47,10 +47,8 @@ final class GrowthStore {
     /// 保留給 `GrowthStoreTests` 直接鎖住 `delete(id:)` 的狀態轉移，不需要建 View）。
     private(set) var deleteState: GrowthOperationState = .idle
 
-    init(childID: UUID, childName: String, childBirthday: Date, apiClient: GrowthAPIClient) {
+    init(childID: UUID, apiClient: GrowthAPIClient) {
         self.childID = childID
-        self.childName = childName
-        self.childBirthday = childBirthday
         self.apiClient = apiClient
     }
 
@@ -87,8 +85,8 @@ final class GrowthStore {
     }
 
     /// LS-312 R3（merge-review R2 M1-a，orchestrator 裁決）：`birthday` 由呼叫端帶入（`child.
-    /// birthday`），不吃 `self.childBirthday`——後者只在 store 建立當下寫死一次，`needsRebuild`
-    /// 同一個孩子不重建之後就不會再更新；使用者改對生日存檔（同一 `child.id`）之後，曲線月齡軸
+    /// birthday`），不吃 store 內的生日快照——當時的 `childBirthday` 只在 store 建立當下寫死一次
+    /// （LS-335 已收掉這個屬性），`needsRebuild` 同一個孩子不重建之後就不會再更新；使用者改對生日存檔（同一 `child.id`）之後，曲線月齡軸
     /// 要立刻反映新生日，不能等到換孩子讓 store 重建才對。
     func curvePoints(for metric: GrowthMetric, birthday: Date) -> [GrowthCurve.CurvePoint] {
         GrowthCurve.curvePoints(for: metric, records: records, birthday: birthday)

@@ -42,14 +42,8 @@ final class PreviewGrowthAPIClient: GrowthAPIClient, @unchecked Sendable {
 
 extension GrowthStore {
     @MainActor
-    static func preview(
-        childID: UUID = UUID(), childName: String = "陳小安",
-        childBirthday: Date = BirthdayFormat.date(fromWireString: "2025-04-20")!
-    ) -> GrowthStore {
-        GrowthStore(
-            childID: childID, childName: childName, childBirthday: childBirthday,
-            apiClient: PreviewGrowthAPIClient()
-        )
+    static func preview(childID: UUID = UUID()) -> GrowthStore {
+        GrowthStore(childID: childID, apiClient: PreviewGrowthAPIClient())
     }
 
     /// Notes 統一示範資料集（`G1tRP9`）：陳小安，「今天」＝2026-08-20，出生 2025-04-20，
@@ -59,10 +53,8 @@ extension GrowthStore {
     /// id（見 `ChildGrowthDetailView(previewGrowthStore:currentUserID:)`），才能同時展示 03
     /// 記錄列表「編輯」（僅作者）與「刪除」（作者或 owner）兩種動作列。
     @MainActor
-    static func previewSeededWithDemoRecords(
-        childID: UUID = UUID(), childName: String = "陳小安"
-    ) -> GrowthStore {
-        let store = GrowthStore.preview(childID: childID, childName: childName)
+    static func previewSeededWithDemoRecords(childID: UUID = UUID()) -> GrowthStore {
+        let store = GrowthStore.preview(childID: childID)
         let familyID = UUID()
         let authorID = GrowthStore.previewAuthorID
         func record(_ measuredOn: String, height: Double?, weight: Double?, head: Double?) -> GrowthRecord {

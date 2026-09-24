@@ -51,10 +51,7 @@ final class GrowthStoreTests: XCTestCase {
     }
 
     private func makeStore(apiClient: GrowthAPIClient = PreviewGrowthAPIClient()) -> GrowthStore {
-        GrowthStore(
-            childID: UUID(), childName: "陳小安",
-            childBirthday: BirthdayFormat.date(fromWireString: "2025-04-20")!, apiClient: apiClient
-        )
+        GrowthStore(childID: UUID(), apiClient: apiClient)
     }
 
     private static func record(
