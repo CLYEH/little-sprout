@@ -79,7 +79,16 @@ struct TimelineView: View {
         // tab 不受影響）；系統標題被隱藏後唯一的可見標題來源是 `headerRow` 的自訂 Text，
         // 兩處都補 `.accessibilityAddTraits(.isHeader)` 保留 heading 語意（不然 VoiceOver
         // 會少一個原本系統 large title 免費附帶的 heading landmark）。
-        .toolbar(.hidden, for: .navigationBar)
+        // LS-369：隱藏只套 compact——iPad detail 欄 nav bar 是「顯示側邊欄」鈕的容身處（LS-344 R1 M1
+        // 同型死路）。regular 比照 `AlbumsView`（LS-355）：`.inline`＋零尺寸 principal 關掉系統標題，
+        // 稿面 `go7f9` 只有自畫 Title `D67gr`；push 目的地皆自設 `.inline`。測試：`TimelineViewIPadTests`。
+        .toolbar(horizontalSizeClass == .regular ? .automatic : .hidden, for: .navigationBar)
+        .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .automatic)
+        .toolbar {
+            if horizontalSizeClass == .regular {
+                ToolbarItem(placement: .principal) { Color.clear.frame(width: 0, height: 0).accessibilityHidden(true) }
+            }
+        }
         // LS-328：批次匯入在時間軸不在畫面上時完成，回到畫面時補一次 refresh（見
         // `TimelineStore+Import.swift`）——`TabView`＋`.tabItem`（`RootView.SectionTabView`）
         // 切換分頁時，未選取分頁的根內容會收到 `onDisappear`／選回來時收到 `onAppear`，同
