@@ -186445,7 +186445,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Import / 05 完成摘要 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 157pt（主鈕「回到時間軸」＋「重試失敗項（N）」；N＝可重試失敗數，LS002 容量已滿不計，N=0 時整顆不出現、動作帶退為 93pt，見 05b ygMNL；LS-349 起「重試指定寶貝」不進動作帶）｜失敗文案鍵 LS002／URLError 連線／5xx 伺服器（同 04，Failed Section 逐列顯示）；寶貝指定失敗 LS044＝不可重試分支、其他 set_media_children_batch 錯誤＝可重試（文案見「LS-349 完成摘要補齊」段）｜深色 qGUTt：色彩隨主題；成功統計 icon 改用 circle-check（避開本機 check-circle 渲染成問號的既有 bug）｜AX3 CDlkK：成功統計數字改用 $fs-display 34（與失敗統計不對稱設計，R2 訂正）；LS-349 起 Icon Line Box 高 58、「重試指定寶貝（N）」label 改 fixed-width 換行｜iPad C09ZI：754pt 滿版欄（同 04，INF-10），Stat Card 橫向鋪開｜資料落點 本頁無可編輯欄位（純 UI 狀態）；「重試失敗項」→ 本機上傳佇列重送（寫入 docs/API.md §2 media）；「重試指定寶貝」→ RPC set_media_children_batch（docs/API.md §2 media_children／§4）",
+                  "content": "Import / 05 完成摘要 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 157pt（主鈕「回到時間軸」＋「重試失敗項（N）」；N＝可重試失敗數，LS002 容量已滿不計，N=0 時整顆不出現、動作帶退為 93pt，見 05b ygMNL；LS-349 起「補上寶貝」不進動作帶）｜失敗文案鍵 LS002／URLError 連線／5xx 伺服器（同 04，Failed Section 逐列顯示）；寶貝指定失敗 LS044＝不可重試分支、其他 set_media_children_batch 錯誤＝可重試（文案見「LS-349 完成摘要補齊」段）｜深色 qGUTt：色彩隨主題；成功統計 icon 改用 circle-check（避開本機 check-circle 渲染成問號的既有 bug）｜AX3 CDlkK：成功統計數字改用 $fs-display 34（與失敗統計不對稱設計，R2 訂正）；LS-349 起 Icon Line Box 高 58、「補上寶貝（N）」label 改 fixed-width｜iPad C09ZI：754pt 滿版欄（同 04，INF-10），Stat Card 橫向鋪開｜資料落點 本頁無可編輯欄位（純 UI 狀態）；「重試失敗項」→ 本機上傳佇列重送（寫入 docs/API.md §2 media）；「補上寶貝」→ RPC set_media_children_batch（docs/API.md §2 media_children／§4）",
                   "fontFamily": "Inter",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -186464,7 +186464,7 @@
                   "id": "ryOf3",
                   "name": "stamp",
                   "fill": "#7A3B48",
-                  "content": "LS-349 R1",
+                  "content": "LS-349 R2",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "fontWeight": "700"
@@ -186476,7 +186476,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Import / 05b 完成摘要 · 寶貝已移除 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt（只有主鈕：本批沒有上傳失敗，「重試失敗項」不出現）｜失敗文案鍵 LS044（寶貝已軟刪，不可重試，不給按鈕）＋其他 set_media_children_batch 錯誤（可重試）｜深色 未另畫：與 05 深色 qGUTt 同一套 token 與版面，差異只多一列 Removed Row（$text-primary，同色票）｜AX3 未另畫：Removed Row 與 05 AX3 CDlkK 的 Stat 沒有加入列同構（Icon Line Box 高 58＋fixed-width 文字換行）｜iPad 未另畫：同 05 iPad C09ZI 754pt 欄｜資料落點 「重試指定寶貝」→ RPC set_media_children_batch（docs/API.md §2 media_children／§4）；其餘無持久化（純 UI 狀態）",
+                  "content": "Import / 05b 完成摘要 · 寶貝已移除 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt（只有主鈕：本批沒有上傳失敗，「重試失敗項」不出現）｜失敗文案鍵 LS044（寶貝已軟刪，不可重試，不給按鈕）＋其他 set_media_children_batch 錯誤（可重試）｜深色 未另畫：與 05 深色 qGUTt 同一套 token 與版面，05b 只多說明句、沒有新的色票或元件｜AX3 已出稿 A11y / 05b 完成摘要 · 寶貝已移除 · Dynamic Type AX3（body 40pt）X27Wc（R2，VR R1 MN-1）：四句說明逐句換行不孤字、按鈕 label 一行、Section Header fixed-width 換行｜iPad 未另畫：同 05 iPad C09ZI 754pt 欄，只有欄寬差異｜資料落點 「補上寶貝」→ RPC set_media_children_batch（docs/API.md §2 media_children／§4）；其餘無持久化（純 UI 狀態）",
                   "fontFamily": "Inter",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187001,7 +187001,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "04 家族：iPhone YfOUJ／深色 y2Qsy／AX3 Fgezb／iPad vOgRq。04b：iPhone淺色 nMVqp／AX3 Rfl9n（R2 新增，VR MN-14）。05 家族：iPhone L6zy2／深色 qGUTt／AX3 CDlkK／iPad C09ZI。 05b（LS-349 R1）：iPhone 淺色 ygMNL。",
+                  "content": "04 家族：iPhone YfOUJ／深色 y2Qsy／AX3 Fgezb／iPad vOgRq。04b：iPhone淺色 nMVqp／AX3 Rfl9n（R2 新增，VR MN-14）。05 家族：iPhone L6zy2／深色 qGUTt／AX3 CDlkK／iPad C09ZI。 05b（LS-349 R1）：iPhone 淺色 ygMNL。 05b AX3（LS-349 R2）：X27Wc。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -187425,7 +187425,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-349 R1",
+                  "content": "LS-349 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -187439,7 +187439,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "範圍：補上 LS-304／LS-319 已上線、但 LS-251 核可稿沒有的三處——①「N 張沒有加入」列 ②「重試失敗項（N）」的 N 語意 ③ 寶貝指定失敗（LS-319）的統計列與重試入口；另新增 05b 寶貝已移除板 ygMNL。05 家族四板：iPhone L6zy2／深色 qGUTt／AX3 CDlkK／iPad C09ZI。未動 00–04、06 各板。用語：01 群卡的動作叫「指定寶貝」（實作 ImportGroupCardView「這群還沒有指定寶貝」），05 沿用同一個動詞，不用工程用語「標記」。",
+                  "content": "範圍：補上 LS-304／LS-319 已上線、但 LS-251 核可稿沒有的三處——①「N 張沒有加入」列 ②「重試失敗項（N）」的 N 語意 ③ 寶貝指定失敗（LS-319）的統計列與補上寶貝入口；另新增 05b 寶貝已移除板 ygMNL 與其 AX3 板 X27Wc（R2，VR R1 MN-1）。05 家族四板：iPhone L6zy2／深色 qGUTt／AX3 CDlkK／iPad C09ZI。未動 00–04、06 各板。用語：01 群卡的動作叫「指定寶貝」（實作 ImportGroupCardView「這群還沒有指定寶貝」），05 沿用同一個動詞講「發生什麼」，按鈕動詞用「補上寶貝」（R2，見下），不用工程用語「標記」。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187460,7 +187460,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-349 R1",
+                  "content": "LS-349 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -187474,7 +187474,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "統計卡（Stats Card）三列，數字契約：成功＋沒有成功＋沒有加入＝開始匯入時的總數（稿面 123＋2＋3＝128，沿 nU2Ka 的 128 故事線；05b 為 128 全部上傳成功）。\n①成功群 Success Group（L6zy2 內 l2nLL，gap $sp-label 8）＝成功統計 AHQE3＋寶貝未指定子列 D45LkN。寶貝沒有指定成功的照片已經上傳成功、算在成功數裡，所以做成成功統計底下的子列（左縮 40＝成功 icon 32＋$sp-label 8，對齊「已成功匯入」字首），不和「沒有成功」並列成第四類——並列會讓人以為這幾張也掉了，也破壞上面的加總。icon circle-alert＋$text-primary（十條之八：還沒做完用 $text-primary＋circle-alert，不用 danger；照片沒有遺失）。文案「其中 N 張的寶貝沒有指定成功」。\n②沒有成功 I49Ido 不變。\n③沒有加入 LbgZW：icon circle-minus（被排除、不會再處理；與 circle-alert 靠形狀區分，不靠顏色）＋$text-secondary；文案拆兩行「N 張沒有加入」／「格式不支援或讀取失敗」——原一行在 17pt、305 寬卡片內會斷成「…讀取失」＋孤字「敗）」，拆行後第二行就是原因。\n三列 icon 都放在 Icon Line Box（高＝該板 $fs-note 單行行高：iPhone／iPad 25、AX3 58），列 alignItems:start；SwiftUI 用 HStack(alignment: .firstTextBaseline) 或 .top 讓 icon 對齊首行。",
+                  "content": "統計卡（Stats Card）三列，數字契約：成功＋沒有成功＋沒有加入＝開始匯入時的總數（稿面 123＋2＋3＝128，沿 nU2Ka 的 128 故事線；05b 為 128 全部上傳成功）。\n①成功群 Success Group（L6zy2 內 l2nLL，gap $sp-label 8）＝成功統計 AHQE3＋寶貝未指定子列 D45LkN。寶貝沒有指定成功的照片已經上傳成功、算在成功數裡，所以做成成功統計底下的子列（左縮 40＝成功 icon 32＋$sp-label 8，對齊「已成功匯入」字首），不和「沒有成功」並列成第四類。R2（VR R1 MJ-1）：子列文字降為 $text-secondary（與「N 張沒有成功」同色，最不嚴重的事不再比照片遺失更醒目）；icon 改 lucide baby（$text-primary），與 danger 列的 circle-alert 在稿上就是不同 glyph——區分靠三件事：位置（左縮、掛在成功之下）＋icon 形狀＋文字，不靠顏色。文案「其中 N 張的寶貝沒有指定成功」。\n②沒有成功 I49Ido 不變（LS-251 已核可，本票未改）。\n③沒有加入 LbgZW：icon circle-minus＋$text-secondary；circle-minus 在 05 家族只代表「沒有加入」（R2 起 LS044 不再用它，見 MJ-2 處置）；文案拆兩個 text 節點「N 張沒有加入」／「格式不支援或讀取失敗」。\n三列 icon 都放在 Icon Line Box（高＝該板 $fs-note 單行行高：iPhone／iPad 25、AX3 58），列 alignItems:start；SwiftUI 用 HStack(alignment: .firstTextBaseline) 或 .top 讓 icon 對齊首行。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187495,7 +187495,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-349 R1",
+                  "content": "LS-349 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -187509,7 +187509,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "兩顆重試的主次：不並排在動作帶。\n①「重試失敗項（N）」留在釘底動作帶（cmp/Button Secondary，J2KFHz）：這是照片本身沒上傳、有遺失風險的事。N 只算可重試失敗（UploadFailureReason.isRetryable，LS002 容量已滿不計）——稿面由（2）改（1），因為 2 張失敗中 1 張是容量已滿；N=0 時整顆不出現。\n②「重試指定寶貝（N）」放在內容區自己的 Marking Section（IpMe2），說明句下方，用 cmp/Button Text（和 Failed Section 逐列「重試」同一元件）：照片已經在時間軸上，重試只補寶貝，位階低於補上傳；放在說明句旁邊，按之前就讀得到「不會重新上傳」。動作帶最多兩顆，不因寶貝指定失敗再長高一顆（56pt，AX3 89pt）。",
+                  "content": "兩顆按鈕的主次：不並排在動作帶。\n①「重試失敗項（N）」留在釘底動作帶（cmp/Button Secondary，J2KFHz）：照片本身沒上傳、有遺失風險。N 只算可重試失敗（UploadFailureReason.isRetryable，LS002 容量已滿不計）——稿面由（2）改（1）；N=0 時整顆不出現。\n②「補上寶貝（N）」（R2 由「重試指定寶貝」改名，VR R1 MJ-3）放在內容區 Marking Section 的最後，用 cmp/Button Text（和 Failed Section 逐列「重試」同一元件）：照片已經在時間軸上，這顆只補寶貝、位階低於補上傳。動詞「補上」與說明句「補上寶貝不會重新上傳照片」同一個詞，也和會重新上傳的「重試失敗項」分開；6 字加數字在 AX3 一行放得下。label 內「寶貝」與「（N）」之間放 U+2060，SwiftUI 字串同樣寫 \"補上寶貝\\u{2060}（\\(n)）\"，（N）不得單獨斷行。動作帶最多兩顆。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187530,7 +187530,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-349 R1",
+                  "content": "LS-349 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -187544,7 +187544,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Marking Section 規格：Failed Section 之後接 Spacer Section 44 → Marking Section（vertical，gap $sp-item 16）：Section Header「這 N 張的寶貝沒有指定成功」（$fs-note 700 $text-secondary，同「這 2 張沒有成功」）→ Retry Group（gap $sp-label 8）＝Marking Note「照片都已經匯入了。」換行「重試只會補上寶貝，不會重新上傳。」（$fs-note $text-primary；句號後換行是刻意的，避免 17pt 下斷出單字行）＋ Retry Marking Button（cmp/Button Text，icon refresh-cw，label「重試指定寶貝（N）」，N＝可重試的張數）。順序依嚴重度：沒有成功在前、寶貝沒有指定成功在後；本批沒有上傳失敗時（05b）Marking Section 直接接在統計卡後的 44 斷點。Body 底部 padding 由 0 補為 $sp-block 24（與實作 .padding(.bottom, AppSpacing.block) 一致），最後一列不再貼住動作帶上緣。",
+                  "content": "Marking Section 規格（R2 重排，VR R1 MJ-3／MJ-4）：Failed Section 之後接 Spacer Section 44 → Marking Section（vertical，gap $sp-item 16）＝①Section Header「這 N 張的寶貝沒有指定成功」（$fs-note 700 $text-secondary，fixed-width 可換行）②Marking Notes（vertical，gap $sp-label 8）：一句一個 text 節點（fixed-width＋fill_container），全稿不用手動換行——「照片都匯入了。」／「補上寶貝不會重新上傳照片。」（$fs-note $text-primary）③最後才是按鈕「補上寶貝（N）」：先講發生什麼、再給動作，按鈕是動線終點。iPhone Marking Notes w50qt、深色 TyLuR、AX3 Fsix4、iPad S71LDs；按鈕 I8MyXS／LJzQQ／D5Ppv／DODeH（AX3 D5Ppv 為 fill_container＋label fixed-width）。本批沒有上傳失敗時（05b）Marking Section 直接接在統計卡後的 44 斷點。Body 底部 padding $sp-block 24（與實作 .padding(.bottom, AppSpacing.block) 一致）。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187565,7 +187565,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-349 R1",
+                  "content": "LS-349 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -187579,7 +187579,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "LS044（寶貝已移除，不可重試）：05b（ygMNL）畫同一批裡可重試與不可重試混合的情況。統計子列 N 算全部（3）；Retry Group 文案改「照片都已經匯入了。其中 2 張可以重試，」換行「只會補上寶貝，不會重新上傳。」、鈕「重試指定寶貝（2）」只算可重試；下方 Removed Row（circle-minus＋$text-primary，Icon Line Box 25）「另外 1 張沒辦法指定：」換行「選的寶貝已經移除了。」——不給按鈕（原樣重送永遠 LS044），也不承諾「之後再指定」（目前 app 沒有單張改寶貝的入口）。用語沿 app 既有「移除這個寶貝」／「已移除的寶貝」。全部都是 LS044 時：Retry Group 整組不出現，Removed Row 改「照片都已經匯入了。」換行「選的寶貝已經移除，這 N 張沒辦法指定。」。",
+                  "content": "LS044（寶貝已移除，不可重試）：05b ygMNL／AX3 X27Wc 畫同一批裡可重試與不可重試混合。統計子列 N 算全部（3）；Marking Notes（x4D0mD／AX3 LLHVy）一句一節點，依序：「照片都匯入了。」→「1 張的寶貝已經移除，沒辦法指定。」→「另外 2 張可以補上寶貝。」→「補上寶貝不會重新上傳照片。」→ 按鈕「補上寶貝（2）」（xnOYi／AX3 i5kq2d）只算可重試、放最後。R2 起 LS044 不再是獨立一列、不帶 icon（VR R1 MJ-2：circle-minus 只留給「沒有加入」，同一畫面可能同時出現兩者）。不承諾「之後再指定」（目前 app 沒有單張改寶貝的入口）；用語沿 app 既有「移除這個寶貝」／「已移除的寶貝」。全部都是 LS044 時：按鈕與「另外…可以補上」「補上寶貝不會…」兩句都不出現，Marking Notes 只剩「照片都匯入了。」／「選的寶貝已經移除，這 N 張沒辦法指定。」。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187600,7 +187600,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-349 R1",
+                  "content": "LS-349 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -187614,7 +187614,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "狀態：「重試指定寶貝」按下後在請求進行中 disable、label 改「正在指定寶貝…」（只有 in-flight 才 disable，十條之八）；全部成功 → Marking Section 與統計子列一起消失，成功數不變（照片本來就算成功）；再失敗 → 維持原樣，N 依剩下的群更新。「重試失敗項」沿 LS-251 fZYWK④（回到上傳態）。空狀態（全部成功、沒有任何失敗）＝只剩成功統計＋主鈕，同 LS-251 原設計。",
+                  "content": "狀態：「補上寶貝」按下後到 RPC 回來前整顆 disable、label 改「正在補上寶貝…」、icon 位置換成 ProgressView（只有 in-flight 才 disable，十條之八；實例與對比數字見本段最後一條 XG9yu）；請求期間 Marking Section 與統計子列都留著，全部成功 → 兩者一起消失，成功數不變（照片本來就算成功）；再失敗 → 按鈕回到可按，N 依剩下的群更新。「重試失敗項」沿 LS-251 fZYWK④（回到上傳態）。空狀態（全部成功、沒有任何失敗）＝只剩成功統計＋主鈕，同 LS-251 原設計。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187635,7 +187635,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-349 R1",
+                  "content": "LS-349 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -187649,7 +187649,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "與現行實作的差異（交 iOS 小票，Import05SummaryView.swift）：\nD1 寶貝指定失敗列：實作是統計卡第四列並列（exclamationmark.circle.fill＋lsDanger、「N 張寶貝標記未完成」）→ 稿：成功統計子列，左縮 40，exclamationmark.circle＋lsTextPrimary，「其中 N 張的寶貝沒有指定成功」。\nD2 沒有加入列：實作 exclamationmark.circle＋一行「N 張沒有加入（格式不支援或讀取失敗）」→ 稿：minus.circle＋兩行「N 張沒有加入」／「格式不支援或讀取失敗」，icon 對首行。\nD3 重試寶貝鈕：實作在動作帶第三顆（lsAccentSoft 底＋lsControlLine 框、「重試標記（N）」）→ 稿：移到內容區 Marking Section，Button Text 樣式，「重試指定寶貝（N）」，前面有說明句。\nD4 Marking Section（標題＋說明＋LS044 Removed Row）實作沒有 → 新增；不可重試張數＝failedMarkingMediaCount − retryableFailedMarkingCount，不需要新 API。\nD5 in-flight：實作按下即從 failedGroups 移除（列瞬間消失、失敗再出現）→ 稿：進行中 disable＋「正在指定寶貝…」。\n一致、不需改：「重試失敗項（N）」N＝可重試數、N=0 隱藏；Body 底部 24。\n範圍外、未補：04 匯入進度頁（Import04ProgressView）的「N 張沒有加入」列稿面仍沒有（本票票文只含 05），記 LS-354。",
+                  "content": "與現行實作的差異（交 iOS 小票，Import05SummaryView.swift）：\nD1 寶貝指定失敗列：實作是統計卡第四列並列（exclamationmark.circle.fill＋lsDanger、「N 張寶貝標記未完成」）→ 稿：成功統計子列，左縮 40，icon figure.child（lsTextPrimary）＋文字 lsTextSecondary，「其中 N 張的寶貝沒有指定成功」。\nD2 沒有加入列：實作 exclamationmark.circle＋一行「N 張沒有加入（格式不支援或讀取失敗）」→ 稿：minus.circle＋兩個 Text「N 張沒有加入」／「格式不支援或讀取失敗」，icon 對首行。\nD3 補上寶貝鈕：實作在動作帶第三顆（lsAccentSoft 底＋lsControlLine 框、「重試標記（N）」）→ 稿：移到內容區 Marking Section 最後，Button Text 樣式，「補上寶貝（N）」（WJ 防斷）。\nD4 Marking Section（標題＋一句一行的說明＋LS044 說明句）實作沒有 → 新增；不可重試張數＝failedMarkingMediaCount − retryableFailedMarkingCount，不需要新 API。\nD5 in-flight：實作按下即從 failedGroups 移除（列瞬間消失、失敗再出現，違反十條之十）→ 稿：進行中 disable＋「正在補上寶貝…」，版面不動。\n一致、不需改：「重試失敗項（N）」N＝可重試數、N=0 隱藏；Body 底部 24；Nav「完成」鈕左距（R2 稿面補齊為 $screen-pad 24，實作 navRow 本來就是 .padding(.leading, AppSpacing.screenPad)）。\n範圍外、未補：04 匯入進度頁（Import04ProgressView）的「N 張沒有加入」列稿面仍沒有（本票票文只含 05），記 LS-354。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187670,7 +187670,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-349 R1",
+                  "content": "LS-349 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -187684,7 +187684,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "SF Symbol 對照（本票新增）：circle-minus → \"minus.circle\"｜寶貝未指定子列的 circle-alert（$text-primary）→ \"exclamationmark.circle\"（不用 .fill，和 danger 的 .fill 以形狀區分）｜clock-3 → \"clock\"（稿面 icon 名由 clock 改 clock-3：本機 Pencil 的 lucide 集沒有 clock，渲染成問號占位；05 家族四顆主鈕 BMpPK／Fe3lC／dXuGC／H0sqI 已改，SF 仍是 \"clock\"。LS-142 16／16b 五處 clock 同病未動，記 LS-354）。",
+                  "content": "SF Symbol 對照（本票新增）：circle-minus → \"minus.circle\"（只用於「沒有加入」）｜baby（寶貝未指定子列）→ \"figure.child\"｜loader-circle（補上寶貝進行中）→ ProgressView()｜clock-3 → \"clock\"（稿面 icon 名由 clock 改 clock-3：本機 Pencil 的 lucide 集沒有 clock，渲染成問號占位；05 家族四顆主鈕 BMpPK／Fe3lC／dXuGC／H0sqI 已改，SF 仍是 \"clock\"。LS-142 16／16b 五處 clock 同病未動，記 LS-354）。R1 寫的「子列用 exclamationmark.circle、與 danger 的 .fill 以形狀區分」作廢——稿上兩者是同一個 lucide glyph，那句不成立（VR R1 MJ-1）。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187705,7 +187705,7 @@
                   "fill": "#7A3B48",
                   "textGrowth": "fixed-width",
                   "width": 118,
-                  "content": "LS-349 R1",
+                  "content": "LS-349 R2",
                   "lineHeight": 1.42,
                   "textAlign": "right",
                   "fontFamily": "Noto Sans TC",
@@ -187719,10 +187719,180 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "節點 id（LS-349 R1 落地時）：Success Group l2nLL／Fxkjw／dCutl／b0D25x（iPhone／深色／AX3／iPad，以下同序）；寶貝未指定子列 D45LkN／ydMf2／ZSsa0／O684RP；沒有加入 LbgZW／h4wu4c／M3WpK6／ahrBE；Marking Section IpMe2／QPU5Y／Su2EX／afVPC；05b Marking Section J9ksa。AX3 CDlkK 第一列（容量已滿）原本誤畫成「重試」鈕（原 IRnD5，已於 LS-349 R1 刪除），改為與基準板一致的「查看儲存空間」連結 re29Z。",
+                  "content": "節點 id（LS-349 R2 落地時）：Success Group l2nLL／Fxkjw／dCutl／b0D25x（iPhone／深色／AX3／iPad，以下同序）；寶貝未指定子列 D45LkN／ydMf2／ZSsa0／O684RP；沒有加入 LbgZW／h4wu4c／M3WpK6／ahrBE；Marking Section IpMe2／QPU5Y／Su2EX／afVPC；05b Marking Section J9ksa；05b AX3 板 X27Wc。R1 的 Retry Group 與 05b Removed Row 已於 LS-349 R2 刪除，由 Marking Notes＋按鈕取代（見 JKCKd／yGn3W 列的現行 id）。AX3 CDlkK 第一列（容量已滿）原本誤畫成「重試」鈕（原 IRnD5，已於 LS-349 R1 刪除），改為與基準板一致的「查看儲存空間」連結 re29Z。Nav Row（ASey0／jsSol／oJpD4／ko1WS／XXW8B）左 padding 0→$screen-pad 24（R2，VR R1 MN-2）。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XG9yu",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dPwQn",
+                  "name": "stamp",
+                  "fill": "#7A3B48",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-349 R2",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "tx194",
+                  "name": "In-flight Spec",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dDXf0",
+                      "name": "l",
+                      "fill": "#2B141C",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "D5 進行中態實例（VR R1 MN-3）：「補上寶貝（N）」按下後，到 RPC 回來前整顆 disable——icon 換成轉圈（lucide loader-circle；SwiftUI 用 ProgressView() 放在 icon 位置、.controlSize(.small)），label 改「正在補上寶貝…」，icon 與字一律 $text-secondary。對比（最不利點，底為板面窗光漸層兩端 $bg／$bg-lit）：淺色 #553040 對 #EDD3D6 7.91:1、對 #F5E1E3 8.90:1；深色 #D3AEB2 對 #190E12 9.41:1、對 #251419 8.78:1——皆 ≥4.5（且 ≥7 AAA）。版面不動：按鈕原位、Marking Section 與統計子列在請求期間都留著，成功後才一起消失；失敗則按鈕回到可按、N 依剩下的群更新。",
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "luajx",
+                      "name": "Specimens",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "JprK0",
+                          "name": "Specimen Light",
+                          "theme": {
+                            "mode": "light"
+                          },
+                          "width": "fill_container",
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "padding": 16,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "cbi6c",
+                              "name": "Specimen Label",
+                              "fill": "$text-secondary",
+                              "content": "淺色",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "id": "W7VtTE",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Fill Babies Button · 可按",
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "fill": "$text-primary"
+                                },
+                                "hIhVd": {
+                                  "content": "補上寶貝⁠（3）",
+                                  "fill": "$text-primary"
+                                }
+                              }
+                            },
+                            {
+                              "id": "TgRYU",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Fill Babies Button · 進行中",
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "loader-circle",
+                                  "fill": "$text-secondary"
+                                },
+                                "hIhVd": {
+                                  "content": "正在補上寶貝…",
+                                  "fill": "$text-secondary"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "q8b4vP",
+                          "name": "Specimen Dark",
+                          "theme": {
+                            "mode": "dark"
+                          },
+                          "width": "fill_container",
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "padding": 16,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Nr1S3",
+                              "name": "Specimen Label",
+                              "fill": "$text-secondary",
+                              "content": "深色",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "600"
+                            },
+                            {
+                              "id": "lhJWy",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Fill Babies Button · 可按",
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "fill": "$text-primary"
+                                },
+                                "hIhVd": {
+                                  "content": "補上寶貝⁠（3）",
+                                  "fill": "$text-primary"
+                                }
+                              }
+                            },
+                            {
+                              "id": "QaY7n",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Fill Babies Button · 進行中",
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "loader-circle",
+                                  "fill": "$text-secondary"
+                                },
+                                "hIhVd": {
+                                  "content": "正在補上寶貝…",
+                                  "fill": "$text-secondary"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
