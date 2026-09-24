@@ -100,20 +100,17 @@ final class PhotoCardBabyCaptionUITests: XCTestCase {
 
     // MARK: - 未標記
 
-    func testUntagged_blankCaptionHidden_cardHeightUnchanged() throws {
+    func testUntagged_noSignatureElement_cardHeightUnchanged() throws {
         for size in [Self.xSmall, Self.large, Self.ax3] {
             let untagged = launch(fixture: "none", size: size)
             let untaggedCard = untagged.descendants(matching: .any)["harness.photoCard"]
             XCTAssertTrue(untaggedCard.waitForExistence(timeout: 10), "[\(size)] 未標記照片卡沒渲染")
+            // 空白行 `.accessibilityHidden(true)` 在這裡驗不到：iOS 26 的 XCUI 快照連
+            // `.accessibilityElement(children: .ignore)` 的子節點都會列出（照片 `.isImage` 底下仍看得到
+            // `person.2.fill`），hidden 與否在 XCUI 樹上沒有差別——只斷言沒有署名元素。
             XCTAssertFalse(
                 untagged.descendants(matching: .any)[QAAccessibilityID.photoCardSignature].exists,
                 "[\(size)] 未標記卡不該有署名元素"
-            )
-            let blankTexts = untaggedCard.staticTexts.allElementsBoundByIndex
-                .filter { $0.label.trimmingCharacters(in: .whitespaces).isEmpty }
-            XCTAssertTrue(
-                blankTexts.isEmpty,
-                "[\(size)] 未標記的空白署名行要 accessibilityHidden，不該留一個空白 VoiceOver 節點（\(blankTexts.count) 個）"
             )
             attachScreenshot(untagged, name: "none-\(size)")
             let untaggedHeight = untaggedCard.frame.height
