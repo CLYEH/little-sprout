@@ -177461,7 +177461,7 @@
           "padding": [
             8,
             "$screen-pad",
-            0,
+            "$sp-block",
             "$screen-pad"
           ],
           "children": [
@@ -178164,7 +178164,7 @@
           "padding": [
             8,
             "$screen-pad",
-            0,
+            "$sp-block",
             "$screen-pad"
           ],
           "children": [
@@ -178867,7 +178867,7 @@
           "padding": [
             8,
             "$screen-pad",
-            0,
+            "$sp-block",
             "$screen-pad"
           ],
           "children": [
@@ -180417,7 +180417,7 @@
           "padding": [
             8,
             "$screen-pad-lg",
-            0,
+            "$sp-block",
             "$screen-pad-lg"
           ],
           "children": [
@@ -210639,6 +210639,425 @@
           "fontFamily": "$font",
           "fontSize": "$fs-body",
           "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ygMNL",
+      "x": 8609,
+      "y": 108428.75769836412,
+      "name": "Import / 05b 完成摘要 · 寶貝已移除 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Ul4xT",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "XXW8B",
+          "name": "Nav Row",
+          "width": "fill_container",
+          "padding": [
+            0,
+            16,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "id": "G0eywf",
+              "type": "ref",
+              "ref": "qe9yS",
+              "name": "Done Button",
+              "width": "fit_content",
+              "descendants": {
+                "breqI": {
+                  "enabled": false
+                },
+                "hIhVd": {
+                  "content": "完成"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "C6Pfe",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            "$screen-pad",
+            "$sp-block",
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "qnroW",
+              "name": "Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-tight",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KtkGM",
+                  "name": "Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "匯入完成",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-display",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LUUxJ",
+                  "name": "Subtitle",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "共 7 個日期群",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-body",
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "NSQ4O",
+              "name": "Spacer 24",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
+              "id": "TzEDh",
+              "name": "Stats Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "padding": "$inset-card",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "lcPpa",
+                  "name": "Success Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "xXSPK",
+                      "name": "Stat 成功",
+                      "gap": "$sp-label",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "HuTKA",
+                          "name": "Stat Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "circle-check",
+                          "library": "lucide",
+                          "fill": "$success"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "CLMar",
+                          "name": "Stat 成功 Text",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bRnsP",
+                              "name": "Stat Count",
+                              "fill": "$text-primary",
+                              "content": "128 張",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-display",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "USWCW",
+                              "name": "Stat Label",
+                              "fill": "$text-secondary",
+                              "content": "已成功匯入",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GZeSM",
+                      "name": "Stat 寶貝未指定",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        40
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "MoCwd",
+                          "name": "Icon Line Box",
+                          "height": 25,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "ZUcQa",
+                              "name": "Stat Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "circle-alert",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "dT3RH",
+                          "name": "Stat Marking Inline",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "其中 3 張的寶貝沒有指定成功",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "F36yAl",
+              "name": "Spacer Section",
+              "width": "fill_container",
+              "height": 44
+            },
+            {
+              "type": "frame",
+              "id": "J9ksa",
+              "name": "Marking Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CKoKQ",
+                  "name": "Section Header",
+                  "fill": "$text-secondary",
+                  "content": "這 3 張的寶貝沒有指定成功",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "t65VGA",
+                  "name": "Retry Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QnTPe",
+                      "name": "Marking Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "照片都已經匯入了。其中 2 張可以重試，\n只會補上寶貝，不會重新上傳。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "id": "MqPwv",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Retry Marking Button",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "refresh-cw"
+                        },
+                        "hIhVd": {
+                          "content": "重試指定寶貝（2）"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "aUx62",
+                  "name": "Removed Row",
+                  "width": "fill_container",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "GpZCG",
+                      "name": "Icon Line Box",
+                      "height": 25,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "I2ezMl",
+                          "name": "Removed Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-minus",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "OI5fZ",
+                      "name": "Removed Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "另外 1 張沒辦法指定：\n選的寶貝已經移除了。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "z9z0a9",
+          "name": "Action Bar",
+          "width": "fill_container",
+          "fill": "$surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "pQn9j",
+              "name": "Bar Hairline",
+              "fill": "$border",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "BPCYT",
+              "name": "Bar Button Wrap",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "padding": [
+                "$sp-item",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "KPo8q",
+                  "type": "ref",
+                  "ref": "OKSJI",
+                  "name": "View Album Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "s9bME2": {
+                      "icon": "clock-3"
+                    },
+                    "w7CUP": {
+                      "content": "回到時間軸"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cGcp0",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "yzMeu",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
         }
       ]
     }
