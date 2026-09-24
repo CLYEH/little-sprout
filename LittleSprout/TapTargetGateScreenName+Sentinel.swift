@@ -133,6 +133,8 @@ extension TapTargetGateScreenName {
         case .growthRecordsList: return .staticText("成長紀錄")
         case .growthRecordActionsSheet: return .button("取消")
         case .childrenManagementPopulated: return .staticText("寶貝")
+        // fixture 共用的頂端標題（feed fixture 除外，見 `photoCardBabyCaptionHost` 文件註解）。
+        case .photoCardBabyCaption: return .staticText("照片卡署名")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
