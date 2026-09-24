@@ -24,6 +24,7 @@
 | 18 | **過期的 Notes／板與稿互打**：Tokens 板寫「24 個畫面 24 次」、Handoff 寫 18/25；`qajNG` 同一節點兩段相反指示 | 「過期的 Notes 比沒有更糟」——ios-dev 會照著做出設計自己否決的行為 | 一個真相來源；動基準板必同步衍生板與註記；Notes 段落標輪次＋frame id | C R2-14、R8 C1、R9-D、R11 D1 |
 | 19 | **圓角＋柔色＋大留白＝溫暖**的迷信 | 溫暖來自內容（照片、人、手寫感、不完美）與紙的物理，不來自 border-radius | 05 建立家庭的 340pt 空洞要放一張空白沖印品，不是留白 | R2 F14、reviewer 通用 #9 |
 | 20 | **手動換行示範／切段文字**：政策文字拆三段等寬、`textGrowth:auto` 不換行 | AX3 下溢出或裁字；長輩開大字級第一個壞 | 單一 text＋`fixed-width`＋`fill_container`；SwiftUI 用 AttributedString 換行 | R2 F2、R3 F8 |
+| 21 | **模型預設樣式**：奶油／米白頁面底配陶土或暖棕 accent；標題裡只把一個字詞改斜體或換色；非序列內容掛「01／02／03」編號；字距拉開的 ALL-CAPS eyebrow 小標；小資料標籤用等寬字；按鈕文字尾加「→」 | 設計模型沒有方向時會回落這些樣式，與題目無關；本專案的底是 rose 染料階（`$bg`／`$print-paper`，見 `tokens.md`）、字級走七級跳階，套上去就是換皮 | 見到即列 finding。具名例外（皆為定案，不算中槍）：邀請碼／OTP 數字等寬（`fs-otp`／`fs-code`，`tokens.md` 字級表）、`cmp/Create Entry Button` 的 pill 形與 `cmp/Tab Bar` 的浮動膠囊（`motifs.md` 時間軸建立入口／Tab-root 段）、歡迎頁相片白邊的「LITTLE SPROUT」字距小字（`fs-imprint` 字距 3.5，SKILL.md 字標段）、壓印行 caption 的「·」分隔（`motifs.md` caption 型印品）。審查時見到新的重複預設樣式就補進這列 | LS-360（09-24 prompt 稽核 C-M10）；Opus 5.5 遷移指引 Frontend design defaults；frontend-design skill 預設清單 |
 
 ## 通過標準（沿用 visual-reviewer）
 
