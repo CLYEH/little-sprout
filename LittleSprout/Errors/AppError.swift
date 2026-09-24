@@ -306,6 +306,12 @@ extension AppError {
             // PostgREST 自己的碼：JWT 過期／驗證失敗。跟 42501 一樣是「需要重新登入」而非
             // 打錯輸入，歸 rejected。
             return .rejected(message: error.message, code: code)
+        case "PGRST303":
+            // LS-348：JWT 時效判定（`JWT issued at future`／`JWT expired`）的暫態——前者是伺服器端
+            // 判定剛簽發 token 的 `iat` 偶發超前、同一把 token 稍後即通過（見
+            // `retryingOnceOnTransientJWTRejection`），重試同一個呼叫就可能成功、使用者沒有輸入
+            // 可改，歸 retryableSystem；未列舉前落 .server，登入落點整頁顯示「伺服器發生問題」。
+            return .retryableSystem(message: error.message, code: code)
         case "23505", "23514", "23503", "23502", "22P02", "22023":
             // unique/check/fk/not-null violation、輸入格式或參數不合法：使用者調整輸入可解。
             return .validationRetryable(message: error.message, code: code)

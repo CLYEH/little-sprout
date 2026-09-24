@@ -12,13 +12,17 @@ final class SupabaseEULAAPIClient: EULAAPIClient {
     /// **不得**帶 `where id = true`（或任何引用到 `id` 的條件）——`docs/API.md` §4：欄位級
     /// 權限檢查涵蓋查詢裡任何位置引用到的欄位，`id` 沒有 `SELECT` 權限。`.single()` 只影響
     /// PostgREST 的 Accept header（要求剛好一列），不會替查詢加上任何欄位篩選，因此安全。
+    ///
+    /// LS-348：登入落點第一批請求之一，`PGRST303` 暫態重送一次（見 `retryingOnceOnTransientJWTRejection`）。
     func fetchCurrentVersion() async throws -> String {
         do {
-            let response: PostgrestResponse<AppSettingsEULAVersionRow> = try await client
-                .from("app_settings")
-                .select("eula_version")
-                .single()
-                .execute()
+            let response: PostgrestResponse<AppSettingsEULAVersionRow> = try await retryingOnceOnTransientJWTRejection {
+                try await client
+                    .from("app_settings")
+                    .select("eula_version")
+                    .single()
+                    .execute()
+            }
             return response.value.eulaVersion
         } catch {
             throw AppError.map(error)
@@ -28,14 +32,19 @@ final class SupabaseEULAAPIClient: EULAAPIClient {
     /// `profiles` 是表級 SELECT（不像 `app_settings` 只開單一欄位），`id = auth.uid()` 一定
     /// 在 `private.peer_profile_ids()` 裡（見該函式：`select auth.uid() union ...`），不需要
     /// 先有家庭才查得到自己這一列。
+    ///
+    /// LS-348：同 `fetchCurrentVersion`，登入落點第一批請求之一，`PGRST303` 暫態重送一次。
     func fetchAcceptedVersion(userID: UUID) async throws -> String? {
         do {
-            let response: PostgrestResponse<ProfileEULAAcceptedVersionRow> = try await client
-                .from("profiles")
-                .select("eula_accepted_version")
-                .eq("id", value: userID)
-                .single()
-                .execute()
+            typealias Response = PostgrestResponse<ProfileEULAAcceptedVersionRow>
+            let response: Response = try await retryingOnceOnTransientJWTRejection {
+                try await client
+                    .from("profiles")
+                    .select("eula_accepted_version")
+                    .eq("id", value: userID)
+                    .single()
+                    .execute()
+            }
             return response.value.eulaAcceptedVersion
         } catch {
             throw AppError.map(error)

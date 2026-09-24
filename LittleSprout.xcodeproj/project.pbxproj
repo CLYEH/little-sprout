@@ -228,6 +228,7 @@
 		64D6D2FDC63635DAF3C32F5B /* ChildModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36A49E7805CE3BA7B1C28D7D /* ChildModels.swift */; };
 		6552BD52456E5000CB0BBB5E /* SupabaseSafetyAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D538922363578E9E2B88FCC /* SupabaseSafetyAPIClientTests.swift */; };
 		656E19972CA92D0172F36650 /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 599FF146CDF65A58E0FBDA1B /* BlockListView.swift */; };
+		65A722D54F83EAFC6DB98F2F /* TransientJWTRetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864FAF633B1769D97D114269 /* TransientJWTRetry.swift */; };
 		65C40F1D88260A5EE89C8AAF /* DiaryComposerStorePublishTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451694C23C0044D0DCDD0356 /* DiaryComposerStorePublishTests.swift */; };
 		669D29B18AE042ABE6B8661C /* AlbumSignatureFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E372B4C02D73ADFF00C356 /* AlbumSignatureFormatterTests.swift */; };
 		670899692547E092C2301C53 /* GrowthHistorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CC6176A3A7D8EB71B8A0AC /* GrowthHistorySection.swift */; };
@@ -851,6 +852,7 @@
 		836F59F33B1A7FC62365AB9F /* SupabasePushDeviceTokenAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabasePushDeviceTokenAPIClient.swift; sourceTree = "<group>"; };
 		8451088ABF5E0779C2BFAFF2 /* TapTargetGateHarness+Legal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Legal.swift"; sourceTree = "<group>"; };
 		860B26A62EB9FA9842759C25 /* StubDiaryAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubDiaryAPIClient.swift; sourceTree = "<group>"; };
+		864FAF633B1769D97D114269 /* TransientJWTRetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransientJWTRetry.swift; sourceTree = "<group>"; };
 		865AA94C394265F3FEA5B37D /* StubMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubMediaUploadService.swift; sourceTree = "<group>"; };
 		8690746BE35135DCFCAED8AC /* AlbumsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsView.swift; sourceTree = "<group>"; };
 		869D332A966B09F270832FF5 /* ImportDateGrouping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportDateGrouping.swift; sourceTree = "<group>"; };
@@ -1923,6 +1925,7 @@
 			isa = PBXGroup;
 			children = (
 				76C79515621CA9052803B7EA /* AppError.swift */,
+				864FAF633B1769D97D114269 /* TransientJWTRetry.swift */,
 			);
 			path = Errors;
 			sourceTree = "<group>";
@@ -2410,6 +2413,7 @@
 				74E602F347273C1919B3B01A /* TimelineView+Comments.swift in Sources */,
 				2109AFB0670559B33E341231 /* TimelineView+Import.swift in Sources */,
 				9784D85D783D81C9D00970E2 /* TimelineView.swift in Sources */,
+				65A722D54F83EAFC6DB98F2F /* TransientJWTRetry.swift in Sources */,
 				02E21F9DC4DC1A797657A859 /* Typography.swift in Sources */,
 				32463742EC96BA86452232E8 /* UploadQueueModels.swift in Sources */,
 				F991E4C05592CCF8FE6E4FF4 /* UploadQueueRowView.swift in Sources */,
