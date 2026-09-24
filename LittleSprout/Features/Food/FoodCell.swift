@@ -129,11 +129,15 @@ struct FoodStickerImage: View {
     let size: CGFloat
     let isGrayscale: Bool
 
+    @Environment(\.displayScale) private var displayScale
     @State private var image: UIImage?
+
+    /// 依顯示尺寸解碼（LS-379 R2，merge-review R1 M1）：80pt@3x＝240px，不解原圖 384px。
+    private var pixelSize: Int { Int((size * displayScale).rounded(.up)) }
 
     var body: some View {
         Group {
-            if let image = image ?? FoodStickerLoader.shared.cachedImage(for: foodID) {
+            if let image = image ?? FoodStickerLoader.shared.cachedImage(for: foodID, pixelSize: pixelSize) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
@@ -145,8 +149,8 @@ struct FoodStickerImage: View {
         .saturation(isGrayscale ? 0 : 1)
         .opacity(isGrayscale ? 0.6 : 1)
         .accessibilityHidden(true)
-        .task(id: foodID) {
-            image = await FoodStickerLoader.shared.image(for: foodID)
+        .task(id: "\(foodID)@\(pixelSize)") {
+            image = await FoodStickerLoader.shared.image(for: foodID, pixelSize: pixelSize)
         }
     }
 }
