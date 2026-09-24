@@ -15,7 +15,7 @@
 # LS-300（㉘，LS-96 池項 3aa46c78）：ios-dev 正文須含「實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選」、
 #   merge-reviewer 正文須含「對 handoff 勾選表抽兩列重放」——各自缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠；
 #   正文必含字樣總數 56→58。
-# LS-306 A2（㉙）：ios-dev 正文須含 push-gate.sh 開始前的進度句（含「逾時被背景化就前景重跑 push，快取秒過」）——
+# LS-306 A2（㉙）：ios-dev 正文須含 push-gate.sh 開始前的進度句（含「逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取」）——
 #   缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠；正文必含字樣總數 58→59。
 # LS-306 B1（㉚）：ui-designer／visual-reviewer 正文須含 `scripts/ops/ci-wait.sh`（同 ios-dev／qa／
 #   merge-reviewer 既有 CIWAIT 句）——各自缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠；
@@ -148,9 +148,9 @@ QA_BODY="${QA_BODY} ${CIWAIT}"
 # merge-reviewer 正文須含「對 handoff 勾選表抽兩列重放」（qa 不要求，不併進 QA_BODY）
 SCREENATTR='實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選。'
 REPLAYSCREENATTR='對 handoff 勾選表抽兩列重放。'
-# LS-306 A2：ios-dev 正文另須含 push-gate.sh 開始前的進度句（含「快取秒過」提示，同句寫進
+# LS-306 A2：ios-dev 正文另須含 push-gate.sh 開始前的進度句（含「確認快取」提示，同句寫進
 # scripts/gates/push-gate.sh 的實際 echo）
-PUSHCACHE='push gate 同 tree 快取，unit tests 開始前印「→ push gate：unit tests 開始（<時間>，通常 5–12 分；逾時被背景化就前景重跑 push，快取秒過）」。'
+PUSHCACHE='push gate 同 tree 快取，unit tests 開始前印「→ push gate：unit tests 開始（<時間>，通常 5–12 分；逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取）」。'
 IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR} ${PUSHCACHE}"
 MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${UBUNTU10} ${UITESTMUT} ${NOTIMEOUT} ${CIWAIT} ${REPLAYSCREENATTR}"
 # LS-306 B1：ui-designer／visual-reviewer 正文另須含 `scripts/ops/ci-wait.sh`（同 ios-dev／qa／
@@ -638,13 +638,13 @@ else
   echo "✗ ㉘ mutant（merge-reviewer 抽兩列重放句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
-# ---- ㉙ LS-306 A2：ios-dev 正文須含 push-gate.sh 開始前的進度句（含「逾時被背景化就前景重跑 push，
-#      快取秒過」——push-gate.sh 步驟 2 的實際 echo 同句）----
-reset; expect 0 '㉙ ios-dev 正文含 push-gate 進度句 → 印「正文含」（總數 77 條）' 'ios-dev.md：正文含「逾時被背景化就前景重跑 push，快取秒過」' '正文必含字樣 77 條）'
-reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR}"; expect 1 '㉙ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「逾時被背景化就前景重跑 push，快取秒過」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
+# ---- ㉙ LS-306 A2（LS-357 改字樣）：ios-dev 正文須含 push-gate.sh 開始前的進度句（含「逾時被截斷先等本
+#      gate 跑完，再前景重跑 push-gate.sh 確認快取」——push-gate.sh 步驟 2 的實際 echo 同句）----
+reset; expect 0 '㉙ ios-dev 正文含 push-gate 進度句 → 印「正文含」（總數 77 條）' 'ios-dev.md：正文含「逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取」' '正文必含字樣 77 條）'
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR}"; expect 1 '㉙ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! grep -qF '逾時被背景化就前景重跑 push，快取秒過' <<<"$out"; then
+if [ "$got" -eq 0 ] && ! grep -qF '逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取' <<<"$out"; then
   ok '㉙ mutant：拿掉規則後「ios-dev 缺 push-gate 進度句」的負樣本變綠'
 else
   echo "✗ ㉙ mutant（ios-dev push-gate 進度句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
