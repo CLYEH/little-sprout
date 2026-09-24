@@ -635,6 +635,13 @@ race_case "同一篇日記：owner 軟刪先動，作者的還原必須被阻塞
   diary_delete_vs_restore_setup.sql diary_delete_vs_restore_s1_owner_delete.sql \
   diary_delete_vs_restore_s2_author_restore.sql diary_delete_vs_restore_verify.sql
 
+# LS-378 併發場景：共用同一張照片的兩篇日記被兩個交易同時刪除——沒有 media 列鎖時兩邊
+# 都用舊快照看到「另一篇還活著」而保留照片（write skew），見
+# diary_delete_shared_media_race_setup.sql 檔頭。
+race_case "共用照片的兩篇日記同時軟刪：後刪者必須等先刪者 commit，照片最終自時間軸隱藏" \
+  diary_delete_shared_media_race_setup.sql diary_delete_shared_media_race_s1.sql \
+  diary_delete_shared_media_race_s2.sql diary_delete_shared_media_race_verify.sql
+
 # LS-58 併發場景：同一人對同一目標的兩次 toggle_reaction 幾乎同時發出，必須被
 # pg_advisory_xact_lock 序列化——沒有這把鎖，兩次呼叫都會查到「還沒按過」而各自
 # INSERT，第二次會撞 reactions_target_user_key 的 23505。
