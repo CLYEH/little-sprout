@@ -94,7 +94,7 @@ final class PhotoCardBabyCaptionUITests: XCTestCase {
         assertNoLineEndsWithDot(lines, context: "three/AX3")
         XCTAssertTrue(
             lines.contains(where: \.startsWithDot),
-            "AX3「歐陽彥廷 · 2 歲 3 個月」放不下一行，應在姓名後折行、由「·」領銜下一行——沒有任何一行以「·」開頭"
+            "AX3「Emma Chen · 8 個月大」等長名放不下一行，應在姓名後折行、由「·」領銜下一行——沒有任何一行以「·」開頭"
         )
     }
 
