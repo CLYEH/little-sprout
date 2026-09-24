@@ -198,7 +198,7 @@ qa|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.sh（
 merge-reviewer|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.sh（exit 3 就再跑一次），取代 gh run watch，那句被刪即紅
 ios-dev|實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選|LS-300：LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」，設計稿 Notes 板有寫、ios-dev 沒逐條對；handoff 用 handoff_evidence_check.py 認的「畫面級屬性（逐條勾選）」子段
 merge-reviewer|對 handoff 勾選表抽兩列重放|LS-300：不只信 ios-dev「已勾選」的申報，抽兩列對照設計稿 Notes「畫面級屬性」段與實際實作重放核對
-ios-dev|逾時被背景化就前景重跑 push，快取秒過|LS-306 A2：xcodebuild 前印進度句，逾時被背景化知道前景重跑 push 快取秒過（push-gate.sh 同 tree 快取，LS-306 A1）
+ios-dev|逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取|LS-306 A2／LS-357：xcodebuild 前印進度句，逾時被截斷先等 gate 跑完再前景重跑 push-gate.sh 確認快取（push-gate.sh 同 tree 快取，LS-306 A1；順序同 LS-333）
 ui-designer|scripts/ops/ci-wait.sh|LS-306 B1：等 CI 一律前景 ci-wait.sh（exit 3 就再跑一次），禁 gh run watch、禁 run_in_background，那句被刪即紅
 visual-reviewer|scripts/ops/ci-wait.sh|LS-306 B1：等 CI 一律前景 ci-wait.sh（exit 3 就再跑一次），禁 gh run watch、禁 run_in_background，那句被刪即紅
 ios-dev|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
