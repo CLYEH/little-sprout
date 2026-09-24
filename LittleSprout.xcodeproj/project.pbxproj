@@ -26,6 +26,7 @@
 		074F93D024EB0F752E0EC89F /* CreateChildAvatarFieldUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46DA9003B46883C47C678BA1 /* CreateChildAvatarFieldUITests.swift */; };
 		0754150D65EACBAE3CC44A30 /* InteractionRowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E715D59C5D776BF6611E5E33 /* InteractionRowUITests.swift */; };
 		0783F95A1496D17C21C9305E /* KeyboardHeightObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A9887FF91CF65FB62A256E /* KeyboardHeightObserverTests.swift */; };
+		089120B0C8982A743CCC033B /* InteractionRowContrastTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E19D4F778FE09E8619F4757 /* InteractionRowContrastTests.swift */; };
 		08CCDFE903AB9F89F47A149C /* AlbumThicknessTierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E311904EB7885960AF830E /* AlbumThicknessTierTests.swift */; };
 		08E2C4433BFD3E5DEC7DFF47 /* DiaryDetailSheetIDTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D07A1233EF216E629B32629 /* DiaryDetailSheetIDTests.swift */; };
 		08EA70433C9FFE03998E1074 /* TapTargetMeasurement.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8613F9B6DA141E7F034F153 /* TapTargetMeasurement.swift */; };
@@ -708,6 +709,7 @@
 		3D953E0A9EB753A52A71CFC7 /* SectionTabBarPushRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionTabBarPushRegressionTests.swift; sourceTree = "<group>"; };
 		3D9B81015EBB68F05A715D7F /* InvitePhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitePhase.swift; sourceTree = "<group>"; };
 		3DDCBCF8F78227507C46D737 /* MediaUploadService+SoftDelete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MediaUploadService+SoftDelete.swift"; sourceTree = "<group>"; };
+		3E19D4F778FE09E8619F4757 /* InteractionRowContrastTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionRowContrastTests.swift; sourceTree = "<group>"; };
 		3E7946776E289C18F37C9B35 /* AvatarImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarImageProcessor.swift; sourceTree = "<group>"; };
 		3FB6E1E2FDB82CD665A7E7ED /* AlbumsContentAssembler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsContentAssembler.swift; sourceTree = "<group>"; };
 		3FCCD7822AD9EF5695A8FAFB /* ChildrenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenStore.swift; sourceTree = "<group>"; };
@@ -1452,6 +1454,7 @@
 				3B854436402C5E2BF4FFF0A8 /* ImportEntrySourceTests.swift */,
 				D6523817390A888A70BC1244 /* ImportMediaTranscoderTests.swift */,
 				A57E9AB7F052DBB790BA042C /* ImportThumbnailLayoutTests.swift */,
+				3E19D4F778FE09E8619F4757 /* InteractionRowContrastTests.swift */,
 				71B810AF479E06C95BAFE863 /* InviteCodeFieldTests.swift */,
 				AD69D0A2456BC4F954E29446 /* InviteCodeParserTests.swift */,
 				EF3E5645BA736D2FB572634A /* InvitePhaseTests.swift */,
@@ -2604,6 +2607,7 @@
 				438D01DAE187ACB9C62F340E /* ImportMediaTranscoderTests.swift in Sources */,
 				83C3BBBEA01248D838D88E0E /* ImportThumbnailLayoutTests.swift in Sources */,
 				336A7171428B83A957574DFF /* InMemoryAuthLocalStorage.swift in Sources */,
+				089120B0C8982A743CCC033B /* InteractionRowContrastTests.swift in Sources */,
 				CE4341264EF8292AA7138953 /* InviteCodeFieldTests.swift in Sources */,
 				FBB9F48BA840757FD27584F8 /* InviteCodeParserTests.swift in Sources */,
 				A16C9A6C91DC96DF2F26892A /* InvitePhaseTests.swift in Sources */,

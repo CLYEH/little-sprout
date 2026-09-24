@@ -50,6 +50,15 @@ struct InteractionRow: View {
     private var likeToggleSize: CGSize { isAX3 ? CGSize(width: 220, height: 80) : CGSize(width: 118, height: 47) }
     private var countZoneSize: CGSize { isAX3 ? CGSize(width: 56, height: 80) : CGSize(width: 44, height: 44) }
 
+    /// LS-366：未按讚 `Like Toggle`／`Count Zone`／`Comment Button` 的字色。稿面（`IgqGF`／
+    /// `VZ0wV`）標 `$print-ink-secondary`，前提是互動列躺在 `cmp/Card Diary` 的 `$print-paper`
+    /// 紙面上；但實作的互動列落在 theme-aware 底色上（`DiaryCardView` 的 `lsSurface`、
+    /// `PhotoCardView`／`AlbumCardView` 相紙外的 `lsBackground`），`print-ink-secondary` 是刻意
+    /// 不隨深色反轉的單值 token（tokens.md「紙上的墨」），深色底上只剩 1.44–1.69:1。改用它的
+    /// theme-aware 對應 `text-secondary`：淺色同值 #553040（淺色零變化），深色 #D3AEB2
+    /// 對 surface／bg 8.02／9.41:1。`internal` 讓單元測試量對比（`InteractionRowContrastTests`）。
+    static let idleForeground = Color.lsTextSecondary
+
     var body: some View {
         Group {
             if isAX3 {
@@ -113,7 +122,7 @@ struct InteractionRow: View {
                 Text(reaction.reactedByMe ? "已按愛心" : "愛心")
                     .appFont(.note, weight: reaction.reactedByMe ? .bold : .regular)
             }
-            .foregroundStyle(reaction.reactedByMe ? Color.lsAccent : Color.lsPrintInkSecondary)
+            .foregroundStyle(reaction.reactedByMe ? Color.lsAccent : Self.idleForeground)
             .padding(11)
             .frame(width: likeToggleSize.width, height: likeToggleSize.height, alignment: .leading)
             .contentShape(Rectangle())
@@ -149,7 +158,7 @@ struct InteractionRow: View {
         } label: {
             Text("\(reaction.count)")
                 .appFont(.note, weight: reaction.reactedByMe ? .bold : .semibold)
-                .foregroundStyle(reaction.reactedByMe ? Color.lsAccent : Color.lsPrintInkSecondary)
+                .foregroundStyle(reaction.reactedByMe ? Color.lsAccent : Self.idleForeground)
                 .frame(width: countZoneSize.width, height: countZoneSize.height)
                 .frame(minWidth: 48, minHeight: 48)
                 .contentShape(Rectangle())
@@ -174,7 +183,7 @@ struct InteractionRow: View {
                 Text("\(commentCount)")
                     .appFont(.note, weight: .semibold)
             }
-            .foregroundStyle(Color.lsPrintInkSecondary)
+            .foregroundStyle(Self.idleForeground)
             .padding(11)
             .frame(minHeight: likeToggleSize.height)
             .contentShape(Rectangle())
@@ -196,7 +205,7 @@ struct InteractionRow: View {
                 Text("\(commentCount)")
                     .appFont(.note, weight: .semibold)
             }
-            .foregroundStyle(Color.lsPrintInkSecondary)
+            .foregroundStyle(Self.idleForeground)
             .padding(11)
             .frame(minHeight: likeToggleSize.height)
             .contentShape(Rectangle())
