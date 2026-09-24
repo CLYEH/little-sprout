@@ -56083,7 +56083,24 @@
                           "type": "ref",
                           "ref": "qtCd7",
                           "name": "Card Diary 1",
-                          "width": "fill_container"
+                          "width": "fill_container",
+                          "descendants": {
+                            "p2odx": {
+                              "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。"
+                            },
+                            "lEgJp": {
+                              "enabled": true
+                            },
+                            "uZ5Lt": {
+                              "enabled": true
+                            },
+                            "kVUWa": {
+                              "enabled": true
+                            },
+                            "GCEdk": {
+                              "enabled": true
+                            }
+                          }
                         }
                       ]
                     }
@@ -56762,6 +56779,18 @@
                               "descendants": {
                                 "p2odx": {
                                   "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。"
+                                },
+                                "lEgJp": {
+                                  "enabled": true
+                                },
+                                "uZ5Lt": {
+                                  "enabled": true
+                                },
+                                "kVUWa": {
+                                  "enabled": true
+                                },
+                                "GCEdk": {
+                                  "enabled": true
                                 }
                               }
                             }
@@ -57082,6 +57111,24 @@
                           "name": "Card Diary 1",
                           "width": "fill_container",
                           "descendants": {
+                            "p2odx": {
+                              "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。"
+                            },
+                            "lEgJp": {
+                              "enabled": true
+                            },
+                            "uZ5Lt": {
+                              "enabled": true
+                            },
+                            "kVUWa": {
+                              "enabled": true
+                            },
+                            "GCEdk": {
+                              "enabled": true
+                            },
+                            "CQpms": {
+                              "content": "+2"
+                            },
                             "Jqwww": {
                               "layout": "vertical",
                               "alignItems": "end"
@@ -209445,6 +209492,24 @@
                           "name": "Card Diary 1",
                           "width": "fill_container",
                           "descendants": {
+                            "p2odx": {
+                              "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。"
+                            },
+                            "lEgJp": {
+                              "enabled": true
+                            },
+                            "uZ5Lt": {
+                              "enabled": true
+                            },
+                            "kVUWa": {
+                              "enabled": true
+                            },
+                            "GCEdk": {
+                              "enabled": true
+                            },
+                            "CQpms": {
+                              "content": "+2"
+                            },
                             "Jqwww": {
                               "layout": "vertical",
                               "alignItems": "end"
