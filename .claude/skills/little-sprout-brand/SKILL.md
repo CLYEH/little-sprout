@@ -29,7 +29,7 @@ description: Little Sprout（萌芽日記）設計語言定案——LS-46 十一
 1. **一畫面一顆實心主鈕**：`$accent` 是唯一的「識別」飽和色，每畫面最多一次實心；danger 不做主鍵、success 一流程一次、連結一律墨色＋底線。
 2. **紙不會變黑**：`$print-paper` 深淺兩模式都是淺色（#FBEBEC／#E8D9D4）；紙上文字一律 `$print-ink` #2B141C／`$print-ink-secondary` #553040——**不掛 theme 的單值 token**，Asset Catalog 的 Any／Dark 填同值。
 3. **沖印品白邊 8/8/8/8**（`$print-edge`＝`$print-edge-bottom`＝8，兩 token 同值但刻意不合併），下緣視覺厚度 32＝8＋7＋Imprint Row 17，由壓印那行字「掙來」，不是 padding 調出來的。
-4. **角托三段規則**：四角托＝這是一張沖印品（只有家人的照片；現稿四顆 175 處維持現狀）；對角兩顆＝App icon（≤60pt）、既有 `cmp/Profile Print`（`OePXK`）、LS-177 起新畫的沖印品（Hero／Empty Print）；既有四顆是否統一另票對帳（LS-96 `a442c747`）；零角托＝不是沖印品（表單、邀請碼卡——會過期的東西不是收藏品）。角托一律壓過紙緣 `corner-out` 5pt。
+4. **角托三段規則**：四角托＝這是一張沖印品（只有家人的照片；現稿四顆維持現狀）；對角兩顆＝App icon（≤60pt）、既有 `cmp/Profile Print`（`OePXK`）、新畫的 Hero／Empty Print 沖印品；既有四顆是否統一另票對帳；零角托＝不是沖印品（表單、邀請碼卡——會過期的東西不是收藏品）。角托一律壓過紙緣 `corner-out` 5pt。
 5. **間距只有一套節奏**：8／16／24／44（群內／群間／段落／章節）＋輔助 6／12；每畫面必須出現一次 44 章節斷點（碼輸入家族 7 張具名豁免）。任何不在節奏上的數字都要有主人（具名豁免），沒有主人的是「倒推餘數」＝缺陷。
 6. **字級七級跳階**：display 34／lead 22／body 17／note 17／meta 13／otp 36／code 60，全走 Dynamic Type；唯一例外 `fs-imprint` 12（印在紙上的字不長大）。**13pt 只給「不讀也能完成任務」的內容**；寫著「還可以用幾次／有效幾天／錯在哪／要怎麼改／你是誰」的字一律 ≥17。
 7. **長輩硬約束**：文字對比 ≥4.5:1（內文目標 7:1 AAA）、點擊 ≥44pt、每張重要畫面必附 AX3 壓力板、字標與圖片帶 a11y metadata、icon 一律帶文字標籤、不用進階手勢。
@@ -44,7 +44,7 @@ description: Little Sprout（萌芽日記）設計語言定案——LS-46 十一
 - 「LITTLE SPROUT」小字：`fs-imprint` 12／字距 3.5／`$print-ink-secondary`／**只在歡迎頁家族相片白邊、水平置中**，其他 UI 不得出現英文名。
 - App icon＝**photo-stack**（三張扇疊照片；`design/app-icon-photo-stack.png` 1024）。「芽」字 icon 概念已被使用者否決。
 - 實測對比（WCAG 2.1，淺／深）：print-ink on print-paper **14.92／12.55**；print-ink-secondary **9.66／8.13**；text-primary on bg 12.21／15.31；text-secondary 7.91／9.41；on-accent 7.30／9.99。
-- Legal／Status 槽 **38pt** 固定高（01／01b／01c 共用；AX3 不套槽，實測 **166pt**——LS-201 R2 訂正，取代舊值 64，見 `references/motifs.md`）。
+- Legal／Status 槽 **38pt** 固定高（01／01b／01c 共用；AX3 不套槽，實測 **166pt**，見 `references/motifs.md`）。
 - 邀請碼：**6 碼、32 字元表（排除 0／O／1／I）、30 bit、3+3 分組、核准必開**（使用者 2026-08-25 裁決 LS-89；後端 LS-90 已對齊——正式站 `create_invite` 自 2026-08-25 起為 6 碼／30 bit）。八格應變規格（`fs-otp` AX3 52→42、`fs-code` 60→52、單一 tap target）是已擱置備案，見 `references/motifs.md` 邀請碼。
 - 溢出掃描收據：`sibling_intersection`／`row_overflow`／`cross_parent_collision` 的命中逐類給 `classification`（出血等設計意圖寫明）；`corner_anchor.mismatch`、`text_occlusion.flagged`、`board_clip.flagged` 在本票觸碰的板必為 0，**不接受白名單**（收據格式見 ui-designer 定義）。節點數基線以最新 landing 的實測值為準（COLLABORATION §7 design-landing 列），本檔不記數字。
 
