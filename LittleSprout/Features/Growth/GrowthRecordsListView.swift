@@ -40,7 +40,7 @@ struct GrowthRecordsListView: View {
     @State private var deletingRecord: GrowthRecord?
     @State private var actionsRecord: GrowthRecord?
 
-    private enum RowItem: Identifiable {
+    enum RowItem: Identifiable {
         case yearDivider(Int)
         case record(GrowthRecord)
 
@@ -57,12 +57,18 @@ struct GrowthRecordsListView: View {
     /// 不能被同日去重藏起來。全列 `growthStore.records`，以記錄 `id` 為鍵（`RowItem.id`）；
     /// 排序邏輯抽成 `GrowthCurve.allRecordsNewestFirst`（R2 merge-review R2-m1，該函式文件
     /// 註解有完整理由），這裡只轉呼叫，年份變化時插入一個郵戳列。
-    private var rowItems: [RowItem] {
+    ///
+    /// LS-335（LS-313 R3-m1）：抽成 `static func rowItems(from:)`，讓 `GrowthCurveTests` 直接對
+    /// 「列」做行為測試——原本的原始碼文字守衛可以被繞過（寫成
+    /// `historyRecords(allRecordsNewestFirst(...))` 仍綠），不改行為的重構反而會讓它轉紅。
+    private var rowItems: [RowItem] { Self.rowItems(from: growthStore.records) }
+
+    static func rowItems(from records: [GrowthRecord]) -> [RowItem] {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
         var items: [RowItem] = []
         var lastYear: Int?
-        for record in GrowthCurve.allRecordsNewestFirst(growthStore.records) {
+        for record in GrowthCurve.allRecordsNewestFirst(records) {
             let year = calendar.component(.year, from: record.measuredOn)
             if year != lastYear {
                 items.append(.yearDivider(year))
