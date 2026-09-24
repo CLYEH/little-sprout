@@ -99,13 +99,13 @@ struct AlbumSummaryCardView: View {
         GeometryReader { proxy in
             let diameter = cornerSize * 6
             ZStack {
-                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.welcome.topLeading)
+                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.card.topLeading)
                     .position(x: 0, y: 0)
-                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.welcome.topTrailing)
+                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.card.topTrailing)
                     .position(x: proxy.size.width, y: 0)
-                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.welcome.bottomLeading)
+                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.card.bottomLeading)
                     .position(x: 0, y: proxy.size.height)
-                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.welcome.bottomTrailing)
+                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.card.bottomTrailing)
                     .position(x: proxy.size.width, y: proxy.size.height)
             }
         }

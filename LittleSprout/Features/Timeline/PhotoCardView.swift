@@ -32,6 +32,7 @@ struct PhotoCardView: View {
             ZStack(alignment: .topLeading) {
                 PrintPhotoCard(
                     photoHeight: Self.photoHeight,
+                    mountPoolOpacity: .card,
                     showsImprint: false,
                     remoteURL: content.signedURL,
                     accessibilityLabel: accessibilityLabel,
