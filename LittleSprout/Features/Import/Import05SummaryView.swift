@@ -11,8 +11,8 @@ import SwiftUI
 struct Import05SummaryView: View {
     let session: ImportBatchSession
     let store: UploadQueueStore
-    /// LS-319：批次匯入「指定寶貝」標記追蹤器——「N 張寶貝標記未完成」與「重試標記」讀寫這個
-    /// 物件，範圍只看跟這個批次（`session.entryIDSet`）有交集的群，見 `MediaChildrenMarkingTracker
+    /// LS-319：批次匯入「指定寶貝」標記追蹤器——「其中 N 張的寶貝沒有指定成功」與「補上寶貝」
+    /// （LS-373）讀寫這個物件，範圍只看跟這個批次（`session.entryIDSet`）有交集的群，見 `MediaChildrenMarkingTracker
     /// .failedMarkingMediaCount(in:)` 文件註解。
     let marker: MediaChildrenMarkingTracker
     var onViewStorage: () -> Void = {}
@@ -34,7 +34,7 @@ struct Import05SummaryView: View {
     /// 不同的事（票文範圍 2：上傳失敗不計入標記失敗），這裡刻意不共用 `failedRows` 的計算。
     /// 統計列用這個（不分是否可重試，照片確實沒有標記是事實）。
     private var markingFailedCount: Int { marker.failedMarkingMediaCount(in: session.entryIDSet) }
-    /// LS-319 R2（merge-review R1 m2）：「重試標記」鈕只在還有**可重試**的失敗群時才顯示——
+    /// LS-319 R2（merge-review R1 m2）：「補上寶貝」鈕只在還有**可重試**的失敗群時才顯示——
     /// `LS044`（寶貝已軟刪）原樣重送永遠不會成功，沿既有「重試失敗項排除 LS002」的 tier 慣例。
     private var retryableMarkingFailedCount: Int { marker.retryableFailedMarkingCount(in: session.entryIDSet) }
 
@@ -49,6 +49,12 @@ struct Import05SummaryView: View {
                     if !failedRows.isEmpty {
                         Color.clear.frame(height: AppSpacing.section)
                         failedSection
+                    }
+                    if let markingSection = content.markingSection {
+                        // D3／D4（`IpMe2`／05b `J9ksa`）：Failed Section 之後（沒有上傳失敗時直接
+                        // 接統計卡）再一個 44 斷點。
+                        Color.clear.frame(height: AppSpacing.section)
+                        markingSectionView(markingSection)
                     }
                 }
                 .padding(.horizontal, AppSpacing.screenPad)
@@ -190,6 +196,56 @@ struct Import05SummaryView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    // MARK: - Marking Section（LS-349 D3／D4）
+
+    private func markingSectionView(_ section: Import05SummaryContent.MarkingSection) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.item) {
+            Text(section.header)
+                .appNumericFont(.note, weight: .bold).foregroundStyle(Color.lsTextSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            // 一組一個 VStack、一句一個 Text（稿面全稿不用手動換行）：組內 $sp-label、組間 $sp-item。
+            VStack(alignment: .leading, spacing: AppSpacing.item) {
+                ForEach(section.noteGroups, id: \.self) { group in
+                    VStack(alignment: .leading, spacing: AppSpacing.label) {
+                        ForEach(group, id: \.self) { sentence in
+                            Text(sentence).appNumericFont(.note).foregroundStyle(Color.lsTextPrimary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
+            }
+            if section.fillableCount > 0 {
+                fillBabiesButton(count: section.fillableCount)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// 「補上寶貝（N）」（`I8MyXS`／05b `xnOYi`）：`cmp/Button Text`（與 Failed Section 逐列「重試」
+    /// 同一元件：無底無框，icon 22＋$fs-body 600，$text-primary）——照片已經在時間軸上，這顆只補
+    /// 寶貝、位階低於動作帶的「重試失敗項」，所以放在內容區段落最後、不進動作帶（Notes `soWdb`）。
+    /// 只重送標記失敗且可重試的群，不重新上傳（見 `MediaChildrenMarkingTracker
+    /// .retryFailedMarking(in:)` 文件註解）。
+    private func fillBabiesButton(count: Int) -> some View {
+        let presentation = Import05SummaryContent.fillBabiesButton(count: count, isInFlight: false)
+        return Button {
+            marker.retryFailedMarking(in: session.entryIDSet)
+        } label: {
+            HStack(spacing: AppSpacing.label) {
+                Image(systemName: "arrow.clockwise").appIconFrame(.medium)
+                Text(presentation.title).appNumericFont(.body, weight: .semibold)
+                    .multilineTextAlignment(.leading)
+            }
+            .foregroundStyle(Color.lsTextPrimary)
+            .padding(.vertical, AppSpacing.controlPaddingTap)
+            .padding(.horizontal, AppSpacing.tight)
+            .frame(minHeight: 48, alignment: .leading)
+            .contentShape([.interaction, .accessibility], Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(presentation.isDisabled)
+    }
+
     // MARK: - Action Bar
 
     private var actionBar: some View {
@@ -217,30 +273,6 @@ struct Import05SummaryView: View {
                         HStack(spacing: AppSpacing.label) {
                             Image(systemName: "arrow.clockwise").appIconFrame(.medium)
                             Text("重試失敗項（\(retryableFailedCount)）").appNumericFont(.body, weight: .bold)
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 48)
-                        .padding(.vertical, AppSpacing.controlPaddingMedium)
-                        .contentShape([.interaction, .accessibility], Rectangle())
-                    }
-                    .foregroundStyle(Color.lsTextPrimary)
-                    .background(Color.lsAccentSoft, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
-                            .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
-                    )
-                }
-                if retryableMarkingFailedCount > 0 {
-                    // LS-319（票文範圍 2）：「重試標記」只重送標記失敗的群，不重新上傳（上傳
-                    // 早就成功了，見 `MediaChildrenMarkingTracker.retryFailedMarking(in:)` 文件
-                    // 註解）——沿用「重試失敗項（N）」按鈕的元件語彙（同背景／邊框／字級），
-                    // 只換文案與觸發對象，同上一段理由，交 orchestrator 判斷是否需要補設計。
-                    // m2（merge-review R1）：只在還有可重試的失敗群時才顯示，`LS044` 排除。
-                    Button {
-                        marker.retryFailedMarking(in: session.entryIDSet)
-                    } label: {
-                        HStack(spacing: AppSpacing.label) {
-                            Image(systemName: "arrow.clockwise").appIconFrame(.medium)
-                            Text("重試標記（\(retryableMarkingFailedCount)）").appNumericFont(.body, weight: .bold)
                         }
                         .frame(maxWidth: .infinity, minHeight: 48)
                         .padding(.vertical, AppSpacing.controlPaddingMedium)
