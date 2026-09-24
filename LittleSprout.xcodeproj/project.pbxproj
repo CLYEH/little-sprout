@@ -39,6 +39,7 @@
 		0B082F905D18BB1C48FCD6B6 /* PhotoCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2956BF7EEFC4095F0306AF4A /* PhotoCardView.swift */; };
 		0B0F470E634F9F528174A8B8 /* ChildrenManagementView+Detail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72F9EC8AA39EA1ADB2DE75A8 /* ChildrenManagementView+Detail.swift */; };
 		0B135682647FD84B6E6E5E92 /* SettingsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD3CBB68CBE0464929AEABA /* SettingsModels.swift */; };
+		0B2DCABD7FD0C53F5C63707B /* TapTargetGateHarness+DiaryCardCaption.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA07ABA0DCE55DF367082482 /* TapTargetGateHarness+DiaryCardCaption.swift */; };
 		0B8A0DB73C4423B756633874 /* QASmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985785A57F53FA7B6C2252FA /* QASmokeTests.swift */; };
 		0BEC88A39AAF8ECE8E2396D9 /* FoodStickerLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85ED8343F451999392E18111 /* FoodStickerLoader.swift */; };
 		0C26B811F96F8122199B4E8A /* QADriver+LoginLanding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8935226D375AB85EFBC17CC3 /* QADriver+LoginLanding.swift */; };
@@ -93,6 +94,7 @@
 		21D4D505A709F1ED3CCAF4A6 /* TimelineStoreToggleReactionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AC550771E9C98F572DEE18 /* TimelineStoreToggleReactionTests.swift */; };
 		21F13267AB0CDCF93F74ABF9 /* DiaryComposerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72BAB19B1C35B0F183EE2699 /* DiaryComposerStore.swift */; };
 		21F98CEDA845DD25BED57494 /* AlbumsStoreAttachUploadedMediaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F8DB1B6261D3E2F9C337CC3 /* AlbumsStoreAttachUploadedMediaTests.swift */; };
+		22A15AD394D58A0D4BF5CECA /* DiaryCardBabyCaptionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597390A518CBE1D672313074 /* DiaryCardBabyCaptionUITests.swift */; };
 		2325DA8B5284BAF26E51345A /* InviteFamilyView+Role.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF3F18D213D33204A82A0BEE /* InviteFamilyView+Role.swift */; };
 		2426523538FF469F71E55F97 /* DiaryDetailView+PresentationBindings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80F4A01D4ECB9D0B6664EBD6 /* DiaryDetailView+PresentationBindings.swift */; };
 		2446A9D3B7C5A02D2E49FB77 /* GrowthCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF6B48B968BD623EFF6F1F8 /* GrowthCurveTests.swift */; };
@@ -812,6 +814,7 @@
 		587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInNonce.swift; sourceTree = "<group>"; };
 		587FCE8EABA329312D4C5197 /* DeleteAccountFlowModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountFlowModel.swift; sourceTree = "<group>"; };
 		58DA7F206D313220AB3A1284 /* FoodCategoryTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCategoryTabs.swift; sourceTree = "<group>"; };
+		597390A518CBE1D672313074 /* DiaryCardBabyCaptionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryCardBabyCaptionUITests.swift; sourceTree = "<group>"; };
 		599FF146CDF65A58E0FBDA1B /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
 		59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
 		59D9C1DF3A30F5BC6061B8A3 /* TimelineStoreImportRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreImportRefreshTests.swift; sourceTree = "<group>"; };
@@ -1068,6 +1071,7 @@
 		C8613F9B6DA141E7F034F153 /* TapTargetMeasurement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapTargetMeasurement.swift; sourceTree = "<group>"; };
 		C8BA8C1CFC00CF8A1D6C9E0C /* ChildAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildAPIClient.swift; sourceTree = "<group>"; };
 		C9C8D00E975B4DE5DC111D3D /* ChildrenStoreAvatarListRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenStoreAvatarListRefreshTests.swift; sourceTree = "<group>"; };
+		CA07ABA0DCE55DF367082482 /* TapTargetGateHarness+DiaryCardCaption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+DiaryCardCaption.swift"; sourceTree = "<group>"; };
 		CA263D0058EB232AD178E89C /* SupabaseDiaryAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseDiaryAPIClientTests.swift; sourceTree = "<group>"; };
 		CA5B9216BB35E6FD6D9BF95A /* FoodCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCell.swift; sourceTree = "<group>"; };
 		CAB7169FDB024249D8521D64 /* SupabaseTimelineAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseTimelineAPIClientTests.swift; sourceTree = "<group>"; };
@@ -1245,6 +1249,7 @@
 				789B89A7CC96DBA74FF41049 /* DeleteAccountFlowUITests.swift */,
 				317678ECB5D24231C3DCC568 /* DeleteConfirmationAX3UITests.swift */,
 				9F97BDDD344600BC1DFCF3BC /* DeleteConfirmationUITests.swift */,
+				597390A518CBE1D672313074 /* DiaryCardBabyCaptionUITests.swift */,
 				17ADF30BD9D82AA5300EFF5B /* DiaryCardVideoBadgeGeometryTests.swift */,
 				B1C7A785A791F12CA1B57CA1 /* DiaryDetailCommentsUITests.swift */,
 				FFBB1C1A417258050587E1F8 /* DiaryDetailVideoUITests.swift */,
@@ -1795,6 +1800,7 @@
 				341F999EAAACA40B2E7B7424 /* TapTargetGateHarness+Comments.swift */,
 				0B87EFC5D19454F29DAAFE38 /* TapTargetGateHarness+Content.swift */,
 				060BC7E72C5EC6ED52FB6E41 /* TapTargetGateHarness+DeleteAccount.swift */,
+				CA07ABA0DCE55DF367082482 /* TapTargetGateHarness+DiaryCardCaption.swift */,
 				9E3D2F360EBF9E037628E69B /* TapTargetGateHarness+DiaryCardVideoBadges.swift */,
 				DF160356D53B7385FF16C6C2 /* TapTargetGateHarness+DiaryDetailVideo.swift */,
 				6BD7AE63A0EB0C80DA9C5851 /* TapTargetGateHarness+Family.swift */,
@@ -2553,6 +2559,7 @@
 				D9F9A28D9B37FAA2AFEE635B /* TapTargetGateHarness+Comments.swift in Sources */,
 				3346C2CA6BA85BDA157C164F /* TapTargetGateHarness+Content.swift in Sources */,
 				B8F948E8FFC79CFAD32A8411 /* TapTargetGateHarness+DeleteAccount.swift in Sources */,
+				0B2DCABD7FD0C53F5C63707B /* TapTargetGateHarness+DiaryCardCaption.swift in Sources */,
 				764C8B42926AA6E94EC2C4CF /* TapTargetGateHarness+DiaryCardVideoBadges.swift in Sources */,
 				B2440B7844509AC9B75634CF /* TapTargetGateHarness+DiaryDetailVideo.swift in Sources */,
 				E5C587EDE37874F5FE29E05E /* TapTargetGateHarness+Family.swift in Sources */,
@@ -2619,6 +2626,7 @@
 				E3E8C4EB335AE30350375930 /* DeleteAccountFlowUITests.swift in Sources */,
 				9C6A7F70A286E7D8E3502E70 /* DeleteConfirmationAX3UITests.swift in Sources */,
 				6B047AD54D66A273C432CC0F /* DeleteConfirmationUITests.swift in Sources */,
+				22A15AD394D58A0D4BF5CECA /* DiaryCardBabyCaptionUITests.swift in Sources */,
 				10CB97ED4D75A21D2579F3CF /* DiaryCardVideoBadgeGeometryTests.swift in Sources */,
 				A9974BD1FAB09CA34048A2BB /* DiaryDetailCommentsUITests.swift in Sources */,
 				FC7F856A2E7EAB8C9B671789 /* DiaryDetailVideoUITests.swift in Sources */,
