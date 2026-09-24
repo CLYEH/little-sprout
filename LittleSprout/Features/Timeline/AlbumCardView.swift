@@ -21,6 +21,7 @@ struct AlbumCardView: View {
             VStack(alignment: .leading, spacing: AppSpacing.label) {
                 PrintPhotoCard(
                     photoHeight: 190,
+                    mountPoolOpacity: .card,
                     showsImprint: false,
                     remoteURL: content.cover?.signedURL,
                     accessibilityLabel: content.title

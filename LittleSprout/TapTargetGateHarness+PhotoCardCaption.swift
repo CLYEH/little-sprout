@@ -12,8 +12,11 @@ import SwiftUI
 /// 「8 個月大」、小饅頭「1 歲 8 個月」）。相簿卡（`AlbumSummaryCardView`）年齡以「現在」為準
 /// （該檔文件註解），`.album` fixture 只量折行位置、不斷言年齡字串。
 extension TapTargetGateHarness {
+    /// LS-389：`descender`／`albumDescender`＝深色署名對比實測測資（LS-372 Notes `SLL6R`：有下伸部
+    /// 的拉丁名 Gary 落在多寶貝最後一行）；`feedAxis`＝時間軸日記卡／照片卡／相簿卡同屏，量三卡文字
+    /// 起點是否同軸。
     enum PhotoCardCaptionFixture: String {
-        case one, two, three, none, album, feed
+        case one, two, three, none, album, feed, descender, albumDescender, feedAxis
     }
 
     static var photoCardCaptionFixture: PhotoCardCaptionFixture {
@@ -37,13 +40,15 @@ private struct PhotoCardBabyCaptionHost: View {
     private static let occurredAt = ISO8601DateFormatter().date(from: "2026-09-15T12:00:00Z")!
     private static let mediaID = UUID()
 
-    @State private var timelineStore = PhotoCardBabyCaptionHost.seededTimelineStore()
+    @State private var timelineStore = PhotoCardBabyCaptionHost.seededTimelineStore(
+        axis: TapTargetGateHarness.photoCardCaptionFixture == .feedAxis
+    )
     @State private var childrenStore = PhotoCardBabyCaptionHost.seededChildrenStore()
     @State private var familyStore = FamilyStore.preview()
 
     var body: some View {
         switch fixture {
-        case .feed:
+        case .feed, .feedAxis:
             NavigationStack {
                 TimelineView(
                     familyStore: familyStore, childrenStore: childrenStore, timelineStore: timelineStore,
@@ -68,7 +73,19 @@ private struct PhotoCardBabyCaptionHost: View {
                 )
                 .accessibilityIdentifier("harness.albumCard")
             }
-        case .one, .two, .three, .none:
+        case .albumDescender:
+            singleCard {
+                AlbumSummaryCardView(
+                    album: AlbumSummary(
+                        id: UUID(), title: "上禮拜的動物園一日遊", photoCount: 12, cover: nil,
+                        childIds: [], createdAt: Date()
+                    ),
+                    taggedChildren: Self.children(for: .descender),
+                    cardWidth: 345
+                )
+                .accessibilityIdentifier("harness.albumCard")
+            }
+        case .one, .two, .three, .none, .descender:
             singleCard {
                 PhotoCardView(
                     content: MediaContent(
@@ -105,7 +122,10 @@ private struct PhotoCardBabyCaptionHost: View {
         case .three:
             [child("歐陽彥廷", born: "2024-06-01"), child("小饅頭", born: "2025-01-01"),
              child("Emma Chen", born: "2026-01-01")]
-        case .none, .album, .feed: []
+        case .descender:
+            [child("歐陽彥廷", born: "2024-06-01"), child("小饅頭", born: "2025-01-01"),
+             child("Gary", born: "2026-01-01")]
+        case .none, .album, .feed, .albumDescender, .feedAxis: []
         }
     }
 
@@ -124,11 +144,35 @@ private struct PhotoCardBabyCaptionHost: View {
     }
 
     /// `.feed` 用：有標記（小安）＋未標記各一張照片卡，同 LS-367 規格板 feed 摘錄（`Jh35i`）。
+    /// `.feedAxis`（LS-389）：日記卡、有標記照片卡、相簿卡各一張，三種卡同屏量文字起點。
     @MainActor
-    private static func seededTimelineStore() -> TimelineStore {
+    private static func seededTimelineStore(axis: Bool) -> TimelineStore {
         let store = TimelineStore.preview()
         let taggedID = UUID()
         let untaggedID = UUID()
+        if axis {
+            store.seedForPreview(entries: [
+                TimelineEntry(
+                    kind: .diary, refId: UUID(), occurredAt: occurredAt, childIds: [feedChild.id],
+                    content: .diary(DiaryContent(
+                        body: "今天第一次自己走到公園。", entryDate: occurredAt, previewPhotos: [], totalPhotoCount: 0
+                    ))
+                ),
+                TimelineEntry(
+                    kind: .media, refId: taggedID, occurredAt: occurredAt.addingTimeInterval(-60),
+                    childIds: [feedChild.id],
+                    content: .media(MediaContent(
+                        id: taggedID, type: .photo, width: 4, height: 3, thumbWidth: nil, thumbHeight: nil,
+                        storagePath: "f/tagged.jpg", isThumbnail: false, signedURL: nil, durationSeconds: nil
+                    ))
+                ),
+                TimelineEntry(
+                    kind: .album, refId: UUID(), occurredAt: occurredAt.addingTimeInterval(-120), childIds: [],
+                    content: .album(AlbumContent(title: "弟弟出生的第一週", cover: nil))
+                )
+            ])
+            return store
+        }
         store.seedForPreview(entries: [
             TimelineEntry(
                 kind: .media, refId: taggedID, occurredAt: occurredAt, childIds: [feedChild.id],
