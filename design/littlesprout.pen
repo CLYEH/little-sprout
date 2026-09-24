@@ -143662,7 +143662,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -143768,7 +143774,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -143874,7 +143886,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -144260,7 +144278,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -144366,7 +144390,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -144472,7 +144502,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -144856,7 +144892,13 @@
                               "y": 9,
                               "width": 54,
                               "height": 54,
-                              "cornerRadius": 2.4
+                              "cornerRadius": 2.4,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -4.56,
@@ -144965,7 +145007,13 @@
                               "y": 9,
                               "width": 54,
                               "height": 54,
-                              "cornerRadius": 2.4
+                              "cornerRadius": 2.4,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -4.56,
@@ -145074,7 +145122,13 @@
                               "y": 9,
                               "width": 54,
                               "height": 54,
-                              "cornerRadius": 2.4
+                              "cornerRadius": 2.4,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -4.56,
@@ -145764,7 +145818,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -145870,7 +145930,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -145976,7 +146042,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -146503,7 +146575,13 @@
                               "y": 5,
                               "width": 30,
                               "height": 30,
-                              "cornerRadius": 1.3333333333333333
+                              "cornerRadius": 1.3333333333333333,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.533333333333333,
@@ -146558,7 +146636,13 @@
                               "y": 5,
                               "width": 30,
                               "height": 30,
-                              "cornerRadius": 1.3333333333333333
+                              "cornerRadius": 1.3333333333333333,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.533333333333333,
@@ -146613,7 +146697,13 @@
                               "y": 5,
                               "width": 30,
                               "height": 30,
-                              "cornerRadius": 1.3333333333333333
+                              "cornerRadius": 1.3333333333333333,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-grandpa.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.533333333333333,
@@ -146668,7 +146758,13 @@
                               "y": 5,
                               "width": 30,
                               "height": 30,
-                              "cornerRadius": 1.3333333333333333
+                              "cornerRadius": 1.3333333333333333,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-toddler.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.533333333333333,
