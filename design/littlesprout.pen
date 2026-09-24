@@ -54329,13 +54329,13 @@
                   "type": "text",
                   "id": "VywUw",
                   "name": "Caption",
-                  "fill": "$print-ink",
+                  "fill": "$print-ink-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "小安 · 2 歲 3 個⁠月",
                   "fontFamily": "$font",
-                  "fontSize": "$fs-body",
-                  "fontWeight": "600"
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -66550,14 +66550,57 @@
           "name": "Card Photo Long Caption",
           "width": "fill_container",
           "descendants": {
-            "VywUw": {
-              "content": "陳彥廷 · 3 歲 0 個⁠月、小饅頭 · 1 歲 8 個⁠月、Emma Chen · 8 個⁠月"
+            "KRUtz": {
+              "type": "frame",
+              "id": "RCwHt",
+              "name": "Imprint Row",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "F0751",
+                  "name": "Caption",
+                  "fill": "$print-ink-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "陳彥廷 · 3 歲",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "B6rrty",
+                  "name": "Caption",
+                  "fill": "$print-ink-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "小饅頭 · 1 歲 8 個⁠月",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "GKUGR",
+                  "name": "Caption",
+                  "fill": "$print-ink-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Emma Chen · 8 個⁠月⁠大",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                }
+              ]
             },
             "SNbd8": {
-              "y": 236
+              "y": 277
             },
             "P15GB": {
-              "y": 236
+              "y": 277
             }
           }
         },
@@ -68277,7 +68320,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "兩個以上寶貝的年齡寫法（R6 定，LS-201 起以稿為準，LS-367 改寫）：**全稿一義**——`、`（頓號）永遠是『下一個人』的分隔，`·`（點）永遠只做『同一人姓名↔年齡』的微連接，不得反過來用。現行稿面多寶貝一律寫成多組「暱稱 · 年齡」以「、」串接（例：「小安 · 2 歲 3 個月、小明 · 8 個月」），`cmp/Card Diary` Multi Caption（x7k2o6）、`cmp/Card Album` Signature Line（wQVzs）、`cmp/Card Photo` Caption（VywUw）三處同一字串；R6 原寫的「多寶貝姓名與年齡之間只用空格、不加 ·」已被 LS-201 之後的稿面取代（實作 MultiChildCaptionFormatter 仍是舊寫法，對齊與否見本板 LS-367 待裁決條）。`cmp/Card Diary`（qtCd7）Signature 的 Multi Caption（`$print-ink`／`$fs-note`／`textAlign:right`，`textGrowth:fixed-width`+`fill_container`）預設 enabled:false；多寶貝實例關閉 Who Group／Age Group、開啟 Multi Caption。**`cmp/Card Photo` 的 Caption（LS-367 改寫）**：App 沒有 media caption（情境描述）資料，Caption 只放署名字串、不再有「情境描述 · 」前段——單寶貝「小安 · 2 歲 3 個月」、多寶貝以「、」串接、AX3 一行一人、未標記＝單一空白（格式、字級與理由見本板 LS-367 段）；沖印品白邊／角托規則不受影響，角托 y 隨印品實測高重算。**SwiftUI 斷行字元**：姓名＋U+0020＋「·」＋U+00A0＋年齡片語（年齡內部 U+00A0、「個」「月」之間 U+2060），確保 AX3 折行時「·」領銜下一行、年齡片語不被拆開。多寶貝 AX3 壓測：原 HLXo3 的 Card Photo 已刪除（見 HPvum），照片卡改由 hk4Kl 示範；HLXo3 仍示範 Card Diary 的 Multi Caption。",
+                  "content": "兩個以上寶貝的年齡寫法（R6 定，LS-201 起以稿為準，LS-367 改寫）：**全稿一義**——`、`（頓號）永遠是『下一個人』的分隔，`·`（點）永遠只做『同一人姓名↔年齡』的微連接，不得反過來用。現行稿面多寶貝一律寫成多組「暱稱 · 年齡」以「、」串接（例：「小安 · 2 歲 3 個月、小明 · 8 個月」），`cmp/Card Diary` Multi Caption（x7k2o6）、`cmp/Card Album` Signature Line（wQVzs）、`cmp/Card Photo` Caption（VywUw）三處的單人片段同一字串（多寶貝排列照片卡另有規則，見下）；R6 原寫的「多寶貝姓名與年齡之間只用空格、不加 ·」已被 LS-201 之後的稿面取代（實作 MultiChildCaptionFormatter 仍是舊寫法，對齊與否見本板 LS-367 待裁決條）。`cmp/Card Diary`（qtCd7）Signature 的 Multi Caption（`$print-ink`／`$fs-note`／`textAlign:right`，`textGrowth:fixed-width`+`fill_container`）預設 enabled:false；多寶貝實例關閉 Who Group／Age Group、開啟 Multi Caption。**`cmp/Card Photo` 的 Caption（LS-367 改寫）**：App 沒有 media caption（情境描述）資料，Caption 只放署名字串、不再有「情境描述 · 」前段——單寶貝「小安 · 2 歲 3 個月」、多寶貝串成一行放得下就用「、」串接、放不下（含 AX3）就一行一人、未標記＝單一空白；樣式 R2 改 `$print-ink-secondary`／`$fs-note`／regular，與相簿卡署名列同樣式（格式、字級與理由見本板 LS-367 段）；沖印品白邊／角托規則不受影響，角托 y 隨印品實測高重算。**SwiftUI 斷行字元**：姓名＋U+0020＋「·」＋U+00A0＋年齡片語（年齡內部 U+00A0、「個」「月」之間 U+2060），確保 AX3 折行時「·」領銜下一行、年齡片語不被拆開。多寶貝 AX3 壓測：原 HLXo3 的 Card Photo 已刪除（見 HPvum），照片卡改由 ai2w5 示範；HLXo3 仍示範 Card Diary 的 Multi Caption。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -71390,7 +71433,7 @@
               "id": "z7gegX",
               "name": "H",
               "fill": "#2B141C",
-              "content": "LS-367 照片卡（cmp/Card Photo）寶貝標記——沒有情境描述時",
+              "content": "LS-367 照片卡（cmp/Card Photo）寶貝標記——沒有情境描述時（R2 改寫）",
               "fontFamily": "Noto Sans TC",
               "fontSize": 20,
               "fontWeight": "700"
@@ -71423,7 +71466,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "採 (a)：`cmp/Card Photo`（umJHD）Imprint Row 唯一一行 Caption（VywUw）只放署名字串「{暱稱} · {年齡}」，不用 `cmp/Baby Chip`（o9Brs1）。理由：①沖印品母題——白邊上只有墨（壓印／手寫），Baby Chip 是 Import 16 板的可切換控件（膠囊＋填色＝「可以按」的外形），搬上紙面會讓長輩去點一個點了沒反應的東西，也在紙上疊出第二種材質；②與相簿卡署名列（`cmp/Card Album` Signature Line wQVzs）同一字串、同一 formatter，時間軸三種卡片只有一條署名規則；③App 沒有 media caption（情境描述）資料（media 表／MediaContent 無欄位），所以舊稿「情境描述 · 」前段整段拿掉，不是留位子等資料——日後若做 caption 功能（另票），Caption 改回「情境 · 署名」兩段時再開設計票。字串規格＝LS-201 定案：姓名＋U+0020＋「·」＋U+00A0＋年齡片語（年齡內部 U+00A0、「個」「月」之間 U+2060）；多寶貝以「、」串接多組「暱稱 · 年齡」（、後不加空白）；AX3（.accessibility3 起）改一行一人，以換行取代「、」。",
+                  "content": "採 (a)：`cmp/Card Photo`（umJHD）Imprint Row 只放署名「{暱稱} · {年齡}」，不用 `cmp/Baby Chip`（o9Brs1）。理由：①沖印品母題——白邊上只有墨，Baby Chip 是 Import 的可切換控件（膠囊＋填色＝「可以按」），搬上紙面會讓長輩去點一個點了沒反應的東西；②App 沒有 media caption（情境描述）資料，舊稿「情境描述 · 」前段整段拿掉，日後做 caption 功能（另票）再開設計票。**多寶貝排列（R2，VR M-3）**：所有字級同一條規則——全部人用「、」串成一行放得下就串接（預設字級兩位短名字：「小安 · 2 歲 3 個月、小明 · 8 個月大」實測 280pt＜欄寬 329），放不下就一行一人、人與人之間 `$sp-label` 8（三位長名字、以及 AX3 的任何多寶貝）；單人一行放不下時沿用 LS-201 已核可的「姓名後折行、『·』領銜下一行」。字串字元：姓名＋U+0020＋「·」＋U+00A0＋年齡；年齡內部 U+00A0，「個」「月」之間 U+2060，「月」「大」之間 U+2060（R2 新增：AX3 實測「小饅頭 · 8 個月」／「大」孤字）。本規則只定照片卡；相簿卡 Signature Line（wQVzs）仍是 AX3 換行、預設「、」串接折行（LS-201 核可），是否跟進待裁決（見下）。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71459,7 +71502,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "照片卡直接用 `AlbumSignatureFormatter.signatureText(children:asOf:isOneLinePerPerson:)`（asOf＝該卡 feed_items.occurred_at，即 coalesce(taken_at, created_at)；isOneLinePerPerson＝dynamicTypeSize ≥ .accessibility3），零寶貝它已回傳單一空白。**不要**用 `MultiChildCaptionFormatter.attributed()`：它的多寶貝寫法不帶「·」（與 wQVzs／x7k2o6 稿面不符）、年齡降到 .footnote（13pt，違反 13pt 成員資格——年齡是要讀的字，稿上 Diary 的 Age zk1yE 也是 $fs-note 17）、顏色用 lsTextPrimary／lsTextSecondary（會隨深色反轉；卡片是紙，紙上一律 print-ink）。渲染：Text(signature).font(.body.weight(.semibold)).foregroundStyle(Color.lsPrintInk)，不設 lineLimit，靠字串裡的 NBSP／WJ 控制斷點。",
+                  "content": "**實作契約（R2，VR M-1；LS-365 要改的地方）**：①`AlbumSignatureFormatter.segment` 目前是「姓名 · 年齡」、「·」後為 U+0020（AlbumSignatureFormatter.swift:40），AX3 會折成「小安 ·」／「2 歲 3 個月」，與本稿相反——LS-365 改成「·」後 U+00A0（「·」前維持 U+0020），並同步改 AlbumSignatureFormatterTests 第 45–46、61 行的 hasPrefix(\"小安 · \") 斷言（改斷言 U+00A0）；②`hardenedAge` 另補「月大」之間 U+2060；③年齡字串一律用 `BirthdayFormat.ageDescription` 實際產出：未滿一歲「N 個月大」、整歲「N 歲」、其餘「N 歲 M 個月」（本稿壓測字串已照此改：「8 個月大」「3 歲」「4 歲」）；④排列用 ViewThatFits：第一候選＝單一 Text（segments.joined(\"、\")，.lineLimit(1)），第二候選＝VStack(alignment: .leading, spacing: 8) 每人一個 Text（不設 lineLimit，靠上述字元控制斷點）；零寶貝回傳單一空白。**不要**用 `MultiChildCaptionFormatter.attributed()`（多寶貝不帶「·」、年齡 .footnote 13pt、顏色用會隨深色反轉的 lsTextPrimary／lsTextSecondary）。樣式：.font(.body)（regular）＋ .foregroundStyle(Color.lsPrintInkSecondary)。asOf＝該卡 feed_items.occurred_at。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71495,7 +71538,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "留白：Caption 內容＝單一半形空白（U+0020），Imprint Row 保留一行高（預設 25／AX3 58），印品高度與有標記的卡相同（預設 232），角托座標不變。不採「整條不顯示」：下緣厚度由壓印行掙來（brand 十條 #3），拿掉整行會讓同一條 feed 出現兩種印品比例，也與 motifs「空欄位態不可整列隱藏」、相簿卡零寶貝署名列保留高度（epDnW）的既有定案互斥。不採「LITTLE SPROUT」：英文名只准出現在歡迎頁家族相片白邊（wordmark-brand），印在這裡會被讀成「這是誰」的答案。無障礙：空白行 .accessibilityHidden(true)；卡片不念「未標記」這類系統狀態，照片本身的 label 照舊。",
+                  "content": "留白：Caption 內容＝單一半形空白，Imprint Row 保留一行高（預設 25／AX3 58）。**印品高（R2 訂正，VR m-3）**：預設字級未標記卡與單寶貝卡同為 232；AX3 未標記 265、單寶貝 323（單寶貝「小安」／「· 2 歲 3 個月」折成兩行 116，空白只佔一行 58）——高度差來自有字的卡折行，不是未標記卡塌縮；角托 y 一律＝印品實測高−21。不採「整條不顯示」：下緣厚度由壓印行掙來（brand 十條 #3），拿掉整行會讓同一條 feed 出現兩種相紙比例，也與 motifs「空欄位態不可整列隱藏」、相簿卡零寶貝署名列保留高度（epDnW）的定案互斥。不採「LITTLE SPROUT」：英文名只准出現在歡迎頁家族（wordmark-brand），印在這裡會被讀成「這是誰」的答案。feed 中的樣子見 g57BHa 最下方無標籤摘錄（日期章→有標記→未標記→日記卡，VR M-4）。無障礙：空白行 .accessibilityHidden(true)，不念「未標記」。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71531,7 +71574,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "整行單一墨色，不跟日記卡兩段式：`$print-ink`／`$fs-body` 17（AX3 40）／600，單一 text 節點。理由：①角色不同——日記卡署名是正文之下的落款、相簿卡 Signature Line 是標題下的第二行（整行 print-ink-secondary regular），照片卡這一行是紙上唯一、也是第一行字，與相簿卡 Caption（MIxHp，600 print-ink）同位階；②對比——年齡也拿到 print-ink 的 14.92／12.55，不降到 9.66／8.13；③稿面可驗——Pencil 文字節點沒有 run 級樣式，兩段式在 AX3 折行（「小安」／「· 2 歲 3 個月」）時只能拆兩個節點、畫不出真實折行，稿與實作會在最需要驗的 AX3 分岔。單一 Text 同時涵蓋單寶貝、多寶貝、長名字與 AX3，不需要結構切換。",
+                  "content": "**R2 改定（VR M-2，orchestrator 裁決採用）**：署名一律 `$print-ink-secondary`／`$fs-note` 17（AX3 40）／regular，與相簿卡 Signature Line（wQVzs）同樣式。理由：紙上 600 `$print-ink` 是「這是什麼」（相簿卡標題 MIxHp、日後的情境描述）的樣式，「這是誰」一律 secondary；R1 讓照片卡署名用 600 主墨，在 go7f9 這類照片卡與相簿卡並排的 feed 裡，同一個樣式同時代表兩種角色。對比：print-ink-secondary 對 print-paper 9.66／8.13（tokens.md 實測），仍過 AAA 7:1；AX3 字級 fs-note 與 fs-body 同為 40，折行位置不變——沒有反證，採用。照片卡與相簿卡現在是同字串、同樣式；多寶貝排列規則兩者不同（照片卡 R2 改放不下一行就一行一人），日記卡兩段式另是一套（待裁決）。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71567,7 +71610,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "新增規格板三塊：rnJTb（淺）／G7iOH（深色）／hk4Kl（AX3），各三張 `cmp/Card Photo`：一位寶貝／兩位以上寶貝／沒有標記寶貝；三張刻意用同一張照片，只讓壓印行變。AX3 印品高 323／381／265，角托 BL／BR 的 y＝印品高−21（F82bp0＝302、cWZQE＝360、IE0cO＝244）。多寶貝 AX3 示範改放 hk4Kl：原 HLXo3 的 Card Photo（P1CltA，已刪除，見 HPvum）不在 HLXo3 重放，因為該板 Tab Bar 帶平移無解。深色板紙與墨不反轉（print-paper／print-ink 不掛 theme），只有台紙 $bg 變深。",
+                  "content": "規格板（R2 整板重建，衍生板由基準板複製後重算）：g57BHa（淺）／u0yYg（深色）／ai2w5（AX3）。每塊五區：一位寶貝／兩位寶貝／三位寶貝（長名字＋拉丁名，VR m-2）／沒有標記寶貝／無標籤 feed 摘錄。印品高與角托 y（＝高−21）：預設 232／211，三位 298／277（Bk4x4、u0yYg 的 Aqp4Q）；AX3 一位 323（qXHec）、兩位 389（IvvTi，一行放不下→一行一人）、三位 571（T8CSTA）、未標記 265（aUAKy）、feed 有標記 323（m9tR2）、feed 未標記 265（f3IQOI）。**素材限制（VR m-1）**：design/appstore-photos 13 張與 LS-247 三張家族圖（hero／invite／join）都沒有兩個孩子同框，多寶貝卡沿用同一張照片當對照組（只讓壓印行變），不代表多寶貝照片的真實內容；需要真實兩孩同框圖時另外生圖。深色板紙與墨不反轉，只有台紙變深。多寶貝 AX3 示範在 ai2w5：原 HLXo3 的 Card Photo（P1CltA，已刪除，見 HPvum）不在 HLXo3 重放。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71603,7 +71646,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "時間軸既有實例的 Caption 同步改寫：元件預設 VywUw、yXSht 的 Oh3Om、go7f9 的 sJpxU 改「小安 · 2 歲 3 個月」；Tr8Kd 的 q3tlmR 改三寶貝長名字「陳彥廷 · 3 歲 0 個月、小饅頭 · 1 歲 8 個月、Emma Chen · 8 個月」（兩行，角托 BL／BR y 261→236）；M7CZQ 的 JIWXi／omQqo 改「小安 · 1 歲 8 個月」（順修 U+0020 舊債）；Import e1cOqx 的 QNEky 同步改（元件預設一改，Import AX3 aGkJ1 的 hO6Sr 會跟著變，只改 AX3 不改基準會讓兩板不一致；只動這一個 content 覆寫，Import 版面不動）。其餘繼承預設的實例（pqE2P／ngQDX／NBUy0／k1phed／hO6Sr）隨元件更新，印品高不變（NBUy0 AX3 仍兩行 323）。",
+                  "content": "時間軸既有實例：元件預設 VywUw、yXSht 的 Oh3Om、go7f9 的 sJpxU 為「小安 · 2 歲 3 個月」；Tr8Kd 的 q3tlmR 改一行一人三寶貝（「陳彥廷 · 3 歲」「小饅頭 · 1 歲 8 個月」「Emma Chen · 8 個月大」，R2 改成 ageDescription 實際產出），印品高 298、角托 BL／BR y 277；M7CZQ 的 JIWXi／omQqo 為「小安 · 1 歲 8 個月」；Import e1cOqx 的 QNEky 同步改（超範圍一處，PR body 申報：元件預設一改，Import AX3 aGkJ1 的 hO6Sr 會跟著變，只改 AX3 不改基準會讓兩板不一致；Import 版面不動）。其餘繼承預設的實例（pqE2P／ngQDX／NBUy0／k1phed／hO6Sr）隨元件更新；R2 樣式改 regular／secondary 後字寬變窄，印品高不變。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71639,7 +71682,43 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "`cmp/Card Diary` 多寶貝字串：稿面 x7k2o6（元件預設與 HLXo3 的 kmbyt 覆寫）是「小安 · 2 歲 3 個月、小明 · 8 個月」（帶 ·），實作 MultiChildCaptionFormatter 是「小安 2 歲 3 個月、小明 8 個月」（不帶 ·，照 ca7bA 的 R6 舊寫法），年齡字級也差（稿 17、實作 13）。本票只定照片卡、不改日記卡；兩者對齊另由 orchestrator 決定開票。",
+                  "content": "待裁決（orchestrator）：①`cmp/Card Diary` 多寶貝字串——稿面 x7k2o6 帶「·」、年齡 17，實作 MultiChildCaptionFormatter 不帶「·」、年齡 13，本票不改日記卡；②相簿卡署名列是否跟進照片卡的「放不下一行就一行一人」（VR i-4，與 LS-374 一併裁）；③U+00B7 在 CJK 字型下顯示成全形、兩側空白偏寬（VR i-2，全稿舊債，本票不動）。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cPxAz",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Cm9hL",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-367 R2 沿革",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LtDnU",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R2 依 VR R1（comment 08d0e396）與 orchestrator 裁決修改：M-2 採用（署名改 secondary／regular／fs-note，見定案 3）；M-1 採用（實作契約四點＋壓測字串改 ageDescription 實際產出，AX3 重量、角托 y 重算）；M-3 採用、限照片卡（放不下一行就一行一人，見定案 1）；M-4 採用（g57BHa 加無標籤 feed 摘錄）；m-1 標明素材限制（範例板條）；m-2 補三位長名字＋拉丁名卡；m-3 印品高改寫成實況（定案 2）；i-1 超範圍一處已於既有實例條申報、PR body 同步。規格板 R1 的三塊已刪除重建，現行為 g57BHa／u0yYg／ai2w5。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71711,7 +71790,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "LS-367 / 照片卡寶貝標記規格 · Card Photo (iPhone)｜隱藏 Tab Bar ✓（元件規格板，不是可導覽畫面；實際出現在時間軸 11，Tab Bar 照 11）｜標題 無（規格板）｜釘底動作帶 無｜失敗文案鍵 無（純顯示；寶貝資料讀不到時退回未標記＝留白，不另出錯誤文案）｜深色 LS-367 / 照片卡寶貝標記規格 · Card Photo · 深色：紙與墨不反轉，只有台紙變深｜AX3 A11y / 照片卡寶貝標記規格 · Card Photo · Dynamic Type AX3（body 40pt）：多寶貝一行一人，單寶貝姓名後折行由「·」領銜，角托 y 隨印品高重算｜iPad 不另出板：卡寬隨欄（go7f9 的 sJpxU 寬 254.5），規則相同｜資料落點 唯讀、無可編輯欄位：寶貝＝feed_items.child_ids（由 media_children 聚合，LS-317）→ children.name／children.birthday；年齡基準＝feed_items.occurred_at（media 為 coalesce(taken_at, created_at)）；標記的寫入路徑是 set_media_children RPC，不在本畫面",
+                  "content": "LS-367 / 照片卡寶貝標記規格 · Card Photo (iPhone)｜隱藏 Tab Bar ✓（元件規格板，不是可導覽畫面；實際出現在時間軸 11，Tab Bar 照 11）｜標題 無（規格板）｜釘底動作帶 無｜失敗文案鍵 無（純顯示；寶貝資料讀不到時退回未標記＝留白，不另出錯誤文案）｜深色 LS-367 / 照片卡寶貝標記規格 · Card Photo · 深色：紙與墨不反轉，只有台紙變深｜AX3 A11y / 照片卡寶貝標記規格 · Card Photo · Dynamic Type AX3（body 40pt）：多寶貝串接放不下→一行一人，單人放不下時姓名後折行由「·」領銜，角托 y 隨印品高重算｜iPad 不另出板：卡寬隨欄（go7f9 的 sJpxU 寬 254.5），規則相同｜資料落點 唯讀、無可編輯欄位：寶貝＝feed_items.child_ids（由 media_children 聚合，LS-317）→ children.name／children.birthday；年齡基準＝feed_items.occurred_at（media 為 coalesce(taken_at, created_at)）；標記的寫入路徑是 set_media_children RPC，不在本畫面",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71747,7 +71826,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "LS-21 / 11 時間軸 (iPhone)（僅列本票改動的照片卡欄位，其餘欄位沿用 LS-21 稿、本票未改）｜隱藏 Tab Bar ✗｜標題 沿用｜釘底動作帶 無｜失敗文案鍵 沿用｜深色 LS-21 / 11 時間軸 · 深色 照片卡紙與墨不反轉｜AX3 照片卡 Caption 兩行（「小安」／「· 2 歲 3 個月」）｜iPad 11-iPad 卡寬 254.5 同規則｜資料落點 照片卡 Caption 同上列（feed_items.child_ids＋children，唯讀）",
+                  "content": "LS-21 / 11 時間軸 (iPhone)（僅列本票改動的照片卡欄位，其餘欄位沿用 LS-21 稿、本票未改）｜隱藏 Tab Bar ✗｜標題 沿用｜釘底動作帶 無｜失敗文案鍵 沿用｜深色 LS-21 / 11 時間軸 · 深色 照片卡紙與墨不反轉｜AX3 照片卡署名兩行（「小安」／「· 2 歲 3 個月」）｜iPad 11-iPad 卡寬 254.5 同規則｜資料落點 照片卡署名同上列（feed_items.child_ids＋children，唯讀）",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -212504,7 +212583,7 @@
     },
     {
       "type": "frame",
-      "id": "rnJTb",
+      "id": "g57BHa",
       "x": 19828,
       "y": 30619,
       "name": "LS-367 / 照片卡寶貝標記規格 · Card Photo (iPhone)",
@@ -212538,7 +212617,7 @@
       "layout": "vertical",
       "children": [
         {
-          "id": "BzCuc",
+          "id": "H73uay",
           "type": "ref",
           "ref": "OeXop",
           "name": "Status Bar",
@@ -212546,7 +212625,7 @@
         },
         {
           "type": "frame",
-          "id": "TQFxN",
+          "id": "Z46fq",
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
@@ -212560,7 +212639,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "DW6Ic",
+              "id": "eDJ9s",
               "name": "Section · 一位寶貝",
               "width": "fill_container",
               "layout": "vertical",
@@ -212568,9 +212647,11 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "oHMj0",
+                  "id": "Nf1wX",
                   "name": "Section Label",
                   "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "一位寶貝",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
@@ -212578,7 +212659,7 @@
                   "letterSpacing": 0.3
                 },
                 {
-                  "id": "ZGeK4",
+                  "id": "WMogE",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo · 一位寶貝",
@@ -212593,7 +212674,7 @@
             },
             {
               "type": "frame",
-              "id": "BwB43",
+              "id": "zjIzs",
               "name": "Section · 兩位寶貝",
               "width": "fill_container",
               "layout": "vertical",
@@ -212601,24 +212682,26 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "zFBRM",
+                  "id": "K1uOQ",
                   "name": "Section Label",
                   "fill": "$text-secondary",
-                  "content": "兩位以上寶貝",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "兩位寶貝",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
                   "fontWeight": "600",
                   "letterSpacing": 0.3
                 },
                 {
-                  "id": "BGhkJ",
+                  "id": "f2uTy",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo · 兩位寶貝",
                   "width": "fill_container",
                   "descendants": {
                     "VywUw": {
-                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月⁠大"
                     }
                   }
                 }
@@ -212626,7 +212709,91 @@
             },
             {
               "type": "frame",
-              "id": "UI4SQ",
+              "id": "WQZ43",
+              "name": "Section · 三位寶貝長名字",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Ar5rs",
+                  "name": "Section Label",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "三位寶貝（長名字＋拉丁名）",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-meta",
+                  "fontWeight": "600",
+                  "letterSpacing": 0.3
+                },
+                {
+                  "id": "Bk4x4",
+                  "type": "ref",
+                  "ref": "umJHD",
+                  "name": "Card Photo · 三位寶貝長名字",
+                  "width": "fill_container",
+                  "descendants": {
+                    "KRUtz": {
+                      "type": "frame",
+                      "id": "YLaNY",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "rLSVN",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "歐陽彥廷 · 2 歲 3 個⁠月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "MYamp",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小饅頭 · 8 個⁠月⁠大",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "RIITJ",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Emma Chen · 4 歲",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    "SNbd8": {
+                      "y": 277
+                    },
+                    "P15GB": {
+                      "y": 277
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "T7HYW",
               "name": "Section · 未標記",
               "width": "fill_container",
               "layout": "vertical",
@@ -212634,9 +212801,11 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "OSPjY",
+                  "id": "rRJmP",
                   "name": "Section Label",
                   "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "沒有標記寶貝",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
@@ -212644,7 +212813,7 @@
                   "letterSpacing": 0.3
                 },
                 {
-                  "id": "kyOGd",
+                  "id": "UaW6U",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo · 未標記",
@@ -212656,6 +212825,63 @@
                   }
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "Jh35i",
+              "name": "Feed Excerpt（無標籤：驗留白在 feed 中的樣子）",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "id": "E00m1U",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider"
+                },
+                {
+                  "type": "frame",
+                  "id": "kK8WQ",
+                  "name": "Cards",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "id": "Jj7F8",
+                      "type": "ref",
+                      "ref": "umJHD",
+                      "name": "Card Photo · Feed 有標記",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VywUw": {
+                          "content": "小安 · 2 歲 3 個⁠月"
+                        }
+                      }
+                    },
+                    {
+                      "id": "hYIQ4",
+                      "type": "ref",
+                      "ref": "umJHD",
+                      "name": "Card Photo · Feed 未標記",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VywUw": {
+                          "content": " "
+                        }
+                      }
+                    },
+                    {
+                      "id": "WS3FN",
+                      "type": "ref",
+                      "ref": "qtCd7",
+                      "name": "Card Diary · Feed",
+                      "width": "fill_container"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -212663,7 +212889,7 @@
     },
     {
       "type": "frame",
-      "id": "G7iOH",
+      "id": "u0yYg",
       "x": 20301,
       "y": 30619,
       "name": "LS-367 / 照片卡寶貝標記規格 · Card Photo · 深色",
@@ -212700,7 +212926,7 @@
       "layout": "vertical",
       "children": [
         {
-          "id": "fwOZe",
+          "id": "ZGKxh",
           "type": "ref",
           "ref": "OeXop",
           "name": "Status Bar",
@@ -212708,7 +212934,7 @@
         },
         {
           "type": "frame",
-          "id": "Bbeb8",
+          "id": "M47mO",
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
@@ -212722,7 +212948,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "lc9OO",
+              "id": "urxoY",
               "name": "Section · 一位寶貝",
               "width": "fill_container",
               "layout": "vertical",
@@ -212730,9 +212956,11 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "NPShB",
+                  "id": "AEQAz",
                   "name": "Section Label",
                   "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "一位寶貝",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
@@ -212740,7 +212968,7 @@
                   "letterSpacing": 0.3
                 },
                 {
-                  "id": "gQs4H",
+                  "id": "L3yyX",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo · 一位寶貝",
@@ -212755,7 +212983,7 @@
             },
             {
               "type": "frame",
-              "id": "mAjcp",
+              "id": "EFGwA",
               "name": "Section · 兩位寶貝",
               "width": "fill_container",
               "layout": "vertical",
@@ -212763,24 +212991,26 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "o5lRwF",
+                  "id": "A8vKIo",
                   "name": "Section Label",
                   "fill": "$text-secondary",
-                  "content": "兩位以上寶貝",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "兩位寶貝",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
                   "fontWeight": "600",
                   "letterSpacing": 0.3
                 },
                 {
-                  "id": "BaCwu",
+                  "id": "VQlUp",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo · 兩位寶貝",
                   "width": "fill_container",
                   "descendants": {
                     "VywUw": {
-                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
+                      "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月⁠大"
                     }
                   }
                 }
@@ -212788,7 +213018,91 @@
             },
             {
               "type": "frame",
-              "id": "rGhCT",
+              "id": "OOcBs",
+              "name": "Section · 三位寶貝長名字",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "YcKDg",
+                  "name": "Section Label",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "三位寶貝（長名字＋拉丁名）",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-meta",
+                  "fontWeight": "600",
+                  "letterSpacing": 0.3
+                },
+                {
+                  "id": "Aqp4Q",
+                  "type": "ref",
+                  "ref": "umJHD",
+                  "name": "Card Photo · 三位寶貝長名字",
+                  "width": "fill_container",
+                  "descendants": {
+                    "KRUtz": {
+                      "type": "frame",
+                      "id": "i0ijn4",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "KCpBv",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "歐陽彥廷 · 2 歲 3 個⁠月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Is0VW",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小饅頭 · 8 個⁠月⁠大",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "fu2wF",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Emma Chen · 4 歲",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    "SNbd8": {
+                      "y": 277
+                    },
+                    "P15GB": {
+                      "y": 277
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "P44MAt",
               "name": "Section · 未標記",
               "width": "fill_container",
               "layout": "vertical",
@@ -212796,9 +213110,11 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "cIrQ3",
+                  "id": "iHIw8",
                   "name": "Section Label",
                   "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "沒有標記寶貝",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
@@ -212806,7 +213122,7 @@
                   "letterSpacing": 0.3
                 },
                 {
-                  "id": "L1g2Un",
+                  "id": "V3CEn",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo · 未標記",
@@ -212818,6 +213134,63 @@
                   }
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "m9aZx",
+              "name": "Feed Excerpt（無標籤：驗留白在 feed 中的樣子）",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "id": "qpuy5",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider"
+                },
+                {
+                  "type": "frame",
+                  "id": "UQdJc",
+                  "name": "Cards",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "id": "A4P19h",
+                      "type": "ref",
+                      "ref": "umJHD",
+                      "name": "Card Photo · Feed 有標記",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VywUw": {
+                          "content": "小安 · 2 歲 3 個⁠月"
+                        }
+                      }
+                    },
+                    {
+                      "id": "L65wX",
+                      "type": "ref",
+                      "ref": "umJHD",
+                      "name": "Card Photo · Feed 未標記",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VywUw": {
+                          "content": " "
+                        }
+                      }
+                    },
+                    {
+                      "id": "ZIMCz",
+                      "type": "ref",
+                      "ref": "qtCd7",
+                      "name": "Card Diary · Feed",
+                      "width": "fill_container"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -212825,7 +213198,7 @@
     },
     {
       "type": "frame",
-      "id": "hk4Kl",
+      "id": "ai2w5",
       "x": 20774,
       "y": 30619,
       "name": "A11y / 照片卡寶貝標記規格 · Card Photo · Dynamic Type AX3（body 40pt）",
@@ -212862,7 +213235,7 @@
       "layout": "vertical",
       "children": [
         {
-          "id": "SoGLF",
+          "id": "IjYfc",
           "type": "ref",
           "ref": "OeXop",
           "name": "Status Bar",
@@ -212870,7 +213243,7 @@
         },
         {
           "type": "frame",
-          "id": "D2ftDB",
+          "id": "d4fV0g",
           "name": "Body",
           "width": "fill_container",
           "layout": "vertical",
@@ -212884,7 +213257,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "KYuM0",
+              "id": "lyR6F",
               "name": "Section · 一位寶貝",
               "width": "fill_container",
               "layout": "vertical",
@@ -212892,9 +213265,11 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "wTDgx",
+                  "id": "W1Fi82",
                   "name": "Section Label",
                   "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "一位寶貝",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
@@ -212902,7 +213277,7 @@
                   "letterSpacing": 0.3
                 },
                 {
-                  "id": "F82bp0",
+                  "id": "qXHec",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo · 一位寶貝",
@@ -212923,7 +213298,7 @@
             },
             {
               "type": "frame",
-              "id": "vuQWu",
+              "id": "dGV7Y",
               "name": "Section · 兩位寶貝",
               "width": "fill_container",
               "layout": "vertical",
@@ -212931,30 +213306,63 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "P4qjtc",
+                  "id": "aQhvq",
                   "name": "Section Label",
                   "fill": "$text-secondary",
-                  "content": "兩位以上寶貝",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "兩位寶貝",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
                   "fontWeight": "600",
                   "letterSpacing": 0.3
                 },
                 {
-                  "id": "cWZQE",
+                  "id": "IvvTi",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo · 兩位寶貝",
                   "width": "fill_container",
                   "descendants": {
-                    "VywUw": {
-                      "content": "小安 · 2 歲 3 個⁠月\n小明 · 8 個⁠月"
+                    "KRUtz": {
+                      "type": "frame",
+                      "id": "LE07a",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "mUtkX",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安 · 2 歲 3 個⁠月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "nB8F0",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小明 · 8 個⁠月⁠大",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     },
                     "SNbd8": {
-                      "y": 360
+                      "y": 368
                     },
                     "P15GB": {
-                      "y": 360
+                      "y": 368
                     }
                   }
                 }
@@ -212962,7 +213370,91 @@
             },
             {
               "type": "frame",
-              "id": "xgLV7",
+              "id": "O41ZAz",
+              "name": "Section · 三位寶貝長名字",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "DrL20",
+                  "name": "Section Label",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "三位寶貝（長名字＋拉丁名）",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-meta",
+                  "fontWeight": "600",
+                  "letterSpacing": 0.3
+                },
+                {
+                  "id": "T8CSTA",
+                  "type": "ref",
+                  "ref": "umJHD",
+                  "name": "Card Photo · 三位寶貝長名字",
+                  "width": "fill_container",
+                  "descendants": {
+                    "KRUtz": {
+                      "type": "frame",
+                      "id": "A8jhK",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "emS08",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "歐陽彥廷 · 2 歲 3 個⁠月",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "d9iRn",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小饅頭 · 8 個⁠月⁠大",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "St1Fj",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Emma Chen · 4 歲",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    "SNbd8": {
+                      "y": 550
+                    },
+                    "P15GB": {
+                      "y": 550
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qx8uE",
               "name": "Section · 未標記",
               "width": "fill_container",
               "layout": "vertical",
@@ -212970,9 +213462,11 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "OgN2F",
+                  "id": "k83Qs",
                   "name": "Section Label",
                   "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "沒有標記寶貝",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
@@ -212980,7 +213474,7 @@
                   "letterSpacing": 0.3
                 },
                 {
-                  "id": "IE0cO",
+                  "id": "aUAKy",
                   "type": "ref",
                   "ref": "umJHD",
                   "name": "Card Photo · 未標記",
@@ -212996,6 +213490,84 @@
                       "y": 244
                     }
                   }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gO9Eu",
+              "name": "Feed Excerpt（無標籤：驗留白在 feed 中的樣子）",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-label",
+              "children": [
+                {
+                  "id": "e29JW",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Day Divider"
+                },
+                {
+                  "type": "frame",
+                  "id": "snbV4",
+                  "name": "Cards",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "id": "m9tR2",
+                      "type": "ref",
+                      "ref": "umJHD",
+                      "name": "Card Photo · Feed 有標記",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VywUw": {
+                          "content": "小安 · 2 歲 3 個⁠月"
+                        },
+                        "SNbd8": {
+                          "y": 302
+                        },
+                        "P15GB": {
+                          "y": 302
+                        }
+                      }
+                    },
+                    {
+                      "id": "f3IQOI",
+                      "type": "ref",
+                      "ref": "umJHD",
+                      "name": "Card Photo · Feed 未標記",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VywUw": {
+                          "content": " "
+                        },
+                        "SNbd8": {
+                          "y": 244
+                        },
+                        "P15GB": {
+                          "y": 244
+                        }
+                      }
+                    },
+                    {
+                      "id": "VjLwd",
+                      "type": "ref",
+                      "ref": "qtCd7",
+                      "name": "Card Diary · Feed",
+                      "width": "fill_container",
+                      "descendants": {
+                        "Jqwww": {
+                          "layout": "vertical",
+                          "alignItems": "end"
+                        },
+                        "WmQcz": {
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
                 }
               ]
             }
