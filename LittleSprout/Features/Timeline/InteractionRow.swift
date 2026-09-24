@@ -241,11 +241,11 @@ struct InteractionRow: View {
     }
 }
 
-/// LS-371：`Count Zone` 專用——直接回傳 label，不依 `isEnabled` 淡化（見 `InteractionRow.countZone`
-/// 文件註解）。
+/// LS-371：`Count Zone` 專用——不依 `isEnabled` 淡化（見 `InteractionRow.countZone` 文件註解），只在
+/// 按下時淡化，與同列 `Like Toggle` 的 `.plain` 按壓觸感一致；disabled（0 讚）不會進 pressed，不淡化。
 private struct CountZoneButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
+        configuration.label.opacity(configuration.isPressed ? 0.6 : 1)
     }
 }
 
