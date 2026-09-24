@@ -93,9 +93,8 @@ final class InteractionRowUITests: XCTestCase {
     /// Count Zone 計數 0 時（照片卡種子）點擊不應該開啟按讚名單 sheet——票文 scope 3。
     ///
     /// LS-371：Count Zone 不再掛 `.disabled`（會把計數「0」淡化到 2.47–3.19:1，見
-    /// `InteractionRow.countZone` 文件註解），「0 讚不開名單」改由 action 內的 `guard` 獨力守住
-    /// ——所以這支改斷言「可點（未淡化）但點了不開 sheet、也不導覽離開時間軸」，拿掉 `guard`
-    /// 就會紅。
+    /// `InteractionRow.countZone` 文件註解），改用 `.allowsHitTesting(count > 0)`：0 讚時 tap
+    /// 穿透給外層卡片、不開名單——所以 `isEnabled` 改斷言為 true（未淡化），「點了不開 sheet」不變。
     func testCountZone_withZeroCount_doesNotOpenLikersSheet() {
         let app = TapTargetMeasurement.launch(.timelineInteractionRow)
         TapTargetMeasurement.assertScreenRendered(.timelineInteractionRow, in: app)
@@ -106,14 +105,13 @@ final class InteractionRowUITests: XCTestCase {
 
         mediaCountZone.tap()
 
-        // LS-237 修（池 `08cad41e`(2)）：同上一支的理由（風險更低——Count Zone 的 action 在
-        // 計數 0 時直接 `guard` 返回（LS-371 前是 disabled），理論上 tap 不會有任何效果）——`.exists` 一次性快照在「若真的開啟
+        // LS-237 修（池 `08cad41e`(2)）：同上一支的理由（風險更低——Count Zone 在計數 0 時
+        // 不接 hit test（LS-371 前是 disabled），tap 穿透給卡片本體、不會開名單）——`.exists` 一次性快照在「若真的開啟
         // 了 sheet」的情境下，開啟動畫還沒跑完的瞬間量到「不存在」也可能只是還沒畫出來，改用
         // `waitForExistence` 積極輪詢一段時間再判斷「真的沒有出現」，同 `SettingsViewTests`
         // 等既有「等一段時間確認不存在」的既有慣例（見該檔案系列 `XCTAssertFalse(...
         // waitForExistence(timeout:))` 寫法）。
         XCTAssertFalse(likersSheetHeadline(in: app).waitForExistence(timeout: 3), "計數 0 時點擊不應該開啟按讚名單 sheet")
-        XCTAssertTrue(app.staticTexts["時間軸"].exists, "計數 0 時點擊 Count Zone 不應該導覽離開時間軸")
     }
 
     /// 按讚名單 sheet：相簿卡種子已按讚（5 人），點擊 Count Zone 應該開啟 sheet。**不斷言
