@@ -16,9 +16,7 @@ final class GrowthMeasurementFormViewTimeZoneTests: XCTestCase {
     func test_localMidnight_negativeOffsetTimeZone_keepsSameCalendarDay() throws {
         let utcDate = try XCTUnwrap(BirthdayFormat.date(fromWireString: "2026-09-04"))
 
-        let localDate = try XCTUnwrap(
-            GrowthMeasurementFormView.localMidnight(from: utcDate, timeZone: easternTimeZone())
-        )
+        let localDate = GrowthMeasurementFormView.localMidnight(from: utcDate, timeZone: easternTimeZone())
         var easternCalendar = Calendar(identifier: .gregorian)
         easternCalendar.timeZone = easternTimeZone()
         let components = easternCalendar.dateComponents([.year, .month, .day], from: localDate)
@@ -34,9 +32,7 @@ final class GrowthMeasurementFormViewTimeZoneTests: XCTestCase {
     func test_localMidnight_roundTripsThroughWireStringInNegativeOffsetTimeZone() throws {
         let utcDate = try XCTUnwrap(BirthdayFormat.date(fromWireString: "2026-09-04"))
 
-        let localDate = try XCTUnwrap(
-            GrowthMeasurementFormView.localMidnight(from: utcDate, timeZone: easternTimeZone())
-        )
+        let localDate = GrowthMeasurementFormView.localMidnight(from: utcDate, timeZone: easternTimeZone())
 
         XCTAssertEqual(BirthdayFormat.wireString(from: localDate, timeZone: easternTimeZone()), "2026-09-04")
     }

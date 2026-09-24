@@ -116,6 +116,7 @@
 		2BE30B61D331B04F1FFA3B02 /* CommentsSheetView+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F98A533BB58A4E7A57B112C8 /* CommentsSheetView+Actions.swift */; };
 		2BFDF35AA74352726B30DA32 /* DiaryAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE38251D5D37CE4FF8269D50 /* DiaryAPIClient.swift */; };
 		2C76DD0C152C817975CFB751 /* DiaryEditorView+Photos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EE645E81A3F0EF6450F481F /* DiaryEditorView+Photos.swift */; };
+		2C912270ED546D780D755F58 /* AgeDescriptionForTestingCallerGuardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE9350184247CED25D3CF2FE /* AgeDescriptionForTestingCallerGuardTests.swift */; };
 		2D03B61ACA5DD6A649155EDC /* OTPCodeField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 577DBA3D01933EB35214704B /* OTPCodeField.swift */; };
 		2D5098229799C3778225F930 /* TimelineHeaderAX3UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C724829E078617E6E3A23478 /* TimelineHeaderAX3UITests.swift */; };
 		2D6B7200292271FD2DCEC9C1 /* TimelineRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F94CB4C84E1E0211A97014 /* TimelineRoute.swift */; };
@@ -123,6 +124,7 @@
 		309B18EC6D3EE73BE4B49FF4 /* ContentActionsAX3UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBCECC0CD6861F5DE00F4FC /* ContentActionsAX3UITests.swift */; };
 		30C42A1A4B913993F2F76730 /* privacy-policy.md in Resources */ = {isa = PBXBuildFile; fileRef = 267EACE4E1129F9AEA336AB0 /* privacy-policy.md */; };
 		30E6D71BFB6C6946819AA123 /* SupabaseAccountAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A0ED71C407A29B4944732E /* SupabaseAccountAPIClient.swift */; };
+		317BD5FBE300AA30B61FAE06 /* CreateChildViewBirthdayLabelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7DBEF2E911E54BAE123A7B /* CreateChildViewBirthdayLabelTests.swift */; };
 		317DD5431EE0674B7B9CA7D3 /* ImportBatchSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF706F50550C3A512A18076 /* ImportBatchSession.swift */; };
 		31A49F9904E6C7D2143C5CA4 /* QADriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1EFC1792C4BB1EA62606E2 /* QADriver.swift */; };
 		31A9B00315543BADF0C808DE /* ImportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1E409F3F92DD7A8DB9461DB /* ImportModels.swift */; };
@@ -948,6 +950,7 @@
 		AD69D0A2456BC4F954E29446 /* InviteCodeParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeParserTests.swift; sourceTree = "<group>"; };
 		ADDE4EEF33482FCA3ABB0819 /* TimelineAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineAPIClient.swift; sourceTree = "<group>"; };
 		AE84C0D4C721C6C68790F395 /* UploadQueueRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueRowView.swift; sourceTree = "<group>"; };
+		AF7DBEF2E911E54BAE123A7B /* CreateChildViewBirthdayLabelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateChildViewBirthdayLabelTests.swift; sourceTree = "<group>"; };
 		B0707A0A53F5FDB50DC6C66C /* AlbumImportUploadCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumImportUploadCoordinatorTests.swift; sourceTree = "<group>"; };
 		B07A1CE61F80D184428D957F /* AlbumsContentAssemblerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsContentAssemblerTests.swift; sourceTree = "<group>"; };
 		B132DF653BFCE2A50058F737 /* EULAStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EULAStoreTests.swift; sourceTree = "<group>"; };
@@ -1109,6 +1112,7 @@
 		FDA1DCFCB88BBB8BE8816F43 /* AlbumImportUploadCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumImportUploadCoordinator.swift; sourceTree = "<group>"; };
 		FE72EFF54C56748BD2A9AAC3 /* BirthdayFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayFormat.swift; sourceTree = "<group>"; };
 		FE80483D9C4D2806145D4CE1 /* LittleSprout.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LittleSprout.entitlements; sourceTree = "<group>"; };
+		FE9350184247CED25D3CF2FE /* AgeDescriptionForTestingCallerGuardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgeDescriptionForTestingCallerGuardTests.swift; sourceTree = "<group>"; };
 		FE98D01D44B247A280103769 /* DiaryComposerStoreVideoCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStoreVideoCacheTests.swift; sourceTree = "<group>"; };
 		FEF706F50550C3A512A18076 /* ImportBatchSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportBatchSession.swift; sourceTree = "<group>"; };
 		FF3F18D213D33204A82A0BEE /* InviteFamilyView+Role.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "InviteFamilyView+Role.swift"; sourceTree = "<group>"; };
@@ -1358,6 +1362,7 @@
 		51FBBB4E3BA4ACB67A77A695 /* LittleSproutTests */ = {
 			isa = PBXGroup;
 			children = (
+				FE9350184247CED25D3CF2FE /* AgeDescriptionForTestingCallerGuardTests.swift */,
 				241E93FAAAD79FEF6D2138E2 /* AlbumDetailStoreTests.swift */,
 				6FDC40A75E4ED58DECBBE351 /* AlbumDetailViewPartitionPickedItemsTests.swift */,
 				6BA26A86C22BB42E622033E3 /* AlbumImportCoordinatorStreamingTests.swift */,
@@ -1396,6 +1401,7 @@
 				1981756D86ABF790E3BFF5E6 /* CommentsSheetViewTests.swift */,
 				A711F7DFF4A82BB7D08AF553 /* CommentsStoreTests.swift */,
 				98F91F255268FEE8F549166E /* ContentActionsTests.swift */,
+				AF7DBEF2E911E54BAE123A7B /* CreateChildViewBirthdayLabelTests.swift */,
 				41B7B10C2108552F0A805115 /* DeleteAccountFlowModelRaceTests.swift */,
 				FC6B2DBBC978E2E01973D4FE /* DeleteAccountFlowModelResumeTests.swift */,
 				63CDD3E63AAEAD23512BDFBA /* DeleteAccountFlowModelTests.swift */,
@@ -2508,6 +2514,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C912270ED546D780D755F58 /* AgeDescriptionForTestingCallerGuardTests.swift in Sources */,
 				A5652476504158AC7AB56B1D /* AlbumDetailStoreTests.swift in Sources */,
 				BA25637DB60CFE6147BF647D /* AlbumDetailViewPartitionPickedItemsTests.swift in Sources */,
 				9E2F34D220D926D25374CE55 /* AlbumImportCoordinatorStreamingTests.swift in Sources */,
@@ -2547,6 +2554,7 @@
 				5BAE0E7538E191695ADFEA49 /* CommentsSheetViewTests.swift in Sources */,
 				1CBA80A960EAA16E708E4F9F /* CommentsStoreTests.swift in Sources */,
 				D7ED98C0BB0F1AA10D10D890 /* ContentActionsTests.swift in Sources */,
+				317BD5FBE300AA30B61FAE06 /* CreateChildViewBirthdayLabelTests.swift in Sources */,
 				947B5736557D6D1227AC9252 /* DeleteAccountFlowModelRaceTests.swift in Sources */,
 				BCCC6A1B7C284C355C6509FF /* DeleteAccountFlowModelResumeTests.swift in Sources */,
 				28E5FB900660E9320FF010BB /* DeleteAccountFlowModelTests.swift in Sources */,

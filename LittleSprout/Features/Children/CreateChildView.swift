@@ -188,9 +188,14 @@ struct CreateChildView: View {
         .disabled(isSubmitting)
     }
 
-    private var birthdayValueText: String {
+    private var birthdayValueText: String { Self.birthdayValueText(for: birthday) }
+
+    /// LS-335 範圍 7：`birthday` 是 `DatePicker` 的本地時刻（非 UTC 午夜），標籤要跟送出的
+    /// `wireString(from:)` 用同一個（裝置）時區抽年月日——預設 UTC 在 Asia/Taipei 當地 0:00–7:59
+    /// 會比實際送出的日期早一天。
+    static func birthdayValueText(for birthday: Date?, timeZone: TimeZone = .current) -> String {
         guard let birthday else { return "選擇生日" }
-        return BirthdayFormat.displayString(from: birthday)
+        return BirthdayFormat.displayString(from: birthday, timeZone: timeZone)
     }
 
     private var birthdayHelpText: String {
