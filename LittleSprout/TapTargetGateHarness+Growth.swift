@@ -23,7 +23,7 @@ extension TapTargetGateHarness {
     @ViewBuilder
     static var growthDetailEmptyHost: some View {
         NavigationStack {
-            ChildGrowthDetailView(previewGrowthStore: .preview(childName: "陳小軒"))
+            ChildGrowthDetailView(previewGrowthStore: .preview(), childName: "陳小軒")
         }
     }
 

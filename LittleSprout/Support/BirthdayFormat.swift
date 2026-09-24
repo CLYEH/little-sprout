@@ -102,7 +102,7 @@ enum BirthdayFormat {
     /// `wireString` 原則，呼叫端要注入就注入 `TimeZone`，不注入 `Calendar`——曆法識別碼結構上
     /// 不會流進正式路徑。
     static func ageDescription(birthday: Date, now: Date = Date(), timeZone: TimeZone = .current) -> String {
-        ageDescriptionForTesting(
+        ageDescriptionCore(
             birthday: birthday, now: now, extractionCalendar: fixedGregorianCalendar(timeZone: timeZone)
         )
     }
@@ -113,6 +113,11 @@ enum BirthdayFormat {
     /// 加上 `ForTesting` 後綴（而不是與 `timeZone:` 版本同名靠 internal 存取層級擋），讓生產程式碼
     /// 呼叫端一望即知不該用這支——同名重載只靠文件註解擋不住日後誤呼叫。
     static func ageDescriptionForTesting(birthday: Date, now: Date, extractionCalendar: Calendar) -> String {
+        ageDescriptionCore(birthday: birthday, now: now, extractionCalendar: extractionCalendar)
+    }
+
+    /// LS-335 範圍 8：兩個入口共用的本體——production 入口不再借用 `ForTesting` 名字。
+    private static func ageDescriptionCore(birthday: Date, now: Date, extractionCalendar: Calendar) -> String {
         let todayComponents = extractionCalendar.dateComponents([.year, .month, .day], from: now)
         let todayUTC = utcCalendar.date(from: todayComponents) ?? now
         let diff = utcCalendar.dateComponents([.year, .month], from: birthday, to: todayUTC)

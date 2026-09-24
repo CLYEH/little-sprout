@@ -125,9 +125,9 @@ enum GrowthCurve {
 
     /// R2 merge-review R2-m1（orchestrator 裁決 `8036a6f0`）：03 列表「同日多筆全列、不去重」
     /// 的排序邏輯抽成純函式，讓 `GrowthRecordsListView.rowItems` 只轉呼叫、不在 View 內重複
-    /// 實作——View 是 private computed var，沒有 ViewInspector 測不到，這支純函式可以直接測，
-    /// 呼叫點是否真的改回整筆去重的 `historyRecords` 則另外用原始碼字面守衛驗證（見
-    /// `GrowthRecordsRowOrderRegressionTests`）。依 `measuredOn` 遞減排序，同日以 `createdAt`
+    /// 實作——這支純函式可以直接測；呼叫端 `GrowthRecordsListView.rowItems(from:)` 產出的列
+    /// 另有行為測試（LS-335，`GrowthCurveTests.test_rowItems_sameDayTwoRecords_
+    /// bothRowsUnderOneYearDivider`）。依 `measuredOn` 遞減排序，同日以 `createdAt`
     /// 遞減 tie-break（較晚存的排前面，同 `latestValuesByDay` 的 tie-break 依據一致，不是任意
     /// 選一個）。
     static func allRecordsNewestFirst(_ records: [GrowthRecord]) -> [GrowthRecord] {

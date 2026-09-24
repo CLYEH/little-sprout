@@ -140,6 +140,23 @@ final class GrowthCurveTests: XCTestCase {
         XCTAssertEqual(result.map(\.id), [later.id, earlier.id])
     }
 
+    /// LS-335（LS-313 R3-m1）行為測試：03 列表的列（年份郵戳＋記錄）——同日兩筆都要各自成列。
+    /// 取代原本的原始碼文字守衛（`GrowthRecordsRowOrderRegressionTests`，可被
+    /// `historyRecords(allRecordsNewestFirst(...))` 這類寫法繞過）。mutation：`rowItems(from:)`
+    /// 改用整筆同日去重的 `GrowthCurve.historyRecords`（不論直接呼叫或包在外層），這支測試轉紅。
+    func test_rowItems_sameDayTwoRecords_bothRowsUnderOneYearDivider() {
+        let older = record(measuredOn: "2026-08-20", height: 78.5, updatedAt: date("2026-01-01"))
+        let newer = record(measuredOn: "2026-08-20", weight: 9.6, updatedAt: date("2026-01-02"))
+        let prevYear = record(measuredOn: "2025-11-20", height: 68.5, updatedAt: date("2025-12-01"))
+
+        let ids = GrowthRecordsListView.rowItems(from: [older, prevYear, newer]).map(\.id)
+
+        XCTAssertEqual(
+            ids, ["year-2026", newer.id.uuidString, older.id.uuidString, "year-2025", prevYear.id.uuidString],
+            "同一天兩筆都要成列、各自可編輯刪除"
+        )
+    }
+
     // MARK: - 最新值與較上次差 ▲▼
 
     /// 逐字對齊 Notes `db1ET`：身高最新 16mo 78.5，「上一筆有值」是 10mo 73.0（13mo 缺身高）

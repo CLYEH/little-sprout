@@ -47,7 +47,7 @@ struct GrowthMeasurementFormView: View {
     init(growthStore: GrowthStore, editingRecord: GrowthRecord? = nil) {
         self.growthStore = growthStore
         self.editingRecord = editingRecord
-        _measuredOn = State(initialValue: editingRecord.flatMap { Self.localMidnight(from: $0.measuredOn) } ?? Date())
+        _measuredOn = State(initialValue: editingRecord.map { Self.localMidnight(from: $0.measuredOn) } ?? Date())
         _heightText = State(initialValue: Self.text(for: editingRecord?.heightCm))
         _weightText = State(initialValue: Self.text(for: editingRecord?.weightKg))
         _headText = State(initialValue: Self.text(for: editingRecord?.headCm))
@@ -70,7 +70,7 @@ struct GrowthMeasurementFormView: View {
     /// 逐字相同，只差回傳型別——兩份實作會各自漂移。改成直接呼叫 `BirthdayFormat.localMidnight`，
     /// 只留一份實作與一組行為測試（`BirthdayFormatTests`／`EditChildViewBirthdayTimeZoneTests`）。
     /// 不設 `private`，`GrowthMeasurementFormViewTimeZoneTests` 直接呼叫驗證接線。
-    static func localMidnight(from utcDate: Date, timeZone: TimeZone = .current) -> Date? {
+    static func localMidnight(from utcDate: Date, timeZone: TimeZone = .current) -> Date {
         BirthdayFormat.localMidnight(from: utcDate, timeZone: timeZone)
     }
 
@@ -328,23 +328,16 @@ struct GrowthMeasurementFormView: View {
 
     private func submit() {
         guard !growthStore.saveState.isSubmitting else { return }
-        let decision = GrowthMeasurementValidation.submitDecision(
-            heightText: heightText, weightText: weightText, headText: headText
+        let submission = GrowthMeasurementValidation.submission(
+            .init(height: heightText, weight: weightText, head: headText, note: note),
+            editingID: editingRecord?.id, measuredOn: measuredOn
         )
-        guard case let .save(heightCm, weightKg, headCm) = decision else {
-            showsEmptyMessage = decision == .empty
-            showsInvalidMessage = decision == .invalid
+        showsEmptyMessage = submission == .empty
+        showsInvalidMessage = submission == .invalid
+        guard case let .send(input) = submission else {
             statusScrollRequest += 1
             return
         }
-        showsEmptyMessage = false
-        showsInvalidMessage = false
-        let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
-        let input = GrowthMeasurementInput(
-            id: editingRecord?.id, measuredOn: measuredOn,
-            heightCm: heightCm, weightKg: weightKg, headCm: headCm,
-            note: trimmedNote.isEmpty ? nil : trimmedNote
-        )
         Task {
             let saved = await growthStore.save(input)
             if saved { dismiss() } else { statusScrollRequest += 1 }

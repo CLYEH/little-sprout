@@ -42,6 +42,7 @@ import SwiftUI
 /// `childName:`、曲線的 `curvePoints(for:birthday:)` 都改吃 `child.name`／`child.birthday`
 /// （呼叫端 `ChildrenManagementView` 重繪時 `child` 本身就是新值，不需要 store 跟著換）；
 /// `growthStore` 只留 `records`／`loadState`——見 `GrowthIdentityFreshnessRegressionTests`。
+/// LS-335 起 `GrowthStore` 已收掉 `childName`／`childBirthday` 兩個屬性，結構上不會再讀到舊快照。
 struct ChildGrowthDetailView: View {
     let child: Child
     let apiClient: GrowthAPIClient
@@ -91,13 +92,18 @@ struct ChildGrowthDetailView: View {
     #if DEBUG
     /// harness／`#Preview` 專用：直接注入已種好資料的 store，不走一次 async
     /// `loadIfNeeded()`（假 client 固定回傳 `[]`，會把種好的示範資料覆蓋成空狀態）。
+    ///
+    /// LS-335：合成的 `Child` 姓名／生日改由這裡的參數帶入（預設值＝Notes 示範資料集 `G1tRP9`
+    /// 陳小安、2025-04-20），不再向 store 借——`GrowthStore` 已不持有姓名／生日。
     init(
-        previewGrowthStore store: GrowthStore, editDestination: (() -> AnyView)? = nil,
+        previewGrowthStore store: GrowthStore, childName: String = "陳小安",
+        childBirthday: Date = BirthdayFormat.date(fromWireString: "2025-04-20")!,
+        editDestination: (() -> AnyView)? = nil,
         currentUserID: UUID? = nil, isFamilyOwner: Bool = false, canManageChildren: Bool = true,
         avatarURL: URL? = nil
     ) {
         self.child = Child(
-            id: store.childID, name: store.childName, birthday: store.childBirthday,
+            id: store.childID, name: childName, birthday: childBirthday,
             avatarURL: nil, deletedAt: nil, createdAt: Date()
         )
         self.apiClient = PreviewGrowthAPIClient()
@@ -147,9 +153,7 @@ struct ChildGrowthDetailView: View {
     @MainActor
     private func loadIfNeeded() async {
         guard GrowthStore.needsRebuild(current: growthStore, forChildID: child.id) else { return }
-        let store = GrowthStore(
-            childID: child.id, childName: child.name, childBirthday: child.birthday, apiClient: apiClient
-        )
+        let store = GrowthStore(childID: child.id, apiClient: apiClient)
         growthStore = store
         await store.refresh()
     }
@@ -375,7 +379,7 @@ struct ChildGrowthDetailView: View {
 
 #Preview("04 空狀態") {
     NavigationStack {
-        ChildGrowthDetailView(previewGrowthStore: .preview(childName: "陳小軒"))
+        ChildGrowthDetailView(previewGrowthStore: .preview(), childName: "陳小軒")
     }
 }
 #endif

@@ -51,10 +51,7 @@ final class GrowthStoreTests: XCTestCase {
     }
 
     private func makeStore(apiClient: GrowthAPIClient = PreviewGrowthAPIClient()) -> GrowthStore {
-        GrowthStore(
-            childID: UUID(), childName: "陳小安",
-            childBirthday: BirthdayFormat.date(fromWireString: "2025-04-20")!, apiClient: apiClient
-        )
+        GrowthStore(childID: UUID(), apiClient: apiClient)
     }
 
     private static func record(
@@ -137,6 +134,28 @@ final class GrowthStoreTests: XCTestCase {
         XCTAssertTrue(succeeded)
         XCTAssertEqual(store.records.count, 1, "新增成功後 records 應該多一筆，不是停在原本的空陣列")
         XCTAssertEqual(store.records.first?.heightCm, 78.5)
+    }
+
+    /// LS-335（LS-313 R3-m3）：DEBUG preview／harness 的假 client 回傳的 `measuredOn` 要跟真 RPC
+    /// 一樣是 UTC 午夜。02 表單送出的是「本地午夜」（Asia/Taipei 的 8/20 00:00＝UTC 8/19 16:00），
+    /// 原樣回傳的話 03 列表（`measuredOnHistoryLabel` 用 UTC 抽年月日）會顯示 8/19——編輯後退一天。
+    /// mutation：拿掉 `PreviewGrowthAPIClient.upsertGrowthRecord` 的正規化（原樣回傳
+    /// `input.measuredOn`），這支測試轉紅。
+    func test_save_previewClientInPositiveOffsetTimeZone_keepsSameCalendarDay() async throws {
+        let taipei = try XCTUnwrap(TimeZone(identifier: "Asia/Taipei"))
+        let store = makeStore(apiClient: PreviewGrowthAPIClient(timeZone: taipei))
+        let utcMidnight = try XCTUnwrap(BirthdayFormat.date(fromWireString: "2026-08-20"))
+        let pickedLocalMidnight = BirthdayFormat.localMidnight(from: utcMidnight, timeZone: taipei)
+
+        let succeeded = await store.save(GrowthMeasurementInput(
+            id: UUID(), measuredOn: pickedLocalMidnight, heightCm: 78.5, weightKg: nil, headCm: nil, note: nil
+        ))
+
+        XCTAssertTrue(succeeded)
+        XCTAssertEqual(
+            store.records.first?.measuredOn, utcMidnight,
+            "UTC+8 選的 8/20 存回來要是 UTC 午夜的 8/20，不是 UTC 8/19 16:00（UTC 抽年月日會退一天）"
+        )
     }
 
     /// R1 merge-review M2：同一天先存身高、再存體重是兩筆不同記錄——`records.count` 要是 2

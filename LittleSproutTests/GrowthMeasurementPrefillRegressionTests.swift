@@ -24,7 +24,7 @@ final class GrowthMeasurementPrefillRegressionTests: XCTestCase {
 
         XCTAssertTrue(
             source.contains(
-                "_measuredOn = State(initialValue: editingRecord.flatMap { Self.localMidnight(from: $0.measuredOn) }"
+                "_measuredOn = State(initialValue: editingRecord.map { Self.localMidnight(from: $0.measuredOn) }"
                     + " ?? Date())"
             ),
             "日期欄要帶入既有筆的 measuredOn（換算成裝置本地時區同一組年月日，見 M1），新增時才落回今天"

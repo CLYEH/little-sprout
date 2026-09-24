@@ -171,4 +171,48 @@ final class GrowthMeasurementValidationTests: XCTestCase {
     func test_parsedMeasurement_roundsToZero_returnsNil() {
         XCTAssertNil(GrowthMeasurementValidation.parsedMeasurement(from: "0.04"))
     }
+
+    // MARK: - submission（LS-335，LS-313 R3-m2：`submit()` 的整段決策）
+
+    /// 編輯既有紀錄、身高改成 `0`、體重照舊——不能送出（`upsert_growth_record` 的 update 分支會把
+    /// 既有身高清成 NULL），而是回 `.invalid`（Status Slot 顯示無效值訊息、sheet 不關）。
+    /// mutation：把 `submission` 接回 R2 行為（只用 `hasAtLeastOneValue` 擋全空、無效值被
+    /// `parsedMeasurement` 當成 nil 照樣送出），這支測試轉紅。
+    func test_submission_editingRecordHeightZero_isInvalidNotSent() {
+        let submission = GrowthMeasurementValidation.submission(
+            .init(height: "0", weight: "9.6", head: "45.0", note: ""), editingID: UUID(), measuredOn: Date()
+        )
+
+        XCTAssertEqual(submission, .invalid, "身高改成 0 不能被當成沒填送出——既有身高會被清成 NULL")
+    }
+
+    func test_submission_allBlank_isEmpty() {
+        let submission = GrowthMeasurementValidation.submission(
+            .init(height: "", weight: " ", head: "", note: "有備註"), editingID: nil, measuredOn: Date()
+        )
+
+        XCTAssertEqual(submission, .empty, "只有備註、三項量測全空不能送出")
+    }
+
+    /// 送出的 input 帶編輯中紀錄的 `id`（走 update 分支）、解析後的數值與去頭尾空白的備註；空白
+    /// 備註送 `nil`。
+    func test_submission_valid_sendsParsedInput() throws {
+        let editingID = UUID()
+        let measuredOn = try XCTUnwrap(BirthdayFormat.date(fromWireString: "2026-08-20"))
+
+        let submission = GrowthMeasurementValidation.submission(
+            .init(height: "78,5", weight: "", head: "45", note: "  打完疫苗  "), editingID: editingID,
+            measuredOn: measuredOn
+        )
+        let blankNote = GrowthMeasurementValidation.submission(
+            .init(height: "78.5", weight: "", head: "", note: "  \n"), editingID: nil, measuredOn: measuredOn
+        )
+
+        XCTAssertEqual(submission, .send(GrowthMeasurementInput(
+            id: editingID, measuredOn: measuredOn, heightCm: 78.5, weightKg: nil, headCm: 45.0, note: "打完疫苗"
+        )))
+        XCTAssertEqual(blankNote, .send(GrowthMeasurementInput(
+            id: nil, measuredOn: measuredOn, heightCm: 78.5, weightKg: nil, headCm: nil, note: nil
+        )), "空白備註送 nil，不送空字串")
+    }
 }
