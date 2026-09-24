@@ -147,6 +147,18 @@ final class AppErrorTests: XCTestCase {
         XCTAssertEqual(code, "PGRST301")
     }
 
+    /// LS-348：PGRST303（`JWT issued at future`／`JWT expired`）是 token 時效判定的暫態——前者是
+    /// 伺服器端判定剛簽發 token 的 `iat` 偶發超前、同一把 token 稍後即通過，後者 SDK 本機也判定過期時
+    /// 下一次請求會自動換新 token——重試同一個呼叫就可能成功、使用者沒有輸入可改，歸 `.retryableSystem`；
+    /// 未列舉前落 `.server`，登入落點整頁顯示「伺服器發生問題」。
+    func test_map_postgrestError_pgrst303_isRetryableSystem() {
+        let error = PostgrestError(code: "PGRST303", message: "JWT issued at future")
+        guard case .retryableSystem(_, let code) = AppError.map(error) else {
+            return XCTFail("PGRST303（JWT 時效暫態）應映射為 .retryableSystem，實際是不同的分類")
+        }
+        XCTAssertEqual(code, "PGRST303")
+    }
+
     // MARK: - HTTPError（PostgrestError 解不出來的非 JSON 錯誤回應，例如反向代理的 502 HTML 頁）
 
     func test_map_httpError_500_isServer() {
