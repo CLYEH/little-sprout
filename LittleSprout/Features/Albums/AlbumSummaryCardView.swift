@@ -23,8 +23,9 @@ struct AlbumSummaryCardView: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    /// AX3 起署名列一行一人、Caption 相簿名與張數各自成行——同 `SectionTabBar.isAX3` 既有
-    /// 斷點慣例（LS-142 Handoff Notes `MJ-6`／`R4 KBNSX`：兩態切換，不是連續縮放曲線）。
+    /// AX3 起 Caption 相簿名與張數各自成行——同 `SectionTabBar.isAX3` 既有斷點慣例（LS-142
+    /// Handoff Notes `MJ-6`／`R4 KBNSX`：兩態切換，不是連續縮放曲線）。署名列不看這個斷點：LS-389
+    /// 起改由 `PhotoCardSignature` 依欄寬決定一行一人。
     private var isOneLinePerPerson: Bool { dynamicTypeSize >= .accessibility3 }
 
     var body: some View {
@@ -91,11 +92,11 @@ struct AlbumSummaryCardView: View {
             ))
             .appNumericFont(.body, weight: .semibold)
             .foregroundStyle(Color.lsPrintInk)
-            Text(AlbumSignatureFormatter.signatureText(
-                children: taggedChildren, asOf: Date(), isOneLinePerPerson: isOneLinePerPerson
-            ))
-            .appNumericFont(.meta)
-            .foregroundStyle(Color.lsPrintInkSecondary)
+            // LS-389（LS-372 Notes `SLL6R`）：多寶貝串接放不下一行就一行一人，所有字級同一條
+            // 規則——重用照片卡的 `PhotoCardSignature`（`ViewThatFits`），不再只在 AX3 才換行。
+            PhotoCardSignature(
+                children: taggedChildren, asOf: Date(), fontToken: .meta, monospacedDigit: true, personSpacing: 0
+            )
         }
     }
 
