@@ -54334,7 +54334,7 @@
                   "width": "fill_container",
                   "content": "小安 · 2 歲 3 個⁠月",
                   "fontFamily": "$font",
-                  "fontSize": "$fs-note",
+                  "fontSize": "$fs-body",
                   "fontWeight": "normal"
                 }
               ]
@@ -66567,7 +66567,7 @@
                   "width": "fill_container",
                   "content": "陳彥廷 · 3 歲",
                   "fontFamily": "$font",
-                  "fontSize": "$fs-note",
+                  "fontSize": "$fs-body",
                   "fontWeight": "normal"
                 },
                 {
@@ -66579,7 +66579,7 @@
                   "width": "fill_container",
                   "content": "小饅頭 · 1 歲 8 個⁠月",
                   "fontFamily": "$font",
-                  "fontSize": "$fs-note",
+                  "fontSize": "$fs-body",
                   "fontWeight": "normal"
                 },
                 {
@@ -66591,7 +66591,7 @@
                   "width": "fill_container",
                   "content": "Emma Chen · 8 個⁠月⁠大",
                   "fontFamily": "$font",
-                  "fontSize": "$fs-note",
+                  "fontSize": "$fs-body",
                   "fontWeight": "normal"
                 }
               ]
@@ -71466,7 +71466,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "採 (a)：`cmp/Card Photo`（umJHD）Imprint Row 只放署名「{暱稱} · {年齡}」，不用 `cmp/Baby Chip`（o9Brs1）。理由：①沖印品母題——白邊上只有墨，Baby Chip 是 Import 的可切換控件（膠囊＋填色＝「可以按」），搬上紙面會讓長輩去點一個點了沒反應的東西；②App 沒有 media caption（情境描述）資料，舊稿「情境描述 · 」前段整段拿掉，日後做 caption 功能（另票）再開設計票。**多寶貝排列（R2，VR M-3）**：所有字級同一條規則——全部人用「、」串成一行放得下就串接（預設字級兩位短名字：「小安 · 2 歲 3 個月、小明 · 8 個月大」實測 280pt＜欄寬 329），放不下就一行一人、人與人之間 `$sp-label` 8（三位長名字、以及 AX3 的任何多寶貝）；單人一行放不下時沿用 LS-201 已核可的「姓名後折行、『·』領銜下一行」。字串字元：姓名＋U+0020＋「·」＋U+00A0＋年齡；年齡內部 U+00A0，「個」「月」之間 U+2060，「月」「大」之間 U+2060（R2 新增：AX3 實測「小饅頭 · 8 個月」／「大」孤字）。本規則只定照片卡；相簿卡 Signature Line（wQVzs）仍是 AX3 換行、預設「、」串接折行（LS-201 核可），是否跟進待裁決（見下）。",
+                  "content": "採 (a)：`cmp/Card Photo`（umJHD）Imprint Row 只放署名「{暱稱} · {年齡}」，不用 `cmp/Baby Chip`（o9Brs1）。理由：①沖印品母題——白邊上只有墨，Baby Chip 是 Import 的可切換控件（膠囊＋填色＝「可以按」），搬上紙面會讓長輩去點一個點了沒反應的東西；②App 沒有 media caption（情境描述）資料，舊稿「情境描述 · 」前段整段拿掉，日後做 caption 功能（另票）再開設計票。**多寶貝排列（R2 定、R3 修間距，VR M-3／M-6）**：所有字級同一條規則——全部人用「、」串成一行放得下就串接（預設字級兩位短名字：「小安 · 2 歲 3 個月、小明 · 8 個月大」實測 280pt＜欄寬 329），放不下就一行一人，人與人之間的間距預設字級 8、AX3 16（R3，VR M-6：AX3 行高 58 下 8 看不出分組）——實作用 @ScaledMetric，見實作契約 ④（三位長名字、以及 AX3 的任何多寶貝）；單人一行放不下時沿用 LS-201 已核可的「姓名後折行、『·』領銜下一行」。字串字元：姓名＋U+0020＋「·」＋U+00A0＋年齡；年齡內部 U+00A0，「個」「月」之間 U+2060，「月」「大」之間 U+2060（R2 新增：AX3 實測「小饅頭 · 8 個月」／「大」孤字）。本規則只定照片卡；相簿卡 Signature Line（wQVzs）仍是 AX3 換行、預設「、」串接折行（LS-201 核可），是否跟進待裁決（見下）。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71502,7 +71502,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "**實作契約（R2，VR M-1；LS-365 要改的地方）**：①`AlbumSignatureFormatter.segment` 目前是「姓名 · 年齡」、「·」後為 U+0020（AlbumSignatureFormatter.swift:40），AX3 會折成「小安 ·」／「2 歲 3 個月」，與本稿相反——LS-365 改成「·」後 U+00A0（「·」前維持 U+0020），並同步改 AlbumSignatureFormatterTests 第 45–46、61 行的 hasPrefix(\"小安 · \") 斷言（改斷言 U+00A0）；②`hardenedAge` 另補「月大」之間 U+2060；③年齡字串一律用 `BirthdayFormat.ageDescription` 實際產出：未滿一歲「N 個月大」、整歲「N 歲」、其餘「N 歲 M 個月」（本稿壓測字串已照此改：「8 個月大」「3 歲」「4 歲」）；④排列用 ViewThatFits：第一候選＝單一 Text（segments.joined(\"、\")，.lineLimit(1)），第二候選＝VStack(alignment: .leading, spacing: 8) 每人一個 Text（不設 lineLimit，靠上述字元控制斷點）；零寶貝回傳單一空白。**不要**用 `MultiChildCaptionFormatter.attributed()`（多寶貝不帶「·」、年齡 .footnote 13pt、顏色用會隨深色反轉的 lsTextPrimary／lsTextSecondary）。樣式：.font(.body)（regular）＋ .foregroundStyle(Color.lsPrintInkSecondary)。asOf＝該卡 feed_items.occurred_at。",
+                  "content": "**實作契約（R2，VR M-1；LS-365 要改的地方）**：①`AlbumSignatureFormatter.segment` 目前是「姓名 · 年齡」、「·」後為 U+0020（AlbumSignatureFormatter.swift:40），AX3 會折成「小安 ·」／「2 歲 3 個月」，與本稿相反——LS-365 改成「·」後 U+00A0（「·」前維持 U+0020），並同步改 AlbumSignatureFormatterTests 第 45–46、61 行的 hasPrefix(\"小安 · \") 斷言（改斷言 U+00A0）；②`hardenedAge` 另補「月大」之間 U+2060；③年齡字串一律用 `BirthdayFormat.ageDescription` 實際產出：未滿一歲「N 個月大」、整歲「N 歲」、其餘「N 歲 M 個月」（本稿壓測字串已照此改：「8 個月大」「3 歲」「4 歲」）；④排列用 ViewThatFits：第一候選＝單一 Text（segments.joined(\"、\")，.lineLimit(1)），第二候選＝VStack(alignment: .leading, spacing: personGap) 每人一個 Text（不設 lineLimit，靠上述字元控制斷點），其中 `@ScaledMetric(relativeTo: .body) var personGap: CGFloat = 8`（R3，VR M-6）——預設字級 8；AX3 稿上以 `$sp-item` 16 示意，ScaledMetric 實際約 19（8×40/17），差 3pt 內以實作為準；零寶貝回傳單一空白。**不要**用 `MultiChildCaptionFormatter.attributed()`（多寶貝不帶「·」、年齡 .footnote 13pt、顏色用會隨深色反轉的 lsTextPrimary／lsTextSecondary）。樣式：.font(.body)（regular，token `$fs-body`，R3 VR m-4：`$fs-note` 是狀態文字用）＋ .foregroundStyle(Color.lsPrintInkSecondary)。asOf＝該卡 feed_items.occurred_at。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71574,7 +71574,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "**R2 改定（VR M-2，orchestrator 裁決採用）**：署名一律 `$print-ink-secondary`／`$fs-note` 17（AX3 40）／regular，與相簿卡 Signature Line（wQVzs）同樣式。理由：紙上 600 `$print-ink` 是「這是什麼」（相簿卡標題 MIxHp、日後的情境描述）的樣式，「這是誰」一律 secondary；R1 讓照片卡署名用 600 主墨，在 go7f9 這類照片卡與相簿卡並排的 feed 裡，同一個樣式同時代表兩種角色。對比：print-ink-secondary 對 print-paper 9.66／8.13（tokens.md 實測），仍過 AAA 7:1；AX3 字級 fs-note 與 fs-body 同為 40，折行位置不變——沒有反證，採用。照片卡與相簿卡現在是同字串、同樣式；多寶貝排列規則兩者不同（照片卡 R2 改放不下一行就一行一人），日記卡兩段式另是一套（待裁決）。",
+                  "content": "**R2 改定（VR M-2，orchestrator 裁決採用）**：署名一律 `$print-ink-secondary`／`$fs-body` 17（AX3 40）／regular（R3 VR m-4：字級 token 由 `$fs-note` 改 `$fs-body`，數值相同、畫面不變——`$fs-note` 保留給必須伴隨狀態色／圖示的狀態文字；相簿卡 wQVzs 仍綁 `$fs-note`，是舊債，本票不動），與相簿卡 Signature Line 視覺同樣式。理由：紙上 600 `$print-ink` 是「這是什麼」（相簿卡標題 MIxHp、日後的情境描述）的樣式，「這是誰」一律 secondary；R1 讓照片卡署名用 600 主墨，在 go7f9 這類照片卡與相簿卡並排的 feed 裡，同一個樣式同時代表兩種角色。對比：print-ink-secondary 對 print-paper 9.66／8.13（tokens.md 實測），仍過 AAA 7:1；AX3 字級 fs-note 與 fs-body 同為 40，折行位置不變——沒有反證，採用。照片卡與相簿卡現在是同字串、同樣式；多寶貝排列規則兩者不同（照片卡 R2 改放不下一行就一行一人），日記卡兩段式另是一套（待裁決）。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71610,7 +71610,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "規格板（R2 整板重建，衍生板由基準板複製後重算）：g57BHa（淺）／u0yYg（深色）／ai2w5（AX3）。每塊五區：一位寶貝／兩位寶貝／三位寶貝（長名字＋拉丁名，VR m-2）／沒有標記寶貝／無標籤 feed 摘錄。印品高與角托 y（＝高−21）：預設 232／211，三位 298／277（Bk4x4、u0yYg 的 Aqp4Q）；AX3 一位 323（qXHec）、兩位 389（IvvTi，一行放不下→一行一人）、三位 571（T8CSTA）、未標記 265（aUAKy）、feed 有標記 323（m9tR2）、feed 未標記 265（f3IQOI）。**素材限制（VR m-1）**：design/appstore-photos 13 張與 LS-247 三張家族圖（hero／invite／join）都沒有兩個孩子同框，多寶貝卡沿用同一張照片當對照組（只讓壓印行變），不代表多寶貝照片的真實內容；需要真實兩孩同框圖時另外生圖。深色板紙與墨不反轉，只有台紙變深。多寶貝 AX3 示範在 ai2w5：原 HLXo3 的 Card Photo（P1CltA，已刪除，見 HPvum）不在 HLXo3 重放。",
+                  "content": "規格板（R2 整板重建，衍生板由基準板複製後重算）：g57BHa（淺）／u0yYg（深色）／ai2w5（AX3）。每塊五區：一位寶貝／兩位寶貝／三位寶貝（長名字＋拉丁名，VR m-2）／沒有標記寶貝／無標籤 feed 摘錄。印品高與角托 y（＝高−21）：預設 232／211，三位 298／277（Bk4x4、u0yYg 的 Aqp4Q）；AX3 一位 323（qXHec）、兩位 397（IvvTi，一行放不下→一行一人，人際間距 16，R3）、三位 587（T8CSTA，同）、未標記 265（aUAKy）、feed 有標記 323（m9tR2）、feed 未標記 265（f3IQOI）。**feed 摘錄的未標記卡（R3，VR M-5）**：hYIQ4／L65wX／f3IQOI 改用遊樂場風景照（與相簿 AX3 板 IjWOp 的「阿公阿嬤家過年」同一張 Unsplash 圖），不再與相鄰有標記卡同圖——沒標寶貝的真實情境是風景、遊樂場、全家福，不是寶寶特寫。**素材限制（VR m-1）**：design/appstore-photos 13 張與 LS-247 三張家族圖（hero／invite／join）都沒有兩個孩子同框，多寶貝卡沿用同一張照片當對照組（只讓壓印行變），不代表多寶貝照片的真實內容；需要真實兩孩同框圖時另外生圖。深色板紙與墨不反轉，只有台紙變深。多寶貝 AX3 示範在 ai2w5：原 HLXo3 的 Card Photo（P1CltA，已刪除，見 HPvum）不在 HLXo3 重放。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71682,7 +71682,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "待裁決（orchestrator）：①`cmp/Card Diary` 多寶貝字串——稿面 x7k2o6 帶「·」、年齡 17，實作 MultiChildCaptionFormatter 不帶「·」、年齡 13，本票不改日記卡；②相簿卡署名列是否跟進照片卡的「放不下一行就一行一人」（VR i-4，與 LS-374 一併裁）；③U+00B7 在 CJK 字型下顯示成全形、兩側空白偏寬（VR i-2，全稿舊債，本票不動）。",
+                  "content": "**已定案（R3，VR R2 判定成立、orchestrator 結案）**：照片卡整行淡墨 regular、日記卡姓名 600 主墨，兩者權重不同是刻意的——照片卡的主角是照片，壓印行只是註記；日記卡的署名是正文的落款、姓名要能一眼認出。**待裁決（orchestrator）**：①`cmp/Card Diary` 多寶貝字串——稿面 x7k2o6 帶「·」、年齡 17，實作 MultiChildCaptionFormatter 不帶「·」、年齡 13，本票不改日記卡；②相簿卡署名列是否跟進照片卡的「放不下一行就一行一人」（VR i-4，與 LS-374 一併裁）；③U+00B7 在 CJK 字型下顯示成全形、兩側空白偏寬（VR i-2，全稿舊債，本票不動）。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -71719,6 +71719,42 @@
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "R2 依 VR R1（comment 08d0e396）與 orchestrator 裁決修改：M-2 採用（署名改 secondary／regular／fs-note，見定案 3）；M-1 採用（實作契約四點＋壓測字串改 ageDescription 實際產出，AX3 重量、角托 y 重算）；M-3 採用、限照片卡（放不下一行就一行一人，見定案 1）；M-4 採用（g57BHa 加無標籤 feed 摘錄）；m-1 標明素材限制（範例板條）；m-2 補三位長名字＋拉丁名卡；m-3 印品高改寫成實況（定案 2）；i-1 超範圍一處已於既有實例條申報、PR body 同步。規格板 R1 的三塊已刪除重建，現行為 g57BHa／u0yYg／ai2w5。另：ai2w5 feed 摘錄的 Day Divider e29JW 的 Stamp Wrap（OCYqN）加字面 width 覆寫＝lKoZG 的 f9KM0G 實測 333.80（LS-201 lyu44 R3 記錄的 Pencil fit_content 寬度解析不一致，同一修法；Stamp 溢出 +2.30→0.28pt，低於 0.5 容差）。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dCJXc",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Tx5fU",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-367 R3 沿革",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "f43pl",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "R3 依 VR R2（comment ad24fff7）與 orchestrator 裁決：M-5 採用（feed 未標記卡換遊樂場照）；M-6 採用（AX3 人際間距 LE07a／A8jhK 改 `$sp-item` 16，印品高與角托 y 重算：IvvTi 397／376、T8CSTA 587／566）；m-4 採用（VywUw 與所有每人一行的 Caption 字級 token 改 `$fs-body`）；m-5 採用（三塊板「三位寶貝（長名字＋拉丁名）」標籤括號內以 U+2060 串起，AX3 改在「（」前整段折行，不再出現孤字）。**i-5**：多寶貝「每人一行」的 Imprint Row 是在實例層以 Replace 換出來的（元件 umJHD 本身只有單一 Caption），實作以本板實作契約（L0xP2）為準，不要照元件結構刻。**i-6**：e29JW 的 Stamp Wrap 寬度 333.80 是 Pencil fit_content 渲染補償值，SwiftUI 不得照抄，日期章寬度照 cmp/Day Divider 自身版面。",
                   "lineHeight": 1.5,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
@@ -212722,7 +212758,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "三位寶貝（長名字＋拉丁名）",
+                  "content": "三位寶貝（長⁠名⁠字⁠＋⁠拉⁠丁⁠名）",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
                   "fontWeight": "600",
@@ -212752,7 +212788,7 @@
                           "width": "fill_container",
                           "content": "歐陽彥廷 · 2 歲 3 個⁠月",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         },
                         {
@@ -212764,7 +212800,7 @@
                           "width": "fill_container",
                           "content": "小饅頭 · 8 個⁠月⁠大",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         },
                         {
@@ -212776,7 +212812,7 @@
                           "width": "fill_container",
                           "content": "Emma Chen · 4 歲",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         }
                       ]
@@ -212867,6 +212903,14 @@
                       "name": "Card Photo · Feed 未標記",
                       "width": "fill_container",
                       "descendants": {
+                        "bjq5n": {
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
                         "VywUw": {
                           "content": " "
                         }
@@ -213031,7 +213075,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "三位寶貝（長名字＋拉丁名）",
+                  "content": "三位寶貝（長⁠名⁠字⁠＋⁠拉⁠丁⁠名）",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
                   "fontWeight": "600",
@@ -213061,7 +213105,7 @@
                           "width": "fill_container",
                           "content": "歐陽彥廷 · 2 歲 3 個⁠月",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         },
                         {
@@ -213073,7 +213117,7 @@
                           "width": "fill_container",
                           "content": "小饅頭 · 8 個⁠月⁠大",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         },
                         {
@@ -213085,7 +213129,7 @@
                           "width": "fill_container",
                           "content": "Emma Chen · 4 歲",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         }
                       ]
@@ -213176,6 +213220,14 @@
                       "name": "Card Photo · Feed 未標記",
                       "width": "fill_container",
                       "descendants": {
+                        "bjq5n": {
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
                         "VywUw": {
                           "content": " "
                         }
@@ -213330,7 +213382,7 @@
                       "name": "Imprint Row",
                       "width": "fill_container",
                       "layout": "vertical",
-                      "gap": "$sp-label",
+                      "gap": "$sp-item",
                       "children": [
                         {
                           "type": "text",
@@ -213341,7 +213393,7 @@
                           "width": "fill_container",
                           "content": "小安 · 2 歲 3 個⁠月",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         },
                         {
@@ -213353,16 +213405,16 @@
                           "width": "fill_container",
                           "content": "小明 · 8 個⁠月⁠大",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         }
                       ]
                     },
                     "SNbd8": {
-                      "y": 368
+                      "y": 376
                     },
                     "P15GB": {
-                      "y": 368
+                      "y": 376
                     }
                   }
                 }
@@ -213383,7 +213435,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "三位寶貝（長名字＋拉丁名）",
+                  "content": "三位寶貝（長⁠名⁠字⁠＋⁠拉⁠丁⁠名）",
                   "fontFamily": "$font",
                   "fontSize": "$fs-meta",
                   "fontWeight": "600",
@@ -213402,7 +213454,7 @@
                       "name": "Imprint Row",
                       "width": "fill_container",
                       "layout": "vertical",
-                      "gap": "$sp-label",
+                      "gap": "$sp-item",
                       "children": [
                         {
                           "type": "text",
@@ -213413,7 +213465,7 @@
                           "width": "fill_container",
                           "content": "歐陽彥廷 · 2 歲 3 個⁠月",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         },
                         {
@@ -213425,7 +213477,7 @@
                           "width": "fill_container",
                           "content": "小饅頭 · 8 個⁠月⁠大",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         },
                         {
@@ -213437,16 +213489,16 @@
                           "width": "fill_container",
                           "content": "Emma Chen · 4 歲",
                           "fontFamily": "$font",
-                          "fontSize": "$fs-note",
+                          "fontSize": "$fs-body",
                           "fontWeight": "normal"
                         }
                       ]
                     },
                     "SNbd8": {
-                      "y": 550
+                      "y": 566
                     },
                     "P15GB": {
-                      "y": 550
+                      "y": 566
                     }
                   }
                 }
@@ -213545,6 +213597,14 @@
                       "name": "Card Photo · Feed 未標記",
                       "width": "fill_container",
                       "descendants": {
+                        "bjq5n": {
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                            "mode": "fill"
+                          }
+                        },
                         "VywUw": {
                           "content": " "
                         },
