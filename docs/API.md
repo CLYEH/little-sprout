@@ -982,6 +982,11 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   轉 UTC 午夜；`food_first` 用 `child_food_records.first_tried_on` 轉 UTC 午夜，
   同 diary 的既有處理）。分頁用 keyset：`WHERE family_id = ? AND (occurred_at, ref_id) < (?, ?)
   ORDER BY occurred_at DESC, ref_id DESC LIMIT n`，不要用 `OFFSET`。
+- **`media` 項目隨日記隱藏（LS-378）**：照片至少掛在一篇已軟刪的日記、沒有掛在任何
+  未刪的日記、也不在任何相簿時，不出現在 `feed_items`（判準
+  `private.media_hidden_by_deleted_diary()`，日記軟刪／還原與 `media` 寫入時求值；之後才
+  增刪 `diary_media`／`album_media` 連結不會重算——目前 app 沒有這條路徑）。只在相簿、
+  或上傳後尚未連結的照片不受影響。見 §4 `set_diary_deleted`。
 - **不要直接 `.from("feed_items")` 拼上面那條查詢**——用 §4 的 `get_family_timeline`
   RPC。它就是這條查詢包成 RPC 的結果，額外做了 `p_limit` 邊界夾定（見 §4），且是唯一
   暴露寶貝篩選能力的入口。
@@ -1361,6 +1366,11 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   （物理上不會執行到 `body`／`entry_date` 的 `UPDATE`，也不會碰 `diary_children`）。
 - **副作用**：軟刪後該篇立即從 `feed_items`／`get_family_timeline` 消失，還原後立即
   回來（既有 trigger 行為，見 `supabase/tests/40_triggers_feed_and_storage.sql`）。
+  **LS-378 起附帶照片一併隱藏**：軟刪時，這篇日記 `diary_media` 裡的照片若**沒有**
+  掛在任何未刪的日記、也**不在**任何相簿（`album_media`），其 `media` 項目同時自
+  `feed_items`／`get_family_timeline`（含寶貝篩選）消失；照片本身（`media` 列、
+  `diary_media` 連結、相簿）完全不動。還原時對稱寫回（照片本身已軟刪的除外）。
+  見 §3「`feed_items`」與 `supabase/tests/120_diary_delete_hides_media_feed.sql`。
   **`deleted_by` 記錄與還原鎖（LS-57，PR #98 review B1/B2/B3 修過）**：軟刪時
   `deleted_by` 由 `private.enforce_deletion_attribution()` trigger 自動寫成呼叫者
   本人，呼叫端無法指定；還原或重新軟刪時，**作者只能觸碰 `deleted_by` 是自己的
