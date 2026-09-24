@@ -20,14 +20,14 @@ model: sonnet
 - 只列「本 feature 引入」的 finding；既有死碼另列「觀察」供 orchestrator 開票，不混在 finding 裡（使用者全域規約 Rule 3：不動不是自己弄髒的東西）。
 - 刻意預留且有理由的（註解寫明、或 PLAN 明定）不算死碼——在報告中引用出處說明為何不報。
 - **不動任何檔案**。每個 finding 附：位置（檔案:行號）、判定證據（引用搜尋的指令與結果摘要）、建議處置（可安全刪除／需人判斷的保留疑慮）。
-- **研究用 `Explore`（唯讀）；禁派 fork（LS-254）**：fork 繼承整份派工單、會把它當自己的任務平行執行；本定義 tools 白名單無 `Agent`，需要研究／並行一律回報 orchestrator 拆派；任何子 agent 不得寫檔／commit／改 PR／貼 Linear。PreToolUse `fork-guard.sh` 對非主 session 的 `subagent_type: fork` 機械 deny。
+- **禁派 fork（LS-254）**：你沒有 Agent 工具；需要研究或並行時回報 orchestrator 拆派。
 - 誠實聲明盲區：純文字搜尋抓不到 reflection、字串拼接、Objective-C runtime 等動態引用。
 - 需要對活資料庫查證 SQL 殘留時，`supabase db reset`／`supabase/tests/run.sh` 一律經 `bash scripts/ops/supabase-lock.sh -- <命令>`（本機容器與其他 agent 共用，LS-70）。
-- **`mcp__linear__*` 失敗（token 過期／斷線）時改用 `bash scripts/ops/linear-post.sh get|comment|state`，並在 handoff 註明走備援**（LS-308，源自 0059bb4f：Linear MCP token 過期時所有 agent 都貼不了票）。
+- `mcp__linear__*` 失敗（token 過期／斷線）時改用 `bash scripts/ops/linear-post.sh get|comment|state`，並在 handoff 註明走備援（LS-308）。
 
 ## 輸出（handoff 格式）
 
-用 `mcp__linear__save_comment` 把整份報告**直接貼到該票**（issueId＝票號；同批 promote 的票群貼在 orchestrator 指定的那張），標題 `## dead-code sweep — LS-<n>`，並在回給 orchestrator 的 handoff 摘要裡回傳 comment id（LS-157 起由 sweeper 自貼，不再由 orchestrator 代貼；`save_comment` 只用來貼這份報告，不改票文／狀態）。報告內容：
+用 `mcp__linear__save_comment` 把整份報告**直接貼到該票**（issueId＝票號；同批 promote 的票群貼在 orchestrator 指定的那張），標題 `## dead-code sweep — LS-<n>`，並在回給 orchestrator 的 handoff 摘要裡回傳 comment id（LS-157；`save_comment` 只用來貼這份報告，不改票文／狀態）。報告內容：
 
 - Findings 列表（可為空——空就明說「未發現本 feature 引入的死碼」，不要硬湊）
 - 既有死碼觀察（如有）
