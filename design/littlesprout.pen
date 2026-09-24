@@ -213890,7 +213890,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 38 種，全部 274 種。",
+                  "content": "小安吃過 38 種，全部 274 種。",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -215972,7 +215972,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 38／274 種，最近三樣：",
+                  "content": "小安吃過 38／274 種，最近三樣：",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -217203,18 +217203,18 @@
                       "name": "Allergen Icon",
                       "width": 18,
                       "height": 18,
-                      "icon": "triangle-alert",
+                      "icon": "info",
                       "library": "lucide",
-                      "fill": "$text-primary"
+                      "fill": "$text-secondary"
                     },
                     {
                       "type": "text",
                       "id": "dl1RU",
                       "name": "Allergen Text",
-                      "fill": "$text-primary",
+                      "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "常見過敏原：麩質（小麥）。只是提醒，不是醫療建議；有疑問請問醫師。",
+                      "content": "含麩質（小麥、燕麥等穀物），是常見過敏原。只是提醒，不是醫療建議；有疑問請問醫師。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
@@ -217791,6 +217791,42 @@
           ]
         },
         {
+          "type": "frame",
+          "id": "B3mnz",
+          "name": "Book Row",
+          "width": "fill_container",
+          "gap": "$sp-tight",
+          "padding": [
+            9.5,
+            0
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "PWo7G",
+              "name": "Book Icon",
+              "width": 18,
+              "height": 18,
+              "icon": "book-open",
+              "library": "lucide",
+              "fill": "$print-ink-secondary"
+            },
+            {
+              "type": "text",
+              "id": "KkzBk",
+              "name": "Book Label",
+              "fill": "$print-ink-secondary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "收進小安的飲食圖鑑 · 穀物根莖",
+              "fontFamily": "$font",
+              "fontSize": "$fs-body",
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
           "type": "rectangle",
           "id": "y7xar",
           "name": "Sign-off Rule",
@@ -217877,7 +217913,7 @@
       "name": "Food / 05 時間軸卡片 · 第一次吃到 (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 1657.4430973949763,
+      "height": 1881.4430973949763,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -217885,7 +217921,7 @@
         "rotation": 0,
         "size": {
           "width": 1.6997,
-          "height": 0.6938398077179657
+          "height": 0.6112329421986115
         },
         "colors": [
           {
@@ -217899,7 +217935,7 @@
         ],
         "center": {
           "x": 0.13995,
-          "y": 0.010256762374961233
+          "y": 0.009035617406414256
         }
       },
       "cornerRadius": 44,
@@ -219275,18 +219311,18 @@
                           "name": "Allergen Icon",
                           "width": 18,
                           "height": 18,
-                          "icon": "triangle-alert",
+                          "icon": "info",
                           "library": "lucide",
-                          "fill": "$text-primary"
+                          "fill": "$text-secondary"
                         },
                         {
                           "type": "text",
                           "id": "ymbMl",
                           "name": "Allergen Text",
-                          "fill": "$text-primary",
+                          "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "常見過敏原：麩質（小麥）。只是提醒，不是醫療建議；有疑問請問醫師。",
+                          "content": "含麩質（小麥、燕麥等穀物），是常見過敏原。只是提醒，不是醫療建議；有疑問請問醫師。",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "normal"
@@ -219654,7 +219690,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "和第一次吃同一天拍的照片排在最前面。",
+                      "content": "點一張照片，再按「用這張」。",
                       "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
@@ -219685,7 +219721,7 @@
                           "id": "S8ygV",
                           "name": "Section Label",
                           "fill": "$text-primary",
-                          "content": "8月20日那天拍的",
+                          "content": "今天拍的",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "700"
@@ -219791,7 +219827,7 @@
                           "id": "rECQt",
                           "name": "Section Label",
                           "fill": "$text-primary",
-                          "content": "更早",
+                          "content": "其他照片",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "700"
@@ -220055,7 +220091,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 38 種，全部 274 種。",
+                  "content": "小安吃過 38 種，全部 274 種。",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -222478,7 +222514,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 0／274 種，可以從這三樣開始：",
+                  "content": "小安吃過 0／274 種，可以從這三樣開始：",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -224595,7 +224631,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "小安吃過 38／274 種，最近五樣：",
+                      "content": "小安吃過 38／274 種，最近五樣：",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
                       "fontWeight": "normal"
@@ -225145,7 +225181,7 @@
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "小安吃過 38 種，全部 274 種。",
+                          "content": "小安吃過 38 種，全部 274 種。",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "normal"
@@ -226865,18 +226901,18 @@
                                   "name": "Allergen Icon",
                                   "width": 18,
                                   "height": 18,
-                                  "icon": "triangle-alert",
+                                  "icon": "info",
                                   "library": "lucide",
-                                  "fill": "$text-primary"
+                                  "fill": "$text-secondary"
                                 },
                                 {
                                   "type": "text",
                                   "id": "Woxm7",
                                   "name": "Allergen Text",
-                                  "fill": "$text-primary",
+                                  "fill": "$text-secondary",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "常見過敏原：麩質（小麥）。只是提醒，不是醫療建議；有疑問請問醫師。",
+                                  "content": "含麩質（小麥、燕麥等穀物），是常見過敏原。只是提醒，不是醫療建議；有疑問請問醫師。",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
                                   "fontWeight": "normal"
@@ -226961,7 +226997,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "Story LS-310 定案 F1a F2a F3a F4a F5b。後端 LS-325（food_catalog 274 種／child_food_records／feed kind food_first）已上線；插圖＝LS-332／338／340 畫風 A 貼紙 design/food-stickers/stickers/<food_id>.png（384×384 RGBA）。本票不生圖。示範資料沿 LS-252：陳小安，出生 2025-04-20，「今天」2026-08-20（1 歲 4 個月）；已吃 38／274（穀物根莖 10／16、蔬菜 12／91、水果 9／46、肉魚蛋豆 5／72、乳製品 1／7、油脂堅果 0／10、台灣家常 1／18、點心飲品 0／14）。",
+          "content": "Story LS-310 定案 F1a F2a F3a F4a F5b。後端 LS-325（food_catalog 274 種／child_food_records／feed kind food_first）已上線；插圖＝LS-332／338／340 畫風 A 貼紙 design/food-stickers/stickers/<food_id>.png（384×384 RGBA）。本票不生圖。示範資料沿 LS-252：陳小安，出生 2025-04-20，「今天」2026-08-20（1 歲 4 個月）；已吃 38／274（穀物根莖 10／16、蔬菜 12／91、水果 9／46、肉魚蛋豆 5／72、乳製品 1／7、油脂堅果 0／10、台灣家常 1／18、點心飲品 0／14）。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227024,7 +227060,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "food_catalog.category → 分頁：grain_root 穀物根莖／vegetable 蔬菜／fruit 水果／protein 肉魚蛋豆／dairy 乳製品／fat_nut 油脂堅果／tw_home 台灣家常／snack_drink 點心飲品（2×4；AX3 4×2）。選中＝$print-paper＋2pt $print-ink 框＋17 bold $print-ink；未選＝透明＋$control-line 1pt＋17 regular $text-secondary。格子順序＝sort_order。過敏原標記＝純文字「含〇〇」（無圖示，F2a 純資訊）：egg 含蛋／milk 含牛奶／peanut 含花生／tree_nut 含堅果／shellfish 含甲殼類／fish 含魚／wheat 含麩質／soy 含大豆／sesame 含芝麻／mango 含芒果；多種時「第一種＋等」（布丁＝含牛奶等）。min_age_months＝12 → 「一歲後」。紙上 $print-ink-secondary、紙外 $text-secondary，17／600。免責句（02 Disclaimer）排在格子之後；04 的過敏原列排在回憶（照片、反應、一句話、記錄者）之後、編輯鈕之前，沒有過敏原的食物整列隱藏。",
+          "content": "food_catalog.category → 分頁：grain_root 穀物根莖／vegetable 蔬菜／fruit 水果／protein 肉魚蛋豆／dairy 乳製品／fat_nut 油脂堅果／tw_home 台灣家常／snack_drink 點心飲品（2×4；AX3 4×2）。選中＝$print-paper＋2pt $print-ink 框＋17 bold $print-ink；未選＝透明＋$control-line 1pt＋17 regular $text-secondary。格子順序＝sort_order。過敏原標記＝純文字「含〇〇」（無圖示，F2a 純資訊）：egg 含蛋／milk 含牛奶／peanut 含花生／tree_nut 含堅果／shellfish 含甲殼類／fish 含魚／wheat 含麩質／soy 含大豆／sesame 含芝麻／mango 含芒果；多種時「第一種＋等」（布丁＝含牛奶等）。min_age_months＝12 → 「一歲後」。紙上 $print-ink-secondary、紙外 $text-secondary，17／600。免責句（02 Disclaimer）排在格子之後；04 的過敏原列排在回憶（照片、反應、一句話、記錄者）之後、編輯鈕之前，沒有過敏原的食物整列隱藏。 04 詳情的過敏原列（info 圖示、$text-secondary，R3 起不用警告圖示）用同一張對應表寫完整：wheat＝含麩質（小麥、燕麥等穀物）；其他＝含〇〇（如含牛奶、含蛋、含大豆）；多種時逐項列出。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227037,7 +227073,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "child_food_records：first_tried_on（必填，預設今天，可回填）／media_id（選填）／note（trimmed.isEmpty→nil，≤2000）／reaction liked 喜歡 smile／neutral 普通 meh／disliked 不愛吃 frown（可不選；已選再點一次取消）。讀：list_child_food_records(p_child_id)。寫：upsert_child_food_record(p_child_id,p_food_id,p_first_tried_on,p_media_id,p_note,p_reaction)。刪：delete_child_food_record(p_id)。時間軸：get_family_timeline kind food_first → cmp/Card Food First（SBzKx）。03d 相簿排序：media.taken_at（無則 created_at）遞減；與 first_tried_on 同一天的照片另成第一段「M月d日那天拍的」，其餘在「更早」。",
+          "content": "child_food_records：first_tried_on（必填，預設今天，可回填）／media_id（選填）／note（trimmed.isEmpty→nil，≤2000）／reaction liked 喜歡 smile／neutral 普通 meh／disliked 不愛吃 frown（可不選；已選再點一次取消）。讀：list_child_food_records(p_child_id)。寫：upsert_child_food_record(p_child_id,p_food_id,p_first_tried_on,p_media_id,p_note,p_reaction)。刪：delete_child_food_record(p_id)。時間軸：get_family_timeline kind food_first → cmp/Card Food First（SBzKx）。03d 相簿排序：media.taken_at（無則 created_at）遞減；與 first_tried_on 同一天的照片另成第一段（first_tried_on＝今天時標「今天拍的」，否則「M月d日那天拍的」），其餘照片在「其他照片」，新到舊。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227112,7 +227148,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "紙卡同 cmp/Card Diary 材質，零角托。Head Row：貼紙 72＋「第一次吃到〇〇」fs-body 700＋反應列（沒選整列隱藏）；Note（沒有就隱藏）；Photo（有 media_id 才顯示、深色疊 $photo-dim）；Signature 同日記卡（utensils＋名字＋·＋年齡）。AX3：Head Row、Signature 直排。v1 無留言／愛心列；整張卡點了開記錄詳情。示範照為佔位（不是吃東西的照片），實作以家庭照片為準。",
+          "content": "紙卡同 cmp/Card Diary 材質，零角托。Head Row：貼紙 72＋「第一次吃到〇〇」fs-body 700＋反應列（沒選整列隱藏）；Note（沒有就隱藏）；Photo（有 media_id 才顯示、深色疊 $photo-dim）；Book Row（R3 MJ-9）：book-open 18＋「收進〇〇的飲食圖鑑 · 〈類別〉」17 regular $print-ink-secondary、列高 44，點這一列開 02 並直接選到該類別（〇〇＝children.name 暱稱、類別＝food_catalog.category 對應中文），卡片其他地方點了開 04；Signature 同日記卡（utensils＋名字＋·＋年齡）。AX3：Head Row、Signature 直排，Book Row 文字自然換行。v1 無留言／愛心列。這條 Book Row 也是 viewer（阿公阿嬤）從時間軸走進圖鑑（02c）的路。示範照為佔位，實作以家庭照片為準。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227137,7 +227173,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "空：01b（三格灰色空位＝圖鑑前三樣，文案「小安吃過 0／274 種，可以從這三樣開始：」，點空位直接開 03）。載入：系統 ProgressView。錯誤：03e 走錯誤文法第 2 層。Status Slot 高度＝目前字級下「一般句」與「失敗句」較高者（預設 56；AX3 348，見 A11y/03 qV7XY 與 A11y/03e Yufqp），實作用 ZStack 疊兩句、非當前那句 opacity 0＋accessibilityHidden，兩態儲存鈕座標相同。sheet Footer 不釘底，隨 sheet 捲動（沿 LS-252 Growth/02）。刪除：03c 背後墊著要刪的那筆記錄（04）。04b 沒照片時放一張空白沖印品（同 04 幾何、零角托），點了直接開照片來源。",
+          "content": "空：01b（三格灰色空位＝圖鑑前三樣，文案「小安吃過 0／274 種，可以從這三樣開始：」，點空位直接開 03）。載入：系統 ProgressView。錯誤：03e 走錯誤文法第 2 層。Status Slot 高度＝max(一般句高度, 失敗句高度)，在目前字級下即時量（ZStack 疊兩句、非當前那句 opacity 0＋accessibilityHidden），AX1–AX5 每一級都自動取較高者；稿面的 56（預設）與 348（AX3）只是 Pencil 實測值，**不得寫死成 frame 高度**。兩態儲存鈕座標相同。sheet Footer 不釘底，隨 sheet 捲動（沿 LS-252 Growth/02）。刪除確認 03c：板上背景的 04 只是示意，實機背景是呼叫端當下的畫面——兩條呼叫路徑：①作者在 03b 編輯 sheet 內按「刪除這筆記錄」，確認 sheet 疊在 03b 之上；②非作者的 owner 在 04c 按「刪除這筆記錄」，確認 sheet 疊在 04c 之上。04b 沒照片時放一張空白沖印品（同 04 幾何、零角托），點了直接開照片來源。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227227,7 +227263,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "Food / 03b 編輯記錄 sheet (iPhone)｜隱藏 Tab Bar ✗（sheet）｜標題 自訂：左側紙片＋「編輯〇〇這筆記錄」｜釘底動作帶 無｜失敗文案鍵 同 03＋42501（非作者）｜深色 未另畫｜AX3 同 A11y/03｜iPad 同一 sheet｜資料落點 同 03；「不用照片」→media_id=null",
+          "content": "Food / 03b 編輯記錄 sheet (iPhone)｜隱藏 Tab Bar ✗（sheet）｜標題 自訂：左側紙片＋「編輯〇〇這筆記錄」｜釘底動作帶 無｜失敗文案鍵 同 03＋42501（非作者）｜深色 未另畫｜AX3 見 A11y/03b K6MMar（照片列直排、日期兩行、Slot 取較高句）｜iPad 同一 sheet｜資料落點 同 03；「不用照片」→media_id=null",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227240,7 +227276,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "Food / 03c 刪除記錄 · 確認 (iPhone)｜隱藏 Tab Bar ✗（sheet）｜標題 自訂 Head Title｜釘底動作帶 無｜失敗文案鍵 42501／LS052／LS053｜深色 未另畫｜AX3 未另畫｜iPad 同一 sheet｜資料落點 delete_child_food_record(p_id)",
+          "content": "Food / 03c 刪除記錄 · 確認 (iPhone)｜隱藏 Tab Bar ✗（sheet）｜標題 自訂 Head Title｜釘底動作帶 無｜失敗文案鍵 42501／LS052／LS053｜深色 未另畫｜AX3 見 A11y/03c d56YR（sheet 長到 961，板高隨之）｜iPad 同一 sheet｜資料落點 delete_child_food_record(p_id)",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227253,7 +227289,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "Food / 03d 從家庭相簿挑一張 (iPhone)｜隱藏 Tab Bar ✗（sheet）｜標題 自訂｜釘底動作帶 無｜失敗文案鍵 42501｜深色 未另畫｜AX3 未另畫（格子改 2 欄）｜iPad 同一 sheet｜資料落點 選中＝純 UI 狀態，「用這張」才回填 media_id；排序見資料對應段",
+          "content": "Food / 03d 從家庭相簿挑一張 (iPhone)｜隱藏 Tab Bar ✗（sheet）｜標題 自訂｜釘底動作帶 無｜失敗文案鍵 42501｜深色 未另畫｜AX3 見 A11y/03d CkOy9（格子改 2 欄、格子區隨 sheet 捲動）｜iPad 同一 sheet｜資料落點 選中＝純 UI 狀態，「用這張」才回填 media_id；排序見資料對應段",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227292,7 +227328,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "Food / 04b 記錄詳情 · 沒有照片 (iPhone)｜隱藏 Tab Bar ✗｜標題 同 04｜釘底動作帶 無｜失敗文案鍵 42501｜深色 同 04｜AX3 同 A11y/04｜iPad 同 04-iPad｜資料落點 media_id 為 null；空白沖印品點了走 03 的兩種照片來源，選好即 upsert media_id",
+          "content": "Food / 04b 記錄詳情 · 沒有照片 (iPhone)｜隱藏 Tab Bar ✗｜標題 同 04｜釘底動作帶 無｜失敗文案鍵 42501｜深色 見 04b 深色 GRB0y｜AX3 見 A11y/04b vr5zj（空白照片窗文案換行、日期章兩行）｜iPad 同 04-iPad｜資料落點 media_id 為 null；空白沖印品點了走 03 的兩種照片來源，選好即 upsert media_id",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227305,7 +227341,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "Food / 05 時間軸卡片 · 第一次吃到 (iPhone)｜隱藏 Tab Bar ✗（規格板）｜標題 N/A｜釘底動作帶 無｜失敗文案鍵 無｜深色 見 05 深色 QGdHY｜AX3 見 A11y/05 CgmBD｜iPad 同一元件｜資料落點 get_family_timeline kind food_first；無可編輯欄位",
+          "content": "Food / 05 時間軸卡片 · 第一次吃到 (iPhone)｜隱藏 Tab Bar ✗（規格板）｜標題 N/A｜釘底動作帶 無｜失敗文案鍵 無｜深色 見 05 深色 QGdHY｜AX3 見 A11y/05 CgmBD｜iPad 同一元件｜資料落點 get_family_timeline kind food_first → child_food_records（food_id→food_catalog.name_zh／category；child_id→children.name）；Book Row 點擊＝導覽到 02 並帶 category（純 UI 狀態）；無可編輯欄位",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227382,7 +227418,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "收下這一刻（動效，MJ-1c）",
+          "content": "收下這一刻（動效，MJ-1c／R3 MJ-8 改寫）",
           "fontFamily": "$font",
           "fontSize": 22,
           "fontWeight": "700"
@@ -227394,7 +227430,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "見 06 jIWO6。儲存成功、sheet 收起回到 02 後，剛記下的那一格在 350ms 內從空位變成紙片：貼紙 saturation 0→1、opacity 0.6→1；底 透明→$print-paper、框 $border→$paper-edge；落影 0→$paper-shadow；scale 0.96→1.0。.spring(response: 0.35, dampingFraction: 0.85)。減少動態效果：0.2s 淡入淡出、不縮放。VoiceOver 唸「已記下〇〇」。只播一次；時間軸同時多一張 food_first 卡（不另動效）。",
+          "content": "見 06 jIWO6。觸發：儲存成功 → sheet 收起 → .sheet 的 onDismiss 完成後才播；那一格不在可見範圍時先 ScrollViewReader.scrollTo(id, anchor: .center) 捲到中央，捲完再播。兩個起點：①從 02 圖鑑點空位 → 回 02 播那一格；②從 01／01b 入口點空位 → 回 01 播「最近三樣」的第一格（01b 為被點的那格）。動畫 withAnimation(.easeOut(duration: 0.35))，實際完成＝0.35s（不用 spring，避免停穩時間與標示不符）：saturation 0→1、貼紙 opacity 0.6→1、底 透明→$print-paper、框 $border→$paper-edge、落影 0→$paper-shadow 並 y −2→0。不縮放（空位與紙片同尺寸，起點即 1.0，避免第一幀先縮）。.sensoryFeedback(.impact(weight: .light)) 一次，不用 .success。減少動態效果：0.2s 淡入淡出、不位移。VoiceOver 唸「已記下〇〇」。只播一次。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227420,6 +227456,31 @@
           "textGrowth": "fixed-width",
           "width": "fill_container",
           "content": "MJ-1 已修：01／01b／01-iPad 改 Food Cell 實例、刪紙卡與進度條（MN-3），01 與 01b 同高；03／03e 表頭灰色空位、03b 紙片；06 動效示意＋本節規格。MJ-2 已修：02 家族免責句移到格子後（首屏 6 格），04 家族過敏原列移到回憶之後。MJ-3 已修：Tag 圖示關閉、改「含〇〇」文字。MJ-4 已修：Status Slot 取較高句，AX3 固定 348，補 A11y/03e。MJ-5 已修：04b 空白沖印品。MJ-6 已修：03d 依日期分兩段、9 張不同照片、無空格。MJ-7 已修：02c／04c。MN-1 日期規則；MN-2 分頁選中態；MN-4「還沒吃過」規則；MN-5 A11y/01 按鈕 icon＋字一起置中；MN-6 Stamp Wrap 實例寬度覆寫；MN-7 03c 背景墊 04；MN-8 04／05 板上佔位註記（核可頁告知）；MN-9 補 A11y/02b、01b 深色；MN-10 沿 LS-252 不動，Footer 不釘底已寫入「狀態」段。R2 深色／AX3 衍生板全數依定稿基準板整板重建（R1 的 01／02／03／04／05 深色與 AX3 板已刪除重建）。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "w6gZ0A",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "R3 修訂記錄（依 VR R2 comment cbdf512f）",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "W03X2h",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "MJ-8 已修：06 改 .easeOut(duration: 0.35)（影格 0／175／350ms 即實際時間），去掉 scale、改落影＋y −2→0；觸發寫明 onDismiss 完成→scrollTo 中央→播，02 與 01／01b 兩個起點；加 .sensoryFeedback(.impact(.light))。MJ-9 已修：cmp/Card Food First 加 Book Row「收進小安的飲食圖鑑 · 〈類別〉」，點了開 02 並選到該類別。MJ-3 殘留已修：04 家族（含 04c 與 03c 背景）過敏原列改 info 圖示＋「含麩質（小麥、燕麥等穀物）」。MJ-10 已修：補 A11y/03b K6MMar、A11y/03c d56YR、A11y/03d CkOy9、A11y/04b vr5zj。MN-11 03d 文案（今天拍的／其他照片／任務句）；MN-12 AX3 清單貼紙 96、靠上；MN-13 數字與「種」之間 U+00A0；MN-14 Slot 高度寫成 max() 規則、348 不得寫死；MN-15 03c 兩條呼叫路徑；MN-16 補 04b 深色 GRB0y。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -227521,7 +227582,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 38 種，全部 274 種。",
+                  "content": "小安吃過 38 種，全部 274 種。",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -229072,18 +229133,18 @@
                       "name": "Allergen Icon",
                       "width": 18,
                       "height": 18,
-                      "icon": "triangle-alert",
+                      "icon": "info",
                       "library": "lucide",
-                      "fill": "$text-primary"
+                      "fill": "$text-secondary"
                     },
                     {
                       "type": "text",
                       "id": "fGYSP",
                       "name": "Allergen Text",
-                      "fill": "$text-primary",
+                      "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "常見過敏原：麩質（小麥）。只是提醒，不是醫療建議；有疑問請問醫師。",
+                      "content": "含麩質（小麥、燕麥等穀物），是常見過敏原。只是提醒，不是醫療建議；有疑問請問醫師。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
@@ -229168,7 +229229,7 @@
       "name": "Food / 06 收下這一刻 · 動效示意 (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 852,
+      "height": 1057,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -229176,7 +229237,7 @@
         "rotation": 0,
         "size": {
           "width": 1.6997,
-          "height": 1.3497652582159625
+          "height": 1.0879848628192998
         },
         "colors": [
           {
@@ -229190,7 +229251,7 @@
         ],
         "center": {
           "x": 0.13995,
-          "y": 0.01995305164319249
+          "y": 0.01608325449385052
         }
       },
       "cornerRadius": 44,
@@ -229243,7 +229304,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "sheet 收起後回到 02，剛記下的芋頭從灰色空位變成一張彩色紙片，只發生這一次。",
+                  "content": "sheet 收起完成後，剛記下的芋頭從灰色空位變成一張彩色紙片，只播這一次。從 02 圖鑑、01 入口的空位進來都一樣。",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -229525,7 +229586,7 @@
               "fill": "$text-primary",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "規格：同一格在 350ms 內同時做四件事——貼紙 saturation 0→1、opacity 0.6→1；底 透明→$print-paper、框 $border→$paper-edge；落影 0→$paper-shadow（1/4 blur 8）；scale 0.96→1.0（紙片浮起）。曲線 .spring(response: 0.35, dampingFraction: 0.85)。開啟「減少動態效果」時只做 0.2s 淡入淡出、不縮放。VoiceOver 同時唸「已記下芋頭」。只在剛儲存的那一格播放一次；捲動回來或重開頁面不再播。",
+              "content": "時機：儲存成功 → sheet 收起，等 .sheet 的 onDismiss 完成才開始；那一格若不在可見範圍，先 ScrollViewReader.scrollTo(id, anchor: .center)（系統捲動），捲完再播。起點兩處：02 圖鑑的那一格；從 01／01b 入口空位進來的，回到 01 時「最近三樣」第一格（01b 是被點的那格）播同一段。\n動畫：withAnimation(.easeOut(duration: 0.35))，影格即 0／175／350 ms——貼紙 saturation 0→1、opacity 0.6→1；底 透明→$print-paper、框 $border→$paper-edge；落影 0→$paper-shadow（1/4 blur 8）並同時 y −2→0（紙片落回台紙）。不縮放（空位與紙片同尺寸，起點就是 1.0）。同時 .sensoryFeedback(.impact(weight: .light)) 一次（不用 .success——03 的狀態列已說過結果）。\n減少動態效果：0.2s 淡入淡出，不位移。VoiceOver 唸「已記下芋頭」。只播一次；捲走再回來、重開頁面都不再播。",
               "fontFamily": "$font",
               "fontSize": "$fs-note",
               "fontWeight": "normal"
@@ -230483,7 +230544,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 38／274 種，最近三樣：",
+                  "content": "小安吃過 38／274 種，最近三樣：",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -231607,7 +231668,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 0／274 種，可以從這三樣開始：",
+                  "content": "小安吃過 0／274 種，可以從這三樣開始：",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -231918,7 +231979,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 38 種，全部 274 種。",
+                  "content": "小安吃過 38 種，全部 274 種。",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -234116,18 +234177,18 @@
                       "name": "Allergen Icon",
                       "width": 18,
                       "height": 18,
-                      "icon": "triangle-alert",
+                      "icon": "info",
                       "library": "lucide",
-                      "fill": "$text-primary"
+                      "fill": "$text-secondary"
                     },
                     {
                       "type": "text",
                       "id": "wQCoE",
                       "name": "Allergen Text",
-                      "fill": "$text-primary",
+                      "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "常見過敏原：麩質（小麥）。只是提醒，不是醫療建議；有疑問請問醫師。",
+                      "content": "含麩質（小麥、燕麥等穀物），是常見過敏原。只是提醒，不是醫療建議；有疑問請問醫師。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
@@ -234199,7 +234260,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1657.4430973949763,
+      "height": 1881.4430973949763,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -234207,7 +234268,7 @@
         "rotation": 0,
         "size": {
           "width": 1.6997,
-          "height": 0.6938398077179657
+          "height": 0.6112329421986115
         },
         "colors": [
           {
@@ -234221,7 +234282,7 @@
         ],
         "center": {
           "x": 0.13995,
-          "y": 0.010256762374961233
+          "y": 0.009035617406414256
         }
       },
       "cornerRadius": 44,
@@ -234485,7 +234546,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 4480,
+      "height": 4654,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -234493,7 +234554,7 @@
         "rotation": 0,
         "size": {
           "width": 1.6997,
-          "height": 0.25669642857142855
+          "height": 0.24709926944563815
         },
         "colors": [
           {
@@ -234507,7 +234568,7 @@
         ],
         "center": {
           "x": 0.13995,
-          "y": 0.003794642857142857
+          "y": 0.00365277180919639
         }
       },
       "cornerRadius": 44,
@@ -234571,7 +234632,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 38 種，全部 274 種。",
+                  "content": "小安吃過 38 種，全部 274 種。",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -234966,7 +235027,7 @@
                           "name": "Food Cell · 米精（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -234974,8 +235035,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235029,7 +235090,7 @@
                           "name": "Food Cell · 白粥（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235037,8 +235098,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235092,7 +235153,7 @@
                           "name": "Food Cell · 燕麥粥（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235100,8 +235161,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235155,7 +235216,7 @@
                           "name": "Food Cell · 白米飯（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235163,8 +235224,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235218,7 +235279,7 @@
                           "name": "Food Cell · 糙米飯（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235239,8 +235300,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235294,7 +235355,7 @@
                           "name": "Food Cell · 地瓜（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235302,8 +235363,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235357,7 +235418,7 @@
                           "name": "Food Cell · 紫地瓜（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235378,8 +235439,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235433,7 +235494,7 @@
                           "name": "Food Cell · 馬鈴薯（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235441,8 +235502,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235496,7 +235557,7 @@
                           "name": "Food Cell · 南瓜（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235504,8 +235565,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235559,7 +235620,7 @@
                           "name": "Food Cell · 芋頭（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235580,8 +235641,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235635,7 +235696,7 @@
                           "name": "Food Cell · 山藥（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235656,8 +235717,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235711,7 +235772,7 @@
                           "name": "Food Cell · 玉米（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235719,8 +235780,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235774,7 +235835,7 @@
                           "name": "Food Cell · 藜麥（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235795,8 +235856,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235850,7 +235911,7 @@
                           "name": "Food Cell · 麵條（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235858,8 +235919,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235913,7 +235974,7 @@
                           "name": "Food Cell · 吐司麵包（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235921,8 +235982,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -235976,7 +236037,7 @@
                           "name": "Food Cell · 白饅頭（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -235997,8 +236058,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -236203,7 +236264,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 38 種，全部 274 種。",
+                  "content": "小安吃過 38 種，全部 274 種。",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -236598,7 +236659,7 @@
                           "name": "Food Cell · 鮮奶（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -236619,8 +236680,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -236674,7 +236735,7 @@
                           "name": "Food Cell · 優格（吃過）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -236682,8 +236743,8 @@
                           ],
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -236737,7 +236798,7 @@
                           "name": "Food Cell · 起司（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -236758,8 +236819,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -236813,7 +236874,7 @@
                           "name": "Food Cell · 奶油（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -236834,8 +236895,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -236889,7 +236950,7 @@
                           "name": "Food Cell · 鮮奶油（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -236910,8 +236971,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -236965,7 +237026,7 @@
                           "name": "Food Cell · 布丁（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -236986,8 +237047,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -237041,7 +237102,7 @@
                           "name": "Food Cell · 茅屋起司（還沒吃）",
                           "width": "fill_container",
                           "layout": "horizontal",
-                          "alignItems": "center",
+                          "alignItems": "start",
                           "gap": "$sp-item",
                           "padding": [
                             12,
@@ -237062,8 +237123,8 @@
                           },
                           "descendants": {
                             "g0UaV": {
-                              "width": 64,
-                              "height": 64,
+                              "width": 96,
+                              "height": 96,
                               "fill": {
                                 "type": "image",
                                 "enabled": true,
@@ -237182,7 +237243,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 3378,
+      "height": 3436,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -237190,7 +237251,7 @@
         "rotation": 0,
         "size": {
           "width": 1.6997,
-          "height": 0.3404381290704559
+          "height": 0.33469150174621654
         },
         "colors": [
           {
@@ -237204,7 +237265,7 @@
         ],
         "center": {
           "x": 0.13995,
-          "y": 0.005032563647128479
+          "y": 0.004947613504074505
         }
       },
       "cornerRadius": 44,
@@ -238096,7 +238157,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安吃過 38／274 種，最近三樣：",
+                  "content": "小安吃過 38／274 種，最近三樣：",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "normal"
@@ -238116,7 +238177,7 @@
                       "name": "Food Cell · 香蕉（吃過）",
                       "width": "fill_container",
                       "layout": "horizontal",
-                      "alignItems": "center",
+                      "alignItems": "start",
                       "gap": "$sp-item",
                       "padding": [
                         12,
@@ -238124,8 +238185,8 @@
                       ],
                       "descendants": {
                         "g0UaV": {
-                          "width": 64,
-                          "height": 64,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -238166,7 +238227,7 @@
                       "name": "Food Cell · 豆腐（吃過）",
                       "width": "fill_container",
                       "layout": "horizontal",
-                      "alignItems": "center",
+                      "alignItems": "start",
                       "gap": "$sp-item",
                       "padding": [
                         12,
@@ -238174,8 +238235,8 @@
                       ],
                       "descendants": {
                         "g0UaV": {
-                          "width": 64,
-                          "height": 64,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -238216,7 +238277,7 @@
                       "name": "Food Cell · 蛋黃（吃過）",
                       "width": "fill_container",
                       "layout": "horizontal",
-                      "alignItems": "center",
+                      "alignItems": "start",
                       "gap": "$sp-item",
                       "padding": [
                         12,
@@ -238224,8 +238285,8 @@
                       ],
                       "descendants": {
                         "g0UaV": {
-                          "width": 64,
-                          "height": 64,
+                          "width": 96,
+                          "height": 96,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -240030,18 +240091,18 @@
                       "name": "Allergen Icon",
                       "width": 32,
                       "height": 32,
-                      "icon": "triangle-alert",
+                      "icon": "info",
                       "library": "lucide",
-                      "fill": "$text-primary"
+                      "fill": "$text-secondary"
                     },
                     {
                       "type": "text",
                       "id": "AvVRc",
                       "name": "Allergen Text",
-                      "fill": "$text-primary",
+                      "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "常見過敏原：麩質（小麥）。只是提醒，不是醫療建議；有疑問請問醫師。",
+                      "content": "含麩質（小麥、燕麥等穀物），是常見過敏原。只是提醒，不是醫療建議；有疑問請問醫師。",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
@@ -240115,7 +240176,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 3313.849119853749,
+      "height": 4133.849119853749,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -240123,7 +240184,7 @@
         "rotation": 0,
         "size": {
           "width": 1.6997,
-          "height": 0.34702847305575374
+          "height": 0.27819109180276175
         },
         "colors": [
           {
@@ -240137,7 +240198,7 @@
         ],
         "center": {
           "x": 0.13995,
-          "y": 0.0051299861234328815
+          "y": 0.004112390052736478
         }
       },
       "cornerRadius": 44,
@@ -240195,6 +240256,10 @@
                       "alignItems": "start"
                     },
                     "M3Bz3q": {
+                      "width": 32,
+                      "height": 32
+                    },
+                    "PWo7G": {
                       "width": 32,
                       "height": 32
                     },
@@ -240263,6 +240328,10 @@
                     "EL975": {
                       "enabled": true
                     },
+                    "PWo7G": {
+                      "width": 32,
+                      "height": 32
+                    },
                     "Wqlnp": {
                       "layout": "vertical",
                       "alignItems": "end",
@@ -240330,6 +240399,10 @@
                     },
                     "MR5Yu": {
                       "enabled": false
+                    },
+                    "PWo7G": {
+                      "width": 32,
+                      "height": 32
                     },
                     "Wqlnp": {
                       "layout": "vertical",
@@ -240414,6 +240487,10 @@
                         "MR5Yu": {
                           "content": "有點黏，吃了三口就搖頭。"
                         },
+                        "PWo7G": {
+                          "width": 32,
+                          "height": 32
+                        },
                         "Wqlnp": {
                           "layout": "vertical",
                           "alignItems": "end",
@@ -240444,6 +240521,2614 @@
                   "fontStyle": "italic"
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "K6MMar",
+      "x": 16146,
+      "y": 56000,
+      "name": "A11y / 03b 編輯記錄 sheet · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 2693,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 0.42703304864463426
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.0063126624582250275
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "A55rf",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "N1liP",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 2693,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "rrbqY",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 2693,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "S4A0Su",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 62,
+              "name": "Form Sheet",
+              "width": 393,
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "zGekF",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "OWUWs",
+                      "name": "Grabber",
+                      "fill": "$border",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "frame",
+                      "id": "G0VfF",
+                      "name": "Head Row",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "id": "QOmsG",
+                          "type": "ref",
+                          "ref": "IikhF",
+                          "name": "Food Slot（吃過：紙片）",
+                          "width": 104,
+                          "descendants": {
+                            "g0UaV": {
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "food-stickers/stickers/bread.png",
+                                "mode": "fit"
+                              },
+                              "opacity": 1
+                            },
+                            "SiaTC": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "KRomN",
+                          "name": "Head Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "J3QRw",
+                              "name": "Head Title",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "編輯吐司麵包這筆記錄",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-lead",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "d2zpkO",
+                              "name": "Head Sub",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "穀物根莖",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hmiFt",
+                  "name": "Fields",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "m8QD4D",
+                      "name": "Date Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ztZ8P",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "哪一天第一次吃",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "kvOfC",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "gap": "$sp-label",
+                          "padding": [
+                            "$sp-group",
+                            "$inset-card"
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zwAsn",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "2026年\n6月8日",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "k0rAoW",
+                              "name": "Calendar Icon",
+                              "width": 40,
+                              "height": 40,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "W2pgeY",
+                          "name": "Field Help",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "FBQNi",
+                              "name": "Help Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "info",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "G51y3",
+                              "name": "Help Text",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "忘了記也沒關係，可以選以前的日子。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YsX7c",
+                      "name": "Photo Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZUD5W",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QGUfl",
+                          "name": "Photo Selected",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-item",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "X4nJVB",
+                              "name": "Photo Thumb",
+                              "clip": true,
+                              "width": 112,
+                              "height": 112,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-toddler.jpg",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "VjRGN",
+                              "name": "Photo Actions",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$sp-group",
+                              "children": [
+                                {
+                                  "id": "rmXuH",
+                                  "type": "ref",
+                                  "ref": "XggYA",
+                                  "name": "Change Photo",
+                                  "width": "fill_container",
+                                  "padding": [
+                                    "$ctl-pad-tap",
+                                    12
+                                  ],
+                                  "justifyContent": "center",
+                                  "descendants": {
+                                    "G4R75k": {
+                                      "icon": "refresh-cw",
+                                      "width": 32,
+                                      "height": 32
+                                    },
+                                    "yxwnz": {
+                                      "content": "換一張"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "kQFbn",
+                                  "type": "ref",
+                                  "ref": "XggYA",
+                                  "name": "Remove Photo",
+                                  "width": "fill_container",
+                                  "padding": [
+                                    "$ctl-pad-tap",
+                                    12
+                                  ],
+                                  "justifyContent": "center",
+                                  "descendants": {
+                                    "G4R75k": {
+                                      "icon": "x",
+                                      "width": 32,
+                                      "height": 32
+                                    },
+                                    "yxwnz": {
+                                      "content": "不用照片"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nnVUl",
+                      "name": "Reaction Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "wWbLr",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安覺得怎麼樣（可不選）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "X8ztF",
+                          "name": "Reaction Options",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "z1KEju",
+                              "name": "Reaction · 喜歡",
+                              "width": "fill_container",
+                              "fill": "$accent-soft",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$text-primary",
+                              "strokeWidth": 2,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "BNUxf",
+                                  "name": "Reaction Icon",
+                                  "width": 40,
+                                  "height": 40,
+                                  "icon": "smile",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "g7P5A0",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "喜歡",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ZzIoY",
+                              "name": "Reaction · 普通",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "PW5St",
+                                  "name": "Reaction Icon",
+                                  "width": 40,
+                                  "height": 40,
+                                  "icon": "meh",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "xZfmN",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "普通",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "OCrrc",
+                              "name": "Reaction · 不愛吃",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "w9MRa",
+                                  "name": "Reaction Icon",
+                                  "width": 40,
+                                  "height": 40,
+                                  "icon": "frown",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "U8nUn6",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "不愛吃",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "N61aWF",
+                      "name": "Note Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "vzCbi",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "一句話（可不填）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "YYeTB",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "padding": "$inset-card",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "MLaeC",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "自己抓著吃，吃得滿臉都是麵包屑。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "YBoO1",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "uJzqh",
+                      "name": "Status Slot",
+                      "width": "fill_container",
+                      "height": 348,
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "DWgcG",
+                          "name": "Status Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "info",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tSQaV",
+                          "name": "Status Text",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "改好後按「儲存」，時間軸上的卡片也會跟著更新。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "k8Q29K",
+                      "name": "Actions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "id": "VPtGk",
+                          "type": "ref",
+                          "ref": "OKSJI",
+                          "name": "Save Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "s9bME2": {
+                              "enabled": false
+                            },
+                            "w7CUP": {
+                              "content": "儲存"
+                            }
+                          }
+                        },
+                        {
+                          "id": "tljmQ",
+                          "type": "ref",
+                          "ref": "qe9yS",
+                          "name": "Cancel Button",
+                          "width": "fill_container",
+                          "justifyContent": "center",
+                          "descendants": {
+                            "breqI": {
+                              "enabled": false
+                            },
+                            "hIhVd": {
+                              "content": "取消"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "MLahw",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Delete Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "icon": "trash-2",
+                          "fill": "$danger",
+                          "width": 32,
+                          "height": 32
+                        },
+                        "hIhVd": {
+                          "content": "刪除這筆記錄",
+                          "fill": "$danger"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "d56YR",
+      "x": 16619,
+      "y": 56000,
+      "name": "A11y / 03c 刪除記錄 · 確認 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1023,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 1.1241446725317692
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.016617790811339198
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "OT6sB",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Backdrop · 04 記錄詳情（要刪的那一筆）",
+          "clip": true,
+          "width": 393,
+          "height": 1023,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "radial",
+            "enabled": true,
+            "rotation": 0,
+            "size": {
+              "width": 1.6997,
+              "height": 0.9138409816520288
+            },
+            "colors": [
+              {
+                "color": "$bg-lit",
+                "position": 0
+              },
+              {
+                "color": "$bg",
+                "position": 1
+              }
+            ],
+            "center": {
+              "x": 0.13995,
+              "y": 0.013508953641812598
+            }
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "id": "CLlne",
+              "type": "ref",
+              "ref": "OeXop",
+              "name": "Status Bar"
+            },
+            {
+              "id": "c3xkN",
+              "type": "ref",
+              "ref": "W6qTyS",
+              "name": "Nav Back",
+              "descendants": {
+                "VCU41": {
+                  "content": "飲食圖鑑"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "xN0kK",
+              "name": "Body",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "padding": [
+                "$sp-item",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "dJAx3",
+                  "name": "Head Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "G3fiCC",
+                      "name": "Food Identity",
+                      "width": "fill_container",
+                      "gap": "$sp-item",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pqQio",
+                          "name": "Sticker",
+                          "width": 96,
+                          "height": 96,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "food-stickers/stickers/bread.png",
+                            "mode": "fit"
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "YwbKV",
+                          "name": "Identity Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "p8iDq",
+                              "name": "Title",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "吐司麵包",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-display",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "rj7JE",
+                              "name": "Category",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "穀物根莖",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zNJy0",
+                      "name": "Date Anchor",
+                      "width": "fill_container",
+                      "padding": [
+                        6,
+                        4
+                      ],
+                      "children": [
+                        {
+                          "id": "SZT2S",
+                          "type": "ref",
+                          "ref": "oLN0e",
+                          "name": "First Date Stamp",
+                          "width": "fill_container",
+                          "descendants": {
+                            "VDOco": {
+                              "content": "2026年6月8日 第一次吃到",
+                              "fontSize": "$fs-lead"
+                            },
+                            "ci8cq": {
+                              "content": "2026年6月8日 第一次吃到",
+                              "fontSize": "$fs-lead"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "a4ysSV",
+                  "name": "Memory Group",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "hQGri",
+                      "name": "Photo Print",
+                      "width": "fill_container",
+                      "fill": [
+                        "$print-paper",
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.382,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.3482142857142857
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        {
+                          "type": "gradient",
+                          "gradientType": "radial",
+                          "enabled": true,
+                          "opacity": 0.11600000000000002,
+                          "rotation": 0,
+                          "size": {
+                            "width": 0.45217391304347826,
+                            "height": 0.3482142857142857
+                          },
+                          "colors": [
+                            {
+                              "color": "$mount-pool",
+                              "position": 0
+                            },
+                            {
+                              "color": "$mount-pool-0",
+                              "position": 1
+                            }
+                          ],
+                          "center": {
+                            "x": 1,
+                            "y": 1
+                          }
+                        }
+                      ],
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 2,
+                          "y": 8
+                        },
+                        "blur": 16
+                      },
+                      "layout": "vertical",
+                      "gap": 7,
+                      "padding": [
+                        "$print-edge",
+                        "$print-edge",
+                        "$print-edge-bottom",
+                        "$print-edge"
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "CcKmJ",
+                          "name": "Photo Wrap",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 400,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "appstore-photos/demo-hero-toddler.jpg",
+                            "mode": "fill"
+                          },
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "id": "gUzTV",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Night Dim",
+                              "fill": "$photo-dim",
+                              "width": 329,
+                              "height": 400
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "qauov",
+                          "name": "Imprint Row",
+                          "width": "fill_container",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YPYtX",
+                              "name": "Caption",
+                              "fill": "$print-ink-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "小安 · 1 歲 1 個⁠月",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "b1wuN",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "layoutPosition": "absolute",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "HDGUL",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "layoutPosition": "absolute",
+                          "x": 324,
+                          "y": 427,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "rXd6y",
+                      "name": "Reaction Note",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "OVFb7",
+                          "name": "Reaction Chip",
+                          "fill": "$accent-soft",
+                          "cornerRadius": "$radius-full",
+                          "gap": "$sp-tight",
+                          "padding": [
+                            "$sp-label",
+                            "$sp-item"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "N7DMQ",
+                              "name": "Reaction Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "smile",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "G630F",
+                              "name": "Reaction Label",
+                              "fill": "$text-primary",
+                              "content": "喜歡",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "NngGe",
+                          "name": "Note",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "自己抓著吃，吃得滿臉都是麵包屑。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "YmMeh",
+                          "name": "Recorded By",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "媽媽記錄",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "gWD3T",
+                      "name": "Allergen Info",
+                      "width": "fill_container",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "MlGm5",
+                          "name": "Allergen Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "info",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "yuFfC",
+                          "name": "Allergen Text",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "含麩質（小麥、燕麥等穀物），是常見過敏原。只是提醒，不是醫療建議；有疑問請問醫師。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "twyod",
+                      "name": "Design Note",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "▸ 示範照為佔位（不是吃東西的照片），實作以家庭照片為準。（設計註記）",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                },
+                {
+                  "id": "h0OyP",
+                  "type": "ref",
+                  "ref": "XggYA",
+                  "name": "Edit Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "G4R75k": {
+                      "icon": "pencil"
+                    },
+                    "yxwnz": {
+                      "content": "編輯這筆記錄"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mZajZ",
+              "name": "Home Indicator Area",
+              "width": "fill_container",
+              "height": 34,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "IkFi7",
+                  "name": "Home Indicator",
+                  "fill": "$home-indicator",
+                  "width": 140,
+                  "height": 5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "J34jg",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1023,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "vWhUq",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1023,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "u9U322",
+              "name": "Confirm Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": "$radius-full",
+                  "id": "FLDaJ",
+                  "name": "Grabber",
+                  "fill": "$border",
+                  "width": 36,
+                  "height": 5
+                },
+                {
+                  "type": "frame",
+                  "id": "NLjZ7",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Bgsnp",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "要刪除吐司麵包這筆記錄嗎？",
+                      "lineHeight": 1.3,
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "Quwv5",
+                  "name": "Body Text",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "吐司麵包會變回灰色，日期、反應和那句話都會移除，時間軸上「第一次吃到吐司麵包」的卡片也會一起拿掉。照片會留在家庭相簿。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "E2z5xL",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "padding": [
+                    "$sp-tight",
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "dTWvf",
+                      "name": "Confirm Delete",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$danger",
+                      "strokeWidth": 1.5,
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$ctl-pad-md",
+                        12
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "n84PR",
+                          "name": "Trash Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "trash-2",
+                          "library": "lucide",
+                          "fill": "$danger"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xppwS",
+                          "name": "Confirm Label",
+                          "fill": "$danger",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "刪除這筆記錄",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "gdwvZ",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "CkOy9",
+      "x": 17092,
+      "y": 56000,
+      "name": "A11y / 03d 從家庭相簿挑一張 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "y2shg",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)"
+        },
+        {
+          "type": "frame",
+          "id": "tCoQn",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "fZDoC",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "cRvXd",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 62,
+              "name": "Picker Sheet",
+              "width": 393,
+              "height": 790,
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "glrcS",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "uMeGT",
+                      "name": "Grabber",
+                      "fill": "$border",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "f1F9e",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "從家庭相簿挑一張",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Tkc1J",
+                      "name": "Head Sub",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "點一張照片，再按「用這張」。",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "VY9u8",
+                  "name": "Photo Grid",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Y56x1",
+                      "name": "Section · 8月20日那天拍的",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Lctjr",
+                          "name": "Section Label",
+                          "fill": "$text-primary",
+                          "content": "今天拍的",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "G1qpX",
+                          "name": "Grid Row（2 欄）",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "g9fRvA",
+                              "name": "Thumb（已選）",
+                              "width": "fill_container",
+                              "height": 150,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-toddler.jpg",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$text-primary",
+                              "strokeWidth": 3,
+                              "strokeAlignment": "inner",
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "xAvVD",
+                                  "x": 142.5,
+                                  "y": -4,
+                                  "name": "Selected Badge",
+                                  "width": 24,
+                                  "height": 24,
+                                  "fill": "$text-primary",
+                                  "cornerRadius": "$radius-full",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "cr8cH",
+                                      "name": "Check Icon",
+                                      "width": 14,
+                                      "height": 14,
+                                      "icon": "check",
+                                      "library": "lucide",
+                                      "fill": "$surface"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "XMXky",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 150,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-hero.jpg",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "c1Brd",
+                          "name": "Grid Row（2 欄）",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "FkISO",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 150,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-timeline-v2.jpg",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "vvWyn",
+                              "name": "Empty Slot",
+                              "width": "fill_container",
+                              "height": 1
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KFwZu",
+                      "name": "Section · 更早",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "W75b4",
+                          "name": "Section Label",
+                          "fill": "$text-primary",
+                          "content": "其他照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "iw83S",
+                          "name": "Grid Row（2 欄）",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Nbe7i",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 150,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-invite.jpg",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "J3vza",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 150,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-join.jpg",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "M9tKy",
+                          "name": "Grid Row（2 欄）",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ff7pb",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 150,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-portrait.jpg",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Y0I4gV",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 150,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-album-cover.jpg",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "mIV1g",
+                          "name": "Grid Row（2 欄）",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "M8BEz6",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 150,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "SDV8T",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 150,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "g0ojAM",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "children": [
+                    {
+                      "id": "R81hK",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "Use Photo Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "enabled": false
+                        },
+                        "w7CUP": {
+                          "content": "用這張"
+                        }
+                      }
+                    },
+                    {
+                      "id": "Rvh66",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "vr5zj",
+      "x": 17565,
+      "y": 56000,
+      "name": "A11y / 04b 記錄詳情 · 沒有照片 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1612.6380782950746,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 0.7131172303805524
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.01054173297084295
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Mi9FI",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar"
+        },
+        {
+          "id": "y7NzLD",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "descendants": {
+            "VCU41": {
+              "content": "飲食圖鑑"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "ae3JI",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            "$sp-item",
+            "$screen-pad",
+            "$sp-section",
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "sTBcn",
+              "name": "Head Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Akjoo",
+                  "name": "Food Identity",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "l6sXsR",
+                      "name": "Sticker",
+                      "width": 96,
+                      "height": 96,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "food-stickers/stickers/pumpkin.png",
+                        "mode": "fit"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "doV0D",
+                      "name": "Identity Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "WLTKT",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "南瓜",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "V96uI",
+                          "name": "Category",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "穀物根莖",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "EnB6b",
+                  "name": "Date Anchor",
+                  "width": "fill_container",
+                  "padding": [
+                    6,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "vtolQ",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "First Date Stamp",
+                      "width": "fill_container",
+                      "descendants": {
+                        "OCYqN": {
+                          "width": 339
+                        },
+                        "VDOco": {
+                          "content": "2025年11月18日\n第一次吃到",
+                          "fontSize": "$fs-note"
+                        },
+                        "ci8cq": {
+                          "content": "2025年11月18日\n第一次吃到",
+                          "fontSize": "$fs-note"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "bSvoc",
+              "name": "Memory Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "DGeOU",
+                  "name": "Blank Print（加照片）",
+                  "width": "fill_container",
+                  "fill": "$print-paper",
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 2,
+                      "y": 8
+                    },
+                    "blur": 16
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "zbL3a",
+                      "name": "Photo Slot",
+                      "width": "fill_container",
+                      "height": 400,
+                      "fill": "#5530401F",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "V8CC27",
+                          "name": "Add Photo Icon",
+                          "width": 64,
+                          "height": 64,
+                          "icon": "image-plus",
+                          "library": "lucide",
+                          "fill": "$print-ink"
+                        },
+                        {
+                          "type": "text",
+                          "id": "B0AKU",
+                          "name": "Add Photo Label",
+                          "fill": "$print-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "加一張第一次吃南瓜的照片",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v1VRhe",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ys9f1",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安 · 6 個⁠月⁠大",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "E2mLeF",
+                  "name": "Reaction Note",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "X29RAa",
+                      "name": "Reaction Chip",
+                      "fill": "$accent-soft",
+                      "cornerRadius": "$radius-full",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-label",
+                        "$sp-item"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "CANjR",
+                          "name": "Reaction Icon",
+                          "width": 40,
+                          "height": 40,
+                          "icon": "smile",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "u2XT5b",
+                          "name": "Reaction Label",
+                          "fill": "$text-primary",
+                          "content": "喜歡",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "FWgrt",
+                      "name": "Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "一口接一口，把整碗吃光了。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "wEcD7",
+                      "name": "Recorded By",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "媽媽記錄",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "lV7Rz",
+              "type": "ref",
+              "ref": "XggYA",
+              "name": "Edit Button",
+              "width": "fill_container",
+              "descendants": {
+                "G4R75k": {
+                  "icon": "pencil",
+                  "width": 32,
+                  "height": 32
+                },
+                "yxwnz": {
+                  "content": "編輯這筆記錄"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tS8VC",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "hboFX",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "GRB0y",
+      "x": 9595,
+      "y": 62600,
+      "name": "Food / 04b 記錄詳情 · 沒有照片 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1120.2382991771346,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 1.0265672945164672
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.015175342614591256
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "w2Btq",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar"
+        },
+        {
+          "id": "xMZss",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "descendants": {
+            "VCU41": {
+              "content": "飲食圖鑑"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "NFjck",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            "$sp-item",
+            "$screen-pad",
+            "$sp-section",
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "IwCz0",
+              "name": "Head Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "y8fEgT",
+                  "name": "Food Identity",
+                  "width": "fill_container",
+                  "gap": "$sp-item",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "n9mdX",
+                      "name": "Sticker",
+                      "width": 96,
+                      "height": 96,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "food-stickers/stickers/pumpkin.png",
+                        "mode": "fit"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pdPVs",
+                      "name": "Identity Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "K1CAmJ",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "南瓜",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "h1OL4",
+                          "name": "Category",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "穀物根莖",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "b0n1sq",
+                  "name": "Date Anchor",
+                  "width": "fill_container",
+                  "padding": [
+                    6,
+                    4
+                  ],
+                  "children": [
+                    {
+                      "id": "COzo4",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "First Date Stamp",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VDOco": {
+                          "content": "2025年11月18日 第一次吃到",
+                          "fontSize": "$fs-lead"
+                        },
+                        "ci8cq": {
+                          "content": "2025年11月18日 第一次吃到",
+                          "fontSize": "$fs-lead"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "c18RL",
+              "name": "Memory Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "U3Eiku",
+                  "name": "Blank Print（加照片）",
+                  "width": "fill_container",
+                  "fill": "$print-paper",
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 2,
+                      "y": 8
+                    },
+                    "blur": 16
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "AYVCT",
+                      "name": "Photo Slot",
+                      "width": "fill_container",
+                      "height": 400,
+                      "fill": "#5530401F",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "T9xC2",
+                          "name": "Add Photo Icon",
+                          "width": 40,
+                          "height": 40,
+                          "icon": "image-plus",
+                          "library": "lucide",
+                          "fill": "$print-ink"
+                        },
+                        {
+                          "type": "text",
+                          "id": "NGEKg",
+                          "name": "Add Photo Label",
+                          "fill": "$print-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "加一張第一次吃南瓜的照片",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SW6is",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "CRV2x",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安 · 6 個⁠月⁠大",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "voE3S",
+                  "name": "Reaction Note",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "mwE6u",
+                      "name": "Reaction Chip",
+                      "fill": "$accent-soft",
+                      "cornerRadius": "$radius-full",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-label",
+                        "$sp-item"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "KDPMy",
+                          "name": "Reaction Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "smile",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "TkfHz",
+                          "name": "Reaction Label",
+                          "fill": "$text-primary",
+                          "content": "喜歡",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "Cm5SK",
+                      "name": "Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "一口接一口，把整碗吃光了。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ASxdt",
+                      "name": "Recorded By",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "媽媽記錄",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "jrvRX",
+              "type": "ref",
+              "ref": "XggYA",
+              "name": "Edit Button",
+              "width": "fill_container",
+              "descendants": {
+                "G4R75k": {
+                  "icon": "pencil"
+                },
+                "yxwnz": {
+                  "content": "編輯這筆記錄"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "pHGEy",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "uMw1s",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
             }
           ]
         }
