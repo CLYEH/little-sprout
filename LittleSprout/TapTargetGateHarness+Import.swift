@@ -68,6 +68,8 @@ extension TapTargetGateHarness {
         let marker = AlbumsStore.preview().mediaChildrenMarker
         let markedEntryIDs = Array(fixture.session.entryIDs.prefix(2))
         marker.seedFailedMarkingForPreview(entryIDs: markedEntryIDs, mediaIDs: markedEntryIDs)
+        // LS-373：同批再疊「沒有加入」列（D2），一個 host 就涵蓋統計卡三類頂層列＋寶貝子列。
+        fixture.session.markGroupResolved(droppedCount: 3)
         return Import05SummaryView(session: fixture.session, store: fixture.store, marker: marker, onDone: {})
     }
 }
