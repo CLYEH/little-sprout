@@ -50,6 +50,14 @@ extension DiaryEditorView {
         }
     }
 
+    /// LS-368：「新增照片」格的 icon／字色與底色。稿面（LS-21 / 12 `KaK9I`、深色 `ob1ws`、AX3
+    /// `kkhtq`）Plus／Label 標 `$text-secondary`、格底 `$surface-2`；曾誤用紙上專用的單值 token
+    /// `print-ink-secondary`（不掛 theme 的「紙上的墨」，只在 `$print-paper` 上合法），深色對
+    /// surface-2 只剩 1.27:1。`text-secondary` 淺色同值 #553040（淺色零變化），深色 #D3AEB2
+    /// 對 surface-2 7.03:1。`internal` 讓單元測試量對比（`DiaryEditorAddPhotoContrastTests`）。
+    static let addPhotoForeground = Color.lsTextSecondary
+    static let addPhotoBackground = Color.lsSurface2
+
     private var addPhotoCell: some View {
         Button {
             guard store.remainingSlots > 0 else { return }
@@ -58,10 +66,10 @@ extension DiaryEditorView {
             VStack(spacing: AppSpacing.label) {
                 Image(systemName: "plus")
                     .appIconFrame(.large)
-                    .foregroundStyle(Color.lsPrintInkSecondary)
+                    .foregroundStyle(Self.addPhotoForeground)
                 Text("新增照片")
                     .appFont(.body, weight: .semibold)
-                    .foregroundStyle(Color.lsPrintInkSecondary)
+                    .foregroundStyle(Self.addPhotoForeground)
                     .multilineTextAlignment(.center)
             }
             // R5（`design/littlesprout.pen` Handoff Notes `PoZUw`）：AX3 下「新增照片」換成兩行後
@@ -71,7 +79,7 @@ extension DiaryEditorView {
                 height: dynamicTypeSize.isAccessibilitySize ? nil : DiaryPhotoQueueLayout.thumbnailSize
             )
             .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? AppSpacing.label : 0)
-            .background(Color.lsSurface2, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+            .background(Self.addPhotoBackground, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
             .overlay(
                 RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
                     .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
