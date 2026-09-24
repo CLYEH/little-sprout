@@ -294,6 +294,7 @@
 		7F8E845A38B45C8D778EF745 /* PushNotificationStoreRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59B9D30E351F20B3ECF494 /* PushNotificationStoreRegistrationTests.swift */; };
 		8024BC8C023748B3862D0042 /* ImportBatchSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79F1BC387F13AB7F3D41FD4C /* ImportBatchSessionTests.swift */; };
 		807A732C47F2294FA3A3CA7C /* EULAConsentUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF78305F7D375B0D04B208D8 /* EULAConsentUITests.swift */; };
+		81B2857C31EDE3F9535B1C5A /* Import05FillBabiesButtonContrastTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D473DE3138F83DFC456719 /* Import05FillBabiesButtonContrastTests.swift */; };
 		820A2BB33CFAAF811A730B05 /* DeleteAccountFlowView+FinalConfirm.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0BE694592A794309EA4A89C /* DeleteAccountFlowView+FinalConfirm.swift */; };
 		8305F04B569996859D2C9862 /* GrowthInitialLoadingStateRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F5EDB155A72F057F906BF04 /* GrowthInitialLoadingStateRegressionTests.swift */; };
 		838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */; };
@@ -1020,6 +1021,7 @@
 		C714D87C85DC97C0A9FB123E /* GrowthIdentityFreshnessRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthIdentityFreshnessRegressionTests.swift; sourceTree = "<group>"; };
 		C724829E078617E6E3A23478 /* TimelineHeaderAX3UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineHeaderAX3UITests.swift; sourceTree = "<group>"; };
 		C734814B3EEC4E4E64E43057 /* ContentActionsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentActionsUITests.swift; sourceTree = "<group>"; };
+		C7D473DE3138F83DFC456719 /* Import05FillBabiesButtonContrastTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Import05FillBabiesButtonContrastTests.swift; sourceTree = "<group>"; };
 		C7DC283EF19BEF096CF3385F /* ImportOrganizeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportOrganizeView.swift; sourceTree = "<group>"; };
 		C7E25D7350CC4F526A8117F3 /* CommentsSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentsSheetView.swift; sourceTree = "<group>"; };
 		C816FAA01B9DC5A5FEF7683E /* InteractionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionRow.swift; sourceTree = "<group>"; };
@@ -1469,6 +1471,7 @@
 				E6E38A2A74FC3F66515AF1D2 /* GrowthMeasurementValidationTests.swift */,
 				803459F4935FD9D0F90164BE /* GrowthRecordsFailureStateRegressionTests.swift */,
 				1321C4BFB76E3F18A8055AA0 /* GrowthStoreTests.swift */,
+				C7D473DE3138F83DFC456719 /* Import05FillBabiesButtonContrastTests.swift */,
 				816ED74044E7C71B1EBCBA9E /* Import05SummaryContentTests.swift */,
 				C83589E845F988100234ED0A /* ImportBatchFlowContainerRegressionTests.swift */,
 				2D6237BF6EAC92E8D4DCB382 /* ImportBatchFlowModifierRegressionTests.swift */,
@@ -2632,6 +2635,7 @@
 				78FF37CFCE5967C673C7E086 /* GrowthMeasurementValidationTests.swift in Sources */,
 				FD8815844119F7CE05A35E28 /* GrowthRecordsFailureStateRegressionTests.swift in Sources */,
 				5DD4408D743CBBACF90061E9 /* GrowthStoreTests.swift in Sources */,
+				81B2857C31EDE3F9535B1C5A /* Import05FillBabiesButtonContrastTests.swift in Sources */,
 				64CF533714F9009660424F6B /* Import05SummaryContentTests.swift in Sources */,
 				F868DF1A2FDACBEEEE02D7DD /* ImportBatchFlowContainerRegressionTests.swift in Sources */,
 				8D36946B41D68D83B6E45986 /* ImportBatchFlowModifierRegressionTests.swift in Sources */,

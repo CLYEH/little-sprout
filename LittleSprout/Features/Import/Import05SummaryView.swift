@@ -216,42 +216,16 @@ struct Import05SummaryView: View {
                 }
             }
             if section.fillableCount > 0 {
-                fillBabiesButton(count: section.fillableCount)
+                // D5（Notes `x73Dy6`／`XG9yu`）：請求進行中整顆停用，版面不動（列與段落等結果
+                // 回來才更新，見 `MediaChildrenMarkingTracker.isRetryingMarking(in:)`）。
+                Import05FillBabiesButton(
+                    count: section.fillableCount, isInFlight: marker.isRetryingMarking(in: session.entryIDSet)
+                ) {
+                    marker.retryFailedMarking(in: session.entryIDSet)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    /// 「補上寶貝（N）」（`I8MyXS`／05b `xnOYi`）：`cmp/Button Text`（與 Failed Section 逐列「重試」
-    /// 同一元件：無底無框，icon 22＋$fs-body 600，$text-primary）——照片已經在時間軸上，這顆只補
-    /// 寶貝、位階低於動作帶的「重試失敗項」，所以放在內容區段落最後、不進動作帶（Notes `soWdb`）。
-    /// 只重送標記失敗且可重試的群，不重新上傳（見 `MediaChildrenMarkingTracker
-    /// .retryFailedMarking(in:)` 文件註解）。
-    private func fillBabiesButton(count: Int) -> some View {
-        // D5（Notes `x73Dy6`／`XG9yu`）：請求進行中整顆停用、icon 位置換 ProgressView、label 改
-        // 「正在補上寶貝…」，icon 與字 $text-secondary；版面不動（列與段落等結果回來才更新）。
-        let isInFlight = marker.isRetryingMarking(in: session.entryIDSet)
-        let presentation = Import05SummaryContent.fillBabiesButton(count: count, isInFlight: isInFlight)
-        return Button {
-            marker.retryFailedMarking(in: session.entryIDSet)
-        } label: {
-            HStack(spacing: AppSpacing.label) {
-                if isInFlight {
-                    ProgressView().controlSize(.small).tint(Color.lsTextSecondary).appIconFrame(.medium)
-                } else {
-                    Image(systemName: "arrow.clockwise").appIconFrame(.medium)
-                }
-                Text(presentation.title).appNumericFont(.body, weight: .semibold)
-                    .multilineTextAlignment(.leading)
-            }
-            .foregroundStyle(isInFlight ? Color.lsTextSecondary : Color.lsTextPrimary)
-            .padding(.vertical, AppSpacing.controlPaddingTap)
-            .padding(.horizontal, AppSpacing.tight)
-            .frame(minHeight: 48, alignment: .leading)
-            .contentShape([.interaction, .accessibility], Rectangle())
-        }
-        .buttonStyle(FillBabiesButtonStyle())
-        .disabled(presentation.isDisabled)
     }
 
     // MARK: - Action Bar
@@ -298,6 +272,43 @@ struct Import05SummaryView: View {
             .padding(.horizontal, AppSpacing.screenPad)
         }
         .background(Color.lsSurface)
+    }
+}
+
+/// 「補上寶貝（N）」（`I8MyXS`／05b `xnOYi`）：`cmp/Button Text`（與 Failed Section 逐列「重試」
+/// 同一元件：無底無框，icon 22＋$fs-body 600，$text-primary）——照片已經在時間軸上，這顆只補
+/// 寶貝、位階低於動作帶的「重試失敗項」，所以放在內容區段落最後、不進動作帶（Notes `soWdb`）。
+/// 只重送標記失敗且可重試的群，不重新上傳（見 `MediaChildrenMarkingTracker
+/// .retryFailedMarking(in:)` 文件註解）。獨立成型別讓 `Import05FillBabiesButtonContrastTests`
+/// 能直接渲染進行中態量對比。
+///
+/// D5（Notes `x73Dy6`／`XG9yu`）：進行中整顆停用、icon 位置換 ProgressView、label 改「正在補上
+/// 寶貝…」，icon 與字 $text-secondary。
+struct Import05FillBabiesButton: View {
+    let count: Int
+    let isInFlight: Bool
+    let action: () -> Void
+
+    var body: some View {
+        let presentation = Import05SummaryContent.fillBabiesButton(count: count, isInFlight: isInFlight)
+        Button(action: action) {
+            HStack(spacing: AppSpacing.label) {
+                if isInFlight {
+                    ProgressView().controlSize(.small).tint(Color.lsTextSecondary).appIconFrame(.medium)
+                } else {
+                    Image(systemName: "arrow.clockwise").appIconFrame(.medium)
+                }
+                Text(presentation.title).appNumericFont(.body, weight: .semibold)
+                    .multilineTextAlignment(.leading)
+            }
+            .foregroundStyle(isInFlight ? Color.lsTextSecondary : Color.lsTextPrimary)
+            .padding(.vertical, AppSpacing.controlPaddingTap)
+            .padding(.horizontal, AppSpacing.tight)
+            .frame(minHeight: 48, alignment: .leading)
+            .contentShape([.interaction, .accessibility], Rectangle())
+        }
+        .buttonStyle(FillBabiesButtonStyle())
+        .disabled(presentation.isDisabled)
     }
 }
 
