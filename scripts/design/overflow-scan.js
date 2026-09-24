@@ -55,9 +55,11 @@
 //      LS-280 VR R2–R6 六輪實測比帶完整 92 KB 正典腳本的 execute 穩定、不必分批重試）——把該檔全文送進
 //      `mcp__pencil__execute`，回收 `SNAP<n> [...]` 行（或其因 >7 萬字元自動落檔的內容），貼進同一份 dump 檔；
 //      再用 node 端 `node scripts/design/overflow-scan.js --from-snapshot <dump 檔> --tree-hash <16 碼 hex>
-//      --total-nodes <n> [--boards a,b,…] [--out receipt.json]` 讀 dump（支援 `SNAP<n>` 行格式與純 JSON 陣列）、
+//      --total-nodes <n> [--boards a,b,…] [--scan-scope document|boards] [--out receipt.json]` 讀 dump（支援 `SNAP<n>` 行格式與純 JSON 陣列）、
 //      跑**未修改的** `scanAll`＋六支＋`withResultHashes`，輸出與 `RESULT-JSON`／`--merge` 同形狀的收據（`scan_scope`
-//      依 `--boards` 有無；`scan_note` 自動填 `"snapshot mode，dump sha256=<…>"`）。**`--tree-hash`／`--total-nodes`
+//      預設依 `--boards` 有無；`--scan-scope document --boards …`（LS-361）＝全稿快照、corner_anchor／text_occlusion／board_clip
+//      的 in-scope 限 boards，等同 Pencil 端只設 SCAN_BOARDS 不設 SCAN_SCOPE，不必自寫 driver；`scan_note` 自動填
+//      `"snapshot mode，dump sha256=<…>"`）。**`--tree-hash`／`--total-nodes`
 //      必填**：dump 只是展開 instance 後的緊湊快照（12 個欄位），無法從中重算出與 `.pen` 原始未展開全樹相同的
 //      `tree_hash`／`total_nodes`（那需要全部節點的完整屬性）——另外用既有 `SCAN_HASH_ONLY` 走訪，或
 //      `scripts/gates/design_tree_hash.py` 對同一稿態（同一次落地、掃描前無寫入）離線算好再傳入（LS-280 R2／R3
@@ -1126,14 +1128,15 @@ function parseSnapshotDump(text) {
 // `scan_note` 自動填 `"snapshot mode，dump sha256=<dump 檔內容的 sha256>"`；`ticket`／`round`／`head_sha` 與 `--merge`
 // 一樣不填，由設計端照抄收據再補（design-evidence-check.sh 只驗 `scan_note` 非空字串，見該檔）。
 function cliFromSnapshot(argv, fs, stdout, stderr) {
-  const usage = "用法：node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash <16碼hex> --total-nodes <n> [--boards a,b,…] [--out <receipt.json>]";
-  let dumpPath = null, outPath = null, boardsArg = null, treeHash = null, totalNodesArg = null;
+  const usage = "用法：node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash <16碼hex> --total-nodes <n> [--boards a,b,…] [--scan-scope document|boards] [--out <receipt.json>]";
+  let dumpPath = null, outPath = null, boardsArg = null, treeHash = null, totalNodesArg = null, scopeArg = null;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--boards") { boardsArg = argv[++i]; if (boardsArg == null) { stderr("✗ --boards 缺值\n" + usage); return 2; } }
     else if (a === "--out") { outPath = argv[++i]; if (outPath == null) { stderr("✗ --out 缺值\n" + usage); return 2; } }
     else if (a === "--tree-hash") { treeHash = argv[++i]; if (treeHash == null) { stderr("✗ --tree-hash 缺值\n" + usage); return 2; } }
     else if (a === "--total-nodes") { totalNodesArg = argv[++i]; if (totalNodesArg == null) { stderr("✗ --total-nodes 缺值\n" + usage); return 2; } }
+    else if (a === "--scan-scope") { scopeArg = argv[++i]; if (scopeArg == null) { stderr("✗ --scan-scope 缺值\n" + usage); return 2; } }
     else if (dumpPath == null) { dumpPath = a; }
     else { stderr("✗ 未知參數 " + a + "\n" + usage); return 2; }
   }
@@ -1146,15 +1149,20 @@ function cliFromSnapshot(argv, fs, stdout, stderr) {
     stderr("✗ --total-nodes 須為非負整數（收到 " + JSON.stringify(totalNodesArg) + "）\n" + usage);
     return 2;
   }
+  if (scopeArg != null && !SCAN_SCOPES.includes(scopeArg)) {
+    stderr("✗ --scan-scope 只接受 " + SCAN_SCOPES.join("|") + "（收到 " + JSON.stringify(scopeArg) + "）\n" + usage);
+    return 2;
+  }
   let text;
   try { text = fs.readFileSync(dumpPath, "utf8"); } catch (e) { stderr("✗ 讀不到 dump「" + dumpPath + "」：" + (e && e.message ? e.message : e)); return 1; }
   let nodes;
   try { nodes = parseSnapshotDump(text); } catch (e) { stderr("✗ " + (e && e.message ? e.message : e)); return 1; }
   const boards = boardsArg ? boardsArg.split(",").map((s) => s.trim()).filter(Boolean) : [];
-  const scanScope = boards.length ? "boards" : "document";
+  // LS-361：預設沿現行（有 --boards 即 boards、否則 document）；`--scan-scope document --boards …` 把 boards 交給 scanAll 但不限縮快照
+  const scanScope = scopeArg != null ? scopeArg : (boards.length ? "boards" : "document");
   let out;
   try {
-    out = scanAll(nodes, scanScope === "boards" ? { boards, scanScope } : { scanScope });
+    out = scanAll(nodes, boards.length ? { boards, scanScope } : { scanScope });
   } catch (e) { stderr("✗ " + (e && e.message ? e.message : e)); return 1; }
   out.total_nodes = Number(totalNodesArg);
   out.tree_hash = treeHash;
@@ -1235,7 +1243,7 @@ function cliEmitHashSnippet(fs, stdout, stderr) {
 
 function cli(argv, fs, stdout, stderr) {
   const usage = "用法：node scripts/design/overflow-scan.js --merge <batch-1> … <batch-K> [--out <merged.json>]\n" +
-    "      node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash <16碼hex> --total-nodes <n> [--boards a,b,…] [--out <receipt.json>]\n" +
+    "      node scripts/design/overflow-scan.js --from-snapshot <dump> --tree-hash <16碼hex> --total-nodes <n> [--boards a,b,…] [--scan-scope document|boards] [--out <receipt.json>]\n" +
     "      node scripts/design/overflow-scan.js --emit-hash-snippet";
   if (argv[0] === "--from-snapshot") return cliFromSnapshot(argv.slice(1), fs, stdout, stderr);
   if (argv[0] === "--emit-hash-snippet") return cliEmitHashSnippet(fs, stdout, stderr);
