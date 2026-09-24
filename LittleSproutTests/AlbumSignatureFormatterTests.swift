@@ -39,12 +39,19 @@ final class AlbumSignatureFormatterTests: XCTestCase {
 
     // MARK: - segment
 
-    func test_segment_usesMiddleDotBetweenNameAndAge_withRegularSpace() {
+    func test_segment_breakableSpaceBeforeDot_nbspAfterDot() {
         let child = makeChild(name: "小安", yearsAgo: 2, monthsAgo: 3)
         let segment = AlbumSignatureFormatter.segment(for: child, asOf: now)
-        // 姓名與年齡之間的「 · 」刻意維持一般可斷空白（U+0020），不是 NBSP 包住的版本。
-        XCTAssertTrue(segment.hasPrefix("小安 · "), "應為「姓名 · 年齡」格式，實際：\(segment)")
+        // LS-365（LS-367 Notes `L0xP2` ①）：「·」前 U+0020（可斷，姓名後折行）、「·」後 U+00A0
+        // （不可斷，「·」領銜下一行）——改回 U+0020 會讓 AX3 折成「小安 ·」／「2 歲 3 個月」。
+        XCTAssertTrue(segment.hasPrefix("小安 ·\u{00A0}"), "應為「姓名 ·(NBSP)年齡」格式，實際：\(segment)")
+        XCTAssertFalse(segment.hasPrefix("小安\u{00A0}"), "「·」前必須是可斷空白，不能把姓名鎖進不可斷區塊")
         XCTAssertTrue(segment.contains("2\u{00A0}歲\u{00A0}3\u{00A0}個\u{2060}月"))
+    }
+
+    func test_hardenedAge_insertsWordJoinerBetween月大() {
+        // LS-365（LS-367 Notes `L0xP2` ②）：AX3 實測「小饅頭 · 8 個月」／「大」孤字。
+        XCTAssertEqual(AlbumSignatureFormatter.hardenedAge("8 個月大"), "8\u{00A0}個\u{2060}月\u{2060}大")
     }
 
     // MARK: - signatureText
@@ -58,7 +65,61 @@ final class AlbumSignatureFormatterTests: XCTestCase {
     func test_signatureText_singleChild_isNameDotAge() {
         let child = makeChild(name: "小安", yearsAgo: 2, monthsAgo: 3)
         let text = AlbumSignatureFormatter.signatureText(children: [child], asOf: now, isOneLinePerPerson: false)
-        XCTAssertTrue(text.hasPrefix("小安 · "))
+        XCTAssertTrue(text.hasPrefix("小安 ·\u{00A0}"), "實際：\(text)")
+    }
+
+    // MARK: - LS-365 三態逐字（照片卡署名，LS-367 Notes `L0xP2`；年齡以 ageDescription 實際輸出為準）
+
+    /// 逐字比對用 UTC 固定時區——`makeChild` 用裝置時區算生日，跨時區跑年齡可能差一個月；
+    /// 這組測試要釘住的是「逐字元」，不能讓時區漂移混進來。
+    private let utc = TimeZone(identifier: "UTC")!
+
+    private func makeUTCChild(name: String, birthday: String) -> Child {
+        let date = ISO8601DateFormatter().date(from: "\(birthday)T00:00:00Z")!
+        return Child(id: UUID(), name: name, birthday: date, avatarURL: nil, deletedAt: nil, createdAt: now)
+    }
+
+    func test_signatureText_exact_singleChild_yearsAndMonths() {
+        let child = makeUTCChild(name: "小安", birthday: "2024-06-05")
+        let text = AlbumSignatureFormatter.signatureText(
+            children: [child], asOf: now, isOneLinePerPerson: false, timeZone: utc
+        )
+        XCTAssertEqual(text, "小安 ·\u{00A0}2\u{00A0}歲\u{00A0}3\u{00A0}個\u{2060}月")
+    }
+
+    func test_signatureText_exact_threeChildren_allThreeAgeShapes_joinedByDunHao() {
+        // ageDescription 三種輸出形狀各一：整歲「N 歲」／「Y 歲 M 個月」／未滿一歲「N 個月大」。
+        let children = [
+            makeUTCChild(name: "陳彥廷", birthday: "2023-09-05"),
+            makeUTCChild(name: "小饅頭", birthday: "2025-01-05"),
+            makeUTCChild(name: "Emma Chen", birthday: "2026-01-05")
+        ]
+        let text = AlbumSignatureFormatter.signatureText(
+            children: children, asOf: now, isOneLinePerPerson: false, timeZone: utc
+        )
+        XCTAssertEqual(
+            text,
+            "陳彥廷 ·\u{00A0}3\u{00A0}歲"
+                + "、小饅頭 ·\u{00A0}1\u{00A0}歲\u{00A0}8\u{00A0}個\u{2060}月"
+                + "、Emma Chen ·\u{00A0}8\u{00A0}個\u{2060}月\u{2060}大"
+        )
+    }
+
+    func test_segment_exact_eachPerson_matchesSignatureParts() {
+        // 照片卡「一行一人」候選每人一個 Text（`PhotoCardSignature`），直接用 `segment`——
+        // 要跟串接版的每一段逐字相同，兩個候選才不會對同一個人印出不同字串。
+        let child = makeUTCChild(name: "Emma Chen", birthday: "2026-01-05")
+        XCTAssertEqual(
+            AlbumSignatureFormatter.segment(for: child, asOf: now, timeZone: utc),
+            "Emma Chen ·\u{00A0}8\u{00A0}個\u{2060}月\u{2060}大"
+        )
+    }
+
+    func test_signatureText_exact_zeroChildren_isSingleHalfWidthSpace() {
+        let text = AlbumSignatureFormatter.signatureText(
+            children: [], asOf: now, isOneLinePerPerson: false, timeZone: utc
+        )
+        XCTAssertEqual(text.unicodeScalars.map(\.value), [0x20], "未標記＝單一半形空白（U+0020），卡高不變")
     }
 
     func test_signatureText_multipleChildren_regularSize_joinedByDunHao() {
