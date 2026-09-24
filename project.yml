@@ -53,6 +53,13 @@ targets:
       - path: docs/legal/privacy-policy.md
         type: file
         buildPhase: resources
+      # LS-379：飲食圖鑑貼紙 274 張（384×384 RGBA PNG，約 43MB）——folder reference 整個資料夾原樣
+      # 進 bundle（bundle 內 `stickers/<food_id>.png`，`FoodStickerLoader` 讀），不另外複製一份進
+      # Assets.xcassets：`design/food-stickers/stickers/` 是裁切腳本的唯一輸出位置，兩份會漂移。
+      # 體積取捨見 LS-379 handoff「風險」段。
+      - path: design/food-stickers/stickers
+        type: folder
+        buildPhase: resources
     # LS-49：Debug/Release 共用同一份 xcconfig。Base.xcconfig 本身有安全佔位值，
     # 只在本機存在 Config/Secrets.xcconfig（gitignored）時才會被覆蓋成真實 Supabase 專案值
     # （見該檔內 #include? 說明）——CI 與新 clone 的機器不需要它就能 build/test。
