@@ -177600,7 +177600,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "baby",
+                              "icon": "person-standing",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -178317,7 +178317,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "baby",
+                              "icon": "person-standing",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -179034,7 +179034,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "baby",
+                              "icon": "person-standing",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -180589,7 +180589,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "baby",
+                              "icon": "person-standing",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -187474,7 +187474,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "統計卡（Stats Card）三列，數字契約：成功＋沒有成功＋沒有加入＝開始匯入時的總數（稿面 123＋2＋3＝128，沿 nU2Ka 的 128 故事線；05b 為 128 全部上傳成功）。\n①成功群 Success Group（L6zy2 內 l2nLL，gap $sp-label 8）＝成功統計 AHQE3＋寶貝未指定子列 D45LkN。寶貝沒有指定成功的照片已經上傳成功、算在成功數裡，所以做成成功統計底下的子列（左縮 40＝成功 icon 32＋$sp-label 8，對齊「已成功匯入」字首），不和「沒有成功」並列成第四類。R2（VR R1 MJ-1）：子列文字降為 $text-secondary（與「N 張沒有成功」同色，最不嚴重的事不再比照片遺失更醒目）；icon 改 lucide baby（$text-primary），與 danger 列的 circle-alert 在稿上就是不同 glyph——區分靠三件事：位置（左縮、掛在成功之下）＋icon 形狀＋文字，不靠顏色。文案「其中 N 張的寶貝沒有指定成功」。\n②沒有成功 I49Ido 不變（LS-251 已核可，本票未改）。\n③沒有加入 LbgZW：icon circle-minus＋$text-secondary；circle-minus 在 05 家族只代表「沒有加入」（R2 起 LS044 不再用它，見 MJ-2 處置）；文案拆兩個 text 節點「N 張沒有加入」／「格式不支援或讀取失敗」。\n三列 icon 都放在 Icon Line Box（高＝該板 $fs-note 單行行高：iPhone／iPad 25、AX3 58），列 alignItems:start；SwiftUI 用 HStack(alignment: .firstTextBaseline) 或 .top 讓 icon 對齊首行。",
+                  "content": "統計卡（Stats Card）三列，數字契約：成功＋沒有成功＋沒有加入＝開始匯入時的總數（稿面 123＋2＋3＝128，沿 nU2Ka 的 128 故事線；05b 為 128 全部上傳成功）。\n①成功群 Success Group（L6zy2 內 l2nLL，gap $sp-label 8）＝成功統計 AHQE3＋寶貝未指定子列 D45LkN。寶貝沒有指定成功的照片已經上傳成功、算在成功數裡，所以做成成功統計底下的子列（左縮 40＝成功 icon 32＋$sp-label 8，對齊「已成功匯入」字首），不和「沒有成功」並列成第四類。R2（VR R1 MJ-1）：子列文字降為 $text-secondary（與「N 張沒有成功」同色，最不嚴重的事不再比照片遺失更醒目）；icon 改 lucide person-standing（$text-primary；SF figure.child，與相簿詳情孩子 Pill（AlbumDetailView.swift）同符號；R3 由 lucide baby 改，VR R2 MJ-5：baby 是嬰兒臉、與 figure.child 形狀不同，且 Tab Bar 的嬰兒臉已於 09-03 被使用者以「長輩不易辨識」裁掉），與 danger 列的 circle-alert 在稿上就是不同 glyph——區分靠三件事：位置（左縮、掛在成功之下）＋icon 形狀＋文字，不靠顏色。文案「其中 N 張的寶貝沒有指定成功」。\n②沒有成功 I49Ido 不變（LS-251 已核可，本票未改）。\n③沒有加入 LbgZW：icon circle-minus＋$text-secondary；circle-minus 在 05 家族只代表「沒有加入」（R2 起 LS044 不再用它，見 MJ-2 處置）；文案拆兩個 text 節點「N 張沒有加入」／「格式不支援或讀取失敗」。\n三列 icon 都放在 Icon Line Box（高＝該板 $fs-note 單行行高：iPhone／iPad 25、AX3 58），列 alignItems:start；SwiftUI 用 HStack(alignment: .firstTextBaseline) 或 .top 讓 icon 對齊首行。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187579,7 +187579,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "LS044（寶貝已移除，不可重試）：05b ygMNL／AX3 X27Wc 畫同一批裡可重試與不可重試混合。統計子列 N 算全部（3）；Marking Notes（x4D0mD／AX3 LLHVy）一句一節點，依序：「照片都匯入了。」→「1 張的寶貝已經移除，沒辦法指定。」→「另外 2 張可以補上寶貝。」→「補上寶貝不會重新上傳照片。」→ 按鈕「補上寶貝（2）」（xnOYi／AX3 i5kq2d）只算可重試、放最後。R2 起 LS044 不再是獨立一列、不帶 icon（VR R1 MJ-2：circle-minus 只留給「沒有加入」，同一畫面可能同時出現兩者）。不承諾「之後再指定」（目前 app 沒有單張改寶貝的入口）；用語沿 app 既有「移除這個寶貝」／「已移除的寶貝」。全部都是 LS044 時：按鈕與「另外…可以補上」「補上寶貝不會…」兩句都不出現，Marking Notes 只剩「照片都匯入了。」／「選的寶貝已經移除，這 N 張沒辦法指定。」。",
+                  "content": "LS044（寶貝已移除，不可重試）：05b ygMNL／AX3 X27Wc 畫同一批裡可重試與不可重試混合。統計子列 N 算全部（3）；Marking Notes（x4D0mD／AX3 LLHVy，gap $sp-item 16）分兩組、一句一節點（R3，VR R2 MN-5）：「發生什麼」組 HN03Q／AX3 H1t8NP（gap $sp-label 8）＝「照片都匯入了。」→「1 張的寶貝已經移除，沒辦法指定。」；「怎麼辦」組 Q5ONgp／AX3 vtTST（gap 8）＝「另 2 張可以補上。」（R3 縮句，VR R2 MN-4：原「另外 2 張可以補上寶貝。」在 AX3 斷成「…補上／寶貝。」；縮句後 AX3 一行 345 寬內放得下，受詞由段落標題帶出）→「補上寶貝不會重新上傳照片。」→ 按鈕「補上寶貝（2）」（xnOYi／AX3 i5kq2d）只算可重試、放最後。R2 起 LS044 不再是獨立一列、不帶 icon（VR R1 MJ-2：circle-minus 只留給「沒有加入」，同一畫面可能同時出現兩者）。不承諾「之後再指定」（目前 app 沒有單張改寶貝的入口）；用語沿 app 既有「移除這個寶貝」／「已移除的寶貝」。全部都是 LS044 時：按鈕與「另外…可以補上」「補上寶貝不會…」兩句都不出現，Marking Notes 只剩「照片都匯入了。」／「選的寶貝已經移除，這 N 張沒辦法指定。」。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187649,7 +187649,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "與現行實作的差異（交 iOS 小票，Import05SummaryView.swift）：\nD1 寶貝指定失敗列：實作是統計卡第四列並列（exclamationmark.circle.fill＋lsDanger、「N 張寶貝標記未完成」）→ 稿：成功統計子列，左縮 40，icon figure.child（lsTextPrimary）＋文字 lsTextSecondary，「其中 N 張的寶貝沒有指定成功」。\nD2 沒有加入列：實作 exclamationmark.circle＋一行「N 張沒有加入（格式不支援或讀取失敗）」→ 稿：minus.circle＋兩個 Text「N 張沒有加入」／「格式不支援或讀取失敗」，icon 對首行。\nD3 補上寶貝鈕：實作在動作帶第三顆（lsAccentSoft 底＋lsControlLine 框、「重試標記（N）」）→ 稿：移到內容區 Marking Section 最後，Button Text 樣式，「補上寶貝（N）」（WJ 防斷）。\nD4 Marking Section（標題＋一句一行的說明＋LS044 說明句）實作沒有 → 新增；不可重試張數＝failedMarkingMediaCount − retryableFailedMarkingCount，不需要新 API。\nD5 in-flight：實作按下即從 failedGroups 移除（列瞬間消失、失敗再出現，違反十條之十）→ 稿：進行中 disable＋「正在補上寶貝…」，版面不動。\n一致、不需改：「重試失敗項（N）」N＝可重試數、N=0 隱藏；Body 底部 24；Nav「完成」鈕左距（R2 稿面補齊為 $screen-pad 24，實作 navRow 本來就是 .padding(.leading, AppSpacing.screenPad)）。\n範圍外、未補：04 匯入進度頁（Import04ProgressView）的「N 張沒有加入」列稿面仍沒有（本票票文只含 05），記 LS-354。",
+                  "content": "與現行實作的差異（交 iOS 小票，Import05SummaryView.swift）：\nD1 寶貝指定失敗列：實作是統計卡第四列並列（exclamationmark.circle.fill＋lsDanger、「N 張寶貝標記未完成」）→ 稿：成功統計子列，左縮 40，icon figure.child（lsTextPrimary；稿面 lucide person-standing，與相簿孩子 Pill 同符號）＋文字 lsTextSecondary，「其中 N 張的寶貝沒有指定成功」。\nD2 沒有加入列：實作 exclamationmark.circle＋一行「N 張沒有加入（格式不支援或讀取失敗）」→ 稿：minus.circle＋兩個 Text「N 張沒有加入」／「格式不支援或讀取失敗」，icon 對首行。\nD3 補上寶貝鈕：實作在動作帶第三顆（lsAccentSoft 底＋lsControlLine 框、「重試標記（N）」）→ 稿：移到內容區 Marking Section 最後，Button Text 樣式，「補上寶貝（N）」（WJ 防斷）。\nD4 Marking Section（標題＋一句一行的說明＋LS044 說明句）實作沒有 → 新增；不可重試張數＝failedMarkingMediaCount − retryableFailedMarkingCount，不需要新 API。\nD5 in-flight：實作按下即從 failedGroups 移除（列瞬間消失、失敗再出現，違反十條之十）→ 稿：進行中 disable＋「正在補上寶貝…」，版面不動。\n一致、不需改：「重試失敗項（N）」N＝可重試數、N=0 隱藏；Body 底部 24；Nav「完成」鈕左距（R2 稿面補齊為 $screen-pad 24，實作 navRow 本來就是 .padding(.leading, AppSpacing.screenPad)）。\n範圍外、未補：04 匯入進度頁（Import04ProgressView）的「N 張沒有加入」列稿面仍沒有（本票票文只含 05），記 LS-354。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187684,7 +187684,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "SF Symbol 對照（本票新增）：circle-minus → \"minus.circle\"（只用於「沒有加入」）｜baby（寶貝未指定子列）→ \"figure.child\"｜loader-circle（補上寶貝進行中）→ ProgressView()｜clock-3 → \"clock\"（稿面 icon 名由 clock 改 clock-3：本機 Pencil 的 lucide 集沒有 clock，渲染成問號占位；05 家族四顆主鈕 BMpPK／Fe3lC／dXuGC／H0sqI 已改，SF 仍是 \"clock\"。LS-142 16／16b 五處 clock 同病未動，記 LS-354）。R1 寫的「子列用 exclamationmark.circle、與 danger 的 .fill 以形狀區分」作廢——稿上兩者是同一個 lucide glyph，那句不成立（VR R1 MJ-1）。",
+                  "content": "SF Symbol 對照（本票新增）：circle-minus → \"minus.circle\"（只用於「沒有加入」）｜person-standing（寶貝未指定子列）→ \"figure.child\"（與相簿詳情孩子 Pill 同符號；R3 起，取代 R2 的 lucide baby）｜loader-circle（補上寶貝進行中）→ ProgressView()｜clock-3 → \"clock\"（稿面 icon 名由 clock 改 clock-3：本機 Pencil 的 lucide 集沒有 clock，渲染成問號占位；05 家族四顆主鈕 BMpPK／Fe3lC／dXuGC／H0sqI 已改，SF 仍是 \"clock\"。LS-142 16／16b 五處 clock 同病未動，記 LS-354）。R1 寫的「子列用 exclamationmark.circle、與 danger 的 .fill 以形狀區分」作廢——稿上兩者是同一個 lucide glyph，那句不成立（VR R1 MJ-1）。",
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -211459,7 +211459,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "baby",
+                              "icon": "person-standing",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -211516,55 +211516,75 @@
                   "name": "Marking Notes",
                   "width": "fill_container",
                   "layout": "vertical",
-                  "gap": "$sp-label",
+                  "gap": "$sp-item",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "tGy4Q",
-                      "name": "Marking Sentence 1",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
+                      "type": "frame",
+                      "id": "HN03Q",
+                      "name": "What Happened",
                       "width": "fill_container",
-                      "content": "照片都匯入了。",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "tGy4Q",
+                          "name": "Marking Sentence 1",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "照片都匯入了。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "W1xXKF",
+                          "name": "Marking Sentence 2",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "1 張的寶貝已經移除，沒辦法指定。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "W1xXKF",
-                      "name": "Marking Sentence 2",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
+                      "type": "frame",
+                      "id": "Q5ONgp",
+                      "name": "What To Do",
                       "width": "fill_container",
-                      "content": "1 張的寶貝已經移除，沒辦法指定。",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "XzpJ6",
-                      "name": "Marking Sentence 3",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "另外 2 張可以補上寶貝。",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "Y1bOkf",
-                      "name": "Marking Sentence 4",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "補上寶貝不會重新上傳照片。",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "XzpJ6",
+                          "name": "Marking Sentence 3",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "另 2 張可以補上。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Y1bOkf",
+                          "name": "Marking Sentence 4",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "補上寶貝不會重新上傳照片。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -211877,7 +211897,7 @@
                               "name": "Stat Icon",
                               "width": 18,
                               "height": 18,
-                              "icon": "baby",
+                              "icon": "person-standing",
                               "library": "lucide",
                               "fill": "$text-primary"
                             }
@@ -211934,55 +211954,75 @@
                   "name": "Marking Notes",
                   "width": "fill_container",
                   "layout": "vertical",
-                  "gap": "$sp-label",
+                  "gap": "$sp-item",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "FFRj8",
-                      "name": "Marking Sentence 1",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
+                      "type": "frame",
+                      "id": "H1t8NP",
+                      "name": "What Happened",
                       "width": "fill_container",
-                      "content": "照片都匯入了。",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "FFRj8",
+                          "name": "Marking Sentence 1",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "照片都匯入了。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "QzqQy",
+                          "name": "Marking Sentence 2",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "1 張的寶貝已經移除，沒辦法指定。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "QzqQy",
-                      "name": "Marking Sentence 2",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
+                      "type": "frame",
+                      "id": "vtTST",
+                      "name": "What To Do",
                       "width": "fill_container",
-                      "content": "1 張的寶貝已經移除，沒辦法指定。",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "VZqUz",
-                      "name": "Marking Sentence 3",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "另外 2 張可以補上寶貝。",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "text",
-                      "id": "X4nN7",
-                      "name": "Marking Sentence 4",
-                      "fill": "$text-primary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "補上寶貝不會重新上傳照片。",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-note",
-                      "fontWeight": "normal"
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "VZqUz",
+                          "name": "Marking Sentence 3",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "另 2 張可以補上。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "X4nN7",
+                          "name": "Marking Sentence 4",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "補上寶貝不會重新上傳照片。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 },
