@@ -15,7 +15,7 @@
 # LS-300（㉘，LS-96 池項 3aa46c78）：ios-dev 正文須含「實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選」、
 #   merge-reviewer 正文須含「對 handoff 勾選表抽兩列重放」——各自缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠；
 #   正文必含字樣總數 56→58。
-# LS-306 A2（㉙）：ios-dev 正文須含 push-gate.sh 開始前的進度句（含「逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取」）——
+# LS-306 A2（㉙；LS-358 起改釘「bash scripts/ops/push-gate-wait.sh --ticket LS-<n>」）：ios-dev 正文須含 push 前呼叫句——
 #   缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠；正文必含字樣總數 58→59。
 # LS-306 B1（㉚）：ui-designer／visual-reviewer 正文須含 `scripts/ops/ci-wait.sh`（同 ios-dev／qa／
 #   merge-reviewer 既有 CIWAIT 句）——各自缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠；
@@ -26,7 +26,7 @@
 # LS-327（㉜，LS-96 池項 dfff5ab3）：ui-designer／visual-reviewer 正文須含 instance 覆寫子節點的擷取限制句
 #   （Export／TakeScreenshot 子節點 id 會回元件預設值）——各自缺即紅、其餘句子齊全不救；同一 mutant 下
 #   負樣本變綠；正文必含字樣總數 67→69。
-# LS-333（㉝㉞，源自 LS-313 R2／R3、池項 f99a2749）：ios-dev 正文須含兩句——push-gate.sh 建快取的 push 前置動作、
+# LS-333（㉝㉞，源自 LS-313 R2／R3、池項 f99a2749；LS-358 起㉝改釘「--confirm 回 exit 0 才前景」）：ios-dev 正文須含兩句——快取命中才 push、
 #   判斷 push 成功不看背景通知 exit code——各自缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠；正文必含
 #   字樣總數 69→71。
 # LS-333（㉟㊱，池項 5ec3954d①，來源 LS-315 QA 實測）：qa 正文須含兩句陷阱原文（WDA 與 simctl launch 競態、
@@ -148,9 +148,9 @@ QA_BODY="${QA_BODY} ${CIWAIT}"
 # merge-reviewer 正文須含「對 handoff 勾選表抽兩列重放」（qa 不要求，不併進 QA_BODY）
 SCREENATTR='實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選。'
 REPLAYSCREENATTR='對 handoff 勾選表抽兩列重放。'
-# LS-306 A2：ios-dev 正文另須含 push-gate.sh 開始前的進度句（含「確認快取」提示，同句寫進
-# scripts/gates/push-gate.sh 的實際 echo）
-PUSHCACHE='push gate 同 tree 快取，unit tests 開始前印「→ push gate：unit tests 開始（<時間>，通常 5–12 分；逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取）」。'
+# LS-306 A2：ios-dev 正文另須含 push-gate.sh 開始前的進度句——LS-358 起改為 push 前的 push-gate-wait.sh 呼叫句
+# （進度句與它指示的手動流程已收進 scripts/ops/push-gate-wait.sh）
+PUSHCACHE='push 一律經 push-gate-wait.sh：push 前在票 worktree 跑 `bash scripts/ops/push-gate-wait.sh --ticket LS-<n>`，exit 3 就再呼叫同一條。'
 IOS_BODY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR} ${PUSHCACHE}"
 MR_BODY="${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${UBUNTU10} ${UITESTMUT} ${NOTIMEOUT} ${CIWAIT} ${REPLAYSCREENATTR}"
 # LS-306 B1：ui-designer／visual-reviewer 正文另須含 `scripts/ops/ci-wait.sh`（同 ios-dev／qa／
@@ -172,9 +172,9 @@ VR_BODY="${VR_BODY} ${LINEARFALLBACK}"
 SCREENSHOT_INSTANCE='instance 內覆寫的子節點不可直接 Export／TakeScreenshot 子節點 id（會回元件預設值）；一律整板截圖再依 Get 絕對座標裁切。'
 UI_BODY="${UI_BODY} ${SCREENSHOT_INSTANCE}"
 VR_BODY="${VR_BODY} ${SCREENSHOT_INSTANCE}"
-# LS-333（源自 LS-313 R2／R3，池項 f99a2749）：ios-dev 正文另須含兩句——push-gate.sh 建快取的 push 前置動作，
-# 與判斷 push 成功不看背景通知 exit code 的規約；併進 IOS_BODY
-SSHPUSHCACHE='先前景跑 push-gate.sh 建快取、快取命中後再 git push。'
+# LS-333（源自 LS-313 R2／R3，池項 f99a2749）：ios-dev 正文另須含兩句——快取命中才 push 的前置動作（LS-358 起為
+# push-gate-wait.sh --confirm 句），與判斷 push 成功不看背景通知 exit code 的規約；併進 IOS_BODY
+SSHPUSHCACHE='exit 0 後加 `--confirm`，--confirm 回 exit 0 才前景 `git push`。'
 PUSHVERIFY='判斷 push 是否成功一律以 `git log -1 origin/<branch>` 對照本機 HEAD，不看背景通知的 exit code。'
 IOS_BODY="${IOS_BODY} ${SSHPUSHCACHE} ${PUSHVERIFY}"
 # LS-352：ios-dev 正文另須含 handoff 自檢段標題（rubric 自檢，handoff-evidence-check.sh --require-selfcheck 機械驗）；併進 IOS_BODY
@@ -638,16 +638,16 @@ else
   echo "✗ ㉘ mutant（merge-reviewer 抽兩列重放句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
-# ---- ㉙ LS-306 A2（LS-357 改字樣）：ios-dev 正文須含 push-gate.sh 開始前的進度句（含「逾時被截斷先等本
-#      gate 跑完，再前景重跑 push-gate.sh 確認快取」——push-gate.sh 步驟 2 的實際 echo 同句）----
-reset; expect 0 '㉙ ios-dev 正文含 push-gate 進度句 → 印「正文含」（總數 77 條）' 'ios-dev.md：正文含「逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取」' '正文必含字樣 77 條）'
-reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR}"; expect 1 '㉙ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
+# ---- ㉙ LS-306 A2（LS-357 改字樣；LS-358 改釘 push-gate-wait.sh 呼叫句「bash scripts/ops/push-gate-wait.sh
+#      --ticket LS-<n>」——進度句的手動流程已收進腳本）----
+reset; expect 0 '㉙ ios-dev 正文含 push-gate-wait.sh 呼叫句 → 印「正文含」（總數 77 條）' 'ios-dev.md：正文含「bash scripts/ops/push-gate-wait.sh --ticket LS-<n>」' '正文必含字樣 77 條）'
+reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR}"; expect 1 '㉙ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「bash scripts/ops/push-gate-wait.sh --ticket LS-<n>」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! grep -qF '逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取' <<<"$out"; then
-  ok '㉙ mutant：拿掉規則後「ios-dev 缺 push-gate 進度句」的負樣本變綠'
+if [ "$got" -eq 0 ] && ! grep -qF 'bash scripts/ops/push-gate-wait.sh --ticket LS-<n>' <<<"$out"; then
+  ok '㉙ mutant：拿掉規則後「ios-dev 缺 push-gate-wait.sh 呼叫句」的負樣本變綠'
 else
-  echo "✗ ㉙ mutant（ios-dev push-gate 進度句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+  echo "✗ ㉙ mutant（ios-dev push-gate-wait.sh 呼叫句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 reset
 
@@ -725,24 +725,24 @@ else
 fi
 reset
 
-# ---- ㉝ LS-333（源自 LS-313 R2／R3，池項 f99a2749）：ios-dev 正文須含「先前景跑 push-gate.sh 建快取、快取命中後
-#      再 git push」——缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠 ----
-reset; expect 0 '㉝ ios-dev 正文含 push-gate 快取前置句 → 印「正文含」（總數 77 條）' 'ios-dev.md：正文含「先前景跑 push-gate.sh 建快取、快取命中後再 git push」' '正文必含字樣 77 條）'
+# ---- ㉝ LS-333（源自 LS-313 R2／R3，池項 f99a2749；LS-358 改釘「--confirm 回 exit 0 才前景」——快取命中確認後才
+#      git push）——缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠 ----
+reset; expect 0 '㉝ ios-dev 正文含 --confirm 快取確認句 → 印「正文含」（總數 77 條）' 'ios-dev.md：正文含「--confirm 回 exit 0 才前景」' '正文必含字樣 77 條）'
 IOS_MINUS_SSHPUSHCACHE="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR} ${PUSHCACHE} ${LINEARFALLBACK} ${PUSHVERIFY}"
-reset; mk ios-dev "$IOS_TOOLS" "$IOS_MINUS_SSHPUSHCACHE"; expect 1 '㉝ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「先前景跑 push-gate.sh 建快取、快取命中後再 git push」' '' 'ios-dev.md：正文缺「不看背景通知的 exit code」'
+reset; mk ios-dev "$IOS_TOOLS" "$IOS_MINUS_SSHPUSHCACHE"; expect 1 '㉝ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「--confirm 回 exit 0 才前景」' '' 'ios-dev.md：正文缺「不看背景通知的 exit code」'
 reset; mk ios-dev "$IOS_TOOLS" "$IOS_MINUS_SSHPUSHCACHE"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! grep -qF '先前景跑 push-gate.sh 建快取、快取命中後再 git push' <<<"$out"; then
-  ok '㉝ mutant：拿掉規則後「缺 push-gate 快取前置句」的負樣本變綠'
+if [ "$got" -eq 0 ] && ! grep -qF -- '--confirm 回 exit 0 才前景' <<<"$out"; then
+  ok '㉝ mutant：拿掉規則後「缺 --confirm 快取確認句」的負樣本變綠'
 else
-  echo "✗ ㉝ mutant（push-gate 快取前置句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+  echo "✗ ㉝ mutant（--confirm 快取確認句）應 exit 0 且不印該字樣（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 reset
 
 # ---- ㉞ LS-333：ios-dev 正文須含「不看背景通知的 exit code」——缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠 ----
 reset; expect 0 '㉞ ios-dev 正文含 push 成功判準句 → 印「正文含」（總數 77 條）' 'ios-dev.md：正文含「不看背景通知的 exit code」' '正文必含字樣 77 條）'
 IOS_MINUS_PUSHVERIFY="${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR} ${PUSHCACHE} ${LINEARFALLBACK} ${SSHPUSHCACHE}"
-reset; mk ios-dev "$IOS_TOOLS" "$IOS_MINUS_PUSHVERIFY"; expect 1 '㉞ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「不看背景通知的 exit code」' '' 'ios-dev.md：正文缺「先前景跑 push-gate.sh 建快取、快取命中後再 git push」'
+reset; mk ios-dev "$IOS_TOOLS" "$IOS_MINUS_PUSHVERIFY"; expect 1 '㉞ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「不看背景通知的 exit code」' '' 'ios-dev.md：正文缺「--confirm 回 exit 0 才前景」'
 reset; mk ios-dev "$IOS_TOOLS" "$IOS_MINUS_PUSHVERIFY"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && ! grep -qF '不看背景通知的 exit code' <<<"$out"; then
