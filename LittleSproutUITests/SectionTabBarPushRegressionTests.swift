@@ -79,4 +79,63 @@ final class SectionTabBarPushRegressionTests: XCTestCase {
             XCTAssertFalse(exists, message, file: file, line: line)
         }
     }
+
+    // MARK: - LS-344 R2（merge-review R1 m1）：子頁返回鈕文字必須沿用 tab 名稱
+    //
+    // `RootView.SectionContentView.content` 的 `.navigationTitle(section.title)` 現在沒有任何
+    // 機械斷言覆蓋（LS-344 拿掉了舊版靠 `app.navigationBars[name]` 順便驗到它的斷言，改成
+    // 自畫標題計數——見 `SectionTabBarTests.swift` 型別文件註解）。這行不只是「系統 large
+    // title」，還是子頁返回鈕文字的唯一來源：拿掉它，子頁整條系統 nav bar（含返回鈕）會消失
+    // （`FamilyMembersView`／`ProfileEditView` 自己都沒有另外設 `.navigationTitle`）。這兩條
+    // 測試各自從設定分頁 push 進一個真實子頁，斷言 `app.navigationBars.buttons["BackButton"]`
+    // 的 `label` 逐字等於「設定」——同 `SettingsViewIPadTests` 既有的 `"BackButton"` identifier
+    // 查詢慣例（label 沿用上一頁 `.navigationTitle`，實測值）。
+    //
+    // merge-review R1 m1 原本建議第二條用「相簿→相簿詳情」，本輪實測（見 PR 討論）
+    // `AlbumDetailView` 整支畫面自畫導覽（`.navigationBarBackButtonHidden(true)`＋
+    // `.toolbar(.hidden, for: .navigationBar)`，該檔既有文件註解），push 進去後系統 nav bar
+    // 整條連 chrome 都不存在——`app.navigationBars.buttons["BackButton"]` 直接查無此元素
+    // （`Failed to get matching snapshot: No matches found for Descendants matching type
+    // NavigationBar`），不是「label 錯」而是「根本沒有可斷言的系統返回鈕」，測不出 m1 要鎖的
+    // 那個機制（`AlbumDetailView` 不依賴祖先 `.navigationTitle` 供應返回鈕，它自己畫）。改用
+    // 「設定→個人資料」（`ProfileEditView`，走 `QAAccessibilityID.settingsProfileRow`
+    // identifier，同一顆 row 也沒有另外設 `.navigationTitle`，符合 m1 要驗的機制）取代，兩條
+    // 測試合起來仍驗到「同一 tab 根頁的兩個不同子頁」都靠 `RootView` 那行供應返回鈕文字。
+
+    func testSettingsToFamilyMembersBackButtonLabelIsSettings() {
+        let app = TapTargetMeasurement.launch(.sectionTabView)
+        TapTargetMeasurement.assertScreenRendered(.sectionTabView, in: app)
+        app.buttons["設定"].tap()
+        // `SettingsRowView` 的 label／value（「家庭成員」／「N 位」）合併成一顆 button 的
+        // accessibilityLabel，不是逐字「家庭成員」——用 CONTAINS 才對得到（同 `AlbumsView`
+        // 卡片 `.accessibilityElement(children: .combine)` 的既有理由）。
+        let familyMembersRow = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@", "家庭成員")
+        ).firstMatch
+        XCTAssertTrue(familyMembersRow.waitForExistence(timeout: 5), "設定頁「家庭」區應有「家庭成員」列")
+        familyMembersRow.tap()
+        let backButton = app.navigationBars.buttons["BackButton"]
+        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "push 進「家庭成員」後應該有系統返回鈕")
+        XCTAssertEqual(
+            backButton.label, "設定",
+            "返回鈕文字應沿用 RootView.SectionContentView.content 的 .navigationTitle(section.title)＝「設定」" +
+            "——拿掉那行的話，FamilyMembersView 自己沒有 .navigationTitle，整條 nav bar 會消失"
+        )
+    }
+
+    func testSettingsToProfileEditBackButtonLabelIsSettings() {
+        let app = TapTargetMeasurement.launch(.sectionTabView)
+        TapTargetMeasurement.assertScreenRendered(.sectionTabView, in: app)
+        app.buttons["設定"].tap()
+        let profileRow = app.buttons[QAAccessibilityID.settingsProfileRow]
+        XCTAssertTrue(profileRow.waitForExistence(timeout: 5), "設定頁「個人」區應有可點擊的個人資料列")
+        profileRow.tap()
+        let backButton = app.navigationBars.buttons["BackButton"]
+        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "push 進「個人資料」後應該有系統返回鈕")
+        XCTAssertEqual(
+            backButton.label, "設定",
+            "返回鈕文字應沿用 RootView.SectionContentView.content 的 .navigationTitle(section.title)＝「設定」" +
+            "——拿掉那行的話，ProfileEditView 自己沒有 .navigationTitle，整條 nav bar 會消失"
+        )
+    }
 }

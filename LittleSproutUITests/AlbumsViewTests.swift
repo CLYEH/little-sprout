@@ -5,9 +5,9 @@ import XCTest
 /// `TapTargetGateScreenName.swift`）——`familyStore` 帶一個測試家庭、`albumsStore` 空狀態，
 /// 讓「新增相簿」sheet 能真的點開（見該 host 文件註解）。
 ///
-/// entry-conditions.md ⑬（tab-root 首屏系統導覽列標題）已由 `SectionTabBarTests.
-/// testAlbumsRootShowsAlbumsHeading` 覆蓋，這裡不重複；本檔專注在票文要求的「畫面存在」與
-/// 「空狀態 → 新增相簿」互動路徑。
+/// entry-conditions.md ⑬（tab-root 首屏標題唯一存在）已由 `SectionTabBarTests.
+/// testAlbumsRootShowsAlbumsHeadingExactlyOnce` 覆蓋（LS-344），這裡不重複；本檔專注在票文
+/// 要求的「畫面存在」與「空狀態 → 新增相簿」互動路徑。
 @MainActor
 final class AlbumsViewTests: XCTestCase {
     func testTabRootShowsHeaderAndEmptyState() {

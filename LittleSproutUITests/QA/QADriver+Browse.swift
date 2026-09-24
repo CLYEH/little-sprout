@@ -95,7 +95,7 @@ extension QADriver {
         app.navigationBars.buttons.firstMatch.tap()
         try require(timelineHeading, "返回時間軸", timeout: 15)
         try require(app.buttons["相簿"], "Tab Bar「相簿」").tap()
-        try require(app.navigationBars["相簿"], "相簿頁", timeout: 15)
+        try require(albumsHeading, "相簿頁", timeout: 15)
         snap("albums")
         try require(app.buttons["時間軸"], "Tab Bar「時間軸」").tap()
         try require(timelineHeading, "回到時間軸", timeout: 15)

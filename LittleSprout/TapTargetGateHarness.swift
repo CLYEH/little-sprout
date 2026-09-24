@@ -68,6 +68,8 @@ enum TapTargetGateHarness {
             albumDetailStressHost
         case .sectionTabView:
             sectionTabViewHost
+        case .sectionSplitView:
+            sectionSplitViewHost
         case .sectionTabViewWithDiary:
             sectionTabViewWithDiaryHost
         case .diaryCardVideoBadges:
@@ -271,6 +273,31 @@ enum TapTargetGateHarness {
             pushNotificationStore: .preview()
         )
         .environment(\.horizontalSizeClass, .compact)
+    }
+
+    /// LS-344 R2（merge-review R1 M1 回歸測試用）：同 `sectionTabViewHost`，但強制
+    /// `.environment(\.horizontalSizeClass, .regular)`——走 `RootView.SectionSplitView`
+    /// （iPad 兩欄，sidebar＋detail）而非 `SectionTabView`。既有的 `.settingsRegular`
+    /// （`TapTargetGateHarness+Settings.swift`）繞過 `AuthenticatedRootView`、直接掛
+    /// `SettingsView.regularBody`，不會經過 `SectionSplitView` 那層，測不出 M1 要鎖的
+    /// 「detail 欄收起側邊欄後找不到路回其他分頁」——這支才是真的走生產路徑的 regular 版本。
+    @MainActor
+    @ViewBuilder
+    private static var sectionSplitViewHost: some View {
+        AuthenticatedRootView(
+            authStore: .preview(),
+            familyStore: .preview(withFamily: Family(
+                id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
+            )),
+            childrenStore: .preview(), timelineStore: .preview(), albumsStore: .preview(),
+            eulaStore: .preview(shouldPresent: false),
+            diaryAPIClient: PreviewDiaryAPIClient(), growthAPIClient: PreviewGrowthAPIClient(),
+            mediaUploadService: PreviewMediaUploadService(),
+            accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
+            safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
+            pushNotificationStore: .preview()
+        )
+        .environment(\.horizontalSizeClass, .regular)
     }
 
     /// merge-review R1 M1 回歸測試用：同 `sectionTabViewHost`，但 `timelineStore` 額外

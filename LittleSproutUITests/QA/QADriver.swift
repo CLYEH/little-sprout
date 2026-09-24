@@ -124,6 +124,9 @@ final class QADriver {
     var welcomeEmailButton: XCUIElement { app.buttons["使用 Email 登入"] }
     /// `TimelineView.headerRow` 自畫的標題（系統 nav bar 在時間軸被隱藏），同 `SectionTabBarTests` 用法。
     var timelineHeading: XCUIElement { app.staticTexts["時間軸"].firstMatch }
+    /// LS-344：`AlbumsView.titleText` 自畫的標題——系統 nav bar 隱藏後同 `timelineHeading` 用法
+    /// （原本斷言 `app.navigationBars["相簿"]`，隨 LS-344 隱藏系統 nav bar 一併改掉）。
+    var albumsHeading: XCUIElement { app.staticTexts["相簿"].firstMatch }
     var forkCreateFamilyRow: XCUIElement { app.buttons["我要自己建立家庭"] }
     var forkGreeting: XCUIElement {
         app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "歡迎，")).firstMatch

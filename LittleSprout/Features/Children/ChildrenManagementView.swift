@@ -36,6 +36,15 @@ struct ChildrenManagementView: View {
 
     // MARK: - Compact (iPhone)
 
+    /// LS-344：`headerSection` 自畫「寶貝」標題，跟 `SectionContentView.content` 既有的
+    /// `.navigationTitle(section.title)` 疊出兩個「寶貝」（實機 iPhone 12 Pro／iOS 26.5.2 與
+    /// 模擬器 iOS 26.5 皆可重現）。改成跟 `TimelineView`／`AlbumsView` 同一種寫法：隱藏系統
+    /// nav bar，`headerSection` 的 Text 補 `.accessibilityAddTraits(.isHeader)`（見下）取代
+    /// 系統 large title 供應 entry-conditions.md ⑬ 的非手勢替代路徑。只套在 compact——regular
+    /// （iPad）走的是內層 `NavigationSplitView`（`sidebarContent` 自己的 `.navigationTitle`），
+    /// 疊在外層既有 `NavigationStack`／`NavigationSplitView` 之上已知行為複雜（見
+    /// `regularLayout` 文件註解），本票只驗證了實機回報的 compact 這條路徑，iPad 是否同病記入
+    /// handoff「未完成」，不在本票盲改。
     private var compactLayout: some View {
         ScrollableFillView {
             VStack(alignment: .leading, spacing: 0) {
@@ -56,6 +65,8 @@ struct ChildrenManagementView: View {
             .padding(.top, AppSpacing.item)
         }
         .appBackground()
+        // LS-344：見上方 `compactLayout` 文件註解。
+        .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(for: ChildrenRoute.self) { route in
             switch route {
             case .create:
@@ -73,6 +84,9 @@ struct ChildrenManagementView: View {
             Text("寶貝")
                 .appFont(.display, weight: .bold)
                 .foregroundStyle(Color.lsTextPrimary)
+                // LS-344：系統 nav bar 隱藏後，這顆自畫標題是唯一的 heading 訊號來源——同
+                // `TimelineView`／`AlbumsView` 既有理由，補 heading trait 保留 VoiceOver 語意。
+                .accessibilityAddTraits(.isHeader)
             Text(subtitleText)
                 .appFont(.body)
                 .foregroundStyle(Color.lsTextSecondary)

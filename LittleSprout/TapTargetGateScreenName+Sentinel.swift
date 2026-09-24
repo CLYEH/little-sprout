@@ -45,6 +45,9 @@ extension TapTargetGateScreenName {
         // 預設選中分頁＝時間軸（`AuthenticatedRootView` 的 `selection` 初值），headerRow
         // 「時間軸」一定會渲染，不依賴任何 seed 資料。
         case .sectionTabView: return .staticText("時間軸")
+        // sidebar 的「時間軸」row 與 detail 預設內容的自畫標題皆為「時間軸」，`.firstMatch` 隨便
+        // 取到一個即可確認渲染成功。
+        case .sectionSplitView: return .staticText("時間軸")
         // 同 `.sectionTabView`：headerRow「時間軸」不受 seed 資料影響，一定會渲染。
         case .sectionTabViewWithDiary: return .staticText("時間軸")
         case .diaryCardVideoBadges: return .staticText("影片 12:34")
