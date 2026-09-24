@@ -30591,6 +30591,392 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "OVW5X",
+          "name": "N LS-296 沿革",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            10,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "bYm6S",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-296 沿革（元件預設示範照換 LS-247 家族）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "zRZb5",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "HBXN5",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 盤點",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "V741va",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【範圍 1 盤點（換圖前稿態，LS-296 R1）】以 python 直接解析 design/littlesprout.pen 明文 JSON 產生、非手寫：逐一走訪 ref 實例，槽位判定 override＝實例 descendants[槽位] 帶 fill；inherit＝未帶、跟元件預設走；隱藏＝槽位或其元件內祖先 enabled 最終為 false（實例覆寫優先）或實例自身／板內祖先 enabled:false。無任何實例以 children 整段替換這六個槽位的祖先。六個預設槽位共 148 筆實例×槽位：\n・cmp/Card Diary（qtCd7）Photo A SBo3L：換前預設＝unsplash photo-1775830979860-f07146977e31；實例 24＝已 override 2／未 override 可見 0／未 override 隱藏 22\n・cmp/Card Diary（qtCd7）Photo B h9c6d：換前預設＝unsplash photo-1756277790825-4e1f6453bbd6；實例 24＝已 override 2／未 override 可見 0／未 override 隱藏 22\n・cmp/Card Diary（qtCd7）Thumb C ekqx4：換前預設＝unsplash photo-1761208663281-619e6532aff3；實例 24＝已 override 2／未 override 可見 0／未 override 隱藏 22\n・cmp/Card Album（bhroo）Photo Wrap s8eO3j：換前預設＝unsplash photo-1560785496-3c9d27877182；實例 34＝已 override 27／未 override 可見 7／未 override 隱藏 0\n・cmp/Card Photo（umJHD）Photo Wrap bjq5n：換前預設＝unsplash photo-1638339972126-fbf92a92dd74；實例 11＝已 override 5／未 override 可見 6／未 override 隱藏 0\n・cmp/Profile Print（OePXK）Photo MN0WF：換前預設＝unsplash photo-1552611324-6a146aea5f04；實例 31＝已 override 0／未 override 可見 31／未 override 隱藏 0",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HF7UG",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "YP9dO",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 盤點",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "YbXdb",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【R1 換圖前快照；R2 變更見 qJUp0，R3 變更見 sErBN 與「LS-296 R3 · 裁切」條——本段不是現況】【未 override 且可見的實例（換預設後跟著變）】A33la：k1phed（Card Photo）、Z9Xuy（Card Album）；FiBvh：R0UbU（Profile Print）、J9qWt（Profile Print）、PEdSZ（Profile Print）、J2VEkA（Profile Print）；GZ3pb：bsbDd（Profile Print）、A6eWx（Profile Print）、E1O3h（Profile Print）、b5aNE（Profile Print）；Rx5mP：vgbkF（Profile Print）；SHbqU：NZCev（Profile Print）、r9GgFS（Profile Print）、arKGn（Profile Print）、TRHtx（Profile Print）；TnxXE：N6CYtr（Profile Print）；Tr8Kd：q3tlmR（Card Photo）；V4Ktak：ngQDX（Card Photo）、bOKfx（Card Album）；a67Na：pqE2P（Card Photo）、zfSO1（Card Album）；aGkJ1：hO6Sr（Card Photo）、jGudh（Card Album）；dHSyh：l3ekZq（Profile Print）；e1cOqx：VXdf0（Card Album）；f10d1D：V2uFs（Profile Print）、DmAlI（Profile Print）、q5ndkJ（Profile Print）、O2U5BN（Profile Print）；lKoZG：NBUy0（Card Photo）、uvL4p（Card Album）；t5wI4：lE7FJ（Profile Print）；wY7f8：vlX7W（Profile Print）、BJPDT（Profile Print）、Tv1Hv（Profile Print）、c6fBj1（Profile Print）；y66AzT：qDB1i（Profile Print）；y7KAW：FW1X8（Profile Print）；yXSht：MYxf1（Card Album）；z20bG：hbUOc（Profile Print）、RQh9Z（Profile Print）、y4mVT5（Profile Print）、sgQ6k（Profile Print）；z9tytH：nGPjb（Profile Print）。App Store 11 板（c2yk3s／y9r9Fq／Bm7Lx／ZRyXL／Q9Zw3f／Vn4TL／mWZy3／BnjqP／b59DUk／ak7RI／H73kPC）內沒有任何未 override 實例，本票不動。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "b3q7Kd",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "AXIOh",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 盤點",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "QfFcr",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【R1 換圖前快照；R2 變更見 qJUp0，R3 變更見 sErBN 與「LS-296 R3 · 裁切」條——本段不是現況】【未 override 但不可見的實例】皆為 cmp/Card Diary——元件預設 Photos Row lEgJp 為 enabled:false，以下實例沒有開啟，三個縮圖槽 SBo3L／h9c6d／ekqx4 不渲染：A33la：P47Wf、lZacZ；HLXo3：kmbyt、wZOV3；IgqGF：A0dNY、TEX4L；Qzz3r：mecrt、u85mDn；Tr8Kd：LL4lr；V4Ktak：FIeHM、o3QzV；VZ0wV：C0Iq53、To3Z8；a67Na：rGi9s；aGkJ1：mEgPV、xNqOC；e1cOqx：cgAuy；go7f9：ARVAU、rsoPm；lKoZG：MiQyy、gw8vW；yXSht：c2pJ7R。開啟 Photos Row 的 2 個 Card Diary 實例三槽皆已 override（LS-280 海報來源），本票不動。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XXqV9",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oFIZf",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R1 · 盤點",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "P9sp8",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【已 override fill 的實例（本票不動）】cmp/Card Photo 5 個；cmp/Card Diary 2 個；cmp/Card Album 27 個；逐筆清單以同一支盤點腳本重跑即得。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IvWJA",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "q6q7ik",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R2 · 換圖",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "dV0I5",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【範圍 2 換圖（R1 建立、R2 改寫）】素材只取 LS-247 三張定稿（design/appstore-photos/hero.jpg／invite.jpg／join.jpg）的裁切，不新生圖；元件定義節點以 Update 改 fill，id 不變。\n・cmp/Card Diary（qtCd7）SBo3L→appstore-photos/demo-hero-portrait.jpg、h9c6d→demo-grid-invite.jpg、ekqx4→demo-grid-join.jpg：三家族各一張，沿用 LS-280 使用者已核可的 WitwS 組合（既有檔）。元件預設 Photos Row lEgJp 仍為 enabled:false。【圖文配對規則（R2，VR MN-2）】預設本文 p2odx「溜滑梯…挖沙工具」只配「照片列關閉」；任何實例開啟照片列時，本文一律 override 成 WitwS/p2odx 原文「今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。」（LS-280 核可），圖與字同時出現或同時不出現。SwiftUI #Preview 照此配對。\n・cmp/Card Album（bhroo）s8eO3j→appstore-photos/demo-album-cover.jpg（R2 改用既有檔，與 LS-280 核可的 eBgN8 同一本相簿同一封面；R1 新裁的 demo-album-newborn.jpg 已刪）；預設 caption MIxHp「弟弟出生的第一週 · 8 張相片」，署名 wQVzs「小安 · 2 歲 3 個月」不變。\n・cmp/Card Photo（umJHD）bjq5n→appstore-photos/demo-timeline-v2.jpg；預設 caption VywUw「小安摸阿嬤的臉 · 2 歲 3 個月」。Stress Tr8Kd 的 q3tlmR/VywUw 長文改成同長度廚房情境，「·」以 NBSP 黏住年齡片語、換行時領銜下一行（LS-201）。\n・cmp/Profile Print（OePXK）MN0WF 預設→appstore-photos/demo-profile-grandma.jpg（hero.jpg (380,0,1080,700)→512²）＝使用者本人陳美玲（設定頁、留言輸入列）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "D2R2b",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "G531kl",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R2 · 名單",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "qJUp0",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【R2 多人名單頭像與對照板（VR R1 MJ-1／MJ-2）】\n・頭像依人分配（實例 override <實例>/MN0WF fill，預設仍是阿嬤）：陳志明＝爸爸 demo-profile-dad.jpg（R3 改裁 join.jpg (600,90,1030,520)→512²；R2 原裁 (613,40,1053,480) 下巴被切，見「LS-296 R3 · 裁切」條）；林美玲＝媽媽 demo-profile-mom.jpg（join.jpg (980,90,1460,570)→512²）；王大明＝阿公 demo-profile-grandpa.jpg（invite.jpg (860,60,1580,780)→512²）；小安＝既有 demo-hero-toddler.jpg。逐板實例：GZ3pb 按讚名單 bsbDd 陳志明、A6eWx 林美玲、E1O3h 王大明、b5aNE 小安；FiBvh 留言 R0UbU 陳志明、J9qWt 林美玲、PEdSZ 陳志明；f10d1D 留言 V2uFs 陳志明、DmAlI 林美玲、q5ndkJ 陳志明；SHbqU 留言 NZCev 陳志明、r9GgFS 林美玲、arKGn 陳志明；wY7f8 留言 vlX7W 陳志明、BJPDT 林美玲、Tv1Hv 陳志明。各板輸入列（J2VEkA、O2U5BN、TRHtx、c6fBj1）與 dHSyh、TnxXE 的輸入列維持預設阿嬤（＝使用者本人）。z20bG 依 VR INF-3 不動。\n・日記卡對照板對齊 WitwS：o3QzV（V4Ktak 深色）、MiQyy（lKoZG AX3）、xNqOC（aGkJ1 AX3）開照片列 lEgJp、疊紙 uZ5Lt／kVUWa、「還有 N 張」遮罩 GCEdk，本文 p2odx 覆寫為 WitwS 原文，三張縮圖吃元件預設（與 WitwS 同三張）；rsoPm（go7f9 iPad）本文原已相同，只補開上述四項。上方盤點段列在「不可見」的這四個實例，R2 起已可見。\n・AX3 規則：【R3 取代】R2 寫的「AX3 顯示 +N」沒有實作觸發條件，已改為「LS-296 R3 · 計數」條（sErBN）的統一判準：放得下長形「還有 N 張」、放不下才退「+N」；MiQyy／xNqOC 的「+2」是該判準在 AX3 96 寬縮圖上的結果。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "em4YP",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "EKCbU",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R3 · 計數",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "sErBN",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【縮圖張數疊字統一規則（VR R2 MJ-1；取代本票 R2 的「AX3 顯示 +N」與 Import 實作註記 iSOb3／R5OnW 的「縮圖疊字 +N 一律 $fs-imprint 12」）】適用：cmp/Card Diary 第三格暗蓋上的 More Count（CQpms）與 Import 縮圖列的 More Cell「+N」（例 m7ZCDg 的 ymHpc），兩者是同一條規則，只差底（75% 暗蓋／$surface-2 紙面）。\n・字級 $fs-note 17、粗體、隨 Dynamic Type 放大；不用 $fs-imprint——「還有幾張」是要讀的資訊（skill 十條第 6 條：寫著數量的字 ≥17），不是印在紙上的廠牌字。\n・長短形由可用寬度決定，不看字級名稱：SwiftUI ViewThatFits(in: .horizontal) { Text(\"還有 N 張\")；Text(\"+N\") }——放得下長形就顯示長形，放不下才退回短形「+N」；短形仍放不下（64pt 格遇 AX3 多位數）時加 .lineLimit(1).minimumScaleFactor(0.5) 收進格內，不裁字、不溢出。\n・稿面對照：96 寬縮圖在預設字級顯示長形「還有 2 張」（實測寬 69，WitwS）；AX3 40pt 長形寬 162 放不下，退短形「+2」（寬 48，MiQyy／xNqOC）；AX1／AX2 依實測寬度自然落在其中一形，不另訂字級門檻。\n・VoiceOver：兩形的 accessibilityLabel 一律「還有 N 張」。\n・Import 各板稿面現畫的 12pt「+N」是 LS-307 定案當時的畫法，本票未重畫；實作以本條為準，Import 稿面回填交下一張觸及 Import 的票（已記 LS-354）。寶貝 chip 頭像姓名縮寫字不在本條範圍，仍依 R5OnW 用 $fs-imprint 12。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hpryU",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "acYuE",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R3 · 裁切",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "HQ5dd",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【go7f9 捲動內容裁切（R2 於 3dead38 落地，R3 補記，比照 lyu44）】裁切者是 go7f9 的 Content Pane uHmFx（clip:true）。R2 開啟 rsoPm 照片列後日記卡長高，Content Grid 尾端的「載入更多回憶中…」（Cxot5）在捲動模擬中落在可見區外——與 iPhone 時間軸 5 板在 Body 上 clip 同一標準（lyu44），屬捲動模擬，不是內容被吃掉。板高不動（維持 iPad 11 吋裝置尺寸）；實作是 ScrollView 的自然裁切，不需額外處理。\n・爸爸頭像（VR R2 MN-1）：demo-profile-dad.jpg 改裁 join.jpg (600,90,1030,520)→512²，整張臉含下巴與笑容置中。VR 建議框 (600,120,1040,560) 多含深色毛衣，檔案層 ΔE00 對 join 10.15、超過門檻 10，故上移 30、收窄 10；新框檔案層 ΔE00 invite 9.76／join 9.64，GZ3pb 渲染值 join 9.12。檔名不變，9 個爸爸實例（bsbDd、R0UbU、PEdSZ、V2uFs、q5ndkJ、NZCev、arKGn、vlX7W、Tv1Hv）fill 不需改。阿公 demo-profile-grandpa.jpg 依 VR 判定保留。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FaYc6",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TjSUM",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R2 · 量測",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "crCiD",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【色溫驗收量測（R1 建立、R2 補）】ΔE00 判準依 orchestrator 裁定＝LS-280 R2 全圖均值（票文「四角」為誤寫）。方法：整板 Export，依 Get(resolveInstances) 絕對座標裁出照片、與 clip:true 祖先求交集確認真的渲染；sRGB→CIELAB(D65)→CIEDE2000，對 hero／invite／join 三張定稿全圖均值取最接近者。\n・元件預設：Card Photo 對 hero 2.66；Card Album（demo-album-cover）對 join 1.01；Profile Print 阿嬤檔案層對 join 2.67（渲染後對 hero 8.71–9.06）；Card Diary 三張為 LS-280 既有裁切（VR 量 1.79／3.41／3.54）。\n・R2 新頭像（27–30pt 渲染後）：爸爸 7.74–9.22（最近 invite／join）、媽媽 7.31–7.97、阿公 1.69（join）、小安 3.95（hero），全數 ≤10。逐筆數字存 .claude/evidence/LS-296/r1/LS-296-r1-de00.json 與 r2/LS-296-r2-avatar-de00.json（gitignored）。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "o27VW",
+              "name": "i",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jt3WT",
+                  "name": "stamp",
+                  "fill": "#8E2447",
+                  "textGrowth": "fixed-width",
+                  "width": 118,
+                  "content": "LS-296 R2 · 未決",
+                  "lineHeight": 1.42,
+                  "textAlign": "right",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "o7QIMo",
+                  "name": "l",
+                  "fill": "#2B141C",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "【已知殘留與未決（R1 建立、R2 改寫）】①z20bG（僅供海報合成）頭像是預設阿嬤，與海報槽位圖 comments-iphone-v3.jpg 不同步；依 VR INF-3 交 LS-280 後續重生海報時一併處理，本票不動。②go7f9 是 App Store iPad 01 海報槽位圖 timeline-ipad.jpg 的來源板；R2 讓 rsoPm 照片列開啟後，來源板與既有扁平槽位圖也不同步，同樣交 LS-280 後續。③已 override 的實例（Card Album 27、Card Photo 5、Card Diary 2）與稿內不是 ref 實例、直接帶舊 unsplash 網址的 frame 維持原樣，本票範圍只到元件預設、未 override 實例與 VR 指定的對照板／名單。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -53150,7 +53536,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTB8&ixlib=rb-4.1.0&q=80&w=1080",
+                "url": "appstore-photos/demo-hero-portrait.jpg",
                 "mode": "fill"
               },
               "cornerRadius": "$radius-md"
@@ -53165,7 +53551,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "https://images.unsplash.com/photo-1756277790825-4e1f6453bbd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTF8&ixlib=rb-4.1.0&q=80&w=1080",
+                "url": "appstore-photos/demo-grid-invite.jpg",
                 "mode": "fill"
               },
               "cornerRadius": "$radius-md"
@@ -53215,7 +53601,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "https://images.unsplash.com/photo-1761208663281-619e6532aff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjUzNTJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                    "url": "appstore-photos/demo-grid-join.jpg",
                     "mode": "fill"
                   },
                   "cornerRadius": "$radius-md"
@@ -53573,7 +53959,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                "url": "appstore-photos/demo-album-cover.jpg",
                 "mode": "fill"
               }
             },
@@ -53593,7 +53979,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "上禮拜的動物園一日遊 · 12 張相片",
+                  "content": "弟弟出生的第一週 · 8 張相片",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "600"
@@ -53885,7 +54271,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "https://images.unsplash.com/photo-1638339972126-fbf92a92dd74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODgyMjQ1Mzl8&ixlib=rb-4.1.0&q=80&w=1080",
+                "url": "appstore-photos/demo-timeline-v2.jpg",
                 "mode": "fill"
               },
               "children": [
@@ -53946,7 +54332,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安在公園盪鞦韆 · 2 歲 3 個月",
+                  "content": "小安摸阿嬤的臉 · 2 歲 3 個⁠月",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "600"
@@ -54303,7 +54689,7 @@
                               }
                             },
                             "VywUw": {
-                              "content": "小安摸阿嬤的臉 · 2 歲 3 個月"
+                              "content": "小安摸阿嬤的臉 · 2 歲 3 個⁠月"
                             }
                           }
                         },
@@ -55805,7 +56191,24 @@
                           "type": "ref",
                           "ref": "qtCd7",
                           "name": "Card Diary 1",
-                          "width": "fill_container"
+                          "width": "fill_container",
+                          "descendants": {
+                            "p2odx": {
+                              "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。"
+                            },
+                            "lEgJp": {
+                              "enabled": true
+                            },
+                            "uZ5Lt": {
+                              "enabled": true
+                            },
+                            "kVUWa": {
+                              "enabled": true
+                            },
+                            "GCEdk": {
+                              "enabled": true
+                            }
+                          }
                         }
                       ]
                     }
@@ -56192,6 +56595,7 @@
               "type": "frame",
               "id": "uHmFx",
               "name": "Content Pane",
+              "clip": true,
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
@@ -56419,7 +56823,7 @@
                                       }
                                     },
                                     "VywUw": {
-                                      "content": "小安摸阿嬤的臉 · 2 歲 3 個月"
+                                      "content": "小安摸阿嬤的臉 · 2 歲 3 個⁠月"
                                     },
                                     "O6ami": {
                                       "x": 233.5
@@ -56484,6 +56888,18 @@
                               "descendants": {
                                 "p2odx": {
                                   "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。"
+                                },
+                                "lEgJp": {
+                                  "enabled": true
+                                },
+                                "uZ5Lt": {
+                                  "enabled": true
+                                },
+                                "kVUWa": {
+                                  "enabled": true
+                                },
+                                "GCEdk": {
+                                  "enabled": true
                                 }
                               }
                             }
@@ -56804,6 +57220,24 @@
                           "name": "Card Diary 1",
                           "width": "fill_container",
                           "descendants": {
+                            "p2odx": {
+                              "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。"
+                            },
+                            "lEgJp": {
+                              "enabled": true
+                            },
+                            "uZ5Lt": {
+                              "enabled": true
+                            },
+                            "kVUWa": {
+                              "enabled": true
+                            },
+                            "GCEdk": {
+                              "enabled": true
+                            },
+                            "CQpms": {
+                              "content": "+2"
+                            },
                             "Jqwww": {
                               "layout": "vertical",
                               "alignItems": "end"
@@ -66117,7 +66551,7 @@
           "width": "fill_container",
           "descendants": {
             "VywUw": {
-              "content": "在阿嬤家後院用水管噴水玩到全身濕透，笑到停不下來，還說明年夏天要再來一次 · 3 歲 0 個月"
+              "content": "在阿嬤家廚房等點心，一直伸手摸阿嬤的臉，笑到停不下來，還說明天要再來一次 · 3 歲 0 個⁠月"
             },
             "SNbd8": {
               "y": 261
@@ -127925,7 +128359,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "https://images.unsplash.com/photo-1552611324-6a146aea5f04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg1MDEwNTF8&ixlib=rb-4.1.0&q=80&w=1080",
+                "url": "appstore-photos/demo-profile-grandma.jpg",
                 "mode": "fill"
               },
               "cornerRadius": 2
@@ -143384,7 +143818,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -143490,7 +143930,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -143596,7 +144042,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -143982,7 +144434,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -144088,7 +144546,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -144194,7 +144658,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -144578,7 +145048,13 @@
                               "y": 9,
                               "width": 54,
                               "height": 54,
-                              "cornerRadius": 2.4
+                              "cornerRadius": 2.4,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -4.56,
@@ -144687,7 +145163,13 @@
                               "y": 9,
                               "width": 54,
                               "height": 54,
-                              "cornerRadius": 2.4
+                              "cornerRadius": 2.4,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -4.56,
@@ -144796,7 +145278,13 @@
                               "y": 9,
                               "width": 54,
                               "height": 54,
-                              "cornerRadius": 2.4
+                              "cornerRadius": 2.4,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -4.56,
@@ -145486,7 +145974,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -145592,7 +146086,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -145698,7 +146198,13 @@
                               "y": 4.5,
                               "width": 27,
                               "height": 27,
-                              "cornerRadius": 1.2
+                              "cornerRadius": 1.2,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.28,
@@ -146225,7 +146731,13 @@
                               "y": 5,
                               "width": 30,
                               "height": 30,
-                              "cornerRadius": 1.3333333333333333
+                              "cornerRadius": 1.3333333333333333,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.533333333333333,
@@ -146280,7 +146792,13 @@
                               "y": 5,
                               "width": 30,
                               "height": 30,
-                              "cornerRadius": 1.3333333333333333
+                              "cornerRadius": 1.3333333333333333,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.533333333333333,
@@ -146335,7 +146853,13 @@
                               "y": 5,
                               "width": 30,
                               "height": 30,
-                              "cornerRadius": 1.3333333333333333
+                              "cornerRadius": 1.3333333333333333,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-grandpa.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.533333333333333,
@@ -146390,7 +146914,13 @@
                               "y": 5,
                               "width": 30,
                               "height": 30,
-                              "cornerRadius": 1.3333333333333333
+                              "cornerRadius": 1.3333333333333333,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-toddler.jpg",
+                                "mode": "fill"
+                              }
                             },
                             "R1lbwf": {
                               "x": -2.533333333333333,
@@ -184659,7 +185189,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "字級：畫面標題 $fs-display 34／05 成功統計數字 $fs-display 34（R2 改版，原設計失敗與成功同 $fs-lead 22 對稱置中，已改不對稱）／區塊標題 $fs-lead 22／04 進度計數「已處理 42/128 張」$fs-lead 22（R3 由 $fs-body 升級，原與其標籤「整體進度」同字級同字重、主角數字認不出主角，見 SH-13）／內文與按鈕 $fs-body 17／次要說明與狀態列 $fs-note 17／縮圖疊字「+N」與寶貝 chip 頭像姓名縮寫字，兩者皆為固定尺寸物件上的印記字，統一用 $fs-imprint 12（R2 前 iPhone 版是 $fs-note 17、AX3 是字面 12，會「縮小」而非「不長大」，R2 已修正兩邊都用 $fs-imprint token，不再是字面值）。",
+                  "content": "字級：畫面標題 $fs-display 34／05 成功統計數字 $fs-display 34（R2 改版，原設計失敗與成功同 $fs-lead 22 對稱置中，已改不對稱）／區塊標題 $fs-lead 22／04 進度計數「已處理 42/128 張」$fs-lead 22（R3 由 $fs-body 升級，原與其標籤「整體進度」同字級同字重、主角數字認不出主角，見 SH-13）／內文與按鈕 $fs-body 17／次要說明與狀態列 $fs-note 17／寶貝 chip 頭像姓名縮寫字 $fs-imprint 12／縮圖疊字「+N」【LS-296 R3 取代】改依統一規則 sErBN（$fs-note＋ViewThatFits 長形放不下才退「+N」），本板 12pt 稿面是 LS-307 當時畫法。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -185818,7 +186348,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "AX3 主題下，固定尺寸縮圖／膠囊上疊加的計數徽章（如「+N」）與寶貝 chip 頭像姓名縮寫字若字級跟著 $fs-note／$fs-meta 走到 40pt，會撐爆固定容器造成溢出——R2 已統一改用 $fs-imprint 12（不隨主題放大的 token，語意「印在固定物件上的字不長大」；見「ios-dev 抄值表」字級段），非字面值覆寫。同理，Action Bar 的純文字 Dismiss Button（無 icon）在 AX3 下（body 40pt）自然寬度會超出 393pt 版面，需顯式覆寫該文字節點 textGrowth:\"fixed-width\"＋固定寬度（本票用 320）並置中，讓文字自然換行而非橫向溢出。",
+                  "content": "AX3 主題下，固定尺寸縮圖／膠囊上疊加的計數徽章（如「+N」）與寶貝 chip 頭像姓名縮寫字若字級跟著 $fs-note／$fs-meta 走到 40pt，會撐爆固定容器造成溢出——R2 已統一改用 $fs-imprint 12（不隨主題放大的 token，語意「印在固定物件上的字不長大」；見「ios-dev 抄值表」字級段），非字面值覆寫。同理，Action Bar 的純文字 Dismiss Button（無 icon）在 AX3 下（body 40pt）自然寬度會超出 393pt 版面，需顯式覆寫該文字節點 textGrowth:\"fixed-width\"＋固定寬度（本票用 320）並置中，讓文字自然換行而非橫向溢出。【LS-296 R3 訂正】上句的計數徽章「+N」改依縮圖張數疊字統一規則 sErBN（不再用 $fs-imprint）；chip 縮寫字不變。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -209071,6 +209601,24 @@
                           "name": "Card Diary 1",
                           "width": "fill_container",
                           "descendants": {
+                            "p2odx": {
+                              "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心。"
+                            },
+                            "lEgJp": {
+                              "enabled": true
+                            },
+                            "uZ5Lt": {
+                              "enabled": true
+                            },
+                            "kVUWa": {
+                              "enabled": true
+                            },
+                            "GCEdk": {
+                              "enabled": true
+                            },
+                            "CQpms": {
+                              "content": "+2"
+                            },
                             "Jqwww": {
                               "layout": "vertical",
                               "alignItems": "end"
