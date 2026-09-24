@@ -53851,7 +53851,7 @@
               "fill": {
                 "type": "image",
                 "enabled": true,
-                "url": "appstore-photos/demo-album-newborn.jpg",
+                "url": "appstore-photos/demo-album-cover.jpg",
                 "mode": "fill"
               }
             },
