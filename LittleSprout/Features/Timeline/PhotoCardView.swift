@@ -9,6 +9,13 @@ import SwiftUI
 /// `MasonryPhotoWallView`／`VideoPlayerScreen`）。
 struct PhotoCardView: View {
     let content: MediaContent
+    /// LS-365：這則 media 標記的寶貝（`feed_items.child_ids`，由 `media_children` 聚合，LS-317），
+    /// 依 `ChildrenStore.children` 原本順序——同 `DiaryCardView.taggedChildren` 的既有分工，
+    /// 由呼叫端（`TimelineView.taggedChildren(for:)`）解析好傳入。
+    let taggedChildren: [Child]
+    /// LS-365：署名年齡的基準日＝`feed_items.occurred_at`（media 為 `coalesce(taken_at,
+    /// created_at)`，LS-367 Notes `L0xP2`／畫面級屬性 `Lj8OY`）——照片拍下當時幾歲，不是現在。
+    let occurredAt: Date
     let timelineStore: TimelineStore
     /// LS-345 R2：只為了轉手給 `InteractionRow`／`LikersListSheet`——見該型別文件註解。
     let familyStore: FamilyStore
@@ -16,22 +23,29 @@ struct PhotoCardView: View {
     /// `InteractionRow.onOpenComments` 文件註解。
     var onOpenComments: () -> Void = {}
 
+    /// `cmp/Card Photo`（`umJHD`）Photo Wrap `bjq5n` 高 184——LS-365 壓印行（Imprint Row
+    /// `KRUtz`）回到卡上之後照稿；原本 220 是沒有壓印行時把那一行的高度併進照片（LS-126）。
+    private static let photoHeight: CGFloat = 184
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
-            ZStack(alignment: .bottomLeading) {
+            ZStack(alignment: .topLeading) {
                 PrintPhotoCard(
-                    photoHeight: 220,
+                    photoHeight: Self.photoHeight,
                     showsImprint: false,
                     remoteURL: content.signedURL,
-                    accessibilityLabel: accessibilityLabel
+                    accessibilityLabel: accessibilityLabel,
+                    imprintCaption: AnyView(PhotoCardSignature(children: taggedChildren, asOf: occurredAt))
                 )
                 if content.type == .video {
-                    // `showsImprint: false` 時 PrintPhotoCard 底部只有 `printEdgeBottom`
-                    // （8）留白（沒有壓印行那 7+17），徽章貼著照片內緣、再空一個
-                    // `sp-label`（8）出來。
+                    // 徽章貼著照片左下內緣、再空一個 `sp-label`（8）。LS-365：照片下方多了
+                    // 高度隨字級／寶貝數變動的壓印行，不能再從卡片底部往上量——改用一個跟照片
+                    // 等高、從 `printEdge` 開始的框把徽章釘在照片本身的左下角。
                     videoBadge
                         .padding(.leading, AppSpacing.printEdge + AppSpacing.label)
-                        .padding(.bottom, AppSpacing.printEdgeBottom + AppSpacing.label)
+                        .padding(.bottom, AppSpacing.label)
+                        .frame(height: Self.photoHeight, alignment: .bottomLeading)
+                        .padding(.top, AppSpacing.printEdge)
                 }
             }
             // LS-216：`content.id`＝這則 media 的 id，剛好就是 `TimelineEntry.refId`
@@ -68,6 +82,56 @@ struct PhotoCardView: View {
     }
 }
 
+/// LS-365：照片卡壓印行的寶貝署名（LS-367 Notes `L0xP2` 實作契約；定案 1 `AGF13`／2 `LMMks`／
+/// 3 `AoZvb`）。字串一律走 `AlbumSignatureFormatter`（「暱稱 ·(NBSP)年齡」，年齡內 NBSP／
+/// WORD JOINER）——**不用** `MultiChildCaptionFormatter`（日記卡那套：多寶貝不帶「·」、年齡
+/// 13pt、顏色隨深色反轉）。
+///
+/// 排列：`ViewThatFits(in: .horizontal)` 兩個候選，所有字級同一條規則——
+///   1. 全部人用「、」串成單一 `Text`、`.lineLimit(1)`：一行放得下就用它。
+///   2. 放不下 → `VStack` 每人一個 `Text`（不設 lineLimit，單人仍放不下時靠字元控制斷點：
+///      姓名後折行、「·」領銜下一行），人與人之間 `personGap`（預設 8，隨字級放大，AX3 約 19）。
+///   外層 `.accessibilityElement(children: .combine)`：不論落在哪個候選，VoiceOver 都把署名
+///   念成一句。
+///
+/// 未標記：單一半形空白、保留一行高（卡高不變、角托不動），`.accessibilityHidden(true)`
+/// 不念「未標記」（定案 2 `LMMks`）。
+///
+/// 樣式：`$print-ink-secondary`／`$fs-body`／regular——紙與墨不隨深色反轉（print-paper 家族）。
+struct PhotoCardSignature: View {
+    let children: [Child]
+    let asOf: Date
+
+    @ScaledMetric(relativeTo: .body) private var personGap: CGFloat = 8
+
+    var body: some View {
+        Group {
+            if children.isEmpty {
+                Text(AlbumSignatureFormatter.signatureText(children: [], asOf: asOf, isOneLinePerPerson: false))
+                    .accessibilityHidden(true)
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    Text(AlbumSignatureFormatter.signatureText(
+                        children: children, asOf: asOf, isOneLinePerPerson: false
+                    ))
+                    .lineLimit(1)
+                    VStack(alignment: .leading, spacing: personGap) {
+                        ForEach(children) { child in
+                            Text(AlbumSignatureFormatter.segment(for: child, asOf: asOf))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier(QAAccessibilityID.photoCardSignature)
+            }
+        }
+        .appFont(.body)
+        .foregroundStyle(Color.lsPrintInkSecondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 #if DEBUG
 #Preview {
     VStack(spacing: AppSpacing.item) {
@@ -76,6 +140,10 @@ struct PhotoCardView: View {
                 id: UUID(), type: .photo, width: 4, height: 3, thumbWidth: nil, thumbHeight: nil,
                 storagePath: "preview/photo.jpg", isThumbnail: false, signedURL: nil, durationSeconds: nil
             ),
+            taggedChildren: [
+                Child(id: UUID(), name: "小安", birthday: Date(), avatarURL: nil, deletedAt: nil, createdAt: Date())
+            ],
+            occurredAt: Date(),
             timelineStore: .preview(),
             familyStore: .preview()
         )
@@ -84,6 +152,8 @@ struct PhotoCardView: View {
                 id: UUID(), type: .video, width: 16, height: 9, thumbWidth: nil, thumbHeight: nil,
                 storagePath: "preview/video.mp4", isThumbnail: false, signedURL: nil, durationSeconds: 68
             ),
+            taggedChildren: [],
+            occurredAt: Date(),
             timelineStore: .preview(),
             familyStore: .preview()
         )
