@@ -227260,7 +227260,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "Food / 02b 飲食圖鑑 · 乳製品（一歲後標記）(iPhone)｜隱藏 Tab Bar ✗｜標題 同 02｜釘底動作帶 無｜失敗文案鍵 42501｜深色 同 02｜AX3 見 A11y/02b CYW21（兩個標記各一行）｜iPad 同 02-iPad｜資料落點 food_catalog.allergens／min_age_months（唯讀）｜備註 孩子已滿一歲時，「一歲後」標記要隱藏、改文案或維持，待使用者裁決（核可頁提問）；裁決前實作一律顯示",
+          "content": "Food / 02b 飲食圖鑑 · 乳製品（一歲後標記）(iPhone)｜隱藏 Tab Bar ✗｜標題 同 02｜釘底動作帶 無｜失敗文案鍵 42501｜深色 同 02｜AX3 見 A11y/02b CYW21（兩個標記各一行）｜iPad 同 02-iPad｜資料落點 food_catalog.allergens／min_age_months（唯讀）｜備註 孩子已滿一歲時「一歲後」標記仍維持顯示（使用者 09-24 裁 D1a）",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
