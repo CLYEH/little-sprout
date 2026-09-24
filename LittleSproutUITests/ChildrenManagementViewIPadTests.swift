@@ -24,8 +24,10 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
     private static let childName = "陳小安"
     private static let placeholderTitle = "選擇一個寶貝"
 
-    /// 四個時點各斷言一次：首次切到寶貝、點選寶貝後（右欄詳情有自己的 `.navigationTitle("")`）、收起
-    /// 側邊欄後、切去相簿再切回寶貝——鎖住不是只有首次進場碰巧對。
+    /// 四個時點各斷言一次：首次切到寶貝、收起側邊欄後、點選寶貝後（右欄詳情有自己的 `.navigationTitle("")`）、
+    /// 切去相簿再切回寶貝——鎖住不是只有首次進場碰巧對。先收側欄再點選：外層側欄展開時 iPad Air 11 直向
+    /// 寬度不夠兩欄、會退成單欄推入詳情（見 `ChildrenManagementView+Regular.swift` 窄欄退路），收起後兩種
+    /// 機型都是兩欄，點選後的斷言才量得到「右欄詳情＋左欄自畫標題」同框。
     func testChildrenRootShowsChildrenTitleExactlyOnceInSplitView() throws {
         try XCTSkipUnless(
             UIDevice.current.userInterfaceIdiom == .pad,
@@ -34,17 +36,17 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
         let app = launchOnChildren()
         assertChildrenTitleAppearsExactlyOnce(in: app, context: "首次切到寶貝")
 
-        app.staticTexts[Self.childName].firstMatch.tap()
+        collapseSidebar(in: app)
+        let showSidebarButton = app.buttons["顯示側邊欄"]
+        XCTAssertTrue(showSidebarButton.waitForHittable(timeout: 5), "收起側邊欄後應該有可點的「顯示側邊欄」鈕")
+        assertChildrenTitleAppearsExactlyOnce(in: app, context: "收起側邊欄後")
+
+        childRow(in: app).tap()
         XCTAssertTrue(
             app.staticTexts[Self.placeholderTitle].waitForNonExistence(timeout: 5),
             "點選寶貝後右欄不應該還是「選擇一個寶貝」佔位"
         )
         assertChildrenTitleAppearsExactlyOnce(in: app, context: "點選寶貝後")
-
-        collapseSidebar(in: app)
-        let showSidebarButton = app.buttons["顯示側邊欄"]
-        XCTAssertTrue(showSidebarButton.waitForHittable(timeout: 5), "收起側邊欄後應該有可點的「顯示側邊欄」鈕")
-        assertChildrenTitleAppearsExactlyOnce(in: app, context: "收起側邊欄後")
         showSidebarButton.tap()
 
         app.cells.staticTexts["相簿"].firstMatch.tap()
@@ -80,26 +82,51 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
 
     /// 拿掉內層 `NavigationSplitView` 後，左欄改 `Button` 列（`ChildrenManagementView+Regular.swift`）——鎖住點選寶貝列
     /// 仍會驅動右欄顯示該寶貝詳情（`ChildGrowthDetailView` 06 版的「最新紀錄」區塊；preview 成長 API 回空，
-    /// 「查看全部紀錄」只在有紀錄時出現，不能拿來當判準），而不是停在佔位。
+    /// 「查看全部紀錄」只在有紀錄時出現，不能拿來當判準），而不是停在佔位。先收外層側欄，讓兩種機型都是兩欄。
     func testSelectingChildShowsDetailInRightColumn() throws {
         try XCTSkipUnless(
             UIDevice.current.userInterfaceIdiom == .pad,
             "iPad 專屬版面測試，非 iPad 裝置（例如 push-gate 常態用的 iPhone 專屬機）略過"
         )
         let app = launchOnChildren()
+        collapseSidebar(in: app)
         XCTAssertTrue(
             app.staticTexts[Self.placeholderTitle].waitForExistence(timeout: 5),
             "尚未選取寶貝時右欄應該是「選擇一個寶貝」佔位"
         )
-        app.staticTexts[Self.childName].firstMatch.tap()
+        childRow(in: app).tap()
         XCTAssertTrue(
             app.staticTexts["最新紀錄"].waitForExistence(timeout: 5),
             "點選左欄寶貝後，右欄應該顯示該寶貝的詳情（ChildGrowthDetailView 06「最新紀錄」）"
         )
         XCTAssertTrue(
-            app.staticTexts[Self.childName].firstMatch.isHittable,
+            childRow(in: app).isHittable,
             "右欄顯示詳情時左欄寶貝清單應該仍在（稿面 JbTfv 兩欄並列，不是 push 蓋掉）"
         )
+    }
+
+    /// 外層側欄展開時 detail 欄可能窄到放不下兩欄（iPad Air 11 直向約 490pt）——固定 320pt 左欄會把寶貝詳情
+    /// 擠出螢幕右緣、整排滑到外層側欄底下（LS-370 模擬器截圖實測）。不論機型走兩欄或單欄推入，點選寶貝後
+    /// 詳情的「編輯」鈕都必須完整落在視窗內且可點。
+    func testSelectingChildWithSidebarExpandedKeepsDetailOnScreen() throws {
+        try XCTSkipUnless(
+            UIDevice.current.userInterfaceIdiom == .pad,
+            "iPad 專屬版面測試，非 iPad 裝置（例如 push-gate 常態用的 iPhone 專屬機）略過"
+        )
+        let app = launchOnChildren()
+        childRow(in: app).tap()
+        let editButton = app.buttons["編輯"]
+        XCTAssertTrue(editButton.waitForExistence(timeout: 5), "點選寶貝後應該出現寶貝詳情（Identity Header「編輯」）")
+        let window = app.windows.firstMatch.frame
+        XCTAssertLessThanOrEqual(
+            editButton.frame.maxX, window.maxX,
+            "外層側欄展開時寶貝詳情不得被擠出螢幕右緣（編輯鈕 frame \(editButton.frame)，視窗 \(window)）"
+        )
+        XCTAssertTrue(editButton.isHittable, "外層側欄展開時寶貝詳情的「編輯」鈕應該可點")
+    }
+
+    private func childRow(in app: XCUIApplication) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", Self.childName)).firstMatch
     }
 
     private func launchOnChildren(file: StaticString = #filePath, line: UInt = #line) -> XCUIApplication {
