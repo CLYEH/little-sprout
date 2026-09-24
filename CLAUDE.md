@@ -9,7 +9,7 @@
 ## 誰做什麼（硬規定）
 
 - **Orchestrator（主 session）**：開票、派工、把關 gate；不寫功能程式碼（harness 除外）。
-- **所有 UI 畫面設計必須由 ui-designer subagent 用 Pencil MCP 產出 .pen 設計稿**（`design/littlesprout.pen`）；沒有設計稿不得實作新畫面。**設計稿送人核可前必先與 visual-reviewer 完成至少 3 輪對抗迭代**（獵殺 slop；前 2 輪一律退修抬標準，第 3 輪起才可 APPROVE；**≥5 輪不收斂且爭點屬可機械複驗項時，orchestrator 得裁定聚焦輪，不進使用者仲裁**，COLLABORATION §1／§7，LS-68）。**每輪收工必附全樹溢出掃描收據**（`design/evidence/<票號>-r<n>-overflow.json`：兄弟交集／橫列溢出／跨 parent 碰撞／角托錨點／文字遮蔽／板裁切六支掃描（一律用正典腳本 `scripts/design/overflow-scan.js`，`corner_anchor.mismatch`、`text_occlusion.flagged` 與 `board_clip.flagged` 限本票觸碰的板 `boards` 且必為 0；`scan_scope` 標明 boards｜document）、TOTAL_NODES、FLAGGED 分類、HEAD sha、`tree_hash`（整份收據須來自對 head 快照的同一稿態——大稿用正典腳本 `SCAN_BATCH` 分批＋`--merge` 合併）、六支各帶 `result_hash`＋頂層 `scan_note`（LS-226，CI 對 corner_anchor／text_occlusion／board_clip 重算比對，照抄 `RESULT-JSON`／merge 輸出）；.pen 有變更的 PR 必附收據，CI `design-evidence-check.sh` 驗；Notes 板引用的節點 id 由 `design-notes-check.sh` 驗（死 id 只能用沿革寫法提），LS-68／LS-122／LS-168／LS-185）。每完成一項即落地＋commit＋push，不准累積到最後一次交（.pen 不透明檔案無法事後拆 commit）。
+- **所有 UI 畫面設計必須由 ui-designer subagent 用 Pencil MCP 產出 .pen 設計稿**（`design/littlesprout.pen`）；沒有設計稿不得實作新畫面。**設計稿送人核可前必先與 visual-reviewer 完成至少 3 輪對抗迭代**（獵殺 slop；前 2 輪一律退修抬標準，第 3 輪起才可 APPROVE；**≥5 輪不收斂且爭點屬可機械複驗項時，orchestrator 得裁定聚焦輪，不進使用者仲裁**，COLLABORATION §1／§7，LS-68）。**每輪收工必附全樹溢出掃描收據**（`design/evidence/<票號>-r<n>-overflow.json`，一律用正典腳本 `scripts/design/overflow-scan.js` 產出；欄位、必為 0 的項目與 CI 驗法見 COLLABORATION §1／§7 與 ui-designer 定義；.pen 有變更的 PR 必附收據，CI `design-evidence-check.sh` 驗；Notes 板引用的節點 id 由 `design-notes-check.sh` 驗（死 id 只能用沿革寫法提），LS-68／LS-122／LS-168／LS-185／LS-226）。每完成一項即落地＋commit＋push，不准累積到最後一次交（.pen 不透明檔案無法事後拆 commit）。
 - ios-dev 實作；merge-reviewer 審 PR（race condition／運算效能／平行優化／scope）；qa 在 `test` branch 驗收（UI 票含模擬器視覺驗收）。model 政策見 COLLABORATION §1。
 - **Feature 收尾儀式**（QA 過後、Done 之前，缺一不可）：dead-code-sweeper 巡檢該 feature 引入的死碼＋orchestrator 做 lesson learning review（harness 改善、設定優化、工具缺口）＋清理（`bash scripts/ops/cleanup-merged.sh --apply LS-<n>` 移除已併入的 worktree／本機分支，LS-86）＋**④ Pen 清場（設計票限定**：設計 PR 併入 development 後 orchestrator `bash scripts/ops/pen-open.sh <主 checkout> --kill` 並先呼叫一次 `mcp__pencil__get_app_state`（懶連線會自動連上）；失敗才請使用者 `/mcp`——設計票期間 Pen 一律停在票檔、agent 收工不切回，LS-180／LS-308），皆記於 ticket comment——是 Done 的前置條件。見 COLLABORATION §6。
 
@@ -21,7 +21,7 @@
 - Handoff 格式：Ticket／已完成／已驗證（怎麼驗）／自檢（依 docs/REVIEW-RUBRIC.md，實作票限定）／未完成（**必列 reviewer 全部 informational 的處置**：已修／記入待辦池 LS-354／另票 LS-<m>（限 COLLABORATION §5-b harness 優先序 High 以上）／不修＋理由，一條不能省）／風險／產出位置。
 - **Linear 是唯一任務狀態來源**（LS team；Backlog→Spec→Design→Ready→In Progress→In Review→QA→Done）。
 - **開票必標 lane**（`lane:harness|backend|design|ui|product`，一票一個）；票間依賴只用 Linear `blockedBy` 關係、不寫成文字。每 lane WIP 上限與巡檢補位規則見 COLLABORATION §5-b。
-- **改狀態進 Ready 必帶 `cycle`（建票與更新票皆驗）；建票直接進 In Progress 也必帶 `cycle`，但更新既有票改 In Progress 不驗**（`Backlog`／`Done` 不要求；PreToolUse hook 擋，R1 依實測資料裁定的混合案，LS-79）；每週 Cycle 規劃提案／核可／結束回顧的節奏見 COLLABORATION §5-c。
+- **改狀態進 Ready 必帶 `cycle`（建票與更新票皆驗）；建票直接進 In Progress 也必帶 `cycle`，但更新既有票改 In Progress 不驗**（`Backlog`／`Done` 不要求；PreToolUse hook 擋，LS-79）；每週 Cycle 規劃提案／核可／結束回顧的節奏見 COLLABORATION §5-c。
 - Secrets 永不進 repo（pre-commit 會掃）。
 - 暫存檔一律 `LS-<n>-<用途>.<ext>`（或 `mktemp -d`）；`gh pr create/edit` 前先 `bash scripts/gates/pr-body-check.sh <body> --branch <branch> --verify` 並檢查 exit code（勿接 `| tail`；CI 以同旗標再驗檔頭段票號與申報，LS-186）。
 
