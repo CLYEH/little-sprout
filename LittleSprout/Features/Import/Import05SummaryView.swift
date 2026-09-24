@@ -89,50 +89,19 @@ struct Import05SummaryView: View {
 
     // MARK: - Stats Card
 
+    /// LS-373：統計列與寶貝段落的數字／文案一律取自純函式 `Import05SummaryContent`（數字契約與
+    /// 逐字文案在那裡鎖住並有單元測試），這裡只負責排版。
+    private var content: Import05SummaryContent {
+        Import05SummaryContent(
+            completedCount: completedCount, failedCount: failedRows.count, droppedCount: session.droppedCount,
+            markingFailedCount: markingFailedCount, retryableMarkingFailedCount: retryableMarkingFailedCount
+        )
+    }
+
     private var statsCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.item) {
-            HStack(spacing: AppSpacing.label) {
-                Image(systemName: "checkmark.circle.fill").appIconFrame(.large).foregroundStyle(Color.lsSuccess)
-                VStack(alignment: .leading, spacing: 0) {
-                    // 05 R2（LS-251 Notes「字級」段）：成功統計數字改用 $fs-display（與失敗
-                    // 統計不對稱設計，主角數字要認得出主角）。
-                    Text("\(completedCount) 張").appNumericFont(.display, weight: .bold)
-                        .foregroundStyle(Color.lsTextPrimary)
-                    Text("已成功匯入").appFont(.note).foregroundStyle(Color.lsTextSecondary)
-                }
-            }
-            if !failedRows.isEmpty {
-                HStack(spacing: AppSpacing.label) {
-                    Image(systemName: "exclamationmark.circle.fill").appIconFrame(.small)
-                        .foregroundStyle(Color.lsDanger)
-                    Text("\(failedRows.count) 張沒有成功")
-                        .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
-                }
-            }
-            if session.droppedCount > 0 {
-                // merge-review R1 M2＋LS-96 池項 `a997f824`(1)：同 `Import04ProgressView`——
-                // 讀不到／不支援格式／轉檔失敗的 asset 從未進佇列，不屬於 `failedRows`，這裡
-                // 另起一行講清楚，數字契約「成功＋沒有成功＋沒有加入＝開始匯入時看到的總數」
-                // 才成立（04→05 一路沿用同一個 `session.droppedCount`）。
-                HStack(spacing: AppSpacing.label) {
-                    Image(systemName: "exclamationmark.circle").appIconFrame(.small)
-                        .foregroundStyle(Color.lsTextSecondary)
-                    Text("\(session.droppedCount) 張沒有加入（格式不支援或讀取失敗）")
-                        .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
-                }
-            }
-            if markingFailedCount > 0 {
-                // LS-319：照片本身已上傳成功，只是寶貝標記沒有落地——沿用「N 張沒有成功」那一
-                // 列的元件語彙（exclamationmark.circle.fill＋lsDanger），這裡另起一行不跟
-                // `failedRows` 混在一起，理由同上（上傳失敗與標記失敗是兩件不同的事）。稿面
-                // （LS-251 05 板）沒有這一列，沿用既有「失敗項＋重試」元件語彙頂上，實作細節見
-                // handoff 畫面級屬性段，交 orchestrator 判斷是否需要補設計。
-                HStack(spacing: AppSpacing.label) {
-                    Image(systemName: "exclamationmark.circle.fill").appIconFrame(.small)
-                        .foregroundStyle(Color.lsDanger)
-                    Text("\(markingFailedCount) 張寶貝標記未完成")
-                        .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
-                }
+            ForEach(content.statRows, id: \.self) { row in
+                statRow(row)
             }
         }
         .padding(AppSpacing.insetCard)
@@ -141,6 +110,68 @@ struct Import05SummaryView: View {
         .overlay(
             RoundedRectangle(cornerRadius: AppSpacing.radiusLarge).strokeBorder(Color.lsBorder, lineWidth: 1)
         )
+    }
+
+    @ViewBuilder
+    private func statRow(_ row: Import05SummaryContent.StatRow) -> some View {
+        switch row {
+        case .succeeded(let count, let unassignedBabyCount):
+            // LS-349 Success Group（`l2nLL`）：成功統計＋寶貝未指定子列，gap $sp-label。
+            VStack(alignment: .leading, spacing: AppSpacing.label) {
+                HStack(spacing: AppSpacing.label) {
+                    Image(systemName: "checkmark.circle.fill").appIconFrame(.large).foregroundStyle(Color.lsSuccess)
+                    VStack(alignment: .leading, spacing: 0) {
+                        // 05 R2（LS-251 Notes「字級」段）：成功統計數字改用 $fs-display（與失敗
+                        // 統計不對稱設計，主角數字要認得出主角）。
+                        Text("\(count) 張").appNumericFont(.display, weight: .bold)
+                            .foregroundStyle(Color.lsTextPrimary)
+                        Text("已成功匯入").appFont(.note).foregroundStyle(Color.lsTextSecondary)
+                    }
+                }
+                if unassignedBabyCount > 0 {
+                    // D1（`D45LkN`）：成功之中寶貝沒有指定成功的子集——左縮對齊「已成功匯入」字首
+                    // （用與成功 icon 同一個 `appIconFrame(.large)` 的透明占位，Dynamic Type 放大
+                    // 時仍對齊）；icon `figure.child`（與相簿詳情孩子 Pill 同符號）$text-primary，
+                    // 文字 $text-secondary。
+                    HStack(alignment: .top, spacing: AppSpacing.label) {
+                        Color.clear.appIconFrame(.large).frame(height: 0)
+                        iconLineBox("figure.child", color: Color.lsTextPrimary)
+                        Text(Import05SummaryContent.unassignedBabyLine(count: unassignedBabyCount))
+                            .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+        case .failed(let count):
+            HStack(spacing: AppSpacing.label) {
+                Image(systemName: "exclamationmark.circle.fill").appIconFrame(.small)
+                    .foregroundStyle(Color.lsDanger)
+                Text("\(count) 張沒有成功")
+                    .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
+            }
+        case .dropped(let count):
+            // D2（`LbgZW`）：讀不到／不支援格式／轉檔失敗的 asset 從未進佇列（merge-review R1 M2
+            // ＋LS-96 池項 `a997f824`(1)）；icon `minus.circle`（05 家族只代表「沒有加入」），
+            // 文案拆兩行，icon 對首行。
+            HStack(alignment: .top, spacing: AppSpacing.label) {
+                iconLineBox("minus.circle", color: Color.lsTextSecondary)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("\(count) 張沒有加入").appNumericFont(.note)
+                    Text("格式不支援或讀取失敗").appFont(.note)
+                }
+                .foregroundStyle(Color.lsTextSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    /// 稿面 Icon Line Box（Notes `T5gSe`：高＝$fs-note 單行行高、icon 置中）——用同字級的隱藏
+    /// 單行字撐出行高，Dynamic Type 放大時 icon 仍對齊首行中線。
+    private func iconLineBox(_ systemName: String, color: Color) -> some View {
+        ZStack {
+            Text(verbatim: "\u{00A0}").appFont(.note).hidden()
+            Image(systemName: systemName).appIconFrame(.small).foregroundStyle(color)
+        }
     }
 
     // MARK: - Failed Section（重用 LS-142 `UploadQueueRowView`）
