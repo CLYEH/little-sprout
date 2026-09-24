@@ -90,6 +90,9 @@
 #       通用 H-BG(a) 的「改用 for/sleep 輪詢」對 `git push` 沒有意義（git push 沒有輪詢等待的寫法）；
 #       正確修法是前景重跑一次 `git push`，同一個 tree 會被 push-gate 的同 tree 快取（A1）秒過。不是
 #       新增一條擋／放行的規則——deny 本身仍是規則 (a) 原本就會做的事，這裡只換訊息。
+#       LS-358：「前景重跑 git push、同 tree 快取秒過」只在快取已寫入時成立（快取要 gate 全綠跑完才寫，被截斷的
+#       那一輪沒寫）；訊息改指向 `scripts/ops/push-gate-wait.sh`——先暖快取（exit 3 再呼叫）、`--confirm` 命中
+#       才前景 `git push`。
 #
 # W0：stdin 空／JSON 壞／頂層非物件／python3 或本檔案本身發生未預期例外 → deny（fail-closed，同
 #   pretool.sh／main_checkout_guard.py 的既有慣例）。
@@ -333,8 +336,8 @@ def _git_push_command_position(stripped):
     命令位置（跳過 `_skip_wrapper_prefix()` 吃掉的環境變數賦值／`time`／`nice`／`env` 前綴，沿
     LS-302）。用途不同：規則 (a) 對 `run_in_background:true`＋`identity ∈ BLOCKED_AGENTS` 早就一律
     deny（見 `main()`）——這支只是在該情形下額外判斷「被擋下的命令是不是 git push」，好給出比通用
-    H-BG(a) 更可執行的訊息（票文範圍 45a016f6：push-gate 逾時被背景化，正確做法是前景重跑一次
-    `git push`，同 tree 會被 A1 的快取秒過）。引號／`$(...)`／反引號不平衡視為不比對，同上。"""
+    H-BG(a) 更可執行的訊息（票文範圍 45a016f6；LS-358 起指向 `scripts/ops/push-gate-wait.sh`：先暖快取、
+    `--confirm` 命中才前景 `git push`）。引號／`$(...)`／反引號不平衡視為不比對，同上。"""
     try:
         segments, _cmdsubs = E.tokenize_segments(stripped)
     except E.Ambiguous:
@@ -423,15 +426,16 @@ def main():
 
     if ti.get("run_in_background") is True and identity in BLOCKED_AGENTS:
         # LS-306 A3（LS-96 池項 45a016f6）：同樣是規則 (a) 的 deny，命令是 `git push`（命令位置，含
-        # env／time／nice／env 前綴）時換一句更可執行的訊息——push-gate 常跑 8-12 分被 Bash 工具背景
-        # 化的真實案例，正確做法是前景重跑一次 `git push`（同 tree 會被 A1 的快取秒過），不是泛用的
-        # 「改用 for/sleep 輪詢」（那句對 git push 沒有意義，git push 沒有輪詢等待的寫法）。
+        # env／time／nice／env 前綴）時換一句更可執行的訊息，不是泛用的「改用 for/sleep 輪詢」（那句對
+        # git push 沒有意義）。LS-358：改指向 push-gate-wait.sh（暖快取→--confirm 命中→前景 git push），
+        # 不再說「前景重跑 git push、快取秒過」——被截斷的那一輪 gate 沒寫快取，重跑會再閒置整段測試。
         stripped_for_push, _bad = E.strip_heredocs(command)
         if _git_push_command_position(stripped_for_push):
             sys.stdout.write(
                 f"H-BG(a)：agent「{identity}」不得以 run_in_background:true 背景執行 `git push`——"
-                "改前景執行並帶 timeout 600000；逾時被系統背景化就再前景重跑一次 `git push`（同一個 "
-                f"tree 會被 push-gate 快取秒過，LS-306），見 {COLL_REF}"
+                "push 前先 `bash scripts/ops/push-gate-wait.sh --ticket LS-<n>` 暖快取（exit 3 就再呼叫），"
+                "`--confirm` 回 exit 0（快取命中）才前景 `git push`（timeout 600000），push 後 `--verify-push "
+                f"<branch>`（LS-358），見 {COLL_REF}"
             )
         else:
             sys.stdout.write(

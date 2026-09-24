@@ -101,6 +101,9 @@ ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 # git push」（163 支 UI tap-target 測試的 push gate 跑 20–40 分鐘，pre-push hook 執行期間 SSH 閒置被對端重置；先暖
 # tree-hash 快取讓 git push 觸發的 pre-push hook 秒過，不再讓 SSH 閒置整段測試時間）與「不看背景通知的 exit code」
 # （判斷 push 是否成功一律以 git log -1 origin/<branch> 對照本機 HEAD）；各自被刪即紅。
+# LS-358：上兩條＋LS-306 A2 進度句那條改釘 `scripts/ops/push-gate-wait.sh` 的三個接點——「bash scripts/ops/push-gate-wait.sh
+# --ticket LS-<n>」（暖快取／分段等待）、「--confirm 回 exit 0 才前景」（快取命中才 git push）、「不看背景通知的 exit code」
+# （沿用，--verify-push）；原本逐步手寫的流程收進腳本，ios-dev.md 那三條合成兩行；各自被刪即紅。
 # LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：qa 正文另須含兩句陷阱原文——「WDA 會與新 scene 競態、app 被背景化」
 # （simctl launch 後緊接 mobile-mcp 互動會撞上）與「鍵盤彈出時會攔截下層按鈕的點擊」；各自被刪即紅。
 # LS-333（池項 7d9ab42d，來源 LS-329 R1 M1）：merge-reviewer 正文另須含「下一頁游標取自原始指標而非過濾後結果」——
@@ -198,7 +201,7 @@ qa|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.sh（
 merge-reviewer|scripts/ops/ci-wait.sh|LS-299：等 CI 一律前景分段輪詢 ci-wait.sh（exit 3 就再跑一次），取代 gh run watch，那句被刪即紅
 ios-dev|實作新畫面必逐條對 Notes「畫面級屬性」並在 handoff 勾選|LS-300：LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」，設計稿 Notes 板有寫、ios-dev 沒逐條對；handoff 用 handoff_evidence_check.py 認的「畫面級屬性（逐條勾選）」子段
 merge-reviewer|對 handoff 勾選表抽兩列重放|LS-300：不只信 ios-dev「已勾選」的申報，抽兩列對照設計稿 Notes「畫面級屬性」段與實際實作重放核對
-ios-dev|逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取|LS-306 A2／LS-357：xcodebuild 前印進度句，逾時被截斷先等 gate 跑完再前景重跑 push-gate.sh 確認快取（push-gate.sh 同 tree 快取，LS-306 A1；順序同 LS-333）
+ios-dev|bash scripts/ops/push-gate-wait.sh --ticket LS-<n>|LS-358（取代 LS-306 A2／LS-357 進度句與 LS-322／LS-341 手寫等待迴圈）：push 前一律用 push-gate-wait.sh 暖快取／分段等待（exit 3 再呼叫），那句被刪即紅
 ui-designer|scripts/ops/ci-wait.sh|LS-306 B1：等 CI 一律前景 ci-wait.sh（exit 3 就再跑一次），禁 gh run watch、禁 run_in_background，那句被刪即紅
 visual-reviewer|scripts/ops/ci-wait.sh|LS-306 B1：等 CI 一律前景 ci-wait.sh（exit 3 就再跑一次），禁 gh run watch、禁 run_in_background，那句被刪即紅
 ios-dev|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
@@ -209,8 +212,8 @@ ui-designer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（toke
 visual-reviewer|並在 handoff 註明走備援|LS-308：mcp__linear__* 失敗（token 過期／斷線）時改用 bash scripts/ops/linear-post.sh get|comment|state 備援，那句被刪即紅
 ui-designer|instance 內覆寫的子節點不可直接|LS-327（LS-96 池項 dfff5ab3）：instance 巢狀 descendants 覆寫路徑對 Export／TakeScreenshot 子節點 id 會回元件預設值，一律整板截圖再依 Get 絕對座標裁切（LS-321 R3 designer 實測），那句被刪即紅
 visual-reviewer|instance 內覆寫的子節點不可直接|LS-327（LS-96 池項 dfff5ab3）：同上，審查時也要留意 instance 覆寫路徑的截圖陷阱，那句被刪即紅
-ios-dev|先前景跑 push-gate.sh 建快取、快取命中後再 git push|LS-333（源自 LS-313 R2／R3，池項 f99a2749）：163 支 UI tap-target 測試的 push gate 跑 20–40 分鐘，pre-push hook 執行期間 SSH 閒置被對端重置（exit 141），先暖 tree-hash 快取讓 git push 觸發的 pre-push hook 秒過，那句被刪即紅
-ios-dev|不看背景通知的 exit code|LS-333：判斷 push 是否成功一律以 git log -1 origin/<branch> 對照本機 HEAD，背景通知顯示的 exit 0 可能只是尾端指令自己的、不是 git push 本身，那句被刪即紅
+ios-dev|--confirm 回 exit 0 才前景|LS-358（取代 LS-333「先前景跑 push-gate.sh 建快取、快取命中後再 git push」）：快取命中確認後才 git push，pre-push hook 只重放快取、SSH 不閒置（LS-313），那句被刪即紅
+ios-dev|不看背景通知的 exit code|LS-333／LS-358：判斷 push 是否成功一律以 origin/<branch> 對照本機 HEAD（push-gate-wait.sh --verify-push），背景通知顯示的 exit 0 可能只是尾端指令自己的、不是 git push 本身，那句被刪即紅
 qa|WDA 會與新 scene 競態、app 被背景化|LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：simctl launch 後緊接 mobile-mcp 互動會撞上這個陷阱，先等畫面渲染或用 mobile_list_elements_on_screen 確認再操作，那句被刪即紅
 qa|鍵盤彈出時會攔截下層按鈕的點擊|LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：鍵盤顯示中先收鍵盤再點下方按鈕，不要對著被蓋住的區域直接點，那句被刪即紅
 merge-reviewer|四維度檢查項的單一來源是 \`docs/REVIEW-RUBRIC.md\`|LS-352：四維度檢查項（含 LS-333 的分頁過濾游標句 R1.5）移到 docs/REVIEW-RUBRIC.md 單一來源，merge-reviewer.md 只引用、不抄；引用句被刪即紅（rubric 內容本身由 handoff-evidence-check.test.sh 對真檔斷言）

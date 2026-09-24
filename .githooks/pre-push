@@ -1,2 +1,3 @@
 #!/bin/sh
-exec "$(git rev-parse --show-toplevel)/scripts/gates/push-gate.sh"
+# LS-358：PUSH_GATE_VIA_PRE_PUSH=1 讓 push-gate.sh 在快取未命中時印「中止這次 push、改跑 push-gate-wait.sh」的分流提示
+PUSH_GATE_VIA_PRE_PUSH=1 exec "$(git rev-parse --show-toplevel)/scripts/gates/push-gate.sh"

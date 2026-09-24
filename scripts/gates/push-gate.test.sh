@@ -1726,6 +1726,68 @@ else
 fi
 rm -rf "$mut36" "$cache_dir"
 
+# ============================================================
+# ㊷ LS-358：LS_PUSH_GATE_CACHE_ONLY=1（scripts/ops/push-gate-wait.sh --confirm 專用）——快取未命中不跑
+#    unit tests、印「快取未命中」exit 4；命中照常秒過 exit 0。另驗進度句依呼叫路徑分流（merge-review i1）：
+#    PUSH_GATE_VIA_PRE_PUSH=1（.githooks/pre-push）印「中止這次 push」，其餘路徑指向 push-gate-wait.sh。
+# ============================================================
+rm -rf "$cache_dir"
+test_log37a="$work/test-log-37a.txt"; : > "$test_log37a"
+out37a=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log37a" LS_PUSH_GATE_NO_CACHE=0 LS_PUSH_GATE_CACHE_ONLY=1); rc37a=$?
+if [ "$rc37a" -eq 4 ] && [ ! -s "$test_log37a" ] && has "$out37a" '快取未命中' && ! has "$out37a" 'unit tests 開始'; then
+  echo "✓ ㊷a CACHE_ONLY＋快取未命中：exit 4、印「快取未命中」、xcodebuild test 沒被呼叫"
+else
+  echo "✗ ㊷a CACHE_ONLY＋快取未命中應 exit 4 且不跑測試（實得 exit ${rc37a}、TEST_LOG=$(cat "$test_log37a" 2>/dev/null)）" >&2
+  printf '%s\n' "$out37a" | sed 's/^/    /' >&2; fail=1
+fi
+out37c=$(run_gate STUB_TEST_RC=0 LS_PUSH_GATE_NO_CACHE=0 PUSH_GATE_VIA_PRE_PUSH=1)   # 同時建快取
+if has "$out37c" 'unit tests 開始（' && has "$out37c" '中止這次 push' && has "$out37c" 'push-gate-wait.sh'; then
+  echo "✓ ㊷c pre-push 路徑快取未命中：進度句要求中止這次 push、改跑 push-gate-wait.sh"
+else
+  echo "✗ ㊷c pre-push 路徑進度句應含「中止這次 push」與 push-gate-wait.sh" >&2
+  printf '%s\n' "$out37c" | sed 's/^/    /' >&2; fail=1
+fi
+test_log37b="$work/test-log-37b.txt"; : > "$test_log37b"
+out37b=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log37b" LS_PUSH_GATE_NO_CACHE=0 LS_PUSH_GATE_CACHE_ONLY=1); rc37b=$?
+if [ "$rc37b" -eq 0 ] && [ ! -s "$test_log37b" ] && has "$out37b" '跳過（快取'; then
+  echo "✓ ㊷b CACHE_ONLY＋快取命中（㊷c 剛寫入）：exit 0、印「跳過（快取」、不跑測試"
+else
+  echo "✗ ㊷b CACHE_ONLY＋快取命中應 exit 0（實得 exit ${rc37b}）" >&2
+  printf '%s\n' "$out37b" | sed 's/^/    /' >&2; fail=1
+fi
+rm -rf "$cache_dir"
+out37d=$(run_gate STUB_TEST_RC=0 LS_PUSH_GATE_NO_CACHE=0)
+if has "$out37d" 'unit tests 開始（' && has "$out37d" 'push-gate-wait.sh 分段等待' && ! has "$out37d" '中止這次 push'; then
+  echo "✓ ㊷d 非 pre-push 路徑：進度句指向 push-gate-wait.sh 分段等待、不叫人中止"
+else
+  echo "✗ ㊷d 非 pre-push 路徑進度句應指向 push-gate-wait.sh 分段等待、不含「中止這次 push」" >&2
+  printf '%s\n' "$out37d" | sed 's/^/    /' >&2; fail=1
+fi
+# ㊷ mutation：拿掉 CACHE_ONLY 那段 → ㊷a 的情境改成真的跑 xcodebuild test（證明 exit 4 由那段造成）
+mut37=$(mktemp -d)
+anchor37='if [ "${LS_PUSH_GATE_CACHE_ONLY:-0}" = 1 ]; then'
+if ! grep -qF "$anchor37" "$gate_src"; then
+  echo "✗ ㊷ mutation 錨點不在 push-gate.sh：${anchor37}" >&2; fail=1
+else
+  sed "s/$(printf '%s' "$anchor37" | sed 's/[.[\*^$]/\\&/g')/if false; then/" "$gate_src" > "$mut37/push-gate.sh"
+  if diff -q "$gate_src" "$mut37/push-gate.sh" >/dev/null 2>&1; then
+    echo '✗ ㊷ mutant 與原始檔完全相同（sed 未命中）' >&2; fail=1
+  else
+    cp "$mut37/push-gate.sh" "$R/scripts/gates/push-gate.sh"
+    rm -rf "$cache_dir"
+    test_log37m="$work/test-log-37m.txt"; : > "$test_log37m"
+    out37m=$(run_gate STUB_TEST_RC=0 TEST_LOG="$test_log37m" LS_PUSH_GATE_NO_CACHE=0 LS_PUSH_GATE_CACHE_ONLY=1); rc37m=$?
+    cp "$gate_src" "$R/scripts/gates/push-gate.sh"
+    if [ "$rc37m" -eq 0 ] && [ -s "$test_log37m" ]; then
+      echo "✓ ㊷ mutant：拿掉 CACHE_ONLY 判斷後，快取未命中改成真的跑 xcodebuild test（exit ${rc37m}）——㊷a 的 exit 4 確由那段造成"
+    else
+      echo "✗ ㊷ mutant 應真的跑測試（實得 exit ${rc37m}、TEST_LOG=$(cat "$test_log37m" 2>/dev/null)）" >&2
+      printf '%s\n' "$out37m" | sed 's/^/    /' >&2; fail=1
+    fi
+  fi
+fi
+rm -rf "$mut37" "$cache_dir"
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ push-gate 模擬器自測通過"
 fi

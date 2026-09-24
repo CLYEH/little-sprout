@@ -14,7 +14,7 @@
 # 起作用、一收到回覆就歸零——實測時 GitHub 對 keepalive 正常回應（細節見 session-start.sh 同段），LS-313 R2／R3 的斷線是在往返正常的情況下
 # 被對端重置，把 CountMax 由 20 拉高到 120 對那次斷線**沒有作用**，純粹是「伺服器真的停止回應」時的第二道防線
 # （`ServerAliveInterval=30` 防的是 NAT／中間設備閒置斷線，另一回事）。**真正有效的修法**：`git push` 前一律
-# 先前景跑本腳本暖 tree-hash 快取（見 ios-dev.md），讓 `git push` 觸發的 pre-push hook 只是重放快取、秒過，
+# 先用 scripts/ops/push-gate-wait.sh 暖 tree-hash 快取（LS-358；見 ios-dev.md），讓 `git push` 觸發的 pre-push hook 只是重放快取、秒過，
 # 把 SSH 連線閒置的時間從 20–40 分鐘收斂到幾秒。
 set -euo pipefail
 
@@ -269,8 +269,8 @@ if [ "$skip_swift_steps" = 1 ]; then
   echo "✓ push gate：無 Swift 變更，跳過 unit tests（CI 仍跑）"
 elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&1; then
   # LS-306 A1：同 tree 快取——步驟 2（xcodebuild unit tests，含下方 LS-95／LS-209 的 tap-target／iPad
-  # best-effort）全綠後在 git-common-dir（worktree 共用）寫一個以本分支 tree sha 為檔名的標記；被
-  # 背景化／逾時後前景重跑 `git push`，同一個 tree 直接秒過，不必再等一次 xcodebuild。只跳步驟 2，
+  # best-effort）全綠後在 git-common-dir（worktree 共用）寫一個以本分支 tree sha 為檔名的標記；同一個
+  # tree 再跑直接秒過，不必再等一次 xcodebuild（push 前的暖快取／確認流程見 scripts/ops/push-gate-wait.sh，LS-358）。只跳步驟 2，
   # 其餘秒級檢查（步驟 1／3／3b／3c／4／5／6／7）照跑，不受影響。標記檔 24 h 過期（find -mmin +1440，
   # 避免長時間沒 push 時誤信舊快取）；`LS_PUSH_GATE_NO_CACHE=1` 強制重跑，不看快取也不寫入（除錯用）。
   push_gate_cache_dir="$(git rev-parse --git-common-dir)/ls-push-gate"
@@ -280,9 +280,22 @@ elif ls -d ./*.xcodeproj >/dev/null 2>&1 || ls -d ./*.xcworkspace >/dev/null 2>&
      && [ -z "$(find "$push_gate_cache_file" -mmin +1440 2>/dev/null)" ]; then
     echo "✓ push gate：unit tests 已於 $(date -r "$push_gate_cache_file" '+%Y-%m-%d %H:%M:%S') 對同一 tree（${push_gate_cache_key}）通過，跳過（快取；LS_PUSH_GATE_NO_CACHE=1 強制重跑；LS-306）"
   else
-  # LS-306 A2：開始前印一行進度——步驟 2 常跑 5–12 分；LS-357：快取只在全綠跑完後才寫入，被 Bash 工具
-  # 截斷時要先等本 gate 跑完、再前景重跑本腳本確認「跳過（快取」（LS-333 順序）；同句寫進 .claude/agents/ios-dev.md。
-  echo "→ push gate：unit tests 開始（$(date '+%H:%M:%S')，通常 5–12 分；逾時被截斷先等本 gate 跑完，再前景重跑 push-gate.sh 確認快取）"
+  # LS-358：`LS_PUSH_GATE_CACHE_ONLY=1`（scripts/ops/push-gate-wait.sh --confirm 專用）＝只確認快取——未命中就
+  # 不跑 unit tests、印「快取未命中」直接 exit 4，讓 push 前的確認永遠是秒級、不會意外開跑一整輪 xcodebuild。
+  if [ "${LS_PUSH_GATE_CACHE_ONLY:-0}" = 1 ]; then
+    echo "✗ push gate：快取未命中（tree ${push_gate_cache_key}；LS_PUSH_GATE_CACHE_ONLY=1，不跑 unit tests；LS-358）"
+    exit 4
+  fi
+  # LS-306 A2：開始前印一行進度。LS-358：時長口徑只留這一處（09-24 實測 log：僅 unit tests 2–4 分〈LS-346／348〉；
+  # diff 含 Features／DesignSystem 另跑點擊目標 gate，合計 24–27 分〈LS-324／344／345 約 24 分、LS-358 probe 27 分〉）；提示依呼叫路徑分流（merge-review i1）——pre-push
+  # （.githooks/pre-push 設 PUSH_GATE_VIA_PRE_PUSH=1）走到這裡＝git push 途中快取未命中、SSH 會閒置整段測試，
+  # 要中止；其餘路徑（push-gate-wait.sh 脫離啟動、手動執行）照常跑完。
+  push_gate_eta="僅 unit tests 約 2–4 分；diff 含 Features／DesignSystem 另跑點擊目標 gate，合計約 25–30 分"
+  if [ "${PUSH_GATE_VIA_PRE_PUSH:-0}" = 1 ]; then
+    echo "→ push gate：unit tests 開始（$(date '+%H:%M:%S')，${push_gate_eta}）——git push 途中快取未命中，SSH 會閒置整段測試：中止這次 push，改跑 bash scripts/ops/push-gate-wait.sh 暖快取（LS-358）"
+  else
+    echo "→ push gate：unit tests 開始（$(date '+%H:%M:%S')，${push_gate_eta}；Bash 工具內請改用 bash scripts/ops/push-gate-wait.sh 分段等待，勿直接 git push）"
+  fi
   # 1b) Xcode 版本對齊（LS-106 R1 F2／F5；PR #165 head 8b7a0fa 同型：8b7a0fa 已修好 1a 的 xcodegen
   #     漂移，但 KeyboardHeightObserver.swift 仍留著 UIScreen.main.bounds，CI 用 .xcode-version
   #     釘住的 Xcode／SDK 對它的 MainActor 隔離判斷較嚴格判成編譯錯，本機當時裝的版本較寬鬆沒

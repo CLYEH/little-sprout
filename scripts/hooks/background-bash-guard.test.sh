@@ -156,7 +156,7 @@ expect '②a-對照 general-purpose run_in_background:true（allow，不在名�
   "$(bash_json_agent '"general-purpose"' 'ls -la' true)"
 
 # LS-306 A3（LS-96 池項 45a016f6）：規則 (a) 對 `git push`（命令位置，含 env／wrapper 前綴）的 deny
-# 訊息換成更可執行的文案（提到「快取秒過」，指向 push-gate A1 的同 tree 快取）——deny 本身不是新規則，
+# 訊息換成更可執行的文案（LS-358 起指向 push-gate-wait.sh 的暖快取→--confirm 流程；原本的「快取秒過」提示已撤）——deny 本身不是新規則，
 # 只是同一個 (a) 的訊息分支；六個身分都要各擋一次；非 git push 的一般命令仍走通用 H-BG(a) 訊息。
 expect '②a-push1 ios-dev run_in_background:true 執行 git push（deny）' 2 \
   "$(bash_json_agent '"ios-dev"' 'git push -u origin HEAD' true)"
@@ -174,16 +174,16 @@ expect '②a-push5 ui-designer run_in_background:true 執行 git push（deny）'
 expect '②a-push6 visual-reviewer run_in_background:true 執行 git push（deny）' 2 \
   "$(bash_json_agent '"visual-reviewer"' 'git push -u origin HEAD' true)"
 out_push1=$(printf '%s' "$(bash_json_agent '"ios-dev"' 'git push -u origin HEAD' true)" | bash "$guard" 2>/dev/null)
-if printf '%s' "$out_push1" | grep -qF '快取秒過'; then
-  ok '②a-push-訊息 git push 背景化的 deny 訊息含「快取秒過」提示（比通用 H-BG(a) 更可執行）'
+if printf '%s' "$out_push1" | grep -qF 'push-gate-wait.sh'; then
+  ok '②a-push-訊息 git push 背景化的 deny 訊息含「push-gate-wait.sh」提示（比通用 H-BG(a) 更可執行）'
 else
-  bad "②a-push-訊息 應含「快取秒過」提示（實得：${out_push1}）"
+  bad "②a-push-訊息 應含「push-gate-wait.sh」提示（實得：${out_push1}）"
 fi
-# 對照：非 git push 的一般命令仍走通用 H-BG(a) 訊息（不含「快取秒過」）——不是所有 (a) 的訊息都被
+# 對照：非 git push 的一般命令仍走通用 H-BG(a) 訊息（不含「push-gate-wait.sh」）——不是所有 (a) 的訊息都被
 # 改寫成 push 專屬文案，只有真的是 git push 才換
 out_push_ctrl=$(printf '%s' "$(bash_json_agent '"visual-reviewer"' 'sleep 60' true)" | bash "$guard" 2>/dev/null)
-if printf '%s' "$out_push_ctrl" | grep -qF '快取秒過'; then
-  bad "②a-push-對照 非 git push 命令不應含「快取秒過」提示（實得：${out_push_ctrl}）"
+if printf '%s' "$out_push_ctrl" | grep -qF 'push-gate-wait.sh'; then
+  bad "②a-push-對照 非 git push 命令不應含「push-gate-wait.sh」提示（實得：${out_push_ctrl}）"
 elif printf '%s' "$out_push_ctrl" | grep -qF 'H-BG(a)'; then
   ok '②a-push-對照 非 git push 命令（sleep 60）仍走通用 H-BG(a) 訊息，不含 push 專屬提示'
 else
@@ -609,8 +609,8 @@ rm -rf "$mut7"
 
 # ============================================================
 # ⑫ LS-306 A3 mutation：讓 `_git_push_command_position` 恆為 False（呼叫點改 `if False:`）→
-#    ②a-push1 的訊息退回通用 H-BG(a)（不含「快取秒過」）；deny 本身不受影響（依然 exit 2）——因為
-#    規則 (a) 對 run_in_background:true＋BLOCKED_AGENTS 一律 deny，這裡只驗「快取秒過」這個更具體的
+#    ②a-push1 的訊息退回通用 H-BG(a)（不含「push-gate-wait.sh」；LS-358 前是「快取秒過」）；deny 本身不受影響（依然 exit 2）——因為
+#    規則 (a) 對 run_in_background:true＋BLOCKED_AGENTS 一律 deny，這裡只驗「push-gate-wait.sh」這個更具體的
 #    提示確由 git push 偵測造成，不是巧合都印同一句。
 # ============================================================
 mut8=$(mktemp -d)
@@ -624,7 +624,7 @@ else
     out=$(printf '%s' "$(bash_json_agent '"ios-dev"' 'git push -u origin HEAD' true)" | "$bash_bin" "$mut8/background-bash-guard.sh" 2>/dev/null); got=$?
     ok12=1
     [ "$got" -eq 2 ] || ok12=0
-    case "$out" in *'快取秒過'*) ok12=0 ;; esac
+    case "$out" in *'push-gate-wait.sh'*) ok12=0 ;; esac
     case "$out" in *'H-BG(a)'*) ;; *) ok12=0 ;; esac
     if [ "$ok12" -eq 1 ]; then
       ok '⑫ mutant：拿掉 git push 專屬訊息判斷後，②a-push1 退回通用 H-BG(a) 訊息（deny 仍在，訊息改變證明判斷確實有效）'

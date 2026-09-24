@@ -297,8 +297,9 @@ jobs:
           # LS-270（LS-96 池項 `d4c1add5`／`e850cb7f`(3)）：`pipefail` ＋ `| grep -q` 偵測自己的自測（夾具正負
           # 各一——票文指定的 mutation 就是「拿掉 set -o pipefail → 無 ⚠」；另含純註解行不算／非 *.test.sh 不掃）
           bash scripts/gates/pipefail-grep-q-check.test.sh || rc=1
-          # LS-346：ios-dev.md「背景 push gate 等待迴圈」不會自我比對（GNU/Linux pgrep 預設不排除祖先
-          # 行程，只有 ubuntu-latest 這個通道能重現 LS-344 回報的自我比對，mutation 拿掉 $_self 排除）
+          # LS-346：「背景 push gate 等待迴圈」不會自我比對（GNU/Linux pgrep 預設不排除祖先
+          # 行程，只有 ubuntu-latest 這個通道能重現 LS-344 回報的自我比對，mutation 拿掉 $_self 排除）；
+          # LS-358 起 ① 檢查 scripts/ops/push-gate-wait.sh 的 gate_running()（ios-dev.md 已不再抄迴圈）
           bash scripts/gates/wait-loop-selfmatch.test.sh || rc=1
           # LS-338：食物圖鑑貼紙裁切腳本自測（真實參考樣張／sheet-15 單列夾具＋合成「少一張」夾具＋
           # sort_reading_order() 單元測試＋mutation：拿掉 REGION-COUNT-CHECK 標記行）
@@ -431,6 +432,9 @@ jobs:
           # LS-299：等 CI 分段前景輪詢（qa/ios-dev 撞 gh run watch 跑超過 Bash 工具 600s 上限、系統移背景
           # 後停下等通知——背景命令完成不會喚醒 subagent），fixture 化 gh，含逾時退出邏輯的 mutation
           bash scripts/ops/ci-wait.test.sh || rc=1
+          # LS-358：push 前暖快取／分段等待／確認快取命中／origin 對 HEAD（假 push-gate＋真 pgrep；範圍／sibling／
+          # 舊手寫迴圈／stdin 沒關／單次等待上限，含 6 個 mutation）
+          bash scripts/ops/push-gate-wait.test.sh || rc=1
           bash scripts/ops/merge-follow.test.sh || rc=1
           bash scripts/ops/post-status.test.sh || rc=1
           bash scripts/ops/pen-open.test.sh || rc=1
