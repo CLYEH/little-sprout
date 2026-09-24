@@ -261,6 +261,9 @@ private struct InkRaster {
     private let scale: CGFloat
     /// 亮度低於此值才算墨：墨 #553040 ≈ 0.23，紙淺 #FBEBEC／深 #E8D9D4 ≥ 0.86。
     private static let inkLuminance: Double = 0.45
+    /// 深色模式角落染料池（`$mount-pool` 深 #0D0609）會把紙壓暗到亮度 0.45 以下，但它是近中性
+    /// 灰（R−G ≤ 15）；墨 #553040 R−G＝37、主墨 #2B141C R−G＝23——再要求紅相才算墨。
+    private static let inkRedMinusGreen = 18
 
     init?(cgImage: CGImage, scale: CGFloat, rect: CGRect) {
         let pixelRect = CGRect(
@@ -285,7 +288,8 @@ private struct InkRaster {
                 let offset = (row * width + col) * 4
                 let luminance = (0.2126 * Double(buffer[offset]) + 0.7152 * Double(buffer[offset + 1])
                     + 0.0722 * Double(buffer[offset + 2])) / 255
-                ink[row][col] = luminance < Self.inkLuminance
+                let redMinusGreen = Int(buffer[offset]) - Int(buffer[offset + 1])
+                ink[row][col] = luminance < Self.inkLuminance && redMinusGreen >= Self.inkRedMinusGreen
             }
         }
         self.ink = ink
