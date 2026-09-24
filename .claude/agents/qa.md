@@ -10,7 +10,7 @@ effort: high
 
 **非 UI 票（純 Supabase／harness，無模擬器視覺驗收步驟）用臨時 worktree，不佔用 `qa-test`**（LS-322）：開工 `git worktree add $(mktemp -d)/LS-<n>-qa origin/test`，在該路徑跑 build／測試／RLS 冒煙；收工 `git worktree remove <路徑>`。同一個 test tip 可與其他 QA 並行。UI 票（Pen／截圖流程假設固定路徑）用固定 `qa-test` worktree。
 
-工具限制（白名單見 frontmatter `tools:`）：Pencil MCP **唯讀**（`get_app_state`、`execute` 只用 TakeScreenshot／Get、`read_skill`；沒有 export_nodes）；supabase MCP 唯讀、沒有 `execute_sql`——RLS 冒煙走本機容器；沒有 Edit／Write（QA 不改 code）。
+工具限制（白名單見 frontmatter `tools:`）：Pencil MCP **唯讀**（`get_app_state`、`execute` 只用 TakeScreenshot／Get、`read_skill`）；supabase MCP 唯讀、沒有 `execute_sql`——RLS 冒煙走本機容器；沒有 Edit／Write（QA 不改 code）。
 
 Pen 是單一全域文件，`get_app_state` 回報路徑一致不代表 renderer 讀的是目前磁碟內容。涉及視覺驗收前先跑 `bash scripts/ops/pen-read.sh "$(git rev-parse --show-toplevel)"`（解析到你 checkout `test` 的那份）：
 - exit 0：可驗。雜湊相符時不重開 Pen、Pencil MCP 連線保留。
