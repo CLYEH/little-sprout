@@ -10,6 +10,8 @@ import SwiftUI
 struct PhotoCardView: View {
     let content: MediaContent
     let timelineStore: TimelineStore
+    /// LS-345 R2：只為了轉手給 `InteractionRow`／`LikersListSheet`——見該型別文件註解。
+    let familyStore: FamilyStore
     /// LS-218：`TimelineView.openComments(kind:refId:)` 開留言 sheet，見
     /// `InteractionRow.onOpenComments` 文件註解。
     var onOpenComments: () -> Void = {}
@@ -36,7 +38,8 @@ struct PhotoCardView: View {
             // （`kind == .media` 的 feed pointer 本來就以 media 自己的 id 當 ref_id）——
             // 不需要像 `DiaryCardView`／`AlbumCardView` 另外收一個 `refId` 參數。
             InteractionRow(
-                kind: .media, refId: content.id, timelineStore: timelineStore, onOpenComments: onOpenComments
+                kind: .media, refId: content.id, timelineStore: timelineStore, familyStore: familyStore,
+                onOpenComments: onOpenComments
             )
         }
         .task(id: content.id) {
@@ -73,14 +76,16 @@ struct PhotoCardView: View {
                 id: UUID(), type: .photo, width: 4, height: 3, thumbWidth: nil, thumbHeight: nil,
                 storagePath: "preview/photo.jpg", isThumbnail: false, signedURL: nil, durationSeconds: nil
             ),
-            timelineStore: .preview()
+            timelineStore: .preview(),
+            familyStore: .preview()
         )
         PhotoCardView(
             content: MediaContent(
                 id: UUID(), type: .video, width: 16, height: 9, thumbWidth: nil, thumbHeight: nil,
                 storagePath: "preview/video.mp4", isThumbnail: false, signedURL: nil, durationSeconds: 68
             ),
-            timelineStore: .preview()
+            timelineStore: .preview(),
+            familyStore: .preview()
         )
     }
     .padding()

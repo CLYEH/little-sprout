@@ -335,13 +335,19 @@ struct ReactionCountRow: Decodable, Sendable, Equatable {
 }
 
 /// 按讚名單 sheet（`GZ3pb`）一列——直接 SELECT `reactions` join `profiles`（LS-216 票文
-/// scope 3：「無需新 RPC」），只取顯示名稱。頭像沿用 `ProfilePrintChip` 既有的沖印占位圖
-/// （同 `ProfileEditView` 文件註解點名的既有缺口：目前 app 內沒有任何畫面會把「別人的」
-/// `avatar_url` 簽名成可顯示的圖片，`FamilyStore.avatarSignedURLs` 只批次簽自己＋
-/// `FamilyStore.members`，這裡不新建一條平行的簽名管線——見 LS-216 handoff「未完成」）。
+/// scope 3：「無需新 RPC」），取顯示名稱與頭像路徑。
+///
+/// **LS-345 R2**：原本不取 `avatar_url`——舊註解宣稱依 LS-177 Notes MJ-1「一律沖印佔位」，
+/// merge-review R1（M1）查證這個決策不成立（見 `CommentAPIClient.swift` 文件註解同一段訂正）。
+/// 現在 `SupabaseTimelineAPIClient.reactors(…)` 的 `.select(...)` 多取 `avatar_url`，這裡多解
+/// 一個欄位，呼叫端（`LikersListSheet.likerRow`）用 `familyStore.avatarDisplayURL(rawValue:)`
+/// 換成可顯示 URL——沿用 `FamilyStore.avatarSignedURLs` 既有的簽名快取（跟留言作者頭像同一份
+/// 快取，只要 `familyStore.members` 已查過，按讚者的頭像路徑多半已經簽好；`LikersListSheet`
+/// 補一個同款 guard task，理由見該檔），不新建平行的簽名管線。
 struct ReactorRow: Decodable, Sendable, Equatable, Identifiable {
     let userID: UUID
     let displayName: String
+    let avatarURL: String?
 
     var id: UUID { userID }
 
@@ -352,6 +358,7 @@ struct ReactorRow: Decodable, Sendable, Equatable, Identifiable {
 
     enum ProfileCodingKeys: String, CodingKey {
         case displayName = "display_name"
+        case avatarURL = "avatar_url"
     }
 
     /// LS-216 R2（merge-review R1 M3）：`profiles` 巢狀 embed 改成可選解碼——按讚者退出家庭
@@ -361,20 +368,25 @@ struct ReactorRow: Decodable, Sendable, Equatable, Identifiable {
     /// 對 null 值會拋錯，讓整份 `[ReactorRow]` 解碼失敗、按讚名單整個開不出來——只因為其中
     /// 一位按讚者離開了家庭，不成比例。改用 `try?` 吞掉「拿不到巢狀容器」或「拿不到
     /// display_name」兩種情況，顯示名稱退回「家人」（純資訊性列表，仍能看到「有 N 人按讚」，
-    /// 只是其中一位顯示為通用稱呼，不影響功能）。
+    /// 只是其中一位顯示為通用稱呼，不影響功能）。**LS-345 R2**：`avatarURL` 沿用同一個
+    /// `try?` 巢狀容器——拿不到 profile（已離開家庭）時頭像同樣是 nil（退回沖印佔位），與顯示
+    /// 名稱的降級規則一致。被封鎖者不走這條：`reactions_select` RLS 的 `blocked_pairs` 述詞
+    /// （`20260906124837_reactions_block_filter.sql`）已把整列濾掉，client 不另外判斷。
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         userID = try container.decode(UUID.self, forKey: .userID)
-        if let profile = try? container.nestedContainer(keyedBy: ProfileCodingKeys.self, forKey: .profile),
-           let name = try? profile.decode(String.self, forKey: .displayName) {
-            displayName = name
+        if let profile = try? container.nestedContainer(keyedBy: ProfileCodingKeys.self, forKey: .profile) {
+            displayName = (try? profile.decode(String.self, forKey: .displayName)) ?? "家人"
+            avatarURL = try? profile.decode(String.self, forKey: .avatarURL)
         } else {
             displayName = "家人"
+            avatarURL = nil
         }
     }
 
-    init(userID: UUID, displayName: String) {
+    init(userID: UUID, displayName: String, avatarURL: String? = nil) {
         self.userID = userID
         self.displayName = displayName
+        self.avatarURL = avatarURL
     }
 }

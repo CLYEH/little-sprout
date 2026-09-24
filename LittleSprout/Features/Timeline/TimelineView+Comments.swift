@@ -33,7 +33,7 @@ extension TimelineView {
             NavigationLink(value: TimelineRoute.diaryDetail(entry.refId)) {
                 DiaryCardView(
                     content: content, taggedChildren: taggedChildren(for: entry), timelineStore: timelineStore,
-                    refId: entry.refId,
+                    familyStore: familyStore, refId: entry.refId,
                     onOpenComments: { openComments(kind: .diary, refId: entry.refId) },
                     previewRowWidth: max(0, cardOuterWidth(columns: columns) - 2 * AppSpacing.insetCard)
                 )
@@ -43,12 +43,12 @@ extension TimelineView {
             .accessibilityIdentifier(QAAccessibilityID.timelineDiaryCard)
         case .album(let content):
             AlbumCardView(
-                content: content, timelineStore: timelineStore, refId: entry.refId,
+                content: content, timelineStore: timelineStore, familyStore: familyStore, refId: entry.refId,
                 onOpenComments: { openComments(kind: .album, refId: entry.refId) }
             )
         case .media(let content):
             PhotoCardView(
-                content: content, timelineStore: timelineStore,
+                content: content, timelineStore: timelineStore, familyStore: familyStore,
                 onOpenComments: { openComments(kind: .media, refId: entry.refId) }
             )
         case nil:

@@ -44,10 +44,17 @@ struct CommentsCursor: Equatable, Sendable {
 }
 
 /// `list_comments` 一列（`docs/API.md` §4）——`author_display_name`／`author_avatar_url` 由
-/// RPC 內部 join `profiles`，呼叫端不需要另外查作者資料。**不解碼 `author_avatar_url`**：
-/// 留言 sheet 的頭像一律顯示 `ProfilePrintChip`「沖印品」佔位圖（LS-177 Notes MJ-1 定案，同
-/// `LikersListSheet.likerRow` 既有慣例），沒有呼叫端會用到真實頭像網址，Rule 2 不解碼用不到
-/// 的欄位。
+/// RPC 內部 join `profiles`，呼叫端不需要另外查作者資料。
+///
+/// **LS-345 R2 訂正**：本欄位原本不解碼 `author_avatar_url`，理由寫的是「LS-177 Notes MJ-1
+/// 定案留言 sheet 一律顯示沖印佔位圖」——merge-review R1（M1）回頭查 `design/littlesprout.pen`
+/// 逐字稿發現這個宣稱**查無明文**：MJ-1（節點 `cPTBT`）只講頭像外框從字母圓圈換成
+/// `cmp/Profile Print`（`OePXK`），該元件的 Photo 子節點 `MN0WF` 的 `fill` 本來就是真實照片，
+/// 留言 sheet／按讚名單的 instance 都沒有覆寫它——稿面畫的就是「框裡有真照片」，不是「一律
+/// 佔位」。這段舊註解是 LS-216 時期寫的、被本票原作者照抄未回頭對稿。現在解碼
+/// `author_avatar_url`，呼叫端（`CommentsSheetView+List.swift`）用
+/// `familyStore.avatarDisplayURL(rawValue:)` 換成可顯示 URL，沿用本票已加好的
+/// `ProfilePrintChip(avatarURL:)`，不需要另建簽名管線。
 struct CommentRecord: Identifiable, Equatable, Decodable, Sendable {
     let id: UUID
     /// 可能為 `nil`——同 `SupabaseSafetyAPIClient.AuthorIDRow` 的既有防禦：作者對應的
@@ -55,6 +62,21 @@ struct CommentRecord: Identifiable, Equatable, Decodable, Sendable {
     /// 的外鍵，防禦性設成 Optional。
     let authorID: UUID?
     let authorDisplayName: String
+    /// Storage 路徑或 OAuth 公開網址，語意同 `Profile.avatarURL`——呼叫端一律經
+    /// `FamilyStore.avatarDisplayURL(rawValue:)` 轉換，不直接拿來建 `URL`。
+    ///
+    /// **被封鎖者由伺服器整列過濾，client 不處理**：`list_comments`（definer，
+    /// `20260913010217_comment_count.sql`）先算 `v_blocked_ids`（`private.blocked_pairs()`），
+    /// 主查詢與 `total_count` 都排除作者在其中的留言——被我封鎖的人的留言整則不會回來，自然也
+    /// 沒有 `author_avatar_url`；按讚名單同理由 `reactions_select` RLS 的 `blocked_pairs` 述詞
+    /// （`20260906124837_reactions_block_filter.sql`）整列濾掉。不要把這層過濾搬到 client。
+    ///
+    /// **不另做遮蔽的只有已離開家庭／已刪帳號**：已離開家庭的作者 `author_display_name` 仍保留
+    /// 當時的值（見 `list_comments` definer 文件），頭像路徑同理原樣回傳；但
+    /// `FamilyStore.avatarSignedURLs` 只簽 `myProfile`＋現任 `members` 的路徑，
+    /// `avatarDisplayURL(rawValue:)` 對它回 nil → 沖印佔位。已刪帳號走 `left join
+    /// public.profiles`，此欄為 nil → 佔位。
+    let authorAvatarURL: String?
     let body: String
     let createdAt: Date
 
@@ -62,6 +84,7 @@ struct CommentRecord: Identifiable, Equatable, Decodable, Sendable {
         case id
         case authorID = "author_id"
         case authorDisplayName = "author_display_name"
+        case authorAvatarURL = "author_avatar_url"
         case body
         case createdAt = "created_at"
     }

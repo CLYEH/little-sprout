@@ -312,7 +312,7 @@ struct DiaryDetailView: View {
     /// 數字，不是各自一套（見檔頭文件註解）。
     private var interactionRow: some View {
         InteractionRow(
-            kind: .diary, refId: diaryID, timelineStore: timelineStore,
+            kind: .diary, refId: diaryID, timelineStore: timelineStore, familyStore: familyStore,
             onOpenComments: { activeSheet = .comments }
         )
     }

@@ -34,4 +34,28 @@ final class TimelineModelsTests: XCTestCase {
         XCTAssertEqual(rows[1].displayName, "家人")
         XCTAssertEqual(rows[1].userID, UUID(uuidString: "22222222-2222-2222-2222-222222222222"))
     }
+
+    /// LS-345 R2（merge-review R1 M1）：`avatar_url` 現在也隨 `profiles` embed 一起解碼——
+    /// mutation：把 `ReactorRow.init(from:)` 裡 `avatarURL = try? profile.decode(...)` 改回
+    /// 不解碼（恆 nil），這支測試會抓到。
+    func test_reactorRow_decode_normalProfile_decodesAvatarURL() throws {
+        let json = """
+        [{
+          "user_id":"11111111-1111-1111-1111-111111111111",
+          "profiles":{"display_name":"陳志明","avatar_url":"family-a/avatars/user-a.jpg"}
+        }]
+        """
+        let rows = try JSONDecoder().decode([ReactorRow].self, from: Data(json.utf8))
+        XCTAssertEqual(rows[0].avatarURL, "family-a/avatars/user-a.jpg")
+    }
+
+    /// `profiles` 是 null（已離開家庭）時 `avatarURL` 同顯示名稱一起退化，不特別遮蔽——沿用
+    /// 顯示名稱的既有降級規則（見型別文件註解「LS-345 R2」段）。
+    func test_reactorRow_decode_nullProfile_avatarURLIsNil() throws {
+        let json = """
+        [{"user_id":"22222222-2222-2222-2222-222222222222","profiles":null}]
+        """
+        let rows = try JSONDecoder().decode([ReactorRow].self, from: Data(json.utf8))
+        XCTAssertNil(rows[0].avatarURL)
+    }
 }

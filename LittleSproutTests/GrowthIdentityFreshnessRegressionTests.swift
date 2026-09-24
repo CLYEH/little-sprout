@@ -16,6 +16,10 @@ import XCTest
 /// ／`ChildRowNavigationRegressionTests` 文件註解點名的既有理由），這裡用原始碼文字守衛：
 /// mutation 把這幾處改回讀 `growthStore.childName`／`growthStore.childBirthday`（R2 的寫法），
 /// 這支測試會抓到。
+///
+/// **LS-345**：同一份「Identity Header 讀新鮮 `child`」的機制，補上頭像那一格——原本
+/// `identityHeader()` 完全沒有把任何 `avatarURL` 傳給 `ChildAvatarView`（不是新鮮度問題，是
+/// 從沒接線），換頭像存檔後畫面永遠停在縮寫圓。見下面兩支新測試。
 final class GrowthIdentityFreshnessRegressionTests: XCTestCase {
     private func sourceText(relativePath: String, file: StaticString = #filePath) throws -> String {
         let testFileURL = URL(fileURLWithPath: "\(file)")
@@ -40,7 +44,7 @@ final class GrowthIdentityFreshnessRegressionTests: XCTestCase {
         let source = try sourceText(relativePath: "LittleSprout/Features/Growth/ChildGrowthDetailView.swift")
 
         XCTAssertTrue(
-            source.contains("ChildAvatarView(name: child.name, size: 64)"),
+            source.contains("ChildAvatarView(name: child.name, size: 64, avatarURL: avatarURL)"),
             "Identity Header 頭像縮寫應該讀 child.name（新鮮值），不是 growthStore.childName（建立當下寫死的舊快照）"
         )
         XCTAssertTrue(
@@ -50,6 +54,34 @@ final class GrowthIdentityFreshnessRegressionTests: XCTestCase {
         XCTAssertTrue(
             source.contains("BirthdayFormat.ageDescription(birthday: child.birthday)"),
             "Identity Header 年齡字串應該讀 child.birthday，不是 growthStore.childBirthday"
+        )
+    }
+
+    /// LS-345：Identity Header 存檔換頭像後仍顯示縮寫圓——上傳成功但畫面沒接
+    /// `avatarURL`（`ChildAvatarView(name: child.name, size: 64)` 完全沒帶這個參數）。
+    /// mutation：把 `identityHeader()` 的 `ChildAvatarView(...)` 改回不帶 `avatarURL:`（LS-345
+    /// 之前的舊寫法），這支測試會抓到。
+    func test_identityHeader_passesAvatarURLToChildAvatarView() throws {
+        let source = try sourceText(relativePath: "LittleSprout/Features/Growth/ChildGrowthDetailView.swift")
+
+        XCTAssertTrue(
+            source.contains("ChildAvatarView(name: child.name, size: 64, avatarURL: avatarURL)"),
+            "Identity Header 的 ChildAvatarView 要帶 avatarURL:，否則存檔換頭像後畫面仍停在縮寫圓"
+        )
+    }
+
+    /// LS-345：呼叫端 `childDetail(for:)` 若不再傳 `avatarURL: childrenStore.avatarURL(for:
+    /// child)`（例如漏傳、或傳固定 nil），這支測試會抓到——同 `GrowthDetailViewerGatingRegressionTests
+    /// .test_childrenManagementView_passesCanManageChildrenFromStore` 既有先例。
+    func test_childrenManagementView_passesAvatarURLFromStore() throws {
+        let source = try sourceText(
+            relativePath: "LittleSprout/Features/Children/ChildrenManagementView+Detail.swift"
+        )
+
+        XCTAssertTrue(
+            source.contains("avatarURL: childrenStore.avatarURL(for: child)"),
+            "childDetail(for:) 要把 childrenStore.avatarURL(for: child) 轉手給 ChildGrowthDetailView，"
+                + "跟列表列（ChildrenManagementView）讀的是同一份簽名 URL 快取，換頭像存檔後才會反映新值"
         )
     }
 

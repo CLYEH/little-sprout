@@ -50,8 +50,14 @@ final class CommentsSheetViewTests: XCTestCase {
         let timelineStore = TimelineStore.preview()
         let view = makeCommentsSheetView(timelineStore: timelineStore)
         view.store.seedForPreview([
-            CommentRecord(id: UUID(), authorID: UUID(), authorDisplayName: "陳志明", body: "1", createdAt: Date()),
-            CommentRecord(id: UUID(), authorID: UUID(), authorDisplayName: "林美玲", body: "2", createdAt: Date())
+            CommentRecord(
+                id: UUID(), authorID: UUID(), authorDisplayName: "陳志明", authorAvatarURL: nil,
+                body: "1", createdAt: Date()
+            ),
+            CommentRecord(
+                id: UUID(), authorID: UUID(), authorDisplayName: "林美玲", authorAvatarURL: nil,
+                body: "2", createdAt: Date()
+            )
         ])
 
         view.syncCommentCountIfKnown()

@@ -6,7 +6,10 @@ import SwiftUI
 extension CommentsSheetView {
     var footer: some View {
         HStack(spacing: AppSpacing.group) {
-            ProfilePrintChip(size: avatarSize)
+            ProfilePrintChip(
+                size: avatarSize,
+                avatarURL: familyStore.avatarDisplayURL(rawValue: familyStore.myProfile?.avatarURL)
+            )
             TextField("留言...", text: $draft, axis: .vertical)
                 .appFont(.body)
                 .foregroundStyle(Color.lsTextPrimary)
@@ -55,9 +58,17 @@ extension CommentsSheetView {
     private func sendTapped() {
         guard !isDraftBlank, let viewerUserID = familyStore.ownerUserID else { return }
         let body = draft
-        let authorDisplayName = familyStore.members.first { $0.userID == viewerUserID }?.displayName ?? "我"
+        let viewerMember = familyStore.members.first { $0.userID == viewerUserID }
+        let authorDisplayName = viewerMember?.displayName ?? "我"
+        // LS-345 R2：樂觀插入那一列的頭像，送出當下就能顯示自己的真實頭像，不必等重開 sheet。
+        // R3（merge-review R2 i2）：作者就是 viewer 自己，改取 `myProfile`（與上方 `footer`
+        // 同源，`FamilyStore.updateAvatar` 換頭像時會寫它）——`members` 可能是換頭像前查的舊值。
+        let authorAvatarURL = familyStore.myProfile?.avatarURL
         Task {
-            let success = await store.send(body: body, authorID: viewerUserID, authorDisplayName: authorDisplayName)
+            let success = await store.send(
+                body: body, authorID: viewerUserID, authorDisplayName: authorDisplayName,
+                authorAvatarURL: authorAvatarURL
+            )
             if success {
                 // LS-237 修（池 `d17bed11` i3）：無條件 `draft = ""` 會在「送出往返期間使用者
                 // 又打了新字」時把新字一併清掉（`body` 已在按下當下正確快照，只差清空這一步沒
