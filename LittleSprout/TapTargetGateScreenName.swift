@@ -306,6 +306,11 @@ enum TapTargetGateScreenName: String {
     // `.deleteCommentConfirmation` 兩個既有 case 覆蓋同一段版面程式碼），不另掛 case。
     case growthRecordActionsSheet = "GrowthRecordActionsSheet"
     case childrenManagementPopulated = "ChildrenManagementView"  // LS-312：populated，1 個寶貝
+    // LS-365：時間軸照片卡壓印行寶貝署名——同 `.diaryCardVideoBadges` 既有先例，不是點擊目標
+    // 測試，借這條通道餵 `PhotoCardBabyCaptionUITests` 量折行像素與截圖對稿；fixture（一位／
+    // 兩位／三位長名／未標記／相簿卡回歸／feed）由 `LS_PHOTO_CARD_CAPTION_FIXTURE` 選，見
+    // `TapTargetGateHarness+PhotoCardCaption.swift`。
+    case photoCardBabyCaption = "PhotoCardBabyCaption"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"

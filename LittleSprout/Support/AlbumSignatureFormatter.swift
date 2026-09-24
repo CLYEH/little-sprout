@@ -21,23 +21,32 @@ enum AlbumSignatureFormatter {
     /// 年齡片語內部空白換成不斷行空格（`\u{00A0}`），「個」「月」之間插入 WORD JOINER
     /// （`\u{2060}`）防止拆成孤字——同 `MultiChildCaptionFormatter.segments` 的既有理由，
     /// 這裡額外處理「個月」相鄰（無空白）也要接住，因為 `BirthdayFormat.ageDescription` 的
-    /// 「N 個月大」／「Y 歲 M 個月」兩種格式都有「個月」這個無空白的相鄰組合。姓名與年齡之間
-    /// 的「 · 」刻意維持一般可斷空白（U+0020）——若也用 NBSP 包住會把姓名最後一字一併鎖進
-    /// 同一個不可斷區塊，AX3 實測會產生單字孤兒（LS-142 Notes `epDnW`）。
+    /// 「N 個月大」／「Y 歲 M 個月」兩種格式都有「個月」這個無空白的相鄰組合。
+    ///
+    /// LS-365（LS-367 Notes `L0xP2` ②）：「月」「大」之間也插 WORD JOINER——AX3 實測
+    /// 「小饅頭 · 8 個月」／「大」孤字（LS-367 定案 1 `AGF13`）。
     static func hardenedAge(_ age: String) -> String {
         age
             .replacingOccurrences(of: "個月", with: "個\u{2060}月")
+            .replacingOccurrences(of: "月大", with: "月\u{2060}大")
             .replacingOccurrences(of: " ", with: "\u{00A0}")
     }
 
     /// 單一寶貝的「暱稱 · 年齡」片段。
+    ///
+    /// LS-365（LS-367 Notes `L0xP2` ①）：「·」前維持一般可斷空白（U+0020）、「·」後改不斷行
+    /// 空格（U+00A0）——單人一行放不下時只能在姓名後折行，「·」領銜下一行（「小安」／
+    /// 「· 2 歲 3 個月」，LS-201 核可稿面）。原本「·」後也是 U+0020，AX3 會折成「小安 ·」／
+    /// 「2 歲 3 個月」，與稿相反。「·」前不能也換 NBSP：會把姓名最後一字一併鎖進同一個不可斷
+    /// 區塊，AX3 實測會產生單字孤兒（LS-142 Notes `epDnW`）。相簿卡署名列（`AlbumSummaryCardView`）
+    /// 與時間軸照片卡（`PhotoCardView`）共用這支，兩邊折行一起變。
     ///
     /// LS-334：改吃 `timeZone: TimeZone`，不再吃 `calendar: Calendar`——同
     /// `BirthdayFormat.wireString`／`ageDescription` 原則，裝置曆法識別碼不會有機會流進
     /// `BirthdayFormat.ageDescription`。
     static func segment(for child: Child, asOf date: Date, timeZone: TimeZone = .current) -> String {
         let age = hardenedAge(BirthdayFormat.ageDescription(birthday: child.birthday, now: date, timeZone: timeZone))
-        return "\(child.name) · \(age)"
+        return "\(child.name) ·\u{00A0}\(age)"
     }
 
     /// 署名列文字——`isOneLinePerPerson` 為 true（AX3）時多寶貝改用 `\n` 分隔，否則用「、」。

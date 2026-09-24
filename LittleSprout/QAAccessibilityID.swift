@@ -25,6 +25,9 @@ enum QAAccessibilityID {
     static let diaryBodyEditor = "qa.diaryEditor.body"
     /// 時間軸日記卡（`TimelineView` 包 `DiaryCardView` 的 `NavigationLink`——整張卡合併成一顆 button）。
     static let timelineDiaryCard = "qa.timeline.diaryCard"
+    /// LS-365：時間軸照片卡壓印行的寶貝署名（`PhotoCardSignature`，整段 `.combine` 成一個元素；
+    /// 未標記時整行 `.accessibilityHidden`，這個 identifier 就不存在）。
+    static let photoCardSignature = "qa.timeline.photoCardSignature"
     /// 13 日記詳情的內文。
     static let diaryDetailBody = "qa.diaryDetail.body"
     /// LS-188：01 設定頁「個人」列（`SettingsView` 包 `ProfileSummaryRow` 的
