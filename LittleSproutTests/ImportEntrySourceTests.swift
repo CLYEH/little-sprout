@@ -59,37 +59,4 @@ final class ImportEntrySourceTests: XCTestCase {
         let source = ImportEntrySource.albumDetail(albumID: UUID(), albumName: "測試相簿")
         XCTAssertTrue(source.applyDefaultAlbum(to: []).isEmpty)
     }
-
-    // MARK: - `ImportPlan.hasUnskippedGroupsWithoutAlbum`（LS-303 R3，merge-review R2 M2）
-
-    private func plan(_ groups: [ImportPlan.Group]) -> ImportPlan {
-        ImportPlan(groups: groups)
-    }
-
-    func test_hasUnskippedGroupsWithoutAlbum_allGroupsHaveAlbum_returnsFalse() {
-        let albumID = UUID()
-        let plan = plan([group(id: "a", albumID: albumID), group(id: "b", albumID: albumID)])
-        XCTAssertFalse(plan.hasUnskippedGroupsWithoutAlbum)
-    }
-
-    func test_hasUnskippedGroupsWithoutAlbum_oneUnskippedGroupMissingAlbum_returnsTrue() {
-        let plan = plan([group(id: "a", albumID: UUID()), group(id: "b", albumID: nil)])
-        XCTAssertTrue(plan.hasUnskippedGroupsWithoutAlbum)
-    }
-
-    func test_hasUnskippedGroupsWithoutAlbum_skippedGroupMissingAlbum_returnsFalse() {
-        var skipped = group(id: "b", albumID: nil)
-        skipped.isSkipped = true
-        XCTAssertFalse(
-            plan([group(id: "a", albumID: UUID()), skipped]).hasUnskippedGroupsWithoutAlbum,
-            "略過的群即使沒有相簿也不擋主鈕——它本來就不會被匯入"
-        )
-    }
-
-    func test_hasUnskippedGroupsWithoutAlbum_emptyGroupMissingAlbum_returnsFalse() {
-        let empty = ImportPlan.Group(id: "empty", anchorDate: Date(), isDateUnknown: false, assetLocalIdentifiers: [])
-        XCTAssertFalse(
-            plan([empty]).hasUnskippedGroupsWithoutAlbum, "沒有任何資產的群不會實際造成任何照片沒地方放"
-        )
-    }
 }

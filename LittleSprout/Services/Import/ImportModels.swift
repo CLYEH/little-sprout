@@ -53,14 +53,6 @@ struct ImportPlan: Codable, Equatable {
     /// 頂部摘要的 M——只算日期群數（沿設計稿 03 板「共 200 張・7 個日期群」語意，日期不明
     /// 群本身也算一群）。
     var groupCount: Int { groups.count }
-
-    /// LS-303 R3（merge-review R2 M2，orchestrator 裁決）：`LegacyAlbumUploadImportCoordinator`
-    /// 過渡版只支援「每群都指定相簿」——有未略過、且非空、卻沒有 `albumID` 的群，代表主鈕按下
-    /// 去會有照片沒有地方可放。`ImportOrganizeView.ctaBar` 用這個純函式決定是否停用主鈕＋
-    /// 顯示提示，見 `ImportUploadCoordinator.requiresAlbumSelection`。
-    var hasUnskippedGroupsWithoutAlbum: Bool {
-        groups.contains { !$0.isSkipped && !$0.assetLocalIdentifiers.isEmpty && $0.albumID == nil }
-    }
 }
 
 /// 匯入流程的觸發入口（LS-303 R2，merge-review R1 M2，orchestrator 裁決 `c997f234`）——
@@ -111,20 +103,6 @@ enum ImportEntrySource: Equatable {
 protocol ImportUploadCoordinator {
     @MainActor
     func startImport(plan: ImportPlan) -> ImportBatchSession
-
-    /// LS-303 R3（merge-review R2 M2）：這個實作是否要求整理頁每一個未略過群都指定相簿——
-    /// `ImportOrganizeView.ctaBar` 讀這個旗標決定要不要在使用者選「不放相簿」時停用主鈕＋
-    /// 提示「本版需先選相簿」。預設 `false`——`AlbumImportUploadCoordinator`（LS-304 正式版）
-    /// 不需要這個限制，這個過渡期限制原本只有已移除的 `LegacyAlbumUploadImportCoordinator`
-    /// 覆寫成 `true`。目前沒有任何實作覆寫；保留這個擴充點是讓型別本身描述完整的介面空間，
-    /// 不需要為此再改一次協定。`@MainActor`：同 `startImport(plan:)`——理由見該處註解。
-    @MainActor
-    var requiresAlbumSelection: Bool { get }
-}
-
-extension ImportUploadCoordinator {
-    @MainActor
-    var requiresAlbumSelection: Bool { false }
 }
 
 /// harness／preview／`.timeline` 入口尚未接線時使用——不做任何事，只用來讓「開始匯入」鈕有
