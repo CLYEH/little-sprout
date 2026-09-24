@@ -129,7 +129,8 @@ final class InteractionRowContrastTests: XCTestCase {
 }
 
 /// 把任意 `CGImage` 重畫進 8-bit sRGB RGBA 點陣，統一色彩空間後才能用 WCAG sRGB 公式算亮度。
-private struct SRGBPixels {
+/// LS-373：改 internal，`Import05FillBabiesButtonContrastTests` 共用。
+struct SRGBPixels {
     let width: Int
     let height: Int
     private let bytes: [UInt8]

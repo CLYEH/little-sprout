@@ -129,6 +129,11 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.importSummaryWithFailures)
     }
 
+    /// LS-373：05 完成摘要疊寶貝沒有指定成功——內容區「補上寶貝（N）」（cmp/Button Text）。
+    func testImportSummaryWithMarkingFailure() {
+        assertAllTappablesMeetMinimum(.importSummaryWithMarkingFailure)
+    }
+
     /// LS-166：「編輯相簿名稱」sheet，初始態（名稱欄／寶貝標記欄／儲存鈕）不需要任何 seed 資料。
     func testEditAlbumView() {
         assertAllTappablesMeetMinimum(.editAlbum)

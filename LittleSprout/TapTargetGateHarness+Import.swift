@@ -60,7 +60,7 @@ extension TapTargetGateHarness {
 
     /// LS-319：05 完成摘要頁疊「寶貝標記未完成」——`seedFailedMarkingForPreview` 直接灌狀態
     /// （不經過真正的 RPC，見該方法文件註解），`entryIDs` 取這份 fixture 真正的
-    /// `session.entryIDSet` 子集，讓「N 張寶貝標記未完成」與「重試標記（N）」對得上。
+    /// `session.entryIDSet` 子集，讓「其中 N 張的寶貝沒有指定成功」與「補上寶貝（N）」（LS-373）對得上。
     @MainActor
     @ViewBuilder
     static var importSummaryWithMarkingFailureHost: some View {
@@ -68,6 +68,8 @@ extension TapTargetGateHarness {
         let marker = AlbumsStore.preview().mediaChildrenMarker
         let markedEntryIDs = Array(fixture.session.entryIDs.prefix(2))
         marker.seedFailedMarkingForPreview(entryIDs: markedEntryIDs, mediaIDs: markedEntryIDs)
+        // LS-373：同批再疊「沒有加入」列（D2），一個 host 就涵蓋統計卡三類頂層列＋寶貝子列。
+        fixture.session.markGroupResolved(droppedCount: 3)
         return Import05SummaryView(session: fixture.session, store: fixture.store, marker: marker, onDone: {})
     }
 }
