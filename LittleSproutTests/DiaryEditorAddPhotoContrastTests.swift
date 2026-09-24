@@ -7,7 +7,8 @@ import XCTest
 /// 對比。曾經誤用紙上專用的單值 token `print-ink-secondary`（不掛 theme，只在 `$print-paper`
 /// 上合法），深色對 surface-2 只剩 1.27:1，長輩看不見「新增照片」。
 /// 4.5:1 是長輩硬約束（一般文字 AA）；淺色必須與舊值一致（票文範圍 2「淺色值不變」）。
-/// 寫法沿 `InteractionRowContrastTests`（LS-366）。
+/// 寫法沿 `InteractionRowContrastTests`（LS-366）；`@MainActor` 同該檔（LS-371，池 `dbf8fade`）。
+@MainActor
 final class DiaryEditorAddPhotoContrastTests: XCTestCase {
     private static let elderMinimumContrast = 4.5
 

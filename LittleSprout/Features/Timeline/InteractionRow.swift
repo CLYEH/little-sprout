@@ -151,6 +151,12 @@ struct InteractionRow: View {
     /// 撐大熱區（標準態 44→48），AX3（56×80）已經遠高於下限、`minWidth`／`minHeight` 對它是
     /// no-op，不受影響；只影響看不見的點擊區，不改變 `Count Zone` 本身沒有背景色塊、純文字
     /// 置中的視覺。
+    ///
+    /// LS-371：計數 0 時「不開名單」只靠 action 內的 `guard`，**不掛 `.disabled`**——`.disabled`
+    /// 會讓 SwiftUI 把 `.plain` 按鈕整顆淡化約 50%，計數「0」對底只剩 2.47–3.19:1（LS-366 QA
+    /// `06a94284`），低於長輩硬約束 4.5:1；計數是資訊、不是可用與否的提示，稿面 `IgqGF`／
+    /// `VZ0wV`／`Qzz3r` 的 `Count Zone` 也只有一種未按讚樣式、沒有淡化態。守在
+    /// `InteractionRowContrastTests.test_countZone_renderedCountMeetsElderContrast_inAllReactionStates`。
     private var countZone: some View {
         Button {
             guard reaction.count > 0 else { return }
@@ -164,7 +170,6 @@ struct InteractionRow: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(reaction.count == 0)
         .accessibilityIdentifier(QAAccessibilityID.interactionRowElement(kind: kind.rawValue, element: "countZone"))
         .accessibilityLabel("\(reaction.count) 人按了愛心")
         .accessibilityHint(reaction.count > 0 ? "顯示按讚名單" : "")
