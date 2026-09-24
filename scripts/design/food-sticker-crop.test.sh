@@ -4,10 +4,11 @@
 # 涵蓋範圍（票文範圍 2；LS-340 scope 5 補 F/G/H/I，承接 LS-338 merge-review m3／m4／i2，見 4d4fbe33；
 # LS-340 R2 補 J，承接 merge-review `1c80d549` i1）：
 #   A. 參考樣張（真實 design/food-stickers/style/reference-sheet.png）裁出剛好 8 張，檔名＝食物 id，且與
-#      已入庫的 design/food-stickers/stickers/*.png **像素內容相同**（見下方「A／C 用像素比對而非 cmp」）。
+#      已入庫的 design/food-stickers/stickers/*.png **像素內容在容差內相同**（見下方「A／C 用像素比對而非 cmp」
+#      與「LS-387 容差比對」）。
 #   B. 合成「少一張貼紙」夾具（7 個連通區塊、plan 卻列 8 個 id）→ exit 非 0，訊息點名哪張 sheet／預期與實際數量。
 #   C. sheet-15（真實 design/food-stickers/sheets/sheet-15.png，唯一的單列 2 食物 sheet）裁出剛好 2 張、檔名
-#      相符，且與已入庫成品像素內容相同（同 A）。
+#      相符，且與已入庫成品像素內容在容差內相同（同 A）。
 #   D. `sort_reading_order()` 純函式單元測試：用一組刻意 y 幾乎相等、x 差很大的座標，證明新演算法（找最大間隔，
 #      小於門檻視為單一列）跟舊版「y 中位數切兩列」在這組座標上給出**不同**且新版才對的排序結果——這正是
 #      票文點名的迴歸（sheet-15 用中位數切割會把單列 2 食物誤判成兩列各一個，此測試把它縮成最小可重現案例）。
@@ -39,6 +40,15 @@
 # `mode`（見 i3，避免 `convert("RGBA")` 把 mode 差異正規化掉）。若之後想收斂到逐位元組，前提是先把
 # 「用哪支 Pillow wheel／哪個 OS／哪個 Python 版本產出版控內成品」定義成可重放的建置環境（例如固定在
 # CI 容器內產出＋入庫），本票不擴大處理。
+#
+# LS-387 容差比對（取代上段的「逐像素相等」）：成品改調色盤量化後，色數依「編碼後位元組數 ≤40 KB」逐級
+# 挑選，zlib 跨平台輸出長度不同 → 貼近 40 KB 的檔可能在 macOS 與 Linux 挑到不同色數，連像素都不再跨平台
+# 相同（實測 macOS arm64 vs Linux amd64：274 張中 20 張不同，平均每通道絕對差最大 1.72／255）。`pixels_equal.py`
+# 改成「mode 都是 P＋透明、尺寸相同、RGBA 平均絕對差 ≤ TOLERANCE（4.0）」才算 MATCH；兩張**不同食物**的
+# 平均絕對差實測最小 10.49（同 sheet 953 組配對，sheet-01 rice_cereal vs rice_porridge），門檻夾在兩者之間，id↔圖錯配照樣抓得到（N 斷言，O mutation 證明 N 真的在測門檻）。
+#   M.（LS-387）合成「雜訊貼紙」夾具：量化到最低色數仍 >40 KB → exit 非 0，訊息點名超過單張上限；
+#      M2 mutation 拿掉 QUANTIZE-LIMIT-CHECK → exit 0（證明 M 在測這個檢查）。A 另驗 8 張輸出皆 ≤40960 bytes。
+#   P1.（LS-387）check-consistency：合成「未量化的 RGBA 貼紙」夾具 → exit 非 0，訊息點名 mode RGBA。
 #
 # B1（LS-340 R2，merge-review `1c80d549`）：`pixels_match()` 呼叫 `uv run --with <pin>` 時若 uv 快取是
 # 冷的，stderr 會印下載進度／安裝訊息；先前版本把 stderr 併進比對字串（`2>&1`）導致冷快取環境（例如
@@ -78,7 +88,14 @@ stickers_dir="${root}/design/food-stickers/stickers"
 
 # i4：所有輔助 `uv run --with` 呼叫釘同一個 Pillow 版本，與 production 的 PEP 723 釘版路徑一致
 # （見上方檔頭「i4」段）。這裡直接讀 production 腳本檔頭的 pin，兩處只有一個事實來源，改版時不會漏改。
-PILLOW_PIN="$(sed -n 's/^# dependencies = \["\(Pillow==[0-9.]*\)"\]$/\1/p' "$script")"
+# LS-387：檔頭改成兩個依賴（Pillow＋imagequant），逐一從 dependencies 行抓出釘版。
+deps_line="$(sed -n 's/^# dependencies = \[\(.*\)\]$/\1/p' "$script")"
+PILLOW_PIN="$(printf '%s' "$deps_line" | grep -oE 'Pillow==[0-9.]+')"
+IQ_PIN="$(printf '%s' "$deps_line" | grep -oE 'imagequant==[0-9.]+')"
+if [ -z "$IQ_PIN" ]; then
+  fail "IQ_PIN：讀不到 ${script} 檔頭的 PEP 723 imagequant 版本宣告（mutant／D 需要 import 本腳本）"
+  IQ_PIN="imagequant"
+fi
 if [ -z "$PILLOW_PIN" ]; then
   fail "PILLOW_PIN：讀不到 ${script} 檔頭的 PEP 723 Pillow 版本宣告（自測其餘部分無法可靠比對像素）"
   PILLOW_PIN="pillow"  # 退回鬆散版本，至少能繼續跑、不整支中止
@@ -86,29 +103,33 @@ else
   PILLOW_PIN="$(printf '%s' "$PILLOW_PIN" | tr 'P' 'p')"  # PEP 723 用 "Pillow"，--with 慣例用小寫套件名
 fi
 
-# 像素內容比對（見上方「A／C 用像素比對而非 cmp」）：兩檔都能開、mode 相同（i3：不靠 convert 正規化掉
-# mode 差異）、轉 RGBA 後 tobytes() 相等才算通過；任一檔打不開或尺寸／mode 不同也算不相等（不拋例外
-# 中斷自測）。印出 "MATCH"／"MISMATCH: <原因>"。
+# 像素內容比對（見上方「A／C 用像素比對而非 cmp」與「LS-387 容差比對」）：兩檔都能開、mode 都是 P 且帶
+# 透明（i3：不靠 convert 正規化掉 mode 差異）、尺寸相同、轉 RGBA 後平均絕對差 ≤ TOLERANCE 才算通過；
+# 任一檔打不開或尺寸／mode 不同也算不相等（不拋例外中斷自測）。印出 "MATCH"／"MISMATCH: <原因>"。
 cat > "${work}/pixels_equal.py" <<'PYEOF'
 import sys
-from PIL import Image
+from PIL import Image, ImageChops, ImageStat
+
+TOLERANCE = 4.0  # RGBA 平均絕對差（0–255）；跨平台量化差實測 ≤1.72、不同食物 ≥10.49（見檔頭）
 
 a_path, b_path = sys.argv[1], sys.argv[2]
 try:
     with Image.open(a_path) as a, Image.open(b_path) as b:
-        # i3：先斷言兩檔本來就是 RGBA，不要讓下面的 convert("RGBA") 把「crop 退化成輸出 RGB」這類迴歸
-        # 正規化掉——RGB 轉 RGBA 時 alpha 補滿 255，若顏色相同會跟真正的 RGBA 版本位元相同，convert()
-        # 本身抓不到「本來就不該是 RGB」這件事，必須在 convert() 之前先擋。
-        if a.mode != "RGBA":
-            print(f"MISMATCH: {a_path} mode {a.mode} != RGBA")
-        elif b.mode != "RGBA":
-            print(f"MISMATCH: {b_path} mode {b.mode} != RGBA")
+        # i3：先斷言兩檔本來就是量化後的調色盤 PNG（mode P＋透明），不要讓下面的 convert("RGBA") 把
+        # 「crop 退化成輸出 RGBA／沒走量化」這類迴歸正規化掉——convert() 之後分不出來，必須在之前先擋。
+        if a.mode != "P" or not a.has_transparency_data:
+            print(f"MISMATCH: {a_path} mode {a.mode} != P")
+        elif b.mode != "P" or not b.has_transparency_data:
+            print(f"MISMATCH: {b_path} mode {b.mode} != P")
         elif a.size != b.size:
             print(f"MISMATCH: size {a.size} != {b.size}")
-        elif a.convert("RGBA").tobytes() != b.convert("RGBA").tobytes():
-            print("MISMATCH: pixels differ")
         else:
-            print("MATCH")
+            diff = ImageChops.difference(a.convert("RGBA"), b.convert("RGBA"))
+            mean = sum(ImageStat.Stat(diff).mean) / 4
+            if mean > TOLERANCE:
+                print(f"MISMATCH: mean abs diff {mean:.2f} > {TOLERANCE}")
+            else:
+                print("MATCH")
 except Exception as exc:  # noqa: BLE001
     print(f"MISMATCH: {exc}")
 PYEOF
@@ -139,9 +160,19 @@ if out="$(run_crop --sheet reference-sheet --plan "$plan" --reference-plan "$ref
     fi
   done
   if [ -z "$a_mismatch" ]; then
-    ok "A. 參考樣張 8 張輸出與已入庫 design/food-stickers/stickers/*.png 像素內容相同"
+    ok "A. 參考樣張 8 張輸出與已入庫 design/food-stickers/stickers/*.png 像素內容在容差內相同"
   else
     fail "A. 以下輸出與已入庫成品像素不同（id↔圖可能錯配）：${a_mismatch}"
+  fi
+  # LS-387：每張輸出 ≤40960 bytes（量化逐級挑色數的上限，與 CI food-sticker-size-check 同門檻）
+  a_oversize=""
+  for f in $got_a; do
+    [ "$(wc -c < "${out_a}/${f}" | tr -d ' ')" -le 40960 ] || a_oversize="${a_oversize} ${f}"
+  done
+  if [ -z "$a_oversize" ]; then
+    ok "A. 參考樣張 8 張輸出皆 ≤40960 bytes（LS-387 單張上限）"
+  else
+    fail "A. 以下輸出超過 40960 bytes：${a_oversize}"
   fi
 else
   fail "A. 參考樣張裁切不該失敗（exit 非 0）"
@@ -214,7 +245,7 @@ if out="$(run_crop --sheet sheet-15 --plan "$plan" --reference-plan "$no_ref" \
     fi
   done
   if [ -z "$c_mismatch" ]; then
-    ok "C. sheet-15 2 張輸出與已入庫成品像素內容相同（m4 點名的中位數法 mutant 會讓兩張對調，此斷言會抓到）"
+    ok "C. sheet-15 2 張輸出與已入庫成品像素內容在容差內相同（m4 點名的中位數法 mutant 會讓兩張對調，此斷言會抓到）"
   else
     fail "C. 以下輸出與已入庫成品像素不同（id↔圖可能錯配）：${c_mismatch}"
   fi
@@ -243,7 +274,7 @@ mid_y = (100.5 + 100.0) / 2
 naive_order = sorted([0, 1], key=lambda i: ([100.5, 100.0][i] > mid_y, [10.0, 90.0][i]))
 print("naive_order=" + ",".join(str(i) for i in naive_order))
 PYEOF
-d_out="$(uv run --with "$PILLOW_PIN" python3 "${work}/check_sort.py" "$script" 2>&1)"
+d_out="$(uv run --with "$PILLOW_PIN" --with "$IQ_PIN" python3 "${work}/check_sort.py" "$script" 2>&1)"
 expect_has "$d_out" "order=0,1" "D. sort_reading_order() 在 y 幾乎相等、x 差很大的座標上依 x 排序（正解 [0,1]）"
 expect_has "$d_out" "naive_order=1,0" "D. 舊版 y 中位數切割在同一組座標給出相反的錯誤排序（[1,0]），證明這是真的迴歸修正"
 
@@ -255,7 +286,7 @@ awk '
 ' "$script" > "$mut"
 if grep -qF 'REGION-COUNT-CHECK-MUTATED' "$mut"; then
   out_e="${work}/out-e"
-  e_out="$(uv run --with "$PILLOW_PIN" python3 "$mut" crop --sheet synthetic-fewer --plan "${work}/plan-fewer.json" \
+  e_out="$(uv run --with "$PILLOW_PIN" --with "$IQ_PIN" python3 "$mut" crop --sheet synthetic-fewer --plan "${work}/plan-fewer.json" \
     --reference-plan "$no_ref" --sheets-dir "$synth_dir" --style-dir "$synth_dir" --out-dir "$out_e" 2>&1)"; rc_e=$?
   if [ "$rc_e" -eq 0 ]; then
     ok "E. mutant（拿掉區塊數檢查）：B 的夾具改判 exit 0——證明 B 的「expect_exit 1」與「expect_has … 連通區塊 7 個，預期 8 個」兩條斷言真的在測這個檢查"
@@ -267,24 +298,26 @@ else
   fail "E. 找不到 REGION-COUNT-CHECK 標記行，負控本身無效"
 fi
 
-# ==== K.（LS-340 R2 i3）mode 斷言防呆：RGB 與同色 RGBA（alpha 全 255）視覺相同但 mode 不同 ====
+# ==== K.（LS-340 R2 i3；LS-387 改 P）mode 斷言防呆：未量化 RGBA 與同內容調色盤 P 視覺相同但 mode 不同 ====
 cat > "${work}/gen_mode_pair.py" <<'PYEOF'
 import sys
 from PIL import Image
 
-rgb_path, rgba_path = sys.argv[1], sys.argv[2]
-Image.new("RGB", (40, 40), (200, 120, 60)).save(rgb_path)
-Image.new("RGBA", (40, 40), (200, 120, 60, 255)).save(rgba_path)
+rgba_path, p_path = sys.argv[1], sys.argv[2]
+im = Image.new("RGBA", (40, 40), (0, 0, 0, 0))
+im.paste((200, 120, 60, 255), (10, 10, 30, 30))
+im.save(rgba_path)
+im.quantize(colors=2, method=Image.Quantize.FASTOCTREE).save(p_path)
 PYEOF
-uv run --with "$PILLOW_PIN" python3 "${work}/gen_mode_pair.py" "${work}/mode-rgb.png" "${work}/mode-rgba.png"
+uv run --with "$PILLOW_PIN" python3 "${work}/gen_mode_pair.py" "${work}/mode-rgba.png" "${work}/mode-p.png"
 
-k_out="$(uv run --with "$PILLOW_PIN" python3 "${work}/pixels_equal.py" "${work}/mode-rgb.png" "${work}/mode-rgba.png" 2>/dev/null)"
-expect_has "$k_out" "mode RGB != RGBA" "K. RGB／RGBA 同色不同 mode 的夾具被判 MISMATCH（防 convert() 把 mode 差異正規化掉）"
+k_out="$(uv run --with "$PILLOW_PIN" python3 "${work}/pixels_equal.py" "${work}/mode-rgba.png" "${work}/mode-p.png" 2>/dev/null)"
+expect_has "$k_out" "mode RGBA != P" "K. 未量化 RGBA／同內容調色盤 P 的夾具被判 MISMATCH（防 convert() 把「沒走量化」正規化掉）"
 
 # ==== L.（LS-340 R2 i3）Mutation：拿掉 pixels_equal.py 的 mode 斷言 → K 的夾具改判 MATCH ====
 mut_mode="${work}/pixels_equal.no-mode-check.py"
 awk '
-  /# i3：先斷言兩檔本來就是 RGBA/ { skip=1; next }
+  /# i3：先斷言兩檔本來就是量化後/ { skip=1; next }
   skip && /^        elif a\.size != b\.size:/ { skip=0; sub(/elif/, "if"); print; next }
   skip { next }
   { print }
@@ -292,12 +325,76 @@ awk '
 if grep -qF 'mode !=' "$mut_mode"; then
   fail "L. 拿掉 mode 檢查失敗，負控本身無效（mutant 仍含 mode 斷言字樣）"
 else
-  l_out="$(uv run --with "$PILLOW_PIN" python3 "$mut_mode" "${work}/mode-rgb.png" "${work}/mode-rgba.png" 2>/dev/null)"
+  l_out="$(uv run --with "$PILLOW_PIN" python3 "$mut_mode" "${work}/mode-rgba.png" "${work}/mode-p.png" 2>/dev/null)"
   if [ "$l_out" = "MATCH" ]; then
     ok "L. mutant（拿掉 mode 斷言）：K 的夾具改判 MATCH——證明 K 真的在測 mode 防呆，不是意外通過"
   else
     fail "L. mutant 未如預期翻轉（拿掉 mode 斷言後仍判「${l_out}」，負控本身無效）"
   fi
+fi
+
+# ==== N.（LS-387）容差比對仍分得出不同食物：A 裁出的 banana 對已入庫的 carrot → MISMATCH ====
+n_out="$(uv run --with "$PILLOW_PIN" python3 "${work}/pixels_equal.py" "${out_a}/banana.png" "${stickers_dir}/carrot.png" 2>/dev/null)"
+expect_has "$n_out" "MISMATCH: mean abs diff" "N. 兩張不同食物（banana 輸出 vs 已入庫 carrot）被容差比對判 MISMATCH（id↔圖錯配抓得到）"
+
+# ==== O.（LS-387）Mutation：容差門檻放到無限大 → N 的配對改判 MATCH（證明 N 真的在測門檻）====
+mut_tol="${work}/pixels_equal.no-tolerance.py"
+sed 's/^TOLERANCE = 4\.0 /TOLERANCE = 1e9 /' "${work}/pixels_equal.py" > "$mut_tol"
+if grep -q '^TOLERANCE = 1e9 ' "$mut_tol"; then
+  o_out="$(uv run --with "$PILLOW_PIN" python3 "$mut_tol" "${out_a}/banana.png" "${stickers_dir}/carrot.png" 2>/dev/null)"
+  if [ "$o_out" = "MATCH" ]; then
+    ok "O. mutant（容差放到無限大）：N 的配對改判 MATCH——證明 N 真的在測容差門檻"
+  else
+    fail "O. mutant 未如預期翻轉（容差放大後仍判「${o_out}」，負控本身無效）"
+  fi
+else
+  fail "O. 找不到 TOLERANCE 設定行，負控本身無效"
+fi
+
+# ==== M.（LS-387）合成「雜訊貼紙」夾具：量化到最低色數仍 >40 KB → exit 非 0 ====
+cat > "${work}/gen_noise.py" <<'PYEOF'
+import random
+import sys
+from PIL import Image
+
+path = sys.argv[1]
+rng = random.Random(387)
+im = Image.new("RGBA", (300, 300), (0, 0, 0, 0))
+noise = Image.frombytes("RGB", (200, 200), bytes(rng.randrange(256) for _ in range(200 * 200 * 3)))
+im.paste(noise.convert("RGBA"), (50, 50))
+im.save(path)
+PYEOF
+uv run --with "$PILLOW_PIN" python3 "${work}/gen_noise.py" "${synth_dir}/synthetic-noise.png"
+cat > "${work}/plan-noise.json" <<'JSONEOF'
+[
+ {"sheet": "synthetic-noise", "foods": [{"id": "n1", "name_zh": "1", "category": "x"}]}
+]
+JSONEOF
+out_m="${work}/out-m"
+m_out="$(run_crop --sheet synthetic-noise --plan "${work}/plan-noise.json" --reference-plan "$no_ref" \
+  --sheets-dir "$synth_dir" --style-dir "$synth_dir" --out-dir "$out_m" 2>&1)"; rc_m=$?
+expect_exit 1 "$rc_m" "M. 雜訊貼紙量化到最低色數仍 >40 KB → exit 非 0"
+expect_has "$m_out" "超過單張上限 40960 bytes" "M. 錯誤訊息點名超過單張上限"
+[ -e "${out_m}/n1.png" ] && fail "M. 超標時不該寫出輸出檔（n1.png 存在）" || ok "M. 超標時不寫出輸出檔"
+
+# ==== M2.（LS-387）Mutation：拿掉 QUANTIZE-LIMIT-CHECK → M 的夾具改判 exit 0 ====
+mut_limit="${work}/food-sticker-crop.no-limit-check.py"
+awk '
+  index($0, "# QUANTIZE-LIMIT-CHECK") > 0 { print "    if False:  # QUANTIZE-LIMIT-CHECK-MUTATED"; next }
+  { print }
+' "$script" > "$mut_limit"
+if grep -qF 'QUANTIZE-LIMIT-CHECK-MUTATED' "$mut_limit"; then
+  m2_out="$(uv run --with "$PILLOW_PIN" --with "$IQ_PIN" python3 "$mut_limit" crop --sheet synthetic-noise \
+    --plan "${work}/plan-noise.json" --reference-plan "$no_ref" \
+    --sheets-dir "$synth_dir" --style-dir "$synth_dir" --out-dir "${work}/out-m2" 2>&1)"; rc_m2=$?
+  if [ "$rc_m2" -eq 0 ]; then
+    ok "M2. mutant（拿掉單張上限檢查）：M 的夾具改判 exit 0——證明 M 真的在測這個檢查"
+  else
+    fail "M2. mutant 未如預期翻轉（拿掉檢查後仍 exit ${rc_m2}，負控本身無效）"
+    printf '%s\n' "$m2_out" | sed 's/^/    /' >&2
+  fi
+else
+  fail "M2. 找不到 QUANTIZE-LIMIT-CHECK 標記行，負控本身無效"
 fi
 
 # ==== F. 合成「列分組與 grid 不符」夾具：8 個連通區塊排成 5 上／3 下，plan 宣告 grid 2x4 → exit 非 0 ====
@@ -350,7 +447,7 @@ awk '
 ' "$script" > "$mut_grid"
 if grep -qF 'GRID-CHECK-MUTATED' "$mut_grid"; then
   out_g="${work}/out-g"
-  g_out="$(uv run --with "$PILLOW_PIN" python3 "$mut_grid" crop --sheet synthetic-mismatch \
+  g_out="$(uv run --with "$PILLOW_PIN" --with "$IQ_PIN" python3 "$mut_grid" crop --sheet synthetic-mismatch \
     --plan "${work}/plan-mismatch.json" --reference-plan "$no_ref" \
     --sheets-dir "$synth_dir" --style-dir "$synth_dir" --out-dir "$out_g" 2>&1)"; rc_g=$?
   if [ "$rc_g" -eq 0 ]; then
@@ -406,7 +503,13 @@ import sys
 from PIL import Image
 
 path = sys.argv[1]
-Image.new("RGBA", (384, 384), (200, 120, 60, 255)).save(path)
+# LS-387：合格成品是 mode P＋透明；夾具照做，讓 H／I 只因缺／多檔而紅（`--rgba` 產未量化版給 P1 用）
+im = Image.new("RGBA", (384, 384), (0, 0, 0, 0))
+im.paste((200, 120, 60, 255), (40, 40, 344, 344))
+if len(sys.argv) > 2 and sys.argv[2] == "--rgba":
+    im.save(path)
+else:
+    im.quantize(colors=2, method=Image.Quantize.FASTOCTREE).save(path)
 PYEOF
 
 csv_h="${work}/food_catalog-missing.csv"
@@ -444,6 +547,23 @@ i_out="$(uv run "$script" check-consistency --stickers-dir "$stickers_i" --csv "
 expect_exit 1 "$rc_i" "I. 多一張孤兒的夾具（stickers/ 比 CSV 多一個檔名）exit 非 0"
 expect_has "$i_out" "多 1 個" "I. 錯誤訊息點名多幾個"
 expect_has "$i_out" "orphan" "I. 錯誤訊息點名多的是哪個 id"
+expect_not_has "$i_out" "不是可開啟的" "I. 夾具本身是合格的調色盤 PNG（只因孤兒檔而紅，不混入格式錯誤）"
+
+# ==== P1.（LS-387）check-consistency：未量化的 RGBA 貼紙 → exit 非 0、訊息點名 mode ====
+csv_p="${work}/food_catalog-rgba.csv"
+cat > "$csv_p" <<'CSVEOF'
+id,name_zh,category,sort_order,allergens,min_age_months
+c1,1,x,1,,6
+c2,2,x,2,,6
+CSVEOF
+stickers_p="${work}/stickers-rgba"
+mkdir -p "$stickers_p"
+uv run --with "$PILLOW_PIN" python3 "${work}/gen_solid.py" "${stickers_p}/c1.png"
+uv run --with "$PILLOW_PIN" python3 "${work}/gen_solid.py" "${stickers_p}/c2.png" --rgba
+p_out="$(uv run "$script" check-consistency --stickers-dir "$stickers_p" --csv "$csv_p" 2>&1)"; rc_p=$?
+expect_exit 1 "$rc_p" "P1. 夾雜一張未量化 RGBA 貼紙 → exit 非 0"
+expect_has "$p_out" "c2（384x384 RGBA）" "P1. 錯誤訊息點名是哪張、mode RGBA"
+expect_not_has "$p_out" "c1（" "P1. 合格的調色盤 PNG（c1）不被誤判"
 
 if [ "$selftest_helpers_fail" -eq 0 ]; then
   echo "✓ food-sticker-crop 自測通過（${selftest_helpers_n} 組樣本）"
