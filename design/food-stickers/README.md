@@ -97,3 +97,7 @@ merge-review `1c80d549` M1 實測校正——逐版掃描 10.3.0／10.4.0／11.0
 - `sheets/sheet-NN-prompt.txt`：第 NN 張 sheet 實際送出的完整 prompt 原文（LS-338 01～15、LS-340 16～34）。
 - `sheets/sheet-15.png`：唯一保留在版控內的正式 sheet 原始檔（見上方體積取捨）。
 - `stickers/<food_id>.png`：274 張裁切後的成品，檔名＝`food_catalog.id`。
+
+## gray-preview/（LS-326）
+
+`gray-preview/<food_id>.png`（192px、Rec.709 亮度灰階、保留 alpha）只給 Pencil 稿面模擬「還沒吃」的灰階貼紙；**不進 App**——App 端一律對 `stickers/` 原圖做 `.saturation(0).opacity(0.6)`。
