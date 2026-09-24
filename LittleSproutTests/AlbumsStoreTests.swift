@@ -113,17 +113,33 @@ final class AlbumsStoreTests: XCTestCase {
 
     /// merge-review R2 m2：第一次 refresh 還在飛行中時再點一次「匯入」，不該再起一個 refresh
     /// 把前一次的結果丟棄。用 `AlbumsTestAsyncGate` 精準卡住第一次，不用 `Task.sleep` 猜時間。
+    ///
+    /// LS-323（LS-315 merge-review R3 m1）：守門回歸時要**秒級轉紅、不能 hang**——push-gate／CI
+    /// 都沒開單支測試逾時，hang 會一路卡到 1500 秒看門狗／job timeout 且沒有斷言訊息。所以：
+    /// (1) gate 只卡**第一次** `fetchAlbums`（`fetchAlbumsCalls` 在呼叫 handler 前就 append，
+    /// 第一次呼叫時 count＝1）——守門失效時第二次呼叫直接回傳，下面兩條斷言照常失敗；
+    /// (2) 等 `.submitting` 的 spin 迴圈設上限，進不去就開 gate 放行第一次、`XCTFail` 收場。
     func test_refreshIfEmpty_whenRefreshInFlight_doesNotFetchAgain() async {
         let stub = StubAlbumsAPIClient()
         let gate = AlbumsTestAsyncGate()
-        stub.setFetchAlbumsHandler { _, _, _ in
-            await gate.wait()
+        stub.setFetchAlbumsHandler { [weak stub] _, _, _ in
+            if (stub?.fetchAlbumsCalls.count ?? 1) <= 1 { await gate.wait() }
             return []
         }
         let store = AlbumsStore(apiClient: stub)
 
         let firstTask = Task { await store.refreshIfEmpty(familyID: familyID) }
-        while store.refreshState != .submitting { await Task.yield() }
+        var spins = 0
+        while store.refreshState != .submitting, spins < 10_000 {
+            spins += 1
+            await Task.yield()
+        }
+        guard store.refreshState == .submitting else {
+            let stuckState = store.refreshState
+            await gate.open()
+            _ = await firstTask.value
+            return XCTFail("第一次 refreshIfEmpty 在 10_000 次 yield 內沒有進入 .submitting，實際是 \(stuckState)")
+        }
 
         let secondResult = await store.refreshIfEmpty(familyID: familyID)
         XCTAssertFalse(secondResult, "第一次還在飛行中，第二次應該被守門擋下")
