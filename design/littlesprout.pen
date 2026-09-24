@@ -54332,7 +54332,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小安摸阿嬤的臉 · 2 歲 3 個月",
+                  "content": "小安摸阿嬤的臉 · 2 歲 3 個⁠月",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "600"
@@ -54689,7 +54689,7 @@
                               }
                             },
                             "VywUw": {
-                              "content": "小安摸阿嬤的臉 · 2 歲 3 個月"
+                              "content": "小安摸阿嬤的臉 · 2 歲 3 個⁠月"
                             }
                           }
                         },
@@ -56823,7 +56823,7 @@
                                       }
                                     },
                                     "VywUw": {
-                                      "content": "小安摸阿嬤的臉 · 2 歲 3 個月"
+                                      "content": "小安摸阿嬤的臉 · 2 歲 3 個⁠月"
                                     },
                                     "O6ami": {
                                       "x": 233.5
