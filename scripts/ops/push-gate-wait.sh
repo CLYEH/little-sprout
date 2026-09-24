@@ -163,6 +163,9 @@ if [ "$mode" = confirm ]; then
   out=$(cd "$worktree" && LS_PUSH_GATE_CACHE_ONLY=1 bash "$gate" < /dev/null 2>&1); rc=$?
   printf '%s\n' "$out" | tail -n 15 | sed 's/^/  /'
   if [ "$rc" -eq 4 ] && grep -qF '快取未命中' <<<"$out"; then
+    # ① 的 rc=0 log 還在、快取標記卻不在（24h 過期／被清／NO_CACHE）時，不挪開 log 的話 ① 會一直回報舊結果
+    # exit 0、--confirm 一直 exit 4＝照 exit code 走的死循環；挪開後下一次 ① 一定重新暖快取
+    [ -f "$log" ] && mv -f "$log" "${log}.stale"
     echo "✗ push-gate-wait：快取未寫入（上一輪沒全綠或 tree 變了）——不要 git push，回到 ${self_cmd} 再暖一次（exit 4）" >&2
     exit 4
   fi
@@ -233,7 +236,7 @@ while :; do
   elapsed=$(( $(date +%s) - start_ts ))
   # MUTATION-BUDGET-START（自測拿掉：gate 比 --max-seconds 久時呼叫不再乾淨回傳，一路等到 gate 結束＝被 Bash 工具截斷）
   if [ "$elapsed" -ge "$max_seconds" ]; then
-    echo "仍在跑：本次已等 $((elapsed / 60)) 分 $((elapsed % 60)) 秒（log ${log}）／再呼叫一次 ${self_cmd}"
+    echo "仍在跑：本次已等 $((elapsed / 60)) 分 $((elapsed % 60)) 秒（log ${log}）／再呼叫一次 ${self_cmd}（Bash 工具 timeout 600000）"
     [ -f "$log" ] && tail -n 3 "$log" | sed 's/^/  /'
     exit 3
   fi

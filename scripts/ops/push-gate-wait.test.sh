@@ -11,13 +11,13 @@
 #
 # 驗的事：①啟動→跑完 exit 0（log 尾＋rc、下一步 --confirm）②同 tree 再呼叫不重跑 ③tree 變了重跑 ④gate 比
 # --max-seconds 久 → exit 3「仍在跑」、再呼叫接續等待且不重複啟動 ⑤gate 紅 → exit 1、下一次呼叫重跑 ⑥--confirm
-# 命中 0／未命中 4／無 Swift 0／紅 1／rc 0 卻沒字樣 1（fail closed）／gate 在跑時 3 ⑦--verify-push 對得上 0、
+# 命中 0／未命中 4／無 Swift 0／紅 1／rc 0 卻沒字樣 1（fail closed）／gate 在跑時 3 ⑥b（R2）① 綠但 --confirm 回 4 → 下一次 ① 重暖 ⑦--verify-push 對得上 0、
 # 對不上 1 ⑧stdin 沒關時兩條路徑都不卡 ⑨範圍：LS-90011 前綴、sibling 呼叫、舊手寫迴圈都不算「在跑」，本 worktree
 # 的 push-gate.sh 才算 ⑩主 checkout／--ticket 不一致／預算過大 → exit 2；--ticket 可從主 checkout 找到 worktree
 # ⑪腳本依賴的字樣真的在 push-gate.sh 裡（字樣契約）。
 # mutation（sed 改一份副本、同情境重跑，必須翻紅）：M1 拿掉 pattern 尾斜線→⑨LS-90011 被等到；M2 拿掉 push-gate-wait
 # 過濾→⑨sibling 被等到；M3 拿掉 pgrep -f 過濾→⑨舊迴圈被等到；M4 脫離子樹不改接 stdout／stderr→④呼叫端被握住管線、
-# 等到 gate 跑完；M5 拿掉 --confirm 的 < /dev/null→⑧卡住；M6 拿掉單次等待上限→④不再 exit 3、一路等到 gate 跑完。
+# 等到 gate 跑完；M5 拿掉 --confirm 的 < /dev/null→⑧卡住；M6 拿掉單次等待上限→④不再 exit 3、一路等到 gate 跑完；M7（R2）拿掉 --confirm 回 4 時挪開 log→⑥b 不再重暖。
 # 脫離啟動那條的 `< /dev/null` 沒有 mutation：非互動 bash 的 `&` 本來就把 stdin 接到 /dev/null，拿掉明寫的那一段
 # 行為不變（實測），⑧ 只驗行為；會卡住的是 --confirm 的前景呼叫（M5）。
 set -uo pipefail
@@ -199,6 +199,25 @@ else
 fi
 wait_gone
 
+# ---- ⑥b R2（merge-review R1 M1）：① 綠、快取標記卻已不在（24h 過期／被清／NO_CACHE）→ --confirm 回 4 → 下一次 ①
+#      必須重新啟動 gate，不能一直回報舊的 rc=0 log（否則照 exit code 走＝① 0 → --confirm 4 → ① 0 … 死循環）----
+scenario_stale() {   # $1＝腳本；設 rc6a（①）／rc6b（--confirm miss）／rc6c（再一次 ①）／launched6（第二次 ① 的啟動增量）
+  local before
+  bump
+  pgw "$1" 20 --worktree "$wt" --max-seconds 10 --interval 1; rc6a=$rc
+  FAKE_CONFIRM=miss pgw "$1" 10 --worktree "$wt" --confirm; rc6b=$rc
+  before=$(runs)
+  pgw "$1" 20 --worktree "$wt" --max-seconds 10 --interval 1; rc6c=$rc; out6c=$out
+  launched6=$(( $(runs) - before ))
+}
+scenario_stale "$script"
+if [ "$rc6a" -eq 0 ] && [ "$rc6b" -eq 4 ] && [ "$rc6c" -eq 0 ] && [ "$launched6" -eq 1 ] && has "$out6c" '已脫離啟動'; then
+  ok "⑥b ① 綠 → --confirm 快取未命中 exit 4 → 下一次 ① 重新啟動 gate（啟動 +1），不再回報舊結果"
+else
+  bad "⑥b --confirm 回 4 之後 ① 應重新啟動 gate（實得 ①=${rc6a}、confirm=${rc6b}、再 ①=${rc6c}、啟動 +${launched6}）"
+  printf '%s\n' "$out6c" | sed 's/^/    /' >&2
+fi
+
 # ---- ⑦ --verify-push ----
 w update-ref refs/remotes/origin/fix/LS-9001-x HEAD
 pgw "$script" 10 --worktree "$wt" --verify-push fix/LS-9001-x
@@ -304,9 +323,12 @@ if [ "$rc8b" -ne 0 ]; then ok "M5 拿掉 --confirm 的 < /dev/null → 卡在讀
 m=$(mutate M6 '/MUTATION-BUDGET-START/,/MUTATION-BUDGET-END/d')
 scenario_long "$m"
 if [ "$rc4a" -ne 3 ] && [ "$took4a" -ge 5 ]; then ok "M6 拿掉單次等待上限 → 不再 exit 3，一路等 gate 跑完（${took4a}s、exit ${rc4a}，紅）"; else bad "M6 應翻紅（實得 ${rc4a}、${took4a}s）"; fi
+m=$(mutate M7 '/mv -f "$log" "${log}.stale"/d')
+scenario_stale "$m"
+if [ "$launched6" -eq 0 ]; then ok "M7 拿掉 --confirm 回 4 時挪開 log → 下一次 ① 仍回報舊 rc=0、不重暖（啟動 +0，紅）"; else bad "M7 應翻紅（實得啟動 +${launched6}）"; fi
 wait_gone
 
 if [ "$fail" -eq 0 ]; then
-  echo "✓ push-gate-wait 自測通過（${n} 組，含 6 個 mutation）"
+  echo "✓ push-gate-wait 自測通過（${n} 組，含 7 個 mutation）"
 fi
 exit "$fail"
