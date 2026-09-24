@@ -45,7 +45,7 @@
 # 挑選，zlib 跨平台輸出長度不同 → 貼近 40 KB 的檔可能在 macOS 與 Linux 挑到不同色數，連像素都不再跨平台
 # 相同（實測 macOS arm64 vs Linux amd64：274 張中 20 張不同，平均每通道絕對差最大 1.72／255）。`pixels_equal.py`
 # 改成「mode 都是 P＋透明、尺寸相同、RGBA 平均絕對差 ≤ TOLERANCE（4.0）」才算 MATCH；兩張**不同食物**的
-# 平均絕對差實測最小 16.4，門檻夾在兩者之間，id↔圖錯配照樣抓得到（N 斷言，O mutation 證明 N 真的在測門檻）。
+# 平均絕對差實測最小 10.49（同 sheet 953 組配對，sheet-01 rice_cereal vs rice_porridge），門檻夾在兩者之間，id↔圖錯配照樣抓得到（N 斷言，O mutation 證明 N 真的在測門檻）。
 #   M.（LS-387）合成「雜訊貼紙」夾具：量化到最低色數仍 >40 KB → exit 非 0，訊息點名超過單張上限；
 #      M2 mutation 拿掉 QUANTIZE-LIMIT-CHECK → exit 0（證明 M 在測這個檢查）。A 另驗 8 張輸出皆 ≤40960 bytes。
 #   P1.（LS-387）check-consistency：合成「未量化的 RGBA 貼紙」夾具 → exit 非 0，訊息點名 mode RGBA。
@@ -110,7 +110,7 @@ cat > "${work}/pixels_equal.py" <<'PYEOF'
 import sys
 from PIL import Image, ImageChops, ImageStat
 
-TOLERANCE = 4.0  # RGBA 平均絕對差（0–255）；跨平台量化差實測 ≤1.72、不同食物 ≥16.4（見檔頭）
+TOLERANCE = 4.0  # RGBA 平均絕對差（0–255）；跨平台量化差實測 ≤1.72、不同食物 ≥10.49（見檔頭）
 
 a_path, b_path = sys.argv[1], sys.argv[2]
 try:

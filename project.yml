@@ -53,7 +53,7 @@ targets:
       - path: docs/legal/privacy-policy.md
         type: file
         buildPhase: resources
-      # LS-379：飲食圖鑑貼紙 274 張（384×384 RGBA PNG，約 43MB）——folder reference 整個資料夾原樣
+      # LS-379：飲食圖鑑貼紙 274 張（384×384 8-bit 調色盤 PNG，約 10.0MB，LS-387 量化；原 RGBA 約 43MB）——folder reference 整個資料夾原樣
       # 進 bundle（bundle 內 `stickers/<food_id>.png`，`FoodStickerLoader` 讀），不另外複製一份進
       # Assets.xcassets：`design/food-stickers/stickers/` 是裁切腳本的唯一輸出位置，兩份會漂移。
       # 體積取捨見 LS-379 handoff「風險」段。
