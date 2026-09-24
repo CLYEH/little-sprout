@@ -216796,7 +216796,7 @@
       "name": "Food / 04 記錄詳情 · 有照片 (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 1258.4246308597874,
+      "height": 1283.4246308597874,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -216804,7 +216804,7 @@
         "rotation": 0,
         "size": {
           "width": 1.6997,
-          "height": 0.9138409816520288
+          "height": 0.8960401509745033
         },
         "colors": [
           {
@@ -216818,7 +216818,7 @@
         ],
         "center": {
           "x": 0.13995,
-          "y": 0.013508953641812598
+          "y": 0.013245810927449178
         }
       },
       "cornerRadius": 44,
@@ -228726,7 +228726,7 @@
       "name": "Food / 04c 記錄詳情 · 家庭管理者看別人的記錄 (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 1331.4246308597874,
+      "height": 1356.4246308597874,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -228734,7 +228734,7 @@
         "rotation": 0,
         "size": {
           "width": 1.6997,
-          "height": 0.863736461941049
+          "height": 0.8478171022823859
         },
         "colors": [
           {
@@ -228748,7 +228748,7 @@
         ],
         "center": {
           "x": 0.13995,
-          "y": 0.012768278133041594
+          "y": 0.012532948468522228
         }
       },
       "cornerRadius": 44,
@@ -233770,7 +233770,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1258.4246308597874,
+      "height": 1283.4246308597874,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -233778,7 +233778,7 @@
         "rotation": 0,
         "size": {
           "width": 1.6997,
-          "height": 0.9138409816520288
+          "height": 0.8960401509745033
         },
         "colors": [
           {
@@ -233792,7 +233792,7 @@
         ],
         "center": {
           "x": 0.13995,
-          "y": 0.013508953641812598
+          "y": 0.013245810927449178
         }
       },
       "cornerRadius": 44,
@@ -239681,7 +239681,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2208.289767555357,
+      "height": 2266.289767555357,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -239689,7 +239689,7 @@
         "rotation": 0,
         "size": {
           "width": 1.6997,
-          "height": 0.5207649905805091
+          "height": 0.5074373173561575
         },
         "colors": [
           {
@@ -239703,7 +239703,7 @@
         ],
         "center": {
           "x": 0.13995,
-          "y": 0.007698265078146656
+          "y": 0.007501247300047546
         }
       },
       "cornerRadius": 44,
@@ -241251,11 +241251,14 @@
       "children": [
         {
           "type": "frame",
-          "id": "OT6sB",
+          "id": "IweHg",
           "layoutPosition": "absolute",
           "x": 0,
           "y": 0,
           "name": "Backdrop · 04 記錄詳情（要刪的那一筆）",
+          "theme": {
+            "size": "ax3"
+          },
           "clip": true,
           "width": 393,
           "height": 1023,
@@ -241266,7 +241269,7 @@
             "rotation": 0,
             "size": {
               "width": 1.6997,
-              "height": 0.9138409816520288
+              "height": 0.5074373173561575
             },
             "colors": [
               {
@@ -241280,19 +241283,19 @@
             ],
             "center": {
               "x": 0.13995,
-              "y": 0.013508953641812598
+              "y": 0.007501247300047546
             }
           },
           "layout": "vertical",
           "children": [
             {
-              "id": "CLlne",
+              "id": "R5U3K",
               "type": "ref",
               "ref": "OeXop",
               "name": "Status Bar"
             },
             {
-              "id": "c3xkN",
+              "id": "wJ05u",
               "type": "ref",
               "ref": "W6qTyS",
               "name": "Nav Back",
@@ -241304,7 +241307,7 @@
             },
             {
               "type": "frame",
-              "id": "xN0kK",
+              "id": "pygyC",
               "name": "Body",
               "width": "fill_container",
               "layout": "vertical",
@@ -241318,7 +241321,7 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "dJAx3",
+                  "id": "MVBb0",
                   "name": "Head Group",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -241326,15 +241329,15 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "G3fiCC",
+                      "id": "L43gCl",
                       "name": "Food Identity",
                       "width": "fill_container",
-                      "gap": "$sp-item",
-                      "alignItems": "center",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "pqQio",
+                          "id": "ON1KS",
                           "name": "Sticker",
                           "width": 96,
                           "height": 96,
@@ -241347,7 +241350,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "YwbKV",
+                          "id": "So8Sw",
                           "name": "Identity Text",
                           "width": "fill_container",
                           "layout": "vertical",
@@ -241355,7 +241358,7 @@
                           "children": [
                             {
                               "type": "text",
-                              "id": "p8iDq",
+                              "id": "G3U1vg",
                               "name": "Title",
                               "fill": "$text-primary",
                               "textGrowth": "fixed-width",
@@ -241367,7 +241370,7 @@
                             },
                             {
                               "type": "text",
-                              "id": "rj7JE",
+                              "id": "VCfDj",
                               "name": "Category",
                               "fill": "$text-secondary",
                               "textGrowth": "fixed-width",
@@ -241383,7 +241386,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "zNJy0",
+                      "id": "Z9Mpw",
                       "name": "Date Anchor",
                       "width": "fill_container",
                       "padding": [
@@ -241392,19 +241395,22 @@
                       ],
                       "children": [
                         {
-                          "id": "SZT2S",
+                          "id": "y89Uh6",
                           "type": "ref",
                           "ref": "oLN0e",
                           "name": "First Date Stamp",
                           "width": "fill_container",
                           "descendants": {
+                            "OCYqN": {
+                              "width": 291
+                            },
                             "VDOco": {
-                              "content": "2026年6月8日 第一次吃到",
-                              "fontSize": "$fs-lead"
+                              "content": "2026年6月8日\n第一次吃到",
+                              "fontSize": "$fs-note"
                             },
                             "ci8cq": {
-                              "content": "2026年6月8日 第一次吃到",
-                              "fontSize": "$fs-lead"
+                              "content": "2026年6月8日\n第一次吃到",
+                              "fontSize": "$fs-note"
                             }
                           }
                         }
@@ -241414,7 +241420,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "a4ysSV",
+                  "id": "CJ2AH",
                   "name": "Memory Group",
                   "width": "fill_container",
                   "layout": "vertical",
@@ -241422,7 +241428,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "hQGri",
+                      "id": "Auace",
                       "name": "Photo Print",
                       "width": "fill_container",
                       "fill": [
@@ -241431,11 +241437,11 @@
                           "type": "gradient",
                           "gradientType": "radial",
                           "enabled": true,
-                          "opacity": 0.382,
+                          "opacity": 0.266,
                           "rotation": 0,
                           "size": {
                             "width": 0.45217391304347826,
-                            "height": 0.3482142857142857
+                            "height": 0.2894248608534323
                           },
                           "colors": [
                             {
@@ -241456,11 +241462,11 @@
                           "type": "gradient",
                           "gradientType": "radial",
                           "enabled": true,
-                          "opacity": 0.11600000000000002,
+                          "opacity": 0.03,
                           "rotation": 0,
                           "size": {
                             "width": 0.45217391304347826,
-                            "height": 0.3482142857142857
+                            "height": 0.2894248608534323
                           },
                           "colors": [
                             {
@@ -241501,7 +241507,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "CcKmJ",
+                          "id": "sBrzv",
                           "name": "Photo Wrap",
                           "clip": true,
                           "width": "fill_container",
@@ -241516,7 +241522,7 @@
                           "children": [
                             {
                               "type": "rectangle",
-                              "id": "gUzTV",
+                              "id": "oiar7",
                               "x": 0,
                               "y": 0,
                               "name": "Night Dim",
@@ -241528,13 +241534,13 @@
                         },
                         {
                           "type": "frame",
-                          "id": "qauov",
+                          "id": "Q6amq1",
                           "name": "Imprint Row",
                           "width": "fill_container",
                           "children": [
                             {
                               "type": "text",
-                              "id": "YPYtX",
+                              "id": "fwW8h",
                               "name": "Caption",
                               "fill": "$print-ink-secondary",
                               "textGrowth": "fixed-width",
@@ -241547,7 +241553,7 @@
                           ]
                         },
                         {
-                          "id": "b1wuN",
+                          "id": "LgWaI",
                           "type": "ref",
                           "ref": "GEBcf",
                           "name": "Corner TL",
@@ -241564,13 +241570,13 @@
                           }
                         },
                         {
-                          "id": "HDGUL",
+                          "id": "c94UOG",
                           "type": "ref",
                           "ref": "GEBcf",
                           "name": "Corner BR",
                           "layoutPosition": "absolute",
                           "x": 324,
-                          "y": 427,
+                          "y": 518,
                           "descendants": {
                             "sD5Ma": {
                               "geometry": "M26 26 L26 0 L0 26 Z"
@@ -241584,7 +241590,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "rXd6y",
+                      "id": "XU9is",
                       "name": "Reaction Note",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -241592,7 +241598,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "OVFb7",
+                          "id": "IQjgv",
                           "name": "Reaction Chip",
                           "fill": "$accent-soft",
                           "cornerRadius": "$radius-full",
@@ -241605,17 +241611,17 @@
                           "children": [
                             {
                               "type": "icon",
-                              "id": "N7DMQ",
+                              "id": "Rr1Ka",
                               "name": "Reaction Icon",
-                              "width": 22,
-                              "height": 22,
+                              "width": 40,
+                              "height": 40,
                               "icon": "smile",
                               "library": "lucide",
                               "fill": "$text-primary"
                             },
                             {
                               "type": "text",
-                              "id": "G630F",
+                              "id": "Sh7zp",
                               "name": "Reaction Label",
                               "fill": "$text-primary",
                               "content": "喜歡",
@@ -241627,7 +241633,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "NngGe",
+                          "id": "aGdAS",
                           "name": "Note",
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
@@ -241639,7 +241645,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "YmMeh",
+                          "id": "sLVOk",
                           "name": "Recorded By",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -241653,24 +241659,24 @@
                     },
                     {
                       "type": "frame",
-                      "id": "gWD3T",
+                      "id": "WjNFM",
                       "name": "Allergen Info",
                       "width": "fill_container",
                       "gap": "$sp-label",
                       "children": [
                         {
                           "type": "icon",
-                          "id": "MlGm5",
+                          "id": "G5kSL",
                           "name": "Allergen Icon",
-                          "width": 18,
-                          "height": 18,
+                          "width": 32,
+                          "height": 32,
                           "icon": "info",
                           "library": "lucide",
                           "fill": "$text-secondary"
                         },
                         {
                           "type": "text",
-                          "id": "yuFfC",
+                          "id": "Qol8C",
                           "name": "Allergen Text",
                           "fill": "$text-secondary",
                           "textGrowth": "fixed-width",
@@ -241684,7 +241690,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "twyod",
+                      "id": "n4Cf1M",
                       "name": "Design Note",
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
@@ -241698,14 +241704,16 @@
                   ]
                 },
                 {
-                  "id": "h0OyP",
+                  "id": "aVa1s",
                   "type": "ref",
                   "ref": "XggYA",
                   "name": "Edit Button",
                   "width": "fill_container",
                   "descendants": {
                     "G4R75k": {
-                      "icon": "pencil"
+                      "icon": "pencil",
+                      "width": 32,
+                      "height": 32
                     },
                     "yxwnz": {
                       "content": "編輯這筆記錄"
@@ -241716,7 +241724,7 @@
             },
             {
               "type": "frame",
-              "id": "mZajZ",
+              "id": "hZIoT",
               "name": "Home Indicator Area",
               "width": "fill_container",
               "height": 34,
@@ -241726,7 +241734,7 @@
                 {
                   "type": "rectangle",
                   "cornerRadius": "$radius-full",
-                  "id": "IkFi7",
+                  "id": "ls01W",
                   "name": "Home Indicator",
                   "fill": "$home-indicator",
                   "width": 140,
