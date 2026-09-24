@@ -100,6 +100,9 @@ enum TapTargetGateScreenName: String {
     // 寬度，sidebar＋detail）——`.sectionTabView` 強制 compact，測不到 detail 欄收起側邊欄後
     // 是否還有路可以回其他分頁。
     case sectionSplitView = "SectionSplitView"
+    // LS-370：同 `.sectionSplitView`，但 `childrenStore` seed 兩個寶貝——`ChildrenManagementViewIPadTests`
+    // 要點選左欄寶貝列、確認右欄詳情出現（`PreviewChildAPIClient.listChildren` 固定回 `[]`）。
+    case sectionSplitViewWithChildren = "SectionSplitViewWithChildren"
     // merge-review R1 M1 回歸測試用：`.sectionTabView` 的 `timelineStore` 是空狀態，時間軸
     // 沒有任何日記卡可點，無法真的 push 進 `DiaryDetailView`——這個變體額外 seed 一筆日記
     // （`TimelineStore.seedForPreview(entries:)`，`TimelineStore.swift` DEBUG-only），讓

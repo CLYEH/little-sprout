@@ -4,7 +4,15 @@ import Foundation
 /// 只給 SwiftUI `#Preview` 用的假 `ChildAPIClient`——不打真網路（同 `PreviewFamilyAPIClient`
 /// 的角色，見該檔）。生產路徑一律用 `SupabaseChildAPIClient`。
 private final class PreviewChildAPIClient: ChildAPIClient, @unchecked Sendable {
-    func listChildren(familyID: UUID) async throws -> [Child] { [] }
+    /// LS-370：`refresh(familyID:)` 會用這份清單覆蓋 `children`——harness 若 seed 了家庭，只靠
+    /// `seedForPreview(children:)` 種的寶貝會在 `.task` 觸發 refresh 時被 `[]` 蓋掉。
+    private let children: [Child]
+
+    init(children: [Child] = []) {
+        self.children = children
+    }
+
+    func listChildren(familyID: UUID) async throws -> [Child] { children }
 
     func createChild(familyID: UUID, name: String, birthday: Date, avatarURL: String?) async throws -> UUID {
         UUID()
@@ -29,8 +37,10 @@ private final class PreviewChildAvatarUploadService: ChildAvatarUploadService, @
 
 extension ChildrenStore {
     @MainActor
-    static func preview() -> ChildrenStore {
-        ChildrenStore(apiClient: PreviewChildAPIClient(), avatarUploadService: PreviewChildAvatarUploadService())
+    static func preview(children: [Child] = []) -> ChildrenStore {
+        ChildrenStore(
+            apiClient: PreviewChildAPIClient(children: children), avatarUploadService: PreviewChildAvatarUploadService()
+        )
     }
 }
 #endif

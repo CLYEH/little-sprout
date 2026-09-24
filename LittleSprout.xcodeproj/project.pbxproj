@@ -235,6 +235,7 @@
 		656E19972CA92D0172F36650 /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 599FF146CDF65A58E0FBDA1B /* BlockListView.swift */; };
 		65A722D54F83EAFC6DB98F2F /* TransientJWTRetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864FAF633B1769D97D114269 /* TransientJWTRetry.swift */; };
 		65C40F1D88260A5EE89C8AAF /* DiaryComposerStorePublishTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451694C23C0044D0DCDD0356 /* DiaryComposerStorePublishTests.swift */; };
+		6610F2852BB066A872EDB6BE /* ChildrenManagementViewIPadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD1C29072F9F7F6ECD1474F4 /* ChildrenManagementViewIPadTests.swift */; };
 		669D29B18AE042ABE6B8661C /* AlbumSignatureFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E372B4C02D73ADFF00C356 /* AlbumSignatureFormatterTests.swift */; };
 		670899692547E092C2301C53 /* GrowthHistorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CC6176A3A7D8EB71B8A0AC /* GrowthHistorySection.swift */; };
 		67B0447ADF48F5AAFDA6629B /* CreateAlbumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C56719C166519CF22A55AFD /* CreateAlbumView.swift */; };
@@ -1025,6 +1026,7 @@
 		CC942E894CB769D576316163 /* SupabaseSafetyAPIClientReportSnippetsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseSafetyAPIClientReportSnippetsTests.swift; sourceTree = "<group>"; };
 		CC95B55D4A6B720D141FFD75 /* TapTargetGateHarness+Growth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Growth.swift"; sourceTree = "<group>"; };
 		CCC6D1B24D8A44CFBF902A2D /* FamilyStoreSuspensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreSuspensionTests.swift; sourceTree = "<group>"; };
+		CD1C29072F9F7F6ECD1474F4 /* ChildrenManagementViewIPadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildrenManagementViewIPadTests.swift; sourceTree = "<group>"; };
 		CD76AEE5E1F4B202EEFA9A92 /* terms-of-service.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "terms-of-service.md"; sourceTree = "<group>"; };
 		CDEDB59C473A3AA37FB56B6D /* AlbumsStore+SharedUploadQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AlbumsStore+SharedUploadQueue.swift"; sourceTree = "<group>"; };
 		CDF2E3B68B1BEFFC8A90A2AF /* EULAConsentPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EULAConsentPolicyTests.swift; sourceTree = "<group>"; };
@@ -1180,6 +1182,7 @@
 				64B2D0ACAEBD4001FACDD222 /* AlbumDetailViewTests.swift */,
 				85B9B9BC87911D6859F99FAC /* AlbumsViewIPadTests.swift */,
 				55EFEBD89186C116A6062C6D /* AlbumsViewTests.swift */,
+				CD1C29072F9F7F6ECD1474F4 /* ChildrenManagementViewIPadTests.swift */,
 				3371438EC359AEC206DEF180 /* CommentsSheetUITests.swift */,
 				BFBCECC0CD6861F5DE00F4FC /* ContentActionsAX3UITests.swift */,
 				C734814B3EEC4E4E64E43057 /* ContentActionsUITests.swift */,
@@ -2476,6 +2479,7 @@
 				3FCA5C7F27DFB77A097EB8D8 /* AlbumsViewTests.swift in Sources */,
 				DFB91365F67833D989932DB0 /* AppSection.swift in Sources */,
 				69D8B95DDE12890F9F6F7987 /* AssertNoOverlap.swift in Sources */,
+				6610F2852BB066A872EDB6BE /* ChildrenManagementViewIPadTests.swift in Sources */,
 				49BC33F5FBCF4915902DE976 /* CommentsSheetUITests.swift in Sources */,
 				309B18EC6D3EE73BE4B49FF4 /* ContentActionsAX3UITests.swift in Sources */,
 				621539C5A36B700A14491FBF /* ContentActionsUITests.swift in Sources */,

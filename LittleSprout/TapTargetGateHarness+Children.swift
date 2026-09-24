@@ -25,5 +25,39 @@ extension TapTargetGateHarness {
         }
         .environment(\.horizontalSizeClass, .compact)
     }
+
+    /// LS-370：同 `sectionSplitViewHost`（生產路徑 `AuthenticatedRootView` → `SectionSplitView`，強制
+    /// regular），但 seed 兩個寶貝（對應稿面 `JbTfv` 左欄兩列），讓 `ChildrenManagementViewIPadTests`
+    /// 能點左欄寶貝列、驗右欄詳情；時間軸／相簿維持空狀態，不影響其他分頁。
+    @MainActor
+    @ViewBuilder
+    static var sectionSplitViewWithChildrenHost: some View {
+        // 家庭有 seed，`ChildrenManagementView` 的 `.task` 會觸發 `refresh(familyID:)`——寶貝清單要從
+        // preview client 回傳（`preview(children:)`），只 `seedForPreview` 會被 refresh 蓋成空清單。
+        let childrenStore = ChildrenStore.preview(children: [
+            Child(
+                id: UUID(), name: "陳小安", birthday: BirthdayFormat.date(fromWireString: "2025-04-20")!,
+                avatarURL: nil, deletedAt: nil, createdAt: Date()
+            ),
+            Child(
+                id: UUID(), name: "陳小樂", birthday: BirthdayFormat.date(fromWireString: "2026-03-02")!,
+                avatarURL: nil, deletedAt: nil, createdAt: Date()
+            )
+        ])
+        AuthenticatedRootView(
+            authStore: .preview(),
+            familyStore: .preview(withFamily: Family(
+                id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
+            )),
+            childrenStore: childrenStore, timelineStore: .preview(), albumsStore: .preview(),
+            eulaStore: .preview(shouldPresent: false),
+            diaryAPIClient: PreviewDiaryAPIClient(), growthAPIClient: PreviewGrowthAPIClient(),
+            mediaUploadService: PreviewMediaUploadService(),
+            accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
+            safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
+            pushNotificationStore: .preview()
+        )
+        .environment(\.horizontalSizeClass, .regular)
+    }
 }
 #endif
