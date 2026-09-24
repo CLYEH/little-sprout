@@ -79,6 +79,20 @@ final class FoodBookUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["這個畫面由 LS-381 實作，尚未完成。"].waitForExistence(timeout: 5))
     }
 
+    /// 未吃＝灰階（App 端 `.saturation(0).opacity(0.6)`，Notes `DpExV`）、吃過＝彩色——以像素色度量：
+    /// 灰階貼紙疊在粉底上，最鮮豔的也只是底色／`$text-secondary` 文字的色度（< 40）；紫地瓜、南瓜原圖
+    /// 色度遠超 60。拿「高色度像素佔比」判斷，不依賴特定座標。
+    func testUntriedStickerIsGrayscale_triedStickerIsColored() {
+        let app = launch(.foodBook, Self.standard)
+        let untried = cell("purple_sweet_potato", in: app)
+        let tried = cell("pumpkin", in: app)
+        scrollUntilHittable(tried, in: app)
+        let untriedRatio = vividPixelRatio(in: untried)
+        let triedRatio = vividPixelRatio(in: tried)
+        XCTAssertLessThan(untriedRatio, 0.005, "未吃的紫地瓜應該是灰階，高色度像素佔比 \(untriedRatio)")
+        XCTAssertGreaterThan(triedRatio, 0.05, "吃過的南瓜應該是彩色，高色度像素佔比 \(triedRatio)（量測自我檢查）")
+    }
+
     // MARK: - 02b／02c
 
     func testDairyVariant_02b_rendersAgeAndAllergenTags() {
@@ -197,6 +211,36 @@ final class FoodBookUITests: XCTestCase {
             app.swipeUp()
             attempts += 1
         }
+    }
+
+    /// 元件截圖中 max(R,G,B) − min(R,G,B) > 60 的像素佔比（重畫進 8-bit sRGB，同
+    /// `InteractionRowUITests.maxTextContrast` 的取像手法）。
+    private func vividPixelRatio(in element: XCUIElement) -> Double {
+        guard let image = element.screenshot().image.cgImage,
+              let space = CGColorSpace(name: CGColorSpace.sRGB) else {
+            XCTFail("元件截圖沒有 cgImage")
+            return 0
+        }
+        let (width, height) = (image.width, image.height)
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let drawn = bytes.withUnsafeMutableBytes { raw -> Bool in
+            guard let context = CGContext(
+                data: raw.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                bytesPerRow: width * 4, space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else { return false }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard drawn, width * height > 0 else {
+            XCTFail("無法建立 sRGB 點陣 context")
+            return 0
+        }
+        var vivid = 0
+        for pixel in 0..<(width * height) {
+            let rgb = bytes[(pixel * 4)..<(pixel * 4 + 3)]
+            if Int(rgb.max() ?? 0) - Int(rgb.min() ?? 0) > 60 { vivid += 1 }
+        }
+        return Double(vivid) / Double(width * height)
     }
 
     private func attachScreenshot(_ app: XCUIApplication, _ name: String) {
