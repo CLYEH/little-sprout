@@ -44,7 +44,7 @@ struct ChildrenManagementView: View {
     /// （iPad）走的是內層 `NavigationSplitView`（`sidebarContent` 自己的 `.navigationTitle`），
     /// 疊在外層既有 `NavigationStack`／`NavigationSplitView` 之上已知行為複雜（見
     /// `regularLayout` 文件註解），本票只驗證了實機回報的 compact 這條路徑，iPad 是否同病記入
-    /// handoff「未完成」，不在本票盲改。
+    /// handoff「未完成」，不在本票盲改。（LS-370 已拿掉內層 split，iPad 見 `regularLayout`。）
     private var compactLayout: some View {
         ScrollableFillView {
             VStack(alignment: .leading, spacing: 0) {
@@ -242,11 +242,24 @@ struct ChildrenManagementView: View {
     /// （`childDetail(for:)`，同 compact 版），「編輯」從詳情頁導覽列右上進入——與 compact
     /// 版同一套目的地，不再各自維護一份。未逐像素比照稿面把 09b「取消」文字鈕挪動位置——
     /// 這是本票在時間預算下的已知簡化，記於 handoff 風險欄。
+    ///
+    /// LS-370：原本這裡再包一層 `NavigationSplitView`，疊在 `RootView.SectionSplitView` 的
+    /// detail 欄（它自己的 `NavigationStack`）裡——iPad Pro 13 上「寶貝」出現三次：外層系統
+    /// large title、內層側欄 `.navigationTitle`、`headerSection` 自畫。稿面 `JbTfv`（09-iPad）
+    /// 是單一 split：左 Sidebar（320pt，自畫 Title「寶貝」＋清單＋新增鈕）｜Divider｜右 Detail
+    /// Pane，沒有系統標題。改成外層 split 的 detail 欄內用 `HStack` 畫這兩欄（同
+    /// `SettingsView.regularBody` 拿掉內層 split 的先例，LS-188 merge-review R1 B1），不再有
+    /// 第二層導覽容器；系統標題比照 `AlbumsView`（LS-355）／`TimelineView`（LS-369）：nav bar
+    /// 保留（外層「顯示側邊欄」鈕的容身處，不得無條件隱藏——LS-344 R1 M1），`.inline`＋零尺寸
+    /// `.principal` 關掉系統標題。已知行為：右欄「編輯」與左欄「新增寶貝」推到外層
+    /// `NavigationStack`、蓋掉整個 detail 欄（同 `SettingsView.regularBody` 已記載的限制）。
+    /// 回歸測試：`ChildrenManagementViewIPadTests`。
     private var regularLayout: some View {
-        NavigationSplitView {
+        HStack(spacing: 0) {
             sidebarContent
-        } detail: {
-            NavigationStack {
+                .frame(width: 320)
+            Divider()
+            Group {
                 if let selectedChildID, let child = childForID(selectedChildID) {
                     childDetail(for: child)
                 } else {
@@ -258,6 +271,12 @@ struct ChildrenManagementView: View {
                     )
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .appBackground()
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) { Color.clear.frame(width: 0, height: 0).accessibilityHidden(true) }
         }
     }
 
@@ -296,7 +315,6 @@ struct ChildrenManagementView: View {
                 .padding(.bottom, AppSpacing.item)
             }
         }
-        .navigationTitle("寶貝")
     }
 }
 
