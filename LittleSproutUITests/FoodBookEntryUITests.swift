@@ -24,7 +24,7 @@ final class FoodBookEntryUITests: XCTestCase {
             let screen: String, buttonY: CGFloat, height: CGFloat, cellHeight: CGFloat, cellCount: Int
         }
         var measured: [Measured] = []
-        for screen in [TapTargetGateScreenName.growthDetailFood, .growthDetailFoodOne, .growthDetailFoodEmpty] {
+        for screen in [TapTargetGateScreenName.foodEntry, .foodEntryOne, .foodEntryEmpty] {
             let app = launch(screen, Self.standard)
             let title = element("foodEntry.title", in: app)
             let button = app.buttons["foodEntry.openBook"]
@@ -51,7 +51,7 @@ final class FoodBookEntryUITests: XCTestCase {
     /// 仍會唸。
     func testTagRowIsExactlyOneLine_twoTagsOrNoTagsKeepButtonInPlace() {
         var reference: (buttonY: CGFloat, height: CGFloat)?
-        for screen in [TapTargetGateScreenName.growthDetailFood, .growthDetailFoodTwoTags, .growthDetailFoodNoTags] {
+        for screen in [TapTargetGateScreenName.foodEntry, .foodEntryTwoTags, .foodEntryNoTags] {
             let app = launch(screen, Self.standard)
             let title = element("foodEntry.title", in: app)
             let button = app.buttons["foodEntry.openBook"]
@@ -63,7 +63,7 @@ final class FoodBookEntryUITests: XCTestCase {
             } else {
                 reference = measured
             }
-            if screen == .growthDetailFoodTwoTags {
+            if screen == .foodEntryTwoTags {
                 XCTAssertEqual(
                     app.buttons["foodCell.fresh_milk"].label, "鮮奶，2026/8/10 第一次吃到，含牛奶，一歲後",
                     "畫面只留過敏原一列，VoiceOver 仍唸兩個小標"
@@ -75,7 +75,7 @@ final class FoodBookEntryUITests: XCTestCase {
     // MARK: - 範圍 1：計數句、三格內容與順序（逐字對稿）
 
     func testDemo_01_recentThreeNewestFirst() {
-        let app = launch(.growthDetailFood, Self.standard)
+        let app = launch(.foodEntry, Self.standard)
         XCTAssertEqual(countLine(in: app), "陳小安吃過 38／274\u{00A0}種，最近三樣：")
         XCTAssertEqual(entryFoodIDs(in: app), ["banana", "tofu", "egg_yolk"])
         XCTAssertEqual(app.buttons["foodCell.banana"].label, "香蕉，2026/8/2 第一次吃到")
@@ -84,7 +84,7 @@ final class FoodBookEntryUITests: XCTestCase {
     }
 
     func testEmpty_01b_firstThreeBySortOrder() {
-        let app = launch(.growthDetailFoodEmpty, Self.standard)
+        let app = launch(.foodEntryEmpty, Self.standard)
         XCTAssertEqual(countLine(in: app), "陳小安吃過 0／274\u{00A0}種，可以從這三樣開始：")
         XCTAssertEqual(entryFoodIDs(in: app), ["rice_cereal", "rice_porridge", "oatmeal"])
         XCTAssertEqual(app.buttons["foodCell.rice_cereal"].label, "米精，還沒吃過")
@@ -92,7 +92,7 @@ final class FoodBookEntryUITests: XCTestCase {
     }
 
     func testOne_01c_triedFirstThenUntriedBySortOrder() {
-        let app = launch(.growthDetailFoodOne, Self.standard)
+        let app = launch(.foodEntryOne, Self.standard)
         XCTAssertEqual(countLine(in: app), "陳小安吃過 1／274\u{00A0}種，最近和接著試的：")
         XCTAssertEqual(entryFoodIDs(in: app), ["rice_cereal", "rice_porridge", "oatmeal"])
         XCTAssertEqual(app.buttons["foodCell.rice_cereal"].label, "米精，2025/10/22 第一次吃到")
@@ -103,7 +103,7 @@ final class FoodBookEntryUITests: XCTestCase {
 
     /// 01b 點「白粥」空位 → 03 → 儲存 → sheet 收起 → 白粥變吃過並排到第一格、計數與文案跟著換。
     func testTappingEmptySlot_savesAndCellBecomesFirstTried() {
-        let app = launch(.growthDetailFoodEmpty, Self.standard)
+        let app = launch(.foodEntryEmpty, Self.standard)
         let porridge = app.buttons["foodCell.rice_porridge"]
         scrollUntilHittable(porridge, in: app)
         porridge.tap()
@@ -122,7 +122,7 @@ final class FoodBookEntryUITests: XCTestCase {
 
     /// 「看整本飲食圖鑑」推 02；在圖鑑裡記下糙米飯、返回——入口不重抓也已經是新的（兩處共用同一顆 store）。
     func testBookButton_opensBook_andSaveInBookUpdatesEntry() {
-        let app = launch(.growthDetailFood, Self.standard)
+        let app = launch(.foodEntry, Self.standard)
         let open = app.buttons["foodEntry.openBook"]
         scrollUntilHittable(open, in: app)
         open.tap()
@@ -148,7 +148,7 @@ final class FoodBookEntryUITests: XCTestCase {
 
     /// 吃過的格子推 04 記錄詳情（正式詳情頁，不是 LS-381 佔位）。
     func testTappingTriedCell_opensRecordDetail() {
-        let app = launch(.growthDetailFood, Self.standard)
+        let app = launch(.foodEntry, Self.standard)
         let banana = app.buttons["foodCell.banana"]
         scrollUntilHittable(banana, in: app)
         banana.tap()
@@ -158,7 +158,7 @@ final class FoodBookEntryUITests: XCTestCase {
 
     /// Notes 01 列「失敗文案鍵 42501」：首次讀取失敗＝錯誤句＋「重新載入」，不畫全灰三格。
     func testLoadFailure_showsErrorAndReload_noCells() {
-        let app = launch(.growthDetailFoodFailure, Self.standard)
+        let app = launch(.foodEntryFailure, Self.standard)
         XCTAssertTrue(app.buttons["foodEntry.reload"].waitForExistence(timeout: 5))
         XCTAssertTrue(entryCells(in: app).isEmpty, "讀取失敗不能落回全灰格子")
         XCTAssertFalse(app.buttons["foodEntry.openBook"].exists)
@@ -168,7 +168,7 @@ final class FoodBookEntryUITests: XCTestCase {
     // MARK: - 範圍 3：AX3（A11y/01 `BSWDH`）
 
     func testAX3_cellsStackVerticallyAndShortButtonTitle() {
-        let app = launch(.growthDetailFood, Self.ax3)
+        let app = launch(.foodEntry, Self.ax3)
         let cells = entryCells(in: app)
         XCTAssertEqual(cells.count, 3)
         XCTAssertEqual(cells[0].frame.minX, cells[1].frame.minX, accuracy: 1, "AX3 直排清單：左緣對齊")
@@ -178,9 +178,9 @@ final class FoodBookEntryUITests: XCTestCase {
 
     // MARK: - 對稿截圖
 
-    func testScreenshots_01() { screenshots(.growthDetailFood, "01") }
-    func testScreenshots_01b() { screenshots(.growthDetailFoodEmpty, "01b") }
-    func testScreenshots_01c() { screenshots(.growthDetailFoodOne, "01c") }
+    func testScreenshots_01() { screenshots(.foodEntry, "01") }
+    func testScreenshots_01b() { screenshots(.foodEntryEmpty, "01b") }
+    func testScreenshots_01c() { screenshots(.foodEntryOne, "01c") }
 
     private func screenshots(_ screen: TapTargetGateScreenName, _ board: String) {
         let sizes = [("xSmall", Self.xSmall), ("default", Self.standard), ("AX3", Self.ax3)]

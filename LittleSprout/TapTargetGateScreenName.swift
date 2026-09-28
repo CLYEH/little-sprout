@@ -316,13 +316,13 @@ enum TapTargetGateScreenName: String {
     // LS-382：寶貝詳情「飲食圖鑑」入口（01 家族）——01（38 筆）／01b（0 筆）／01c（1 筆）／讀取失敗四個 fixture，
     // 三格 cmp/Food Cell＋「看整本飲食圖鑑」皆可量；供 `FoodBookEntryUITests` 斷言三態等高與截圖對稿（同
     // `.foodBook*` 變體 case 的先例）。深色走 launch argument，見 `TapTargetGateHarness+FoodEntry.swift`。
-    case growthDetailFood = "ChildGrowthDetailViewFood"
-    case growthDetailFoodEmpty = "ChildGrowthDetailViewFoodEmpty"
-    case growthDetailFoodOne = "ChildGrowthDetailViewFoodOne"
-    case growthDetailFoodFailure = "ChildGrowthDetailViewFoodFailure"
+    case foodEntry = "ChildGrowthDetailViewFood"
+    case foodEntryEmpty = "ChildGrowthDetailViewFoodEmpty"
+    case foodEntryOne = "ChildGrowthDetailViewFoodOne"
+    case foodEntryFailure = "ChildGrowthDetailViewFoodFailure"
     // LS-382 R2（merge-review R1 F1／F2）：入口一列裡有兩個小標的食物（鮮奶）／整列都沒有小標——鎖「小標恰好一列」。
-    case growthDetailFoodTwoTags = "ChildGrowthDetailViewFoodTwoTags"
-    case growthDetailFoodNoTags = "ChildGrowthDetailViewFoodNoTags"
+    case foodEntryTwoTags = "ChildGrowthDetailViewFoodTwoTags"
+    case foodEntryNoTags = "ChildGrowthDetailViewFoodNoTags"
     // LS-379：飲食圖鑑 02（示範資料 38／274，穀物根莖）——8 顆分頁＋16 格（吃過／還沒吃）皆可量。
     // 深色／02b 乳製品（一歲後標記）／02c viewer 三個變體同一支檔案，供 `FoodBookUITests` 截圖與
     // 行為斷言（同 `.settingsMemberRole` 等既有變體 case 的先例，不另外具名排除）。
@@ -340,6 +340,10 @@ enum TapTargetGateScreenName: String {
     // LS-380 R2：圖鑑 → 04 詳情 → 03b／03c／04b 加照片的整條接縫（`FoodRecordDetailRouter`），不是新畫面，
     // 借這條通道餵 `FoodRecordDetailFlowUITests`；fixture 見 `TapTargetGateHarness+FoodRecord.swift`。
     case foodRecordDetailFlow = "FoodRecordDetailFlow"
+    // LS-380 R3（QA `a27eafaf`）：04 詳情＋`FoodRecordDetailRouter` 單獨掛著、呼叫端給的記錄**永遠不更新**（同真入口
+    // 下圖鑑的 `navigationDestination` 不重跑），API 用真後端回傳形狀的 `ServerShapedFoodAPIClient`——餵
+    // `FoodRecordDetailFlowUITests.testEditWithFrozenCallerRecord_serverShapedClient_detailShowsSavedValues`。
+    case foodRecordDetailServer = "FoodRecordDetailServer"
     // LS-365：時間軸照片卡壓印行寶貝署名——同 `.diaryCardVideoBadges` 既有先例，不是點擊目標
     // 測試，借這條通道餵 `PhotoCardBabyCaptionUITests` 量折行像素與截圖對稿；fixture（一位／
     // 兩位／三位長名／未標記／相簿卡回歸／feed）由 `LS_PHOTO_CARD_CAPTION_FIXTURE` 選，見

@@ -136,8 +136,8 @@ extension TapTargetGateScreenName {
         case .growthRecordActionsSheet: return .button("取消")
         case .childrenManagementPopulated: return .staticText("寶貝")
         // LS-382：宿主寶貝詳情的 Identity Header 名字（同 `.growthDetailPopulated`）。
-        case .growthDetailFood, .growthDetailFoodEmpty, .growthDetailFoodOne, .growthDetailFoodFailure,
-             .growthDetailFoodTwoTags, .growthDetailFoodNoTags:
+        case .foodEntry, .foodEntryEmpty, .foodEntryOne, .foodEntryFailure,
+             .foodEntryTwoTags, .foodEntryNoTags:
             return .staticText("陳小安")
         // LS-379：body 自畫的 display 標題（系統標題已由零尺寸 principal 關掉，見 `FoodBookView`）。
         case .foodBook, .foodBookDark: return .staticText("飲食圖鑑")
@@ -145,6 +145,7 @@ extension TapTargetGateScreenName {
         case .foodBookViewer: return .staticText("這本圖鑑由家人記錄，你可以隨時翻看。")
         // LS-380：03／03e 先渲染圖鑑本身（UITest 再點空位開 sheet）；03b 一開就疊著編輯 sheet。
         case .foodRecordSheet, .foodRecordSheetFailure, .foodRecordDetailFlow: return .staticText("飲食圖鑑")
+        case .foodRecordDetailServer: return .staticText("吐司麵包")
         case .foodRecordSheetEdit: return .staticText("編輯吐司麵包這筆記錄")
         // fixture 共用的頂端標題（feed fixture 除外，見 `photoCardBabyCaptionHost` 文件註解）。
         case .photoCardBabyCaption: return .staticText("照片卡署名")

@@ -6,13 +6,13 @@ import SwiftUI
 ///
 /// 宿主是真的 `ChildGrowthDetailView`（成長區塊用示範資料），飲食圖鑑 client 經 `\.foodAPIClient` 注入——入口的
 /// store 走正式的 `.task(id:)` 讀取路徑，不是預先種好的。四個 fixture：
-/// - `.growthDetailFood`（01 `QRoGt`）：示範 38／274；最近五筆＝香蕉 8/2、豆腐 7/19、蛋黃 7/5、吐司麵包 6/8、優格 5/2
+/// - `.foodEntry`（01 `QRoGt`）：示範 38／274；最近五筆＝香蕉 8/2、豆腐 7/19、蛋黃 7/5、吐司麵包 6/8、優格 5/2
 ///   （逐格照稿 `DtcpY`／01-iPad `i6WGR`）。
-/// - `.growthDetailFoodEmpty`（01b `J58vyP`）：0 筆，三格＝`sort_order` 前三。
-/// - `.growthDetailFoodOne`（01c `ls2g6`）：只記米精 1 筆，後兩格依 `sort_order` 補未吃。
-/// - `.growthDetailFoodFailure`：讀取一律斷線（Notes 01 列「失敗文案鍵 42501」的錯誤態）。
-/// - `.growthDetailFoodTwoTags`（R2，merge-review R1 F1）：最近三筆＝鮮奶（含牛奶＋一歲後兩個小標）／香蕉／蘋果。
-/// - `.growthDetailFoodNoTags`（R2，merge-review R1 F2）：最近三筆＝香蕉／蘋果／木瓜，整列都沒有小標。
+/// - `.foodEntryEmpty`（01b `J58vyP`）：0 筆，三格＝`sort_order` 前三。
+/// - `.foodEntryOne`（01c `ls2g6`）：只記米精 1 筆，後兩格依 `sort_order` 補未吃。
+/// - `.foodEntryFailure`：讀取一律斷線（Notes 01 列「失敗文案鍵 42501」的錯誤態）。
+/// - `.foodEntryTwoTags`（R2，merge-review R1 F1）：最近三筆＝鮮奶（含牛奶＋一歲後兩個小標）／香蕉／蘋果。
+/// - `.foodEntryNoTags`（R2，merge-review R1 F2）：最近三筆＝香蕉／蘋果／木瓜，整列都沒有小標。
 ///
 /// 深色：launch argument `-LSFoodEntryDark YES`（同 `foodRecordDarkKey` 手法，不另開 case）。
 extension TapTargetGateHarness {
@@ -22,12 +22,12 @@ extension TapTargetGateHarness {
     @ViewBuilder
     static func foodEntryHost(for screen: TapTargetGateScreenName) -> some View {
         switch screen {
-        case .growthDetailFood: FoodEntryHarnessHost(fixture: .demo)
-        case .growthDetailFoodEmpty: FoodEntryHarnessHost(fixture: .empty)
-        case .growthDetailFoodOne: FoodEntryHarnessHost(fixture: .one)
-        case .growthDetailFoodFailure: FoodEntryHarnessHost(fixture: .failure)
-        case .growthDetailFoodTwoTags: FoodEntryHarnessHost(fixture: .twoTags)
-        case .growthDetailFoodNoTags: FoodEntryHarnessHost(fixture: .noTags)
+        case .foodEntry: FoodEntryHarnessHost(fixture: .demo)
+        case .foodEntryEmpty: FoodEntryHarnessHost(fixture: .empty)
+        case .foodEntryOne: FoodEntryHarnessHost(fixture: .one)
+        case .foodEntryFailure: FoodEntryHarnessHost(fixture: .failure)
+        case .foodEntryTwoTags: FoodEntryHarnessHost(fixture: .twoTags)
+        case .foodEntryNoTags: FoodEntryHarnessHost(fixture: .noTags)
         default: EmptyView()
         }
     }

@@ -14,9 +14,9 @@ final class FoodBookEntryIPadTests: XCTestCase {
         )
         var blockHeights: [CGFloat] = []
         for (screen, expectedLine, expectedIDs) in [
-            (TapTargetGateScreenName.growthDetailFood, "陳小安吃過 38／274\u{00A0}種，最近五樣：",
+            (TapTargetGateScreenName.foodEntry, "陳小安吃過 38／274\u{00A0}種，最近五樣：",
              ["banana", "tofu", "egg_yolk", "bread", "yogurt"]),
-            (.growthDetailFoodEmpty, "陳小安吃過 0／274\u{00A0}種，可以從這五樣開始：",
+            (.foodEntryEmpty, "陳小安吃過 0／274\u{00A0}種，可以從這五樣開始：",
              ["rice_cereal", "rice_porridge", "oatmeal", "white_rice", "brown_rice"])
         ] {
             let app = TapTargetMeasurement.launch(screen)
@@ -41,7 +41,7 @@ final class FoodBookEntryIPadTests: XCTestCase {
             }
             app.swipeUp()  // 「可點」只要按鈕中心露出來就成立，再推一次讓整顆按鈕進截圖
             let attachment = XCTAttachment(screenshot: app.screenshot())
-            attachment.name = "LS-382-01-iPad-\(screen == .growthDetailFood ? "populated" : "empty")"
+            attachment.name = "LS-382-01-iPad-\(screen == .foodEntry ? "populated" : "empty")"
             attachment.lifetime = .keepAlways
             add(attachment)
         }

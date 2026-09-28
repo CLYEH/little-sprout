@@ -284,12 +284,12 @@ final class TapTargetGateTests: XCTestCase {
 
     /// LS-382：01 寶貝詳情＋飲食圖鑑入口（38 筆）——三格吃過的 Food Cell＋「看整本飲食圖鑑」。
     func testChildGrowthDetailViewFood() {
-        assertAllTappablesMeetMinimum(.growthDetailFood)
+        assertAllTappablesMeetMinimum(.foodEntry)
     }
 
     /// LS-382：01b 0 筆——三格空位（開第一次記錄）＋「打開飲食圖鑑」。
     func testChildGrowthDetailViewFoodEmpty() {
-        assertAllTappablesMeetMinimum(.growthDetailFoodEmpty)
+        assertAllTappablesMeetMinimum(.foodEntryEmpty)
     }
 
     /// LS-313：02 新增量測 sheet——日期欄／三個量測欄／Save／Cancel。
