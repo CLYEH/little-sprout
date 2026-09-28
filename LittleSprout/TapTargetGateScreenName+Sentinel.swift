@@ -145,6 +145,9 @@ extension TapTargetGateScreenName {
         // fixture 共用的頂端標題（feed fixture 除外，見 `photoCardBabyCaptionHost` 文件註解）。
         case .photoCardBabyCaption: return .staticText("照片卡署名")
         case .diaryCardBabyCaption: return .staticText("日記卡署名")
+        // LS-381：類別小字（四個 fixture 的吐司麵包／南瓜都屬穀物根莖），不帶 identifier、不受權限影響。
+        case .foodRecordDetail, .foodRecordDetailNoPhoto, .foodRecordDetailOwner, .foodRecordDetailViewer:
+            return .staticText("穀物根莖")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

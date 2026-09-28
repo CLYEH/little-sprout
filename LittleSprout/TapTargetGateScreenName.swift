@@ -336,6 +336,14 @@ enum TapTargetGateScreenName: String {
     // `DiaryCardBabyCaptionUITests` 截圖對稿（`x7k2o6`）；fixture／深淺色見
     // `TapTargetGateHarness+DiaryCardCaption.swift`。
     case diaryCardBabyCaption = "DiaryCardBabyCaption"
+    // LS-381：飲食圖鑑 04 記錄詳情——04 作者（有照片，只有「編輯」）／04b 沒照片（空白沖印品可點）／04c
+    // 非作者 owner（只有「刪除」）／viewer（沒有動作）四個權限與內容變體，供 `FoodRecordDetailUITests` 斷言
+    // 按鈕集合與截圖對稿（同 `.foodBook*` 變體 case 的先例）；深色走 launch argument，見
+    // `TapTargetGateHarness+FoodRecordDetail.swift`。
+    case foodRecordDetail = "FoodRecordDetailView"
+    case foodRecordDetailNoPhoto = "FoodRecordDetailViewNoPhoto"
+    case foodRecordDetailOwner = "FoodRecordDetailViewOwner"
+    case foodRecordDetailViewer = "FoodRecordDetailViewViewer"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"

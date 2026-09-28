@@ -134,6 +134,8 @@ enum TapTargetGateHarness {
              .foodRecordSheet, .foodRecordSheetFailure, .foodRecordSheetEdit: foodHost(for: screen)
         case .photoCardBabyCaption: photoCardBabyCaptionHost
         case .diaryCardBabyCaption: diaryCardBabyCaptionHost
+        case .foodRecordDetail, .foodRecordDetailNoPhoto, .foodRecordDetailOwner, .foodRecordDetailViewer:
+            foodRecordDetailHost(for: screen)
         case .selfTestTooSmall: selfTestTooSmallHost
         case .selfTestGood: selfTestGoodHost
         case .selfTestPaddingOutsideButton: selfTestPaddingOutsideButtonHost

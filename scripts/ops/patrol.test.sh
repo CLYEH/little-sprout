@@ -2436,6 +2436,38 @@ else
 fi
 rm -rf "$repo/.github"
 
+# ---- ㉚n（LS-392）：db job `supabase db start` 限流退避用盡 → db-start-retry.sh 印「⚠ db-start-retry：疑似映像限流（toomanyrequests）」，
+#      近 7 日同類紅段把這行當型別簽章。兩個 run（09-28 真實事故 log 形狀，含時間戳前綴）→ ⚠ 同類紅 2 次；第三個 run 是 db start
+#      非限流錯誤（不印 ⚠ 行）→ 不得併入。mutation：拿掉 REDS-IMAGE-LIMIT 那行 → 簽章消失。
+gh_dir_n="$work/fake-gh-data-n"; mkdir -p "$gh_dir_n"
+for id in 36363735578 36371133062; do
+  printf '%s\n' \
+    "db\tsupabase db start\t2026-09-28T00:56:19.7068138Z failed to pull docker image from all registries: public.ecr.aws/supabase/postgres:17.6.1.159 attempt 1: Error response from daemon: toomanyrequests: Data limit exceeded" \
+    "db\tsupabase db start\t2026-09-28T00:56:19.7208751Z ✗ db-start-retry：映像限流，重試 4 次後 supabase db start 仍失敗（exit 1）" \
+    "db\tsupabase db start\t2026-09-28T00:56:19.7209000Z ⚠ db-start-retry：疑似映像限流（toomanyrequests）——registry public.ecr.aws，退避 30,60,120,240 秒用盡；查映像快取是否命中（LS-392）" \
+    > "$gh_dir_n/${id}.log"
+done
+printf '%s\n' "db\tsupabase db start\t2026-09-28T01:00:00.0000000Z ✗ db-start-retry：supabase db start 失敗（exit 5）且不是映像限流——不重試，錯誤見上" > "$gh_dir_n/36378063655.log"
+printf '%s\n' \
+  $'36363735578\tfailure\tmain\t2026-09-28T00:50:00Z' \
+  $'36371133062\tfailure\tdevelopment\t2026-09-28T02:47:00Z' \
+  $'36378063655\tfailure\tfeature/LS-385-x\t2026-09-28T04:30:00Z' > "$work/gh-runs-n"
+reds_n() {   # reds_n <patrol 腳本>
+  rm -rf "$work/reds-cache-n"
+  PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs-n" FAKE_GH_DIR="$gh_dir_n" PATROL_REDS_CACHE="$work/reds-cache-n" PATROL_REDS_MAX_FETCH=10 \
+    bash "$1" --repo "$repo" --no-fetch "$STALE" 2>&1
+}
+out30n="$(reds_n "$patrol")"
+has   '㉚n 兩個 run 的 db start 限流用盡 → ⚠ 同類紅 2 次（映像限流）' "$out30n" '⚠ 同類紅 2 次（映像限流（db-start-retry toomanyrequests））→ 依 §5-b 升票'
+hasnt '㉚n2 非限流的 db start 失敗不併入（不是 3 次）' "$out30n" '同類紅 3 次（映像限流'
+mut_n="$work/patrol.no-image-limit.sh"
+grep -v 'REDS-IMAGE-LIMIT$' "$patrol" > "$mut_n"
+if cmp -s "$patrol" "$mut_n"; then
+  echo "✗ ㉚n mutation 無效：grep 沒刪到 REDS-IMAGE-LIMIT 那行" >&2; fail=1
+else
+  hasnt '㉚n mutant（拿掉 REDS-IMAGE-LIMIT）→ 不再有映像限流簽章（證明 ㉚n 咬住該行）' "$(reds_n "$mut_n")" '映像限流（db-start-retry'
+fi
+
 # ---- ㉞（LS-385）：PR 段「⚠ ci job 耗時 ≥40 分」——讀 gh pr list 的 statusCheckRollup（同一次呼叫），`ci`／`ci-ui-<n>`
 #      已完成的 check-run 耗時最長者 ≥PATROL_CI_SLOW_MIN（預設 40）分就標。假 gh 對 pr-list.json 跑 patrol 自己那條 -q 運算式
 #      （真 jq，同 ㉘ i4 的教訓：預先算好的 TSV 會繞過運算式本身）。fixture 形狀取自真 PR（`gh pr list --json statusCheckRollup`：
