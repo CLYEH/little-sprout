@@ -26,6 +26,9 @@ struct FoodCell: View {
     let item: FoodCatalogItem
     let state: FoodCellState
     let layout: Layout
+    /// LS-382：小標至少佔幾列——不足就補單一空白（稿面 01 入口的 Tag Row 在沒有過敏原時內容是 " "），讓不同
+    /// 食物的格子等高、入口區塊三態等高（Notes `h752D`）。圖鑑本體（02）維持 0＝有幾個小標就幾列。
+    var minimumTagLines = 0
     /// 點擊回呼——`state.isInteractive == false`（viewer 空位）時不會包成按鈕，這個回呼不會被呼叫。
     let onTap: () -> Void
 
@@ -84,7 +87,7 @@ struct FoodCell: View {
             Text(dateLine)
                 .appNumericFont(.note)
                 .foregroundStyle(state.isTried ? Color.lsPrintInkSecondary : Color.lsTextSecondary)
-            ForEach(tags, id: \.self) { tag in
+            ForEach(Array(tags.enumerated()), id: \.offset) { _, tag in
                 Text(tag)
                     .appFont(.note, weight: .semibold)
                     .foregroundStyle(state.isTried ? Color.lsPrintInkSecondary : Color.lsTextSecondary)
@@ -102,8 +105,9 @@ struct FoodCell: View {
     }
 
     private var tags: [String] {
-        [FoodBookCopy.allergenTag(item.allergens), FoodBookCopy.ageTag(minAgeMonths: item.minAgeMonths)]
+        let tags = [FoodBookCopy.allergenTag(item.allergens), FoodBookCopy.ageTag(minAgeMonths: item.minAgeMonths)]
             .compactMap { $0 }
+        return tags + Array(repeating: " ", count: max(0, minimumTagLines - tags.count))
     }
 }
 

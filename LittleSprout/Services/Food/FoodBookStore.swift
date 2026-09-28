@@ -12,8 +12,8 @@ enum FoodBookLoadState: Equatable {
     var isLoading: Bool { self == .loading }
 }
 
-/// 飲食圖鑑 02（LS-379）的 `@Observable` 狀態——view-scoped，每次推入圖鑑建一份（同 `GrowthStore`
-/// 的角色分工）。
+/// 飲食圖鑑 02（LS-379）的 `@Observable` 狀態——view-scoped（同 `GrowthStore` 的角色分工）。LS-382 起由寶貝
+/// 詳情（`ChildGrowthDetailView`）每個寶貝建一份，入口三格與推入的圖鑑共用同一顆；其他呼叫端沒傳就由圖鑑自己建。
 ///
 /// **目錄與記錄一次換**：`refresh()` 用 `async let` 平行抓 `food_catalog` 與 `list_child_food_records`，
 /// 兩者都成功才一起寫進 `catalog`／`records`——只成功一半就寫，畫面會出現「目錄是新的、記錄是空的」
