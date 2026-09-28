@@ -88,6 +88,7 @@ enum TapTargetGateHarness {
         case .importProgressCancelConfirm: importProgressCancelConfirmHost
         case .importSummaryWithFailures: importSummaryWithFailuresHost
         case .importSummaryWithMarkingFailure: importSummaryWithMarkingFailureHost
+        case .importBatchFlowEntry, .importBatchFlowEntryDark: importBatchFlowEntryHost(for: screen)
         case .passwordSignIn: passwordSignInHost
         case .welcome: welcomeHost
         case .profileEdit: profileEditHost
@@ -133,12 +134,9 @@ enum TapTargetGateHarness {
              .foodRecordSheet, .foodRecordSheetFailure, .foodRecordSheetEdit: foodHost(for: screen)
         case .photoCardBabyCaption: photoCardBabyCaptionHost
         case .diaryCardBabyCaption: diaryCardBabyCaptionHost
-        case .selfTestTooSmall:
-            selfTestTooSmallHost
-        case .selfTestGood:
-            selfTestGoodHost
-        case .selfTestPaddingOutsideButton:
-            selfTestPaddingOutsideButtonHost
+        case .selfTestTooSmall: selfTestTooSmallHost
+        case .selfTestGood: selfTestGoodHost
+        case .selfTestPaddingOutsideButton: selfTestPaddingOutsideButtonHost
         }
     }
 

@@ -138,6 +138,12 @@ expect_has "$outs" "mode=full" "機制檔：不略過" || fail=1
 expect_has "$out" "不可略過檔 .github/workflows/ci.yml" "機制檔：點名" || fail=1
 expect_has "$outs" "record=false" "機制檔：PR 無 UI 變更→非完整集合不登記" || fail=1
 
+# LS-385：只動分片腳本（ci-ui job 在 macOS 上執行它）→ 不略過，否則分片機制改壞的 PR 走 harness-skip、ci-ui 不跑就綠
+pr_case shards scripts/gates/ui-test-shards.sh
+run "$checker" --event pull_request --base main
+expect_has "$outs" "mode=full" "機制檔（ui-test-shards.sh）：不略過" || fail=1
+expect_has "$out" "不可略過檔 scripts/gates/ui-test-shards.sh" "機制檔（ui-test-shards.sh）：點名" || fail=1
+
 # R1 M1：harness 目錄下但 macOS job 會讀到的檔 → 不略過
 pr_case legal docs/legal/terms-of-service.md
 run "$checker" --event pull_request --base main

@@ -262,6 +262,70 @@ else
   fail=1
 fi
 
+# ⑯～⑲ LS-385：--shard <i>/<n>（CI `ci-ui` job 各片）——另外帶 `-skip-testing:<其他片的類別>`（清單由 ui-test-shards.sh
+#    從 LittleSproutUITests/ 算出），⑨ 的基本旗標不變；算不出清單 exit 2 且不呼叫 xcodebuild；TapTargetGateTests 分到別片時
+#    成功訊息不宣稱「已量測畫面」。fixture：TapTargetGateTests 3 支→第 1 片；OtherUITests、ThirdUITests 各 1 支→第 2 片。
+mkdir -p "$R/LittleSproutUITests"
+printf 'import XCTest\nfinal class TapTargetGateTests: XCTestCase {\n    func testA() {}\n    func testB() {}\n    func testC() {}\n}\n' > "$R/LittleSproutUITests/TapTargetGateTests.swift"
+printf 'import XCTest\nfinal class OtherUITests: XCTestCase {\n    func testA() {}\n}\n' > "$R/LittleSproutUITests/Other.swift"
+printf 'import XCTest\nfinal class ThirdUITests: XCTestCase {\n    func testA() {}\n}\n' > "$R/LittleSproutUITests/Third.swift"
+shard_args_file="$work/xcodebuild-shard.args"
+run_shard() {   # run_shard <checker> <shard spec>
+  rm -f "$shard_args_file"
+  ( cd "$R" && unset GITHUB_ACTIONS GITHUB_JOB GITHUB_RUN_ATTEMPT
+    PATH="$bin:$PATH" FAKE_XCODEBUILD_MODE=pass FAKE_XCODEBUILD_ARGS_FILE="$shard_args_file" bash "$1" UDID SCHEME --shard "$2" 2>&1 )
+}
+shard_flags_ok() {   # 第 1 片：略過另兩個類別、不略過自己；⑨ 的基本旗標仍在、無 -only-testing
+  grep -qxF -- '-skip-testing:LittleSproutUITests/OtherUITests' "$shard_args_file" \
+    && grep -qxF -- '-skip-testing:LittleSproutUITests/ThirdUITests' "$shard_args_file" \
+    && ! grep -qxF -- '-skip-testing:LittleSproutUITests/TapTargetGateTests' "$shard_args_file" \
+    && grep -qxF -- '-skip-testing:LittleSproutTests' "$shard_args_file" \
+    && grep -qxF -- '-skip-testing:LittleSproutUITests/QASmokeTests' "$shard_args_file" \
+    && ! grep -q -- '^-only-testing' "$shard_args_file"
+}
+out=$(run_shard "$checker" 1/2); got=$?
+if [ "$got" -eq 0 ] && shard_flags_ok; then
+  echo "✓ ⑯ --shard 1/2 → 另帶 -skip-testing:<第 2 片的類別>，不略過本片，⑨ 基本旗標不變"
+else
+  echo "✗ ⑯ --shard 1/2 的 xcodebuild 旗標不對（實得 exit ${got}）" >&2
+  sed 's/^/    /' "$shard_args_file" >&2 2>/dev/null; printf '%s\n' "$out" | sed 's/^/    /' >&2
+  fail=1
+fi
+expect 0 '⑯ --shard 1/2（TapTargetGateTests 在本片）→ 成功訊息帶分片並照舊列已量測畫面' "$got" "$out" '✓ tap-target-check（分片 1/2）：已量測畫面'
+
+# ⑯m mutation：拿掉帶分片旗標那行 → ⑯ 的旗標斷言必須紅（證明 ⑯ 咬的是這行、不是巧合）
+mut_shard="$work/tap-target-check.no-shard-args.sh"
+grep -vF '${shard_args[@]+"${shard_args[@]}"}' "$checker" > "$mut_shard"
+if cmp -s "$checker" "$mut_shard"; then
+  echo "✗ ⑯m mutation 無效：grep 沒刪到帶分片旗標那行（錨點漂移）" >&2; fail=1
+else
+  out=$(run_shard "$mut_shard" 1/2); got=$?
+  if shard_flags_ok; then
+    echo "✗ ⑯m mutant（不帶分片旗標）⑯ 的旗標斷言仍綠——⑯ 沒咬住分片旗標" >&2; fail=1
+  else
+    echo "✓ ⑯m mutant（拿掉帶分片旗標那行）→ ⑯ 的旗標斷言轉紅"
+  fi
+fi
+
+# ⑰ TapTargetGateTests 在別片（2/2）→ 成功，但訊息不宣稱「已量測畫面」
+out=$(run_shard "$checker" 2/2); got=$?
+expect 0 '⑰ --shard 2/2（TapTargetGateTests 在別片）→ 訊息點明 ≥44pt 結果見該片' "$got" "$out" \
+  '✓ tap-target-check（分片 2/2）：本片 UITests 全綠（TapTargetGateTests 在其他分片'
+case "$out" in *已量測畫面*) echo "✗ ⑰ 別片不該印「已量測畫面」" >&2; fail=1 ;; *) echo "✓ ⑰ 別片不印「已量測畫面」" ;; esac
+grep -qxF -- '-skip-testing:LittleSproutUITests/TapTargetGateTests' "$shard_args_file" \
+  && echo "✓ ⑰ 2/2 的 xcodebuild 旗標含 -skip-testing:LittleSproutUITests/TapTargetGateTests" \
+  || { echo "✗ ⑰ 2/2 應略過 TapTargetGateTests" >&2; fail=1; }
+
+# ⑱ 分片清單算不出來（3/2）→ exit 2，且不得呼叫 xcodebuild（不能退回整包跑或什麼都不略過）
+out=$(run_shard "$checker" 3/2); got=$?
+expect 2 '⑱ --shard 3/2（清單算不出來）→ exit 2' "$got" "$out" '略過清單算不出來'
+[ ! -e "$shard_args_file" ] && echo "✓ ⑱ 未呼叫 xcodebuild" || { echo "✗ ⑱ 清單算不出來仍呼叫了 xcodebuild" >&2; fail=1; }
+
+# ⑲ --shard 以外的第三、四個參數 → exit 2（③ 的單一多餘參數之外，也不接受 --shard 拼錯）
+out=$(cd "$R" && PATH="$bin:$PATH" bash "$checker" UDID SCHEME --shards 1/2 2>&1); got=$?
+expect 2 '⑲ 第三個參數不是 --shard → exit 2' "$got" "$out" '用法：tap-target-check.sh'
+rm -rf "$R/LittleSproutUITests" "$result_bundle"
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ tap-target-check.test.sh 全部通過"
 else
