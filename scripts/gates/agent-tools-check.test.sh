@@ -41,6 +41,9 @@
 # LS-352（㊲ 改釘、㊶）：㊲ 原釘 merge-reviewer 的分頁過濾游標句，改釘 rubric 引用句（游標句搬進 docs/REVIEW-RUBRIC.md
 #   R1.5）；㊶ ios-dev 正文須含 handoff 自檢段標題、㊷ merge-reviewer 正文須含「自檢已宣告通過的項只抽驗、不重寫」——
 #   各自缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠；正文必含字樣總數 74→76。
+# LS-376（㊹）：qa／merge-reviewer／dead-code-sweeper 的 tools: 不得含 mcp__pencil__execute／read_skill／browser（禁止工具表
+#   多字首）；qa 必要工具撤掉 execute（② 原「qa 少 execute → 紅」改為「只有 get_app_state 也通過」）；mutant 拿掉 PEN_WRITE
+#   那一行後「qa 含 execute」負樣本變綠。⑮ mutant 的斷言改比對「tools: 含被禁工具」（qa 等列的「不含被禁工具」行仍會印）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -210,7 +213,7 @@ mk() {
 reset() {
   rm -rf "$agents"; mkdir -p "$agents"
   mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_BODY"
-  mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_BODY"
+  mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "$QA_BODY"
   mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "${NOFORK254} ${LINEARFALLBACK}"
   mk ui-designer NONE "$UI_BODY"
   mk visual-reviewer NONE "$VR_BODY"
@@ -223,15 +226,15 @@ reset; expect 0 '① ui-designer／visual-reviewer 仍可無 tools: 行（未被
 out="$(bash "$checker" 2>&1)"; got=$?   # 不帶參數＝真 repo 的 .claude/agents
 if [ "$got" -eq 0 ]; then ok '① 真 repo 的 .claude/agents 通過'; else echo "✗ ① 真 repo 應通過（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
 reset; mk ui-designer "Read, mcp__pencil__get_app_state, mcp__pencil__execute" "$UI_BODY"; expect 0 '① ui-designer 有 tools: 且含 execute → exit 0' '通過'
-reset; mk qa "  Bash ,  ${LINEAR3},mcp__pencil__get_app_state,mcp__pencil__execute  " "$QA_BODY"; expect 0 '① 空白／逗號變體 → exit 0' '通過'
-reset; printf -- '---\r\nname: qa\r\ndescription: x\r\ntools: Bash, %s, mcp__pencil__get_app_state, mcp__pencil__execute\r\nmodel: sonnet\r\n---\r\n\r\n%s\r\n' "$LINEAR3" "$QA_BODY" > "$agents/qa.md"; expect 0 '① CRLF 行尾 → exit 0' '通過'
+reset; mk qa "  Bash ,  ${LINEAR3},mcp__pencil__get_app_state  " "$QA_BODY"; expect 0 '① 空白／逗號變體 → exit 0' '通過'
+reset; printf -- '---\r\nname: qa\r\ndescription: x\r\ntools: Bash, %s, mcp__pencil__get_app_state\r\nmodel: sonnet\r\n---\r\n\r\n%s\r\n' "$LINEAR3" "$QA_BODY" > "$agents/qa.md"; expect 0 '① CRLF 行尾 → exit 0' '通過'
 
 # ---- ② 缺工具 ----
 reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '② qa 少 Bash → exit 1' 'qa.md：tools: 缺 Bash'
 reset; mk qa "BashOutput, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '② BashOutput 不算 Bash（整字比對）→ exit 1' 'qa.md：tools: 缺 Bash'
 reset; mk merge-reviewer "Bash, mcp__linear__get_issue, mcp__linear__list_comments" "$HOLD"; expect 1 '② merge-reviewer 少 save_comment → exit 1' 'merge-reviewer.md：tools: 缺 mcp__linear__save_comment'
 reset; mk qa "Bash, ${LINEAR3}" "$HOLD"; expect 1 '② qa 少 mcp__pencil__get_app_state → exit 1' 'qa.md：tools: 缺 mcp__pencil__get_app_state'
-reset; mk qa "Bash, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '② qa 少 mcp__pencil__execute（LS-91 補釘）→ exit 1' 'qa.md：tools: 缺 mcp__pencil__execute'
+reset; mk qa "Bash, ${LINEAR3}, mcp__pencil__get_app_state" "$QA_BODY"; expect 0 '② LS-376：qa 不再要求 mcp__pencil__execute（LS-91 補釘撤銷）→ 只有 get_app_state 也通過' '✓ agent-tools gate 通過' '' 'qa.md：tools: 缺 mcp__pencil__execute'
 # LS-209 merge-review R1 M2：ios-dev 現在有必要工具表（曾經留空、「規則表無要求」故意讓任何子集通過）——
 # 缺 Bash／Read 等基本工具，或漏了三支 Linear 工具的任一支，都要紅，不能再靜默放行。
 reset; mk ios-dev "Read, Edit" "$IOS_BODY"; expect 1 '② M2：ios-dev 有 tools: 行但缺必要工具 → exit 1（regression：曾經規則表無要求，本票起要求）' 'ios-dev.md：tools: 缺'
@@ -255,7 +258,7 @@ reset; mk qa "Read, ${LINEAR3}, mcp__pencil__get_app_state" "$HOLD"; expect 1 '�
 reset; expect 0 '⑤ 三份正文含字樣 → 印「正文含」、通過（77 條）' 'ios-dev.md：正文含「supabase-lock.sh --hold」' '正文必含字樣 77 條）'
 # LS-158：qa 正文另一條 `qa-e2e.sh`——有 hold 字樣但沒有 e2e 字樣仍紅；三句都在才印「正文含」
 reset; expect 0 '⑥ LS-158：qa 正文含 qa-e2e.sh → 印「正文含」' 'qa.md：正文含「qa-e2e.sh」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "$LOCK_BODY"; expect 1 '⑥ LS-158：qa 正文只有 hold＋H3b 句、缺 qa-e2e.sh → exit 1' 'qa.md：正文缺「qa-e2e.sh」' '' 'qa.md：正文缺「supabase-lock.sh --hold」'
 # LS-180：ui-designer／visual-reviewer 正文須含「--kill 只在 orchestrator 明示時」——切檔不殺行程的規約句被刪即紅；工具齊全不救
 reset; expect 0 '⑦ LS-180：ui-designer／visual-reviewer 正文含字樣 → 印「正文含」' 'ui-designer.md：正文含「--kill 只在 orchestrator 明示時」' 'visual-reviewer.md：正文含「--kill 只在 orchestrator 明示時」'
 reset; mk ui-designer NONE; expect 1 '⑦ LS-180：ui-designer 正文缺字樣 → exit 1' 'ui-designer.md：正文缺「--kill 只在 orchestrator 明示時」'
@@ -270,13 +273,13 @@ reset; mk visual-reviewer NONE "$VR_BODY"; expect 0 '⑧ LS-180 裁決：visual-
 reset; expect 0 '⑨ LS-183：三份正文含 H3b 句 → 印「正文含」' 'ios-dev.md：正文含「本機容器操作同樣要在 lock 內」' 'qa.md：正文含「本機容器操作同樣要在 lock 內」'
 reset; mk ios-dev "$IOS_TOOLS" "$HOLD"; expect 1 '⑨ LS-183：ios-dev 只有 hold 句、缺 H3b 句 → exit 1' 'ios-dev.md：正文缺「本機容器操作同樣要在 lock 內」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$HOLD"; expect 1 '⑨ LS-183：merge-reviewer 缺 H3b 句 → exit 1' 'merge-reviewer.md：正文缺「本機容器操作同樣要在 lock 內」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${HOLD} ${E2E}"; expect 1 '⑨ LS-183：qa 有 hold＋e2e、缺 H3b 句 → exit 1，工具齊全不救' 'qa.md：正文缺「本機容器操作同樣要在 lock 內」' '' 'qa.md：tools: 缺'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${HOLD} ${E2E}"; expect 1 '⑨ LS-183：qa 有 hold＋e2e、缺 H3b 句 → exit 1，工具齊全不救' 'qa.md：正文缺「本機容器操作同樣要在 lock 內」' '' 'qa.md：tools: 缺'
 reset; mk ios-dev "$IOS_TOOLS" "${HOLD} 只寫 docker exec 而沒有那句規約不算"; expect 1 '⑨ LS-183：只有 docker exec 字面、無「同樣要在 lock 內」→ 紅' 'ios-dev.md：正文缺「本機容器操作同樣要在 lock 內」'
 # LS-184：三份正文的 `--hold` 寫法須為 `cd <worktree> && bash scripts/ops/supabase-lock.sh --hold` 同一命令鏈——裸 `--hold` 句（舊字樣 `supabase-lock.sh --hold` 仍在）即紅；三份都驗；工具齊全不救
 reset; expect 0 '⑩ LS-184：三份正文含 cd <worktree> && … --hold 同鏈句 → 印「正文含」' 'ios-dev.md：正文含「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」' 'qa.md：正文含「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」'
 reset; mk ios-dev "$IOS_TOOLS" "${BARE_HOLD} ${H3B}"; expect 1 '⑩ LS-184：ios-dev 只有裸 --hold（無 cd 同鏈）→ exit 1，舊字樣仍在不救' 'ios-dev.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${BARE_HOLD} ${H3B}"; expect 1 '⑩ LS-184：merge-reviewer 裸 --hold → exit 1' 'merge-reviewer.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${BARE_HOLD} ${H3B} ${E2E}"; expect 1 '⑩ LS-184：qa 裸 --hold → exit 1，工具齊全不救' 'qa.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」' '' 'qa.md：tools: 缺'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${BARE_HOLD} ${H3B} ${E2E}"; expect 1 '⑩ LS-184：qa 裸 --hold → exit 1，工具齊全不救' 'qa.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」' '' 'qa.md：tools: 缺'
 reset; mk ios-dev "$IOS_TOOLS" "先 cd <worktree>，另一條命令再 bash scripts/ops/supabase-lock.sh --hold 不算同鏈。${H3B}"; expect 1 '⑩ LS-184：cd 與 --hold 不在同一命令鏈（沒有 &&）→ 紅' 'ios-dev.md：正文缺「cd <worktree> && bash scripts/ops/supabase-lock.sh --hold」'
 # LS-186：ios-dev 正文的 PR body 驗證句須帶 CI 完整旗標 `pr-body-check.sh <f> --branch <分支> --verify`——裸 `pr-body-check.sh <f>`（LS-185 前寫法）即紅；
 # lock 三句齊全不救；merge-reviewer／qa 不要求
@@ -287,7 +290,7 @@ reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "$MR_BODY"; expect
 reset; expect 0 '⑤ merge-reviewer／qa 也印「正文含」' 'merge-reviewer.md：正文含「supabase-lock.sh --hold」' 'qa.md：正文含「supabase-lock.sh --hold」'
 reset; mk ios-dev "$IOS_TOOLS"; expect 1 '⑤ ios-dev 正文缺字樣 → exit 1' 'ios-dev.md：正文缺「supabase-lock.sh --hold」' '' '✓ agent-tools gate 通過'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '⑤ merge-reviewer 正文缺字樣 → exit 1' 'merge-reviewer.md：正文缺「supabase-lock.sh --hold」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill"; expect 1 '⑤ qa 正文缺字樣（R2 (a)）→ exit 1，工具齊全不救' 'qa.md：正文缺「supabase-lock.sh --hold」' '' 'qa.md：tools: 缺'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state"; expect 1 '⑤ qa 正文缺字樣（R2 (a)）→ exit 1，工具齊全不救' 'qa.md：正文缺「supabase-lock.sh --hold」' '' 'qa.md：tools: 缺'
 reset; mk ios-dev "$IOS_TOOLS"; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}"; expect 1 '⑤ 兩份同時缺 → 一次列完' 'ios-dev.md：正文缺' 'merge-reviewer.md：正文缺'
 reset; mk ios-dev "$IOS_TOOLS" "只寫 supabase-lock.sh --release 不算"; expect 1 '⑤ 只有 --release 沒有 --hold → 紅' 'ios-dev.md：正文缺'
 reset; printf -- '---\nname: ios-dev\ndescription: frontmatter 提到 supabase-lock.sh --hold 不算\nmodel: sonnet\n---\n\n正文。\n' > "$agents/ios-dev.md"; expect 1 '⑤ 字樣只在 frontmatter → 仍紅（只看正文）' 'ios-dev.md：正文缺'
@@ -361,7 +364,7 @@ fi
 # ---- ⑬ LS-207（a7b0f49e）：ios-dev／qa／merge-reviewer 正文須含「等長命令一律前景 Bash 帶 timeout」 ----
 reset; expect 0 '⑬ 三份正文含長命令前景 timeout 句 → 印「正文含」' 'ios-dev.md：正文含「等長命令一律前景 Bash 帶 timeout」' 'qa.md：正文含「等長命令一律前景 Bash 帶 timeout」'
 reset; mk ios-dev "$IOS_TOOLS" "${HOLD} ${H3B} ${PRBODY} ${DBCHAN} ${SHEETUI}"; expect 1 '⑬ ios-dev 缺長命令前景 timeout 句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「等長命令一律前景 Bash 帶 timeout」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${HOLD} ${H3B} ${E2E}"; expect 1 '⑬ qa 缺長命令前景 timeout 句 → exit 1' 'qa.md：正文缺「等長命令一律前景 Bash 帶 timeout」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${HOLD} ${H3B} ${E2E}"; expect 1 '⑬ qa 缺長命令前景 timeout 句 → exit 1' 'qa.md：正文缺「等長命令一律前景 Bash 帶 timeout」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${HOLD} ${H3B} ${DBCHAN} ${SHEETUI}"; expect 1 '⑬ merge-reviewer 缺長命令前景 timeout 句 → exit 1' 'merge-reviewer.md：正文缺「等長命令一律前景 Bash 帶 timeout」'
 reset; mk ios-dev "$IOS_TOOLS" "${HOLD} ${H3B} ${PRBODY} ${DBCHAN} ${SHEETUI}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
@@ -373,10 +376,10 @@ fi
 
 # ---- ⑭ LS-207（c18ef27f）：qa／merge-reviewer 正文須含「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」；ios-dev 不要求 ----
 reset; expect 0 'qa／merge-reviewer 正文含 simctl ui 復原句 → 印「正文含」' 'qa.md：正文含「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」' 'merge-reviewer.md：正文含「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E}"; expect 1 'qa 缺 simctl ui 復原句 → exit 1，其餘句子齊全不救' 'qa.md：正文缺「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」' '' 'qa.md：正文缺「qa-e2e.sh」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E}"; expect 1 'qa 缺 simctl ui 復原句 → exit 1，其餘句子齊全不救' 'qa.md：正文缺「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」' '' 'qa.md：正文缺「qa-e2e.sh」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI}"; expect 1 'merge-reviewer 缺 simctl ui 復原句 → exit 1' 'merge-reviewer.md：正文缺「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」'
 reset; expect 0 'ios-dev 不要求 simctl ui 復原句 → 仍通過' '通過'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E}"
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && ! grep -qF 'simctl ui' <<<"$out"; then
   echo '✓ mutant：拿掉規則後「缺 simctl ui 復原句」的負樣本變綠'
@@ -385,9 +388,9 @@ else
 fi
 
 # ---- ⑭-b LS-207 R3（merge-review R2 b907173c N1）：句子在但數值寫 medium（R2 之前的舊值）→ 仍紅，只釘句子不夠 ----
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI_MEDIUM}"; expect 1 '⑭-b qa 復原句寫 medium（非 large）→ exit 1，句子本身在也不救' 'qa.md：正文缺「content_size／appearance 改成 large」' '' 'qa.md：正文缺「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E} ${SIMCTLUI_MEDIUM}"; expect 1 '⑭-b qa 復原句寫 medium（非 large）→ exit 1，句子本身在也不救' 'qa.md：正文缺「content_size／appearance 改成 large」' '' 'qa.md：正文缺「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI_MEDIUM}"; expect 1 '⑭-b merge-reviewer 復原句寫 medium → exit 1' 'merge-reviewer.md：正文缺「content_size／appearance 改成 large」' '' 'merge-reviewer.md：正文缺「用 `simctl ui` 改過字級／外觀的 handoff 必列已復原」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI_MEDIUM}"
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E} ${SIMCTLUI_MEDIUM}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && ! grep -qF 'content_size／appearance 改成 large' <<<"$out"; then
   echo '✓ ⑭-b mutant：拿掉規則後「復原句寫 medium」的負樣本變綠（新數值規則確實是原因）'
@@ -411,10 +414,10 @@ else
 fi
 reset; mk ios-dev "${IOS_TOOLS}, mcp__pencil__execute" "$IOS_BODY"
 out="$(bash "$mut_forbid" "$agents" 2>&1)"; got=$?
-if [ "$got" -eq 0 ] && ! grep -qF '含被禁工具' <<<"$out"; then
+if [ "$got" -eq 0 ] && ! grep -qF 'tools: 含被禁工具' <<<"$out"; then
   ok '⑮ mutant：清空 FORBIDDEN_RULES 後「tools: 含 mcp__pencil__execute」的負樣本變綠（禁止工具規則確實是原因）'
 else
-  echo "✗ ⑮ mutant 應 exit 0 且不印「含被禁工具」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+  echo "✗ ⑮ mutant 應 exit 0 且不印「tools: 含被禁工具」（「不含被禁工具」行自 LS-376 起仍會出現在 qa 等列，故比對帶 tools: 前綴）（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 reset; mk ios-dev NONE "$IOS_BODY"
 out="$(bash "$mut_forbid" "$agents" 2>&1)"; got=$?
@@ -422,6 +425,34 @@ if [ "$got" -eq 0 ] && ! grep -qF '隱含含有禁止工具' <<<"$out"; then
   ok '⑮ mutant：清空 FORBIDDEN_RULES 後「無 tools: 行」的負樣本也變綠（同一條規則造成兩種樣本的紅）'
 else
   echo "✗ ⑮ mutant 應 exit 0 且不印「隱含含有禁止工具」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ㊹ LS-376：唯讀角色（qa／merge-reviewer／dead-code-sweeper）tools: 不得含 Pencil 寫入類工具（execute／read_skill／
+#        browser）——LS-208、LS-349 兩次設計票在飛時 Pen 被切到 qa-test；get_app_state 唯讀對路徑不禁。沒有 tools: 行也算違規
+#        （同 ⑮ 語意）；ui-designer／visual-reviewer 不在表內（需要寫入，① 已覆蓋其含 execute 仍通過）----
+QA_TOOLS="Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state"
+reset; mk qa "${QA_TOOLS}, mcp__pencil__execute" "$QA_BODY"; expect 1 '㊹ qa tools: 含 mcp__pencil__execute → exit 1' 'qa.md：tools: 含被禁工具（字首「mcp__pencil__execute」）' '' 'qa.md：tools: 缺'
+reset; mk qa "${QA_TOOLS}, mcp__pencil__read_skill" "$QA_BODY"; expect 1 '㊹ qa tools: 含 mcp__pencil__read_skill → exit 1' 'qa.md：tools: 含被禁工具（字首「mcp__pencil__read_skill」）'
+reset; mk qa "${QA_TOOLS}, mcp__pencil__browser" "$QA_BODY"; expect 1 '㊹ qa tools: 含 mcp__pencil__browser → exit 1' 'qa.md：tools: 含被禁工具（字首「mcp__pencil__browser」）'
+reset; mk qa "${QA_TOOLS}, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_BODY"; expect 1 '㊹ qa 同時含兩支 → 兩支都列（不在第一支就停）' 'qa.md：tools: 含被禁工具（字首「mcp__pencil__execute」）' 'qa.md：tools: 含被禁工具（字首「mcp__pencil__read_skill」）'
+reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__execute" "$MR_BODY"; expect 1 '㊹ merge-reviewer tools: 含 mcp__pencil__execute → exit 1' 'merge-reviewer.md：tools: 含被禁工具（字首「mcp__pencil__execute」）'
+reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__browser" "${NOFORK254} ${LINEARFALLBACK}"; expect 1 '㊹ dead-code-sweeper tools: 含 mcp__pencil__browser → exit 1' 'dead-code-sweeper.md：tools: 含被禁工具（字首「mcp__pencil__browser」）'
+reset; mk qa NONE "$QA_BODY"; expect 1 '㊹ qa 無 tools: 行（繼承全部工具）→ exit 1，不是放行' 'qa.md：無 tools: 行（繼承全部工具）——隱含含有禁止工具「mcp__pencil__execute*」「mcp__pencil__read_skill*」「mcp__pencil__browser*」'
+reset; expect 0 '㊹ qa 只含 get_app_state → 通過並印不含被禁工具' 'qa.md：tools: 不含被禁工具（字首「mcp__pencil__execute」「mcp__pencil__read_skill」「mcp__pencil__browser」）'
+# mutation：拿掉 LS-376 的 PEN_WRITE 那一行 → 上面「qa 含 execute」的負樣本必須變綠，證明紅是這條規則造成的
+mut_penwrite="$work/agent-tools-check.no-pen-write.sh"
+grep -v '^PEN_WRITE=' "$checker" > "$mut_penwrite"
+if grep -q '^FORBIDDEN_RULES="ios-dev|mcp__pencil__"$' "$mut_penwrite" && ! grep -q 'PEN_WRITE' "$mut_penwrite"; then
+  ok '㊹ mutant 確實已拿掉 PEN_WRITE 規則（ios-dev 列保留）'
+else
+  echo "✗ ㊹ mutant 拿掉 PEN_WRITE 失敗（負控本身無效）" >&2; fail=1
+fi
+reset; mk qa "${QA_TOOLS}, mcp__pencil__execute" "$QA_BODY"
+out="$(bash "$mut_penwrite" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! has "$out" 'tools: 含被禁工具'; then
+  ok '㊹ mutant：拿掉 PEN_WRITE 後「qa 含 execute」的負樣本變綠（LS-376 規則確實是原因）'
+else
+  echo "✗ ㊹ mutant 應 exit 0 且不印「tools: 含被禁工具」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
 # ---- ⑯ LS-209：ios-dev 正文須含 mutation 三段式句；merge-reviewer 正文須含「handoff 申報的 mutation 一律
@@ -450,7 +481,7 @@ fi
 reset; expect 0 '⑰ 三份正文含逐項對應句 → 印「正文含」' 'ios-dev.md：正文含「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」' 'qa.md：正文含「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」'
 reset; expect 0 '⑰ qa／merge-reviewer 正文含 handoff-evidence-check.sh 命令句 → 印「正文含」' 'qa.md：正文含「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」' 'merge-reviewer.md：正文含「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY}"; expect 1 '⑰ ios-dev 缺逐項對應句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI}"; expect 1 '⑰ qa 缺逐項對應句與 handoff-evidence-check.sh 句 → exit 1' 'qa.md：正文缺「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」' 'qa.md：正文缺「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E} ${SIMCTLUI}"; expect 1 '⑰ qa 缺逐項對應句與 handoff-evidence-check.sh 句 → exit 1' 'qa.md：正文缺「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」' 'qa.md：正文缺「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM}"; expect 1 '⑰ merge-reviewer 有逐項對應句但缺 handoff-evidence-check.sh 命令句 → exit 1' 'merge-reviewer.md：正文缺「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」' '' 'merge-reviewer.md：正文缺「「已驗證」逐項對應派工單／票文編號，並寫「怎麼驗」」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
@@ -471,9 +502,9 @@ fi
 #        ——措辭從「綠再貼」改為「跑過並附輸出；紅則逐條說明是誤判或補證據」，不讓 agent 為了討好工具
 #        改寫正確敘述；ios-dev 不要求（不貼裁決 comment）----
 reset; expect 0 '⑱ qa／merge-reviewer 正文含「紅則逐條說明是誤判或補證據」→ 印「正文含」' 'qa.md：正文含「紅則逐條說明是誤判或補證據」' 'merge-reviewer.md：正文含「紅則逐條說明是誤判或補證據」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN_CMD}"; expect 1 '⑱ qa 只有 handoff-evidence-check.sh 命令句、缺「紅則逐條說明」→ exit 1' 'qa.md：正文缺「紅則逐條說明是誤判或補證據」' '' 'qa.md：正文缺「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN_CMD}"; expect 1 '⑱ qa 只有 handoff-evidence-check.sh 命令句、缺「紅則逐條說明」→ exit 1' 'qa.md：正文缺「紅則逐條說明是誤判或補證據」' '' 'qa.md：正文缺「bash scripts/gates/handoff-evidence-check.sh <暫存檔>」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN_CMD}"; expect 1 '⑱ merge-reviewer 只有 handoff-evidence-check.sh 命令句、缺「紅則逐條說明」→ exit 1' 'merge-reviewer.md：正文缺「紅則逐條說明是誤判或補證據」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN_CMD}"
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN_CMD}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && ! grep -qF '紅則逐條說明' <<<"$out"; then
   ok '⑱ mutant：拿掉規則後「缺紅則逐條說明句」的負樣本變綠'
@@ -485,7 +516,7 @@ fi
 #        「background-bash-guard.sh」（「不使用背景 Bash」規約落地後仍三起 agent 停在等背景通知，升機械 gate）----
 reset; expect 0 '⑲ 三份正文含 background-bash-guard.sh → 印「正文含」' 'ios-dev.md：正文含「background-bash-guard.sh」' 'qa.md：正文含「background-bash-guard.sh」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM}"; expect 1 '⑲ ios-dev 缺 background-bash-guard.sh → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「background-bash-guard.sh」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN}"; expect 1 '⑲ qa 缺 background-bash-guard.sh → exit 1' 'qa.md：正文缺「background-bash-guard.sh」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN}"; expect 1 '⑲ qa 缺 background-bash-guard.sh → exit 1' 'qa.md：正文缺「background-bash-guard.sh」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN}"; expect 1 '⑲ merge-reviewer 缺 background-bash-guard.sh → exit 1' 'merge-reviewer.md：正文缺「background-bash-guard.sh」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM}"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
@@ -511,7 +542,7 @@ fi
 #        殺掉，殘留會與下一輪 xcodebuild 搶模擬器；來源 LS-166／LS-217，stale-xcodebuild-check.sh 機械擋殘留）----
 reset; expect 0 '㉑ 三份正文含不得依賴截斷後自動背景化句 → 印「正文含」' 'ios-dev.md：正文含「不得依賴截斷後的自動背景化」' 'qa.md：正文含「不得依賴截斷後的自動背景化」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE}"; expect 1 '㉑ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「不得依賴截斷後的自動背景化」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE}"; expect 1 '㉑ qa 缺該句 → exit 1' 'qa.md：正文缺「不得依賴截斷後的自動背景化」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE}"; expect 1 '㉑ qa 缺該句 → exit 1' 'qa.md：正文缺「不得依賴截斷後的自動背景化」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE}"; expect 1 '㉑ merge-reviewer 缺該句 → exit 1' 'merge-reviewer.md：正文缺「不得依賴截斷後的自動背景化」'
 reset
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
@@ -529,7 +560,7 @@ reset; expect 0 '㉒ 五份正文含禁派 fork 句 → 印「正文含」（mer
 reset; mk ui-designer NONE "${KILL} ${STAY}"; expect 1 '㉒ ui-designer 缺該句 → exit 1，LS-180 兩句齊全不救' 'ui-designer.md：正文缺「禁派 fork」' '' 'ui-designer.md：正文缺「收工 Pen 停在票檔」'
 reset; mk visual-reviewer NONE "$KILL"; expect 1 '㉒ visual-reviewer 缺該句 → exit 1' 'visual-reviewer.md：正文缺「禁派 fork」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC}"; expect 1 '㉒ ios-dev 缺該句 → exit 1（LS-209 舊句「不得派 fork／subagent 改動任何檔案」在也不救——字樣不同）' 'ios-dev.md：正文缺「禁派 fork」' '' 'ios-dev.md：正文缺「不得派 fork／subagent 改動任何檔案」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC}"; expect 1 '㉒ qa 缺該句 → exit 1' 'qa.md：正文缺「禁派 fork」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC}"; expect 1 '㉒ qa 缺該句 → exit 1' 'qa.md：正文缺「禁派 fork」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC}"; expect 1 '㉒ merge-reviewer 缺該句 → exit 1' 'merge-reviewer.md：正文缺「禁派 fork」'
 reset; mk visual-reviewer NONE "${KILL} 禁派fork（無空白）"; expect 1 '㉒ 字樣須整句「禁派 fork」（含空白），「禁派fork」不算 → exit 1' 'visual-reviewer.md：正文缺「禁派 fork」'
 reset; mk visual-reviewer NONE "$KILL"
@@ -605,7 +636,7 @@ reset
 reset; expect 0 '㉗ 三份正文含 scripts/ops/ci-wait.sh → 印「正文含」（總數 77 條）' 'ios-dev.md：正文含「scripts/ops/ci-wait.sh」' '正文必含字樣 77 條）'
 reset; expect 0 '㉗ qa／merge-reviewer 正文含 scripts/ops/ci-wait.sh → 印「正文含」' 'qa.md：正文含「scripts/ops/ci-wait.sh」' 'merge-reviewer.md：正文含「scripts/ops/ci-wait.sh」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254}"; expect 1 '㉗ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「scripts/ops/ci-wait.sh」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254}"; expect 1 '㉗ qa 缺該句 → exit 1' 'qa.md：正文缺「scripts/ops/ci-wait.sh」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254}"; expect 1 '㉗ qa 缺該句 → exit 1' 'qa.md：正文缺「scripts/ops/ci-wait.sh」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${UBUNTU10} ${UITESTMUT} ${NOTIMEOUT}"; expect 1 '㉗ merge-reviewer 缺該句 → exit 1' 'merge-reviewer.md：正文缺「scripts/ops/ci-wait.sh」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} 只提 gh run watch 而沒有 ci-wait.sh 不算"; expect 1 '㉗ 只提 gh run watch 字面、無 ci-wait.sh → 紅' 'ios-dev.md：正文缺「scripts/ops/ci-wait.sh」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254}"
@@ -679,7 +710,7 @@ reset; expect 0 '㉛ 六份正文含 mcp__linear__* 備援句 → 印「正文�
 reset; expect 0 '㉛ 其餘五份也印「正文含」' 'qa.md：正文含「並在 handoff 註明走備援」' 'dead-code-sweeper.md：正文含「並在 handoff 註明走備援」'
 reset; mk ios-dev "$IOS_TOOLS" "${LOCK_BODY} ${PRBODY} ${DBCHAN} ${SHEETUI} ${NOFORK} ${MUTPLAY} ${EVIDENCE_ITEM} ${BGGATE} ${QAGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${SCREENATTR} ${PUSHCACHE}"; expect 1 '㉛ ios-dev 缺該句 → exit 1，其餘句子齊全不救' 'ios-dev.md：正文缺「並在 handoff 註明走備援」' '' 'ios-dev.md：正文缺「supabase-lock.sh --hold」'
 reset; mk merge-reviewer "Bash, Read, Grep, Glob, ${LINEAR3}" "${LOCK_BODY} ${DBCHAN} ${SHEETUI} ${SIMCTLUI} ${REPLAYRULE} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${UBUNTU10} ${UITESTMUT} ${NOTIMEOUT} ${CIWAIT} ${REPLAYSCREENATTR}"; expect 1 '㉛ merge-reviewer 缺該句 → exit 1' 'merge-reviewer.md：正文缺「並在 handoff 註明走備援」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT}"; expect 1 '㉛ qa 缺該句 → exit 1' 'qa.md：正文缺「並在 handoff 註明走備援」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT}"; expect 1 '㉛ qa 缺該句 → exit 1' 'qa.md：正文缺「並在 handoff 註明走備援」'
 reset; mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "$NOFORK254"; expect 1 '㉛ dead-code-sweeper 只有禁派 fork 句、缺備援句 → exit 1' 'dead-code-sweeper.md：正文缺「並在 handoff 註明走備援」' '' 'dead-code-sweeper.md：正文缺「禁派 fork」'
 reset; mk ui-designer NONE "${KILL} ${STAY} ${NOFORK254} ${EDITID} ${CIWAIT}"; expect 1 '㉛ ui-designer 缺該句 → exit 1，其餘句子齊全不救' 'ui-designer.md：正文缺「並在 handoff 註明走備援」' '' 'ui-designer.md：正文缺「scripts/ops/ci-wait.sh」'
 reset; mk visual-reviewer NONE "${KILL} ${NOFORK254} ${EDITID} ${CIWAIT}"; expect 1 '㉛ visual-reviewer 缺該句 → exit 1' 'visual-reviewer.md：正文缺「並在 handoff 註明走備援」'
@@ -756,8 +787,8 @@ reset
 #      缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠 ----
 reset; expect 0 '㉟ qa 正文含 WDA 競態陷阱句 → 印「正文含」（總數 77 條）' 'qa.md：正文含「WDA 會與新 scene 競態、app 被背景化」' '正文必含字樣 77 條）'
 QA_MINUS_WDARACE="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${LINEARFALLBACK} ${KBINTERCEPT}"
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_MINUS_WDARACE"; expect 1 '㉟ qa 缺該句 → exit 1，其餘句子齊全不救' 'qa.md：正文缺「WDA 會與新 scene 競態、app 被背景化」' '' 'qa.md：正文缺「鍵盤彈出時會攔截下層按鈕的點擊」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_MINUS_WDARACE"
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "$QA_MINUS_WDARACE"; expect 1 '㉟ qa 缺該句 → exit 1，其餘句子齊全不救' 'qa.md：正文缺「WDA 會與新 scene 競態、app 被背景化」' '' 'qa.md：正文缺「鍵盤彈出時會攔截下層按鈕的點擊」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "$QA_MINUS_WDARACE"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && ! grep -qF 'WDA 會與新 scene 競態、app 被背景化' <<<"$out"; then
   ok '㉟ mutant：拿掉規則後「缺 WDA 競態陷阱句」的負樣本變綠'
@@ -769,8 +800,8 @@ reset
 # ---- ㊱ LS-333：qa 正文須含「鍵盤彈出時會攔截下層按鈕的點擊」——缺即紅、其餘句子齊全不救；同一 mutant 下負樣本變綠 ----
 reset; expect 0 '㊱ qa 正文含鍵盤攔截陷阱句 → 印「正文含」（總數 77 條）' 'qa.md：正文含「鍵盤彈出時會攔截下層按鈕的點擊」' '正文必含字樣 77 條）'
 QA_MINUS_KBINTERCEPT="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${LINEARFALLBACK} ${WDARACE}"
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_MINUS_KBINTERCEPT"; expect 1 '㊱ qa 缺該句 → exit 1，其餘句子齊全不救' 'qa.md：正文缺「鍵盤彈出時會攔截下層按鈕的點擊」' '' 'qa.md：正文缺「WDA 會與新 scene 競態、app 被背景化」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_MINUS_KBINTERCEPT"
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "$QA_MINUS_KBINTERCEPT"; expect 1 '㊱ qa 缺該句 → exit 1，其餘句子齊全不救' 'qa.md：正文缺「鍵盤彈出時會攔截下層按鈕的點擊」' '' 'qa.md：正文缺「WDA 會與新 scene 競態、app 被背景化」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "$QA_MINUS_KBINTERCEPT"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && ! grep -qF '鍵盤彈出時會攔截下層按鈕的點擊' <<<"$out"; then
   ok '㊱ mutant：拿掉規則後「缺鍵盤攔截陷阱句」的負樣本變綠'
@@ -797,8 +828,8 @@ reset
 # ---- ㊸ LS-346（來源 LS-343）：qa 正文須含字級矩陣句（xSmall／預設／AX3，不是只驗放大端）----
 reset; expect 0 '㊸ qa 正文含字級矩陣句 → 印「正文含」（總數 77 條）' 'qa.md：正文含「字級矩陣至少含 xSmall、預設、AX3」' '正文必含字樣 77 條）'
 QA_MINUS_FONTMATRIX="${LOCK_BODY} ${E2E} ${SIMCTLUI} ${EVIDENCE_ITEM} ${EVIDENCE_RUN} ${BGGATE} ${NOBGXC} ${NOFORK254} ${CIWAIT} ${LINEARFALLBACK} ${WDARACE} ${KBINTERCEPT}"
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_MINUS_FONTMATRIX"; expect 1 '㊸ qa 缺該句 → exit 1' 'qa.md：正文缺「字級矩陣至少含 xSmall、預設、AX3」'
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$QA_MINUS_FONTMATRIX"
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "$QA_MINUS_FONTMATRIX"; expect 1 '㊸ qa 缺該句 → exit 1' 'qa.md：正文缺「字級矩陣至少含 xSmall、預設、AX3」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "$QA_MINUS_FONTMATRIX"
 out="$(bash "$mut" "$agents" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && ! grep -qF '字級矩陣至少含 xSmall、預設、AX3' <<<"$out"; then
   ok '㊸ mutant：拿掉規則後「qa 缺字級矩陣句」的負樣本變綠'
@@ -845,7 +876,7 @@ if [ "$got" -eq 0 ] && has "$out" 'qa.md：正文含「qa-e2e.sh」（出現 4 �
 else
   echo "✗ ㊴ 真 repo：qa-e2e.sh 應通過並印出 4 次（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
-reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state, mcp__pencil__execute, mcp__pencil__read_skill" "$LOCK_BODY"; expect 1 '㊴ multi 規則仍要求至少 1 次：qa 正文完全缺 qa-e2e.sh → exit 1（標記多次不等於不檢查）' 'qa.md：正文缺「qa-e2e.sh」'
+reset; mk qa "Bash, Read, Grep, Glob, ${LINEAR3}, mcp__pencil__get_app_state" "$LOCK_BODY"; expect 1 '㊴ multi 規則仍要求至少 1 次：qa 正文完全缺 qa-e2e.sh → exit 1（標記多次不等於不檢查）' 'qa.md：正文缺「qa-e2e.sh」'
 reset
 
 # ---- ㊵ LS-341 R2 m1（merge-review R1 458d27a4）：hint 內本身含字面 `|` 的規則（LINEARFALLBACK，六份都有，

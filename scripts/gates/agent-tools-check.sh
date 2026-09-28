@@ -3,7 +3,8 @@
 #
 # 前饋：.claude/agents/*.md 的 frontmatter `tools:` 是**窮舉**白名單——列了就只有那些工具。qa／merge-reviewer 的「裁決必貼
 # commit status」靠 Bash 跑 scripts/ops/post-status.sh、讀票寫 comment 靠三支 Linear 工具；qa 視覺驗收對設計稿路徑靠
-# mcp__pencil__get_app_state、實際取圖靠 mcp__pencil__execute（唯讀用途，見 qa.md；LS-91）；ui-designer／visual-reviewer
+# mcp__pencil__get_app_state（LS-376 起 qa 不再持有 execute／read_skill／browser——稿面截圖交 visual-reviewer，見下方
+# FORBIDDEN_RULES 段）；ui-designer／visual-reviewer
 # 操作／截圖 .pen 也靠 mcp__pencil__execute。白名單漏列任何一支，該規約就靜默不可執行（CI 四項全綠、下一次派工才發現——
 # R2 I3 指出、R2 F1 實際發生在 qa 漏了 pencil）。
 # 這裡驗每份被點名的 agent 定義：檔案存在、frontmatter 閉合、`tools:` 行含全部必要工具（整字比對：`BashOutput` 不算 `Bash`）。
@@ -38,14 +39,15 @@ fi
 
 # 規則表：<agent>|<必要工具（空白分隔）>——加規約時在這裡加一行（前饋必有反饋）
 # LS-91：qa 補釘 mcp__pencil__execute——qa.md 視覺驗收唯讀截圖靠它（get_app_state 對路徑後以 execute 的
-# TakeScreenshot／Get 取圖），先前規則表只釘了 get_app_state，漏了實際取圖要用的工具。
+# TakeScreenshot／Get 取圖），先前規則表只釘了 get_app_state，漏了實際取圖要用的工具。**LS-376 撤銷**：qa 改為
+# 不得含 execute（見 FORBIDDEN_RULES），必要工具只留 get_app_state。
 # LS-157：dead-code-sweeper 補 save_comment——巡檢結果改由 sweeper 直貼票（此前缺該工具、orchestrator 一日代貼三次）。
 # LS-209 merge-review R1 M2：ios-dev 自本票起有顯式 tools: 白名單（見上方 FORBIDDEN_RULES 段），這裡不能再留空——
 # 空必要工具清單會讓「tools: 含必要工具（）」這種空括號訊息看起來像沒在驗；「無 tools: 行＝放行」這條路徑改由
 # agent-tools-check.test.sh 的合成 fixture（ui-designer／visual-reviewer 仍無 tools: 行）覆蓋，不需要 ios-dev 陪測。
 LINEAR3="mcp__linear__get_issue mcp__linear__list_comments mcp__linear__save_comment"
 RULES="merge-reviewer|Bash ${LINEAR3}
-qa|Bash ${LINEAR3} mcp__pencil__get_app_state mcp__pencil__execute
+qa|Bash ${LINEAR3} mcp__pencil__get_app_state
 dead-code-sweeper|Bash ${LINEAR3}
 ui-designer|mcp__pencil__execute
 visual-reviewer|mcp__pencil__execute
@@ -290,6 +292,12 @@ RULES_EOF
 # （不是「放行」）——LS-188／LS-192：ios-dev 實作票 agent 用 Pencil MCP 越權切檔／編輯他票，規則寫在派工 prompt 沒有
 # gate，這裡把「ios-dev 不得碰 Pencil MCP」做成機械擋。與上面 RULES（必要工具）互相獨立的檢查，各自 continue 不影響對方。
 FORBIDDEN_RULES="ios-dev|mcp__pencil__"
+# LS-376（LS-208 首例、LS-349 第二次：設計票在飛時 Pen active 被切到 qa-test）：唯讀角色（qa／merge-reviewer／
+# dead-code-sweeper）不得持有會開檔／切檔／寫入的 Pencil 工具——execute、read_skill、browser（server 實際五支見
+# docs/archive/linear/LS-87.md：browser／execute／get_app_state／get_style／read_skill）；get_app_state 唯讀對路徑不禁。
+# 同一列可列多個字首（空白分隔）。另起一行 `+=` 而非改寫上一行：⑮ 的 mutation 靠整行比對清空 ios-dev 那列，
+# LS-376 的 mutation 靠拿掉這一行，兩者各自獨立。
+PEN_WRITE="mcp__pencil__execute mcp__pencil__read_skill mcp__pencil__browser"; FORBIDDEN_RULES+=$'\n'"qa|${PEN_WRITE}"$'\n'"merge-reviewer|${PEN_WRITE}"$'\n'"dead-code-sweeper|${PEN_WRITE}"
 fn=0
 while IFS='|' read -r agent forbid; do
   [ -n "$agent" ] || continue
@@ -299,14 +307,17 @@ while IFS='|' read -r agent forbid; do
   read_tools "$f"
   [ "$RT_OK" -eq 1 ] || continue  # frontmatter 問題已由上面列過
   if [ "$RT_HAS_TOOLS" -eq 0 ]; then
-    hits+="    ${agent}.md：無 tools: 行（繼承全部工具）——隱含含有禁止工具「${forbid}*」，須新增 tools: 白名單並排除它"$'\n'
+    hits+="    ${agent}.md：無 tools: 行（繼承全部工具）——隱含含有禁止工具「${forbid// /*」「}*」，須新增 tools: 白名單並排除它"$'\n'
     continue
   fi
   toks=" $(printf '%s' "$RT_TOOLS_LINE" | tr ',' ' ' | tr -s '[:space:]' ' ') "
-  case "$toks" in
-    *" ${forbid}"*) hits+="    ${agent}.md：tools: 含被禁工具（字首「${forbid}」）"$'\n' ;;
-    *) echo "  ${agent}.md：tools: 不含被禁工具（字首「${forbid}」）" ;;
-  esac
+  bad=0
+  for fb in $forbid; do
+    case "$toks" in
+      *" ${fb}"*) hits+="    ${agent}.md：tools: 含被禁工具（字首「${fb}」）"$'\n'; bad=1 ;;
+    esac
+  done
+  [ "$bad" -eq 0 ] && echo "  ${agent}.md：tools: 不含被禁工具（字首「${forbid// /」「}」）"
 done <<FORBID_EOF
 $FORBIDDEN_RULES
 FORBID_EOF
