@@ -73,6 +73,9 @@ final class FoodFirstCardUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["編輯優格這筆記錄"].waitUntilGone(timeout: 5))
         let reaction = app.descendants(matching: .any)["foodRecordDetail.reaction"].firstMatch
+        // push gate 實測：sheet 收起的那一刻直接對 label 求值，可能在元素重新出現前就取 snapshot 失敗
+        // （「No matches found」），不會重試——先等元素存在，再等 label。
+        XCTAssertTrue(reaction.waitForExistence(timeout: 5), "存檔後應回到詳情頁的反應 chip")
         let updated = NSPredicate(format: "label == %@", "普通")
         XCTAssertEqual(
             XCTWaiter().wait(for: [expectation(for: updated, evaluatedWith: reaction)], timeout: 5), .completed,
