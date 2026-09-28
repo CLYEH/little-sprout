@@ -53723,7 +53723,7 @@
               "fill": "$print-ink",
               "textGrowth": "fixed-width",
               "width": "fill_container(0)",
-              "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月",
+              "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月⁠大",
               "textAlign": "right",
               "fontFamily": "$font",
               "fontSize": "$fs-note",
@@ -68332,7 +68332,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "兩個以上寶貝的年齡寫法（R6 定，LS-201 起以稿為準，LS-367 改寫）：**全稿一義**——`、`（頓號）永遠是『下一個人』的分隔，`·`（點）永遠只做『同一人姓名↔年齡』的微連接，不得反過來用。現行稿面多寶貝一律寫成多組「暱稱 · 年齡」以「、」串接（例：「小安 · 2 歲 3 個月、小明 · 8 個月」），`cmp/Card Diary` Multi Caption（x7k2o6）、`cmp/Card Album` Signature Line（wQVzs）、`cmp/Card Photo` Caption（VywUw）三處的單人片段同一字串（多寶貝排列照片卡另有規則，見下）；R6 原寫的「多寶貝姓名與年齡之間只用空格、不加 ·」已被 LS-201 之後的稿面取代（實作 MultiChildCaptionFormatter 仍是舊寫法，對齊與否見本板 LS-367 待裁決條）。`cmp/Card Diary`（qtCd7）Signature 的 Multi Caption（`$print-ink`／`$fs-note`／`textAlign:right`，`textGrowth:fixed-width`+`fill_container`）預設 enabled:false；多寶貝實例關閉 Who Group／Age Group、開啟 Multi Caption。**`cmp/Card Photo` 的 Caption（LS-367 改寫）**：App 沒有 media caption（情境描述）資料，Caption 只放署名字串、不再有「情境描述 · 」前段——單寶貝「小安 · 2 歲 3 個月」、多寶貝串成一行放得下就用「、」串接、放不下（含 AX3）就一行一人、未標記＝單一空白；樣式 R2 改 `$print-ink-secondary`／`$fs-note`／regular，與相簿卡署名列同樣式（格式、字級與理由見本板 LS-367 段）；沖印品白邊／角托規則不受影響，角托 y 隨印品實測高重算。**SwiftUI 斷行字元**：姓名＋U+0020＋「·」＋U+00A0＋年齡片語（年齡內部 U+00A0、「個」「月」之間 U+2060），確保 AX3 折行時「·」領銜下一行、年齡片語不被拆開。多寶貝 AX3 壓測：原 HLXo3 的 Card Photo 已刪除（見 HPvum），照片卡改由 ai2w5 示範；HLXo3 仍示範 Card Diary 的 Multi Caption。",
+                  "content": "兩個以上寶貝的年齡寫法（R6 定，LS-201 起以稿為準，LS-367 改寫）：**全稿一義**——`、`（頓號）永遠是『下一個人』的分隔，`·`（點）永遠只做『同一人姓名↔年齡』的微連接，不得反過來用。現行稿面多寶貝一律寫成多組「暱稱 · 年齡」以「、」串接（例：「小安 · 2 歲 3 個月、小明 · 8 個月大」），`cmp/Card Diary` Multi Caption（x7k2o6）、`cmp/Card Album` Signature Line（wQVzs）、`cmp/Card Photo` Caption（VywUw）三處的單人片段同一字串（多寶貝排列照片卡另有規則，見下）；R6 原寫的「多寶貝姓名與年齡之間只用空格、不加 ·」已被 LS-201 之後的稿面取代（實作 MultiChildCaptionFormatter 仍是舊寫法，對齊與否見本板 LS-367 待裁決條）。`cmp/Card Diary`（qtCd7）Signature 的 Multi Caption（`$print-ink`／`$fs-note`／`textAlign:right`，`textGrowth:fixed-width`+`fill_container`）預設 enabled:false；多寶貝實例關閉 Who Group／Age Group、開啟 Multi Caption。**`cmp/Card Photo` 的 Caption（LS-367 改寫）**：App 沒有 media caption（情境描述）資料，Caption 只放署名字串、不再有「情境描述 · 」前段——單寶貝「小安 · 2 歲 3 個月」、多寶貝串成一行放得下就用「、」串接、放不下（含 AX3）就一行一人、未標記＝單一空白；樣式 R2 改 `$print-ink-secondary`／`$fs-note`／regular，與相簿卡署名列同樣式（格式、字級與理由見本板 LS-367 段）；沖印品白邊／角托規則不受影響，角托 y 隨印品實測高重算。**SwiftUI 斷行字元**：姓名＋U+0020＋「·」＋U+00A0＋年齡片語（年齡內部 U+00A0、「個」「月」之間 U+2060），確保 AX3 折行時「·」領銜下一行、年齡片語不被拆開。多寶貝 AX3 壓測：原 HLXo3 的 Card Photo 已刪除（見 HPvum），照片卡改由 ai2w5 示範；HLXo3 仍示範 Card Diary 的 Multi Caption。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -89957,7 +89957,7 @@
                             },
                             "x7k2o6": {
                               "enabled": true,
-                              "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
+                              "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月⁠大"
                             }
                           }
                         }
@@ -96936,6 +96936,140 @@
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "契約兩件事，①②缺一不可；只做①不得出貨：①AlbumSummaryCardView、PhotoCardView、AlbumCardView 印品白邊上的文字列（Caption／Signature）在 printEdge 8 之內再加水平 12（$sp-group），照片不動，字軸與日記卡 $inset-card 20 對齊。②這三張卡的染料池改用稿面元件值 0.393／0.259／0.293／0.197（新增一個 MountPoolOpacity preset，常數、不依 viewport 算），不再沿用歡迎頁的 .welcome（0.494／0.288／0.36／0.236）。只做①時，.welcome 下最低墨點（拉丁下伸部）只有 4.51，餘裕小於模型誤差，實機可能 4.4x——正是 LS-368 量到的缺陷；做了②為 5.08 起。驗收以實測為準、不以模型：QA 以模擬器深色截圖，用本段「量法」條（AgS9H）的量法量字起點帶 [20,30)，須 ≥4.5:1；測試資料須含有下伸部的拉丁名（例 Gary · 8 個月）與多寶貝的最後一行。多寶貝署名串接超出欄寬時改一行一人（寫成換行），不靠自然斷行把名字與年齡拆開。caption 折行字元待使用者裁決（見「連帶」）。無新增畫面、無資料落點變更。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "c3l75",
+          "name": "N LS-388 相簿卡標題折行字元",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "y72F3",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-388 相簿卡標題折行字元（LS-372 D1a 擴充）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "uMq0c",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "OXW7D",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-388｜規格",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "E2AtB",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "相簿卡標題（cmp/Card Album caption MIxHp）與署名列同一套折行字元（使用者 2026-09-24 裁 LS-372 D1a，本票擴到元件預設與全部實例）：相簿名＋U+0020＋「·」＋U+00A0＋張數＋U+00A0＋張⁠相⁠片（「張」「相」「片」之間 U+2060）。一行放不下時只在相簿名內或「·」前折行，「·」領銜下一行，「N 張相片」整組不拆、不留孤字。AX3 版式（相簿名與張數以換行分成兩行）的張數段同樣是張數＋U+00A0＋張⁠相⁠片。元件預設 MIxHp 已改為「弟弟出生的第一週 · 8 張相片」；全稿 34 個實例：22 處覆寫本票改寫、3 處（eBgN8／qteWo／WiBHO）為 LS-372 已套用、7 處吃元件預設、2 處（C93xq／CG1hw，14b 空狀態）是單一空白、不適用。逐張讀回印品高與改前一致，角托與疊紙 y 不需重算。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "V0LVz",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "bXZdH",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-388｜ios-dev",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "v6k4s",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "契約：AlbumSummaryCardView 的標題改用 AlbumSignatureFormatter 同源規則——captionText 目前產出「{title} · {count} 張相片」（「·」兩側與張數後都是 U+0020），改成 \"\\(title) ·\\u{00A0}\\(count)\\u{00A0}張\\u{2060}相\\u{2060}片\"；AX3 分支改成 \"\\(title)\\n\\(count)\\u{00A0}張\\u{2060}相\\u{2060}片\"。「·」前不得換成 NBSP（會把相簿名末字鎖進同一區塊、AX3 產生孤字，同 epDnW 署名列理由）。程式另開 ui 小票或併入 LS-372 後續 ui 票，本票不動程式。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "xu4a3",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "SpnZE",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-388｜日記卡",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "KIbVZ",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "cmp/Card Diary 多寶貝署名樣本 Multi Caption（x7k2o6 元件預設，及 HLXo3 上 kmbyt 的覆寫）第二人年齡由「8 個月」改為正典「8 個月大」，與 BirthdayFormat.ageDescription／MultiChildCaptionFormatter 一致；「月」「大」之間 U+2060（同 AGF13 規則）。kmbyt 在 AX3 仍是三行、卡高不變。LS-119 Notes 的 ca7bA 範例字串同步改成「小明 · 8 個月大」。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
