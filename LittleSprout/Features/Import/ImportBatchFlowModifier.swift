@@ -15,6 +15,8 @@ import UIKit
 /// 後把它撥回 `false`，呼叫端不需要自己管理中繼狀態。
 struct ImportBatchFlowModifier: ViewModifier {
     @Binding var isActive: Bool
+    /// LS-396：只轉手給 `ImportBatchFlowContainer`——LS002「查看儲存空間」開 `StorageUsageView` 用。
+    let familyStore: FamilyStore
     let childrenStore: ChildrenStore
     let albumsStore: AlbumsStore
     let entrySource: ImportEntrySource
@@ -73,7 +75,8 @@ struct ImportBatchFlowModifier: ViewModifier {
             // 原本直接放 `ImportOrganizeView`——見該檔文件註解「為什麼用內部狀態切換」。
             .fullScreenCover(item: $organizePayload) { payload in
                 ImportBatchFlowContainer(
-                    childrenStore: childrenStore, albumsStore: albumsStore, uploadCoordinator: uploadCoordinator,
+                    familyStore: familyStore, childrenStore: childrenStore, albumsStore: albumsStore,
+                    uploadCoordinator: uploadCoordinator,
                     entrySource: entrySource, pickedAssets: payload.pickedAssets,
                     thumbnailProvider: payload.thumbnailProvider, droppedCount: payload.droppedCount,
                     accessState: payload.accessState
@@ -167,12 +170,12 @@ extension View {
     /// （harness／`.timeline` 入口尚未接線時的保底），`AlbumDetailView` 傳自己持有的
     /// `AlbumImportUploadCoordinator`（LS-304 正式版）。
     func importBatchFlow(
-        isActive: Binding<Bool>, childrenStore: ChildrenStore, albumsStore: AlbumsStore,
+        isActive: Binding<Bool>, familyStore: FamilyStore, childrenStore: ChildrenStore, albumsStore: AlbumsStore,
         entrySource: ImportEntrySource, uploadCoordinator: ImportUploadCoordinator = NoOpImportUploadCoordinator()
     ) -> some View {
         modifier(ImportBatchFlowModifier(
-            isActive: isActive, childrenStore: childrenStore, albumsStore: albumsStore, entrySource: entrySource,
-            uploadCoordinator: uploadCoordinator
+            isActive: isActive, familyStore: familyStore, childrenStore: childrenStore, albumsStore: albumsStore,
+            entrySource: entrySource, uploadCoordinator: uploadCoordinator
         ))
     }
 }

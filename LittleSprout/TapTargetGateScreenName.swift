@@ -152,6 +152,10 @@ enum TapTargetGateScreenName: String {
     // `ImportFlowTopBarSafeAreaUITests` 用；rawValue 不以 "View" 結尾，registry gate 不認它。
     case importBatchFlowEntry = "ImportBatchFlowEntry"
     case importBatchFlowEntryDark = "ImportBatchFlowEntryDark"
+    // LS-396：直接掛 `ImportBatchFlowContainer`（01 → 04 → 05，那一張種成 LS002 容量已滿），給
+    // `UploadQueueSheetUITests.test_importBatchFlow_quotaRowStorageLinkOpensStorageUsage`
+    // 驗「查看儲存空間」接線；同上不做逐元件量測、rawValue 不以 "View" 結尾。
+    case importBatchFlowQuotaFailure = "ImportBatchFlowQuotaFailure"
     // LS-164：帳號密碼登入畫面（審核帳號用）——初始態不需要任何 seed 資料（`.preview()`
     // 免登入即可建構，同 `createChild`／`createAlbum` 的既有理由），Email／密碼欄與登入鈕
     // 一開畫面就有代表性。

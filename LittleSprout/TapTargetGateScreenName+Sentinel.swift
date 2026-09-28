@@ -75,6 +75,8 @@ extension TapTargetGateScreenName {
         case .importSummaryWithMarkingFailure: return .staticText("匯入完成")
         // LS-391：入口鈕本身——一開畫面就渲染，不依賴相片庫授權／picker。
         case .importBatchFlowEntry, .importBatchFlowEntryDark: return .button("開始批次匯入")
+        // LS-396：容器起始 route＝01 整理頁，標題同 `.importOrganizeDefault`。
+        case .importBatchFlowQuotaFailure: return .staticText("整理新照片")
         case .passwordSignIn: return .staticText("帳號密碼登入")
         // Doc Title——`LegalDocumentSheet` 載入完成後必定渲染，不依賴檔案實際內容。
         case .legalDocumentSheet: return .staticText("使用條款")

@@ -74,11 +74,36 @@ extension TapTargetGateHarness {
     }
 
     /// LS-391：`.importBatchFlowEntry`／`.importBatchFlowEntryDark` 兩 case 共用一行分派（`hostView(for:)`
-    /// 所在的 enum 已貼齊 SwiftLint `type_body_length` 上限）。
+    /// 所在的 enum 已貼齊 SwiftLint `type_body_length` 上限）。LS-396 `.importBatchFlowQuotaFailure`
+    /// 同理併進這一行分派。
     @MainActor
     @ViewBuilder
     static func importBatchFlowEntryHost(for screen: TapTargetGateScreenName) -> some View {
-        ImportBatchFlowEntryHost().preferredColorScheme(screen == .importBatchFlowEntryDark ? .dark : .light)
+        if screen == .importBatchFlowQuotaFailure {
+            ImportBatchFlowQuotaFailureHost()
+        } else {
+            ImportBatchFlowEntryHost().preferredColorScheme(screen == .importBatchFlowEntryDark ? .dark : .light)
+        }
+    }
+}
+
+/// LS-396：直接掛**正式的** `ImportBatchFlowContainer`（01 → 04 → 05 的狀態切換與 LS002「查看儲存空間」
+/// 接線都在它身上），不經 PHPicker——這支 host 驗的是容器接線，不是 LS-391 的呈現時序，fixture 一張
+/// `PickedAsset` 即可（`thumbnailProvider` 為 nil 同 picker 查不到 `PHAsset` 時的正式路徑）。主鈕按下後
+/// 那一張直接以 `.failed(.quota)`（LS002）種進共用佇列，04／05 都會渲染 LS002 列。
+struct ImportBatchFlowQuotaFailureHost: View {
+    @State private var familyStore = FamilyStore.preview()
+    @State private var childrenStore = ChildrenStore.preview()
+    @State private var albumsStore = AlbumsStore.preview()
+
+    var body: some View {
+        ImportBatchFlowContainer(
+            familyStore: familyStore, childrenStore: childrenStore, albumsStore: albumsStore,
+            uploadCoordinator: HarnessCompletedImportCoordinator(albumsStore: albumsStore, seedState: .failed(.quota)),
+            entrySource: .timeline,
+            pickedAssets: [ImportDateGrouping.PickedAsset(localIdentifier: "LS-396-fixture", creationDate: Date())],
+            thumbnailProvider: nil, droppedCount: 0, accessState: .authorized
+        )
     }
 }
 
@@ -89,6 +114,7 @@ extension TapTargetGateHarness {
 /// （LS-391 r1 截圖）。入口鈕貼齊 safe area 頂端，UITest 拿它的 `minY` 當 safe area top 參照。
 struct ImportBatchFlowEntryHost: View {
     @State private var isActive = false
+    @State private var familyStore = FamilyStore.preview()
     @State private var childrenStore = ChildrenStore.preview()
     @State private var albumsStore = AlbumsStore.preview()
 
@@ -105,8 +131,8 @@ struct ImportBatchFlowEntryHost: View {
         }
         .appBackground()
         .importBatchFlow(
-            isActive: $isActive, childrenStore: childrenStore, albumsStore: albumsStore, entrySource: .timeline,
-            uploadCoordinator: HarnessCompletedImportCoordinator(albumsStore: albumsStore)
+            isActive: $isActive, familyStore: familyStore, childrenStore: childrenStore, albumsStore: albumsStore,
+            entrySource: .timeline, uploadCoordinator: HarnessCompletedImportCoordinator(albumsStore: albumsStore)
         )
     }
 }
@@ -114,8 +140,10 @@ struct ImportBatchFlowEntryHost: View {
 /// LS-391：主鈕按下後不真的上傳——每張直接以「已完成」種進 app 層級共用佇列，讓
 /// `ImportBatchFlowContainer` 走 04 → 05。群「已解決」延後 3 秒才標，04 才會在畫面上停得夠久
 /// 讓 UITest 驗它的頂列（`Import04ProgressView.checkAllFinished` 要 `isFullyEnqueued`）。
+/// LS-396：`seedState` 可改種終局失敗（`.failed(.quota)`＝LS002），預設維持「已完成」。
 private struct HarnessCompletedImportCoordinator: ImportUploadCoordinator {
     let albumsStore: AlbumsStore
+    var seedState: UploadItemState = .completed
 
     @MainActor
     func startImport(plan: ImportPlan) -> ImportBatchSession {
@@ -129,7 +157,7 @@ private struct HarnessCompletedImportCoordinator: ImportUploadCoordinator {
                 pixelSize: PixelSize(width: 4, height: 3)
             )
             session.append(upload.id)
-            return UploadQueueStore.PreviewSeed(upload, enqueuedAt: Date(), state: .completed)
+            return UploadQueueStore.PreviewSeed(upload, enqueuedAt: Date(), state: seedState)
         }
         store.seedForPreview(seeds)
         Task {

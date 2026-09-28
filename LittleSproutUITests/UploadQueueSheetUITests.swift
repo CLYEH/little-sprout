@@ -171,4 +171,52 @@ final class UploadQueueSheetUITests: XCTestCase {
             "grabber→標題間距應為 30pt（`rTEGf`／`Q7HrnF` 實測值），不是拿掉 16pt band 後的 24pt"
         )
     }
+
+    /// LS-396：批次匯入 04／05 的 LS002 列「查看儲存空間」是容量已滿時唯一的出路（不給重試）——
+    /// `ImportBatchFlowContainer` 沒接 `onViewStorage` 時按鈕落到預設 `{}`，點了毫無反應（LS-20
+    /// 稽核抓到正式版是死的）。走正式容器：01 主鈕 → 04（那一張種成 LS002）→ 點「查看儲存空間」→
+    /// 09 儲存空間頁的固定說明文字出現；關掉後等流程進 05（harness 3 秒後標群已解決），05 的 LS002
+    /// 列再點一次——04、05 各自建構，兩處接線分開鎖。
+    func test_importBatchFlow_quotaRowStorageLinkOpensStorageUsage() {
+        let app = TapTargetMeasurement.launch(.importBatchFlowQuotaFailure)
+        TapTargetMeasurement.assertScreenRendered(.importBatchFlowQuotaFailure, in: app)
+
+        let start = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "開始匯入")).firstMatch
+        XCTAssertTrue(start.waitForHittable(timeout: 10), "01 主鈕「開始匯入」應可點")
+        start.tap()
+
+        XCTAssertTrue(
+            app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "取消匯入")).firstMatch
+                .waitForExistence(timeout: 5),
+            "主鈕後應先進 04 進度頁"
+        )
+        openAndCloseStorageUsage(in: app, screen: "04")
+
+        XCTAssertTrue(app.staticTexts["匯入完成"].waitForExistence(timeout: 15), "群標為已解決後應進 05 摘要頁")
+        openAndCloseStorageUsage(in: app, screen: "05")
+    }
+
+    private func openAndCloseStorageUsage(
+        in app: XCUIApplication, screen: String, file: StaticString = #filePath, line: UInt = #line
+    ) {
+        let storageLink = app.buttons["查看儲存空間"].firstMatch
+        XCTAssertTrue(
+            storageLink.waitForHittable(timeout: 10), "\(screen) 的 LS002 列應有可點的「查看儲存空間」",
+            file: file, line: line
+        )
+        storageLink.tap()
+        let storageNote = app.staticTexts["照片與影片會佔用空間，日記文字不會。"]
+        XCTAssertTrue(
+            storageNote.waitForExistence(timeout: 5),
+            "\(screen) 點「查看儲存空間」應開出 09 儲存空間頁（StorageUsageView）——沒反應代表 onViewStorage 沒接線",
+            file: file, line: line
+        )
+        let close = app.buttons["關閉"]
+        XCTAssertTrue(close.waitForHittable(timeout: 5), "儲存空間 sheet 應有非手勢的「關閉」鈕", file: file, line: line)
+        close.tap()
+        XCTAssertTrue(
+            storageNote.waitForNonExistence(timeout: 5), "按「關閉」應收掉儲存空間 sheet、回到匯入流程",
+            file: file, line: line
+        )
+    }
 }
