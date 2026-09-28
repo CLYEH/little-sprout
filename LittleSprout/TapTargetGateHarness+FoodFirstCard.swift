@@ -71,7 +71,9 @@ private enum FoodFirstCardSample {
     /// 登入者＝媽媽（owner），harness 的記錄都是她記的——詳情頁看得到「編輯這筆記錄」（R2 接縫 hook 測試用）。
     static let mom = UUID()
 
-    /// 記錄固定成 `static let`：id 若每次重建，`TimelineRoute` 從 `entries` 查不到同一筆。
+    /// 記錄固定成 `static let`：時間軸（`timelineStore`）與假 client（`foodAPIClient`）各自呼叫 `records(_:)`，
+    /// id 若每次重建兩邊就不是同一筆——`.foodRecordDetail` 帶的快照在詳情頁重讀時查不到，會當成已被刪而返回
+    /// （`FoodRecordDetailStore.isGone`）。
     static let taro = record("taro", "2026-08-20", reaction: "neutral", note: "有點黏，吃了三口就搖頭。")
     static let bread = record(
         "bread", "2026-05-20", reaction: "liked", note: "自己抓著吃，吃得滿臉都是麵包屑。", mediaID: UUID()
