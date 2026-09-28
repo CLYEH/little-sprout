@@ -41,10 +41,11 @@ private struct FoodFirstCardHost: View {
 
     init(fixture: TapTargetGateHarness.FoodFirstCardFixture) {
         self.fixture = fixture
-        _timelineStore = State(initialValue: FoodFirstCardSample.timelineStore(fixture))
-        _foodAPIClient = State(initialValue: PreviewFoodAPIClient(
+        let foodAPIClient = PreviewFoodAPIClient(
             records: FoodFirstCardSample.records(fixture), currentUserID: FoodFirstCardSample.mom
-        ))
+        )
+        _timelineStore = State(initialValue: FoodFirstCardSample.timelineStore(fixture, foodAPIClient: foodAPIClient))
+        _foodAPIClient = State(initialValue: foodAPIClient)
     }
 
     var body: some View {
@@ -106,8 +107,10 @@ private enum FoodFirstCardSample {
     }
 
     @MainActor
-    static func timelineStore(_ fixture: TapTargetGateHarness.FoodFirstCardFixture) -> TimelineStore {
-        let store = TimelineStore.preview()
+    static func timelineStore(
+        _ fixture: TapTargetGateHarness.FoodFirstCardFixture, foodAPIClient: PreviewFoodAPIClient
+    ) -> TimelineStore {
+        let store = TimelineStore(apiClient: FoodFirstCardTimelineAPIClient(foodAPIClient: foodAPIClient))
         var entries = records(fixture).map(entry)
         if fixture == .spec {
             // 同日並列：芋頭之後接一張同一天的日記卡（稿 Feed Excerpt `qILb9`）。
@@ -151,5 +154,49 @@ private enum FoodFirstCardSample {
             mediaID: mediaID, note: note, reaction: reaction, createdAt: date, updatedAt: date
         )
     }
+}
+
+/// LS-393（merge-review LS-383 R3 i8）：時間軸重讀時回「假 client 目前的記錄」，存檔後的強制重讀
+/// （`TimelineView.refreshAfterFoodRecordChange`）才看得出效果——回到時間軸，卡片換成剛存的值。
+/// 只重建食物卡：第一頁＝每筆記錄一個 `food_first` 指標（依第一次吃的日期新到舊），之後的頁一律空；
+/// 同日日記卡、照片縮圖重讀後不會回來（沒有測試在重讀之後看它們）。
+private final class FoodFirstCardTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
+    private let foodAPIClient: PreviewFoodAPIClient
+
+    init(foodAPIClient: PreviewFoodAPIClient) {
+        self.foodAPIClient = foodAPIClient
+    }
+
+    func fetchTimelinePointers(
+        familyID: UUID, childID: UUID?, cursor: TimelineCursor?, limit: Int
+    ) async throws -> [TimelineFeedPointer] {
+        guard cursor == nil else { return [] }
+        return try await records()
+            .sorted { $0.firstTriedOn > $1.firstTriedOn }
+            .map {
+                TimelineFeedPointer(kind: .foodFirst, refId: $0.id, occurredAt: $0.firstTriedOn, childIds: [$0.childID])
+            }
+    }
+
+    func fetchFoodRecords(ids: [UUID]) async throws -> [ChildFoodRecord] {
+        try await records().filter { ids.contains($0.id) }
+    }
+
+    private func records() async throws -> [ChildFoodRecord] {
+        try await foodAPIClient.listChildFoodRecords(childID: FoodFirstCardSample.child.id)
+    }
+
+    func fetchFoodCatalogItems(ids: [String]) async throws -> [FoodCatalogItem] {
+        PreviewFoodCatalog.items.filter { ids.contains($0.id) }
+    }
+
+    func fetchDiaries(ids: [UUID]) async throws -> [DiaryRow] { [] }
+    func fetchDiaryMediaLinks(diaryIds: [UUID]) async throws -> [DiaryMediaLinkRow] { [] }
+    func fetchAlbums(ids: [UUID]) async throws -> [AlbumRow] { [] }
+    func fetchMedia(ids: [UUID]) async throws -> [MediaRow] { [] }
+    func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] { [:] }
+    func reactionCounts(familyID: UUID, targetType: String, targetIDs: [UUID]) async throws -> [ReactionCountRow] { [] }
+    func toggleReaction(familyID: UUID, targetType: String, targetID: UUID) async throws -> Bool { true }
+    func reactors(familyID: UUID, targetType: String, targetID: UUID) async throws -> [ReactorRow] { [] }
 }
 #endif
