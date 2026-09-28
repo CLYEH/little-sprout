@@ -21,7 +21,7 @@ final class FoodBookEntryUITests: XCTestCase {
     /// fixture 一樣，所以直接比絕對座標，不捲動）；三格同高。Notes `h752D`「01 與 01b 同高、按鈕不位移」。
     func testThreeStates_blockHeightAndButtonPositionAreEqual() {
         struct Measured {
-            let screen: String, buttonY: CGFloat, height: CGFloat, cellHeight: CGFloat
+            let screen: String, buttonY: CGFloat, height: CGFloat, cellHeight: CGFloat, cellCount: Int
         }
         var measured: [Measured] = []
         for screen in [TapTargetGateScreenName.growthDetailFood, .growthDetailFoodOne, .growthDetailFoodEmpty] {
@@ -30,10 +30,9 @@ final class FoodBookEntryUITests: XCTestCase {
             let button = app.buttons["foodEntry.openBook"]
             XCTAssertTrue(button.waitForExistence(timeout: 5), "\(screen.rawValue) 沒有圖鑑按鈕")
             let cells = entryCells(in: app)
-            XCTAssertEqual(cells.count, 3, "\(screen.rawValue) 應該固定三格")
             measured.append(Measured(
                 screen: screen.rawValue, buttonY: button.frame.minY, height: button.frame.maxY - title.frame.minY,
-                cellHeight: cells.map(\.frame.height).max() ?? 0
+                cellHeight: cells.map(\.frame.height).max() ?? 0, cellCount: cells.count
             ))
         }
         let reference = measured[0]
@@ -43,6 +42,8 @@ final class FoodBookEntryUITests: XCTestCase {
             XCTAssertEqual(other.height, reference.height, accuracy: 0.5, "區塊高：\(pair)")
             XCTAssertEqual(other.cellHeight, reference.cellHeight, accuracy: 0.5, "格子高：\(other.screen)")
         }
+        // 位置先比、格數後比：格數少了（沒補空位）的主要後果就是按鈕上移，讓斷言訊息直接指出這件事。
+        XCTAssertEqual(measured.map(\.cellCount), [3, 3, 3], "三態都固定三格")
     }
 
     // MARK: - 範圍 1：計數句、三格內容與順序（逐字對稿）
