@@ -1132,7 +1132,7 @@ jobs:
   # LS-385：UITests（LittleSproutUITests 整包，含 LS-95 ≥44pt 點擊目標 gate）自 `ci` job 拆出、分 3 片在獨立 runner 上並行。
   # 09-24 `ci` job 串跑 Build & Test（6–9 分）→ Release 編譯（3–5 分）→ 點擊目標 gate（UITests 整包 34–38 分），總計
   # 43–51 分、三次撞 timeout-minutes 50 被 cancelled（#544／#552／#553、dev 58ff3af）。拆出後 `ci` 剩約 13 分；各片＝
-  # 建置＋開機（約 4–6 分，ci-ipad 實測）＋約 1/3 的 UITests，推算約 18–21 分（推算表見 LS-385 handoff）。
+  # 建置＋開機（約 4–6 分，ci-ipad 實測）＋約 1/3 的 UITests，推算約 22–24 分（本機實測三片 471／553／677 秒×CI 倍率 1.45–1.52，推算表見 LS-385 PR）。
   # 分片：scripts/gates/ui-test-shards.sh 依各類別 `func test…` 數做 LPT 分配（每片都算同一張表），tap-target-check.sh
   # --shard 帶「其他片的類別」為 -skip-testing——掃描漏掉的類別每片都跑（重複、不會漏測，見該腳本檔頭）。
   # job 名 `ci-ui-<n>`（不含空白：promote.sh 的 REQUIRED_CHECKS 是空白分隔清單）＝各自一個 required check
