@@ -13,9 +13,9 @@ import Foundation
 /// （帶關聯值的 case 不能與 raw value 並存），`rawValue` 改手寫計算屬性，語意對既有呼叫端
 /// （`CommentsSheetView`／`InteractionRow`／`TimelineStore+Reactions`／`TimelineEntry.id`）
 /// 透明——這些呼叫端只會拿到已知 kind 的 entry（`.unknown` 在更早的階段就被濾掉），
-/// `.unknown` 分支在這裡只是滿足編譯器窮舉要求，不是預期路徑。
+/// `.unknown` 分支在這裡只是滿足編譯器窮舉要求，不是預期路徑。LS-383 起 `food_first` 是已知 kind。
 enum FeedKind: Decodable, Sendable, Hashable {
-    case diary, album, media
+    case diary, album, media, foodFirst
     case unknown(String)
 
     init(from decoder: Decoder) throws {
@@ -24,6 +24,7 @@ enum FeedKind: Decodable, Sendable, Hashable {
         case "diary": self = .diary
         case "album": self = .album
         case "media": self = .media
+        case "food_first": self = .foodFirst
         default: self = .unknown(raw)
         }
     }
@@ -33,6 +34,7 @@ enum FeedKind: Decodable, Sendable, Hashable {
         case .diary: return "diary"
         case .album: return "album"
         case .media: return "media"
+        case .foodFirst: return "food_first"
         case .unknown(let raw): return raw
         }
     }
@@ -283,6 +285,7 @@ struct TimelineEntry: Equatable, Sendable, Identifiable {
         case diary(DiaryContent)
         case album(AlbumContent)
         case media(MediaContent)
+        case foodFirst(FoodFirstContent)
     }
 
     let kind: FeedKind

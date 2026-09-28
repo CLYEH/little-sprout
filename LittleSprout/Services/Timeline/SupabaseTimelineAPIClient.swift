@@ -90,6 +90,37 @@ final class SupabaseTimelineAPIClient: TimelineAPIClient {
         }
     }
 
+    func fetchFoodRecords(ids: [UUID]) async throws -> [ChildFoodRecord] {
+        guard !ids.isEmpty else { return [] }
+        do {
+            let response: PostgrestResponse<[ChildFoodRecord]> = try await client
+                .from("child_food_records")
+                .select(
+                    "id,family_id,child_id,food_id,author_id,first_tried_on,media_id,note,reaction,"
+                        + "created_at,updated_at"
+                )
+                .in("id", values: ids)
+                .execute()
+            return response.value
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
+    func fetchFoodCatalogItems(ids: [String]) async throws -> [FoodCatalogItem] {
+        guard !ids.isEmpty else { return [] }
+        do {
+            let response: PostgrestResponse<[FoodCatalogItem]> = try await client
+                .from("food_catalog")
+                .select("id,name_zh,category,sort_order,allergens,min_age_months")
+                .in("id", values: ids)
+                .execute()
+            return response.value
+        } catch {
+            throw AppError.map(error)
+        }
+    }
+
     func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] {
         guard !paths.isEmpty else { return [:] }
         do {

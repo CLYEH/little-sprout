@@ -9,6 +9,9 @@ import Foundation
 ///   - `fetchDiaryMediaLinks`   → SELECT `public.diary_media`（`.in("diary_id", ids)`）
 ///   - `fetchAlbums`            → SELECT `public.albums`（`.in("id", ids)`）
 ///   - `fetchMedia`             → SELECT `public.media`（`.in("id", ids)`）
+///   - `fetchFoodRecords`       → SELECT `public.child_food_records`（`.in("id", ids)`，LS-383；
+///                                RLS `child_food_records_select`＝家庭成員＋未刪）
+///   - `fetchFoodCatalogItems`  → SELECT `public.food_catalog`（`.in("id", ids)`，LS-383；全域唯讀目錄）
 ///   - `signedURLs`             → Storage `media` bucket `createSignedURLs`（PLAN §8：
 ///                                全私有 bucket，一律簽名 URL，不組公開網址）
 ///   - `reactionCounts`         → RPC `get_reaction_counts(p_family_id, p_target_type,
@@ -19,7 +22,8 @@ import Foundation
 ///                                scope 3：按讚名單無需新 RPC）
 ///
 /// 錯誤一律映射為 `AppError`（`fetchTimelinePointers`／`fetchDiaries`／`fetchAlbums`／
-/// `fetchMedia`／`fetchDiaryMediaLinks`／`reactionCounts`／`toggleReaction`／`reactors`），
+/// `fetchMedia`／`fetchFoodRecords`／`fetchFoodCatalogItems`／`fetchDiaryMediaLinks`／`reactionCounts`／
+/// `toggleReaction`／`reactors`），
 /// 不直接往外拋 PostgREST 的 error 型別。`signedURLs` 對單一路徑簽名失敗時**不**整批失敗
 /// （見該方法文件）。
 protocol TimelineAPIClient: Sendable {
@@ -34,6 +38,11 @@ protocol TimelineAPIClient: Sendable {
     func fetchDiaryMediaLinks(diaryIds: [UUID]) async throws -> [DiaryMediaLinkRow]
     func fetchAlbums(ids: [UUID]) async throws -> [AlbumRow]
     func fetchMedia(ids: [UUID]) async throws -> [MediaRow]
+    /// LS-383：`food_first` 指標的 `ref_id` 就是 `child_food_records.id`。已軟刪的列 RLS 直接濾掉（不回傳）。
+    func fetchFoodRecords(ids: [UUID]) async throws -> [ChildFoodRecord]
+    /// LS-383：食物名稱／類別（卡片標題「第一次吃到〇〇」、Book Row 類別）。不篩 `active`——已下架的食物
+    /// 仍是這個孩子真的吃過的回憶，卡片照樣顯示。
+    func fetchFoodCatalogItems(ids: [String]) async throws -> [FoodCatalogItem]
 
     /// 批次簽名——回傳 `[storage_path: URL]`；單一路徑簽名失敗時該路徑不會出現在字典裡
     /// （呼叫端顯示占位圖，不因為一張照片壞掉讓整頁組裝失敗）。空陣列直接回傳空字典，

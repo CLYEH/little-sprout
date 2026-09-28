@@ -14,14 +14,16 @@ enum TimelineContentAssembler {
         case diaries([UUID: DiaryContent])
         case albums([UUID: AlbumContent])
         case media([UUID: MediaContent])
+        case foodFirst([UUID: FoodFirstContent])
     }
 
-    /// 三支批次查詢的結果——獨立命名型別而不是 tuple（SwiftLint `large_tuple` 只准 2 個
-    /// 成員，這裡有 3 個）。
+    /// 各 kind 批次查詢的結果——獨立命名型別而不是 tuple（SwiftLint `large_tuple` 只准 2 個
+    /// 成員）。
     private struct ContentMaps {
         var diaries: [UUID: DiaryContent] = [:]
         var albums: [UUID: AlbumContent] = [:]
         var media: [UUID: MediaContent] = [:]
+        var foodFirst: [UUID: FoodFirstContent] = [:]
     }
 
     /// LS-329：`FeedKind` 尚無法辨識的值（見該型別文件註解）——`subsystem` 用 bundle id，
@@ -66,7 +68,7 @@ enum TimelineContentAssembler {
         }
     }
 
-    /// 三支批次查詢（diary／album／media）用 `withThrowingTaskGroup` 平行發出，見
+    /// 各 kind 批次查詢（diary／album／media／food_first，LS-383）用 `withThrowingTaskGroup` 平行發出，見
     /// docs/API.md `get_family_timeline` 文件與本檔頂端註解。
     private static func fetchContentMaps(
         byKind: [FeedKind: [TimelineFeedPointer]], apiClient: TimelineAPIClient
@@ -82,6 +84,9 @@ enum TimelineContentAssembler {
             if let ids = byKind[.media]?.map(\.refId) {
                 group.addTask { .media(try await fetchMediaContents(ids: ids, apiClient: apiClient)) }
             }
+            if let ids = byKind[.foodFirst]?.map(\.refId) {
+                group.addTask { .foodFirst(try await fetchFoodFirstContents(ids: ids, apiClient: apiClient)) }
+            }
             // 收集端序列（同一個 for-await），但三支查詢本身已經平行發出——這裡只是
             // 把各自的結果寫回各自對應的字典，不是重新序列化查詢本身。
             for try await batch in group {
@@ -89,6 +94,7 @@ enum TimelineContentAssembler {
                 case .diaries(let value): maps.diaries = value
                 case .albums(let value): maps.albums = value
                 case .media(let value): maps.media = value
+                case .foodFirst(let value): maps.foodFirst = value
                 }
             }
         }
@@ -102,6 +108,7 @@ enum TimelineContentAssembler {
             case .diary: content = maps.diaries[pointer.refId].map(TimelineEntry.Content.diary)
             case .album: content = maps.albums[pointer.refId].map(TimelineEntry.Content.album)
             case .media: content = maps.media[pointer.refId].map(TimelineEntry.Content.media)
+            case .foodFirst: content = maps.foodFirst[pointer.refId].map(TimelineEntry.Content.foodFirst)
             // LS-329：`assemble` 已經把 `.unknown` 的指標濾掉，不會有 pointer 帶著
             // `.unknown` 的 kind 走到這裡——這個分支只是滿足編譯器窮舉要求（`FeedKind`
             // 加了 `.unknown` case 之後這個 switch 若不補分支不會過編譯）。
@@ -225,6 +232,35 @@ enum TimelineContentAssembler {
                 signedURL: signed[displayPath(row)], durationSeconds: row.durationSeconds
             ))
         })
+    }
+
+    /// LS-383：`food_first` 卡片內容。記錄一次批次查回來後，目錄項（名稱／類別）與照片兩支互不依賴、
+    /// 平行發出（同 `fetchDiaryContents` m5 的理由）。照片**複用時間軸既有的 media 縮圖簽名路徑**
+    /// （`fetchMediaContents`：`thumb_path` 優先、整批一次 `createSignedURLs`），不走記錄詳情那支單張
+    /// `FoodRecordDetailAPIClient.photoURL`——一頁多張食物卡不會變成逐張簽名。
+    ///
+    /// 目錄項查不到（理論上不會：`food_id` 有外鍵）＝這筆沒有 content，`TimelineView` 不畫；照片查不到
+    /// （已軟刪，`media_select` 對非上傳者藏起）＝`photo` 為 nil，卡片照樣畫、只是沒有照片區。
+    private static func fetchFoodFirstContents(
+        ids: [UUID], apiClient: TimelineAPIClient
+    ) async throws -> [UUID: FoodFirstContent] {
+        let records = try await apiClient.fetchFoodRecords(ids: ids)
+        guard !records.isEmpty else { return [:] }
+        let foodIDs = Array(Set(records.map(\.foodID)))
+        let mediaIDs = Array(Set(records.compactMap(\.mediaID)))
+        async let itemsTask = apiClient.fetchFoodCatalogItems(ids: foodIDs)
+        async let photosTask = mediaIDs.isEmpty ? [:] : fetchMediaContents(ids: mediaIDs, apiClient: apiClient)
+        let (items, photos) = try await (itemsTask, photosTask)
+        let itemByID = Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+
+        var result: [UUID: FoodFirstContent] = [:]
+        for record in records {
+            guard let item = itemByID[record.foodID] else { continue }
+            result[record.id] = FoodFirstContent(
+                record: record, item: item, photo: record.mediaID.flatMap { photos[$0] }
+            )
+        }
+        return result
     }
 
     /// 列表／詳情情境要簽的路徑——`thumb_path` 優先、`NULL` 時退回 `storage_path`（過渡期
