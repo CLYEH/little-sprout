@@ -20,7 +20,19 @@ final class FoodRecordDetailStoreTests: XCTestCase {
         func listFoodCatalog() async throws -> [FoodCatalogItem] { [] }
 
         func listChildFoodRecords(childID: UUID) async throws -> [ChildFoodRecord] { try recordsResult.get() }
+
+        // LS-380 的寫入／照片方法：詳情 store 不呼叫它們，被呼叫到就是測試寫錯，大聲失敗。
+        func upsertChildFoodRecord(_ input: FoodRecordUpsert) async throws -> ChildFoodRecord { throw Unused() }
+        func deleteChildFoodRecord(id: UUID) async throws { throw Unused() }
+        func listFamilyPhotos(childID: UUID) async throws -> [FamilyPhoto] { throw Unused() }
+        func fetchFamilyPhoto(id: UUID) async throws -> FamilyPhoto? { throw Unused() }
+        func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] { throw Unused() }
+        func uploadPhoto(childID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
+            throw Unused()
+        }
     }
+
+    private struct Unused: Error {}
 
     private final class StubDetailAPIClient: FoodRecordDetailAPIClient, @unchecked Sendable {
         var names: [UUID: String] = [:]
