@@ -36,6 +36,7 @@
 		0997FB71931083A645DA5C8D /* SupabaseTimelineAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAB7169FDB024249D8521D64 /* SupabaseTimelineAPIClientTests.swift */; };
 		09F84913FCD1F25566F45E6A /* TimelineAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADDE4EEF33482FCA3ABB0819 /* TimelineAPIClient.swift */; };
 		0A228566E448CAE5C07A187F /* XCUIElement+Waits.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BA76C163AC1B48771D0C701 /* XCUIElement+Waits.swift */; };
+		0ACEBD6207B408FB96E611FC /* FoodRecordDetailIPadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7A562541FCFF3574CE3BAF /* FoodRecordDetailIPadTests.swift */; };
 		0B082F905D18BB1C48FCD6B6 /* PhotoCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2956BF7EEFC4095F0306AF4A /* PhotoCardView.swift */; };
 		0B0F470E634F9F528174A8B8 /* ChildrenManagementView+Detail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72F9EC8AA39EA1ADB2DE75A8 /* ChildrenManagementView+Detail.swift */; };
 		0B135682647FD84B6E6E5E92 /* SettingsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD3CBB68CBE0464929AEABA /* SettingsModels.swift */; };
@@ -90,6 +91,7 @@
 		206A1B32B7EF93F3805932C5 /* TimelineStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C5672CE61BE2296C5EA787 /* TimelineStoreTests.swift */; };
 		207CFF5FAB45D30280888981 /* PhotoLibraryAccessService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D61A6C472115192338A97F4 /* PhotoLibraryAccessService.swift */; };
 		2109AFB0670559B33E341231 /* TimelineView+Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CA78FC6D7BCCE0103D052F /* TimelineView+Import.swift */; };
+		2135A6279475151EF51A34E5 /* TapTargetGateHarness+FoodRecordDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C27AECC9DE6D5721E42065 /* TapTargetGateHarness+FoodRecordDetail.swift */; };
 		21810E7F9187EEFE2481ADC7 /* ImportDateGrouping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869D332A966B09F270832FF5 /* ImportDateGrouping.swift */; };
 		21D4D505A709F1ED3CCAF4A6 /* TimelineStoreToggleReactionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AC550771E9C98F572DEE18 /* TimelineStoreToggleReactionTests.swift */; };
 		21F13267AB0CDCF93F74ABF9 /* DiaryComposerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72BAB19B1C35B0F183EE2699 /* DiaryComposerStore.swift */; };
@@ -105,6 +107,7 @@
 		25F9D051097A5F845C3747AB /* DiaryDateFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8938E753539C18541CF4360 /* DiaryDateFormat.swift */; };
 		25FCC21C16E35CFC9D838BBB /* AuthButtonsStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6FB791F1C8D6FD682B0ABDB /* AuthButtonsStateTests.swift */; };
 		269DBB84AD4BB022C5CE1510 /* ImportEntryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C28B10B64350EF2599D6E1 /* ImportEntryButton.swift */; };
+		26C0612B803DE80FD12DAA0D /* PreviewFoodRecordDetailAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DE6BF3CDCAB1175B87344D /* PreviewFoodRecordDetailAPIClient.swift */; };
 		26CE1F348CFAE9947598779C /* GrowthMeasurementFormViewTimeZoneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03C5CAF48A1D9EAFE4F56298 /* GrowthMeasurementFormViewTimeZoneTests.swift */; };
 		27765396913C304FC059C525 /* CommentAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFD1FF4DE88B8A84B28A7C2 /* CommentAPIClient.swift */; };
 		27942E3D3049966A807E6743 /* SupabaseCommentAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F87BF57597ACB46BC0AC7B /* SupabaseCommentAPIClientTests.swift */; };
@@ -149,6 +152,7 @@
 		367D59A4F380BF0A371733E7 /* TimelineStore+Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EE1D73C47DCC06AABE04A7 /* TimelineStore+Import.swift */; };
 		36A6AB2697A55FA8B1A33AD1 /* SettingsView+Sidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 069E688841B40CFFC7D7A689 /* SettingsView+Sidebar.swift */; };
 		36F437FAC0A2870CF4374058 /* FamilyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF2B62443AA0559B13A0839 /* FamilyStore.swift */; };
+		378E092802A73C5728CEA2CC /* FoodRecordDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65CFD435AAEEC2F7B55530B8 /* FoodRecordDetailView.swift */; };
 		37D0EF15D80588C4EECF99AB /* FoodBookStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A129B9A4E229D5EF0E4602D2 /* FoodBookStoreTests.swift */; };
 		37FDE6D5C5BDF814BB1A700C /* SettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DD92F585174EABEB3BA92CA /* SettingsViewTests.swift */; };
 		383D474495FF59BAEC37E1FC /* AlbumsStore+SharedUploadQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDEDB59C473A3AA37FB56B6D /* AlbumsStore+SharedUploadQueue.swift */; };
@@ -226,6 +230,7 @@
 		5C691EBCF0E6332E28EF8654 /* UploadQueueStore+VideoExportSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F210F5BDD14ADE30EF4B005D /* UploadQueueStore+VideoExportSlot.swift */; };
 		5C9E6ED512A86D8A37DC15EA /* TapTargetGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38210395D04923BEFD0ED94B /* TapTargetGateTests.swift */; };
 		5DD4408D743CBBACF90061E9 /* GrowthStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1321C4BFB76E3F18A8055AA0 /* GrowthStoreTests.swift */; };
+		5E1D6A842BC50BBE15F9B983 /* FoodRecordDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C79D42C5104D810DEEE6057 /* FoodRecordDetailUITests.swift */; };
 		5E234D0A701EAB0B4BA3FEAD /* BirthdayFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE72EFF54C56748BD2A9AAC3 /* BirthdayFormat.swift */; };
 		5EAD5ABA428E704737E898D1 /* FoodAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE71D21163A9380A9C7C7A9 /* FoodAPIClient.swift */; };
 		5EC1E966C14830184690D16B /* TimelineModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131C968476EFA7FF91F30E97 /* TimelineModels.swift */; };
@@ -318,9 +323,11 @@
 		838BEA28E6C05A825D649B22 /* SupabaseFamilyAPIClientJoinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF56932F09E86FBADCA3CBDA /* SupabaseFamilyAPIClientJoinTests.swift */; };
 		83C3BBBEA01248D838D88E0E /* ImportThumbnailLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57E9AB7F052DBB790BA042C /* ImportThumbnailLayoutTests.swift */; };
 		8467E723667649B1DED23A33 /* EULAAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3430D5B33F6693A06536C073 /* EULAAPIClient.swift */; };
+		84A751432FB38C70F384091A /* FoodRecordDetailCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED3DD96C495457B12016E3D2 /* FoodRecordDetailCopy.swift */; };
 		85336150B2495BA6105983AF /* InvitePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9B81015EBB68F05A715D7F /* InvitePhase.swift */; };
 		856028BA2632449FEDA2CBF6 /* SupabaseMediaUploadServiceThumbnailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B08E2AF6C54AAD3D290BA2 /* SupabaseMediaUploadServiceThumbnailTests.swift */; };
 		85723FB45E06A5EB78027073 /* EditChildViewBirthdayTimeZoneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF414CB59C4B5FFD289EB32 /* EditChildViewBirthdayTimeZoneTests.swift */; };
+		85A62245355A821081651596 /* FoodRecordDetailParts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 362DFBA3724E37CF7C6288B1 /* FoodRecordDetailParts.swift */; };
 		85B9E26BBBF2DFC02DFF398C /* GrowthMeasurementDatePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F7E15199F2E7CF91BAE7AA /* GrowthMeasurementDatePickerSheet.swift */; };
 		86D917D478AEBD78E63DCB82 /* FoodBookCopyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD10F9ABF51B03A77085EDC /* FoodBookCopyTests.swift */; };
 		87BC02F8CF41F90D569BEA84 /* BabyChipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6FEB0AA729D73E382DB2760 /* BabyChipView.swift */; };
@@ -336,6 +343,7 @@
 		8B1480EC9DAD0F2F17939ECC /* SettingsIconsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42EC894F62DC55A74654ED99 /* SettingsIconsTests.swift */; };
 		8C28191049D2D6F723A9CE2B /* DeleteAccountStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96073B8EE43A7B538080DA3B /* DeleteAccountStep.swift */; };
 		8CD42A33A7D04F52D172819D /* AlbumsContentAssemblerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07A1CE61F80D184428D957F /* AlbumsContentAssemblerTests.swift */; };
+		8CE989C6B03F5EDB8A5FA749 /* FoodRecordDetailAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03CDDE104E60CBBC6D519215 /* FoodRecordDetailAPIClient.swift */; };
 		8D05F64CBBAECB05BA9C76A4 /* DiaryComposerStoreVideoCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE98D01D44B247A280103769 /* DiaryComposerStoreVideoCacheTests.swift */; };
 		8D31CF3B331A5CF24123DC90 /* Pill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D16770ED55A8DF1FD527425 /* Pill.swift */; };
 		8D36946B41D68D83B6E45986 /* ImportBatchFlowModifierRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6237BF6EAC92E8D4DCB382 /* ImportBatchFlowModifierRegressionTests.swift */; };
@@ -382,6 +390,7 @@
 		A1236061B097AAC7DC3DC06D /* ImportThumbnailLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109FCD489FF3BBF139A763F4 /* ImportThumbnailLayout.swift */; };
 		A13CB2C22B1C3096DF1C9EFD /* DeviceCalendarSourceGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68C02C27EDFD1C4D9346B650 /* DeviceCalendarSourceGuard.swift */; };
 		A16C9A6C91DC96DF2F26892A /* InvitePhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3E5645BA736D2FB572634A /* InvitePhaseTests.swift */; };
+		A29E796818C86CAD25DB7EBC /* FoodRecordDetailStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F52A8956EBB61A5306F593 /* FoodRecordDetailStoreTests.swift */; };
 		A2A3A634EB00BF28AADD37DE /* RootView+AuthenticatedGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BFD27CD53D1339A7A55EB8 /* RootView+AuthenticatedGate.swift */; };
 		A32CCA725D57371D04861B00 /* TimelineStoreReactionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B64D96ADE299BAA5D4FE329 /* TimelineStoreReactionTests.swift */; };
 		A3EF30A323D55F605B593614 /* AppFontTokenClampTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC5027E02B9CD08C0E248406 /* AppFontTokenClampTests.swift */; };
@@ -454,6 +463,7 @@
 		BF464AAE722DF3886B500846 /* SectionTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5C1334809B861267881A3E /* SectionTabBar.swift */; };
 		BFD28F5A7684AC7AF7DA1FF7 /* ImportEntrySourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B854436402C5E2BF4FFF0A8 /* ImportEntrySourceTests.swift */; };
 		C0DB8C9DEF3898A082A02411 /* TimelineImportEntryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3317934C4CA67E11E562E23B /* TimelineImportEntryUITests.swift */; };
+		C10CB66DDE3D1D371C0779E5 /* FoodRecordDetailStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95E4C96566882B5A47168EB3 /* FoodRecordDetailStore.swift */; };
 		C19A5713AEB0B853F576475D /* EULAConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071D2E76524F1503D2394A01 /* EULAConsentView.swift */; };
 		C25CB47B6E864AD71513F432 /* FamilyStoreInviteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B134F4114955711989F4A4 /* FamilyStoreInviteTests.swift */; };
 		C279B695C268CE2BCA1BFE8E /* DeleteAccountFlowView+MustTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09D9B18228BC68A41954AED /* DeleteAccountFlowView+MustTransfer.swift */; };
@@ -492,6 +502,7 @@
 		D0AF78E3C840FDAE433B1A61 /* DiaryEditorViewLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B65A9E81D3E3B5D92B0B6BDE /* DiaryEditorViewLifecycleTests.swift */; };
 		D0CBE882E4F270D9D1E98EA6 /* DeleteAccountFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03ECD2ECF46482E7BE076F73 /* DeleteAccountFlowView.swift */; };
 		D21331BAC819121267E6EBB0 /* JoinWaitingPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4552E5CBB92202CE2D569612 /* JoinWaitingPhase.swift */; };
+		D2BB97B9C691B174E2C733C0 /* FoodRecordDetailCopyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC5E7CC3876799874C04EE38 /* FoodRecordDetailCopyTests.swift */; };
 		D2D031850A6315F0D1C90D70 /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01951470E7861A632283E1A /* ProfileEditView.swift */; };
 		D2E1CC90D6A00B31BE3D2C01 /* ContentActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C5A7E72B680DAB0AF3701 /* ContentActions.swift */; };
 		D34A9C68A1E7558AC7FA664B /* SettingsView+Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C569AB8BA23817265C5402 /* SettingsView+Profile.swift */; };
@@ -617,6 +628,7 @@
 		037FF26C7AE60735F31B632A /* SupabaseDiaryAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseDiaryAPIClient.swift; sourceTree = "<group>"; };
 		03AC550771E9C98F572DEE18 /* TimelineStoreToggleReactionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreToggleReactionTests.swift; sourceTree = "<group>"; };
 		03C5CAF48A1D9EAFE4F56298 /* GrowthMeasurementFormViewTimeZoneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthMeasurementFormViewTimeZoneTests.swift; sourceTree = "<group>"; };
+		03CDDE104E60CBBC6D519215 /* FoodRecordDetailAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailAPIClient.swift; sourceTree = "<group>"; };
 		03ECD2ECF46482E7BE076F73 /* DeleteAccountFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountFlowView.swift; sourceTree = "<group>"; };
 		0507B2F97DF5468321E35CF3 /* MultiChildCaptionFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiChildCaptionFormatterTests.swift; sourceTree = "<group>"; };
 		051C77F4F02C900469E71445 /* AttributionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributionSheet.swift; sourceTree = "<group>"; };
@@ -727,6 +739,7 @@
 		349D50973057FF7C3329F069 /* SupabaseAlbumsAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAlbumsAPIClientTests.swift; sourceTree = "<group>"; };
 		35722FF8F70D0F6329F4069C /* EmailSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInView.swift; sourceTree = "<group>"; };
 		3626E5AD602F5C5151E75278 /* CommentDeleteConfirmationSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentDeleteConfirmationSheetTests.swift; sourceTree = "<group>"; };
+		362DFBA3724E37CF7C6288B1 /* FoodRecordDetailParts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailParts.swift; sourceTree = "<group>"; };
 		369CBDFE007B61C9401815AE /* EULAStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EULAStore.swift; sourceTree = "<group>"; };
 		36A49E7805CE3BA7B1C28D7D /* ChildModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildModels.swift; sourceTree = "<group>"; };
 		3818A30F1F394CCAC357359C /* LegalDocumentSheetUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentSheetUITests.swift; sourceTree = "<group>"; };
@@ -787,6 +800,7 @@
 		4C4B969F26400E2ECFC1C204 /* ImportBatchFlowModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportBatchFlowModifier.swift; sourceTree = "<group>"; };
 		4CE3353D44311219CE17B533 /* EditChildView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditChildView.swift; sourceTree = "<group>"; };
 		4D16770ED55A8DF1FD527425 /* Pill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pill.swift; sourceTree = "<group>"; };
+		4D7A562541FCFF3574CE3BAF /* FoodRecordDetailIPadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailIPadTests.swift; sourceTree = "<group>"; };
 		4E315D06E0BC5BD355A32CA4 /* PushDeviceTokenAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushDeviceTokenAPIClient.swift; sourceTree = "<group>"; };
 		4E6E56E4C76AEA8782832761 /* GrowthLatestValuesAX3RegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthLatestValuesAX3RegressionTests.swift; sourceTree = "<group>"; };
 		4F072DA1DC140AE9EB54D242 /* SupabaseSafetyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseSafetyAPIClient.swift; sourceTree = "<group>"; };
@@ -844,6 +858,7 @@
 		6559B92B7B6A289D59C6481F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		656EEB0F20DEDA8B21C3A883 /* StubSafetyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubSafetyAPIClient.swift; sourceTree = "<group>"; };
 		65B134F4114955711989F4A4 /* FamilyStoreInviteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreInviteTests.swift; sourceTree = "<group>"; };
+		65CFD435AAEEC2F7B55530B8 /* FoodRecordDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailView.swift; sourceTree = "<group>"; };
 		669695C5807128CB808DA8B4 /* SettingsSidebarRowStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSidebarRowStyleTests.swift; sourceTree = "<group>"; };
 		673C41FF62F64795F7752D25 /* PickedItemLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickedItemLoader.swift; sourceTree = "<group>"; };
 		68C02C27EDFD1C4D9346B650 /* DeviceCalendarSourceGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCalendarSourceGuard.swift; sourceTree = "<group>"; };
@@ -870,12 +885,14 @@
 		722D8ED2CA2CA763DF21AAB7 /* AuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStore.swift; sourceTree = "<group>"; };
 		726954960B96E7CE9697A154 /* StubAlbumsAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubAlbumsAPIClient.swift; sourceTree = "<group>"; };
 		72BAB19B1C35B0F183EE2699 /* DiaryComposerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStore.swift; sourceTree = "<group>"; };
+		72DE6BF3CDCAB1175B87344D /* PreviewFoodRecordDetailAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewFoodRecordDetailAPIClient.swift; sourceTree = "<group>"; };
 		72F9EC8AA39EA1ADB2DE75A8 /* ChildrenManagementView+Detail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChildrenManagementView+Detail.swift"; sourceTree = "<group>"; };
 		73162165F62AEFC93093639C /* DiaryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryCardView.swift; sourceTree = "<group>"; };
 		73E829FD28258F900CECEAF4 /* UploadQueueStoreDefensiveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueStoreDefensiveTests.swift; sourceTree = "<group>"; };
 		73F8FB0F4FF8E831B7A83F37 /* UploadQueueStore+ImportCancellation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UploadQueueStore+ImportCancellation.swift"; sourceTree = "<group>"; };
 		743A14E1E7666B9B37F94689 /* KeyboardHeightObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeightObserver.swift; sourceTree = "<group>"; };
 		74C5672CE61BE2296C5EA787 /* TimelineStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreTests.swift; sourceTree = "<group>"; };
+		74F52A8956EBB61A5306F593 /* FoodRecordDetailStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailStoreTests.swift; sourceTree = "<group>"; };
 		7527E2B1A3FCC80DBEB44EB5 /* BlockConfirmSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockConfirmSheet.swift; sourceTree = "<group>"; };
 		75ECDD98F8DDC62243057E57 /* DeleteConfirmationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteConfirmationSheet.swift; sourceTree = "<group>"; };
 		76C79515621CA9052803B7EA /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
@@ -930,6 +947,7 @@
 		8AFA10890A15EC69C5CB0BF9 /* MasonryLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasonryLayout.swift; sourceTree = "<group>"; };
 		8BECC7D79F1B9E53EABE6120 /* AvatarPickerLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarPickerLoader.swift; sourceTree = "<group>"; };
 		8C74E777AB0094919EC703B2 /* AppConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigTests.swift; sourceTree = "<group>"; };
+		8C79D42C5104D810DEEE6057 /* FoodRecordDetailUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailUITests.swift; sourceTree = "<group>"; };
 		8C7ACE26EA3E828F870C6BB9 /* DiaryDurationFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDurationFormatTests.swift; sourceTree = "<group>"; };
 		8C83653E2AB94DBB5230ACB1 /* GrowthSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthSegmentedControl.swift; sourceTree = "<group>"; };
 		8D28B773C8EDDC2BA7C7D993 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
@@ -951,6 +969,7 @@
 		95B92F29867CB3855772E654 /* AuthRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthRoute.swift; sourceTree = "<group>"; };
 		95BEB4DA6A1BCCFD8355575E /* AuthSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSession.swift; sourceTree = "<group>"; };
 		95CE2C734582EA614CBB344E /* TapTargetGateHarness+Import.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Import.swift"; sourceTree = "<group>"; };
+		95E4C96566882B5A47168EB3 /* FoodRecordDetailStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailStore.swift; sourceTree = "<group>"; };
 		96073B8EE43A7B538080DA3B /* DeleteAccountStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountStep.swift; sourceTree = "<group>"; };
 		96263CE935C656C186FDEC99 /* InMemoryAuthLocalStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryAuthLocalStorage.swift; sourceTree = "<group>"; };
 		962EAB3D4E7C6E203A5790AE /* TapTargetGateScreenName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapTargetGateScreenName.swift; sourceTree = "<group>"; };
@@ -1034,6 +1053,7 @@
 		B692204E09536444545FA3A7 /* FoodBookView+States.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FoodBookView+States.swift"; sourceTree = "<group>"; };
 		B6A01A57459C021E561433E6 /* VideoTrimmerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoTrimmerTests.swift; sourceTree = "<group>"; };
 		B6B922E8AD56E1EF2150FE2B /* PushPrepromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushPrepromptView.swift; sourceTree = "<group>"; };
+		B6C27AECC9DE6D5721E42065 /* TapTargetGateHarness+FoodRecordDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+FoodRecordDetail.swift"; sourceTree = "<group>"; };
 		B7011C61D613644C595C9208 /* LittleSproutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LittleSproutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8D1271C2CC39AA7D7D71E59 /* CommentRowActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentRowActions.swift; sourceTree = "<group>"; };
 		B953E2D0F652452A92AA6639 /* FamilyMemberActionVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberActionVisibility.swift; sourceTree = "<group>"; };
@@ -1045,6 +1065,7 @@
 		BAB640AAAE61BC9D1CAAF2EE /* PushNotificationStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationStoreTests.swift; sourceTree = "<group>"; };
 		BB03234039D326BAF0DA3B08 /* WelcomeView+Legal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WelcomeView+Legal.swift"; sourceTree = "<group>"; };
 		BBC5A903489F554F9E012A50 /* FamilyStore+Invite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FamilyStore+Invite.swift"; sourceTree = "<group>"; };
+		BC5E7CC3876799874C04EE38 /* FoodRecordDetailCopyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailCopyTests.swift; sourceTree = "<group>"; };
 		BC7448E56867EED60566A8F0 /* FamilyStoreInviteRaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreInviteRaceTests.swift; sourceTree = "<group>"; };
 		BCF885D756104B3EBAAD6DB2 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		BD57976BACB0CB191D6B1ADB /* TapTargetGateHarness+UploadQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+UploadQueue.swift"; sourceTree = "<group>"; };
@@ -1150,6 +1171,7 @@
 		EBB014839E737CAEB6A24CAE /* PreviewFoodCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewFoodCatalog.swift; sourceTree = "<group>"; };
 		EC531A82AD0092B3665DA94F /* DiaryCardVideoBadgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryCardVideoBadgeTests.swift; sourceTree = "<group>"; };
 		ECF414CB59C4B5FFD289EB32 /* EditChildViewBirthdayTimeZoneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditChildViewBirthdayTimeZoneTests.swift; sourceTree = "<group>"; };
+		ED3DD96C495457B12016E3D2 /* FoodRecordDetailCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailCopy.swift; sourceTree = "<group>"; };
 		EEF4B6F33EBC80A3AA56E8FC /* FamilyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyModels.swift; sourceTree = "<group>"; };
 		EF3E5645BA736D2FB572634A /* InvitePhaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitePhaseTests.swift; sourceTree = "<group>"; };
 		EF7806F951789DC6E905A8FA /* InviteFamilyView+PendingApprovals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "InviteFamilyView+PendingApprovals.swift"; sourceTree = "<group>"; };
@@ -1261,6 +1283,8 @@
 				3A3E469D46F901CC4530B24A /* FamilyMembersLeaveFlowUITests.swift */,
 				A62860B0E30E1DD94B917396 /* FoodBookIPadTests.swift */,
 				FDEAC50154EF831F02F1315B /* FoodBookUITests.swift */,
+				4D7A562541FCFF3574CE3BAF /* FoodRecordDetailIPadTests.swift */,
+				8C79D42C5104D810DEEE6057 /* FoodRecordDetailUITests.swift */,
 				F65E1F807D24047DBD9701A4 /* ImportFlowTopBarSafeAreaUITests.swift */,
 				E715D59C5D776BF6611E5E33 /* InteractionRowUITests.swift */,
 				3818A30F1F394CCAC357359C /* LegalDocumentSheetUITests.swift */,
@@ -1320,6 +1344,9 @@
 				FB1158626A81AAAB03182FBA /* FoodBookCopy.swift */,
 				E0A37DE8043DA71735D6C05F /* FoodBookStore.swift */,
 				63B4DCE1396A1C4882A63DCB /* FoodModels.swift */,
+				03CDDE104E60CBBC6D519215 /* FoodRecordDetailAPIClient.swift */,
+				ED3DD96C495457B12016E3D2 /* FoodRecordDetailCopy.swift */,
+				95E4C96566882B5A47168EB3 /* FoodRecordDetailStore.swift */,
 				85ED8343F451999392E18111 /* FoodStickerLoader.swift */,
 				48BABAAD2A38855260C56E61 /* SupabaseFoodAPIClient.swift */,
 			);
@@ -1540,6 +1567,8 @@
 				BA9BCE3B67830009105F917D /* FamilyStoreTests.swift */,
 				7AD10F9ABF51B03A77085EDC /* FoodBookCopyTests.swift */,
 				A129B9A4E229D5EF0E4602D2 /* FoodBookStoreTests.swift */,
+				BC5E7CC3876799874C04EE38 /* FoodRecordDetailCopyTests.swift */,
+				74F52A8956EBB61A5306F593 /* FoodRecordDetailStoreTests.swift */,
 				790F9F13C03D257E18D9BE6E /* FoodStickerAssetsTests.swift */,
 				4F79950DF786C7BA12A3C979 /* GrowthAgeNBSPRegressionTests.swift */,
 				1EF6B48B968BD623EFF6F1F8 /* GrowthCurveTests.swift */,
@@ -1811,6 +1840,7 @@
 				DF160356D53B7385FF16C6C2 /* TapTargetGateHarness+DiaryDetailVideo.swift */,
 				6BD7AE63A0EB0C80DA9C5851 /* TapTargetGateHarness+Family.swift */,
 				83491FF465D4E20858923B38 /* TapTargetGateHarness+Food.swift */,
+				B6C27AECC9DE6D5721E42065 /* TapTargetGateHarness+FoodRecordDetail.swift */,
 				CC95B55D4A6B720D141FFD75 /* TapTargetGateHarness+Growth.swift */,
 				95CE2C734582EA614CBB344E /* TapTargetGateHarness+Import.swift */,
 				8451088ABF5E0779C2BFAFF2 /* TapTargetGateHarness+Legal.swift */,
@@ -2085,6 +2115,8 @@
 				B692204E09536444545FA3A7 /* FoodBookView+States.swift */,
 				58DA7F206D313220AB3A1284 /* FoodCategoryTabs.swift */,
 				CA5B9216BB35E6FD6D9BF95A /* FoodCell.swift */,
+				362DFBA3724E37CF7C6288B1 /* FoodRecordDetailParts.swift */,
+				65CFD435AAEEC2F7B55530B8 /* FoodRecordDetailView.swift */,
 			);
 			path = Food;
 			sourceTree = "<group>";
@@ -2160,6 +2192,7 @@
 				0C0777CD557C2FE037CDA135 /* PreviewFamilyAPIClient.swift */,
 				176FB0785E221A5AA44B62CB /* PreviewFoodAPIClient.swift */,
 				EBB014839E737CAEB6A24CAE /* PreviewFoodCatalog.swift */,
+				72DE6BF3CDCAB1175B87344D /* PreviewFoodRecordDetailAPIClient.swift */,
 				B9E315247A843CD5FA7D3F1F /* PreviewGrowthAPIClient.swift */,
 				14278530E77D1559729D3354 /* PreviewPushAPIClient.swift */,
 				3D15D7407095F945AC0EC40E /* PreviewSafetyAPIClient.swift */,
@@ -2425,6 +2458,11 @@
 				65A86AB26502C8E039374810 /* FoodCategoryTabs.swift in Sources */,
 				FCCA7392D8A93ACCC20F22D5 /* FoodCell.swift in Sources */,
 				72E3B4B4BAE3E16790FCD5CC /* FoodModels.swift in Sources */,
+				8CE989C6B03F5EDB8A5FA749 /* FoodRecordDetailAPIClient.swift in Sources */,
+				84A751432FB38C70F384091A /* FoodRecordDetailCopy.swift in Sources */,
+				85A62245355A821081651596 /* FoodRecordDetailParts.swift in Sources */,
+				C10CB66DDE3D1D371C0779E5 /* FoodRecordDetailStore.swift in Sources */,
+				378E092802A73C5728CEA2CC /* FoodRecordDetailView.swift in Sources */,
 				0BEC88A39AAF8ECE8E2396D9 /* FoodStickerLoader.swift in Sources */,
 				D66065353A119BE1100868EE /* ForkView+SuspendedFooter.swift in Sources */,
 				0F2F86603BE0C13DB1C9E552 /* ForkView.swift in Sources */,
@@ -2511,6 +2549,7 @@
 				8F83F2C0B186737A2A575D7A /* PreviewFamilyAPIClient.swift in Sources */,
 				47F7D68FCFBA68AF81B00EC0 /* PreviewFoodAPIClient.swift in Sources */,
 				D989CD4C5AD31DE0823F9850 /* PreviewFoodCatalog.swift in Sources */,
+				26C0612B803DE80FD12DAA0D /* PreviewFoodRecordDetailAPIClient.swift in Sources */,
 				63052EAADBB2E1CF9070CCE6 /* PreviewGrowthAPIClient.swift in Sources */,
 				2901F4F02AEFA34AA7943F0B /* PreviewPushAPIClient.swift in Sources */,
 				B83A86E61A18F083F22C5D89 /* PreviewSafetyAPIClient.swift in Sources */,
@@ -2570,6 +2609,7 @@
 				B2440B7844509AC9B75634CF /* TapTargetGateHarness+DiaryDetailVideo.swift in Sources */,
 				E5C587EDE37874F5FE29E05E /* TapTargetGateHarness+Family.swift in Sources */,
 				003AD2E22FCA249EA103EE8B /* TapTargetGateHarness+Food.swift in Sources */,
+				2135A6279475151EF51A34E5 /* TapTargetGateHarness+FoodRecordDetail.swift in Sources */,
 				9482742558C3F5019B8B80E8 /* TapTargetGateHarness+Growth.swift in Sources */,
 				9179ED955E1D442316156D89 /* TapTargetGateHarness+Import.swift in Sources */,
 				E59430960BE686522003EB58 /* TapTargetGateHarness+Legal.swift in Sources */,
@@ -2640,6 +2680,8 @@
 				E772320BB13188A0A3532E7D /* FamilyMembersLeaveFlowUITests.swift in Sources */,
 				318CB8A951CE0C13F30A6D76 /* FoodBookIPadTests.swift in Sources */,
 				46FDDADF98313FCAA344A65C /* FoodBookUITests.swift in Sources */,
+				0ACEBD6207B408FB96E611FC /* FoodRecordDetailIPadTests.swift in Sources */,
+				5E1D6A842BC50BBE15F9B983 /* FoodRecordDetailUITests.swift in Sources */,
 				A9B5C77BA5DADE5F566E028D /* ImportFlowTopBarSafeAreaUITests.swift in Sources */,
 				0754150D65EACBAE3CC44A30 /* InteractionRowUITests.swift in Sources */,
 				167E18BF37C8233457D3C4B2 /* LegalDocumentSheetUITests.swift in Sources */,
@@ -2756,6 +2798,8 @@
 				2923B118178851D5C29651A5 /* FamilyStoreTests.swift in Sources */,
 				86D917D478AEBD78E63DCB82 /* FoodBookCopyTests.swift in Sources */,
 				37D0EF15D80588C4EECF99AB /* FoodBookStoreTests.swift in Sources */,
+				D2BB97B9C691B174E2C733C0 /* FoodRecordDetailCopyTests.swift in Sources */,
+				A29E796818C86CAD25DB7EBC /* FoodRecordDetailStoreTests.swift in Sources */,
 				4AC4D64BF3F4281B14C0D5C1 /* FoodStickerAssetsTests.swift in Sources */,
 				8923EF57530FAA260F9E65DB /* GrowthAgeNBSPRegressionTests.swift in Sources */,
 				2446A9D3B7C5A02D2E49FB77 /* GrowthCurveTests.swift in Sources */,
