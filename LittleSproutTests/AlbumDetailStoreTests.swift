@@ -355,3 +355,34 @@ final class AlbumDetailStoreTests: XCTestCase {
         XCTAssertTrue(apiClient.setAlbumChildrenCalls.isEmpty)
     }
 }
+
+// MARK: - 簽名路徑（LS-396：放 extension——class body 已頂 SwiftLint `type_body_length` 250 上限）
+
+extension AlbumDetailStoreTests {
+    /// LS-396（LS-20 稽核 ⑤b）：照片牆只簽縮圖路徑——原圖動輒數 MB，整本相簿簽原圖等於每格都下載
+    /// 原檔（流量與記憶體都爆）；沒有縮圖（`thumb_path` NULL，例如縮圖尚未產生）時才退回原圖。
+    /// 比照 `FoodFirstTimelineTests.test_assemble_withPhoto_signsThumbnailViaTimelineMediaPath` 的
+    /// `signedURLsCalls` 斷言（路徑順序不是契約，比集合）。
+    func test_refresh_signsThumbnailPathsOnly_fallsBackToOriginalWhenNoThumb() async {
+        let withThumbID = UUID()
+        let noThumbID = UUID()
+        let capturedAlbumID = albumID
+        let apiClient = StubAlbumsAPIClient()
+        apiClient.setFetchAlbumMediaLinksHandler { _ in
+            [
+                AlbumMediaLinkRow(albumId: capturedAlbumID, mediaId: withThumbID, sortOrder: 1),
+                AlbumMediaLinkRow(albumId: capturedAlbumID, mediaId: noThumbID, sortOrder: 0)
+            ]
+        }
+        apiClient.setFetchMediaHandler { ids in ids.map { Self.makeMediaRow(id: $0, hasThumb: $0 == withThumbID) } }
+        apiClient.setSignedURLsHandler(Self.echoSignedURLsHandler)
+        let store = makeStore(apiClient: apiClient)
+
+        await store.refresh()
+
+        XCTAssertEqual(
+            apiClient.signedURLsCalls.map(Set.init), [["thumb/\(withThumbID).jpg", "orig/\(noThumbID).jpg"]],
+            "有縮圖的只簽縮圖、不簽原圖；沒縮圖的才退回原圖"
+        )
+    }
+}
