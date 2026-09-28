@@ -23,7 +23,9 @@ enum FoodRecordDetailPhotoState: Equatable {
 /// 2／3 先用手上那筆的 `media_id`／`author_id` 發出去，不排在 1 後面多等一趟來回；1 回來後若 `media_id`
 /// 變了，再補簽一次新照片（`author_id` 不會變：更新路徑只開內容四欄）。
 ///
-/// **併發**：`refresh()` 以 `isRefreshing` 防重入（同 `FoodBookStore.refresh()`）；寫回前都比對
+/// **併發**：`refresh()` 以世代號（`refreshGeneration`）讓**只有最新一次呼叫**能寫回——不再用 `isRefreshing`
+/// 早退（LS-383 R2 修 LS-380 R2 m1，池 `c712c880`：舊的一輪被 `.task(id: record)` 取消後，新一輪被早退擋掉，
+/// 照片窗停在 `.loading`）；寫回前都比對
 /// 「目前這筆的 `media_id` 還是不是發出請求時那個」，避免慢回來的舊照片蓋掉新照片。整個 store 綁在畫面
 /// `@State`，畫面離開時 `.task` 取消、store 隨之釋放——照片載入中離開不會寫到別的畫面。
 @MainActor
@@ -41,6 +43,8 @@ final class FoodRecordDetailStore {
     /// 最近一次重讀記錄失敗（照片／名稱失敗不算：那兩樣各自退回空白，不擋主要內容）。
     private(set) var refreshError: AppError?
     private(set) var isRefreshing = false
+    /// 每次 `refresh()` 遞增；await 回來時不是最新那輪就丟掉結果（見型別文件「併發」）。
+    private var refreshGeneration = 0
 
     init(record: ChildFoodRecord, foodAPIClient: FoodAPIClient, detailAPIClient: (any FoodRecordDetailAPIClient)?) {
         self.record = record
@@ -60,9 +64,10 @@ final class FoodRecordDetailStore {
     }
 
     func refresh() async {
-        guard !isRefreshing else { return }
+        refreshGeneration += 1
+        let generation = refreshGeneration
         isRefreshing = true
-        defer { isRefreshing = false }
+        defer { if generation == refreshGeneration { isRefreshing = false } }
         let requestedMediaID = record.mediaID
         async let recordsResult = fetchRecords()
         async let photoResult = fetchPhoto(mediaID: requestedMediaID)
@@ -70,7 +75,7 @@ final class FoodRecordDetailStore {
         let records = await recordsResult
         let photoURL = await photoResult
         let name = await nameResult
-        guard !Task.isCancelled else { return }
+        guard !Task.isCancelled, generation == refreshGeneration else { return }
 
         authorName = name ?? authorName
         switch records {
@@ -90,7 +95,7 @@ final class FoodRecordDetailStore {
             let newMediaID = record.mediaID
             photo = newMediaID == nil ? .none : .loading
             let newURL = await fetchPhoto(mediaID: newMediaID)
-            guard !Task.isCancelled, record.mediaID == newMediaID else { return }
+            guard !Task.isCancelled, generation == refreshGeneration, record.mediaID == newMediaID else { return }
             applyPhoto(newURL, for: newMediaID)
         }
     }

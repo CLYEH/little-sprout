@@ -173,4 +173,61 @@ final class FoodRecordDetailStoreTests: XCTestCase {
         store.adopt(original)
         XCTAssertEqual(store.record.reaction, "neutral", "舊值不能把畫面倒退回去")
     }
+
+    // MARK: - LS-383 R2（LS-380 R2 m1，池 c712c880）：只有最新一次 refresh 能寫回
+
+    /// 首次重讀還沒回來時，使用者在 04b 存好新照片：`.task(id: record)` 取消舊的一輪、新的一輪先 `adopt` 再
+    /// `refresh`。舊寫法以 `isRefreshing` 早退，新一輪被擋、舊一輪又因取消不寫回——照片窗永遠停在 `.loading`。
+    /// 重現步驟同 reviewer probe（`LS-380-rv2-probe.log`）。
+    func test_refresh_newPhotoSavedWhileFirstRefreshPending_photoDoesNotStickLoading() async throws {
+        let original = try record(mediaID: nil)
+        let newMedia = UUID()
+        let saved = ChildFoodRecord(
+            id: original.id, familyID: original.familyID, childID: original.childID, foodID: original.foodID,
+            authorID: original.authorID, firstTriedOn: original.firstTriedOn, mediaID: newMedia, note: nil,
+            reaction: nil, createdAt: original.createdAt, updatedAt: original.updatedAt.addingTimeInterval(60)
+        )
+        let client = BlockingFirstListClient(records: [saved])
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: client, detailAPIClient: StubDetailAPIClient()
+        )
+
+        let firstTask = Task { await store.refresh() }
+        while client.gate == nil { await Task.yield() }
+        firstTask.cancel()
+        store.adopt(saved)
+        XCTAssertEqual(store.photo, .loading)
+        await store.refresh()
+        client.gate?.resume()
+        await firstTask.value
+
+        XCTAssertEqual(store.photo, .loaded(StubDetailAPIClient.url(for: newMedia)), "照片不該停在 loading")
+        XCTAssertFalse(store.isRefreshing)
+    }
+
+    /// 第一次 `listChildFoodRecords` 卡住（等測試放行），之後的呼叫立刻回傳——模擬「首次重讀還在路上」。
+    private final class BlockingFirstListClient: FoodAPIClient, @unchecked Sendable {
+        let records: [ChildFoodRecord]
+        var gate: CheckedContinuation<Void, Never>?
+        private var blocks = true
+
+        init(records: [ChildFoodRecord]) { self.records = records }
+
+        func listFoodCatalog() async throws -> [FoodCatalogItem] { [] }
+        func listChildFoodRecords(childID: UUID) async throws -> [ChildFoodRecord] {
+            if blocks {
+                blocks = false
+                await withCheckedContinuation { gate = $0 }
+            }
+            return records
+        }
+        func upsertChildFoodRecord(_ input: FoodRecordUpsert) async throws -> ChildFoodRecord { throw Unused() }
+        func deleteChildFoodRecord(id: UUID) async throws { throw Unused() }
+        func listFamilyPhotos(childID: UUID) async throws -> [FamilyPhoto] { throw Unused() }
+        func fetchFamilyPhoto(id: UUID) async throws -> FamilyPhoto? { throw Unused() }
+        func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] { throw Unused() }
+        func uploadPhoto(childID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
+            throw Unused()
+        }
+    }
 }
