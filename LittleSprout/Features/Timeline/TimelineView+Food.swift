@@ -51,9 +51,10 @@ extension TimelineView {
         FoodRecordDetailContext(currentUserID: familyStore.ownerUserID, isFamilyOwner: childrenStore.isOwner)
     }
 
+    /// R3（merge-review R2 i4）：用 `refreshWithCurrentFilter()`（force）——不帶 force 的 `refresh` 會併進存檔前
+    /// 就在跑的同世代那一輪，拿到存檔前的舊資料。
     private func refreshAfterFoodRecordChange() {
-        guard let familyID = familyStore.myFamily?.id else { return }
-        Task { await timelineStore.refresh(familyID: familyID, childID: selectedChildID) }
+        Task { _ = await timelineStore.refreshWithCurrentFilter() }
     }
 
     private func foodFirstContent(recordID: UUID) -> FoodFirstContent? {
