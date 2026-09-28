@@ -36,6 +36,11 @@ struct FoodRecordDetailRouter: View {
         let store: FoodRecordEditorStore
     }
 
+    /// 這個畫面自己存過的最新一筆（03b 儲存／04b 加照片的 upsert 回傳列，LS-380 R3）。詳情頁吃
+    /// `FoodRecordDetailRouter.shownRecord(caller:saved:)`——不能只靠呼叫端把新值傳回來：真入口下圖鑑的
+    /// `navigationDestination` 閉包不會因 store 變動重跑（QA `a27eafaf`，實機 log 見 LS-380 R3 handoff），
+    /// `record` 參數停在推入當下那一筆，詳情頁 `.task(id: record)` 永遠等不到新 key。
+    @State private var savedRecord: ChildFoodRecord?
     @State private var editSession: EditSession?
     @State private var deleteTarget: ChildFoodRecord?
     @State private var removedRecordID: UUID?
@@ -48,14 +53,15 @@ struct FoodRecordDetailRouter: View {
 
     var body: some View {
         FoodRecordDetailView(
-            child: child, item: item, record: record, apiClient: apiClient,
+            child: child, item: item, record: Self.shownRecord(caller: record, saved: savedRecord),
+            apiClient: apiClient,
             currentUserID: context.currentUserID, isFamilyOwner: context.isFamilyOwner, canRecord: canRecord,
             detailAPIClient: detailAPIClient, onGone: onRemoved, onRoute: route
         )
         .sheet(item: $editSession, onDismiss: finishRemovalIfNeeded) { session in
             FoodRecordSheet(
                 childName: child.name, store: session.store, apiClient: apiClient,
-                onSaved: onSaved, onDeleted: { removedRecordID = $0 }
+                onSaved: didSave, onDeleted: { removedRecordID = $0 }
             )
         }
         .sheet(item: $deleteTarget, onDismiss: finishRemovalIfNeeded) { target in
@@ -80,6 +86,18 @@ struct FoodRecordDetailRouter: View {
         }
         .photosPicker(isPresented: $showsPhonePicker, selection: $phoneSelection, matching: .images)
         .onChange(of: phoneSelection) { loadPhonePhoto() }
+    }
+
+    /// 詳情頁要顯示的那一筆：呼叫端給的與這裡自己存過的，取同一筆裡 `updatedAt` 較新者（呼叫端之後若又帶來更新的
+    /// 值——例如別處重讀——照樣以較新者為準；不同筆〔id 不同〕一律以呼叫端為準）。
+    static func shownRecord(caller: ChildFoodRecord, saved: ChildFoodRecord?) -> ChildFoodRecord {
+        guard let saved, saved.id == caller.id, saved.updatedAt > caller.updatedAt else { return caller }
+        return saved
+    }
+
+    private func didSave(_ saved: ChildFoodRecord) {
+        savedRecord = saved
+        onSaved(saved)
     }
 
     private func route(_ route: FoodRecordDetailRoute) {
@@ -135,7 +153,7 @@ struct FoodRecordDetailRouter: View {
         Task {
             if let saved = await store.save() {
                 addPhotoStore = nil
-                onSaved(saved)
+                didSave(saved)
             } else {
                 editSession = EditSession(store: store)
             }

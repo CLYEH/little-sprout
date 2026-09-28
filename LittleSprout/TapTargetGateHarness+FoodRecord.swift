@@ -34,6 +34,7 @@ extension TapTargetGateHarness {
         case .foodRecordSheetFailure: foodRecordSheetFailureHost
         case .foodRecordSheetEdit: foodRecordSheetEditHost
         case .foodRecordDetailFlow: foodRecordColorScheme(FoodRecordDetailFlowHarnessHost())
+        case .foodRecordDetailServer: FoodRecordDetailServerHarnessHost()
         default: EmptyView()
         }
     }
@@ -194,6 +195,39 @@ private struct FoodRecordDetailFlowHarnessHost: View {
         .environment(
             \.foodRecordDetailAPIClient, PreviewFoodRecordDetailAPIClient(names: [Self.mom: "媽媽", Self.dad: "爸爸"])
         )
+    }
+}
+/// LS-380 R3（QA `a27eafaf`）：真入口的條件——呼叫端給詳情頁的那一筆**推入後就不再更新**（圖鑑的
+/// `navigationDestination` 閉包在真導覽下不隨 store 重跑，實機 log 見 R3 handoff）、API 回的是伺服器那一列
+/// （`ServerShapedFoodAPIClient`）。`onSaved`／`onRemoved` 刻意什麼都不做：詳情頁得靠 router 自己換新。
+private struct FoodRecordDetailServerHarnessHost: View {
+    private static let mom = UUID()
+    private static let child = Child(
+        id: UUID(), name: TapTargetGateHarness.foodRecordChildName,
+        birthday: BirthdayFormat.date(fromWireString: "2025-04-20")!, avatarURL: nil, deletedAt: nil,
+        createdAt: Date(timeIntervalSince1970: 1_750_000_000)
+    )
+    private static let serverTime = Date(timeIntervalSince1970: 1_780_000_000)
+    private static let frozenRecord = ChildFoodRecord(
+        id: UUID(), familyID: UUID(), childID: child.id, foodID: "bread", authorID: mom,
+        firstTriedOn: BirthdayFormat.date(fromWireString: "2026-06-08")!, mediaID: nil, note: "自己抓著吃。",
+        reaction: FoodReaction.liked.rawValue, createdAt: serverTime, updatedAt: serverTime
+    )
+    private static let apiClient = ServerShapedFoodAPIClient(rows: [frozenRecord], serverClock: serverTime)
+
+    var body: some View {
+        NavigationStack(path: .constant([true])) {
+            Color.clear
+                .navigationTitle("飲食圖鑑")
+                .navigationDestination(for: Bool.self) { _ in
+                    FoodRecordDetailRouter(
+                        child: Self.child, item: PreviewFoodCatalog.items.first { $0.id == "bread" }!,
+                        record: Self.frozenRecord, apiClient: Self.apiClient,
+                        context: FoodRecordDetailContext(currentUserID: Self.mom, isFamilyOwner: true), canRecord: true,
+                        onSaved: { _ in }, onRemoved: { _ in }
+                    )
+                }
+        }
     }
 }
 #endif
