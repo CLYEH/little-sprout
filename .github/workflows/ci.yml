@@ -204,7 +204,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／food-sticker-crop）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／overflow-scan／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／food-sticker-crop／food-sticker-size-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -305,8 +305,12 @@ jobs:
           # sort_reading_order() 單元測試＋mutation：拿掉 REGION-COUNT-CHECK 標記行）
           bash scripts/design/food-sticker-crop.test.sh || rc=1
           # LS-340 R2 i3（merge-review 1c80d549）：check-consistency 先前沒掛進任何 CI／gate，只能手動跑；
-          # 274 個 id 對帳＋每張可開啟／384×384／RGBA 的驗證現在每個 PR 都跑，<1 秒。
+          # 274 個 id 對帳＋每張可開啟／384×384／調色盤 PNG（LS-387 起 mode P＋透明）的驗證現在每個 PR 都跑，<1 秒。
           uv run scripts/design/food-sticker-crop.py check-consistency || rc=1
+          # LS-387：貼紙整個資料夾進 app bundle——單張 ≤40 KB、總量 ≤11 MB（現況掃描，不吃 diff）＋其自測
+          #（邊界兩側、非 .png 也算、fail closed；mutation：拿掉單張／總量檢查各一）
+          bash scripts/gates/food-sticker-size-check.sh || rc=1
+          bash scripts/gates/food-sticker-size-check.test.sh || rc=1
           exit "$rc"
 
       # LS-267（LS-96 池項 `c0d883e1`；根因來自 LS-264 merge-review R1 M1）：上面兩個自測 step 列舉的清單與

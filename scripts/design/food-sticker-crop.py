@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["Pillow==11.3.0"]
+# dependencies = ["Pillow==11.3.0", "imagequant==1.1.5"]
 # ///
 """LS-338 食物圖鑑貼紙裁切腳本——sticker sheet（一張多種食物、透明背景）→ 單張彩色 PNG，決定性、不靠模型判斷。
 
@@ -22,9 +22,15 @@
      也做合理性檢查，見 `split_into_rows()`／`crop_sheet()` 的 `GRID-CHECK` 標記）。
   3. 裁切：每個區塊的遮罩膨脹 6px（四鄰接、6 次疊代，等同保留白邊抗鋸齒）；alpha < 32 清成 0、
      alpha ≥ 200 拉成 255；依膨脹後遮罩裁出 bounding box，等比縮放置中到正方形畫布，四周留 6% 邊。
-  4. 輸出：`design/food-stickers/stickers/<food_id>.png`，RGBA、不產生灰階版（App 端即時處理）。
+  4. 輸出：`design/food-stickers/stickers/<food_id>.png`，不產生灰階版（App 端即時處理）。LS-387 起輸出
+     是**8-bit 調色盤 PNG（mode P＋tRNS alpha）**，不再是 RGBA：274 張 RGBA 共 ~43MB 進 app bundle 太重。
+     量化用 libimagequant（pngquant 同一顆引擎，PyPI `imagequant` 綁定，無抖色），色數從 256 往下逐級試
+     （`QUANTIZE_COLOR_STEPS`），取第一個編碼後 ≤ `MAX_STICKER_BYTES`（40 KB）的結果；最低一級仍超標就
+     exit 非 0（`QUANTIZE-LIMIT-CHECK`），不默默寫出超標檔。選 libimagequant 而非 Pillow 內建 FASTOCTREE
+     （Pillow wheel 未編入 libimagequant，RGBA 只能用 octree）：octree 在 3× 放大下淺色水彩面（饅頭、
+     蛋白）出現明顯色塊，libimagequant 同樣 ≤40 KB 下目視幾乎無差（LS-387 handoff 三案對照）。
 
-依賴決策（Rule 12）：只依賴 Pillow，不用 numpy／scipy——scipy 對 CI ubuntu runner 是額外負擔且本腳本
+依賴決策（Rule 12）：只依賴 Pillow＋imagequant（量化，LS-387），不用 numpy／scipy——scipy 對 CI ubuntu runner 是額外負擔且本腳本
 用不到它的進階功能；連通區塊標記與膨脹都用純 Python 實作（見下方兩個函式），在 1536×1024 的 sheet 上
 實測每張 <0.3s（labeling）＋<0.1s（單一區塊局部膨脹，只在該區塊 bounding box 的局部陣列上做，不是對
 整張圖）。CI／自測一律用 `uv run` 執行本檔（本檔頭的 PEP 723 inline metadata 宣告依賴），不裝系統套件、
@@ -33,10 +39,12 @@
 成品都是這個版本產出，逐版掃描 10.3.0／10.4.0／11.0.0 重切皆與版控不同、11.3.0／12.0.0 起才相同）：
 不同 Pillow 版本 PNG 編碼層不同會讓「像素沒變、blob 全變」的整批 churn（實測 Pillow 12.3.0 重切像素
 相同、位元全不同）；重切前先對齊這個版本，日後要升級 Pillow 得連同全部既有成品一起重切、逐檔 `cmp`
-驗過再一起 commit，不能只改依賴宣告。**位元級可重放只在「同 OS／同 Pillow wheel build」內成立**：
-同一台機器、同一個 Pillow 版本重切，`cmp` 逐位元組相同；跨平台（例如 macOS 與 Linux 容器同為
-Pillow 11.3.0）重切，`cmp` 不同但像素（`Image.tobytes()`）相同——PNG 編碼層（zlib/optimize 的候選
-篩選）不保證跨平台位元重放，這也是為什麼 CI 自測驗證輸出正確性要用像素比對而非 `cmp`。
+驗過再一起 commit，不能只改依賴宣告（`imagequant` 同理釘 `==1.1.5`）。**可重放範圍（LS-387 量化後
+重測）**：同一台機器、同一組釘版重切，`cmp` 逐位元組相同；**跨平台連像素都不保證相同**——色數是依
+「編碼後位元組數」逐級挑的，PNG 編碼層（zlib）跨平台輸出長度不同，貼近 40 KB 的檔就可能在兩個平台挑到
+不同色數（實測 macOS arm64 vs Linux amd64 容器：274 張中 254 張像素相同，差異的 20 張全落在 34–41 KB
+區間，平均每通道絕對差最大 1.72／255；同 sheet 兩張不同食物之間最小 10.49）。所以 CI 自測比對輸出正確性用
+「平均絕對差 ≤ 門檻」的容差比對（見 food-sticker-crop.test.sh），不用 `cmp` 也不用逐像素相等。
 
 用法：
   uv run scripts/design/food-sticker-crop.py crop [--sheet <sheet-01|reference-sheet>] [--plan PATH]
@@ -53,10 +61,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
 import json
 import sys
 from pathlib import Path
 
+import imagequant
 from PIL import Image
 
 HERE = Path(__file__).resolve().parent
@@ -69,13 +79,15 @@ DEFAULT_PLAN_PATH = DEFAULT_SHEETS_DIR / "plan.json"
 DEFAULT_REFERENCE_PLAN_PATH = DEFAULT_STYLE_DIR / "reference-plan.json"
 DEFAULT_CSV_PATH = REPO_ROOT / "supabase" / "seed-data" / "food_catalog.csv"
 
-CANVAS = 384  # 3x retina 下 110pt 格 ≈ 330px；384 留一點餘裕、單檔仍遠低於 500 KB gate（實測 90–180 KB）
+CANVAS = 384  # 3x retina 下 110pt 格 ≈ 330px；384 留一點餘裕（LS-387 量化後單張 ≤40 KB，見 MAX_STICKER_BYTES）
 MARGIN = 0.06
 ALPHA_REGION_THRESHOLD = 128
 ALPHA_CLEAR_THRESHOLD = 32
 ALPHA_SOLID_THRESHOLD = 200
 DILATE_PX = 6
 ROW_GAP_RATIO = 0.15  # 最大間隔 < 圖高的 15% 視為同一列（見上方 docstring 第 2 點）
+MAX_STICKER_BYTES = 40960  # LS-387：單張 ≤40 KB（274 張總量 ≤11 MB，CI food-sticker-size-check 驗版控成品）
+QUANTIZE_COLOR_STEPS = (256, 192, 160, 128, 96, 64, 48, 32)  # 由多到少，取第一個 ≤ MAX_STICKER_BYTES 的
 
 
 class CropError(Exception):
@@ -224,6 +236,25 @@ def dilate_local(mask_rows: list[list[bool]], iterations: int) -> list[list[bool
     return cur
 
 
+def quantize_sticker(canvas: Image.Image, food_id: str) -> bytes:
+    """RGBA 畫布 → 8-bit 調色盤 PNG 位元組（見 docstring 第 4 點）。色數逐級遞減，取第一個編碼後
+    ≤ MAX_STICKER_BYTES 的；最低一級仍超標丟 CropError。"""
+    for colors in QUANTIZE_COLOR_STEPS:
+        quantized = imagequant.quantize_pil_image(
+            canvas, dithering_level=0.0, max_colors=colors, min_quality=0, max_quality=100
+        )
+        buf = io.BytesIO()
+        quantized.save(buf, "PNG", optimize=True)
+        if buf.tell() <= MAX_STICKER_BYTES:
+            break
+    if buf.tell() > MAX_STICKER_BYTES:  # QUANTIZE-LIMIT-CHECK（自測 mutation 標記，見 food-sticker-crop.test.sh）
+        raise CropError(
+            f"{food_id}：量化到 {QUANTIZE_COLOR_STEPS[-1]} 色仍有 {buf.tell()} bytes，超過單張上限 "
+            f"{MAX_STICKER_BYTES} bytes"
+        )
+    return buf.getvalue()
+
+
 def crop_sheet(sheet_path: Path, ids: list[str], out_dir: Path, grid: dict | None = None) -> list[str]:
     """裁一張 sheet，回傳實際寫出的檔名（依食物 id）。區塊數不符、或列分組與 `grid`（若有）不符時丟
     CropError。"""
@@ -295,7 +326,7 @@ def crop_sheet(sheet_path: Path, ids: list[str], out_dir: Path, grid: dict | Non
         canvas.paste(tile_resized, ((CANVAS - new_w) // 2, (CANVAS - new_h) // 2), tile_resized)
 
         out_path = out_dir / f"{food_id}.png"
-        canvas.save(out_path, optimize=True)
+        out_path.write_bytes(quantize_sticker(canvas, food_id))
         written.append(food_id)
     return written
 
@@ -361,23 +392,24 @@ def cmd_check_consistency(args: argparse.Namespace) -> int:
         print(f"✗ food-sticker-crop check-consistency：多 {len(extra)} 個（stickers/ 有、CSV 沒有）：{', '.join(extra)}", file=sys.stderr)
         rc = 1
 
-    # i2（LS-338 merge-review）：id 集合對得上不代表每張圖本身可用——逐張驗可開啟／384×384／RGBA。
+    # i2（LS-338 merge-review）：id 集合對得上不代表每張圖本身可用——逐張驗可開啟／384×384／調色盤帶 alpha
+    # （LS-387 起成品是 mode P＋tRNS，見 docstring 第 4 點；RGBA 表示沒走量化，也算不合格）。
     bad: list[str] = []
     for food_id in sorted(csv_ids & sticker_ids):
         path = args.stickers_dir / f"{food_id}.png"
         try:
             with Image.open(path) as im:
                 im.load()
-                if im.size != (CANVAS, CANVAS) or im.mode != "RGBA":
+                if im.size != (CANVAS, CANVAS) or im.mode != "P" or not im.has_transparency_data:
                     bad.append(f"{food_id}（{im.size[0]}x{im.size[1]} {im.mode}）")
         except Exception as exc:  # noqa: BLE001 — 任何開檔／解碼失敗都算壞檔，訊息點名原因
             bad.append(f"{food_id}（無法開啟：{exc}）")
     if bad:
-        print(f"✗ food-sticker-crop check-consistency：{len(bad)} 個檔案不是可開啟的 {CANVAS}x{CANVAS} RGBA：{', '.join(bad)}", file=sys.stderr)
+        print(f"✗ food-sticker-crop check-consistency：{len(bad)} 個檔案不是可開啟的 {CANVAS}x{CANVAS} 調色盤 PNG（mode P＋透明）：{', '.join(bad)}", file=sys.stderr)
         rc = 1
 
     if rc == 0:
-        print(f"✓ food-sticker-crop check-consistency：{len(sticker_ids)} 個 id 與 food_catalog.csv 一一對應，且皆為可開啟的 {CANVAS}x{CANVAS} RGBA")
+        print(f"✓ food-sticker-crop check-consistency：{len(sticker_ids)} 個 id 與 food_catalog.csv 一一對應，且皆為可開啟的 {CANVAS}x{CANVAS} 調色盤 PNG（mode P＋透明）")
     return rc
 
 
