@@ -205,19 +205,51 @@ final class FoodRecordDetailStoreTests: XCTestCase {
         XCTAssertFalse(store.isRefreshing)
     }
 
-    /// 第一次 `listChildFoodRecords` 卡住（等測試放行），之後的呼叫立刻回傳——模擬「首次重讀還在路上」。
+    /// R3（merge-review R2 i5）：兩輪都沒被取消——舊的一輪（伺服器快照是存檔前的「喜歡」）晚於新的一輪回來，
+    /// 不得把新一輪寫好的「普通」蓋回去。釘住的是世代號比對本身（`FoodRecordDetailStore.refresh()` 的
+    /// `generation == refreshGeneration`），不靠取消。
+    func test_refresh_staleEarlierRoundReturnsLate_doesNotOverwriteNewerResult() async throws {
+        let original = try record(mediaID: nil, reaction: "liked")
+        let edited = ChildFoodRecord(
+            id: original.id, familyID: original.familyID, childID: original.childID, foodID: original.foodID,
+            authorID: original.authorID, firstTriedOn: original.firstTriedOn, mediaID: nil, note: "改過",
+            reaction: "neutral", createdAt: original.createdAt, updatedAt: original.updatedAt.addingTimeInterval(60)
+        )
+        let client = BlockingFirstListClient(records: [edited], firstRecords: [original])
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: client, detailAPIClient: StubDetailAPIClient()
+        )
+
+        let firstRound = Task { await store.refresh() }
+        while client.gate == nil { await Task.yield() }
+        await store.refresh()
+        XCTAssertEqual(store.record.reaction, "neutral", "新的一輪先回來，寫上最新值")
+        client.gate?.resume()
+        await firstRound.value
+
+        XCTAssertEqual(store.record.reaction, "neutral", "晚回來的舊一輪不得把最新值蓋回「喜歡」")
+        XCTAssertEqual(store.record.note, "改過")
+    }
+
+    /// 第一次 `listChildFoodRecords` 卡住（等測試放行）並回傳 `firstRecords`（沒給就同 `records`），之後的呼叫
+    /// 立刻回傳 `records`——模擬「首次重讀還在路上」。
     private final class BlockingFirstListClient: FoodAPIClient, @unchecked Sendable {
         let records: [ChildFoodRecord]
+        let firstRecords: [ChildFoodRecord]
         var gate: CheckedContinuation<Void, Never>?
         private var blocks = true
 
-        init(records: [ChildFoodRecord]) { self.records = records }
+        init(records: [ChildFoodRecord], firstRecords: [ChildFoodRecord]? = nil) {
+            self.records = records
+            self.firstRecords = firstRecords ?? records
+        }
 
         func listFoodCatalog() async throws -> [FoodCatalogItem] { [] }
         func listChildFoodRecords(childID: UUID) async throws -> [ChildFoodRecord] {
             if blocks {
                 blocks = false
                 await withCheckedContinuation { gate = $0 }
+                return firstRecords
             }
             return records
         }
