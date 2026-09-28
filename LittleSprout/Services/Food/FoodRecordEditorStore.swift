@@ -82,6 +82,7 @@ final class FoodRecordEditorStore {
         // `first_tried_on` 解成 UTC 午夜；DatePicker 與送出都以裝置本地時區的那一天為準（同
         // `GrowthMeasurementFormView.localMidnight` 的既有修法）。
         firstTriedOn = editingRecord.map { BirthdayFormat.localMidnight(from: $0.firstTriedOn) } ?? now
+        existingPhotoLoad = editingRecord?.mediaID == nil ? .notApplicable : .loading
         reaction = editingRecord?.reaction.flatMap(FoodReaction.init(rawValue:))
         note = editingRecord?.note ?? ""
     }
@@ -93,12 +94,35 @@ final class FoodRecordEditorStore {
         reaction = reaction == tapped ? nil : tapped
     }
 
-    /// 03b 回填既有照片的縮圖（`media_id` → `FamilyPhoto`）。讀不到（已軟刪／網路）就維持「沒選」的外觀
-    /// ——但送出時仍保留原本的 `media_id`（見 `resolvedMediaID`），不因縮圖讀不到就默默把照片拿掉。
+    /// 03b 既有照片縮圖的讀取狀態（merge-review R1 i4）。
+    enum ExistingPhotoLoad: Equatable {
+        /// 第一次記錄，或這筆本來就沒照片。
+        case notApplicable
+        case loading
+        /// 讀不到（已軟刪／網路）——畫面顯示「原照片讀取失敗」、仍保留原 `media_id`，可按「不用照片」清掉。
+        case failed
+    }
+
+    private(set) var existingPhotoLoad: ExistingPhotoLoad = .notApplicable
+
+    /// 照片欄目前代表「原本那張、還沒讀到縮圖」：畫面顯示選取態（換一張／不用照片），送出也保留原 `media_id`
+    /// ——畫面與送出值一致（R1 i4：原本這裡顯示「沒選照片」、送出卻帶原 `media_id`、又沒有「不用照片」可按）。
+    var keepsUnresolvedExistingPhoto: Bool {
+        photo == .none && !removedExistingPhoto && editingRecord?.mediaID != nil
+    }
+
+    /// 03b 回填既有照片的縮圖（`media_id` → `FamilyPhoto`）。讀不到就標 `.failed`，照片欄照樣是選取態（見
+    /// `keepsUnresolvedExistingPhoto`），送出仍保留原 `media_id`，不因縮圖讀不到就默默把照片拿掉。
     func loadExistingPhoto() async {
-        guard let mediaID = editingRecord?.mediaID, photo == .none else { return }
-        if let existing = try? await apiClient.fetchFamilyPhoto(id: mediaID), photo == .none {
+        guard let mediaID = editingRecord?.mediaID, photo == .none, !removedExistingPhoto else { return }
+        existingPhotoLoad = .loading
+        let existing = try? await apiClient.fetchFamilyPhoto(id: mediaID)
+        guard photo == .none, !removedExistingPhoto else { return }
+        if let existing {
             photo = .family(existing)
+            existingPhotoLoad = .notApplicable
+        } else {
+            existingPhotoLoad = .failed
         }
     }
 

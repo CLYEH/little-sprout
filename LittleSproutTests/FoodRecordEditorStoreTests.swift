@@ -145,6 +145,34 @@ final class FoodRecordEditorStoreTests: XCTestCase {
         XCTAssertNil(client.upserts.last?.mediaID, "「不用照片」→ media_id = null（Notes COtpI）")
     }
 
+    /// R1 i4：03b 原照片縮圖讀不到 → 照片欄仍是選取態（顯示「原照片讀取失敗」、有「不用照片」），送出保留原
+    /// `media_id`；按「不用照片」後畫面回到兩個來源鈕、送出 null——畫面與送出值一致。
+    func test_edit_existingPhotoUnavailable_staysSelectedAndCanBeRemoved() async {
+        let mediaID = UUID()
+        let client = RecordingClient()  // fetchFamilyPhoto 回 nil＝讀不到
+        let record = existingRecord(mediaID: mediaID)
+        let store = FoodRecordEditorStore(childID: record.childID, item: taro, editingRecord: record, apiClient: client)
+        XCTAssertEqual(store.existingPhotoLoad, .loading)
+
+        await store.loadExistingPhoto()
+
+        XCTAssertEqual(store.existingPhotoLoad, .failed)
+        XCTAssertTrue(store.keepsUnresolvedExistingPhoto, "讀不到仍顯示成「有照片」（原照片讀取失敗），不是「沒選」")
+        _ = await store.save()
+        XCTAssertEqual(client.upserts.last?.mediaID, mediaID, "畫面說有照片，送出就保留原 media_id")
+
+        store.removePhoto()
+        XCTAssertFalse(store.keepsUnresolvedExistingPhoto, "按「不用照片」後回到兩個來源鈕")
+        _ = await store.save()
+        XCTAssertNil(client.upserts.last?.mediaID)
+    }
+
+    func test_firstRecord_hasNoExistingPhotoState() {
+        let store = FoodRecordEditorStore(childID: UUID(), item: taro, apiClient: RecordingClient())
+        XCTAssertEqual(store.existingPhotoLoad, .notApplicable)
+        XCTAssertFalse(store.keepsUnresolvedExistingPhoto)
+    }
+
     func test_delete_callsRPCWithRecordID() async throws {
         let client = RecordingClient()
         let record = existingRecord(mediaID: nil)

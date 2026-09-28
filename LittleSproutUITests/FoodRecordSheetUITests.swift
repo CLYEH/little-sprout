@@ -148,6 +148,20 @@ final class FoodRecordSheetUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["foodBook.progress"].label, "小安吃過 37\u{00A0}種，全部 274\u{00A0}種。")
     }
 
+    /// R1 i4：03b 原照片讀不到時，照片欄仍是選取態（「原照片讀取失敗」＋換一張／不用照片）——畫面與送出的
+    /// `media_id` 一致；按「不用照片」才回到兩個來源鈕。
+    func testEditSheet_existingPhotoUnavailable_showsFailedThumbAndCanRemove() {
+        let app = Support.launch(
+            .foodRecordSheetEdit, Support.standard, extraArguments: ["-LSFoodRecordMissingPhoto", "YES"]
+        )
+        let thumb = Support.element("foodRecord.photoThumb", in: app)
+        XCTAssertTrue(Support.waitForLabel(thumb, where: "==", "原照片讀取失敗"), "原照片讀不到要明講：\(thumb.label)")
+        XCTAssertTrue(app.buttons["換一張"].exists)
+        XCTAssertFalse(app.buttons["從家庭相簿挑"].exists, "不能顯示成「沒選照片」")
+        app.buttons["不用照片"].tap()
+        XCTAssertTrue(app.buttons["從家庭相簿挑"].waitForExistence(timeout: 5), "不用照片 → 回到兩個來源鈕")
+    }
+
     /// 03c AX3（稿 `d56YR`）：刪除鈕與取消都在首屏內。
     func testDeleteConfirmation_AX3_buttonsOnFirstScreen() {
         let app = Support.launch(.foodRecordSheetEdit, Support.ax3)

@@ -50,6 +50,9 @@ enum FoodRecordCopy {
     /// 照片時——稿面沒畫這個邊界，沿 03e 的 Status Slot 失敗語彙（同一格、同一套開頭），不另開版面。
     static let photoUnsupported = "沒有加入照片：這張照片讀不出來，請換一張。"
 
+    /// 03b 原照片縮圖讀不到（已軟刪／網路；merge-review R1 i4）——照片仍會保留，要拿掉請按「不用照片」。
+    static let existingPhotoUnavailable = "原照片讀取失敗"
+
     /// 03c 刪除確認（稿 `F7KFM`／`jbiJI` 逐字；票文範圍 3）。
     static func deleteTitle(foodName: String) -> String { "要刪除\(foodName)這筆記錄嗎？" }
     static func deleteBody(foodName: String) -> String {

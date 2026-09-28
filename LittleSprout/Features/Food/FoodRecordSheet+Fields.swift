@@ -48,8 +48,13 @@ extension FoodRecordSheet {
 
     var photoField: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
-            fieldLabel(store.photo == .none ? "照片（可不選）" : "照片")
+            fieldLabel(store.photo == .none && !store.keepsUnresolvedExistingPhoto ? "照片（可不選）" : "照片")
             switch store.photo {
+            case .none where store.keepsUnresolvedExistingPhoto:
+                let failed = store.existingPhotoLoad == .failed
+                selectedPhoto(label: failed ? FoodRecordCopy.existingPhotoUnavailable : "原照片") {
+                    unresolvedThumbnail(failed: failed)
+                }
             case .none:
                 photoOptions
             case .family(let photo):
@@ -76,12 +81,12 @@ extension FoodRecordSheet {
         }
     }
 
-    private func selectedPhoto(@ViewBuilder thumbnail: () -> some View) -> some View {
+    private func selectedPhoto(label: String = "已選的照片", @ViewBuilder thumbnail: () -> some View) -> some View {
         let thumb = thumbnail()
             .frame(width: 112, height: 112)
             .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
             .accessibilityElement()
-            .accessibilityLabel("已選的照片")
+            .accessibilityLabel(label)
             .accessibilityIdentifier("foodRecord.photoThumb")
         let actions = VStack(spacing: AppSpacing.group) {
             outlineButton(title: "換一張", icon: "arrow.clockwise", verticalPadding: .tap) {
@@ -104,6 +109,21 @@ extension FoodRecordSheet {
                 image.resizable().scaledToFill()
             } else {
                 Color.lsSurface2
+            }
+        }
+    }
+
+    /// 03b 原照片還沒讀到／讀不到（R1 i4）：同一格縮圖位，讀取中留空白底，失敗時寫明「原照片讀取失敗」
+    /// ——旁邊照樣有「換一張／不用照片」，畫面與送出的 `media_id` 一致。
+    private func unresolvedThumbnail(failed: Bool) -> some View {
+        Color.lsSurface2.overlay {
+            if failed {
+                Text(FoodRecordCopy.existingPhotoUnavailable)
+                    .appFont(.note)
+                    .foregroundStyle(Color.lsTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.5)
+                    .padding(AppSpacing.tight)
             }
         }
     }
