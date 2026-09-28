@@ -173,4 +173,30 @@ final class FoodRecordDetailStoreTests: XCTestCase {
         store.adopt(original)
         XCTAssertEqual(store.record.reaction, "neutral", "舊值不能把畫面倒退回去")
     }
+
+    // MARK: - LS-380 R3：router 顯示的那一筆
+
+    /// QA `a27eafaf`：真入口下呼叫端的記錄推入後不再更新——router 必須以自己存過的較新那筆為準；呼叫端之後若帶來
+    /// 更新的值（或換了一筆）則以呼叫端為準。
+    @MainActor
+    func test_shownRecord_prefersNewerSavedSameRecord() throws {
+        let caller = try record(mediaID: nil, reaction: "liked")
+        func copy(_ base: ChildFoodRecord, reaction: String, plus seconds: TimeInterval) -> ChildFoodRecord {
+            ChildFoodRecord(
+                id: base.id, familyID: base.familyID, childID: base.childID, foodID: base.foodID,
+                authorID: base.authorID, firstTriedOn: base.firstTriedOn, mediaID: base.mediaID, note: base.note,
+                reaction: reaction,
+                createdAt: base.createdAt, updatedAt: base.updatedAt.addingTimeInterval(seconds)
+            )
+        }
+        let saved = copy(caller, reaction: "disliked", plus: 10)
+        XCTAssertEqual(FoodRecordDetailRouter.shownRecord(caller: caller, saved: nil), caller)
+        XCTAssertEqual(FoodRecordDetailRouter.shownRecord(caller: caller, saved: saved), saved, "呼叫端沒更新：用存好的")
+        let callerLater = copy(caller, reaction: "neutral", plus: 20)
+        XCTAssertEqual(
+            FoodRecordDetailRouter.shownRecord(caller: callerLater, saved: saved), callerLater, "呼叫端較新：用呼叫端"
+        )
+        let other = try record(mediaID: nil, reaction: "liked")
+        XCTAssertEqual(FoodRecordDetailRouter.shownRecord(caller: other, saved: saved), other, "不同筆：用呼叫端")
+    }
 }
