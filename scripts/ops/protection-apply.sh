@@ -61,6 +61,10 @@ summary() {  # 一行摘要：require_pr／checks／enforce_admins／force_push�
 # m1 裁決**：development 的 patch 模式刻意不強制加 ci-ipad——development 是快速整合分支，`qa` status 同理也只在
 # test→main 才要求，not development；iPad 測試紅的 PR 仍可併入 development，要到晉升 test 才擋，與既有分層把關的
 # 設計一致（不是遺漏）。
+# **LS-385 例外**：UITests 自 `ci` 拆成 `ci-ui-1..3`，而 development 原本就要求 `ci`（當時含 UITests）——patch 模式一併把
+# `ci-ui-1..3`（@15368）編進 request／verify，維持「UITests 紅的 PR 併不進 development」這條既有把關，不是新增分層。
+# request＝before 的其他 check（去掉既有的 ci-ui-*，改以 DEV_ADD 為準）＋DEV_ADD＋merge-review；verify 同源比對。
+DEV_ADD='[{"context":"ci-ui-1","app_id":15368},{"context":"ci-ui-2","app_id":15368},{"context":"ci-ui-3","app_id":15368}]'
 CHECKS_OK='(.required_status_checks.strict | not)
     and ([.required_status_checks.checks[].context] | sort == ["ci","ci-ipad","ci-ui-1","ci-ui-2","ci-ui-3","db","lint","merge-review","rules"])
     and ([.required_status_checks.checks[] | select(.context != "merge-review") | .app_id] | all(. == 15368))
@@ -74,13 +78,14 @@ verify() {  # 回讀是否等於目標狀態
       and (.required_linear_history.enabled | not)
       and ${CHECKS_OK}
       and (.restrictions == null)" "$1" >/dev/null ;;
-    patch) jq -e --slurpfile b "$before" '
+    patch) jq -e --slurpfile b "$before" --argjson add "$DEV_ADD" '
       def others: [.required_status_checks.checks[] | select(.context != "merge-review") | {context, app_id: (.app_id // -1)}] | sort_by(.context);
+      def want: ([($b[0] | others)[] | select(.context | test("^ci-ui-[0-9]+$") | not)] + $add) | sort_by(.context);
       (.required_pull_request_reviews != null)
       and (.required_status_checks.strict | not)
-      and (([.required_status_checks.checks[].context] | unique) == (([$b[0].required_status_checks.checks[].context] + ["merge-review"]) | unique))
+      and (([.required_status_checks.checks[].context] | unique) == (([$b[0].required_status_checks.checks[].context] + ["merge-review"] + [$add[].context]) | unique))
       and ([.required_status_checks.checks[] | select(.context == "merge-review") | .app_id] | all(. == null or . == -1))
-      and (others == ($b[0] | others))' "$1" >/dev/null ;;
+      and (others == want)' "$1" >/dev/null ;;
   esac
 }
 
@@ -122,11 +127,11 @@ case "$MODE" in
 EOF
     echo "  request: PUT ${EP}" ;;
   patch)
-    # 只加 merge-review：其餘 check 照 before 原樣（context／app_id；null→-1 同義「任何 app」），不順手收緊（R2 M2）
-    if ! jq '{strict: false, checks: ([.required_status_checks.checks[] | select(.context != "merge-review") | {context, app_id: (.app_id // -1)}] + [{context: "merge-review", app_id: -1}])}' "$before" > "$request"; then
+    # 加 merge-review＋DEV_ADD（ci-ui-1..3，LS-385）：其餘 check 照 before 原樣（context／app_id；null→-1 同義「任何 app」），不順手收緊（R2 M2）
+    if ! jq --argjson add "$DEV_ADD" '{strict: false, checks: ([.required_status_checks.checks[] | select(.context != "merge-review" and (.context | test("^ci-ui-[0-9]+$") | not)) | {context, app_id: (.app_id // -1)}] + $add + [{context: "merge-review", app_id: -1}])}' "$before" > "$request"; then
       echo "✗ protection-apply：從 ${before} 產生 request 失敗" >&2; exit 2
     fi
-    echo "  request: PATCH ${EP_CHECKS}（只加 merge-review；其餘 check 照現況、require PR 等其餘設定不動）" ;;
+    echo "  request: PATCH ${EP_CHECKS}（加 merge-review＋ci-ui-1..3（LS-385）；其餘 check 照現況、require PR 等其餘設定不動）" ;;
 esac
 sed 's/^/    /' "$request"
 echo "  可推送者（collaborators 有 push 權限；user-owned repo 無 restrictions 可設）："
