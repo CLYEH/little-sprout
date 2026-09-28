@@ -330,6 +330,10 @@ enum TapTargetGateScreenName: String {
     // LS-380 R2：圖鑑 → 04 詳情 → 03b／03c／04b 加照片的整條接縫（`FoodRecordDetailRouter`），不是新畫面，
     // 借這條通道餵 `FoodRecordDetailFlowUITests`；fixture 見 `TapTargetGateHarness+FoodRecord.swift`。
     case foodRecordDetailFlow = "FoodRecordDetailFlow"
+    // LS-380 R3（QA `a27eafaf`）：04 詳情＋`FoodRecordDetailRouter` 單獨掛著、呼叫端給的記錄**永遠不更新**（同真入口
+    // 下圖鑑的 `navigationDestination` 不重跑），API 用真後端回傳形狀的 `ServerShapedFoodAPIClient`——餵
+    // `FoodRecordDetailFlowUITests.testEditWithFrozenCallerRecord_serverShapedClient_detailShowsSavedValues`。
+    case foodRecordDetailServer = "FoodRecordDetailServer"
     // LS-365：時間軸照片卡壓印行寶貝署名——同 `.diaryCardVideoBadges` 既有先例，不是點擊目標
     // 測試，借這條通道餵 `PhotoCardBabyCaptionUITests` 量折行像素與截圖對稿；fixture（一位／
     // 兩位／三位長名／未標記／相簿卡回歸／feed）由 `LS_PHOTO_CARD_CAPTION_FIXTURE` 選，見

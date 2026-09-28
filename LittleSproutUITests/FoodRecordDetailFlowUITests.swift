@@ -33,6 +33,29 @@ final class FoodRecordDetailFlowUITests: XCTestCase {
         XCTAssertTrue(Support.waitForLabel(reaction, where: "==", "普通"), "詳情頁要換成剛存的反應：\(reaction.label)")
     }
 
+    /// LS-380 R3（QA `a27eafaf`，真後端重現）：呼叫端給詳情頁的記錄推入後永遠不更新（同真入口）、API 回伺服器
+    /// 那一列——03b 儲存收起後，詳情頁仍要立刻顯示新值（router 自己記住存好的那一筆，不能只靠呼叫端回傳）。
+    func testEditWithFrozenCallerRecord_serverShapedClient_detailShowsSavedValues() {
+        let app = Support.launch(.foodRecordDetailServer, Support.standard)
+        let reaction = Support.element("foodRecordDetail.reaction", in: app)
+        XCTAssertTrue(Support.waitForLabel(reaction, where: "==", "喜歡"))
+        let edit = app.buttons["foodRecordDetail.edit"]
+        Support.scrollUntilHittable(edit, in: app)
+        edit.tap()
+        XCTAssertTrue(app.staticTexts["編輯吐司麵包這筆記錄"].waitForExistence(timeout: 5))
+        let disliked = app.buttons["foodRecord.reaction.disliked"]
+        Support.scrollUntilHittable(disliked, in: app)
+        disliked.tap()
+        let save = app.buttons["foodRecord.save"]
+        Support.scrollUntilHittable(save, in: app)
+        save.tap()
+
+        XCTAssertTrue(app.staticTexts["編輯吐司麵包這筆記錄"].waitUntilGone(timeout: 5))
+        XCTAssertTrue(
+            Support.waitForLabel(reaction, where: "==", "不愛吃"), "儲存後詳情頁要立刻換成新反應：\(reaction.label)"
+        )
+    }
+
     /// 接縫①（刪除，04c 呼叫路徑②）＋④⑥：非作者 owner 在詳情頁刪除 → 03c → 確認後返回圖鑑、格子回未吃。
     func testOwnerDeletesFromDetail_popsAndCellReturnsToUntried() {
         let app = Support.launch(.foodRecordDetailFlow, Support.standard)
