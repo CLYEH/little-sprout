@@ -35,7 +35,8 @@ extension TapTargetGateHarness {
         case .foodRecordSheetEdit: foodRecordSheetEditHost
         case .foodRecordDetailFlow: foodRecordColorScheme(FoodRecordDetailFlowHarnessHost())
         // LS-382：寶貝詳情入口（01 家族），見 `TapTargetGateHarness+FoodEntry.swift`。
-        case .growthDetailFood, .growthDetailFoodEmpty, .growthDetailFoodOne, .growthDetailFoodFailure:
+        case .growthDetailFood, .growthDetailFoodEmpty, .growthDetailFoodOne, .growthDetailFoodFailure,
+             .growthDetailFoodTwoTags, .growthDetailFoodNoTags:
             foodEntryHost(for: screen)
         default: EmptyView()
         }

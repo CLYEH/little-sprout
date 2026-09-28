@@ -11,6 +11,8 @@ import SwiftUI
 /// - `.growthDetailFoodEmpty`（01b `J58vyP`）：0 筆，三格＝`sort_order` 前三。
 /// - `.growthDetailFoodOne`（01c `ls2g6`）：只記米精 1 筆，後兩格依 `sort_order` 補未吃。
 /// - `.growthDetailFoodFailure`：讀取一律斷線（Notes 01 列「失敗文案鍵 42501」的錯誤態）。
+/// - `.growthDetailFoodTwoTags`（R2，merge-review R1 F1）：最近三筆＝鮮奶（含牛奶＋一歲後兩個小標）／香蕉／蘋果。
+/// - `.growthDetailFoodNoTags`（R2，merge-review R1 F2）：最近三筆＝香蕉／蘋果／木瓜，整列都沒有小標。
 ///
 /// 深色：launch argument `-LSFoodEntryDark YES`（同 `foodRecordDarkKey` 手法，不另開 case）。
 extension TapTargetGateHarness {
@@ -24,6 +26,8 @@ extension TapTargetGateHarness {
         case .growthDetailFoodEmpty: FoodEntryHarnessHost(fixture: .empty)
         case .growthDetailFoodOne: FoodEntryHarnessHost(fixture: .one)
         case .growthDetailFoodFailure: FoodEntryHarnessHost(fixture: .failure)
+        case .growthDetailFoodTwoTags: FoodEntryHarnessHost(fixture: .twoTags)
+        case .growthDetailFoodNoTags: FoodEntryHarnessHost(fixture: .noTags)
         default: EmptyView()
         }
     }
@@ -32,7 +36,7 @@ extension TapTargetGateHarness {
 /// store／client 放 `@State`、只建一次（同 `FoodRecordBookHarnessHost` 的理由：重繪換出新 client 會讓寫入落到別顆）。
 private struct FoodEntryHarnessHost: View {
     enum Fixture {
-        case demo, empty, one, failure
+        case demo, empty, one, failure, twoTags, noTags
     }
 
     @State private var growthStore: GrowthStore
@@ -46,6 +50,16 @@ private struct FoodEntryHarnessHost: View {
         case .empty: PreviewFoodAPIClient()
         case .one: PreviewFoodAPIClient(records: [FoodBookStore.entryRecord("rice_cereal", "2025-10-22", childID)])
         case .failure: PreviewFoodAPIClient(listFailure: .network(message: "harness：斷線"))
+        case .twoTags: PreviewFoodAPIClient(records: [
+            FoodBookStore.entryRecord("fresh_milk", "2026-08-10", childID),
+            FoodBookStore.entryRecord("banana", "2026-08-02", childID),
+            FoodBookStore.entryRecord("apple", "2026-07-01", childID)
+        ])
+        case .noTags: PreviewFoodAPIClient(records: [
+            FoodBookStore.entryRecord("banana", "2026-08-02", childID),
+            FoodBookStore.entryRecord("apple", "2026-07-01", childID),
+            FoodBookStore.entryRecord("papaya", "2026-06-01", childID)
+        ])
         }
         _growthStore = State(initialValue: growthStore)
         _apiClient = State(initialValue: apiClient)

@@ -125,6 +125,16 @@ final class FoodBookEntryTests: XCTestCase {
         )
     }
 
+    /// R2（merge-review R1 F1／F2）：入口小標恰好一列——兩個只留第一個（過敏原優先、不加「…」），沒有就補空白保住
+    /// 列高；圖鑑本體（nil）全部照列。
+    func test_visibleTags_exactlyOneLineInEntry_allInBook() {
+        XCTAssertEqual(FoodCell.visibleTags(["含牛奶", "一歲後"], lines: 1), ["含牛奶"])
+        XCTAssertEqual(FoodCell.visibleTags(["含大豆"], lines: 1), ["含大豆"])
+        XCTAssertEqual(FoodCell.visibleTags([], lines: 1), [" "])
+        XCTAssertEqual(FoodCell.visibleTags(["含牛奶", "一歲後"], lines: nil), ["含牛奶", "一歲後"])
+        XCTAssertEqual(FoodCell.visibleTags([], lines: nil), [])
+    }
+
     func test_bookButtonTitle() {
         XCTAssertEqual(FoodBookEntry.bookButtonTitle(triedCount: 38, isAccessibilityLayout: false), "看整本飲食圖鑑")
         XCTAssertEqual(FoodBookEntry.bookButtonTitle(triedCount: 38, isAccessibilityLayout: true), "看整本圖鑑")

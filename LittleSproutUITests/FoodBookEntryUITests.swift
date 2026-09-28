@@ -46,6 +46,32 @@ final class FoodBookEntryUITests: XCTestCase {
         XCTAssertEqual(measured.map(\.cellCount), [3, 3, 3], "三態都固定三格")
     }
 
+    /// R2（merge-review R1 F1／F2）：入口每格小標恰好一列——一列裡有兩個小標的食物（鮮奶：含牛奶＋一歲後）不把
+    /// 那列撐高、整列都沒有小標也不變矮；按鈕 y 與區塊高都跟 01（每格至多一個小標）相同。截掉的「一歲後」VoiceOver
+    /// 仍會唸。
+    func testTagRowIsExactlyOneLine_twoTagsOrNoTagsKeepButtonInPlace() {
+        var reference: (buttonY: CGFloat, height: CGFloat)?
+        for screen in [TapTargetGateScreenName.growthDetailFood, .growthDetailFoodTwoTags, .growthDetailFoodNoTags] {
+            let app = launch(screen, Self.standard)
+            let title = element("foodEntry.title", in: app)
+            let button = app.buttons["foodEntry.openBook"]
+            XCTAssertTrue(button.waitForExistence(timeout: 5), "\(screen.rawValue) 沒有圖鑑按鈕")
+            let measured = (buttonY: button.frame.minY, height: button.frame.maxY - title.frame.minY)
+            if let reference {
+                XCTAssertEqual(measured.buttonY, reference.buttonY, accuracy: 0.5, "按鈕 y：\(screen.rawValue) vs 01")
+                XCTAssertEqual(measured.height, reference.height, accuracy: 0.5, "區塊高：\(screen.rawValue) vs 01")
+            } else {
+                reference = measured
+            }
+            if screen == .growthDetailFoodTwoTags {
+                XCTAssertEqual(
+                    app.buttons["foodCell.fresh_milk"].label, "鮮奶，2026/8/10 第一次吃到，含牛奶，一歲後",
+                    "畫面只留過敏原一列，VoiceOver 仍唸兩個小標"
+                )
+            }
+        }
+    }
+
     // MARK: - 範圍 1：計數句、三格內容與順序（逐字對稿）
 
     func testDemo_01_recentThreeNewestFirst() {
