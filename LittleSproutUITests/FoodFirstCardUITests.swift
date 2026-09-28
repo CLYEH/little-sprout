@@ -52,6 +52,34 @@ final class FoodFirstCardUITests: XCTestCase {
         XCTAssertEqual(title.label, "優格")
     }
 
+    /// R2（LS-380 併入後的接縫）：從時間軸推入的詳情頁走 `FoodRecordDetailRouter`——作者按「編輯這筆記錄」真的開出
+    /// 03b，改反應存檔後回到詳情頁就是新值（不再是空的 `onRoute`）。
+    func testCardDetail_editHookOpensSheetAndSaves() {
+        let app = launch(fixture: "dairy", size: Self.standard)
+        let card = app.buttons[Self.cardID]
+        XCTAssertTrue(card.waitForHittable(timeout: 5))
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.12)).tap()
+
+        let edit = app.buttons["foodRecordDetail.edit"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5), "作者看得到編輯鈕")
+        edit.tap()
+        XCTAssertTrue(app.staticTexts["編輯優格這筆記錄"].waitForExistence(timeout: 5), "編輯 hook 應開出 03b")
+        let neutral = app.buttons["foodRecord.reaction.neutral"]
+        scrollUntilHittable(neutral, in: app)
+        neutral.tap()
+        let save = app.buttons["foodRecord.save"]
+        scrollUntilHittable(save, in: app)
+        save.tap()
+
+        XCTAssertTrue(app.staticTexts["編輯優格這筆記錄"].waitUntilGone(timeout: 5))
+        let reaction = app.descendants(matching: .any)["foodRecordDetail.reaction"].firstMatch
+        let updated = NSPredicate(format: "label == %@", "普通")
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [expectation(for: updated, evaluatedWith: reaction)], timeout: 5), .completed,
+            "詳情頁要換成剛存的反應：\(reaction.label)"
+        )
+    }
+
     // MARK: - 無互動列
 
     func testFoodCards_haveNoInteractionRow_whileDiaryCardDoes() {
@@ -110,6 +138,14 @@ final class FoodFirstCardUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons[Self.cardID].firstMatch.waitForExistence(timeout: 10), "食物卡沒渲染")
         return app
+    }
+
+    private func scrollUntilHittable(_ element: XCUIElement, in app: XCUIApplication) {
+        var attempts = 0
+        while !element.isHittable && attempts < 6 {
+            app.swipeUp()
+            attempts += 1
+        }
     }
 
     private func assertCard(

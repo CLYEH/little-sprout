@@ -35,11 +35,16 @@ private struct FoodFirstCardHost: View {
 
     @State private var timelineStore: TimelineStore
     @State private var childrenStore = FoodFirstCardSample.childrenStore()
-    @State private var familyStore = FamilyStore.preview()
+    @State private var familyStore = FoodFirstCardSample.familyStore()
+    /// 有狀態的假 client（R2）：放 `@State` 才不會每次重繪換一份新的、把 03b 剛存的值洗回去。
+    @State private var foodAPIClient: PreviewFoodAPIClient
 
     init(fixture: TapTargetGateHarness.FoodFirstCardFixture) {
         self.fixture = fixture
         _timelineStore = State(initialValue: FoodFirstCardSample.timelineStore(fixture))
+        _foodAPIClient = State(initialValue: PreviewFoodAPIClient(
+            records: FoodFirstCardSample.records(fixture), currentUserID: FoodFirstCardSample.mom
+        ))
     }
 
     var body: some View {
@@ -51,7 +56,7 @@ private struct FoodFirstCardHost: View {
                 albumsStore: .preview()
             )
         }
-        .environment(\.foodAPIClient, PreviewFoodAPIClient(records: FoodFirstCardSample.records(fixture)))
+        .environment(\.foodAPIClient, foodAPIClient)
         .environment(\.foodRecordDetailAPIClient, PreviewFoodRecordDetailAPIClient(names: [:]))
     }
 }
@@ -63,6 +68,8 @@ private enum FoodFirstCardSample {
     )
     static let familyID = UUID()
     static let diaryID = UUID()
+    /// 登入者＝媽媽（owner），harness 的記錄都是她記的——詳情頁看得到「編輯這筆記錄」（R2 接縫 hook 測試用）。
+    static let mom = UUID()
 
     /// 記錄固定成 `static let`：id 若每次重建，`TimelineRoute` 從 `entries` 查不到同一筆。
     static let taro = record("taro", "2026-08-20", reaction: "neutral", note: "有點黏，吃了三口就搖頭。")
@@ -84,6 +91,15 @@ private enum FoodFirstCardSample {
     static func childrenStore() -> ChildrenStore {
         let store = ChildrenStore.preview()
         store.seedForPreview(children: [child])
+        store.seedRoleForPreview(.owner)
+        return store
+    }
+
+    /// 只種登入者、不種 `myFamily`：`myFamily` 非 nil 會讓 `TimelineView` 的 `.task` 重新整理、洗掉種好的卡片。
+    @MainActor
+    static func familyStore() -> FamilyStore {
+        let store = FamilyStore.preview()
+        store.seedOwnerUserIDForPreview(mom)
         return store
     }
 
@@ -129,7 +145,7 @@ private enum FoodFirstCardSample {
     ) -> ChildFoodRecord {
         let date = BirthdayFormat.date(fromWireString: day)!
         return ChildFoodRecord(
-            id: UUID(), familyID: familyID, childID: child.id, foodID: foodID, authorID: nil, firstTriedOn: date,
+            id: UUID(), familyID: familyID, childID: child.id, foodID: foodID, authorID: mom, firstTriedOn: date,
             mediaID: mediaID, note: note, reaction: reaction, createdAt: date, updatedAt: date
         )
     }
