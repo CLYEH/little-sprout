@@ -903,7 +903,7 @@ jobs:
     needs: ci-dedup
     if: ${{ !cancelled() }}
     runs-on: ${{ needs.ci-dedup.outputs.skip_macos == 'true' && 'ubuntu-latest' || 'macos-26' }}
-    timeout-minutes: 50
+    timeout-minutes: 75
     steps:
       # LS-350：同 tree 沿用／harness-only 略過時只印來源、不跑實際 step（mode=blocked 在這步紅）。
       - name: CI 去重（LS-350）
