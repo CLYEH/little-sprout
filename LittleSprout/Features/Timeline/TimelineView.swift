@@ -130,9 +130,9 @@ struct TimelineView: View {
             }
         }
         .importBatchFlow(
-            isActive: $showsImportBatch, childrenStore: childrenStore, albumsStore: albumsStore,
-            entrySource: .timeline, uploadCoordinator: Self.resolveUploadCoordinator(importUploadCoordinator)
-        )
+            isActive: $showsImportBatch, familyStore: familyStore, childrenStore: childrenStore,
+            albumsStore: albumsStore, entrySource: .timeline,
+            uploadCoordinator: Self.resolveUploadCoordinator(importUploadCoordinator)) // LS-396：頂 file_length 400
     }
 
     // MARK: - 版面

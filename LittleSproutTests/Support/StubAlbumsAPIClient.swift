@@ -56,6 +56,7 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
         var fetchAlbumChildrenHandler: FetchAlbumChildrenHandler = { _ in [] }
         var fetchMediaHandler: FetchMediaHandler = { _ in [] }
         var signedURLsHandler: SignedURLsHandler = { _ in [:] }
+        var signedURLsCalls: [[String]] = []
         var createAlbumHandler: CreateAlbumHandler = { _, title in
             AlbumListingRow(id: UUID(), title: title, createdAt: Date())
         }
@@ -102,6 +103,11 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
 
     func setSignedURLsHandler(_ handler: @escaping SignedURLsHandler) {
         box.withLock { $0.signedURLsHandler = handler }
+    }
+
+    /// LS-396：每次 `signedURLs(forStoragePaths:)` 收到的路徑（依呼叫順序），供「只簽縮圖」斷言。
+    var signedURLsCalls: [[String]] {
+        box.withLock { $0.signedURLsCalls }
     }
 
     func setCreateAlbumHandler(_ handler: @escaping CreateAlbumHandler) {
@@ -170,7 +176,10 @@ final class StubAlbumsAPIClient: AlbumsAPIClient, @unchecked Sendable {
     }
 
     func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] {
-        let handler = box.withLock { $0.signedURLsHandler }
+        let handler = box.withLock {
+            $0.signedURLsCalls.append(paths)
+            return $0.signedURLsHandler
+        }
         return try await handler(paths)
     }
 

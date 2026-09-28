@@ -103,6 +103,9 @@ enum TapTargetGateScreenName: String {
     // LS-370：同 `.sectionSplitView`，但 `childrenStore` seed 兩個寶貝——`ChildrenManagementViewIPadTests`
     // 要點選左欄寶貝列、確認右欄詳情出現（`PreviewChildAPIClient.listChildren` 固定回 `[]`）。
     case sectionSplitViewWithChildren = "SectionSplitViewWithChildren"
+    // LS-396：同 `.sectionSplitView`，但 `albumsStore` 帶一本相簿——`AlbumsViewIPadTests` 要真的
+    // push 進相簿詳情，再切 section 驗 detail stack 重置（空狀態沒有卡片可點）。
+    case sectionSplitViewWithAlbum = "SectionSplitViewWithAlbum"
     // merge-review R1 M1 回歸測試用：`.sectionTabView` 的 `timelineStore` 是空狀態，時間軸
     // 沒有任何日記卡可點，無法真的 push 進 `DiaryDetailView`——這個變體額外 seed 一筆日記
     // （`TimelineStore.seedForPreview(entries:)`，`TimelineStore.swift` DEBUG-only），讓
@@ -149,6 +152,10 @@ enum TapTargetGateScreenName: String {
     // `ImportFlowTopBarSafeAreaUITests` 用；rawValue 不以 "View" 結尾，registry gate 不認它。
     case importBatchFlowEntry = "ImportBatchFlowEntry"
     case importBatchFlowEntryDark = "ImportBatchFlowEntryDark"
+    // LS-396：直接掛 `ImportBatchFlowContainer`（01 → 04 → 05，那一張種成 LS002 容量已滿），給
+    // `UploadQueueSheetUITests.test_importBatchFlow_quotaRowStorageLinkOpensStorageUsage`
+    // 驗「查看儲存空間」接線；同上不做逐元件量測、rawValue 不以 "View" 結尾。
+    case importBatchFlowQuotaFailure = "ImportBatchFlowQuotaFailure"
     // LS-164：帳號密碼登入畫面（審核帳號用）——初始態不需要任何 seed 資料（`.preview()`
     // 免登入即可建構，同 `createChild`／`createAlbum` 的既有理由），Email／密碼欄與登入鈕
     // 一開畫面就有代表性。

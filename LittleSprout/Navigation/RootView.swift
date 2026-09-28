@@ -287,8 +287,10 @@ private struct SectionSplitView: View {
             }
             .navigationTitle("Little Sprout")
         } detail: {
-            // 已知債：detail 欄共用單一 NavigationStack；第一張含 push destination 的票
-            // 需處理「iPad 切換 section 重置 detail stack」（可用 .id(selection)）。
+            // detail 欄共用單一 NavigationStack（隱式 path）：切 section 時 SwiftUI 已自動把 stack
+            // 退回根頁（LS-396 實測 iOS 26.0／26.5，sidebar 點選與程式改 selection 皆然），不另加
+            // `.id(selection)`。改成自持並還原 path 會破壞這點——`AlbumsViewIPadTests
+            // .testSwitchingSectionResetsAlbumDetailStack` 鎖住。
             NavigationStack {
                 SectionContentView(
                     section: selection, authStore: authStore, familyStore: familyStore,

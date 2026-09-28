@@ -69,10 +69,10 @@ enum TapTargetGateHarness {
             sectionTabViewHost
         case .sectionSplitView:
             sectionSplitViewHost
-        case .sectionSplitViewWithChildren:
-            sectionSplitViewWithChildrenHost
-        case .sectionTabViewWithDiary:
-            sectionTabViewWithDiaryHost
+        // LS-396：三支併單行——enum body 已頂 SwiftLint `type_body_length` 250 上限。
+        case .sectionSplitViewWithChildren: sectionSplitViewWithChildrenHost
+        case .sectionSplitViewWithAlbum: sectionSplitViewWithAlbumHost
+        case .sectionTabViewWithDiary: sectionTabViewWithDiaryHost
         case .diaryCardVideoBadges:
             diaryCardVideoBadgesHost
         case .timelineInteractionRow: interactionRowHost
@@ -87,7 +87,8 @@ enum TapTargetGateHarness {
         case .importProgressCancelConfirm: importProgressCancelConfirmHost
         case .importSummaryWithFailures: importSummaryWithFailuresHost
         case .importSummaryWithMarkingFailure: importSummaryWithMarkingFailureHost
-        case .importBatchFlowEntry, .importBatchFlowEntryDark: importBatchFlowEntryHost(for: screen)
+        case .importBatchFlowEntry, .importBatchFlowEntryDark, .importBatchFlowQuotaFailure:
+            importBatchFlowEntryHost(for: screen)
         case .passwordSignIn: passwordSignInHost
         case .welcome: welcomeHost
         case .profileEdit: profileEditHost

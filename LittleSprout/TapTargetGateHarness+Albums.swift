@@ -53,6 +53,32 @@ extension TapTargetGateHarness {
     /// `@ViewBuilder` body 不能塞裸的 void 陳述式（`store.seedForPreview(...)` 這種呼叫會被
     /// `buildExpression` 硬吃成一個 View 表達式而編譯失敗，同 `TapTargetGateHarness.
     /// seededTimelineStore()` 文件註解點名的既有陷阱）——seeding 副作用抽到這支普通函式裡。
+    /// LS-396：同 `sectionSplitViewHost`（生產路徑 `AuthenticatedRootView` → `SectionSplitView`，強制
+    /// regular），但 `albumsStore` 的 preview client 帶一本相簿——家庭有 seed，`AlbumsView.task` 的
+    /// `refresh` 會真的打 `fetchAlbums`，所以要從 client 回傳而不是 `seedForPreview`（會被蓋成空）。
+    /// 讓 `AlbumsViewIPadTests` 能點卡片 push 進 `AlbumDetailView`，再切 section 驗 detail stack 重置。
+    @MainActor
+    @ViewBuilder
+    static var sectionSplitViewWithAlbumHost: some View {
+        AuthenticatedRootView(
+            authStore: .preview(),
+            familyStore: .preview(withFamily: Family(
+                id: UUID(), name: "測試家庭", createdBy: UUID(), createdAt: Date(), requireApproval: true
+            )),
+            childrenStore: .preview(), timelineStore: .preview(),
+            albumsStore: .preview(albums: [
+                AlbumListingRow(id: UUID(), title: "上禮拜的動物園一日遊", createdAt: Date())
+            ]),
+            eulaStore: .preview(shouldPresent: false),
+            diaryAPIClient: PreviewDiaryAPIClient(), growthAPIClient: PreviewGrowthAPIClient(),
+            mediaUploadService: PreviewMediaUploadService(),
+            accountAPIClient: PreviewAccountAPIClient(), resumer: .preview(),
+            safetyAPIClient: PreviewSafetyAPIClient(), commentAPIClient: PreviewCommentAPIClient(),
+            pushNotificationStore: .preview()
+        )
+        .environment(\.horizontalSizeClass, .regular)
+    }
+
     @MainActor
     private static func seededAlbumsStore() -> AlbumsStore {
         let store = AlbumsStore.preview()

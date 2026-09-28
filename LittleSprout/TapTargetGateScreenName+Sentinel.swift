@@ -50,6 +50,8 @@ extension TapTargetGateScreenName {
         case .sectionSplitView: return .staticText("時間軸")
         // 同 `.sectionSplitView`：預設選中分頁仍是時間軸，seed 的寶貝不影響首頁。
         case .sectionSplitViewWithChildren: return .staticText("時間軸")
+        // 同 `.sectionSplitView`：預設選中分頁仍是時間軸，帶的相簿不影響首頁。
+        case .sectionSplitViewWithAlbum: return .staticText("時間軸")
         // 同 `.sectionTabView`：headerRow「時間軸」不受 seed 資料影響，一定會渲染。
         case .sectionTabViewWithDiary: return .staticText("時間軸")
         case .diaryCardVideoBadges: return .staticText("影片 12:34")
@@ -73,6 +75,8 @@ extension TapTargetGateScreenName {
         case .importSummaryWithMarkingFailure: return .staticText("匯入完成")
         // LS-391：入口鈕本身——一開畫面就渲染，不依賴相片庫授權／picker。
         case .importBatchFlowEntry, .importBatchFlowEntryDark: return .button("開始批次匯入")
+        // LS-396：容器起始 route＝01 整理頁，標題同 `.importOrganizeDefault`。
+        case .importBatchFlowQuotaFailure: return .staticText("整理新照片")
         case .passwordSignIn: return .staticText("帳號密碼登入")
         // Doc Title——`LegalDocumentSheet` 載入完成後必定渲染，不依賴檔案實際內容。
         case .legalDocumentSheet: return .staticText("使用條款")

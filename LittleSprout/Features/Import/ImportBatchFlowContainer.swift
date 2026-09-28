@@ -15,7 +15,14 @@ import SwiftUI
 /// `.fullScreenCover` 底下用一個 `@State` enum 切換內容（同 `AlbumDetailView.body` 的
 /// `if let detailStore {…} else {…}` 既有慣例，只是這裡是三態不是兩態），從根本避開這整類
 /// 競態：整條流程從頭到尾只有「進 cover」與「離開 cover」兩次真正的 presentation 事件。
+///
+/// **LS-396：LS002「查看儲存空間」**——04／05 的容量已滿列開 `StorageUsageView`。用 `.sheet`
+/// （包 `NavigationStack` 帶標題列＋「關閉」，同 `ReportInboxView` 詳情 sheet 既有做法）而不是
+/// 設定頁的 push：push 需要把整條流程包進 `NavigationStack`，正是上段刻意避開的。這個 sheet
+/// 由使用者點擊觸發、疊在 cover 上（不是 sheet 疊 sheet），也不與 cover 的進出連續觸發，
+/// 不落入上段那類競態；掛在 `switch` 外層，04 → 05 切換時不會被收掉。
 struct ImportBatchFlowContainer: View {
+    let familyStore: FamilyStore
     let childrenStore: ChildrenStore
     let albumsStore: AlbumsStore
     let uploadCoordinator: ImportUploadCoordinator
@@ -27,6 +34,7 @@ struct ImportBatchFlowContainer: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var route: Route = .organize
+    @State private var showsStorageUsage = false
 
     private enum Route {
         case organize
@@ -35,6 +43,21 @@ struct ImportBatchFlowContainer: View {
     }
 
     var body: some View {
+        routeContent
+            .sheet(isPresented: $showsStorageUsage) {
+                NavigationStack {
+                    StorageUsageView(familyStore: familyStore)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("關閉") { showsStorageUsage = false }
+                            }
+                        }
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var routeContent: some View {
         switch route {
         case .organize:
             ImportOrganizeView(
@@ -51,7 +74,7 @@ struct ImportBatchFlowContainer: View {
             // 退回上一頁而不是卡在空白畫面。
             if let store = albumsStore.sharedUploadQueueStoreInstance {
                 Import04ProgressView(
-                    session: session, store: store,
+                    session: session, store: store, onViewStorage: { showsStorageUsage = true },
                     onLeaveInBackground: {
                         // merge-review R2 M5：M3(c) 的縮圖釋放原本只掛在 05「完成」這一條離開
                         // 路徑——「在背景繼續」是票文範圍 3 明列、也是大批次最常走的離開路徑，
@@ -75,6 +98,7 @@ struct ImportBatchFlowContainer: View {
             if let store = albumsStore.sharedUploadQueueStoreInstance {
                 Import05SummaryView(
                     session: session, store: store, marker: albumsStore.mediaChildrenMarker,
+                    onViewStorage: { showsStorageUsage = true },
                     onDone: {
                         // merge-review R1 M3(c)：離開摘要頁前釋放這個批次終局項目的縮圖，見
                         // `UploadQueueStore.releaseThumbnails(for:)` 文件註解。
