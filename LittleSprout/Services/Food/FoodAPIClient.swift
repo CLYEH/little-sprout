@@ -40,10 +40,10 @@ enum FamilyPhotoQuery {
 ///
 /// **刻意偏離既有「逐層 init 參數」慣例**（`growthAPIClient` 從 `LittleSproutApp` 經 `RootView`／
 /// `AuthenticatedRootView`／`AuthenticatedGate`／`SectionTabView`／`SectionSplitView`／
-/// `SectionContentView`／`ChildrenManagementView` 七層手傳）：本票的入口只是寶貝詳情裡的 DEBUG
-/// 暫時入口（見 `ChildGrowthDetailView+FoodBookDebugEntry.swift`），為一個暫時入口改七個導覽型別
-/// 的 init 與全部 preview／harness 呼叫點，是超出票面的導覽層重構。正式入口（LS-382）若要改回
-/// 逐層傳參，只需要把讀取點換掉。預設 `nil`＝沒注入（preview／harness／單元測試），入口不顯示。
+/// `SectionContentView`／`ChildrenManagementView` 七層手傳）：LS-379 當時入口只是 DEBUG 暫時入口，
+/// 為它改七個導覽型別的 init 與全部 preview／harness 呼叫點是超出票面的導覽層重構。LS-382 正式入口
+/// （`ChildGrowthDetailView+FoodBook.swift`）沿用同一個讀取點，未改回逐層傳參（LS-381 的
+/// `foodRecordDetailAPIClient` 也走 environment）。預設 `nil`＝沒注入（preview／harness／單元測試），入口不顯示。
 extension EnvironmentValues {
     @Entry var foodAPIClient: (any FoodAPIClient)?
 }
