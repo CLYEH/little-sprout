@@ -61,8 +61,8 @@ extension TimelineView {
     }
 }
 
-/// 時間軸推入的記錄詳情：握住最新那一筆（03b 存檔回傳列，同 `FoodBookView.recordDetail` 對圖鑑 store 做的事），
-/// 刪除（或重讀發現已被刪）就返回時間軸。
+/// 時間軸推入的記錄詳情：存好的最新一筆由 `FoodRecordDetailRouter` 自己握（`shownRecord(caller:saved:)`，LS-380 R3），
+/// 這裡不再另存一份（R3 處置 reviewer i1）；存檔／刪除之後重新整理時間軸，刪除（或重讀發現已被刪）就返回時間軸。
 private struct TimelineFoodRecordDetailHost: View {
     let child: Child
     let item: FoodCatalogItem
@@ -72,17 +72,13 @@ private struct TimelineFoodRecordDetailHost: View {
     let canRecord: Bool
     let onChanged: () -> Void
 
-    @State private var saved: ChildFoodRecord?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         FoodRecordDetailRouter(
-            child: child, item: item, record: saved ?? initialRecord, apiClient: apiClient, context: context,
+            child: child, item: item, record: initialRecord, apiClient: apiClient, context: context,
             canRecord: canRecord,
-            onSaved: { record in
-                saved = record
-                onChanged()
-            },
+            onSaved: { _ in onChanged() },
             onRemoved: { _ in
                 dismiss()
                 onChanged()

@@ -53,7 +53,8 @@ final class FoodFirstCardUITests: XCTestCase {
     }
 
     /// R2（LS-380 併入後的接縫）：從時間軸推入的詳情頁走 `FoodRecordDetailRouter`——作者按「編輯這筆記錄」真的開出
-    /// 03b，改反應存檔後回到詳情頁就是新值（不再是空的 `onRoute`）。
+    /// 03b，改反應存檔後回到詳情頁就是新值（不再是空的 `onRoute`）。R3：時間軸這一側不再自己握存好的那筆，
+    /// 「存檔後顯示新值」完全靠 router 的 `shownRecord(caller:saved:)`（推入的快照 `initialRecord` 不會變）。
     func testCardDetail_editHookOpensSheetAndSaves() {
         let app = launch(fixture: "dairy", size: Self.standard)
         let card = app.buttons[Self.cardID]
