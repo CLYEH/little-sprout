@@ -57,7 +57,7 @@ extension FamilyPhoto {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let hues: [CGFloat] = [0.02, 0.08, 0.13, 0.33, 0.45, 0.55, 0.62, 0.75, 0.9]
         return hues.enumerated().map { index, hue in
-            let url = directory.appendingPathComponent("photo-\(index).jpg")
+            let url = directory.appendingPathComponent("photo-4x3-\(index).jpg")
             if !FileManager.default.fileExists(atPath: url.path) {
                 try? samplePhotoData(hue: hue).write(to: url)
             }
@@ -71,8 +71,9 @@ extension FamilyPhoto {
         }
     }
 
+    /// 橫幅（4:3）——真實照片多半不是正方形，用正方形示範圖會遮住「縮圖撐出欄外」這類版面問題。
     private static func samplePhotoData(hue: CGFloat) -> Data {
-        let size = CGSize(width: 240, height: 240)
+        let size = CGSize(width: 320, height: 240)
         let image = UIGraphicsImageRenderer(size: size).image { context in
             let colors = [
                 UIColor(hue: hue, saturation: 0.35, brightness: 0.95, alpha: 1).cgColor,

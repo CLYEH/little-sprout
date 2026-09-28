@@ -130,16 +130,19 @@ struct FoodFamilyPhotoPickerSheet: View {
         return Button {
             selectedID = isSelected ? nil : photo.id
         } label: {
-            AsyncImage(url: urls[photo.displayPath]) { phase in
-                if case .success(let image) = phase {
-                    image.resizable().scaledToFill()
-                } else {
-                    Color.lsSurface2
+            // 格子尺寸由底色決定、照片疊上去再裁——直接對 `scaledToFill` 的圖下 `frame(maxWidth:)`，非正方形的
+            // 照片會把自己的理想寬度撐出欄外、蓋到隔壁格（E2E 用真照片實測抓到）。
+            Color.lsSurface2
+                .frame(maxWidth: .infinity)
+                .frame(height: isAccessibilityLayout ? 130 : 104)
+                .overlay {
+                    AsyncImage(url: urls[photo.displayPath]) { phase in
+                        if case .success(let image) = phase {
+                            image.resizable().scaledToFill()
+                        }
+                    }
                 }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: isAccessibilityLayout ? 130 : 104)
-            .clipShape(shape)
+                .clipShape(shape)
             .overlay { if isSelected { shape.strokeBorder(Color.lsTextPrimary, lineWidth: 3) } }
             .overlay(alignment: .topTrailing) {
                 if isSelected {

@@ -110,6 +110,12 @@ final class FoodRecordSheetUITests: XCTestCase {
         let firstPhoto = app.buttons["foodPhoto.00000000-0000-0000-0000-000000000001"]
         XCTAssertTrue(firstPhoto.waitForHittable(timeout: 5))
         XCTAssertLessThan(firstPhoto.frame.minY, app.staticTexts["其他照片"].frame.minY, "今天拍的在前")
+        // 示範照是 4:3 橫幅：縮圖要裁在自己那一欄內，不能撐出去蓋到隔壁格（E2E 用真照片抓到的回歸）。
+        let todayRow = (1...3).map { app.buttons[String(format: "foodPhoto.00000000-0000-0000-0000-%012d", $0)] }
+        assertNoOverlap(todayRow)
+        for thumb in todayRow {
+            XCTAssertLessThan(thumb.frame.width, app.frame.width / 3, "3 欄縮圖寬度要在一欄內：\(thumb.frame)")
+        }
         firstPhoto.tap()
         XCTAssertTrue(firstPhoto.isSelected)
         app.buttons["foodPhoto.use"].tap()

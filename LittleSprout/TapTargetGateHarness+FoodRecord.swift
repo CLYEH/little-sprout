@@ -55,20 +55,36 @@ extension TapTargetGateHarness {
 
     @MainActor
     private static func foodRecordBook(apiClient: PreviewFoodAPIClient) -> some View {
-        NavigationStack(path: .constant([true])) {
-            Color.clear
-                .navigationTitle(foodRecordChildName)
-                .navigationDestination(for: Bool.self) { _ in
-                    FoodBookView(
-                        previewStore: .previewSeededWithDemoRecords(apiClient: apiClient),
-                        childName: foodRecordChildName, apiClient: apiClient
-                    )
-                }
-        }
+        FoodRecordBookHarnessHost(apiClient: apiClient)
     }
 
     private static func foodRecordColorScheme(_ view: some View) -> some View {
         view.preferredColorScheme(UserDefaults.standard.bool(forKey: foodRecordDarkKey) ? .dark : nil)
+    }
+}
+
+/// 03／03d／03e：圖鑑本身。store 放在 `@State`、只建一次——在 `navigationDestination` 閉包裡現建的話，sheet
+/// 開關造成閉包重跑會換出一顆新 store（新的隨機孩子 id），`FoodBookView` 的 `.task(id: child.id)` 以為換了寶貝
+/// 就重讀（假 client 回 0 筆），儲存後的計數對不上（實測：38 → 1）。
+private struct FoodRecordBookHarnessHost: View {
+    @State private var store: FoodBookStore
+    private let apiClient: PreviewFoodAPIClient
+
+    init(apiClient: PreviewFoodAPIClient) {
+        self.apiClient = apiClient
+        _store = State(initialValue: FoodBookStore.previewSeededWithDemoRecords(apiClient: apiClient))
+    }
+
+    var body: some View {
+        NavigationStack(path: .constant([true])) {
+            Color.clear
+                .navigationTitle(TapTargetGateHarness.foodRecordChildName)
+                .navigationDestination(for: Bool.self) { _ in
+                    FoodBookView(
+                        previewStore: store, childName: TapTargetGateHarness.foodRecordChildName, apiClient: apiClient
+                    )
+                }
+        }
     }
 }
 
