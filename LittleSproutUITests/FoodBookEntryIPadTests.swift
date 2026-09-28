@@ -39,6 +39,7 @@ final class FoodBookEntryIPadTests: XCTestCase {
                 app.swipeUp()
                 swipes += 1
             }
+            app.swipeUp()  // 「可點」只要按鈕中心露出來就成立，再推一次讓整顆按鈕進截圖
             let attachment = XCTAttachment(screenshot: app.screenshot())
             attachment.name = "LS-382-01-iPad-\(screen == .growthDetailFood ? "populated" : "empty")"
             attachment.lifetime = .keepAlways
