@@ -33,8 +33,7 @@ enum TapTargetGateHarness {
     // swiftlint:disable:next cyclomatic_complexity function_body_length
     static func hostView(for screen: TapTargetGateScreenName) -> some View {
         switch screen {
-        case .otpVerification:
-            otpVerificationHost
+        case .otpVerification: otpVerificationHost
         case .settings: settingsHost
         case .settingsMemberRole: settingsMemberRoleHost
         case .settingsRegular: settingsRegularHost
@@ -138,6 +137,7 @@ enum TapTargetGateHarness {
         case .diaryCardBabyCaption: diaryCardBabyCaptionHost
         case .foodRecordDetail, .foodRecordDetailNoPhoto, .foodRecordDetailOwner, .foodRecordDetailViewer:
             foodRecordDetailHost(for: screen)
+        case .foodFirstCard: foodFirstCardHost
         case .selfTestTooSmall: selfTestTooSmallHost
         case .selfTestGood: selfTestGoodHost
         case .selfTestPaddingOutsideButton: selfTestPaddingOutsideButtonHost

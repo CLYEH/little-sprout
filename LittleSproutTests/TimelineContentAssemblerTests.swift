@@ -224,7 +224,7 @@ final class TimelineContentAssemblerTests: XCTestCase {
         }
         let now = Date()
         let pointers = [
-            pointer(kind: .unknown("food_first"), refId: UUID(), occurredAt: now),
+            pointer(kind: .unknown("future_kind"), refId: UUID(), occurredAt: now),
             pointer(kind: .diary, refId: diaryID, occurredAt: now.addingTimeInterval(-60)),
             pointer(kind: .album, refId: albumID, occurredAt: now.addingTimeInterval(-120))
         ]
@@ -240,7 +240,7 @@ final class TimelineContentAssemblerTests: XCTestCase {
     func test_assemble_allUnknownKinds_returnsEmptyWithoutThrowing() async throws {
         let stub = StubTimelineAPIClient()
         let pointers = [
-            pointer(kind: .unknown("food_first"), refId: UUID()),
+            pointer(kind: .unknown("future_kind"), refId: UUID()),
             pointer(kind: .unknown("mystery_kind"), refId: UUID())
         ]
 

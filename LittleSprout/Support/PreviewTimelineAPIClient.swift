@@ -42,6 +42,8 @@ private final class PreviewTimelineAPIClient: TimelineAPIClient, @unchecked Send
     }
     func fetchAlbums(ids: [UUID]) async throws -> [AlbumRow] { [] }
     func fetchMedia(ids: [UUID]) async throws -> [MediaRow] { mediaRows.filter { ids.contains($0.id) } }
+    func fetchFoodRecords(ids: [UUID]) async throws -> [ChildFoodRecord] { [] }
+    func fetchFoodCatalogItems(ids: [String]) async throws -> [FoodCatalogItem] { [] }
     func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] {
         if signDelayNanoseconds > 0 {
             try? await Task.sleep(nanoseconds: signDelayNanoseconds)

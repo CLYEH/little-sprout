@@ -91,7 +91,9 @@ extension TimelineStore {
     /// 已前進），`entries` 已換過基底，這批結果安靜丟棄，不覆蓋新世代可能已更新的值。R4：
     /// 查詢失敗的 kind 保留舊值不寫回，查成功但缺席才寫 `.zero`（見下方 `succeededKinds`）。
     func loadReactionCounts(for newEntries: [TimelineEntry], familyID: UUID, expectedGeneration: Int) async {
-        let idsByKind = Dictionary(grouping: newEntries, by: \.kind).mapValues { $0.map(\.refId) }
+        // LS-383：`food_first` 不是 `content_target_type`，替它查計數必撞 enum 轉型錯誤——只查能互動的 kind。
+        let idsByKind = Dictionary(grouping: newEntries.filter(\.kind.supportsInteractions), by: \.kind)
+            .mapValues { $0.map(\.refId) }
         guard !idsByKind.isEmpty else { return }
         let apiClient = self.apiClient
         var merged: [String: ReactionState] = [:]

@@ -25,6 +25,10 @@ enum QAAccessibilityID {
     static let diaryBodyEditor = "qa.diaryEditor.body"
     /// 時間軸日記卡（`TimelineView` 包 `DiaryCardView` 的 `NavigationLink`——整張卡合併成一顆 button）。
     static let timelineDiaryCard = "qa.timeline.diaryCard"
+    /// LS-383：時間軸「第一次吃到〇〇」卡（`TimelineView` 包 `FoodFirstCardView` 的 `NavigationLink`，整張卡
+    /// 合併成一顆 button，label 隨食物變）與卡內 Book Row（另一顆 `NavigationLink`）。
+    static let timelineFoodFirstCard = "qa.timeline.foodFirstCard"
+    static let timelineFoodFirstBookRow = "qa.timeline.foodFirstBookRow"
     /// LS-365：時間軸照片卡壓印行的寶貝署名（`PhotoCardSignature`，整段 `.combine` 成一個元素；
     /// 未標記時整行 `.accessibilityHidden`，這個 identifier 就不存在）。
     static let photoCardSignature = "qa.timeline.photoCardSignature"

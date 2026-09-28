@@ -44,6 +44,7 @@ struct TimelineView: View {
     /// `TimelineStore` 的既有存取層級理由。
     @State var commentsSheetTarget: CommentsSheetTarget?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.foodAPIClient) var foodAPIClient  // LS-383：食物卡目的地用，見 `TimelineView+Food.swift`
 
     /// merge-review R3（`add3f2c1` m1）：`feedScrollView` 內容區實際渲染寬度（已扣掉
     /// `screenPad`）——同 `DiaryDetailView.photoWallWidth` 既有量寬手法（`.background`
@@ -116,6 +117,7 @@ struct TimelineView: View {
                     familyStore: familyStore, safetyAPIClient: safetyAPIClient, diaryAPIClient: diaryAPIClient,
                     commentAPIClient: commentAPIClient
                 )
+            case .foodRecordDetail, .foodBook: foodDestination(for: route)
             }
         }
         .overlay(commentsSheetHost)

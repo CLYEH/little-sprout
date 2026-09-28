@@ -25,7 +25,7 @@ extension TimelineView {
     }
 
     /// 依 `entry.content` 畫出對應卡片——搬到這個檔案的理由同檔頭註解：三種卡片的
-    /// `onOpenComments` 閉包都在這裡組裝，跟這條線密不可分。
+    /// `onOpenComments` 閉包都在這裡組裝，跟這條線密不可分。LS-383 食物卡沒有互動列（不接留言）。
     @ViewBuilder
     func cardView(for entry: TimelineEntry, columns: Int) -> some View {
         switch entry.content {
@@ -52,6 +52,15 @@ extension TimelineView {
                 timelineStore: timelineStore, familyStore: familyStore,
                 onOpenComments: { openComments(kind: .media, refId: entry.refId) }
             )
+        case .foodFirst(let content):
+            // LS-383：寶貝查不到（`childrenStore` 還沒載入）時先不畫——Book Row／署名／記錄詳情都需要 `Child`。
+            if let child = childrenStore.children.first(where: { $0.id == content.record.childID }) {
+                NavigationLink(value: TimelineRoute.foodRecordDetail(content.record, content.item)) {
+                    FoodFirstCardView(content: content, child: child)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier(QAAccessibilityID.timelineFoodFirstCard)
+            }
         case nil:
             EmptyView()
         }

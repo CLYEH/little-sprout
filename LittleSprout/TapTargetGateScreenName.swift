@@ -361,6 +361,10 @@ enum TapTargetGateScreenName: String {
     case foodRecordDetailNoPhoto = "FoodRecordDetailViewNoPhoto"
     case foodRecordDetailOwner = "FoodRecordDetailViewOwner"
     case foodRecordDetailViewer = "FoodRecordDetailViewViewer"
+    // LS-383：時間軸「第一次吃到〇〇」卡片——真的 `TimelineView` 種四態（無照片／有照片／只有日期／與同日日記
+    // 並列）＋Book Row，供 `FoodFirstCardUITests` 斷言導覽／無互動列與截圖對稿（`SLjde`／`QGdHY`／`CgmBD`）；
+    // fixture／深色見 `TapTargetGateHarness+FoodFirstCard.swift`。
+    case foodFirstCard = "FoodFirstCardView"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"

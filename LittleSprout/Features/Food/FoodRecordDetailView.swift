@@ -249,7 +249,7 @@ struct FoodRecordDetailView: View {
     }
 
     /// 重讀失敗：內容保留、上方加一條錯誤列（同 `FoodBookView.refreshFailureBanner` 的既有語彙）。
-    /// `FoodRecordDetailStore.refresh()` 以 `isRefreshing` 防重入，這顆鈕不另外 disable（品牌硬約束不 `.disabled(`）。
+    /// `FoodRecordDetailStore.refresh()` 以世代號只讓最新一次寫回，連點不會亂序覆寫，這顆鈕不另外 disable（品牌硬約束不 `.disabled(`）。
     @ViewBuilder
     private var refreshFailureBanner: some View {
         if let error = store?.refreshError {

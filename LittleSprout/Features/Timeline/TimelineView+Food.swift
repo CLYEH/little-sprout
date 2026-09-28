@@ -1,0 +1,88 @@
+import SwiftUI
+
+/// LS-383：時間軸食物卡（`FoodFirstCardView`）的兩個目的地——拆檔理由同 `TimelineView+Comments.swift`
+/// （`TimelineView.swift` 本體已貼著 SwiftLint 長度上限）。
+///
+/// 權限三個值與寶貝詳情的飲食圖鑑入口同一組來源（`ChildrenManagementView.childDetail(for:)`）：
+/// `familyStore.ownerUserID`（命名雖是 owner，存的是目前登入者，見該處註解）／`childrenStore.isOwner`／
+/// `childrenStore.canManageChildren`。R2（LS-380 併入後）：兩條路都走 LS-380 的 `FoodRecordDetailRouter`
+/// （圖鑑那條由 `FoodBookView(recordDetailContext:)` 自己組），詳情頁的編輯／刪除／加照片真的接上 sheet。
+///
+/// `\.foodAPIClient` 沒注入（preview／沒種 client 的 harness）時目的地為空——正式 app 由
+/// `LittleSproutApp.rootView` 一律注入。
+extension TimelineView {
+    /// `TimelineView` 的 `.navigationDestination(for: TimelineRoute.self)` 把兩個食物路由整包交過來。
+    @ViewBuilder
+    func foodDestination(for route: TimelineRoute) -> some View {
+        switch route {
+        case .foodRecordDetail(let record, let item): foodRecordDetailDestination(record: record, item: item)
+        case .foodBook(let childID, let category): foodBookDestination(childID: childID, category: category)
+        case .diaryDetail: EmptyView()
+        }
+    }
+
+    /// 整張卡 → 記錄詳情 04。記錄與目錄項是推入當下的快照（見 `TimelineRoute.foodRecordDetail`）；存檔／刪除之後
+    /// 重新整理時間軸，卡片跟著換新或消失。
+    @ViewBuilder
+    private func foodRecordDetailDestination(record: ChildFoodRecord, item: FoodCatalogItem) -> some View {
+        if let foodAPIClient, let child = childForID(record.childID) {
+            TimelineFoodRecordDetailHost(
+                child: child, item: item, initialRecord: record, apiClient: foodAPIClient,
+                context: recordDetailContext, canRecord: childrenStore.canManageChildren,
+                onChanged: refreshAfterFoodRecordChange
+            )
+        }
+    }
+
+    /// Book Row → 圖鑑 02，直接選到那項食物的類別（`FoodBookView(initialCategory:)`）；吃過的格子由圖鑑自己推
+    /// `FoodRecordDetailRouter`（`recordDetailContext`）。
+    @ViewBuilder
+    private func foodBookDestination(childID: UUID, category: FoodCategory) -> some View {
+        if let foodAPIClient, let child = childForID(childID) {
+            FoodBookView(
+                child: child, apiClient: foodAPIClient, canRecord: childrenStore.canManageChildren,
+                initialCategory: category, recordDetailContext: recordDetailContext
+            )
+        }
+    }
+
+    private var recordDetailContext: FoodRecordDetailContext {
+        FoodRecordDetailContext(currentUserID: familyStore.ownerUserID, isFamilyOwner: childrenStore.isOwner)
+    }
+
+    /// R3（merge-review R2 i4）：用 `refreshWithCurrentFilter()`（force）——不帶 force 的 `refresh` 會併進存檔前
+    /// 就在跑的同世代那一輪，拿到存檔前的舊資料。
+    private func refreshAfterFoodRecordChange() {
+        Task { _ = await timelineStore.refreshWithCurrentFilter() }
+    }
+
+    private func childForID(_ id: UUID) -> Child? {
+        childrenStore.children.first { $0.id == id }
+    }
+}
+
+/// 時間軸推入的記錄詳情：存好的最新一筆由 `FoodRecordDetailRouter` 自己握（`shownRecord(caller:saved:)`，LS-380 R3），
+/// 這裡不再另存一份（R3 處置 reviewer i1）；存檔／刪除之後重新整理時間軸，刪除（或重讀發現已被刪）就返回時間軸。
+private struct TimelineFoodRecordDetailHost: View {
+    let child: Child
+    let item: FoodCatalogItem
+    let initialRecord: ChildFoodRecord
+    let apiClient: FoodAPIClient
+    let context: FoodRecordDetailContext
+    let canRecord: Bool
+    let onChanged: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        FoodRecordDetailRouter(
+            child: child, item: item, record: initialRecord, apiClient: apiClient, context: context,
+            canRecord: canRecord,
+            onSaved: { _ in onChanged() },
+            onRemoved: { _ in
+                dismiss()
+                onChanged()
+            }
+        )
+    }
+}

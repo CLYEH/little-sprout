@@ -153,6 +153,8 @@ extension TapTargetGateScreenName {
         // LS-381：類別小字（四個 fixture 的吐司麵包／南瓜都屬穀物根莖），不帶 identifier、不受權限影響。
         case .foodRecordDetail, .foodRecordDetailNoPhoto, .foodRecordDetailOwner, .foodRecordDetailViewer:
             return .staticText("穀物根莖")
+        // LS-383：食物卡整張是一顆 `NavigationLink`（identifier 固定，label 隨食物變）。
+        case .foodFirstCard: return .button(QAAccessibilityID.timelineFoodFirstCard)
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")
