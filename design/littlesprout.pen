@@ -96997,7 +96997,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "相簿卡標題（cmp/Card Album caption MIxHp）的「·」與張數段沿用署名列同一套折行字元（使用者 2026-09-24 裁 LS-372 D1a）。公式：相簿名＋U+0020＋「·」＋U+00A0＋張數＋U+00A0＋張⁠相⁠片（「張」「相」「片」之間 U+2060）。範例 codepoint：弟弟出生的第一週 U+0020 U+00B7 U+00A0 8 U+00A0 張 U+2060 相 U+2060 片。折行行為：一行放不下時，「·」前的 U+0020 是唯一允許的斷點，「·」領銜下一行、「N 張相片」整組不拆（證據：Wl90J nxJbB 在 iPhone 17pt 第 4 行由「· 1 張相片」起頭；iPad qteWo／WiBHO／eBgN8 同）。「·」前不得換 NBSP（會把相簿名末字鎖進同一區塊，理由同 epDnW）。範圍界線：相簿名本身的折行不在本規則內——相簿名一律照系統自然斷行，末字可能單獨落到下一行（例：AX3 的 uvL4p「弟弟出生的第一／週 · 8 張相片」），孤字議題送核可頁 C1 由使用者裁決，本票不對相簿名加 U+2060。AX3 版式：相簿頁卡（14 相簿，AlbumSummaryCardView）AX3 改成相簿名與張數以換行分兩行，張數行＝張數＋U+00A0＋張⁠相⁠片；時間軸板（11／00 系列，含 AX3 的 lKoZG／aGkJ1）的相簿卡用上面的單行公式，不分兩行。",
+              "content": "相簿卡標題（cmp/Card Album caption MIxHp）的「·」與張數段沿用署名列同一套折行字元（使用者 2026-09-24 裁 LS-372 D1a）。公式：相簿名＋U+0020＋「·」＋U+00A0＋張數＋U+00A0＋張⁠相⁠片（「張」「相」「片」之間 U+2060）。範例 codepoint：弟弟出生的第一週 U+0020 U+00B7 U+00A0 8 U+00A0 張 U+2060 相 U+2060 片。折行行為：相簿名之後、張數段之前，唯一允許的斷點是「·」前的 U+0020——一行放不下時「·」領銜下一行、「N 張相片」整組不拆；相簿名內部照系統自然斷行（見下方範圍界線）（證據：Wl90J nxJbB 在 iPhone 17pt 第 4 行由「· 1 張相片」起頭；iPad qteWo／WiBHO／eBgN8 同）。「·」前不得換 NBSP（會把相簿名末字鎖進同一區塊，理由同 epDnW）。範圍界線：相簿名本身的折行不在本規則內——相簿名一律照系統自然斷行，末字可能單獨落到下一行（例：AX3 的 uvL4p「弟弟出生的第一／週 · 8 張相片」），孤字議題送核可頁 C1 由使用者裁決，本票不對相簿名加 U+2060。AX3 版式：相簿頁卡（14 相簿，AlbumSummaryCardView）AX3 改成相簿名與張數以換行分兩行，張數行＝張數＋U+00A0＋張⁠相⁠片；時間軸板（11／00 系列，含 AX3 的 lKoZG／aGkJ1）的相簿卡用上面的單行公式，不分兩行。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -97033,7 +97033,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "契約（ios-dev，範圍只涵蓋相簿頁卡 AlbumSummaryCardView）：AlbumSignatureFormatter.captionText(title:photoCount:isMultiline:) 目前產出 \"\\(title) · \\(photoCount) 張相片\"（「·」兩側與張數後都是 U+0020，AlbumSignatureFormatter.swift:63-65），改成一般字級 \"\\(title) ·\\u{00A0}\\(photoCount)\\u{00A0}張\\u{2060}相\\u{2060}片\"、AX3 \"\\(title)\\n\\(photoCount)\\u{00A0}張\\u{2060}相\\u{2060}片\"；相簿名不做任何字元處理。同步：①檔頭第 18 行文件註解的兩個格式字串照改；②AlbumSignatureFormatterTests.swift:150-164 三支 captionText 測試會壞，改成逐 codepoint 斷言，並寫明為什麼（「·」後與張數後若退回 U+0020，AX3 會折成「…·」／「12 張相片」或「12」／「張相片」）。時間軸相簿卡 AlbumCardView（Features/Timeline/AlbumCardView.swift:28）只顯示 content.title、不顯示張數，與 11／00 時間軸板的稿面不一致，屬既有漂移、不在本契約內，由 LS-390 處理。程式另開 ui 小票或併入 LS-372 後續 ui 票，本票不動程式。",
+              "content": "契約（ios-dev，範圍只涵蓋相簿頁卡 AlbumSummaryCardView）：AlbumSignatureFormatter.captionText(title:photoCount:isMultiline:) 目前產出 \"\\(title) · \\(photoCount) 張相片\"（「·」兩側與張數後都是 U+0020，AlbumSignatureFormatter.swift:63-65），改成一般字級 \"\\(title) ·\\u{00A0}\\(photoCount)\\u{00A0}張\\u{2060}相\\u{2060}片\"、AX3 \"\\(title)\\n\\(photoCount)\\u{00A0}張\\u{2060}相\\u{2060}片\"；相簿名不做任何字元處理。同步：①檔頭第 18 行文件註解的兩個格式字串照改；②AlbumSignatureFormatterTests.swift:150-164 三支 captionText 測試會壞，改成逐 codepoint 斷言，並寫明為什麼（單行分支在 iPad 窄欄或 AX1／AX2 字級下，「·」後若退回 U+0020 會折成「…·」／「12 張相片」；AX3 換行分支沒有「·」，張數後若退回 U+0020 會把張數行拆成「12」／「張相片」）。時間軸相簿卡 AlbumCardView（Features/Timeline/AlbumCardView.swift:28）只顯示 content.title、不顯示張數，與 11／00 時間軸板的稿面不一致，屬既有漂移、不在本契約內，由 LS-390 處理。程式另開 ui 小票或併入 LS-372 後續 ui 票，本票不動程式。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -129856,7 +129856,7 @@
       "type": "frame",
       "id": "ZG2Un",
       "x": 17151,
-      "y": 23117,
+      "y": 23455,
       "name": "LS-152 / 09b 儲存空間 · 已滿",
       "clip": true,
       "width": 393,
@@ -130261,7 +130261,7 @@
       "type": "frame",
       "id": "yResD",
       "x": 18097,
-      "y": 23117,
+      "y": 23455,
       "name": "A11y / 07 檢舉收件匣 · Dynamic Type AX3",
       "theme": {
         "size": "ax3"
@@ -153822,7 +153822,7 @@
       "type": "frame",
       "id": "Oic2v",
       "x": 17624,
-      "y": 23117,
+      "y": 23455,
       "name": "A11y / 08 EULA 同意頁 · Dynamic Type AX3",
       "theme": {
         "size": "ax3"
