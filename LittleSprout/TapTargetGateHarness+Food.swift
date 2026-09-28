@@ -7,11 +7,18 @@ import SwiftUI
 /// 四支都用 `NavigationStack(path:)` 帶一個非空初始路徑、根畫面標題「陳小安」：真實用法是從寶貝詳情
 /// （系統標題＝孩子名）推入，這樣系統返回鍵才會是稿面 Nav Back「陳小安」（同
 /// `growthRecordsListHost` 的既有技巧），截圖對稿與 tap target 量測都涵蓋返回鍵。
+///
+/// LS-393：吃過的格子推真的 04 記錄詳情（原本推 LS-381 落地前的佔位頁，型別已刪）——四支都帶
+/// `foodBookDetailContext`，假 client 也帶同一批示範記錄（`demoFoodBook`）：詳情頁開啟即重讀，查不到那一筆
+/// 會當成已被刪（`isGone`）而自己返回。
 extension TapTargetGateHarness {
+    /// 飲食圖鑑 harness 共用的詳情頁身分：登入者不是任何一筆的作者、是 owner（04c：只有「刪除」）。
+    static let foodBookDetailContext = FoodRecordDetailContext(currentUserID: nil, isFamilyOwner: true)
+
     @MainActor
     @ViewBuilder
     static var foodBookHost: some View {
-        foodBookStack(FoodBookView(previewStore: .previewSeededWithDemoRecords()))
+        foodBookStack(demoFoodBook())
     }
 
     /// 02 深色（稿 `XuCDh`）：`.preferredColorScheme(.dark)` 釘住深色，不依賴模擬器外觀設定——
@@ -19,7 +26,7 @@ extension TapTargetGateHarness {
     @MainActor
     @ViewBuilder
     static var foodBookDarkHost: some View {
-        foodBookStack(FoodBookView(previewStore: .previewSeededWithDemoRecords()))
+        foodBookStack(demoFoodBook())
             .preferredColorScheme(.dark)
     }
 
@@ -27,14 +34,30 @@ extension TapTargetGateHarness {
     @MainActor
     @ViewBuilder
     static var foodBookDairyHost: some View {
-        foodBookStack(FoodBookView(previewStore: .previewSeededWithDemoRecords(), initialCategory: .dairy))
+        foodBookStack(demoFoodBook(initialCategory: .dairy))
     }
 
     /// 02c viewer 唯讀（稿 `jo5h8`）：空位無髮絲框、不是按鈕；提示句換唯讀版。
     @MainActor
     @ViewBuilder
     static var foodBookViewerHost: some View {
-        foodBookStack(FoodBookView(previewStore: .previewSeededWithDemoRecords(), canRecord: false))
+        foodBookStack(demoFoodBook(canRecord: false))
+    }
+
+    /// 示範資料集（`FoodBookStore.demoRecords`）的圖鑑：store 與假 client 共用同一批記錄（同一組 id）。
+    @MainActor
+    private static func demoFoodBook(
+        canRecord: Bool = true, initialCategory: FoodCategory = .grainRoot
+    ) -> FoodBookView {
+        let childID = UUID()
+        let records = FoodBookStore.demoRecords(childID: childID)
+        let apiClient = PreviewFoodAPIClient(records: records)
+        let store = FoodBookStore(childID: childID, apiClient: apiClient)
+        store.seedForPreview(catalog: PreviewFoodCatalog.items, records: records)
+        return FoodBookView(
+            previewStore: store, canRecord: canRecord, initialCategory: initialCategory, apiClient: apiClient,
+            recordDetailContext: foodBookDetailContext
+        )
     }
 
     @MainActor

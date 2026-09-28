@@ -183,11 +183,11 @@ struct FoodBookEntrySection: View {
         )
     }
 
-    /// 詳情頁一律拿 store 裡最新的那一筆（同 `FoodBookView.recordDetail`）：03b 存檔後換新、刪除後格子退回未吃並返回。
+    /// 詳情頁拿推入當下那一筆（同 `FoodBookView.recordDetail`）：03b 存檔後換新由 router 自己的 `savedRecord` 接手
+    /// （`FoodRecordDetailRouter.shownRecord(caller:saved:)`），刪除後格子退回未吃並返回。
     private func recordDetail(_ item: FoodCatalogItem, _ record: ChildFoodRecord) -> some View {
-        let latest = store.record(for: record.foodID).flatMap { $0.id == record.id ? $0 : nil } ?? record
-        return FoodRecordDetailRouter(
-            child: child, item: item, record: latest, apiClient: apiClient, context: recordDetailContext,
+        FoodRecordDetailRouter(
+            child: child, item: item, record: record, apiClient: apiClient, context: recordDetailContext,
             canRecord: canRecord,
             onSaved: { store.applySaved($0) },
             onRemoved: { id in

@@ -84,6 +84,39 @@ final class FoodFirstCardUITests: XCTestCase {
         )
     }
 
+    /// LS-393（merge-review LS-383 R3 i8）：詳情頁存檔後時間軸要**強制**重讀（`TimelineView+Food.swift`
+    /// `refreshAfterFoodRecordChange` → `refreshWithCurrentFilter()`：用 store 自己記的 familyID、不合流到存檔前
+    /// 那一輪）——返回時間軸，卡片念出剛存的反應，不是推入前的舊值。harness 的時間軸 client 回假 client 目前的
+    /// 記錄（`FoodFirstCardTimelineAPIClient`），重讀有跑就換新；harness 不種 `myFamily`，改回依賴
+    /// `familyStore.myFamily` 的寫法就不會重讀，本測試轉紅。
+    func testCardDetail_saveThenBack_timelineCardShowsSavedReaction() {
+        let app = launch(fixture: "dairy", size: Self.standard)
+        let card = app.buttons[Self.cardID]
+        XCTAssertTrue(card.waitForHittable(timeout: 5))
+        XCTAssertTrue(card.label.contains("喜歡"), "前提：優格卡原本是「喜歡」，實際：\(card.label)")
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.12)).tap()
+
+        let edit = app.buttons["foodRecordDetail.edit"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5), "作者看得到編輯鈕")
+        edit.tap()
+        let neutral = app.buttons["foodRecord.reaction.neutral"]
+        scrollUntilHittable(neutral, in: app)
+        neutral.tap()
+        let save = app.buttons["foodRecord.save"]
+        scrollUntilHittable(save, in: app)
+        save.tap()
+        XCTAssertTrue(app.staticTexts["編輯優格這筆記錄"].waitUntilGone(timeout: 5))
+        XCTAssertTrue(app.staticTexts["foodRecordDetail.title"].waitForExistence(timeout: 5), "存檔後留在詳情頁")
+
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 5), "返回時間軸")
+        let updated = NSPredicate(format: "label CONTAINS %@", "普通")
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [expectation(for: updated, evaluatedWith: card)], timeout: 5), .completed,
+            "存檔後時間軸要重讀、卡片換成剛存的反應「普通」，實際：\(card.label)"
+        )
+    }
+
     // MARK: - 無互動列
 
     func testFoodCards_haveNoInteractionRow_whileDiaryCardDoes() {

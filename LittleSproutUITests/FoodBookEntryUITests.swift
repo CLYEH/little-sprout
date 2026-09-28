@@ -146,14 +146,13 @@ final class FoodBookEntryUITests: XCTestCase {
         XCTAssertEqual(entryFoodIDs(in: app).first, "brown_rice", "圖鑑裡記的（今天）要排進入口第一格")
     }
 
-    /// 吃過的格子推 04 記錄詳情（正式詳情頁，不是 LS-381 佔位）。
+    /// 吃過的格子推 04 記錄詳情。
     func testTappingTriedCell_opensRecordDetail() {
         let app = launch(.foodEntry, Self.standard)
         let banana = app.buttons["foodCell.banana"]
         scrollUntilHittable(banana, in: app)
         banana.tap()
         XCTAssertTrue(element("foodRecordDetail.title", in: app).waitForExistence(timeout: 5), "吃過的格子要推 04")
-        XCTAssertFalse(app.staticTexts["這個畫面由 LS-381 實作，尚未完成。"].exists)
     }
 
     /// Notes 01 列「失敗文案鍵 42501」：首次讀取失敗＝錯誤句＋「重新載入」，不畫全灰三格。

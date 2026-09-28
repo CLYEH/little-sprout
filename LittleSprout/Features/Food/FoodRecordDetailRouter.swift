@@ -21,7 +21,8 @@ struct FoodRecordDetailContext {
 struct FoodRecordDetailRouter: View {
     let child: Child
     let item: FoodCatalogItem
-    /// 呼叫端手上最新的那一筆（圖鑑 store 套用過 03b 回傳列之後的值）。
+    /// 呼叫端推入當下的那一筆快照（推入後呼叫端不一定會再更新它）；畫面實際顯示的是它與這裡自己存過的
+    /// `savedRecord` 取較新者（`shownRecord(caller:saved:)`）。
     let record: ChildFoodRecord
     let apiClient: FoodAPIClient
     let context: FoodRecordDetailContext

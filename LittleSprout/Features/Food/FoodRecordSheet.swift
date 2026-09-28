@@ -22,12 +22,6 @@ import SwiftUI
 /// **Grabber 自畫**，同 `GrowthMeasurementFormView`／`DeleteConfirmationSheet` 既有理由（系統
 /// `.presentationDragIndicator` 會被 tap-target gate 誤判成 <44pt 違規）。
 struct FoodRecordSheet: View {
-    /// harness／UITest 用：開 sheet 時直接疊上的第二層（03d 挑相簿／03c 刪除確認）。正式呼叫端不傳。
-    enum Overlay {
-        case familyPicker
-        case deleteConfirmation
-    }
-
     let childName: String
     let apiClient: FoodAPIClient
     /// 儲存成功（sheet 關閉之前）——呼叫端把回傳列套進圖鑑，並安排「收下」動效（06）。
@@ -51,7 +45,6 @@ struct FoodRecordSheet: View {
 
     init(
         childName: String, store: FoodRecordEditorStore, apiClient: FoodAPIClient,
-        initialOverlay: Overlay? = nil,
         onSaved: @escaping (ChildFoodRecord) -> Void, onDeleted: @escaping (UUID) -> Void = { _ in }
     ) {
         self.childName = childName
@@ -59,8 +52,6 @@ struct FoodRecordSheet: View {
         self.onSaved = onSaved
         self.onDeleted = onDeleted
         _store = State(initialValue: store)
-        _showsFamilyPicker = State(initialValue: initialOverlay == .familyPicker)
-        _showsDeleteConfirmation = State(initialValue: initialOverlay == .deleteConfirmation)
     }
 
     var isAccessibilityLayout: Bool { dynamicTypeSize.isAccessibilitySize }
