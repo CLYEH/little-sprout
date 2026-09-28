@@ -20,7 +20,19 @@ final class FoodRecordDetailStoreTests: XCTestCase {
         func listFoodCatalog() async throws -> [FoodCatalogItem] { [] }
 
         func listChildFoodRecords(childID: UUID) async throws -> [ChildFoodRecord] { try recordsResult.get() }
+
+        // LS-380 的寫入／照片方法：詳情 store 不呼叫它們，被呼叫到就是測試寫錯，大聲失敗。
+        func upsertChildFoodRecord(_ input: FoodRecordUpsert) async throws -> ChildFoodRecord { throw Unused() }
+        func deleteChildFoodRecord(id: UUID) async throws { throw Unused() }
+        func listFamilyPhotos(childID: UUID) async throws -> [FamilyPhoto] { throw Unused() }
+        func fetchFamilyPhoto(id: UUID) async throws -> FamilyPhoto? { throw Unused() }
+        func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] { throw Unused() }
+        func uploadPhoto(childID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
+            throw Unused()
+        }
     }
+
+    private struct Unused: Error {}
 
     private final class StubDetailAPIClient: FoodRecordDetailAPIClient, @unchecked Sendable {
         var names: [UUID: String] = [:]
@@ -134,5 +146,31 @@ final class FoodRecordDetailStoreTests: XCTestCase {
         await store.refresh()
 
         XCTAssertEqual(store.photo, .unavailable, "有 media_id 但看不到：空白照片窗，不邀請加照片")
+    }
+
+    // MARK: - LS-380 接縫⑦：編輯後回詳情頁換新
+
+    /// 03b 儲存後呼叫端帶進更新過的同一筆：`adopt` 先換上（照片換了回 `.loading`），舊值（`updatedAt` 沒比較新）
+    /// 一律忽略、不倒退。
+    func test_adopt_takesNewerSameRecordOnly() async throws {
+        let original = try record(mediaID: UUID(), reaction: "liked")
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: StubFoodAPIClient(records: [original]),
+            detailAPIClient: StubDetailAPIClient()
+        )
+        await store.refresh()
+        XCTAssertEqual(store.photo, .loaded(StubDetailAPIClient.url(for: original.mediaID!)))
+
+        let edited = ChildFoodRecord(
+            id: original.id, familyID: original.familyID, childID: original.childID, foodID: original.foodID,
+            authorID: original.authorID, firstTriedOn: original.firstTriedOn, mediaID: nil, note: "改過",
+            reaction: "neutral", createdAt: original.createdAt, updatedAt: original.updatedAt.addingTimeInterval(60)
+        )
+        store.adopt(edited)
+        XCTAssertEqual(store.record.reaction, "neutral", "比較新的同一筆要換上")
+        XCTAssertEqual(store.photo, .none, "照片拿掉了：回到 04b 空白沖印品")
+
+        store.adopt(original)
+        XCTAssertEqual(store.record.reaction, "neutral", "舊值不能把畫面倒退回去")
     }
 }

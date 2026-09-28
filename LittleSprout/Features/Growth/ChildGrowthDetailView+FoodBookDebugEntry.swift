@@ -20,15 +20,11 @@ extension ChildGrowthDetailView {
             NavigationLink {
                 FoodBookView(
                     child: child, apiClient: foodAPIClient, canRecord: canManageChildren,
-                    // LS-381：吃過的格子推記錄詳情（取代 LS-379 的 placeholder）。編輯／刪除／加照片的
-                    // sheet 屬 LS-380，`onRoute` 先用預設 no-op（見 `FoodRecordDetailView.init`）。
-                    recordDetailDestination: { item, record in
-                        AnyView(FoodRecordDetailView(
-                            child: child, item: item, record: record, apiClient: foodAPIClient,
-                            currentUserID: currentUserID, isFamilyOwner: isFamilyOwner,
-                            canRecord: canManageChildren
-                        ))
-                    }
+                    // LS-381：吃過的格子推記錄詳情；LS-380 R2：由圖鑑自己組 `FoodRecordDetailRouter`，編輯／刪除／
+                    // 加照片的 sheet 與結果回寫（格子狀態、pop）都接上。
+                    recordDetailContext: FoodRecordDetailContext(
+                        currentUserID: currentUserID, isFamilyOwner: isFamilyOwner
+                    )
                 )
             } label: {
                 Text("飲食圖鑑（開發用入口）")

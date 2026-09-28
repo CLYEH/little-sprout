@@ -26,9 +26,14 @@ enum FoodBookSelection: Equatable {
 ///   `RootView.SectionSplitView` 既有外殼，不在這裡重畫（同 `ChildGrowthDetailView.regularLayout`）。
 /// - 資料落點：分頁＝純 UI 狀態（不持久化）；格子狀態＝`child_food_records.food_id` 是否存在。
 ///
-/// 目的地（本票先接 placeholder）：點還沒吃的格子開第一次記錄 sheet（LS-380）、點吃過的格子推記錄詳情
-/// （LS-381）。兩者都可由呼叫端注入（`firstRecordDestination`／`recordDetailDestination`），另有
-/// `onSelect` 回呼讓呼叫端在呈現之外做事（例如 LS-380 的「收下」動效要知道剛點的是哪一格）。
+/// 目的地：點還沒吃的格子開第一次記錄 sheet（LS-380 `FoodRecordSheet`）、點吃過的格子推記錄詳情（LS-381，
+/// 尚未實作前接 placeholder）。兩者都可由呼叫端注入（`firstRecordDestination`／`recordDetailDestination`），
+/// 另有 `onSelect` 回呼讓呼叫端在呈現之外做事。
+///
+/// 「收下」動效（06 `jIWO6`，LS-380；Notes `cEkCH`）：儲存成功時先把那一格**按住**在「還沒吃」的外觀
+/// （`pendingRevealFoodID`）、計數句照常更新；sheet 的 `onDismiss` 完成後才 `scrollTo` 那一格（`anchor: nil`＝
+/// 已在可見範圍就不捲）並以 `FoodRevealMotion` 放開——去灰、紙片、落影、y −2→0；減少動態效果改 0.2s 淡入
+/// 淡出不位移；`.sensoryFeedback(.impact(weight: .light))` 一次；VoiceOver 唸「已記下〇〇」；只播一次。
 struct FoodBookView: View {
     let child: Child
     let apiClient: FoodAPIClient
@@ -37,6 +42,9 @@ struct FoodBookView: View {
     var onSelect: ((FoodBookSelection) -> Void)?
     var firstRecordDestination: ((FoodCatalogItem) -> AnyView)?
     var recordDetailDestination: ((FoodCatalogItem, ChildFoodRecord) -> AnyView)?
+    /// LS-380 R2：非 nil＝吃過的格子推真詳情頁（`FoodRecordDetailRouter`），編輯／刪除／加照片的結果直接回寫
+    /// 這本圖鑑的 store（`recordDetailDestination` 另給時以它為準）。
+    var recordDetailContext: FoodRecordDetailContext?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -44,12 +52,19 @@ struct FoodBookView: View {
     @State private var selectedCategory: FoodCategory
     @State private var firstRecordItem: FoodCatalogItem?
     @State private var detailRecord: ChildFoodRecord?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// 剛儲存、還沒播「收下」動效的那一格（sheet 收起前維持「還沒吃」的外觀）。
+    @State private var pendingRevealFoodID: String?
+    /// sheet `onDismiss` 完成後要播的那一格——交給 `ScrollViewReader` 內的 `onChange` 捲動＋播放。
+    @State private var revealRequest: String?
+    @State private var revealCount = 0
 
     init(
         child: Child, apiClient: FoodAPIClient, canRecord: Bool, initialCategory: FoodCategory = .grainRoot,
         onSelect: ((FoodBookSelection) -> Void)? = nil,
         firstRecordDestination: ((FoodCatalogItem) -> AnyView)? = nil,
-        recordDetailDestination: ((FoodCatalogItem, ChildFoodRecord) -> AnyView)? = nil
+        recordDetailDestination: ((FoodCatalogItem, ChildFoodRecord) -> AnyView)? = nil,
+        recordDetailContext: FoodRecordDetailContext? = nil
     ) {
         self.child = child
         self.apiClient = apiClient
@@ -57,6 +72,7 @@ struct FoodBookView: View {
         self.onSelect = onSelect
         self.firstRecordDestination = firstRecordDestination
         self.recordDetailDestination = recordDetailDestination
+        self.recordDetailContext = recordDetailContext
         _selectedCategory = State(initialValue: initialCategory)
     }
 
@@ -64,14 +80,16 @@ struct FoodBookView: View {
     /// harness／`#Preview` 專用：直接注入已種好資料的 store（同 `ChildGrowthDetailView(previewGrowthStore:)`）。
     init(
         previewStore: FoodBookStore, childName: String = "陳小安", canRecord: Bool = true,
-        initialCategory: FoodCategory = .grainRoot
+        initialCategory: FoodCategory = .grainRoot, apiClient: FoodAPIClient = PreviewFoodAPIClient(),
+        recordDetailContext: FoodRecordDetailContext? = nil
     ) {
+        self.recordDetailContext = recordDetailContext
         self.child = Child(
             id: previewStore.childID, name: childName,
             birthday: BirthdayFormat.date(fromWireString: "2025-04-20")!, avatarURL: nil, deletedAt: nil,
             createdAt: Date()
         )
-        self.apiClient = PreviewFoodAPIClient()
+        self.apiClient = apiClient
         self.canRecord = canRecord
         _selectedCategory = State(initialValue: initialCategory)
         _store = State(initialValue: previewStore)
@@ -93,12 +111,16 @@ struct FoodBookView: View {
             ToolbarItem(placement: .principal) { Color.clear.frame(width: 0, height: 0).accessibilityHidden(true) }
         }
         .task(id: child.id) { await loadIfNeeded() }
-        .sheet(item: $firstRecordItem) { item in
-            firstRecordDestination?(item) ?? AnyView(FoodBookPendingDestination(item: item, ticket: "LS-380"))
-        }
+        .sheet(
+            item: $firstRecordItem,
+            onDismiss: { revealRequest = pendingRevealFoodID },
+            content: { item in firstRecordDestination?(item) ?? AnyView(firstRecordSheet(item)) }
+        )
+        .sensoryFeedback(.impact(weight: .light), trigger: revealCount)
         .navigationDestination(item: $detailRecord) { record in
             if let item = store?.catalog.first(where: { $0.id == record.foodID }) {
                 recordDetailDestination?(item, record)
+                    ?? recordDetailContext.map { AnyView(recordDetail(item, record, context: $0)) }
                     ?? AnyView(FoodBookPendingDestination(item: item, ticket: "LS-381"))
             }
         }
@@ -124,24 +146,73 @@ struct FoodBookView: View {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.section) {
-                    header(store)
-                    VStack(alignment: .leading, spacing: AppSpacing.block) {
-                        refreshFailureBanner(store)
-                        FoodCategoryTabs(
-                            selection: $selectedCategory,
-                            columns: isAccessibilityLayout ? 2 : 4,
-                            columnSpacing: isRegular || isAccessibilityLayout ? AppSpacing.label : AppSpacing.tight
-                        )
-                        collection(store)
-                        disclaimer
+            ScrollViewReader { proxy in
+                scrollContent(store)
+                    .onChange(of: revealRequest) { _, foodID in
+                        guard let foodID else { return }
+                        revealRequest = nil
+                        playReveal(foodID, store: store, proxy: proxy)
                     }
-                }
-                .padding(.top, AppSpacing.item)
-                .padding(.horizontal, isRegular ? AppSpacing.screenPadLarge : AppSpacing.screenPad)
-                .padding(.bottom, AppSpacing.section)
             }
+        }
+    }
+
+    private func scrollContent(_ store: FoodBookStore) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppSpacing.section) {
+                header(store)
+                VStack(alignment: .leading, spacing: AppSpacing.block) {
+                    refreshFailureBanner(store)
+                    FoodCategoryTabs(
+                        selection: $selectedCategory,
+                        columns: isAccessibilityLayout ? 2 : 4,
+                        columnSpacing: isRegular || isAccessibilityLayout ? AppSpacing.label : AppSpacing.tight
+                    )
+                    collection(store)
+                    disclaimer
+                }
+            }
+            .padding(.top, AppSpacing.item)
+            .padding(.horizontal, isRegular ? AppSpacing.screenPadLarge : AppSpacing.screenPad)
+            .padding(.bottom, AppSpacing.section)
+        }
+    }
+
+    private func firstRecordSheet(_ item: FoodCatalogItem) -> some View {
+        FoodRecordSheet(
+            childName: child.name,
+            store: FoodRecordEditorStore(childID: child.id, item: item, apiClient: apiClient),
+            apiClient: apiClient,
+            onSaved: { record in
+                // 同一個 transaction 內先按住、再套用：那一格不會先閃成紙片再被按回灰色。
+                pendingRevealFoodID = record.foodID
+                store?.applySaved(record)
+            }
+        )
+    }
+
+    /// 詳情頁一律拿 store 裡最新的那一筆（03b 儲存後 `applySaved` 換上的回傳列，接縫⑦），刪除／重讀發現已刪就
+    /// 把格子退回未吃並 pop（接縫④⑥）。
+    private func recordDetail(
+        _ item: FoodCatalogItem, _ record: ChildFoodRecord, context: FoodRecordDetailContext
+    ) -> some View {
+        let latest = store?.record(for: record.foodID).flatMap { $0.id == record.id ? $0 : nil } ?? record
+        return FoodRecordDetailRouter(
+            child: child, item: item, record: latest, apiClient: apiClient, context: context, canRecord: canRecord,
+            onSaved: { store?.applySaved($0) },
+            onRemoved: { id in
+                store?.removeRecord(id: id)
+                detailRecord = nil
+            }
+        )
+    }
+
+    private func playReveal(_ foodID: String, store: FoodBookStore, proxy: ScrollViewProxy) {
+        proxy.scrollTo(foodID)
+        withAnimation(FoodRevealMotion.animation(reduceMotion: reduceMotion)) { pendingRevealFoodID = nil }
+        revealCount += 1
+        if let name = store.catalog.first(where: { $0.id == foodID })?.nameZh {
+            AccessibilityNotification.Announcement(FoodRecordCopy.revealAnnouncement(foodName: name)).post()
         }
     }
 
@@ -205,9 +276,13 @@ struct FoodBookView: View {
 
     private func cell(_ item: FoodCatalogItem, store: FoodBookStore, layout: FoodCell.Layout) -> some View {
         let record = store.record(for: item.id)
-        return FoodCell(item: item, state: FoodCellState.make(record: record, canRecord: canRecord), layout: layout) {
+        let isHeldForReveal = pendingRevealFoodID == item.id
+        let state = FoodCellState.make(record: isHeldForReveal ? nil : record, canRecord: canRecord)
+        return FoodCell(item: item, state: state, layout: layout) {
             select(item, record: record)
         }
+        .offset(y: isHeldForReveal ? FoodRevealMotion.spec(reduceMotion: reduceMotion).startOffsetY : 0)
+        .id(item.id)
     }
 
     private func select(_ item: FoodCatalogItem, record: ChildFoodRecord?) {
