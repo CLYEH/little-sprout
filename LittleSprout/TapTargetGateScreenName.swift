@@ -142,6 +142,13 @@ enum TapTargetGateScreenName: String {
     // `.albumDetailStress` 既有先例，變體態用不以 "View" 結尾的 rawValue，registry gate
     // 只要求基底檔名（上面那個 case）至少出現一次。
     case importSummaryWithMarkingFailure = "Import05SummaryViewMarkingFailure"
+    // LS-391：批次匯入「入口鈕 → 真的 PHPicker → 整理頁 → 04 → 05」整條 `.importBatchFlow`
+    // 流程——頂列畫進狀態列的 bug 只在「picker dismiss 轉場途中 present cover」才出現，上面
+    // 各 case 直接把畫面當根 view 掛、量不到。**不**做逐元件 tap target 量測（同
+    // `.eulaConsentToTimelineFlow`），只借 launch environment 通道給
+    // `ImportFlowTopBarSafeAreaUITests` 用；rawValue 不以 "View" 結尾，registry gate 不認它。
+    case importBatchFlowEntry = "ImportBatchFlowEntry"
+    case importBatchFlowEntryDark = "ImportBatchFlowEntryDark"
     // LS-164：帳號密碼登入畫面（審核帳號用）——初始態不需要任何 seed 資料（`.preview()`
     // 免登入即可建構，同 `createChild`／`createAlbum` 的既有理由），Email／密碼欄與登入鈕
     // 一開畫面就有代表性。

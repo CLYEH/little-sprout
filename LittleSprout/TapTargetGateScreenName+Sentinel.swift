@@ -71,6 +71,8 @@ extension TapTargetGateScreenName {
         case .importSummaryWithFailures: return .staticText("匯入完成")
         // 同 `.importSummaryWithFailures`：疊了標記失敗狀態，大標題不受影響，一樣渲染。
         case .importSummaryWithMarkingFailure: return .staticText("匯入完成")
+        // LS-391：入口鈕本身——一開畫面就渲染，不依賴相片庫授權／picker。
+        case .importBatchFlowEntry, .importBatchFlowEntryDark: return .button("開始批次匯入")
         case .passwordSignIn: return .staticText("帳號密碼登入")
         // Doc Title——`LegalDocumentSheet` 載入完成後必定渲染，不依賴檔案實際內容。
         case .legalDocumentSheet: return .staticText("使用條款")
