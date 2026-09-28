@@ -318,6 +318,10 @@ enum TapTargetGateScreenName: String {
     // 兩位／三位長名／未標記／相簿卡回歸／feed）由 `LS_PHOTO_CARD_CAPTION_FIXTURE` 選，見
     // `TapTargetGateHarness+PhotoCardCaption.swift`。
     case photoCardBabyCaption = "PhotoCardBabyCaption"
+    // LS-374：時間軸日記卡寶貝署名——同 `.photoCardBabyCaption` 既有先例，借這條通道餵
+    // `DiaryCardBabyCaptionUITests` 截圖對稿（`x7k2o6`）；fixture／深淺色見
+    // `TapTargetGateHarness+DiaryCardCaption.swift`。
+    case diaryCardBabyCaption = "DiaryCardBabyCaption"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
