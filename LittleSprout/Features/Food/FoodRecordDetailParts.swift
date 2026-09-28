@@ -191,20 +191,24 @@ struct FoodRecordPrint: View {
         .accessibilityHidden(true)
     }
 
-    /// 同 `PhotoCornerOverlay.cornerView`／`ProfilePrintChip.corner` 的畫法（`PhotoCornerShape`＋摺痕），只取對角兩顆。
+    /// 同 `PhotoCornerOverlay.cornerView` 的畫法（`PhotoCornerShape`＋摺痕、外擴 `cornerOut`）；畫哪幾顆由 `corners(hasPhoto:)` 決定。
     private func cornerView(_ corner: PhotoCorner) -> some View {
         let shape = PhotoCornerShape(corner: corner)
         let size = Self.cornerSize
         let out = AppSpacing.cornerOut
-        let isTopLeading = corner == .topLeading
+        let isLeading = corner == .topLeading || corner == .bottomLeading
+        let isTop = corner == .topLeading || corner == .topTrailing
         return ZStack {
             shape.fill(Color.lsPhotoCorner)
             shape.foldEdge(in: CGRect(x: 0, y: 0, width: size, height: size))
                 .stroke(Color.lsCornerFold, lineWidth: 1.5)
         }
         .frame(width: size, height: size)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isTopLeading ? .topLeading : .bottomTrailing)
-        .offset(x: isTopLeading ? -out : out, y: isTopLeading ? -out : out)
+        .frame(
+            maxWidth: .infinity, maxHeight: .infinity,
+            alignment: Alignment(horizontal: isLeading ? .leading : .trailing, vertical: isTop ? .top : .bottom)
+        )
+        .offset(x: isLeading ? -out : out, y: isTop ? -out : out)
     }
 }
 
