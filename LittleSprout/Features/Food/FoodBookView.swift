@@ -195,14 +195,14 @@ struct FoodBookView: View {
         )
     }
 
-    /// 詳情頁一律拿 store 裡最新的那一筆（03b 儲存後 `applySaved` 換上的回傳列，接縫⑦），刪除／重讀發現已刪就
-    /// 把格子退回未吃並 pop（接縫④⑥）。
+    /// 詳情頁拿推入當下那一筆；之後儲存換新由 router 自己的 `savedRecord` 接手（`FoodRecordDetailRouter`
+    /// `shownRecord(caller:saved:)`，LS-380 R3——推入後本閉包不再重跑）。刪除／重讀發現已刪就把格子退回未吃
+    /// 並 pop（接縫④⑥）。
     private func recordDetail(
         _ item: FoodCatalogItem, _ record: ChildFoodRecord, context: FoodRecordDetailContext
     ) -> some View {
-        let latest = store?.record(for: record.foodID).flatMap { $0.id == record.id ? $0 : nil } ?? record
-        return FoodRecordDetailRouter(
-            child: child, item: item, record: latest, apiClient: apiClient, context: context, canRecord: canRecord,
+        FoodRecordDetailRouter(
+            child: child, item: item, record: record, apiClient: apiClient, context: context, canRecord: canRecord,
             onSaved: { store?.applySaved($0) },
             onRemoved: { id in
                 store?.removeRecord(id: id)
