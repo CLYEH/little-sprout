@@ -313,6 +313,13 @@ enum TapTargetGateScreenName: String {
     case foodBookDark = "FoodBookViewDark"
     case foodBookDairy = "FoodBookViewDairy"
     case foodBookViewer = "FoodBookViewViewer"
+    // LS-380：第一次記錄 sheet 家族（`FoodRecordSheet`／`FoodFamilyPhotoPickerSheet`，`*Sheet.swift` 不在
+    // `tap-target-registry-check.sh` 自動掃描範圍內，仍手動註冊，同 `.growthRecordActionsSheet` 先例）——
+    // 03／03d 從圖鑑點空位開（`.foodRecordSheet`）、03e 同上但儲存一律失敗、03b／03c 一開就疊著編輯 sheet。
+    // 深色用 launch argument（`TapTargetGateHarness+FoodRecord.swift`），不另開 case。
+    case foodRecordSheet = "FoodRecordSheet"
+    case foodRecordSheetFailure = "FoodRecordSheetFailure"
+    case foodRecordSheetEdit = "FoodRecordSheetEdit"
     // LS-365：時間軸照片卡壓印行寶貝署名——同 `.diaryCardVideoBadges` 既有先例，不是點擊目標
     // 測試，借這條通道餵 `PhotoCardBabyCaptionUITests` 量折行像素與截圖對稿；fixture（一位／
     // 兩位／三位長名／未標記／相簿卡回歸／feed）由 `LS_PHOTO_CARD_CAPTION_FIXTURE` 選，見

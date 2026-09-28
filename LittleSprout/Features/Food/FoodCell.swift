@@ -48,7 +48,7 @@ struct FoodCell: View {
     private var styledContent: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: layout == .grid ? .top : .topLeading)
-            .background { background }
+            .background { FoodCellBackground(state: state) }
             .contentShape(RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(FoodBookCopy.cellAccessibilityLabel(item: item, state: state))
@@ -105,9 +105,14 @@ struct FoodCell: View {
         [FoodBookCopy.allergenTag(item.allergens), FoodBookCopy.ageTag(minAgeMonths: item.minAgeMonths)]
             .compactMap { $0 }
     }
+}
 
-    @ViewBuilder
-    private var background: some View {
+/// cmp/Food Cell 的底（紙片／髮絲框／無）——LS-380 從 `FoodCell` 抽出，03 sheet 表頭的 Food Slot
+/// （`I6Mq1c`／03b `TdD2n`：同一個元件實例、Text Stack 關閉）共用同一份，不各畫一份。
+struct FoodCellBackground: View {
+    let state: FoodCellState
+
+    var body: some View {
         let shape = RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
         switch state {
         case .tried:

@@ -137,6 +137,9 @@ extension TapTargetGateScreenName {
         case .foodBook, .foodBookDark: return .staticText("飲食圖鑑")
         case .foodBookDairy: return .staticText("吃過 1／7")
         case .foodBookViewer: return .staticText("這本圖鑑由家人記錄，你可以隨時翻看。")
+        // LS-380：03／03e 先渲染圖鑑本身（UITest 再點空位開 sheet）；03b 一開就疊著編輯 sheet。
+        case .foodRecordSheet, .foodRecordSheetFailure: return .staticText("飲食圖鑑")
+        case .foodRecordSheetEdit: return .staticText("編輯吐司麵包這筆記錄")
         // fixture 共用的頂端標題（feed fixture 除外，見 `photoCardBabyCaptionHost` 文件註解）。
         case .photoCardBabyCaption: return .staticText("照片卡署名")
         case .diaryCardBabyCaption: return .staticText("日記卡署名")
