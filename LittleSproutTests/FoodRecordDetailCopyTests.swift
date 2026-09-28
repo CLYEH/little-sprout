@@ -109,11 +109,11 @@ final class FoodRecordDetailCopyTests: XCTestCase {
     }
 
     func test_reactionLabel_threeValuesAndHidesUnknown() {
-        XCTAssertEqual(FoodRecordDetailCopy.reactionLabel("liked"), "喜歡")
-        XCTAssertEqual(FoodRecordDetailCopy.reactionLabel("neutral"), "普通")
-        XCTAssertEqual(FoodRecordDetailCopy.reactionLabel("disliked"), "不愛吃")
-        XCTAssertNil(FoodRecordDetailCopy.reactionLabel(nil), "沒選反應：chip 隱藏")
-        XCTAssertNil(FoodRecordDetailCopy.reactionLabel("love"), "CHECK 之外的值不把英文代碼露出來")
+        XCTAssertEqual(FoodRecordDetailCopy.reaction("liked")?.label, "喜歡")
+        XCTAssertEqual(FoodRecordDetailCopy.reaction("neutral")?.label, "普通")
+        XCTAssertEqual(FoodRecordDetailCopy.reaction("disliked")?.label, "不愛吃")
+        XCTAssertNil(FoodRecordDetailCopy.reaction(nil), "沒選反應：chip 隱藏")
+        XCTAssertNil(FoodRecordDetailCopy.reaction("love"), "CHECK 之外的值不把英文代碼露出來")
     }
 
     // MARK: - 過敏原 info 句

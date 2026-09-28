@@ -215,14 +215,14 @@ struct FoodRecordPrint: View {
 /// Reaction Chip（`m9RG7L`）：`$accent-soft` 膠囊、padding `$sp-label`／`$sp-item`、gap `$sp-tight`；臉 22（AX3 40）
 /// ＋文字 `$fs-body` 700 `$text-primary`。
 struct FoodRecordReactionChip: View {
-    let reaction: String
-    let label: String
+    let reaction: FoodReaction
 
     var body: some View {
         HStack(spacing: AppSpacing.tight) {
-            FoodRecordReactionFace(reaction: reaction)
+            // LS-380 併入後改用 03 sheet 同一支臉（`FoodReactionIcon`，同一套 lucide 幾何），不各畫一份。
+            FoodReactionIcon(reaction: reaction)
                 .appIconFrame(.medium)
-            Text(label).appFont(.body, weight: .bold)
+            Text(reaction.label).appFont(.body, weight: .bold)
         }
         .foregroundStyle(Color.lsTextPrimary)
         .padding(.vertical, AppSpacing.label)
@@ -230,50 +230,6 @@ struct FoodRecordReactionChip: View {
         .background(Color.lsAccentSoft, in: Capsule())
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("foodRecordDetail.reaction")
-    }
-}
-
-/// 反應的臉（lucide `smile`／`meh`／`frown` 24 格線稿幾何，stroke 2、圓端點）——SF Symbols 沒有「普通」「不愛吃」
-/// 兩張臉。待 LS-380 併入：LS-380 的 `FoodReactionIcon` 併入後改用它、刪掉這支（同一套 lucide 幾何，見 handoff 接縫清單）。
-struct FoodRecordReactionFace: View {
-    let reaction: String
-
-    var body: some View {
-        GeometryReader { proxy in
-            let scale = min(proxy.size.width, proxy.size.height) / 24
-            FaceShape(reaction: reaction)
-                .stroke(style: StrokeStyle(lineWidth: 2 * scale, lineCap: .round, lineJoin: .round))
-        }
-        .accessibilityHidden(true)
-    }
-
-    private struct FaceShape: Shape {
-        let reaction: String
-
-        func path(in rect: CGRect) -> Path {
-            let scale = min(rect.width, rect.height) / 24
-            func point(_ gridX: CGFloat, _ gridY: CGFloat) -> CGPoint {
-                CGPoint(x: rect.minX + gridX * scale, y: rect.minY + gridY * scale)
-            }
-            var path = Path()
-            path.addEllipse(in: CGRect(origin: point(2, 2), size: CGSize(width: 20 * scale, height: 20 * scale)))
-            for eyeX: CGFloat in [9, 15] {
-                path.move(to: point(eyeX, 9))
-                path.addLine(to: point(eyeX + 0.01, 9))
-            }
-            switch reaction {
-            case "liked":
-                path.move(to: point(8, 14))
-                path.addQuadCurve(to: point(16, 14), control: point(12, 18))
-            case "disliked":
-                path.move(to: point(8, 16))
-                path.addQuadCurve(to: point(16, 16), control: point(12, 12))
-            default:
-                path.move(to: point(8, 15))
-                path.addLine(to: point(16, 15))
-            }
-            return path
-        }
     }
 }
 

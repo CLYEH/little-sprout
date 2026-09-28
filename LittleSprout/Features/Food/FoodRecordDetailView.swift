@@ -184,13 +184,13 @@ struct FoodRecordDetailView: View {
     /// （查不到名字隱藏）。
     @ViewBuilder
     private var reactionNote: some View {
-        let reaction = FoodRecordDetailCopy.reactionLabel(shown.reaction)
+        let reaction = FoodRecordDetailCopy.reaction(shown.reaction)
         let note = shown.note.flatMap { $0.isEmpty ? nil : $0 }
         let author = store?.authorName.map(FoodRecordDetailCopy.recordedBy(displayName:))
         if reaction != nil || note != nil || author != nil {
             VStack(alignment: .leading, spacing: AppSpacing.group) {
-                if let reaction, let raw = shown.reaction {
-                    FoodRecordReactionChip(reaction: raw, label: reaction)
+                if let reaction {
+                    FoodRecordReactionChip(reaction: reaction)
                 }
                 if let note {
                     Text(note)
