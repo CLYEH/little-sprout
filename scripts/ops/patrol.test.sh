@@ -1486,6 +1486,13 @@ case " $* " in
     if [ "$rc" != 0 ]; then echo "略過（自測假身）" >&2; exit "$rc"; fi
     printf '%s\n' "${LANE_STUB:-}"
     exit 0 ;;
+  *" --inflight "*)
+    # LS-376：預設 exit 3（＝查不到在飛設計票，patrol.sh 該段 fail-open 不印）——㉖ 既有情境維持只驗 LS-209 段；
+    # ㊺ 用 DESIGN_STUB_RC=0＋DESIGN_STUB 餵在飛票
+    rc=${DESIGN_STUB_RC:-3}
+    if [ "$rc" != 0 ]; then echo "略過（自測假身）" >&2; exit "$rc"; fi
+    printf '%s\n' ${DESIGN_STUB:-}
+    exit 0 ;;
   *) echo "巡檢（Linear 半段）：（假身）"; exit 0 ;;
 esac
 EOF
@@ -1536,6 +1543,67 @@ if [ "$rc" -eq 0 ] && ! printf '%s' "$out26m" | grep -qF '⚠ Pen 開錯檔'; th
   echo '✓ ㉖ mutant：拿掉偵測段後，同一份「非 design 票」負樣本變綠（Pen 開錯檔偵測段確實是原因）'
 else
   echo "✗ ㉖ mutant 應 exit 0 且不印「⚠ Pen 開錯檔」（實得 ${rc}）" >&2; printf '%s\n' "$out26m" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ㊺ LS-376：Pen 開錯檔（設計票在飛）——LS-208／LS-349 設計票在飛時 Pen 被切到 qa-test（非票 worktree，㉖ 抓不到）。
+#        在飛設計票來源：PATROL_DESIGN_TICKETS 覆寫，或假 patrol-linear.sh 回應 `--inflight lane:design`。
+#        (a) 在飛 LS-388＋Pen 在 qa-test → ⚠＋切回命令＋[Pen] flag；(b) 在飛 LS-388＋Pen 正在 LS-388 票檔 → 無訊號；
+#        (c) 兩張在飛、Pen 在第二張 → 無訊號；(d) 來源走 patrol-linear.sh --inflight → 同 (a)；(e) --inflight 查不到
+#        （exit 3）→ 不印（fail-open）；(f) 無在飛設計票＋Pen 在 qa-test → ⚠ 提示行、不掛 flag；Pen 在主 checkout → 無；
+#        (g) patrol-filter 留得住 ⚠ 行；mutation：拿掉 LS376-PEN-DESIGN 區塊 → (a) 變綠 ----
+fake_ps_qatest="$work/fake-pen-status-qatest.sh"
+mk_fake_pen_status "$fake_ps_qatest" "${repo}/.claude/worktrees/qa-test/design/littlesprout.pen"
+fake_ps_ls388="$work/fake-pen-status-ls388.sh"
+mk_fake_pen_status "$fake_ps_ls388" "${repo}/.claude/worktrees/LS-388/design/littlesprout.pen"
+fake_ps_ls390="$work/fake-pen-status-ls390.sh"
+mk_fake_pen_status "$fake_ps_ls390" "${repo}/.claude/worktrees/LS-390/design/littlesprout.pen"
+want45="⚠ Pen 開錯檔：${repo}/.claude/worktrees/qa-test/design/littlesprout.pen（設計票 LS-388 在飛）→ bash scripts/ops/pen-open.sh ${repo}/.claude/worktrees/LS-388"
+
+out45a="$(PATROL_DESIGN_TICKETS=LS-388 PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
+rc_is '㊺(a) 在飛設計票＋Pen 在 qa-test 仍 exit 0（異常在輸出）' 0 "$rc" "$out45a"
+has   '㊺(a) human 印 ⚠ Pen 開錯檔＋實際路徑＋在飛票＋切回命令' "$out45a" "$want45"
+brief45a="$(PATROL_DESIGN_TICKETS=LS-388 PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㊺(a) --brief 掛 [Pen] flag' "$brief45a" "[Pen] ${want45}"
+
+out45b="$(PATROL_DESIGN_TICKETS=LS-388 PATROL_PEN_STATUS_SH="$fake_ps_ls388" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㊺(b) Pen 正在在飛設計票 LS-388 的票檔 → 不印 ⚠ Pen 開錯檔' "$out45b" '⚠ Pen 開錯檔'
+hasnt '㊺(b) 也不印非主 checkout 提示' "$out45b" 'Pen 停在非主 checkout'
+brief45b="$(PATROL_DESIGN_TICKETS=LS-388 PATROL_PEN_STATUS_SH="$fake_ps_ls388" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㊺(b) --brief 不掛 [Pen] flag' "$brief45b" '[Pen]'
+
+out45c="$(PATROL_DESIGN_TICKETS='LS-388,LS-390' PATROL_PEN_STATUS_SH="$fake_ps_ls390" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㊺(c) 兩張在飛、Pen 在第二張 LS-390 的票檔 → 不印（任一張命中即正確）' "$out45c" '⚠ Pen 開錯檔'
+
+out45d="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=0 DESIGN_STUB='LS-388' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㊺(d) 在飛票來源走 patrol-linear.sh --inflight lane:design → 同 (a)' "$out45d" "$want45"
+
+out45e="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=3 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㊺(e) --inflight 查不到（exit 3，模擬無 LINEAR_API_KEY）→ 不印 ⚠ Pen 開錯檔（fail-open）' "$out45e" '⚠ Pen 開錯檔'
+hasnt '㊺(e) 也不印非主 checkout 提示（在飛與否未知）' "$out45e" 'Pen 停在非主 checkout'
+
+out45f="$(PATROL_DESIGN_TICKETS='' PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㊺(f) 無在飛設計票＋Pen 在 qa-test → ⚠ 非主 checkout 提示' "$out45f" "⚠ Pen 停在非主 checkout：${repo}/.claude/worktrees/qa-test/design/littlesprout.pen（無設計票在飛"
+hasnt '㊺(f) 無在飛設計票 → 不印「開錯檔（設計票…在飛）」' "$out45f" '在飛）→ bash scripts/ops/pen-open.sh'
+brief45f="$(PATROL_DESIGN_TICKETS='' PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㊺(f) 提示行不掛 [Pen] flag（沒人在用 Pen，只是沒清場）' "$brief45f" '[Pen]'
+out45f2="$(PATROL_DESIGN_TICKETS='' PATROL_PEN_STATUS_SH="$fake_ps_outside" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㊺(f) 無在飛設計票＋Pen 在主 checkout → 無提示' "$out45f2" 'Pen 停在非主 checkout'
+
+filt45="$(printf '%s\n' "$brief45a" | bash "${root}/scripts/ops/patrol-filter.sh" 2>&1)"
+has   '㊺(g) patrol-filter 過濾後仍留 ⚠ Pen 開錯檔行' "$filt45" "$want45"
+
+mut_pendesign="$work/patrol.no-pen-design.sh"
+awk 'index($0, "LS376-PEN-DESIGN-START") > 0 { skip = 1 } skip != 1 { print } index($0, "LS376-PEN-DESIGN-END") > 0 { skip = 0 }' "$patrol" > "$mut_pendesign"
+if grep -q 'LS376-PEN-DESIGN-START' "$mut_pendesign" || grep -qF 'PEN_DESIGN_LINE="⚠ Pen 開錯檔' "$mut_pendesign"; then
+  echo "✗ ㊺ mutant 仍含設計票在飛偵測段（awk 拿掉失敗，負控本身無效）" >&2; fail=1
+else
+  echo '✓ ㊺ mutant 確實已拿掉設計票在飛偵測段'
+fi
+out45m="$(PATROL_DESIGN_TICKETS=LS-388 PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$mut_pendesign" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] && ! grep -qF '⚠ Pen 開錯檔：' <<<"$out45m"; then
+  echo '✓ ㊺ mutant：拿掉偵測段後，同一份「qa-test＋在飛設計票」負樣本變綠（該段確實是原因）'
+else
+  echo "✗ ㊺ mutant 應 exit 0 且不印「⚠ Pen 開錯檔：」（實得 ${rc}）" >&2; printf '%s\n' "$out45m" | sed 's/^/    /' >&2; fail=1
 fi
 
 # 假 pgrep／lsof（LS-207 R2 F6）：不碰真的系統行程表。fake-pgrep 只回 $FAKE_PGREP_PIDS（空白分隔，忽略實際參數）；

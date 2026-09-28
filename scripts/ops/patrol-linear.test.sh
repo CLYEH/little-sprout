@@ -423,6 +423,32 @@ if [ "$rc" -eq 2 ] && has "$out_lane_bad2" '單一票號數字'; then echo "✓ 
 out_lane_empty="$(bash "$plsh" --lane '' --repo "$repo" 2>&1)"; rc=$?
 if [ "$rc" -eq 2 ]; then echo "✓ ⑥c --lane 空值 → exit 2"; else echo "✗ ⑥c --lane 空值應 exit 2（實得 ${rc}）" >&2; fail=1; fi
 
+# ---- ⑥d --inflight <lane>（LS-376：patrol.sh「Pen 開錯檔（設計票在飛）」偵測問「哪些 lane:design 票在 In Progress／
+#        In Review」）：假 curl 只認 state name in 查詢、且 variables 必須帶 In Progress 與 In Review 兩個狀態（漏一個＝
+#        In Review 期間的設計票被當成沒在飛）；回四張票（兩張 design、一張 ui、一張無 lane）→ stdout 只列 design 兩張、
+#        依號碼排序（LS-3 在 LS-12 前，字串排序會反過來）；無 key → exit 3；lane 名錯 → exit 2 ----
+mkdir -p "$work/bin_inflight"
+cat > "$work/bin_inflight/curl" <<'EOF'
+#!/bin/bash
+cat >/dev/null
+data=""
+while [ $# -gt 0 ]; do case "$1" in --data) data=$2; shift ;; esac; shift; done
+case "$data" in
+  *'state: { name: { in: $states } }'*'"In Progress"'*'"In Review"'*)
+    echo '{"data":{"issues":{"nodes":[{"identifier":"LS-12","labels":{"nodes":[{"name":"lane:design"}]}},{"identifier":"LS-9","labels":{"nodes":[{"name":"lane:ui"}]}},{"identifier":"LS-3","labels":{"nodes":[{"name":"size:S"},{"name":"lane:design"}]}},{"identifier":"LS-5","labels":{"nodes":[]}}]}}}' ;;
+  *) echo '{"errors":[{"message":"stub curl：--inflight 查詢形狀不符（缺 state in 過濾或缺 In Progress／In Review）"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_inflight/curl"
+out_inf="$(PATH="$work/bin_inflight:$PATH" bash "$plsh" --inflight lane:design --repo "$repo" 2>"$work/stderr_inf.log")"; rc=$?
+if [ "$rc" -eq 0 ] && [ "$out_inf" = "LS-3"$'\n'"LS-12" ]; then echo "✓ ⑥d --inflight lane:design → exit 0、只列 design 兩張且依號碼排序"; else echo "✗ ⑥d --inflight lane:design 應印 LS-3、LS-12 兩行（實得 rc=${rc}、out=${out_inf}）" >&2; sed 's/^/    /' "$work/stderr_inf.log" >&2; fail=1; fi
+out_inf_ui="$(PATH="$work/bin_inflight:$PATH" bash "$plsh" --inflight lane:ui --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] && [ "$out_inf_ui" = "LS-9" ]; then echo "✓ ⑥d --inflight lane:ui → 只列 LS-9（lane 過濾確實生效）"; else echo "✗ ⑥d --inflight lane:ui 應只印 LS-9（實得 rc=${rc}、out=${out_inf_ui}）" >&2; fail=1; fi
+out_inf_nokey="$(bash "$plsh" --inflight lane:design --repo "$repo_no_token" 2>"$work/stderr_inf_nokey.log")"; rc=$?
+if [ "$rc" -eq 3 ] && [ -z "$out_inf_nokey" ] && grep -qF '略過（無 LINEAR_API_KEY）' "$work/stderr_inf_nokey.log"; then echo "✓ ⑥d 無 key → exit 3、stdout 空（呼叫端 fail-open）"; else echo "✗ ⑥d 無 key 應 exit 3（實得 rc=${rc}）" >&2; fail=1; fi
+out_inf_bad="$(bash "$plsh" --inflight design --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 2 ] && has "$out_inf_bad" '須為 lane 名'; then echo "✓ ⑥d lane 名缺 lane: 前綴 → exit 2"; else echo "✗ ⑥d lane 名錯應 exit 2（實得 ${rc}）" >&2; fail=1; fi
+
 # ---- ⑦ R1 F5：cycle 對帳 (d)（剩餘時間 <24h）——用執行當下算出的動態時間戳，不寫死日期，
 #        避免測試在特定日期之後失效；獨立 repo／fixture，不與 ② 的固定 2099 endsAt 互相干擾 ----
 repo_d="$work/repo_d"

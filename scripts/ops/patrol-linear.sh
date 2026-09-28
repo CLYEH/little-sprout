@@ -10,7 +10,7 @@
 # patrol.sh（同一份已測過的 xcrun/simctl 邏輯，不重造輪子）：呼叫 patrol.sh --brief --no-pr
 # --no-fetch，抓「[Booted 模擬器 …]」開頭的旗標行轉交 python 排版。
 #
-# 用法：patrol-linear.sh [--json|--brief|--closed <n,n,…>|--lane <n>] [--repo <path>]
+# 用法：patrol-linear.sh [--json|--brief|--closed <n,n,…>|--lane <n>|--inflight <lane>] [--repo <path>]
 #   （預設）human 模式，印五段：狀態對照／cycle 對帳／lane 補位＋候補＋動作清單／開票結構／Booted 模擬器
 #   --brief  只印動作清單（hook／cron 摘要用）
 #   --json   單一 JSON 物件給程式讀
@@ -20,6 +20,9 @@
 #   --lane <n>  （LS-209）只回答「這張票目前的 lane 標籤」：印一行（`lane:harness` 之類；沒掛 lane 標籤印空行），
 #            不跑整份報表、不回頭呼叫 patrol.sh。exit 0＝查過（含空字串）；3＝缺 LINEAR_API_KEY 略過；2＝票號格式錯；
 #            1＝查詢失敗。patrol.sh 的「Pen 開錯檔（實作票）」偵測走這裡。
+#   --inflight <lane>  （LS-376）只回答「這個 lane 目前 In Progress／In Review 的票」：每行一個 LS-<n>（沒有就不印），
+#            不跑整份報表、不回頭呼叫 patrol.sh。exit 0＝查過；3＝缺 LINEAR_API_KEY 略過；2＝lane 名錯；1＝查詢失敗。
+#            patrol.sh 的「Pen 開錯檔（設計票在飛）」偵測走這裡（--inflight lane:design）。
 #   --repo   指定 repo（任一 worktree 路徑皆可；預設取腳本所在 repo，ROOT 解到主 checkout）
 #
 # .env 只認 key 名、source 注入、不印不寫檔（docs/COLLABORATION.md §6／§7 H2）。缺
@@ -31,7 +34,7 @@
 # 驗證的是自測腳本（餵假 token＋假 curl）。
 set -uo pipefail
 
-MODE=human; REPO=; CLOSED_NUMS=; LANE_NUM=
+MODE=human; REPO=; CLOSED_NUMS=; LANE_NUM=; INFLIGHT_LANE=
 while [ $# -gt 0 ]; do
   case "$1" in
     --brief) MODE=brief ;;
@@ -44,11 +47,14 @@ while [ $# -gt 0 ]; do
       [ -n "${2:-}" ] || { echo "✗ patrol-linear：--lane 缺值" >&2; exit 2; }
       case "$2" in *[!0-9]*|'') echo "✗ patrol-linear：--lane 須為單一票號數字（得到「$2」）" >&2; exit 2 ;; esac
       MODE=lane; LANE_NUM=$2; shift ;;
+    --inflight)
+      case "${2:-}" in lane:harness|lane:backend|lane:design|lane:ui) ;; *) echo "✗ patrol-linear：--inflight 須為 lane 名（得到「${2:-}」）" >&2; exit 2 ;; esac
+      MODE=inflight; INFLIGHT_LANE=$2; shift ;;
     --repo)
       [ -n "${2:-}" ] || { echo "✗ patrol-linear：--repo 缺值" >&2; exit 2; }
       REPO=$2; shift ;;
     -h|--help)
-      echo "用法：patrol-linear.sh [--json|--brief|--closed <n,n,…>|--lane <n>] [--repo <path>]（說明見檔頭）"; exit 0 ;;
+      echo "用法：patrol-linear.sh [--json|--brief|--closed <n,n,…>|--lane <n>|--inflight <lane>] [--repo <path>]（說明見檔頭）"; exit 0 ;;
     *) echo "✗ patrol-linear：未知參數 $1" >&2; exit 2 ;;
   esac
   shift
@@ -75,6 +81,7 @@ if [ -z "${LINEAR_API_KEY:-}" ]; then
     json) echo '{"skipped":true,"reason":"no LINEAR_API_KEY"}' ;;
     closed) echo "⚠ 巡檢（Linear 半段）：--closed 略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會查票狀態" >&2; exit 3 ;;
     lane) echo "⚠ 巡檢（Linear 半段）：--lane 略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會查 lane" >&2; exit 3 ;;
+    inflight) echo "⚠ 巡檢（Linear 半段）：--inflight 略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會查在飛票" >&2; exit 3 ;;
     *) echo "⚠ 巡檢（Linear 半段）：略過（無 LINEAR_API_KEY）——${ROOT}/.env 補上後才會打 GraphQL，見 docs/COLLABORATION.md §7" ;;
   esac
   exit 0
@@ -96,6 +103,13 @@ if [ "$MODE" = lane ]; then
   python3 "${here}/patrol_linear.py" \
     --root "$ROOT" --team-key LS --team-id 020782d9-b525-46e1-8805-965cff30d7d2 \
     --lane "$LANE_NUM"
+  exit $?
+fi
+if [ "$MODE" = inflight ]; then
+  export LINEAR_API_KEY
+  python3 "${here}/patrol_linear.py" \
+    --root "$ROOT" --team-key LS --team-id 020782d9-b525-46e1-8805-965cff30d7d2 \
+    --inflight "$INFLIGHT_LANE"
   exit $?
 fi
 
