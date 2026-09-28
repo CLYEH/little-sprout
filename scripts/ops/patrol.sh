@@ -1059,6 +1059,45 @@ if [ -n "$pen_wt_ticket" ]; then
 fi
 # LS209-PEN-WRONG-END
 
+# ---- Pen 開錯檔（設計票在飛，LS-376；LS-208 首例、LS-349 第二次：設計票在飛時 Pen active 被 qa／reviewer 切到 qa-test
+#      或主 checkout，設計 agent 開 PR 時才發現）：上一段只抓「開在非 design 票的票 worktree」，抓不到 qa-test／主 checkout
+#      這類非票路徑。這段以 Linear 的 lane:design 在飛票（In Progress／In Review）為準：有在飛設計票而 Pen active 不是任一張
+#      的 `<票 worktree>/design/littlesprout.pen` → ⚠＋[Pen] flag＋切回命令；沒有在飛設計票而 active 不在主 checkout →
+#      只印 ⚠ 提示行（不掛 flag——沒人在用 Pen，只是沒清場）。設計票來源：PATROL_DESIGN_TICKETS（有設定就用，空字串＝
+#      無在飛；自測與人工覆寫用）否則 `patrol-linear.sh --inflight lane:design`；查不到（無 LINEAR_API_KEY／查詢失敗）
+#      → 本段不印（fail-open）。只在讀得到 Pen 路徑時才查（Pen 沒開不付 Linear 呼叫）。`${pen_path:-}`：上一段是 ㉖
+#      mutation 會整段拿掉的標記區塊，這裡不能假設 pen_path 已宣告（set -u）。
+PEN_DESIGN_LINE=
+# LS376-PEN-DESIGN-START
+# 只認絕對路徑的 .pen（pen-status.sh --path 的契約）；其他輸出（讀不到、假身印的敘述行）一律視為無路徑、不查 Linear。
+case "${pen_path:-}" in /*.pen) pen_abs=$pen_path ;; *) pen_abs= ;; esac
+if [ -n "$pen_abs" ]; then
+  design_tix=; design_known=0
+  if [ -n "${PATROL_DESIGN_TICKETS+x}" ]; then
+    design_tix=$(printf '%s\n' "$PATROL_DESIGN_TICKETS" | tr ', ' '\n\n' | grep -E '^LS-[0-9]+$'); design_known=1
+  else
+    plsh_df="${PATROL_LINEAR_SH:-${here}/patrol-linear.sh}"
+    if [ -x "$plsh_df" ] && dt_out=$(bash "$plsh_df" --inflight lane:design --repo "$ROOT" 2>/dev/null); then
+      design_tix=$(printf '%s\n' "$dt_out" | grep -E '^LS-[0-9]+$'); design_known=1
+    fi
+  fi
+  if [ "$design_known" -eq 1 ] && [ -n "$design_tix" ]; then
+    pen_on_design=0; first_design=; design_list=
+    for t in $design_tix; do
+      [ -n "$first_design" ] || first_design=$t
+      design_list="${design_list:+${design_list}、}$t"
+      [ "$pen_path" = "${ROOT}/.claude/worktrees/${t}/design/littlesprout.pen" ] && pen_on_design=1
+    done
+    if [ "$pen_on_design" -eq 0 ]; then
+      PEN_DESIGN_LINE="⚠ Pen 開錯檔：${pen_path}（設計票 ${design_list} 在飛）→ bash scripts/ops/pen-open.sh ${ROOT}/.claude/worktrees/${first_design}"
+      add_flag "[Pen] ${PEN_DESIGN_LINE}"
+    fi
+  elif [ "$design_known" -eq 1 ] && [ "$pen_path" != "${ROOT}/design/littlesprout.pen" ]; then
+    PEN_DESIGN_LINE="⚠ Pen 停在非主 checkout：${pen_path}（無設計票在飛；確認無人使用後 → bash scripts/ops/pen-open.sh ${ROOT}）"
+  fi
+fi
+# LS376-PEN-DESIGN-END
+
 # ---- 用量（LS-311；使用者 2026-09-16 指示：讀 statusline 落地的 usage-cache.json（rate_limits.
 #      seven_day／five_hour，由 scripts/ops/usage-cache-snippet.sh／statusline-command.sh 原子寫入）——週用量
 #      ≥ PATROL_USAGE_STOP（預設 99）→ 印 99 級行，指示 orchestrator 停下所有工作＋寫交接；≥ PATROL_USAGE_WARN
@@ -1490,6 +1529,7 @@ case "$MODE" in
     [ -n "$lock_queue_flag" ] && echo "Supabase lock：${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
     [ "$pencil_ran" -eq 1 ] && printf '%s\n' "$PENCIL_LINE"
     [ -n "$PEN_WRONG_LINE" ] && printf '%s\n' "$PEN_WRONG_LINE"
+    [ -n "$PEN_DESIGN_LINE" ] && printf '%s\n' "$PEN_DESIGN_LINE"
     [ -n "$USAGE_LINE" ] && printf '%s\n' "$USAGE_LINE"
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
     ;;
@@ -1530,8 +1570,9 @@ case "$MODE" in
       printf '%s\n' "$PENCIL_LINE" | sed 's/^/  /'
       [ "$pencil_rc" -ne 0 ] && echo "  → 設計票派工前先呼叫一次 mcp__pencil__get_app_state（懶連線會自動連上）；失敗才請使用者 /mcp（LS-180／LS-308）"
     else echo "  （無 design 分支 worktree，略過探針）"; fi
-    echo "== Pen 開錯檔偵測（LS-209；Pen 目前文件若落在非 design lane 的票 worktree → ⚠，查不到 lane 印 ?、不擋）"
+    echo "== Pen 開錯檔偵測（LS-209；Pen 目前文件若落在非 design lane 的票 worktree → ⚠，查不到 lane 印 ?、不擋。LS-376：lane:design 票在飛而 Pen 不在其票檔 → ⚠＋切回命令；無設計票在飛而不在主 checkout → ⚠ 提示；查不到在飛票不印）"
     if [ -n "$PEN_WRONG_LINE" ]; then echo "  ${PEN_WRONG_LINE}"; else echo "  （Pen 未開，或未開在任何票 worktree，或該票 lane 為 design）"; fi
+    [ -n "$PEN_DESIGN_LINE" ] && echo "  ${PEN_DESIGN_LINE}"
     echo "== 專屬模擬器（scripts/gates/detect-simulator.sh 建的 <票號>-<機型>；LS-83／LS-187：票 worktree 已不在或已 Done／Canceled ⚠→cleanup-merged；其餘 >7 天未用只列不刪；Booted 不列刪；LS-205：runtime 與 .ios-runtime 不一致標 ⚠ runtime，獨立計數、不計入待清、不自動重建，merge-review R1 M1）"
     if [ -n "$SIM_LINES" ]; then printf '%s' "$SIM_LINES"; else echo "  （無 xcrun，或無殘機／逾期的專屬模擬器）"; fi
     if [ -n "${sim_rows:-}" ]; then

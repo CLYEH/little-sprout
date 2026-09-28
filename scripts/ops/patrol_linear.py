@@ -144,6 +144,16 @@ query($teamKey: String!, $number: Float!) {
 }
 """
 
+# LS-376：patrol.sh「Pen 開錯檔（設計票在飛）」偵測——列出 WIP_STATES（In Progress／In Review）的票與 lane 標籤，
+# lane 過濾在 python 端做（lane_of() 同一套判定，不另寫 GraphQL label 過濾語法）。一頁 250 足夠（在飛票數遠小於此）。
+WIP_ISSUES_QUERY = """
+query($teamKey: String!, $states: [String!]) {
+  issues(first: 250, filter: { team: { key: { eq: $teamKey } }, state: { name: { in: $states } } }) {
+    nodes { identifier labels { nodes { name } } }
+  }
+}
+"""
+
 # LS-144：待辦池（LS-354）comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
 POOL_COMMENTS_QUERY = """
 query($id: String!, $after: String) {
@@ -1374,6 +1384,15 @@ def lane_of_number(token, team_key, number):
     return lane_of(nodes[0])
 
 
+def inflight_of_lane(token, team_key, lane):
+    """LS-376：回 lane 標籤為 lane 且狀態在 WIP_STATES 的票號（identifier，依號碼排序）；查詢失敗由 gql() fail loud。"""
+    data = gql(token, WIP_ISSUES_QUERY, {"teamKey": team_key, "states": list(WIP_STATES)})
+    nodes = (data.get("issues") or {}).get("nodes") or []
+    out = [n.get("identifier", "") for n in nodes if lane_of(n) == lane]
+    out.sort(key=lambda ident: ticket_number(ident) or 0)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(add_help=True)
     ap.add_argument("--root", required=True)
@@ -1385,6 +1404,8 @@ def main():
     ap.add_argument("--closed", default=None)
     # LS-209：單一票號數字——印該票目前的 lane 標籤（可能是空字串，代表沒掛 lane 標籤）；不跑整份報表。
     ap.add_argument("--lane", default=None)
+    # LS-376：lane 名（如 lane:design）——每行印一個該 lane 在 In Progress／In Review 的票號；不跑整份報表。
+    ap.add_argument("--inflight", default=None)
     args = ap.parse_args()
 
     token = os.environ.get("LINEAR_API_KEY", "")
@@ -1397,6 +1418,14 @@ def main():
             sys.stderr.write("✗ patrol-linear：--lane 須為單一票號數字（得到「%s」）\n" % args.lane)
             sys.exit(2)
         print(lane_of_number(token, args.team_key, int(args.lane)))
+        sys.exit(0)
+
+    if args.inflight is not None:
+        if args.inflight not in LANE_LIMITS:
+            sys.stderr.write("✗ patrol-linear：--inflight 須為 lane 名（%s；得到「%s」）\n" % ("／".join(LANE_LIMITS), args.inflight))
+            sys.exit(2)
+        for ident in inflight_of_lane(token, args.team_key, args.inflight):
+            print(ident)
         sys.exit(0)
 
     if args.closed is not None:
