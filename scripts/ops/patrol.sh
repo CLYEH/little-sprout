@@ -27,6 +27,10 @@
 #            其餘 CLEAN 超過 stale 標 ⏳；BLOCKED（及其他未列名狀態）超過 stale 改查 check bucket 分三流
 #            （LS-233）：pending→CI 跑中／全綠仍卡→缺必要 status／有 fail→check 紅，取代舊版籠統「無
 #            動作（CI 沒回報？）」（草稿不標）
+#            LS-385：另讀 PR 的 check-run（statusCheckRollup，同一次 gh pr list、不多打 API）——每個 check 名先收斂到最新一輪
+#            （close/reopen 會讓同 head 並列新舊兩輪；最新一輪未完成＝該名不算），`ci`／`ci-ui-<n>`
+#            任一已完成且耗時 ≥PATROL_CI_SLOW_MIN（預設 40）分就標「⚠ ci job 耗時 ≥40 分」（逼近 timeout-minutes 50 的預警；
+#            草稿也標）
 #   分支     有 commit 但分支從未 push、最後 commit 超過 PATROL_PUSH_GRACE_MIN（預設 30 分，> push-gate 看門狗 25 分，LS-207 R2）
 #            且真的 pgrep 不到該 worktree 下的 push-gate.sh 行程；領先 remote 且最後 commit 超過 stale（push gate 卡？）；
 #            落後 remote（別處 push 過）；已 push、無 open PR、最後 commit 超過 stale
@@ -265,6 +269,10 @@ EOF
 }
 
 # ---- PR（open）：gh 未裝／失敗一律略過並標示原因，不炸 ----
+# LS-385：ci job 耗時預警門檻（分）。09-24 `ci` job 43–51 分、三次撞 timeout-minutes 50 被 cancelled，事前沒有任何訊號；
+# UITests 拆成 ci-ui 分片後各 job 約 13–21 分，≥40 分＝又逼近上限（分片失衡或 UITests 成長），該調分片數了。
+CI_SLOW_MIN=${PATROL_CI_SLOW_MIN:-40}
+case "$CI_SLOW_MIN" in ''|*[!0-9]*) echo "✗ patrol：PATROL_CI_SLOW_MIN 須為整數分鐘（得到「${CI_SLOW_MIN}」）" >&2; exit 2 ;; esac
 PR_CHECKED=0; pr_skip=; pr_total=0; pr_flagged=0; PR_LINES=; J_PRS=; PR_HEADS=; pr_raw=
 # gh 的 stderr 另存暫存檔，不併進 TSV（2>&1 會把警告行當成一筆 PR 讀進去；PR #99 R1）
 gh_err=$(mktemp "${TMPDIR:-/tmp}/patrol-gh.XXXXXX") || { echo "✗ patrol：mktemp 失敗" >&2; exit 2; }
@@ -272,14 +280,14 @@ trap 'rm -f "$gh_err"' EXIT
 if [ "$DO_PR" -eq 0 ]; then pr_skip="--no-pr"
 elif ! command -v gh >/dev/null 2>&1; then pr_skip="gh 未安裝"
 elif pr_raw=$(cd "$ROOT" && gh pr list --state open --limit 50 \
-      --json number,title,headRefName,baseRefName,mergeStateStatus,updatedAt,reviewDecision,isDraft,headRefOid \
-      -q '.[] | [.number, .mergeStateStatus, (if (.reviewDecision // "") == "" then "-" else .reviewDecision end), (((now - (.updatedAt | fromdateiso8601)) / 60) | floor), .headRefName, .baseRefName, (.isDraft | tostring), .headRefOid, .title] | @tsv' 2>"$gh_err"); then
+      --json number,title,headRefName,baseRefName,mergeStateStatus,updatedAt,reviewDecision,isDraft,headRefOid,statusCheckRollup \
+      -q '.[] | [.number, .mergeStateStatus, (if (.reviewDecision // "") == "" then "-" else .reviewDecision end), (((now - (.updatedAt | fromdateiso8601)) / 60) | floor), .headRefName, .baseRefName, (.isDraft | tostring), .headRefOid, .title, ([.statusCheckRollup[]? | select(.__typename == "CheckRun" and ((.name // "") | test("^ci(-ui-[0-9]+)?$")))] | group_by(.name) | map(max_by([(if .status == "COMPLETED" then 0 else 1 end), (.startedAt // "")])) | map(select(.status == "COMPLETED" and .startedAt != null and .completedAt != null) | {n: .name, m: ((((.completedAt | fromdateiso8601) - (.startedAt | fromdateiso8601)) / 60) | floor)}) | max_by(.m) | if . == null then "" else "\(.n) \(.m)" end)] | @tsv' 2>"$gh_err"); then
   PR_CHECKED=1
 else
   pr_skip="gh 失敗：$(head -1 "$gh_err" 2>/dev/null)"
 fi
 if [ "$PR_CHECKED" -eq 1 ] && [ -n "$pr_raw" ]; then
-  while IFS=$'\t' read -r n st rd age head base draft oid title; do
+  while IFS=$'\t' read -r n st rd age head base draft oid title ci_slow; do
     [ -n "$n" ] || continue
     pr_total=$((pr_total + 1))
     PR_HEADS="${PR_HEADS}${head}"$'\t'"${n}"$'\n'
@@ -297,6 +305,12 @@ if [ "$PR_CHECKED" -eq 1 ] && [ -n "$pr_raw" ]; then
       esac
       if [ "$rd" = CHANGES_REQUESTED ]; then flag="${flag:+${flag}；}⚠ CHANGES_REQUESTED"; fi
     fi
+    # LS-385：每個 check 名先取最新一輪（R2 M1：舊一輪不算），其中已完成的 ci／ci-ui-<n> 耗時最長者（第 10 欄「<job> <分>」，
+    # 無則空）≥門檻 → 預警（草稿也標）
+    ci_slow_m=${ci_slow##* }
+    case "$ci_slow_m" in ''|*[!0-9]*) : ;; *)
+      if [ "$ci_slow_m" -ge "$CI_SLOW_MIN" ]; then flag="${flag:+${flag}；}⚠ ci job 耗時 ≥${CI_SLOW_MIN} 分（${ci_slow% *} ${ci_slow_m} 分，逼近該 job 的 timeout-minutes）→ 依 LS-385 調 ci-ui 分片數／拆 job，別等撞 timeout 被 cancelled"; fi ;;   # CI-SLOW-FLAG
+    esac
     if [ -n "$flag" ]; then pr_flagged=$((pr_flagged + 1)); add_flag "[PR #${n} ${head}] ${flag}"; fi
     PR_LINES="${PR_LINES}$(printf '  #%-4s %-12s %-18s %5sm  %s → %s  %s%s' "$n" "$st" "$rd" "$age" "$head" "$base" "$([ "$draft" = true ] && echo '草稿 ')" "${flag:-ok}")"$'\n'
     J_PRS="${J_PRS:+${J_PRS},}{\"number\":$(json_num "$n"),\"merge_state\":$(json_str "$st"),\"review\":$(json_str "$rd"),\"age_minutes\":$(json_num "$age"),\"head\":$(json_str "$head"),\"base\":$(json_str "$base"),\"draft\":${draft},\"title\":$(json_str "$title"),\"flag\":$(json_str "$flag")}"
@@ -917,6 +931,9 @@ SUPEOF
                 : > "$cache_f"   # superseded（concurrency cancel）：不計入
               else
                 job_timeout=$(reds_job_timeout_min "$r_jobname")
+                # LS-385：matrix job 的 check 名是 `ci-ui-<n>`，ci.yml 的 job key 是 `ci-ui`——查不到就去掉 `-<數字>` 尾再查一次，
+                # 否則落回 REDS_TIMEOUT_MIN（30 分），把 ci-ui 片 30–50 分的人工取消誤計成「撞 timeout」。
+                [ -n "$job_timeout" ] || job_timeout=$(reds_job_timeout_min "${r_jobname%-[0-9]*}")   # REDS-MATRIX-KEY
                 case "$job_timeout" in ''|*[!0-9]*) job_timeout=$REDS_TIMEOUT_MIN ;; esac
                 if [ "$r_cansec" -ge $((job_timeout * 60)) ]; then
                   printf 'timeout（cancelled、無 failure／timed_out step、cancelled job ≥%s 分——撞 job timeout-minutes）\n' "$job_timeout" > "$cache_f"

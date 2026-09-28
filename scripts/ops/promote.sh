@@ -5,7 +5,8 @@
 # merge-reviewer 不動（本來就只審 feature／fix／hotfix PR）；gate 不減、換位置：
 #   server-side：test／main 的 required status checks 對推上去的 SHA 生效（沒有綠 check 的 SHA 推不上去，GH006；
 #               scripts/ops/protection-apply.sh）
-#   client-side：本腳本驗 FF＋`$REQUIRED_CHECKS`（目前五個：ci／ci-ipad／db／lint／rules，LS-209 加 ci-ipad；
+#   client-side：本腳本驗 FF＋`$REQUIRED_CHECKS`（目前八個：ci／ci-ipad／ci-ui-1／ci-ui-2／ci-ui-3／db／lint／rules，LS-209 加
+#               ci-ipad、LS-385 加 ci-ui-1..3——UITests 自 ci 拆出分三片；
 #               改動 required check 集合時只需改該變數，這段敘述不會跟著自動更新，請一併訂正）；
 #               push-gate（scripts/gates/push-ref-check.sh）擋繞過本腳本的 test／main 推送；
 #               漂移由 scripts/ops/patrol.sh 偵測。
@@ -15,8 +16,7 @@
 #       (b) 方向
 #       (c) FF：origin/<to> 須為 origin/<from> 的祖先，否則拒絕並指示先 back-merge
 #       (d) origin/<from> 的 SHA 在 GitHub 的 check-runs：只認 GitHub Actions（app id 15368，與分支保護 required checks 限 app
-#           一致——別的 app 貼同名 check 不算，PR #141 R1 F5）的 `$REQUIRED_CHECKS`（ci／ci-ipad／db／lint／rules，LS-209
-#           加 ci-ipad），各取最新一筆（id 最大；同一 SHA 推到 test
+#           一致——別的 app 貼同名 check 不算，PR #141 R1 F5）的 `$REQUIRED_CHECKS`（見上方 client-side 清單），各取最新一筆（id 最大；同一 SHA 推到 test
 #           後會再跑一輪，與 GitHub 分支保護「看最新一筆」一致），status completed 且 conclusion success 才放行；缺／skipped／
 #           failure／in_progress 皆拒絕並印出是哪一個
 #       (d′) 同一 SHA 的 commit status（LS-87；`gh api …/commits/<sha>/status` combined status，每個 context 只回最新一筆）：
@@ -35,7 +35,9 @@ set -uo pipefail
 # LS-209 merge-review R1 M3：required checks 清單須與 protection-apply.sh 的分支保護設定同步——加 ci-ipad
 # 之前這裡漏了它，套用保護後某次 ci-ipad 紅時本腳本仍印「四項全綠」照樣拒絕 push（server-side 仍安全），
 # 但把可診斷的紅換成了要人自己去猜的泛用訊息。成功訊息改讀這個變數、不再硬寫四個名字。
-REQUIRED_CHECKS="ci ci-ipad db lint rules"
+# LS-385：UITests 自 ci job 拆到 ci.yml 的 ci-ui matrix（job 名 ci-ui-<n>，分片數＝matrix.shard 清單長度）——少列一片＝
+# 該片紅照樣晉升；改分片數時這裡、protection-apply.sh 與 branch protection 三處同步。
+REQUIRED_CHECKS="ci ci-ipad ci-ui-1 ci-ui-2 ci-ui-3 db lint rules"
 CHECKS_APP_ID=15368   # GitHub Actions；分支保護的 required checks 也限這個 app（scripts/ops/protection-apply.sh）
 # commit status（LS-87）：merge-review 兩個方向都要（分支保護亦列為 required check）；qa 只在 test→main（release 前提＝QA PASS）
 

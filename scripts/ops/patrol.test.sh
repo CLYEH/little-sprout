@@ -2400,6 +2400,129 @@ else
   fail=1
 fi
 
+# ---- ㉚m（LS-385）：matrix job 的 check 名 `ci-ui-<n>` 對應 ci.yml 的 job key `ci-ui`——cancelled 35 分（2100 s）、
+#      ci.yml 寫 timeout-minutes 50 → 不是撞 timeout，不得計入（查不到 key 時會落回 30 分 fallback 而誤計）。
+#      合成 repo 本來沒有 ci.yml，這組臨時寫一份只含 ci-ui job 的，跑完移除，不影響其他組。
+gh_dir_m="$work/fake-gh-data-m"; mkdir -p "$gh_dir_m"
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-28T10:35:00Z","conclusion":"cancelled","name":"ci-ui-2","startedAt":"2026-09-28T10:00:00Z","steps":[{"conclusion":"success"},{"conclusion":"cancelled"}]}]}' > "$gh_dir_m/36900000001.jobs.json"
+printf '%s\n' $'36900000001\tcancelled\tfeature/LS-385-m\t2026-09-28T10:00:00Z\tshaMMM1\tpush\t1790503200' > "$work/gh-runs-m"
+mkdir -p "$repo/.github/workflows"
+printf 'jobs:\n  ci-ui:\n    needs: ci-dedup\n    name: ci-ui-${{ matrix.shard }}\n    timeout-minutes: 50\n  ci-ipad:\n    timeout-minutes: 30\n' > "$repo/.github/workflows/ci.yml"
+cache30m="$work/reds-cache-m"; rm -rf "$cache30m"
+reds_m() {   # reds_m <patrol 腳本>
+  rm -rf "$cache30m"
+  PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs-m" FAKE_GH_DIR="$gh_dir_m" PATROL_REDS_CACHE="$cache30m" PATROL_REDS_MAX_FETCH=10 \
+    bash "$1" --repo "$repo" --no-fetch "$STALE" >/dev/null 2>&1
+}
+reds_m "$patrol"
+cache_m="$cache30m/v3/36900000001"
+if [ -f "$cache_m" ] && [ ! -s "$cache_m" ]; then
+  echo "✓ ㉚m cancelled ci-ui-2 35 分、ci.yml 的 ci-ui timeout-minutes 50 → 不計入 timeout（簽章空白）"
+else
+  echo "✗ ㉚m ci-ui-2 應對到 ci.yml 的 ci-ui（timeout 50）而不計入：$(cat "$cache_m" 2>/dev/null || echo '（檔案不存在）')" >&2
+  fail=1
+fi
+mut_m="$work/patrol.no-matrix-key.sh"
+grep -v 'REDS-MATRIX-KEY$' "$patrol" > "$mut_m"
+if cmp -s "$patrol" "$mut_m"; then
+  echo "✗ ㉚m mutation 無效：grep 沒刪到 REDS-MATRIX-KEY 那行" >&2; fail=1
+else
+  reds_m "$mut_m"
+  if [ -s "$cache_m" ]; then
+    echo "✓ ㉚m mutant（拿掉 matrix key 對應）→ 落回 30 分 fallback、誤計成 timeout（證明 ㉚m 咬住該行）"
+  else
+    echo "✗ ㉚m mutant 仍不計入——㉚m 沒咬住 matrix key 對應那行" >&2; fail=1
+  fi
+fi
+rm -rf "$repo/.github"
+
+# ---- ㉞（LS-385）：PR 段「⚠ ci job 耗時 ≥40 分」——讀 gh pr list 的 statusCheckRollup（同一次呼叫），`ci`／`ci-ui-<n>`
+#      已完成的 check-run 耗時最長者 ≥PATROL_CI_SLOW_MIN（預設 40）分就標。假 gh 對 pr-list.json 跑 patrol 自己那條 -q 運算式
+#      （真 jq，同 ㉘ i4 的教訓：預先算好的 TSV 會繞過運算式本身）。fixture 形狀取自真 PR（`gh pr list --json statusCheckRollup`：
+#      CheckRun 帶 name／status／startedAt／completedAt，StatusContext（merge-review）這幾欄為 null，跑中的 check 為 IN_PROGRESS）。
+#      950＝#553 重放（ci CANCELLED 18:58:19→19:49:33＝51 分）；951＝ci-ui-2 41 分、ci-ui-3 跑中（不得當 0001 年算成負值或巨值）；
+#      952＝ci 39 分＋ci-ipad 45 分（ci-ipad 不在判準內）→ 不標；953＝無任何 check → 不標；954＝草稿 ci 42 分 → 也標。
+cs_dir="$work/gh-fixtures-ci-slow"; mkdir -p "$cs_dir" "$work/bin-ci-slow"
+now_iso=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+cat > "$cs_dir/pr-list.json" <<JSON
+[
+ {"number":950,"title":"LS-950 重放 #553","headRefName":"feature/LS-950-a","baseRefName":"development","mergeStateStatus":"CLEAN","updatedAt":"${now_iso}","reviewDecision":"","isDraft":false,"headRefOid":"a950","statusCheckRollup":[
+   {"__typename":"CheckRun","name":"rules","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-24T18:58:00Z","completedAt":"2026-09-24T19:09:35Z"},
+   {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"CANCELLED","startedAt":"2026-09-24T18:58:19Z","completedAt":"2026-09-24T19:49:33Z"},
+   {"__typename":"CheckRun","name":"ci-ipad","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-24T18:58:21Z","completedAt":"2026-09-24T19:12:23Z"},
+   {"__typename":"StatusContext","name":null,"status":null,"startedAt":"2026-09-28T01:03:49Z","completedAt":null}]},
+ {"number":951,"title":"LS-951 分片失衡","headRefName":"feature/LS-951-b","baseRefName":"development","mergeStateStatus":"CLEAN","updatedAt":"${now_iso}","reviewDecision":"","isDraft":false,"headRefOid":"a951","statusCheckRollup":[
+   {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T10:00:00Z","completedAt":"2026-09-28T10:13:00Z"},
+   {"__typename":"CheckRun","name":"ci-ui-1","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T10:00:00Z","completedAt":"2026-09-28T10:18:00Z"},
+   {"__typename":"CheckRun","name":"ci-ui-2","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T10:00:00Z","completedAt":"2026-09-28T10:41:30Z"},
+   {"__typename":"CheckRun","name":"ci-ui-3","status":"IN_PROGRESS","conclusion":null,"startedAt":"2026-09-28T10:00:00Z","completedAt":"0001-01-01T00:00:00Z"}]},
+ {"number":952,"title":"LS-952 門檻下","headRefName":"feature/LS-952-c","baseRefName":"development","mergeStateStatus":"CLEAN","updatedAt":"${now_iso}","reviewDecision":"","isDraft":false,"headRefOid":"a952","statusCheckRollup":[
+   {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T10:00:00Z","completedAt":"2026-09-28T10:39:59Z"},
+   {"__typename":"CheckRun","name":"ci-ipad","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T10:00:00Z","completedAt":"2026-09-28T10:45:00Z"},
+   {"__typename":"CheckRun","name":"ci-dedup","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T09:00:00Z","completedAt":"2026-09-28T10:00:00Z"}]},
+ {"number":953,"title":"LS-953 無 check","headRefName":"feature/LS-953-d","baseRefName":"development","mergeStateStatus":"CLEAN","updatedAt":"${now_iso}","reviewDecision":"","isDraft":false,"headRefOid":"a953","statusCheckRollup":[]},
+ {"number":955,"title":"LS-955 close/reopen 後新一輪","headRefName":"feature/LS-955-f","baseRefName":"development","mergeStateStatus":"CLEAN","updatedAt":"${now_iso}","reviewDecision":"","isDraft":false,"headRefOid":"a955","statusCheckRollup":[
+   {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"CANCELLED","startedAt":"2026-09-24T18:58:19Z","completedAt":"2026-09-24T19:49:33Z"},
+   {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T01:55:58Z","completedAt":"2026-09-28T02:09:00Z"}]},
+ {"number":956,"title":"LS-956 reopen 後新一輪排隊中","headRefName":"feature/LS-956-g","baseRefName":"development","mergeStateStatus":"CLEAN","updatedAt":"${now_iso}","reviewDecision":"","isDraft":false,"headRefOid":"a956","statusCheckRollup":[
+   {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"CANCELLED","startedAt":"2026-09-24T18:58:19Z","completedAt":"2026-09-24T19:49:33Z"},
+   {"__typename":"CheckRun","name":"ci","status":"QUEUED","conclusion":null,"startedAt":null,"completedAt":null}]},
+ {"number":954,"title":"LS-954 草稿","headRefName":"feature/LS-954-e","baseRefName":"development","mergeStateStatus":"DRAFT","updatedAt":"${now_iso}","reviewDecision":"","isDraft":true,"headRefOid":"a954","statusCheckRollup":[
+   {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T10:00:00Z","completedAt":"2026-09-28T10:42:00Z"}]}
+]
+JSON
+cat > "$work/bin-ci-slow/gh" <<STUB
+#!/bin/bash
+if [ "\$1" = pr ] && [ "\$2" = list ]; then
+  filter=""
+  while [ \$# -gt 0 ]; do
+    if [ "\$1" = "-q" ]; then filter="\$2"; break; fi
+    shift
+  done
+  jq -r "\$filter" "$cs_dir/pr-list.json"
+  exit \$?
+fi
+exit 1
+STUB
+chmod +x "$work/bin-ci-slow/gh"
+cs_run() {   # cs_run <patrol 腳本> [env…]：只換 PR 段的 gh；同類紅段也吃到這支假 gh（run 子命令 exit 1 → fail-soft）
+  env PATH="$work/bin-ci-slow:$PATH" PATROL_REDS_CACHE="$work/reds-cache-cs" "${@:2}" bash "$1" --repo "$repo" --no-fetch "$STALE" 2>&1
+}
+out34=$(cs_run "$patrol")
+# 斷言對象＝人類模式的 PR 列（orchestrator cron 讀的就是這個輸出再經 patrol-filter.sh，見 ㉞h）
+has_jq '㉞a #553 重放：ci CANCELLED 51 分 → ⚠ ci job 耗時 ≥40 分（點名 job 與分鐘）' "$(row "$out34" '#950 ')" '⚠ ci job 耗時 ≥40 分（ci 51 分'
+has_jq '㉞b ci-ui-2 41 分 → 標（matrix 分片名在判準內；跑中的 ci-ui-3 不影響）' "$(row "$out34" '#951 ')" '⚠ ci job 耗時 ≥40 分（ci-ui-2 41 分'
+hasnt_jq '㉞c ci 39 分＋ci-ipad 45 分 → 不標（門檻下；ci-ipad 不在判準內）' "$(row "$out34" '#952 ')" 'ci job 耗時'
+hasnt_jq '㉞d 無任何 check → 不標' "$(row "$out34" '#953 ')" 'ci job 耗時'
+hasnt_jq '㉞i close/reopen：同名 ci 舊一輪 51 分 cancelled、最新一輪 13 分 → 不標（只看每個 check 名最新一輪）' "$(row "$out34" '#955 ')" 'ci job 耗時'
+hasnt_jq '㉞i2 close/reopen：新一輪 ci 排隊中（startedAt null）→ 舊一輪 51 分不再算（最新一輪未完成＝不標）' "$(row "$out34" '#956 ')" 'ci job 耗時'
+has_jq '㉞e 草稿也標（耗時預警與審查狀態無關）' "$(row "$out34" '#954 ')" '⚠ ci job 耗時 ≥40 分（ci 42 分'
+# ㉞h 端到端：經 §4-b cron 的 patrol-filter.sh 後預警行仍在（⚠ 標記被保留，不會被濾掉）
+has_jq '㉞h 經 patrol-filter.sh 後 #950 預警行仍在' "$(printf '%s\n' "$out34" | bash "${root}/scripts/ops/patrol-filter.sh")" '#950  CLEAN'
+out34t=$(cs_run "$patrol" PATROL_CI_SLOW_MIN=52)
+hasnt_jq '㉞f PATROL_CI_SLOW_MIN=52 → 51 分的 #950 不標（門檻有接線，不是寫死 40）' "$(row "$out34t" '#950 ')" 'ci job 耗時'
+has_jq '㉞f 對照：同一輪 52 分門檻下 fixture 本身仍讀得到（#950 列存在）' "$out34t" '#950 '
+out34x=$(cs_run "$patrol" PATROL_CI_SLOW_MIN=abc); rc34x=$?
+rc_is '㉞g PATROL_CI_SLOW_MIN 非整數 → exit 2（fail closed）' 2 "$rc34x" "$out34x"
+# mutation：拿掉標旗那行（CI-SLOW-FLAG）→ ㉞a 的斷言必須紅
+mut34="$work/patrol.no-ci-slow-flag.sh"
+grep -v 'CI-SLOW-FLAG$' "$patrol" > "$mut34"
+if cmp -s "$patrol" "$mut34"; then
+  echo "✗ ㉞m mutation 無效：grep 沒刪到 CI-SLOW-FLAG 那行" >&2; fail=1
+elif command -v jq >/dev/null 2>&1; then
+  out34m=$(cs_run "$mut34")
+  row34m=$(row "$out34m" '#950 ')
+  if [ -z "$row34m" ]; then
+    echo "✗ ㉞m mutant 輸出沒有 #950 列——負控空跑（fixture 沒被讀到）" >&2; fail=1
+  elif printf '%s' "$row34m" | grep -qF 'ci job 耗時'; then
+    echo "✗ ㉞m mutant（拿掉 CI-SLOW-FLAG）#950 列仍有預警——㉞a 沒咬住那行" >&2; fail=1
+  else
+    echo "✓ ㉞m mutant（拿掉 CI-SLOW-FLAG）→ #950 列不再有預警（㉞a 轉紅，證明斷言咬住標旗那行）"
+  fi
+else
+  jq_skipped=$((jq_skipped + 1))
+fi
+
 # ==== ㉝ LS-352：review-rounds-report.sh（審查輪次報表）＋ patrol.sh --weekly ====
 # 合成 repo：main 上 8 支近期 fix（R2／R3／R1／無標記／PR2（不算）／R12／R2.1 rubric 編號（不算，R2）／R3-m1 連字號形狀（算））
 # ＋1 支 feat R5（非 fix 不算）＋1 支 30 天前的 fix R4（--days 7 排除、--days 60 納入）。
