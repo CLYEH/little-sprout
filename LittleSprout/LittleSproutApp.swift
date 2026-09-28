@@ -31,6 +31,9 @@ struct LittleSproutApp: App {
     /// LS-379：飲食圖鑑 client——同 `growthAPIClient` 的既有理由（不可變的純 service 物件）；以
     /// `.environment(\.foodAPIClient, …)` 注入而非逐層 init 參數，理由見 `FoodAPIClient.swift`。
     let foodAPIClient: FoodAPIClient
+    /// LS-381：記錄詳情的照片簽名／記錄者名稱——同 `foodAPIClient` 以 environment 注入，理由見
+    /// `FoodRecordDetailAPIClient.swift`（刻意不併進 `FoodAPIClient`）。
+    let foodRecordDetailAPIClient: FoodRecordDetailAPIClient
     let mediaUploadService: MediaUploadService
     /// LS-193：`SettingsView`→`DeleteAccountFlowView` 用，同 `diaryAPIClient`／
     /// `mediaUploadService` 的既有角色分工（不隨 app 存活的無狀態 client）。
@@ -87,6 +90,7 @@ struct LittleSproutApp: App {
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)
         growthAPIClient = SupabaseGrowthAPIClient(client: client)
         foodAPIClient = SupabaseFoodAPIClient(client: client)
+        foodRecordDetailAPIClient = SupabaseFoodRecordDetailAPIClient(client: client)
         mediaUploadService = SupabaseMediaUploadService(client: client)
         accountAPIClient = SupabaseAccountAPIClient(client: client)
         _resumer = State(initialValue: PendingAccountDeletionResumer(accountAPIClient: accountAPIClient))
@@ -147,5 +151,6 @@ struct LittleSproutApp: App {
             }
         }
         .environment(\.foodAPIClient, foodAPIClient)
+        .environment(\.foodRecordDetailAPIClient, foodRecordDetailAPIClient)
     }
 }
