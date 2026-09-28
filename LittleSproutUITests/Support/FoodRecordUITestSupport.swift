@@ -6,6 +6,7 @@ import XCTest
 enum FoodRecordUITestSupport {
     static let xSmall = "UICTContentSizeCategoryXS"
     static let standard = "UICTContentSizeCategoryL"
+    static let ax1 = "UICTContentSizeCategoryAccessibilityM"
     static let ax3 = "UICTContentSizeCategoryAccessibilityXL"
 
     static func launch(_ screen: TapTargetGateScreenName, _ size: String, dark: Bool = false) -> XCUIApplication {

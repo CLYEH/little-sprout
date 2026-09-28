@@ -53,18 +53,37 @@ final class FoodRecordSheetUITests: XCTestCase {
         assertFailureKeepsSaveButtonInPlace(size: Support.ax3)
     }
 
-    /// 儲存鈕 y 在失敗前後相同（票文範圍 2）；Status Slot 高度前後相同、且＝兩句中較高那句（不是寫死的 348／56）。
+    /// 稿面只量了 AX3（348）；AX1 下兩句都比 348 矮——寫死「AX 字級 348」或「AX3 以上 348、其餘 56」都會在這裡
+    /// 對不上「兩句較高者」（mutation 實測：AX3 的失敗句剛好量到約 348，只測 AX3 抓不到寫死）。
+    func testFailureKeepsSaveButtonInPlace_AX1() {
+        assertFailureKeepsSaveButtonInPlace(size: Support.ax1)
+    }
+
+    /// 儲存鈕 y 在失敗前後相同（票文範圍 2）；Status Slot＝兩句中較高那句（不是寫死的 348／56）。
+    ///
+    /// Slot 高度量法：XCUITest 的容器 frame 是子元素聯集、量不到 Slot 自己的高度，改量「句子頂 → 儲存鈕頂」——
+    /// 兩句（當前句＋保留句 `foodRecord.statusText.reserved`，opacity 0 但仍在元素樹上）都頂齊 Slot 頂，
+    /// 所以 `儲存鈕頂 − 句子頂 − 較高那句的高` 就是 Footer 的間距（`AppSpacing.item` 16，sheet 縮放下約 15–17）。
+    /// 寫死任何高度（例如 AX 一律 348）都會讓這個差值離開 16。
     private func assertFailureKeepsSaveButtonInPlace(size: String, line: UInt = #line) {
         let app = Support.launch(.foodRecordSheetFailure, size)
         Support.openTaroSheet(in: app)
         let save = app.buttons["foodRecord.save"]
         Support.scrollUntilHittable(save, in: app)
-        let slot = Support.element("foodRecord.statusSlot", in: app)
         let statusText = Support.element("foodRecord.statusText", in: app)
         XCTAssertTrue(statusText.label.contains("儲存後芋頭會變成彩色"), statusText.label, line: line)
+        let rows = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "foodRecord.statusText")
+        ).allElementsBoundByIndex
+        XCTAssertGreaterThanOrEqual(rows.count, 2, "一般句＋保留的失敗句都要疊在 Slot 裡", line: line)
+        let tallest = rows.map(\.frame.height).max() ?? 0
         let saveBefore = save.frame
-        let slotBefore = slot.frame
-        let normalRowHeight = statusText.frame.height
+        let footerGap = saveBefore.minY - statusText.frame.minY - tallest
+        XCTAssertEqual(
+            footerGap, 16, accuracy: 2,
+            "Slot 高＝兩句較高者（\(tallest)pt）＋間距 16——實測間距 \(footerGap)，不是 16 代表 Slot 高度被寫死或沒疊句",
+            line: line
+        )
 
         save.tap()
 
@@ -73,14 +92,7 @@ final class FoodRecordSheetUITests: XCTestCase {
             line: line
         )
         XCTAssertTrue(save.waitForHittable(timeout: 5), line: line)
-        let failureRowHeight = statusText.frame.height
         XCTAssertEqual(save.frame.minY, saveBefore.minY, accuracy: 0.5, "失敗態儲存鈕不位移", line: line)
-        XCTAssertEqual(slot.frame.height, slotBefore.height, accuracy: 0.5, "Status Slot 前後同高", line: line)
-        XCTAssertEqual(
-            slot.frame.height, max(normalRowHeight, failureRowHeight), accuracy: 1,
-            "Status Slot 高＝兩句較高者（max 規則，不寫死）：slot \(slot.frame.height)、一般 \(normalRowHeight)、失敗 \(failureRowHeight)",
-            line: line
-        )
         XCTAssertTrue(app.staticTexts["記下小安第一次吃芋頭"].exists, "失敗不關 sheet（內容保留）", line: line)
     }
 
