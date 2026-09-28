@@ -27,7 +27,8 @@
 #            其餘 CLEAN 超過 stale 標 ⏳；BLOCKED（及其他未列名狀態）超過 stale 改查 check bucket 分三流
 #            （LS-233）：pending→CI 跑中／全綠仍卡→缺必要 status／有 fail→check 紅，取代舊版籠統「無
 #            動作（CI 沒回報？）」（草稿不標）
-#            LS-385：另讀 PR 最新一輪 check-run（statusCheckRollup，同一次 gh pr list、不多打 API）——`ci`／`ci-ui-<n>`
+#            LS-385：另讀 PR 的 check-run（statusCheckRollup，同一次 gh pr list、不多打 API）——每個 check 名先收斂到最新一輪
+#            （close/reopen 會讓同 head 並列新舊兩輪；最新一輪未完成＝該名不算），`ci`／`ci-ui-<n>`
 #            任一已完成且耗時 ≥PATROL_CI_SLOW_MIN（預設 40）分就標「⚠ ci job 耗時 ≥40 分」（逼近 timeout-minutes 50 的預警；
 #            草稿也標）
 #   分支     有 commit 但分支從未 push、最後 commit 超過 PATROL_PUSH_GRACE_MIN（預設 30 分，> push-gate 看門狗 25 分，LS-207 R2）
@@ -280,7 +281,7 @@ if [ "$DO_PR" -eq 0 ]; then pr_skip="--no-pr"
 elif ! command -v gh >/dev/null 2>&1; then pr_skip="gh 未安裝"
 elif pr_raw=$(cd "$ROOT" && gh pr list --state open --limit 50 \
       --json number,title,headRefName,baseRefName,mergeStateStatus,updatedAt,reviewDecision,isDraft,headRefOid,statusCheckRollup \
-      -q '.[] | [.number, .mergeStateStatus, (if (.reviewDecision // "") == "" then "-" else .reviewDecision end), (((now - (.updatedAt | fromdateiso8601)) / 60) | floor), .headRefName, .baseRefName, (.isDraft | tostring), .headRefOid, .title, ([.statusCheckRollup[]? | select(.__typename == "CheckRun" and .status == "COMPLETED" and .startedAt != null and .completedAt != null and ((.name // "") | test("^ci(-ui-[0-9]+)?$"))) | {n: .name, m: ((((.completedAt | fromdateiso8601) - (.startedAt | fromdateiso8601)) / 60) | floor)}] | max_by(.m) | if . == null then "" else "\(.n) \(.m)" end)] | @tsv' 2>"$gh_err"); then
+      -q '.[] | [.number, .mergeStateStatus, (if (.reviewDecision // "") == "" then "-" else .reviewDecision end), (((now - (.updatedAt | fromdateiso8601)) / 60) | floor), .headRefName, .baseRefName, (.isDraft | tostring), .headRefOid, .title, ([.statusCheckRollup[]? | select(.__typename == "CheckRun" and ((.name // "") | test("^ci(-ui-[0-9]+)?$")))] | group_by(.name) | map(max_by([(if .status == "COMPLETED" then 0 else 1 end), (.startedAt // "")])) | map(select(.status == "COMPLETED" and .startedAt != null and .completedAt != null) | {n: .name, m: ((((.completedAt | fromdateiso8601) - (.startedAt | fromdateiso8601)) / 60) | floor)}) | max_by(.m) | if . == null then "" else "\(.n) \(.m)" end)] | @tsv' 2>"$gh_err"); then
   PR_CHECKED=1
 else
   pr_skip="gh 失敗：$(head -1 "$gh_err" 2>/dev/null)"
@@ -304,7 +305,8 @@ if [ "$PR_CHECKED" -eq 1 ] && [ -n "$pr_raw" ]; then
       esac
       if [ "$rd" = CHANGES_REQUESTED ]; then flag="${flag:+${flag}；}⚠ CHANGES_REQUESTED"; fi
     fi
-    # LS-385：最新一輪 ci／ci-ui-<n> 耗時最長者（第 10 欄「<job> <分>」，無已完成的就空）≥門檻 → 預警（草稿也標）
+    # LS-385：每個 check 名先取最新一輪（R2 M1：舊一輪不算），其中已完成的 ci／ci-ui-<n> 耗時最長者（第 10 欄「<job> <分>」，
+    # 無則空）≥門檻 → 預警（草稿也標）
     ci_slow_m=${ci_slow##* }
     case "$ci_slow_m" in ''|*[!0-9]*) : ;; *)
       if [ "$ci_slow_m" -ge "$CI_SLOW_MIN" ]; then flag="${flag:+${flag}；}⚠ ci job 耗時 ≥${CI_SLOW_MIN} 分（${ci_slow% *} ${ci_slow_m} 分，逼近該 job 的 timeout-minutes）→ 依 LS-385 調 ci-ui 分片數／拆 job，別等撞 timeout 被 cancelled"; fi ;;   # CI-SLOW-FLAG

@@ -2461,6 +2461,12 @@ cat > "$cs_dir/pr-list.json" <<JSON
    {"__typename":"CheckRun","name":"ci-ipad","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T10:00:00Z","completedAt":"2026-09-28T10:45:00Z"},
    {"__typename":"CheckRun","name":"ci-dedup","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T09:00:00Z","completedAt":"2026-09-28T10:00:00Z"}]},
  {"number":953,"title":"LS-953 無 check","headRefName":"feature/LS-953-d","baseRefName":"development","mergeStateStatus":"CLEAN","updatedAt":"${now_iso}","reviewDecision":"","isDraft":false,"headRefOid":"a953","statusCheckRollup":[]},
+ {"number":955,"title":"LS-955 close/reopen 後新一輪","headRefName":"feature/LS-955-f","baseRefName":"development","mergeStateStatus":"CLEAN","updatedAt":"${now_iso}","reviewDecision":"","isDraft":false,"headRefOid":"a955","statusCheckRollup":[
+   {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"CANCELLED","startedAt":"2026-09-24T18:58:19Z","completedAt":"2026-09-24T19:49:33Z"},
+   {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T01:55:58Z","completedAt":"2026-09-28T02:09:00Z"}]},
+ {"number":956,"title":"LS-956 reopen 後新一輪排隊中","headRefName":"feature/LS-956-g","baseRefName":"development","mergeStateStatus":"CLEAN","updatedAt":"${now_iso}","reviewDecision":"","isDraft":false,"headRefOid":"a956","statusCheckRollup":[
+   {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"CANCELLED","startedAt":"2026-09-24T18:58:19Z","completedAt":"2026-09-24T19:49:33Z"},
+   {"__typename":"CheckRun","name":"ci","status":"QUEUED","conclusion":null,"startedAt":null,"completedAt":null}]},
  {"number":954,"title":"LS-954 草稿","headRefName":"feature/LS-954-e","baseRefName":"development","mergeStateStatus":"DRAFT","updatedAt":"${now_iso}","reviewDecision":"","isDraft":true,"headRefOid":"a954","statusCheckRollup":[
    {"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"SUCCESS","startedAt":"2026-09-28T10:00:00Z","completedAt":"2026-09-28T10:42:00Z"}]}
 ]
@@ -2488,6 +2494,8 @@ has_jq '㉞a #553 重放：ci CANCELLED 51 分 → ⚠ ci job 耗時 ≥40 分�
 has_jq '㉞b ci-ui-2 41 分 → 標（matrix 分片名在判準內；跑中的 ci-ui-3 不影響）' "$(row "$out34" '#951 ')" '⚠ ci job 耗時 ≥40 分（ci-ui-2 41 分'
 hasnt_jq '㉞c ci 39 分＋ci-ipad 45 分 → 不標（門檻下；ci-ipad 不在判準內）' "$(row "$out34" '#952 ')" 'ci job 耗時'
 hasnt_jq '㉞d 無任何 check → 不標' "$(row "$out34" '#953 ')" 'ci job 耗時'
+hasnt_jq '㉞i close/reopen：同名 ci 舊一輪 51 分 cancelled、最新一輪 13 分 → 不標（只看每個 check 名最新一輪）' "$(row "$out34" '#955 ')" 'ci job 耗時'
+hasnt_jq '㉞i2 close/reopen：新一輪 ci 排隊中（startedAt null）→ 舊一輪 51 分不再算（最新一輪未完成＝不標）' "$(row "$out34" '#956 ')" 'ci job 耗時'
 has_jq '㉞e 草稿也標（耗時預警與審查狀態無關）' "$(row "$out34" '#954 ')" '⚠ ci job 耗時 ≥40 分（ci 42 分'
 # ㉞h 端到端：經 §4-b cron 的 patrol-filter.sh 後預警行仍在（⚠ 標記被保留，不會被濾掉）
 has_jq '㉞h 經 patrol-filter.sh 後 #950 預警行仍在' "$(printf '%s\n' "$out34" | bash "${root}/scripts/ops/patrol-filter.sh")" '#950  CLEAN'
