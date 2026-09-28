@@ -155,6 +155,7 @@ final class FoodRecordSheetUITests: XCTestCase {
             .foodRecordSheetEdit, Support.standard, extraArguments: ["-LSFoodRecordMissingPhoto", "YES"]
         )
         let thumb = Support.element("foodRecord.photoThumb", in: app)
+        XCTAssertTrue(thumb.waitForExistence(timeout: 5), "原照片讀不到時照片欄仍是選取態（有縮圖位），不是「沒選」")
         XCTAssertTrue(Support.waitForLabel(thumb, where: "==", "原照片讀取失敗"), "原照片讀不到要明講：\(thumb.label)")
         XCTAssertTrue(app.buttons["換一張"].exists)
         XCTAssertFalse(app.buttons["從家庭相簿挑"].exists, "不能顯示成「沒選照片」")
