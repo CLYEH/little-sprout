@@ -730,7 +730,6 @@ jobs:
     env:
       SUPABASE_CLI_VERSION: 2.115.0
       DB_IMAGE_REGISTRY: public.ecr.aws
-      DB_IMAGE_TAR: ${{ github.workspace }}/../supabase-db-images/images.tar
     steps:
       # LS-350：同 tree 沿用／harness-only 略過時只印來源、不跑實際 step（mode=blocked 在這步紅）。
       - name: CI 去重（LS-350）
@@ -833,17 +832,19 @@ jobs:
       # gotrue）以 docker save tar 放 actions/cache：命中 → docker load，CLI 見本機已有同名映像就不拉（完全不碰 ECR）；
       # 未命中 → 照舊拉 ECR（fallback），db start 成功後 docker save 寫回。key＝runner os／arch＋CLI 版本＋registry＋
       # config.toml（決定 postgres 版本與要起哪些服務）。讀取範圍依 actions/cache 規則：本分支＋預設分支（PR 另加 base）。
+      # tar 放 runner.temp（＝$RUNNER_TEMP，四處同一路徑）：actions/cache 的 path 不接受含 `..` 的寫法（PR #558 首跑
+      # `Invalid pattern … Relative pathing '.' and '..' is not allowed` → Cache save failed），job 層 env 又拿不到 runner context。
       - name: 還原 supabase 映像快取（actions/cache，LS-392）
         id: db-image-cache
         if: steps.detect.outputs.skip == 'false'
         uses: actions/cache/restore@v4
         with:
-          path: ${{ env.DB_IMAGE_TAR }}
+          path: ${{ runner.temp }}/supabase-db-images/images.tar
           key: supabase-db-images-v1-${{ runner.os }}-${{ runner.arch }}-cli${{ env.SUPABASE_CLI_VERSION }}-${{ env.DB_IMAGE_REGISTRY }}-${{ hashFiles('supabase/config.toml') }}
 
       - name: 載入 supabase 映像快取（cache hit → docker load；miss → 由 registry 拉，LS-392）
         if: steps.detect.outputs.skip == 'false'
-        run: bash scripts/ci/db-image-cache.sh load "$DB_IMAGE_TAR"
+        run: bash scripts/ci/db-image-cache.sh load "$RUNNER_TEMP/supabase-db-images/images.tar"
 
       - name: supabase db start（只起 DB，比 supabase start 快；測試資料直接灌 auth.users，不需要 Auth/Storage service）
         if: steps.detect.outputs.skip == 'false'
@@ -853,13 +854,13 @@ jobs:
       # 後面的測試紅了也已經寫回——映像本身與測試結果無關。
       - name: 匯出 supabase 映像（docker save，cache miss 時，LS-392）
         if: steps.detect.outputs.skip == 'false' && steps.db-image-cache.outputs.cache-hit != 'true'
-        run: bash scripts/ci/db-image-cache.sh save "$DB_IMAGE_TAR"
+        run: bash scripts/ci/db-image-cache.sh save "$RUNNER_TEMP/supabase-db-images/images.tar"
 
       - name: 寫回 supabase 映像快取（actions/cache，cache miss 時，LS-392）
         if: steps.detect.outputs.skip == 'false' && steps.db-image-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: ${{ env.DB_IMAGE_TAR }}
+          path: ${{ runner.temp }}/supabase-db-images/images.tar
           key: ${{ steps.db-image-cache.outputs.cache-primary-key }}
 
       # LS-186：reset 重建 db 容器時 runner docker 對 54322 舊綁定偶爾未釋放 →「address already in use」（LS-184 run 33934840343，
