@@ -6,6 +6,11 @@ import XCTest
 /// `ekxHM`／`K6MMar`；03c `Oob1d`／`d56YR`；03d `OoYLu`／`CkOy9`；03e `NgnYl`／`Yufqp`。
 ///
 /// 截圖之外也順手斷言每一板的關鍵元素確實出現（不是截到空白或錯的畫面）。
+///
+/// **預設略過**：六支約 5 分鐘、純為產出對稿截圖（行為斷言在 `FoodRecordSheetUITests`），不佔 push gate／CI
+/// 的 UITests 時間（LS-385 才因 UITests 過長拆片）。要截圖時帶環境變數跑：
+/// `TEST_RUNNER_LS_FOOD_RECORD_SCREENSHOTS=1 xcodebuild test …`
+/// `-only-testing:LittleSproutUITests/FoodRecordSheetScreenshotTests`
 @MainActor
 final class FoodRecordSheetScreenshotTests: XCTestCase {
     private typealias Support = FoodRecordUITestSupport
@@ -13,6 +18,10 @@ final class FoodRecordSheetScreenshotTests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         try XCTSkipIf(UIDevice.current.userInterfaceIdiom == .pad, "iPhone 對稿截圖")
+        try XCTSkipUnless(
+            ProcessInfo.processInfo.environment["LS_FOOD_RECORD_SCREENSHOTS"] == "1",
+            "對稿截圖預設略過；TEST_RUNNER_LS_FOOD_RECORD_SCREENSHOTS=1 才跑"
+        )
     }
 
     func testScreenshots_light_xSmall() { captureAll(dark: false, size: Support.xSmall, sizeName: "xSmall") }
