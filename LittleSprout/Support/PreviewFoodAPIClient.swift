@@ -1,18 +1,90 @@
 #if DEBUG
 import Foundation
+import UIKit
 
 /// 只給 SwiftUI `#Preview`／`TapTargetGateHarness` 用的假 `FoodAPIClient`——不打真網路（同
 /// `PreviewGrowthAPIClient` 的角色）。回傳完整 274 種目錄＋呼叫端給的記錄。
+///
+/// LS-380：寫入（upsert／delete）與照片來源（03d）也是假的——`upsertFailure` 非 nil 時 upsert 一律丟
+/// 那個錯誤（03e 儲存失敗 fixture 用）；家庭照片是啟動時畫在暫存目錄的色塊 JPEG（`file://` URL，
+/// `AsyncImage` 可直接載入，不需要網路或 Storage）。
 final class PreviewFoodAPIClient: FoodAPIClient, @unchecked Sendable {
     private let records: [ChildFoodRecord]
+    private let upsertFailure: AppError?
+    private let photos: [FamilyPhoto]
 
-    init(records: [ChildFoodRecord] = []) {
+    init(records: [ChildFoodRecord] = [], upsertFailure: AppError? = nil, photos: [FamilyPhoto] = []) {
         self.records = records
+        self.upsertFailure = upsertFailure
+        self.photos = photos
     }
 
     func listFoodCatalog() async throws -> [FoodCatalogItem] { PreviewFoodCatalog.items }
 
     func listChildFoodRecords(childID: UUID) async throws -> [ChildFoodRecord] { records }
+
+    func upsertChildFoodRecord(_ input: FoodRecordUpsert) async throws -> ChildFoodRecord {
+        if let upsertFailure { throw upsertFailure }
+        let midnight = BirthdayFormat.date(fromWireString: BirthdayFormat.wireString(from: input.firstTriedOn))!
+        return ChildFoodRecord(
+            id: UUID(), familyID: UUID(), childID: input.childID, foodID: input.foodID, authorID: nil,
+            firstTriedOn: midnight, mediaID: input.mediaID, note: input.note, reaction: input.reaction?.rawValue,
+            createdAt: Date(), updatedAt: Date()
+        )
+    }
+
+    func deleteChildFoodRecord(id: UUID) async throws {}
+
+    func listFamilyPhotos(childID: UUID) async throws -> [FamilyPhoto] { photos }
+
+    func fetchFamilyPhoto(id: UUID) async throws -> FamilyPhoto? { photos.first { $0.id == id } }
+
+    /// 示範照片的 `storagePath` 本身就是暫存檔的絕對路徑。
+    func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL] {
+        Dictionary(uniqueKeysWithValues: paths.map { ($0, URL(fileURLWithPath: $0)) })
+    }
+
+    func uploadPhoto(childID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
+        UUID()
+    }
+}
+
+extension FamilyPhoto {
+    /// 03d 示範：記錄日期（今天）拍的 3 張＋更早的 6 張（稿 `OoYLu` 9 張不同照片、無空格）。每張是一塊
+    /// 不同色相的漸層 JPEG，寫在暫存目錄（同一次啟動重複呼叫共用同一批檔案）。
+    static func previewSamples(now: Date = Date()) -> [FamilyPhoto] {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("LS-380-preview-photos")
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let hues: [CGFloat] = [0.02, 0.08, 0.13, 0.33, 0.45, 0.55, 0.62, 0.75, 0.9]
+        return hues.enumerated().map { index, hue in
+            let url = directory.appendingPathComponent("photo-\(index).jpg")
+            if !FileManager.default.fileExists(atPath: url.path) {
+                try? samplePhotoData(hue: hue).write(to: url)
+            }
+            let takenAt = index < 3
+                ? now.addingTimeInterval(-Double(index + 1) * 600)
+                : now.addingTimeInterval(-Double(index) * 86_400 * 3)
+            return FamilyPhoto(
+                id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", index + 1))!,
+                storagePath: url.path, thumbPath: nil, takenAt: takenAt, createdAt: takenAt
+            )
+        }
+    }
+
+    private static func samplePhotoData(hue: CGFloat) -> Data {
+        let size = CGSize(width: 240, height: 240)
+        let image = UIGraphicsImageRenderer(size: size).image { context in
+            let colors = [
+                UIColor(hue: hue, saturation: 0.35, brightness: 0.95, alpha: 1).cgColor,
+                UIColor(hue: hue, saturation: 0.6, brightness: 0.7, alpha: 1).cgColor
+            ] as CFArray
+            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1])!
+            context.cgContext.drawLinearGradient(
+                gradient, start: .zero, end: CGPoint(x: size.width, y: size.height), options: []
+            )
+        }
+        return image.jpegData(compressionQuality: 0.8) ?? Data()
+    }
 }
 
 extension FoodBookStore {
@@ -20,8 +92,10 @@ extension FoodBookStore {
     /// 穀物根莖 10／16（品項與日期逐格照稿 `hWu6N`）、乳製品 1／7（優格 2026/5/2，照稿 `SYefI`）、
     /// 蔬菜 12、水果 9、肉魚蛋豆 5、台灣家常 1（稿面沒逐格畫，取該類 `sort_order` 前 N 樣、日期示意）。
     @MainActor
-    static func previewSeededWithDemoRecords(childID: UUID = UUID()) -> FoodBookStore {
-        let store = FoodBookStore(childID: childID, apiClient: PreviewFoodAPIClient())
+    static func previewSeededWithDemoRecords(
+        childID: UUID = UUID(), apiClient: FoodAPIClient = PreviewFoodAPIClient()
+    ) -> FoodBookStore {
+        let store = FoodBookStore(childID: childID, apiClient: apiClient)
         store.seedForPreview(catalog: PreviewFoodCatalog.items, records: demoRecords(childID: childID))
         return store
     }

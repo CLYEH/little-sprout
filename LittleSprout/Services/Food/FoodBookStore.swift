@@ -60,6 +60,20 @@ final class FoodBookStore {
         }
     }
 
+    /// LS-380：第一次記錄 sheet 儲存成功（`upsert_child_food_record` 回傳整列）後就地換上，不重抓整份
+    /// ——同一食物已有記錄（03b 編輯）就替換，沒有就加入。回傳列若不是這顆 store 的孩子（儲存途中已換
+    /// 寶貝、store 已重建成別的孩子）直接忽略，不把 A 孩子的記錄塞進 B 孩子的圖鑑。
+    func applySaved(_ record: ChildFoodRecord) {
+        guard record.childID == childID else { return }
+        apply(catalog: catalog, records: records.filter { $0.foodID != record.foodID } + [record])
+    }
+
+    /// LS-380：刪除（`delete_child_food_record` 成功）後就地移除——格子退回「還沒吃」（灰階），計數同步
+    /// 減一（API.md §3：UI 語意是「這格圖鑑退回未嘗試」）。
+    func removeRecord(id: UUID) {
+        apply(catalog: catalog, records: records.filter { $0.id != id })
+    }
+
     func record(for foodID: String) -> ChildFoodRecord? {
         recordsByFoodID[foodID]
     }
