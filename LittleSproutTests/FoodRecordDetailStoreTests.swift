@@ -1,0 +1,138 @@
+import Foundation
+@testable import LittleSprout
+import XCTest
+
+/// LS-381：`FoodRecordDetailStore.refresh()`——詳情開著時記錄的最新狀態。
+///
+/// 鎖住的行為（自檢 R1 race）：
+/// - 記錄被刪（owner 刪了別人的、作者在另一台刪了）→ `isGone`，畫面據此返回圖鑑，不停在一筆不存在的記錄上。
+/// - 記錄被改過 → 用最新那筆（反應／備註）；照片換了 → 補簽新照片，不留舊照片。
+/// - 重讀失敗 → 保留手上那筆＋`refreshError`（錯誤列），照片／記錄者照常顯示。
+@MainActor
+final class FoodRecordDetailStoreTests: XCTestCase {
+    private final class StubFoodAPIClient: FoodAPIClient, @unchecked Sendable {
+        var recordsResult: Result<[ChildFoodRecord], Error>
+
+        init(records: [ChildFoodRecord]) {
+            recordsResult = .success(records)
+        }
+
+        func listFoodCatalog() async throws -> [FoodCatalogItem] { [] }
+
+        func listChildFoodRecords(childID: UUID) async throws -> [ChildFoodRecord] { try recordsResult.get() }
+    }
+
+    private final class StubDetailAPIClient: FoodRecordDetailAPIClient, @unchecked Sendable {
+        var names: [UUID: String] = [:]
+        private(set) var photoRequests: [UUID] = []
+
+        func photoURL(mediaID: UUID) async throws -> URL? {
+            photoRequests.append(mediaID)
+            return Self.url(for: mediaID)
+        }
+
+        func displayName(userID: UUID) async throws -> String? { names[userID] }
+
+        static func url(for mediaID: UUID) -> URL {
+            URL(string: "https://example.test/\(mediaID.uuidString).jpg")!
+        }
+    }
+
+    private let author = UUID()
+
+    private func record(
+        id: UUID = UUID(), mediaID: UUID?, note: String? = nil, reaction: String? = nil
+    ) throws -> ChildFoodRecord {
+        let date = try XCTUnwrap(BirthdayFormat.date(fromWireString: "2026-06-08"))
+        return ChildFoodRecord(
+            id: id, familyID: UUID(), childID: UUID(), foodID: "bread", authorID: author, firstTriedOn: date,
+            mediaID: mediaID, note: note, reaction: reaction, createdAt: date, updatedAt: date
+        )
+    }
+
+    func test_refresh_loadsPhotoAndAuthorName() async throws {
+        let mediaID = UUID()
+        let original = try record(mediaID: mediaID)
+        let detail = StubDetailAPIClient()
+        detail.names = [author: "媽媽"]
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: StubFoodAPIClient(records: [original]), detailAPIClient: detail
+        )
+        XCTAssertEqual(store.photo, .loading, "有 media_id：第一幀是照片窗空白，不是 04b 的加照片邀請")
+
+        await store.refresh()
+
+        XCTAssertEqual(store.photo, .loaded(StubDetailAPIClient.url(for: mediaID)))
+        XCTAssertEqual(store.authorName, "媽媽")
+        XCTAssertFalse(store.isGone)
+        XCTAssertNil(store.refreshError)
+    }
+
+    func test_refresh_recordDeletedElsewhere_marksGone() async throws {
+        let original = try record(mediaID: nil)
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: StubFoodAPIClient(records: []), detailAPIClient: StubDetailAPIClient()
+        )
+
+        await store.refresh()
+
+        XCTAssertTrue(store.isGone, "未刪列表裡沒有這筆＝已被軟刪，詳情要返回圖鑑")
+    }
+
+    func test_refresh_recordEditedElsewhere_showsLatestAndResignsNewPhoto() async throws {
+        let recordID = UUID(), oldMedia = UUID(), newMedia = UUID()
+        let original = try record(id: recordID, mediaID: oldMedia, note: "舊", reaction: "neutral")
+        let edited = try record(id: recordID, mediaID: newMedia, note: "新", reaction: "liked")
+        let detail = StubDetailAPIClient()
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: StubFoodAPIClient(records: [edited]), detailAPIClient: detail
+        )
+
+        await store.refresh()
+
+        XCTAssertEqual(store.record.note, "新")
+        XCTAssertEqual(store.record.reaction, "liked")
+        XCTAssertEqual(store.photo, .loaded(StubDetailAPIClient.url(for: newMedia)), "照片換了：不能留舊照片")
+        XCTAssertEqual(detail.photoRequests.last, newMedia)
+    }
+
+    func test_refresh_photoRemovedElsewhere_fallsBackToBlankPrint() async throws {
+        let recordID = UUID()
+        let original = try record(id: recordID, mediaID: UUID())
+        let edited = try record(id: recordID, mediaID: nil)
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: StubFoodAPIClient(records: [edited]),
+            detailAPIClient: StubDetailAPIClient()
+        )
+
+        await store.refresh()
+
+        XCTAssertEqual(store.photo, .none, "作者按了「不用照片」→ 04b 空白沖印品")
+    }
+
+    func test_refresh_failure_keepsRecordAndPhotoAndReportsError() async throws {
+        let mediaID = UUID()
+        let original = try record(mediaID: mediaID, note: "自己抓著吃")
+        let food = StubFoodAPIClient(records: [])
+        food.recordsResult = .failure(AppError.network(message: "offline"))
+        let store = FoodRecordDetailStore(record: original, foodAPIClient: food, detailAPIClient: StubDetailAPIClient())
+
+        await store.refresh()
+
+        XCTAssertFalse(store.isGone, "讀取失敗≠被刪")
+        XCTAssertEqual(store.record, original)
+        XCTAssertEqual(store.refreshError, .network(message: "offline"))
+        XCTAssertEqual(store.photo, .loaded(StubDetailAPIClient.url(for: mediaID)), "照片與記錄重讀各自獨立")
+    }
+
+    func test_photoWithoutAccess_isUnavailableNotBlankPrint() async throws {
+        let original = try record(mediaID: UUID())
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: StubFoodAPIClient(records: [original]), detailAPIClient: nil
+        )
+
+        await store.refresh()
+
+        XCTAssertEqual(store.photo, .unavailable, "有 media_id 但看不到：空白照片窗，不邀請加照片")
+    }
+}
