@@ -1,5 +1,5 @@
 #!/bin/bash
-# CI 去重判定（LS-350）：決定這次 CI run 的 macOS job（lint／ci／ci-ipad）與 db job 要不要真的跑。
+# CI 去重判定（LS-350）：決定這次 CI run 的 macOS job（lint／ci／ci-ui／ci-ipad；ci-ui 自 LS-385）與 db job 要不要真的跑。
 # 呼叫端：.github/workflows/ci.yml 的 `ci-dedup` job（ubuntu），輸出寫進 $GITHUB_OUTPUT 給下游 job 的
 # runs-on／step if 讀。
 #
@@ -99,7 +99,7 @@ if [ -n "$repo" ]; then
     src=
   fi
   if [ -n "$src" ]; then
-    emit hit true true false "$src" "→ CI 去重：沿用 run ${src}（tree ${tree}）——同 tree 已有完整全綠 run，lint／ci／ci-ipad／db 不重跑（rules 照跑；強制全跑見 COLLABORATION §7）"
+    emit hit true true false "$src" "→ CI 去重：沿用 run ${src}（tree ${tree}）——同 tree 已有完整全綠 run，lint／ci／ci-ui／ci-ipad／db 不重跑（rules 照跑；強制全跑見 COLLABORATION §7）"
   fi
 else
   echo "::warning::CI 去重：無 --repo／GITHUB_REPOSITORY，不查快取"
@@ -113,13 +113,13 @@ if [ "$event" = pull_request ]; then
   # 不可略過清單（macOS job 會讀到的 harness 路徑檔，與機制檔同一處維護；LS-350 R1 M1）：
   #   docs/legal/**  project.yml 打包進 app bundle，LittleSproutTests/LegalMarkdownDocumentTests 斷言其 version
   #   *.swift        任何路徑的 Swift 檔都在 lint job `swiftlint lint --strict` 範圍內（例：scripts/ops/review-demo-genvideo.swift）
-  mech='^(\.github/workflows/ci\.yml|scripts/gates/(ci-cache-check|detect-simulator|ui-test-trigger|tap-target-check|list-ipad-tests|pick-ipad-runtime)\.sh|scripts/gates/tap-target-exemptions\.txt|docs/legal/.*|.*\.swift)$'   # CI-CACHE-MECH
+  mech='^(\.github/workflows/ci\.yml|scripts/gates/(ci-cache-check|detect-simulator|ui-test-trigger|ui-test-shards|tap-target-check|list-ipad-tests|pick-ipad-runtime)\.sh|scripts/gates/tap-target-exemptions\.txt|docs/legal/.*|.*\.swift)$'   # CI-CACHE-MECH
   files=$(printf '%s\n' "$changed" | grep '[^[:space:]]' || true)
   n=$(printf '%s\n' "$files" | grep -c '[^[:space:]]' || true)
   non_harness=$(printf '%s\n' "$files" | grep -Ev "$harness" | grep -m1 '[^[:space:]]' || true)   # CI-CACHE-MIXED
   mech_hit=$(printf '%s\n' "$files" | grep -Em1 "$mech" || true)
   if [ "$n" -gt 0 ] && [ -z "$non_harness" ] && [ -z "$mech_hit" ]; then
-    emit harness-skip true false false "" "→ CI 去重：harness-only PR（${n} 個檔皆在 harness 路徑）——略過 lint／ci／ci-ipad 的 macOS 執行，rules／db 照跑；併入後的 push run 仍全跑"
+    emit harness-skip true false false "" "→ CI 去重：harness-only PR（${n} 個檔皆在 harness 路徑）——略過 lint／ci／ci-ui／ci-ipad 的 macOS 執行，rules／db 照跑；併入後的 push run 仍全跑"
   fi
   if [ -n "$non_harness" ]; then echo "→ CI 去重：非 harness-only（含 ${non_harness}），不略過"; fi
   if [ -z "$non_harness" ] && [ -n "$mech_hit" ]; then echo "→ CI 去重：diff 動到 macOS job 機制檔／不可略過檔 ${mech_hit}，不略過"; fi

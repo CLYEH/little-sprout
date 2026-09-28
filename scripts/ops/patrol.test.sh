@@ -2400,6 +2400,42 @@ else
   fail=1
 fi
 
+# ---- ㉚m（LS-385）：matrix job 的 check 名 `ci-ui-<n>` 對應 ci.yml 的 job key `ci-ui`——cancelled 35 分（2100 s）、
+#      ci.yml 寫 timeout-minutes 50 → 不是撞 timeout，不得計入（查不到 key 時會落回 30 分 fallback 而誤計）。
+#      合成 repo 本來沒有 ci.yml，這組臨時寫一份只含 ci-ui job 的，跑完移除，不影響其他組。
+gh_dir_m="$work/fake-gh-data-m"; mkdir -p "$gh_dir_m"
+printf '%s\n' '{"jobs":[{"completedAt":"2026-09-28T10:35:00Z","conclusion":"cancelled","name":"ci-ui-2","startedAt":"2026-09-28T10:00:00Z","steps":[{"conclusion":"success"},{"conclusion":"cancelled"}]}]}' > "$gh_dir_m/36900000001.jobs.json"
+printf '%s\n' $'36900000001\tcancelled\tfeature/LS-385-m\t2026-09-28T10:00:00Z\tshaMMM1\tpush\t1790503200' > "$work/gh-runs-m"
+mkdir -p "$repo/.github/workflows"
+printf 'jobs:\n  ci-ui:\n    needs: ci-dedup\n    name: ci-ui-${{ matrix.shard }}\n    timeout-minutes: 50\n  ci-ipad:\n    timeout-minutes: 30\n' > "$repo/.github/workflows/ci.yml"
+cache30m="$work/reds-cache-m"; rm -rf "$cache30m"
+reds_m() {   # reds_m <patrol 腳本>
+  rm -rf "$cache30m"
+  PATROL_GH="$work/fake-gh" FAKE_GH_RUNS="$work/gh-runs-m" FAKE_GH_DIR="$gh_dir_m" PATROL_REDS_CACHE="$cache30m" PATROL_REDS_MAX_FETCH=10 \
+    bash "$1" --repo "$repo" --no-fetch "$STALE" >/dev/null 2>&1
+}
+reds_m "$patrol"
+cache_m="$cache30m/v3/36900000001"
+if [ -f "$cache_m" ] && [ ! -s "$cache_m" ]; then
+  echo "✓ ㉚m cancelled ci-ui-2 35 分、ci.yml 的 ci-ui timeout-minutes 50 → 不計入 timeout（簽章空白）"
+else
+  echo "✗ ㉚m ci-ui-2 應對到 ci.yml 的 ci-ui（timeout 50）而不計入：$(cat "$cache_m" 2>/dev/null || echo '（檔案不存在）')" >&2
+  fail=1
+fi
+mut_m="$work/patrol.no-matrix-key.sh"
+grep -v 'REDS-MATRIX-KEY$' "$patrol" > "$mut_m"
+if cmp -s "$patrol" "$mut_m"; then
+  echo "✗ ㉚m mutation 無效：grep 沒刪到 REDS-MATRIX-KEY 那行" >&2; fail=1
+else
+  reds_m "$mut_m"
+  if [ -s "$cache_m" ]; then
+    echo "✓ ㉚m mutant（拿掉 matrix key 對應）→ 落回 30 分 fallback、誤計成 timeout（證明 ㉚m 咬住該行）"
+  else
+    echo "✗ ㉚m mutant 仍不計入——㉚m 沒咬住 matrix key 對應那行" >&2; fail=1
+  fi
+fi
+rm -rf "$repo/.github"
+
 # ==== ㉝ LS-352：review-rounds-report.sh（審查輪次報表）＋ patrol.sh --weekly ====
 # 合成 repo：main 上 8 支近期 fix（R2／R3／R1／無標記／PR2（不算）／R12／R2.1 rubric 編號（不算，R2）／R3-m1 連字號形狀（算））
 # ＋1 支 feat R5（非 fix 不算）＋1 支 30 天前的 fix R4（--days 7 排除、--days 60 納入）。

@@ -917,6 +917,9 @@ SUPEOF
                 : > "$cache_f"   # superseded（concurrency cancel）：不計入
               else
                 job_timeout=$(reds_job_timeout_min "$r_jobname")
+                # LS-385：matrix job 的 check 名是 `ci-ui-<n>`，ci.yml 的 job key 是 `ci-ui`——查不到就去掉 `-<數字>` 尾再查一次，
+                # 否則落回 REDS_TIMEOUT_MIN（30 分），把 ci-ui 片 30–50 分的人工取消誤計成「撞 timeout」。
+                [ -n "$job_timeout" ] || job_timeout=$(reds_job_timeout_min "${r_jobname%-[0-9]*}")   # REDS-MATRIX-KEY
                 case "$job_timeout" in ''|*[!0-9]*) job_timeout=$REDS_TIMEOUT_MIN ;; esac
                 if [ "$r_cansec" -ge $((job_timeout * 60)) ]; then
                   printf 'timeout（cancelled、無 failure／timed_out step、cancelled job ≥%s 分——撞 job timeout-minutes）\n' "$job_timeout" > "$cache_f"

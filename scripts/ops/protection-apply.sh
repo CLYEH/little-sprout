@@ -1,7 +1,8 @@
 #!/bin/bash
 # 分支保護套用（LS-85 G1／LS-87 G1）：test／main 改成「required status checks＋禁 force push／刪除＋enforce_admins」、關閉 require PR——
 # 晉升改 fast-forward push（scripts/ops/promote.sh）後，PR 只剩 feature→development 與 hotfix→main；每個進到 test／main 的 SHA
-# 仍須五個 check（ci／ci-ipad／db／lint／rules，LS-209 加 ci-ipad）全綠才推得上去（server-side：沒有綠 check 的 SHA 被 GH006 拒收）。
+# 仍須八個 check（ci／ci-ipad／ci-ui-1／ci-ui-2／ci-ui-3／db／lint／rules，LS-209 加 ci-ipad、LS-385 加 UITests 三片 ci-ui-1..3）全綠
+# 才推得上去（server-side：沒有綠 check 的 SHA 被 GH006 拒收）。
 # LS-87：required checks 再加 commit status context `merge-review`（merge-reviewer 以 scripts/ops/post-status.sh 用 gh 使用者 token 貼，
 # 不是 GitHub Actions → app_id -1＝任何來源皆可；GitHub required status checks 可混用 check-run 與 status context）——沒有
 # merge-review success 的 head 併不進 development／main（gh pr merge 被拒）、沒有的 SHA 推不上 test／main（GH006）；head 再 push
@@ -53,15 +54,15 @@ after="$OUT/protection-${branch}-after.json"
 summary() {  # 一行摘要：require_pr／checks／enforce_admins／force_push／deletions／linear／restrictions
   jq -r '"require_pr=\(.required_pull_request_reviews != null) checks=\([.required_status_checks.checks[]? | "\(.context)@\(if .app_id == null or .app_id == -1 then "any" else .app_id end)"] | join(",")) strict=\(.required_status_checks.strict) enforce_admins=\(.enforce_admins.enabled) force_push=\(.allow_force_pushes.enabled) deletions=\(.allow_deletions.enabled) linear_history=\(.required_linear_history.enabled) restrictions=\(.restrictions != null)"' "$1"
 }
-# 目標狀態：merge-review@any（GET 回讀 -1 或 null 都算「任何 app」）。test／main：**六個** context 齊、**五個** Actions
-# check@15368（LS-209 加 ci-ipad）；另驗 require PR 關、enforce_admins、禁 force push／刪除；development：contexts＝before
+# 目標狀態：merge-review@any（GET 回讀 -1 或 null 都算「任何 app」）。test／main：**九個** context 齊、**八個** Actions
+# check@15368（LS-209 加 ci-ipad、LS-385 加 ci-ui-1..3；與 promote.sh REQUIRED_CHECKS 同步）；另驗 require PR 關、enforce_admins、禁 force push／刪除；development：contexts＝before
 # 的 contexts ∪ merge-review、其餘 check 的 context／app_id 與 before 相同（與 request 同源、不硬寫五個——development 的
 # required checks 日後增減不會讓 verify 誤報，R3 F3）＋require PR 仍開（其餘欄位本腳本不動）。**LS-209 merge-review R1
 # m1 裁決**：development 的 patch 模式刻意不強制加 ci-ipad——development 是快速整合分支，`qa` status 同理也只在
 # test→main 才要求，not development；iPad 測試紅的 PR 仍可併入 development，要到晉升 test 才擋，與既有分層把關的
 # 設計一致（不是遺漏）。
 CHECKS_OK='(.required_status_checks.strict | not)
-    and ([.required_status_checks.checks[].context] | sort == ["ci","ci-ipad","db","lint","merge-review","rules"])
+    and ([.required_status_checks.checks[].context] | sort == ["ci","ci-ipad","ci-ui-1","ci-ui-2","ci-ui-3","db","lint","merge-review","rules"])
     and ([.required_status_checks.checks[] | select(.context != "merge-review") | .app_id] | all(. == 15368))
     and ([.required_status_checks.checks[] | select(.context == "merge-review") | .app_id] | all(. == null or . == -1))'
 verify() {  # 回讀是否等於目標狀態
@@ -93,6 +94,9 @@ CHECKS_JSON='{
     "checks": [
       {"context": "ci",           "app_id": 15368},
       {"context": "ci-ipad",      "app_id": 15368},
+      {"context": "ci-ui-1",      "app_id": 15368},
+      {"context": "ci-ui-2",      "app_id": 15368},
+      {"context": "ci-ui-3",      "app_id": 15368},
       {"context": "db",           "app_id": 15368},
       {"context": "lint",         "app_id": 15368},
       {"context": "rules",        "app_id": 15368},

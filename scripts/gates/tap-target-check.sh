@@ -34,23 +34,42 @@
 # `scripts/ops/simulator-lock.sh` 的 `--udid` 選項會把系統設定調成 large——這支 gate 目前量到的字級數字
 # 實際上就是仰賴這個系統設定，而非上面那行 env（動這裡的字級常數前，先看 simulator-lock.sh 對應的註解）。
 #
-# 用法：tap-target-check.sh <UDID> <scheme>
+# 用法：tap-target-check.sh <UDID> <scheme> [--shard <i>/<n>]
+#   --shard（LS-385，CI `ci-ui` job 用）：只跑第 i 片的 UITests 類別——另外帶 `-skip-testing:<其他片的類別>`（清單由
+#     scripts/gates/ui-test-shards.sh 從 LittleSproutUITests/ 原始碼算出；略過清單的安全方向見該腳本檔頭）。不帶＝整包
+#     （本機 push-gate.sh 的呼叫方式，不變）。
 # exit：0＝所有量測畫面的 Button／tappable 元件皆 ≥44×44pt；1＝有違規（或其他測試/編譯失敗，
-#   log 尾段會印出來，不會被靜默吞掉）；2＝參數錯誤。
+#   log 尾段會印出來，不會被靜默吞掉）；2＝參數錯誤（含分片清單算不出來）。
 set -uo pipefail
 
-if [ $# -ne 2 ]; then
-  echo "用法：tap-target-check.sh <UDID> <scheme>" >&2
+shard=
+if [ $# -eq 4 ] && [ "$3" = --shard ]; then
+  shard=$4
+elif [ $# -ne 2 ]; then
+  echo "用法：tap-target-check.sh <UDID> <scheme> [--shard <i>/<n>]" >&2
   exit 2
 fi
 udid=$1
 scheme=$2
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # LS-385：下面 cd "$repo" 之前先定位，相對路徑呼叫也找得到 ui-test-shards.sh
 
 repo=$(git rev-parse --show-toplevel 2>/dev/null) || {
   echo "✗ tap-target-check：不在 git repo 內（fail closed）" >&2
   exit 2
 }
 cd "$repo"
+
+# LS-385：分片——算不出清單（參數錯、目錄不在、掃不到任何類別）一律 exit 2，不退回「整包跑」也不退回「什麼都不略過」
+# 以外的任何猜測；`${shard_args[@]+…}` 寫法是 bash 3.2（macOS）在 set -u 下展開空陣列的必要形式。
+shard_args=(); shard_skip=
+if [ -n "$shard" ]; then
+  shard_skip=$(bash "${here}/ui-test-shards.sh" --shard "$shard" "$repo/LittleSproutUITests") || {
+    echo "✗ tap-target-check：分片 ${shard} 的略過清單算不出來（ui-test-shards.sh 失敗，訊息見上）" >&2
+    exit 2
+  }
+  while IFS= read -r c; do [ -n "$c" ] && shard_args+=("-skip-testing:${c}"); done <<< "$shard_skip"
+  echo "→ tap-target-check：分片 ${shard}（略過其他片的 ${#shard_args[@]} 個類別；分配表見 ui-test-shards.sh --plan）"
+fi
 
 log=$(mktemp -t tap-target-check.XXXXXX)
 trap 'rm -f "$log"' EXIT
@@ -77,12 +96,19 @@ if xcodebuild test \
   -resultBundlePath "$result_bundle" \
   -skip-testing:LittleSproutTests \
   -skip-testing:LittleSproutUITests/QASmokeTests \
+  ${shard_args[@]+"${shard_args[@]}"} \
   -parallel-testing-enabled NO \
   > "$log" 2>&1; then
   # LS-257：CI 的 `ci` job 在「點擊目標 gate」步驟之後新增一步印這份 bundle（對應
   # LittleSproutUITests）的耗時（見 ci.yml），需要 bundle 撐到那一步才能讀；本機
   # push-gate.sh 反覆呼叫不需要保留，成功時仍清掉避免工作目錄累積垃圾。
   [ -n "${GITHUB_ACTIONS:-}" ] || rm -rf "$result_bundle"
+  # LS-385：分片且 TapTargetGateTests 分到別片時，本片沒量任何畫面——不印下面那句「已量測畫面…皆 ≥44」免得誤導。
+  case $'\n'"${shard_skip}"$'\n' in
+    *$'\n'"LittleSproutUITests/TapTargetGateTests"$'\n'*)
+      echo "✓ tap-target-check（分片 ${shard}）：本片 UITests 全綠（TapTargetGateTests 在其他分片，≥44pt 量測結果見該片）"
+      exit 0 ;;
+  esac
   # merge-review R1 M1：不印「所有量測畫面」這種聽起來像全域覆蓋的措辭——目前只有
   # LittleSprout/TapTargetGateScreenName.swift 註冊的畫面會被實際量到（其餘 Features 畫面見
   # scripts/gates/tap-target-exemptions.txt 具名排除，或尚待補進註冊表），明確點名以免誤導。
@@ -92,7 +118,7 @@ if xcodebuild test \
   # 跑，這行過去只在 macOS 被執行到才沒炸；同型見 `detect-simulator.sh` 的 LS-260 R2 B1。
   checked=$(grep -oE '= "[A-Za-z0-9]+View"' "$(git rev-parse --show-toplevel)/LittleSprout/TapTargetGateScreenName.swift" \
     | sed -E 's/= "(.*)"/\1/' | awk '{printf "%s%s", (n++ ? "、" : ""), $0} END{if (n) print ""}')
-  echo "✓ tap-target-check：已量測畫面（${checked:-無}）的 Button／tappable 元件皆 ≥44×44pt（一般字級 content_size large 量測）；其餘 Features 畫面覆蓋見 tap-target-exemptions.txt"
+  echo "✓ tap-target-check${shard:+（分片 ${shard}）}：已量測畫面（${checked:-無}）的 Button／tappable 元件皆 ≥44×44pt（一般字級 content_size large 量測）；其餘 Features 畫面覆蓋見 tap-target-exemptions.txt"
   exit 0
 fi
 
