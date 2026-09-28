@@ -15,20 +15,19 @@ extension TimelineView {
     @ViewBuilder
     func foodDestination(for route: TimelineRoute) -> some View {
         switch route {
-        case .foodRecordDetail(let recordID): foodRecordDetailDestination(recordID: recordID)
+        case .foodRecordDetail(let record, let item): foodRecordDetailDestination(record: record, item: item)
         case .foodBook(let childID, let category): foodBookDestination(childID: childID, category: category)
         case .diaryDetail: EmptyView()
         }
     }
 
-    /// 整張卡 → 記錄詳情 04。從 `TimelineStore.entries` 依 id 查目前那一筆（同 `.diaryDetail`，見 `TimelineRoute`）；
-    /// 存檔／刪除之後重新整理時間軸，卡片跟著換新或消失。
+    /// 整張卡 → 記錄詳情 04。記錄與目錄項是推入當下的快照（見 `TimelineRoute.foodRecordDetail`）；存檔／刪除之後
+    /// 重新整理時間軸，卡片跟著換新或消失。
     @ViewBuilder
-    private func foodRecordDetailDestination(recordID: UUID) -> some View {
-        if let foodAPIClient, let content = foodFirstContent(recordID: recordID),
-           let child = childForID(content.record.childID) {
+    private func foodRecordDetailDestination(record: ChildFoodRecord, item: FoodCatalogItem) -> some View {
+        if let foodAPIClient, let child = childForID(record.childID) {
             TimelineFoodRecordDetailHost(
-                child: child, item: content.item, initialRecord: content.record, apiClient: foodAPIClient,
+                child: child, item: item, initialRecord: record, apiClient: foodAPIClient,
                 context: recordDetailContext, canRecord: childrenStore.canManageChildren,
                 onChanged: refreshAfterFoodRecordChange
             )
@@ -55,12 +54,6 @@ extension TimelineView {
     /// 就在跑的同世代那一輪，拿到存檔前的舊資料。
     private func refreshAfterFoodRecordChange() {
         Task { _ = await timelineStore.refreshWithCurrentFilter() }
-    }
-
-    private func foodFirstContent(recordID: UUID) -> FoodFirstContent? {
-        let entry = timelineStore.entries.first { $0.kind == .foodFirst && $0.refId == recordID }
-        guard case .foodFirst(let content) = entry?.content else { return nil }
-        return content
     }
 
     private func childForID(_ id: UUID) -> Child? {

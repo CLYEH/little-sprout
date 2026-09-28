@@ -55,7 +55,7 @@ extension TimelineView {
         case .foodFirst(let content):
             // LS-383：寶貝查不到（`childrenStore` 還沒載入）時先不畫——Book Row／署名／記錄詳情都需要 `Child`。
             if let child = childrenStore.children.first(where: { $0.id == content.record.childID }) {
-                NavigationLink(value: TimelineRoute.foodRecordDetail(entry.refId)) {
+                NavigationLink(value: TimelineRoute.foodRecordDetail(content.record, content.item)) {
                     FoodFirstCardView(content: content, child: child)
                 }
                 .buttonStyle(.plain)
