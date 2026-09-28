@@ -12,7 +12,7 @@ import SwiftUI
 /// 兩個子節點）。
 ///
 /// **三態等高**（Notes `h752D`「01 與 01b 同高 1483、按鈕不位移」）：格子數固定（`FoodBookEntry.slots` 不足就補
-/// 空位）；每格固定保留一列小標（稿面 Tag Row 在沒有過敏原時內容是單一空白，`minimumTagLines: 1`）；一列格子
+/// 空位）；每格小標恰好一列（`tagLines: 1`——沒有就補空白、兩個只留過敏原，見 `FoodCell.visibleTags`）；一列格子
 /// 取最高那格的高度（`fixedSize(vertical:)`＋`FoodCell` 自己的 `maxHeight: .infinity`）。
 ///
 /// **store 共用**：`store` 由宿主（每個寶貝一顆，`FoodBookStore.needsRebuild`）建好傳入，推圖鑑時把同一顆交給
@@ -113,7 +113,7 @@ struct FoodBookEntrySection: View {
     private func cell(_ slot: FoodBookEntrySlot, layout: FoodCell.Layout) -> some View {
         let isHeldForReveal = pendingRevealFoodID == slot.item.id
         let state = FoodCellState.make(record: isHeldForReveal ? nil : slot.record, canRecord: canRecord)
-        return FoodCell(item: slot.item, state: state, layout: layout, minimumTagLines: 1) {
+        return FoodCell(item: slot.item, state: state, layout: layout, tagLines: 1) {
             if let record = slot.record {
                 detailRecord = record
             } else {
