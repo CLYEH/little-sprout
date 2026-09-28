@@ -32,6 +32,7 @@ struct PhotoCardView: View {
             ZStack(alignment: .topLeading) {
                 PrintPhotoCard(
                     photoHeight: Self.photoHeight,
+                    mountPoolOpacity: .card,
                     showsImprint: false,
                     remoteURL: content.signedURL,
                     accessibilityLabel: accessibilityLabel,
@@ -98,9 +99,17 @@ struct PhotoCardView: View {
 /// 不念「未標記」（定案 2 `LMMks`）。
 ///
 /// 樣式：`$print-ink-secondary`／`$fs-body`／regular——紙與墨不隨深色反轉（print-paper 家族）。
+///
+/// LS-389：相簿 tab 卡（`AlbumSummaryCardView`）署名列共用本型別的排列規則（LS-372 Notes `SLL6R`
+/// 「多寶貝署名串接超出欄寬時改一行一人」），字級沿用該卡既有的 `$fs-meta`＋等寬數字——以
+/// `fontToken`／`monospacedDigit` 帶入，照片卡維持預設。相簿卡稿面一行一人是純換行、人與人之間
+/// 不另加間距（LS-142 `pNPuF`／`WiBHO`），以 `personSpacing: 0` 帶入；`nil`＝照片卡的 `personGap`。
 struct PhotoCardSignature: View {
     let children: [Child]
     let asOf: Date
+    var fontToken: AppFontToken = .body
+    var monospacedDigit = false
+    var personSpacing: CGFloat?
 
     @ScaledMetric(relativeTo: .body) private var personGap: CGFloat = 8
 
@@ -115,7 +124,7 @@ struct PhotoCardSignature: View {
                         children: children, asOf: asOf, isOneLinePerPerson: false
                     ))
                     .lineLimit(1)
-                    VStack(alignment: .leading, spacing: personGap) {
+                    VStack(alignment: .leading, spacing: personSpacing ?? personGap) {
                         ForEach(children) { child in
                             Text(AlbumSignatureFormatter.segment(for: child, asOf: asOf))
                                 .fixedSize(horizontal: false, vertical: true)
@@ -126,9 +135,22 @@ struct PhotoCardSignature: View {
                 .accessibilityIdentifier(QAAccessibilityID.photoCardSignature)
             }
         }
-        .appFont(.body)
+        .modifier(SignatureFont(token: fontToken, monospacedDigit: monospacedDigit))
         .foregroundStyle(Color.lsPrintInkSecondary)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct SignatureFont: ViewModifier {
+    let token: AppFontToken
+    let monospacedDigit: Bool
+
+    func body(content: Content) -> some View {
+        if monospacedDigit {
+            content.appNumericFont(token)
+        } else {
+            content.appFont(token)
+        }
     }
 }
 

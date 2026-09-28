@@ -155,6 +155,12 @@ struct SRGBPixels {
         bytes = buffer
     }
 
+    /// LS-389：8-bit sRGB 三通道原值（`CardImprintInsetContrastTests` 判斷像素是否落在紙色→池色直線上）。
+    func rgb(column: Int, row: Int) -> SIMD3<Double> {
+        let offset = (row * width + column) * 4
+        return SIMD3(Double(bytes[offset]), Double(bytes[offset + 1]), Double(bytes[offset + 2]))
+    }
+
     /// WCAG 2.1 相對亮度（8-bit sRGB → 線性）。底色不透明，premultiplied 不影響結果。
     func luminance(column: Int, row: Int) -> Double {
         let offset = (row * width + column) * 4

@@ -51,6 +51,12 @@ struct PrintPhotoCard: View {
         static let inviteSample = MountPoolOpacity(
             topLeading: 0.432, topTrailing: 0.277, bottomLeading: 0.342, bottomTrailing: 0.23
         )
+        /// LS-389：時間軸照片卡／相簿卡（`cmp/Card Photo` `boZpu`、`cmp/Card Album` `r6cYjT`
+        /// 的四顆漸層，LS-372 Notes `SLL6R` ②）。這三張卡的白邊上有署名列，`.welcome` 的
+        /// 左下角 0.36 會把深色署名列字起點壓到 4.5:1 以下；常數、不依 viewport 算。
+        static let card = MountPoolOpacity(
+            topLeading: 0.393, topTrailing: 0.259, bottomLeading: 0.293, bottomTrailing: 0.197
+        )
     }
 
     @ViewBuilder
@@ -72,7 +78,10 @@ struct PrintPhotoCard: View {
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(accessibilityLabel)
                     .accessibilityAddTraits(.isImage)
+                // LS-389（LS-372 Notes `SLL6R` ①）：壓印行文字在 printEdge 之內再內縮 `$sp-group`，
+                // 字起點離紙左緣 20、避開左下角染料池最暗處，並與日記卡 `$inset-card` 同軸；照片不動。
                 imprintCaption
+                    .padding(.horizontal, AppSpacing.group)
             } else {
                 photo
                 if showsImprint {

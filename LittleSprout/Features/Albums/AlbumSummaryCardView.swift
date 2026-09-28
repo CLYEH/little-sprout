@@ -23,8 +23,9 @@ struct AlbumSummaryCardView: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    /// AX3 起署名列一行一人、Caption 相簿名與張數各自成行——同 `SectionTabBar.isAX3` 既有
-    /// 斷點慣例（LS-142 Handoff Notes `MJ-6`／`R4 KBNSX`：兩態切換，不是連續縮放曲線）。
+    /// AX3 起 Caption 相簿名與張數各自成行——同 `SectionTabBar.isAX3` 既有斷點慣例（LS-142
+    /// Handoff Notes `MJ-6`／`R4 KBNSX`：兩態切換，不是連續縮放曲線）。署名列不看這個斷點：LS-389
+    /// 起改由 `PhotoCardSignature` 依欄寬決定一行一人。
     private var isOneLinePerPerson: Bool { dynamicTypeSize >= .accessibility3 }
 
     var body: some View {
@@ -44,7 +45,11 @@ struct AlbumSummaryCardView: View {
     private var printCard: some View {
         VStack(alignment: .leading, spacing: 7) {
             photo
+            // LS-389（LS-372 Notes `SLL6R` ①）：Caption／Signature 在 printEdge 之內再內縮
+            // `$sp-group`，字起點離紙左緣 20、避開左下角染料池最暗處，並與日記卡 `$inset-card`
+            // 同軸；照片不動。
             captionBlock
+                .padding(.horizontal, AppSpacing.group)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, AppSpacing.printEdge)
@@ -87,11 +92,11 @@ struct AlbumSummaryCardView: View {
             ))
             .appNumericFont(.body, weight: .semibold)
             .foregroundStyle(Color.lsPrintInk)
-            Text(AlbumSignatureFormatter.signatureText(
-                children: taggedChildren, asOf: Date(), isOneLinePerPerson: isOneLinePerPerson
-            ))
-            .appNumericFont(.meta)
-            .foregroundStyle(Color.lsPrintInkSecondary)
+            // LS-389（LS-372 Notes `SLL6R`）：多寶貝串接放不下一行就一行一人，所有字級同一條
+            // 規則——重用照片卡的 `PhotoCardSignature`（`ViewThatFits`），不再只在 AX3 才換行。
+            PhotoCardSignature(
+                children: taggedChildren, asOf: Date(), fontToken: .meta, monospacedDigit: true, personSpacing: 0
+            )
         }
     }
 
@@ -99,13 +104,13 @@ struct AlbumSummaryCardView: View {
         GeometryReader { proxy in
             let diameter = cornerSize * 6
             ZStack {
-                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.welcome.topLeading)
+                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.card.topLeading)
                     .position(x: 0, y: 0)
-                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.welcome.topTrailing)
+                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.card.topTrailing)
                     .position(x: proxy.size.width, y: 0)
-                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.welcome.bottomLeading)
+                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.card.bottomLeading)
                     .position(x: 0, y: proxy.size.height)
-                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.welcome.bottomTrailing)
+                glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.card.bottomTrailing)
                     .position(x: proxy.size.width, y: proxy.size.height)
             }
         }
