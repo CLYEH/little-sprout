@@ -53983,7 +53983,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "弟弟出生的第一週 · 8 張相片",
+                  "content": "弟弟出生的第一週 · 8 張⁠相⁠片",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "600"
