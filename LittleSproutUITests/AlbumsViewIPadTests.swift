@@ -105,6 +105,51 @@ final class AlbumsViewIPadTests: XCTestCase {
         assertAlbumsTitleAppearsExactlyOnce(in: app, context: "切去時間軸再切回相簿")
     }
 
+    /// LS-396（LS-5 review F3 債、LS-20 驗收條④）：`SectionSplitView` 的 detail 欄共用單一
+    /// `NavigationStack`——相簿頁 push 進詳情後切到別的 section 再切回來，使用者點的是側欄「相簿」，
+    /// 期待看到的是相簿列表；若 stack 沒重置，就會掉回上次留下的詳情頁（或別 section 的根頁上疊著
+    /// 相簿詳情），側欄選取與畫面內容對不上。鎖「切回來＝回到列表、詳情頁不在」。
+    ///
+    /// 現況 SwiftUI 已自動重置（見 `RootView.SectionSplitView` 註解）；mutation「改成各 section 自持並
+    /// 在切回時還原 path」→ 本測試轉紅（handoff 附斷言原文）。
+    func testSwitchingSectionResetsAlbumDetailStack() throws {
+        try XCTSkipUnless(
+            UIDevice.current.userInterfaceIdiom == .pad,
+            "iPad 專屬版面測試，非 iPad 裝置（例如 push-gate 常態用的 iPhone 專屬機）略過"
+        )
+        let app = TapTargetMeasurement.launch(.sectionSplitViewWithAlbum)
+        TapTargetMeasurement.assertScreenRendered(.sectionSplitViewWithAlbum, in: app)
+        app.cells.staticTexts["相簿"].firstMatch.tap()
+        // 卡片 `.accessibilityElement(children: .combine)` 包在 `NavigationLink` 裡——合成一顆 Button，
+        // label 是標題＋張數等子節點串接，用 CONTAINS 找。
+        let albumCard = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "上禮拜的動物園一日遊")).firstMatch
+        XCTAssertTrue(albumCard.waitForExistence(timeout: 5), "相簿列表應該顯示 harness 帶的那本相簿")
+        albumCard.tap()
+        // 詳情頁的空照片牆文案（`PreviewAlbumsAPIClient.fetchAlbumMediaLinks` 回 `[]`）——列表頁沒有這句。
+        let detailEmptyState = app.staticTexts["還沒有照片"]
+        XCTAssertTrue(detailEmptyState.waitForExistence(timeout: 5), "點相簿卡片後應該 push 進相簿詳情")
+
+        app.cells.staticTexts["時間軸"].firstMatch.tap()
+        XCTAssertTrue(
+            detailEmptyState.waitForNonExistence(timeout: 5),
+            "切到時間軸後 detail 欄不應該還疊著相簿詳情（共用 NavigationStack 未重置）"
+        )
+        XCTAssertTrue(
+            app.staticTexts["這裡還沒有任何回憶"].waitForExistence(timeout: 5),
+            "切到時間軸後 detail 欄應該是時間軸根頁（空狀態），不是殘留 path 的佔位畫面"
+        )
+        app.cells.staticTexts["相簿"].firstMatch.tap()
+        XCTAssertTrue(
+            app.buttons["新增相簿"].waitForExistence(timeout: 5),
+            "切回相簿應該回到相簿列表（header 的「新增相簿」鈕在）——detail stack 應在切 section 時重置"
+        )
+        // 等 2 秒而不是當下 `.exists`：延遲還原的 path（例如 onChange 後非同步寫回）也要抓得到。
+        XCTAssertFalse(
+            detailEmptyState.waitForExistence(timeout: 2),
+            "切回相簿不應該掉回上次 push 的相簿詳情——detail stack 應在切 section 時重置"
+        )
+    }
+
     private func assertAlbumsTitleAppearsExactlyOnce(
         in app: XCUIApplication, context: String, file: StaticString = #filePath, line: UInt = #line
     ) {

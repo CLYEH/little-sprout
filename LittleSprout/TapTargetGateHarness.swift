@@ -69,8 +69,9 @@ enum TapTargetGateHarness {
             sectionTabViewHost
         case .sectionSplitView:
             sectionSplitViewHost
-        case .sectionSplitViewWithChildren:
-            sectionSplitViewWithChildrenHost
+        // LS-396：兩支併單行——enum body 已頂 SwiftLint `type_body_length` 250 上限。
+        case .sectionSplitViewWithChildren: sectionSplitViewWithChildrenHost
+        case .sectionSplitViewWithAlbum: sectionSplitViewWithAlbumHost
         case .sectionTabViewWithDiary:
             sectionTabViewWithDiaryHost
         case .diaryCardVideoBadges:

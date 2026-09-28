@@ -103,6 +103,9 @@ enum TapTargetGateScreenName: String {
     // LS-370：同 `.sectionSplitView`，但 `childrenStore` seed 兩個寶貝——`ChildrenManagementViewIPadTests`
     // 要點選左欄寶貝列、確認右欄詳情出現（`PreviewChildAPIClient.listChildren` 固定回 `[]`）。
     case sectionSplitViewWithChildren = "SectionSplitViewWithChildren"
+    // LS-396：同 `.sectionSplitView`，但 `albumsStore` 帶一本相簿——`AlbumsViewIPadTests` 要真的
+    // push 進相簿詳情，再切 section 驗 detail stack 重置（空狀態沒有卡片可點）。
+    case sectionSplitViewWithAlbum = "SectionSplitViewWithAlbum"
     // merge-review R1 M1 回歸測試用：`.sectionTabView` 的 `timelineStore` 是空狀態，時間軸
     // 沒有任何日記卡可點，無法真的 push 進 `DiaryDetailView`——這個變體額外 seed 一筆日記
     // （`TimelineStore.seedForPreview(entries:)`，`TimelineStore.swift` DEBUG-only），讓
