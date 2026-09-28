@@ -10,6 +10,8 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
     typealias FetchDiaryMediaLinksHandler = @Sendable ([UUID]) async throws -> [DiaryMediaLinkRow]
     typealias FetchAlbumsHandler = @Sendable ([UUID]) async throws -> [AlbumRow]
     typealias FetchMediaHandler = @Sendable ([UUID]) async throws -> [MediaRow]
+    typealias FetchFoodRecordsHandler = @Sendable ([UUID]) async throws -> [ChildFoodRecord]
+    typealias FetchFoodCatalogItemsHandler = @Sendable ([String]) async throws -> [FoodCatalogItem]
     typealias SignedURLsHandler = @Sendable ([String]) async throws -> [String: URL]
     typealias ReactionCountsHandler = @Sendable (UUID, String, [UUID]) async throws -> [ReactionCountRow]
     typealias ToggleReactionHandler = @Sendable (UUID, String, UUID) async throws -> Bool
@@ -44,6 +46,9 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
         var fetchDiaryMediaLinksHandler: FetchDiaryMediaLinksHandler = { _ in [] }
         var fetchAlbumsHandler: FetchAlbumsHandler = { _ in [] }
         var fetchMediaHandler: FetchMediaHandler = { _ in [] }
+        var fetchMediaCalls: [[UUID]] = []
+        var fetchFoodRecordsHandler: FetchFoodRecordsHandler = { _ in [] }
+        var fetchFoodCatalogItemsHandler: FetchFoodCatalogItemsHandler = { _ in [] }
         var signedURLsHandler: SignedURLsHandler = { _ in [:] }
         /// LS-130：每次 `signedURLs(forStoragePaths:)` 呼叫收到的路徑陣列，依呼叫順序——
         /// 供測試斷言「全尺寸只在放大／播放時簽」：計數呼叫次數、檢查每次傳入的路徑是縮圖
@@ -64,6 +69,11 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
 
     var signedURLsCalls: [[String]] {
         box.withLock { $0.signedURLsCalls }
+    }
+
+    /// LS-383：每次 `fetchMedia(ids:)` 收到的 id 陣列——斷言食物卡只替有 `media_id` 的記錄查照片。
+    var fetchMediaCalls: [[UUID]] {
+        box.withLock { $0.fetchMediaCalls }
     }
 
     var reactionCountsCalls: [ReactionCountsCall] {
@@ -92,6 +102,14 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
 
     func setFetchMediaHandler(_ handler: @escaping FetchMediaHandler) {
         box.withLock { $0.fetchMediaHandler = handler }
+    }
+
+    func setFetchFoodRecordsHandler(_ handler: @escaping FetchFoodRecordsHandler) {
+        box.withLock { $0.fetchFoodRecordsHandler = handler }
+    }
+
+    func setFetchFoodCatalogItemsHandler(_ handler: @escaping FetchFoodCatalogItemsHandler) {
+        box.withLock { $0.fetchFoodCatalogItemsHandler = handler }
     }
 
     func setSignedURLsHandler(_ handler: @escaping SignedURLsHandler) {
@@ -135,7 +153,18 @@ final class StubTimelineAPIClient: TimelineAPIClient, @unchecked Sendable {
     }
 
     func fetchMedia(ids: [UUID]) async throws -> [MediaRow] {
+        box.withLock { $0.fetchMediaCalls.append(ids) }
         let handler = box.withLock { $0.fetchMediaHandler }
+        return try await handler(ids)
+    }
+
+    func fetchFoodRecords(ids: [UUID]) async throws -> [ChildFoodRecord] {
+        let handler = box.withLock { $0.fetchFoodRecordsHandler }
+        return try await handler(ids)
+    }
+
+    func fetchFoodCatalogItems(ids: [String]) async throws -> [FoodCatalogItem] {
+        let handler = box.withLock { $0.fetchFoodCatalogItemsHandler }
         return try await handler(ids)
     }
 

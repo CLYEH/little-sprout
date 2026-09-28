@@ -86,6 +86,7 @@ final class SupabaseTimelineAPIClientTests: XCTestCase {
     /// 讓陣列繼續解出其餘已知 kind 的列（見 `FeedKind` 文件註解）。這裡驗證的是解碼層——
     /// `.unknown` 這筆該不該顯示是 `TimelineContentAssembler.assemble` 的職責，見
     /// `TimelineContentAssemblerTests.test_assemble_unknownKindPointer_skippedAndKnownKindsSurvive`。
+    /// LS-383 起 `food_first` 是已知 kind，這裡改用一個假想的未來值 `future_kind`。
     func test_fetchTimelinePointers_unknownKind_decodesAlongsideKnownKinds() async throws {
         let unknownRefID = UUID(uuidString: "99999999-9999-9999-9999-999999999999")!
         let albumRefID = UUID(uuidString: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")!
@@ -93,7 +94,7 @@ final class SupabaseTimelineAPIClientTests: XCTestCase {
             MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
             [
               {
-                "kind": "food_first",
+                "kind": "future_kind",
                 "ref_id": "\(unknownRefID.uuidString)",
                 "occurred_at": "2026-09-19T08:00:00Z",
                 "child_ids": []
@@ -119,11 +120,11 @@ final class SupabaseTimelineAPIClientTests: XCTestCase {
             familyID: familyID, childID: nil, cursor: nil, limit: 20
         )
 
-        XCTAssertEqual(pointers.count, 3, "未知 kind（如 food_first）不該讓整批解碼失敗")
+        XCTAssertEqual(pointers.count, 3, "未知 kind（如 future_kind）不該讓整批解碼失敗")
         guard case .unknown(let rawKind) = pointers[0].kind else {
             return XCTFail("辨識不出的 kind 字串應解碼為 .unknown，實際是 \(pointers[0].kind)")
         }
-        XCTAssertEqual(rawKind, "food_first")
+        XCTAssertEqual(rawKind, "future_kind")
         XCTAssertEqual(pointers[1].kind, .diary)
         XCTAssertEqual(pointers[2].kind, .album)
     }

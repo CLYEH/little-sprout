@@ -29,7 +29,7 @@ extension TimelineStoreTests {
         let base = Date()
         let unknownPage = (0..<TimelineStore.pageSize).map { index in
             TimelineFeedPointer(
-                kind: .unknown("food_first"), refId: UUID(),
+                kind: .unknown("future_kind"), refId: UUID(),
                 occurredAt: base.addingTimeInterval(TimeInterval(-index)), childIds: []
             )
         }
@@ -69,7 +69,7 @@ extension TimelineStoreTests {
         let lastKnown = firstPage[firstPage.count - 1]
         let unknownRun = (0..<TimelineStore.pageSize).map { index in
             TimelineFeedPointer(
-                kind: .unknown("food_first"), refId: UUID(),
+                kind: .unknown("future_kind"), refId: UUID(),
                 occurredAt: lastKnown.occurredAt.addingTimeInterval(TimeInterval(-10 - index)), childIds: []
             )
         }
