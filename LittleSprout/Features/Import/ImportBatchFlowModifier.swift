@@ -1,6 +1,7 @@
 import Photos
 import PhotosUI
 import SwiftUI
+import UIKit
 
 /// 相機膠卷批次匯入「選取→整理」的入口串接（LS-303 範圍 1／4）——把「請求相片庫授權
 /// →（`.denied` 就攔在 06b／否則開 PHPicker）→ 依 `itemIdentifier` 反查 EXIF 分組
@@ -62,6 +63,9 @@ struct ImportBatchFlowModifier: ViewModifier {
                     let result = await Task.detached(priority: .userInitiated) {
                         PhotoLibraryAccessService.fetchResult(for: identifiers, droppedCount: droppedCount)
                     }.value
+                    // LS-391：picker 的 dismiss 轉場還在跑就 present 整理頁，整個 cover 的 safe area
+                    // 會是 0，見 `awaitInFlightPresentationTransition()` 文件註解。
+                    await Self.awaitInFlightPresentationTransition()
                     presentOrganize(with: result)
                 }
             }
@@ -96,6 +100,33 @@ struct ImportBatchFlowModifier: ViewModifier {
         )
     }
 
+    /// LS-391：等目前 key window 最上層 view controller 的 present／dismiss 轉場跑完才返回；沒有
+    /// 轉場在跑就立刻返回。
+    ///
+    /// **為什麼需要**：使用者在 picker 按「完成」後，`showsPicker` 在 dismiss 轉場**開始**時就
+    /// 撥回 `false`、`pickerSelection` 同一輪更新送達；Photos 查詢（上面的 `Task.detached`）
+    /// 通常在轉場結束前就回來。這時 `organizePayload` 一設、`.fullScreenCover` 在 picker 還在
+    /// dismiss 的途中 present，整個 cover 的 safe area insets 會是 0（上下皆然，之後也不會自己
+    /// 修正）——整理頁／04／05 的頂列畫進狀態列、與時鐘重疊，「取消」「完成」點不到（LS-391；
+    /// 模擬器 probe 實測 present 當下 picker 那層 `isBeingDismissed == true`、帶
+    /// `transitionCoordinator`）。`showsPicker` 撥回 `false` 的時間點早於轉場結束，不能拿來當
+    /// 「picker 已完全收掉」的訊號，只能直接問 UIKit 轉場本身。
+    @MainActor
+    private static func awaitInFlightPresentationTransition() async {
+        let scene = UIApplication.shared.connectedScenes.first { $0.activationState == .foregroundActive }
+        var topmost = (scene as? UIWindowScene)?.keyWindow?.rootViewController
+        while let presented = topmost?.presentedViewController { topmost = presented }
+        guard let coordinator = topmost?.transitionCoordinator else { return }
+        let gate = ResumeOnce()
+        await withCheckedContinuation { continuation in
+            gate.continuation = continuation
+            // 回傳 `false`＝沒排進轉場（completion 不會被呼叫）——直接放行，不能讓匯入流程卡住。
+            if !coordinator.animate(alongsideTransition: nil, completion: { _ in gate.resume() }) {
+                gate.resume()
+            }
+        }
+    }
+
     @MainActor
     private func requestAccessAndProceed() async {
         let state = await PhotoLibraryAccessService.requestAccess()
@@ -105,6 +136,18 @@ struct ImportBatchFlowModifier: ViewModifier {
         } else {
             showsPicker = true
         }
+    }
+}
+
+/// `awaitInFlightPresentationTransition()` 專用：continuation 只 resume 一次（轉場 completion
+/// 與「沒排進轉場」兩條路徑擇一）。
+@MainActor
+private final class ResumeOnce {
+    var continuation: CheckedContinuation<Void, Never>?
+
+    func resume() {
+        continuation?.resume()
+        continuation = nil
     }
 }
 
