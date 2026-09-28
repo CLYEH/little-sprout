@@ -719,7 +719,15 @@ jobs:
     needs: ci-dedup
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # LS-392：15 → 20。db start 限流退避拉長到 30／60／120／240（最壞多等 7.5 分），cache miss 時再加 docker save＋
+    # actions/cache 上傳（約 2–3 分）；原本正常 run 約 4–5 分，15 分會在「退避到最後一次才成功＋寫回快取」時撞頂。
+    timeout-minutes: 20
+    # LS-392：CLI 版本與映像 registry 同時決定映像的 repo:tag，映像快取 key 取這兩個值——集中在這裡，
+    # setup-cli／registry 覆寫／快取 key 三處共用，改版本不會有一處漏改（key 沒跟上＝載入舊映像後 CLI 照樣去拉）。
+    env:
+      SUPABASE_CLI_VERSION: 2.115.0
+      DB_IMAGE_REGISTRY: public.ecr.aws
+      DB_IMAGE_TAR: ${{ github.workspace }}/../supabase-db-images/images.tar
     steps:
       # LS-350：同 tree 沿用／harness-only 略過時只印來源、不跑實際 step（mode=blocked 在這步紅）。
       - name: CI 去重（LS-350）
@@ -801,7 +809,7 @@ jobs:
         if: steps.detect.outputs.skip == 'false'
         uses: supabase/setup-cli@v1
         with:
-          version: 2.115.0
+          version: ${{ env.SUPABASE_CLI_VERSION }}
 
       - name: 安裝 psql client
         if: steps.detect.outputs.skip == 'false'
@@ -815,11 +823,41 @@ jobs:
       # 自測 db-start-retry.test.sh 掛 rules job）。
       - name: supabase 映像改拉 public.ecr.aws（避開 ghcr 共享出口限流，LS-351）
         if: steps.detect.outputs.skip == 'false'
-        run: echo "SUPABASE_INTERNAL_IMAGE_REGISTRY=public.ecr.aws" >> "$GITHUB_ENV"
+        run: echo "SUPABASE_INTERNAL_IMAGE_REGISTRY=${DB_IMAGE_REGISTRY}" >> "$GITHUB_ENV"
+
+      # LS-392（池 LS-354 84acf277）：ECR Public 匿名拉取有資料量上限，09-28 一日三次 `toomanyrequests: Data limit
+      # exceeded`（run 36363735578／36371133062／36378063655）。db start 要的四個映像（postgres／realtime／storage-api／
+      # gotrue）以 docker save tar 放 actions/cache：命中 → docker load，CLI 見本機已有同名映像就不拉（完全不碰 ECR）；
+      # 未命中 → 照舊拉 ECR（fallback），db start 成功後 docker save 寫回。key＝runner os／arch＋CLI 版本＋registry＋
+      # config.toml（決定 postgres 版本與要起哪些服務）。讀取範圍依 actions/cache 規則：本分支＋預設分支（PR 另加 base）。
+      - name: 還原 supabase 映像快取（actions/cache，LS-392）
+        id: db-image-cache
+        if: steps.detect.outputs.skip == 'false'
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DB_IMAGE_TAR }}
+          key: supabase-db-images-v1-${{ runner.os }}-${{ runner.arch }}-cli${{ env.SUPABASE_CLI_VERSION }}-${{ env.DB_IMAGE_REGISTRY }}-${{ hashFiles('supabase/config.toml') }}
+
+      - name: 載入 supabase 映像快取（cache hit → docker load；miss → 由 registry 拉，LS-392）
+        if: steps.detect.outputs.skip == 'false'
+        run: bash scripts/ci/db-image-cache.sh load "$DB_IMAGE_TAR"
 
       - name: supabase db start（只起 DB，比 supabase start 快；測試資料直接灌 auth.users，不需要 Auth/Storage service）
         if: steps.detect.outputs.skip == 'false'
         run: bash scripts/ci/db-start-retry.sh
+
+      # LS-392：只在 cache miss 且 db start 成功後寫回（命中時不重存，key 相同也存不進去）。放在 db start 正後方，
+      # 後面的測試紅了也已經寫回——映像本身與測試結果無關。
+      - name: 匯出 supabase 映像（docker save，cache miss 時，LS-392）
+        if: steps.detect.outputs.skip == 'false' && steps.db-image-cache.outputs.cache-hit != 'true'
+        run: bash scripts/ci/db-image-cache.sh save "$DB_IMAGE_TAR"
+
+      - name: 寫回 supabase 映像快取（actions/cache，cache miss 時，LS-392）
+        if: steps.detect.outputs.skip == 'false' && steps.db-image-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.DB_IMAGE_TAR }}
+          key: ${{ steps.db-image-cache.outputs.cache-primary-key }}
 
       # LS-186：reset 重建 db 容器時 runner docker 對 54322 舊綁定偶爾未釋放 →「address already in use」（LS-184 run 33934840343，
       # rerun 即綠、純 flake）。抽成 scripts/ci/db-reset-retry.sh：失敗且輸出含該字串才 stop --no-backup → sleep 10 → db start →
