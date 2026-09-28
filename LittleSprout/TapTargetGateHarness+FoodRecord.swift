@@ -89,7 +89,8 @@ private struct FoodRecordBookHarnessHost: View {
                 .navigationTitle(TapTargetGateHarness.foodRecordChildName)
                 .navigationDestination(for: Bool.self) { _ in
                     FoodBookView(
-                        previewStore: store, childName: TapTargetGateHarness.foodRecordChildName, apiClient: apiClient
+                        previewStore: store, childName: TapTargetGateHarness.foodRecordChildName, apiClient: apiClient,
+                        recordDetailContext: TapTargetGateHarness.foodBookDetailContext
                     )
                 }
         }
@@ -131,7 +132,8 @@ private struct FoodRecordEditHarnessHost: View {
                 .navigationTitle(TapTargetGateHarness.foodRecordChildName)
                 .navigationDestination(for: Bool.self) { _ in
                     FoodBookView(
-                        previewStore: store, childName: TapTargetGateHarness.foodRecordChildName, apiClient: apiClient
+                        previewStore: store, childName: TapTargetGateHarness.foodRecordChildName, apiClient: apiClient,
+                        recordDetailContext: TapTargetGateHarness.foodBookDetailContext
                     )
                 }
         }

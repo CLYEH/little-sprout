@@ -67,7 +67,8 @@ final class FoodBookUITests: XCTestCase {
         XCTAssertEqual(app.buttons["foodCell.yogurt"].label, "優格，2026/5/2 第一次吃到，含牛奶")
     }
 
-    /// 空位開第一次記錄 sheet（LS-380 已接上真畫面）、吃過的格子推記錄詳情（LS-381 尚未實作，仍是 placeholder）。
+    /// 空位開第一次記錄 sheet（LS-380）、吃過的格子推 04 記錄詳情（LS-381；LS-393 起 harness 帶
+    /// `recordDetailContext`，不再是佔位頁）。
     func testTappingCells_opensDestinations() {
         let app = launch(.foodBook, Self.standard)
         app.buttons["foodCell.brown_rice"].tap()
@@ -76,7 +77,7 @@ final class FoodBookUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["記下陳小安第一次吃糙米飯"].waitUntilGone(timeout: 5))
 
         app.buttons["foodCell.pumpkin"].tap()
-        XCTAssertTrue(app.staticTexts["這個畫面由 LS-381 實作，尚未完成。"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["foodRecordDetail.title"].waitForExistence(timeout: 5), "吃過的格子要推 04")
     }
 
     /// 未吃＝灰階（App 端 `.saturation(0).opacity(0.6)`，Notes `DpExV`）、吃過＝彩色——以像素色度量：

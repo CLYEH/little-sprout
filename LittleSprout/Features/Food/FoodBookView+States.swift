@@ -45,28 +45,3 @@ extension FoodBookView {
         }
     }
 }
-
-/// LS-379 暫接的目的地——記錄詳情（LS-381）尚未實作時的佔位（第一次記錄 sheet 已由 LS-380 接上真畫面），
-/// 只顯示食物名與「由哪張票實作」，沒有任何互動元件。只在呼叫端既沒給 `recordDetailContext` 也沒給
-/// `recordDetailDestination` 時走到（harness；正式入口 LS-382 `FoodBookEntrySection` 一律帶 context），不會出現在
-/// 正式使用者面前；LS-381 落地後這支型別隨之移除。
-struct FoodBookPendingDestination: View {
-    let item: FoodCatalogItem
-    let ticket: String
-
-    var body: some View {
-        VStack(spacing: AppSpacing.item) {
-            FoodStickerImage(foodID: item.id, size: 96, isGrayscale: false)
-            Text(item.nameZh)
-                .appFont(.lead, weight: .bold)
-                .foregroundStyle(Color.lsTextPrimary)
-            Text("這個畫面由 \(ticket) 實作，尚未完成。")
-                .appFont(.note)
-                .foregroundStyle(Color.lsTextSecondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(AppSpacing.screenPad)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .appBackground()
-    }
-}

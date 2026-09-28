@@ -26,9 +26,9 @@ enum FoodBookSelection: Equatable {
 ///   `RootView.SectionSplitView` 既有外殼，不在這裡重畫（同 `ChildGrowthDetailView.regularLayout`）。
 /// - 資料落點：分頁＝純 UI 狀態（不持久化）；格子狀態＝`child_food_records.food_id` 是否存在。
 ///
-/// 目的地：點還沒吃的格子開第一次記錄 sheet（LS-380 `FoodRecordSheet`）、點吃過的格子推記錄詳情（LS-381，
-/// 尚未實作前接 placeholder）。兩者都可由呼叫端注入（`firstRecordDestination`／`recordDetailDestination`），
-/// 另有 `onSelect` 回呼讓呼叫端在呈現之外做事。
+/// 目的地：點還沒吃的格子開第一次記錄 sheet（LS-380 `FoodRecordSheet`）、點吃過的格子推記錄詳情（LS-381
+/// `FoodRecordDetailRouter`，需 `recordDetailContext`）。兩者都可由呼叫端注入（`firstRecordDestination`／
+/// `recordDetailDestination`），另有 `onSelect` 回呼讓呼叫端在呈現之外做事。
 ///
 /// 「收下」動效（06 `jIWO6`，LS-380；Notes `cEkCH`）：儲存成功時先把那一格**按住**在「還沒吃」的外觀
 /// （`pendingRevealFoodID`）、計數句照常更新；sheet 的 `onDismiss` 完成後才 `scrollTo` 那一格（`anchor: nil`＝
@@ -43,7 +43,8 @@ struct FoodBookView: View {
     var firstRecordDestination: ((FoodCatalogItem) -> AnyView)?
     var recordDetailDestination: ((FoodCatalogItem, ChildFoodRecord) -> AnyView)?
     /// LS-380 R2：非 nil＝吃過的格子推真詳情頁（`FoodRecordDetailRouter`），編輯／刪除／加照片的結果直接回寫
-    /// 這本圖鑑的 store（`recordDetailDestination` 另給時以它為準）。
+    /// 這本圖鑑的 store（`recordDetailDestination` 另給時以它為準）。兩者皆 nil 時詳情目的地為空——正式入口
+    /// （`FoodBookEntrySection`／時間軸 Book Row）一律帶 context，harness 也都帶（LS-393 移除原本的佔位頁）。
     var recordDetailContext: FoodRecordDetailContext?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -125,7 +126,6 @@ struct FoodBookView: View {
             if let item = store?.catalog.first(where: { $0.id == record.foodID }) {
                 recordDetailDestination?(item, record)
                     ?? recordDetailContext.map { AnyView(recordDetail(item, record, context: $0)) }
-                    ?? AnyView(FoodBookPendingDestination(item: item, ticket: "LS-381"))
             }
         }
     }
