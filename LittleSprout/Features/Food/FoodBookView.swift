@@ -42,6 +42,9 @@ struct FoodBookView: View {
     var onSelect: ((FoodBookSelection) -> Void)?
     var firstRecordDestination: ((FoodCatalogItem) -> AnyView)?
     var recordDetailDestination: ((FoodCatalogItem, ChildFoodRecord) -> AnyView)?
+    /// LS-380 R2：非 nil＝吃過的格子推真詳情頁（`FoodRecordDetailRouter`），編輯／刪除／加照片的結果直接回寫
+    /// 這本圖鑑的 store（`recordDetailDestination` 另給時以它為準）。
+    var recordDetailContext: FoodRecordDetailContext?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -60,7 +63,8 @@ struct FoodBookView: View {
         child: Child, apiClient: FoodAPIClient, canRecord: Bool, initialCategory: FoodCategory = .grainRoot,
         onSelect: ((FoodBookSelection) -> Void)? = nil,
         firstRecordDestination: ((FoodCatalogItem) -> AnyView)? = nil,
-        recordDetailDestination: ((FoodCatalogItem, ChildFoodRecord) -> AnyView)? = nil
+        recordDetailDestination: ((FoodCatalogItem, ChildFoodRecord) -> AnyView)? = nil,
+        recordDetailContext: FoodRecordDetailContext? = nil
     ) {
         self.child = child
         self.apiClient = apiClient
@@ -68,6 +72,7 @@ struct FoodBookView: View {
         self.onSelect = onSelect
         self.firstRecordDestination = firstRecordDestination
         self.recordDetailDestination = recordDetailDestination
+        self.recordDetailContext = recordDetailContext
         _selectedCategory = State(initialValue: initialCategory)
     }
 
@@ -75,8 +80,10 @@ struct FoodBookView: View {
     /// harness／`#Preview` 專用：直接注入已種好資料的 store（同 `ChildGrowthDetailView(previewGrowthStore:)`）。
     init(
         previewStore: FoodBookStore, childName: String = "陳小安", canRecord: Bool = true,
-        initialCategory: FoodCategory = .grainRoot, apiClient: FoodAPIClient = PreviewFoodAPIClient()
+        initialCategory: FoodCategory = .grainRoot, apiClient: FoodAPIClient = PreviewFoodAPIClient(),
+        recordDetailContext: FoodRecordDetailContext? = nil
     ) {
+        self.recordDetailContext = recordDetailContext
         self.child = Child(
             id: previewStore.childID, name: childName,
             birthday: BirthdayFormat.date(fromWireString: "2025-04-20")!, avatarURL: nil, deletedAt: nil,
@@ -113,6 +120,7 @@ struct FoodBookView: View {
         .navigationDestination(item: $detailRecord) { record in
             if let item = store?.catalog.first(where: { $0.id == record.foodID }) {
                 recordDetailDestination?(item, record)
+                    ?? recordDetailContext.map { AnyView(recordDetail(item, record, context: $0)) }
                     ?? AnyView(FoodBookPendingDestination(item: item, ticket: "LS-381"))
             }
         }
@@ -179,6 +187,22 @@ struct FoodBookView: View {
                 // 同一個 transaction 內先按住、再套用：那一格不會先閃成紙片再被按回灰色。
                 pendingRevealFoodID = record.foodID
                 store?.applySaved(record)
+            }
+        )
+    }
+
+    /// 詳情頁一律拿 store 裡最新的那一筆（03b 儲存後 `applySaved` 換上的回傳列，接縫⑦），刪除／重讀發現已刪就
+    /// 把格子退回未吃並 pop（接縫④⑥）。
+    private func recordDetail(
+        _ item: FoodCatalogItem, _ record: ChildFoodRecord, context: FoodRecordDetailContext
+    ) -> some View {
+        let latest = store?.record(for: record.foodID).flatMap { $0.id == record.id ? $0 : nil } ?? record
+        return FoodRecordDetailRouter(
+            child: child, item: item, record: latest, apiClient: apiClient, context: context, canRecord: canRecord,
+            onSaved: { store?.applySaved($0) },
+            onRemoved: { id in
+                store?.removeRecord(id: id)
+                detailRecord = nil
             }
         )
     }

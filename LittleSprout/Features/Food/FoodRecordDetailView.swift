@@ -34,8 +34,11 @@ struct FoodRecordDetailView: View {
     let isFamilyOwner: Bool
     /// owner／member＝true（`ChildrenStore.canManageChildren`）；viewer＝false。
     let canRecord: Bool
-    /// 編輯／刪除／加照片交給呼叫端開 sheet（LS-380）。
+    /// 編輯／刪除／加照片交給呼叫端開 sheet（LS-380，`FoodRecordDetailRouter`）。
     var onRoute: (FoodRecordDetailRoute) -> Void
+    /// 重讀發現這筆已被刪（`isGone`）：非 nil＝交給呼叫端（圖鑑把格子退回未吃並 pop，LS-380 接縫④）；
+    /// nil＝自己 `dismiss()`（harness／preview 等沒有圖鑑 store 的呼叫端）。
+    var onGone: ((UUID) -> Void)?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -48,7 +51,8 @@ struct FoodRecordDetailView: View {
         child: Child, item: FoodCatalogItem, record: ChildFoodRecord, apiClient: FoodAPIClient,
         currentUserID: UUID?, isFamilyOwner: Bool, canRecord: Bool,
         detailAPIClient: (any FoodRecordDetailAPIClient)? = nil,
-        // 待 LS-380 接手：呼叫端改接 03b／03c／照片來源 sheet；未接之前按鈕按了沒有反應。
+        onGone: ((UUID) -> Void)? = nil,
+        // 正式呼叫端（`FoodRecordDetailRouter`）接 03b／03c／照片來源 sheet；harness 單獨展示詳情頁時用預設 no-op。
         onRoute: @escaping (FoodRecordDetailRoute) -> Void = { _ in }
     ) {
         self.child = child
@@ -60,6 +64,7 @@ struct FoodRecordDetailView: View {
         self.canRecord = canRecord
         self.detailAPIClientOverride = detailAPIClient
         self.onRoute = onRoute
+        self.onGone = onGone
     }
 
     private var isAccessibilityLayout: Bool { dynamicTypeSize.isAccessibilitySize }
@@ -92,9 +97,12 @@ struct FoodRecordDetailView: View {
         .toolbar {
             ToolbarItem(placement: .principal) { Color.clear.frame(width: 0, height: 0).accessibilityHidden(true) }
         }
-        .task(id: record.id) { await loadIfNeeded() }
+        // LS-380 接縫⑦：以整筆記錄（含 `updatedAt`）當 key——03b 儲存後圖鑑套用回傳列、呼叫端帶進更新過的
+        // 那筆，這裡就重跑：同一筆 id 保留 store、先換上新值再重讀（見 `FoodRecordDetailStore.adopt`）。
+        .task(id: record) { await loadIfNeeded() }
         .onChange(of: store?.isGone == true) { _, isGone in
-            if isGone { dismiss() }
+            guard isGone else { return }
+            if let onGone { onGone(record.id) } else { dismiss() }
         }
     }
 
@@ -105,6 +113,8 @@ struct FoodRecordDetailView: View {
                 record: record, foodAPIClient: apiClient,
                 detailAPIClient: detailAPIClientOverride ?? environmentDetailAPIClient
             )
+        } else {
+            store?.adopt(record)
         }
         await store?.refresh()
     }

@@ -49,6 +49,16 @@ final class FoodRecordDetailStore {
         photo = record.mediaID == nil ? .none : .loading
     }
 
+    /// 呼叫端手上有比這裡更新的同一筆（03b 儲存後圖鑑已套用 upsert 回傳列，LS-380 接縫⑦）——先換上，照片
+    /// 換了就回 `.loading`，接著 `refresh()` 以伺服器為準。舊的（`updatedAt` 不比現在新）一律忽略：store 自己
+    /// 重讀到的值可能比呼叫端那份新，不能被倒退。
+    func adopt(_ newer: ChildFoodRecord) {
+        guard newer.id == record.id, newer.updatedAt > record.updatedAt else { return }
+        let mediaChanged = newer.mediaID != record.mediaID
+        record = newer
+        if mediaChanged { photo = newer.mediaID == nil ? .none : .loading }
+    }
+
     func refresh() async {
         guard !isRefreshing else { return }
         isRefreshing = true

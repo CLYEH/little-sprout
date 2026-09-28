@@ -8,32 +8,52 @@ import UIKit
 /// LS-380：寫入（upsert／delete）與照片來源（03d）也是假的——`upsertFailure` 非 nil 時 upsert 一律丟
 /// 那個錯誤（03e 儲存失敗 fixture 用）；家庭照片是啟動時畫在暫存目錄的色塊 JPEG（`file://` URL，
 /// `AsyncImage` 可直接載入，不需要網路或 Storage）。
+///
+/// LS-380 R2：記錄是**有狀態**的——upsert／delete 會改記憶體裡那份清單，`listChildFoodRecords` 讀得到
+/// 剛寫的值（同後端的自然鍵 upsert：同寶貝同食物已有一筆＝更新那一筆、保留 id），詳情頁重讀才不會倒退成舊值。
 final class PreviewFoodAPIClient: FoodAPIClient, @unchecked Sendable {
-    private let records: [ChildFoodRecord]
+    private let lock = NSLock()
+    private var records: [ChildFoodRecord]
     private let upsertFailure: AppError?
     private let photos: [FamilyPhoto]
+    /// 新增記錄的作者（harness 的「目前登入者」）；nil＝不填。
+    private let currentUserID: UUID?
 
-    init(records: [ChildFoodRecord] = [], upsertFailure: AppError? = nil, photos: [FamilyPhoto] = []) {
+    init(
+        records: [ChildFoodRecord] = [], upsertFailure: AppError? = nil, photos: [FamilyPhoto] = [],
+        currentUserID: UUID? = nil
+    ) {
         self.records = records
         self.upsertFailure = upsertFailure
         self.photos = photos
+        self.currentUserID = currentUserID
     }
 
     func listFoodCatalog() async throws -> [FoodCatalogItem] { PreviewFoodCatalog.items }
 
-    func listChildFoodRecords(childID: UUID) async throws -> [ChildFoodRecord] { records }
+    func listChildFoodRecords(childID: UUID) async throws -> [ChildFoodRecord] {
+        lock.withLock { records }
+    }
 
     func upsertChildFoodRecord(_ input: FoodRecordUpsert) async throws -> ChildFoodRecord {
         if let upsertFailure { throw upsertFailure }
         let midnight = BirthdayFormat.date(fromWireString: BirthdayFormat.wireString(from: input.firstTriedOn))!
-        return ChildFoodRecord(
-            id: UUID(), familyID: UUID(), childID: input.childID, foodID: input.foodID, authorID: nil,
-            firstTriedOn: midnight, mediaID: input.mediaID, note: input.note, reaction: input.reaction?.rawValue,
-            createdAt: Date(), updatedAt: Date()
-        )
+        return lock.withLock {
+            let existing = records.first { $0.childID == input.childID && $0.foodID == input.foodID }
+            let saved = ChildFoodRecord(
+                id: existing?.id ?? UUID(), familyID: existing?.familyID ?? UUID(), childID: input.childID,
+                foodID: input.foodID, authorID: existing?.authorID ?? currentUserID, firstTriedOn: midnight,
+                mediaID: input.mediaID, note: input.note, reaction: input.reaction?.rawValue,
+                createdAt: existing?.createdAt ?? Date(), updatedAt: Date()
+            )
+            records = records.filter { $0.id != saved.id } + [saved]
+            return saved
+        }
     }
 
-    func deleteChildFoodRecord(id: UUID) async throws {}
+    func deleteChildFoodRecord(id: UUID) async throws {
+        lock.withLock { records.removeAll { $0.id == id } }
+    }
 
     func listFamilyPhotos(childID: UUID) async throws -> [FamilyPhoto] { photos }
 

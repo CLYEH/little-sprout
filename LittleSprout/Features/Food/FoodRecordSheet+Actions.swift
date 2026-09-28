@@ -19,10 +19,8 @@ extension FoodRecordSheet {
     /// 外，任何字級都在首屏內（AX3 亦是，稿 `d56YR`）；背景是呼叫端當下的畫面（本 sheet 疊在 03b 之上，
     /// 刻意偏離 LS-152 的空背景慣例，Notes `GssPy`）。
     var deleteConfirmation: some View {
-        DeleteConfirmationSheet(
-            headTitle: FoodRecordCopy.deleteTitle(foodName: store.item.nameZh),
-            bodyText: FoodRecordCopy.deleteBody(foodName: store.item.nameZh),
-            confirmLabel: "刪除這筆記錄",
+        FoodRecordDeleteConfirmationSheet(
+            foodName: store.item.nameZh,
             confirmAction: { try await store.delete() },
             // `DeleteConfirmationSheet` 保證先關自己再呼叫 `onSuccess`（LS-190 R2 m3）——這裡才讓呼叫端把
             // 格子退回「還沒吃」，再等確認 sheet 關完（`onDismiss`）關本 sheet。
@@ -86,5 +84,23 @@ struct FoodRecordDatePickerSheet: View {
                 }
         }
         .presentationDetents([.medium])
+    }
+}
+
+/// 03c 刪除確認（`Oob1d`／AX3 `d56YR`）——03b 編輯 sheet 內（呼叫路徑①）與 04c 詳情頁（非作者 owner，呼叫路徑②，
+/// Notes `hqrit`）共用同一份文案與版式（LS-380 R2 接縫①）。
+struct FoodRecordDeleteConfirmationSheet: View {
+    let foodName: String
+    let confirmAction: () async throws -> Void
+    let onSuccess: () -> Void
+
+    var body: some View {
+        DeleteConfirmationSheet(
+            headTitle: FoodRecordCopy.deleteTitle(foodName: foodName),
+            bodyText: FoodRecordCopy.deleteBody(foodName: foodName),
+            confirmLabel: "刪除這筆記錄",
+            confirmAction: confirmAction,
+            onSuccess: onSuccess
+        )
     }
 }

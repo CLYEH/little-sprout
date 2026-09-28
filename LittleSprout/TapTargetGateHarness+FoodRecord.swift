@@ -14,6 +14,10 @@ import SwiftUI
 /// 「小安」＝稿面文案（Notes `UsJkk` 示範資料的暱稱）。
 extension TapTargetGateHarness {
     static let foodRecordDarkKey = "LSFoodRecordDark"
+    /// `.foodRecordSheetEdit`：原照片讀不到（`media_id` 指向不存在的照片，R1 i4）。
+    static let foodRecordMissingPhotoKey = "LSFoodRecordMissingPhoto"
+    /// `.foodRecordDetailFlow`：南瓜那筆已在後端被刪（圖鑑還以為吃過），開詳情即發現（接縫④）。
+    static let foodRecordFlowGoneKey = "LSFoodRecordFlowGone"
     static let foodRecordChildName = "小安"
 
     /// 飲食圖鑑家族（LS-379 02 × 4＋LS-380 03 × 3）的 dispatch——從 `hostView(for:)` 搬來（該 enum 逼近
@@ -29,6 +33,7 @@ extension TapTargetGateHarness {
         case .foodRecordSheet: foodRecordSheetHost
         case .foodRecordSheetFailure: foodRecordSheetFailureHost
         case .foodRecordSheetEdit: foodRecordSheetEditHost
+        case .foodRecordDetailFlow: foodRecordColorScheme(FoodRecordDetailFlowHarnessHost())
         default: EmptyView()
         }
     }
@@ -104,7 +109,10 @@ private struct FoodRecordEditHarnessHost: View {
         let seeded = store.record(for: "bread")!
         let record = ChildFoodRecord(
             id: seeded.id, familyID: seeded.familyID, childID: store.childID, foodID: "bread", authorID: nil,
-            firstTriedOn: seeded.firstTriedOn, mediaID: photos.first?.id, note: "自己抓著吃，吃得滿臉都是麵包屑。",
+            firstTriedOn: seeded.firstTriedOn,
+            mediaID: UserDefaults.standard.bool(forKey: TapTargetGateHarness.foodRecordMissingPhotoKey)
+                ? UUID() : photos.first?.id,
+            note: "自己抓著吃，吃得滿臉都是麵包屑。",
             reaction: FoodReaction.liked.rawValue, createdAt: seeded.createdAt, updatedAt: seeded.updatedAt
         )
         store.applySaved(record)
@@ -135,6 +143,57 @@ private struct FoodRecordEditHarnessHost: View {
                 onDeleted: { store.removeRecord(id: $0) }
             )
         }
+    }
+}
+/// LS-380 R2 接縫①④⑥⑦：圖鑑（帶 `recordDetailContext`）→ 吃過的格子 → 04 詳情 → 03b／03c／04b 加照片。
+/// 登入者＝媽媽（owner）：吐司麵包、南瓜（沒照片）是媽媽記的（作者：只有「編輯」）；米精是爸爸記的（04c：只有
+/// 「刪除」）。假 client 有狀態（upsert／delete 會改清單），詳情頁重讀拿得到剛存的值。
+private struct FoodRecordDetailFlowHarnessHost: View {
+    @State private var store: FoodBookStore
+    private let apiClient: PreviewFoodAPIClient
+    private static let mom = UUID()
+    private static let dad = UUID()
+
+    init() {
+        let photos = FamilyPhoto.previewSamples()
+        let seeded = FoodBookStore.previewSeededWithDemoRecords()
+        func record(_ foodID: String, author: UUID, mediaID: UUID?) -> ChildFoodRecord {
+            let old = seeded.record(for: foodID)!
+            return ChildFoodRecord(
+                id: old.id, familyID: old.familyID, childID: seeded.childID, foodID: foodID, authorID: author,
+                firstTriedOn: old.firstTriedOn, mediaID: mediaID, note: "自己抓著吃。", reaction: "liked",
+                createdAt: old.createdAt, updatedAt: old.updatedAt
+            )
+        }
+        let mom = Self.mom, dad = Self.dad
+        let bread = record("bread", author: mom, mediaID: photos.first?.id)
+        let pumpkin = record("pumpkin", author: mom, mediaID: nil)
+        let riceCereal = record("rice_cereal", author: dad, mediaID: photos.first?.id)
+        let pumpkinIsGone = UserDefaults.standard.bool(forKey: TapTargetGateHarness.foodRecordFlowGoneKey)
+        let apiClient = PreviewFoodAPIClient(
+            records: pumpkinIsGone ? [bread, riceCereal] : [bread, pumpkin, riceCereal], photos: photos,
+            currentUserID: mom
+        )
+        let store = FoodBookStore.previewSeededWithDemoRecords(childID: seeded.childID, apiClient: apiClient)
+        [bread, pumpkin, riceCereal].forEach(store.applySaved)
+        self.apiClient = apiClient
+        _store = State(initialValue: store)
+    }
+
+    var body: some View {
+        NavigationStack(path: .constant([true])) {
+            Color.clear
+                .navigationTitle(TapTargetGateHarness.foodRecordChildName)
+                .navigationDestination(for: Bool.self) { _ in
+                    FoodBookView(
+                        previewStore: store, childName: TapTargetGateHarness.foodRecordChildName, apiClient: apiClient,
+                        recordDetailContext: FoodRecordDetailContext(currentUserID: Self.mom, isFamilyOwner: true)
+                    )
+                }
+        }
+        .environment(
+            \.foodRecordDetailAPIClient, PreviewFoodRecordDetailAPIClient(names: [Self.mom: "媽媽", Self.dad: "爸爸"])
+        )
     }
 }
 #endif

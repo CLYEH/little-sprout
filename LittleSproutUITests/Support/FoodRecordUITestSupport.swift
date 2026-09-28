@@ -9,9 +9,12 @@ enum FoodRecordUITestSupport {
     static let ax1 = "UICTContentSizeCategoryAccessibilityM"
     static let ax3 = "UICTContentSizeCategoryAccessibilityXL"
 
-    static func launch(_ screen: TapTargetGateScreenName, _ size: String, dark: Bool = false) -> XCUIApplication {
+    static func launch(
+        _ screen: TapTargetGateScreenName, _ size: String, dark: Bool = false, extraArguments: [String] = []
+    ) -> XCUIApplication {
         let app = TapTargetMeasurement.launch(
-            screen, contentSizeCategory: size, extraLaunchArguments: dark ? ["-LSFoodRecordDark", "YES"] : []
+            screen, contentSizeCategory: size,
+            extraLaunchArguments: (dark ? ["-LSFoodRecordDark", "YES"] : []) + extraArguments
         )
         TapTargetMeasurement.assertScreenRendered(screen, in: app)
         return app
@@ -39,10 +42,12 @@ enum FoodRecordUITestSupport {
         }
     }
 
-    /// 03c 確認 sheet 的「刪除這筆記錄」——底下 03b 也有一顆同字的（identifier `foodRecord.delete`），排除它。
+    /// 03c 確認 sheet 的「刪除這筆記錄」——底下 03b（identifier `foodRecord.delete`）與 04c 詳情頁（`foodRecordDetail.delete`）
+    /// 也各有一顆同字的，排除它們。
     static func confirmDeleteButton(in app: XCUIApplication) -> XCUIElement {
         app.buttons.matching(NSPredicate(
-            format: "label == %@ AND identifier != %@", "刪除這筆記錄", "foodRecord.delete"
+            format: "label == %@ AND identifier != %@ AND identifier != %@",
+            "刪除這筆記錄", "foodRecord.delete", "foodRecordDetail.delete"
         )).firstMatch
     }
 

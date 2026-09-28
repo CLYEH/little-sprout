@@ -327,6 +327,9 @@ enum TapTargetGateScreenName: String {
     case foodRecordSheet = "FoodRecordSheet"
     case foodRecordSheetFailure = "FoodRecordSheetFailure"
     case foodRecordSheetEdit = "FoodRecordSheetEdit"
+    // LS-380 R2：圖鑑 → 04 詳情 → 03b／03c／04b 加照片的整條接縫（`FoodRecordDetailRouter`），不是新畫面，
+    // 借這條通道餵 `FoodRecordDetailFlowUITests`；fixture 見 `TapTargetGateHarness+FoodRecord.swift`。
+    case foodRecordDetailFlow = "FoodRecordDetailFlow"
     // LS-365：時間軸照片卡壓印行寶貝署名——同 `.diaryCardVideoBadges` 既有先例，不是點擊目標
     // 測試，借這條通道餵 `PhotoCardBabyCaptionUITests` 量折行像素與截圖對稿；fixture（一位／
     // 兩位／三位長名／未標記／相簿卡回歸／feed）由 `LS_PHOTO_CARD_CAPTION_FIXTURE` 選，見
