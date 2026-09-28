@@ -106,4 +106,110 @@ final class SupabaseFoodAPIClientTests: XCTestCase {
             XCTAssertTrue(error is AppError, "錯誤要映射成 AppError，實際：\(error)")
         }
     }
+
+    // MARK: - LS-380：寫入與照片來源
+
+    /// 6 個具名參數在 SQL 端都沒有預設值——nil 也要送出明確的 JSON null，否則 PostgREST 找不到函式簽章。
+    func test_upsertChildFoodRecord_sendsAllSixKeysWithExplicitNulls() async throws {
+        let client = TestSupabaseClient.make { [childID] request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/upsert_child_food_record")
+            let body = try XCTUnwrap(request.bodyData)
+            let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+            XCTAssertEqual(
+                Set(payload.keys),
+                ["p_child_id", "p_food_id", "p_first_tried_on", "p_media_id", "p_note", "p_reaction"]
+            )
+            XCTAssertEqual(payload["p_child_id"] as? String, childID.uuidString)
+            XCTAssertEqual(payload["p_food_id"] as? String, "taro")
+            XCTAssertEqual(payload["p_first_tried_on"] as? String, "2026-08-20")
+            XCTAssertTrue(payload["p_media_id"] is NSNull)
+            XCTAssertTrue(payload["p_note"] is NSNull)
+            XCTAssertEqual(payload["p_reaction"] as? String, "disliked")
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            {"id": "11111111-1111-1111-1111-111111111111", "family_id": "33333333-3333-3333-3333-333333333333",
+             "child_id": "\(childID.uuidString)", "food_id": "taro", "author_id": null,
+             "first_tried_on": "2026-08-20", "media_id": null, "note": null, "reaction": "disliked",
+             "created_at": "2026-08-20T03:00:00Z", "updated_at": "2026-08-20T03:00:00Z",
+             "deleted_at": null, "deleted_by": null}
+            """.utf8))
+        }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        let picked = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 8, day: 20, hour: 9)))
+
+        let saved = try await SupabaseFoodAPIClient(client: client).upsertChildFoodRecord(FoodRecordUpsert(
+            childID: childID, foodID: "taro", firstTriedOn: picked, mediaID: nil, note: nil, reaction: .disliked
+        ))
+
+        XCTAssertEqual(saved.foodID, "taro")
+        XCTAssertEqual(FoodBookCopy.cellDate(saved.firstTriedOn), "2026/8/20")
+    }
+
+    func test_upsertChildFoodRecord_checkViolation_mapsToAppError() async {
+        let client = TestSupabaseClient.make { _ in
+            MockURLProtocol.StubResponse(statusCode: 400, body: Data("""
+            {"code": "23514", "message": "new row violates check constraint"}
+            """.utf8))
+        }
+        do {
+            _ = try await SupabaseFoodAPIClient(client: client).upsertChildFoodRecord(FoodRecordUpsert(
+                childID: childID, foodID: "taro", firstTriedOn: Date(), mediaID: nil, note: nil, reaction: nil
+            ))
+            XCTFail("23514 應該拋錯")
+        } catch {
+            XCTAssertEqual(
+                error as? AppError, .validationRetryable(message: "new row violates check constraint", code: "23514")
+            )
+        }
+    }
+
+    func test_deleteChildFoodRecord_sendsRecordID() async throws {
+        let recordID = UUID()
+        let client = TestSupabaseClient.make { request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/delete_child_food_record")
+            let body = try XCTUnwrap(request.bodyData)
+            let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+            XCTAssertEqual(payload["p_id"] as? String, recordID.uuidString)
+            return MockURLProtocol.StubResponse(statusCode: 204, body: Data())
+        }
+
+        try await SupabaseFoodAPIClient(client: client).deleteChildFoodRecord(id: recordID)
+    }
+
+    /// 03d：先以寶貝解出家庭，再只列該家庭、未軟刪的照片（`media_select` 會讓上傳者看到自己已軟刪的列，
+    /// `deleted_at` 要自己濾），新到舊、有上限。
+    func test_listFamilyPhotos_resolvesFamilyThenQueriesLivePhotos() async throws {
+        let familyID = "33333333-3333-3333-3333-333333333333"
+        let client = TestSupabaseClient.make { [childID] request in
+            let query = URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+            switch request.url?.path {
+            case "/rest/v1/children":
+                XCTAssertTrue(query.contains(URLQueryItem(name: "id", value: "eq.\(childID.uuidString)")), "\(query)")
+                return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+                {"family_id": "\(familyID)"}
+                """.utf8))
+            case "/rest/v1/media":
+                XCTAssertTrue(query.contains(URLQueryItem(name: "family_id", value: "eq.\(familyID)")), "\(query)")
+                XCTAssertTrue(query.contains(URLQueryItem(name: "type", value: "eq.photo")), "\(query)")
+                XCTAssertTrue(query.contains(URLQueryItem(name: "deleted_at", value: "is.NULL")), "\(query)")
+                let limit = URLQueryItem(name: "limit", value: "\(FamilyPhotoQuery.limit)")
+                XCTAssertTrue(query.contains(limit), "\(query)")
+                let order = query.first { $0.name == "order" }?.value ?? ""
+                XCTAssertTrue(order.hasPrefix("created_at.desc"), "\(query)")
+                return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+                [{"id": "44444444-4444-4444-4444-444444444444", "storage_path": "f/2026/08/a.jpg",
+                  "thumb_path": "f/2026/08/a_thumb.jpg", "taken_at": null, "created_at": "2026-08-20T03:00:00Z"}]
+                """.utf8))
+            default:
+                XCTFail("非預期的請求：\(request.url?.absoluteString ?? "")")
+                return MockURLProtocol.StubResponse(statusCode: 500, body: Data())
+            }
+        }
+
+        let photos = try await SupabaseFoodAPIClient(client: client).listFamilyPhotos(childID: childID)
+
+        XCTAssertEqual(photos.count, 1)
+        XCTAssertEqual(photos[0].displayPath, "f/2026/08/a_thumb.jpg")
+        XCTAssertNil(photos[0].takenAt)
+    }
 }

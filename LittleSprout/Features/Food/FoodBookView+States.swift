@@ -46,10 +46,10 @@ extension FoodBookView {
     }
 }
 
-/// LS-379 暫接的目的地——第一次記錄 sheet（LS-380）與記錄詳情（LS-381）尚未實作時的佔位，只顯示
-/// 食物名與「由哪張票實作」，沒有任何互動元件。只可能從 DEBUG 暫時入口走到（見
-/// `ChildGrowthDetailView+FoodBookDebugEntry.swift`），不會出現在正式使用者面前；兩張票落地後由
-/// `FoodBookView` 的呼叫端注入真畫面，這支型別隨之移除。
+/// LS-379 暫接的目的地——記錄詳情（LS-381）尚未實作時的佔位（第一次記錄 sheet 已由 LS-380 接上真畫面），
+/// 只顯示食物名與「由哪張票實作」，沒有任何互動元件。只可能從 DEBUG 暫時入口走到（見
+/// `ChildGrowthDetailView+FoodBookDebugEntry.swift`），不會出現在正式使用者面前；LS-381 落地後這支型別
+/// 隨之移除。
 struct FoodBookPendingDestination: View {
     let item: FoodCatalogItem
     let ticket: String

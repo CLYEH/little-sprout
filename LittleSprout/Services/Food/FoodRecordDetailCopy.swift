@@ -79,15 +79,10 @@ enum FoodRecordDetailCopy {
 
     // MARK: - 反應（Notes `m18MTy`）
 
-    /// `reaction` 原字串 → 顯示文字；`nil` 或 CHECK 之外的值（理論上不會出現）＝整個反應 chip 隱藏，
-    /// 不讓英文代碼露出在畫面上。
-    static func reactionLabel(_ reaction: String?) -> String? {
-        switch reaction {
-        case "liked": "喜歡"
-        case "neutral": "普通"
-        case "disliked": "不愛吃"
-        default: nil
-        }
+    /// `reaction` 原字串 → 反應（顯示文字＝`FoodReaction.label`，與 03 sheet 單一來源）；`nil` 或 CHECK 之外的值
+    /// （理論上不會出現）＝整個反應 chip 隱藏，不讓英文代碼露出在畫面上。
+    static func reaction(_ raw: String?) -> FoodReaction? {
+        raw.flatMap(FoodReaction.init(rawValue:))
     }
 
     // MARK: - 過敏原 info 句（Notes `v5KLRQ`、R3 MJ-3）

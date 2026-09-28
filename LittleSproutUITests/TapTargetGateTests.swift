@@ -307,6 +307,11 @@ final class TapTargetGateTests: XCTestCase {
         assertAllTappablesMeetMinimum(.foodBookViewer)
     }
 
+    /// LS-380：03b 編輯記錄 sheet（一開就疊著）——日期欄、換一張／不用照片、反應三選一、儲存／取消／刪除這筆記錄。
+    func testFoodRecordSheetEdit() {
+        assertAllTappablesMeetMinimum(.foodRecordSheetEdit)
+    }
+
     /// LS-312：populated（1 個寶貝）——`ChildrenManagementView` 取代原本 tap-target-exemptions.txt
     /// 的排除，量測「陳小安」列（進寶貝詳情）＋「新增寶貝」主鈕。
     func testChildrenManagementViewPopulated() {

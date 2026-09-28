@@ -961,6 +961,11 @@ SUPEOF
             case "$reds_log" in
               *"has exceeded the maximum execution time"*|*"timed out"*|*"Timed out"*) printf 'timeout（步驟逾時）\n' ;;
             esac
+            # LS-392：db job 的 `supabase db start` 限流退避用盡時，scripts/ci/db-start-retry.sh 印這行——當作型別簽章，
+            # 同類 ≥2 個 run 即掛旗標（09-28 一日三次靠人工計數才升票）。新字串，舊快取裡不會有，快取版本不必跳號。
+            case "$reds_log" in
+              *"⚠ db-start-retry：疑似映像限流"*) printf '映像限流（db-start-retry toomanyrequests）\n' ;;   # REDS-IMAGE-LIMIT
+            esac
           } > "$cache_f"
         fi
       fi
