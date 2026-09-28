@@ -313,6 +313,16 @@ enum TapTargetGateScreenName: String {
     // `.deleteCommentConfirmation` 兩個既有 case 覆蓋同一段版面程式碼），不另掛 case。
     case growthRecordActionsSheet = "GrowthRecordActionsSheet"
     case childrenManagementPopulated = "ChildrenManagementView"  // LS-312：populated，1 個寶貝
+    // LS-382：寶貝詳情「飲食圖鑑」入口（01 家族）——01（38 筆）／01b（0 筆）／01c（1 筆）／讀取失敗四個 fixture，
+    // 三格 cmp/Food Cell＋「看整本飲食圖鑑」皆可量；供 `FoodBookEntryUITests` 斷言三態等高與截圖對稿（同
+    // `.foodBook*` 變體 case 的先例）。深色走 launch argument，見 `TapTargetGateHarness+FoodEntry.swift`。
+    case foodEntry = "ChildGrowthDetailViewFood"
+    case foodEntryEmpty = "ChildGrowthDetailViewFoodEmpty"
+    case foodEntryOne = "ChildGrowthDetailViewFoodOne"
+    case foodEntryFailure = "ChildGrowthDetailViewFoodFailure"
+    // LS-382 R2（merge-review R1 F1／F2）：入口一列裡有兩個小標的食物（鮮奶）／整列都沒有小標——鎖「小標恰好一列」。
+    case foodEntryTwoTags = "ChildGrowthDetailViewFoodTwoTags"
+    case foodEntryNoTags = "ChildGrowthDetailViewFoodNoTags"
     // LS-379：飲食圖鑑 02（示範資料 38／274，穀物根莖）——8 顆分頁＋16 格（吃過／還沒吃）皆可量。
     // 深色／02b 乳製品（一歲後標記）／02c viewer 三個變體同一支檔案，供 `FoodBookUITests` 截圖與
     // 行為斷言（同 `.settingsMemberRole` 等既有變體 case 的先例，不另外具名排除）。

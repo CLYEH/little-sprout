@@ -74,9 +74,13 @@ struct ChildGrowthDetailView: View {
     @State private var growthStore: GrowthStore?
     @State private var selectedMetric: GrowthMetric = .height
     @State private var showsAddMeasurement = false
-    /// LS-379：飲食圖鑑暫時入口用（見 `ChildGrowthDetailView+FoodBookDebugEntry.swift`）；不標 `private`，
-    /// 跨檔 extension 要讀。
+    /// LS-382：飲食圖鑑入口區塊（見 `ChildGrowthDetailView+FoodBook.swift`）；不標 `private`，跨檔 extension
+    /// 要讀寫。app 根注入 client（`LittleSproutApp.rootView`），沒注入（成長區塊自己的 harness／preview）時整個
+    /// 區塊不顯示。
     @Environment(\.foodAPIClient) var foodAPIClient
+    /// 每個寶貝一顆，`.task(id: child.id)` 內依 `FoodBookStore.needsRebuild` 決定重建（同 `growthStore`）；
+    /// 推整本圖鑑時共用同一顆。
+    @State var foodStore: FoodBookStore?
 
     init(
         child: Child, apiClient: GrowthAPIClient, editDestination: (() -> AnyView)? = nil,
@@ -140,7 +144,10 @@ struct ChildGrowthDetailView: View {
         .navigationTitle(horizontalSizeClass == .regular ? "" : child.name)
         .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .large)
         .task(id: child.id) {
+            // LS-382：飲食圖鑑與成長量測平行讀，不互等（換孩子時兩者一起取消）。
+            async let food: Void = loadFoodIfNeeded()
             await loadIfNeeded()
+            await food
         }
         .sheet(isPresented: $showsAddMeasurement) {
             // LS-313：`showsAddMeasurement` 只在 `actionsCompact`／`regularLayout`（`content(_:)`
@@ -197,7 +204,7 @@ struct ChildGrowthDetailView: View {
                     plotHeight: chartPlotHeight
                 )
                 actionsCompact(growthStore)
-                foodBookDebugEntry()
+                foodBookSection()
             }
             .padding(.horizontal, AppSpacing.screenPad)
             .padding(.top, AppSpacing.item)
@@ -285,7 +292,7 @@ struct ChildGrowthDetailView: View {
                         GrowthHistorySection(records: growthStore.records)
                     }
                 }
-                foodBookDebugEntry()
+                foodBookSection()
             }
             .padding(.horizontal, AppSpacing.screenPadLarge)
             .padding(.top, AppSpacing.item)

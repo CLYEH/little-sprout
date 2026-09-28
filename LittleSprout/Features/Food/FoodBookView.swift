@@ -64,6 +64,7 @@ struct FoodBookView: View {
         onSelect: ((FoodBookSelection) -> Void)? = nil,
         firstRecordDestination: ((FoodCatalogItem) -> AnyView)? = nil,
         recordDetailDestination: ((FoodCatalogItem, ChildFoodRecord) -> AnyView)? = nil,
+        store sharedStore: FoodBookStore? = nil,
         recordDetailContext: FoodRecordDetailContext? = nil
     ) {
         self.child = child
@@ -74,6 +75,9 @@ struct FoodBookView: View {
         self.recordDetailDestination = recordDetailDestination
         self.recordDetailContext = recordDetailContext
         _selectedCategory = State(initialValue: initialCategory)
+        // LS-382：寶貝詳情入口把自己那顆 store 交過來（同一個孩子就不重建、不重讀，見 `loadIfNeeded`）——
+        // 圖鑑裡的儲存／刪除直接改到入口三格讀的同一份資料，返回時入口已是新的。
+        _store = State(initialValue: sharedStore)
     }
 
     #if DEBUG

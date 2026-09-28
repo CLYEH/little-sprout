@@ -15,24 +15,31 @@ final class PreviewFoodAPIClient: FoodAPIClient, @unchecked Sendable {
     private let lock = NSLock()
     private var records: [ChildFoodRecord]
     private let upsertFailure: AppError?
+    /// LS-382：非 nil 時讀取（目錄與記錄）一律丟這個錯誤——寶貝詳情入口「首次讀取失敗」fixture 用。
+    private let listFailure: AppError?
     private let photos: [FamilyPhoto]
     /// 新增記錄的作者（harness 的「目前登入者」）；nil＝不填。
     private let currentUserID: UUID?
 
     init(
         records: [ChildFoodRecord] = [], upsertFailure: AppError? = nil, photos: [FamilyPhoto] = [],
-        currentUserID: UUID? = nil
+        currentUserID: UUID? = nil, listFailure: AppError? = nil
     ) {
         self.records = records
         self.upsertFailure = upsertFailure
+        self.listFailure = listFailure
         self.photos = photos
         self.currentUserID = currentUserID
     }
 
-    func listFoodCatalog() async throws -> [FoodCatalogItem] { PreviewFoodCatalog.items }
+    func listFoodCatalog() async throws -> [FoodCatalogItem] {
+        if let listFailure { throw listFailure }
+        return PreviewFoodCatalog.items
+    }
 
     func listChildFoodRecords(childID: UUID) async throws -> [ChildFoodRecord] {
-        lock.withLock { records }
+        if let listFailure { throw listFailure }
+        return lock.withLock { records }
     }
 
     func upsertChildFoodRecord(_ input: FoodRecordUpsert) async throws -> ChildFoodRecord {

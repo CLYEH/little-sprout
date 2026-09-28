@@ -130,9 +130,9 @@ enum TapTargetGateHarness {
         case .growthRecordsList: growthRecordsListHost
         case .growthRecordActionsSheet: growthRecordActionsSheetHost
         case .childrenManagementPopulated: childrenManagementPopulatedHost
-        case .foodBook, .foodBookDark, .foodBookDairy, .foodBookViewer,
-             .foodRecordSheet, .foodRecordSheetFailure, .foodRecordSheetEdit, .foodRecordDetailFlow,
-             .foodRecordDetailServer:
+        case .foodBook, .foodBookDark, .foodBookDairy, .foodBookViewer, .foodRecordSheet, .foodRecordSheetFailure,
+             .foodRecordSheetEdit, .foodRecordDetailFlow, .foodRecordDetailServer, .foodEntry, .foodEntryEmpty,
+             .foodEntryOne, .foodEntryFailure, .foodEntryTwoTags, .foodEntryNoTags:
             foodHost(for: screen)
         case .photoCardBabyCaption: photoCardBabyCaptionHost
         case .diaryCardBabyCaption: diaryCardBabyCaptionHost

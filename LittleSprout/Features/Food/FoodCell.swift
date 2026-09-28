@@ -26,6 +26,9 @@ struct FoodCell: View {
     let item: FoodCatalogItem
     let state: FoodCellState
     let layout: Layout
+    /// LS-382：小標固定佔幾列（見 `visibleTags(_:lines:)`）。nil＝有幾個小標就幾列（圖鑑本體 02）；寶貝詳情入口
+    /// （01）傳 1＝恰好一列，讓每格等高、入口區塊三態等高（Notes `h752D`）。
+    var tagLines: Int?
     /// 點擊回呼——`state.isInteractive == false`（viewer 空位）時不會包成按鈕，這個回呼不會被呼叫。
     let onTap: () -> Void
 
@@ -84,7 +87,7 @@ struct FoodCell: View {
             Text(dateLine)
                 .appNumericFont(.note)
                 .foregroundStyle(state.isTried ? Color.lsPrintInkSecondary : Color.lsTextSecondary)
-            ForEach(tags, id: \.self) { tag in
+            ForEach(Array(tags.enumerated()), id: \.offset) { _, tag in
                 Text(tag)
                     .appFont(.note, weight: .semibold)
                     .foregroundStyle(state.isTried ? Color.lsPrintInkSecondary : Color.lsTextSecondary)
@@ -102,8 +105,19 @@ struct FoodCell: View {
     }
 
     private var tags: [String] {
-        [FoodBookCopy.allergenTag(item.allergens), FoodBookCopy.ageTag(minAgeMonths: item.minAgeMonths)]
-            .compactMap { $0 }
+        Self.visibleTags(
+            [FoodBookCopy.allergenTag(item.allergens), FoodBookCopy.ageTag(minAgeMonths: item.minAgeMonths)]
+                .compactMap { $0 },
+            lines: tagLines
+        )
+    }
+
+    /// 小標列：`lines` 為 nil＝全部照列；給定列數＝恰好那麼多列——多的截掉（保留前面的，過敏原排在「一歲後」之前
+    /// ＝過敏原優先，不加「…」，沿 Notes `v5KLRQ`「多種時第一種＋等」單行先例）、少的補單一空白（稿面 01 入口
+    /// Tag Row 沒有過敏原時內容是 " "）。截掉的小標 VoiceOver 仍會唸（`FoodBookCopy.cellAccessibilityLabel` 不經這裡）。
+    static func visibleTags(_ tags: [String], lines: Int?) -> [String] {
+        guard let lines else { return tags }
+        return Array(tags.prefix(lines)) + Array(repeating: " ", count: max(0, lines - tags.count))
     }
 }
 

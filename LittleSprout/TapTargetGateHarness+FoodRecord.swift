@@ -35,7 +35,9 @@ extension TapTargetGateHarness {
         case .foodRecordSheetEdit: foodRecordSheetEditHost
         case .foodRecordDetailFlow: foodRecordColorScheme(FoodRecordDetailFlowHarnessHost())
         case .foodRecordDetailServer: FoodRecordDetailServerHarnessHost()
-        default: EmptyView()
+        // LS-382：其餘（寶貝詳情入口 `.foodEntry*`）交給 `TapTargetGateHarness+FoodEntry.swift`，那邊的 default 才是
+        // EmptyView——多掛一個 case 會讓這支 switch 超過 cyclomatic_complexity 上限。
+        default: foodEntryHost(for: screen)
         }
     }
 
