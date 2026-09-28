@@ -822,7 +822,7 @@ jobs:
       # `toomanyrequests … allowed: 44000/minute`。改拉 Supabase 官方在 public.ecr.aws 的鏡像避開 ghcr 共享出口限流：
       # setup-cli 把 SUPABASE_INTERNAL_IMAGE_REGISTRY=ghcr.io 寫進 $GITHUB_ENV，這裡在它之後再寫一次覆蓋（後寫者生效，
       # 對其後所有 step 有效，含 db reset）。docker login ghcr.io 對 CLI 內部 pull 無效（run 35904976443 已 Login Succeeded
-      # 仍四次撞限流，反證），已拿掉。限流時仍由 db-start-retry.sh 退避重試 3 次（30／60／120 秒，其他錯誤立即紅；
+      # 仍四次撞限流，反證），已拿掉。限流時仍由 db-start-retry.sh 退避重試 4 次（30／60／120／240 秒，LS-392 由 3 次加長；其他錯誤立即紅；
       # 自測 db-start-retry.test.sh 掛 rules job）。
       - name: supabase 映像改拉 public.ecr.aws（避開 ghcr 共享出口限流，LS-351）
         if: steps.detect.outputs.skip == 'false'
