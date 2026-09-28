@@ -44,6 +44,7 @@
 		0B8A0DB73C4423B756633874 /* QASmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985785A57F53FA7B6C2252FA /* QASmokeTests.swift */; };
 		0BEC88A39AAF8ECE8E2396D9 /* FoodStickerLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85ED8343F451999392E18111 /* FoodStickerLoader.swift */; };
 		0C26B811F96F8122199B4E8A /* QADriver+LoginLanding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8935226D375AB85EFBC17CC3 /* QADriver+LoginLanding.swift */; };
+		0CA747FE5AE0E42F2AC42A0F /* TimelineModels+FoodFirst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E312396D905AD41DE800DA7 /* TimelineModels+FoodFirst.swift */; };
 		0D55E3896A6F4D62BF477EA2 /* GrowthRecordActionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA72632AD0E93264F6CB920 /* GrowthRecordActionsSheet.swift */; };
 		0EBB91992D58C3FF21900433 /* UploadQueueSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00431FCAC56E01318E03FCFD /* UploadQueueSheetView.swift */; };
 		0EE0C2A820CA284AEDA95B34 /* MediaUploadService+Payloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC5B425B5797C9D6C60B37D /* MediaUploadService+Payloads.swift */; };
@@ -204,6 +205,7 @@
 		4CF7E19D52171C546E2EAAAB /* JoinWaitingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE21E4A220A9C7AF7F79450 /* JoinWaitingView.swift */; };
 		4DAC292C1F7A6F7721709114 /* AppBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A53A1F6D147A58F55F72D3F /* AppBackground.swift */; };
 		4E128F1D0AD9913386F289B7 /* GrowthIdentityFreshnessRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C714D87C85DC97C0A9FB123E /* GrowthIdentityFreshnessRegressionTests.swift */; };
+		4E62B6B22C0995F23CF5BB72 /* FoodFirstCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD386FFE2BE429969A3CCF1 /* FoodFirstCardView.swift */; };
 		4FBA0B132FA839140B2E7FB4 /* SupabaseClientFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E69B95CA3E637FEF6DFCCB /* SupabaseClientFactoryTests.swift */; };
 		5006E2F67FD5072CA07B41F3 /* SafetyModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1676990AFF88042719C8300B /* SafetyModelsTests.swift */; };
 		504526865C4E36877D62D018 /* MediaDraftTempStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E42EA52EA5C7F06F992E88B /* MediaDraftTempStorageTests.swift */; };
@@ -213,6 +215,7 @@
 		5082D3510D50899E250FFFA0 /* TimelineContentAssemblerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA808B45C621641B99EC528B /* TimelineContentAssemblerTests.swift */; };
 		52FB88C685FEC278FC52E8EC /* JoinRequestTimeFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C06A12F799073325C52822A0 /* JoinRequestTimeFormatterTests.swift */; };
 		533B01F1B4098A3628E1B7B5 /* EmailSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35722FF8F70D0F6329F4069C /* EmailSignInView.swift */; };
+		5468EDC65CF0C4AB6911AB35 /* FoodFirstCardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A3351A600041848B3432DC /* FoodFirstCardUITests.swift */; };
 		54CEDCF25F75AE0D02DB4561 /* TimelineStoreUnknownKindPaginationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09834B9128FEF0B0A385ABD0 /* TimelineStoreUnknownKindPaginationTests.swift */; };
 		5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E53DCEE9853B208E1D30E1B /* SessionFixture.swift */; };
 		556DB5B8B8585087B96537AC /* CommentDeleteConfirmationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B04119AE44DC83DF4A5A616 /* CommentDeleteConfirmationSheet.swift */; };
@@ -427,6 +430,7 @@
 		AE349DC5C77A050FEB6B3158 /* DiaryComposerStorePublishRetryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 715344039FD455DD3BD4E744 /* DiaryComposerStorePublishRetryTests.swift */; };
 		AE6757B53ACBD92E58192676 /* PushDeviceTokenAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E315D06E0BC5BD355A32CA4 /* PushDeviceTokenAPIClient.swift */; };
 		AEF1E6FD2001CD17F441C1D4 /* ChildRowNavigationRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B0CD7F35226A25AE8A23ED /* ChildRowNavigationRegressionTests.swift */; };
+		AF647264A584AAFA538632C1 /* TimelineView+Food.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14271D5CBB5C33A32231F541 /* TimelineView+Food.swift */; };
 		AFA4F86684A41CC8BA208560 /* TimelineContentAssemblerThumbPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B2FD827FA0B9B18B244A1DC /* TimelineContentAssemblerThumbPathTests.swift */; };
 		B0D70EB20B4074F89886D5B5 /* ChildrenStoreAvatarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A580FB25AD23E59B1A979C /* ChildrenStoreAvatarTests.swift */; };
 		B0FA3B419745F9D231E75C58 /* VideoTrimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E13DE0D017682C31FBABE1 /* VideoTrimmer.swift */; };
@@ -465,6 +469,7 @@
 		C0DB8C9DEF3898A082A02411 /* TimelineImportEntryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3317934C4CA67E11E562E23B /* TimelineImportEntryUITests.swift */; };
 		C10CB66DDE3D1D371C0779E5 /* FoodRecordDetailStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95E4C96566882B5A47168EB3 /* FoodRecordDetailStore.swift */; };
 		C19A5713AEB0B853F576475D /* EULAConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071D2E76524F1503D2394A01 /* EULAConsentView.swift */; };
+		C2074C2B3F9CC4D0BB0854ED /* FoodFirstCardCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4762D10180DBF0F2AA2FA19 /* FoodFirstCardCopy.swift */; };
 		C25CB47B6E864AD71513F432 /* FamilyStoreInviteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B134F4114955711989F4A4 /* FamilyStoreInviteTests.swift */; };
 		C279B695C268CE2BCA1BFE8E /* DeleteAccountFlowView+MustTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09D9B18228BC68A41954AED /* DeleteAccountFlowView+MustTransfer.swift */; };
 		C2C151B3DF9E8CDB42DB6753 /* TapTargetGateScreenName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 962EAB3D4E7C6E203A5790AE /* TapTargetGateScreenName.swift */; };
@@ -479,6 +484,7 @@
 		C5042B02B845BD72DFA1D050 /* DiaryPhotoReorderMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CF5C61ADF3E932C1795C96 /* DiaryPhotoReorderMath.swift */; };
 		C59E991B7D5B3EE1D7916A3F /* UploadQueueStore+Preview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2D29ACA45C74DE4CB9229 /* UploadQueueStore+Preview.swift */; };
 		C5A680937E6BD7F0B4673749 /* AppleSignInNonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587B330E759DA2D787F4E63C /* AppleSignInNonce.swift */; };
+		C5ABA83E23259EC81F77B64B /* FoodFirstTimelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 841D58A595A0DF031F6B17CC /* FoodFirstTimelineTests.swift */; };
 		C643708C9CD676EABE8E33F6 /* EmailDisplayNameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C785FE3D7CCF80C7870997 /* EmailDisplayNameTests.swift */; };
 		C649CAC4FC01FF528483B208 /* DiaryPhotoReorderMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0694D8B3FF373E24A5D98E12 /* DiaryPhotoReorderMathTests.swift */; };
 		C908027A6D35BBE67CE31052 /* TapTargetGateHarness+Safety.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82A4DFDB01C5E9345FAC1DA2 /* TapTargetGateHarness+Safety.swift */; };
@@ -589,6 +595,7 @@
 		FB7F9654CD0A5795A0FFC8F4 /* InteractionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C816FAA01B9DC5A5FEF7683E /* InteractionRow.swift */; };
 		FBB9F48BA840757FD27584F8 /* InviteCodeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD69D0A2456BC4F954E29446 /* InviteCodeParserTests.swift */; };
 		FC29BEFB2E6B8EFF9F451EE8 /* UploadQueueSheetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02633BBE20BEAB5636EA3944 /* UploadQueueSheetUITests.swift */; };
+		FC4BBDA3CB7AC1E112590298 /* TapTargetGateHarness+FoodFirstCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8048058EE49E91817DE5C17 /* TapTargetGateHarness+FoodFirstCard.swift */; };
 		FC57ED90724330FB0129ACD5 /* ProfilePrintChipAvatarRenderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DD9FDE8F1BCE0FF953D1C7 /* ProfilePrintChipAvatarRenderingTests.swift */; };
 		FC7F856A2E7EAB8C9B671789 /* DiaryDetailVideoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBB1C1A417258050587E1F8 /* DiaryDetailVideoUITests.swift */; };
 		FCCA7392D8A93ACCC20F22D5 /* FoodCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5B9216BB35E6FD6D9BF95A /* FoodCell.swift */; };
@@ -672,6 +679,7 @@
 		131C968476EFA7FF91F30E97 /* TimelineModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineModels.swift; sourceTree = "<group>"; };
 		1321C4BFB76E3F18A8055AA0 /* GrowthStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthStoreTests.swift; sourceTree = "<group>"; };
 		1422150ED25BE1054FB9631F /* DiaryDeleteConfirmationCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDeleteConfirmationCopy.swift; sourceTree = "<group>"; };
+		14271D5CBB5C33A32231F541 /* TimelineView+Food.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimelineView+Food.swift"; sourceTree = "<group>"; };
 		14278530E77D1559729D3354 /* PreviewPushAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewPushAPIClient.swift; sourceTree = "<group>"; };
 		14AB4F80381DABD0E6FE12B0 /* AuthButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthButtons.swift; sourceTree = "<group>"; };
 		14C3B6A37517D958F06E5C25 /* UploadQueueModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueModelsTests.swift; sourceTree = "<group>"; };
@@ -819,6 +827,7 @@
 		53B0CD7F35226A25AE8A23ED /* ChildRowNavigationRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildRowNavigationRegressionTests.swift; sourceTree = "<group>"; };
 		548C97E596BB9FBC3C8CA3FD /* TapTargetGateHarness+Albums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Albums.swift"; sourceTree = "<group>"; };
 		5524206AAC07353AE54C7926 /* TimelineViewIPadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineViewIPadTests.swift; sourceTree = "<group>"; };
+		55A3351A600041848B3432DC /* FoodFirstCardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFirstCardUITests.swift; sourceTree = "<group>"; };
 		55ABA1362A5D5A948083DC7B /* PasswordSignInModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordSignInModel.swift; sourceTree = "<group>"; };
 		55EFEBD89186C116A6062C6D /* AlbumsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsViewTests.swift; sourceTree = "<group>"; };
 		566A3C5AD3646A4BD28A4F37 /* AlbumSummaryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumSummaryCardView.swift; sourceTree = "<group>"; };
@@ -839,6 +848,7 @@
 		5D7480F3CE0820B854D10C3C /* UploadQueueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueStore.swift; sourceTree = "<group>"; };
 		5E035A6914D8ED45DF6CDD63 /* DiaryPublishErrorMessageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryPublishErrorMessageTests.swift; sourceTree = "<group>"; };
 		5E24DD1C9B8256B87B5B076C /* MasonryPhotoWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasonryPhotoWallView.swift; sourceTree = "<group>"; };
+		5E312396D905AD41DE800DA7 /* TimelineModels+FoodFirst.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimelineModels+FoodFirst.swift"; sourceTree = "<group>"; };
 		5E699460134CBD4E0FE83B9A /* ChildFilterLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildFilterLayoutTests.swift; sourceTree = "<group>"; };
 		5F5EDB155A72F057F906BF04 /* GrowthInitialLoadingStateRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthInitialLoadingStateRegressionTests.swift; sourceTree = "<group>"; };
 		60442D28C44079E5C725D701 /* SettingsViewIPadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewIPadTests.swift; sourceTree = "<group>"; };
@@ -930,6 +940,7 @@
 		83491FF465D4E20858923B38 /* TapTargetGateHarness+Food.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Food.swift"; sourceTree = "<group>"; };
 		8351A5DED54BE71EBD0A9161 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		836F59F33B1A7FC62365AB9F /* SupabasePushDeviceTokenAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabasePushDeviceTokenAPIClient.swift; sourceTree = "<group>"; };
+		841D58A595A0DF031F6B17CC /* FoodFirstTimelineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFirstTimelineTests.swift; sourceTree = "<group>"; };
 		8451088ABF5E0779C2BFAFF2 /* TapTargetGateHarness+Legal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Legal.swift"; sourceTree = "<group>"; };
 		85B9B9BC87911D6859F99FAC /* AlbumsViewIPadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumsViewIPadTests.swift; sourceTree = "<group>"; };
 		85ED8343F451999392E18111 /* FoodStickerLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodStickerLoader.swift; sourceTree = "<group>"; };
@@ -956,6 +967,7 @@
 		8E9F5D419E50A0CC051AAFE4 /* LegalDocumentKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentKind.swift; sourceTree = "<group>"; };
 		8FA02F76382E9C615C1006F2 /* SupabaseAlbumsMediaChildrenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAlbumsMediaChildrenTests.swift; sourceTree = "<group>"; };
 		8FD268EF45ACA8D3FE3F11E2 /* PhotoCornerShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCornerShape.swift; sourceTree = "<group>"; };
+		8FD386FFE2BE429969A3CCF1 /* FoodFirstCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFirstCardView.swift; sourceTree = "<group>"; };
 		90B3A90CF3954DCB0BDF70BD /* AlbumDetailView+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AlbumDetailView+Actions.swift"; sourceTree = "<group>"; };
 		90C0E7B83A1C6FD1BC4C91E8 /* CommentsErrorPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentsErrorPresentationTests.swift; sourceTree = "<group>"; };
 		9208C662169731DBA1CE4FB9 /* Import05SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Import05SummaryView.swift; sourceTree = "<group>"; };
@@ -1114,6 +1126,7 @@
 		D27995DD952B5001B0D8C952 /* GrowthMeasurementPrefillRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthMeasurementPrefillRegressionTests.swift; sourceTree = "<group>"; };
 		D2F9F3FB9139CAE156CCD645 /* TimelineStoreReactorsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreReactorsTests.swift; sourceTree = "<group>"; };
 		D3E2CD07A3D49AF4B16C0D9A /* MultiChildCaptionFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiChildCaptionFormatter.swift; sourceTree = "<group>"; };
+		D4762D10180DBF0F2AA2FA19 /* FoodFirstCardCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodFirstCardCopy.swift; sourceTree = "<group>"; };
 		D48AB78E328CC27084B31E15 /* DiaryEditorAddPhotoContrastTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryEditorAddPhotoContrastTests.swift; sourceTree = "<group>"; };
 		D4B8B83A763BF11381A8A48B /* QAAccessibilityID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QAAccessibilityID.swift; sourceTree = "<group>"; };
 		D4F8DC307DA209CD5559A0E6 /* TimelineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStore.swift; sourceTree = "<group>"; };
@@ -1130,6 +1143,7 @@
 		D7DE28F37645984E622E64F5 /* AvatarImageProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarImageProcessorTests.swift; sourceTree = "<group>"; };
 		D7EE19B8D103ADB86326A704 /* ChildGrowthDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildGrowthDetailView.swift; sourceTree = "<group>"; };
 		D80254B30BAD4FF6E688CBB9 /* UploadQueueStoreVideoExportSlotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueStoreVideoExportSlotTests.swift; sourceTree = "<group>"; };
+		D8048058EE49E91817DE5C17 /* TapTargetGateHarness+FoodFirstCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+FoodFirstCard.swift"; sourceTree = "<group>"; };
 		D80489A5B8A1E996B4001B37 /* AlbumDeleteConfirmationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDeleteConfirmationSheet.swift; sourceTree = "<group>"; };
 		D89356DF123DCA440A1440E4 /* ImportDateGroupingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportDateGroupingTests.swift; sourceTree = "<group>"; };
 		D9229E1129C9AC40092028D3 /* DayDividerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayDividerView.swift; sourceTree = "<group>"; };
@@ -1283,6 +1297,7 @@
 				3A3E469D46F901CC4530B24A /* FamilyMembersLeaveFlowUITests.swift */,
 				A62860B0E30E1DD94B917396 /* FoodBookIPadTests.swift */,
 				FDEAC50154EF831F02F1315B /* FoodBookUITests.swift */,
+				55A3351A600041848B3432DC /* FoodFirstCardUITests.swift */,
 				4D7A562541FCFF3574CE3BAF /* FoodRecordDetailIPadTests.swift */,
 				8C79D42C5104D810DEEE6057 /* FoodRecordDetailUITests.swift */,
 				F65E1F807D24047DBD9701A4 /* ImportFlowTopBarSafeAreaUITests.swift */,
@@ -1343,6 +1358,7 @@
 				0DE71D21163A9380A9C7C7A9 /* FoodAPIClient.swift */,
 				FB1158626A81AAAB03182FBA /* FoodBookCopy.swift */,
 				E0A37DE8043DA71735D6C05F /* FoodBookStore.swift */,
+				D4762D10180DBF0F2AA2FA19 /* FoodFirstCardCopy.swift */,
 				63B4DCE1396A1C4882A63DCB /* FoodModels.swift */,
 				03CDDE104E60CBBC6D519215 /* FoodRecordDetailAPIClient.swift */,
 				ED3DD96C495457B12016E3D2 /* FoodRecordDetailCopy.swift */,
@@ -1567,6 +1583,7 @@
 				BA9BCE3B67830009105F917D /* FamilyStoreTests.swift */,
 				7AD10F9ABF51B03A77085EDC /* FoodBookCopyTests.swift */,
 				A129B9A4E229D5EF0E4602D2 /* FoodBookStoreTests.swift */,
+				841D58A595A0DF031F6B17CC /* FoodFirstTimelineTests.swift */,
 				BC5E7CC3876799874C04EE38 /* FoodRecordDetailCopyTests.swift */,
 				74F52A8956EBB61A5306F593 /* FoodRecordDetailStoreTests.swift */,
 				790F9F13C03D257E18D9BE6E /* FoodStickerAssetsTests.swift */,
@@ -1694,6 +1711,7 @@
 				63CA1CAC550FF16F9806B519 /* DiaryDetailView.swift */,
 				B99EC50D8E436ECFB8234F53 /* DiaryDetailView+ContentActions.swift */,
 				80F4A01D4ECB9D0B6664EBD6 /* DiaryDetailView+PresentationBindings.swift */,
+				8FD386FFE2BE429969A3CCF1 /* FoodFirstCardView.swift */,
 				C816FAA01B9DC5A5FEF7683E /* InteractionRow.swift */,
 				06F2509D647D85FE8DC82E55 /* LikersListSheet.swift */,
 				5E24DD1C9B8256B87B5B076C /* MasonryPhotoWallView.swift */,
@@ -1701,6 +1719,7 @@
 				16F94CB4C84E1E0211A97014 /* TimelineRoute.swift */,
 				390715FC09697B47477605E4 /* TimelineView.swift */,
 				B382FF9798D526E3A1B37E63 /* TimelineView+Comments.swift */,
+				14271D5CBB5C33A32231F541 /* TimelineView+Food.swift */,
 				D7CA78FC6D7BCCE0103D052F /* TimelineView+Import.swift */,
 				A1905C686E265375F2E30D04 /* VideoPlayerScreen.swift */,
 			);
@@ -1840,6 +1859,7 @@
 				DF160356D53B7385FF16C6C2 /* TapTargetGateHarness+DiaryDetailVideo.swift */,
 				6BD7AE63A0EB0C80DA9C5851 /* TapTargetGateHarness+Family.swift */,
 				83491FF465D4E20858923B38 /* TapTargetGateHarness+Food.swift */,
+				D8048058EE49E91817DE5C17 /* TapTargetGateHarness+FoodFirstCard.swift */,
 				B6C27AECC9DE6D5721E42065 /* TapTargetGateHarness+FoodRecordDetail.swift */,
 				CC95B55D4A6B720D141FFD75 /* TapTargetGateHarness+Growth.swift */,
 				95CE2C734582EA614CBB344E /* TapTargetGateHarness+Import.swift */,
@@ -1953,6 +1973,7 @@
 				ADDE4EEF33482FCA3ABB0819 /* TimelineAPIClient.swift */,
 				1E1A187F8B4D813F1BCB0135 /* TimelineContentAssembler.swift */,
 				131C968476EFA7FF91F30E97 /* TimelineModels.swift */,
+				5E312396D905AD41DE800DA7 /* TimelineModels+FoodFirst.swift */,
 				D4F8DC307DA209CD5559A0E6 /* TimelineStore.swift */,
 				B2EE1D73C47DCC06AABE04A7 /* TimelineStore+Import.swift */,
 				E8EFE62F69B6F11D9FEEB069 /* TimelineStore+Reactions.swift */,
@@ -2457,6 +2478,8 @@
 				49ED44F10DB2B4001803C4A6 /* FoodBookView.swift in Sources */,
 				65A86AB26502C8E039374810 /* FoodCategoryTabs.swift in Sources */,
 				FCCA7392D8A93ACCC20F22D5 /* FoodCell.swift in Sources */,
+				C2074C2B3F9CC4D0BB0854ED /* FoodFirstCardCopy.swift in Sources */,
+				4E62B6B22C0995F23CF5BB72 /* FoodFirstCardView.swift in Sources */,
 				72E3B4B4BAE3E16790FCD5CC /* FoodModels.swift in Sources */,
 				8CE989C6B03F5EDB8A5FA749 /* FoodRecordDetailAPIClient.swift in Sources */,
 				84A751432FB38C70F384091A /* FoodRecordDetailCopy.swift in Sources */,
@@ -2609,6 +2632,7 @@
 				B2440B7844509AC9B75634CF /* TapTargetGateHarness+DiaryDetailVideo.swift in Sources */,
 				E5C587EDE37874F5FE29E05E /* TapTargetGateHarness+Family.swift in Sources */,
 				003AD2E22FCA249EA103EE8B /* TapTargetGateHarness+Food.swift in Sources */,
+				FC4BBDA3CB7AC1E112590298 /* TapTargetGateHarness+FoodFirstCard.swift in Sources */,
 				2135A6279475151EF51A34E5 /* TapTargetGateHarness+FoodRecordDetail.swift in Sources */,
 				9482742558C3F5019B8B80E8 /* TapTargetGateHarness+Growth.swift in Sources */,
 				9179ED955E1D442316156D89 /* TapTargetGateHarness+Import.swift in Sources */,
@@ -2626,12 +2650,14 @@
 				09F84913FCD1F25566F45E6A /* TimelineAPIClient.swift in Sources */,
 				0FE5CB1F362B73DC140F24CC /* TimelineContentAssembler.swift in Sources */,
 				365EEBA0356A6D011613BAAB /* TimelineDayGrouping.swift in Sources */,
+				0CA747FE5AE0E42F2AC42A0F /* TimelineModels+FoodFirst.swift in Sources */,
 				5EC1E966C14830184690D16B /* TimelineModels.swift in Sources */,
 				2D6B7200292271FD2DCEC9C1 /* TimelineRoute.swift in Sources */,
 				367D59A4F380BF0A371733E7 /* TimelineStore+Import.swift in Sources */,
 				C306914EB8F752FFED8EB54C /* TimelineStore+Reactions.swift in Sources */,
 				7C07BF69FAFB75E77DA11249 /* TimelineStore.swift in Sources */,
 				74E602F347273C1919B3B01A /* TimelineView+Comments.swift in Sources */,
+				AF647264A584AAFA538632C1 /* TimelineView+Food.swift in Sources */,
 				2109AFB0670559B33E341231 /* TimelineView+Import.swift in Sources */,
 				9784D85D783D81C9D00970E2 /* TimelineView.swift in Sources */,
 				65A722D54F83EAFC6DB98F2F /* TransientJWTRetry.swift in Sources */,
@@ -2680,6 +2706,7 @@
 				E772320BB13188A0A3532E7D /* FamilyMembersLeaveFlowUITests.swift in Sources */,
 				318CB8A951CE0C13F30A6D76 /* FoodBookIPadTests.swift in Sources */,
 				46FDDADF98313FCAA344A65C /* FoodBookUITests.swift in Sources */,
+				5468EDC65CF0C4AB6911AB35 /* FoodFirstCardUITests.swift in Sources */,
 				0ACEBD6207B408FB96E611FC /* FoodRecordDetailIPadTests.swift in Sources */,
 				5E1D6A842BC50BBE15F9B983 /* FoodRecordDetailUITests.swift in Sources */,
 				A9B5C77BA5DADE5F566E028D /* ImportFlowTopBarSafeAreaUITests.swift in Sources */,
@@ -2798,6 +2825,7 @@
 				2923B118178851D5C29651A5 /* FamilyStoreTests.swift in Sources */,
 				86D917D478AEBD78E63DCB82 /* FoodBookCopyTests.swift in Sources */,
 				37D0EF15D80588C4EECF99AB /* FoodBookStoreTests.swift in Sources */,
+				C5ABA83E23259EC81F77B64B /* FoodFirstTimelineTests.swift in Sources */,
 				D2BB97B9C691B174E2C733C0 /* FoodRecordDetailCopyTests.swift in Sources */,
 				A29E796818C86CAD25DB7EBC /* FoodRecordDetailStoreTests.swift in Sources */,
 				4AC4D64BF3F4281B14C0D5C1 /* FoodStickerAssetsTests.swift in Sources */,

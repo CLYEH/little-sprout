@@ -19,7 +19,8 @@ final class PreviewFoodRecordDetailAPIClient: FoodRecordDetailAPIClient, @unchec
         names[userID]
     }
 
-    private static let samplePhotoURL: URL? = {
+    /// LS-383：時間軸食物卡 harness（`TapTargetGateHarness+FoodFirstCard.swift`）共用同一張佔位照。
+    static let samplePhotoURL: URL? = {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("LS-381-preview-photo.jpg")
         if FileManager.default.fileExists(atPath: url.path) { return url }
         guard let data = UIImage(named: "HeroGrandma")?.jpegData(compressionQuality: 0.8),
