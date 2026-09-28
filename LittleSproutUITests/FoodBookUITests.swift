@@ -67,13 +67,13 @@ final class FoodBookUITests: XCTestCase {
         XCTAssertEqual(app.buttons["foodCell.yogurt"].label, "優格，2026/5/2 第一次吃到，含牛奶")
     }
 
-    /// 本票先接 placeholder：空位開第一次記錄 sheet（LS-380）、吃過的格子推記錄詳情（LS-381）。
-    func testTappingCells_opensPendingDestinations() {
+    /// 空位開第一次記錄 sheet（LS-380 已接上真畫面）、吃過的格子推記錄詳情（LS-381 尚未實作，仍是 placeholder）。
+    func testTappingCells_opensDestinations() {
         let app = launch(.foodBook, Self.standard)
         app.buttons["foodCell.brown_rice"].tap()
-        XCTAssertTrue(app.staticTexts["這個畫面由 LS-380 實作，尚未完成。"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["記下陳小安第一次吃糙米飯"].waitForExistence(timeout: 5))
         app.swipeDown(velocity: .fast)
-        XCTAssertTrue(app.staticTexts["這個畫面由 LS-380 實作，尚未完成。"].waitUntilGone(timeout: 5))
+        XCTAssertTrue(app.staticTexts["記下陳小安第一次吃糙米飯"].waitUntilGone(timeout: 5))
 
         app.buttons["foodCell.pumpkin"].tap()
         XCTAssertTrue(app.staticTexts["這個畫面由 LS-381 實作，尚未完成。"].waitForExistence(timeout: 5))
