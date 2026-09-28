@@ -13,6 +13,7 @@
 --       view 這一層有資料可退
 --   2.  全隱形 → visible_media_count=0，六個彙總欄（latest_*／cover_*）皆 NULL
 --   3.  跨家庭看不到（RLS 逐使用者，security_invoker 生效）
+--   3b. 同家 member 讀得到 owner 建立的相簿（LS-396：原本只有建立者自建自讀）
 --   4.  anon 拒（授權面 has_table_privilege ＋ 實際查詢兩種驗法，比照
 --       106_eula_consent.sql 場景 4 的既有慣例）
 --   5.  keyset 分頁欄位（created_at, id）仍可用——view 只是在 albums 之上疊加彙總欄，
@@ -433,7 +434,19 @@ begin
   end if;
   reset role;
 
-  raise notice 'ok 隔離：B 家看不到 A 家的 album_summaries（0 列），A 家 owner 查得到自己的（1 列）';
+  -- LS-396（3b）：同家 member（a2）讀得到 owner（a1）建立的相簿——上面只有 a1 自建自讀，
+  -- 讀權限若誤收窄成「只有建立者看得到」也會綠；相簿是全家共用，要釘住非建立者也讀得到。
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+  set local role authenticated;
+  select count(*) into v_n from public.album_summaries
+   where id = '4a000000-0000-4000-8000-000000000001';
+  if v_n <> 1 then
+    raise exception 'FAIL：A 家 member（a2）查不到 owner（a1）建立的相簿（影響 % 列）', v_n;
+  end if;
+  reset role;
+
+  raise notice 'ok 隔離：B 家看不到 A 家的 album_summaries（0 列），A 家 owner 查得到自己的（1 列），A 家 member 查得到 owner 建的（1 列）';
 end;
 $$;
 
