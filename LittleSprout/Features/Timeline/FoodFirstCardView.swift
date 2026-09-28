@@ -85,7 +85,7 @@ struct FoodFirstCardView: View {
                 .accessibilityIdentifier("foodFirstCard.headline")
             if let reaction = FoodFirstCardCopy.reaction(content.record) {
                 HStack(spacing: AppSpacing.tight) {
-                    FoodRecordReactionFace(reaction: reaction.raw).appIconFrame(.small)
+                    FoodReactionIcon(reaction: reaction).appIconFrame(.small)
                     Text(reaction.label).appFont(.note, weight: .semibold)
                 }
                 .foregroundStyle(Color.lsPrintInkSecondary)

@@ -31,10 +31,10 @@ enum FoodFirstCardCopy {
         return note
     }
 
-    /// 反應列（稿 `OZHA9`，沒選整列隱藏）：`(原字串, 顯示文字)`——文字對應沿用記錄詳情的單一來源。
-    static func reaction(_ record: ChildFoodRecord) -> (raw: String, label: String)? {
-        guard let raw = record.reaction, let label = FoodRecordDetailCopy.reactionLabel(raw) else { return nil }
-        return (raw, label)
+    /// 反應列（稿 `OZHA9`，沒選整列隱藏）：沿用 LS-380 的 `FoodReaction`（臉＋文字的單一來源）；CHECK 之外的值
+    /// 同樣隱藏，不讓英文代碼露出。
+    static func reaction(_ record: ChildFoodRecord) -> FoodReaction? {
+        record.reaction.flatMap(FoodReaction.init(rawValue:))
     }
 
     /// 這張卡要畫哪些區塊。照片只看組裝結果有沒有讀到（`content.photo`），不看 `media_id`：照片已被軟刪
