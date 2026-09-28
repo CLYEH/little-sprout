@@ -127,8 +127,8 @@ fi
 # ---- ⑧ 其餘退化分支的標記（原始碼字面對帳；這些分支要在真機／真 Linear 才觸發得到）----
 file_has '⑧ patrol.sh：df 讀不到可用空間的略過行帶 ⚠' "$patrol" '⚠ （df 讀不到可用空間，略過'
 file_has '⑧ patrol.sh：Pen lane 查詢失敗分支帶 ⚠' "$patrol" 'PEN_WRONG_LINE="⚠ Pen：目前開在'
-has '⑧ patrol-linear.sh：無 LINEAR_API_KEY 三種模式都帶 ⚠' \
-  "$(grep -c '⚠ 巡檢（Linear 半段）' "${root}/scripts/ops/patrol-linear.sh")" '3'
+has '⑧ patrol-linear.sh：無 LINEAR_API_KEY 四種模式都帶 ⚠（LS-376 加 --inflight）' \
+  "$(grep -c '⚠ 巡檢（Linear 半段）' "${root}/scripts/ops/patrol-linear.sh")" '4'
 # R3 m1：QA「讀不到」那格移除——`format_human()` 的渲染端已經對每條 state_crosscheck 行前置 ⚠，
 # 產生端不該再加（R2 加了會變 `⚠ ⚠`）。該路徑改由 `patrol-linear.test.sh` ⑫ 驗「恰好一個 ⚠ 且通過過濾」。
 file_has '⑧ patrol_linear.py：狀態對照行由渲染端統一前置 ⚠（產生端不重複加）' "${root}/scripts/ops/patrol_linear.py" '"  ⚠ %s" % line'
