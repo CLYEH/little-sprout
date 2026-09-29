@@ -112,16 +112,21 @@ for path in glob.glob(os.path.join(proj, "**", "subagents", "*.jsonl"), recursiv
                 continue
             ts = o.get("timestamp") or ""
             if best is None or ts >= best[0]:
-                best = (ts, path, (o.get("message") or {}).get("model", "?"), effort_of(o), source)
+                best = (ts, path, (o.get("message") or {}).get("model", "?"), effort_of(o), source, o.get("version") or "?")
 
 if best is None:
     print("✗ 近 %d 天內（掃 %d 支 subagent transcript）找不到 agent「%s」的 assistant turn：%s"
           % (days, scanned, agent, proj), file=sys.stderr)
     sys.exit(1)
-ts, path, model, effort, source = best
+ts, path, model, effort, source, cli_version = best
 print("agent：%s（來源：%s）" % (agent, source))
 print("model：%s" % model)
 print("effort：%s" % effort)
+# LS-400：別名解析依「正在跑的 session」的 Claude Code 版本，不是磁碟上 `claude --version` 那份（自動更新後兩者會不同；
+# 2.1.284 起 sonnet 別名才指 claude-sonnet-5-5）。transcript 每行的 version 欄就是該 session 的版本，一併印出。
+print("Claude Code 版本（該 session）：%s" % cli_version)
+if model == "claude-sonnet-5":
+    print("⚠ sonnet 別名解析到 Sonnet 5——該 session 的 Claude Code < 2.1.284；/exit 重開 session（磁碟版本已更新也一樣）再派（LS-400）")
 print("時間：%s" % ts)
 print("檔案：%s" % path)
 PY

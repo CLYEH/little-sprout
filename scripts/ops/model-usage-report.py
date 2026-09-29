@@ -30,9 +30,10 @@ from collections import defaultdict
 
 # 牌價表（2026-09-23 查；$／百萬 token：input, output, cache read, cache write 5m＝input×1.25）
 PRICES = {
-    "claude-fable-5-1": (10, 50, 1.0, 12.5),
+    "claude-fable-5-1": (10, 50, 0.25, 12.5),  # cache read $0.25（官方 pricing 頁 09-29；LS-400 R1 i7 原寫 1.0 高估 4 倍）
     "claude-opus-5": (5, 25, 0.5, 6.25),
     "claude-opus-5-5": (4, 20, 0.2, 5),  # 排在 opus-5 之後：對表靠最長前綴、不靠順序
+    "claude-sonnet-5-5": (2, 10, 0.2, 2.5),  # 09-28 上線，牌價同 Sonnet 5；對表靠最長前綴
     "claude-sonnet-5": (2, 10, 0.2, 2.5),
     "claude-haiku-4-5": (1, 5, 0.1, 1.25),
 }

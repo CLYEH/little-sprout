@@ -1,11 +1,13 @@
 ---
 name: opus-dispatch
-description: Orchestrator 派任何 Opus 5.5 agent（ios-dev／qa／merge-reviewer／ui-designer／visual-reviewer，agent 定義皆 model opus）前必載——把 claude.dev「Getting the most out of Opus 5.5」八條建議翻成本專案派工單與 SendMessage 續派的固定寫法：明寫 finish line 與 Done 定義、刪掉 think-carefully 類句、stop/go 規則、未證實項標 PLAUSIBLE、設計退修用排除清單、大稽核拆 subagent 並核對證據、checklist 落檔、不索取內部推理、多輪續派鎖住已核銷項、safety flag 降級偵測。寫 Agent prompt 或 SendMessage 續派時對照本檔逐條自檢。
+description: Orchestrator 派任何 Opus 5.5 agent（ui-designer／merge-reviewer／visual-reviewer，agent 定義 model opus；ios-dev／qa／dead-code-sweeper 是 sonnet，改讀 sonnet-dispatch）前必載——把 claude.dev「Getting the most out of Opus 5.5」八條建議翻成本專案派工單與 SendMessage 續派的固定寫法：明寫 finish line 與 Done 定義、刪掉 think-carefully 類句、stop/go 規則、未證實項標 PLAUSIBLE、設計退修用排除清單、大稽核拆 subagent 並核對證據、checklist 落檔、不索取內部推理、多輪續派鎖住已核銷項、safety flag 降級偵測。寫 Agent prompt 或 SendMessage 續派時對照本檔逐條自檢。
 ---
 
 # Opus 5.5 派工寫法（本專案版）
 
-來源：https://claude.dev/blog/getting-the-most-out-of-opus-5-5/ （2026-09-24 讀取）。適用對象：所有 `model: opus` 的 subagent（COLLABORATION §1 表：ios-dev／qa／merge-reviewer／ui-designer／visual-reviewer，effort 一律 frontmatter 明寫 high）。dead-code-sweeper 是 sonnet，本檔的「finish line」「未證實標記」兩條仍適用。
+> LS-400（2026-09-29）：ios-dev／qa／dead-code-sweeper 已改 `model: sonnet`（Claude Code ≥2.1.284 指 Sonnet 5.5），派這三支改讀 `sonnet-dispatch`；本檔只適用仍是 opus 的 ui-designer／merge-reviewer／visual-reviewer，以及以 Agent 工具 `model: opus` 臨時覆寫的派工。
+
+來源：https://claude.dev/blog/getting-the-most-out-of-opus-5-5/ （2026-09-24 讀取）。適用對象：所有 `model: opus` 的 subagent（COLLABORATION §1 表：ui-designer／merge-reviewer／visual-reviewer，effort 一律 frontmatter 明寫 high）。ios-dev／qa／dead-code-sweeper 自 LS-400 起是 `model: sonnet`（＝Sonnet 5.5），讀 `sonnet-dispatch`（其中 finish line／判斷材料／PLAUSIBLE／checklist 落檔／續派鎖項與本檔相同）。
 
 ## Opus 5.5 與前代的差別（影響寫法的四點）
 
