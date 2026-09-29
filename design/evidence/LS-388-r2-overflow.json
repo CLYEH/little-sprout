@@ -1,0 +1,1569 @@
+{
+ "ticket": "LS-388",
+ "round": 2,
+ "head_sha": "29eb8a9c4747c2c7e215185189321401528f4c8c",
+ "scanned_nodes": 2677,
+ "scan_scope": "boards",
+ "scans": {
+  "sibling_intersection": {
+   "scope": "boards",
+   "document_count": 462,
+   "classes": 52,
+   "flagged": [
+    {
+     "node_a": "s8eO3j",
+     "node_b": "DjW91",
+     "name_a": "Photo Wrap",
+     "name_b": "Corner TL",
+     "parent": "r6cYjT",
+     "parent_name": "Photo Print",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Photo Wrap × Corner TL @ Photo Print",
+     "count": 43,
+     "classification": "角托咬住紙緣、壓在照片／壓印列上，沖印品母題定案（brand 十條 #4，corner-out 5pt）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 43 例"
+    },
+    {
+     "node_a": "s8eO3j",
+     "node_b": "JgUK8",
+     "name_a": "Photo Wrap",
+     "name_b": "Corner TR",
+     "parent": "r6cYjT",
+     "parent_name": "Photo Print",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Photo Wrap × Corner TR @ Photo Print",
+     "count": 43,
+     "classification": "角托咬住紙緣、壓在照片／壓印列上，沖印品母題定案（brand 十條 #4，corner-out 5pt）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 43 例"
+    },
+    {
+     "node_a": "IXmLN",
+     "node_b": "mlORb",
+     "name_a": "Imprint Row",
+     "name_b": "Corner BL",
+     "parent": "r6cYjT",
+     "parent_name": "Photo Print",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Imprint Row × Corner BL @ Photo Print",
+     "count": 43,
+     "classification": "角托咬住紙緣、壓在照片／壓印列上，沖印品母題定案（brand 十條 #4，corner-out 5pt）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 43 例"
+    },
+    {
+     "node_a": "IXmLN",
+     "node_b": "atAkU",
+     "name_a": "Imprint Row",
+     "name_b": "Corner BR",
+     "parent": "r6cYjT",
+     "parent_name": "Photo Print",
+     "overlap": [
+      13,
+      13
+     ],
+     "class": "Imprint Row × Corner BR @ Photo Print",
+     "count": 43,
+     "classification": "角托咬住紙緣、壓在照片／壓印列上，沖印品母題定案（brand 十條 #4，corner-out 5pt）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 43 例"
+    },
+    {
+     "node_a": "DjW91/sD5Ma",
+     "node_b": "DjW91/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "DjW91",
+     "parent_name": "Corner TL",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner TL",
+     "count": 43,
+     "classification": "cmp/Photo Corner 元件內部三角形與邊線兩層疊畫，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 43 例"
+    },
+    {
+     "node_a": "JgUK8/sD5Ma",
+     "node_b": "JgUK8/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "JgUK8",
+     "parent_name": "Corner TR",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner TR",
+     "count": 43,
+     "classification": "cmp/Photo Corner 元件內部三角形與邊線兩層疊畫，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 43 例"
+    },
+    {
+     "node_a": "mlORb/sD5Ma",
+     "node_b": "mlORb/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "mlORb",
+     "parent_name": "Corner BL",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner BL",
+     "count": 43,
+     "classification": "cmp/Photo Corner 元件內部三角形與邊線兩層疊畫，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 43 例"
+    },
+    {
+     "node_a": "atAkU/sD5Ma",
+     "node_b": "atAkU/DhOiK",
+     "name_a": "Corner Shape",
+     "name_b": "Corner Edge",
+     "parent": "atAkU",
+     "parent_name": "Corner BR",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner Shape × Corner Edge @ Corner BR",
+     "count": 43,
+     "classification": "cmp/Photo Corner 元件內部三角形與邊線兩層疊畫，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 43 例"
+    },
+    {
+     "node_a": "Z4TsQ/tBi8u",
+     "node_b": "Z4TsQ/xlLIo",
+     "name_a": "Ghost",
+     "name_b": "Stamp",
+     "parent": "Z4TsQ/OCYqN",
+     "parent_name": "Stamp Wrap",
+     "overlap": [
+      147.98,
+      39.63
+     ],
+     "class": "Ghost × Stamp @ Stamp Wrap",
+     "count": 18,
+     "classification": "cmp/Day Divider 日期章疊影 Ghost，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 18 例"
+    },
+    {
+     "node_a": "WitwS/uZ5Lt",
+     "node_b": "WitwS/kVUWa",
+     "name_a": "Stack Sheet 2",
+     "name_b": "Stack Sheet 1",
+     "parent": "WitwS/oBEkH",
+     "parent_name": "Photo C",
+     "overlap": [
+      1,
+      88
+     ],
+     "class": "Stack Sheet 2 × Stack Sheet 1 @ Photo C",
+     "count": 6,
+     "classification": "cmp/Card Diary 照片 C 的疊紙與 +N 遮罩刻意重疊／露出右緣，設計意圖（LS-296）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 6 例"
+    },
+    {
+     "node_a": "WitwS/ekqx4",
+     "node_b": "WitwS/GCEdk",
+     "name_a": "Thumb C",
+     "name_b": "More Scrim",
+     "parent": "WitwS/oBEkH",
+     "parent_name": "Photo C",
+     "overlap": [
+      96.3,
+      100
+     ],
+     "class": "Thumb C × More Scrim @ Photo C",
+     "count": 6,
+     "classification": "cmp/Card Diary 照片 C 的疊紙與 +N 遮罩刻意重疊／露出右緣，設計意圖（LS-296）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 6 例"
+    },
+    {
+     "node_a": "n2VSQy",
+     "node_b": "Egn9A",
+     "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "name_b": "Tab Bar",
+     "parent": "yXSht",
+     "parent_name": "LS-21 / 11 時間軸 (iPhone)",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ LS-21 / 11 時間軸 (iPhone)",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "zbJlv",
+     "node_b": "OR1hw",
+     "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "name_b": "Tab Bar",
+     "parent": "a67Na",
+     "parent_name": "LS-21 / 11c 時間軸 · 下拉更新中",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ LS-21 / 11c 時間軸 · 下拉更新中",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "a3l8GT",
+     "node_b": "bmk5H",
+     "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "name_b": "Tab Bar",
+     "parent": "V4Ktak",
+     "parent_name": "LS-21 / 11 時間軸 · 深色",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ LS-21 / 11 時間軸 · 深色",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "rsoPm/uZ5Lt",
+     "node_b": "rsoPm/ekqx4",
+     "name_a": "Stack Sheet 2",
+     "name_b": "Thumb C",
+     "parent": "rsoPm/oBEkH",
+     "parent_name": "Photo C",
+     "overlap": [
+      4,
+      88
+     ],
+     "class": "Stack Sheet 2 × Thumb C @ Photo C",
+     "count": 1,
+     "classification": "cmp/Card Diary 照片 C 的疊紙與 +N 遮罩刻意重疊／露出右緣，設計意圖（LS-296）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "rsoPm/kVUWa",
+     "node_b": "rsoPm/ekqx4",
+     "name_a": "Stack Sheet 1",
+     "name_b": "Thumb C",
+     "parent": "rsoPm/oBEkH",
+     "parent_name": "Photo C",
+     "overlap": [
+      4,
+      94
+     ],
+     "class": "Stack Sheet 1 × Thumb C @ Photo C",
+     "count": 1,
+     "classification": "cmp/Card Diary 照片 C 的疊紙與 +N 遮罩刻意重疊／露出右緣，設計意圖（LS-296）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "CXGIM",
+     "node_b": "QVGNJ",
+     "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "name_b": "Tab Bar",
+     "parent": "lKoZG",
+     "parent_name": "A11y / 11 時間軸 · Dynamic Type AX3（body 40pt）",
+     "overlap": [
+      361,
+      88
+     ],
+     "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ A11y / 11 時間軸 · Dynamic Type AX3（body 40pt）",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "kQ23G",
+     "node_b": "M4PUm",
+     "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "name_b": "Tab Bar",
+     "parent": "A33la",
+     "parent_name": "Stress / 11 時間軸 · 單一寶貝 filter",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ Stress / 11 時間軸 · 單一寶貝 filter",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "KqMPu",
+     "node_b": "V4oYH",
+     "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "name_b": "Tab Bar",
+     "parent": "HLXo3",
+     "parent_name": "A11y / 11 時間軸 · 兩位寶貝聯合標記 · Dynamic Type AX3（body 40pt）",
+     "overlap": [
+      361,
+      88
+     ],
+     "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ A11y / 11 時間軸 · 兩位寶貝聯合標記 · Dynamic Type AX3（body 40pt）",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "FqE7M",
+     "node_b": "g0Nub8",
+     "name_a": "Body",
+     "name_b": "Home Indicator Area",
+     "parent": "puHZ5",
+     "parent_name": "LS-142 / 14 相簿 (iPhone)",
+     "overlap": [
+      393,
+      34
+     ],
+     "class": "Body × Home Indicator Area @ LS-142 / 14 相簿 (iPhone)",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "FqE7M",
+     "node_b": "wTMlo",
+     "name_a": "Body",
+     "name_b": "Tab Bar",
+     "parent": "puHZ5",
+     "parent_name": "LS-142 / 14 相簿 (iPhone)",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Body × Tab Bar @ LS-142 / 14 相簿 (iPhone)",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "WC9pB/UTLcl",
+     "node_b": "WC9pB/KGh0U",
+     "name_a": "Fan Ghost",
+     "name_b": "Fan Ghost 2",
+     "parent": "WC9pB",
+     "parent_name": "Card Album 1",
+     "overlap": [
+      141.66,
+      54.86
+     ],
+     "class": "Fan Ghost × Fan Ghost 2 @ Card Album 1",
+     "count": 4,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 4 例"
+    },
+    {
+     "node_a": "WC9pB/UTLcl",
+     "node_b": "WC9pB/r6cYjT",
+     "name_a": "Fan Ghost",
+     "name_b": "Photo Print",
+     "parent": "WC9pB",
+     "parent_name": "Card Album 1",
+     "overlap": [
+      167.39,
+      40.57
+     ],
+     "class": "Fan Ghost × Photo Print @ Card Album 1",
+     "count": 5,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 5 例"
+    },
+    {
+     "node_a": "WC9pB/KGh0U",
+     "node_b": "WC9pB/r6cYjT",
+     "name_a": "Fan Ghost 2",
+     "name_b": "Photo Print",
+     "parent": "WC9pB",
+     "parent_name": "Card Album 1",
+     "overlap": [
+      141.66,
+      38.97
+     ],
+     "class": "Fan Ghost 2 × Photo Print @ Card Album 1",
+     "count": 4,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 4 例"
+    },
+    {
+     "node_a": "PjgtQ/UTLcl",
+     "node_b": "PjgtQ/KGh0U",
+     "name_a": "Fan Ghost",
+     "name_b": "Fan Ghost 2",
+     "parent": "PjgtQ",
+     "parent_name": "Card Album 2",
+     "overlap": [
+      141.66,
+      54.86
+     ],
+     "class": "Fan Ghost × Fan Ghost 2 @ Card Album 2",
+     "count": 5,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 5 例"
+    },
+    {
+     "node_a": "PjgtQ/UTLcl",
+     "node_b": "PjgtQ/r6cYjT",
+     "name_a": "Fan Ghost",
+     "name_b": "Photo Print",
+     "parent": "PjgtQ",
+     "parent_name": "Card Album 2",
+     "overlap": [
+      167.39,
+      40.57
+     ],
+     "class": "Fan Ghost × Photo Print @ Card Album 2",
+     "count": 5,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 5 例"
+    },
+    {
+     "node_a": "PjgtQ/KGh0U",
+     "node_b": "PjgtQ/r6cYjT",
+     "name_a": "Fan Ghost 2",
+     "name_b": "Photo Print",
+     "parent": "PjgtQ",
+     "parent_name": "Card Album 2",
+     "overlap": [
+      141.66,
+      38.97
+     ],
+     "class": "Fan Ghost 2 × Photo Print @ Card Album 2",
+     "count": 5,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 5 例"
+    },
+    {
+     "node_a": "R7edNW/UTLcl",
+     "node_b": "R7edNW/r6cYjT",
+     "name_a": "Fan Ghost",
+     "name_b": "Photo Print",
+     "parent": "R7edNW",
+     "parent_name": "Card Album 3",
+     "overlap": [
+      167.39,
+      40.57
+     ],
+     "class": "Fan Ghost × Photo Print @ Card Album 3",
+     "count": 5,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 5 例"
+    },
+    {
+     "node_a": "H51J8u/UTLcl",
+     "node_b": "H51J8u/r6cYjT",
+     "name_a": "Fan Ghost",
+     "name_b": "Photo Print",
+     "parent": "H51J8u",
+     "parent_name": "Card Album 4",
+     "overlap": [
+      167.39,
+      40.57
+     ],
+     "class": "Fan Ghost × Photo Print @ Card Album 4",
+     "count": 4,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 4 例"
+    },
+    {
+     "node_a": "eDQhR/FjOA8",
+     "node_b": "eDQhR/UTLcl",
+     "name_a": "Fan Ghost 3",
+     "name_b": "Fan Ghost",
+     "parent": "eDQhR",
+     "parent_name": "Card Album 5",
+     "overlap": [
+      133.8,
+      58.57
+     ],
+     "class": "Fan Ghost 3 × Fan Ghost @ Card Album 5",
+     "count": 4,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 4 例"
+    },
+    {
+     "node_a": "eDQhR/FjOA8",
+     "node_b": "eDQhR/KGh0U",
+     "name_a": "Fan Ghost 3",
+     "name_b": "Fan Ghost 2",
+     "parent": "eDQhR",
+     "parent_name": "Card Album 5",
+     "overlap": [
+      113.18,
+      54.86
+     ],
+     "class": "Fan Ghost 3 × Fan Ghost 2 @ Card Album 5",
+     "count": 4,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 4 例"
+    },
+    {
+     "node_a": "eDQhR/FjOA8",
+     "node_b": "eDQhR/r6cYjT",
+     "name_a": "Fan Ghost 3",
+     "name_b": "Photo Print",
+     "parent": "eDQhR",
+     "parent_name": "Card Album 5",
+     "overlap": [
+      154.4,
+      47.41
+     ],
+     "class": "Fan Ghost 3 × Photo Print @ Card Album 5",
+     "count": 4,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 4 例"
+    },
+    {
+     "node_a": "eDQhR/UTLcl",
+     "node_b": "eDQhR/KGh0U",
+     "name_a": "Fan Ghost",
+     "name_b": "Fan Ghost 2",
+     "parent": "eDQhR",
+     "parent_name": "Card Album 5",
+     "overlap": [
+      141.66,
+      54.86
+     ],
+     "class": "Fan Ghost × Fan Ghost 2 @ Card Album 5",
+     "count": 4,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 4 例"
+    },
+    {
+     "node_a": "eDQhR/UTLcl",
+     "node_b": "eDQhR/r6cYjT",
+     "name_a": "Fan Ghost",
+     "name_b": "Photo Print",
+     "parent": "eDQhR",
+     "parent_name": "Card Album 5",
+     "overlap": [
+      167.39,
+      40.57
+     ],
+     "class": "Fan Ghost × Photo Print @ Card Album 5",
+     "count": 4,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 4 例"
+    },
+    {
+     "node_a": "eDQhR/KGh0U",
+     "node_b": "eDQhR/r6cYjT",
+     "name_a": "Fan Ghost 2",
+     "name_b": "Photo Print",
+     "parent": "eDQhR",
+     "parent_name": "Card Album 5",
+     "overlap": [
+      141.66,
+      38.97
+     ],
+     "class": "Fan Ghost 2 × Photo Print @ Card Album 5",
+     "count": 4,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 4 例"
+    },
+    {
+     "node_a": "oyZbS",
+     "node_b": "v4dw1",
+     "name_a": "Body",
+     "name_b": "Tab Bar",
+     "parent": "LTDYH",
+     "parent_name": "LS-142 / 14b 相簿 · 空狀態",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Body × Tab Bar @ LS-142 / 14b 相簿 · 空狀態",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "YekOU",
+     "node_b": "U7ATK",
+     "name_a": "Body",
+     "name_b": "Home Indicator Area",
+     "parent": "Xldkz",
+     "parent_name": "LS-142 / 14 相簿 · 深色",
+     "overlap": [
+      393,
+      34
+     ],
+     "class": "Body × Home Indicator Area @ LS-142 / 14 相簿 · 深色",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "YekOU",
+     "node_b": "Kl0eH",
+     "name_a": "Body",
+     "name_b": "Tab Bar",
+     "parent": "Xldkz",
+     "parent_name": "LS-142 / 14 相簿 · 深色",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Body × Tab Bar @ LS-142 / 14 相簿 · 深色",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "v3pPdz",
+     "node_b": "K3xsp1",
+     "name_a": "Body",
+     "name_b": "Tab Bar",
+     "parent": "BTDgD",
+     "parent_name": "LS-142 / 14b 相簿 · 空狀態 · 深色",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Body × Tab Bar @ LS-142 / 14b 相簿 · 空狀態 · 深色",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "jZVRr",
+     "node_b": "CRf3y",
+     "name_a": "Body",
+     "name_b": "Home Indicator Area",
+     "parent": "IjWOp",
+     "parent_name": "A11y / 14 相簿 · Dynamic Type AX3（body 40pt）",
+     "overlap": [
+      393,
+      34
+     ],
+     "class": "Body × Home Indicator Area @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "jZVRr",
+     "node_b": "RxQis",
+     "name_a": "Body",
+     "name_b": "Tab Bar",
+     "parent": "IjWOp",
+     "parent_name": "A11y / 14 相簿 · Dynamic Type AX3（body 40pt）",
+     "overlap": [
+      361,
+      88
+     ],
+     "class": "Body × Tab Bar @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "i3jpIq/FjOA8",
+     "node_b": "i3jpIq/UTLcl",
+     "name_a": "Fan Ghost 3",
+     "name_b": "Fan Ghost",
+     "parent": "i3jpIq",
+     "parent_name": "Card Album 3",
+     "overlap": [
+      133.8,
+      58.57
+     ],
+     "class": "Fan Ghost 3 × Fan Ghost @ Card Album 3",
+     "count": 1,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "i3jpIq/FjOA8",
+     "node_b": "i3jpIq/KGh0U",
+     "name_a": "Fan Ghost 3",
+     "name_b": "Fan Ghost 2",
+     "parent": "i3jpIq",
+     "parent_name": "Card Album 3",
+     "overlap": [
+      113.18,
+      54.86
+     ],
+     "class": "Fan Ghost 3 × Fan Ghost 2 @ Card Album 3",
+     "count": 1,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "i3jpIq/FjOA8",
+     "node_b": "i3jpIq/r6cYjT",
+     "name_a": "Fan Ghost 3",
+     "name_b": "Photo Print",
+     "parent": "i3jpIq",
+     "parent_name": "Card Album 3",
+     "overlap": [
+      154.4,
+      47.41
+     ],
+     "class": "Fan Ghost 3 × Photo Print @ Card Album 3",
+     "count": 1,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "i3jpIq/UTLcl",
+     "node_b": "i3jpIq/KGh0U",
+     "name_a": "Fan Ghost",
+     "name_b": "Fan Ghost 2",
+     "parent": "i3jpIq",
+     "parent_name": "Card Album 3",
+     "overlap": [
+      141.66,
+      54.86
+     ],
+     "class": "Fan Ghost × Fan Ghost 2 @ Card Album 3",
+     "count": 1,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "i3jpIq/KGh0U",
+     "node_b": "i3jpIq/r6cYjT",
+     "name_a": "Fan Ghost 2",
+     "name_b": "Photo Print",
+     "parent": "i3jpIq",
+     "parent_name": "Card Album 3",
+     "overlap": [
+      141.66,
+      38.97
+     ],
+     "class": "Fan Ghost 2 × Photo Print @ Card Album 3",
+     "count": 1,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "HIdMW/UTLcl",
+     "node_b": "HIdMW/KGh0U",
+     "name_a": "Fan Ghost",
+     "name_b": "Fan Ghost 2",
+     "parent": "HIdMW",
+     "parent_name": "Card Album 6",
+     "overlap": [
+      104.98,
+      52.91
+     ],
+     "class": "Fan Ghost × Fan Ghost 2 @ Card Album 6",
+     "count": 1,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "HIdMW/UTLcl",
+     "node_b": "HIdMW/r6cYjT",
+     "name_a": "Fan Ghost",
+     "name_b": "Photo Print",
+     "parent": "HIdMW",
+     "parent_name": "Card Album 6",
+     "overlap": [
+      124.25,
+      38.31
+     ],
+     "class": "Fan Ghost × Photo Print @ Card Album 6",
+     "count": 1,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "HIdMW/KGh0U",
+     "node_b": "HIdMW/r6cYjT",
+     "name_a": "Fan Ghost 2",
+     "name_b": "Photo Print",
+     "parent": "HIdMW",
+     "parent_name": "Card Album 6",
+     "overlap": [
+      104.98,
+      38.97
+     ],
+     "class": "Fan Ghost 2 × Photo Print @ Card Album 6",
+     "count": 1,
+     "classification": "相簿卡扇形疊影 Fan Ghost 疊在印品後方，元件設計意圖（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "YlNJe",
+     "node_b": "j2svp",
+     "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "name_b": "Tab Bar",
+     "parent": "Wl90J",
+     "parent_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "u95aXI",
+     "node_b": "hJ3cT",
+     "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "name_b": "Tab Bar",
+     "parent": "e1cOqx",
+     "parent_name": "Import / 00 時間軸入口 (iPhone)",
+     "overlap": [
+      361,
+      64
+     ],
+     "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ Import / 00 時間軸入口 (iPhone)",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "IKVkU",
+     "node_b": "OJjhM",
+     "name_a": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "name_b": "Tab Bar",
+     "parent": "aGkJ1",
+     "parent_name": "A11y / 00 時間軸入口 · Dynamic Type AX3",
+     "overlap": [
+      361,
+      88
+     ],
+     "class": "Spacer · Body 收窄補償（Tab Bar 前緣淨空） × Tab Bar @ A11y / 00 時間軸入口 · Dynamic Type AX3",
+     "count": 1,
+     "classification": "Tab Bar／Home Indicator 覆蓋層浮在捲動內容（Body／收窄補償 Spacer）上，既有畫面結構；text_occlusion=0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    }
+   ],
+   "result_hash": "14c0997862a4d009"
+  },
+  "row_overflow": {
+   "scope": "boards",
+   "document_count": 96,
+   "classes": 4,
+   "flagged": [
+    {
+     "node": "JgUK8",
+     "name": "Corner TR",
+     "parent": "r6cYjT",
+     "parent_name": "Photo Print",
+     "overflow": 5,
+     "class": "Photo Print :: Corner TR",
+     "count": 43,
+     "classification": "角托 corner-out 5pt 壓出紙緣，母題定案（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 43 例"
+    },
+    {
+     "node": "atAkU",
+     "name": "Corner BR",
+     "parent": "r6cYjT",
+     "parent_name": "Photo Print",
+     "overflow": 5,
+     "class": "Photo Print :: Corner BR",
+     "count": 43,
+     "classification": "角托 corner-out 5pt 壓出紙緣，母題定案（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 43 例"
+    },
+    {
+     "node": "WitwS/uZ5Lt",
+     "name": "Stack Sheet 2",
+     "parent": "WitwS/oBEkH",
+     "parent_name": "Photo C",
+     "overflow": 9.97,
+     "class": "Photo C :: Stack Sheet 2",
+     "count": 5,
+     "classification": "cmp/Card Diary 照片 C 疊紙刻意露出右緣，設計意圖（LS-296）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 5 例"
+    },
+    {
+     "node": "WitwS/kVUWa",
+     "name": "Stack Sheet 1",
+     "parent": "WitwS/oBEkH",
+     "parent_name": "Photo C",
+     "overflow": 6.97,
+     "class": "Photo C :: Stack Sheet 1",
+     "count": 5,
+     "classification": "cmp/Card Diary 照片 C 疊紙刻意露出右緣，設計意圖（LS-296）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 5 例"
+    }
+   ],
+   "result_hash": "92b09f884b7b4b26"
+  },
+  "cross_parent_collision": {
+   "scope": "boards",
+   "document_count": 36,
+   "classes": 36,
+   "flagged": [
+    {
+     "node_a": "zfSO1/DjW91",
+     "node_b": "zbJlv",
+     "name_a": "Corner TL",
+     "name_b": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "parent_a": "zfSO1/r6cYjT",
+     "parent_b": "a67Na",
+     "board": "a67Na",
+     "board_name": "LS-21 / 11c 時間軸 · 下拉更新中",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner TL × Spacer · Body 收窄補償（Tab Bar 前緣淨空） @ LS-21 / 11c 時間軸 · 下拉更新中",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "zfSO1/DjW91",
+     "node_b": "OR1hw",
+     "name_a": "Corner TL",
+     "name_b": "Tab Bar",
+     "parent_a": "zfSO1/r6cYjT",
+     "parent_b": "a67Na",
+     "board": "a67Na",
+     "board_name": "LS-21 / 11c 時間軸 · 下拉更新中",
+     "overlap": [
+      26,
+      12.02
+     ],
+     "class": "Corner TL × Tab Bar @ LS-21 / 11c 時間軸 · 下拉更新中",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "zfSO1/JgUK8",
+     "node_b": "zbJlv",
+     "name_a": "Corner TR",
+     "name_b": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "parent_a": "zfSO1/r6cYjT",
+     "parent_b": "a67Na",
+     "board": "a67Na",
+     "board_name": "LS-21 / 11c 時間軸 · 下拉更新中",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner TR × Spacer · Body 收窄補償（Tab Bar 前緣淨空） @ LS-21 / 11c 時間軸 · 下拉更新中",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "zfSO1/JgUK8",
+     "node_b": "OR1hw",
+     "name_a": "Corner TR",
+     "name_b": "Tab Bar",
+     "parent_a": "zfSO1/r6cYjT",
+     "parent_b": "a67Na",
+     "board": "a67Na",
+     "board_name": "LS-21 / 11c 時間軸 · 下拉更新中",
+     "overlap": [
+      26,
+      12.02
+     ],
+     "class": "Corner TR × Tab Bar @ LS-21 / 11c 時間軸 · 下拉更新中",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "Z9Xuy/DjW91",
+     "node_b": "kQ23G",
+     "name_a": "Corner TL",
+     "name_b": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "parent_a": "Z9Xuy/r6cYjT",
+     "parent_b": "A33la",
+     "board": "A33la",
+     "board_name": "Stress / 11 時間軸 · 單一寶貝 filter",
+     "overlap": [
+      26,
+      2.98
+     ],
+     "class": "Corner TL × Spacer · Body 收窄補償（Tab Bar 前緣淨空） @ Stress / 11 時間軸 · 單一寶貝 filter",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "Z9Xuy/DjW91",
+     "node_b": "u87Nb",
+     "name_a": "Corner TL",
+     "name_b": "Home Indicator Area",
+     "parent_a": "Z9Xuy/r6cYjT",
+     "parent_b": "A33la",
+     "board": "A33la",
+     "board_name": "Stress / 11 時間軸 · 單一寶貝 filter",
+     "overlap": [
+      26,
+      23.02
+     ],
+     "class": "Corner TL × Home Indicator Area @ Stress / 11 時間軸 · 單一寶貝 filter",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "Z9Xuy/DjW91",
+     "node_b": "M4PUm",
+     "name_a": "Corner TL",
+     "name_b": "Tab Bar",
+     "parent_a": "Z9Xuy/r6cYjT",
+     "parent_b": "A33la",
+     "board": "A33la",
+     "board_name": "Stress / 11 時間軸 · 單一寶貝 filter",
+     "overlap": [
+      26,
+      2.98
+     ],
+     "class": "Corner TL × Tab Bar @ Stress / 11 時間軸 · 單一寶貝 filter",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "Z9Xuy/JgUK8",
+     "node_b": "kQ23G",
+     "name_a": "Corner TR",
+     "name_b": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "parent_a": "Z9Xuy/r6cYjT",
+     "parent_b": "A33la",
+     "board": "A33la",
+     "board_name": "Stress / 11 時間軸 · 單一寶貝 filter",
+     "overlap": [
+      26,
+      2.98
+     ],
+     "class": "Corner TR × Spacer · Body 收窄補償（Tab Bar 前緣淨空） @ Stress / 11 時間軸 · 單一寶貝 filter",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "Z9Xuy/JgUK8",
+     "node_b": "u87Nb",
+     "name_a": "Corner TR",
+     "name_b": "Home Indicator Area",
+     "parent_a": "Z9Xuy/r6cYjT",
+     "parent_b": "A33la",
+     "board": "A33la",
+     "board_name": "Stress / 11 時間軸 · 單一寶貝 filter",
+     "overlap": [
+      26,
+      23.02
+     ],
+     "class": "Corner TR × Home Indicator Area @ Stress / 11 時間軸 · 單一寶貝 filter",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "Z9Xuy/JgUK8",
+     "node_b": "M4PUm",
+     "name_a": "Corner TR",
+     "name_b": "Tab Bar",
+     "parent_a": "Z9Xuy/r6cYjT",
+     "parent_b": "A33la",
+     "board": "A33la",
+     "board_name": "Stress / 11 時間軸 · 單一寶貝 filter",
+     "overlap": [
+      26,
+      2.98
+     ],
+     "class": "Corner TR × Tab Bar @ Stress / 11 時間軸 · 單一寶貝 filter",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "zYLzt",
+     "node_b": "WC9pB/DjW91",
+     "name_a": "Spacer Section",
+     "name_b": "Corner TL",
+     "parent_a": "FqE7M",
+     "parent_b": "WC9pB/r6cYjT",
+     "board": "puHZ5",
+     "board_name": "LS-142 / 14 相簿 (iPhone)",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Spacer Section × Corner TL @ LS-142 / 14 相簿 (iPhone)",
+     "count": 1,
+     "classification": "首張相簿卡上緣角托 corner-out 5pt 出血壓進空白 Spacer Section，母題定案（tokens corner-out 5）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "zYLzt",
+     "node_b": "WC9pB/JgUK8",
+     "name_a": "Spacer Section",
+     "name_b": "Corner TR",
+     "parent_a": "FqE7M",
+     "parent_b": "WC9pB/r6cYjT",
+     "board": "puHZ5",
+     "board_name": "LS-142 / 14 相簿 (iPhone)",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Spacer Section × Corner TR @ LS-142 / 14 相簿 (iPhone)",
+     "count": 1,
+     "classification": "首張相簿卡上緣角托 corner-out 5pt 出血壓進空白 Spacer Section，母題定案（tokens corner-out 5）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "R7edNW/DjW91",
+     "node_b": "wTMlo",
+     "name_a": "Corner TL",
+     "name_b": "Tab Bar",
+     "parent_a": "R7edNW/r6cYjT",
+     "parent_b": "puHZ5",
+     "board": "puHZ5",
+     "board_name": "LS-142 / 14 相簿 (iPhone)",
+     "overlap": [
+      26,
+      4
+     ],
+     "class": "Corner TL × Tab Bar @ LS-142 / 14 相簿 (iPhone)",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "R7edNW/JgUK8",
+     "node_b": "wTMlo",
+     "name_a": "Corner TR",
+     "name_b": "Tab Bar",
+     "parent_a": "R7edNW/r6cYjT",
+     "parent_b": "puHZ5",
+     "board": "puHZ5",
+     "board_name": "LS-142 / 14 相簿 (iPhone)",
+     "overlap": [
+      26,
+      4
+     ],
+     "class": "Corner TR × Tab Bar @ LS-142 / 14 相簿 (iPhone)",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "WESbz",
+     "node_b": "J4vk0/DjW91",
+     "name_a": "Spacer Section",
+     "name_b": "Corner TL",
+     "parent_a": "YekOU",
+     "parent_b": "J4vk0/r6cYjT",
+     "board": "Xldkz",
+     "board_name": "LS-142 / 14 相簿 · 深色",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Spacer Section × Corner TL @ LS-142 / 14 相簿 · 深色",
+     "count": 1,
+     "classification": "首張相簿卡上緣角托 corner-out 5pt 出血壓進空白 Spacer Section，母題定案（tokens corner-out 5）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "WESbz",
+     "node_b": "J4vk0/JgUK8",
+     "name_a": "Spacer Section",
+     "name_b": "Corner TR",
+     "parent_a": "YekOU",
+     "parent_b": "J4vk0/r6cYjT",
+     "board": "Xldkz",
+     "board_name": "LS-142 / 14 相簿 · 深色",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Spacer Section × Corner TR @ LS-142 / 14 相簿 · 深色",
+     "count": 1,
+     "classification": "首張相簿卡上緣角托 corner-out 5pt 出血壓進空白 Spacer Section，母題定案（tokens corner-out 5）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "T3SwvP/DjW91",
+     "node_b": "Kl0eH",
+     "name_a": "Corner TL",
+     "name_b": "Tab Bar",
+     "parent_a": "T3SwvP/r6cYjT",
+     "parent_b": "Xldkz",
+     "board": "Xldkz",
+     "board_name": "LS-142 / 14 相簿 · 深色",
+     "overlap": [
+      26,
+      4
+     ],
+     "class": "Corner TL × Tab Bar @ LS-142 / 14 相簿 · 深色",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "T3SwvP/JgUK8",
+     "node_b": "Kl0eH",
+     "name_a": "Corner TR",
+     "name_b": "Tab Bar",
+     "parent_a": "T3SwvP/r6cYjT",
+     "parent_b": "Xldkz",
+     "board": "Xldkz",
+     "board_name": "LS-142 / 14 相簿 · 深色",
+     "overlap": [
+      26,
+      4
+     ],
+     "class": "Corner TR × Tab Bar @ LS-142 / 14 相簿 · 深色",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "T4FpQ",
+     "node_b": "ONEs5/DjW91",
+     "name_a": "Spacer Section",
+     "name_b": "Corner TL",
+     "parent_a": "jZVRr",
+     "parent_b": "ONEs5/r6cYjT",
+     "board": "IjWOp",
+     "board_name": "A11y / 14 相簿 · Dynamic Type AX3（body 40pt）",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Spacer Section × Corner TL @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）",
+     "count": 1,
+     "classification": "首張相簿卡上緣角托 corner-out 5pt 出血壓進空白 Spacer Section，母題定案（tokens corner-out 5）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "T4FpQ",
+     "node_b": "ONEs5/JgUK8",
+     "name_a": "Spacer Section",
+     "name_b": "Corner TR",
+     "parent_a": "jZVRr",
+     "parent_b": "ONEs5/r6cYjT",
+     "board": "IjWOp",
+     "board_name": "A11y / 14 相簿 · Dynamic Type AX3（body 40pt）",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Spacer Section × Corner TR @ A11y / 14 相簿 · Dynamic Type AX3（body 40pt）",
+     "count": 1,
+     "classification": "首張相簿卡上緣角托 corner-out 5pt 出血壓進空白 Spacer Section，母題定案（tokens corner-out 5）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "oWCtg",
+     "node_b": "nxJbB/DjW91",
+     "name_a": "Spacer Section",
+     "name_b": "Corner TL",
+     "parent_a": "T7DfpY",
+     "parent_b": "nxJbB/r6cYjT",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Spacer Section × Corner TL @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "首張相簿卡上緣角托 corner-out 5pt 出血壓進空白 Spacer Section，母題定案（tokens corner-out 5）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "oWCtg",
+     "node_b": "nxJbB/JgUK8",
+     "name_a": "Spacer Section",
+     "name_b": "Corner TR",
+     "parent_a": "T7DfpY",
+     "parent_b": "nxJbB/r6cYjT",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      21,
+      5
+     ],
+     "class": "Spacer Section × Corner TR @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "首張相簿卡上緣角托 corner-out 5pt 出血壓進空白 Spacer Section，母題定案（tokens corner-out 5）（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "QSnUF/mlORb",
+     "node_b": "YlNJe",
+     "name_a": "Corner BL",
+     "name_b": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "parent_a": "QSnUF/r6cYjT",
+     "parent_b": "Wl90J",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner BL × Spacer · Body 收窄補償（Tab Bar 前緣淨空） @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "QSnUF/mlORb",
+     "node_b": "j2svp",
+     "name_a": "Corner BL",
+     "name_b": "Tab Bar",
+     "parent_a": "QSnUF/r6cYjT",
+     "parent_b": "Wl90J",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner BL × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "QSnUF/atAkU",
+     "node_b": "YlNJe",
+     "name_a": "Corner BR",
+     "name_b": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "parent_a": "QSnUF/r6cYjT",
+     "parent_b": "Wl90J",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner BR × Spacer · Body 收窄補償（Tab Bar 前緣淨空） @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "QSnUF/atAkU",
+     "node_b": "j2svp",
+     "name_a": "Corner BR",
+     "name_b": "Tab Bar",
+     "parent_a": "QSnUF/r6cYjT",
+     "parent_b": "Wl90J",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      26,
+      26
+     ],
+     "class": "Corner BR × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "mdabp/DjW91",
+     "node_b": "YlNJe",
+     "name_a": "Corner TL",
+     "name_b": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "parent_a": "mdabp/r6cYjT",
+     "parent_b": "Wl90J",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      26,
+      11
+     ],
+     "class": "Corner TL × Spacer · Body 收窄補償（Tab Bar 前緣淨空） @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "mdabp/DjW91",
+     "node_b": "NLs8N",
+     "name_a": "Corner TL",
+     "name_b": "Home Indicator Area",
+     "parent_a": "mdabp/r6cYjT",
+     "parent_b": "Wl90J",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      26,
+      15
+     ],
+     "class": "Corner TL × Home Indicator Area @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "mdabp/DjW91",
+     "node_b": "j2svp",
+     "name_a": "Corner TL",
+     "name_b": "Tab Bar",
+     "parent_a": "mdabp/r6cYjT",
+     "parent_b": "Wl90J",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      26,
+      11
+     ],
+     "class": "Corner TL × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "mdabp/JgUK8",
+     "node_b": "YlNJe",
+     "name_a": "Corner TR",
+     "name_b": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "parent_a": "mdabp/r6cYjT",
+     "parent_b": "Wl90J",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      26,
+      11
+     ],
+     "class": "Corner TR × Spacer · Body 收窄補償（Tab Bar 前緣淨空） @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "mdabp/JgUK8",
+     "node_b": "NLs8N",
+     "name_a": "Corner TR",
+     "name_b": "Home Indicator Area",
+     "parent_a": "mdabp/r6cYjT",
+     "parent_b": "Wl90J",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      26,
+      15
+     ],
+     "class": "Corner TR × Home Indicator Area @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "mdabp/JgUK8",
+     "node_b": "j2svp",
+     "name_a": "Corner TR",
+     "name_b": "Tab Bar",
+     "parent_a": "mdabp/r6cYjT",
+     "parent_b": "Wl90J",
+     "board": "Wl90J",
+     "board_name": "Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "overlap": [
+      26,
+      11
+     ],
+     "class": "Corner TR × Tab Bar @ Stress / 14 相簿 · 超長相簿名＋單張相片",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "xNqOC/uZ5Lt",
+     "node_b": "IKVkU",
+     "name_a": "Stack Sheet 2",
+     "name_b": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "parent_a": "xNqOC/oBEkH",
+     "parent_b": "aGkJ1",
+     "board": "aGkJ1",
+     "board_name": "A11y / 00 時間軸入口 · Dynamic Type AX3",
+     "overlap": [
+      4,
+      76.18
+     ],
+     "class": "Stack Sheet 2 × Spacer · Body 收窄補償（Tab Bar 前緣淨空） @ A11y / 00 時間軸入口 · Dynamic Type AX3",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "xNqOC/uZ5Lt",
+     "node_b": "OJjhM",
+     "name_a": "Stack Sheet 2",
+     "name_b": "Tab Bar",
+     "parent_a": "xNqOC/oBEkH",
+     "parent_b": "aGkJ1",
+     "board": "aGkJ1",
+     "board_name": "A11y / 00 時間軸入口 · Dynamic Type AX3",
+     "overlap": [
+      4,
+      76.18
+     ],
+     "class": "Stack Sheet 2 × Tab Bar @ A11y / 00 時間軸入口 · Dynamic Type AX3",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "xNqOC/kVUWa",
+     "node_b": "IKVkU",
+     "name_a": "Stack Sheet 1",
+     "name_b": "Spacer · Body 收窄補償（Tab Bar 前緣淨空）",
+     "parent_a": "xNqOC/oBEkH",
+     "parent_b": "aGkJ1",
+     "board": "aGkJ1",
+     "board_name": "A11y / 00 時間軸入口 · Dynamic Type AX3",
+     "overlap": [
+      4,
+      79.18
+     ],
+     "class": "Stack Sheet 1 × Spacer · Body 收窄補償（Tab Bar 前緣淨空） @ A11y / 00 時間軸入口 · Dynamic Type AX3",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    },
+    {
+     "node_a": "xNqOC/kVUWa",
+     "node_b": "OJjhM",
+     "name_a": "Stack Sheet 1",
+     "name_b": "Tab Bar",
+     "parent_a": "xNqOC/oBEkH",
+     "parent_b": "aGkJ1",
+     "board": "aGkJ1",
+     "board_name": "A11y / 00 時間軸入口 · Dynamic Type AX3",
+     "overlap": [
+      4,
+      79.18
+     ],
+     "class": "Stack Sheet 1 × Tab Bar @ A11y / 00 時間軸入口 · Dynamic Type AX3",
+     "count": 1,
+     "classification": "捲動列表末張卡的角托／疊紙延伸到 Tab Bar 帶，由 Body clip:true 裁掉（LS-208 Djv58 已記錄），board_clip／text_occlusion 皆 0（既有結構，非本票引入；本票只改文字字元與 nxJbB 相簿名，逐張印品高讀回不變）；同類 1 例"
+    }
+   ],
+   "result_hash": "02c9eef986786286"
+  },
+  "corner_anchor": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "bhroo",
+    "qtCd7",
+    "yec61",
+    "HLXo3",
+    "puHZ5",
+    "kHDk4",
+    "Xldkz",
+    "IjWOp",
+    "X9PfG",
+    "Wl90J",
+    "yXSht",
+    "a67Na",
+    "V4Ktak",
+    "go7f9",
+    "lKoZG",
+    "A33la",
+    "LTDYH",
+    "BTDgD",
+    "e1cOqx",
+    "aGkJ1"
+   ],
+   "containers": 43,
+   "points": 344,
+   "mismatch": 0,
+   "flagged": [],
+   "unresolved": [],
+   "ref_hits": 0,
+   "ref_hits_defs": 4,
+   "document_containers": 43,
+   "document_points": 344,
+   "document_mismatch": 0,
+   "document_flagged": [],
+   "document_unresolved": [],
+   "result_hash": "2f00e05ec82c5013"
+  },
+  "text_occlusion": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "bhroo",
+    "qtCd7",
+    "yec61",
+    "HLXo3",
+    "puHZ5",
+    "kHDk4",
+    "Xldkz",
+    "IjWOp",
+    "X9PfG",
+    "Wl90J",
+    "yXSht",
+    "a67Na",
+    "V4Ktak",
+    "go7f9",
+    "lKoZG",
+    "A33la",
+    "LTDYH",
+    "BTDgD",
+    "e1cOqx",
+    "aGkJ1"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "a3a05779ef445893"
+  },
+  "board_clip": {
+   "scope": "boards",
+   "document_count": 0,
+   "boards": [
+    "bhroo",
+    "qtCd7",
+    "yec61",
+    "HLXo3",
+    "puHZ5",
+    "kHDk4",
+    "Xldkz",
+    "IjWOp",
+    "X9PfG",
+    "Wl90J",
+    "yXSht",
+    "a67Na",
+    "V4Ktak",
+    "go7f9",
+    "lKoZG",
+    "A33la",
+    "LTDYH",
+    "BTDgD",
+    "e1cOqx",
+    "aGkJ1"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "e6ef59aba4d24a11"
+  }
+ },
+ "total_nodes": 16542,
+ "tree_hash": "6fd2aa87fd04a91e",
+ "flags": {
+  "cross_all": false,
+  "custom_overlay_re": false
+ },
+ "scan_note": "snapshot mode，dump sha256=e36afe80ce2741cd0420b92feae1e34b8701140ddf69b769c62c3773487ee129；跑法②快照模式（16542 節點 ≥8k）：tree_hash 6fd2aa87fd04a91e＝design_tree_hash.py 對 29eb8a9 落地檔離線值，Pencil 端 hash-only 分段 [120,240)/[240,∞) 重算＋未變動的 [0,120) 相加一致；pen-snapshot-dump.js 單次 execute（SNAP_BATCH_ROWS=20000，26838 rows／2 批）；--scan-scope boards（orchestrator 指示），SCAN_BOARDS 同 R1 共 20 板＝.pen 頂層 diff 10 板（bhroo／qtCd7／yec61／HLXo3／puHZ5／kHDk4／Xldkz／IjWOp／X9PfG／Wl90J）＋其餘含 bhroo 實例 10 板（yXSht／a67Na／V4Ktak／go7f9／lKoZG／A33la／LTDYH／BTDgD／e1cOqx／aGkJ1）；hash 與 dump 之間無寫入，同一稿態。corner_anchor ref_hits=0（scope=boards 提示，既有工具限制；名稱備援命中 43 容器／344 點、mismatch 0）"
+}

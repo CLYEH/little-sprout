@@ -53723,7 +53723,7 @@
               "fill": "$print-ink",
               "textGrowth": "fixed-width",
               "width": "fill_container(0)",
-              "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月",
+              "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月⁠大",
               "textAlign": "right",
               "fontFamily": "$font",
               "fontSize": "$fs-note",
@@ -53983,7 +53983,7 @@
                   "fill": "$print-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "弟弟出生的第一週 · 8 張相片",
+                  "content": "弟弟出生的第一週 · 8 張⁠相⁠片",
                   "fontFamily": "$font",
                   "fontSize": "$fs-body",
                   "fontWeight": "600"
@@ -68332,7 +68332,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "兩個以上寶貝的年齡寫法（R6 定，LS-201 起以稿為準，LS-367 改寫）：**全稿一義**——`、`（頓號）永遠是『下一個人』的分隔，`·`（點）永遠只做『同一人姓名↔年齡』的微連接，不得反過來用。現行稿面多寶貝一律寫成多組「暱稱 · 年齡」以「、」串接（例：「小安 · 2 歲 3 個月、小明 · 8 個月」），`cmp/Card Diary` Multi Caption（x7k2o6）、`cmp/Card Album` Signature Line（wQVzs）、`cmp/Card Photo` Caption（VywUw）三處的單人片段同一字串（多寶貝排列照片卡另有規則，見下）；R6 原寫的「多寶貝姓名與年齡之間只用空格、不加 ·」已被 LS-201 之後的稿面取代（實作 MultiChildCaptionFormatter 仍是舊寫法，對齊與否見本板 LS-367 待裁決條）。`cmp/Card Diary`（qtCd7）Signature 的 Multi Caption（`$print-ink`／`$fs-note`／`textAlign:right`，`textGrowth:fixed-width`+`fill_container`）預設 enabled:false；多寶貝實例關閉 Who Group／Age Group、開啟 Multi Caption。**`cmp/Card Photo` 的 Caption（LS-367 改寫）**：App 沒有 media caption（情境描述）資料，Caption 只放署名字串、不再有「情境描述 · 」前段——單寶貝「小安 · 2 歲 3 個月」、多寶貝串成一行放得下就用「、」串接、放不下（含 AX3）就一行一人、未標記＝單一空白；樣式 R2 改 `$print-ink-secondary`／`$fs-note`／regular，與相簿卡署名列同樣式（格式、字級與理由見本板 LS-367 段）；沖印品白邊／角托規則不受影響，角托 y 隨印品實測高重算。**SwiftUI 斷行字元**：姓名＋U+0020＋「·」＋U+00A0＋年齡片語（年齡內部 U+00A0、「個」「月」之間 U+2060），確保 AX3 折行時「·」領銜下一行、年齡片語不被拆開。多寶貝 AX3 壓測：原 HLXo3 的 Card Photo 已刪除（見 HPvum），照片卡改由 ai2w5 示範；HLXo3 仍示範 Card Diary 的 Multi Caption。",
+                  "content": "兩個以上寶貝的年齡寫法（R6 定，LS-201 起以稿為準，LS-367 改寫）：**全稿一義**——`、`（頓號）永遠是『下一個人』的分隔，`·`（點）永遠只做『同一人姓名↔年齡』的微連接，不得反過來用。現行稿面多寶貝一律寫成多組「暱稱 · 年齡」以「、」串接（例：「小安 · 2 歲 3 個月、小明 · 8 個月大」），`cmp/Card Diary` Multi Caption（x7k2o6）、`cmp/Card Album` Signature Line（wQVzs）、`cmp/Card Photo` Caption（VywUw）三處的單人片段同一字串（多寶貝排列照片卡另有規則，見下）；R6 原寫的「多寶貝姓名與年齡之間只用空格、不加 ·」已被 LS-201 之後的稿面取代（實作 MultiChildCaptionFormatter 仍是舊寫法，對齊與否見本板 LS-367 待裁決條）。`cmp/Card Diary`（qtCd7）Signature 的 Multi Caption（`$print-ink`／`$fs-note`／`textAlign:right`，`textGrowth:fixed-width`+`fill_container`）預設 enabled:false；多寶貝實例關閉 Who Group／Age Group、開啟 Multi Caption。**`cmp/Card Photo` 的 Caption（LS-367 改寫）**：App 沒有 media caption（情境描述）資料，Caption 只放署名字串、不再有「情境描述 · 」前段——單寶貝「小安 · 2 歲 3 個月」、多寶貝串成一行放得下就用「、」串接、放不下（含 AX3）就一行一人、未標記＝單一空白；樣式 R2 改 `$print-ink-secondary`／`$fs-note`／regular，與相簿卡署名列同樣式（格式、字級與理由見本板 LS-367 段）；沖印品白邊／角托規則不受影響，角托 y 隨印品實測高重算。**SwiftUI 斷行字元**：姓名＋U+0020＋「·」＋U+00A0＋年齡片語（年齡內部 U+00A0、「個」「月」之間 U+2060），確保 AX3 折行時「·」領銜下一行、年齡片語不被拆開。多寶貝 AX3 壓測：原 HLXo3 的 Card Photo 已刪除（見 HPvum），照片卡改由 ai2w5 示範；HLXo3 仍示範 Card Diary 的 Multi Caption。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -89957,7 +89957,7 @@
                             },
                             "x7k2o6": {
                               "enabled": true,
-                              "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月"
+                              "content": "小安 · 2 歲 3 個⁠月、小明 · 8 個⁠月⁠大"
                             }
                           }
                         }
@@ -91527,7 +91527,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "上禮拜的動物園一日遊 · 12 張相片"
+                      "content": "上禮拜的動物園一日遊 · 12 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -91577,7 +91577,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "阿公阿嬤家過年 · 34 張相片"
+                      "content": "阿公阿嬤家過年 · 34 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -91627,7 +91627,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "海邊戲水 · 8 張相片"
+                      "content": "海邊戲水 · 8 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -91674,7 +91674,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "第一次騎腳踏車 · 5 張相片"
+                      "content": "第一次騎腳踏車 · 5 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -91724,7 +91724,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "跨年連假出遊 · 62 張相片"
+                      "content": "跨年連假出遊 · 62 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -96942,6 +96942,140 @@
               "fontWeight": "normal"
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "c3l75",
+          "name": "N LS-388 相簿卡標題折行字元",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "y72F3",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-388 相簿卡標題折行字元（LS-372 D1a 擴充）",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "uMq0c",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "OXW7D",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-388｜規格",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "E2AtB",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "相簿卡標題（cmp/Card Album caption MIxHp）的「·」與張數段沿用署名列同一套折行字元（使用者 2026-09-24 裁 LS-372 D1a）。公式：相簿名＋U+0020＋「·」＋U+00A0＋張數＋U+00A0＋張⁠相⁠片（「張」「相」「片」之間 U+2060）。範例 codepoint：弟弟出生的第一週 U+0020 U+00B7 U+00A0 8 U+00A0 張 U+2060 相 U+2060 片。折行行為：相簿名之後、張數段之前，唯一允許的斷點是「·」前的 U+0020——一行放不下時「·」領銜下一行、「N 張相片」整組不拆；相簿名內部照系統自然斷行（見下方範圍界線）（證據：Wl90J nxJbB 在 iPhone 17pt 第 4 行由「· 1 張相片」起頭；iPad qteWo／WiBHO／eBgN8 同）。「·」前不得換 NBSP（會把相簿名末字鎖進同一區塊，理由同 epDnW）。範圍界線：相簿名本身的折行不在本規則內——相簿名一律照系統自然斷行，末字可能單獨落到下一行（例：AX3 的 uvL4p「弟弟出生的第一／週 · 8 張相片」），孤字議題送核可頁 C1 由使用者裁決，本票不對相簿名加 U+2060。AX3 版式：相簿頁卡（14 相簿，AlbumSummaryCardView）AX3 改成相簿名與張數以換行分兩行，張數行＝張數＋U+00A0＋張⁠相⁠片；時間軸板（11／00 系列，含 AX3 的 lKoZG／aGkJ1）的相簿卡用上面的單行公式，不分兩行。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "V0LVz",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "bXZdH",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-388｜ios-dev",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "v6k4s",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "契約（ios-dev，範圍只涵蓋相簿頁卡 AlbumSummaryCardView）：AlbumSignatureFormatter.captionText(title:photoCount:isMultiline:) 目前產出 \"\\(title) · \\(photoCount) 張相片\"（「·」兩側與張數後都是 U+0020，AlbumSignatureFormatter.swift:63-65），改成一般字級 \"\\(title) ·\\u{00A0}\\(photoCount)\\u{00A0}張\\u{2060}相\\u{2060}片\"、AX3 \"\\(title)\\n\\(photoCount)\\u{00A0}張\\u{2060}相\\u{2060}片\"；相簿名不做任何字元處理。同步：①檔頭第 18 行文件註解的兩個格式字串照改；②AlbumSignatureFormatterTests.swift:150-164 三支 captionText 測試會壞，改成逐 codepoint 斷言，並寫明為什麼（單行分支在 iPad 窄欄或 AX1／AX2 字級下，「·」後若退回 U+0020 會折成「…·」／「12 張相片」；AX3 換行分支沒有「·」，張數後若退回 U+0020 會把張數行拆成「12」／「張相片」）。時間軸相簿卡 AlbumCardView（Features/Timeline/AlbumCardView.swift:28）只顯示 content.title、不顯示張數，與 11／00 時間軸板的稿面不一致，屬既有漂移、不在本契約內，由 LS-390 處理。程式另開 ui 小票或併入 LS-372 後續 ui 票，本票不動程式。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "xu4a3",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "SpnZE",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-388｜日記卡",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "KIbVZ",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "cmp/Card Diary 多寶貝署名樣本 Multi Caption（x7k2o6 元件預設，及 HLXo3 上 kmbyt 的覆寫）中，第二人的年齡由「8 個月」補成「8 個月大」。年齡字串與 BirthdayFormat.ageDescription 的產出一致（未滿一歲一律「N 個月大」）；字元規則同 AlbumSignatureFormatter.hardenedAge（年齡內部 U+00A0，「個」「月」之間與「月」「大」之間 U+2060，同 AGF13）。MultiChildCaptionFormatter 現行多寶貝寫法不加「·」、不插 U+2060，與本樣本不同，是否對齊見 LS-119 Notes 的 ca7bA。kmbyt 在 AX3 仍是三行、卡高不變。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
         }
       ]
     },
@@ -97076,7 +97210,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "上禮拜的動物園一日遊 · 12 張相片"
+                      "content": "上禮拜的動物園一日遊 · 12 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -97126,7 +97260,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "阿公阿嬤家過年 · 34 張相片"
+                      "content": "阿公阿嬤家過年 · 34 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -97176,7 +97310,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "海邊戲水 · 8 張相片"
+                      "content": "海邊戲水 · 8 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -97223,7 +97357,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "第一次騎腳踏車 · 5 張相片"
+                      "content": "第一次騎腳踏車 · 5 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -97273,7 +97407,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "跨年連假出遊 · 62 張相片"
+                      "content": "跨年連假出遊 · 62 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -97824,7 +97958,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "上禮拜的動物園一日遊\n12 張相片"
+                      "content": "上禮拜的動物園一日遊\n12 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -97874,7 +98008,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "阿公阿嬤家過年\n34 張相片"
+                      "content": "阿公阿嬤家過年\n34 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -97924,7 +98058,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "跨年連假出遊\n62 張相片"
+                      "content": "跨年連假出遊\n62 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -98437,7 +98571,7 @@
                               }
                             },
                             "MIxHp": {
-                              "content": "海邊戲水 · 8 張相片"
+                              "content": "海邊戲水 · 8 張⁠相⁠片"
                             },
                             "wQVzs": {
                               "enabled": true,
@@ -98498,7 +98632,7 @@
                               }
                             },
                             "MIxHp": {
-                              "content": "跨年連假出遊 · 62 張相片"
+                              "content": "跨年連假出遊 · 62 張⁠相⁠片"
                             },
                             "wQVzs": {
                               "enabled": true,
@@ -98636,7 +98770,7 @@
                               }
                             },
                             "MIxHp": {
-                              "content": "第一次騎腳踏車 · 5 張相片"
+                              "content": "第一次騎腳踏車 · 5 張⁠相⁠片"
                             },
                             "wQVzs": {
                               "enabled": true,
@@ -98700,7 +98834,7 @@
                               }
                             },
                             "MIxHp": {
-                              "content": "生日派對 · 15 張相片"
+                              "content": "生日派對 · 15 張⁠相⁠片"
                             },
                             "wQVzs": {
                               "content": "小明 · 8 個⁠月",
@@ -98891,7 +99025,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "阿公阿嬤全家福二〇二六跨年夜溫馨團聚倒數紀念相片珍藏加長版本紀念冊完整收藏版超長標題測試延伸\n再加一行內容 · 1 張相片"
+                      "content": "阿公阿嬤全家福二〇二六跨年夜溫馨團聚倒數紀念相片珍藏加長版本紀念冊完整收藏版與親友合照精選集錦全集 · 1 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -98941,7 +99075,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "阿公阿嬤家過年 · 34 張相片"
+                      "content": "阿公阿嬤家過年 · 34 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -98991,7 +99125,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "海邊戲水 · 8 張相片"
+                      "content": "海邊戲水 · 8 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -99038,7 +99172,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "第一次騎腳踏車 · 5 張相片"
+                      "content": "第一次騎腳踏車 · 5 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -99088,7 +99222,7 @@
                       }
                     },
                     "MIxHp": {
-                      "content": "跨年連假出遊 · 62 張相片"
+                      "content": "跨年連假出遊 · 62 張⁠相⁠片"
                     },
                     "wQVzs": {
                       "enabled": true,
@@ -129722,7 +129856,7 @@
       "type": "frame",
       "id": "ZG2Un",
       "x": 17151,
-      "y": 23117,
+      "y": 23455,
       "name": "LS-152 / 09b 儲存空間 · 已滿",
       "clip": true,
       "width": 393,
@@ -130127,7 +130261,7 @@
       "type": "frame",
       "id": "yResD",
       "x": 18097,
-      "y": 23117,
+      "y": 23455,
       "name": "A11y / 07 檢舉收件匣 · Dynamic Type AX3",
       "theme": {
         "size": "ax3"
@@ -153688,7 +153822,7 @@
       "type": "frame",
       "id": "Oic2v",
       "x": 17624,
-      "y": 23117,
+      "y": 23455,
       "name": "A11y / 08 EULA 同意頁 · Dynamic Type AX3",
       "theme": {
         "size": "ax3"
