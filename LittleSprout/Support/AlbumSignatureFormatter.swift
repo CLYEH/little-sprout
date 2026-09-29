@@ -15,7 +15,7 @@ import Foundation
 ///   - 零寶貝：回傳單一半形空白 `" "`——署名列保留高度、讀者靠「這行是空白」本身辨識零寶貝卡，
 ///     不靠卡片整體變矮辨識（brand 十條 #10「空欄位卡不塌縮」）。
 ///
-/// Caption（相簿名＋張數）同理：一般字級 `"{title} · {count} 張相片"`；AX3 改 `"{title}\n{count} 張相片"`
+/// Caption（相簿名＋張數）同理：一般字級 `"{title} · {count} 張相片"`；AX3 改 `"{title}\n{count} 張相片"`（折行字元見 `captionText`）
 /// （`IjWOp.png` 核可頁截圖：AX3 下相簿名與張數各自成行）。
 enum AlbumSignatureFormatter {
     /// 年齡片語內部空白換成不斷行空格（`\u{00A0}`），「個」「月」之間插入 WORD JOINER
@@ -60,8 +60,14 @@ enum AlbumSignatureFormatter {
     }
 
     /// Caption 文字——相簿名＋張數，AX3 各自成行（`\n`），一般字級用「·」同列。
+    ///
+    /// LS-406（LS-388 範圍 1／3）：折行字元逐字同稿面 `cmp/Card Album` Caption `MIxHp`——
+    /// `"{title} ·\u{00A0}{N}\u{00A0}張\u{2060}相\u{2060}片"`：「·」前維持可斷空白（U+0020，折行時「·」領銜
+    /// 下一行，同 `segment(for:asOf:timeZone:)`）、「·」後與數字後 U+00A0、「張相片」字間 U+2060 防孤字
+    /// （AX3 實測超長標題裁圖曾見末行孤字）。時間軸相簿卡（`AlbumCardView`）與相簿 tab 卡
+    /// （`AlbumSummaryCardView`）共用這支，兩邊折行一起變。
     static func captionText(title: String, photoCount: Int, isMultiline: Bool) -> String {
-        let countText = "\(photoCount) 張相片"
-        return isMultiline ? "\(title)\n\(countText)" : "\(title) · \(countText)"
+        let countText = "\(photoCount)\u{00A0}張\u{2060}相\u{2060}片"
+        return isMultiline ? "\(title)\n\(countText)" : "\(title) ·\u{00A0}\(countText)"
     }
 }

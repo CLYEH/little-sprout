@@ -16,12 +16,6 @@ struct AlbumCardView: View {
     let refId: UUID
     var onOpenComments: () -> Void = {}
 
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    /// AX3 起相簿名與張數各自成行——同 `AlbumSummaryCardView.isOneLinePerPerson` 的斷點
-    /// （LS-142 Handoff Notes `MJ-6`／`R4 KBNSX`：兩態切換，不是連續縮放曲線）。
-    private var isMultiline: Bool { dynamicTypeSize >= .accessibility3 }
-
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
             PrintPhotoCard(
@@ -38,6 +32,10 @@ struct AlbumCardView: View {
             // （改前標題會念兩次），也不把 Caption 內的 U+2060／NBSP 折行字元交給 VoiceOver。
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(content.title)，\(content.photoCount) 張相片")
+            // LS-406（LS-390 R1 I1）：`.ignore` 會吃掉照片的 `.isImage`（改前 `.combine` 帶得上），有封面時補回、
+            // VoiceOver 念「圖像」；占位圖（沒有封面）不加。判準是 `cover != nil`（有簽名 URL 就是有照片要載）——
+            // `AsyncImage` 的載入中／失敗態在這一層看不到，那兩態也念「圖像」，比占位圖態誤念「沒有照片」好。
+            .accessibilityAddTraits(content.cover == nil ? [] : .isImage)
             InteractionRow(
                 kind: .album, refId: refId, timelineStore: timelineStore, familyStore: familyStore,
                 onOpenComments: onOpenComments
@@ -48,10 +46,12 @@ struct AlbumCardView: View {
     /// Caption（`MIxHp`）：`$print-ink`／`$fs-body`／600，紙與墨不隨深色反轉。內縮 `$sp-group`
     /// 由 `PrintPhotoCard` 對 `imprintCaption` 統一套（LS-389），字起點＝紙左緣 20＝日記卡同軸。
     /// 字串走 `AlbumSignatureFormatter.captionText`（與相簿 tab 卡同源，不在此拼字元）；不設
-    /// `lineLimit`——AX3 換行不截斷。
+    /// `lineLimit`——AX3 換行不截斷。LS-406 R2 M1：**所有字級固定單行公式**（`isMultiline: false`）——定案稿
+    /// Notes `E2AtB`：AX3 相簿名與張數分兩行只給相簿頁卡（`AlbumSummaryCardView`）；時間軸板（含 AX3 的 `lKoZG`／
+    /// `aGkJ1`，實例 `uvL4p`／`jGudh`）用「相簿名 · N 張相片」單行公式，放不下時折在標題內或「·」前。
     private var caption: some View {
         Text(AlbumSignatureFormatter.captionText(
-            title: content.title, photoCount: content.photoCount, isMultiline: isMultiline
+            title: content.title, photoCount: content.photoCount, isMultiline: false
         ))
         .appNumericFont(.body, weight: .semibold)
         .foregroundStyle(Color.lsPrintInk)

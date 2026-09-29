@@ -12,8 +12,8 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
     private static let xSmall = "UICTContentSizeCategoryXS"
     private static let large = "UICTContentSizeCategoryL"
     private static let ax3 = "UICTContentSizeCategoryAccessibilityXL"
-    /// `PrintPhotoCard` 染料池圓半徑（`cornerSize` 26 × 6 ÷ 2），見 `captionRaster` 註解。
-    private static let glowRadius: CGFloat = 78
+    /// `PrintPhotoCard` 染料池圓半徑，讀 `PrintPhotoCardMetrics`（app 與 UITest 共用同一份，LS-406），見 `captionRaster` 註解。
+    private static let glowRadius = PrintPhotoCardMetrics.mountPoolRadius()
     private static let shortLabel = "弟弟出生的第一週，8 張相片"
     private static let longLabel = "阿公阿嬤全家福二〇二六跨年夜溫馨團聚倒數紀念相片珍藏加長版本紀念冊，1 張相片"
 
@@ -37,7 +37,7 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
                 print("LS-390 captionStartX \(context)=\(startX) lines=\(lines.count)")
                 if size == Self.ax3 {
                     XCTAssertGreaterThanOrEqual(
-                        lines.count, 2, "[\(context)] AX3 相簿名與張數各自成行、不截斷，量到 \(lines.count) 行"
+                        lines.count, 2, "[\(context)] AX3 單行公式折行（相簿名放不下時折行）、不截斷，量到 \(lines.count) 行"
                     )
                 } else {
                     XCTAssertEqual(
@@ -57,6 +57,40 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
         let lines = try captionRaster(paper: paper, in: app, context: "long/AX3").lines()
         attachScreenshot(app, name: "timelineAlbumLong-AX3")
         XCTAssertGreaterThanOrEqual(lines.count, 3, "超長相簿名 AX3 應多行換行不截斷，量到 \(lines.count) 行")
+    }
+
+    /// LS-406 R2 M1：定案稿 Notes `E2AtB`——時間軸板（含 AX3 的 `lKoZG`／`aGkJ1`，實例 `uvL4p`／`jGudh`）的相簿卡
+    /// 用單行公式「相簿名 · N 張相片」、AX3 也**不**拆成「相簿名＼\n張數」兩行（兩行版式只給相簿頁卡）。
+    /// 超長標題（`Stress / 14`）AX3 折成 5 行，末行「冊」與「· 1 張相片」同行＝5 行；`\n` 版把張數獨立成行＝6 行。
+    /// 用超長標題而非短標題：短標題 AX3 本來就放得下一行，`\n` 與單行公式都量到 2 行、分不出來。
+    func testTimelineAlbumCard_ax3_usesSingleLineFormula_countSharesLastTitleLine() throws {
+        let app = launch(fixture: "timelineAlbumLong", size: Self.ax3, scheme: "light")
+        let paper = paperElement(in: app, label: Self.longLabel)
+        let lines = try captionRaster(paper: paper, in: app, context: "single-line/AX3").lines()
+        attachScreenshot(app, name: "timelineAlbumLong-singleLineFormula-AX3")
+        XCTAssertEqual(
+            lines.count, 5,
+            "AX3 時間軸相簿卡應用單行公式（末行「冊」與「· 1 張相片」同行，共 5 行）；量到 \(lines.count) 行——"
+                + "6 行代表仍用換行把張數獨立成行（稿 Notes E2AtB：兩行版式只給相簿頁卡）"
+        )
+    }
+
+    /// LS-406（LS-390 R1 I1）：整張相簿卡念成一個元素（`.ignore`）後，封面照片的 `.isImage` trait 要補回來——
+    /// VoiceOver 念「圖像」。`isImage` 在 XCUI 對應 `elementType == .image`。有封面才有、占位圖（`cover: nil`）不加。
+    func testTimelineAlbumCard_isImageTrait_onlyWhenCoverPresent() {
+        let withCover = launch(fixture: "timelineAlbumCover", size: Self.large, scheme: "light")
+        let coverCard = paperElement(in: withCover, label: Self.shortLabel)
+        XCTAssertEqual(
+            coverCard.elementType, .image,
+            "封面已載入的相簿卡應帶 .isImage trait（VoiceOver 念「圖像」），實際 elementType＝\(coverCard.elementType.rawValue)"
+        )
+        withCover.terminate()
+        let placeholder = launch(fixture: "timelineAlbum", size: Self.large, scheme: "light")
+        let placeholderCard = paperElement(in: placeholder, label: Self.shortLabel)
+        XCTAssertNotEqual(
+            placeholderCard.elementType, .image,
+            "占位圖（沒有封面）的相簿卡不該帶 .isImage trait（念「圖像」會誤導）"
+        )
     }
 
     // MARK: - helpers
@@ -81,7 +115,7 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
     /// 右緣對稱。回傳的 raster 以裁切左緣為 x=0（`leftmostInkX` 需再加 15）。
     private func captionRaster(paper: XCUIElement, in app: XCUIApplication, context: String) throws -> InkRaster {
         // 卡片元素的 a11y frame 會把染料池圓（`PrintPhotoCard.mountPoolGlow`，直徑＝角托 26×6，圓心在四角）
-        // 一起算進去，四邊各外擴半徑 78——實測 XS 為 (-54, 30, 510×387)，扣回來才是紙（左緣＝screenPad 24）。
+        // 一起算進去，四邊各外擴半徑 `glowRadius`（預設 78）——實測 XS 為 (-54, 30, 510×387)，扣回來才是紙（左緣＝screenPad 24）。
         let frame = paper.frame.insetBy(dx: Self.glowRadius, dy: Self.glowRadius)
         let area = CGRect(x: frame.minX + 15, y: frame.minY + 205, width: frame.width - 30, height: frame.height - 213)
         let screenshot = app.screenshot().image

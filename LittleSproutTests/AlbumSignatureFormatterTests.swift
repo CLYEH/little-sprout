@@ -147,20 +147,52 @@ final class AlbumSignatureFormatterTests: XCTestCase {
 
     // MARK: - captionText
 
+    /// LS-406（LS-388 範圍 1）：稿面 `cmp/Card Album` Caption `MIxHp` 全部實例逐字
+    /// `"{title} ·\u{00A0}{N}\u{00A0}張\u{2060}相\u{2060}片"`——「·」前維持 U+0020（可斷，折行時「·」領銜下一行）、
+    /// 「·」後 U+00A0、數字與「張」之間 U+00A0、「張相片」字間 U+2060。時間軸相簿卡與相簿 tab 卡共用這支。
     func test_captionText_regular_joinsWithMiddleDotOnOneLine() {
         let text = AlbumSignatureFormatter.captionText(title: "上禮拜的動物園一日遊", photoCount: 12, isMultiline: false)
-        XCTAssertEqual(text, "上禮拜的動物園一日遊 · 12 張相片")
+        XCTAssertEqual(text, "上禮拜的動物園一日遊 ·\u{00A0}12\u{00A0}張\u{2060}相\u{2060}片")
     }
 
     func test_captionText_ax3_splitsTitleAndCountOntoSeparateLines() {
         let text = AlbumSignatureFormatter.captionText(title: "上禮拜的動物園一日遊", photoCount: 12, isMultiline: true)
-        XCTAssertEqual(text, "上禮拜的動物園一日遊\n12 張相片")
+        XCTAssertEqual(text, "上禮拜的動物園一日遊\n12\u{00A0}張\u{2060}相\u{2060}片")
     }
 
     func test_captionText_zeroPhotos_stillReadsZeroSheets() {
         // MN-3 用詞規則：計數名詞用「相片」，這裡順帶釘住 0 張的措辭不會變成奇怪的複數/單數問題
         // （中文沒有複數變化，純粹確認數字 0 能正常組字串）。
         let text = AlbumSignatureFormatter.captionText(title: "新相簿", photoCount: 0, isMultiline: false)
-        XCTAssertEqual(text, "新相簿 · 0 張相片")
+        XCTAssertEqual(text, "新相簿 ·\u{00A0}0\u{00A0}張\u{2060}相\u{2060}片")
+    }
+
+    /// 逐字元斷言折行字元的位置（不靠整串 `XCTAssertEqual` 的 diff 肉眼比對 U+0020／U+00A0）。
+    func test_captionText_regular_breakCharactersAtExactPositions() throws {
+        let text = AlbumSignatureFormatter.captionText(title: "海邊", photoCount: 8, isMultiline: false)
+        let scalars = Array(text.unicodeScalars)
+        // 越界回 nil 而非 crash：修前是「斷言紅」，不是「測試宿主 crash」。
+        func scalar(_ index: Int) -> Unicode.Scalar? { scalars.indices.contains(index) ? scalars[index] : nil }
+        let dot = try XCTUnwrap(scalars.firstIndex(of: "·"), "找不到「·」")
+        XCTAssertEqual(scalar(dot - 1), "\u{0020}", "「·」前應為可斷空白 U+0020（折行時「·」領銜下一行）")
+        XCTAssertEqual(scalar(dot + 1), "\u{00A0}", "「·」後應為 U+00A0（不在「·」後折行）")
+        let count = try XCTUnwrap(scalars.firstIndex(of: "8"), "找不到張數")
+        XCTAssertEqual(scalar(count + 1), "\u{00A0}", "數字與「張」之間應為 U+00A0（稿面 MIxHp 逐字）")
+        let sheet = try XCTUnwrap(scalars.firstIndex(of: "張"), "找不到「張」")
+        XCTAssertEqual(scalar(sheet + 1), "\u{2060}", "「張」「相」之間應為 U+2060")
+        XCTAssertEqual(scalar(sheet + 2), "相")
+        XCTAssertEqual(scalar(sheet + 3), "\u{2060}", "「相」「片」之間應為 U+2060")
+        XCTAssertEqual(
+            text.unicodeScalars.filter { $0 == "\u{0020}" }.count, 1,
+            "整串只該有「·」前這一個可斷空白，其餘都要黏住：\(text.unicodeScalars.map { String($0.value, radix: 16) })"
+        )
+    }
+
+    /// AX3（`isMultiline`）：標題與張數以 `\n` 分行，張數行仍是 `N\u{00A0}張\u{2060}相\u{2060}片`，不含可斷空白。
+    func test_captionText_ax3_countLineHasNoBreakableSpace() {
+        let text = AlbumSignatureFormatter.captionText(title: "海邊", photoCount: 8, isMultiline: true)
+        let countLine = text.components(separatedBy: "\n").last ?? ""
+        XCTAssertEqual(countLine, "8\u{00A0}張\u{2060}相\u{2060}片")
+        XCTAssertFalse(countLine.unicodeScalars.contains("\u{0020}"), "張數行不該有可斷空白")
     }
 }
