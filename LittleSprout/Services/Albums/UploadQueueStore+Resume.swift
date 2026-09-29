@@ -13,8 +13,10 @@ import Foundation
 ///   嘗試會再傳一份，`media` 多一列重複照片。
 /// - 新嘗試成功時項目已被舊嘗試標成 `.completed`：不重複呼叫 `onUploadSucceeded`（相簿掛載
 ///   與時間軸通知只做一次）。
-/// 已經送出的請求無法保證伺服器端沒收到（例如回應遺失後才被取消）——這條路徑是 at-least-once，
-/// 真正的去重需要伺服器端冪等鍵，不在本票範圍（記入 handoff）。
+/// 已經送出的請求無法保證伺服器端沒收到（例如回應遺失後才被取消）——重送是 at-least-once，靠冪等去重：
+/// 佇列項目 id 一律當 `mediaID` 傳給 `MediaUploadService`（storage 以 `upsert` 覆寫同路徑、`media` INSERT
+/// 撞主鍵 `23505` 視為上次已成功，見 `insertMediaRow(tolerateExisting:)`）；落盤紀錄（`PersistedUploadRecord`）
+/// 與重啟後還原的項目沿用同一個 id，所以同一項目不論重送、續傳幾次，`media` 都只會有一列。
 extension UploadQueueStore {
     struct ResumeState {
         /// 飛行中的 `Task` 參照——回前景時取消舊嘗試；`start(_:)` 是唯一寫入點。
