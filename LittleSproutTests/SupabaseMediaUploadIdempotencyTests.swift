@@ -46,9 +46,12 @@ final class SupabaseMediaUploadIdempotencyTests: XCTestCase {
                    let id = row["id"] as? String {
                     recorded.withLock { $0.insertedIDs.append(id) }
                 }
-                let body = insertStatus == 201
-                    ? Data()
-                    : Data(#"{"code":"23505","message":"duplicate key value violates unique constraint"}"#.utf8)
+                let body: Data
+                switch insertStatus {
+                case 201: body = Data()
+                case 500: body = Data(#"{"code":"XX000","message":"internal error"}"#.utf8)
+                default: body = Data(#"{"code":"23505","message":"duplicate key value violates unique"}"#.utf8)
+                }
                 return MockURLProtocol.StubResponse(statusCode: insertStatus, body: body)
             }
             XCTFail("未預期的請求：\(request.url?.path ?? "nil")")
@@ -113,5 +116,27 @@ final class SupabaseMediaUploadIdempotencyTests: XCTestCase {
 
         XCTAssertEqual(recorded.withLock { $0.putUpsertHeaders }.filter { $0 == "true" }.count, 0, "既有呼叫端不 upsert")
         XCTAssertEqual(recorded.withLock { $0.deleteCount }, 1, "既有呼叫端 INSERT 失敗仍照舊清孤兒物件")
+    }
+
+    /// R2 N1：冪等重送（指定 `mediaID`）失敗（這裡是 INSERT 回 5xx）時，上一次嘗試可能已 commit 一列指向
+    /// **同一路徑**的 `media`——清孤兒會把那列的原檔與縮圖刪掉（列在、檔案沒了，永久破圖）。冪等模式
+    /// 一律不清理，孤兒交 LS-213 的「Storage 有物件、沒有 media 列」掃描回收。
+    func test_uploadPhoto_withMediaID_insertServerError_doesNotDeleteSamePathObjects() async throws {
+        let recorded = OSAllocatedUnfairLock(initialState: Recorded())
+        let client = makeClient(insertStatus: 500, recorded: recorded)
+        try await signIn(client: client)
+        let service = SupabaseMediaUploadService(client: client)
+
+        do {
+            _ = try await service.uploadPhoto(
+                familyID: familyID, data: photoData(), fileExtension: "jpg",
+                pixelSize: PixelSize(width: 64, height: 64), takenAt: nil, mediaID: UUID()
+            )
+            XCTFail("INSERT 回 5xx 應該丟錯")
+        } catch {}
+
+        XCTAssertEqual(
+            recorded.withLock { $0.deleteCount }, 0, "冪等重送失敗不能清掉同路徑物件（可能屬於上一次已 commit 的列）"
+        )
     }
 }

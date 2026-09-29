@@ -102,7 +102,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
             // task」）。有縮圖時兩個 task 都跑完才會到這裡，任一個都可能已經真的上傳成功，
             // 兩個路徑都要批次清。
             if pendingThumb != nil {
-                await cleanupOrphans(path: path, thumbPath: pendingThumb?.path)
+                await cleanupUnlessIdempotent(idempotent, path: path, thumbPath: pendingThumb?.path)
             }
             throw Self.mapUploadError(error)
         }
@@ -116,7 +116,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
                 tolerateExisting: idempotent
             )
         } catch {
-            await cleanupOrphans(path: path, thumbPath: pendingThumb?.path)
+            await cleanupUnlessIdempotent(idempotent, path: path, thumbPath: pendingThumb?.path)
             throw error
         }
         return mediaID
@@ -163,7 +163,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
             // 見 uploadPhoto 同一段落的文件註解：沒有縮圖時只有原檔一個 PUT，失敗代表沒有
             // 任何物件真的上傳成功，不需要呼叫 cleanupOrphans。
             if pendingThumb != nil {
-                await cleanupOrphans(path: path, thumbPath: pendingThumb?.path)
+                await cleanupUnlessIdempotent(idempotent, path: path, thumbPath: pendingThumb?.path)
             }
             throw Self.mapUploadError(error)
         }
@@ -177,7 +177,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
                 tolerateExisting: idempotent
             )
         } catch {
-            await cleanupOrphans(path: path, thumbPath: pendingThumb?.path)
+            await cleanupUnlessIdempotent(idempotent, path: path, thumbPath: pendingThumb?.path)
             throw error
         }
         return mediaID
@@ -210,6 +210,15 @@ final class SupabaseMediaUploadService: MediaUploadService {
             }
             for try await _ in group {}
         }
+    }
+
+    /// LS-397 R2 N1：冪等重送（呼叫端指定 `mediaID`）失敗時**不清理**——重送沿用同一個 id，同一個 UTC 月內
+    /// 路徑與上一次嘗試完全相同，上一次可能已 commit 一列指向這些物件的 `media`（回應遺失才會重送），
+    /// 這裡刪了就變成列在、檔案沒了（永久破圖）。留下的物件下一次重送會 upsert 覆寫，最終沒有 commit 的
+    /// 交給 LS-213 的「Storage 有物件、沒有 media 列」孤兒掃描回收。非冪等呼叫端行為不變。
+    private func cleanupUnlessIdempotent(_ idempotent: Bool, path: String, thumbPath: String?) async {
+        guard !idempotent else { return }
+        await cleanupOrphans(path: path, thumbPath: thumbPath)
     }
 
     /// ②③失敗時清掉①②已上傳的孤兒物件——best-effort：清理本身失敗不覆蓋原始錯誤（呼叫端
