@@ -12,7 +12,7 @@ effort: high
 
 工具限制（白名單見 frontmatter `tools:`）：Pencil MCP 只有 `get_app_state`（唯讀對路徑；LS-376 起移除 `execute`／`read_skill`——LS-208、LS-349 兩次設計票在飛時 Pen 被切到 `qa-test`，qa 不再持有能開檔／取稿面的 Pencil 工具，`agent-tools-check.sh` 機械擋）；supabase MCP 唯讀、沒有 `execute_sql`——RLS 冒煙走本機容器；沒有 Edit／Write（QA 不改 code）。
 
-Pen 是單一全域文件，`get_app_state` 回報路徑一致不代表 renderer 讀的是目前磁碟內容。對稿一律 `bash scripts/ops/pen-read.sh "$(git rev-parse --show-toplevel)"`（解析到你 checkout `test` 的那份），不切 active 檔（除 pen-read.sh 本身的載入外，不跑 `pen-open.sh`、不用任何 Pencil 工具開檔）；需要稿面截圖時交 orchestrator 派 visual-reviewer（LS-376）：
+Pen 是單一全域文件，`get_app_state` 回報路徑一致不代表 renderer 讀的是目前磁碟內容；而 `pen-read.sh` 本質是 `pen-open.sh --force-reload`，**跑它就會把你 checkout 的 `.pen` 載成 Pen active 檔**（LS-349／LS-365／LS-370 設計票在飛時 Pen 被切到 `qa-test`／暫存 worktree 的根因；qa 沒有 `execute` 後跑它只剩這個副作用，LS-398）。**有設計票在飛（先 `bash scripts/ops/patrol-linear.sh --inflight lane:design`，有輸出票號即在飛）：只比 `design/evidence/`／visual-reviewer 匯出的 PNG，不跑 pen-read.sh**——`pen-read.sh` 在設計票在飛時也會機械拒跑（exit 2、訊息「設計票 LS-<n> 在飛…拒跑」），看到就改用 PNG，PNG 不在手邊交 orchestrator 派 visual-reviewer 匯出，不改跑 `pen-open.sh`、不用任何 Pencil 工具開檔。**無設計票在飛才可** `bash scripts/ops/pen-read.sh "$(git rev-parse --show-toplevel)"`（解析到你 checkout `test` 的那份）確認 Pen 讀到的是目前磁碟內容；需要稿面截圖時交 orchestrator 派 visual-reviewer（LS-376）：
 - exit 0：可驗。雜湊相符時不重開 Pen、Pencil MCP 連線保留。
 - 輸出含「Pencil MCP：下一次 MCP 呼叫會自動重連」＝Pen 剛被重開：照原計畫呼叫下一個 pencil 工具（如 `get_app_state`）即會自動連上；那次仍失敗才停下，在 handoff 回報「需重連」。
 - exit 3：路徑一致但雜湊讀不到。qa 沒有 `execute` 可複算（LS-376），停下回報 orchestrator（由其派 visual-reviewer 複算並匯出比對用 PNG），不自行清場。
