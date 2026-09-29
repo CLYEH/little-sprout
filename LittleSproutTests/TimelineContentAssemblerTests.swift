@@ -114,7 +114,7 @@ final class TimelineContentAssemblerTests: XCTestCase {
         let coverID = UUID()
         stub.setFetchAlbumsHandler { [albumID, coverID] ids in
             XCTAssertEqual(ids, [albumID])
-            return [AlbumRow(id: albumID, title: "生日派對", coverMediaId: coverID)]
+            return [AlbumRow(id: albumID, title: "生日派對", coverMediaId: coverID, visibleMediaCount: 8)]
         }
         stub.setFetchMediaHandler { [coverID] ids in
             XCTAssertEqual(ids, [coverID])
@@ -132,6 +132,7 @@ final class TimelineContentAssemblerTests: XCTestCase {
             return XCTFail("預期組出 .album content")
         }
         XCTAssertEqual(content.title, "生日派對")
+        XCTAssertEqual(content.photoCount, 8, "Caption「· N 張相片」的 N 應取自 album_summaries.visible_media_count")
         XCTAssertNotNil(content.cover?.signedURL)
     }
 

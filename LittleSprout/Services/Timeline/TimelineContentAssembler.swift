@@ -214,7 +214,7 @@ enum TimelineContentAssembler {
                     signedURL: signed[displayPath(row)], durationSeconds: row.durationSeconds
                 )
             }
-            result[album.id] = AlbumContent(title: album.title, cover: cover)
+            result[album.id] = AlbumContent(title: album.title, photoCount: album.visibleMediaCount, cover: cover)
         }
         return result
     }

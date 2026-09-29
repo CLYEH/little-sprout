@@ -144,15 +144,18 @@ struct DiaryRow: Decodable, Sendable, Equatable, Identifiable {
     }
 }
 
-/// `albums` 表可讀欄位子集。
+/// `album_summaries`（LS-200 view）欄位子集；LS-390 多帶 `visible_media_count` 給相簿卡「N 張相片」。
 struct AlbumRow: Decodable, Sendable, Equatable, Identifiable {
     let id: UUID
     let title: String
     let coverMediaId: UUID?
+    /// 預設 0 只為測試 init；解碼缺此欄仍 fail loud。
+    var visibleMediaCount: Int = 0
 
     enum CodingKeys: String, CodingKey {
         case id, title
         case coverMediaId = "cover_media_id"
+        case visibleMediaCount = "visible_media_count"
     }
 }
 
@@ -276,6 +279,8 @@ struct DiaryContent: Equatable, Sendable {
 
 struct AlbumContent: Equatable, Sendable {
     let title: String
+    /// LS-390：Caption「· N 張相片」的 N。
+    let photoCount: Int
     let cover: MediaContent?
 }
 

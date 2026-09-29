@@ -66,8 +66,8 @@ final class SupabaseTimelineAPIClient: TimelineAPIClient {
         guard !ids.isEmpty else { return [] }
         do {
             let response: PostgrestResponse<[AlbumRow]> = try await client
-                .from("albums")
-                .select()
+                .from("album_summaries")
+                .select("id,title,cover_media_id,visible_media_count")
                 .in("id", values: ids)
                 .execute()
             return response.value
