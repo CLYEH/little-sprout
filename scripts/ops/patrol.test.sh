@@ -1564,6 +1564,15 @@ rc_is '㊺(a) 在飛設計票＋Pen 在 qa-test 仍 exit 0（異常在輸出）'
 has   '㊺(a) human 印 ⚠ Pen 開錯檔＋實際路徑＋在飛票＋切回命令' "$out45a" "$want45"
 brief45a="$(PATROL_DESIGN_TICKETS=LS-388 PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
 has   '㊺(a) --brief 掛 [Pen] flag' "$brief45a" "[Pen] ${want45}"
+# LS-398（LS-376 R1 i1）：--brief 同一條訊息只出現一次（[Pen] flag 那行；不再另印一行同文）
+n45a=$(printf '%s\n' "$brief45a" | grep -cF '⚠ Pen 開錯檔：')
+if [ "$n45a" -eq 1 ]; then echo '✓ ㊺(a) --brief 「⚠ Pen 開錯檔：」只出現一次（不重複兩行，LS-398 i1）'; else echo "✗ ㊺(a) --brief 「⚠ Pen 開錯檔：」應恰出現 1 次（實得 ${n45a}）" >&2; printf '%s\n' "$brief45a" | sed 's/^/    /' >&2; fail=1; fi
+# LS-398（LS-376 R1 i1）：Pen 開在實作票 worktree（LS209 段已掛 [Pen] flag）且同時有設計票在飛 → 只掛一條 [Pen] flag，不疊第二條
+brief45i1="$(PATROL_DESIGN_TICKETS=LS-388 PATROL_PEN_STATUS_SH="$fake_ps_wrong" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:ui' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㊺(a2) Pen 在實作票 worktree＋設計票在飛 → LS209 的 [Pen] 開錯檔（實作票）flag 仍在' "$brief45i1" '[Pen] ⚠ 開錯檔（實作票 LS-777'
+n45i1=$(printf '%s\n' "$brief45i1" | grep -c '^\[Pen\]')
+if [ "$n45i1" -eq 1 ]; then echo '✓ ㊺(a2) 兩段同時命中只掛一條 [Pen] flag（LS-398 i1）'; else echo "✗ ㊺(a2) 兩段同時命中應恰 1 條 [Pen] flag（實得 ${n45i1}）" >&2; printf '%s\n' "$brief45i1" | sed 's/^/    /' >&2; fail=1; fi
+has   '㊺(a2) 設計票在飛的切回命令仍出現一次（PEN_DESIGN_LINE 照印）' "$brief45i1" "→ bash scripts/ops/pen-open.sh ${repo}/.claude/worktrees/LS-388"
 
 out45b="$(PATROL_DESIGN_TICKETS=LS-388 PATROL_PEN_STATUS_SH="$fake_ps_ls388" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 hasnt '㊺(b) Pen 正在在飛設計票 LS-388 的票檔 → 不印 ⚠ Pen 開錯檔' "$out45b" '⚠ Pen 開錯檔'
@@ -1580,6 +1589,17 @@ has   '㊺(d) 在飛票來源走 patrol-linear.sh --inflight lane:design → 同
 out45e="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=3 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 hasnt '㊺(e) --inflight 查不到（exit 3，模擬無 LINEAR_API_KEY）→ 不印 ⚠ Pen 開錯檔（fail-open）' "$out45e" '⚠ Pen 開錯檔'
 hasnt '㊺(e) 也不印非主 checkout 提示（在飛與否未知）' "$out45e" 'Pen 停在非主 checkout'
+# LS-398（LS-376 R1 i2）：exit 1（查詢失敗；假身即使 stdout 有票號也不得採信）與 exit 0＋空輸出（查過、無在飛）兩條 --inflight 路徑
+out45e2="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=1 DESIGN_STUB='LS-388' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㊺(e2) --inflight 查詢失敗（exit 1，stdout 有票號也不採信）→ 不印 ⚠ Pen 開錯檔（fail-open）' "$out45e2" '⚠ Pen 開錯檔'
+hasnt '㊺(e2) 也不印非主 checkout 提示（在飛與否未知）' "$out45e2" 'Pen 停在非主 checkout'
+brief45e2="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=1 DESIGN_STUB='LS-388' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㊺(e2) --brief 不掛 [Pen] flag' "$brief45e2" '[Pen]'
+out45e3="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=0 DESIGN_STUB='' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㊺(e3) --inflight exit 0＋空輸出（查過、無在飛）＋Pen 在 qa-test → ⚠ 非主 checkout 提示（同 (f)）' "$out45e3" "⚠ Pen 停在非主 checkout：${repo}/.claude/worktrees/qa-test/design/littlesprout.pen（無設計票在飛"
+hasnt '㊺(e3) 不印「開錯檔（設計票…在飛）」' "$out45e3" '⚠ Pen 開錯檔'
+brief45e3="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=0 DESIGN_STUB='' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㊺(e3) --brief 不掛 [Pen] flag' "$brief45e3" '[Pen]'
 
 out45f="$(PATROL_DESIGN_TICKETS='' PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 has   '㊺(f) 無在飛設計票＋Pen 在 qa-test → ⚠ 非主 checkout 提示' "$out45f" "⚠ Pen 停在非主 checkout：${repo}/.claude/worktrees/qa-test/design/littlesprout.pen（無設計票在飛"

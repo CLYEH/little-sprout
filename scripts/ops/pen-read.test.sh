@@ -111,6 +111,20 @@ export PEN_OPEN_HASH_TIMEOUT=2 PEN_OPEN_HASH_ATTEMPTS=1
 export PEN_BACKUP_DIR="${work}/backup"
 mkdir -p "$PEN_BACKUP_DIR"
 
+# LS-398：pen-read.sh 開頭會查 `patrol-linear.sh --inflight lane:design`——自測一律用假身（PEN_READ_PATROL_LINEAR_SH），
+# 不碰真 Linear。假身依 $INFLIGHT_RC／$INFLIGHT_OUT 兩個檔回 exit code／stdout；預設「查過、無在飛設計票」
+# （rc 0、空輸出），既有各案照舊走 pen-open.sh。
+export INFLIGHT_RC="${work}/inflight.rc" INFLIGHT_OUT="${work}/inflight.out" INFLIGHT_LOG="${work}/inflight.log"
+cat > "${work}/fake-patrol-linear.sh" <<'STUB'
+#!/bin/bash
+printf '%s\n' "$*" >> "${INFLIGHT_LOG:?}"
+cat "${INFLIGHT_OUT:?}" 2>/dev/null
+exit "$(cat "${INFLIGHT_RC:?}" 2>/dev/null || echo 0)"
+STUB
+export PEN_READ_PATROL_LINEAR_SH="${work}/fake-patrol-linear.sh"
+set_inflight() { printf '%s' "$1" > "$INFLIGHT_RC"; printf '%s' "$2" > "$INFLIGHT_OUT"; }
+set_inflight 0 ''
+
 set_state() { printf '%s' "$1" > "$PEN_STUB_STATE"; }
 set_hash() { printf '%s' "$1" > "$PEN_STUB_HASH"; }
 open_calls() { wc -l < "$PEN_STUB_OPEN_LOG" | tr -d ' '; }
@@ -266,6 +280,88 @@ else
 fi
 unset PEN_STUB_OPEN_SUCCEED_AT
 clear_fake_pen
+
+# ---- LS-398：設計票在飛時拒跑（qa 在 qa-test 跑 pen-read ＝把 Pen active 載成 qa-test，LS-349 事故根因）----
+# 設計票自己的 worktree 路徑形狀：<repo>/.claude/worktrees/LS-<n>
+dwt="${work}/repo/.claude/worktrees/LS-403"; mkdir -p "${dwt}/design"
+printf '%s' "$WT_SAFE" > "${dwt}/design/littlesprout.pen"
+dwant="$(cd "${dwt}/design" && pwd -P)/littlesprout.pen"
+DWT_HASH="$(python3 "${root}/scripts/gates/design_tree_hash.py" "$dwant")"
+
+# (1) 在飛設計票 LS-403、呼叫端目標是別的 root（qa-test 之類）→ exit 2、印票文那句、不呼叫 pen-open（無 open／不殺行程）
+reset_open_tracking; clear_fake_pen; wt_backup_safe; set_hash "HASH:${WT_HASH}"
+set_state "PATH:${want}"; start_fake_pen
+set_inflight 0 'LS-403'
+: > "$INFLIGHT_LOG"
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '⚠ 設計票 LS-403 在飛，pen-read 會切走 Pen active 檔，拒跑；對稿改用 visual-reviewer 匯出的 PNG' \
+  && grep -qF -- '--inflight lane:design' "$INFLIGHT_LOG" && [ "$(open_calls)" -eq 0 ] && fake_pen_alive; then
+  ok 'pen-read.sh：設計票在飛且目標不是該票 worktree → exit 2 拒跑、不動 Pen（LS-398）'
+else
+  bad "在飛設計票應 exit 2 拒跑且不動 Pen（實得 ${got}，open 次數＝$(open_calls)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# (2) 在飛設計票 LS-403、目標就是該票自己的 worktree → 照跑（VR／ui-designer 讀自己的稿；雜湊相符 exit 0）
+reset_open_tracking; clear_fake_pen; wt_backup_safe; set_hash "HASH:${DWT_HASH}"
+set_state "PATH:${dwant}"; start_fake_pen
+set_inflight 0 'LS-403'
+out="$(run "$dwt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "tree_hash=${DWT_HASH} 與磁碟一致" && ! printf '%s' "$out" | grep -qF '拒跑'; then
+  ok 'pen-read.sh：設計票在飛但目標就是該票 worktree → 照跑 exit 0（LS-398）'
+else
+  bad "目標為在飛設計票自己的 worktree 應照跑 exit 0（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# (3) 多張在飛（LS-388、LS-403）、目標是其中之一（LS-403）→ 照跑
+reset_open_tracking; clear_fake_pen; wt_backup_safe; set_hash "HASH:${DWT_HASH}"
+set_state "PATH:${dwant}"; start_fake_pen
+set_inflight 0 $'LS-388\nLS-403'
+out="$(run "$dwt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF '拒跑'; then
+  ok 'pen-read.sh：多張設計票在飛、目標是其中一張自己的 worktree → 照跑（LS-398）'
+else
+  bad "多張在飛且目標為其中一張應照跑 exit 0（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# (4) 票號前綴不算數：在飛 LS-40、目標是 .../LS-403 → 拒跑（不能因為字串前綴相同放行別票）
+reset_open_tracking; clear_fake_pen; wt_backup_safe; set_hash "HASH:${DWT_HASH}"
+set_state "PATH:${dwant}"; start_fake_pen
+set_inflight 0 'LS-40'
+out="$(run "$dwt" 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '設計票 LS-40 在飛' && [ "$(open_calls)" -eq 0 ]; then
+  ok 'pen-read.sh：在飛 LS-40、目標是 LS-403 worktree → 仍拒跑（票號需完整比對，LS-398）'
+else
+  bad "在飛 LS-40 不應放行 LS-403 目標（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# (5) 查不到（缺 key 的 exit 3）→ fail-open 照跑、stderr 有提示
+reset_open_tracking; clear_fake_pen; wt_backup_safe; set_hash "HASH:${WT_HASH}"
+set_state "PATH:${want}"; start_fake_pen
+set_inflight 3 ''
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '查不到在飛設計票' && printf '%s' "$out" | grep -qF "tree_hash=${WT_HASH} 與磁碟一致"; then
+  ok 'pen-read.sh：Linear 查不到（exit 3）→ fail-open 照跑並印提示（LS-398）'
+else
+  bad "查不到（exit 3）應照跑 exit 0 並印提示（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# (6) 查詢失敗（exit 1，即使 stdout 有東西也不採信）→ fail-open 照跑、有提示
+reset_open_tracking; clear_fake_pen; wt_backup_safe; set_hash "HASH:${WT_HASH}"
+set_state "PATH:${want}"; start_fake_pen
+set_inflight 1 'LS-403'
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '查不到在飛設計票' && ! printf '%s' "$out" | grep -qF '拒跑'; then
+  ok 'pen-read.sh：Linear 查詢失敗（exit 1）→ fail-open 照跑並印提示（LS-398）'
+else
+  bad "查詢失敗（exit 1）應照跑 exit 0 並印提示（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+set_inflight 0 ''
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-read-check 自測失敗" >&2
