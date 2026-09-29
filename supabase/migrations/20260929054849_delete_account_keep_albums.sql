@@ -32,10 +32,12 @@
 --      刪除 auth.users 才因 cascade 而 set null；若走 purge tombstone 路徑則指向
 --      tombstone 列）。不論哪種，albums_update 的建立者分支
 --      （created_by = auth.uid()）再也沒有人符合：**標題／封面（title／
---      cover_media_id）無人可直接 .update()**；owner 仍可用既有的
---      set_album_deleted（軟刪／還原）與 set_album_children，album_media 仍可由
---      任一 owner／member 增刪。本票**不新增**接手編輯路徑（要不要給 owner
---      接手編輯另議，見 handoff／docs/API.md §4）。
+--      cover_media_id）無人可直接 .update()**；寶貝標記
+--      （set_album_children）同為建立者本人限定，非建立者一律 LS045，所以
+--      **標題／封面／寶貝標記三者皆無人能改**。owner 只剩既有的
+--      set_album_deleted（軟刪／還原）；album_media 仍可由任一 owner／member
+--      增刪。本票**不新增**接手編輯路徑（要不要給 owner 接手編輯另議，見
+--      handoff／docs/API.md §3、§4）。
 --   c) 不回填：先前因刪帳號而被軟刪的相簿不還原（正式站尚無真實使用者）。
 --
 -- 與 20260903084231／20260904070941／20260904212530 三檔關係：本檔是 CREATE OR
