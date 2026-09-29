@@ -42,6 +42,14 @@
 # （LS-180 裁決：設計票期間 Pen 停在票檔，切回會把票檔留在背景視窗、下一輪只能清場；票結案由 orchestrator
 # `pen-open.sh <主 checkout> --kill` 清場一次，見 ui-designer.md 步驟 5／COLLABORATION §2、§6）。
 #
+# **LS-398 起設計票在飛時拒跑**（來源 LS-376 R1 m1；LS-349／LS-365／LS-370 同型事故根因：qa 依 qa.md 在 qa-test 跑本腳本
+# ＝把 qa-test 的 .pen 載成 Pen active，設計 agent 下一次 execute 讀／寫到錯檔；LS-376 拿掉 qa 的 execute 後，qa 跑本腳本
+# 只剩這個副作用，patrol ㊺ 只能事後抓）：開頭先問 `patrol-linear.sh --inflight lane:design`——有在飛設計票，且目標
+# root（引數）不是任一張在飛設計票自己的 `.claude/worktrees/LS-<n>` → 印「⚠ 設計票 LS-<n> 在飛，pen-read 會切走 Pen active
+# 檔，拒跑；對稿改用 visual-reviewer 匯出的 PNG」、exit 2（fail closed 的對象是「會搶走 active」這件事）；目標就是該設計票
+# 自己的 worktree（VR／ui-designer 讀自己的稿）照跑。Linear 查不到（無 LINEAR_API_KEY／curl 失敗／非 0 exit）→ fail-open
+# 照跑，stderr 印一行提示。`PEN_READ_PATROL_LINEAR_SH` 可覆寫查詢腳本（自測餵假身，同 patrol.sh 的 PATROL_LINEAR_SH 慣例）。
+#
 # 自測：scripts/ops/pen-read.test.sh（驗證正確轉呼叫 pen-open.sh --force-reload 並如實回傳結果：雜湊相符不殺／
 # 不符才清場＋印重連提示／讀不到 exit 3；完整的清場矩陣測試在 pen-open.test.sh，這裡不重複）。
 set -uo pipefail
@@ -51,6 +59,26 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ $# -ne 1 ]; then
   echo "用法：pen-read.sh <worktree-or-repo-root>" >&2
   exit 2
+fi
+
+# ---- LS-398：設計票在飛時拒跑（見檔頭）----
+target_root=$(cd "$1" 2>/dev/null && pwd -P) || target_root=$1
+plsh="${PEN_READ_PATROL_LINEAR_SH:-${script_dir}/patrol-linear.sh}"
+if [ -f "$plsh" ] && inflight_out=$(bash "$plsh" --inflight lane:design 2>/dev/null); then
+  design_tix=$(printf '%s\n' "$inflight_out" | grep -E '^LS-[0-9]+$')
+  if [ -n "$design_tix" ]; then
+    own=0; design_list=
+    for t in $design_tix; do
+      design_list="${design_list:+${design_list}、}$t"
+      case "$target_root" in */.claude/worktrees/"$t") own=1 ;; esac
+    done
+    if [ "$own" -eq 0 ]; then
+      echo "⚠ 設計票 ${design_list} 在飛，pen-read 會切走 Pen active 檔，拒跑；對稿改用 visual-reviewer 匯出的 PNG（目標：${target_root}）" >&2
+      exit 2
+    fi
+  fi
+else
+  echo "⚠ pen-read：查不到在飛設計票（缺 LINEAR_API_KEY 或 Linear 查詢失敗），照跑——請自行確認沒有設計票在飛（LS-398）" >&2
 fi
 
 exec bash "${script_dir}/pen-open.sh" "$1" --force-reload
