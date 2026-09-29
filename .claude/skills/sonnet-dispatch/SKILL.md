@@ -9,9 +9,9 @@ description: Orchestrator 派任何 Sonnet 5.5 agent（ios-dev／qa／dead-code-
 
 ## 別名與版本
 
-`sonnet` 別名在 Claude Code 2.1.284 起指 `claude-sonnet-5-5`（2.1.282 實測仍是 `claude-sonnet-5`，2026-09-29 probe transcript）。agent 定義檔寫 `model: sonnet`，讓別名跟著 CLI 升級自動指向最新 Sonnet；代價是舊 CLI 會靜默退回 Sonnet 5，所以：
+`sonnet` 別名在 Claude Code 2.1.284 起指 `claude-sonnet-5-5`（2.1.281／2.1.282 的二進位仍是 `claude-sonnet-5`；2026-09-29 probe transcript 跑在 2.1.281）。agent 定義檔寫 `model: sonnet`，讓別名跟著 CLI 升級自動指向最新 Sonnet；代價是舊 CLI 會靜默退回 Sonnet 5，所以：
 
-- 新 session 開工先 `claude --version` ≥ 2.1.284；第一張 sonnet 派工後 `bash scripts/ops/agent-model-check.sh <agent>` 看 transcript 是 `"model":"claude-sonnet-5-5"`，不是就升級 CLI 再派。
+- 版本看的是**正在跑的 session**，不是磁碟上的 `claude --version`（自動更新後磁碟已是 2.1.284、舊 session 仍是 2.1.281，別名照舊指 Sonnet 5）。第一張 sonnet 派工後 `bash scripts/ops/agent-model-check.sh <agent>`：它印該 session 的 Claude Code 版本與 transcript 的 `"model"`，看到 `claude-sonnet-5-5` 才算生效；印 `claude-sonnet-5` 就 `/exit` 重開 session 再派。
 - Agent 工具的 `model` 參數同樣走別名（`sonnet`／`opus`／`haiku`／`fable`），同一條件下才會是 5.5。
 - 需要釘死版本（例如 CLI 升不了）時才在定義檔改寫全 ID `claude-sonnet-5-5`（frontmatter 接受全 ID）。
 
@@ -104,7 +104,7 @@ Sonnet 5.5 讀密集截圖（多板對稿、AX3 長頁）時漏細節；給它�
 ## 拒答與降級偵測
 
 - Sonnet 5.5 的安全分類有五類（cyber／bio／frontier_llm／reasoning_extraction／general_harms）。本專案會撞到的只有 `reasoning_extraction`（第 6 條）與偶發 `general_harms`（如「刪除帳號」「封鎖」相關文案被誤判）；撞到時 handoff 會少一段或直接停，先看 transcript 尾端的 `stop_reason`，改寫派工句再派，不要換模型硬闖。
-- 品質異常（回報變短、少規約段落）先 `bash scripts/ops/agent-model-check.sh <agent>` 查實際 model／effort；`"model"` 是 `claude-sonnet-5` 代表 CLI 版本 <2.1.284、別名退回舊版，升級 CLI 再派。
+- 品質異常（回報變短、少規約段落）先 `bash scripts/ops/agent-model-check.sh <agent>` 查實際 model／effort；`"model"` 是 `claude-sonnet-5` 代表這個 session 的 Claude Code <2.1.284（別名退回舊版），`/exit` 重開 session 再派——磁碟版本已更新也救不了舊 session。
 - 真的需要更強判斷（跨模組重構、race 密集、長程多段）→ 派工時 Agent 工具 `model: opus` 覆寫並在派工訊息註明理由（§1 表「升 opus 的時機」）。
 
 ## 派工單自檢（寫完再看一遍）
@@ -119,4 +119,4 @@ Sonnet 5.5 讀密集截圖（多板對稿、AX3 長頁）時漏細節；給它�
 - [ ] 要它查現況的地方寫了「先 grep／讀檔」（第 9 條）
 - [ ] 對稿有裁圖與路徑（第 10 條）
 - [ ] 要 handoff 落檔＋Linear comment（沿 opus-dispatch 第 7 條）
-- [ ] 本 session CLI ≥2.1.284，且首張派工已用 agent-model-check 確認 `claude-sonnet-5-5`
+- [ ] 首張 sonnet 派工已用 agent-model-check 確認該 session 版本 ≥2.1.284 且 model 是 `claude-sonnet-5-5`（不是就重開 session）

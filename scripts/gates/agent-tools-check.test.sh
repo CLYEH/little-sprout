@@ -202,12 +202,17 @@ MR_BODY="${MR_BODY} ${SELFCHECKSAMPLE}"
 # （Bash／Read／Edit／Write／Grep／Glob／Agent／三支 Linear 工具），這裡的乾淨清單須包含全部才能當合法基準。
 IOS_TOOLS="Bash, Read, Edit, Write, Grep, Glob, Agent, ${LINEAR3}"
 # mk <agent> <tools 行的值|NONE> [<正文附加行>]：寫一份最小 agent 定義
+# model: 依 §1 政策（LS-400 MODEL_RULES）：ui-designer／merge-reviewer／visual-reviewer 是 opus，其餘 sonnet；MK_MODEL 可覆寫
+# （空字串＝不寫 model: 行）。
 mk() {
-  local agent=$1 tools=$2 body=${3:-}
+  local agent=$1 tools=$2 body=${3:-} model
+  case "$agent" in ui-designer|merge-reviewer|visual-reviewer) model=opus ;; *) model=sonnet ;; esac
+  [ "${MK_MODEL-unset}" = unset ] || model=$MK_MODEL
   {
     echo "---"; echo "name: ${agent}"; echo "description: 測試用"
     [ "$tools" = NONE ] || echo "tools: ${tools}"
-    echo "model: sonnet"; echo "---"; echo; echo "正文。"; [ -z "$body" ] || echo "$body"
+    [ -z "$model" ] || echo "model: ${model}"
+    echo "---"; echo; echo "正文。"; [ -z "$body" ] || echo "$body"
   } > "$agents/${agent}.md"
 }
 reset() {
@@ -453,6 +458,31 @@ if [ "$got" -eq 0 ] && ! has "$out" 'tools: 含被禁工具'; then
   ok '㊹ mutant：拿掉 PEN_WRITE 後「qa 含 execute」的負樣本變綠（LS-376 規則確實是原因）'
 else
   echo "✗ ㊹ mutant 應 exit 0 且不印「tools: 含被禁工具」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ---- ㊺ LS-400：六份定義檔的 frontmatter model: 釘 §1 政策（ios-dev／qa／dead-code-sweeper＝sonnet、ui-designer／
+#        merge-reviewer／visual-reviewer＝opus）；不符即紅、缺行即紅、值含空白去掉後整字比對；mutation 拿掉 MODEL_RULES → 負樣本變綠 ----
+reset; expect 0 '㊺ 六份 model: 皆符合政策 → 通過並逐份印出' 'qa.md：model: sonnet（符合 §1 政策）' 'visual-reviewer.md：model: opus（符合 §1 政策）'
+reset; MK_MODEL=opus mk qa "$QA_TOOLS" "$QA_BODY"; expect 1 '㊺ qa 改回 opus → exit 1' 'qa.md：model: 是「opus」，§1 政策要「sonnet」'
+reset; MK_MODEL=sonnet mk visual-reviewer NONE "$VR_BODY"; expect 1 '㊺ visual-reviewer 降 sonnet → exit 1' 'visual-reviewer.md：model: 是「sonnet」，§1 政策要「opus」'
+reset; MK_MODEL=claude-sonnet-5-5 mk ios-dev "$IOS_TOOLS" "$IOS_BODY"; expect 1 '㊺ ios-dev 寫全 ID（政策是別名）→ exit 1，提示同步改表' 'ios-dev.md：model: 是「claude-sonnet-5-5」，§1 政策要「sonnet」' '同步改 COLLABORATION §1 與本表 MODEL_RULES'
+reset; MK_MODEL= mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "${NOFORK254} ${LINEARFALLBACK}"; expect 1 '㊺ dead-code-sweeper 無 model: 行（繼承 session 模型）→ exit 1' 'dead-code-sweeper.md：無 model: 行（繼承派工 session 的模型）——§1 政策要 model: sonnet'
+reset; MK_MODEL='  sonnet  ' mk qa "$QA_TOOLS" "$QA_BODY"; expect 0 '㊺ model: 值前後空白 → 去空白後通過' 'qa.md：model: sonnet（符合 §1 政策）'
+reset; printf -- '---\r\nname: qa\r\ntools: %s\r\nmodel: sonnet\r\n---\r\n\r\n%s\r\n' "$QA_TOOLS" "$QA_BODY" > "$agents/qa.md"; expect 0 '㊺ CRLF 的 model: 行 → 通過' 'qa.md：model: sonnet（符合 §1 政策）'
+# mutation：MODEL_RULES 整表清空 → 上面「qa 改回 opus」的負樣本必須變綠，證明紅是這張表造成的
+mut_model="$work/agent-tools-check.no-model-rules.sh"
+awk 'BEGIN{skip=0} /^MODEL_RULES="ios-dev\|sonnet$/{print "MODEL_RULES=\"\""; skip=1; next} skip==1{ if ($0 ~ /^visual-reviewer\|opus"$/) skip=0; next } {print}' "$checker" > "$mut_model"
+if grep -q '^MODEL_RULES=""$' "$mut_model" && ! grep -q '^qa|sonnet$' "$mut_model"; then
+  ok '㊺ mutant 確實已清空 MODEL_RULES'
+else
+  echo "✗ ㊺ mutant 清空 MODEL_RULES 失敗（awk 未命中，負控本身無效）" >&2; fail=1
+fi
+reset; MK_MODEL=opus mk qa "$QA_TOOLS" "$QA_BODY"
+out="$(bash "$mut_model" "$agents" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! has "$out" '§1 政策要'; then
+  ok '㊺ mutant：清空 MODEL_RULES 後「qa 改回 opus」的負樣本變綠（LS-400 規則確實是原因）'
+else
+  echo "✗ ㊺ mutant 應 exit 0 且不印「§1 政策要」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
 # ---- ⑯ LS-209：ios-dev 正文須含 mutation 三段式句；merge-reviewer 正文須含「handoff 申報的 mutation 一律

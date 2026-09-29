@@ -1,6 +1,6 @@
 ---
 name: opus-dispatch
-description: Orchestrator 派任何 Opus 5.5 agent（ios-dev／qa／merge-reviewer／ui-designer／visual-reviewer，agent 定義皆 model opus）前必載——把 claude.dev「Getting the most out of Opus 5.5」八條建議翻成本專案派工單與 SendMessage 續派的固定寫法：明寫 finish line 與 Done 定義、刪掉 think-carefully 類句、stop/go 規則、未證實項標 PLAUSIBLE、設計退修用排除清單、大稽核拆 subagent 並核對證據、checklist 落檔、不索取內部推理、多輪續派鎖住已核銷項、safety flag 降級偵測。寫 Agent prompt 或 SendMessage 續派時對照本檔逐條自檢。
+description: Orchestrator 派任何 Opus 5.5 agent（ui-designer／merge-reviewer／visual-reviewer，agent 定義 model opus；ios-dev／qa／dead-code-sweeper 是 sonnet，改讀 sonnet-dispatch）前必載——把 claude.dev「Getting the most out of Opus 5.5」八條建議翻成本專案派工單與 SendMessage 續派的固定寫法：明寫 finish line 與 Done 定義、刪掉 think-carefully 類句、stop/go 規則、未證實項標 PLAUSIBLE、設計退修用排除清單、大稽核拆 subagent 並核對證據、checklist 落檔、不索取內部推理、多輪續派鎖住已核銷項、safety flag 降級偵測。寫 Agent prompt 或 SendMessage 續派時對照本檔逐條自檢。
 ---
 
 # Opus 5.5 派工寫法（本專案版）

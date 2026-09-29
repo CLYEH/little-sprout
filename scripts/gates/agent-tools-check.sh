@@ -229,7 +229,7 @@ qa|字級矩陣至少含 xSmall、預設、AX3|LS-346（來源 LS-343 verdict b9
 # 之間的 tools:，正文提到的「tools:」不算。設全域變數 RT_OK（frontmatter 閉合與否）、RT_HAS_TOOLS、RT_TOOLS_LINE。
 read_tools() {
   local f=$1 first=1 in_fm=0 closed=0 line
-  RT_OK=0; RT_HAS_TOOLS=0; RT_TOOLS_LINE=
+  RT_OK=0; RT_HAS_TOOLS=0; RT_TOOLS_LINE=; RT_MODEL=
   while IFS= read -r line || [ -n "$line" ]; do
     line=${line%$'\r'}
     if [ "$first" -eq 1 ]; then
@@ -241,6 +241,7 @@ read_tools() {
       if [ "$line" = "---" ]; then closed=1; break; fi
       case "$line" in
         tools:*) RT_HAS_TOOLS=1; RT_TOOLS_LINE=${line#tools:} ;;
+        model:*) RT_MODEL=$(printf '%s' "${line#model:}" | tr -d '[:space:]') ;;  # LS-400 MODEL_RULES 用；去空白後整字比對
       esac
     fi
   done < "$f"
@@ -322,6 +323,34 @@ done <<FORBID_EOF
 $FORBIDDEN_RULES
 FORBID_EOF
 
+# frontmatter model: 期望值（LS-400）：COLLABORATION §1 表的 model 政策——ios-dev／qa／dead-code-sweeper 走 `sonnet` 別名
+# （Claude Code ≥2.1.284＝Sonnet 5.5，跟 CLI 升級；使用者 09-29 裁）、ui-designer／merge-reviewer／visual-reviewer 留 `opus`。
+# 政策寫在文件沒有 gate，誰順手把 qa 改回 opus（或把 VR 降 sonnet）CI 不會知道——這裡把六份定義檔的 model: 值釘住。
+# 沒有 model: 行＝繼承派工 session 的模型（Fable 5.1），同樣違規。改政策時同步改這張表與 §1；要釘死版本改全 ID 時也要改這裡。
+# 別名實際解析到哪個模型 CI 驗不了（那是 agent-model-check.sh 從 transcript 事後查的事）。
+MODEL_RULES="ios-dev|sonnet
+qa|sonnet
+dead-code-sweeper|sonnet
+ui-designer|opus
+merge-reviewer|opus
+visual-reviewer|opus"
+while IFS='|' read -r agent want_model; do
+  [ -n "$agent" ] || continue
+  f="${dir}/${agent}.md"
+  [ -r "$f" ] || continue  # 缺檔已由上面的 RULES 迴圈列過
+  read_tools "$f"
+  [ "$RT_OK" -eq 1 ] || continue  # frontmatter 問題已由上面列過
+  if [ -z "$RT_MODEL" ]; then
+    hits+="    ${agent}.md：無 model: 行（繼承派工 session 的模型）——§1 政策要 model: ${want_model}"$'\n'
+  elif [ "$RT_MODEL" != "$want_model" ]; then
+    hits+="    ${agent}.md：model: 是「${RT_MODEL}」，§1 政策要「${want_model}」（改政策要同步改 COLLABORATION §1 與本表 MODEL_RULES，LS-400）"$'\n'
+  else
+    echo "  ${agent}.md：model: ${RT_MODEL}（符合 §1 政策）"
+  fi
+done <<MODEL_EOF
+$MODEL_RULES
+MODEL_EOF
+
 # 正文必含字樣（LS-170）：正文＝第二個 --- 之後（CR 一併剝除）；缺檔已由上表列出，這裡略過不重複；frontmatter 未閉合時正文為空、
 # 會多列一條「正文缺」（上表已列未閉合，兩條都是真的）。
 # R1 I-3：「缺檔略過不重複」依賴 BODY_RULES 的 agent ⊆ 工具表——不成立時缺檔會靜默跳過整條規則。先斷言，不成立＝兩表沒同步、exit 2。
@@ -378,7 +407,7 @@ $BODY_RULES
 BODY_EOF
 
 if [ -n "$hits" ]; then
-  echo "✗ agent-tools gate：agent 定義的 tools: 白名單缺必要工具／含被禁工具、正文缺必含字樣（或檔案／frontmatter 有問題）：" >&2
+  echo "✗ agent-tools gate：agent 定義的 tools: 白名單缺必要工具／含被禁工具、model: 不符 §1 政策、正文缺必含字樣（或檔案／frontmatter 有問題）：" >&2
   printf '%s' "$hits" >&2
   echo "  少了工具的規約會靜默不可執行（qa／merge-reviewer 少 Bash → 貼不了 status；qa 少 pencil → 開不了設計稿）；含被禁工具的規約會被繞過（ios-dev 不得碰 Pencil MCP）。修 .claude/agents/<agent>.md 的 tools: 行（整字、逗號分隔）；沒有 tools: 行＝繼承全部工具（對有禁止工具規則的 agent 一樣算違規）。正文缺字樣＝該規約段被刪，見上方每條各自的提示，補回正文。" >&2
   exit 1
