@@ -248069,7 +248069,7 @@
           },
           "clip": true,
           "width": 393,
-          "height": 1500,
+          "height": 1640,
           "fill": {
             "type": "gradient",
             "gradientType": "radial",
@@ -248757,7 +248757,7 @@
               "name": "Tab Bar",
               "layoutPosition": "absolute",
               "x": 16,
-              "y": 1378,
+              "y": 1518,
               "width": 361,
               "height": 88,
               "descendants": {
@@ -248794,7 +248794,7 @@
           },
           "clip": true,
           "width": 393,
-          "height": 1500,
+          "height": 1640,
           "fill": {
             "type": "gradient",
             "gradientType": "radial",
@@ -249512,7 +249512,7 @@
               "name": "Tab Bar",
               "layoutPosition": "absolute",
               "x": 16,
-              "y": 1378,
+              "y": 1518,
               "width": 361,
               "height": 88,
               "descendants": {
