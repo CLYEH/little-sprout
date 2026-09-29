@@ -87,6 +87,22 @@ final class UploadQueueEntryUITests: XCTestCase {
         XCTAssertEqual(profileHeader.frame.minY - subtitle.frame.maxY, 44, accuracy: 4, "入口列隱藏時不應多佔 VStack 間距")
     }
 
+    // MARK: - 點擊：開佇列 sheet（四態同一個入口），關閉後列仍在
+
+    func testTappingRow_opensQueueSheet_thenClosingKeepsRow() {
+        let app = launch(fixture: "progressFailure", size: Self.large, scheme: "light")
+        let row = entryRow(in: app)
+        XCTAssertTrue(row.waitForHittable(timeout: 10))
+        row.tap()
+        let footer = app.buttons["在背景繼續，關閉視窗"]
+        XCTAssertTrue(footer.waitForExistence(timeout: 10), "點入口列應 present 上傳佇列 sheet（Footer「在背景繼續，關閉視窗」可見）")
+        XCTAssertTrue(footer.waitForHittable(timeout: 10))
+        footer.tap()
+        XCTAssertTrue(footer.waitUntilGone(timeout: 10), "關閉 sheet")
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "sheet 關閉後入口列仍在（失敗項還在）")
+        XCTAssertTrue(row.label.contains("1 張沒有成功"), "sheet 關閉是情境邊界，重新評估後仍是含失敗的態，實際：\(row.label)")
+    }
+
     // MARK: - 停留期間（bqnO1）
 
     /// 進行中→全部完成：兩行態列高相同，原地換成「照片都加好了」，頁面其餘內容 y 不動。
