@@ -247011,7 +247011,7 @@
                                   "fill": "$danger"
                                 },
                                 "n1hzsr": {
-                                  "content": "看⁠原⁠因⁠，或⁠再⁠試⁠一⁠次",
+                                  "content": "看⁠原⁠因⁠，再⁠試⁠或⁠移⁠除",
                                   "enabled": true
                                 }
                               }
@@ -249996,7 +249996,7 @@
                                   "fill": "$danger"
                                 },
                                 "n1hzsr": {
-                                  "content": "看⁠原⁠因⁠，或⁠再⁠試⁠一⁠次",
+                                  "content": "看⁠原⁠因⁠，再⁠試⁠或⁠移⁠除",
                                   "enabled": true
                                 }
                               }
@@ -252252,7 +252252,7 @@
                                   "fill": "$danger"
                                 },
                                 "n1hzsr": {
-                                  "content": "看⁠原⁠因⁠，或⁠再⁠試⁠一⁠次",
+                                  "content": "看⁠原⁠因⁠，再⁠試⁠或⁠移⁠除",
                                   "enabled": true
                                 }
                               }
@@ -255506,7 +255506,7 @@
                                   "fill": "$danger"
                                 },
                                 "n1hzsr": {
-                                  "content": "看⁠原⁠因⁠，或⁠再⁠試⁠一⁠次",
+                                  "content": "看⁠原⁠因⁠，再⁠試⁠或⁠移⁠除",
                                   "enabled": true
                                 }
                               }
@@ -256074,11 +256074,8 @@
                     {
                       "type": "frame",
                       "id": "Yesjq",
-                      "x": 0,
-                      "y": 153,
                       "name": "Resume Banner",
-                      "enabled": false,
-                      "width": "fill_container(345)",
+                      "width": "fill_container",
                       "fill": "$surface-2",
                       "cornerRadius": "$radius-md",
                       "gap": "$sp-label",
@@ -256160,7 +256157,7 @@
                       "name": "Rows Scroll Area",
                       "clip": true,
                       "width": "fill_container",
-                      "height": 325,
+                      "height": 252,
                       "layout": "vertical",
                       "gap": 24,
                       "children": [
@@ -256203,7 +256200,11 @@
                                   ],
                                   "descendants": {
                                     "breqI": {
-                                      "enabled": false
+                                      "enabled": true,
+                                      "icon": "x",
+                                      "fill": "$text-secondary",
+                                      "width": 22,
+                                      "height": 22
                                     },
                                     "hIhVd": {
                                       "content": "移除這 3 張",
@@ -256332,7 +256333,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -256436,6 +256441,12 @@
                                           "type": "ref",
                                           "ref": "qe9yS",
                                           "name": "Retry Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            "$sp-tight",
+                                            "$ctl-pad-tap",
+                                            0
+                                          ],
                                           "descendants": {
                                             "breqI": {
                                               "icon": "refresh-cw"
@@ -256458,7 +256469,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -256556,6 +256571,12 @@
                                           "type": "ref",
                                           "ref": "qe9yS",
                                           "name": "Retry Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            "$sp-tight",
+                                            "$ctl-pad-tap",
+                                            0
+                                          ],
                                           "descendants": {
                                             "breqI": {
                                               "icon": "refresh-cw"
@@ -256578,7 +256599,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -257319,7 +257344,11 @@
                                   ],
                                   "descendants": {
                                     "breqI": {
-                                      "enabled": false
+                                      "enabled": true,
+                                      "icon": "x",
+                                      "fill": "$text-secondary",
+                                      "width": 22,
+                                      "height": 22
                                     },
                                     "hIhVd": {
                                       "content": "移除這 3 張",
@@ -257448,7 +257477,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -257552,6 +257585,12 @@
                                           "type": "ref",
                                           "ref": "qe9yS",
                                           "name": "Retry Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            "$sp-tight",
+                                            "$ctl-pad-tap",
+                                            0
+                                          ],
                                           "descendants": {
                                             "breqI": {
                                               "icon": "refresh-cw"
@@ -257574,7 +257613,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -257672,6 +257715,12 @@
                                           "type": "ref",
                                           "ref": "qe9yS",
                                           "name": "Retry Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            "$sp-tight",
+                                            "$ctl-pad-tap",
+                                            0
+                                          ],
                                           "descendants": {
                                             "breqI": {
                                               "icon": "refresh-cw"
@@ -257694,7 +257743,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -259858,7 +259911,11 @@
                                   ],
                                   "descendants": {
                                     "breqI": {
-                                      "enabled": false
+                                      "enabled": true,
+                                      "icon": "x",
+                                      "fill": "$text-secondary",
+                                      "width": 22,
+                                      "height": 22
                                     },
                                     "hIhVd": {
                                       "content": "移除這 3 張",
@@ -259987,7 +260044,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -260091,6 +260152,12 @@
                                           "type": "ref",
                                           "ref": "qe9yS",
                                           "name": "Retry Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            "$sp-tight",
+                                            "$ctl-pad-tap",
+                                            0
+                                          ],
                                           "descendants": {
                                             "breqI": {
                                               "icon": "refresh-cw"
@@ -260113,7 +260180,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -260211,6 +260282,12 @@
                                           "type": "ref",
                                           "ref": "qe9yS",
                                           "name": "Retry Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            "$sp-tight",
+                                            "$ctl-pad-tap",
+                                            0
+                                          ],
                                           "descendants": {
                                             "breqI": {
                                               "icon": "refresh-cw"
@@ -260233,7 +260310,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -261134,7 +261215,11 @@
                                   ],
                                   "descendants": {
                                     "breqI": {
-                                      "enabled": false
+                                      "enabled": true,
+                                      "icon": "x",
+                                      "fill": "$text-secondary",
+                                      "width": 40,
+                                      "height": 40
                                     },
                                     "hIhVd": {
                                       "content": "移除這 3 張",
@@ -261260,7 +261345,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 40,
+                                              "height": 40
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -261357,6 +261446,12 @@
                                           "type": "ref",
                                           "ref": "qe9yS",
                                           "name": "Retry Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            "$sp-tight",
+                                            "$ctl-pad-tap",
+                                            0
+                                          ],
                                           "descendants": {
                                             "breqI": {
                                               "icon": "refresh-cw",
@@ -261379,7 +261474,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 40,
+                                              "height": 40
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -261476,6 +261575,12 @@
                                           "type": "ref",
                                           "ref": "qe9yS",
                                           "name": "Retry Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            "$sp-tight",
+                                            "$ctl-pad-tap",
+                                            0
+                                          ],
                                           "descendants": {
                                             "breqI": {
                                               "icon": "refresh-cw",
@@ -261498,7 +261603,11 @@
                                           ],
                                           "descendants": {
                                             "breqI": {
-                                              "enabled": false
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 40,
+                                              "height": 40
                                             },
                                             "hIhVd": {
                                               "content": "移除",
@@ -261894,6 +262003,1151 @@
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
                                   "textAlign": "center"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "p0Fw0",
+      "x": 20865,
+      "y": 6100,
+      "name": "LS-403 / 16f 上傳佇列 · 移除後（可復原）",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997455470737914,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13994910941475827,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "kzvVz",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "m6oQ5",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "b6Tmfa",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "vertical",
+          "justifyContent": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "vG8qu",
+              "name": "Upload Sheet",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                0,
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "CtalK",
+                  "name": "Summary Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "Zge2E",
+                      "name": "Grabber",
+                      "fill": "$border",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "frame",
+                      "id": "U17MFI",
+                      "name": "Head",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-tight",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "y0EsEA",
+                          "name": "Head Title",
+                          "fill": "$text-primary",
+                          "content": "正在新增照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-lead",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "PqZaJ",
+                          "name": "Head Subtitle Row",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "OFpQk",
+                              "name": "Head Subtitle Main",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "還有 4 張還沒完成",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "C0DEGT",
+                              "name": "Head Subtitle Sub",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$sp-tight",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "uP4dg",
+                                  "name": "Sub Normal",
+                                  "fill": "$text-secondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "1 張等候上傳、1 張上傳中",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jK1ds",
+                      "name": "Resume Banner",
+                      "width": "fill_container",
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-group",
+                        "$inset-card"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "AHSwf",
+                          "name": "Resume Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "rotate-ccw",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "e6gnd",
+                          "name": "Resume Text",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "已接續先前中斷的上傳。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VxK3H",
+                      "name": "Retry All Bar",
+                      "width": "fill_container",
+                      "fill": "$accent-soft",
+                      "cornerRadius": "$radius-md",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-group",
+                        "$inset-card"
+                      ],
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "id": "CXgFX",
+                          "type": "ref",
+                          "ref": "XggYA",
+                          "name": "Retry All Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "G4R75k": {
+                              "icon": "refresh-cw"
+                            },
+                            "yxwnz": {
+                              "content": "重試這 2 張"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "qurhq",
+                  "name": "Action Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "h1hhX",
+                      "name": "Rows Scroll Area",
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 252,
+                      "layout": "vertical",
+                      "gap": 24,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ZpyfW",
+                          "name": "Group Failed",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-item",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "wP3oo",
+                              "name": "Group Header Row",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "UnrLz",
+                                  "name": "Group Header",
+                                  "fill": "$text-secondary",
+                                  "content": "沒有成功",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "id": "f9msss",
+                                  "type": "ref",
+                                  "ref": "qe9yS",
+                                  "name": "Remove All Button",
+                                  "padding": [
+                                    "$ctl-pad-tap",
+                                    0,
+                                    "$ctl-pad-tap",
+                                    "$sp-item"
+                                  ],
+                                  "descendants": {
+                                    "breqI": {
+                                      "enabled": true,
+                                      "icon": "x",
+                                      "fill": "$text-secondary",
+                                      "width": 22,
+                                      "height": 22
+                                    },
+                                    "hIhVd": {
+                                      "content": "移除這 2 張",
+                                      "fill": "$text-secondary"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "GEoiB",
+                              "name": "Queue Row · Removed (Tombstone)",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "GOEzY",
+                                  "name": "Thumb",
+                                  "opacity": 0.4,
+                                  "clip": true,
+                                  "width": 64,
+                                  "height": 64,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "foUOQ",
+                                  "name": "Content",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "j9gH8",
+                                      "name": "Timestamp",
+                                      "fill": "$text-secondary",
+                                      "content": "今天 14:29",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Txyqg",
+                                      "name": "Tombstone Row",
+                                      "width": "fill_container",
+                                      "gap": "$sp-tight",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "xIsMc",
+                                          "x": 0,
+                                          "y": 0,
+                                          "name": "Error Icon",
+                                          "enabled": false,
+                                          "width": 18,
+                                          "height": 18,
+                                          "icon": "circle-alert",
+                                          "library": "lucide",
+                                          "fill": "$danger"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "TJynp",
+                                          "name": "Tombstone Text",
+                                          "fill": "$text-secondary",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "已移除，不會加進相簿。",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "v9oJJ",
+                                      "name": "Action Row",
+                                      "width": "fill_container",
+                                      "justifyContent": "end",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "pOB4j",
+                                          "x": 0,
+                                          "y": 8.5,
+                                          "name": "Quota Link",
+                                          "enabled": false,
+                                          "layout": "vertical",
+                                          "gap": 1,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "LRqrG",
+                                              "name": "Link Label",
+                                              "fill": "$text-primary",
+                                              "content": "查看儲存空間",
+                                              "fontFamily": "$font",
+                                              "fontSize": "$fs-note",
+                                              "fontWeight": "600"
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "D2MCzy",
+                                              "name": "Link Underline",
+                                              "fill": "$text-primary",
+                                              "width": 102,
+                                              "height": 1
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "id": "rYCGO",
+                                          "type": "ref",
+                                          "ref": "qe9yS",
+                                          "name": "Undo Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            0,
+                                            "$ctl-pad-tap",
+                                            "$sp-item"
+                                          ],
+                                          "descendants": {
+                                            "breqI": {
+                                              "enabled": true,
+                                              "icon": "undo-2",
+                                              "fill": "$text-primary",
+                                              "width": 22,
+                                              "height": 22
+                                            },
+                                            "hIhVd": {
+                                              "content": "復原",
+                                              "fill": "$text-primary"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "rX6Fb",
+                              "name": "Queue Row",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "lIZGa",
+                                  "name": "Thumb",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "joshbduncan",
+                                    "link": "https://unsplash.com/@joshbduncan",
+                                    "author": "Josh Duncan"
+                                  },
+                                  "clip": true,
+                                  "width": 64,
+                                  "height": 64,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1647621122823-71750ec68e62?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODd8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "c8QS8Z",
+                                  "name": "Content",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "V5axy",
+                                      "name": "Timestamp",
+                                      "fill": "$text-primary",
+                                      "content": "今天 14:31",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "TBQEJ",
+                                      "name": "Error Row",
+                                      "width": "fill_container",
+                                      "gap": "$sp-tight",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "Qwl0I",
+                                          "name": "Error Icon",
+                                          "width": 18,
+                                          "height": 18,
+                                          "icon": "circle-alert",
+                                          "library": "lucide",
+                                          "fill": "$danger"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "YluBC",
+                                          "name": "Error Text",
+                                          "fill": "$danger",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "連線中斷，請檢查網路連線。",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "L8KTV",
+                                      "name": "Action Row",
+                                      "width": "fill_container",
+                                      "justifyContent": "space_between",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "E3Asq",
+                                          "type": "ref",
+                                          "ref": "qe9yS",
+                                          "name": "Retry Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            "$sp-tight",
+                                            "$ctl-pad-tap",
+                                            0
+                                          ],
+                                          "descendants": {
+                                            "breqI": {
+                                              "icon": "refresh-cw"
+                                            },
+                                            "hIhVd": {
+                                              "content": "重試"
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "id": "b5CMA",
+                                          "type": "ref",
+                                          "ref": "qe9yS",
+                                          "name": "Remove Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            0,
+                                            "$ctl-pad-tap",
+                                            "$sp-item"
+                                          ],
+                                          "descendants": {
+                                            "breqI": {
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
+                                            },
+                                            "hIhVd": {
+                                              "content": "移除",
+                                              "fill": "$text-secondary"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fbyPh",
+                              "name": "Queue Row",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "p16urU",
+                                  "name": "Thumb",
+                                  "clip": true,
+                                  "width": 64,
+                                  "height": 64,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "IvQfM",
+                                  "name": "Content",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "mDfyI",
+                                      "name": "Timestamp",
+                                      "fill": "$text-primary",
+                                      "content": "今天 14:30",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "VahQv",
+                                      "name": "Error Row",
+                                      "width": "fill_container",
+                                      "gap": "$sp-tight",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "mHqqz",
+                                          "name": "Error Icon",
+                                          "width": 18,
+                                          "height": 18,
+                                          "icon": "circle-alert",
+                                          "library": "lucide",
+                                          "fill": "$danger"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "yJnij",
+                                          "name": "Error Text",
+                                          "fill": "$danger",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "伺服器忙碌，請稍後再試。",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "DOvAG",
+                                      "name": "Action Row",
+                                      "width": "fill_container",
+                                      "justifyContent": "space_between",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "id": "s0Niqk",
+                                          "type": "ref",
+                                          "ref": "qe9yS",
+                                          "name": "Retry Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            "$sp-tight",
+                                            "$ctl-pad-tap",
+                                            0
+                                          ],
+                                          "descendants": {
+                                            "breqI": {
+                                              "icon": "refresh-cw"
+                                            },
+                                            "hIhVd": {
+                                              "content": "重試"
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "id": "P3wy2",
+                                          "type": "ref",
+                                          "ref": "qe9yS",
+                                          "name": "Remove Button",
+                                          "padding": [
+                                            "$ctl-pad-tap",
+                                            0,
+                                            "$ctl-pad-tap",
+                                            "$sp-item"
+                                          ],
+                                          "descendants": {
+                                            "breqI": {
+                                              "enabled": true,
+                                              "icon": "x",
+                                              "fill": "$text-secondary",
+                                              "width": 22,
+                                              "height": 22
+                                            },
+                                            "hIhVd": {
+                                              "content": "移除",
+                                              "fill": "$text-secondary"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wz7J4",
+                          "name": "Group In Progress",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-item",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "PKAAy",
+                              "name": "Group Header",
+                              "fill": "$text-secondary",
+                              "content": "正在進行",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "YIdEB",
+                              "name": "Queue Row",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "dt3Dd",
+                                  "name": "Thumb",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "anna_khromova",
+                                    "link": "https://unsplash.com/@anna_khromova",
+                                    "author": "Anna Khromova"
+                                  },
+                                  "clip": true,
+                                  "width": 64,
+                                  "height": 64,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1780336707361-506ecf2c74f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODh8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "wqRCF",
+                                  "name": "Content",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "Cm3q4",
+                                      "name": "Timestamp",
+                                      "fill": "$text-primary",
+                                      "content": "今天 14:35",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "yGlrY",
+                                      "name": "Status Row",
+                                      "gap": "$sp-tight",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "jeAYB",
+                                          "name": "Icon",
+                                          "width": 18,
+                                          "height": 18,
+                                          "icon": "clock",
+                                          "library": "lucide",
+                                          "fill": "$text-secondary"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "S9DkJ",
+                                          "name": "Status Text",
+                                          "fill": "$text-secondary",
+                                          "content": "等候上傳",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "uJAfm",
+                              "name": "Queue Row",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "ixspU",
+                                  "name": "Thumb",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "khodzinskyi",
+                                    "link": "https://unsplash.com/@khodzinskyi",
+                                    "author": "Vitalii Khodzinskyi"
+                                  },
+                                  "clip": true,
+                                  "width": 64,
+                                  "height": 64,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1779881259393-6949a9838196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTB8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "h8g43",
+                                  "name": "Content",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "c1V5b",
+                                      "name": "Timestamp",
+                                      "fill": "$text-primary",
+                                      "content": "今天 14:34",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "E71sv",
+                                      "name": "Progress Track",
+                                      "width": "fill_container",
+                                      "height": 6,
+                                      "fill": "$surface-2",
+                                      "cornerRadius": "$radius-full",
+                                      "children": [
+                                        {
+                                          "type": "rectangle",
+                                          "cornerRadius": "$radius-full",
+                                          "id": "C2zpIN",
+                                          "name": "Progress Fill",
+                                          "fill": "$accent",
+                                          "width": 120,
+                                          "height": 6
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "cjz7R",
+                                      "name": "Percent",
+                                      "fill": "$text-secondary",
+                                      "content": "上傳中 · 42%",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "o0uz3",
+                          "name": "Group Completed",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-item",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QDTkE",
+                              "name": "Group Header",
+                              "fill": "$text-secondary",
+                              "content": "已完成",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "dNQRc",
+                              "name": "Queue Row",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "huRtE",
+                                  "name": "Thumb",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "chrishcush",
+                                    "link": "https://unsplash.com/@chrishcush",
+                                    "author": "Christian Bowen"
+                                  },
+                                  "clip": true,
+                                  "width": 64,
+                                  "height": 64,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5ODl8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "CKOsu",
+                                  "name": "Content",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "cCSkj",
+                                      "name": "Timestamp",
+                                      "fill": "$text-primary",
+                                      "content": "今天 14:33",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "XEOfS",
+                                      "name": "Status Row",
+                                      "gap": "$sp-tight",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "oluJ1",
+                                          "name": "Icon",
+                                          "width": 18,
+                                          "height": 18,
+                                          "icon": "check",
+                                          "library": "lucide",
+                                          "fill": "$text-secondary"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "UtIXF",
+                                          "name": "Status Text",
+                                          "fill": "$text-secondary",
+                                          "content": "已完成",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "DIpSI",
+                              "name": "Queue Row",
+                              "width": "fill_container",
+                              "gap": "$sp-label",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "KeyQn",
+                                  "name": "Thumb",
+                                  "metadata": {
+                                    "type": "unsplash",
+                                    "username": "fotomagi",
+                                    "link": "https://unsplash.com/@fotomagi",
+                                    "author": "Dragon White Munthe"
+                                  },
+                                  "clip": true,
+                                  "width": 64,
+                                  "height": 64,
+                                  "fill": {
+                                    "type": "image",
+                                    "enabled": true,
+                                    "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                                    "mode": "fill"
+                                  },
+                                  "cornerRadius": "$radius-md"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "g4al50",
+                                  "name": "Content",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": "$sp-tight",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "RPltV",
+                                      "name": "Timestamp",
+                                      "fill": "$text-primary",
+                                      "content": "今天 14:32",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "hf04u",
+                                      "name": "Status Row",
+                                      "gap": "$sp-tight",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "KvQgV",
+                                          "name": "Icon",
+                                          "width": 18,
+                                          "height": 18,
+                                          "icon": "check",
+                                          "library": "lucide",
+                                          "fill": "$text-secondary"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "k5tDoc",
+                                          "name": "Status Text",
+                                          "fill": "$text-secondary",
+                                          "content": "已完成",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZHYyz",
+                      "name": "Footer",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "EnJKI",
+                          "name": "Footer Hairline",
+                          "fill": "$border",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "NgACl",
+                          "name": "Footer Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "padding": [
+                            "$sp-item",
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "id": "yowuo",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Dismiss Button",
+                              "descendants": {
+                                "breqI": {
+                                  "enabled": false
+                                },
+                                "hIhVd": {
+                                  "content": "在背景繼續，關閉視窗"
                                 }
                               }
                             }
