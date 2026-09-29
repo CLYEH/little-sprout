@@ -250,6 +250,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 1. **每家庭儲存額度**（`families.storage_quota_bytes`，預設值取一個你能吸收的數字，例如 2–5GB）。超額擋下上傳並清楚提示。這是硬防線。
 2. **Supabase 用量告警**：設定接近方案上限時通知，別靠月結帳單才發現。
+   **已落地（LS-399）**：`scripts/ops/prod-usage-health.sh`，Dashboard 告警設定見 `docs/API.md` §11。
 3.（備案）**註冊開關**：留一個能快速把新註冊關掉或改為候補的旗標。真的爆量時這是唯一能立刻止血的手段。
    **已落地（LS-179）**：`app_settings.registrations_open`（取「關掉」，不做候補名單），Dashboard 改欄位即生效，操作方式見 `docs/API.md` §11。
 
