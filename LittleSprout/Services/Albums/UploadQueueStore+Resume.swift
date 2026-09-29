@@ -23,6 +23,9 @@ extension UploadQueueStore {
         /// 進背景那一刻仍在飛行中的項目 id——回前景時只重送這些（不是所有 `.uploading`／
         /// 可重試失敗，避免把使用者早就看過的舊失敗項自動重送）。
         var inFlightAtBackground: Set<UUID> = []
+        /// 進背景到回前景之間為 true——這段期間（背景寬限期）才開始的嘗試也要記進
+        /// `inFlightAtBackground`，否則被暫停中斷後不會自動重送。
+        var isInBackground = false
         /// 尚未終局、已落盤的紀錄（key＝entry id）；`persistManifest()` 依 `order` 輸出。
         var records: [UUID: PersistedUploadRecord] = [:]
     }
@@ -30,6 +33,7 @@ extension UploadQueueStore {
     // MARK: - 嘗試編號與結果套用
 
     func beginAttempt(_ id: UUID) -> Int {
+        if resume.isInBackground { resume.inFlightAtBackground.insert(id) }
         let next = (resume.attempts[id] ?? 0) + 1
         resume.attempts[id] = next
         return next
@@ -57,6 +61,7 @@ extension UploadQueueStore {
     /// `RootView` 的 `scenePhase == .background` 呼叫：記下此刻飛行中的項目。只有真的進過背景
     /// 才會重送——`.inactive`（下拉通知中心、系統對話框）不算，那段時間上傳沒有被中斷。
     func appDidEnterBackground() {
+        resume.isInBackground = true
         resume.inFlightAtBackground = Set(order.filter { id in
             if case .uploading? = entries[id]?.state { true } else { false }
         })
@@ -66,6 +71,7 @@ extension UploadQueueStore {
     /// （被暫停的請求）或已被系統中斷成 `.failed(.network)`（`-1005`）的項目取消舊嘗試、翻回
     /// `.waiting` 重送，並讓續傳橫幅出現。沒有需要重送的項目時什麼都不做（橫幅不出現）。
     func appDidBecomeActive() {
+        resume.isInBackground = false
         let candidates = resume.inFlightAtBackground
         resume.inFlightAtBackground = []
         var resumedAny = false
