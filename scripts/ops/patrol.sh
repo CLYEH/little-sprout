@@ -1068,6 +1068,9 @@ fi
 #      → 本段不印（fail-open）。只在讀得到 Pen 路徑時才查（Pen 沒開不付 Linear 呼叫）。`${pen_path:-}`：上一段是 ㉖
 #      mutation 會整段拿掉的標記區塊，這裡不能假設 pen_path 已宣告（set -u）。
 PEN_DESIGN_LINE=
+# LS-398（LS-376 R1 i1）：這條訊息已掛成 [Pen] flag 時，--brief 不再另印一行（同文兩行＝cron 每輪多佔一行 context）；
+# 宣告放在 LS376 標記區塊外，理由同 PEN_WRONG_LINE（㊺ mutation 整段拿掉時 set -u 不能炸）。
+PEN_DESIGN_FLAGGED=0
 # LS376-PEN-DESIGN-START
 # 只認絕對路徑的 .pen（pen-status.sh --path 的契約）；其他輸出（讀不到、假身印的敘述行）一律視為無路徑、不查 Linear。
 case "${pen_path:-}" in /*.pen) pen_abs=$pen_path ;; *) pen_abs= ;; esac
@@ -1090,7 +1093,12 @@ if [ -n "$pen_abs" ]; then
     done
     if [ "$pen_on_design" -eq 0 ]; then
       PEN_DESIGN_LINE="⚠ Pen 開錯檔：${pen_path}（設計票 ${design_list} 在飛）→ bash scripts/ops/pen-open.sh ${ROOT}/.claude/worktrees/${first_design}"
-      add_flag "[Pen] ${PEN_DESIGN_LINE}"
+      # LS-398（LS-376 R1 i1）：上一段（LS209）已因「Pen 開在非 design 票的票 worktree」掛過一條 [Pen] flag 時，這裡不再疊第二條
+      # flag（同一份 Pen 狀態兩段各掛一條）；PEN_DESIGN_LINE 仍設，切回命令照常在 brief／human 出現一次。
+      case "$PEN_WRONG_LINE" in
+        *實作票*) ;;
+        *) add_flag "[Pen] ${PEN_DESIGN_LINE}"; PEN_DESIGN_FLAGGED=1 ;;
+      esac
     fi
   elif [ "$design_known" -eq 1 ] && [ "$pen_path" != "${ROOT}/design/littlesprout.pen" ]; then
     PEN_DESIGN_LINE="⚠ Pen 停在非主 checkout：${pen_path}（無設計票在飛；確認無人使用後 → bash scripts/ops/pen-open.sh ${ROOT}）"
@@ -1529,7 +1537,7 @@ case "$MODE" in
     [ -n "$lock_queue_flag" ] && echo "Supabase lock：${lock_queue_flag}——持有者「${hold_label}」剩餘 ${lock_hold_remain_min} 分"
     [ "$pencil_ran" -eq 1 ] && printf '%s\n' "$PENCIL_LINE"
     [ -n "$PEN_WRONG_LINE" ] && printf '%s\n' "$PEN_WRONG_LINE"
-    [ -n "$PEN_DESIGN_LINE" ] && printf '%s\n' "$PEN_DESIGN_LINE"
+    [ -n "$PEN_DESIGN_LINE" ] && [ "$PEN_DESIGN_FLAGGED" -eq 0 ] && printf '%s\n' "$PEN_DESIGN_LINE"
     [ -n "$USAGE_LINE" ] && printf '%s\n' "$USAGE_LINE"
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
     ;;
