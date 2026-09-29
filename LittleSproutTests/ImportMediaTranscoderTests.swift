@@ -29,9 +29,32 @@ final class ImportMediaTranscoderTests: XCTestCase {
         XCTAssertEqual(decoded.cgImage?.height, 30)
     }
 
+    /// LS-356：iPhone 直拍 HEIC 的儲存方向是橫的（感光元件寫入的 `pixelWidth × pixelHeight`，例如
+    /// 4032×3024），方向只靠 EXIF orientation（6＝順時針轉 90°顯示、8＝逆時針）。轉出來的 JPEG
+    /// 必須畫素已轉正（寬高對調）且 EXIF orientation 歸 1（或不帶），否則任何忽略 EXIF 的顯示
+    /// 端（縮圖產生、`thumb_width/height`、Storage 圖片轉換）都會看到橫躺的相片。
+    func test_convertHEICToJPEG_orientation6And8_outputIsUprightWithOrientation1() throws {
+        for orientation in [6, 8] {
+            let heicData = try Self.makeHEICData(pixelWidth: 40, pixelHeight: 30, exifOrientation: orientation)
+            let image = try XCTUnwrap(UIImage(data: heicData), "測試前置：解碼合成 HEIC 失敗")
+
+            let jpegData = try XCTUnwrap(ImportMediaTranscoder.convertHEICToJPEG(image))
+
+            let source = try XCTUnwrap(CGImageSourceCreateWithData(jpegData as CFData, nil))
+            let properties = try XCTUnwrap(
+                CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+            )
+            XCTAssertEqual(properties[kCGImagePropertyPixelWidth] as? Int, 30, "orientation \(orientation)：畫素寬應已轉正")
+            XCTAssertEqual(properties[kCGImagePropertyPixelHeight] as? Int, 40, "orientation \(orientation)：畫素高應已轉正")
+            let outputOrientation = (properties[kCGImagePropertyOrientation] as? Int) ?? 1
+            XCTAssertEqual(outputOrientation, 1, "orientation \(orientation)：輸出 EXIF orientation 應為 1")
+        }
+    }
+
     /// 產生一張 `pixelWidth × pixelHeight` 的純色 HEIC 影像位元組——同
     /// `PickedItemLoaderTests.makeJPEGData` 的既有作法，目的格式換成 `.heic`。
-    private static func makeHEICData(pixelWidth: Int, pixelHeight: Int) throws -> Data {
+    /// `exifOrientation`（LS-356）：寫進 HEIC 的 EXIF orientation（畫素本身不旋轉，同真實直拍檔）。
+    private static func makeHEICData(pixelWidth: Int, pixelHeight: Int, exifOrientation: Int? = nil) throws -> Data {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: pixelWidth, height: pixelHeight), format: format)
@@ -45,7 +68,8 @@ final class ImportMediaTranscoderTests: XCTestCase {
             CGImageDestinationCreateWithData(mutableData, UTType.heic.identifier as CFString, 1, nil),
             "測試前置：建立 HEIC CGImageDestination 失敗（模擬器/主機需支援 HEIC 編碼）"
         )
-        CGImageDestinationAddImage(destination, cgImage, nil)
+        let properties = exifOrientation.map { [kCGImagePropertyOrientation: $0] as CFDictionary }
+        CGImageDestinationAddImage(destination, cgImage, properties)
         XCTAssertTrue(CGImageDestinationFinalize(destination), "測試前置：寫出 HEIC 位元組失敗")
         return mutableData as Data
     }
