@@ -16,12 +16,6 @@ struct AlbumCardView: View {
     let refId: UUID
     var onOpenComments: () -> Void = {}
 
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    /// AX3 起相簿名與張數各自成行——同 `AlbumSummaryCardView.isOneLinePerPerson` 的斷點
-    /// （LS-142 Handoff Notes `MJ-6`／`R4 KBNSX`：兩態切換，不是連續縮放曲線）。
-    private var isMultiline: Bool { dynamicTypeSize >= .accessibility3 }
-
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.label) {
             PrintPhotoCard(
@@ -52,10 +46,12 @@ struct AlbumCardView: View {
     /// Caption（`MIxHp`）：`$print-ink`／`$fs-body`／600，紙與墨不隨深色反轉。內縮 `$sp-group`
     /// 由 `PrintPhotoCard` 對 `imprintCaption` 統一套（LS-389），字起點＝紙左緣 20＝日記卡同軸。
     /// 字串走 `AlbumSignatureFormatter.captionText`（與相簿 tab 卡同源，不在此拼字元）；不設
-    /// `lineLimit`——AX3 換行不截斷。
+    /// `lineLimit`——AX3 換行不截斷。LS-406 R2 M1：**所有字級固定單行公式**（`isMultiline: false`）——定案稿
+    /// Notes `E2AtB`：AX3 相簿名與張數分兩行只給相簿頁卡（`AlbumSummaryCardView`）；時間軸板（含 AX3 的 `lKoZG`／
+    /// `aGkJ1`，實例 `uvL4p`／`jGudh`）用「相簿名 · N 張相片」單行公式，放不下時折在標題內或「·」前。
     private var caption: some View {
         Text(AlbumSignatureFormatter.captionText(
-            title: content.title, photoCount: content.photoCount, isMultiline: isMultiline
+            title: content.title, photoCount: content.photoCount, isMultiline: false
         ))
         .appNumericFont(.body, weight: .semibold)
         .foregroundStyle(Color.lsPrintInk)

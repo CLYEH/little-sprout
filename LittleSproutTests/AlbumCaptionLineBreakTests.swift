@@ -19,7 +19,8 @@ final class AlbumCaptionLineBreakTests: XCTestCase {
             let dot = nsText.range(of: "·").location
             XCTAssertNotEqual(dot, NSNotFound)
             let unit = nsText.substring(from: dot) as NSString
-            for fontSize in [17.0, 23.0, 28.0, 33.0] {
+            // 17＝Large；23／28／33＝AX 以下各檔；40／47／53＝AX3／AX4／AX5 body（時間軸相簿卡 AX3 起也走這條單串，LS-406 R2）。
+            for fontSize in [17.0, 23.0, 28.0, 33.0, 40.0, 47.0, 53.0] {
                 let font = UIFont.systemFont(ofSize: fontSize, weight: .semibold)
                 let attributes: [NSAttributedString.Key: Any] = [.font: font]
                 let unitWidth = ceil(unit.size(withAttributes: attributes).width)
