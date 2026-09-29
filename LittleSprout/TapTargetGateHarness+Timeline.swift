@@ -87,7 +87,7 @@ extension TapTargetGateHarness {
             ),
             TimelineEntry(
                 kind: .album, refId: albumID, occurredAt: Date().addingTimeInterval(-60), childIds: [],
-                content: .album(AlbumContent(title: "LS-216 互動列量測樣本：相簿卡", cover: nil))
+                content: .album(AlbumContent(title: "LS-216 互動列量測樣本：相簿卡", photoCount: 12, cover: nil))
             ),
             TimelineEntry(
                 kind: .media, refId: mediaID, occurredAt: Date().addingTimeInterval(-120), childIds: [],

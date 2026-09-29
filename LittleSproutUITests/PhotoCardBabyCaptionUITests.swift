@@ -235,7 +235,8 @@ final class PhotoCardBabyCaptionUITests: XCTestCase {
 }
 
 /// 一行文字的墨色量測結果（單位：點）。
-private struct InkLine {
+/// LS-390：`AlbumCardImprintCaptionUITests` 共用，故不再 `private`。
+struct InkLine {
     let height: CGFloat
     let firstGlyphHeight: CGFloat
     let lastGlyphHeight: CGFloat
@@ -246,7 +247,7 @@ private struct InkLine {
     var endsWithDot: Bool { lastGlyphHeight < height * Self.dotRatio }
 }
 
-private struct InkLines {
+struct InkLines {
     let lines: [InkLine]
     var count: Int { lines.count }
     subscript(index: Int) -> InkLine { lines[index] }
@@ -256,7 +257,7 @@ private struct InkLines {
 }
 
 /// 把截圖裁成署名範圍的灰階墨色點陣（`true`＝墨）。
-private struct InkRaster {
+struct InkRaster {
     private let ink: [[Bool]]
     private let scale: CGFloat
     /// 亮度低於此值才算墨：墨 #553040 ≈ 0.23，紙淺 #FBEBEC／深 #E8D9D4 ≥ 0.86。
@@ -294,6 +295,13 @@ private struct InkRaster {
         }
         self.ink = ink
         self.scale = scale
+    }
+
+    /// 最左墨點離裁切範圍左緣（點）。
+    var leftmostInkX: CGFloat? {
+        guard let width = ink.first?.count else { return nil }
+        guard let column = (0..<width).first(where: { col in ink.contains { $0[col] } }) else { return nil }
+        return CGFloat(column) / scale
     }
 
     /// 連續有墨的列＝一行（行距空白把行與行分開）；每行再找第一／最後一個字形群的墨色高度。

@@ -112,6 +112,7 @@
 		25F9D051097A5F845C3747AB /* DiaryDateFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8938E753539C18541CF4360 /* DiaryDateFormat.swift */; };
 		25FCC21C16E35CFC9D838BBB /* AuthButtonsStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6FB791F1C8D6FD682B0ABDB /* AuthButtonsStateTests.swift */; };
 		269DBB84AD4BB022C5CE1510 /* ImportEntryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C28B10B64350EF2599D6E1 /* ImportEntryButton.swift */; };
+		26B1D11F24F2AA06744F814C /* AlbumCardImprintCaptionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C8B9C938E1E57BCC38B5DF /* AlbumCardImprintCaptionUITests.swift */; };
 		26C0612B803DE80FD12DAA0D /* PreviewFoodRecordDetailAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DE6BF3CDCAB1175B87344D /* PreviewFoodRecordDetailAPIClient.swift */; };
 		26CE1F348CFAE9947598779C /* GrowthMeasurementFormViewTimeZoneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03C5CAF48A1D9EAFE4F56298 /* GrowthMeasurementFormViewTimeZoneTests.swift */; };
 		27765396913C304FC059C525 /* CommentAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFD1FF4DE88B8A84B28A7C2 /* CommentAPIClient.swift */; };
@@ -833,6 +834,7 @@
 		48C785FE3D7CCF80C7870997 /* EmailDisplayNameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailDisplayNameTests.swift; sourceTree = "<group>"; };
 		49B445AA4DDFB31AF4751DCE /* PendingAccountDeletionResumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingAccountDeletionResumer.swift; sourceTree = "<group>"; };
 		49BFD27CD53D1339A7A55EB8 /* RootView+AuthenticatedGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RootView+AuthenticatedGate.swift"; sourceTree = "<group>"; };
+		49C8B9C938E1E57BCC38B5DF /* AlbumCardImprintCaptionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumCardImprintCaptionUITests.swift; sourceTree = "<group>"; };
 		4A2C55516A51E5A0FD9BCA23 /* GrowthCurve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthCurve.swift; sourceTree = "<group>"; };
 		4A53A1F6D147A58F55F72D3F /* AppBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBackground.swift; sourceTree = "<group>"; };
 		4A724FA08C0F9A6A0AD5DA8E /* TapTargetGateHarness+FoodEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+FoodEntry.swift"; sourceTree = "<group>"; };
@@ -1326,6 +1328,7 @@
 		1DA7979F5CC775A4EC407A14 /* LittleSproutUITests */ = {
 			isa = PBXGroup;
 			children = (
+				49C8B9C938E1E57BCC38B5DF /* AlbumCardImprintCaptionUITests.swift */,
 				9CC784C4A15C4C6B5C97B845 /* AlbumDetailAX3UITests.swift */,
 				64B2D0ACAEBD4001FACDD222 /* AlbumDetailViewTests.swift */,
 				85B9B9BC87911D6859F99FAC /* AlbumsViewIPadTests.swift */,
@@ -2773,6 +2776,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				26B1D11F24F2AA06744F814C /* AlbumCardImprintCaptionUITests.swift in Sources */,
 				929B962D65C1284A59E86AB4 /* AlbumDetailAX3UITests.swift in Sources */,
 				62880BAED51D6DE7D9EC30FF /* AlbumDetailViewTests.swift in Sources */,
 				043855BA7839CA15F042676B /* AlbumsViewIPadTests.swift in Sources */,

@@ -14,9 +14,11 @@ import SwiftUI
 extension TapTargetGateHarness {
     /// LS-389：`descender`／`albumDescender`＝深色署名對比實測測資（LS-372 Notes `SLL6R`：有下伸部
     /// 的拉丁名 Gary 落在多寶貝最後一行）；`feedAxis`＝時間軸日記卡／照片卡／相簿卡同屏，量三卡文字
-    /// 起點是否同軸。
+    /// 起點是否同軸。LS-390：`timelineAlbum`／`timelineAlbumLong`＝時間軸相簿卡（`AlbumCardView`）單張
+    /// （白邊壓印 Caption「相簿名 · N 張相片」；Long 為超長相簿名＋單張，稿面 `Stress / 14`）。
     enum PhotoCardCaptionFixture: String {
-        case one, two, three, none, album, feed, descender, albumDescender, feedAxis
+        case one, two, three, none, album, feed, descender, albumDescender, feedAxis, timelineAlbum,
+             timelineAlbumLong
     }
 
     static var photoCardCaptionFixture: PhotoCardCaptionFixture {
@@ -29,7 +31,11 @@ extension TapTargetGateHarness {
     /// 這個 fixture 沒有「照片卡署名」頂端標題（sentinel），測試直接等署名元素。
     @MainActor
     static var photoCardBabyCaptionHost: some View {
-        PhotoCardBabyCaptionHost(fixture: photoCardCaptionFixture)
+        // LS-390：`LS_PHOTO_CARD_CAPTION_SCHEME=dark` 用 `.preferredColorScheme(.dark)` 釘深色（同
+        // `diaryCardBabyCaptionHost` 既有做法）；沒設＝跟系統（既有測試行為不變）。
+        let dark = ProcessInfo.processInfo.environment["LS_PHOTO_CARD_CAPTION_SCHEME"] == "dark"
+        return PhotoCardBabyCaptionHost(fixture: photoCardCaptionFixture)
+            .preferredColorScheme(dark ? .dark : nil)
     }
 }
 
@@ -85,6 +91,19 @@ private struct PhotoCardBabyCaptionHost: View {
                 )
                 .accessibilityIdentifier("harness.albumCard")
             }
+        case .timelineAlbum, .timelineAlbumLong:
+            singleCard {
+                AlbumCardView(
+                    content: AlbumContent(
+                        title: fixture == .timelineAlbum
+                            ? "弟弟出生的第一週" : "阿公阿嬤全家福二〇二六跨年夜溫馨團聚倒數紀念相片珍藏加長版本紀念冊",
+                        photoCount: fixture == .timelineAlbum ? 8 : 1, cover: nil
+                    ),
+                    timelineStore: timelineStore, familyStore: familyStore, refId: UUID()
+                )
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("harness.timelineAlbumCard")
+            }
         case .one, .two, .three, .none, .descender:
             singleCard {
                 PhotoCardView(
@@ -125,7 +144,7 @@ private struct PhotoCardBabyCaptionHost: View {
         case .descender:
             [child("歐陽彥廷", born: "2024-06-01"), child("小饅頭", born: "2025-01-01"),
              child("Gary", born: "2026-01-01")]
-        case .none, .album, .feed, .albumDescender, .feedAxis: []
+        case .none, .album, .feed, .albumDescender, .feedAxis, .timelineAlbum, .timelineAlbumLong: []
         }
     }
 
@@ -168,7 +187,7 @@ private struct PhotoCardBabyCaptionHost: View {
                 ),
                 TimelineEntry(
                     kind: .album, refId: UUID(), occurredAt: occurredAt.addingTimeInterval(-120), childIds: [],
-                    content: .album(AlbumContent(title: "弟弟出生的第一週", cover: nil))
+                    content: .album(AlbumContent(title: "弟弟出生的第一週", photoCount: 8, cover: nil))
                 )
             ])
             return store

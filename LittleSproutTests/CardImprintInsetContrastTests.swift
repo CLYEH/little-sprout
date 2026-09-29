@@ -85,6 +85,31 @@ final class CardImprintInsetContrastTests: XCTestCase {
         }
     }
 
+    /// LS-390：時間軸相簿卡（`AlbumCardView`，`cmp/Card Album` `bhroo`）標題進白邊（Imprint Row `IXmLN`）——
+    /// Caption 用印品墨色 `$print-ink`（不隨深色反轉）、內縮 `$sp-group`，字起點落在 x=20 與日記卡同軸；
+    /// 深色 [20,30) 帶對比 ≥ 4.5（量法同上）。改前標題畫在頁面底色（`lsTextPrimary`），實測字起點 x=25。
+    func test_timelineAlbumCard_captionStartsOnInsetCardAxis_inPrintInk_andMeetsElderContrast() throws {
+        for scheme in [ColorScheme.dark, .light] {
+            let card = AlbumCardView(
+                content: AlbumContent(title: "弟弟出生的第一週", photoCount: 8, cover: nil),
+                timelineStore: .preview(), familyStore: .preview(), refId: UUID()
+            )
+            let measurement = try measure(card, photoHeight: 190, scheme: scheme, ink: .lsPrintInk)
+            assertInsetAndContrast(measurement, card: "時間軸相簿卡", scheme: scheme)
+            XCTAssertEqual(
+                measurement.lineCount, 1, "[時間軸相簿卡/\(scheme)] Caption「相簿名 · N 張相片」預設字級應單行，量到 \(measurement.lineCount) 行"
+            )
+            // 墨色：字形最暗像素應是 `$print-ink`（紙與墨不隨深色反轉）。改回頁面底色字（`lsTextPrimary`，
+            // 深色是亮色）時最暗字形像素會落在紙色附近。
+            let expected = luminance(.lsPrintInk, scheme)
+            XCTAssertLessThan(
+                measurement.darkestGlyphLuminance, expected + 0.03,
+                "[時間軸相簿卡/\(scheme)] Caption 最暗字形像素亮度 \(String(format: "%.3f", measurement.darkestGlyphLuminance))，"
+                    + "應接近 print-ink \(String(format: "%.3f", expected))——標題不是印品墨色？"
+            )
+        }
+    }
+
     // MARK: - helpers
 
     /// 最後一行是「Gary · 8 個月大」——有下伸部的拉丁名（SLL6R 指定測資），且在多寶貝的最後一行、最靠近
@@ -162,9 +187,14 @@ final class CardImprintInsetContrastTests: XCTestCase {
         let bandContrasts: [Int: Double]
         /// 紙左緣內 2pt、紙底往上 40pt 那一點的染料池沿線位置（0＝紙、1＝全池），推回左下池的 α。
         let bottomLeadingPoolPosition: Double
+        /// 最後一行字形像素的最暗亮度（LS-390：驗墨色是 `$print-ink`）。
+        let darkestGlyphLuminance: Double
     }
 
-    private func measure(_ view: some View, photoHeight: CGFloat, scheme: ColorScheme) throws -> Measurement {
+    /// `ink`：受測文字列的墨色（署名列＝`$print-ink-secondary`；LS-390 相簿卡 Caption＝`$print-ink`）。
+    private func measure(
+        _ view: some View, photoHeight: CGFloat, scheme: ColorScheme, ink: Color = .lsPrintInkSecondary
+    ) throws -> Measurement {
         let content = view
             .frame(width: Self.cardWidth)
             .padding(Self.margin)
@@ -181,13 +211,14 @@ final class CardImprintInsetContrastTests: XCTestCase {
         let textStart = try XCTUnwrap(raster.textStartColumn, "文字區沒有任何字形像素")
         let lines = raster.lines()
         let lastLine = try XCTUnwrap(lines.last, "文字區找不到任何一行")
-        let inkLuminance = luminance(.lsPrintInkSecondary, scheme)
+        let inkLuminance = luminance(ink, scheme)
         return Measurement(
             textStartX: CGFloat(textStart - raster.paperLeft) / Self.scale,
             lineCount: lines.count,
             bandContrasts: raster.darkestBackgroundByBand(in: lastLine)
                 .mapValues { ($0 + 0.05) / (inkLuminance + 0.05) },
-            bottomLeadingPoolPosition: raster.poolPosition(paperX: 2, abovePaperBottom: 40)
+            bottomLeadingPoolPosition: raster.poolPosition(paperX: 2, abovePaperBottom: 40),
+            darkestGlyphLuminance: raster.darkestGlyphLuminance(in: lastLine)
         )
     }
 
@@ -285,6 +316,17 @@ private struct ImprintRaster {
             if CGFloat(row - top) / scale >= 3 { lines.append(top..<row) }
         }
         return lines
+    }
+
+    /// 該行字形像素的最暗亮度。
+    func darkestGlyphLuminance(in line: Range<Int>) -> Double {
+        var darkest = 1.0
+        for row in line {
+            for column in columns where isGlyph(column: column, row: row) {
+                darkest = min(darkest, pixels.luminance(column: column, row: row))
+            }
+        }
+        return darkest
     }
 
     /// 背景＝落在直線上、且 2px 內沒有字形（排除反鋸齒邊緣）的像素；逐 10pt 帶取最暗的亮度。

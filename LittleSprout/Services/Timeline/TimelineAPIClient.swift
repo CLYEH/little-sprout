@@ -7,7 +7,8 @@ import Foundation
 ///                                p_cursor_occurred_at, p_cursor_ref_id, p_limit)`
 ///   - `fetchDiaries`           → SELECT `public.diaries`（`.in("id", ids)`）
 ///   - `fetchDiaryMediaLinks`   → SELECT `public.diary_media`（`.in("diary_id", ids)`）
-///   - `fetchAlbums`            → SELECT `public.albums`（`.in("id", ids)`）
+///   - `fetchAlbums`            → SELECT `public.album_summaries`（`.in("id", ids)`，LS-390：多帶
+///                                `visible_media_count` 給相簿卡「N 張相片」；view 是 `albums.*`＋彙總欄）
 ///   - `fetchMedia`             → SELECT `public.media`（`.in("id", ids)`）
 ///   - `fetchFoodRecords`       → SELECT `public.child_food_records`（`.in("id", ids)`，LS-383；
 ///                                RLS `child_food_records_select`＝家庭成員＋未刪）
