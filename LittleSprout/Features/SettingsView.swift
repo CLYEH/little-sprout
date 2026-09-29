@@ -69,9 +69,9 @@ struct SettingsView: View {
     @State var regularSelection: SettingsSection = .profile
     /// LS-210：法律區兩列改開 in-app sheet，同 `WelcomeView.presentedLegalDocument`（LS-191）寫法。
     @State private var presentedLegalDocument: LegalDocumentKind?
-    /// LS-397：暫定的上傳佇列入口（`SettingsView+UploadQueue.swift`）——sheet 與「查看儲存空間」出路。
-    @State var showsUploadQueue = false
-    @State var showsStorageFromUploadQueue = false
+    /// LS-404：上傳佇列入口列（`UploadQueueEntryCard.swift`）的顯示態與 sheet／儲存空間導覽旗標；
+    /// 不標 `private`：`SettingsView+UploadQueue.swift`／`SettingsView+Sidebar.swift` 要讀。
+    @State var uploadQueueEntry = UploadQueueEntryModel()
 
     var body: some View {
         Group {
@@ -126,6 +126,9 @@ struct SettingsView: View {
         .sheet(item: $presentedLegalDocument) { kind in
             LegalDocumentSheet(kind: kind)
         }
+        .modifier(UploadQueueEntryLifecycle(
+            model: uploadQueueEntry, albumsStore: albumsStore, familyStore: familyStore
+        ))
     }
 
     // MARK: - Compact（iPhone，`t5wI4`/`Rx5mP`/`z9tytH`）
@@ -138,6 +141,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 0) {
                 header
                 VStack(spacing: AppSpacing.block) {
+                    uploadQueueEntryCard
                     profileSection
                     if familyStore.myFamily != nil {
                         familySection
@@ -297,7 +301,6 @@ struct SettingsView: View {
                 }
                 contentSafetyRow(row)
             }
-            uploadQueueRow
         }
     }
 
