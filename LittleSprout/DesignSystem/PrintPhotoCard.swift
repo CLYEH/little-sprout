@@ -14,6 +14,9 @@ struct PrintPhotoCard: View {
     var mountPoolOpacity: MountPoolOpacity = .welcome
     var showsImprint = true
     var imageName: String?
+    /// 已解碼影像，優先於 `imageName`／`remoteURL`；給單元測試注入「載入完成」的照片用（`AsyncImage` 在
+    /// 單元測試宿主載不起來、`imageName` 只認 App bundle 資產），走與另兩條路徑同一個照片窗容器。
+    var coverImage: Image?
     /// LS-126：時間軸／日記詳情第一次需要把**使用者上傳的真實照片**（Storage 簽名 URL）
     /// 套進沖印品母題，不是稿面內建的本地資產——`imageName` 優先；兩者都缺時退回 SF Symbol
     /// 占位圖（沿用既有行為，見下）。
@@ -101,28 +104,39 @@ struct PrintPhotoCard: View {
         .overlay(PhotoCornerOverlay(size: cornerSize))
     }
 
+    /// LS-390 R2（QA R1 FAIL）：照片窗以**固定高度的底色為本體**、影像放 `overlay` 再裁切。
+    /// 蓋滿（`scaledToFill`）的影像理想尺寸比提案框大——寬幅照片在 190pt 高蓋滿後寬度＝190×長寬比，
+    /// 若把它直接放進 `ZStack` 當子視圖，`ZStack` 取最大子視圖尺寸，整張卡就被封面撐寬（QA 實測寬
+    /// 7pt）；`VStack` 預設置中對齊，署名／Caption 列因此被帶偏 3.5pt，離日記卡軸 4pt。`clipped()`
+    /// 只裁繪製結果、不改 layout 回報，所以裁切不能取代這層結構。底色 `Color` 無固有尺寸、寬度吃父層
+    /// 提案；overlay 不參與 layout 尺寸——沿 `FoodRecordDetailParts` 照片窗既有寫法。
     private var photo: some View {
-        ZStack {
-            Color.lsSurface2
-            if let imageName {
-                Image(imageName)
-                    .resizable()
-                    .scaledToFill()
-            } else if let remoteURL {
-                AsyncImage(url: remoteURL) { phase in
-                    if case .success(let image) = phase {
-                        image.resizable().scaledToFill()
-                    }
+        Color.lsSurface2
+            .frame(height: photoHeight)
+            .overlay { photoContent }
+            .overlay(Color.lsPhotoDim)
+            .clipped()
+    }
+
+    @ViewBuilder
+    private var photoContent: some View {
+        if let coverImage {
+            coverImage.resizable().scaledToFill()
+        } else if let imageName {
+            Image(imageName)
+                .resizable()
+                .scaledToFill()
+        } else if let remoteURL {
+            AsyncImage(url: remoteURL) { phase in
+                if case .success(let image) = phase {
+                    image.resizable().scaledToFill()
                 }
-            } else {
-                Image(systemName: "person.2.fill")
-                    .font(.system(size: photoHeight * 0.4))
-                    .foregroundStyle(Color.lsTextSecondary.opacity(0.5))
             }
-            Color.lsPhotoDim
+        } else {
+            Image(systemName: "person.2.fill")
+                .font(.system(size: photoHeight * 0.4))
+                .foregroundStyle(Color.lsTextSecondary.opacity(0.5))
         }
-        .frame(height: photoHeight)
-        .clipped()
     }
 
     private var imprintRow: some View {
