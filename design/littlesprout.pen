@@ -97282,6 +97282,284 @@
               "fontWeight": "normal"
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "ejfoO",
+          "name": "N LS-403 上傳佇列移除失敗項",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            34,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "d4TLJr",
+              "name": "H",
+              "fill": "#2B141C",
+              "content": "LS-403 上傳佇列：移除失敗項＋只剩失敗／全部完成收斂",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "bWhHj",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "K3YuWI",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-403｜動作",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "udGMN",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "【LS-403 R1】失敗項退場路徑（回應 OT5n9「失敗項退場：…待 LS-142 補移除動作」）。每張失敗列在錯誤句下方加一條動作列：左＝原有動作（可重試的列「重試」cmp/Button Text 帶 refresh-cw；容量已滿 LS002 列「查看儲存空間」連結），右＝「移除」（cmp/Button Text 實例，icon 關閉、label $text-secondary 600，內距 上下 $ctl-pad-tap／左 $sp-item 16／右 0，文字右緣貼齊內容欄右緣，點擊區 50×44）。層級：重試＝墨色＋icon（這一列該做的事），移除＝次要灰字、無 icon（放棄這張）；兩者分處動作列左右兩端，誤觸不會按到另一個。不做滑動刪除：sheet 不是 List，滑動是看不見的手勢（長輩硬約束：不用進階手勢），可見按鈕是唯一路徑。批次：「沒有成功」群標題列右側「移除這 N 張」（N＝failedCount，含 LS002；同一個 cmp/Button Text 寫法），只在 failedCount>1 顯示——單張時列上自己的「移除」就夠（同 iIkHT「重試這 N 張」只在 >1 顯示的理由）。文案用「移除這 N 張」不用「全部移除」：與「重試這 N 張」同一句型，數字直接說出範圍。板：rU2zY（16c 淺，進行中＋失敗）／KaONe（16d 淺，只剩失敗）／FgH6v（16d 深）／sq2SF（16e 淺，全部完成）／FIwU8（AX3，16c）。16c 板刻意關掉續傳橫幅（resumedFromInterruption＝false 的樣本），讓動作列在 727 detent 內露出兩列半；橫幅與移除動作可並存，規則見下條。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "K6T3ow",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "iPYON",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-403｜確認",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "skC6Q",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "單張「移除」不確認、直接移除；「移除這 N 張」要確認（系統 confirmationDialog，不另畫板）。三句理由：①移除不刪任何東西——照片還在手機相簿、伺服器上也沒有這張（沒成功），誤按一張的代價是回相簿再選一次；②批次一次丟掉多張，其中「連線中斷／伺服器忙碌」那幾張回前景會自動重試（LS-397），一次誤觸會讓本來會自己成功的照片一起消失，代價跨越多張；③批次鈕和「重試這 N 張」同在畫面上方、是長輩最可能按錯的一對，確認只加在代價大的那一顆，單張移除不必每次多按一下。Dialog：標題「移除這 N 張照片？」、訊息「移除只是不加進相簿，手機裡的照片還在。」、按鈕「移除這 N 張」（role .destructive，系統樣式）＋「取消」。不用 toast／復原橫幅（sheet 內已有續傳橫幅，不疊第二條）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "hmhhE",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "MwbX4",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-403｜三態",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "k4oJhV",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "sheet 摘要區三態（與 OT5n9 入口四態同一套判定，只讀 store；inFlight＝waitingCount＋uploadingCount）：①inFlight>0（不論有無失敗）：沿用 16 原樣——標題「正在新增照片」、主行「還有 N 張還沒完成」、次行分項；footer「在背景繼續，關閉視窗」。②inFlight==0 且 failedCount>0（只剩失敗，KaONe）：標題「有 M 張照片沒有加進去」（與入口列只剩失敗態 Label 同一句，從入口點進來看到同一句話）；主行改一句 $text-secondary $fs-body 400「移除只是不加進相簿，手機裡的照片還在。」；無分項；「重試這 N 張」照原規則；footer 改「關閉」（背景沒有東西在跑，「在背景繼續」不成立）。③inFlight==0、failedCount==0、K>0（全部完成，sq2SF）：標題「照片都加好了」、主行「K 張都加進相簿了」（同入口全部完成態，K 定義見 OT5n9）；無分項、無續傳橫幅、無重試列；列表只剩「已完成」群；footer「關閉」。④inFlight==0、failedCount==0、K==0（最後的失敗項被移除、本次啟動沒有完成項）：sheet 自動 dismiss（使用者按移除的直接結果）。續傳橫幅只在 resumedFromInterruption && inFlight>0 時顯示，「還有 N 張還沒完成」只在 inFlight>0 時存在——解 LS-397 QA 觀察（池 20a74f47）：全部完成後 sheet 同時顯示「還有 0 張還沒完成」與橫幅。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Fq494",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "cqwwZ",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-403｜入口",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "oQ5SF",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "入口列（LS-402）對齊 bqnO1：移除只發生在 sheet 內，sheet 關閉（onDismiss）是情境邊界；sheet 開著時不改入口列，關閉後才重新快照。移除後：仍有 inFlight→進行中態；inFlight==0 且 failedCount==0（不論 K）→入口列依出現條件（remainingCount==0）直接隱藏，不再經過「照片都加好了」過渡態（那個態只為「停在設定頁期間完成」而設，使用者剛在 sheet 看過完成句）；仍有失敗→只剩失敗態、M 更新。OT5n9 句中「失敗項退場：…在那之前入口常駐」自本票起由本條取代（沿革：該句保留不刪）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "VmLE9",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Q2PX3u",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-403｜ios-dev",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "FBoLL",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "UploadQueueStore 契約（範圍 2）：removeFailed(_ id: UUID)——只對 state==.failed 生效（其他狀態 no-op，防止誤刪進行中項）；從 entries 移除、釋放縮圖、刪該項落盤檔與暫存匯出檔（影片沿 cleanupVideoTempFiles），再寫一次 manifest（persistManifest）——記憶體與落盤在同一個 MainActor 呼叫內完成，不留「畫面沒了、檔案還在」的窗口，重啟後不會復活。removeAllFailed()——一次移除全部 .failed（含 LS002 與可重試者），只寫一次 manifest。兩者不打伺服器、不動 PhotoKit。PLAUSIBLE（未讀 performUpload 核實）：失敗項若已上傳 Storage 物件但 media INSERT 失敗（LS002 由 trigger 擋 INSERT 的路徑），移除後物件成孤兒——ios-dev 核對失敗點；若會留孤兒，回報設計端決定是否順帶刪物件（不在本稿範圍）。sheet：UploadQueueRowView 失敗分支加 onRemove；群標題列在 failedCount>1 時帶「移除這 N 張」並觸發 confirmationDialog；摘要區與 footer 文案依上條由 store 推導（建議 enum：inFlight／onlyFailed／allDone），K==0 空佇列時 dismiss()。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "txtfn",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "s1HasZ",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-403｜AX3",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "fC2Rf",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "AX3（FIwU8）：①失敗列動作列從左右兩端改直排（先原有動作、再「移除」；Remove 內距改 上下 $ctl-pad-tap／左右 0，左緣貼齊內容欄，AX3 字寬 80pt 遠超 44）；群標題列同樣直排（「沒有成功」下接「移除這 N 張」）。實作用 ViewThatFits(in: .horizontal) 包兩種排法，不寫死字級門檻。②Footer「在背景繼續，關閉視窗」AX3 兩行、斷在「，」之後（稿上以換行呈現）：iOS 在兩個片語的字與字之間插 U+2060，只留「，」後一個斷點；Text 加 .fixedSize(horizontal: false, vertical: true)＋.multilineTextAlignment(.center)，不設 lineLimit——sheet 是固定 detent（ImjbJ），沒有 fixedSize 時 VStack 會把 footer 壓成一行截斷（LS-397 QA 觀察「在背景繼續，…」），該被壓縮的是 rowsSection 的 ScrollView。③分項行同法斷在「、」之後。只剩失敗／全部完成態 footer 是「關閉」，AX3 一行。iPad 不另出板：sheet 在 iPad 同樣是 modal、單欄列表，動作列排法與 iPhone 預設字級相同（沿 cn84r／umhGy）。",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tjhXN",
+          "name": "i",
+          "width": "fill_container",
+          "gap": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "Q90Kf",
+              "name": "stamp",
+              "fill": "#7A3B48",
+              "textGrowth": "fixed-width",
+              "width": 118,
+              "content": "LS-403｜畫面級屬性",
+              "lineHeight": 1.42,
+              "textAlign": "right",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "U5FnHV",
+              "name": "l",
+              "fill": "#2B141C",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "LS-403 / 16c 上傳佇列 · 有失敗（可移除）（AX3 變體：A11y / LS-403 16c 上傳佇列 · 有失敗（可移除）· Dynamic Type AX3（body 40pt））｜隱藏 Tab Bar ✓（sheet）｜標題 自訂（sheet Head Title「正在新增照片」）｜釘底動作帶 無（sheet 內 Footer 文字鈕）｜失敗文案鍵 無新增（沿 LS-142 三分支）｜深色 無特例｜AX3 動作列與群標題列直排、footer 斷在「，」後兩行｜iPad 同 sheet 不重排｜資料落點 移除＝UploadQueueStore.removeFailed／removeAllFailed，寫本機佇列落盤（Application Support/UploadQueue），不經 API、無資料表\nLS-403 / 16d 上傳佇列 · 只剩失敗｜隱藏 Tab Bar ✓（sheet）｜標題 自訂「有 M 張照片沒有加進去」｜釘底動作帶 無（Footer「關閉」）｜失敗文案鍵 無新增｜深色 無特例（$danger 深 #FFA48F 對 $surface 8.40）｜AX3 同 16c 直排規則｜iPad 同 sheet 不重排｜資料落點 同 16c（本機佇列落盤）\nLS-403 / 16e 上傳佇列 · 全部完成｜隱藏 Tab Bar ✓（sheet）｜標題 自訂「照片都加好了」｜釘底動作帶 無（Footer「關閉」）｜失敗文案鍵 無｜深色 無特例｜AX3 無特例（兩行短句）｜iPad 同 sheet 不重排｜資料落點 無持久化（純 UI 狀態，只讀 UploadQueueStore）",
+              "lineHeight": 1.6,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            }
+          ]
         }
       ]
     },
@@ -256875,7 +257153,7 @@
                               "fill": "$text-secondary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "移除只會從這裡拿掉，手機裡的照片還在。",
+                              "content": "移除只是不加進相簿，手機裡的照片還在。",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
                               "fontWeight": "normal"
@@ -259414,7 +259692,7 @@
                               "fill": "$text-secondary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "移除只會從這裡拿掉，手機裡的照片還在。",
+                              "content": "移除只是不加進相簿，手機裡的照片還在。",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
                               "fontWeight": "normal"
