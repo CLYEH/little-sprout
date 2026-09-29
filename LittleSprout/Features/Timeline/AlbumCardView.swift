@@ -38,6 +38,10 @@ struct AlbumCardView: View {
             // （改前標題會念兩次），也不把 Caption 內的 U+2060／NBSP 折行字元交給 VoiceOver。
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(content.title)，\(content.photoCount) 張相片")
+            // LS-406（LS-390 R1 I1）：`.ignore` 會吃掉照片的 `.isImage`（改前 `.combine` 帶得上），有封面時補回、
+            // VoiceOver 念「圖像」；占位圖（沒有封面）不加。判準是 `cover != nil`（有簽名 URL 就是有照片要載）——
+            // `AsyncImage` 的載入中／失敗態在這一層看不到，那兩態也念「圖像」，比占位圖態誤念「沒有照片」好。
+            .accessibilityAddTraits(content.cover == nil ? [] : .isImage)
             InteractionRow(
                 kind: .album, refId: refId, timelineStore: timelineStore, familyStore: familyStore,
                 onOpenComments: onOpenComments
