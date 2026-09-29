@@ -130062,7 +130062,7 @@
       "type": "frame",
       "id": "ZG2Un",
       "x": 17151,
-      "y": 23455,
+      "y": 25089,
       "name": "LS-152 / 09b 儲存空間 · 已滿",
       "clip": true,
       "width": 393,
@@ -130467,7 +130467,7 @@
       "type": "frame",
       "id": "yResD",
       "x": 18097,
-      "y": 23455,
+      "y": 25089,
       "name": "A11y / 07 檢舉收件匣 · Dynamic Type AX3",
       "theme": {
         "size": "ax3"
@@ -154028,7 +154028,7 @@
       "type": "frame",
       "id": "Oic2v",
       "x": 17624,
-      "y": 23455,
+      "y": 25089,
       "name": "A11y / 08 EULA 同意頁 · Dynamic Type AX3",
       "theme": {
         "size": "ax3"
