@@ -45,8 +45,8 @@ enum QAAccessibilityID {
     /// 隨 `FamilyStore.quota` 是否載入完成而變（「儲存空間」／「儲存空間、2.1／5 GB」），不
     /// 適合再用固定字串比對，改用 identifier。
     static let settingsStorageRow = "qa.settings.storageRow"
-    /// LS-397：01 設定頁暫定的「上傳進度」列——`value`（「還有 N 張還沒完成」）隨佇列而變，同
-    /// `settingsStorageRow` 的既有理由改用 identifier。
+    /// LS-397／LS-404：01 設定頁最上方「正在新增照片」上傳佇列入口列——四態文案隨佇列而變，同
+    /// `settingsStorageRow` 的既有理由改用 identifier；label 是乾淨版整句（`UploadQueueEntryCopy.accessibilityLabel`）。
     static let settingsUploadQueueRow = "qa.settings.uploadQueueRow"
     /// LS-193：04e 最終確認的「輸入『刪除帳號』」欄——沒有固定 label（同 `LabeledTextField`
     /// 慣例，見 `DeleteAccountFlowView+FinalConfirm.swift`），改用 identifier。

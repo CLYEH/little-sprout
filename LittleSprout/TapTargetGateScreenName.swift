@@ -372,6 +372,11 @@ enum TapTargetGateScreenName: String {
     // 並列）＋Book Row，供 `FoodFirstCardUITests` 斷言導覽／無互動列與截圖對稿（`SLjde`／`QGdHY`／`CgmBD`）；
     // fixture／深色見 `TapTargetGateHarness+FoodFirstCard.swift`。
     case foodFirstCard = "FoodFirstCardView"
+    // LS-404：設定頁最上方上傳佇列入口列（`UploadQueueEntryCard`）——真的 `SettingsView` 掛種好狀態的佇列，
+    // 借這條通道餵 `UploadQueueEntryUITests`／`UploadQueueEntryIPadTests` 的淺深 × 字級截圖矩陣與停留期間
+    // 行為斷言（同 `.diaryCardBabyCaption` 先例，不進逐元件 tap target 量測）；fixture／劇本見
+    // `TapTargetGateHarness+UploadQueueEntry.swift`。
+    case settingsUploadQueueEntry = "SettingsViewUploadQueueEntry"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
