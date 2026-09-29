@@ -205,7 +205,7 @@ struct AlbumDetailView: View {
     }
 
     private func countText(_ store: AlbumDetailStore) -> some View {
-        Text("\(store.photoCount) 張相片")
+        Text(AlbumSignatureFormatter.countText(photoCount: store.photoCount))
             .appNumericFont(.body, weight: .semibold)
             .foregroundStyle(Color.lsTextSecondary)
     }

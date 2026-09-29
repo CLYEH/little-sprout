@@ -67,7 +67,13 @@ enum AlbumSignatureFormatter {
     /// （AX3 實測超長標題裁圖曾見末行孤字）。時間軸相簿卡（`AlbumCardView`）與相簿 tab 卡
     /// （`AlbumSummaryCardView`）共用這支，兩邊折行一起變。
     static func captionText(title: String, photoCount: Int, isMultiline: Bool) -> String {
-        let countText = "\(photoCount)\u{00A0}張\u{2060}相\u{2060}片"
-        return isMultiline ? "\(title)\n\(countText)" : "\(title) ·\u{00A0}\(countText)"
+        let count = countText(photoCount: photoCount)
+        return isMultiline ? "\(title)\n\(count)" : "\(title) ·\u{00A0}\(count)"
+    }
+
+    /// 張數片段 `"{N}\u{00A0}張\u{2060}相\u{2060}片"`（LS-407）：`captionText` 的尾段，單獨抽出給相簿詳情頁
+    /// 張數節點用——兩邊同源，折行字元不再各拼各的（改前詳情頁是 `"\(N) 張相片"` 普通空白，LS-388 規則沒套到）。
+    static func countText(photoCount: Int) -> String {
+        "\(photoCount)\u{00A0}張\u{2060}相\u{2060}片"
     }
 }

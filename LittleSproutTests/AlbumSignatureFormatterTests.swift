@@ -167,6 +167,25 @@ final class AlbumSignatureFormatterTests: XCTestCase {
         XCTAssertEqual(text, "新相簿 ·\u{00A0}0\u{00A0}張\u{2060}相\u{2060}片")
     }
 
+    /// LS-407（池 5e2b5013）：張數片段單獨可取（相簿詳情頁張數節點用），逐字元 `"{N}\u{00A0}張\u{2060}相\u{2060}片"`，
+    /// 且 `captionText` 的尾段就是它（同源）。
+    func test_countText_breakCharactersAtExactPositions() {
+        let scalars = Array(AlbumSignatureFormatter.countText(photoCount: 34).unicodeScalars)
+        XCTAssertEqual(scalars.map(\.value), [0x33, 0x34, 0x00A0, 0x5F35, 0x2060, 0x76F8, 0x2060, 0x7247],
+                       "「34」＋NBSP＋「張」＋WJ＋「相」＋WJ＋「片」，實際：\(scalars.map { String($0.value, radix: 16) })")
+    }
+
+    func test_captionText_endsWithCountText() {
+        for isMultiline in [false, true] {
+            let caption = AlbumSignatureFormatter.captionText(title: "海邊", photoCount: 8, isMultiline: isMultiline)
+            let scalars = caption.unicodeScalars.map { String($0.value, radix: 16) }
+            XCTAssertTrue(
+                caption.hasSuffix(AlbumSignatureFormatter.countText(photoCount: 8)),
+                "captionText（isMultiline=\(isMultiline)）尾段應與 countText 同源，實際：\(scalars)"
+            )
+        }
+    }
+
     /// 逐字元斷言折行字元的位置（不靠整串 `XCTAssertEqual` 的 diff 肉眼比對 U+0020／U+00A0）。
     func test_captionText_regular_breakCharactersAtExactPositions() throws {
         let text = AlbumSignatureFormatter.captionText(title: "海邊", photoCount: 8, isMultiline: false)
