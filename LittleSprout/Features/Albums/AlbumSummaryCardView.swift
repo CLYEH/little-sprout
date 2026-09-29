@@ -20,6 +20,9 @@ struct AlbumSummaryCardView: View {
     let cardWidth: CGFloat
     var photoHeight: CGFloat = 184
     var cornerSize: CGFloat = 26
+    /// 已解碼影像，優先於 `album.cover`；給單元測試注入「載入完成」的封面用（`AsyncImage` 在單元測試宿主載不起來）。
+    /// 同 `PrintPhotoCard.coverImage`。
+    var coverImage: Image?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -60,24 +63,33 @@ struct AlbumSummaryCardView: View {
         .overlay(PhotoCornerOverlay(size: cornerSize))
     }
 
+    /// LS-405：照片窗以**固定高度的底色為本體**、影像與占位圖放 `overlay` 再裁切——與 `PrintPhotoCard.photo`
+    /// （LS-390 R2，eb8ad6e）同一寫法。蓋滿（`scaledToFill`）的影像理想尺寸比提案框大，直接放進 `ZStack`
+    /// 會讓 `ZStack` 取最大子視圖、把整張卡撐寬（2:1 封面實測 384pt vs 欄寬 354pt）；`clipped()` 只裁繪製、
+    /// 不改 layout 回報，所以裁切不能取代這層結構。底色 `Color` 無固有尺寸、寬度吃父層提案。
     private var photo: some View {
-        ZStack {
-            Color.lsSurface2
-            if let url = album.cover {
-                AsyncImage(url: url) { phase in
-                    if case .success(let image) = phase {
-                        image.resizable().scaledToFill()
-                    }
+        Color.lsSurface2
+            .frame(height: photoHeight)
+            .overlay { photoContent }
+            .overlay(Color.lsPhotoDim)
+            .clipped()
+    }
+
+    @ViewBuilder
+    private var photoContent: some View {
+        if let coverImage {
+            coverImage.resizable().scaledToFill()
+        } else if let url = album.cover {
+            AsyncImage(url: url) { phase in
+                if case .success(let image) = phase {
+                    image.resizable().scaledToFill()
                 }
-            } else {
-                Image(systemName: "photo.stack")
-                    .font(.system(size: photoHeight * 0.3))
-                    .foregroundStyle(Color.lsTextSecondary.opacity(0.5))
             }
-            Color.lsPhotoDim
+        } else {
+            Image(systemName: "photo.stack")
+                .font(.system(size: photoHeight * 0.3))
+                .foregroundStyle(Color.lsTextSecondary.opacity(0.5))
         }
-        .frame(height: photoHeight)
-        .clipped()
     }
 
     /// Caption（相簿名＋張數）／Signature Line（署名列）文字格式見
