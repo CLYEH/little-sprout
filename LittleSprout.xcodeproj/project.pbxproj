@@ -531,6 +531,7 @@
 		D0CBE882E4F270D9D1E98EA6 /* DeleteAccountFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03ECD2ECF46482E7BE076F73 /* DeleteAccountFlowView.swift */; };
 		D21331BAC819121267E6EBB0 /* JoinWaitingPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4552E5CBB92202CE2D569612 /* JoinWaitingPhase.swift */; };
 		D25DDE5793D5DC546E028495 /* FoodRecordEditorStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54D1CFF7A4F91A6525A8DF2A /* FoodRecordEditorStoreTests.swift */; };
+		D25E1FDB8869EE47C8D29824 /* UploadQueueStoreResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77C4A0060791BA29B9534B09 /* UploadQueueStoreResumeTests.swift */; };
 		D2BB97B9C691B174E2C733C0 /* FoodRecordDetailCopyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC5E7CC3876799874C04EE38 /* FoodRecordDetailCopyTests.swift */; };
 		D2D031850A6315F0D1C90D70 /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01951470E7861A632283E1A /* ProfileEditView.swift */; };
 		D2E1CC90D6A00B31BE3D2C01 /* ContentActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C5A7E72B680DAB0AF3701 /* ContentActions.swift */; };
@@ -951,6 +952,7 @@
 		76C79515621CA9052803B7EA /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
 		771AE54A75695B0ED950F667 /* AlbumPhotoGridLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumPhotoGridLayout.swift; sourceTree = "<group>"; };
 		775F76A6FD49940CFBE1EE85 /* SettingsContentSafetyCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsContentSafetyCompositionTests.swift; sourceTree = "<group>"; };
+		77C4A0060791BA29B9534B09 /* UploadQueueStoreResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueStoreResumeTests.swift; sourceTree = "<group>"; };
 		789B89A7CC96DBA74FF41049 /* DeleteAccountFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountFlowUITests.swift; sourceTree = "<group>"; };
 		790F9F13C03D257E18D9BE6E /* FoodStickerAssetsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodStickerAssetsTests.swift; sourceTree = "<group>"; };
 		79AA7604D9C488F075F81E30 /* SupabaseEULAAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseEULAAPIClient.swift; sourceTree = "<group>"; };
@@ -1761,6 +1763,7 @@
 				99EBF0CBF300A95651C705A5 /* UploadQueueStoreCancelImportTests.swift */,
 				73E829FD28258F900CECEAF4 /* UploadQueueStoreDefensiveTests.swift */,
 				B637A2D40B9B50F6FF88E75A /* UploadQueueStoreReleaseThumbnailsTests.swift */,
+				77C4A0060791BA29B9534B09 /* UploadQueueStoreResumeTests.swift */,
 				DDDD8173F56D793263B1D08E /* UploadQueueStoreRetryRetryableInTests.swift */,
 				3426D48B93D0809933E05622 /* UploadQueueStoreTests.swift */,
 				A3FB5A5983F1F8C9C04E3BC2 /* UploadQueueStoreVideoCompressionTests.swift */,
@@ -3063,6 +3066,7 @@
 				DFF92BBB2A94647AF3474483 /* UploadQueueStoreCancelImportTests.swift in Sources */,
 				A583A6F5F73A5469EF67DC23 /* UploadQueueStoreDefensiveTests.swift in Sources */,
 				E1FCCD660486CBC90BB60C6F /* UploadQueueStoreReleaseThumbnailsTests.swift in Sources */,
+				D25E1FDB8869EE47C8D29824 /* UploadQueueStoreResumeTests.swift in Sources */,
 				8955E8323F03435DC76D1211 /* UploadQueueStoreRetryRetryableInTests.swift in Sources */,
 				EB9C272DC720C2345B620849 /* UploadQueueStoreTests.swift in Sources */,
 				56A02AD000467006CF9F2937 /* UploadQueueStoreVideoCompressionTests.swift in Sources */,
