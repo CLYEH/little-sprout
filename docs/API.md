@@ -3892,3 +3892,47 @@ select eula_version from public.app_settings where id = true;  -- 表擁有者�
 select id, eula_accepted_version, eula_accepted_at from public.profiles
  where eula_accepted_version is not null;
 ```
+
+### Supabase 用量水位與告警（LS-399，PLAN §10-A(2)）
+
+§10-A 第二道防線：**接近方案上限時要先知道，別靠月結帳單或專案被限流才發現**。分兩半——腳本
+（任何時候唯讀量一次）＋Dashboard 告警（Supabase 自己寄信）。
+
+**腳本**：在已 `supabase link` 的目錄（主 checkout）執行——
+
+```bash
+bash scripts/ops/prod-usage-health.sh
+```
+
+唯讀量三個水位，各對方案上限（腳本頂端常數：免費方案 Storage 1 GiB、DB 500 MiB）算百分比：
+
+| 水位 | 來源 | 對哪個上限 |
+|---|---|---|
+| (a) | `sum(families.storage_used_bytes)`——app 自己記的額度用量（未軟刪 media 的 `byte_size`） | Storage |
+| (b) | `sum(storage.objects.metadata->>'size')`——bucket 實際物件大小（Supabase 計費口徑） | Storage |
+| (c) | `pg_database_size(current_database())` | DB |
+
+每行 `✓`（< 70%）／`⚠`（≥ 70%，exit 0）／`✗`（≥ 90%，exit 1）。另印 (a)(b) 差額：超過 10% 印 `ⓘ`
+並指向 `prod-storage-verify.sh`——**(b) 大於 (a) 本來就正常**（縮圖物件不算 `byte_size`、軟刪待清的
+原檔已釋放額度但還在 bucket，見 §3 `byte_size` 段），差額突然變大才是孤兒物件或計數漂移的線索。
+連線失敗一律 exit 1（沒量到不等於健康）。換方案時改腳本頂端兩個常數，並同步本段。
+
+**Dashboard 告警設定（使用者本人操作）**——agent 沒有 Dashboard 權限，以下由專案擁有者登入
+supabase.com 操作；介面名稱以 Dashboard 當下為準：
+
+1. **看用量**：Organization → **Usage**，選正式站專案，逐項對照 Database size／Storage size／Egress
+   跟方案配額。這頁是腳本 (b)(c) 的官方口徑，兩邊數字差很多時以這頁為準、回頭查腳本。
+2. **email 告警收件人**：Organization → **Settings**／**Billing**，確認 billing email 與 org owner 的
+   email 是會看的信箱——Supabase 的用量接近／超過配額通知寄到這裡，收不到等於沒有告警。
+3. **spend cap**（Billing → **Cost Control**）：只有付費方案才有此設定。升級時**保持開啟**（超量時
+   限流而不是自動加價），關掉前先想清楚 §10-A 的成本曝險；免費方案超量會被限制，不會產生帳單。
+
+**水位到 70%（腳本印 `⚠`）的處置順序**——由便宜到貴，前一步解決就停：
+
+1. **先查孤兒**：跑 `bash scripts/ops/prod-storage-verify.sh`，對照 (a)(b) 差額；確認
+   `purge-storage` 排程健康（`bash scripts/ops/prod-purge-health.sh`）——軟刪待清的原檔若沒被清，
+   (b) 會一直漲。
+2. **再看註冊開關**：成長來自新家庭湧入時，照本節「關閉／重新開放新註冊」暫停自建家庭
+   （LS-179，既有家庭不受影響）。
+3. **最後才談升級方案**：前兩步都不是原因（真實使用量成長），才評估付費方案——這是使用者的決定，
+   agent 只提供水位數字。
