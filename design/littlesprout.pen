@@ -245230,7 +245230,7 @@
                                     "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "正⁠在新⁠增⁠照⁠片"
@@ -245963,7 +245963,7 @@
                                     "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "正⁠在新⁠增⁠照⁠片"
@@ -246726,13 +246726,14 @@
                                     "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
-                                  "content": "有 1 張⁠照⁠片沒⁠有⁠加⁠進⁠去"
+                                  "content": "有 1 張⁠照⁠片沒⁠有⁠加⁠進⁠去",
+                                  "fill": "$danger"
                                 },
                                 "n1hzsr": {
-                                  "content": "點⁠這⁠裡看⁠怎⁠麼⁠處⁠理",
+                                  "content": "看⁠原⁠因⁠，或⁠再⁠試⁠一⁠次",
                                   "enabled": true
                                 }
                               }
@@ -247459,7 +247460,7 @@
                                     "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "照⁠片⁠都加⁠好⁠了"
@@ -248208,7 +248209,7 @@
                                     "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "正⁠在新⁠增⁠照⁠片"
@@ -248944,7 +248945,7 @@
                                     "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "正⁠在新⁠增⁠照⁠片"
@@ -249710,13 +249711,14 @@
                                     "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
-                                  "content": "有 1 張⁠照⁠片沒⁠有⁠加⁠進⁠去"
+                                  "content": "有 1 張⁠照⁠片沒⁠有⁠加⁠進⁠去",
+                                  "fill": "$danger"
                                 },
                                 "n1hzsr": {
-                                  "content": "點⁠這⁠裡看⁠怎⁠麼⁠處⁠理",
+                                  "content": "看⁠原⁠因⁠，或⁠再⁠試⁠一⁠次",
                                   "enabled": true
                                 }
                               }
@@ -250459,7 +250461,7 @@
                                     "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "正⁠在新⁠增⁠照⁠片"
@@ -251197,7 +251199,7 @@
                                     "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "正⁠在新⁠增⁠照⁠片"
@@ -251965,13 +251967,14 @@
                                     "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
-                                  "content": "有 1 張⁠照⁠片沒⁠有⁠加⁠進⁠去"
+                                  "content": "有 1 張⁠照⁠片沒⁠有⁠加⁠進⁠去",
+                                  "fill": "$danger"
                                 },
                                 "n1hzsr": {
-                                  "content": "點⁠這⁠裡看⁠怎⁠麼⁠處⁠理",
+                                  "content": "看⁠原⁠因⁠，或⁠再⁠試⁠一⁠次",
                                   "enabled": true
                                 }
                               }
@@ -252703,7 +252706,7 @@
                                     "url": "https://images.unsplash.com/photo-1763463608728-6eeb317023d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODg0ODg5OTJ8&ixlib=rb-4.1.0&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "照⁠片⁠都加⁠好⁠了"
@@ -253441,7 +253444,7 @@
                                     "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "正⁠在新⁠增⁠照⁠片"
@@ -254184,7 +254187,7 @@
                                     "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "正⁠在新⁠增⁠照⁠片"
@@ -254686,7 +254689,7 @@
                                     "url": "https://images.unsplash.com/photo-1775830979860-f07146977e31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
                                   "content": "正⁠在新⁠增⁠照⁠片"
@@ -255218,13 +255221,14 @@
                                     "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
                                     "mode": "fill"
                                   },
-                                  "cornerRadius": "$radius-md"
+                                  "cornerRadius": 2
                                 },
                                 "iOlfc": {
-                                  "content": "有 1 張⁠照⁠片沒⁠有⁠加⁠進⁠去"
+                                  "content": "有 1 張⁠照⁠片沒⁠有⁠加⁠進⁠去",
+                                  "fill": "$danger"
                                 },
                                 "n1hzsr": {
-                                  "content": "點⁠這⁠裡看⁠怎⁠麼⁠處⁠理",
+                                  "content": "看⁠原⁠因⁠，或⁠再⁠試⁠一⁠次",
                                   "enabled": true
                                 }
                               }
