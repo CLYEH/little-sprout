@@ -20,6 +20,9 @@ struct AlbumSummaryCardView: View {
     let cardWidth: CGFloat
     var photoHeight: CGFloat = 184
     var cornerSize: CGFloat = 26
+    /// 已解碼影像，優先於 `album.cover`；給單元測試注入「載入完成」的封面用（`AsyncImage` 在單元測試宿主載不起來）。
+    /// 同 `PrintPhotoCard.coverImage`。
+    var coverImage: Image?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -63,7 +66,9 @@ struct AlbumSummaryCardView: View {
     private var photo: some View {
         ZStack {
             Color.lsSurface2
-            if let url = album.cover {
+            if let coverImage {
+                coverImage.resizable().scaledToFill()
+            } else if let url = album.cover {
                 AsyncImage(url: url) { phase in
                     if case .success(let image) = phase {
                         image.resizable().scaledToFill()
