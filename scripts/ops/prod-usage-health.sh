@@ -13,16 +13,20 @@
 #   (c) db_bytes       `pg_database_size(current_database())`——Supabase 對 Database size 計量的口徑。
 # (a)(b) 對 Storage 上限、(c) 對 DB 上限各算百分比：≥ WARN_PCT 印 ⚠、≥ FAIL_PCT 印 ✗；任一 ✗ exit 1，
 # 只有 ⚠ 仍 exit 0（⚠ 是「開始處置」的訊號，見 API.md §11 的 70% 處置順序）。
-# 另印 (a)(b) 差額：|b−a| / max(a,b) > DRIFT_PCT 印 ⓘ 提示改跑 `prod-storage-verify.sh` 查孤兒物件／計數
-# 漂移（不影響 exit code——縮圖與軟刪待清的物件本來就讓 b > a，差額是線索不是判決）。
+# 另印 (a) 對 (b) 淨值的差額：(b) 淨值＝(b) − softdeleted_bytes（`sum(public.media.byte_size) where deleted_at
+# is not null`——軟刪但尚未被 purge 硬刪的列，其原檔已從 (a) 扣掉卻仍在 bucket；purge_expired() 硬刪 media
+# 列後原檔才進 purge_storage_queue 被清，見 20260903110908_purge_expired.sql）。|淨值−a| / max(a,|淨值|) >
+# DRIFT_PCT 印 ⓘ 提示改跑 `prod-storage-verify.sh` 查孤兒物件／計數漂移（不影響 exit code——縮圖物件不算
+# byte_size，淨值仍略大於 a 屬正常，差額是線索不是判決；LS-399 R0 補充：未扣軟刪量時正式站常態就超過 10%）。
 #
 # **唯讀**：只有 select，不寫入任何資料；不讀任何 `.env`、不印任何憑證（走 CLI 既有的專案連結）。
 # 本腳本只報告，不改額度、不關註冊、不升級方案（票文「不做」）。
 #
 # 用法：
-#   bash scripts/ops/prod-usage-health.sh [--fixture <a>,<b>,<c>]
+#   bash scripts/ops/prod-usage-health.sh [--fixture <a>,<b>,<c>[,<d>]]
 #
-# --fixture a,b,c  跳過真正連線，三個水位直接給 bytes（非負整數），腳本自己包成與真通道同形的信封
+# --fixture a,b,c[,d]  跳過真正連線，三個水位（＋可選的軟刪待清 bytes d，預設 0）直接給 bytes（非負整數），
+#                  腳本自己包成與真通道同形的信封
 #                  再走同一條解析路徑——供自測（prod-usage-health.test.sh）與手動除錯用。
 # Exit：0＝全 ✓（或只有 ⚠）；1＝任一 ✗，或連線／解析失敗（fail loud，不誤報健康）；2＝用法錯誤或未 link。
 set -uo pipefail
@@ -54,13 +58,13 @@ done
 if [ -n "$FIXTURE" ]; then
   case "$FIXTURE" in
     *[!0-9,]*|,*|*,|*,,*)
-      echo "✗ --fixture 格式必須是 <a>,<b>,<c>（三個非負整數 bytes），收到：$FIXTURE" >&2
+      echo "✗ --fixture 格式必須是 <a>,<b>,<c>[,<d>]（非負整數 bytes），收到：$FIXTURE" >&2
       exit 2
       ;;
   esac
-  IFS=, read -r fx_a fx_b fx_c fx_extra <<<"$FIXTURE"
+  IFS=, read -r fx_a fx_b fx_c fx_d fx_extra <<<"$FIXTURE"
   if [ -z "${fx_a:-}" ] || [ -z "${fx_b:-}" ] || [ -z "${fx_c:-}" ] || [ -n "${fx_extra:-}" ]; then
-    echo "✗ --fixture 格式必須是 <a>,<b>,<c>（三個非負整數 bytes），收到：$FIXTURE" >&2
+    echo "✗ --fixture 格式必須是 <a>,<b>,<c>[,<d>]（非負整數 bytes），收到：$FIXTURE" >&2
     exit 2
   fi
 fi
@@ -78,14 +82,15 @@ build_query() {
 select jsonb_build_object(
   'families_used', (select coalesce(sum(storage_used_bytes), 0) from public.families),
   'bucket_bytes', (select coalesce(sum((metadata->>'size')::bigint), 0) from storage.objects),
+  'softdeleted_bytes', (select coalesce(sum(byte_size), 0) from public.media where deleted_at is not null),
   'db_bytes', pg_database_size(current_database())
 ) as payload;
 SQL
 }
 
 if [ -n "$FIXTURE" ]; then
-  raw=$(printf '{\n  "boundary": "fixture",\n  "rows": [\n    { "payload": { "families_used": %s, "bucket_bytes": %s, "db_bytes": %s } }\n  ],\n  "warning": null\n}\n' \
-    "$fx_a" "$fx_b" "$fx_c")
+  raw=$(printf '{\n  "boundary": "fixture",\n  "rows": [\n    { "payload": { "families_used": %s, "bucket_bytes": %s, "db_bytes": %s, "softdeleted_bytes": %s } }\n  ],\n  "warning": null\n}\n' \
+    "$fx_a" "$fx_b" "$fx_c" "${fx_d:-0}")
 else
   sql_file=$(mktemp "${TMPDIR:-/tmp}/LS-399-usage-health.XXXXXX")
   build_query > "$sql_file"
@@ -121,7 +126,7 @@ if not rows or not isinstance(rows[0].get("payload"), dict):
 payload = rows[0]["payload"]
 
 values = {}
-for key in ("families_used", "bucket_bytes", "db_bytes"):
+for key in ("families_used", "bucket_bytes", "db_bytes", "softdeleted_bytes"):
     v = payload.get(key)
     if not isinstance(v, int) or v < 0:
         print(f"✗ payload.{key} 不是非負整數：{v!r}", file=sys.stderr)
@@ -160,16 +165,18 @@ level("(a) families.storage_used_bytes 加總", values["families_used"], storage
 level("(b) storage.objects 實際大小", values["bucket_bytes"], storage_limit, "Storage 上限 1 GiB")
 level("(c) DB 大小 pg_database_size", values["db_bytes"], db_limit, "DB 上限 500 MiB")
 
-a, b = values["families_used"], values["bucket_bytes"]
-denom = max(a, b)
-drift = abs(b - a) * 100 / denom if denom else 0.0
+a, b, d = values["families_used"], values["bucket_bytes"], values["softdeleted_bytes"]
+net = b - d
+denom = max(a, abs(net))
+drift = abs(net - a) * 100 / denom if denom else 0.0
+breakdown = f"(b) 原始 {mib(b)} − 軟刪待清 {mib(d)} ＝ (b) 淨值 {mib(net)}"
 if drift > drift_pct:
     print(
-        f"ⓘ (a)(b) 差額 {mib(abs(b - a))}（{drift:.1f}%，> {drift_pct}%）：可能是孤兒物件或計數漂移"
-        "（縮圖／軟刪待清的原檔本來就讓 b > a）——跑 bash scripts/ops/prod-storage-verify.sh 查"
+        f"ⓘ (a) 對 (b) 淨值差額 {mib(abs(net - a))}（{drift:.1f}%，> {drift_pct}%）——{breakdown}："
+        "可能是孤兒物件或計數漂移（縮圖不算 byte_size，淨值略大於 a 屬正常）——跑 bash scripts/ops/prod-storage-verify.sh 查"
     )
 else:
-    print(f"✓ (a)(b) 差額 {mib(abs(b - a))}（{drift:.1f}%，≤ {drift_pct}%）")
+    print(f"✓ (a) 對 (b) 淨值差額 {mib(abs(net - a))}（{drift:.1f}%，≤ {drift_pct}%）——{breakdown}")
 
 sys.stdout.flush()
 if failed:

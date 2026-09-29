@@ -3912,9 +3912,11 @@ bash scripts/ops/prod-usage-health.sh
 | (b) | `sum(storage.objects.metadata->>'size')`——bucket 實際物件大小（Supabase 計費口徑） | Storage |
 | (c) | `pg_database_size(current_database())` | DB |
 
-每行 `✓`（< 70%）／`⚠`（≥ 70%，exit 0）／`✗`（≥ 90%，exit 1）。另印 (a)(b) 差額：超過 10% 印 `ⓘ`
-並指向 `prod-storage-verify.sh`——**(b) 大於 (a) 本來就正常**（縮圖物件不算 `byte_size`、軟刪待清的
-原檔已釋放額度但還在 bucket，見 §3 `byte_size` 段），差額突然變大才是孤兒物件或計數漂移的線索。
+每行 `✓`（< 70%）／`⚠`（≥ 70%，exit 0）／`✗`（≥ 90%，exit 1）。另印 (a) 對 (b) 淨值的差額，並列出
+(b) 原始、軟刪待清、(b) 淨值三個數——**(b) 淨值＝(b) 減去 `media.deleted_at is not null`（軟刪、尚未被
+purge 硬刪）的原檔 `byte_size`**：這些原檔已從 (a) 扣掉額度卻還在 bucket，不扣的話正式站常態差額就超過
+10%。淨差超過 10% 才印 `ⓘ` 並指向 `prod-storage-verify.sh`；縮圖物件不算 `byte_size`（見 §3 `byte_size`
+段），淨值略大於 (a) 屬正常，差額突然變大才是孤兒物件或計數漂移的線索。
 連線失敗一律 exit 1（沒量到不等於健康）。換方案時改腳本頂端兩個常數，並同步本段。
 
 **Dashboard 告警設定（使用者本人操作）**——agent 沒有 Dashboard 權限，以下由專案擁有者登入
@@ -3929,7 +3931,7 @@ supabase.com 操作；介面名稱以 Dashboard 當下為準：
 
 **水位到 70%（腳本印 `⚠`）的處置順序**——由便宜到貴，前一步解決就停：
 
-1. **先查孤兒**：跑 `bash scripts/ops/prod-storage-verify.sh`，對照 (a)(b) 差額；確認
+1. **先查孤兒**：跑 `bash scripts/ops/prod-storage-verify.sh`，對照 (a) 對 (b) 淨值的差額；確認
    `purge-storage` 排程健康（`bash scripts/ops/prod-purge-health.sh`）——軟刪待清的原檔若沒被清，
    (b) 會一直漲。
 2. **再看註冊開關**：成長來自新家庭湧入時，照本節「關閉／重新開放新註冊」暫停自建家庭

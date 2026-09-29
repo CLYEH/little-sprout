@@ -3,12 +3,13 @@
 # Supabase 專案。
 #
 # 涵蓋：三分支（<70 ✓／70–90 ⚠ exit 0／≥90 ✗ exit 1，(a)(b)(c) 各自都會觸發）＋70%／90% 兩個邊界的前後
-# 一位元組＋(a)(b) 差額 ⓘ 提示（>10% 印、≤10% 不印、兩者皆 0 不除以零）＋參數驗證 exit 2＋未 link exit 2＋
+# 一位元組＋(a) 對 (b) 淨值差額 ⓘ 提示（>10% 印、≤10% 不印、扣掉軟刪待清後 <10% 不印、兩者皆 0 不除以零）＋參數驗證 exit 2＋未 link exit 2＋
 # 真通道路徑（PATH 上的假 `supabase` 回完整信封／exit 非 0／非 JSON，並攔下送出的 SQL 驗只有 select）。
 #
 # Mutation（票文規約；同 prod-storage-verify.test.sh 慣例：本機手動跑一次、斷言原文貼票 handoff，不進 commit）：
 #   - `FAIL_PCT=90` 改成 `FAIL_PCT=95` → ③（(c) 92%）與 ⑤（90% 邊界）轉紅（exit 0、印 ⚠ 而非 ✗）。
 #   - `elif pct >= warn_pct:` 改成 `>` → ④（(c) 恰等於 70%）轉紅（印 ✓ 而非 ⚠）。
+#   - `net = b - d` 改成 `net = b`（不扣軟刪待清）→ ⑥ 軟刪夾具轉紅（又印 ⓘ）。
 # 比對一律走共用庫 has()（here-string；不接 `printf | grep -q`，見 pipefail-grep-q-check.sh）。
 set -uo pipefail
 
@@ -78,19 +79,24 @@ expect 0 '⑤ (b) 90% 前一位元組 → ⚠、exit 0' '⚠ prod-usage-health' 
 expect 1 '⑤ (b) 剛達 90% → ✗、exit 1' '✗ (b) storage.objects 實際大小' --fixture "${S90_AT},${S90_AT},0"
 expect 1 '⑤ (c) 恰等於 90% → ✗、exit 1（≥ 含等號）' '✗ (c) DB 大小 pg_database_size' --fixture "0,0,$((MIB500 * 90 / 100))"
 
-# ---- ⑥ (a)(b) 差額提示 ----
+# ---- ⑥ (a) 對 (b) 淨值差額提示（淨值＝b − 軟刪待清 d，LS-399 R0 補充）----
 expect 0 '⑥ 差額 >10% → 印 ⓘ 並指向 prod-storage-verify.sh（不影響 exit）' 'bash scripts/ops/prod-storage-verify.sh' \
   --fixture "100000000,120000000,0"
-expect_has "$out" 'ⓘ (a)(b) 差額 19.1 MiB（16.7%，> 10%）' '⑥ ⓘ 行印差額百分比'
-expect 0 '⑥ 差額 ≤10% → 不印 ⓘ' '✓ (a)(b) 差額' --fixture "100000000,109000000,0"
+expect_has "$out" 'ⓘ (a) 對 (b) 淨值差額 19.1 MiB（16.7%，> 10%）' '⑥ ⓘ 行印差額百分比'
+expect 0 '⑥ 差額 ≤10% → 不印 ⓘ' '✓ (a) 對 (b) 淨值差額' --fixture "100000000,109000000,0"
 expect_not_has "$out" 'prod-storage-verify.sh' '⑥ ≤10% 不指向 prod-storage-verify.sh'
-expect 0 '⑥ a > b 也算差額（計數漂移方向）' 'ⓘ (a)(b) 差額' --fixture "120000000,100000000,0"
-expect 0 '⑥ a=b=0 不除以零' '✓ (a)(b) 差額 0.0 MiB（0.0%' --fixture "0,0,0"
+expect 0 '⑥ a > b 也算差額（計數漂移方向）' 'ⓘ (a) 對 (b) 淨值差額' --fixture "120000000,100000000,0"
+expect 0 '⑥ a=b=0 不除以零' '✓ (a) 對 (b) 淨值差額 0.0 MiB（0.0%' --fixture "0,0,0"
+# 原始差額 20%（>10%）但其中 15 MB 是軟刪待清 → 淨值 105 MB、淨差 4.8% → 不印 ⓘ，且三個數都列出
+expect 0 '⑥ 軟刪待清 15 MB：原始差 20%、淨差 4.8% → 不印 ⓘ' '✓ (a) 對 (b) 淨值差額 4.8 MiB（4.8%，≤ 10%）' \
+  --fixture "100000000,120000000,0,15000000"
+expect_not_has "$out" 'ⓘ' '⑥ 軟刪夾具不印 ⓘ'
+expect_has "$out" '(b) 原始 114.4 MiB − 軟刪待清 14.3 MiB ＝ (b) 淨值 100.1 MiB' '⑥ 軟刪夾具列出 b 原始／軟刪待清／b 淨值三個數'
+expect 2 '⑦ 給五個數 → exit 2' '格式必須是' --fixture 1,2,3,4,5
 
 # ---- ⑦ 參數驗證 fail closed（exit 2，不嘗試連線）----
 expect 2 '⑦ --fixture 缺值 → exit 2' '--fixture 缺值' --fixture
 expect 2 '⑦ 只給兩個數 → exit 2' '格式必須是' --fixture 1,2
-expect 2 '⑦ 給四個數 → exit 2' '格式必須是' --fixture 1,2,3,4
 expect 2 '⑦ 負數 → exit 2' '格式必須是' --fixture -1,2,3
 expect 2 '⑦ 非數字 → exit 2' '格式必須是' --fixture a,b,c
 expect 2 '⑦ 空欄 → exit 2' '格式必須是' --fixture 1,,3
@@ -126,6 +132,7 @@ case "$SHIM_MODE" in
       "payload": {
         "bucket_bytes": 125011345,
         "db_bytes": 16272531,
+        "softdeleted_bytes": 14770761,
         "families_used": 107877790
       }
     }
