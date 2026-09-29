@@ -25,9 +25,9 @@ import UIKit
 ///   記為後續）。app 進背景時記下飛行中的項目，回前景（`appDidBecomeActive()`）把仍卡在
 ///   `.uploading`／被中斷成 `.failed(.network)` 的翻回 `.waiting` 重送並設
 ///   `resumedFromInterruption`；未完成項另落盤（`UploadQueuePersistence`），app 被回收重啟後由
-///   `restorePersistedEntries` 列回佇列重送。飛行中的位元組不接回——一律整筆重傳（at-least-once，
-///   見 `UploadQueueStore+Resume.swift` 的去重說明）。「使用者主動關閉 sheet 時不取消飛行中
-///   的 Task」仍成立：`Task` 的生命週期跟著 store 實例走，不是跟著 sheet 的 `View`。
+///   `restorePersistedEntries` 列回佇列重送。飛行中的位元組不接回——一律整筆重傳，重送沿用佇列項 id
+///   當 `media.id` 以冪等去重（見 `+Resume.swift`）。dismiss sheet 不取消飛行中的 Task（生命週期
+///   跟著 store 實例，不是 `View`）。
 @MainActor
 @Observable
 final class UploadQueueStore {
@@ -107,14 +107,13 @@ final class UploadQueueStore {
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
     var order: [UUID] = []
 
-    /// 稿面 `LS-142 / 16 上傳佇列` `Resume Banner`（`SpAvh`）：LS-397 起由 `appDidBecomeActive()`
-    /// （回前景重送被中斷的項目）與 `restorePersistedEntries`（app 被回收後重啟續傳）設 `true`；
-    /// 佇列閒置後的下一次 `enqueue` 才歸零（全部完成後橫幅仍留著，直到有新的一批）。
+    /// 稿面 `16 上傳佇列` `Resume Banner`（`SpAvh`）：LS-397 起由 `appDidBecomeActive()`（回前景重送）與
+    /// `restorePersistedEntries`（重啟續傳）設 `true`；佇列閒置後的下一次 `enqueue` 才歸零。
     var resumedFromInterruption = false
-    /// LS-397：落盤層（`nil`＝不落盤，測試／preview 預設）與「這筆要掛進哪本相簿」的查詢
-    /// （`AlbumsStore.pendingUploadAlbumIDs`，入列時一併落盤）。
+    /// LS-397：落盤層（`nil`＝不落盤，測試／preview 預設）與「這筆要掛進哪本相簿、標哪些寶貝」的
+    /// 查詢（`AlbumsStore.pendingUploadAlbumIDs`／標記追蹤器，入列時一併落盤）。
     let persistence: UploadQueuePersistence?
-    let albumIDProvider: @MainActor (_ id: UUID) -> UUID?
+    let linksProvider: @MainActor (_ id: UUID) -> PersistedUploadRecord.Links
     /// LS-397：續傳／落盤簿記，見 `+Resume.swift`。
     var resume = ResumeState()
 
@@ -126,7 +125,7 @@ final class UploadQueueStore {
         onUploadFailedRetryable: @escaping @MainActor (_ id: UUID) -> Void = { _ in },
         videoExportTimeout: Duration = .seconds(600),
         persistence: UploadQueuePersistence? = nil,
-        albumIDProvider: @escaping @MainActor (_ id: UUID) -> UUID? = { _ in nil },
+        linksProvider: @escaping @MainActor (_ id: UUID) -> PersistedUploadRecord.Links = { _ in .none },
         videoPreparer: @escaping @Sendable (URL) async throws -> VideoTrimmer.UploadSource = { fileURL in
             try await VideoTrimmer.compressedForUpload(fileURL: fileURL)
         }
@@ -140,7 +139,7 @@ final class UploadQueueStore {
         self.onUploadFailedRetryable = onUploadFailedRetryable
         self.videoExportTimeout = videoExportTimeout
         self.persistence = persistence
-        self.albumIDProvider = albumIDProvider
+        self.linksProvider = linksProvider
         self.videoPreparer = videoPreparer
     }
 
@@ -355,7 +354,8 @@ final class UploadQueueStore {
         switch payload {
         case .photo(let data, let fileExtension):
             return try await mediaUploadService.uploadPhoto(
-                familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: takenAt
+                familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: takenAt,
+                mediaID: id
             )
         case .video(let fileURL, _):
             let source: VideoTrimmer.UploadSource
@@ -372,7 +372,7 @@ final class UploadQueueStore {
             // .uploadSingle` merge-review R1 m7）。
             let mediaID = try await mediaUploadService.uploadVideo(
                 familyID: familyID, fileURL: source.fileURL, fileExtension: source.fileExtension,
-                pixelSize: source.pixelSize ?? pixelSize, takenAt: takenAt
+                pixelSize: source.pixelSize ?? pixelSize, takenAt: takenAt, mediaID: id
             )
             compressedVideoCache.removeValue(forKey: id)
             Self.cleanupVideoTempFiles(originalURL: fileURL, uploadedURL: source.fileURL)

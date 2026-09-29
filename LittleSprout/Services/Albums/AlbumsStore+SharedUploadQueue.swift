@@ -67,13 +67,21 @@ extension AlbumsStore {
             },
             // LS-397：落盤層由 `LittleSproutApp` 注入工廠；測試預設 `nil`（不落盤）。
             persistence: uploadQueuePersistenceFactory?(familyID),
-            albumIDProvider: { [weak self] entryID in self?.pendingUploadAlbumIDs[entryID] }
+            linksProvider: { [weak self] entryID in
+                PersistedUploadRecord.Links(
+                    albumID: self?.pendingUploadAlbumIDs[entryID],
+                    babyIDs: self?.mediaChildrenMarker.babyIDs(forEntry: entryID)
+                )
+            }
         )
         sharedUploadQueueStoreInstance = store
         // LS-397：上一個行程被回收時留下的未完成項——先重新登記相簿對照再開始重送（還原內部會
         // `advance()`），成功後 `onUploadSucceeded` 才查得到要掛哪本相簿。
-        store.restorePersistedEntries { [weak self] entryID, albumID in
-            self?.pendingUploadAlbumIDs[entryID] = albumID
+        store.restorePersistedEntries { [weak self] record in
+            if let albumID = record.albumID { self?.pendingUploadAlbumIDs[record.id] = albumID }
+            if let babyIDs = record.babyIDs {
+                self?.mediaChildrenMarker.restoreEntry(entryID: record.id, babyIDs: babyIDs)
+            }
         }
         return store
     }

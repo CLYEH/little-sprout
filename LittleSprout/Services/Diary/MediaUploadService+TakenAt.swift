@@ -10,13 +10,35 @@ extension MediaUploadService {
     /// 參數值（Swift 對 protocol requirement 的限制），這裡用轉呼叫的便利多載補上。
     func uploadPhoto(familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
         try await uploadPhoto(
-            familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: nil
+            familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: nil,
+            mediaID: nil
         )
     }
 
     func uploadVideo(familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
         try await uploadVideo(
-            familyID: familyID, fileURL: fileURL, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: nil
+            familyID: familyID, fileURL: fileURL, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: nil,
+            mediaID: nil
+        )
+    }
+
+    /// LS-304 起的 5-arg 形狀（`takenAt`，無指定 `mediaID`）——LS-397 R1 M3 把 `mediaID` 加進協定要求後，
+    /// 既有呼叫端（批次匯入以外的單張上傳、食物圖鑑等）仍用這個多載，行為與之前完全相同。
+    func uploadPhoto(
+        familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID {
+        try await uploadPhoto(
+            familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: takenAt,
+            mediaID: nil
+        )
+    }
+
+    func uploadVideo(
+        familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    ) async throws -> UUID {
+        try await uploadVideo(
+            familyID: familyID, fileURL: fileURL, fileExtension: fileExtension, pixelSize: pixelSize,
+            takenAt: takenAt, mediaID: nil
         )
     }
 }

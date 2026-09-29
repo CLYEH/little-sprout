@@ -32,6 +32,16 @@ struct PersistedUploadRecord: Codable, Equatable {
     /// 這筆完成後要掛進哪本相簿（`AlbumsStore.pendingUploadAlbumIDs` 的落盤副本）——重啟後由
     /// `AlbumsStore` 重新登記，否則續傳成功的照片會進 `media` 卻不會掛進相簿。
     let albumID: UUID?
+    /// LS-397 R1 M2：批次匯入「指定寶貝」的寶貝 id（標記追蹤器對這筆的落盤副本）——重啟後重新登記進
+    /// 追蹤器，續傳成功才補得上標記；舊版 manifest 沒有這個 key，解碼為 `nil`。
+    var babyIDs: [UUID]?
+
+    /// 入列當下向外部（`AlbumsStore`）查到的「這筆的連結」，落進 record。
+    struct Links {
+        var albumID: UUID?
+        var babyIDs: [UUID]?
+        static let none = Links(albumID: nil, babyIDs: nil)
+    }
 }
 
 struct UploadQueuePersistence: Sendable {

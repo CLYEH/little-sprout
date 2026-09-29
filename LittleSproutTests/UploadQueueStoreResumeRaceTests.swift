@@ -65,4 +65,39 @@ final class UploadQueueStoreResumeRaceTests: XCTestCase {
         XCTAssertEqual(store.failedCount, 0, "背景寬限期內才開始的上傳被暫停中斷後，必須自動重送，不能留成失敗項")
         XCTAssertEqual(store.remainingCount, 0, "回前景後 30 張要全部完成")
     }
+
+    /// R1 M3：INSERT 已在伺服器 commit、回應卻沒回到 app（被暫停）→ 回前景取消並重送。重送必須沿用
+    /// 同一個 `media.id`（佇列項 id），伺服器（這裡用「同 id 只算一列」模擬主鍵）才不會多出重複列；
+    /// 所有嘗試都要帶非 `nil` 的 `mediaID`，且同一筆的每次嘗試 id 相同。
+    func test_resendAfterLostResponse_reusesMediaID_soServerHasNoDuplicateRow() async {
+        let serverRows = OSAllocatedUnfairLock(initialState: Set<UUID>())
+        let attempts = OSAllocatedUnfairLock(initialState: [String: Int]())
+        let mediaService = StubMediaUploadService()
+        mediaService.setUploadPhotoMediaIDHandler { mediaID, data in
+            let tag = String(bytes: data, encoding: .utf8) ?? ""
+            let attempt = attempts.withLock { counts -> Int in
+                counts[tag, default: 0] += 1
+                return counts[tag] ?? 0
+            }
+            let id = mediaID ?? UUID() // 沒指定 id＝服務自己產生新的（舊行為，重送就會變成新的一列）
+            serverRows.withLock { _ = $0.insert(id) } // INSERT 已 commit
+            if attempt == 1, tag == "2" { try await Task.sleep(for: .seconds(60)) } // 回應遺失
+            return id
+        }
+        let store = UploadQueueStore(familyID: UUID(), mediaUploadService: mediaService, maxConcurrentUploads: 3)
+        addTeardownBlock { @MainActor in store.discardPersistedState() }
+        let uploads = (0..<3).map { makeUpload("\($0)") }
+
+        store.enqueue(uploads)
+        await waitUntil { self.completedCount(store) == 2 }
+        store.appDidEnterBackground()
+        store.appDidBecomeActive()
+        await waitUntil { store.remainingCount == 0 }
+
+        XCTAssertEqual(store.remainingCount, 0, "重送後 3 張都要完成")
+        XCTAssertEqual(serverRows.withLock { $0.count }, 3, "回應遺失後重送不能在伺服器多出一列 media（重複照片）")
+        let sentIDs = mediaService.uploadPhotoCalls.compactMap(\.mediaID)
+        XCTAssertEqual(sentIDs.count, mediaService.uploadPhotoCalls.count, "每次嘗試都要指定 mediaID")
+        XCTAssertEqual(Set(sentIDs), Set(uploads.map(\.id)), "mediaID 用佇列項 id，重送沿用同一個")
+    }
 }

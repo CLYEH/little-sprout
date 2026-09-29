@@ -103,10 +103,11 @@ extension UploadQueueStore {
         case .photo(_, let fileExtension): (kind, ext) = (.photo, fileExtension)
         case .video(_, let fileExtension): (kind, ext) = (.video, fileExtension)
         }
+        let links = linksProvider(upload.id)
         resume.records[upload.id] = PersistedUploadRecord(
             id: upload.id, kind: kind, fileExtension: ext, payloadFileName: fileName,
             pixelWidth: upload.pixelSize.width, pixelHeight: upload.pixelSize.height,
-            takenAt: upload.takenAt, enqueuedAt: enqueuedAt, albumID: albumIDProvider(upload.id)
+            takenAt: upload.takenAt, enqueuedAt: enqueuedAt, albumID: links.albumID, babyIDs: links.babyIDs
         )
     }
 
@@ -135,9 +136,9 @@ extension UploadQueueStore {
     // MARK: - 重啟後還原
 
     /// app 被回收後重新啟動：把 manifest 裡的未完成項列回佇列（狀態一律 `.waiting`，縮圖為空）、
-    /// 逐筆呼叫 `registerAlbum` 讓呼叫端重新登記相簿對照，設 `resumedFromInterruption` 並開始重送。
+    /// 逐筆呼叫 `register` 讓呼叫端重新登記相簿對照與寶貝標記，設 `resumedFromInterruption` 並開始重送。
     /// 不接回舊的 `URLSession`（路線 (a)）——整筆重傳。payload 檔案不見的紀錄直接丟棄。
-    func restorePersistedEntries(registerAlbum: (_ entryID: UUID, _ albumID: UUID) -> Void) {
+    func restorePersistedEntries(register: (_ record: PersistedUploadRecord) -> Void) {
         guard let persistence else { return }
         var restored = 0
         for record in persistence.loadRecords() where entries[record.id] == nil {
@@ -148,7 +149,7 @@ extension UploadQueueStore {
             )
             order.append(record.id)
             resume.records[record.id] = record
-            if let albumID = record.albumID { registerAlbum(record.id, albumID) }
+            register(record)
             restored += 1
         }
         persistence.pruneOrphans(keeping: Set(resume.records.values.map(\.payloadFileName)))

@@ -109,7 +109,7 @@ final class UploadQueueStoreResumeTests: XCTestCase {
         }
         let firstProcess = UploadQueueStore(
             familyID: familyID, mediaUploadService: hanging, maxConcurrentUploads: 5, persistence: persistence,
-            albumIDProvider: { $0 == stuckAlbumUploadID ? albumID : nil }
+            linksProvider: { PersistedUploadRecord.Links(albumID: $0 == stuckAlbumUploadID ? albumID : nil) }
         )
         firstProcess.enqueue([
             makeUpload(tag: "0"), makeUpload(tag: "1"), makeUpload(tag: "2"),
@@ -125,7 +125,9 @@ final class UploadQueueStoreResumeTests: XCTestCase {
         let restarted = UploadQueueStore(
             familyID: familyID, mediaUploadService: secondService, maxConcurrentUploads: 5, persistence: persistence
         )
-        restarted.restorePersistedEntries { registered[$0] = $1 }
+        restarted.restorePersistedEntries { record in
+            if let albumID = record.albumID { registered[record.id] = albumID }
+        }
 
         XCTAssertEqual(restarted.rows.count, 2, "重啟後只還原未完成的 2 張")
         XCTAssertEqual(registered, [stuckAlbumUploadID: albumID], "相簿對照要重新登記，續傳成功才掛得進相簿")

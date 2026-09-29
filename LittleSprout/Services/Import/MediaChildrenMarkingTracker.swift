@@ -198,6 +198,20 @@ final class MediaChildrenMarkingTracker {
         finalizeIfReady(key)
     }
 
+    /// LS-397 R1 M2：這筆所屬群的 `babyIDs`（入列當下落盤用）——先看補交登記，再看群狀態；沒有登記（空
+    /// `babyIDs` 的群、或群已結算移除）回 `nil`。
+    func babyIDs(forEntry entryID: UUID) -> [UUID]? {
+        pendingRetryableEntries[entryID] ?? entryToGroup[entryID].flatMap { groups[$0]?.babyIDs }
+    }
+
+    /// LS-397 R1 M2：app 被回收後還原的佇列項——原本的群狀態（記憶體）已不存在，把這筆登記成既有
+    /// 「補交」路徑（同 `handleUploadFailedRetryable` 之後補交成功的那條）：續傳成功時
+    /// `handleUploadSucceeded` 會對這一筆單獨補送一次標記 RPC。空 `babyIDs` 不登記。
+    func restoreEntry(entryID: UUID, babyIDs: [UUID]) {
+        guard !babyIDs.isEmpty else { return }
+        pendingRetryableEntries[entryID] = babyIDs
+    }
+
     private func finalizeIfReady(_ key: GroupKey) {
         guard let state = groups[key], state.isFullyRegistered, state.resolvedCount >= state.registeredCount else {
             return
