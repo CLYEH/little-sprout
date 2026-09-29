@@ -18,7 +18,6 @@
 		03097B461382E3D453B7B548 /* PendingAccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 891013E5A75CD7CC488037D0 /* PendingAccountDeletionTests.swift */; };
 		0373CF2DC8FA481EBC64CFF3 /* ChildrenStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C7E229440047D04B81BCE30 /* ChildrenStoreTests.swift */; };
 		043855BA7839CA15F042676B /* AlbumsViewIPadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B9B9BC87911D6859F99FAC /* AlbumsViewIPadTests.swift */; };
-		04D3D6DBA1052199F614C07D /* SupabaseMediaUploadServiceIdempotentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 642BDD957233F3FE9D90038C /* SupabaseMediaUploadServiceIdempotentTests.swift */; };
 		04D52DB3C6523A449FAB42B8 /* FamilyStoreProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2584887C616FAF64E990665 /* FamilyStoreProfileTests.swift */; };
 		04E7BE1E889A851AE7F4E484 /* DeleteConfirmationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ECDD98F8DDC62243057E57 /* DeleteConfirmationSheet.swift */; };
 		0510B5801E753003A86A2B04 /* AuthSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BEB4DA6A1BCCFD8355575E /* AuthSession.swift */; };
@@ -119,6 +118,7 @@
 		27765396913C304FC059C525 /* CommentAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFD1FF4DE88B8A84B28A7C2 /* CommentAPIClient.swift */; };
 		27942E3D3049966A807E6743 /* SupabaseCommentAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F87BF57597ACB46BC0AC7B /* SupabaseCommentAPIClientTests.swift */; };
 		27DFB207A8FB1F89BDBE0EC4 /* PreviewCommentAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E47F3C2BFA4730CBA70641 /* PreviewCommentAPIClient.swift */; };
+		283AA84F34716C131BE79828 /* SupabaseMediaUploadIdempotencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44AF11A84EA040040AB1C554 /* SupabaseMediaUploadIdempotencyTests.swift */; };
 		28E5FB900660E9320FF010BB /* DeleteAccountFlowModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CDD3E63AAEAD23512BDFBA /* DeleteAccountFlowModelTests.swift */; };
 		2901F4F02AEFA34AA7943F0B /* PreviewPushAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14278530E77D1559729D3354 /* PreviewPushAPIClient.swift */; };
 		2923B118178851D5C29651A5 /* FamilyStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA9BCE3B67830009105F917D /* FamilyStoreTests.swift */; };
@@ -827,6 +827,7 @@
 		41B7B10C2108552F0A805115 /* DeleteAccountFlowModelRaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountFlowModelRaceTests.swift; sourceTree = "<group>"; };
 		42C2B83FEEFC0C21A583FCA6 /* GrowthDetailViewerGatingRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthDetailViewerGatingRegressionTests.swift; sourceTree = "<group>"; };
 		42EC894F62DC55A74654ED99 /* SettingsIconsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsIconsTests.swift; sourceTree = "<group>"; };
+		44AF11A84EA040040AB1C554 /* SupabaseMediaUploadIdempotencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaUploadIdempotencyTests.swift; sourceTree = "<group>"; };
 		44CF5C61ADF3E932C1795C96 /* DiaryPhotoReorderMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryPhotoReorderMath.swift; sourceTree = "<group>"; };
 		451694C23C0044D0DCDD0356 /* DiaryComposerStorePublishTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStorePublishTests.swift; sourceTree = "<group>"; };
 		4552E5CBB92202CE2D569612 /* JoinWaitingPhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinWaitingPhase.swift; sourceTree = "<group>"; };
@@ -909,7 +910,6 @@
 		63CA1CAC550FF16F9806B519 /* DiaryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryDetailView.swift; sourceTree = "<group>"; };
 		63CDD3E63AAEAD23512BDFBA /* DeleteAccountFlowModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountFlowModelTests.swift; sourceTree = "<group>"; };
 		64087AB29C1A51AC86834868 /* SupabaseFamilyAPIClientInviteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClientInviteTests.swift; sourceTree = "<group>"; };
-		642BDD957233F3FE9D90038C /* SupabaseMediaUploadServiceIdempotentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseMediaUploadServiceIdempotentTests.swift; sourceTree = "<group>"; };
 		64398867FF6A776CAD323AB7 /* LittleSprout.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LittleSprout.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		643C6B3527FD660D2F89D842 /* SettingsPushRowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPushRowUITests.swift; sourceTree = "<group>"; };
 		64B2D0ACAEBD4001FACDD222 /* AlbumDetailViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailViewTests.swift; sourceTree = "<group>"; };
@@ -1742,9 +1742,9 @@
 				94B90F66016EC2C905347224 /* SupabaseFamilyAPIClientTests.swift */,
 				3EB0E68ECDDA345191C5DB80 /* SupabaseFoodAPIClientTests.swift */,
 				4765EF6D4F14332FC2ED3B3B /* SupabaseMediaSoftDeleteTests.swift */,
+				44AF11A84EA040040AB1C554 /* SupabaseMediaUploadIdempotencyTests.swift */,
 				265ECDE8A6FEEB9D93E92AE4 /* SupabaseMediaUploadServiceCleanupTests.swift */,
 				87CB2AF4E34834F3279C2367 /* SupabaseMediaUploadServiceDurationTests.swift */,
-				642BDD957233F3FE9D90038C /* SupabaseMediaUploadServiceIdempotentTests.swift */,
 				1316439F5231DB2C470519A8 /* SupabaseMediaUploadServiceTests.swift */,
 				06B08E2AF6C54AAD3D290BA2 /* SupabaseMediaUploadServiceThumbnailTests.swift */,
 				525B6AAD4DF9748A8DA22192 /* SupabasePushDeviceTokenAPIClientTests.swift */,
@@ -3047,9 +3047,9 @@
 				15E53C663EE9CEDBF1E4FCCE /* SupabaseFamilyAPIClientTests.swift in Sources */,
 				E213D5142C9114A63FCC3AC3 /* SupabaseFoodAPIClientTests.swift in Sources */,
 				3B8B050311C2E7D8ABC66A97 /* SupabaseMediaSoftDeleteTests.swift in Sources */,
+				283AA84F34716C131BE79828 /* SupabaseMediaUploadIdempotencyTests.swift in Sources */,
 				E70D35B49C52CB73CBA0BCFA /* SupabaseMediaUploadServiceCleanupTests.swift in Sources */,
 				992B474F641BD90228CA9C62 /* SupabaseMediaUploadServiceDurationTests.swift in Sources */,
-				04D3D6DBA1052199F614C07D /* SupabaseMediaUploadServiceIdempotentTests.swift in Sources */,
 				506E4EBE1704397A0F6CBFCF /* SupabaseMediaUploadServiceTests.swift in Sources */,
 				856028BA2632449FEDA2CBF6 /* SupabaseMediaUploadServiceThumbnailTests.swift in Sources */,
 				FADF90D2F44EB137408E582B /* SupabasePushDeviceTokenAPIClientTests.swift in Sources */,
