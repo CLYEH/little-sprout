@@ -211,9 +211,10 @@ final class SupabaseTimelineAPIClientTests: XCTestCase {
 
     func test_fetchAlbums_decodesRows() async throws {
         let client = TestSupabaseClient.make { [refID] request in
-            XCTAssertEqual(request.url?.path, "/rest/v1/albums")
+            // LS-390：改讀 `album_summaries` view 以取 `visible_media_count`（相簿卡「N 張相片」）。
+            XCTAssertEqual(request.url?.path, "/rest/v1/album_summaries")
             return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
-            [{"id": "\(refID.uuidString)", "title": "生日派對", "cover_media_id": null}]
+            [{"id": "\(refID.uuidString)", "title": "生日派對", "cover_media_id": null, "visible_media_count": 8}]
             """.utf8))
         }
         let apiClient = SupabaseTimelineAPIClient(client: client)
@@ -223,6 +224,7 @@ final class SupabaseTimelineAPIClientTests: XCTestCase {
         XCTAssertEqual(albums.count, 1)
         XCTAssertEqual(albums[0].title, "生日派對")
         XCTAssertNil(albums[0].coverMediaId)
+        XCTAssertEqual(albums[0].visibleMediaCount, 8)
     }
 
     func test_fetchMedia_decodesPhotoRow() async throws {
