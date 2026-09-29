@@ -97337,7 +97337,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "【LS-403 R1】失敗項退場路徑（回應 OT5n9「失敗項退場：…待 LS-142 補移除動作」）。每張失敗列在錯誤句下方加一條動作列：左＝原有動作（可重試的列「重試」cmp/Button Text 帶 refresh-cw；容量已滿 LS002 列「查看儲存空間」連結），右＝「移除」（cmp/Button Text 實例，icon 關閉、label $text-secondary 600，內距 上下 $ctl-pad-tap／左 $sp-item 16／右 0，文字右緣貼齊內容欄右緣，點擊區 50×44）。層級：重試＝墨色＋icon（這一列該做的事），移除＝次要灰字、無 icon（放棄這張）；兩者分處動作列左右兩端，誤觸不會按到另一個。不做滑動刪除：sheet 不是 List，滑動是看不見的手勢（長輩硬約束：不用進階手勢），可見按鈕是唯一路徑。批次：「沒有成功」群標題列右側「移除這 N 張」（N＝failedCount，含 LS002；同一個 cmp/Button Text 寫法），只在 failedCount>1 顯示——單張時列上自己的「移除」就夠（同 iIkHT「重試這 N 張」只在 >1 顯示的理由）。文案用「移除這 N 張」不用「全部移除」：與「重試這 N 張」同一句型，數字直接說出範圍。板：rU2zY（16c 淺，進行中＋失敗）／KaONe（16d 淺，只剩失敗）／FgH6v（16d 深）／sq2SF（16e 淺，全部完成）／FIwU8（AX3，16c）。16c 板刻意關掉續傳橫幅（resumedFromInterruption＝false 的樣本），讓動作列在 727 detent 內露出兩列半；橫幅與移除動作可並存，規則見下條。",
+              "content": "【LS-403 R1】失敗項退場路徑（回應 OT5n9「失敗項退場：…待 LS-142 補移除動作」）。每張失敗列在錯誤句下方加一條動作列：左＝原有動作（可重試的列「重試」cmp/Button Text 帶 refresh-cw；容量已滿 LS002 列「查看儲存空間」連結），右＝「移除」（cmp/Button Text 實例，icon 關閉、label $text-secondary 600，內距 上下 $ctl-pad-tap／左 $sp-item 16／右 0，文字右緣貼齊內容欄右緣，點擊區 50×44）。層級：重試＝墨色＋icon（這一列該做的事），移除＝次要灰字、無 icon（放棄這張）；兩者分處動作列左右兩端，誤觸不會按到另一個。不做滑動刪除：sheet 不是 List，滑動是看不見的手勢（長輩硬約束：不用進階手勢），可見按鈕是唯一路徑。批次：「沒有成功」群標題列右側「移除這 N 張」（N＝failedCount，含 LS002；同一個 cmp/Button Text 寫法），只在 failedCount>1 顯示——單張時列上自己的「移除」就夠（同 iIkHT「重試這 N 張」只在 >1 顯示的理由）。文案用「移除這 N 張」不用「全部移除」：與「重試這 N 張」同一句型，數字直接說出範圍。板：rU2zY（16c 淺，進行中＋失敗）／KaONe（16d 淺，只剩失敗）／FgH6v（16d 深）／sq2SF（16e 淺，全部完成）／FIwU8（AX3，16c）。16c 板刻意關掉續傳橫幅（resumedFromInterruption＝false 的樣本），讓動作列在 727 detent 內露出兩列半；橫幅與移除動作可並存，規則見下條。版位（LS-403 R1）：本段加長 kHDk4 後，ZG2Un／Oic2v／yResD 由 kHDk4 下方平移到 x 18600／19073／19546、y 26800（只平移，內容不動）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -130339,7 +130339,7 @@
     {
       "type": "frame",
       "id": "ZG2Un",
-      "x": 17151,
+      "x": 18600,
       "y": 26800,
       "name": "LS-152 / 09b 儲存空間 · 已滿",
       "clip": true,
@@ -130744,7 +130744,7 @@
     {
       "type": "frame",
       "id": "yResD",
-      "x": 18097,
+      "x": 19546,
       "y": 26800,
       "name": "A11y / 07 檢舉收件匣 · Dynamic Type AX3",
       "theme": {
@@ -154305,7 +154305,7 @@
     {
       "type": "frame",
       "id": "Oic2v",
-      "x": 17624,
+      "x": 19073,
       "y": 26800,
       "name": "A11y / 08 EULA 同意頁 · Dynamic Type AX3",
       "theme": {
