@@ -6,9 +6,13 @@
 # 併行時全部解析到清單第一台，併發 `xcodebuild test` 打同一顆模擬器 → runner 崩潰（LS-62 PR #120 review F5）。
 # 改成：
 #   1. 先找「本 worktree 專屬」模擬器（名稱 `<票號>-<機型無空白>`，票號取自 worktree 目錄名或分支名，
-#      主 checkout／非票號分支用 `main`）：存在就直接用它的 UDID；不存在就用清單第一台可用 iPhone 的
-#      devicetype／runtime `simctl create` 一台，用完不刪（>7 天未用由 scripts/ops/patrol.sh 只列不刪，
-#      印 `simctl delete` 指令）。
+#      主 checkout／非票號分支用 `main`）：存在就直接用它的 UDID；不存在就 `simctl create` 一台，用完不刪
+#      （>7 天未用由 scripts/ops/patrol.sh 只列不刪，印 `simctl delete` 指令）。
+#      LS-384：建機固定用 devicetype `iPhone-17-Pro`＋下方解析出的 runtime（`.ios-runtime` 釘住版優先），
+#      不再拿「清單第一台既有機的名稱」去查 devicetype——第一台是 `qa-test-iPhone17Pro` 這類共用機時
+#      查不到、建機失敗、退回共用 qa 機（LS-365／LS-373）。同票重用只認 `<票號>-iPhone*`，同票 iPad
+#      （`<票號>-*iPad*`，QA／review 另建的）一律不選（LS-370／LS-396 拿 iPad 跑 iPhone 版面測試誤紅）。
+#      每條路徑都在 stderr 印一行「選到 <名稱>（<原因>）」。
 #   2. 建立失敗，或 `DETECT_SIMULATOR_SHARED=1`（手動強制） → 直接退回共用第一台的 UDID，**這裡不再持鎖**
 #      （R1 的鎖只包住這支腳本自己印字那一瞬間，兩個 worktree 若同時走 fallback，鎖早就放掉、後面各自的
 #      `xcodebuild test` 依然併發打同一台——鎖錯地方，merge-reviewer R2 F1 抓到）。真正需要序列化的是
@@ -35,6 +39,9 @@ list=$(xcrun simctl list devices available)
 #     字串、且不是這裡管的「本 worktree 專屬機」，原本沒被排除——一旦它排在清單較前面（例如某個 OS
 #     分節唯一的候選就是它），會被誤判成「共用第一台」，連帶被 push-gate.sh 的模擬器用完必關（LS-100）
 #     選中並關掉，而 demo 機在其餘三處（push-gate.sh／patrol.sh／§6）都刻意豁免。
+#   - LS-384：`qa-` 前綴（QA 共用機，如 `qa-test-iPhone17Pro`）同樣排除——它不是原廠機、是 QA 驗收中
+#     可能正在用的機器，當共用 fallback 會與 QA 撞台（LS-373 退回 qa-test 機跑 push gate）。
+#     這裡只剩「共用 fallback／CI」用途，建專屬機已不靠它當範本。
 first=$(printf '%s\n' "$list" | awk '
   /^-- iOS / {
     os = $0
@@ -47,7 +54,7 @@ first=$(printf '%s\n' "$list" | awk '
     cand = line
     sub(/^[ \t]*/, "", cand)
     sub(/ *\(.*/, "", cand)
-    if (cand ~ /^(LS-[0-9]+|main|demo)-/) next
+    if (cand ~ /^(LS-[0-9]+|main|demo|qa)-/) next
     name = cand
     udid = line
     sub(/^[^(]*\(/, "", udid)
@@ -60,10 +67,10 @@ header_os=$(printf '%s' "$first" | cut -f1)
 name=$(printf '%s' "$first" | cut -f2)
 shared_udid=$(printf '%s' "$first" | cut -f3)
 
-if [ -z "$name" ] || [ -z "$header_os" ] || [ -z "$shared_udid" ]; then
-  echo "✗ 找不到可用的 iPhone 模擬器（xcrun simctl list devices available）。" >&2
-  exit 1
-fi
+no_iphone() { echo "✗ 找不到可用的 iPhone 模擬器（xcrun simctl list devices available；qa-／demo-／main-／LS-<n>- 前綴不算共用機）。" >&2; exit 1; }
+# LS-384：本機（非 CI）建專屬機不再需要範本機，找不到共用第一台不必立刻失敗——留到最後「連專屬機也
+# 拿不到」才 no_iphone；CI 只走共用第一台，缺了就是缺。
+[ "${CI:-}" = true ] && [ -z "$shared_udid" ] && no_iphone
 
 # ---- 本 worktree 專屬模擬器的名稱：<票號>-<機型無空白>（票號取自 worktree 目錄名或分支名，抓不到用 main）----
 extract_ticket() { printf '%s' "$1" | grep -oE 'LS-[0-9]+' | head -1; }
@@ -129,8 +136,10 @@ warn_runtime_mismatch() {   # $1＝UDID $2＝顯示名稱；pinned_os 有值且�
 ticket=$(extract_ticket "$(basename "$toplevel")")
 [ -n "$ticket" ] || ticket=$(extract_ticket "${branch:-}")
 [ -n "$ticket" ] || ticket=main
-model_slug=$(printf '%s' "$name" | tr -d '[:space:]')
-dedicated_name="${ticket}-${model_slug}"
+# LS-384：專屬機機型固定 iPhone 17 Pro（LS-346 已定為 push gate 機型），名稱與 devicetype 都不再取自清單第一台
+dedicated_devicetype=com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro
+dedicated_name="${ticket}-iPhone17Pro"
+say_picked() { echo "→ detect-simulator：選到 $1（$2）" >&2; }   # LS-384：每條路徑印一行選到哪台、為何
 
 find_udid_by_name() {   # $1＝精確裝置名；印第一個相符「可用」裝置（任何 runtime）的 UDID，沒有就空字串
   # LS-83 R2 m3：查 `devices available`（非全部 devices）——Xcode／runtime 升級後舊 runtime 被移除，
@@ -154,14 +163,16 @@ find_udid_by_name() {   # $1＝精確裝置名；印第一個相符「可用」�
   '
 }
 
-find_udid_same_ticket() {   # LS-176：同票（名稱 `<票號>-` 開頭）、同「有效目標 runtime」（`target_os`，
+find_udid_same_ticket() {   # LS-176：同票 iPhone（名稱 `<票號>-iPhone` 開頭，LS-384）、同「有效目標 runtime」（`target_os`，
   # LS-205 R2 起與 create_dedicated() 共用同一個解析結果——見上方定義，不再各自各算）分節的第一台可用
   # 裝置，印 "name\tudid"
   # 同票專屬機的機型可能跟現在「清單第一台原廠機」不同（原廠機被刪／重建、Xcode 升級換了預設機型後 name 就變了），
   # 舊版只認精確名稱 `<票號>-<機型無空白>`，找不到就再建一台——LS-107 因此堆到 4 台（LS-96 池項 7c9fe5bd (c)）。
   # 單元測試不挑機型，同 runtime 的既有專屬機直接重用；**不同 runtime 的不重用**（舊 runtime 可能跑不了目前的
   # deployment target），那一種仍走 create_dedicated。同 find_udid_by_name 只看「可用」裝置。
-  xcrun simctl list devices available 2>/dev/null | awk -v pfx="${ticket}-" -v os="$target_os" '
+  # LS-384：前綴收窄成 `<票號>-iPhone`——原本 `<票號>-` 會把同票 iPad（`LS-370-iPadPro13`、`LS-396-iPadAir11M3`）
+  # 當 push gate 機，iPhone 版面測試在 iPad 寬度誤紅（tap-target 量到寬 983）。
+  xcrun simctl list devices available 2>/dev/null | awk -v pfx="${ticket}-iPhone" -v os="$target_os" '
     /^-- iOS / { cur = $0; sub(/^-- iOS /, "", cur); sub(/ --$/, "", cur); next }
     cur == os && /^[ \t]+[^ \t]/ {
       line = $0
@@ -179,19 +190,22 @@ find_udid_same_ticket() {   # LS-176：同票（名稱 `<票號>-` 開頭）、�
 }
 
 create_dedicated() {   # 成功印新 UDID、exit 0；失敗印訊息到 stderr、回 1（呼叫端退回共用）
-  local devicetype_id runtime_id created avail
-  devicetype_id=$(xcrun simctl list devicetypes 2>/dev/null | grep -F "${name} (" \
-    | sed -E 's/.*\(([^()]+)\)[[:space:]]*$/\1/' | head -1)
+  local runtime_id created
+  # LS-384：devicetype 固定，只確認本機 Xcode 認得它（舊 Xcode 沒有 iPhone 17 Pro → 印 ⚠ 退回共用）
+  if ! xcrun simctl list devicetypes 2>/dev/null | grep -qF "(${dedicated_devicetype})"; then
+    echo "⚠ detect-simulator：本機 Xcode 沒有 devicetype ${dedicated_devicetype}，無法建立專屬模擬器" >&2
+    return 1
+  fi
   # LS-205 R2：建在共用的 `target_os`（上方已算好——優先釘住版，本機沒裝該版時已挑同 major 最接近者）。
   # LS-260：「本機沒有釘住版」的 ⚠ 從這裡搬到 `target_os` 解析處印一次——重用既有專屬機那條路徑
   # 根本不會走到 create_dedicated()，警告掛在這裡等於一整類呼叫都看不到（正是 LS-246 的情形）。
   runtime_id=$(xcrun simctl list runtimes 2>/dev/null | grep -m1 "^iOS ${target_os} " \
     | sed -E 's/.* - (com\.apple\.[^[:space:]]+)[[:space:]]*$/\1/')
-  if [ -z "$devicetype_id" ] || [ -z "$runtime_id" ]; then
-    echo "⚠ detect-simulator：找不到「${name}」的 devicetype／「iOS ${target_os}」的 runtime identifier，無法建立專屬模擬器" >&2
+  if [ -z "$runtime_id" ]; then
+    echo "⚠ detect-simulator：找不到「iOS ${target_os}」的 runtime identifier，無法建立專屬模擬器" >&2
     return 1
   fi
-  if ! created=$(xcrun simctl create "$dedicated_name" "$devicetype_id" "$runtime_id" 2>&1); then
+  if ! created=$(xcrun simctl create "$dedicated_name" "$dedicated_devicetype" "$runtime_id" 2>&1); then
     echo "⚠ detect-simulator：simctl create「${dedicated_name}」失敗：${created}" >&2
     return 1
   fi
@@ -201,6 +215,7 @@ create_dedicated() {   # 成功印新 UDID、exit 0；失敗印訊息到 stderr�
 udid=
 if [ "${CI:-}" = true ]; then
   udid=$shared_udid
+  say_picked "$name" "CI：共用第一台，不建專屬機"
 else
   # ---- LS-205 R2（merge-review R1 M2；merge-review R2 b907173c n1 移到這裡才算）：「有效目標 runtime」
   #      只在這裡算一次，find_udid_same_ticket() 與 create_dedicated() 共用同一個值——原本兩處各自各算
@@ -219,6 +234,18 @@ else
   #      前幾支 agent 同樣撞到），擋下去等於本機完全跑不了 UITest；改成每次都把差異印在 stderr，
   #      派工單／handoff 依此揭露。
   target_os="$header_os"
+  # LS-384：共用第一台排除 qa-／demo-／main-／LS-<n>- 後，本機可能一台原廠 iPhone 都沒有（header_os 空）；
+  # 建專屬機已不靠範本機，這時取本機最高可用 iOS runtime（下面釘住版解析仍優先）。
+  [ -n "$target_os" ] || target_os=$(xcrun simctl list runtimes 2>/dev/null | awk '
+    function verkey(v,   n, a, i, key) {
+      n = split(v, a, ".")
+      key = ""
+      for (i = 1; i <= 4; i++) key = key sprintf("%06d.", (i <= n ? a[i] + 0 : 0))
+      return key
+    }
+    /^iOS / { k = verkey($2); if (best_k == "" || k > best_k) { best_k = k; best = $2 } }
+    END { if (best != "") print best }
+  ')
   if [ -n "$pinned_os" ]; then
     picked_os=$(nearest_same_major_runtime "$pinned_os")
     [ -n "$picked_os" ] && target_os="$picked_os"
@@ -241,20 +268,30 @@ else
   if [ "${DETECT_SIMULATOR_SHARED:-0}" != 1 ]; then
     udid=$(find_udid_by_name "$dedicated_name")
     if [ -n "$udid" ]; then
+      say_picked "$dedicated_name" "本票專屬機"
       warn_runtime_mismatch "$udid" "$dedicated_name"   # LS-205：既有專屬機 runtime ≠ 釘住版只印警告，不重建
     else
       # LS-176：精確名稱找不到 → 先重用同票、同 runtime 的既有專屬機（不論機型），都沒有才建新的
       reuse=$(find_udid_same_ticket)
       if [ -n "$reuse" ]; then
         udid=$(printf '%s' "$reuse" | cut -f2)
-        echo "→ detect-simulator：重用同票既有專屬機「$(printf '%s' "$reuse" | cut -f1)」（同 runtime iOS ${target_os}，不另建 ${dedicated_name}；LS-176）" >&2
+        say_picked "$(printf '%s' "$reuse" | cut -f1)" "重用同票既有 iPhone 專屬機，同 runtime iOS ${target_os}，不另建 ${dedicated_name}；LS-176"
         warn_runtime_mismatch "$udid" "$(printf '%s' "$reuse" | cut -f1)"   # LS-205
       else
         udid=$(create_dedicated) || udid=
+        [ -n "$udid" ] && say_picked "$dedicated_name" "新建本票專屬機：iPhone 17 Pro／iOS ${target_os}"
       fi
     fi
   fi
-  [ -n "$udid" ] || udid=$shared_udid   # 找不到／建立失敗／強制共用：直接回共用第一台，序列化交給呼叫端
+  if [ -z "$udid" ]; then   # 找不到／建立失敗／強制共用：直接回共用第一台，序列化交給呼叫端
+    [ -n "$shared_udid" ] || no_iphone
+    udid=$shared_udid
+    if [ "${DETECT_SIMULATOR_SHARED:-0}" = 1 ]; then
+      say_picked "$name" "共用第一台：DETECT_SIMULATOR_SHARED=1 強制共用"
+    else
+      say_picked "$name" "共用第一台：本票專屬機建立失敗，見上方 ⚠"
+    fi
+  fi
 
   # LS-236：回傳這顆 UDID 前確認沒有殘留的 xcodebuild 還在跑（同 push-gate.sh 對 sim_udid 那段理由；
   # 保護直接呼叫本腳本、自己另外跑 xcodebuild 的呼叫端——如 CI workflow 之外未來可能新增的呼叫點——

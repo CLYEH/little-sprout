@@ -78,6 +78,12 @@ case "$cmd" in
   create)
     name=${1:-}
     runtime_arg=${3:-}
+    # LS-384：比照真 simctl——devicetype 參數不是已知 identifier／機型名就拒絕（LS-365／LS-373 拿
+    # `qa-test-iPhone17Pro` 這種既有機名去建機，就是在真 simctl 這一步失敗）。
+    case "${2:-}" in
+      com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro|"${STUB_MODEL:-iPhone 17 Pro}") ;;
+      *) echo "Invalid device type: ${2:-}" >&2; exit 1 ;;
+    esac
     # LS-205：db 的第三欄改由「實際傳給 simctl create 的 runtime identifier」反推版本號
     # （com.apple.CoreSimulator.SimRuntime.iOS-26-5 → 26.5），不再盲用 STUB_OS——否則測不出
     # create_dedicated() 到底選中了釘住版還是 header_os。反推不出來（不合預期的呼叫）才退回 STUB_OS。
@@ -257,7 +263,7 @@ out11=$(STUB_DB="$db11" run_in "$work/wt/LS-106" 2>"$work/err11")
 u11=$(id_of "$out11")
 if [ "$u11" = EXISTING-106 ]; then echo "✓ ⑪ 同票不同機型、同 runtime → 重用既有專屬機 EXISTING-106"; else echo "✗ ⑪ 應為 EXISTING-106，實得 ${u11}" >&2; cat "$work/err11" >&2; fail=1; fi
 if grep -qF 'LS-106-iPhone17Pro' "$db11"; then echo "✗ ⑪ 不該再建 LS-106-iPhone17Pro" >&2; fail=1; else echo "✓ ⑪ 未另建 LS-106-iPhone17Pro"; fi
-has '⑪ stderr 說明重用了哪一台' "$(cat "$work/err11")" '重用同票既有專屬機「LS-106-iPhoneAir」'
+has '⑪ stderr 說明重用了哪一台' "$(cat "$work/err11")" '選到 LS-106-iPhoneAir（重用同票既有 iPhone 專屬機'
 
 # ---- ⑫ LS-176 對照：同票專屬機只存在於別的 runtime（iOS 18.6 節）→ 不重用（舊 runtime 可能跑不了目前的 deployment
 #        target），照舊在目前 runtime（原廠第一台所在的 26.0 節）建新的；db 分節輸出的順序＝首次出現（18.6 節在前），
@@ -315,7 +321,7 @@ printf '26.0\n' > "$work/wt/LS-114/.ios-runtime"
 out16=$(STUB_DB="$db16" run_in "$work/wt/LS-114" 2>"$work/err16")
 u16=$(id_of "$out16")
 if [ "$u16" = EXISTING-114 ]; then echo "✓ ⑯ 既有專屬機 runtime＝釘住版 → 沿用"; else echo "✗ ⑯ 應沿用 EXISTING-114，實得 ${u16}" >&2; cat "$work/err16" >&2; fail=1; fi
-if [ ! -s "$work/err16" ]; then echo "✓ ⑯ runtime 相符時不印警告"; else echo "✗ ⑯ runtime 相符卻印了警告" >&2; cat "$work/err16" >&2; fail=1; fi
+if ! grep -qF '⚠' "$work/err16"; then echo "✓ ⑯ runtime 相符時不印警告（LS-384 起只印「選到」那一行）"; else echo "✗ ⑯ runtime 相符卻印了警告" >&2; cat "$work/err16" >&2; fail=1; fi
 
 
 # ---- ⑰～⑱（LS-205 R2；merge-review R1 M2）：LS-176 同票重用要跟 create_dedicated() 用同一個
@@ -334,7 +340,7 @@ out17=$(STUB_DB="$db17" STUB_RUNTIMES=26.0,26.5 run_in "$work/wt/LS-115" 2>"$wor
 u17=$(id_of "$out17")
 if [ "$u17" = EXISTING-115 ]; then echo "✓ ⑰ 釘住版生效時，坐在釘住版分節的既有同票機被正確重用（M2）"; else echo "✗ ⑰ 應重用 EXISTING-115，實得 ${u17}（M2 回歸：另建了第二台？）" >&2; cat "$work/err17" >&2; fail=1; fi
 if [ "$(printf '%s\n' "$(cat "$db17")" | wc -l | tr -d ' ')" = 2 ]; then echo "✓ ⑰ 沒有另建第二台（db 仍兩筆）"; else echo "✗ ⑰ db 筆數變了，另建了機器" >&2; cat "$db17" >&2; fail=1; fi
-has '⑰ stderr 說明重用了哪一台、runtime 字串是釘住版 26.5（不是 header_os 26.0）' "$(cat "$work/err17")" '重用同票既有專屬機「LS-115-iPhoneAir」（同 runtime iOS 26.5，不另建 LS-115-iPhone17Pro；LS-176）'
+has '⑰ stderr 說明重用了哪一台、runtime 字串是釘住版 26.5（不是 header_os 26.0）' "$(cat "$work/err17")" '選到 LS-115-iPhoneAir（重用同票既有 iPhone 專屬機，同 runtime iOS 26.5，不另建 LS-115-iPhone17Pro；LS-176）'
 
 # ⑱（對照，fail-open 分支）：釘住版本機不可用（只有 26.0）、既有同票機坐在 header_os 分節（26.0）
 #    → target_os 退回 header_os，同 LS-176 舊行為仍正確重用（證明 M2 的共用解析在「退回」分支
@@ -346,7 +352,7 @@ printf '26.2\n' > "$work/wt/LS-116/.ios-runtime"
 out18=$(STUB_DB="$db18" run_in "$work/wt/LS-116" 2>"$work/err18")
 u18=$(id_of "$out18")
 if [ "$u18" = EXISTING-116 ]; then echo "✓ ⑱ 釘住版不可用（fail-open 退回 header_os）時，既有同票機仍被正確重用"; else echo "✗ ⑱ 應重用 EXISTING-116，實得 ${u18}" >&2; cat "$work/err18" >&2; fail=1; fi
-has '⑱ stderr 重用訊息 runtime 字串是退回後的 header_os 26.0（不是打不到的釘住版 26.2）' "$(cat "$work/err18")" '重用同票既有專屬機「LS-116-iPhoneAir」（同 runtime iOS 26.0，不另建 LS-116-iPhone17Pro；LS-176）'
+has '⑱ stderr 重用訊息 runtime 字串是退回後的 header_os 26.0（不是打不到的釘住版 26.2）' "$(cat "$work/err18")" '選到 LS-116-iPhoneAir（重用同票既有 iPhone 專屬機，同 runtime iOS 26.0，不另建 LS-116-iPhone17Pro；LS-176）'
 
 # ⑲～㉒（LS-236）：detect-simulator.sh 回傳 UDID 前的殘留 xcodebuild 檢查（scripts/gates/stale-xcodebuild-check.sh
 #    的接線，不是它自己的邏輯——邏輯本身由 stale-xcodebuild-check.test.sh 專測）。stub `pgrep`（`-f` 走假身，其餘
@@ -461,6 +467,87 @@ out25=$(STUB_DB="$db25" STUB_RUNTIMES=26.0,26.5 run_in "$work/wt/LS-122" 2>"$wor
 u25=$(id_of "$out25")
 has '㉕ 同 major 無候選 → 退回 header_os 26.0' "$(cat "$db25")" "$(printf 'LS-122-iPhone17Pro\t%s\t26.0' "$u25")"
 has '㉕ stderr 仍印出差異（不靜默）' "$(cat "$work/err25")" 'runtime 26.0 ≠ 釘住 27.0（本機無 27.0；派工單／handoff 須揭露）'
+
+# ---- ㉖～㉙（LS-384）：專屬機挑選——建機不再拿清單第一台既有機名當範本（LS-365／LS-373：第一台是
+#      `qa-test-iPhone17Pro`，拿它的名稱查 devicetype／當 simctl create 參數失敗，退回共用 qa 機）、共用
+#      fallback 排除 qa-、同票重用只認 `<票號>-iPhone*`（LS-370／LS-396：同票 iPad 被當 push gate 機）。
+#      每案各配一支 mutation（比照 ㉒）：把修正點改回舊形狀，同一組夾具必須轉紅——證明是那一行在擋。
+#      mutant 放 $work/mut/（連同它 source 的 stale-xcodebuild-check.sh），不碰真檔。
+mutate() {   # $1＝標籤 $2＝sed 式；sed 沒改到任何字＝負控無效，記 fail
+  mkdir -p "$work/mut"
+  cp "${root}/scripts/gates/stale-xcodebuild-check.sh" "$work/mut/"
+  sed "$2" "$detect" > "$work/mut/detect-simulator.sh"
+  if cmp -s "$detect" "$work/mut/detect-simulator.sh"; then echo "✗ ${1} mutate：sed 沒改到任何字，負控無效" >&2; fail=1; return 1; fi
+  echo "✓ ${1} mutate：已套用"
+}
+run_mut_in() { local dir=$1; shift; ( cd "$dir" && bash "$work/mut/detect-simulator.sh" "$@" ); }
+
+# ㉖ 清單第一台是 qa-test、本機沒有任何原廠 iPhone（只剩 qa-／demo- 機，本機實況的縮影）→ 仍建出
+#    LS-130-iPhone17Pro（devicetype 固定 iPhone-17-Pro、runtime 取釘住版同 major 最接近的 26.5），不退回 qa／demo 機
+fx26=$(printf 'qa-test-iPhone17Pro\tQA-UDID\t26.0\nqa-test-iPadPro13\tQA-IPAD\t26.0\ndemo-iPhone17Pro\tDEMO-UDID\t26.5\n')
+db26="$work/db26"; printf '%s\n' "$fx26" > "$db26"
+mkdir -p "$work/wt/LS-130"; printf '26.2\n' > "$work/wt/LS-130/.ios-runtime"
+out26=$(STUB_DB="$db26" STUB_RUNTIMES=26.0,26.5 run_in "$work/wt/LS-130" 2>"$work/err26"); rc26=$?
+u26=$(id_of "$out26")
+if [ "$rc26" -eq 0 ] && [ -n "$u26" ] && [ "$u26" != QA-UDID ] && [ "$u26" != DEMO-UDID ]; then echo "✓ ㉖ 第一台是 qa-test 仍建專屬機（${u26}），不退回 qa／demo 機"; else echo "✗ ㉖ 應建新專屬機（非 QA-UDID／DEMO-UDID），實得 exit ${rc26}／${u26}" >&2; cat "$work/err26" >&2; fail=1; fi
+has '㉖ db 記到 LS-130-iPhone17Pro（名稱不帶 qa-test 字樣）且 runtime 26.5' "$(cat "$db26")" "$(printf 'LS-130-iPhone17Pro\t%s\t26.5' "$u26")"
+has '㉖ stderr 印一行選到哪台與原因' "$(cat "$work/err26")" '選到 LS-130-iPhone17Pro（新建本票專屬機：iPhone 17 Pro／iOS 26.5）'
+# ㉖m mutation：simctl create 的 devicetype 改回「清單第一台機名」（LS-365／LS-373 的舊形狀）
+# shellcheck disable=SC2016  # sed 式裡的 $ 是要比對的字面，刻意單引號
+if mutate '㉖m' 's/create "\$dedicated_name" "\$dedicated_devicetype"/create "$dedicated_name" "$name"/'; then
+  dbm26="$work/dbm26"; printf '%s\n' "$fx26" > "$dbm26"
+  STUB_DB="$dbm26" STUB_RUNTIMES=26.0,26.5 run_mut_in "$work/wt/LS-130" >/dev/null 2>&1
+  if grep -qF 'LS-130-iPhone17Pro' "$dbm26"; then echo "✗ ㉖m mutant 仍建出 LS-130-iPhone17Pro——㉖ 沒有釘住「devicetype 固定」" >&2; fail=1; else echo "✓ ㉖m mutant（devicetype 改用第一台機名）：建不出專屬機，㉖ 轉紅"; fi
+fi
+
+# ㉗ 共用 fallback（CI 路徑）排除 qa- 前綴：qa-test 排第一、原廠機在後 → 選原廠機
+db27="$work/db27"
+printf 'qa-test-iPhone17Pro\tQA-UDID\t26.0\niPhone 17 Pro\tSTOCK-UDID\t26.5\n' > "$db27"
+mkdir -p "$work/wt/LS-133"
+out27=$(STUB_DB="$db27" CI=true run_in "$work/wt/LS-133" 2>"$work/err27")
+u27=$(id_of "$out27")
+if [ "$u27" = STOCK-UDID ]; then echo "✓ ㉗ qa-test 排第一時共用機仍選原廠機"; else echo "✗ ㉗ 應為 STOCK-UDID，實得 ${u27}（挑到 qa 共用機了？）" >&2; fail=1; fi
+has '㉗ stderr 印一行選到哪台與原因' "$(cat "$work/err27")" '選到 iPhone 17 Pro（CI：共用第一台，不建專屬機）'
+# ㉗m mutation：排除清單拿掉 qa
+# shellcheck disable=SC2016  # sed 式裡的 $ 是要比對的字面，刻意單引號
+if mutate '㉗m' 's/|demo|qa)-/|demo)-/'; then
+  um27=$(id_of "$(STUB_DB="$db27" CI=true run_mut_in "$work/wt/LS-133" 2>/dev/null)")
+  if [ "$um27" = QA-UDID ]; then echo "✓ ㉗m mutant（不排除 qa-）：選到 QA-UDID，㉗ 轉紅"; else echo "✗ ㉗m mutant 未翻轉（實得 ${um27}）" >&2; fail=1; fi
+fi
+
+# ㉘ 同票 iPad 存在（LS-131-iPadAir11M3，同 runtime 分節）→ 不選它，另建 LS-131-iPhone17Pro
+fx28=$(printf 'iPhone 17 Pro\tSHARED-UDID\t26.0\nLS-131-iPadAir11M3\tIPAD-131\t26.0\n')
+db28="$work/db28"; printf '%s\n' "$fx28" > "$db28"
+mkdir -p "$work/wt/LS-131"
+out28=$(STUB_DB="$db28" run_in "$work/wt/LS-131" 2>"$work/err28")
+u28=$(id_of "$out28")
+if [ -n "$u28" ] && [ "$u28" != IPAD-131 ] && [ "$u28" != SHARED-UDID ]; then echo "✓ ㉘ 同票 iPad 存在時不選它，另建專屬機（${u28}）"; else echo "✗ ㉘ 不該選同票 iPad／共用機，實得 ${u28}" >&2; cat "$work/err28" >&2; fail=1; fi
+has '㉘ db 記到新建的 LS-131-iPhone17Pro' "$(cat "$db28")" "$(printf 'LS-131-iPhone17Pro\t%s\t26.0' "$u28")"
+has '㉘ stderr 印一行選到哪台與原因' "$(cat "$work/err28")" '選到 LS-131-iPhone17Pro（新建本票專屬機'
+# ㉘m mutation：同票重用前綴放寬回 `<票號>-`
+# shellcheck disable=SC2016  # sed 式裡的 $ 是要比對的字面，刻意單引號
+if mutate '㉘m' 's/pfx="\${ticket}-iPhone"/pfx="${ticket}-"/'; then
+  dbm28="$work/dbm28"; printf '%s\n' "$fx28" > "$dbm28"
+  um28=$(id_of "$(STUB_DB="$dbm28" run_mut_in "$work/wt/LS-131" 2>/dev/null)")
+  if [ "$um28" = IPAD-131 ]; then echo "✓ ㉘m mutant（前綴放寬成 <票號>-）：選到同票 iPad，㉘ 轉紅"; else echo "✗ ㉘m mutant 未翻轉（實得 ${um28}）" >&2; fail=1; fi
+fi
+
+# ㉙ 本機沒有釘住 runtime（釘 27.0、同 major 無候選）且沒有原廠 iPhone 可當 header_os → 印提示、用最高可用 26.5 建機
+fx29=$(printf 'qa-test-iPhone17Pro\tQA-UDID\t26.0\ndemo-iPhone17Pro\tDEMO-UDID\t26.5\n')
+db29="$work/db29"; printf '%s\n' "$fx29" > "$db29"
+mkdir -p "$work/wt/LS-132"; printf '27.0\n' > "$work/wt/LS-132/.ios-runtime"
+out29=$(STUB_DB="$db29" STUB_RUNTIMES=26.0,26.5 run_in "$work/wt/LS-132" 2>"$work/err29"); rc29=$?
+u29=$(id_of "$out29")
+has '㉙ 無釘住 runtime → 用最高可用 26.5 建 LS-132-iPhone17Pro' "$(cat "$db29")" "$(printf 'LS-132-iPhone17Pro\t%s\t26.5' "$u29")"
+has '㉙ stderr 印提示（實際版≠釘住版、須揭露）' "$(cat "$work/err29")" 'runtime 26.5 ≠ 釘住 27.0（本機無 27.0；派工單／handoff 須揭露）'
+if [ "$rc29" -eq 0 ]; then echo "✓ ㉙ exit 0"; else echo "✗ ㉙ 應 exit 0（實得 ${rc29}）" >&2; fail=1; fi
+# ㉙m mutation：拿掉「header_os 空時取最高可用 runtime」
+# shellcheck disable=SC2016  # sed 式裡的 $ 是要比對的字面，刻意單引號
+if mutate '㉙m' 's/|| target_os=\$(xcrun simctl list runtimes/|| target_os=$(false/'; then
+  dbm29="$work/dbm29"; printf '%s\n' "$fx29" > "$dbm29"
+  STUB_DB="$dbm29" STUB_RUNTIMES=26.0,26.5 run_mut_in "$work/wt/LS-132" >/dev/null 2>&1; rcm29=$?
+  if [ "$rcm29" -ne 0 ] && ! grep -qF 'LS-132-iPhone17Pro' "$dbm29"; then echo "✓ ㉙m mutant（不取最高可用）：建不出專屬機、exit ${rcm29}，㉙ 轉紅"; else echo "✗ ㉙m mutant 未翻轉（exit ${rcm29}）" >&2; fail=1; fi
+fi
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ detect-simulator／simulator-lock 自測通過"
