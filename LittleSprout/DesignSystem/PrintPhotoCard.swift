@@ -10,7 +10,7 @@ import SwiftUI
 /// 不必跟著改。
 struct PrintPhotoCard: View {
     var photoHeight: CGFloat = 190
-    var cornerSize: CGFloat = 26
+    var cornerSize: CGFloat = PrintPhotoCardMetrics.cornerSize
     var mountPoolOpacity: MountPoolOpacity = .welcome
     var showsImprint = true
     var imageName: String?
@@ -156,7 +156,7 @@ struct PrintPhotoCard: View {
 
     private var mountPoolGlow: some View {
         GeometryReader { proxy in
-            let diameter = cornerSize * 6
+            let diameter = PrintPhotoCardMetrics.mountPoolDiameter(cornerSize: cornerSize)
             ZStack {
                 glow(diameter: diameter, opacity: mountPoolOpacity.topLeading)
                     .position(x: 0, y: 0)

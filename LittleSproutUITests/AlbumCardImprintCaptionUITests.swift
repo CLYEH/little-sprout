@@ -12,8 +12,8 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
     private static let xSmall = "UICTContentSizeCategoryXS"
     private static let large = "UICTContentSizeCategoryL"
     private static let ax3 = "UICTContentSizeCategoryAccessibilityXL"
-    /// `PrintPhotoCard` 染料池圓半徑（`cornerSize` 26 × 6 ÷ 2），見 `captionRaster` 註解。
-    private static let glowRadius: CGFloat = 78
+    /// `PrintPhotoCard` 染料池圓半徑，讀 `PrintPhotoCardMetrics`（app 與 UITest 共用同一份，LS-406），見 `captionRaster` 註解。
+    private static let glowRadius = PrintPhotoCardMetrics.mountPoolRadius()
     private static let shortLabel = "弟弟出生的第一週，8 張相片"
     private static let longLabel = "阿公阿嬤全家福二〇二六跨年夜溫馨團聚倒數紀念相片珍藏加長版本紀念冊，1 張相片"
 
@@ -99,7 +99,7 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
     /// 右緣對稱。回傳的 raster 以裁切左緣為 x=0（`leftmostInkX` 需再加 15）。
     private func captionRaster(paper: XCUIElement, in app: XCUIApplication, context: String) throws -> InkRaster {
         // 卡片元素的 a11y frame 會把染料池圓（`PrintPhotoCard.mountPoolGlow`，直徑＝角托 26×6，圓心在四角）
-        // 一起算進去，四邊各外擴半徑 78——實測 XS 為 (-54, 30, 510×387)，扣回來才是紙（左緣＝screenPad 24）。
+        // 一起算進去，四邊各外擴半徑 `glowRadius`（預設 78）——實測 XS 為 (-54, 30, 510×387)，扣回來才是紙（左緣＝screenPad 24）。
         let frame = paper.frame.insetBy(dx: Self.glowRadius, dy: Self.glowRadius)
         let area = CGRect(x: frame.minX + 15, y: frame.minY + 205, width: frame.width - 30, height: frame.height - 213)
         let screenshot = app.screenshot().image
