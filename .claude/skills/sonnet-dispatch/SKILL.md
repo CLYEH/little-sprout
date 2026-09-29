@@ -1,15 +1,19 @@
 ---
 name: sonnet-dispatch
-description: Orchestrator 派任何 Sonnet 5.5 agent（ios-dev／qa／dead-code-sweeper，agent 定義 model claude-sonnet-5-5）前必載——把官方「Prompting Claude Sonnet 5.5」翻成本專案派工單與 SendMessage 續派的固定寫法：effort 由定義檔決定（派工不調）、做到完才停、不做沒要求的、真跑檢查才算完成、判斷材料代替叫它想、不索取內部推理、續派自報身分避免被當注入、查現況不憑記憶、對稿先裁圖、未證實標 PLAUSIBLE、finish line 與 handoff 落檔沿 opus-dispatch。寫 Agent prompt 或 SendMessage 續派時對照本檔逐條自檢；agent 是 opus 時改讀 opus-dispatch。
+description: Orchestrator 派任何 Sonnet 5.5 agent（ios-dev／qa／dead-code-sweeper，agent 定義 model sonnet；Claude Code ≥2.1.284 的 sonnet 別名＝claude-sonnet-5-5）前必載——把官方「Prompting Claude Sonnet 5.5」翻成本專案派工單與 SendMessage 續派的固定寫法：effort 由定義檔決定（派工不調）、先用 agent-model-check 確認別名真的解析到 5.5、做到完才停、不做沒要求的、真跑檢查才算完成、判斷材料代替叫它想、不索取內部推理、續派自報身分避免被當注入、查現況不憑記憶、對稿先裁圖、未證實標 PLAUSIBLE、finish line 與 handoff 落檔沿 opus-dispatch。寫 Agent prompt 或 SendMessage 續派時對照本檔逐條自檢；agent 是 opus 時改讀 opus-dispatch。
 ---
 
 # Sonnet 5.5 派工寫法（本專案版）
 
-來源：https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5 與 https://platform.claude.com/docs/en/models/sonnet-5-5/whats-new-sonnet-5-5（2026-09-29 讀取）。適用對象：所有 `model: claude-sonnet-5-5` 的 subagent（COLLABORATION §1 表：ios-dev／qa／dead-code-sweeper）。opus agent（ui-designer／merge-reviewer／visual-reviewer）讀 `opus-dispatch`；兩份共用的六條（finish line、判斷材料、stop/go、PLAUSIBLE、checklist 落檔、續派鎖項）本檔只寫差異，寫法本身以 opus-dispatch 為準。
+來源：https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5 與 https://platform.claude.com/docs/en/models/sonnet-5-5/whats-new-sonnet-5-5（2026-09-29 讀取）。適用對象：所有 `model: sonnet` 的 subagent（COLLABORATION §1 表：ios-dev／qa／dead-code-sweeper；Claude Code ≥2.1.284 的 `sonnet` 別名指 `claude-sonnet-5-5`）。opus agent（ui-designer／merge-reviewer／visual-reviewer）讀 `opus-dispatch`；兩份共用的六條（finish line、判斷材料、stop/go、PLAUSIBLE、checklist 落檔、續派鎖項）本檔只寫差異，寫法本身以 opus-dispatch 為準。
 
-## 為什麼是全 ID 不是別名
+## 別名與版本
 
-Claude Code 2.1.282 的 `sonnet` 別名實測仍解析到 `claude-sonnet-5`（2026-09-29 probe transcript），2.1.284 起才改指 5.5。agent 定義檔 frontmatter 接受全 ID，所以一律寫 `model: claude-sonnet-5-5`，不依賴 CLI 版本；派工後第一次用 `bash scripts/ops/agent-model-check.sh <agent>` 從 transcript 確認 `"model":"claude-sonnet-5-5"`。Agent 工具的 `model` 參數只有別名（`sonnet` 在 2.1.282 會退回 Sonnet 5），要臨時覆寫模型時用 `opus`／`haiku`，不要用 `sonnet`。
+`sonnet` 別名在 Claude Code 2.1.284 起指 `claude-sonnet-5-5`（2.1.282 實測仍是 `claude-sonnet-5`，2026-09-29 probe transcript）。agent 定義檔寫 `model: sonnet`，讓別名跟著 CLI 升級自動指向最新 Sonnet；代價是舊 CLI 會靜默退回 Sonnet 5，所以：
+
+- 新 session 開工先 `claude --version` ≥ 2.1.284；第一張 sonnet 派工後 `bash scripts/ops/agent-model-check.sh <agent>` 看 transcript 是 `"model":"claude-sonnet-5-5"`，不是就升級 CLI 再派。
+- Agent 工具的 `model` 參數同樣走別名（`sonnet`／`opus`／`haiku`／`fable`），同一條件下才會是 5.5。
+- 需要釘死版本（例如 CLI 升不了）時才在定義檔改寫全 ID `claude-sonnet-5-5`（frontmatter 接受全 ID）。
 
 ## Sonnet 5.5 與 Opus 5.5 的差別（影響寫法的六點）
 
@@ -100,7 +104,7 @@ Sonnet 5.5 讀密集截圖（多板對稿、AX3 長頁）時漏細節；給它�
 ## 拒答與降級偵測
 
 - Sonnet 5.5 的安全分類有五類（cyber／bio／frontier_llm／reasoning_extraction／general_harms）。本專案會撞到的只有 `reasoning_extraction`（第 6 條）與偶發 `general_harms`（如「刪除帳號」「封鎖」相關文案被誤判）；撞到時 handoff 會少一段或直接停，先看 transcript 尾端的 `stop_reason`，改寫派工句再派，不要換模型硬闖。
-- 品質異常（回報變短、少規約段落）先 `bash scripts/ops/agent-model-check.sh <agent>` 查實際 model／effort；`"model"` 不是 `claude-sonnet-5-5` 代表定義檔沒生效（主 checkout 未 pull）或被別名覆寫。
+- 品質異常（回報變短、少規約段落）先 `bash scripts/ops/agent-model-check.sh <agent>` 查實際 model／effort；`"model"` 是 `claude-sonnet-5` 代表 CLI 版本 <2.1.284、別名退回舊版，升級 CLI 再派。
 - 真的需要更強判斷（跨模組重構、race 密集、長程多段）→ 派工時 Agent 工具 `model: opus` 覆寫並在派工訊息註明理由（§1 表「升 opus 的時機」）。
 
 ## 派工單自檢（寫完再看一遍）
@@ -115,4 +119,4 @@ Sonnet 5.5 讀密集截圖（多板對稿、AX3 長頁）時漏細節；給它�
 - [ ] 要它查現況的地方寫了「先 grep／讀檔」（第 9 條）
 - [ ] 對稿有裁圖與路徑（第 10 條）
 - [ ] 要 handoff 落檔＋Linear comment（沿 opus-dispatch 第 7 條）
-- [ ] 沒有用 Agent 工具 `model: sonnet` 別名覆寫（會退回 Sonnet 5）
+- [ ] 本 session CLI ≥2.1.284，且首張派工已用 agent-model-check 確認 `claude-sonnet-5-5`
