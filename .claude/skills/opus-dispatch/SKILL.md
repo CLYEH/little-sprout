@@ -5,7 +5,9 @@ description: Orchestrator 派任何 Opus 5.5 agent（ios-dev／qa／merge-review
 
 # Opus 5.5 派工寫法（本專案版）
 
-來源：https://claude.dev/blog/getting-the-most-out-of-opus-5-5/ （2026-09-24 讀取）。適用對象：所有 `model: opus` 的 subagent（COLLABORATION §1 表：ios-dev／qa／merge-reviewer／ui-designer／visual-reviewer，effort 一律 frontmatter 明寫 high）。dead-code-sweeper 是 sonnet，本檔的「finish line」「未證實標記」兩條仍適用。
+> LS-400（2026-09-29）：ios-dev／qa／dead-code-sweeper 已改 `claude-sonnet-5-5`，派這三支改讀 `sonnet-dispatch`；本檔只適用仍是 opus 的 ui-designer／merge-reviewer／visual-reviewer，以及以 Agent 工具 `model: opus` 臨時覆寫的派工。
+
+來源：https://claude.dev/blog/getting-the-most-out-of-opus-5-5/ （2026-09-24 讀取）。適用對象：所有 `model: opus` 的 subagent（COLLABORATION §1 表：ui-designer／merge-reviewer／visual-reviewer，effort 一律 frontmatter 明寫 high）。ios-dev／qa／dead-code-sweeper 自 LS-400 起是 `claude-sonnet-5-5`，讀 `sonnet-dispatch`（其中 finish line／判斷材料／PLAUSIBLE／checklist 落檔／續派鎖項與本檔相同）。
 
 ## Opus 5.5 與前代的差別（影響寫法的四點）
 
