@@ -34,7 +34,6 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
                 )
                 XCTAssertLessThan(startX, 23.5, "[\(context)] Caption 字起點離紙左緣 \(startX)pt，偏離 20 太多")
                 let lines = raster.lines()
-                print("LS-390 captionStartX \(context)=\(startX) lines=\(lines.count)")
                 if size == Self.ax3 {
                     XCTAssertGreaterThanOrEqual(
                         lines.count, 2, "[\(context)] AX3 單行公式折行（相簿名放不下時折行）、不截斷，量到 \(lines.count) 行"
