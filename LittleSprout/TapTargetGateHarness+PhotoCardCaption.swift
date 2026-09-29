@@ -16,9 +16,11 @@ extension TapTargetGateHarness {
     /// 的拉丁名 Gary 落在多寶貝最後一行）；`feedAxis`＝時間軸日記卡／照片卡／相簿卡同屏，量三卡文字
     /// 起點是否同軸。LS-390：`timelineAlbum`／`timelineAlbumLong`＝時間軸相簿卡（`AlbumCardView`）單張
     /// （白邊壓印 Caption「相簿名 · N 張相片」；Long 為超長相簿名＋單張，稿面 `Stress / 14`）。
+    /// LS-406：`timelineAlbumCover`＝同 `timelineAlbum` 但帶封面（本機 PNG 的 file URL）——驗 VoiceOver
+    /// `.isImage` trait 只在有封面時出現（`timelineAlbum` 是占位圖態）。
     enum PhotoCardCaptionFixture: String {
         case one, two, three, none, album, feed, descender, albumDescender, feedAxis, timelineAlbum,
-             timelineAlbumLong
+             timelineAlbumLong, timelineAlbumCover
     }
 
     static var photoCardCaptionFixture: PhotoCardCaptionFixture {
@@ -91,13 +93,14 @@ private struct PhotoCardBabyCaptionHost: View {
                 )
                 .accessibilityIdentifier("harness.albumCard")
             }
-        case .timelineAlbum, .timelineAlbumLong:
+        case .timelineAlbum, .timelineAlbumLong, .timelineAlbumCover:
             singleCard {
                 AlbumCardView(
                     content: AlbumContent(
-                        title: fixture == .timelineAlbum
-                            ? "弟弟出生的第一週" : "阿公阿嬤全家福二〇二六跨年夜溫馨團聚倒數紀念相片珍藏加長版本紀念冊",
-                        photoCount: fixture == .timelineAlbum ? 8 : 1, cover: nil
+                        title: fixture == .timelineAlbumLong
+                            ? "阿公阿嬤全家福二〇二六跨年夜溫馨團聚倒數紀念相片珍藏加長版本紀念冊" : "弟弟出生的第一週",
+                        photoCount: fixture == .timelineAlbumLong ? 1 : 8,
+                        cover: fixture == .timelineAlbumCover ? Self.coverMedia : nil
                     ),
                     timelineStore: timelineStore, familyStore: familyStore, refId: UUID()
                 )
@@ -144,8 +147,25 @@ private struct PhotoCardBabyCaptionHost: View {
         case .descender:
             [child("歐陽彥廷", born: "2024-06-01"), child("小饅頭", born: "2025-01-01"),
              child("Gary", born: "2026-01-01")]
-        case .none, .album, .feed, .albumDescender, .feedAxis, .timelineAlbum, .timelineAlbumLong: []
+        case .none, .album, .feed, .albumDescender, .feedAxis, .timelineAlbum, .timelineAlbumLong,
+             .timelineAlbumCover: []
         }
+    }
+
+    /// LS-406：封面＝寫進暫存目錄的純色 PNG、以 file URL 當 `signedURL`（`AsyncImage` 走 URLSession 讀得起 file URL），
+    /// 不打網路、不依賴 Storage。
+    private static var coverMedia: MediaContent {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("LS-406-harness-cover.png")
+        let size = CGSize(width: 800, height: 400)
+        let png = UIGraphicsImageRenderer(size: size).pngData { context in
+            UIColor(red: 0.55, green: 0.72, blue: 0.62, alpha: 1).setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
+        try? png.write(to: url)
+        return MediaContent(
+            id: mediaID, type: .photo, width: 800, height: 400, thumbWidth: nil, thumbHeight: nil,
+            storagePath: "preview/cover.png", isThumbnail: false, signedURL: url, durationSeconds: nil
+        )
     }
 
     private static func child(_ name: String, born: String) -> Child {

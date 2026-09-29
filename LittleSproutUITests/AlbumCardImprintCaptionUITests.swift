@@ -59,6 +59,24 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(lines.count, 3, "超長相簿名 AX3 應多行換行不截斷，量到 \(lines.count) 行")
     }
 
+    /// LS-406（LS-390 R1 I1）：整張相簿卡念成一個元素（`.ignore`）後，封面照片的 `.isImage` trait 要補回來——
+    /// VoiceOver 念「圖像」。`isImage` 在 XCUI 對應 `elementType == .image`。有封面才有、占位圖（`cover: nil`）不加。
+    func testTimelineAlbumCard_isImageTrait_onlyWhenCoverPresent() {
+        let withCover = launch(fixture: "timelineAlbumCover", size: Self.large, scheme: "light")
+        let coverCard = paperElement(in: withCover, label: Self.shortLabel)
+        XCTAssertEqual(
+            coverCard.elementType, .image,
+            "封面已載入的相簿卡應帶 .isImage trait（VoiceOver 念「圖像」），實際 elementType＝\(coverCard.elementType.rawValue)"
+        )
+        withCover.terminate()
+        let placeholder = launch(fixture: "timelineAlbum", size: Self.large, scheme: "light")
+        let placeholderCard = paperElement(in: placeholder, label: Self.shortLabel)
+        XCTAssertNotEqual(
+            placeholderCard.elementType, .image,
+            "占位圖（沒有封面）的相簿卡不該帶 .isImage trait（念「圖像」會誤導）"
+        )
+    }
+
     // MARK: - helpers
 
     private func launch(fixture: String, size: String, scheme: String) -> XCUIApplication {
