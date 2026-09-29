@@ -8,8 +8,11 @@
 \set ON_ERROR_STOP on
 
 -- ===========================================================================
--- 1. 非 owner 成員（member）自刪帳號：自己的 diary／album／comment 依既有 soft
---    delete 策略處理（deleted_by=自己），離開家庭，家庭與其他人的內容不受影響
+-- 1. 非 owner 成員（member）自刪帳號：自己的 diary／comment 依既有 soft delete
+--    策略處理（deleted_by=自己）、自己上傳的 media 軟刪；**自己建的 album 不軟刪**
+--    （LS-401，使用者 09-29 裁決：家庭相簿是共有物，作者離開不帶走容器），
+--    別人（owner）掛進該相簿的 media 仍在、且 owner 仍讀得到；離開家庭，家庭與
+--    其他人的內容不受影響
 -- ===========================================================================
 begin;
 
@@ -20,6 +23,9 @@ declare
   v_diary uuid := 'ad000000-0000-4000-8000-000000000001';
   v_album uuid := 'ae000000-0000-4000-8000-000000000001';
   v_comment uuid := 'af000000-0000-4000-8000-000000000001';
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';  -- A 家唯一 owner（fixtures）
+  v_media_member uuid := 'ae000000-0000-4000-8000-000000000011'; -- member 上傳、掛在自己的相簿
+  v_media_owner uuid := 'ae000000-0000-4000-8000-000000000012';  -- owner 上傳、掛在 member 的相簿
   v_n int;
   v_deleted_at timestamptz;
   v_deleted_by uuid;
@@ -34,6 +40,15 @@ begin
   values (v_album, v_family, 'member 自己的相簿', v_member);
   insert into public.comments (id, family_id, target_type, target_id, author_id, body)
   values (v_comment, v_family, 'media', '3a000000-0000-4000-8000-000000000001', v_member, 'member 自己的留言');
+  -- LS-401：member 的相簿裡同時有 member 自己上傳的一張、與 owner 上傳的一張。
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by)
+  values
+    (v_media_member, v_family, v_family::text || '/2026/09/' || v_media_member::text || '.jpg',
+     'photo', 100, now(), 10, 10, v_member),
+    (v_media_owner, v_family, v_family::text || '/2026/09/' || v_media_owner::text || '.jpg',
+     'photo', 100, now(), 10, 10, v_owner);
+  insert into public.album_media (album_id, media_id, family_id, sort_order)
+  values (v_album, v_media_member, v_family, 0), (v_album, v_media_owner, v_family, 1);
   reset role;
 
   perform set_config('request.jwt.claims',
@@ -62,12 +77,50 @@ begin
       v_deleted_at, v_deleted_by;
   end if;
 
+  -- LS-401：相簿是共有物，作者刪帳號不帶走容器——deleted_at／deleted_by 皆維持 NULL。
   select deleted_at, deleted_by into v_deleted_at, v_deleted_by
     from public.albums where id = v_album;
-  if v_deleted_at is null or v_deleted_by is distinct from v_member then
-    raise exception 'FAIL：member 自己的相簿沒有被正確軟刪（deleted_at=% deleted_by=%）',
+  if v_deleted_at is not null or v_deleted_by is not null then
+    raise exception 'FAIL：member 建的相簿不該隨作者軟刪（deleted_at=% deleted_by=%）',
       v_deleted_at, v_deleted_by;
   end if;
+
+  -- 作者自己上傳的 media 仍軟刪；別人（owner）掛進同一本相簿的 media 不受影響。
+  select deleted_at into v_deleted_at from public.media where id = v_media_member;
+  if v_deleted_at is null then
+    raise exception 'FAIL：member 上傳的 media（在自己建的相簿內）沒有被軟刪';
+  end if;
+  select deleted_at into v_deleted_at from public.media where id = v_media_owner;
+  if v_deleted_at is not null then
+    raise exception 'FAIL：owner 上傳、掛在 member 相簿內的 media 竟然被連帶軟刪';
+  end if;
+  select count(*) into v_n from public.album_media
+   where album_id = v_album and media_id in (v_media_member, v_media_owner);
+  if v_n <> 2 then
+    raise exception 'FAIL：album_media 連結列不該被動到（應剩 2 列），實際 %', v_n;
+  end if;
+
+  -- owner 以自己的身分（RLS 生效）仍讀得到那本相簿與掛在裡面的自己的 media；
+  -- member 的 media 已被 media_select 隱藏（LS-155 R2）。
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  select count(*) into v_n from public.albums where id = v_album;
+  if v_n <> 1 then
+    raise exception 'FAIL：owner 讀不到 member 刪帳號後留下的相簿（RLS 下 % 列）', v_n;
+  end if;
+  select count(*) into v_n
+    from public.album_media am join public.media m on m.id = am.media_id
+   where am.album_id = v_album and m.id = v_media_owner;
+  if v_n <> 1 then
+    raise exception 'FAIL：owner 讀不到自己掛在該相簿內的 media（RLS 下 % 列）', v_n;
+  end if;
+  select count(*) into v_n from public.media where id = v_media_member;
+  if v_n <> 0 then
+    raise exception 'FAIL：已軟刪的 member media 對 owner 仍可見（RLS 下 % 列）', v_n;
+  end if;
+  reset role;
+  set local role postgres;
 
   select deleted_at, deleted_by into v_deleted_at, v_deleted_by
     from public.comments where id = v_comment;
@@ -88,7 +141,7 @@ begin
     raise exception 'FAIL：member 的 profiles.deletion_requested_at 沒有被標記';
   end if;
 
-  raise notice 'ok：非 owner 成員刪帳號——自己的內容依既有 soft delete 策略處理、離開家庭、家庭不受影響';
+  raise notice 'ok：非 owner 成員刪帳號——diaries／comments／自己的 media 軟刪、相簿留下（owner 仍讀得到）、離開家庭、家庭不受影響';
 end;
 $$;
 
