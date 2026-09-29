@@ -20,14 +20,18 @@ protocol MediaUploadService: Sendable {
     /// 上傳一張照片；`data` 是已經讀進記憶體的原始位元組（`PhotosPickerItem.loadTransferable`
     /// 讀出來的那份），`fileExtension` 不含點（`jpg`／`heic`…）。回傳新建 `media` 列的 id。
     /// `takenAt`（LS-304，見 `MediaUploadService+TakenAt.swift`）：`media.taken_at`。
-    func uploadPhoto(
-        familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    /// `mediaID`（LS-397 R1 M3）：呼叫端指定的 `media.id`（`nil`＝這次呼叫自己產生，既有行為）——
+    /// 上傳佇列重送同一筆時沿用同一個 id，讓重送**冪等**：Storage PUT 用 upsert 覆寫同路徑物件、
+    /// `media` 列 INSERT 撞主鍵（`23505`）視為上一次嘗試已經寫入，回傳同一個 id，不重複建列、
+    /// 也不清掉已寫入的物件。`nil` 時失敗路徑與清理完全不變。
+    func uploadPhoto( // swiftlint:disable:this function_parameter_count
+        familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize, takenAt: Date?, mediaID: UUID?
     ) async throws -> UUID
 
     /// 上傳一支影片；`fileURL` 是本機暫存檔（呼叫端若先用 `VideoTrimmer` 裁切壓縮過，這裡
-    /// 傳裁切後的暫存檔路徑）。回傳新建 `media` 列的 id。`takenAt` 同 `uploadPhoto` 文件註解。
-    func uploadVideo(
-        familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    /// 傳裁切後的暫存檔路徑）。回傳新建 `media` 列的 id。`takenAt`／`mediaID` 同 `uploadPhoto` 文件註解。
+    func uploadVideo( // swiftlint:disable:this function_parameter_count
+        familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize, takenAt: Date?, mediaID: UUID?
     ) async throws -> UUID
 
     /// 軟刪一批已上傳成功、但草稿被移出佇列／編輯器整個被取消而不再需要的 `media` 列（LS-212，
@@ -71,10 +75,12 @@ final class SupabaseMediaUploadService: MediaUploadService {
         self.durationLoader = durationLoader
     }
 
-    func uploadPhoto(
-        familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    func uploadPhoto( // swiftlint:disable:this function_parameter_count
+        familyID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize, takenAt: Date?,
+        mediaID requestedID: UUID?
     ) async throws -> UUID {
-        let mediaID = UUID()
+        let mediaID = requestedID ?? UUID()
+        let idempotent = requestedID != nil
         // merge-review R1 m1：只讀一次 `now()`，原檔與縮圖路徑共用同一個時間點——見下方
         // `storagePath`／`makePhotoPendingThumbnail` 呼叫都吃這個值，不各自重新讀「現在」。
         let uploadTime = now()
@@ -83,10 +89,10 @@ final class SupabaseMediaUploadService: MediaUploadService {
             from: data, familyID: familyID, mediaID: mediaID, now: uploadTime
         )
         do {
-            try await uploadOriginalAndThumb(pendingThumb: pendingThumb) { [client] in
+            try await uploadOriginalAndThumb(pendingThumb: pendingThumb, upsert: idempotent) { [client] in
                 try await client.storage.from(Self.bucketID).upload(
                     path, data: data,
-                    options: FileOptions(contentType: Self.contentType(forExtension: fileExtension))
+                    options: FileOptions(contentType: Self.contentType(forExtension: fileExtension), upsert: idempotent)
                 )
             }
         } catch {
@@ -96,7 +102,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
             // task」）。有縮圖時兩個 task 都跑完才會到這裡，任一個都可能已經真的上傳成功，
             // 兩個路徑都要批次清。
             if pendingThumb != nil {
-                await cleanupOrphans(path: path, thumbPath: pendingThumb?.path)
+                await cleanupUnlessIdempotent(idempotent, path: path, thumbPath: pendingThumb?.path)
             }
             throw Self.mapUploadError(error)
         }
@@ -106,19 +112,22 @@ final class SupabaseMediaUploadService: MediaUploadService {
                 descriptor: MediaRowDescriptor(
                     storagePath: path, type: "photo", byteSize: data.count, pixelSize: pixelSize, thumb: pendingThumb,
                     durationSeconds: nil, takenAt: takenAt
-                )
+                ),
+                tolerateExisting: idempotent
             )
         } catch {
-            await cleanupOrphans(path: path, thumbPath: pendingThumb?.path)
+            await cleanupUnlessIdempotent(idempotent, path: path, thumbPath: pendingThumb?.path)
             throw error
         }
         return mediaID
     }
 
-    func uploadVideo(
-        familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize, takenAt: Date?
+    func uploadVideo( // swiftlint:disable:this function_parameter_count
+        familyID: UUID, fileURL: URL, fileExtension: String, pixelSize: PixelSize, takenAt: Date?,
+        mediaID requestedID: UUID?
     ) async throws -> UUID {
-        let mediaID = UUID()
+        let mediaID = requestedID ?? UUID()
+        let idempotent = requestedID != nil
         // merge-review R1 m1：同 uploadPhoto，只讀一次 `now()`，原檔與縮圖路徑共用同一個時間點。
         let uploadTime = now()
         let path = Self.storagePath(familyID: familyID, mediaID: mediaID, fileExtension: fileExtension, now: uploadTime)
@@ -144,17 +153,17 @@ final class SupabaseMediaUploadService: MediaUploadService {
         // 延遲成本可忽略。
         let durationSeconds = await Self.measureDurationSeconds(fileURL: fileURL, loader: durationLoader)
         do {
-            try await uploadOriginalAndThumb(pendingThumb: pendingThumb) { [client] in
+            try await uploadOriginalAndThumb(pendingThumb: pendingThumb, upsert: idempotent) { [client] in
                 try await client.storage.from(Self.bucketID).upload(
                     path, fileURL: fileURL,
-                    options: FileOptions(contentType: Self.contentType(forExtension: fileExtension))
+                    options: FileOptions(contentType: Self.contentType(forExtension: fileExtension), upsert: idempotent)
                 )
             }
         } catch {
             // 見 uploadPhoto 同一段落的文件註解：沒有縮圖時只有原檔一個 PUT，失敗代表沒有
             // 任何物件真的上傳成功，不需要呼叫 cleanupOrphans。
             if pendingThumb != nil {
-                await cleanupOrphans(path: path, thumbPath: pendingThumb?.path)
+                await cleanupUnlessIdempotent(idempotent, path: path, thumbPath: pendingThumb?.path)
             }
             throw Self.mapUploadError(error)
         }
@@ -164,10 +173,11 @@ final class SupabaseMediaUploadService: MediaUploadService {
                 descriptor: MediaRowDescriptor(
                     storagePath: path, type: "video", byteSize: byteSize, pixelSize: pixelSize, thumb: pendingThumb,
                     durationSeconds: durationSeconds, takenAt: takenAt
-                )
+                ),
+                tolerateExisting: idempotent
             )
         } catch {
-            await cleanupOrphans(path: path, thumbPath: pendingThumb?.path)
+            await cleanupUnlessIdempotent(idempotent, path: path, thumbPath: pendingThumb?.path)
             throw error
         }
         return mediaID
@@ -185,7 +195,7 @@ final class SupabaseMediaUploadService: MediaUploadService {
     /// 縮圖（`pendingThumb == nil`，生成失敗的過渡情形）時只有原檔一個 child task，等同單一
     /// PUT。
     private func uploadOriginalAndThumb(
-        pendingThumb: PendingThumbnail?, putOriginal: @escaping @Sendable () async throws -> Void
+        pendingThumb: PendingThumbnail?, upsert: Bool, putOriginal: @escaping @Sendable () async throws -> Void
     ) async throws {
         let bucket = client.storage.from(Self.bucketID)
         try await withThrowingTaskGroup(of: Void.self) { group in
@@ -194,12 +204,21 @@ final class SupabaseMediaUploadService: MediaUploadService {
                 group.addTask {
                     try await bucket.upload(
                         pendingThumb.path, data: pendingThumb.data,
-                        options: FileOptions(contentType: Self.thumbnailContentType)
+                        options: FileOptions(contentType: Self.thumbnailContentType, upsert: upsert)
                     )
                 }
             }
             for try await _ in group {}
         }
+    }
+
+    /// LS-397 R2 N1：冪等重送（呼叫端指定 `mediaID`）失敗時**不清理**——重送沿用同一個 id，同一個 UTC 月內
+    /// 路徑與上一次嘗試完全相同，上一次可能已 commit 一列指向這些物件的 `media`（回應遺失才會重送），
+    /// 這裡刪了就變成列在、檔案沒了（永久破圖）。留下的物件下一次重送會 upsert 覆寫，最終沒有 commit 的
+    /// 交給 LS-213 的「Storage 有物件、沒有 media 列」孤兒掃描回收。非冪等呼叫端行為不變。
+    private func cleanupUnlessIdempotent(_ idempotent: Bool, path: String, thumbPath: String?) async {
+        guard !idempotent else { return }
+        await cleanupOrphans(path: path, thumbPath: thumbPath)
     }
 
     /// ②③失敗時清掉①②已上傳的孤兒物件——best-effort：清理本身失敗不覆蓋原始錯誤（呼叫端
@@ -212,7 +231,12 @@ final class SupabaseMediaUploadService: MediaUploadService {
         _ = try? await client.storage.from(Self.bucketID).remove(paths: paths)
     }
 
-    private func insertMediaRow(id: UUID, familyID: UUID, descriptor: MediaRowDescriptor) async throws {
+    /// `tolerateExisting`（LS-397 R1 M3）：呼叫端指定了 `mediaID` 的冪等重送——撞主鍵（`23505`）代表上一次
+    /// 嘗試的 INSERT 已經 commit（回應遺失才會重送），視為成功；此時**不能**走呼叫端的 `cleanupOrphans`
+    /// （那會刪掉已寫入那列所指的物件，同路徑時就是刪掉真正的照片），所以直接正常返回。
+    private func insertMediaRow(
+        id: UUID, familyID: UUID, descriptor: MediaRowDescriptor, tolerateExisting: Bool
+    ) async throws {
         do {
             let session = try await client.auth.session
             let row = MediaInsertPayload(
@@ -220,7 +244,9 @@ final class SupabaseMediaUploadService: MediaUploadService {
             )
             try await client.from("media").insert(row).execute()
         } catch {
-            throw AppError.map(error)
+            let mapped = AppError.map(error)
+            if tolerateExisting, case .validationRetryable(_, let code) = mapped, code == "23505" { return }
+            throw mapped
         }
     }
 

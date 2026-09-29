@@ -49,6 +49,10 @@ final class AlbumsStore {
     /// 問題見 `AlbumsStore+SharedUploadQueue.swift` 檔頭文件註解。兩個屬性不標 `private`
     /// （同 `AlbumDetailView` 既有慣例）：那支擴充檔要跨檔案讀寫。
     var sharedUploadQueueStoreInstance: UploadQueueStore?
+    /// LS-397：`LittleSproutApp.init()` 唯一寫入點——依家庭建立共用佇列的落盤層（見
+    /// `UploadQueuePersistence`）；`nil`（單元測試／preview 預設）＝不落盤，避免測試互相撿到
+    /// 對方留在裝置上的未完成項。
+    var uploadQueuePersistenceFactory: ((UUID) -> UploadQueuePersistence?)?
     /// entry id（`PendingUpload.id`）→ 這筆完成後要掛進哪本相簿，見上。
     var pendingUploadAlbumIDs: [UUID: UUID] = [:]
     /// LS-328：`LittleSproutApp.init()` 唯一寫入點——`sharedUploadQueueStore` 的
@@ -375,6 +379,8 @@ final class AlbumsStore {
         // LS-303 R5（merge-review R4 M1）：共用上傳佇列把 familyID 焊在第一次呼叫建立的
         // `UploadQueueStore` 裡（`AlbumsStore+SharedUploadQueue.swift` 檔頭文件註解）——
         // 不清掉這兩個屬性，登出換帳號後上傳仍會打舊家庭的 familyID。
+        // LS-397：登出時未完成的家庭照片不留在裝置上——取消飛行中的嘗試並清掉落盤目錄。
+        sharedUploadQueueStoreInstance?.discardPersistedState()
         sharedUploadQueueStoreInstance = nil
         pendingUploadAlbumIDs = [:]
         mediaChildrenMarker.reset()

@@ -67,6 +67,7 @@ struct RootView: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in
+            albumsStore.uploadQueueScenePhaseChanged(phase) // LS-397：進背景／回前景的上傳續傳
             if phase == .active {
                 authStore.refreshSnapshot()
                 // LS-217 票文範圍 2：「每次 App 進前景重讀狀態」——沒有登入者時沒有東西可重讀

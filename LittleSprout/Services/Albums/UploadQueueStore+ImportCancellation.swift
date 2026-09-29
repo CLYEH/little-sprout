@@ -36,6 +36,7 @@ extension UploadQueueStore {
             }
             entries.removeValue(forKey: id)
             order.removeAll { $0 == id }
+            discardPersisted(id) // LS-397：取消的批次不該在重啟後又被還原續傳。
             onUploadFailedTerminal(id)
             removedCount += 1
         }

@@ -69,6 +69,9 @@ struct SettingsView: View {
     @State var regularSelection: SettingsSection = .profile
     /// LS-210：法律區兩列改開 in-app sheet，同 `WelcomeView.presentedLegalDocument`（LS-191）寫法。
     @State private var presentedLegalDocument: LegalDocumentKind?
+    /// LS-397：暫定的上傳佇列入口（`SettingsView+UploadQueue.swift`）——sheet 與「查看儲存空間」出路。
+    @State var showsUploadQueue = false
+    @State var showsStorageFromUploadQueue = false
 
     var body: some View {
         Group {
@@ -294,6 +297,7 @@ struct SettingsView: View {
                 }
                 contentSafetyRow(row)
             }
+            uploadQueueRow
         }
     }
 

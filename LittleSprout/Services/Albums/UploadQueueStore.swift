@@ -21,12 +21,13 @@ import UIKit
 /// - `MediaUploadService.uploadPhoto`／`uploadVideo` 目前不回報位元組級進度，`uploading`
 ///   狀態的 `progress` 恆為 `nil`——稿面「上傳中・42%」的即時百分比留給未來另一張碰
 ///   `MediaUploadService` 本身的票接上真正的進度來源，這裡先把顯示邏輯與測試準備好。
-/// - 「已接續先前中斷的上傳」橫幅需要偵測「app 被系統終止、重啟後恢復未完成的上傳」，
-///   這需要真正的背景 `URLSession` 續傳（同樣是「上傳引擎本身」），本票只做「使用者主動
-///   關閉 sheet 時不取消飛行中的 Task」這一半（`Task` 的生命週期跟著 `UploadQueueStore`
-///   實例走，不是跟著 sheet 的 `View` 走——呼叫端只要不提早釋放這個 store 實例，dismiss
-///   sheet 不會中斷上傳）；`resumedFromInterruption` 是給呼叫端在偵測到真正中斷時手動
-///   設定的旗標，本票沒有任何呼叫端會設它為 `true`。
+/// - 「已接續先前中斷的上傳」橫幅（LS-397 路線 (b)）：**不是**背景 `URLSession` 續傳（路線 (a)，
+///   記為後續）。app 進背景時記下飛行中的項目，回前景（`appDidBecomeActive()`）把仍卡在
+///   `.uploading`／被中斷成 `.failed(.network)` 的翻回 `.waiting` 重送並設
+///   `resumedFromInterruption`；未完成項另落盤（`UploadQueuePersistence`），app 被回收重啟後由
+///   `restorePersistedEntries` 列回佇列重送。飛行中的位元組不接回——一律整筆重傳，重送沿用佇列項 id
+///   當 `media.id` 以冪等去重（見 `+Resume.swift`）。dismiss sheet 不取消飛行中的 Task（生命週期
+///   跟著 store 實例，不是 `View`）。
 @MainActor
 @Observable
 final class UploadQueueStore {
@@ -58,7 +59,7 @@ final class UploadQueueStore {
     /// 只用來標記 `.completed`，沒有任何管道往外送——這裡補一個 side-effect 掛鉤，呼叫端可選擇
     /// 性注入；預設空閉包，不影響 `UploadQueueStoreTests`／`UploadQueueStoreDefensiveTests`
     /// 既有呼叫端（皆未帶這個參數）。
-    private let onUploadSucceeded: @MainActor (_ id: UUID, _ mediaID: UUID) -> Void
+    let onUploadSucceeded: @MainActor (_ id: UUID, _ mediaID: UUID) -> Void
     /// LS-303 R5（merge-review R4 i1）：終局失敗（不可重試，`releasesPayload` 為 true 的
     /// `.failed`）的掛鉤——`onUploadSucceeded` 只在成功時讓呼叫端清掉自己的
     /// `entry id → albumID` 對照表，不可重試失敗（`.quota`／`.videoTooLarge`／
@@ -106,9 +107,15 @@ final class UploadQueueStore {
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
     var order: [UUID] = []
 
-    /// 稿面 `ImjbJ`：使用者上一次是被系統中斷、這次重新開 sheet 時接續——本票沒有偵測中斷
-    /// 的機制（見檔頭「已知限制」），呼叫端可在確實偵測到的情境手動設 `true`。
+    /// 稿面 `16 上傳佇列` `Resume Banner`（`SpAvh`）：LS-397 起由 `appDidBecomeActive()`（回前景重送）與
+    /// `restorePersistedEntries`（重啟續傳）設 `true`；佇列閒置後的下一次 `enqueue` 才歸零。
     var resumedFromInterruption = false
+    /// LS-397：落盤層（`nil`＝不落盤，測試／preview 預設）與「這筆要掛進哪本相簿、標哪些寶貝」的
+    /// 查詢（`AlbumsStore.pendingUploadAlbumIDs`／標記追蹤器，入列時一併落盤）。
+    let persistence: UploadQueuePersistence?
+    let linksProvider: @MainActor (_ id: UUID) -> PersistedUploadRecord.Links
+    /// LS-397：續傳／落盤簿記，見 `+Resume.swift`。
+    var resume = ResumeState()
 
     init(
         familyID: UUID, mediaUploadService: MediaUploadService, maxConcurrentUploads: Int = 3,
@@ -117,6 +124,8 @@ final class UploadQueueStore {
         onUploadFailedTerminal: @escaping @MainActor (_ id: UUID) -> Void = { _ in },
         onUploadFailedRetryable: @escaping @MainActor (_ id: UUID) -> Void = { _ in },
         videoExportTimeout: Duration = .seconds(600),
+        persistence: UploadQueuePersistence? = nil,
+        linksProvider: @escaping @MainActor (_ id: UUID) -> PersistedUploadRecord.Links = { _ in .none },
         videoPreparer: @escaping @Sendable (URL) async throws -> VideoTrimmer.UploadSource = { fileURL in
             try await VideoTrimmer.compressedForUpload(fileURL: fileURL)
         }
@@ -129,6 +138,8 @@ final class UploadQueueStore {
         self.onUploadFailedTerminal = onUploadFailedTerminal
         self.onUploadFailedRetryable = onUploadFailedRetryable
         self.videoExportTimeout = videoExportTimeout
+        self.persistence = persistence
+        self.linksProvider = linksProvider
         self.videoPreparer = videoPreparer
     }
 
@@ -186,14 +197,19 @@ final class UploadQueueStore {
     /// 呼叫 `finish(id:)` 改的其實是「新蓋上去的那筆」的狀態——對不上真正完成的是哪一次
     /// upload，且 `order` 會多出一個重複的 id（`rows`／`sections` 因此重複列出同一張縮圖）。
     func enqueue(_ uploads: [PendingUpload]) {
+        // LS-397：佇列閒置時進來的是全新一批，不是「接續先前中斷」——橫幅歸零。
+        if waitingCount + uploadingCount == 0 { resumedFromInterruption = false }
         for upload in uploads {
             guard entries[upload.id] == nil else { continue }
+            let enqueuedAt = now()
             entries[upload.id] = Entry(
                 thumbnail: upload.thumbnail, pixelSize: upload.pixelSize, payload: upload.kind,
-                enqueuedAt: now(), state: .waiting, takenAt: upload.takenAt
+                enqueuedAt: enqueuedAt, state: .waiting, takenAt: upload.takenAt
             )
             order.append(upload.id)
+            persistEnqueued(upload, enqueuedAt: enqueuedAt)
         }
+        persistManifest()
         advance()
     }
 
@@ -261,25 +277,23 @@ final class UploadQueueStore {
         let pixelSize = entry.pixelSize
         let takenAt = entry.takenAt
         entries[id] = entry
-        Task { [weak self] in
+        // LS-397：每次 `start` 是新的一次嘗試（attempt），舊嘗試的結果靠編號辨識，見 `+Resume.swift`。
+        let attempt = beginAttempt(id)
+        resume.tasks[id] = Task { [weak self] in
             guard let self else { return }
             do {
                 let mediaID = try await self.performUpload(id: id, payload, pixelSize: pixelSize, takenAt: takenAt)
                 // LS-166：先呼叫掛鉤（讓呼叫端有機會把這張掛進相簿／更新畫面），再翻成
-                // `.completed`——兩者順序不影響 `entries`／`order` 的一致性（掛鉤不觸碰這兩個
-                // 屬性），純粹是「先讓呼叫端知道結果，這支 store 自己的狀態轉換晚一步」，同
-                // `DeleteConfirmationSheet.confirmTapped` 檔頭「先 dismiss 再 onSuccess」相反
-                // 順序但同樣理由：這裡呼叫端不會讓這個 store 消失，不需要那個順序保護。
-                self.onUploadSucceeded(id, mediaID)
-                self.finish(id, state: .completed)
+                // `.completed`（LS-397 起這兩步在 `completeUpload`）。
+                self.completeUpload(id, attempt: attempt, mediaID: mediaID)
             } catch is VideoExportTimeoutError {
                 // LS-288 i3：跟 `.quota`／`.videoTooLarge` 一樣不落 `AppError.map` 的
                 // `.server` 桶——那個桶是可重試的，但卡住的 export 重試大機率卡在同一個地方。
-                self.finish(id, state: .failed(.videoExportTimedOut))
+                self.failUpload(id, attempt: attempt, reason: .videoExportTimedOut)
             } catch let error as AppError {
-                self.finish(id, state: .failed(.from(error)))
+                self.failUpload(id, attempt: attempt, reason: .from(error))
             } catch {
-                self.finish(id, state: .failed(.from(AppError.map(error))))
+                self.failUpload(id, attempt: attempt, reason: .from(AppError.map(error)))
             }
         }
     }
@@ -290,7 +304,7 @@ final class UploadQueueStore {
     /// `.quota`：payload 裡的 `fileURL` 是 `PickedItemLoader` 產生的選片暫存複本，
     /// `compressedVideoCache[id]` 若有值（例如壓縮成功但上傳因額度已滿被拒）是還沒被清掉的
     /// 壓縮輸出——兩者都要清，這支影片不會再被重試。
-    private func finish(_ id: UUID, state: UploadItemState) {
+    func finish(_ id: UUID, state: UploadItemState) {
         guard entries[id] != nil else { return }
         entries[id]?.state = state
         if Self.releasesPayload(for: state) {
@@ -300,6 +314,7 @@ final class UploadQueueStore {
             }
             compressedVideoCache.removeValue(forKey: id)
             entries[id]?.payload = nil
+            discardPersisted(id)
             // LS-303 R5（merge-review R4 i1）：終局失敗（不可重試）也讓呼叫端清 entry→albumID
             // 對照表，同 `onUploadSucceeded` 的查表清理，見該屬性文件註解。
             if case .failed = state { onUploadFailedTerminal(id) }
@@ -314,7 +329,7 @@ final class UploadQueueStore {
 
     /// merge-review R2 F3：完成或不可重試失敗的這筆不會再被拿去打網路，`payload` 沒有繼續
     /// 留著的理由；可重試的失敗必須留著給 `retry(_:)`／`retryAllRetryable()` 用。
-    private static func releasesPayload(for state: UploadItemState) -> Bool {
+    static func releasesPayload(for state: UploadItemState) -> Bool {
         switch state {
         case .completed: true
         case .failed(let reason): !reason.isRetryable
@@ -339,7 +354,8 @@ final class UploadQueueStore {
         switch payload {
         case .photo(let data, let fileExtension):
             return try await mediaUploadService.uploadPhoto(
-                familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: takenAt
+                familyID: familyID, data: data, fileExtension: fileExtension, pixelSize: pixelSize, takenAt: takenAt,
+                mediaID: id
             )
         case .video(let fileURL, _):
             let source: VideoTrimmer.UploadSource
@@ -356,7 +372,7 @@ final class UploadQueueStore {
             // .uploadSingle` merge-review R1 m7）。
             let mediaID = try await mediaUploadService.uploadVideo(
                 familyID: familyID, fileURL: source.fileURL, fileExtension: source.fileExtension,
-                pixelSize: source.pixelSize ?? pixelSize, takenAt: takenAt
+                pixelSize: source.pixelSize ?? pixelSize, takenAt: takenAt, mediaID: id
             )
             compressedVideoCache.removeValue(forKey: id)
             Self.cleanupVideoTempFiles(originalURL: fileURL, uploadedURL: source.fileURL)
