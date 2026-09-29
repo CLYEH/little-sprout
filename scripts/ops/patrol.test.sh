@@ -1589,6 +1589,17 @@ has   '㊺(d) 在飛票來源走 patrol-linear.sh --inflight lane:design → 同
 out45e="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=3 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 hasnt '㊺(e) --inflight 查不到（exit 3，模擬無 LINEAR_API_KEY）→ 不印 ⚠ Pen 開錯檔（fail-open）' "$out45e" '⚠ Pen 開錯檔'
 hasnt '㊺(e) 也不印非主 checkout 提示（在飛與否未知）' "$out45e" 'Pen 停在非主 checkout'
+# LS-398（LS-376 R1 i2）：exit 1（查詢失敗；假身即使 stdout 有票號也不得採信）與 exit 0＋空輸出（查過、無在飛）兩條 --inflight 路徑
+out45e2="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=1 DESIGN_STUB='LS-388' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㊺(e2) --inflight 查詢失敗（exit 1，stdout 有票號也不採信）→ 不印 ⚠ Pen 開錯檔（fail-open）' "$out45e2" '⚠ Pen 開錯檔'
+hasnt '㊺(e2) 也不印非主 checkout 提示（在飛與否未知）' "$out45e2" 'Pen 停在非主 checkout'
+brief45e2="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=1 DESIGN_STUB='LS-388' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㊺(e2) --brief 不掛 [Pen] flag' "$brief45e2" '[Pen]'
+out45e3="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=0 DESIGN_STUB='' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㊺(e3) --inflight exit 0＋空輸出（查過、無在飛）＋Pen 在 qa-test → ⚠ 非主 checkout 提示（同 (f)）' "$out45e3" "⚠ Pen 停在非主 checkout：${repo}/.claude/worktrees/qa-test/design/littlesprout.pen（無設計票在飛"
+hasnt '㊺(e3) 不印「開錯檔（設計票…在飛）」' "$out45e3" '⚠ Pen 開錯檔'
+brief45e3="$(PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" DESIGN_STUB_RC=0 DESIGN_STUB='' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㊺(e3) --brief 不掛 [Pen] flag' "$brief45e3" '[Pen]'
 
 out45f="$(PATROL_DESIGN_TICKETS='' PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
 has   '㊺(f) 無在飛設計票＋Pen 在 qa-test → ⚠ 非主 checkout 提示' "$out45f" "⚠ Pen 停在非主 checkout：${repo}/.claude/worktrees/qa-test/design/littlesprout.pen（無設計票在飛"
