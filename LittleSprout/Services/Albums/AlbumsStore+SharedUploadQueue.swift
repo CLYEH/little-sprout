@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// LS-303 R4（merge-review R3 M1／M2，orchestrator 裁決 `8579e30e`）：「加入照片」單張即傳
 /// （`AlbumDetailView+Actions.loadPicked`）與批次匯入過渡管線（`LegacyAlbumUploadImportCoordinator`，
@@ -63,10 +64,39 @@ extension AlbumsStore {
             // `MediaChildrenMarkingTracker.handleUploadFailedRetryable(entryID:)` 文件註解。
             onUploadFailedRetryable: { [weak self] entryID in
                 self?.mediaChildrenMarker.handleUploadFailedRetryable(entryID: entryID)
-            }
+            },
+            // LS-397：落盤層由 `LittleSproutApp` 注入工廠；測試預設 `nil`（不落盤）。
+            persistence: uploadQueuePersistenceFactory?(familyID),
+            albumIDProvider: { [weak self] entryID in self?.pendingUploadAlbumIDs[entryID] }
         )
         sharedUploadQueueStoreInstance = store
+        // LS-397：上一個行程被回收時留下的未完成項——先重新登記相簿對照再開始重送（還原內部會
+        // `advance()`），成功後 `onUploadSucceeded` 才查得到要掛哪本相簿。
+        store.restorePersistedEntries { [weak self] entryID, albumID in
+            self?.pendingUploadAlbumIDs[entryID] = albumID
+        }
         return store
+    }
+
+    /// LS-397：`RootView` 的 `scenePhase` 轉發——進背景記下飛行中的上傳、回前景重送被中斷的（見
+    /// `UploadQueueStore+Resume.swift`）。共用佇列還沒建立（沒匯入過、沒有落盤項）時是 no-op；
+    /// `.inactive`（下拉通知中心等）不算進背景。
+    @MainActor
+    func uploadQueueScenePhaseChanged(_ phase: ScenePhase) {
+        switch phase {
+        case .background: sharedUploadQueueStoreInstance?.appDidEnterBackground()
+        case .active: sharedUploadQueueStoreInstance?.appDidBecomeActive()
+        default: break
+        }
+    }
+
+    /// LS-397：冷啟動後若有落盤的未完成項就立刻還原並續傳，不必等使用者再開一次匯入（否則
+    /// 共用佇列要等下一次 `startImport` 才會被建立）。沒有落盤資料時不建立 store。
+    @MainActor
+    func restoreUploadQueueIfPersisted(familyID: UUID, mediaUploadService: MediaUploadService) {
+        guard sharedUploadQueueStoreInstance == nil,
+              uploadQueuePersistenceFactory?(familyID)?.loadRecords().isEmpty == false else { return }
+        _ = sharedUploadQueueStore(familyID: familyID, mediaUploadService: mediaUploadService)
     }
 
     /// 呼叫端在 `store.enqueue(uploads)` **之前**對每一筆 `PendingUpload` 呼叫，登記這筆

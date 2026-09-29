@@ -85,6 +85,8 @@ struct LittleSproutApp: App {
         let albumsStore = AlbumsStore(apiClient: SupabaseAlbumsAPIClient(client: client))
         // LS-328：批次匯入完成後通知時間軸自動刷新，見 `AlbumsStore.timelineStore` 文件註解。
         albumsStore.timelineStore = timelineStore
+        // LS-397：共用上傳佇列落盤（未完成項在 app 被回收後仍可續傳），見 `UploadQueuePersistence`。
+        albumsStore.uploadQueuePersistenceFactory = UploadQueuePersistence.standard(familyID:)
         _albumsStore = State(initialValue: albumsStore)
         _eulaStore = State(initialValue: EULAStore(apiClient: SupabaseEULAAPIClient(client: client)))
         diaryAPIClient = SupabaseDiaryAPIClient(client: client)

@@ -87,6 +87,11 @@ struct AuthenticatedGate: View {
             guard let userID = authStore.session?.userID else { return }
             resumer.resumeIfPending(userID: userID)
         }
+        // LS-397：冷啟動後有落盤的未完成上傳就立刻還原續傳（家庭查詢完成、有 familyID 才做）。
+        .task(id: familyStore.myFamily?.id) {
+            guard let familyID = familyStore.myFamily?.id else { return }
+            albumsStore.restoreUploadQueueIfPersisted(familyID: familyID, mediaUploadService: mediaUploadService)
+        }
     }
 
     /// LS-190 R2（merge-review R1 B2(b)）：判斷順序改成先看「這組結果是不是屬於 `userID`
