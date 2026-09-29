@@ -106,6 +106,7 @@
 		2426523538FF469F71E55F97 /* DiaryDetailView+PresentationBindings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80F4A01D4ECB9D0B6664EBD6 /* DiaryDetailView+PresentationBindings.swift */; };
 		2446A9D3B7C5A02D2E49FB77 /* GrowthCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF6B48B968BD623EFF6F1F8 /* GrowthCurveTests.swift */; };
 		245C5DD4E64BBA6217C815C8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E001ADD4BD2FAB3AAD8A3B8E /* AppDelegate.swift */; };
+		250735FA33F0609FD831524C /* AlbumCardCoverWidthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD5B853C865A31A7DA2C67A /* AlbumCardCoverWidthTests.swift */; };
 		252D10CE9F600B1DF2D9FEB4 /* AvatarImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E7946776E289C18F37C9B35 /* AvatarImageProcessor.swift */; };
 		25367928B8EE5F7251D0D37F /* UploadQueueModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14C3B6A37517D958F06E5C25 /* UploadQueueModelsTests.swift */; };
 		25AE7F87285B432C9786C2D0 /* AccountAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A7D1A5031BDB4C6CE51381 /* AccountAPIClient.swift */; };
@@ -730,6 +731,7 @@
 		1A8EDF036C5C5EE3DB19D2A9 /* FamilyMembersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMembersView.swift; sourceTree = "<group>"; };
 		1AAA98C9E8EC8946FC45F0FF /* InviteFamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteFamilyView.swift; sourceTree = "<group>"; };
 		1AACC2AC996982C86D79D3E7 /* PasswordSignInModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordSignInModelTests.swift; sourceTree = "<group>"; };
+		1CD5B853C865A31A7DA2C67A /* AlbumCardCoverWidthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumCardCoverWidthTests.swift; sourceTree = "<group>"; };
 		1CFC8787191D904A091D87BB /* SupabaseFamilyAPIClientProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseFamilyAPIClientProfileTests.swift; sourceTree = "<group>"; };
 		1E04B4A97FE65EFEB6195BCC /* FoodRecordSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordSheet.swift; sourceTree = "<group>"; };
 		1E1A187F8B4D813F1BCB0135 /* TimelineContentAssembler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineContentAssembler.swift; sourceTree = "<group>"; };
@@ -1569,6 +1571,7 @@
 			isa = PBXGroup;
 			children = (
 				FE9350184247CED25D3CF2FE /* AgeDescriptionForTestingCallerGuardTests.swift */,
+				1CD5B853C865A31A7DA2C67A /* AlbumCardCoverWidthTests.swift */,
 				241E93FAAAD79FEF6D2138E2 /* AlbumDetailStoreTests.swift */,
 				6BA26A86C22BB42E622033E3 /* AlbumImportCoordinatorStreamingTests.swift */,
 				B0707A0A53F5FDB50DC6C66C /* AlbumImportUploadCoordinatorTests.swift */,
@@ -2847,6 +2850,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2C912270ED546D780D755F58 /* AgeDescriptionForTestingCallerGuardTests.swift in Sources */,
+				250735FA33F0609FD831524C /* AlbumCardCoverWidthTests.swift in Sources */,
 				A5652476504158AC7AB56B1D /* AlbumDetailStoreTests.swift in Sources */,
 				9E2F34D220D926D25374CE55 /* AlbumImportCoordinatorStreamingTests.swift in Sources */,
 				CB15209FA29161740BD7537F /* AlbumImportUploadCoordinatorTests.swift in Sources */,
