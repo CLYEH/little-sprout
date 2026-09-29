@@ -159,6 +159,8 @@ extension TapTargetGateScreenName {
             return .staticText("穀物根莖")
         // LS-383：食物卡整張是一顆 `NavigationLink`（identifier 固定，label 隨食物變）。
         case .foodFirstCard: return .button(QAAccessibilityID.timelineFoodFirstCard)
+        // LS-404：「個人」區塊標題（compact）／detail 欄標題（regular）——不受佇列 fixture 影響，一定會渲染。
+        case .settingsUploadQueueEntry: return .staticText("個人")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

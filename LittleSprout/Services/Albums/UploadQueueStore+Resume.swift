@@ -26,6 +26,9 @@ extension UploadQueueStore {
         /// 進背景到回前景之間為 true——這段期間（背景寬限期）才開始的嘗試也要記進
         /// `inFlightAtBackground`，否則被暫停中斷後不會自動重送。
         var isInBackground = false
+        /// LS-404：每次 `appDidBecomeActive()` 結束都遞增（含沒有項目要重送）——設定頁入口列以它當「回前景」
+        /// 情境邊界，保證在重送把失敗項翻回等候**之後**才重新評估，不依賴 scenePhase 觀察者的先後順序。
+        var foregroundEpoch = 0
         /// 尚未終局、已落盤的紀錄（key＝entry id）；`persistManifest()` 依 `order` 輸出。
         var records: [UUID: PersistedUploadRecord] = [:]
     }
@@ -71,6 +74,7 @@ extension UploadQueueStore {
     /// （被暫停的請求）或已被系統中斷成 `.failed(.network)`（`-1005`）的項目取消舊嘗試、翻回
     /// `.waiting` 重送，並讓續傳橫幅出現。沒有需要重送的項目時什麼都不做（橫幅不出現）。
     func appDidBecomeActive() {
+        defer { resume.foregroundEpoch += 1 }
         resume.isInBackground = false
         let candidates = resume.inFlightAtBackground
         resume.inFlightAtBackground = []

@@ -29,6 +29,11 @@ extension SettingsView {
                     .appFont(.lead, weight: .bold)
                     .foregroundStyle(Color.lsTextPrimary)
                     .padding(AppSpacing.item)
+                // LS-404：上傳佇列入口在標題之下、Nav List 之上（Notes `OT5n9`）；卡片與標題同左右內縮，
+                // 與下方 Nav List 之間留 `AppSpacing.block`。
+                uploadQueueEntryCard
+                    .padding(.horizontal, AppSpacing.item)
+                    .padding(.bottom, AppSpacing.block)
                 ForEach(SettingsSection.allCases) { section in
                     let isSelected = section == regularSelection
                     Button {

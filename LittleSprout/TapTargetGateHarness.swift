@@ -37,8 +37,7 @@ enum TapTargetGateHarness {
         case .settings: settingsHost
         case .settingsMemberRole: settingsMemberRoleHost
         case .settingsRegular: settingsRegularHost
-        case .diaryEditor:
-            diaryEditorHost
+        case .diaryEditor: diaryEditorHost
         case .createChild:
             createChildHost
         case .timelineDefaultState:
@@ -139,6 +138,7 @@ enum TapTargetGateHarness {
         case .foodRecordDetail, .foodRecordDetailNoPhoto, .foodRecordDetailOwner, .foodRecordDetailViewer:
             foodRecordDetailHost(for: screen)
         case .foodFirstCard: foodFirstCardHost
+        case .settingsUploadQueueEntry: settingsUploadQueueEntryHost
         case .selfTestTooSmall: selfTestTooSmallHost
         case .selfTestGood: selfTestGoodHost
         case .selfTestPaddingOutsideButton: selfTestPaddingOutsideButtonHost

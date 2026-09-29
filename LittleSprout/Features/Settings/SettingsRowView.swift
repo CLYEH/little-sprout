@@ -14,7 +14,8 @@ import SwiftUI
 /// 對應。含副標的列（例如「個人」列的姓名＋「編輯顯示名稱與頭像」）一樣適用：文字群組是
 /// 單一 `VStack`，被 `HStack` 當一個整體置中，不是逐行各自置中。
 struct SettingsRowView: View {
-    let icon: String
+    /// LS-404：`leading` 非 nil 時由縮圖取代 icon，此時 `icon` 可省略（`nil`）。
+    let icon: String?
     let label: String
     var value: String?
     var isDestructive: Bool = false
@@ -24,23 +25,48 @@ struct SettingsRowView: View {
     /// `SettingsView` 外層 `Button` 才是整列熱區（Notes `UU5Rm`：「點擊區＝整列，Toggle 只是
     /// 視覺」），這裡只負責畫出跟 `value` 一致的開／關視覺。
     var toggleIsOn: Bool?
+    /// LS-404（Notes `kI2bt` ⑤，稿面以實例覆寫呈現、不改 `cmp/Settings Row` 定義）：leading 視圖，取代
+    /// icon 槽——「上傳進度」入口列放 44×44 佇列縮圖（`UploadQueueEntryThumbnail`）。其餘設定列不傳、
+    /// 版面不變。
+    var leading: AnyView?
+    /// LS-404（同上）：第三行失敗文字（`$danger` 600、`$fs-note`），接在副標之後；nil 不畫。
+    var failureLine: String?
+
+    private var textStack: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.tight) {
+            Text(label)
+                .appFont(.body, weight: .semibold)
+                .foregroundStyle(isDestructive ? Color.lsDanger : Color.lsTextPrimary)
+            if let value {
+                Text(value)
+                    .appFont(.note)
+                    .foregroundStyle(Color.lsTextSecondary)
+            }
+            if let failureLine {
+                Text(failureLine)
+                    .appFont(.note, weight: .semibold)
+                    .foregroundStyle(Color.lsDanger)
+            }
+        }
+    }
 
     var body: some View {
         HStack(spacing: AppSpacing.group) {
-            Image(systemName: icon)
-                .appIconFrame(.medium)
-                .foregroundStyle(isDestructive ? Color.lsDanger : Color.lsTextSecondary)
-            VStack(alignment: .leading, spacing: AppSpacing.tight) {
-                Text(label)
-                    .appFont(.body, weight: .semibold)
-                    .foregroundStyle(isDestructive ? Color.lsDanger : Color.lsTextPrimary)
-                if let value {
-                    Text(value)
-                        .appFont(.note)
-                        .foregroundStyle(Color.lsTextSecondary)
-                }
+            if let leading {
+                leading
+            } else if let icon {
+                Image(systemName: icon)
+                    .appIconFrame(.medium)
+                    .foregroundStyle(isDestructive ? Color.lsDanger : Color.lsTextSecondary)
             }
-            Spacer(minLength: AppSpacing.group)
+            if leading != nil {
+                // 稿面 `cmp/Settings Row` 是「Left(fill：縮圖＋文字)｜Right(chevron)」兩段、之間只有一個 `$sp-group`；
+                // 文字欄直接撐滿，不再夾一個 Spacer（否則多出一格間距＋最小間距，iPad 側欄 130pt 文字欄被吃到 98pt）。
+                textStack.frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                textStack
+                Spacer(minLength: AppSpacing.group)
+            }
             if let toggleIsOn {
                 PushToggleVisual(isOn: toggleIsOn)
             } else if showsChevron {
