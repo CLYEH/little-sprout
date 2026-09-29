@@ -12,8 +12,6 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
     private static let xSmall = "UICTContentSizeCategoryXS"
     private static let large = "UICTContentSizeCategoryL"
     private static let ax3 = "UICTContentSizeCategoryAccessibilityXL"
-    /// `PrintPhotoCard` 染料池圓半徑，讀 `PrintPhotoCardMetrics`（app 與 UITest 共用同一份，LS-406），見 `captionRaster` 註解。
-    private static let glowRadius = PrintPhotoCardMetrics.mountPoolRadius()
     private static let shortLabel = "弟弟出生的第一週，8 張相片"
     private static let longLabel = "阿公阿嬤全家福二〇二六跨年夜溫馨團聚倒數紀念相片珍藏加長版本紀念冊，1 張相片"
 
@@ -92,6 +90,52 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
         )
     }
 
+    /// LS-407 範圍 2（池 1d1587a7）：真的時間軸（`TimelineView`）內，有封面與占位圖兩張相簿卡的 a11y frame 都該是**紙面**
+    /// 且彼此一致（差 ≤1pt）。改前：染料池圓把 frame 撐成 510×389（x=-54）；扣掉染料池後封面影像又撐成 380（x=11）、
+    /// 占位圖被角托撐成 365（x=18.5）——QA 讀到的 380 vs 338 同型。紙面寬＝視窗寬扣兩側 `$screen-pad` 24。
+    func testFeedAlbumCards_a11yFrame_isPaper_sameForCoverAndPlaceholder() {
+        let app = launch(fixture: "feedAlbums", size: Self.large, scheme: "light")
+        let cover = paperElement(in: app, label: "阿公阿嬤家過年，8 張相片").frame
+        let placeholder = paperElement(in: app, label: "占位圖相簿，3 張相片").frame
+        let paperWidth = app.windows.firstMatch.frame.width - 2 * 24
+        for (name, frame) in [("封面", cover), ("占位圖", placeholder)] {
+            XCTAssertEqual(
+                frame.width, paperWidth, accuracy: 1,
+                "[\(name)] a11y frame 寬 \(frame.width) 應＝紙面寬 \(paperWidth)（\(frame)）"
+            )
+            XCTAssertEqual(
+                frame.minX, 24, accuracy: 1, "[\(name)] a11y frame 左緣 \(frame.minX) 應＝紙左緣 24（\(frame)）"
+            )
+        }
+        XCTAssertEqual(
+            cover.width, placeholder.width, accuracy: 1,
+            "封面 \(cover.width) vs 占位圖 \(placeholder.width) 兩卡 a11y frame 寬應一致"
+        )
+        XCTAssertEqual(
+            cover.minX, placeholder.minX, accuracy: 1,
+            "封面 \(cover.minX) vs 占位圖 \(placeholder.minX) 兩卡 a11y frame 左緣應一致"
+        )
+    }
+
+    /// LS-407 範圍 1（池 82a6799d）：相簿 tab 卡（`AlbumSummaryCardView`，`.combine`）有封面才帶 `.isImage`，占位圖不加。
+    /// `.combine` 的 XCUI `elementType` 恆為 `.staticText`（子節點 Text 的 trait 優先），看不出 `.isImage`，
+    /// 所以直接讀 accessibility traits 位元（`UIAccessibilityTraits.image`＝0x4）。
+    func testAlbumTabCard_isImageTrait_onlyWhenCoverPresent() throws {
+        let withCover = launch(fixture: "albumCover", size: Self.large, scheme: "light")
+        let coverTraits = try tabCardTraits(in: withCover, context: "有封面")
+        XCTAssertTrue(
+            coverTraits.contains(.image),
+            "有封面的相簿 tab 卡應帶 .isImage trait（VoiceOver 念「圖像」），實際 traits＝\(coverTraits.rawValue)"
+        )
+        withCover.terminate()
+        let placeholder = launch(fixture: "album", size: Self.large, scheme: "light")
+        let placeholderTraits = try tabCardTraits(in: placeholder, context: "占位圖")
+        XCTAssertFalse(
+            placeholderTraits.contains(.image),
+            "占位圖（沒有封面）的相簿 tab 卡不該帶 .isImage trait（念「圖像」會誤導），實際 traits＝\(placeholderTraits.rawValue)"
+        )
+    }
+
     // MARK: - helpers
 
     private func launch(fixture: String, size: String, scheme: String) -> XCUIApplication {
@@ -104,6 +148,16 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
         return app
     }
 
+    /// 相簿 tab 卡（harness id `harness.albumCard`）的 accessibility traits。XCUI 沒有公開 API 讀 trait，
+    /// 走 element snapshot 的 `traits`（KVC）；讀不到就 fail loud，不悄悄回 0 讓「占位圖不帶 image」假綠。
+    private func tabCardTraits(in app: XCUIApplication, context: String) throws -> UIAccessibilityTraits {
+        let card = app.descendants(matching: .any).matching(identifier: "harness.albumCard").firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "[\(context)] 相簿 tab 卡沒渲染")
+        let snapshot = try XCTUnwrap(try card.snapshot() as? NSObject, "[\(context)] 讀不到 element snapshot")
+        let raw = try XCTUnwrap(snapshot.value(forKey: "traits") as? UInt64, "[\(context)] snapshot 沒有 traits")
+        return UIAccessibilityTraits(rawValue: raw)
+    }
+
     private func paperElement(in app: XCUIApplication, label: String) -> XCUIElement {
         let element = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", label)).firstMatch
         XCTAssertTrue(element.waitForExistence(timeout: 10), "時間軸相簿卡（label「\(label)」）沒渲染")
@@ -113,9 +167,9 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
     /// 裁出 Caption 區：照片（printEdge 8＋190）下 7 起、扣底部 printEdgeBottom 8；左緣取 15（避開角托）、
     /// 右緣對稱。回傳的 raster 以裁切左緣為 x=0（`leftmostInkX` 需再加 15）。
     private func captionRaster(paper: XCUIElement, in app: XCUIApplication, context: String) throws -> InkRaster {
-        // 卡片元素的 a11y frame 會把染料池圓（`PrintPhotoCard.mountPoolGlow`，直徑＝角托 26×6，圓心在四角）
-        // 一起算進去，四邊各外擴半徑 `glowRadius`（預設 78）——實測 XS 為 (-54, 30, 510×387)，扣回來才是紙（左緣＝screenPad 24）。
-        let frame = paper.frame.insetBy(dx: Self.glowRadius, dy: Self.glowRadius)
+        // LS-407：卡片元素的 a11y frame＝紙面（`AlbumCardView` 用與紙同大的透明代理承載 a11y 元素，
+        // 不再把染料池圓算進 frame，改前四邊各外擴 78——LS-406 的裁圖得扣 `PrintPhotoCardMetrics.mountPoolRadius()`）。
+        let frame = paper.frame
         let area = CGRect(x: frame.minX + 15, y: frame.minY + 205, width: frame.width - 30, height: frame.height - 213)
         let screenshot = app.screenshot().image
         let cgImage = try XCTUnwrap(screenshot.cgImage, "[\(context)] 截圖沒有 cgImage")

@@ -18,9 +18,11 @@ extension TapTargetGateHarness {
     /// （白邊壓印 Caption「相簿名 · N 張相片」；Long 為超長相簿名＋單張，稿面 `Stress / 14`）。
     /// LS-406：`timelineAlbumCover`＝同 `timelineAlbum` 但帶封面（本機 PNG 的 file URL）——驗 VoiceOver
     /// `.isImage` trait 只在有封面時出現（`timelineAlbum` 是占位圖態）。
+    /// LS-407：`albumCover`＝同 `album` 但帶封面（相簿 tab 卡 `.isImage` 兩態）；`feedAlbums`＝真的
+    /// `TimelineView` 內有封面／占位圖兩張時間軸相簿卡，量 a11y frame 是否一致（池 1d1587a7）。
     enum PhotoCardCaptionFixture: String {
         case one, two, three, none, album, feed, descender, albumDescender, feedAxis, timelineAlbum,
-             timelineAlbumLong, timelineAlbumCover
+             timelineAlbumLong, timelineAlbumCover, albumCover, feedAlbums
     }
 
     static var photoCardCaptionFixture: PhotoCardCaptionFixture {
@@ -49,14 +51,14 @@ private struct PhotoCardBabyCaptionHost: View {
     private static let mediaID = UUID()
 
     @State private var timelineStore = PhotoCardBabyCaptionHost.seededTimelineStore(
-        axis: TapTargetGateHarness.photoCardCaptionFixture == .feedAxis
+        fixture: TapTargetGateHarness.photoCardCaptionFixture
     )
     @State private var childrenStore = PhotoCardBabyCaptionHost.seededChildrenStore()
     @State private var familyStore = FamilyStore.preview()
 
     var body: some View {
         switch fixture {
-        case .feed, .feedAxis:
+        case .feed, .feedAxis, .feedAlbums:
             NavigationStack {
                 TimelineView(
                     familyStore: familyStore, childrenStore: childrenStore, timelineStore: timelineStore,
@@ -65,13 +67,14 @@ private struct PhotoCardBabyCaptionHost: View {
                     albumsStore: .preview()
                 )
             }
-        case .album:
+        case .album, .albumCover:
             singleCard {
                 // `cardWidth` 只餵扇影比例縮放（`AlbumSummaryCardView` 文件註解），不影響署名折行；
                 // 用 iPhone 基準卡寬即可。
                 AlbumSummaryCardView(
                     album: AlbumSummary(
-                        id: UUID(), title: "上禮拜的動物園一日遊", photoCount: 12, cover: nil,
+                        id: UUID(), title: "上禮拜的動物園一日遊", photoCount: 12,
+                        cover: fixture == .albumCover ? Self.coverMedia.signedURL : nil,
                         childIds: [], createdAt: Date()
                     ),
                     // 相簿卡署名是 `$fs-meta`（AX3 約 33pt），「歐陽彥廷／Emma Chen · 2 歲 3 個月」在 iPhone 17 Pro
@@ -148,7 +151,7 @@ private struct PhotoCardBabyCaptionHost: View {
             [child("歐陽彥廷", born: "2024-06-01"), child("小饅頭", born: "2025-01-01"),
              child("Gary", born: "2026-01-01")]
         case .none, .album, .feed, .albumDescender, .feedAxis, .timelineAlbum, .timelineAlbumLong,
-             .timelineAlbumCover: []
+             .timelineAlbumCover, .albumCover, .feedAlbums: []
         }
     }
 
@@ -182,14 +185,32 @@ private struct PhotoCardBabyCaptionHost: View {
         return store
     }
 
+    /// `.feedAlbums`（LS-407）：封面態＋占位圖態兩張時間軸相簿卡。
+    private static var albumEntries: [TimelineEntry] {
+        [
+            TimelineEntry(
+                kind: .album, refId: UUID(), occurredAt: occurredAt, childIds: [],
+                content: .album(AlbumContent(title: "阿公阿嬤家過年", photoCount: 8, cover: coverMedia))
+            ),
+            TimelineEntry(
+                kind: .album, refId: UUID(), occurredAt: occurredAt.addingTimeInterval(-60), childIds: [],
+                content: .album(AlbumContent(title: "占位圖相簿", photoCount: 3, cover: nil))
+            )
+        ]
+    }
+
     /// `.feed` 用：有標記（小安）＋未標記各一張照片卡，同 LS-367 規格板 feed 摘錄（`Jh35i`）。
     /// `.feedAxis`（LS-389）：日記卡、有標記照片卡、相簿卡各一張，三種卡同屏量文字起點。
     @MainActor
-    private static func seededTimelineStore(axis: Bool) -> TimelineStore {
+    private static func seededTimelineStore(fixture: TapTargetGateHarness.PhotoCardCaptionFixture) -> TimelineStore {
         let store = TimelineStore.preview()
         let taggedID = UUID()
         let untaggedID = UUID()
-        if axis {
+        if fixture == .feedAlbums {
+            store.seedForPreview(entries: albumEntries)
+            return store
+        }
+        if fixture == .feedAxis {
             store.seedForPreview(entries: [
                 TimelineEntry(
                     kind: .diary, refId: UUID(), occurredAt: occurredAt, childIds: [feedChild.id],
