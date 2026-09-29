@@ -18,6 +18,9 @@ final class UploadQueueEntryUITests: XCTestCase {
     /// 各態的 VoiceOver 文案（乾淨版，見 `UploadQueueEntryCopy.accessibilityLabel`）。
     private static let inProgressLabel = "正在新增照片，還有 27 張還沒完成"
     private static let withFailureLabel = "正在新增照片，還有 27 張還沒完成，1 張沒有成功"
+    /// `progressThenFailedOnly`：起始「還有 9 張」、劇本結束「還有 1 張」（位數不變，見 harness 註解）。
+    private static let startLabel = "正在新增照片，還有 9 張還沒完成"
+    private static let almostDoneLabel = "正在新增照片，還有 1 張還沒完成"
     private static let onlyFailedLabel = "有 1 張照片沒有加進去，看原因，或再試一次"
 
     override func setUpWithError() throws {
@@ -126,14 +129,15 @@ final class UploadQueueEntryUITests: XCTestCase {
         for size in [Self.xSmall, Self.large, Self.ax3] {
             let app = launch(fixture: "progressThenFailedOnly", size: size, scheme: "light")
             let row = entryRow(in: app)
+            XCTAssertEqual(row.label, Self.startLabel)
             let headerY = app.staticTexts["個人"].frame.minY
             let height = row.frame.height
-            Thread.sleep(forTimeInterval: 5) // 劇本 2.5 秒後把佇列改成只剩 1 張失敗
+            Thread.sleep(forTimeInterval: 7) // 劇本 4 秒後把佇列改成只剩 1 張失敗
             XCTAssertEqual(app.staticTexts["個人"].frame.minY, headerY, accuracy: 0.5, "[\(size)] 停留期間頁面不能被搬動")
             XCTAssertEqual(row.frame.height, height, accuracy: 0.5, "[\(size)] 停留期間列高不能改變")
             print("LS-404 progressToOnlyFailed \(size) label=\(row.label)")
             XCTAssertTrue(
-                row.label == Self.inProgressLabel.replacingOccurrences(of: "27", with: "1")
+                row.label == Self.almostDoneLabel
                     || row.label == Self.onlyFailedLabel,
                 "[\(size)] 只能是原態（數字更新）或原地換成只剩失敗，實際：\(row.label)"
             )

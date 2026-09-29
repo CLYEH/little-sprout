@@ -10,6 +10,9 @@ import XCTest
 final class UploadQueueEntryIPadTests: XCTestCase {
     private static let large = "UICTContentSizeCategoryL"
     private static let inProgressLabel = "正在新增照片，還有 27 張還沒完成"
+    /// `progressThenFailedOnly`：起始「還有 9 張」、劇本結束「還有 1 張」（位數不變，見 harness 註解）。
+    private static let startLabel = "正在新增照片，還有 9 張還沒完成"
+    private static let almostDoneLabel = "正在新增照片，還有 1 張還沒完成"
     private static let onlyFailedLabel = "有 1 張照片沒有加進去，看原因，或再試一次"
 
     override func setUpWithError() throws {
@@ -43,35 +46,41 @@ final class UploadQueueEntryIPadTests: XCTestCase {
     }
 
     /// 停留期間佇列變成「只剩失敗」：不論列高是否相同，Nav List 不能被搬動；列高不同（稿面 100→125）時列必須
-    /// 維持原態，列高相同時才可原地換態。
+    /// 維持原態，列高相同時才可原地換態。跑多個中間字級（Label 較早換行，列高更可能不同），print 出各級實際走了
+    /// 哪一支（原態／原地換態）供 handoff 引用。
     func testStay_progressToOnlyFailed_neverMovesNavListMidStay() {
-        let app = launch(fixture: "progressThenFailedOnly", scheme: "light")
-        let row = app.buttons[QAAccessibilityID.settingsUploadQueueRow]
-        XCTAssertTrue(row.waitForExistence(timeout: 10))
-        let navItem = app.buttons["個人"].firstMatch
-        let navY = navItem.frame.minY
-        let height = row.frame.height
-        Thread.sleep(forTimeInterval: 5)
-        XCTAssertEqual(navItem.frame.minY, navY, accuracy: 0.5, "停留期間 Nav List 不能被搬動")
-        XCTAssertEqual(row.frame.height, height, accuracy: 0.5, "停留期間列高不能改變")
-        print("LS-404 iPad progressToOnlyFailed label=\(row.label)")
-        XCTAssertTrue(
-            row.label == Self.inProgressLabel.replacingOccurrences(of: "27", with: "1")
-                || row.label == Self.onlyFailedLabel,
-            "只能是原態（數字更新）或原地換成只剩失敗，實際：\(row.label)"
-        )
-        attach(app, name: "entry-ipad-stay-progressToOnlyFailed")
+        let sizes = ["UICTContentSizeCategoryL", "UICTContentSizeCategoryXXL", "UICTContentSizeCategoryAccessibilityM"]
+        for size in sizes {
+            let app = launch(fixture: "progressThenFailedOnly", scheme: "light", size: size)
+            let row = app.buttons[QAAccessibilityID.settingsUploadQueueRow]
+            XCTAssertTrue(row.waitForExistence(timeout: 10))
+            XCTAssertEqual(row.label, Self.startLabel)
+            let navItem = app.buttons["個人"].firstMatch
+            let navY = navItem.frame.minY
+            let height = row.frame.height
+            Thread.sleep(forTimeInterval: 7)
+            XCTAssertEqual(navItem.frame.minY, navY, accuracy: 0.5, "[\(size)] 停留期間 Nav List 不能被搬動")
+            XCTAssertEqual(row.frame.height, height, accuracy: 0.5, "[\(size)] 停留期間列高不能改變")
+            print("LS-404 iPad progressToOnlyFailed \(size) height=\(height) label=\(row.label)")
+            XCTAssertTrue(
+                row.label == Self.almostDoneLabel
+                    || row.label == Self.onlyFailedLabel,
+                "[\(size)] 只能是原態（數字更新）或原地換成只剩失敗，實際：\(row.label)"
+            )
+            attach(app, name: "entry-ipad-stay-\(size)")
+            app.terminate()
+        }
     }
 
     // MARK: - helpers
 
-    private func launch(fixture: String, scheme: String) -> XCUIApplication {
+    private func launch(fixture: String, scheme: String, size: String = "UICTContentSizeCategoryL") -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["LS_TAP_TARGET_GATE_SCREEN"] = TapTargetGateScreenName.settingsUploadQueueEntry.rawValue
         app.launchEnvironment["LS_UPLOAD_QUEUE_ENTRY_FIXTURE"] = fixture
         app.launchEnvironment["LS_UPLOAD_QUEUE_ENTRY_SCHEME"] = scheme
         app.launchEnvironment["LS_UPLOAD_QUEUE_ENTRY_LAYOUT"] = "regular"
-        app.launchArguments += ["-UIPreferredContentSizeCategoryName", Self.large]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
         app.launch()
         return app
     }

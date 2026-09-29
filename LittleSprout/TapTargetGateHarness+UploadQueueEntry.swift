@@ -11,9 +11,9 @@ import UIKit
 /// - `progress`：30 張已完成 3（2 上傳中、25 等候）＝稿面「進行中」。
 /// - `progressFailure`：同上但其中 1 張失敗＝「進行中＋失敗」。
 /// - `onlyFailed`：29 張完成、1 張失敗＝「只剩失敗」。
-/// - `allDone`：進行中，畫面出現 2.5 秒後全部完成＝停留期間「原地換成全部完成」。
-/// - `stayFailure`：進行中，2.5 秒後一張失敗、3.5 秒後另一張完成＝停留期間只更新數字、不增行。
-/// - `progressThenFailedOnly`：進行中，2.5 秒後剩下的全部完成、最後一張失敗＝「進行中→只剩失敗」，
+/// - `allDone`：進行中，畫面出現 4 秒後全部完成＝停留期間「原地換成全部完成」。
+/// - `stayFailure`：進行中，4 秒後一張失敗、3.5 秒後另一張完成＝停留期間只更新數字、不增行。
+/// - `progressThenFailedOnly`：還有 9 張，4 秒後剩下的全部完成、最後一張失敗（9→1）＝「進行中→只剩失敗」，
 ///   用來量 iPad／中間字級列高不同時不原地換態。
 /// `LS_UPLOAD_QUEUE_ENTRY_SCHEME=dark` 釘深色；`LS_UPLOAD_QUEUE_ENTRY_LAYOUT=regular` 走 iPad 兩欄版面
 /// （否則 compact，並在底部掛真正的 `SectionTabBar` 以驗「Tab Bar 不遮」）。
@@ -106,7 +106,10 @@ private struct SettingsUploadQueueEntryHost: View {
             (0..<3).forEach { _ in add(.completed, color: .systemTeal) }
             add(.uploading(progress: nil), color: .systemPink)
             add(.uploading(progress: nil), color: .systemPurple)
-            (0..<(fixture == "progressFailure" ? 24 : 25)).forEach { _ in add(.waiting, color: .systemIndigo) }
+            // `progressThenFailedOnly` 只剩個位數張：劇本把數字 9→1，位數不變，列高改變只能來自「換態」，
+            // 不會混進「數字位數變少讓文字少折一行」（那是數字更新，不是換態）。
+            let waiting = fixture == "progressThenFailedOnly" ? 7 : (fixture == "progressFailure" ? 24 : 25)
+            (0..<waiting).forEach { _ in add(.waiting, color: .systemIndigo) }
             if fixture == "progressFailure" { add(.failed(.network), color: .systemOrange) }
         }
         store.seedForPreview(seeds)
@@ -122,21 +125,24 @@ private struct SettingsUploadQueueEntryHost: View {
 
     // MARK: - 劇本（停留期間的佇列變化）
 
+    /// 劇本起跑延遲：要夠久，UITest 才來得及先讀到初始態（冷啟動慢的機器上 2.5 秒曾被劇本搶先）。
+    private static let scriptDelay = 4.0
+
     private func runScript() async {
         guard let store = albumsStore.sharedUploadQueueStoreInstance else { return }
         switch fixture {
         case "allDone":
-            try? await Task.sleep(for: .seconds(2.5))
+            try? await Task.sleep(for: .seconds(Self.scriptDelay))
             for id in store.order where !isCompleted(store, id) { store.finish(id, state: .completed) }
         case "stayFailure":
-            try? await Task.sleep(for: .seconds(2.5))
+            try? await Task.sleep(for: .seconds(Self.scriptDelay))
             if let id = store.order.first(where: { isUploading(store, $0) }) {
                 store.finish(id, state: .failed(.network))
             }
             try? await Task.sleep(for: .seconds(1))
             if let id = store.order.first(where: { isWaiting(store, $0) }) { store.finish(id, state: .completed) }
         case "progressThenFailedOnly":
-            try? await Task.sleep(for: .seconds(2.5))
+            try? await Task.sleep(for: .seconds(Self.scriptDelay))
             let open = store.order.filter { !isCompleted(store, $0) }
             for id in open.dropLast() { store.finish(id, state: .completed) }
             if let id = open.last { store.finish(id, state: .failed(.network)) }
