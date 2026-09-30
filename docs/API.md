@@ -63,7 +63,7 @@
 
 | 表 | 讀 | 新增 | 修改 | 刪除 | 備註 |
 |---|---|---|---|---|---|
-| `profiles` | 同家庭成員互看 | 由 `auth.users` insert trigger 自動建立；INSERT grant／`profiles_insert` policy 仍在（未被 revoke，LS-107 `ensureProfileExists` 的冪等 upsert 靠它），client 慣例上不直接 insert，若呼叫則是 upsert 冪等（`ON CONFLICT DO NOTHING`）；**INSERT 欄位級 grant 只開 `id`／`display_name`／`avatar_url`（LS-414）**——`deletion_requested_at`／`purged_at`／`suspended_at`／`eula_accepted_version`／`eula_accepted_at` 五個伺服器專屬旗標直接 INSERT 一律 `42501` | 僅自己 | ❌ 無 delete policy | 帳號刪除走 Auth 側 cascade。`eula_accepted_version`／`eula_accepted_at`（LS-197）：**client 讀得到、改不動**——只能透過 `accept_eula()` 寫入，見 §4／§11 |
+| `profiles` | 同家庭成員互看 | 由 `auth.users` insert trigger 自動建立；`profiles_insert` policy 仍在，INSERT 自 LS-414 起由整表 grant 改為欄位級 grant（見下；LS-107 `ensureProfileExists` 的冪等 upsert 靠它），client 慣例上不直接 insert，若呼叫則是 upsert 冪等（`ON CONFLICT DO NOTHING`）；**INSERT 欄位級 grant 只開 `id`／`display_name`／`avatar_url`（LS-414）**——`deletion_requested_at`／`purged_at`／`suspended_at`／`eula_accepted_version`／`eula_accepted_at` 五個伺服器專屬旗標直接 INSERT 一律 `42501` | 僅自己 | ❌ 無 delete policy | 帳號刪除走 Auth 側 cascade。`eula_accepted_version`／`eula_accepted_at`（LS-197）：**client 讀得到、改不動**——只能透過 `accept_eula()` 寫入，見 §4／§11 |
 | `families` | 我所屬的家庭 | 任何登入者（自建家庭），但 (a) 呼叫者已被停權，或 (b) `app_settings.registrations_open = false` 時一律拒絕（`LS052`／`LS054`，LS-179，見 §11） | `name`／`require_approval` 兩欄，owner-only | ❌ 無 delete policy | `storage_quota_bytes`／`storage_used_bytes` 兩個額度欄位永遠唯讀——不論身分，client 都改不動（只有 `media` 表的 trigger 與表擁有者能寫）。`suspended_at`（LS-179）：**client 讀得到**（停權事實本來就會從 `LS052`／`LS053` 揭露），但改不動，只有表擁有者（postgres，Dashboard／`db query --linked`）能寫；停權原因不在這張表上，見 §11 與 `private.suspension_notes` |
 | `app_settings`（LS-179／LS-197） | `registrations_open`／`updated_at`／`id` 🔒 完全不可讀（`authenticated` 無 grant、無 policy）；`eula_version`（LS-197）**client 讀得到**（欄位級 `SELECT`＋`app_settings_select` policy，見 §11） | 🔒 唯讀（只有表擁有者能寫，見 §11） | 🔒 唯讀 | 🔒 唯讀 | 全域營運開關（`registrations_open`／`eula_version`）。`registrations_open` 只透過 `private.registrations_open()`（`SECURITY DEFINER`）供其他函式內部讀，client 不會直接碰到；`eula_version` 則刻意開放 client 直接讀（呼叫 `accept_eula()` 前需要知道目前版本），見 §11 |
 | `family_members` | 我所屬家庭的成員 | 🔒 **RPC-only**（`request_join`／`approve_join`，直接 INSERT 已被 revoke） | 僅 `role`／`can_upload` 兩欄，owner-only | owner 移除任何人；任何人可自行退出 | LS-33/LS-6 收斂：不存在「owner 直接把任意 user_id 塞進成員名單」的路徑 |
@@ -165,12 +165,12 @@ PostgreSQL 解析 UPDATE 語句時就被擋下，連 RLS 的 USING 子句都不�
   每個候選先去頭尾空白再截斷到 50 字，空字串／全空白視同沒有該候選；三者都落空時
   保底 `新成員`（永遠非空、永遠 ≤ 50 字，不會撞 `profiles_display_name_check`）。
   `avatar_url` 取 `raw_user_meta_data->>'avatar_url'`（去空白後為空字串也視為
-  `NULL`）。client 只做 `update`（改自己的 `display_name`／`avatar_url`）；INSERT
-  grant 與 `profiles_insert` policy 仍在（未被 revoke，LS-107 `ensureProfileExists`
-  的冪等 upsert 靠它），但 **INSERT 欄位級 grant 自 LS-414 起只開 `id`／`display_name`／
-  `avatar_url`**——`deletion_requested_at`／`purged_at`／`suspended_at`／
-  `eula_accepted_version`／`eula_accepted_at` 直接 INSERT 一律 `42501`（UPDATE 早已
-  只開兩欄，這裡補上 INSERT 路徑繞過的同型缺口）。**trigger／回填都只 `insert`、不 `update`**——既有列的
+  `NULL`）。client 只做 `update`（改自己的 `display_name`／`avatar_url`）；`profiles_insert`
+  policy 仍在；INSERT 自 LS-414 起由整表 grant 改為欄位級 grant（先整表 revoke 再只開
+  `id`／`display_name`／`avatar_url`，LS-107 `ensureProfileExists` 的冪等 upsert 只送
+  前兩欄，靠這條路徑）——`deletion_requested_at`／`purged_at`／`suspended_at`／
+  `eula_accepted_version`／`eula_accepted_at` 直接 INSERT 一律 `42501`（純縱深防禦：
+  與 UPDATE 早已只開兩欄的收斂對齊）。**trigger／回填都只 `insert`、不 `update`**——既有列的
   `display_name` 永遠不會被回填或之後的觸發再覆寫（trigger 已建過的使用者不會二次
   觸發；回填只補「缺列」；兩者都用 `on conflict (id) do nothing`），即使 client 先
   以 `ensureProfileExists` 建了一列、`display_name` 停在 email 帳號部分，也不會被
