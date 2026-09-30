@@ -94,6 +94,7 @@ case "$input" in
     hc="$(cat "${PEN_STUB_HASH:?}" 2>/dev/null || true)"
     case "$hc" in
       HASH:*) printf 'SUMMARY-HASH total_nodes=1 tree_hash=%s\n' "${hc#HASH:}" ;;
+      HANG) sleep 5 ;;
       *) echo "Error: InternalError: interrupted" ;;
     esac
     exit 0
@@ -536,6 +537,30 @@ else
 fi
 clear_fake_pen
 
+# (8) merge-review R1 m1：pen-read 收到 TERM 要把信號轉給 pen-open 子行程並清統計暫存（不留孤兒、不留 TMPDIR 殘檔）。
+#     讓 pen-open 卡在 Pen 端 execute（假身 sleep 5，HASH_TIMEOUT 拉長）時送 TERM。孤兒用 /bin/ps 找（PATH 上的 ps 是 stub）。
+term_case() {  # $1＝pen-read.sh 路徑；設 $term_orphans（殘留的 pen-open 子行程數）、$term_tmpleft（殘留暫存檔數）
+  local script_under=$1 tdir="${work}/term-tmp" pid
+  rm -rf "$tdir"; mkdir -p "$tdir"
+  big_case_setup; set_hash HANG; unset PEN_STUB_RANGE_MODE
+  ( cd "$tix_repo" && TMPDIR="$tdir" PEN_OPEN_HASH_TIMEOUT=30 bash "$script_under" --budget-bytes 0 "$wtBig" >/dev/null 2>&1 ) &
+  pid=$!
+  sleep 2
+  /bin/kill -TERM "$(/bin/ps -axo pid=,command= | grep -F "pen-read.sh --budget-bytes 0 ${wtBig}" | grep -v grep | awk '{print $1}' | head -1)" 2>/dev/null
+  sleep 1
+  term_orphans=$(/bin/ps -axo command= | grep -F "pen-open.sh ${wtBig} --force-reload" | grep -vc grep)
+  term_tmpleft=$(find "$tdir" -name 'pen-read-stats.*' | wc -l | tr -d ' ')
+  wait "$pid" 2>/dev/null
+  /bin/ps -axo pid=,command= | grep -F "pen-open.sh ${wtBig} --force-reload" | grep -v grep | awk '{print $1}' | xargs -I{} /bin/kill -KILL {} 2>/dev/null
+  clear_fake_pen; set_hash 'HASH:ffffffffffffffff'; export PEN_STUB_RANGE_MODE=1
+}
+term_case "$script"
+if [ "$term_orphans" -eq 0 ] && [ "$term_tmpleft" -eq 0 ]; then
+  ok 'pen-read.sh：收到 SIGTERM → 轉送給 pen-open 子行程（0 個孤兒）並清掉統計暫存（0 個殘檔）（LS-377 R2 m1）'
+else
+  bad "SIGTERM 後應無 pen-open 孤兒與統計暫存殘留（實得孤兒 ${term_orphans}、殘檔 ${term_tmpleft}）"
+fi
+
 # ---- mutation（LS-377）：改 pen-open.sh 的副本，用同一組夾具重跑，確認上面的斷言真的在保護該邏輯 ----
 mk_mutant() {
   local mut_root="${work}/$1" sed_expr=$2
@@ -623,6 +648,17 @@ else
   bad "mutation E 未重現假陽性（exit ${gotE}）"; printf '%s\n' "$outE" | sed 's/^/    /' >&2
 fi
 clear_fake_pen
+# mutation F（m1）：拿掉 TERM trap → pen-open 變孤兒、統計暫存殘留，情境 (8) 必須紅
+mk_mutant mutF-root 's/^trap .forward_signal TERM 143. TERM$/:/'
+sed -i.bak "s/^trap 'forward_signal TERM 143' TERM\$/:/" "${work}/mutF-root/scripts/ops/pen-read.sh" && rm -f "${work}/mutF-root/scripts/ops/pen-read.sh.bak"
+if ! grep -qF "trap 'forward_signal TERM 143' TERM" "${work}/mutF-root/scripts/ops/pen-read.sh"; then ok 'mutation F：確認已拿掉 TERM trap'; else bad 'mutation F：替換失敗，負控本身無效'; fi
+term_case "${work}/mutF-root/scripts/ops/pen-read.sh"
+if [ "$term_orphans" -gt 0 ] || [ "$term_tmpleft" -gt 0 ]; then
+  ok "mutation F：拿掉 TERM trap 後 SIGTERM 留下孤兒 ${term_orphans}／暫存殘檔 ${term_tmpleft}，情境 (8) 轉紅——證明 trap 在保護這件事"
+else
+  bad 'mutation F 未如預期翻轉（沒有孤兒也沒有殘檔）'
+fi
+
 unset PEN_STUB_RANGE_MODE
 
 if [ "$fail" -ne 0 ]; then

@@ -158,8 +158,33 @@ esac
 stats_tmp=$(mktemp "${TMPDIR:-/tmp}/pen-read-stats.XXXXXX") || stats_tmp=""
 [ -z "$stats_tmp" ] || export PEN_OPEN_STATS_FILE="$stats_tmp"
 started=$SECONDS
-bash "${script_dir}/pen-open.sh" "$root_arg" --force-reload
+# LS-377 R2（merge-review m1）：子行程化後 pen-read 被 TERM／INT／HUP 時 pen-open 會變孤兒繼續跑（可能照樣走完清場重開）、
+# 統計暫存殘留——背景啟動後 wait，trap 轉送信號給子行程並清暫存（exec 時代 pen-read 的 PID 就是 pen-open，不需要這些）
+bash "${script_dir}/pen-open.sh" "$root_arg" --force-reload &
+child=$!
+# 子行程樹的 pid 清單（先收集再殺——父先死子會被 init 收養、找不到）：pen-open.sh 用 $(…) 子殼與 `pen interactive`／看門狗 sleep，
+# 只殺 pen-open 本體會留下它們（實測孤兒）。用絕對路徑 /bin/ps（PATH 上的 ps 可能是自測 stub）。
+descendants_of() {
+  local kid
+  for kid in $(/bin/ps -axo pid=,ppid= 2>/dev/null | awk -v p="$1" '$2 == p { print $1 }'); do
+    descendants_of "$kid"
+    printf '%s\n' "$kid"
+  done
+}
+forward_signal() {
+  local victims
+  victims=$(descendants_of "$child"; printf '%s\n' "$child")
+  # shellcheck disable=SC2086
+  kill -"$1" $victims 2>/dev/null
+  [ -z "$stats_tmp" ] || rm -f "$stats_tmp"
+  exit "$2"
+}
+trap 'forward_signal TERM 143' TERM
+trap 'forward_signal INT 130' INT
+trap 'forward_signal HUP 129' HUP
+wait "$child"
 rc=$?
+trap - TERM INT HUP
 if [ -n "$stats_tmp" ]; then
   if [ -n "$stats_dir" ]; then
     interrupted=$(grep -c '^interrupted$' "$stats_tmp"); mode=$(sed -n 's/^mode=//p' "$stats_tmp" | tail -1); segs=$(sed -n 's/^segments=//p' "$stats_tmp" | tail -1)
