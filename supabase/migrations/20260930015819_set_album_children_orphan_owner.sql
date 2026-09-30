@@ -27,7 +27,8 @@
 --      policy 與 RPC 沒有第二份判定式可漂移。
 --      副作用：LS-408 policy 內的「created_by is null or (family_id, created_by) not in …」
 --      整段從 policy 移進函式；policy 只剩 `id in (…)`。孤兒條件只剩本函式一處定義
---      （`git grep 'owned_family_member_pairs'` 只有本檔函式本體與 LS-408 舊檔的歷史定義）。
+--      （現行孤兒判定只剩本函式一處；LS-408 舊 migration 內的 policy 文字已被本檔的
+--      `alter policy` 取代，只是歷史，`git grep 'not in ('` 可對照）。）
 --   b) `owned_family_member_pairs()` 補過濾 vs 註解：**選註解，不補過濾**。原因與 R1 i2 的
 --      直覺相反——該 helper 只用在 `NOT IN` 方向，回傳集合是「安全側的 superset」：加上
 --      caller_is_active()／family_is_active() 過濾會讓集合在「呼叫者被停權／家庭停用」時變空，
