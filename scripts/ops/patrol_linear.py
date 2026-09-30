@@ -15,9 +15,9 @@ stub gh 慣例），不必真的打 Linear。唯一的本機寫入是 `<root>/.c
 LS-144「開票責任」：lane 在飛 0 且無可派候補（無候補，或候補全被擋——`hold:user` 使用者裁決、
 待 Spec／待結構／blockedBy 未解／`需 Design gate` 無核可稿）時，動作清單多印一行
 `→ 開票：lane:<x> 空 n 輪（…）——來源候選：…`（連續空 ≥2 輪升 ⚠），並機械列出來源候選：
-design／ui＝Backlog 中票文含正典標記 `**UI 票：需 Design gate**` 且尚無 lane:design 票承接者；harness＝LS-354 池項（LS-351 起接替 LS-96）
+design／ui＝Backlog 中票文含正典標記 `**UI 票：需 Design gate**` 且尚無 lane:design 票承接者；harness＝待辦池項（LS-413；LS-375 起接替 LS-354）
 `P1 ·`／`P2 ·` 且尚未被任何票引用 comment id 前綴者；backend＝Backlog Story 含後端關鍵字且尚無
-lane:backend 子票者（關鍵字啟發式，只列、不判）。來源候選需要的額外查詢（已結案票、LS-354
+lane:backend 子票者（關鍵字啟發式，只列、不判）。來源候選需要的額外查詢（已結案票、待辦池
 comments）只在有 lane 需要時才打、且 best-effort（查詢失敗只在該行註明，不打掉整份報表，
 同 cycle_progress() 的例外）。不自動建票——建票仍由 orchestrator 判斷 scope（§4-b 模板第 4 步）。
 
@@ -51,7 +51,7 @@ BACKLOG_STATES = ("Backlog", "Spec")
 # cycle 對帳 (a) 的「active」定義抄自 §4-b 巡檢 cron 模板本文（狀態名稱，不是 state.type）
 ACTIVE_STATE_NAMES = ("Ready", "In Progress", "In Review", "QA", "Design", "Spec")
 SIZE_RANK = {"size:S": 0, "size:M": 1, "size:L": 2}
-SKIP_ISSUE = "LS-354"  # 常駐待辦池（LS-351 起接替封存的 LS-96）：永不列為候補、永不派（§5-b「harness 優先序」）
+SKIP_ISSUE = "LS-413"  # 常駐待辦池 v3（LS-375 起接替封存的 LS-354、LS-351 起接替 LS-96）：永不列為候補、永不派（§5-b「harness 優先序」）
 # LS-144：使用者裁決暫不動的票——補位與開票候選皆跳過並註明「使用者裁決」（§5-b）。
 HOLD_LABEL = "hold:user"
 # LS-351（§5-b「harness 配額」）：lane:harness 每 cycle 開票數 ≤ 該 cycle 總票數 20%（向上取整）。
@@ -59,6 +59,9 @@ HARNESS_LANE = "lane:harness"
 HARNESS_QUOTA_PERCENT = 20
 # LS-351 R2（§5-b「入口收斂」）：待辦池 comment 數超過此門檻即需封存重開（重貼沿用 40＋約一個 cycle 新增量）。
 POOL_ARCHIVE_THRESHOLD = 80
+# LS-375（§5-b「入口收斂」）：新池 P3 不入池（P3 改寫 handoff「不修＋理由」）。此時刻＝新池票建立日（UTC）；只算這之後建立的池留言，
+# 封存前的舊池留言（含 P3）不會誤報。
+POOL_NO_P3_SINCE = "2026-09-30T02:49:41.465Z"
 # LS-144：Story 票文的正典粗體標記 `**UI 票：需 Design gate**`（LS-19／20／22／24 皆此形）＝沒有核可設計稿不得
 # 實作（CLAUDE.md design gate）。帶此標記的 Backlog 票永不列為候補（實作票是核可後另開的子票，Story 本身不派
 # ——LS-142 驗收段的流程），只作為 design／ui lane 的開票來源。LS-96 池項 b2993155（P1）的機械修法即此條。
@@ -68,11 +71,12 @@ POOL_ARCHIVE_THRESHOLD = 80
 # 折衷：必須在 `**UI 票：需…Design gate**` 粗體內、「需」與「Design gate」之間容忍 ≤6 字（先過／先通過）；「不需」「另票，需」
 # 都不在這個粗體形內，仍不命中。
 DESIGN_GATE_RE = re.compile(r"\*\*UI 票：需.{0,6}Design gate\*\*")
-POOL_PRIORITY_RE = re.compile(r"\bP([1-4])\s*[·｜]")  # 池項格式：LS-96 舊式 `Pn ·`／LS-354 `Pn ｜`（§5-b「入口收斂」）；body 首個 match
+POOL_PRIORITY_RE = re.compile(r"\bP([1-4])\s*[·｜]")  # 池項格式：LS-96 舊式 `Pn ·`／LS-354 起 `Pn ｜`（§5-b「入口收斂」）；body 首個 match
 POOL_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P([1-4])\s*[·｜]")  # 行首列點項 `- Pn ·`（R2 N1：一則多項取最小級）
 # 池內公告（銷除／銷案／已升票）會引述被銷除項的 `P1 ·`，不是池項（R1 F2 live 62ecf8f1）。R2 N3：不錨 body 開頭（公告以日期／
 # 票號起頭就漏），改看 body 前 2 行有沒有這些字樣；只看前 2 行是避免正文提到「已升票」的真池項被當公告藏掉。
 POOL_ANNOUNCE_RE = re.compile(r"銷除|銷案|已升票")
+POOL_P3_ITEM_LINE_RE = re.compile(r"(?m)^\s*(?:[-*]\s*)?P3\s*[·｜]")  # LS-375：行首（含列點）`P3 ｜`／`P3 ·` 項
 BACKEND_KEYWORDS = ("RPC", "RLS", "migration", "schema", "後端", "Supabase", "資料表", "trigger", "policy", "SQL", "Edge Function", "bucket")
 STATE_FILE_REL = os.path.join(".claude", "patrol-state.json")  # 連續空輪計數（gitignored）
 BACKTICK_TOKEN_RE = re.compile(r"`([^`\n]{2,80})`")  # LS-298 scope 2：Story 票文反引號 token（表名／RPC 名／檔名）
@@ -154,7 +158,7 @@ query($teamKey: String!, $states: [String!]) {
 }
 """
 
-# LS-144：待辦池（LS-354）comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
+# LS-144：待辦池（LS-413）comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
 POOL_COMMENTS_QUERY = """
 query($id: String!, $after: String) {
   issue(id: $id) {
@@ -766,8 +770,19 @@ def is_pool_announcement(comment):
     return POOL_ANNOUNCE_RE.search("\n".join((comment.get("body") or "").splitlines()[:2])) is not None
 
 
+def count_pool_p3(comments):
+    """LS-375：新池（POOL_NO_P3_SINCE 之後建立、非公告）含行首 `P3 ｜` 項的留言則數。P3 不入池（§5-b「入口收斂」）。"""
+    n = 0
+    for c in comments:
+        if (c.get("createdAt") or "") < POOL_NO_P3_SINCE or is_pool_announcement(c):
+            continue
+        if POOL_P3_ITEM_LINE_RE.search(c.get("body") or ""):
+            n += 1
+    return n
+
+
 def pool_sources(comments, all_issues):
-    """(b) harness：待辦池（LS-354）池項 comment 等級為 P1／P2、且尚未升票者。等級＝body 首個 `Pn ·` 與各行首列點
+    """(b) harness：待辦池（LS-413）池項 comment 等級為 P1／P2、且尚未升票者。等級＝body 首個 `Pn ·` 與各行首列點
     `- Pn ·` 的最小級（R2 N1：live 163 則中 8 則是一則多項混級，如 `- P3 ·` 後接 `- P2 ·`，取最小級才不會把真 P2
     藏掉；P3 池項文中段引用「P1 ·」既非首個 match 也不在行首，不升級）。公告（is_pool_announcement()：前 2 行含
     「銷除／銷案／已升票」）整則跳過。「已升票」＝任一票（open 或已結案）的標題／票文含該 comment id 前 8 碼（agent
@@ -805,7 +820,7 @@ def pool_sources(comments, all_issues):
 
 
 # LS-287：pool_sources() 的「已被未封存票 description 引用」是查 Linear 票文；這裡再補第二層——查 repo
-# 本身（腳本檔頭「來源 LS-96／LS-354 池項 <id>」等）是否已經落地實作。兩層互補，都判定為已升票／已落地，
+# 本身（腳本檔頭「來源 LS-96／LS-354／LS-413 池項 <id>」等）是否已經落地實作。兩層互補，都判定為已升票／已落地，
 # 不列為候選（09-15 兩輪列出的 12 候選中 5 個其實 LS-141／180／140／226 已做掉，orchestrator 每輪重複
 # 人工排除）。只查 repo 內會被 agent／人翻閱到的位置，不掃整個 repo（避免誤命中 .pen／二進位或無關檔案）。
 POOL_LANDED_PATHS = ["scripts/", ".github/", "docs/COLLABORATION.md", "docs/PLAN.md", ".claude/agents/"]
@@ -1200,7 +1215,8 @@ def build_report(token, root, team_key, team_id, sim_lines):
     # LS-351 R2：待辦池則數（與開票來源共用同一次 lazy 查詢，harness lane 已查過就不再打）。
     pool_list, pool_err = pool_comments()
     pool_size = {"issue": SKIP_ISSUE, "count": None if pool_err else len(pool_list),
-                 "threshold": POOL_ARCHIVE_THRESHOLD, "error": pool_err}
+                 "threshold": POOL_ARCHIVE_THRESHOLD, "error": pool_err,
+                 "p3_count": None if pool_err else count_pool_p3(pool_list)}
     save_state(root, state)
 
     actions = list(cycle_actions) + list(lane_actions)
@@ -1289,9 +1305,16 @@ def format_pool_size(ps):
     return None
 
 
+def format_pool_p3(ps):
+    """LS-375：新池出現 P3 印 ⚠（過得了 patrol-filter）；0 則或讀不到（則數那行已印 ⚠）零訊號。"""
+    if not ps or ps.get("error") or not ps.get("p3_count"):
+        return None
+    return "⚠ 待辦池出現 P3（%d 則）→ 依 §5-b 改寫成 handoff 不修＋理由" % ps["p3_count"]
+
+
 def format_human(report, brief=False):
     lines = []
-    pool_line = format_pool_size(report.get("pool_size"))
+    pool_line = "\n".join(x for x in (format_pool_size(report.get("pool_size")), format_pool_p3(report.get("pool_size"))) if x) or None
     cc = report["current_cycle"]
     if brief:
         lines.append("巡檢（Linear 半段）%s" % format_cycle_line(cc))
@@ -1351,7 +1374,7 @@ def format_human(report, brief=False):
 
     if pool_line:
         lines.append("== 待辦池")
-        lines.append("  " + pool_line)
+        lines.extend("  " + x for x in pool_line.split("\n"))
     lines.append("== 動作清單（逐行執行）")
     if report["actions"]:
         lines.extend(report["actions"])

@@ -198,7 +198,7 @@ QA_BODY="${QA_BODY} ${PENREADFLOW}"
 RUBRICREF='四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`（本檔不另抄一份）。'
 MR_BODY="${MR_BODY} ${RUBRICREF}"
 # LS-352：merge-reviewer 正文另須含自檢抽驗句（informational 記池、不得要求本 PR 修）；併進 MR_BODY
-SELFCHECKSAMPLE='自檢已宣告通過的項只抽驗、不重寫；informational 一律記 LS-354 池。'
+SELFCHECKSAMPLE='自檢已宣告通過的項只抽驗、不重寫；informational 只有 P1／P2 記 LS-413 池、P3 不入池。'
 MR_BODY="${MR_BODY} ${SELFCHECKSAMPLE}"
 # LS-209：ios-dev 新增 tools: 白名單（移除 mcp__pencil__*）——取代舊的 `NONE`（無 tools: 行＝繼承全部工具，其中
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求

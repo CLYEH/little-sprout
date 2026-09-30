@@ -160,7 +160,7 @@ R7 掃過全部 393 寬、非 A11y/Stress 的螢幕板：27 張有實心 accent�
 - **張數暗蓋（`cmp/Card Diary` 第三格 More Count `CQpms`、Import 縮圖列 More Cell「+N」）走 `$fs-note` 17 粗體、隨 Dynamic Type 放大**——「還有幾張」是要讀的資訊，適用十條第 6 條（寫著數量的字 ≥17），不是廠牌壓印字。
 - **長短形看可用寬度，不看字級名稱**：SwiftUI `ViewThatFits(in: .horizontal) { Text("還有 N 張"); Text("+N") }`，放得下長形就顯示「還有 N 張」，放不下才退「+N」；短形仍放不下（64pt 格遇 AX3 多位數）時 `.lineLimit(1).minimumScaleFactor(0.5)` 收進格內，不裁字、不溢出。稿面對照：96 寬縮圖預設字級長形寬 69（`WitwS`），AX3 40pt 長形寬 162 放不下→「+2」寬 48（`MiQyy`／`xNqOC`）。
 - **VoiceOver 兩形一律讀「還有 N 張」**（`accessibilityLabel` 固定長形）。
-- 本條取代 Import Notes `iSOb3`／`R5OnW` 原「縮圖疊字 +N 一律 `$fs-imprint` 12」的寫法（chip 頭像姓名縮寫字不在本條，仍 12）；Import 各板稿面 12pt「+N」與現行實作（`ImportMoreCell`、`DiaryCardView`）的對齊記在 LS-354（comment `10a36cc6`）。
+- 本條取代 Import Notes `iSOb3`／`R5OnW` 原「縮圖疊字 +N 一律 `$fs-imprint` 12」的寫法（chip 頭像姓名縮寫字不在本條，仍 12）；Import 各板稿面 12pt「+N」與現行實作（`ImportMoreCell`、`DiaryCardView`）的對齊記在 LS-413（LS-375 自 LS-354 comment `10a36cc6` 重貼）。
 
 ## 邀請碼
 

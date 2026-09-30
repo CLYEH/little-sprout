@@ -6,15 +6,15 @@
 #
 # 覆蓋：候補排序（priority 同分取 size S→M→L 再 createdAt）、blockedBy 未 Done → 跳過、Canceled 視為
 # 已解、缺 size 的 lane:harness 票列結構 (e)、cycle 外（非本 cycle）的 active 票列 cycle 對帳 (a)、
-# LS-354 永遠不列為候補、分頁（兩頁 issues 合併）、無 LINEAR_API_KEY → 略過且不呼叫 curl。
+# LS-413 永遠不列為候補、分頁（兩頁 issues 合併）、無 LINEAR_API_KEY → 略過且不呼叫 curl。
 # ⑩（LS-144 開票責任）：lane 空＋無候補 → 印「→ 開票」並列來源；lane 空＋候補全 hold:user → 印開票行且註明
 # 「使用者裁決」；lane 有在飛 → 不印；第二輪升 ⚠（.claude/patrol-state.json 計數）；「需 Design gate」票歸
-# 待Design 不進候補；設計票（open 或已 Done）已承接的 Story 不列；LS-354 池項 P1／P2 才列、被票引用或池內銷除
+# 待Design 不進候補；設計票（open 或已 Done）已承接的 Story 不列；LS-413 池項 P1／P2 才列、被票引用或池內銷除
 # 不列；附加查詢失敗 fail-soft（JSON 仍合法、行內註明）。R1 負樣本：「不需 Design gate」／「另票，需 Design gate」
 # 票不得進待Design（F1）；銷除公告自身引述「P1 ·」不列、P3 池項文中引用「P1 ·」不升級（F2）；Canceled 設計票不算承接（F3）。
 # R2 負樣本：混級 comment（`- P3 ·` 後接 `- P2 ·`）以最小級 P2 列出（N1）；「**UI 票：需先過 Design gate**」變體歸待Design、
 # 「**UI 票：不需 Design gate**」不歸（N2）；公告不以「銷除」開頭（日期／票號起頭）仍被跳過（N3）。
-# ⑲（LS-351 R2）：待辦池 LS-354 則數 > 80 印 ⚠ 封存重開（human／brief／json）、恰 80 零訊號、查詢失敗印 ⚠ 讀不到；mutation 拿掉判定即消失。
+# ⑲（LS-351 R2）：待辦池 LS-413 則數 > 80 印 ⚠ 封存重開（human／brief／json）、恰 80 零訊號、查詢失敗印 ⚠ 讀不到；mutation 拿掉判定即消失。
 # ⑱（LS-351）：harness 配額（cycle 票數 20% 向上取整）超額時不列候選、不補位、不開票，印「harness 配額已滿（已開/上限）」；
 #   cycle 內候補只在本來就超額時擋；cycle 0 票不判定；mutation 拿掉判定即翻轉。
 # ⑬（LS-287）：harness 池項來源候選再多一層排除——id 前 8 碼若已被 repo 腳本檔頭等引用（`git grep`）視為已落地，
@@ -100,7 +100,7 @@ cat > "$fx/issues_page1.json" <<'EOF'
 EOF
 
 # page2（after=CURSOR1）：LS-204（blockedBy 已 Canceled——視為已解，priority Urgent 應排第一）、
-# LS-205（缺 size：候補排最後＋結構 (e) 命中）、LS-354（常駐待辦池，priority 故意設最高也永不列為候補，
+# LS-205（缺 size：候補排最後＋結構 (e) 命中）、LS-413（常駐待辦池，priority 故意設最高也永不列為候補，
 # R1 I1 起結構 (e) 豁免它——它自己也缺 size 但不該再被列出）、LS-210（lane:backend、In Progress、
 # cycle=4≠目前 cycle 5 → cycle 對帳 (a) 命中）、LS-206（缺「## 驗收」→ R1 F1 待 Spec）、
 # LS-207（缺 project → R1 F1 待結構）、LS-211（R1 I2：lane:backend、Backlog、cycle=4≠目前 cycle 5，
@@ -116,7 +116,7 @@ cat > "$fx/issues_page2.json" <<'EOF'
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
    "inverseRelations":{"nodes":[]}},
-  {"identifier":"LS-354","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+  {"identifier":"LS-413","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}},
   {"identifier":"LS-210","title":"backend in progress","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
@@ -233,15 +233,15 @@ check("② 候補排序（priority 同分，size S 排在 size M 之前：202 �
       harness["candidates"].index("LS-202") < harness["candidates"].index("LS-201"))
 check("② 候補排序（缺 size 排最後）", harness["candidates"][-1] == "LS-205")
 check("② blockedBy 未 Done → 跳過（LS-203 不在候補）", "LS-203" not in harness["candidates"])
-check("② LS-354 永不列為候補", "LS-354" not in harness["candidates"])
+check("② LS-413 永不列為候補", "LS-413" not in harness["candidates"])
 check("② lane:harness WIP=0、選中 LS-204、動作含 save_issue Ready",
       harness["wip"] == 0 and harness["chosen"] == "LS-204"
       and any("save_issue LS-204 state=Ready cycle=5" in a for a in harness["actions"]))
 
 structure_e = set(d["structure"]["e"])
 check("② 缺 size 的 lane:harness 票列結構 (e)（LS-205 命中）", "LS-205" in structure_e)
-check("② R1 I1：LS-354 常駐待辦池結構檢查豁免，不列 (e)（否則永遠清不掉、訓練出忽略習慣）",
-      "LS-354" not in structure_e)
+check("② R1 I1：LS-413 常駐待辦池結構檢查豁免，不列 (e)（否則永遠清不掉、訓練出忽略習慣）",
+      "LS-413" not in structure_e)
 
 check("② R1 F1：current_cycle 附帶剩餘天數／票數 完成-總數",
       isinstance((d.get("current_cycle") or {}).get("remaining_days"), (int, float))
@@ -744,7 +744,7 @@ fi
 
 # ---- ⑩ LS-144 開票責任：lane 空＋無候補／候補全 hold:user → 印「→ 開票」並列來源；lane 有在飛 → 不印；
 #        連續空第二輪升 ⚠；「需 Design gate」歸待Design；設計票已承接的 Story 不列；池項 P1／P2 才列、
-#        被票引用或池內銷除不列；附加查詢（已結案票／LS-354 comments）失敗 fail-soft ----
+#        被票引用或池內銷除不列；附加查詢（已結案票／LS-413 comments）失敗 fail-soft ----
 repo_ot="$work/repo_ot"
 git init -q -b main "$repo_ot"
 git -C "$repo_ot" config user.email test@example.com
@@ -772,7 +772,7 @@ EOF
 #   LS-974 lane:ui Backlog Story「需 Design gate」＋票文含「RPC」、無 backend 子票 → design／ui 來源＋backend 來源
 #   LS-975 lane:ui Backlog Story「需 Design gate」，已結案設計票 LS-981 標題整字提到它 → 不列來源
 #   LS-976 lane:product Story 含「RLS」關鍵字，已結案 backend 子票 LS-977（parent=LS-976）→ 不列 backend 來源
-#   LS-354  常駐待辦池（skip）→ harness lane 無候補 → 印開票並列池項來源
+#   LS-413  常駐待辦池（skip）→ harness lane 無候補 → 印開票並列池項來源
 cat > "$fx_ot/issues_page1.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
   {"identifier":"LS-970","title":"Story：孩子檔案 CRUD","description":"PLAN。**UI 票：需 Design gate**（孩子卡片）。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
@@ -803,7 +803,7 @@ cat > "$fx_ot/issues_page1.json" <<'EOF'
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:product"}]},
    "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
    "inverseRelations":{"nodes":[]}},
-  {"identifier":"LS-354","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+  {"identifier":"LS-413","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}}
 ]}}}
@@ -813,17 +813,17 @@ EOF
 # LS-970 仍列來源。
 cat > "$fx_ot/closed_issues.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
-  {"identifier":"LS-980","title":"Harness：已升票的池項","description":"來源 LS-354 池項 `bbbbbbbb`。","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:harness"}]},"parent":null},
+  {"identifier":"LS-980","title":"Harness：已升票的池項","description":"來源 LS-413 池項 `bbbbbbbb`。","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:harness"}]},"parent":null},
   {"identifier":"LS-981","title":"設計：登入頁（LS-975 畫面群）","description":"已核可","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:design"}]},"parent":null},
   {"identifier":"LS-977","title":"Task：LS-976 後端 RLS","description":"done","state":{"name":"Done","type":"completed"},"labels":{"nodes":[{"name":"lane:backend"}]},"parent":{"identifier":"LS-976"}},
   {"identifier":"LS-982","title":"設計：孩子卡片（LS-970 畫面群）","description":"取消","state":{"name":"Canceled","type":"canceled"},"labels":{"nodes":[{"name":"lane:design"}]},"parent":null}
 ]}}}
 EOF
-# LS-354 comments：aaaa P1（有效）、bbbb P2（被 LS-980 引用 → 不列）、cccc P3（不列）、eeee P1 但 dddd「銷除…已升為」
+# LS-413 comments：aaaa P1（有效）、bbbb P2（被 LS-980 引用 → 不列）、cccc P3（不列）、eeee P1 但 dddd「銷除…已升為」
 # 提到它（不列）、dddd 本身是銷除公告且引述「P1 ·」——且**不以「銷除」開頭**（日期／票號起頭，R2 N3：前 2 行含字樣即公告，不列）、
 # ffff P2 較早建立（有效，排在 P1 之後）、abababab P3 池項文中引用「P1 ·」（既非首個 match 也不在行首 → 不升級、不列）、
 # cdcdcdcd 混級：首項 `- P3 ·`、次項 `- P2 ·`（R2 N1：取行首各項最小級 → 以 P2 列出，摘要取 P2 那項）。
-# 0a0a0a0a／0b0b0b0b：LS-354 新格式 `Pn ｜ 來源 …`（LS-351）——P2 列出（依建立時間排在 ffff 後）、P3 不列。
+# 0a0a0a0a／0b0b0b0b：LS-413 新格式 `Pn ｜ 來源 …`（LS-351）——P2 列出（依建立時間排在 ffff 後）、P3 不列。
 # efefefef 非公告池項（P3）在第 3 行提到 `aaaaaaaa` 並帶「銷案」字樣——前 2 行無公告字樣所以不是公告（R3：只有公告能銷除
 # 別則 → aaaa 仍列；live bcb97555 第 3 行更正文提到 ca993eba／d8634a08 的誤藏實例）。
 cat > "$fx_ot/pool_comments.json" <<'EOF'
@@ -836,7 +836,7 @@ cat > "$fx_ot/pool_comments.json" <<'EOF'
   {"id":"ffffffff-0000-4000-8000-000000000006","createdAt":"2026-09-01T00:00:00.000Z","body":"入池 2026-09-01：\n- P2 · 第二個有效池項 · 估 size:M"},
   {"id":"abababab-0000-4000-8000-000000000007","createdAt":"2026-09-02T05:00:00.000Z","body":"入池：P3 · 純效率項——文中引用他則「P1 · 某某」只是舉例，不是升級"},
   {"id":"cdcdcdcd-0000-4000-8000-000000000008","createdAt":"2026-09-02T06:00:00.000Z","body":"入池 2026-09-02（LS-121 收尾）：\n- P3 · docs 錯誤碼表範例過時 · 估 size:S\n- P2 · **mutation 自證機械化** · 再發生一次即升獨立票 · 估 size:M"},
-  {"id":"0a0a0a0a-0000-4000-8000-000000000010","createdAt":"2026-09-01T12:00:00.000Z","body":"P2 ｜ 來源 LS-351（R1 i1）｜ LS-354 新格式池項 ｜ 建議處置"},
+  {"id":"0a0a0a0a-0000-4000-8000-000000000010","createdAt":"2026-09-01T12:00:00.000Z","body":"P2 ｜ 來源 LS-351（R1 i1）｜ LS-413 新格式池項 ｜ 建議處置"},
   {"id":"0b0b0b0b-0000-4000-8000-000000000011","createdAt":"2026-09-01T13:00:00.000Z","body":"P3 ｜ 來源 LS-351（R1 i2）｜ 新格式 P3 不列 ｜ 建議處置"},
   {"id":"efefefef-0000-4000-8000-000000000009","createdAt":"2026-09-02T07:00:00.000Z","body":"入池：P3 · 純效率項\n- 細節：只是效率\n- 對照：同型 `aaaaaaaa` 尚未銷案，僅提及、不是公告"}
 ]}}}}
@@ -901,14 +901,14 @@ check("⑩ backend lane 候補全 hold:user → 開票行註明「使用者裁�
 check("⑩ backend 來源候選＝含後端關鍵字且無 backend 子票的 Story（LS-974）；LS-976 已有已結案 backend 子票 LS-977 → 不列",
       ids(backend["open_ticket"]["sources"]) == ["LS-974"] and "RPC" in backend["open_ticket"]["sources"][0]["why"])
 
-check("⑩ harness lane 無候補（只有 LS-354）→ 開票行理由「無候補」",
+check("⑩ harness lane 無候補（只有 LS-413）→ 開票行理由「無候補」",
       harness["open_ticket"] is not None and harness["open_ticket"]["blocked"] == []
       and any(a.startswith("→ 開票：lane:harness 空 1 輪（無候補）") for a in d["actions"]))
 check("⑩ 池項來源：P1 aaaa、P2 ffff、P2 cdcdcdcd（P1 先、同級依建立時間）；bbbb 被 LS-980 引用、cccc 是 P3、eeee 被池內公告銷除、dddd 是公告（非「銷除」開頭，前 2 行含字樣）、abababab 是 P3 只在文中引用 P1 ·、efefefef 非公告提到 aaaa＋「銷案」不能銷除 aaaa → 皆不列／aaaa 仍列",
-      ids(harness["open_ticket"]["sources"]) == ["LS-354#aaaaaaaa", "LS-354#ffffffff", "LS-354#0a0a0a0a", "LS-354#cdcdcdcd"]
+      ids(harness["open_ticket"]["sources"]) == ["LS-413#aaaaaaaa", "LS-413#ffffffff", "LS-413#0a0a0a0a", "LS-413#cdcdcdcd"]
       and harness["open_ticket"]["sources"][0]["why"] == "P1 池項尚未升票"
       and harness["open_ticket"]["sources"][0]["title"].startswith("**候補不驗 Design gate**"))
-mixed = [s for s in harness["open_ticket"]["sources"] if s["id"] == "LS-354#cdcdcdcd"]
+mixed = [s for s in harness["open_ticket"]["sources"] if s["id"] == "LS-413#cdcdcdcd"]
 check("⑩ R2 N1 混級 comment（首項 - P3 ·、次項 - P2 ·）以最小級 P2 列出，摘要取 P2 那項",
       len(mixed) == 1 and mixed[0]["why"] == "P2 池項尚未升票" and mixed[0]["title"].startswith("**mutation 自證機械化**"))
 check("⑩ 第一輪不升 ⚠", not any("⚠ 開票" in a for a in d["actions"]))
@@ -1210,11 +1210,11 @@ git init -q -b main "$repo_landed"
 git -C "$repo_landed" config user.email test@example.com
 git -C "$repo_landed" config user.name Test
 mkdir -p "$repo_landed/scripts/ops"
-# 「11112222」已被這支腳本檔頭引用（模擬 cleanup-merged.sh／pen-read.sh 之類「來源 LS-354 池項 <id>」的慣例）；
+# 「11112222」已被這支腳本檔頭引用（模擬 cleanup-merged.sh／pen-read.sh 之類「來源 LS-413 池項 <id>」的慣例）；
 # 「33334444」不出現在 repo 任何地方，應維持現行輸出（夾具 (b)）。
 cat > "$repo_landed/scripts/ops/fake-landed-LS287.sh" <<'EOF'
 #!/bin/bash
-# 假腳本（LS-287 自測用）：來源 LS-354 池項 11112222
+# 假腳本（LS-287 自測用）：來源 LS-413 池項 11112222
 echo hi
 EOF
 git -C "$repo_landed" add scripts/ops/fake-landed-LS287.sh
@@ -1231,7 +1231,7 @@ cat > "$fx_landed/closed_issues.json" <<'EOF'
 EOF
 cat > "$fx_landed/issues_page1.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
-  {"identifier":"LS-354","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+  {"identifier":"LS-413","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}}
 ]}}}
@@ -1280,7 +1280,7 @@ def check(name, cond):
 harness = d["lanes"]["lane:harness"]["open_ticket"]
 ids = [s["id"] for s in harness["sources"]]
 check("⑬(a) 已落地的池項（11112222）從候選移除，只剩未落地的（33334444）（夾具 b：未命中維持現行）",
-      ids == ["LS-354#33334444"])
+      ids == ["LS-413#33334444"])
 check("⑬(a) 開票行的 notes 印「已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2」",
       any(n.startswith("已落地：11112222 → scripts/ops/fake-landed-LS287.sh:2") for n in harness["notes"]))
 check("⑬(a) 動作清單的「→ 開票」行含已落地附註（同段一行，重用 notes［…］）",
@@ -1304,7 +1304,7 @@ else
   out13m="$(PATH="$work/bin_landed:$PATH" bash "$mutdir13/scripts/ops/patrol-linear.sh" --repo "$repo_landed" --json 2>&1)"
   export OUT13M="$out13m"
   mut13err="$work/ls287-mut-err"
-  if python3 -c 'import json,os; d=json.loads(os.environ["OUT13M"]); ids=[s["id"] for s in d["lanes"]["lane:harness"]["open_ticket"]["sources"]]; assert ids==["LS-354#11112222","LS-354#33334444"], ids' 2>"$mut13err"; then
+  if python3 -c 'import json,os; d=json.loads(os.environ["OUT13M"]); ids=[s["id"] for s in d["lanes"]["lane:harness"]["open_ticket"]["sources"]]; assert ids==["LS-413#11112222","LS-413#33334444"], ids' 2>"$mut13err"; then
     echo "✓ ⑬(b) mutant（拿掉 repo-grep 排除）：已落地的 11112222 也被列出——證明 ⑬(a) 的綠來自這段機械排除"
   else
     echo "✗ ⑬(b) mutant 未如預期翻轉" >&2; cat "$mut13err" >&2; printf '%s\n' "$out13m" | sed 's/^/    /' >&2; fail=1
@@ -1351,7 +1351,7 @@ EOF
 # 子票（父票欄＝LS-994、lane:backend）→ 應印「已落地」。
 cat > "$fx_degraded/issues_page1.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
-  {"identifier":"LS-354","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+  {"identifier":"LS-413","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}},
   {"identifier":"LS-993","title":"Story：無法判定的候選","description":"後端需要 RPC 支援。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
@@ -1476,7 +1476,7 @@ cat > "$fx_landed2/closed_issues.json" <<'EOF'
 EOF
 cat > "$fx_landed2/issues_page1.json" <<'EOF'
 {"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
-  {"identifier":"LS-354","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
+  {"identifier":"LS-413","title":"Harness 待辦池","description":"常駐","priority":1,"createdAt":"2020-01-01T00:00:00.000Z",
    "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:harness"}]},
    "cycle":null,"project":null,"projectMilestone":null,"parent":null,"inverseRelations":{"nodes":[]}},
   {"identifier":"LS-996","title":"Story：反引號 token 命中","description":"後端需要 RPC 支援 `fancy_measurement_table`。\n\n## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
@@ -1797,7 +1797,7 @@ else
   quota_check '⑱g mutant（拿掉配額判定）：已滿仍選中 LS-9181——證明 ⑱a 的綠來自配額判定' "$out18m" 'h["chosen"] == "LS-9181"'
 fi
 
-# ---- ⑲（LS-351 R2）待辦池（LS-354）則數 > 80 印「⚠ 待辦池 LS-354 <n> 則 > 80，需封存重開」；≤ 80 零訊號；讀不到印 ⚠ ----
+# ---- ⑲（LS-351 R2）待辦池（LS-413）則數 > 80 印「⚠ 待辦池 LS-413 <n> 則 > 80，需封存重開」；≤ 80 零訊號；讀不到印 ⚠ ----
 mkdir -p "$work/bin_pool"
 cat > "$work/bin_pool/curl" <<'EOF'
 #!/bin/bash
@@ -1830,19 +1830,19 @@ chmod +x "$work/bin_pool/curl"
 pool_run() { POOL_N="$1" PATH="$work/bin_pool:$PATH" bash "${3:-$plsh}" --repo "$q_repo" ${2:+"$2"} 2>&1; }
 
 out19a="$(pool_run 81)"
-expect_has "$out19a" '⚠ 待辦池 LS-354 81 則 > 80，需封存重開（linear-archive.py）' '⑲a 81 則 > 80 → human 印 ⚠ 封存重開'
+expect_has "$out19a" '⚠ 待辦池 LS-413 81 則 > 80，需封存重開（linear-archive.py）' '⑲a 81 則 > 80 → human 印 ⚠ 封存重開'
 out19ab="$(pool_run 81 --brief)"
-expect_has "$out19ab" '⚠ 待辦池 LS-354 81 則 > 80' '⑲a 81 則 → --brief 也印（cron 讀 brief／過濾式）'
+expect_has "$out19ab" '⚠ 待辦池 LS-413 81 則 > 80' '⑲a 81 則 → --brief 也印（cron 讀 brief／過濾式）'
 out19aj="$(pool_run 81 --json)"
-if PJ="$out19aj" python3 -c 'import json,os,sys; d=json.loads(os.environ["PJ"]); p=d["pool_size"]; sys.exit(0 if (p["count"]==81 and p["threshold"]==80 and p["issue"]=="LS-354") else 1)'; then
-  echo "✓ ⑲a --json 帶 pool_size（count 81／threshold 80／issue LS-354）"
+if PJ="$out19aj" python3 -c 'import json,os,sys; d=json.loads(os.environ["PJ"]); p=d["pool_size"]; sys.exit(0 if (p["count"]==81 and p["threshold"]==80 and p["issue"]=="LS-413") else 1)'; then
+  echo "✓ ⑲a --json 帶 pool_size（count 81／threshold 80／issue LS-413）"
 else
   echo "✗ ⑲a --json pool_size 不符" >&2; printf '%s\n' "$out19aj" | tail -5 | sed 's/^/    /' >&2; fail=1
 fi
 out19b="$(pool_run 80)"
-expect_not_has "$out19b" '待辦池 LS-354' '⑲b 恰 80 則（未超過）→ 零訊號'
+expect_not_has "$out19b" '待辦池 LS-413' '⑲b 恰 80 則（未超過）→ 零訊號'
 out19c="$(pool_run fail)"
-expect_has "$out19c" '⚠ 待辦池 LS-354 則數讀不到' '⑲c 池查詢失敗 → 印 ⚠ 讀不到（不靜默）'
+expect_has "$out19c" '⚠ 待辦池 LS-413 則數讀不到' '⑲c 池查詢失敗 → 印 ⚠ 讀不到（不靜默）'
 # ⑲d mutation：format_pool_size() 恆回 None → ⑲a 的 ⚠ 消失
 mutdir19="$work/mut19"
 rm -rf "$mutdir19"; mkdir -p "$mutdir19"
@@ -1853,7 +1853,85 @@ if ! grep -q 'LS-351 mutation test (pool size disabled)' "$mutdir19/scripts/ops/
   echo "✗ ⑲d mutant 沒被正確合成" >&2; fail=1
 else
   out19m="$(pool_run 81 '' "$mutdir19/scripts/ops/patrol-linear.sh")"
-  expect_not_has "$out19m" '待辦池 LS-354 81 則' '⑲d mutant（拿掉則數判定）：81 則不再印 ⚠——證明 ⑲a 的綠來自這段'
+  expect_not_has "$out19m" '待辦池 LS-413 81 則' '⑲d mutant（拿掉則數判定）：81 則不再印 ⚠——證明 ⑲a 的綠來自這段'
+fi
+
+# ---- ⑳（LS-375）新池 P3 不入池：新池建立日（POOL_NO_P3_SINCE）之後出現行首 `P3 ｜` 項印「⚠ 待辦池出現 P3（<n> 則）→ …」----
+# 夾具：2 則純 P3（新）＋1 則 P2 底下列點 `- P3 ｜`（新，一則多項）＋1 則 P3 但為公告（前 2 行含「銷除」，不算）＋
+# 1 則封存前建立的 P3（不算）＋3 則 P2（新，不算）＝ 預期 3 則。P3_MODE=none：只有 P2／舊 P3；fail：池查詢失敗。
+mkdir -p "$work/bin_p3"
+cat > "$work/bin_p3/curl" <<'EOF'
+#!/bin/bash
+data=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --data) data=$2; shift ;;
+  esac
+  shift
+done
+case "$data" in
+  *'comments('*)
+    [ "${P3_MODE:?}" = fail ] && { echo '{"errors":[{"message":"stub：池查詢失敗"}]}'; exit 0; }
+    new=2026-09-30T05:00:00.000Z; old=2026-09-01T00:00:00.000Z
+    nodes="{\"id\":\"00000001-0000-4000-8000-000000000000\",\"createdAt\":\"$old\",\"body\":\"P3 ｜ 來源 LS-1（x）｜ 封存前的舊 P3 ｜ z\"}"
+    for i in 2 3 4; do
+      nodes="${nodes},{\"id\":\"0000000${i}-0000-4000-8000-000000000000\",\"createdAt\":\"$new\",\"body\":\"P2 ｜ 來源 LS-${i}（x）｜ 新 P2 ｜ z\"}"
+    done
+    if [ "$P3_MODE" = mixed ]; then
+      nodes="${nodes},{\"id\":\"00000005-0000-4000-8000-000000000000\",\"createdAt\":\"$new\",\"body\":\"P3 ｜ 來源 LS-5（x）｜ 新 P3 甲 ｜ z\"}"
+      nodes="${nodes},{\"id\":\"00000006-0000-4000-8000-000000000000\",\"createdAt\":\"$new\",\"body\":\"P3 ｜ 來源 LS-6（x）｜ 新 P3 乙 ｜ z\"}"
+      nodes="${nodes},{\"id\":\"00000007-0000-4000-8000-000000000000\",\"createdAt\":\"$new\",\"body\":\"2026-09-30 orchestrator\\n\\n- P2 ｜ 來源 LS-7（x）｜ 一則多項的 P2 ｜ z\\n- P3 ｜ 來源 LS-7（y）｜ 同則底下的 P3 ｜ z\"}"
+      nodes="${nodes},{\"id\":\"00000008-0000-4000-8000-000000000000\",\"createdAt\":\"$new\",\"body\":\"P3 已銷除：某項\\nP3 ｜ 來源 LS-8（x）｜ 公告引述的 P3 ｜ z\"}"
+    fi
+    printf '{"data":{"issue":{"comments":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[%s]}}}}' "$nodes" ;;
+  *'documents('*) echo '{"data":{"documents":{"nodes":[{"id":"doc-1","title":"Cycle 5 規劃"}]}}}' ;;
+  *'cycle(id:'*) echo '{"data":{"cycle":{"issues":{"nodes":[]}}}}' ;;
+  *'cycles('*) echo '{"data":{"team":{"cycles":{"nodes":[{"id":"cyc-5","number":5,"startsAt":"2020-01-01T00:00:00.000Z","endsAt":"2099-01-01T00:00:00.000Z","isActive":true}]}}}}' ;;
+  *'type: { in: ['*) echo '{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}' ;;
+  *'issues('*) echo '{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}' ;;
+  *) echo '{"errors":[{"message":"stub curl：認不出的 query"}]}' ;;
+esac
+EOF
+chmod +x "$work/bin_p3/curl"
+p3_run() { P3_MODE="$1" PATH="$work/bin_p3:$PATH" bash "${3:-$plsh}" --repo "$q_repo" ${2:+"$2"} 2>&1; }
+
+out20a="$(p3_run mixed)"
+expect_has "$out20a" '⚠ 待辦池出現 P3（3 則）→ 依 §5-b 改寫成 handoff 不修＋理由' '⑳a 新池 3 則含 P3（2 純＋1 多項；公告與封存前的舊 P3 不算）→ human 印 ⚠'
+out20ab="$(p3_run mixed --brief)"
+expect_has "$out20ab" '⚠ 待辦池出現 P3（3 則）' '⑳a --brief 也印（cron 讀 brief／過濾式）'
+out20aj="$(p3_run mixed --json)"
+if PJ="$out20aj" python3 -c 'import json,os,sys; d=json.loads(os.environ["PJ"]); p=d["pool_size"]; sys.exit(0 if (p["p3_count"]==3 and p["issue"]=="LS-413") else 1)'; then
+  echo "✓ ⑳a --json 帶 pool_size.p3_count（3）"
+else
+  echo "✗ ⑳a --json pool_size.p3_count 不符" >&2; printf '%s\n' "$out20aj" | tail -5 | sed 's/^/    /' >&2; fail=1
+fi
+out20b="$(p3_run none)"
+expect_not_has "$out20b" '待辦池出現 P3' '⑳b 只有 P2 與封存前的舊 P3 → 零訊號'
+out20c="$(p3_run fail)"
+expect_not_has "$out20c" '待辦池出現 P3' '⑳c 池查詢失敗 → 不印 P3 行（則數那行已印 ⚠ 讀不到）'
+# ⑳d mutation：count_pool_p3() 恆回 0 → ⑳a 的 ⚠ 消失
+mutdir20="$work/mut20"
+rm -rf "$mutdir20"; mkdir -p "$mutdir20"
+cp -R "${root}/scripts" "$mutdir20/scripts"
+sed 's/^def count_pool_p3(comments):$/def count_pool_p3(comments):\n    return 0  # LS-375 mutation test (P3 gate disabled)/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir20/scripts/ops/patrol_linear.py"
+if ! grep -q 'LS-375 mutation test (P3 gate disabled)' "$mutdir20/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑳d mutant 沒被正確合成" >&2; fail=1
+else
+  out20m="$(p3_run mixed '' "$mutdir20/scripts/ops/patrol-linear.sh")"
+  expect_not_has "$out20m" '待辦池出現 P3' '⑳d mutant（拿掉 P3 判斷）：3 則 P3 不再印 ⚠——證明 ⑳a 的綠來自這段'
+fi
+# ⑳e mutation：建立日過濾放寬到 2000 年 → 封存前的舊 P3 也被算（4 則），⑳a 的「（3 則）」消失
+mutdir20e="$work/mut20e"
+rm -rf "$mutdir20e"; mkdir -p "$mutdir20e"
+cp -R "${root}/scripts" "$mutdir20e/scripts"
+sed 's/^POOL_NO_P3_SINCE = .*/POOL_NO_P3_SINCE = "2000-01-01T00:00:00.000Z"  # LS-375 mutation test (since disabled)/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir20e/scripts/ops/patrol_linear.py"
+if ! grep -q 'LS-375 mutation test (since disabled)' "$mutdir20e/scripts/ops/patrol_linear.py"; then
+  echo "✗ ⑳e mutant 沒被正確合成" >&2; fail=1
+else
+  out20e="$(p3_run mixed '' "$mutdir20e/scripts/ops/patrol-linear.sh")"
+  expect_not_has "$out20e" '待辦池出現 P3（3 則）' '⑳e mutant（拿掉建立日過濾）：封存前的舊 P3 被算進去、不再是 3 則——證明 ⑳a 的「3」守住舊池不誤報'
 fi
 
 if [ "$fail" -ne 0 ]; then
