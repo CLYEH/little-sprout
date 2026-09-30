@@ -95,7 +95,10 @@ declare
     -- 只從 enforce_registrations_open() trigger 內部呼叫（以 postgres 身分
     -- 執行），不需要登記在這裡。
     'private.caller_is_active()',
-    'private.family_is_active(uuid)'
+    'private.family_is_active(uuid)',
+    -- LS-408：albums_update 的孤兒相簿分支（owner 接手編輯）以 authenticated 身分求值
+    -- 時呼叫，同其餘集合函式的理由。
+    'private.owned_family_member_pairs()'
   ];
   v_exceptions text[] := array[]::text[];  -- 目前無例外；若新增，必須附理由註解
   v_allow_oids oid[];
