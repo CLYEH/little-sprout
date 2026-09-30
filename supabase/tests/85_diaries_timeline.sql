@@ -787,9 +787,12 @@ begin
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   set local role authenticated;
 
-  select array_agg(t.kind::text || ':' || t.ref_id::text order by t.occurred_at desc, t.ref_id desc)
+  -- LS-415：平手鍵由 ref_id 改成 seq（建立順序），測試端不再自己重排——以 RPC 單次回傳的
+  -- 順序（with ordinality）為準；同日順序本身的斷言在 125_feed_items_seq_order.sql。
+  select array_agg(t.kind::text || ':' || t.ref_id::text order by t.n)
     into v_full
-    from public.get_family_timeline(v_family, null, null, null, 1000) t;
+    from public.get_family_timeline(v_family, null, null, null, 1000)
+         with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
 
   v_collected := array[]::text[];
   v_cursor_at := null;
@@ -814,13 +817,13 @@ begin
 
   if v_collected is distinct from v_full then
     raise exception
-      'FAIL：加入 3 筆同一 occurred_at 的日記後，limit=1 逐頁串接與單次查詢不同（tie-breaker 可能漏用 ref_id）—— 分頁=%，完整=%',
+      'FAIL：加入 3 筆同一 occurred_at 的日記後，limit=1 逐頁串接與單次查詢不同（tie-breaker 可能漏用 seq／ref_id）—— 分頁=%，完整=%',
       v_collected, v_full;
   end if;
   if array_length(v_collected, 1) <> 12 then
     raise exception 'FAIL：加入 3 筆平手日記後應收集到 12 筆（原 9 ＋新 3），實際 %', array_length(v_collected, 1);
   end if;
-  raise notice 'ok：3 筆同一 occurred_at 的日記混進資料集後，limit=1 逐頁串接仍與單次查詢完全一致（tie-breaker 正確靠 ref_id）——F6';
+  raise notice 'ok：3 筆同一 occurred_at 的日記混進資料集後，limit=1 逐頁串接仍與單次查詢完全一致（tie-breaker 靠 seq，LS-415 起；原 ref_id）——F6';
 
   -- ---------------------------------------------------------------------------
   -- child 篩選下的 keyset 分頁（merge-reviewer PR #60 review N1，major）：(d)／(h)
