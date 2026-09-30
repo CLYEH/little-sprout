@@ -16,13 +16,24 @@
 //     `snapVisit` 同語意：`x`／`y` 由父節點的絕對座標＋`c.bounds` 的相對位移逐層累加算出（Pencil `Get` 的
 //     `c.bounds` 是相對父節點的位移，不是絕對座標），`w`／`h` 直接取 `c.bounds.width`／`height`（Pencil 版面引擎
 //     已算好的展開後尺寸，text 節點的高已含 `textGrowth` 撐開的高度，不需要另外處理）。
-//   - 依 `SNAP_BATCH_ROWS`（未設時預設 400）把 rows 切批，每批一行 `Print("SNAP<k> [...]")`（k 從 1 起算、
-//     不拘印出順序，node 端 parser 只把所有 `SNAP<n> [...]` 行的陣列串接，見 overflow-scan.js `parseSnapshotDump`）。
-//     **Print 單次輸出 >約 7 萬字元時 Pencil 會自動把那次 Print 的內容落到本機檔案**（MCP 回應改印檔案路徑，不是
-//     內容本身）——這是 Pencil MCP 本身的行為，不是本腳本處理的；若某個 `SNAP<k>` 批次觸發這個情況，直接讀那個
-//     本機檔案內容當作那一行的替代（檔案內容＝原本 `Print` 會印出的那一行文字，原樣是 `SNAP<k> [...]` 的形狀），
-//     跟其餘沒落檔的 `SNAP<k>` 行一起貼進同一份 dump 檔交給 node 端；調小 `SNAP_BATCH_ROWS`（例如 200）可以讓
-//     每一行都低於門檻、不必處理落檔這一步。
+//   - **LS-377 起依位元組預算分段**（取代舊版 `SNAP_BATCH_ROWS` 依列數切批——14k 節點稿整份一次送必 `InternalError:
+//     interrupted`，且 Print 單次輸出 >約 7 萬字元時 Pencil 會自動把那次 Print 落到本機檔案、MCP 回應改印檔案路徑）：
+//     一次 execute 只 dump「一段」——從頂層（depth-1）子節點序 `SNAP_ROOTS = [lo, hi]`（前置全域宣告，未設＝[0, ∞)）起，
+//     依序收整棵子樹，累計 rows 的 UTF-8 位元組數（`JSON.stringify(row)` 加逗號）到 `SNAP_MAX_BYTES`（未設＝50000）就停在
+//     下一個頂層節點之前。**單一子樹本身就超過預算時**（實測 14k–18k 節點稿有頂層板的 rows 就 >64 KB；而 `pen` CLI／
+//     MCP 單次 execute 回應約 64 KB 就被截斷，DONE 行會遺失）改在該子樹內依 pre-order 列序切：`SNAP_SKIP = m` 跳過
+//     該頂層節點（序 lo）的前 m 列（仍走訪、累加座標，只是不印），印到預算為止，`SNAP-DONE` 的 `skip=` 告訴下一段從第幾列續。
+//     每段印 `SNAP<k> [...]` 行（一段通常只有一行；k＝lo×1000000＋skip＋段內已印列數＋1，跨段嚴格遞增，node 端 parser
+//     依 k 排序串接時順序仍是 pre-order，見 overflow-scan.js `parseSnapshotDump`），最後一行
+//     `SNAP-DONE roots=[lo,next) next=<下一段起點的頂層序> skip=<下一段 SNAP_SKIP> of=<頂層總數> total_rows=<n> bytes=<b>`。
+//     呼叫端迴圈：lo=0、skip=0 → 跑一段 → 讀 `next`／`skip` 當下一段的 `SNAP_ROOTS = [next, ∞]`／`SNAP_SKIP` → 直到
+//     `next` 等於 `of`；各段的 `SNAP<k>` 行全部貼進同一個 dump 檔。
+//     `SNAP_ROOT_COUNT_ONLY = true`：只印 `SNAP-ROOT-COUNT n=<頂層總數>`（不走訪子樹）。
+//     **單段 interrupted 的處置（上限 3 次）**：同一個 lo 把 `SNAP_MAX_BYTES` 對半重跑（50000→25000→12500→6250），
+//     第 4 次仍 interrupted 就停下回報（不得再縮；那是環境問題——先 `open -a Pen` 置前景再試，見下）。
+//     **執行前 `open -a Pen` 把 Pen 置於前景**（LS-377：背景時 execute 明顯較易 interrupted，置前景即過）。
+//     `SNAP_ROOTS`／`SNAP_SKIP`／`SNAP_MAX_BYTES`／`SNAP_ROOT_COUNT_ONLY` 是 Pencil execute 的全域變數，會在後續呼叫間殘留
+//     （見 execute 回應「Global variables … carry over」）——每一次呼叫都明確宣告 `SNAP_ROOTS`／`SNAP_SKIP`，不要依賴上一次。
 //   - **ref 判準（LS-207）**：`resolveInstances:true` 展開後的樹裡，實例根節點本身沒有 `n.ref`（已被展開成子樹）——
 //     跟 overflow-scan.js 檔尾 Pencil execute 區塊完全相同的做法：本腳本先跑一次 `resolveInstances:false` 的唯讀
 //     走訪，把每個 `type:"ref"` 節點的 `id → ref`（元件 id）收進對照表 `refMap`；再用 `resolveInstances:true`
@@ -51,46 +62,128 @@ function hasImageFill(fill) {
   return Array.isArray(fill) ? fill.some(one) : one(fill);
 }
 
-var BATCH_ROWS = typeof SNAP_BATCH_ROWS !== "undefined" && SNAP_BATCH_ROWS ? Number(SNAP_BATCH_ROWS) : 400;
+var MAX_BYTES = typeof SNAP_MAX_BYTES !== "undefined" && SNAP_MAX_BYTES ? Number(SNAP_MAX_BYTES) : 50000;
+var RANGE = typeof SNAP_ROOTS !== "undefined" && Array.isArray(SNAP_ROOTS) ? SNAP_ROOTS : null;
+var LO = RANGE ? Number(RANGE[0]) : 0;
+var HI = RANGE && RANGE[1] != null && RANGE[1] !== Infinity ? Number(RANGE[1]) : Infinity;
+var SKIP = typeof SNAP_SKIP !== "undefined" && SNAP_SKIP ? Number(SNAP_SKIP) : 0;
 
-// LS-207：resolveInstances:false 對照表——只收 type:"ref" 節點的 id → ref（元件 id）
-var refMap = {};
-Get(function (n) {
-  if (n.type === "ref" && n.ref != null) refMap[n.id] = n.ref;
-}, { resolveInstances: false });
+if (typeof SNAP_ROOT_COUNT_ONLY !== "undefined" && SNAP_ROOT_COUNT_ONLY === true) {
+  var rc = 0;
+  Get(function (n, c) { if (!c.parentCtx) { rc++; c.skipChildren(); } });
+  Print("SNAP-ROOT-COUNT n=" + rc);
+} else {
+  // UTF-8 位元組數（Print 落檔門檻看字元數，但 MCP 回應大小看位元組；中文名稱一字 3 bytes，用位元組較保守）
+  var utf8Len = function (str) {
+    var b = 0;
+    for (var q = 0; q < str.length; q++) {
+      var cc = str.charCodeAt(q);
+      if (cc < 0x80) b += 1;
+      else if (cc < 0x800) b += 2;
+      else if (cc >= 0xd800 && cc <= 0xdbff) { b += 4; q++; }
+      else b += 3;
+    }
+    return b;
+  };
+  var inRange = function (c) { return c.index >= LO && c.index < HI; };
 
-// 展開走訪：累加絕對座標＋收 rows
-var abs = {};
-var rows = [];
-Get(function (n, c) {
-  var pid = c.parentCtx ? c.parentCtx.node.id : null;
-  if (abs[n.id]) throw new Error("pen-snapshot-dump：Get 走訪到重複 id " + n.id);
-  if (pid != null && !abs[pid]) throw new Error("pen-snapshot-dump：父節點 " + pid + " 尚未走訪（訪問序非 pre-order），無法累加絕對座標");
-  var pa = pid != null ? abs[pid] : { x: 0, y: 0 };
-  var b = c.bounds;
-  var a = { x: pa.x + b.x, y: pa.y + b.y };
-  abs[n.id] = a;
-  var ref = n.ref != null ? n.ref : (refMap[n.id] != null ? refMap[n.id] : null);
-  rows.push([
-    n.id, n.name || "", pid, n.type || "", ref,
-    n.enabled !== false ? 1 : 0,
-    n.clip === true ? 1 : 0,
-    hasImageFill(n.fill) ? 1 : 0,
-    a.x, a.y, b.width, b.height,
-  ]);
-}, { resolveInstances: true });
+  // LS-207：resolveInstances:false 對照表——只收 type:"ref" 節點的 id → ref（元件 id）；只走範圍內的頂層子樹
+  var refMap = {};
+  var rootTotal = 0;
+  Get(function (n, c) {
+    if (!c.parentCtx) {
+      rootTotal++;
+      if (!inRange(c)) { c.skipChildren(); return; }
+    }
+    if (n.type === "ref" && n.ref != null) refMap[n.id] = n.ref;
+  }, { resolveInstances: false });
 
-var batch = [];
-var k = 0;
-var flush = function () {
-  if (!batch.length) return;
-  k++;
-  Print("SNAP" + k + " " + JSON.stringify(batch));
-  batch = [];
-};
-for (var i = 0; i < rows.length; i++) {
-  batch.push(rows[i]);
-  if (batch.length >= BATCH_ROWS) flush();
+  // 展開走訪：累加絕對座標＋收 rows；以「頂層子樹」為單位依位元組預算收段
+  var abs = {};
+  var rows = [];        // 已接受的段內 rows
+  var segBytes = 0;
+  var segRoots = 0;
+  var cur = [];         // 目前頂層子樹的 rows（下一個頂層節點開始或走訪結束時才決定收不收）
+  var curBytes = 0;
+  var curIdx = -1;
+  var next = null;      // 停在哪個頂層序（null＝走到範圍尾）
+  var nextSkip = 0;     // 停在該頂層子樹的第幾列（0＝從子樹開頭）
+  var visitedInRoot = 0;
+  var finalize = function () {
+    if (curIdx < 0) return;
+    if (segBytes + curBytes <= MAX_BYTES) {
+      for (var r = 0; r < cur.length; r++) rows.push(cur[r]);
+      segBytes += curBytes;
+      segRoots++;
+    } else if (segRoots === 0) {
+      // 段內第一棵子樹就超過預算：在子樹內依列序切，至少收 1 列（保證前進）
+      var took = 0;
+      var tb = 0;
+      while (took < cur.length) {
+        var rb0 = utf8Len(JSON.stringify(cur[took])) + 1;
+        if (took > 0 && tb + rb0 > MAX_BYTES) break;
+        rows.push(cur[took]);
+        tb += rb0;
+        took++;
+      }
+      segBytes += tb;
+      segRoots++;
+      next = curIdx;
+      nextSkip = (curIdx === LO ? SKIP : 0) + took;
+    } else {
+      next = curIdx;
+    }
+    cur = []; curBytes = 0; curIdx = -1;
+  };
+  Get(function (n, c) {
+    if (!c.parentCtx) {
+      if (!inRange(c) || next != null) { c.skipChildren(); return; }
+      finalize();
+      if (next != null) { c.skipChildren(); return; }
+      curIdx = c.index;
+      visitedInRoot = 0;
+    }
+    var pid = c.parentCtx ? c.parentCtx.node.id : null;
+    if (abs[n.id]) throw new Error("pen-snapshot-dump：Get 走訪到重複 id " + n.id);
+    if (pid != null && !abs[pid]) throw new Error("pen-snapshot-dump：父節點 " + pid + " 尚未走訪（訪問序非 pre-order），無法累加絕對座標");
+    var pa = pid != null ? abs[pid] : { x: 0, y: 0 };
+    var b = c.bounds;
+    var a = { x: pa.x + b.x, y: pa.y + b.y };
+    abs[n.id] = a;
+    var ref = n.ref != null ? n.ref : (refMap[n.id] != null ? refMap[n.id] : null);
+    var row = [
+      n.id, n.name || "", pid, n.type || "", ref,
+      n.enabled !== false ? 1 : 0,
+      n.clip === true ? 1 : 0,
+      hasImageFill(n.fill) ? 1 : 0,
+      a.x, a.y, b.width, b.height,
+    ];
+    // 段起點那棵子樹的前 SKIP 列只走訪（座標要累加）、不收
+    if (curIdx === LO && visitedInRoot < SKIP) { visitedInRoot++; return; }
+    visitedInRoot++;
+    cur.push(row);
+    curBytes += utf8Len(JSON.stringify(row)) + 1;
+  }, { resolveInstances: true });
+  finalize();
+  var nextRoot = next != null ? next : Math.min(HI, rootTotal);
+  // 整棵子樹剛好被收完的情況（partial 切完後 nextSkip 已等於該子樹列數）由下一段自然收到 0 列、前進——不特判
+
+  // 段內再依同一位元組預算切 Print 行（只有單一超大子樹獨佔一段時才會多行）
+  var batch = [];
+  var batchBytes = 0;
+  var printed = 0;
+  var flush = function () {
+    if (!batch.length) return;
+    Print("SNAP" + (LO * 1000000 + SKIP + printed + 1) + " " + JSON.stringify(batch));
+    printed += batch.length;
+    batch = []; batchBytes = 0;
+  };
+  for (var i = 0; i < rows.length; i++) {
+    var rb = utf8Len(JSON.stringify(rows[i])) + 1;
+    if (batch.length && batchBytes + rb > MAX_BYTES) flush();
+    batch.push(rows[i]);
+    batchBytes += rb;
+  }
+  flush();
+  Print("SNAP-DONE roots=[" + LO + "," + nextRoot + ") next=" + nextRoot + " skip=" + nextSkip + " of=" + rootTotal + " total_rows=" + rows.length + " bytes=" + segBytes);
 }
-flush();
-Print("SNAP-DONE total_rows=" + rows.length + " batches=" + k);
