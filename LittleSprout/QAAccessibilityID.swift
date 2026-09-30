@@ -48,6 +48,13 @@ enum QAAccessibilityID {
     /// LS-397／LS-404：01 設定頁最上方「正在新增照片」上傳佇列入口列——四態文案隨佇列而變，同
     /// `settingsStorageRow` 的既有理由改用 identifier；label 是乾淨版整句（`UploadQueueEntryCopy.accessibilityLabel`）。
     static let settingsUploadQueueRow = "qa.settings.uploadQueueRow"
+    /// LS-410：上傳佇列 sheet 的「× 移除」（每張失敗列一顆）、墓碑列「↶ 復原」、群標題列「× 移除這 N 張」——
+    /// 列是動態產生的，label 文字重複（多張都叫「移除」），UITest 用 identifier 取。
+    static let uploadQueueRemove = "qa.uploadQueue.remove"
+    static let uploadQueueUndo = "qa.uploadQueue.undo"
+    static let uploadQueueRemoveAll = "qa.uploadQueue.removeAll"
+    /// LS-410：完成態縮圖格的一格（不可點、只有 a11y label）。
+    static let uploadQueueDonePhoto = "qa.uploadQueue.donePhoto"
     /// LS-193：04e 最終確認的「輸入『刪除帳號』」欄——沒有固定 label（同 `LabeledTextField`
     /// 慣例，見 `DeleteAccountFlowView+FinalConfirm.swift`），改用 identifier。
     static let deleteAccountConfirmField = "qa.deleteAccount.confirmField"
