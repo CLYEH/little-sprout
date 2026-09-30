@@ -255,6 +255,58 @@ $$;
 rollback;
 
 -- ===========================================================================
+-- §2b. 作者被降級成 viewer（仍在 family_members）不算孤兒：owner 不得改
+--      （LS-408 R2 m1：孤兒判定是「不在成員表」，不是「不是 owner／member」；
+--      helper 若只回 owner／member 兩種角色，降級作者的相簿會被誤判成孤兒）
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_author uuid := 'a0000000-0000-4000-8000-000000000002';
+  v_album uuid := 'ae000000-0000-4000-8000-000000000105';
+  v_n int;
+  v_title text;
+  v_role text;
+begin
+  set local role postgres;
+  insert into public.albums (id, family_id, title, created_by)
+  values (v_album, v_family, '作者被降級的相簿', v_author);
+  update public.family_members set role = 'viewer'
+   where family_id = v_family and user_id = v_author;
+  select role::text into v_role from public.family_members
+   where family_id = v_family and user_id = v_author;
+  reset role;
+  if v_role is distinct from 'viewer' then
+    raise exception 'FAIL：前置條件不成立，作者應已降級為 viewer 且仍在 family_members，實際 role=%', v_role;
+  end if;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  update public.albums set title = 'HACKED-by-owner' where id = v_album;
+  get diagnostics v_n = row_count;
+  reset role;
+  if v_n <> 0 then
+    raise exception 'FAIL：作者被降級成 viewer（仍在家庭）不算孤兒，owner 不該能改該相簿，影響 % 列（預期 0）', v_n;
+  end if;
+
+  set local role postgres;
+  select title into v_title from public.albums where id = v_album;
+  reset role;
+  if v_title <> '作者被降級的相簿' then
+    raise exception 'FAIL：被拒的更新不該動到標題，現為 %', v_title;
+  end if;
+
+  raise notice 'OK §2b：降級成 viewer 的作者不算孤兒，owner 被拒';
+end;
+$$;
+
+rollback;
+
+-- ===========================================================================
 -- §3. owner 改自己建的相簿（不退步）
 -- ===========================================================================
 begin;
