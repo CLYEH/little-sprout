@@ -140,6 +140,10 @@
 #      mod 2^64 的結合律／交換律直接相加（與 `overflow-scan.js` 的 `mergeBatches` 對 `tree_hash` 的合併規則同構），
 #      得到與不分段整棵雜湊逐位元相同的值（LS-252 R3 實測手動驗證過）。多數稿一路走「整棵單次成功」的快路徑，
 #      分段只在真的失敗時才觸發——不是無條件先分段。
+#      **LS-377**（大稿位元組預算）：磁碟 .pen 頂層（depth-1）子節點緊湊 JSON 位元組總和超過 `PEN_OPEN_HASH_SEGMENT_BYTES`
+#      （預設 2 MiB，0＝停用）時，不再先白送兩次必 interrupted 的整份——直接把相鄰頂層節點依預算打包成段各自回讀合併；單段
+#      失敗對半重切最多 `PEN_OPEN_HASH_MAX_HALVINGS`（預設 3）次。18k 節點稿實測：舊路徑「整份 ×2 失敗→對半 2 段」
+#      → 新路徑直接 3 段。`PEN_OPEN_STATS_FILE` 有設時逐行追加 interrupted／mode／segments 事件（pen-read.sh 用來寫統計）。
 #   2. 讀回的值與磁碟不同（renderer 真的停在舊快照、或記憶體有未落地編輯）→ 才走既有清場流程（候選枚舉＋
 #      check_root_safe＋osascript→TERM→KILL＋重開）；未落地的真實編輯仍 fail closed exit 1，與 LS-118 相同。
 #   3. 整棵單次與分段都失敗（CLI 逾時／Pencil `InternalError: interrupted`——見 1；或 CLI 輸出格式改了）→ **不殺、
@@ -207,9 +211,15 @@ QUIT_GRACE=${PEN_OPEN_QUIT_GRACE:-4}
 # LS-180：Pencil 端 tree_hash 回讀（execute 全樹走訪）——單次看門狗與重試次數；9000 節點級的稿一次走訪要數十秒。
 HASH_TIMEOUT=${PEN_OPEN_HASH_TIMEOUT:-60}
 HASH_ATTEMPTS=${PEN_OPEN_HASH_ATTEMPTS:-2}
-for v in "$POLL_TIMEOUT" "$ATTEMPT_TIMEOUT" "$POLL_INTERVAL" "$QUIT_TIMEOUT" "$QUIT_GRACE" "$HASH_TIMEOUT" "$HASH_ATTEMPTS"; do
+# LS-377：位元組預算分段——磁碟 .pen 頂層（depth-1）子節點 JSON 位元組總和超過此值就不先送整份（14k+ 節點稿整份必
+# InternalError: interrupted），直接依預算把相鄰頂層節點打包成段；0＝停用（維持 LS-309 先整份、失敗才對半）。單段
+# interrupted 對半重切最多 HASH_MAX_HALVINGS 次。預設 2 MiB／段：實測（18k 節點、4.8 MB 稿）每次 execute 固定 ~2 秒，
+# 8.4k–10k 節點／段可成功、整份 18k 不行；50 KB 會切出 ~100 段（~200 秒），只有 pen-snapshot-dump.js 的 Print 輸出才用 50 KB。
+HASH_SEGMENT_BYTES=${PEN_OPEN_HASH_SEGMENT_BYTES:-2097152}
+HASH_MAX_HALVINGS=${PEN_OPEN_HASH_MAX_HALVINGS:-3}
+for v in "$POLL_TIMEOUT" "$ATTEMPT_TIMEOUT" "$POLL_INTERVAL" "$QUIT_TIMEOUT" "$QUIT_GRACE" "$HASH_TIMEOUT" "$HASH_ATTEMPTS" "$HASH_SEGMENT_BYTES" "$HASH_MAX_HALVINGS"; do
   case "$v" in
-    ''|*[!0-9]*) echo "✗ pen-open：PEN_OPEN_TIMEOUT／PEN_OPEN_ATTEMPT_TIMEOUT／PEN_OPEN_POLL_INTERVAL／PEN_OPEN_QUIT_TIMEOUT／PEN_OPEN_QUIT_GRACE／PEN_OPEN_HASH_TIMEOUT 須為整數秒、PEN_OPEN_HASH_ATTEMPTS 須為整數次數（得到「${v}」）" >&2; exit 2 ;;
+    ''|*[!0-9]*) echo "✗ pen-open：PEN_OPEN_TIMEOUT／PEN_OPEN_ATTEMPT_TIMEOUT／PEN_OPEN_POLL_INTERVAL／PEN_OPEN_QUIT_TIMEOUT／PEN_OPEN_QUIT_GRACE／PEN_OPEN_HASH_TIMEOUT 須為整數秒、PEN_OPEN_HASH_ATTEMPTS／PEN_OPEN_HASH_MAX_HALVINGS 須為整數次數、PEN_OPEN_HASH_SEGMENT_BYTES 須為整數位元組（得到「${v}」）" >&2; exit 2 ;;
   esac
 done
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -301,6 +311,37 @@ PY
   rm -f "$in" "$tmp"
 }
 
+# LS-377：統計事件——PEN_OPEN_STATS_FILE（pen-read.sh 設）有設才逐行追加（read_pen_hash 在 $(…) 子殼跑，全域變數帶不出去，
+# 只能走檔案）；沒設（直接跑 pen-open.sh）不記。事件：`interrupted`（每次回讀失敗）、`segments=<n>`、`mode=planned|halved|whole`。
+pen_stat() { [ -n "${PEN_OPEN_STATS_FILE:-}" ] && printf '%s\n' "$1" >> "$PEN_OPEN_STATS_FILE"; return 0; }
+
+# LS-377：依位元組預算規劃頂層子節點分段——讀磁碟 .pen，每個頂層（depth-1）子節點取緊湊 JSON 的 UTF-8 位元組數，
+# 相鄰節點貪婪打包成 `lo:hi` 段（[lo,hi) 頂層序，與 SCAN_HASH_ROOTS 同語意），每段不超過預算；單一節點本身超過預算獨佔一段。
+# 總和沒超過預算、預算為 0、.pen 讀不了時不印任何東西（呼叫端退回 LS-309 先整份的舊路徑）。
+plan_hash_segments() {
+  [ "$HASH_SEGMENT_BYTES" -gt 0 ] || return 0
+  python3 - "$want" "$HASH_SEGMENT_BYTES" <<'PY'
+import json, sys
+path, budget = sys.argv[1], int(sys.argv[2])
+try:
+    with open(path, encoding="utf-8") as fh:
+        doc = json.load(fh)
+except Exception:
+    sys.exit(0)
+kids = doc.get("children") or []
+sizes = [len(json.dumps(k, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) for k in kids]
+if sum(sizes) <= budget:
+    sys.exit(0)
+lo = acc = 0
+for i, sz in enumerate(sizes):
+    if i > lo and acc + sz > budget:
+        print("%d:%d" % (lo, i))
+        lo, acc = i, 0
+    acc += sz
+print("%d:%d" % (lo, len(sizes)))
+PY
+}
+
 # LS-309：對指定 root 範圍送 hash-only snippet，重試 HASH_ATTEMPTS 次（看門狗 HASH_TIMEOUT 秒／次，同既有慣例）。
 # lo/hi 皆空字串＝整棵不分段（SUMMARY-HASH）；否則帶 SCAN_HASH_ROOTS=[lo,hi) 分段（SUMMARY-HASH-PART）。成功設
 # $HASH_TRY_PART（16 碼 hex）／$HASH_TRY_COUNT（節點數）並 return 0；全部失敗只印診斷、return 1（呼叫端決定下一步）。
@@ -323,6 +364,7 @@ try_hash_range() {
       return 0
     fi
     echo "  Pencil 端 tree_hash：${label} 第 ${attempt}/${HASH_ATTEMPTS} 次回讀失敗（${HASH_TIMEOUT}s 內無預期輸出：逾時／InternalError: interrupted／CLI 格式變了）" >&2
+    pen_stat "interrupted"
   done
   return 1
 }
@@ -339,47 +381,63 @@ probe_root_count() {
 # HASH_TIMEOUT×HASH_ATTEMPTS，段數上不封頂會拖到不合理久）。
 HASH_MAX_SEGMENTS=${PEN_OPEN_HASH_MAX_SEGMENTS:-8}
 
-# LS-180／LS-309：向 Pencil 端回讀目前 active document 的 tree_hash。先試整棵單次（多數稿一次過，含 13–14k 節點級
-# ——LS-252 R1／R2 皆一次過）；HASH_ATTEMPTS 次皆失敗才改用 root 數量探測＋對半遞迴分段（各段各自重試，仍失敗才再
-# 對半，到 HASH_MAX_SEGMENTS 上限放棄），分段 hash_part 依 mod 2^64 相加合併（見檔頭 LS-180／LS-309 段的等價性說明）。
-# stdout 只印最終 16 碼 hex（成功時恰一行）；診斷訊息一律 stderr。失敗（含組不出 snippet／root 數量探測不到）印診斷
-# 後 return 0、不印任何 hex——呼叫端把空字串視為「讀不到」，走既有 exit 3 路徑。
+# LS-180／LS-309／LS-377：向 Pencil 端回讀目前 active document 的 tree_hash。
+#   * 磁碟頂層子節點位元組總和 ≤ HASH_SEGMENT_BYTES（小稿）：先整棵單次（多數稿一次過）；HASH_ATTEMPTS 次皆失敗才改用
+#     root 數量探測＋對半遞迴分段（LS-309 舊路徑，到 HASH_MAX_SEGMENTS 上限放棄）。
+#   * 超過預算（大稿，LS-377）：不先送整份（必 interrupted、白等兩次），直接依 plan_hash_segments 的位元組預算分段；單段
+#     HASH_ATTEMPTS 次皆失敗才對半重切（最多 HASH_MAX_HALVINGS 次），仍失敗放棄。
+# 分段 hash_part 依 mod 2^64 相加合併（見檔頭 LS-180／LS-309 段的等價性說明）。stdout 只印最終 16 碼 hex（成功時恰一行）；
+# 診斷訊息一律 stderr。失敗（含組不出 snippet／root 數量探測不到）印診斷後 return 0、不印任何 hex——呼叫端把空字串視為
+# 「讀不到」，走既有 exit 3 路徑。
 read_pen_hash() {
-  local snippet_base root_count
+  local snippet_base root_count planned mode=whole
   snippet_base=$(node "${script_root}/scripts/design/overflow-scan.js" --emit-hash-snippet 2>/dev/null) || {
     echo "  Pencil 端 tree_hash：無法組出 hash-only snippet（node／overflow-scan.js --emit-hash-snippet 缺？）" >&2
     return 0
   }
   [ -n "$snippet_base" ] || { echo "  Pencil 端 tree_hash：hash-only snippet 是空字串" >&2; return 0; }
 
-  if try_hash_range "" "" "$snippet_base"; then
-    printf '%s\n' "$HASH_TRY_PART"
-    return 0
-  fi
-  echo "  Pencil 端 tree_hash：整份單次回讀失敗，改分段（LS-309）" >&2
-
-  root_count=$(probe_root_count "$snippet_base")
-  case "$root_count" in
-    ''|*[!0-9]*)
-      echo "  Pencil 端 tree_hash：root 數量探測失敗（得到「${root_count}」），放棄分段" >&2
+  local queue=() acc_hash="0000000000000000" acc_count=0 seg_done=0
+  local item lo hi span mid merged depth rest
+  planned=$(plan_hash_segments)
+  if [ -n "$planned" ]; then
+    mode=planned
+    local seg
+    for seg in $planned; do queue+=("${seg}:0"); done
+    echo "  Pencil 端 tree_hash：稿的頂層節點 JSON 超過位元組預算 ${HASH_SEGMENT_BYTES}，直接分 ${#queue[@]} 段回讀（不先送整份，LS-377）" >&2
+  else
+    if try_hash_range "" "" "$snippet_base"; then
+      pen_stat "mode=whole"
+      printf '%s\n' "$HASH_TRY_PART"
       return 0
-      ;;
-  esac
-  if [ "$root_count" -lt 2 ]; then
-    echo "  Pencil 端 tree_hash：root 數量 ${root_count} 不足以分段，放棄" >&2
-    return 0
+    fi
+    echo "  Pencil 端 tree_hash：整份單次回讀失敗，改分段（LS-309）" >&2
+
+    root_count=$(probe_root_count "$snippet_base")
+    case "$root_count" in
+      ''|*[!0-9]*)
+        echo "  Pencil 端 tree_hash：root 數量探測失敗（得到「${root_count}」），放棄分段" >&2
+        return 0
+        ;;
+    esac
+    if [ "$root_count" -lt 2 ]; then
+      echo "  Pencil 端 tree_hash：root 數量 ${root_count} 不足以分段，放棄" >&2
+      return 0
+    fi
+    # 直接對半起手（不先重送一次未拆分的 [0, root_count)——那等於在同一個 code path 下第三／四次重試整棵，LS-252
+    # R3 實測的正是「連續兩次整棵失敗後直接對半」才成功，不是「再重試一次整棵」），與 LS-252 R3 的實測配方一致。
+    local seg_mid=$((root_count / 2))
+    queue=("0:${seg_mid}:0" "${seg_mid}:${root_count}:0")
+    mode=halved
   fi
 
-  # 直接對半起手（不先重送一次未拆分的 [0, root_count)——那等於在同一個 code path 下第三／四次重試整棵，LS-252
-  # R3 實測的正是「連續兩次整棵失敗後直接對半」才成功，不是「再重試一次整棵」），與 LS-252 R3 的實測配方一致。
-  local seg_mid=$((root_count / 2))
-  local queue=("0:${seg_mid}" "${seg_mid}:${root_count}") acc_hash="0000000000000000" acc_count=0 seg_done=0
-  local item lo hi span mid merged
   while [ "${#queue[@]}" -gt 0 ]; do
     item="${queue[0]}"
     queue=("${queue[@]:1}")
     lo="${item%%:*}"
-    hi="${item##*:}"
+    rest="${item#*:}"
+    hi="${rest%%:*}"
+    depth="${rest##*:}"
     if try_hash_range "$lo" "$hi" "$snippet_base"; then
       merged=$(python3 -c "print('%016x' % ((0x${acc_hash} + 0x${HASH_TRY_PART}) % (1 << 64)))") || {
         echo "  Pencil 端 tree_hash：合併分段雜湊失敗（python3？）" >&2
@@ -395,14 +453,21 @@ read_pen_hash() {
       echo "  Pencil 端 tree_hash：root 範圍 [${lo},${hi}) 已無法再分段仍失敗，放棄" >&2
       return 0
     fi
-    if [ $((seg_done + ${#queue[@]} + 2)) -gt "$HASH_MAX_SEGMENTS" ]; then
+    if [ "$mode" = planned ]; then
+      if [ "$depth" -ge "$HASH_MAX_HALVINGS" ]; then
+        echo "  Pencil 端 tree_hash：root 範圍 [${lo},${hi}) 已對半重切 ${HASH_MAX_HALVINGS} 次仍失敗，放棄（PEN_OPEN_HASH_MAX_HALVINGS 可調；先 open -a Pen 置前景再試）" >&2
+        return 0
+      fi
+    elif [ $((seg_done + ${#queue[@]} + 2)) -gt "$HASH_MAX_SEGMENTS" ]; then
       echo "  Pencil 端 tree_hash：分段數將超過上限 ${HASH_MAX_SEGMENTS}（PEN_OPEN_HASH_MAX_SEGMENTS 可調），放棄" >&2
       return 0
     fi
     mid=$((lo + span / 2))
-    queue+=("${lo}:${mid}" "${mid}:${hi}")
+    queue+=("${lo}:${mid}:$((depth + 1))" "${mid}:${hi}:$((depth + 1))")
   done
   echo "  Pencil 端 tree_hash：分段成功（${seg_done} 段，共 ${acc_count} 節點）" >&2
+  pen_stat "mode=${mode}"
+  pen_stat "segments=${seg_done}"
   printf '%s\n' "$acc_hash"
   return 0
 }

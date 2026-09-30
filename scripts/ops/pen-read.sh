@@ -11,7 +11,18 @@
 # 強制重新載入（必要時清場重開 Pen，讓全新 renderer 從磁碟讀取當下內容）成為 active document，讀者
 # 再對這份 active document 做唯讀查詢（get_app_state／execute 不帶會寫入的操作）。
 #
-# 用法：pen-read.sh <worktree-or-repo-root>
+# 用法：pen-read.sh [--ticket LS-<n>] [--budget-bytes <N>] [--help] <worktree-or-repo-root>
+#
+# **LS-377 起**（來源 LS-354 池 P1 兩項：14k 節點稿 exit 3／單段 interrupted、Pen 在背景時 interrupted 明顯較多）：
+#   1. **執行前先 `open -a Pen` 把 Pen 置於前景**——execute 在背景視窗明顯較易 `InternalError: interrupted`，置前景即過。
+#      本腳本查到 Pen 不在前景會在 stderr 提示（不自動切前景、不擋）。
+#   2. 大稿依位元組預算分段：磁碟 .pen 頂層（depth-1）子節點緊湊 JSON 位元組總和超過預算（預設 2 MiB，`--budget-bytes N`
+#      或 `PEN_OPEN_HASH_SEGMENT_BYTES`，0＝停用）就不先送必失敗的整份，直接依預算把相鄰頂層節點打包成段回讀合併；單段
+#      interrupted 自動對半重切、最多 3 次（`PEN_OPEN_HASH_MAX_HALVINGS`）。分段細節與 18k 節點稿實測見 pen-open.sh
+#      檔頭 LS-377 段。（對照：`scripts/design/pen-snapshot-dump.js` 的 Print 輸出預算才是 50 KB，見其檔頭。）
+#   3. 每次執行把「前景／背景、interrupted 次數、分段模式與段數、exit code」追加到
+#      `<cwd 的 git toplevel>/.claude/evidence/<票號>/pen-read-stats.log`（gitignored；票號從 toplevel 目錄名 `LS-<n>` 推，
+#      推不出用 `--ticket LS-<n>`，兩者都沒有就略過並在 stderr 說明）；handoff 引用這個 log。
 #
 # 本質是 `pen-open.sh <root> --force-reload` 的封裝——`--force-reload` 讓 pen-open.sh 不信任「目前已經
 # 是 active」這個訊號。**LS-180 起**（來源 LS-177 VR R2：一律清場＝殺 Pen 主行程＝Pencil MCP 在 Claude Code
@@ -28,7 +39,7 @@
 # 的真實變更就整個拒絕清場，fail closed（exit 1，訊息會指出該去哪個 root 先 pen-land）；不會為了讀稿而默默
 # 丟掉別人真正未落地的設計工作。要無條件清場請 orchestrator 明示用 `pen-open.sh <root> --kill`（本腳本不提供）。
 #
-# Exit code：與 `pen-open.sh <root> --force-reload` 相同——
+# Exit code：與 `pen-open.sh <root> --force-reload` 相同（`--help` 同樣印在說明裡）——
 #   0＝路徑一致且 tree_hash 相符（未清場），或清場重開後一致（stdout 會多一行重連提示——帶回 handoff）；
 #      皆可安全對 active document 做唯讀查詢
 #   1＝判定不安全而拒絕清場，或清場後仍與目標路徑不一致
@@ -56,13 +67,56 @@ set -uo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ $# -ne 1 ]; then
-  echo "用法：pen-read.sh <worktree-or-repo-root>" >&2
+usage() { echo "用法：pen-read.sh [--ticket LS-<n>] [--budget-bytes <N>] [--help] <worktree-or-repo-root>" >&2; }
+
+print_help() {
+  cat <<'HELP'
+用法：pen-read.sh [--ticket LS-<n>] [--budget-bytes <N>] [--help] <worktree-or-repo-root>
+
+唯讀讀稿前，把目標 root 的 design/littlesprout.pen 確認為 Pen 的 active document，並驗 Pencil 端 tree_hash＝磁碟。
+
+執行前：先 `open -a Pen` 把 Pen 置於前景（背景時大稿 execute 明顯較易 InternalError: interrupted）。
+  --ticket LS-<n>      統計 log 的票號（預設從 cwd 的 git toplevel 目錄名推）；log：<toplevel>/.claude/evidence/<票號>/pen-read-stats.log
+  --budget-bytes <N>   分段位元組預算（預設 2097152＝2 MiB；0＝停用預算分段、維持先整份再對半的舊路徑）
+  --help               本說明
+
+Exit code：
+  0  路徑一致且 tree_hash 相符（未清場，Pencil MCP 連線保留），或清場重開後一致——可安全唯讀查詢
+  1  判定不安全而拒絕清場，或清場後仍與目標路徑不一致
+  2  用法錯誤／設計票在飛而目標不是該票 worktree（LS-398 拒跑）／Pen 沒開／pen CLI 問題／磁碟 .pen 算不出雜湊／清場失敗（fail closed）
+  3  路徑一致但 Pencil 端雜湊讀不到（分段與對半重切都 interrupted）——未清場；stdout 印期望值 tree_hash=<磁碟值>，
+     請 agent 用 mcp__pencil__execute 複算比對，或改用 visual-reviewer.md「可接受的替代新鮮度證明」
+HELP
+}
+
+ticket=""
+budget=""
+positional=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --help|-h) print_help; exit 0 ;;
+    --ticket)
+      [ $# -ge 2 ] || { usage; exit 2; }
+      ticket=$2; shift 2 ;;
+    --budget-bytes)
+      [ $# -ge 2 ] || { usage; exit 2; }
+      budget=$2; shift 2 ;;
+    -*) usage; exit 2 ;;
+    *) positional+=("$1"); shift ;;
+  esac
+done
+if [ "${#positional[@]}" -ne 1 ]; then
+  usage
   exit 2
 fi
+root_arg="${positional[0]}"
+case "$budget" in
+  ''|*[!0-9]*) [ -z "$budget" ] || { echo "✗ pen-read：--budget-bytes 須為整數位元組（得到「${budget}」）" >&2; exit 2; } ;;
+esac
+[ -z "$budget" ] || export PEN_OPEN_HASH_SEGMENT_BYTES="$budget"
 
 # ---- LS-398：設計票在飛時拒跑（見檔頭）----
-target_root=$(cd "$1" 2>/dev/null && pwd -P) || target_root=$1
+target_root=$(cd "$root_arg" 2>/dev/null && pwd -P) || target_root=$root_arg
 plsh="${PEN_READ_PATROL_LINEAR_SH:-${script_dir}/patrol-linear.sh}"
 if [ -f "$plsh" ] && inflight_out=$(bash "$plsh" --inflight lane:design 2>/dev/null); then
   design_tix=$(printf '%s\n' "$inflight_out" | grep -E '^LS-[0-9]+$')
@@ -81,4 +135,38 @@ else
   echo "⚠ pen-read：查不到在飛設計票（缺 LINEAR_API_KEY 或 Linear 查詢失敗），照跑——請自行確認沒有設計票在飛（LS-398）" >&2
 fi
 
-exec bash "${script_dir}/pen-open.sh" "$1" --force-reload
+# ---- LS-377：前景／背景狀態與統計 log ----
+frontmost=$(osascript -e 'tell application "System Events" to get name of first process whose frontmost is true' 2>/dev/null | head -1)
+if [ "$frontmost" = "Pen" ]; then
+  pen_front=yes
+else
+  pen_front=no
+  echo "⚠ pen-read：Pen 不在前景（目前前景：${frontmost:-未知}）——大稿 execute 背景時明顯較易 interrupted；建議先 \`open -a Pen\` 置前景再跑（LS-377）" >&2
+fi
+stats_dir=""
+toplevel=$(git rev-parse --show-toplevel 2>/dev/null) || toplevel=""
+if [ -z "$ticket" ] && [ -n "$toplevel" ]; then
+  case "$(basename "$toplevel")" in LS-[0-9]*) ticket=$(basename "$toplevel") ;; esac
+fi
+case "$ticket" in
+  LS-[0-9]*) [ -n "$toplevel" ] && stats_dir="${toplevel}/.claude/evidence/${ticket}" ;;
+  '') ;;
+  *) echo "✗ pen-read：--ticket 須為 LS-<n>（得到「${ticket}」）" >&2; exit 2 ;;
+esac
+[ -n "$stats_dir" ] || echo "  pen-read：推不出票號（cwd 不是 LS-<n> worktree）且沒給 --ticket——本次不寫 pen-read-stats.log（LS-377）" >&2
+
+stats_tmp=$(mktemp "${TMPDIR:-/tmp}/pen-read-stats.XXXXXX") || stats_tmp=""
+[ -z "$stats_tmp" ] || export PEN_OPEN_STATS_FILE="$stats_tmp"
+started=$SECONDS
+bash "${script_dir}/pen-open.sh" "$root_arg" --force-reload
+rc=$?
+if [ -n "$stats_tmp" ]; then
+  if [ -n "$stats_dir" ]; then
+    interrupted=$(grep -c '^interrupted$' "$stats_tmp"); mode=$(sed -n 's/^mode=//p' "$stats_tmp" | tail -1); segs=$(sed -n 's/^segments=//p' "$stats_tmp" | tail -1)
+    mkdir -p "$stats_dir" && printf '%s ticket=%s root=%s rc=%s pen_frontmost=%s frontmost=%s interrupted=%s mode=%s segments=%s duration_s=%s\n' \
+      "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$ticket" "$target_root" "$rc" "$pen_front" "${frontmost:-unknown}" "${interrupted:-0}" "${mode:--}" "${segs:--}" "$((SECONDS - started))" \
+      >> "${stats_dir}/pen-read-stats.log" && echo "  pen-read：統計已追加 ${stats_dir}/pen-read-stats.log（前景=${pen_front}、interrupted=${interrupted:-0}）" >&2
+  fi
+  rm -f "$stats_tmp"
+fi
+exit "$rc"
