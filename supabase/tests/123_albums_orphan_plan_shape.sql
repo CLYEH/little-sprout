@@ -3,12 +3,29 @@
 -- 背景：`albums_update` policy 的 owner 分支與 `set_album_children` 的授權都走
 -- `id in (select private.owned_orphan_album_ids())`（LS-409）。這條寫法之所以安全，
 -- 前提是規劃器把它收斂成 **hashed SubPlan、每個 statement 只算一次**；一旦被改成逐列
--- EXISTS／逐列函式呼叫，每列都會重算「owner 家庭內全部孤兒相簿」，成本變成
--- 相簿數的平方。LS-408 migration 註解宣稱這件事由 tests/50 的偵測機制覆蓋，但 tests/50
--- 沒有任何 albums 查詢——本檔補上，判準沿用 tests/50（loops 只能從 ANALYZE 取）：
+-- EXISTS，或把集合包進 SECURITY DEFINER 函式做逐列呼叫（例如
+-- `private.is_orphan_album(id)`，LS-409 取捨 a(i) 否決的寫法），每列都會重算「owner 家庭內
+-- 全部孤兒相簿」，成本變成相簿數的平方。LS-408 migration 註解宣稱這件事由 tests/50 的偵測機制
+-- 覆蓋，但 tests/50 沒有任何 albums 查詢——本檔補上，判準沿用 tests/50（loops 只能從
+-- ANALYZE 取）並加一條專為「逐列函式呼叫」設的：
 --   1. plan 不得出現 `(SubPlan N)` 形式的 qual 引用（correlated、逐列）；
 --   2. 所有節點 loops 必須是 1；
---   3. 額外要求 `hashed SubPlan` 真的出現（否則 1、2 在集合被拉平成別種 plan 時是恆真句）。
+--   3. **孤兒集合本身**必須是 hashed SubPlan：plan 裡要找得到 `Output:
+--      private.owned_orphan_album_ids()` 的 SubPlan，且 Filter 以 `hashed SubPlan N` 引用它。
+--      不能只問「plan 裡有沒有任何 hashed SubPlan」——作者分支的 `contributor_family_ids()`
+--      就會產生一個，LS-412 R1 merge-review M1 的 M5 mutation 正是這樣騙過第一版：
+--      SECURITY DEFINER 函式不會被 inline，逐列函式呼叫在 plan 上只是 Filter 裡的一個
+--      函式呼叫，沒有 `(SubPlan N)`、所有 loops=1，孤兒集合（函式內部）對 plan 不可見，
+--      實測 5000 列相簿建了 5001 次集合（乾淨是 2 次）。判準 3 抓的就是「孤兒集合從
+--      plan 上消失」。
+--
+-- 為什麼不用函式呼叫計數（`track_functions='all'` 前後取
+-- `pg_stat_get_xact_function_calls` 差值，reviewer 實測 baseline 2／M5 5001）：
+-- 該 GUC 是 superuser-only，測試 runner（run.sh／CI）以 `postgres` 連線、不是 superuser，
+-- `set local track_functions = 'all'` 會得到 `permission denied to set parameter`
+-- （本機容器實測，只有 supabase_admin 設得了）。所以退而求其次用 plan 上的判準 3；
+-- 它的已知盲區：孤兒集合仍以 hashed SubPlan 出現、但另外再多一處逐列呼叫同一函式的
+-- 寫法抓不到（那需要計數法）。
 --
 -- 為什麼是新檔而不是塞進 tests/50：tests/50 先灌 5 萬列 media＋2 萬列 storage.objects，
 -- 本檔只需要 5000 列 albums，獨立跑快得多；判準與 tests/50 一字不差。
@@ -21,7 +38,9 @@
 --   S3 `set_album_children` owner 呼叫：函式內是 plpgsql，EXPLAIN 看不進去，所以
 --      (a) 斷言函式本體字面含 `p_album_id in (select private.owned_orphan_album_ids())`
 --      （函式改寫成別種授權寫法就紅，不留「手抄副本與本體漂移」的洞，理由同 tests/50
---      get_family_timeline 段）；(b) 對「同一個」表達式做 EXPLAIN ANALYZE。
+--      get_family_timeline 段；改寫成 `IN (SELECT` 大小寫也會紅，接受——改函式一定得走新
+--      migration，紅了訊息明確，誤報代價低，LS-412 R1 i2）；(b) 對「同一個」表達式做
+--      EXPLAIN ANALYZE。
 -- 另加 catalog 斷言：`private.owned_orphan_album_ids()` 必須是 STABLE。實測（本機 PG）
 -- 把它改成 VOLATILE 時 plan 形狀不變（仍是 hashed SubPlan、loops=1），所以 plan 判準
 -- 抓不到這個退步，只有這條 catalog 斷言抓得到——兩者分工，不是互為備援。
@@ -29,7 +48,10 @@
 -- Mutation 自證（本票實跑，斷言原文見 PR 描述／handoff）：
 --   M1 `private.owned_orphan_album_ids()` 改 VOLATILE（catalog 斷言紅）；
 --   M2 albums_update 的 owner 分支改成逐列 count(*) 相關子查詢（plan 判準紅）；
---   M3 set_album_children 授權式改寫成別種形狀（S3(a) 字面斷言紅）。
+--   M3 set_album_children 授權式改寫成別種形狀（S3(a) 字面斷言紅）；
+--   M5（R2）新增 SECURITY DEFINER STABLE 包裝 `private.ls412_is_orphan(id)`（本體
+--      `id in (select owned_orphan_album_ids())`），policy owner 分支改 `or ls412_is_orphan(id)`
+--      → 判準 3 紅。檔尾偵測器自我驗證段以同一寫法當 negative control。
 
 \set ON_ERROR_STOP on
 
@@ -64,6 +86,41 @@ begin
   end if;
 end;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- 判準 3 的解析器（pg_temp，隨交易消失）：從 verbose plan 找出「Output 為
+-- private.owned_orphan_album_ids() 的 SubPlan」編號，確認 Filter 有以 `hashed SubPlan N`
+-- 引用其中之一。回傳空字串＝通過，否則為失敗原因。
+-- ---------------------------------------------------------------------------
+create function pg_temp.ls412_orphan_check(p_plan text) returns text
+language plpgsql as $f$
+declare
+  v_line text;
+  v_cur int;
+  v_found int[] := array[]::int[];
+  v_n int;
+begin
+  foreach v_line in array string_to_array(p_plan, E'\n') loop
+    if v_line ~ '^\s*SubPlan [0-9]+\s*$' then
+      v_cur := (regexp_match(v_line, 'SubPlan ([0-9]+)'))[1]::int;
+    elsif v_line ~ '^\s*(InitPlan|SubPlan) ' or v_line ~ '^\S' then
+      v_cur := null;
+    elsif v_cur is not null and v_line ~ 'Output: private\.owned_orphan_album_ids\(\)' then
+      v_found := v_found || v_cur;
+    end if;
+  end loop;
+
+  if coalesce(array_length(v_found, 1), 0) = 0 then
+    return '孤兒集合 private.owned_orphan_album_ids() 在 plan 上找不到對應的 SubPlan——判定被包進逐列函式呼叫或其他不可見的形狀';
+  end if;
+  foreach v_n in array v_found loop
+    if p_plan ~ ('hashed SubPlan ' || v_n || '\)') then
+      return '';
+    end if;
+  end loop;
+  return format('孤兒集合的 SubPlan %s 沒有被 Filter 以 hashed SubPlan 引用（不是單次求值的雜湊子計畫）', v_found);
+end;
+$f$;
 
 -- ---------------------------------------------------------------------------
 -- catalog：孤兒集合函式必須 STABLE（plan 形狀看不出 VOLATILE，見檔頭）
@@ -108,6 +165,7 @@ declare
   v_line text;
   v_plan text;
   v_loops bigint;
+  v_why text;
 begin
   select id into v_a2_album from public.albums
    where title like 'ls412 plan %' and created_by = 'a0000000-0000-4000-8000-000000000002' limit 1;
@@ -150,12 +208,12 @@ begin
         q.label, v_loops, v_plan;
     end if;
 
-    if v_plan !~ 'hashed SubPlan' then
-      raise exception E'FAIL 效能：% 的 plan 沒有 hashed SubPlan（孤兒集合不是單次求值的雜湊子計畫）\n%',
-        q.label, v_plan;
+    v_why := pg_temp.ls412_orphan_check(v_plan);
+    if v_why <> '' then
+      raise exception E'FAIL 效能：% —— %\n%', q.label, v_why, v_plan;
     end if;
 
-    raise notice 'ok 效能：% —— 無 correlated SubPlan、hashed SubPlan、所有節點 loops=1', q.label;
+    raise notice 'ok 效能：% —— 無 correlated SubPlan、孤兒集合是 hashed SubPlan、所有節點 loops=1', q.label;
   end loop;
 end;
 $$;
@@ -198,6 +256,58 @@ begin
   raise notice
     'ok 偵測器自我驗證：逐列 correlated 子查詢被抓到（correlated SubPlan=%，最大 loops=%）',
     (v_plan ~ '\(SubPlan [0-9]+\)'), v_loops;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 偵測器自我驗證 #2（LS-412 R2）：逐列函式包裝（M5）——新增 SECURITY DEFINER STABLE
+-- `private.ls412_is_orphan(id)`（本體 `id in (select owned_orphan_album_ids())`），policy
+-- owner 分支改 `or private.ls412_is_orphan(id)`。這是 R1 merge-review 用來騙過第一版判準的
+-- 寫法：SD 函式不 inline，plan 沒有 `(SubPlan N)`、loops 全是 1（下面兩個 notice 會印出
+-- 這件事），只有判準 3 抓得到。DDL 在本檔交易內，最後隨 rollback 消失。
+-- ---------------------------------------------------------------------------
+create function private.ls412_is_orphan(p uuid) returns boolean
+language sql stable security definer set search_path = ''
+as $$ select p in (select private.owned_orphan_album_ids()) $$;
+revoke execute on function private.ls412_is_orphan(uuid) from public, anon;
+grant execute on function private.ls412_is_orphan(uuid) to authenticated;
+
+alter policy albums_update on public.albums
+  using (
+    (created_by = (select auth.uid()) and family_id in (select private.contributor_family_ids()))
+    or private.ls412_is_orphan(id)
+  )
+  with check (
+    (created_by = (select auth.uid()) and family_id in (select private.contributor_family_ids()))
+    or private.ls412_is_orphan(id)
+  );
+
+do $$
+declare
+  v_line text;
+  v_plan text := '';
+  v_loops bigint;
+  v_why text;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', 'a0000000-0000-4000-8000-000000000001', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  for v_line in execute 'explain (analyze, verbose, buffers)
+      update public.albums set title = title where title like ''ls412 plan %''' loop
+    v_plan := v_plan || v_line || E'\n';
+  end loop;
+  reset role;
+
+  select coalesce(max((x[1])::bigint), 1) into v_loops
+    from regexp_matches(v_plan, 'loops=([0-9]+)', 'g') as x;
+  raise notice 'M5 對照：correlated SubPlan=%，最大 loops=%（兩條舊判準對它看不見，符合預期）',
+    (v_plan ~ '\(SubPlan [0-9]+\)'), v_loops;
+
+  v_why := pg_temp.ls412_orphan_check(v_plan);
+  if v_why = '' then
+    raise exception E'FAIL：偵測器失效——逐列函式包裝（M5）竟然沒被判準 3 抓到\n%', v_plan;
+  end if;
+  raise notice 'ok 偵測器自我驗證 #2：逐列函式包裝（M5）被判準 3 抓到（%）', v_why;
 end;
 $$;
 

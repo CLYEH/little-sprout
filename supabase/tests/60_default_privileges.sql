@@ -98,8 +98,9 @@ declare
     'private.family_is_active(uuid)',
     -- LS-409：albums_update 的孤兒相簿分支（owner 接手編輯，LS-408）與 set_album_children
     -- 以 authenticated 身分求值時呼叫，同其餘集合函式的理由。LS-412：它內部呼叫的
-    -- private.owned_family_member_pairs() 是 SECURITY DEFINER 巢狀呼叫、不需要 authenticated
-    -- EXECUTE，已 revoke 並從本清單移除（通掃會斷言它對 authenticated／anon 皆無 EXECUTE）。
+    -- private.owned_family_member_pairs() 不需要 authenticated EXECUTE（呼叫它的
+    -- owned_orphan_album_ids() 是 SECURITY DEFINER、以 owner postgres 身分執行），已 revoke
+    -- 並從本清單移除（通掃會斷言它對 authenticated／anon 皆無 EXECUTE）。
     'private.owned_orphan_album_ids()'
   ];
   v_exceptions text[] := array[]::text[];  -- 目前無例外；若新增，必須附理由註解
