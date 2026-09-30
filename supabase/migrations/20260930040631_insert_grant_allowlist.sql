@@ -47,11 +47,12 @@
 --    `profiles` 對 `authenticated` 是整表 INSERT grant，但 UPDATE 早已收成只有
 --    `display_name`／`avatar_url`；上述五欄的唯一寫入路徑是 SECURITY DEFINER 的
 --    `delete_my_account`／`accept_eula`／管理端 service_role。INSERT 仍整表開放，
---    等於「UPDATE 收斂被 INSERT 路徑繞過」的同一形狀（profile 列在註冊時已由 `auth.users`
---    的 AFTER INSERT trigger 建好，client 的 `ensureProfileExists` 是 `on conflict do
---    nothing`，實務上撞 PK；但列若不存在〔例如被 purge 後〕就能一次寫入 `eula_accepted_
---    version`／`suspended_at` 等旗標，繞過 EULA gate）。iOS `ProfileUpsertPayload` 只送
---    `id`／`display_name`；`profiles_insert` policy 仍只限 `id = auth.uid()`，不動。
+--    與 UPDATE 收斂不對齊。這是純縱深防禦，不是已知可利用的洞：profile 列在註冊時已由
+--    `auth.users` 的 AFTER INSERT trigger 建好，client 的 `ensureProfileExists` 是 `on
+--    conflict do nothing`，實務上撞 PK；`purge_expired()` 對 profiles 只設 `purged_at`、
+--    不刪列，列只在 `auth.users` 被刪時才消失（那時已無 JWT 可用）。本次只把 INSERT
+--    欄位級 grant 與 UPDATE 收斂對齊。iOS `ProfileUpsertPayload` 只送 `id`／
+--    `display_name`；`profiles_insert` policy 仍只限 `id = auth.uid()`，不動。
 --
 -- 盤點後保留（client 該填，不動）：`albums.id`／`family_id`／`title`／`cover_media_id`／
 -- `created_by`；`media` 其餘 13 欄；`content_reports.id`／`family_id`／`target_type`／
