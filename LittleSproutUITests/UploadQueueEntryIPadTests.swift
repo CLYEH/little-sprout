@@ -13,7 +13,7 @@ final class UploadQueueEntryIPadTests: XCTestCase {
     /// `progressThenFailedOnly`：起始「還有 9 張」、劇本結束「還有 1 張」（位數不變，見 harness 註解）。
     private static let startLabel = "正在新增照片，還有 9 張還沒完成"
     private static let almostDoneLabel = "正在新增照片，還有 1 張還沒完成"
-    private static let onlyFailedLabel = "有 1 張照片沒有加進去，看原因，或再試一次"
+    private static let onlyFailedLabel = "有 1 張照片沒有加進去，看原因，再試或移除"
 
     override func setUpWithError() throws {
         try XCTSkipUnless(

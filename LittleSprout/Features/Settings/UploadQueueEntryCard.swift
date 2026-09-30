@@ -19,9 +19,12 @@ extension UploadQueueEntryCounts {
             self = .zero
             return
         }
+        // LS-410：標記移除中的失敗項（sheet 開著、還沒 `commitRemovals`）仍算失敗——入口列在 sheet 關閉（情境邊界）
+        // 才重新快照，sheet 開著時它背後的列不因標記而變態（否則 `liveChanged` 會在 sheet 後面先原地換成「全部完成」）。
+        let failedEntries = store.entries.values.count { if case .failed = $0.state { true } else { false } }
         self.init(
-            waiting: store.waitingCount, uploading: store.uploadingCount, failed: store.failedCount,
-            completed: store.entries.count - store.remainingCount
+            waiting: store.waitingCount, uploading: store.uploadingCount, failed: failedEntries,
+            completed: store.completedCount
         )
     }
 }
@@ -237,6 +240,9 @@ struct UploadQueueEntryLifecycle: ViewModifier {
             .onChange(of: store?.resume.foregroundEpoch) { model.contextBoundary(UploadQueueEntryCounts(store: store)) }
             .onChange(of: counts) { _, newCounts in model.liveChanged(newCounts) }
             .sheet(isPresented: $model.showsSheet, onDismiss: {
+                // LS-410（merge-review i3）：sheet 內標記的移除在這裡真的提交，且**先於** `contextBoundary`——入口列
+                // 拿提交後的佇列重新快照；放在 sheet 內容的 onDisappear 與這個 onDismiss 的先後 SwiftUI 不保證。
+                albumsStore.sharedUploadQueueStoreInstance?.commitRemovals()
                 model.contextBoundary(UploadQueueEntryCounts(store: albumsStore.sharedUploadQueueStoreInstance))
             }, content: {
                 if let store {
