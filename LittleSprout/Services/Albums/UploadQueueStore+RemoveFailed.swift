@@ -6,7 +6,8 @@ import Foundation
 /// `pendingRemovals`，可用 `undoRemove` 復原，墓碑列仍在 `sections`）；sheet 關閉（presenter 的
 /// `onDismiss`）才呼叫 `commitRemovals()` 真的移除並落盤——標記中的項目不計入 `failedCount`／
 /// `retryableFailedCount`／`remainingCount`、不參與 `retryAllRetryable()` 與回前景自動重試。
-/// `pendingRemovals` 不落盤：sheet 開著時 app 被回收，重啟後那幾張仍是失敗項（安全的方向，使用者可再移除）。
+/// `pendingRemovals` 不落盤：sheet 開著時 app 被回收，重啟後 `restorePersistedEntries` 會把 manifest 裡尚未提交的紀錄
+/// （含這些標記中的項目）全部還原成 `.waiting` 並自動重傳——標記不會跨行程存活（是否要「進背景即提交」屬產品／設計裁決）。
 ///
 /// 都不打伺服器、不動 PhotoKit。**孤兒 Storage 物件（VR R3 I3）**：見 `commitRemovals()` 文件註解——本票核對後
 /// 決定不在這裡刪，理由與後續寫在那裡。
