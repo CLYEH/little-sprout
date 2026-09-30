@@ -796,7 +796,7 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
     每個 statement 一次（`supabase/tests/123_albums_orphan_plan_shape.sql` 常設守
     loops=1）。owner 對非己相簿 update 時 USING 與 WITH CHECK 各建一次孤兒 id
     雜湊表（**建集合兩次**），成本與「該家庭相簿數」成正比、不隨被更新列數放大
-    （5000 列相簿實測各約 1 ms）；作者本人 update 因 OR 短路不建。
+    （5000 列相簿實測各約 1 ms）；作者本人 by-id update（目標列是自己的相簿）因 OR 短路不建；批次 update 若涵蓋非己相簿，作者分支為假的列會讓集合建表一次。
   - **軟刪／還原（`deleted_at`）自 LS-57 R2 起是 RPC-only**：`set_album_deleted`
     （見 §4）是唯一路徑，建立者與 owner 皆同——直接 `.update({deleted_at: …})`
     不論改的人是誰、改成什麼值，一律 `42501`（欄位級 grant 收回，見下）。R1 版本
