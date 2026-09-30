@@ -106,6 +106,8 @@ final class UploadQueueStore {
     /// 插入順序——`entries` 是字典（用 id 查找／更新方便），排序另外靠這份陣列記住「先進
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
     var order: [UUID] = []
+    /// LS-410：sheet 內「標記移除」的失敗項（只在記憶體，`commitRemovals()` 才真的移除並落盤；見 `+RemoveFailed.swift`）。
+    var pendingRemovals: Set<UUID> = []
 
     /// 稿面 `16 上傳佇列` `Resume Banner`（`SpAvh`）：LS-397 起由 `appDidBecomeActive()`（回前景重送）與
     /// `restorePersistedEntries`（重啟續傳）設 `true`；佇列閒置後的下一次 `enqueue` 才歸零。
@@ -157,13 +159,11 @@ final class UploadQueueStore {
     func thumbnail(for id: UUID) -> UIImage? { entries[id]?.thumbnail }
 
     /// 「還有 N 張還沒完成」＝等候＋上傳中＋失敗（`design/littlesprout.pen` Handoff Notes
-    /// `EUNxh`：完成的不算「還沒完成」）。
-    var remainingCount: Int {
-        entries.values.reduce(0) { count, entry in
-            if case .completed = entry.state { return count }
-            return count + 1
-        }
-    }
+    /// `EUNxh`：完成的不算「還沒完成」）。LS-410：標記移除中的失敗項（`pendingRemovals`）已被使用者放棄，不計入。
+    var remainingCount: Int { count { if case .completed = $0 { false } else { true } } }
+
+    /// 已完成張數（含標記移除以外的全部；標記中的都是失敗項，不會是完成）。
+    var completedCount: Int { count { if case .completed = $0 { true } else { false } } }
 
     var waitingCount: Int { count { if case .waiting = $0 { true } else { false } } }
     var uploadingCount: Int { count { if case .uploading = $0 { true } else { false } } }
@@ -184,8 +184,10 @@ final class UploadQueueStore {
         count { if case .failed = $0 { true } else { false } }
     }
 
+    /// LS-410：標記移除中的項目（`pendingRemovals`）一律不計入——`failedCount`／`retryableFailedCount`／
+    /// `remainingCount` 都經過這裡，符合 Notes `FBoLL`「標記中的項目不計入」。
     private func count(where predicate: (UploadItemState) -> Bool) -> Int {
-        entries.values.reduce(0) { predicate($1.state) ? $0 + 1 : $0 }
+        entries.reduce(0) { pendingRemovals.contains($1.key) || !predicate($1.value.state) ? $0 : $0 + 1 }
     }
 
     // MARK: - 佇列操作
@@ -216,7 +218,8 @@ final class UploadQueueStore {
     /// 單列「重試」——LS002 不可重試（見 `UploadFailureReason.isRetryable`），呼叫端理應
     /// 不會對這列顯示重試鈕，這裡再擋一層不信任呼叫端。
     func retry(_ id: UUID) {
-        guard var entry = entries[id], case .failed(let reason) = entry.state, reason.isRetryable else { return }
+        guard !pendingRemovals.contains(id), var entry = entries[id],
+              case .failed(let reason) = entry.state, reason.isRetryable else { return }
         entry.state = .waiting
         entries[id] = entry
         advance()
@@ -225,7 +228,7 @@ final class UploadQueueStore {
     /// 「重試這 N 張」——只重試可重試的失敗列，不動 LS002（`design/littlesprout.pen`
     /// Handoff Notes `hD3dH`：「只重試可重試的（不含 LS002）」）。
     func retryAllRetryable() {
-        for id in order {
+        for id in order where !pendingRemovals.contains(id) {
             guard var entry = entries[id], case .failed(let reason) = entry.state, reason.isRetryable else { continue }
             entry.state = .waiting
             entries[id] = entry
@@ -391,10 +394,7 @@ final class UploadQueueStore {
         }
     }
 
-    // `acquireVideoExportSlot()`／`releaseVideoExportSlot()`／`runVideoPreparer(_:)` 見
-    // `UploadQueueStore+VideoExportSlot.swift`；`cancelPendingImportItems(_:)` 見
-    // `UploadQueueStore+ImportCancellation.swift`；`PreviewSeed`／`seedForPreview`／
-    // `debugPayload`／`debugForcePayloadNil` 見 `UploadQueueStore+Preview.swift`（LS-304：
-    // 三支都是為了讓 `UploadQueueStore.swift` 自己留在 SwiftLint `file_length` 上限內才拆出去，
-    // 不是行為分界）。
+    // 拆檔（SwiftLint `file_length`）：`acquireVideoExportSlot()`／`runVideoPreparer(_:)` 見 `+VideoExportSlot.swift`；
+    // `cancelPendingImportItems(_:)` 見 `+ImportCancellation.swift`；`markRemoved`／`commitRemovals` 見
+    // `+RemoveFailed.swift`；`PreviewSeed`／`seedForPreview`／`debug*` 見 `+Preview.swift`（皆非行為分界）。
 }
