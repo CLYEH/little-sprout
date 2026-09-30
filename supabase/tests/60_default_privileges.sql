@@ -98,7 +98,10 @@ declare
     'private.family_is_active(uuid)',
     -- LS-408：albums_update 的孤兒相簿分支（owner 接手編輯）以 authenticated 身分求值
     -- 時呼叫，同其餘集合函式的理由。
-    'private.owned_family_member_pairs()'
+    'private.owned_family_member_pairs()',
+    -- LS-409：albums_update 的孤兒相簿分支改呼叫這支（取代直接呼叫上面的 pairs helper），
+    -- 同樣以 authenticated 身分求值。
+    'private.owned_orphan_album_ids()'
   ];
   v_exceptions text[] := array[]::text[];  -- 目前無例外；若新增，必須附理由註解
   v_allow_oids oid[];

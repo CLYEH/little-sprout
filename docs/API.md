@@ -74,7 +74,7 @@
 | `child_food_records`（LS-325） | 我所屬家庭**未刪**的飲食圖鑑記錄（每寶貝每食物一筆「第一次吃到」） | owner／member（`author_id` 必須是自己）；建議走 `upsert_child_food_record` RPC（自然鍵 upsert，見 §4） | 僅內容欄位（`first_tried_on`／`media_id`／`note`／`reaction`），**僅原作者本人**（owner 不在這條路徑，同 `growth_records`） | 🔒 **無直接 DELETE 路徑**；軟刪唯一路徑是 `delete_child_food_record` RPC（作者本人，或該家庭 owner） | 權限模型逐字沿用 `growth_records`（見 §3）；同一寶貝同一食物最多一筆未軟刪紀錄（partial unique index），軟刪後可再新增；時間軸產生 `food_first` 卡片，見 §3「`feed_items`」／§4 `get_family_timeline`。**`updated_at` 自 LS-337 起同 `growth_records`，由共用的 `private.touch_updated_at()` trigger 強制 `now()`** |
 | `media` | 我所屬家庭**尚未軟刪**的檔案中繼資料，**上傳者自己的例外**——不論是否已軟刪都看得到自己上傳的列（`deleted_at is null or uploaded_by = auth.uid()`，LS-155 R2 起；與 `children` 全員可見已軟刪列的例外不同，這裡只有上傳者本人是例外，見 §3「`media_select` 過濾」段落的已知殘留缺口） | 有上傳權者（`uploaded_by` 必須是自己） | 僅 `taken_at`／`deleted_at`／`width`／`height` 四欄；owner 任意列，上傳者僅自己上傳的**且當下仍有上傳權** | **文件承諾「owner 任意列」，實際只對 owner 自己上傳的列與尚未軟刪的別人的列成立**（一般刪除走 `deleted_at`）——owner 對「別人上傳、已軟刪」的列直接 `DELETE` 會因為 R2 的 `media_select` 把該列藏起來而**靜默影響 0 列**（LS-155 R2 review m1 實測，見 §3 殘留缺口段落）；真正的 owner moderation 請走 `remove_content_as_owner('media', id)`（`SECURITY DEFINER`，不受這個限制） | `byte_size`／`storage_path`／`family_id`／`uploaded_by`／`thumb_path`／`thumb_width`／`thumb_height`（LS-128）／`duration_seconds`（LS-134）一旦寫入不可改；`can_upload` 被 owner 關掉後，非 owner 的原上傳者連軟刪除自己的照片都會被拒（`42501`），見 §3；寶貝標記唯一路徑是 `set_media_children`／`set_media_children_batch` RPC（見下 `media_children` 列與 §4）；**`created_at` 自 LS-337 起欄位級 INSERT grant 已排除**（伺服器專屬，見 §3） |
 | `media_children`（LS-317） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_media_children`／`set_media_children_batch`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（同上，直接 DELETE 已被 revoke） | 照片／影片 ↔ 孩子多對多標記，沿 `album_children`（LS-121）先例；`media` 本身沒有 hybrid 模式，授權門檻是「上傳者本人且當下仍有上傳權，或該家庭 owner」（同 `media_update` policy，不是建立者分支），見 §8 |
-| `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己；**`created_at` 自 LS-337 起欄位級 INSERT grant 已排除**，伺服器專屬，見 §3） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`（**LS-408：作者離開家庭〔刪帳號／被移除〕後，該家庭 owner 可接手改孤兒相簿；作者仍在時只有作者可改**）；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對「作者仍在家庭」的別人相簿內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8。**作者刪帳號後相簿保留（LS-401）**：`delete_my_account()` 不再軟刪呼叫者建立的相簿（家庭相簿是共有物）；`created_by` 之後不再是任何家庭成員（`auth.users` 刪除後因 `on delete set null` 變 `NULL`）＝孤兒相簿：標題／封面自 LS-408 起由該家庭 owner 接手（`albums_update` 孤兒分支），寶貝標記（`set_album_children`）仍無人可編輯，owner 另可 `set_album_deleted`，見 §3「albums」與 §4 `delete_my_account()` |
+| `albums` | 我所屬家庭的相簿 | owner／member（`created_by` 必須是自己；**`created_at` 自 LS-337 起欄位級 INSERT grant 已排除**，伺服器專屬，見 §3） | 🔀 **混合模式（LS-52；LS-57 R2 起範圍限縮；LS-121 起 `child_id` 移出本表）**：內容（title／cover_media_id）僅建立者本人直接 `.update()`（**LS-408：作者離開家庭〔刪帳號／被移除〕後，該家庭 owner 可接手改孤兒相簿；作者仍在時只有作者可改**）；`deleted_at`／`deleted_by`／`family_id` 三欄自 LS-57 R2 起對 `authenticated` 已無 UPDATE 欄位級 grant，唯一路徑是 `set_album_deleted` RPC；寶貝標記唯一路徑是 `set_album_children` RPC（見 §4） | owner-only | Viewer 不可建立相簿；owner 對「作者仍在家庭」的別人相簿內容**沒有**直接 `.update()` 路徑——見 §3「為什麼 albums／comments／diaries 曾經、現在用了不同的寫入模型」；`album_children`（見下）任何一列的 `child_id` 指向一個已軟刪的孩子時 INSERT 皆拿 `LS044`，見 §8。**作者刪帳號後相簿保留（LS-401）**：`delete_my_account()` 不再軟刪呼叫者建立的相簿（家庭相簿是共有物）；`created_by` 之後不再是任何家庭成員（`auth.users` 刪除後因 `on delete set null` 變 `NULL`）＝孤兒相簿：標題／封面自 LS-408 起由該家庭 owner 接手（`albums_update` 孤兒分支），寶貝標記（`set_album_children`）自 LS-409 起同樣由該家庭 owner 接手，owner 另可 `set_album_deleted`，見 §3「albums」與 §4 `delete_my_account()` |
 | `album_media` | 同上 | owner／member | owner／member | owner／member | 連結表自帶 `family_id`，policy 不必 join 回 `albums` |
 | `album_summaries`（LS-200，view） | 我所屬家庭的相簿，逐列多帶 `visible_media_count`／`latest_media_id`／`latest_thumb_path`／`latest_storage_path`／`cover_thumb_path`／`cover_storage_path` 六個彙總欄——只算呼叫者依 RLS 看得到的 media | ❌ 沒有寫入語意（view，無 INSERT grant） | ❌ 同上 | ❌ 同上 | `security_invoker=true`，`albums_select`／`album_media_select`／`media_select` 三條既有 policy 逐使用者生效，取代 client 端 `album_media(count)` 內嵌 aggregate 的連結列計數口徑（LS-165 R2）；**欄位於 `CREATE VIEW` 當下凍結**，`albums` 加欄需重建 view 才會補上，見 §3「albums / diaries」 |
 | `album_children`（LS-121） | 我所屬家庭，任一角色（含 viewer） | 🔒 **RPC-only**（`set_album_children`，直接 INSERT 已被 revoke） | 🔒 **無 UPDATE 語意**——覆蓋是同一交易內先刪後插，不是對既有列 UPDATE | 🔒 **RPC-only**（`set_album_children`，直接 DELETE 已被 revoke） | 相簿 ↔ 孩子多對多標記，取代舊版 `albums.child_id` 單一欄位；見 §8 |
@@ -768,8 +768,9 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
     「寫入路徑小結」的例外說明）。這兩欄不受下面的欄位級
     grant 收斂影響，維持 LS-52 定案的 hybrid 模式。寶貝標記（`album_children`）
     是獨立的第三條路徑，唯一入口是 `set_album_children` RPC（見 §4），授權門檻
-    跟內容欄位的建立者分支一致（仍是該家庭 owner/member 的建立者本人），不是
-    owner 的移除／還原權限。
+    跟內容欄位一致：仍是該家庭 owner/member 的建立者本人，**或（LS-409）該家庭 owner
+    對孤兒相簿**（孤兒判定與 `albums_update` 同一來源）；不是 owner 對「作者仍在」
+    別人相簿的通用權限。
   - **作者刪帳號後的孤兒相簿（LS-401）**：`delete_my_account()` 不再軟刪呼叫者
     建立的相簿（使用者 2026-09-29 裁決：家庭相簿是共有物，作者離開不帶走容器；
     見 §4）。相簿留下之後 `created_by` 不再是該家庭任何成員：離開家庭當下仍指向
@@ -780,8 +781,13 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
     viewer 的作者仍在 `family_members`，不算孤兒）；該家庭 owner 可直接 `.update()`
     title／cover_media_id（欄位範圍仍是既有欄位級 grant，改不到 `created_by`／
     `deleted_at`），非 owner 成員與他家 owner 仍是靜默 0 列。作者仍在家庭時 owner
-    不得改（既有契約不變）。`set_album_children`（寶貝標記，建立者本人限定）**不在
-    LS-408 範圍、對孤兒相簿仍無人可用**；不做相簿所有權轉移。仍可用的：owner 的
+    不得改（既有契約不變）。**LS-409：`set_album_children`（寶貝標記）同批放行
+    owner-on-orphan**——授權＝建立者本人（仍是 owner/member）**或**該相簿在
+    `private.owned_orphan_album_ids()`（呼叫者是 owner 的未停權家庭內的孤兒相簿；
+    `albums_update` 的孤兒分支與 RPC 共用這支函式，孤兒判定只有這一處定義），
+    owner 因此可在孤兒相簿同一次送出改標題＋改標記皆成功；作者仍在家庭、
+    作者被降級成 viewer、非 owner 成員、他家 owner、停權／停用家庭的 owner 仍是
+    `LS045`。不做相簿所有權轉移。仍可用的：owner 的
     `set_album_deleted`（軟刪／還原）、
     任一 owner／member 對 `album_media` 的增刪（連結列不動，掛在裡面的其他人的
     照片照常顯示；作者自己上傳的照片已由 `delete_my_account()` 軟刪）。
@@ -1480,10 +1486,12 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `s1_delete.sql` 兩組（作者改 `title`、owner 軟刪同時發生）。
 
 ### `set_album_children(p_album_id uuid, p_child_ids uuid[]) -> void`（LS-121，新增）
-- **誰能呼叫**：**建立者本人，且必須現在仍是該家庭的 owner/member**——跟內容欄位
-  （title／cover_media_id）的直接 `.update()` 授權門檻一致（見 §3 `albums` 段），
-  不是 `set_album_deleted` 那種「owner 也能對別人的相簿做」的移除／還原權限：
-  標記孩子屬於「內容」，不是「移除」。
+- **誰能呼叫**：**建立者本人，且必須現在仍是該家庭的 owner/member**；**作者離開後
+  （相簿為孤兒，LS-409）該家庭 owner 也可呼叫**——跟內容欄位（title／cover_media_id）
+  的直接 `.update()` 授權門檻一致（見 §3 `albums` 段，孤兒判定與 `albums_update`
+  同一來源 `private.owned_orphan_album_ids()`），不是 `set_album_deleted` 那種
+  「owner 也能對別人的相簿做」的移除／還原權限：標記孩子屬於「內容」，不是「移除」；
+  作者仍在家庭（含被降級成 viewer）時 owner 呼叫仍 `LS045`。
 - **用途**：設定一本相簿的寶貝標記，唯一能寫 `album_children` 的路徑（直接
   `.insert()`/`.delete()` 對 `authenticated` 一律 `42501`，見 §3）。
 - **語意**：**全覆蓋**（PUT，不是逐一新增／移除）——`p_child_ids` 為 `NULL` 或
@@ -1501,7 +1509,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   （軟刪期間可能已經改過）的集合重新展開，不是還原成軟刪前的舊集合。
 - **錯誤碼**：未登入 `42501`；相簿不存在 `LS023`（跟 `set_album_deleted` 共用同一
   個碼，語意一致：「相簿不存在」）；不是建立者本人、或雖是建立者但已不是該家庭
-  owner/member `LS045`（LS-121 新碼）；`p_child_ids` 任一元素跨家庭 `23503`；
+  owner/member，且不是「孤兒相簿的該家庭 owner」（LS-409）`LS045`（LS-121 新碼）；`p_child_ids` 任一元素跨家庭 `23503`；
   任一元素指向一個已軟刪的孩子 `LS044`（`album_children` 的 `BEFORE INSERT`
   trigger，見 §8）。
 - **併發**：對目標相簿列用 `FOR UPDATE` 鎖住，`album_children` 的「刪多補少」在
@@ -2194,7 +2202,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
      因 FK `on delete set null` 變 `NULL`，client 解碼需容忍 `NULL`），建立者分支
      不再成立；**自 LS-408 起該家庭 owner 可接手編輯標題／封面**（`albums_update`
      孤兒分支，作者仍在家庭時不適用，見 §3「albums」），寶貝標記
-     （`set_album_children`，建立者本人限定）仍無人可編輯；owner 另可
+     （`set_album_children`）自 LS-409 起同樣由 owner 接手；owner 另可
      `set_album_deleted` 軟刪／還原，任一 owner／member 仍可增刪 `album_media`。
      本 RPC 本身未改動。情況 2 不受影響（唯一成員的家庭整個 cascade，相簿隨
      家庭硬刪）。**`media`（LS-155，R2 訂正範圍）**：呼叫者上傳的每一張仍存在的
@@ -2455,7 +2463,7 @@ Swift 端 `LSErrorCode`（`LittleSprout/Errors/AppError.swift`）逐碼列舉本
 | `LS042` | 不是仍是該家庭 owner/member 的成員，無法編輯孩子檔案 | `update_child` |
 | `LS043` | 孩子檔案已被移除超過 30 天，無法還原 | `set_child_deleted`（`p_deleted = false`） |
 | `LS044` | 寶貝已移除，無法歸屬新內容 | `diary_children`／`album_children` 的 `BEFORE INSERT` trigger（LS-121 起搬到連結表；原本掛在 `diaries`／`albums` 本體，見 §8）——`create_diary_entry`／`update_diary_entry`／`set_album_children`（`p_child_ids` 任一元素指向已軟刪的孩子）皆可能撞到，這是這支 trigger 唯一會被觸發的路徑（`diary_children`／`album_children` 對 `authenticated` 沒有任何直接寫入 grant，見 §2／§3，不存在繞過三支 RPC 直接撞到這個碼的呼叫端路徑）；只在真的要新增一列標記時才會觸發，不影響既有標記繼續存在、既有內容繼續軟刪／還原／編輯自己（見 §8）。**`growth_records`（LS-255 R2，merge-review R1 m2 登記）**：`growth_records` 的 `BEFORE INSERT/UPDATE` 也掛了同一支共用函式 `private.enforce_child_not_deleted()`——`upsert_growth_record` 的新增分支若 `p_child_id` 指向已軟刪的孩子會撞到；更新分支從不改 `child_id`（欄位級 grant 未開放），這支 trigger 對更新分支恆為 no-op。**`child_food_records`（LS-325）**：同樣掛了 `private.enforce_child_not_deleted()`（`BEFORE INSERT/UPDATE`）——但跟 `growth_records` 不同，`upsert_child_food_record` 唯一的寫入路徑是 `INSERT ... ON CONFLICT DO UPDATE`，`BEFORE INSERT` trigger 對提議列求值、不論最後落地成新增還是撞衝突轉更新都會觸發：`p_child_id` 指向已軟刪的孩子時，新增分支與編輯既有紀錄的衝突轉更新分支**都**會撞到，不是 no-op（merge-review R1 m1 登記，訂正原先誤寫的「恆為 no-op」） |
-| `LS045` | 不是相簿建立者本人，或雖是建立者但已不是該家庭 owner/member，無法設定寶貝標記 | `set_album_children`（LS-121） |
+| `LS045` | 不是相簿建立者本人，或雖是建立者但已不是該家庭 owner/member，且不是孤兒相簿的該家庭 owner（LS-409），無法設定寶貝標記 | `set_album_children`（LS-121） |
 | `LS050` | 你是家庭的唯一 owner，且家庭還有其他成員，須先轉移 owner 身份才能刪除帳號——`DETAIL` 帶 JSON 陣列列出全部需要轉移的家庭（`[{"family_id","family_name"}, ...]`），見 §4 `delete_my_account` | `delete_my_account`（LS-143） |
 | `LS051` | 帳號已請求刪除（`deletion_requested_at` 非 `NULL`），過渡期間不能再建立新資料——沒有輸入可換，只能等 Edge Function `delete-account` 完成刪除 | `families`／`family_members`／`media`／`diaries`／`albums`／`children`／`comments` 的 `BEFORE INSERT` trigger（`private.enforce_account_not_deletion_requested()`，LS-151），涵蓋直接 `.insert()` 與 `create_child`／`create_diary_entry`／`create_comment`／`approve_join`／建立新家庭自動寫入 owner 等 RPC 路徑，見 §2「過渡期擋寫」。**`child_food_records`（LS-325，merge-review R2-m1 登記）**：同樣掛了 `private.enforce_account_not_deletion_requested()`（`BEFORE INSERT`），但跟本列其餘表不同——`upsert_child_food_record` 的更新分支是 `INSERT ... ON CONFLICT DO UPDATE`，trigger 對提議列求值、衝突與否都會觸發，已申請刪帳的作者編輯既有紀錄一樣會撞這個碼，不是只擋新增（見 §3） |
 | `LS052` | 這個帳號已被暫停使用，請聯絡我們 | `profiles.suspended_at` 非 `NULL`（Dashboard 手動停權，PLAN §10-B，LS-179）時：(a) `private.enforce_not_suspended()`——掛在 `family_members`／`invites`／`children`／`media`／`albums`／`album_media`／`diaries`／`diary_media`／`diary_children`／`album_children`／`comments`／`reactions`／`content_reports`／`blocked_users`／`join_requests`／`growth_records`（LS-255）／`child_food_records`（LS-325）十七張表的 `BEFORE INSERT/UPDATE/DELETE`，涵蓋直接 `.insert()`/`.update()`/`.delete()` 與全部 `SECURITY DEFINER` RPC（trigger 不受 `SECURITY DEFINER` 影響——**`delete_my_account()` 是唯一的例外**，R2 見 §4，永遠豁免這個檢查）；(b) `private.enforce_caller_not_suspended_for_families()`——`families` 的 `BEFORE INSERT`（自建新家庭）；(c) `list_join_requests`／`get_my_join_request`／`list_comments` 三支唯讀 `SECURITY DEFINER` RPC 各自的明確檢查（這三支沒有寫入、又繞過 RLS 讀，前兩種機制都碰不到）。**讀取（SELECT）與 Storage 簽名上傳**：透過 `private.family_ids()`／`owned_family_ids()`／`contributor_family_ids()`／`uploadable_family_ids()` 四支集合函式收斂，停權者這四個集合皆為空，對應的 `_select` policy 與 `storage.objects` 四條 policy 靜默回 0 列／`42501`，不會有 `LS052`（RLS 違反沒有自訂碼這條路）；`content_reports_select`／`join_requests_select`／`families_select` 的「自己那一支」分支（R2 訂正，見 §3）也已補上同一組排除 |
