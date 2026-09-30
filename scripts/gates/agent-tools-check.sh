@@ -197,6 +197,8 @@ qa|禁派 fork|LS-254：fork 繼承整份派工單、會把它當自己的任務
 dead-code-sweeper|禁派 fork|LS-254／LS-256：fork 繼承整份派工單、會把它當自己的任務平行執行；tools 白名單無 Agent，需要並行回報 orchestrator 拆派（六份定義中原唯一未釘的一份）
 ui-designer|editId 成功套用後即失效|LS-264（LS-96 池項 c1b67f93）：Pencil execute 的 edits/editId 只在上一次呼叫失敗的重試視窗內有效，分批每批都要重送 snippet 全文；只要 tree_hash 的輪次改送 hash-only snippet
 visual-reviewer|editId 成功套用後即失效|LS-264（LS-96 池項 c1b67f93）：Pencil execute 的 edits/editId 只在上一次呼叫失敗的重試視窗內有效，分批重掃每批都要重送 snippet 全文；只要 tree_hash 的輪次改送 hash-only snippet
+ui-designer|一次 execute 只回一段|LS-377 R2（merge-review M1）：pen-snapshot-dump.js 依位元組預算分段後一次 execute 只回一段；步驟②沒寫續跑迴圈，下一張票照舊說明只送一次就拿到部分快照（node 端 parseSnapshotDump 也會驗缺段，這句是前饋）
+visual-reviewer|一次 execute 只回一段|LS-377 R2（merge-review M1）：同 ui-designer——重掃走快照模式時要知道 dump 是分段續跑、缺段 node 端會報錯
 merge-reviewer|shell 自測在 ubuntu:24.04 通道跑 ≥10 次|LS-270（LS-96 池項 d4c1add5(c)）：BSD-GNU 差異有一整類是機率性的（pipefail 下的 grep -q 管線在 ubuntu 20 次紅 14 次、macOS 永遠綠），macOS 跑一次綠不算驗過，重放要在 ubuntu:24.04 容器跑 ≥10 次並記錄紅幾次
 merge-reviewer|UITest mutation 重放要看失敗點／時間軸是否隨 mutation 改變|LS-270（LS-96 池項 3e9347c4(5)）：xcodebuild 可能沒把改動編進 UITest bundle，只看 exit code 會把舊 bundle 的紅／假綠當成重放結果，要比對 xcresult 的失敗方法／行號／時間軸有沒有跟著 mutation 移動
 merge-reviewer|macOS 沒有 timeout 指令|LS-270（LS-96 池項 8a946ea2(3)）：timeout 600 xcodebuild … 在 macOS exit 127＝整個測試沒跑過，卻容易被讀成「跑完沒事」（LS-266 R2 實例）；改用 gtimeout（先 command -v 確認）或 XCTest 看門狗

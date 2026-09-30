@@ -1192,10 +1192,71 @@ ok("LS-289 parseSnapshotDump：純 JSON 陣列與 SNAP<n> 行格式（行序不�
   const wantNodes = FIX.map((n) => ({ id: n.id, name: n.name, parent: n.parent, type: n.type, ref: n.ref == null ? undefined : n.ref, enabled: !!n.enabled, clip: !!n.clip, image: !!n.image, x: n.x, y: n.y, w: n.w, h: n.h }));
   assert.deepStrictEqual(M.parseSnapshotDump(JSON.stringify(rows)), wantNodes, "純 JSON 陣列（snap-r2.json／snap-r3.json 的形狀）");
   const half = Math.ceil(rows.length / 2);
-  const dumpText = "SNAP2 " + JSON.stringify(rows.slice(half)) + "\n（不相干的雜訊行，parser 應忽略）\nSNAP1 " + JSON.stringify(rows.slice(0, half)) + "\n";
+  const doneLine = (lo, next, skip, of, nrows, from) => "SNAP-DONE roots=[" + lo + "," + next + ") next=" + next + " skip=" + skip + " of=" + of + " total_rows=" + nrows + " bytes=1 from=" + from;
+  const dumpText = "SNAP2 " + JSON.stringify(rows.slice(half)) + "\n（不相干的雜訊行，parser 應忽略）\nSNAP1 " + JSON.stringify(rows.slice(0, half)) + "\n" + doneLine(0, 1, 0, 1, rows.length, 0) + "\n";
   assert.deepStrictEqual(M.parseSnapshotDump(dumpText), wantNodes, "SNAP<n> 行格式：SNAP2 排在 SNAP1 前面、中間夾雜噪音行，parser 只認前綴、依編號串接不受順序影響");
   assert.throws(() => M.parseSnapshotDump("既不是 JSON 也沒有 SNAP 行"), /既不是 JSON 陣列開頭、也找不到/);
   assert.throws(() => M.parseSnapshotDump(JSON.stringify([["only", "six", null, "frame", null, 1]])), /不是 12 欄的節點陣列/);
+});
+
+// LS-377 R2（merge-review M1 a）：dump 依位元組預算分段後，SNAP-DONE 各段必須首尾相接到頂層總數；缺段報錯，不產出部分快照
+const segDump = () => {
+  const rows = toSnapshotRows(FIX);
+  const a = Math.floor(rows.length / 3), b = Math.floor((rows.length * 2) / 3);
+  const done = (lo, next, skip, of, nrows, from) => "SNAP-DONE roots=[" + lo + "," + next + ") next=" + next + " skip=" + skip + " of=" + of + " total_rows=" + nrows + " bytes=1 from=" + from;
+  // 三段：頂層序 [0,2) → [2,5) → 第 5 個頂層節點內從第 4 列續（skip=4）→ 走完（of=6）
+  const segs = [
+    ["SNAP1 " + JSON.stringify(rows.slice(0, a)), done(0, 2, 0, 6, a, 0)],
+    ["SNAP2000001 " + JSON.stringify(rows.slice(a, b)), done(2, 5, 4, 6, b - a, 0)],
+    ["SNAP5000005 " + JSON.stringify(rows.slice(b)), done(5, 6, 0, 6, rows.length - b, 4)],
+  ];
+  return { rows, segs, text: (list) => list.map((x) => x.join("\n")).join("\n") + "\n" };
+};
+
+ok("LS-377 R2 parseSnapshotDump：SNAP-DONE 各段首尾相接（含子樹內 skip 續跑）且最後 next==of → 通過並串回全部列；舊版全量收尾行 `SNAP-DONE total_rows=… batches=…` 仍相容（列數對得上才過）", () => {
+  const { rows, segs, text } = segDump();
+  assert.strictEqual(M.parseSnapshotDump(text(segs)).length, rows.length);
+  const legacy = "SNAP1 " + JSON.stringify(rows) + "\nSNAP-DONE total_rows=" + rows.length + " batches=1\n";
+  assert.strictEqual(M.parseSnapshotDump(legacy).length, rows.length, "舊版收尾行相容");
+  const badLegacy = "SNAP1 " + JSON.stringify(rows.slice(0, 5)) + "\nSNAP-DONE total_rows=" + rows.length + " batches=1\n";
+  assert.throws(() => M.parseSnapshotDump(badLegacy), /舊版 SNAP-DONE 宣告 total_rows=/, "舊版收尾行宣告列數與實際不符");
+});
+
+ok("LS-377 R2 parseSnapshotDump：缺中段、缺尾段、重複貼段、只有 SNAP 行沒有 SNAP-DONE、某段只貼 DONE 沒貼 SNAP 行 → 各自 throw 並指出補跑點", () => {
+  const { segs, text } = segDump();
+  assert.throws(() => M.parseSnapshotDump(text([segs[0], segs[2]])), /沒有首尾相接.*期望下一段從頂層序 2（第 0 列）起.*實際找到的段起點是 5（第 4 列）/, "缺中段");
+  assert.throws(() => M.parseSnapshotDump(text([segs[0], segs[1]])), /缺尾段.*SNAP_ROOTS = \[5, ∞\]、SNAP_SKIP = 4/, "缺尾段");
+  assert.throws(() => M.parseSnapshotDump(text([segs[0], segs[1], segs[1], segs[2]])), /沒有首尾相接/, "重複貼段");
+  assert.throws(() => M.parseSnapshotDump(text(segs.map((x) => [x[0]]))), /找不到任何 `SNAP-DONE` 行/, "只有 SNAP 行");
+  assert.throws(() => M.parseSnapshotDump(text([segs[0], [segs[1][1]], segs[2]])), /total_rows 加總/, "某段只貼 DONE 沒貼 SNAP 行");
+  assert.throws(() => M.parseSnapshotDump(text([segs[1], segs[2]])), /沒有首尾相接.*期望下一段從頂層序 0（第 0 列）起/, "缺首段");
+});
+
+ok("LS-377 R2 mutation：把連續性檢查拿掉（`d.lo !== cursorRoot || d.from !== cursorSkip` 改恆假）→ 缺中段的部分 dump 被靜默收下——「缺中段」斷言轉紅，證明檢查在這一行", () => {
+  const src = require("fs").readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
+  const needle = "d.lo !== cursorRoot || d.from !== cursorSkip";
+  assert.ok(src.includes(needle), "夾具前提：原始碼含連續性判斷");
+  const tmp = path.join(require("os").tmpdir(), "overflow-scan-mut-" + process.pid + ".js");
+  require("fs").writeFileSync(tmp, src.replace(needle, "false"));
+  try {
+    const Mut = require(tmp);
+    const { segs, text } = segDump();
+    const nodes = Mut.parseSnapshotDump(text([segs[0], segs[2]])); // 缺中段
+    assert.ok(nodes.length > 0, "變異版收下了缺中段的 dump（原版會 throw「沒有首尾相接」）");
+  } finally { require("fs").unlinkSync(tmp); }
+});
+
+ok("LS-377 R2 mutation：把缺尾段檢查拿掉（`cursorRoot !== of || cursorSkip !== 0` 改恆假）→ 只貼前兩段的 dump 被收下——「缺尾段」斷言轉紅", () => {
+  const src = require("fs").readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
+  const needle = "cursorRoot !== of || cursorSkip !== 0";
+  assert.ok(src.includes(needle), "夾具前提：原始碼含缺尾段判斷");
+  const tmp = path.join(require("os").tmpdir(), "overflow-scan-mut2-" + process.pid + ".js");
+  require("fs").writeFileSync(tmp, src.replace(needle, "false"));
+  try {
+    const Mut = require(tmp);
+    const { segs, text } = segDump();
+    assert.ok(Mut.parseSnapshotDump(text([segs[0], segs[1]])).length > 0, "變異版收下了缺尾段的 dump");
+  } finally { require("fs").unlinkSync(tmp); }
 });
 
 ok("LS-289 in-Pencil 路徑 vs snapshot 路徑：同一份 FIX 快照，scanAll 直接跑（in-Pencil）與 --from-snapshot CLI 讀陣列 dump 重建節點再跑（snapshot），六支 result_hash＋tree_hash 逐位元相同——scope=boards（沿用 FIX_OPTS）與 scope=document（不給 --boards）都驗；scan_note 帶「snapshot mode，dump sha256=<dump 檔內容的 sha256>」", () => {

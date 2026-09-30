@@ -1087,7 +1087,7 @@ function extractBatchJson(text, name) {
 }
 
 // ---- LS-289：--from-snapshot（讀 scripts/design/pen-snapshot-dump.js 的唯讀快照 dump，跑未修改的 scanAll）----
-// dump 兩種格式（與 pen-snapshot-dump.js 檔頭「取回」段同規格，parser 與既有 vr-scan.js／vr-scan2.js 一致）：
+// dump 兩種格式（與 pen-snapshot-dump.js 檔頭「取回」段同規格，parser 與既有 vr-scan.js／vr-scan2.js 一致；LS-377 R2：② 另驗 SNAP-DONE 各段首尾相接）：
 //   ① 純 JSON 陣列：整份檔案就是 rows 陣列（pen-snapshot-dump.js 落地檔、或既有 snap-r2.json／snap-r3.json 的形狀）。
 //   ② `SNAP<n> [...]` 行格式：pen-snapshot-dump.js 分批 Print 的原文（含其他行也沒關係，parser 只挑這個前綴），
 //      n 不拘順序，把各行的陣列依序串接。
@@ -1104,14 +1104,42 @@ function parseSnapshotDump(text) {
     // 檔案時，物理行序不一定與 n 一致，節點順序影響同一父節點下兄弟的相對序（sibling_intersection 的配對序、
     // text_occlusion 的 z-order），排序後才能保證與 Pencil 端印出的順序（＝pre-order／繪製順序）一致。
     const segs = [];
+    const dones = [];
+    let legacyRows = null;
     for (const line of t.split("\n")) {
-      const m = /^SNAP(\d+)\s+(\[.*\])\s*$/.exec(line.trim());
-      if (m) segs.push([Number(m[1]), JSON.parse(m[2])]);
+      const tl = line.trim();
+      const m = /^SNAP(\d+)\s+(\[.*\])\s*$/.exec(tl);
+      if (m) { segs.push([Number(m[1]), JSON.parse(m[2])]); continue; }
+      const d = /^SNAP-DONE roots=\[(\d+),(\d+)\) next=(\d+) skip=(\d+) of=(\d+) total_rows=(\d+) bytes=\d+ from=(\d+)\s*$/.exec(tl);
+      if (d) { dones.push({ lo: Number(d[1]), next: Number(d[3]), skip: Number(d[4]), of: Number(d[5]), rows: Number(d[6]), from: Number(d[7]) }); continue; }
+      const ld = /^SNAP-DONE total_rows=(\d+) batches=\d+\s*$/.exec(tl); // LS-377 之前的全量 dump 收尾行
+      if (ld) legacyRows = (legacyRows || 0) + Number(ld[1]);
     }
     if (!segs.length) throw new Error("overflow-scan --from-snapshot：dump 既不是 JSON 陣列開頭、也找不到任何 `SNAP<n> [...]` 行（scripts/design/pen-snapshot-dump.js 的輸出格式）");
     segs.sort((a, b) => a[0] - b[0]);
     rows = [];
     for (const [, arr] of segs) for (const r of arr) rows.push(r);
+    // LS-377 R2（merge-review M1 a）：dump 依位元組預算分段後，只貼一段也解析得動、掃描照樣出收據——但只涵蓋部分稿。
+    // 必須看到各段的 SNAP-DONE 且首尾相接到頂層總數，缺段就報錯（fail loud，不產出部分快照的收據）。
+    if (legacyRows != null && !dones.length) {
+      if (legacyRows !== rows.length) throw new Error("overflow-scan --from-snapshot：舊版 SNAP-DONE 宣告 total_rows=" + legacyRows + "，但 dump 實際只有 " + rows.length + " 列（漏貼 SNAP 行？）");
+    } else {
+      if (!dones.length) throw new Error("overflow-scan --from-snapshot：dump 有 SNAP<n> 行卻找不到任何 `SNAP-DONE` 行——無法確認各段是否完整貼進來（pen-snapshot-dump.js 每段最後一行的 SNAP-DONE 也要一起貼）");
+      dones.sort((a, b) => a.lo - b.lo || a.from - b.from);
+      let cursorRoot = 0, cursorSkip = 0;
+      for (const d of dones) {
+        if (d.lo !== cursorRoot || d.from !== cursorSkip) {
+          throw new Error("overflow-scan --from-snapshot：dump 各段沒有首尾相接——期望下一段從頂層序 " + cursorRoot + "（第 " + cursorSkip + " 列）起，實際找到的段起點是 " + d.lo + "（第 " + d.from + " 列）；缺段或重複貼段，請依 SNAP-DONE 的 next／skip 補跑漏掉的段");
+        }
+        cursorRoot = d.next; cursorSkip = d.skip;
+      }
+      const of = dones[dones.length - 1].of;
+      if (cursorRoot !== of || cursorSkip !== 0) {
+        throw new Error("overflow-scan --from-snapshot：dump 最後一段停在頂層序 " + cursorRoot + "（skip=" + cursorSkip + "），頂層總數是 " + of + "——缺尾段，請從 SNAP_ROOTS = [" + cursorRoot + ", ∞]、SNAP_SKIP = " + cursorSkip + " 續跑到 next 等於 of");
+      }
+      const declared = dones.reduce((a, d) => a + d.rows, 0);
+      if (declared !== rows.length) throw new Error("overflow-scan --from-snapshot：各段 SNAP-DONE 宣告的 total_rows 加總 " + declared + "，但 dump 實際只有 " + rows.length + " 列（漏貼某段的 SNAP 行？）");
+    }
   }
   if (!Array.isArray(rows)) throw new Error("overflow-scan --from-snapshot：dump 解析結果不是陣列");
   return rows.map((r, i) => {
