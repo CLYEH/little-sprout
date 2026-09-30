@@ -86958,7 +86958,7 @@
                                   "id": "ifQh4",
                                   "name": "Age",
                                   "fill": "$print-ink-secondary",
-                                  "content": "2 歲 3 個月",
+                                  "content": "2 歲 3 個⁠月",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
                                   "fontWeight": "normal"
@@ -97337,7 +97337,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "【LS-403 R2 改寫，取代 R1 版】失敗項退場路徑（回應 OT5n9「失敗項退場：…待 LS-142 補移除動作」）。每張失敗列在錯誤句下方加一條動作列：左＝這一列該做的事（可重試的列「↻ 重試」cmp/Button Text；容量已滿 LS002 列「查看儲存空間」連結），右＝「× 移除」（cmp/Button Text 實例：Text Btn Icon 開啟、lucide x 22（AX3 40）、icon 與 label 皆 $text-secondary 600；內距 上下 $ctl-pad-tap／左 $sp-item／右 0，文字右緣貼齊內容欄右緣；R2 M1：R1 拿掉 icon 後「移除」和群標題同字級同色、看不出能按，改成和「↻ 重試」同一種 icon＋字寫法，層級只靠墨／灰與左／右區分）。「↻ 重試」左內距改 0（R2 m2，icon 左緣對齊內容欄 0，和「查看儲存空間」、錯誤 icon 同一條線；右內距 $sp-tight 維持點擊寬 ≥44）。不做滑動刪除。批次：「沒有成功」群標題列右端「× 移除這 N 張」（N＝未標記移除的 failed 數，含 LS002），failedCount>1 才顯示（同 iIkHT 的理由）。三個數字為何不同（n2）：「重試這 N 張」只算可重試的（LS002 容量已滿重試也不會成功，iIkHT／retryableFailedCount 不計），「移除這 N 張」和標題算全部失敗——LS002 列自己帶「查看儲存空間」，不另寫「重試也不會成功」。續傳橫幅與移除並存（R2 m1）：16c rU2zY 打開橫幅（resumedFromInterruption＝true、inFlight>0，LS-397 回前景重送時最常見的態），727 detent 內第一張失敗列連動作列完整露出，第二列從縮圖到錯誤句露出、下方捲動。板：rU2zY（16c）／p0Fw0（16f 移除後，墓碑列）／KaONe（16d）／FgH6v（16d 深）／sq2SF（16e）／FIwU8（AX3 16c）／ri0AF（AX3 16d）。版位（LS-403 R1）：本段加長 kHDk4 後，ZG2Un／Oic2v／yResD 由 kHDk4 下方平移到 x 18600／19073／19546、y 26800（只平移，內容不動）。版位（LS-403 R3）：kHDk4 再加長（底 31299）後，KjDsM（Stress / 13-iPad）由 y 30619 平移到 y 31400（只平移 y，內容不動）。版位（LS-403 C1a C2a）：Notes 補核可句後 kHDk4 底到 31488，KjDsM 再平移到 y 31600（只平移 y）。",
+              "content": "【LS-403 R2 改寫，取代 R1 版】失敗項退場路徑（回應 OT5n9「失敗項退場：…待 LS-142 補移除動作」）。每張失敗列在錯誤句下方加一條動作列：左＝這一列該做的事（可重試的列「↻ 重試」cmp/Button Text；容量已滿 LS002 列「查看儲存空間」連結），右＝「× 移除」（cmp/Button Text 實例：Text Btn Icon 開啟、lucide x 22（AX3 40）、icon 與 label 皆 $text-secondary 600；內距 上下 $ctl-pad-tap／左 $sp-item／右 0，文字右緣貼齊內容欄右緣；R2 M1：R1 拿掉 icon 後「移除」和群標題同字級同色、看不出能按，改成和「↻ 重試」同一種 icon＋字寫法，層級只靠墨／灰與左／右區分）。「↻ 重試」左內距改 0（R2 m2，icon 左緣對齊內容欄 0，和「查看儲存空間」、錯誤 icon 同一條線；右內距 $sp-tight 維持點擊寬 ≥44）。不做滑動刪除。批次：「沒有成功」群標題列右端「× 移除這 N 張」（N＝未標記移除的 failed 數，含 LS002），failedCount>1 才顯示（同 iIkHT 的理由）。三個數字為何不同（n2）：「重試這 N 張」只算可重試的（LS002 容量已滿重試也不會成功，iIkHT／retryableFailedCount 不計），「移除這 N 張」和標題算全部失敗——LS002 列自己帶「查看儲存空間」，不另寫「重試也不會成功」。續傳橫幅與移除並存（R2 m1）：16c rU2zY 打開橫幅（resumedFromInterruption＝true、inFlight>0，LS-397 回前景重送時最常見的態），727 detent 內第一張失敗列連動作列完整露出，第二列從縮圖到錯誤句露出、下方捲動。板：rU2zY（16c）／p0Fw0（16f 移除後，墓碑列）／KaONe（16d）／FgH6v（16d 深）／sq2SF（16e）／FIwU8（AX3 16c）／ri0AF（AX3 16d）。版位（LS-403 R1）：本段加長 kHDk4 後，ZG2Un／Oic2v／yResD 由 kHDk4 下方平移到 x 18600／19073／19546、y 26800（只平移，內容不動）。版位（LS-403 R3）：kHDk4 再加長（底 31299）後，KjDsM（Stress / 13-iPad）由 y 30619 平移到 y 31400（只平移 y，內容不動）。版位（LS-403 C1a C2a）：Notes 補核可句後 kHDk4 底到 31488，KjDsM 再平移到 y 31600（只平移 y）。版位連帶（LS-403 identity-header）：因平移 KjDsM 被 CI design-identity-header-check 算入觸碰板，順手把該板節點 ifQh4 年齡字串分隔改成 U+00A0／U+00A0／U+00A0／U+2060，與 cmp/Card Diary zk1yE 相同（只改字元）。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
