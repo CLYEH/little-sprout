@@ -117,7 +117,7 @@ ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
 # （設計票在飛時；pen-read.sh 本身也已機械拒跑，見 scripts/ops/pen-read.sh 檔頭 LS-398 段）；那句被刪即紅。
 # LS-352：ios-dev 正文須含 handoff 自檢段標題「## 自檢（依 docs/REVIEW-RUBRIC.md）」（交件前自跑四維度 rubric，逐條附證據；
 # 段落本身由 handoff-evidence-check.sh --require-selfcheck 驗）；那句被刪即紅。
-# LS-352：merge-reviewer 正文須含「自檢已宣告通過的項只抽驗、不重寫」（同句含 informational 只有 P1／P2 記 LS-NEWPOOL 池、P3 不入池、不得要求本 PR 修）；
+# LS-352：merge-reviewer 正文須含「自檢已宣告通過的項只抽驗、不重寫」（同句含 informational 只有 P1／P2 記 LS-413 池、P3 不入池、不得要求本 PR 修）；
 # 那句被刪即紅。
 BODY_RULES=
 # LS-254：五份（ios-dev／ui-designer／visual-reviewer／merge-reviewer／qa）正文須含「禁派 fork」——fork 繼承整份派工單、會把它當
@@ -222,7 +222,7 @@ qa|WDA 會與新 scene 競態、app 被背景化|LS-333（池項 5ec3954d①，�
 qa|鍵盤彈出時會攔截下層按鈕的點擊|LS-333（池項 5ec3954d①，來源 LS-315 QA 實測）：鍵盤顯示中先收鍵盤再點下方按鈕，不要對著被蓋住的區域直接點，那句被刪即紅
 merge-reviewer|四維度檢查項的單一來源是 \`docs/REVIEW-RUBRIC.md\`|LS-352：四維度檢查項（含 LS-333 的分頁過濾游標句 R1.5）移到 docs/REVIEW-RUBRIC.md 單一來源，merge-reviewer.md 只引用、不抄；引用句被刪即紅（rubric 內容本身由 handoff-evidence-check.test.sh 對真檔斷言）
 ios-dev|## 自檢（依 docs/REVIEW-RUBRIC.md）|LS-352：handoff 必含 rubric 自檢段，逐條對 docs/REVIEW-RUBRIC.md 每個 R<n>.<m> 寫通過／不適用／已知未處理＋證據，handoff-evidence-check.sh --require-selfcheck 機械驗；那句被刪即紅
-merge-reviewer|自檢已宣告通過的項只抽驗、不重寫|LS-352：ios-dev 自檢段宣告通過的項只抽驗、不從頭重審；informational 只有 P1／P2 記 LS-NEWPOOL 池、P3 不入池、不得要求本 PR 修，那句被刪即紅
+merge-reviewer|自檢已宣告通過的項只抽驗、不重寫|LS-352：ios-dev 自檢段宣告通過的項只抽驗、不從頭重審；informational 只有 P1／P2 記 LS-413 池、P3 不入池、不得要求本 PR 修，那句被刪即紅
 qa|字級矩陣至少含 xSmall、預設、AX3|LS-346（來源 LS-343 verdict b975e587）：只驗預設與放大會漏掉「比預設小」那端的回歸（LS-343 時間軸 Header 在 390pt 只有 Small／XS 字級破版，與範圍 4 的機型寬度問題是兩件事），那句被刪即紅
 qa|只比 \`design/evidence/\`／visual-reviewer 匯出的 PNG，不跑 pen-read.sh|LS-398（來源 LS-376 R1 m1）：pen-read.sh＝pen-open --force-reload，qa 跑它會把 qa-test 的 .pen 載成 Pen active（LS-349 設計票在飛時 Pen 跑到 qa-test 的根因）；設計票在飛時 qa 對稿只比 VR 匯出 PNG、不跑 pen-read.sh，那句被刪即紅"
 # LS170-BODY-RULES-END

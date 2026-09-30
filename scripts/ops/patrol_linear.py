@@ -15,7 +15,7 @@ stub gh 慣例），不必真的打 Linear。唯一的本機寫入是 `<root>/.c
 LS-144「開票責任」：lane 在飛 0 且無可派候補（無候補，或候補全被擋——`hold:user` 使用者裁決、
 待 Spec／待結構／blockedBy 未解／`需 Design gate` 無核可稿）時，動作清單多印一行
 `→ 開票：lane:<x> 空 n 輪（…）——來源候選：…`（連續空 ≥2 輪升 ⚠），並機械列出來源候選：
-design／ui＝Backlog 中票文含正典標記 `**UI 票：需 Design gate**` 且尚無 lane:design 票承接者；harness＝待辦池項（LS-NEWPOOL；LS-375 起接替 LS-354）
+design／ui＝Backlog 中票文含正典標記 `**UI 票：需 Design gate**` 且尚無 lane:design 票承接者；harness＝待辦池項（LS-413；LS-375 起接替 LS-354）
 `P1 ·`／`P2 ·` 且尚未被任何票引用 comment id 前綴者；backend＝Backlog Story 含後端關鍵字且尚無
 lane:backend 子票者（關鍵字啟發式，只列、不判）。來源候選需要的額外查詢（已結案票、待辦池
 comments）只在有 lane 需要時才打、且 best-effort（查詢失敗只在該行註明，不打掉整份報表，
@@ -51,7 +51,7 @@ BACKLOG_STATES = ("Backlog", "Spec")
 # cycle 對帳 (a) 的「active」定義抄自 §4-b 巡檢 cron 模板本文（狀態名稱，不是 state.type）
 ACTIVE_STATE_NAMES = ("Ready", "In Progress", "In Review", "QA", "Design", "Spec")
 SIZE_RANK = {"size:S": 0, "size:M": 1, "size:L": 2}
-SKIP_ISSUE = "LS-NEWPOOL"  # 常駐待辦池 v3（LS-375 起接替封存的 LS-354、LS-351 起接替 LS-96）：永不列為候補、永不派（§5-b「harness 優先序」）
+SKIP_ISSUE = "LS-413"  # 常駐待辦池 v3（LS-375 起接替封存的 LS-354、LS-351 起接替 LS-96）：永不列為候補、永不派（§5-b「harness 優先序」）
 # LS-144：使用者裁決暫不動的票——補位與開票候選皆跳過並註明「使用者裁決」（§5-b）。
 HOLD_LABEL = "hold:user"
 # LS-351（§5-b「harness 配額」）：lane:harness 每 cycle 開票數 ≤ 該 cycle 總票數 20%（向上取整）。
@@ -61,7 +61,7 @@ HARNESS_QUOTA_PERCENT = 20
 POOL_ARCHIVE_THRESHOLD = 80
 # LS-375（§5-b「入口收斂」）：新池 P3 不入池（P3 改寫 handoff「不修＋理由」）。此時刻＝新池票建立日（UTC）；只算這之後建立的池留言，
 # 封存前的舊池留言（含 P3）不會誤報。
-POOL_NO_P3_SINCE = "2026-09-30T00:00:00.000Z"
+POOL_NO_P3_SINCE = "2026-09-30T02:49:41.465Z"
 # LS-144：Story 票文的正典粗體標記 `**UI 票：需 Design gate**`（LS-19／20／22／24 皆此形）＝沒有核可設計稿不得
 # 實作（CLAUDE.md design gate）。帶此標記的 Backlog 票永不列為候補（實作票是核可後另開的子票，Story 本身不派
 # ——LS-142 驗收段的流程），只作為 design／ui lane 的開票來源。LS-96 池項 b2993155（P1）的機械修法即此條。
@@ -158,7 +158,7 @@ query($teamKey: String!, $states: [String!]) {
 }
 """
 
-# LS-144：待辦池（LS-NEWPOOL）comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
+# LS-144：待辦池（LS-413）comments（分頁 100）——harness lane 開票來源。同 pr-body-check.sh --verify 的查法。
 POOL_COMMENTS_QUERY = """
 query($id: String!, $after: String) {
   issue(id: $id) {
@@ -782,7 +782,7 @@ def count_pool_p3(comments):
 
 
 def pool_sources(comments, all_issues):
-    """(b) harness：待辦池（LS-NEWPOOL）池項 comment 等級為 P1／P2、且尚未升票者。等級＝body 首個 `Pn ·` 與各行首列點
+    """(b) harness：待辦池（LS-413）池項 comment 等級為 P1／P2、且尚未升票者。等級＝body 首個 `Pn ·` 與各行首列點
     `- Pn ·` 的最小級（R2 N1：live 163 則中 8 則是一則多項混級，如 `- P3 ·` 後接 `- P2 ·`，取最小級才不會把真 P2
     藏掉；P3 池項文中段引用「P1 ·」既非首個 match 也不在行首，不升級）。公告（is_pool_announcement()：前 2 行含
     「銷除／銷案／已升票」）整則跳過。「已升票」＝任一票（open 或已結案）的標題／票文含該 comment id 前 8 碼（agent
@@ -820,7 +820,7 @@ def pool_sources(comments, all_issues):
 
 
 # LS-287：pool_sources() 的「已被未封存票 description 引用」是查 Linear 票文；這裡再補第二層——查 repo
-# 本身（腳本檔頭「來源 LS-96／LS-354／LS-NEWPOOL 池項 <id>」等）是否已經落地實作。兩層互補，都判定為已升票／已落地，
+# 本身（腳本檔頭「來源 LS-96／LS-354／LS-413 池項 <id>」等）是否已經落地實作。兩層互補，都判定為已升票／已落地，
 # 不列為候選（09-15 兩輪列出的 12 候選中 5 個其實 LS-141／180／140／226 已做掉，orchestrator 每輪重複
 # 人工排除）。只查 repo 內會被 agent／人翻閱到的位置，不掃整個 repo（避免誤命中 .pen／二進位或無關檔案）。
 POOL_LANDED_PATHS = ["scripts/", ".github/", "docs/COLLABORATION.md", "docs/PLAN.md", ".claude/agents/"]
