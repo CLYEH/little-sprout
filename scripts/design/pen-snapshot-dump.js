@@ -25,9 +25,12 @@
 //     該頂層節點（序 lo）的前 m 列（仍走訪、累加座標，只是不印），印到預算為止，`SNAP-DONE` 的 `skip=` 告訴下一段從第幾列續。
 //     每段印 `SNAP<k> [...]` 行（一段通常只有一行；k＝lo×1000000＋skip＋段內已印列數＋1，跨段嚴格遞增，node 端 parser
 //     依 k 排序串接時順序仍是 pre-order，見 overflow-scan.js `parseSnapshotDump`），最後一行
-//     `SNAP-DONE roots=[lo,next) next=<下一段起點的頂層序> skip=<下一段 SNAP_SKIP> of=<頂層總數> total_rows=<n> bytes=<b>`。
+//     `SNAP-DONE roots=[lo,next) next=<下一段起點的頂層序> skip=<下一段 SNAP_SKIP> of=<頂層總數> total_rows=<n> bytes=<b> from=<本段 SNAP_SKIP>`。
 //     呼叫端迴圈：lo=0、skip=0 → 跑一段 → 讀 `next`／`skip` 當下一段的 `SNAP_ROOTS = [next, ∞]`／`SNAP_SKIP` → 直到
-//     `next` 等於 `of`；各段的 `SNAP<k>` 行全部貼進同一個 dump 檔。
+//     `next` 等於 `of`（且 `skip=0`）；各段的 `SNAP<k>` 與 `SNAP-DONE` 行**全部**貼進同一個 dump 檔。
+//     **node 端會驗**（overflow-scan.js `parseSnapshotDump`，LS-377 R2）：各段 `SNAP-DONE` 的起點（`roots=[lo,…)`＋`from=`）必須
+//     首尾相接、從 (0,0) 起、最後一段 `next==of` 且 `skip=0`、各段 `total_rows` 加總等於實際貼進來的列數——缺中段／缺尾段／
+//     漏貼 SNAP 行一律報錯 exit 非 0，不會產出只涵蓋部分稿的收據。**沒帶 `SNAP_ROOTS` 只會得到第一段**（不再是舊版的全量）。
 //     `SNAP_ROOT_COUNT_ONLY = true`：只印 `SNAP-ROOT-COUNT n=<頂層總數>`（不走訪子樹）。
 //     **單段 interrupted 的處置（上限 3 次）**：同一個 lo 把 `SNAP_MAX_BYTES` 對半重跑（50000→25000→12500→6250），
 //     第 4 次仍 interrupted 就停下回報（不得再縮；那是環境問題——先 `open -a Pen` 置前景再試，見下）。
@@ -53,6 +56,12 @@
 
 if (typeof Get !== "function" || typeof Print !== "function") {
   throw new Error("pen-snapshot-dump：只能當 Pencil execute snippet 跑（沒有全域 Get／Print，這裡是 node 或其他環境）");
+}
+
+// LS-377 R2（merge-review M1 d）：舊版依列數切批的 `SNAP_BATCH_ROWS` 已不再支援——靜默忽略會讓呼叫端以為自己拿到全量，
+// 實際只回第一段。明確拒絕（Pencil execute 沙盒沒有 process.exit，拋錯即 execute 失敗＝fail loud）。
+if (typeof SNAP_BATCH_ROWS !== "undefined") {
+  throw new Error("pen-snapshot-dump：SNAP_BATCH_ROWS 已不再支援（LS-377 起依位元組預算分段）——改用 SNAP_MAX_BYTES（預設 50000）＋SNAP_ROOTS／SNAP_SKIP 續跑，見本檔檔頭");
 }
 
 function hasImageFill(fill) {
@@ -185,5 +194,5 @@ if (typeof SNAP_ROOT_COUNT_ONLY !== "undefined" && SNAP_ROOT_COUNT_ONLY === true
     batchBytes += rb;
   }
   flush();
-  Print("SNAP-DONE roots=[" + LO + "," + nextRoot + ") next=" + nextRoot + " skip=" + nextSkip + " of=" + rootTotal + " total_rows=" + rows.length + " bytes=" + segBytes);
+  Print("SNAP-DONE roots=[" + LO + "," + nextRoot + ") next=" + nextRoot + " skip=" + nextSkip + " of=" + rootTotal + " total_rows=" + rows.length + " bytes=" + segBytes + " from=" + SKIP);
 }
