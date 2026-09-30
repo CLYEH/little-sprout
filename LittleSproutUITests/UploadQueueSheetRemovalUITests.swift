@@ -53,6 +53,12 @@ final class UploadQueueSheetRemovalUITests: XCTestCase {
                 )
                 let secondRemoveAfter = app.buttons.matching(identifier: QAAccessibilityID.uploadQueueRemove)
                     .element(boundBy: 0).frame
+                let measured = XCTAttachment(string: "\(context) 移除→復原相對群標題鈕的 y："
+                    + "before=\(removeOffset) after=\(undo.frame.minY - anchor.frame.minY)；"
+                    + "下一列 before=\(secondOffsetBefore) after=\(secondRemoveAfter.minY - anchor.frame.minY)")
+                measured.name = "measure-\(context.replacingOccurrences(of: "/", with: "-"))"
+                measured.lifetime = .keepAlways
+                add(measured)
                 XCTAssertEqual(
                     secondRemoveAfter.minY - anchor.frame.minY, secondOffsetBefore, accuracy: 1,
                     "[\(context)] 墓碑列鎖原列高：下一列（原第二顆「移除」）位置不動"
