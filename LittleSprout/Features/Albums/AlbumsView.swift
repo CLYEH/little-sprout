@@ -231,6 +231,9 @@ struct AlbumsView: View {
             AlbumSummaryCardView(album: album, taggedChildren: taggedChildren(for: album), cardWidth: cardWidth)
         }
         .buttonStyle(.plain)
+        // LS-407 R2 M1：`.isImage` 必須掛在 `NavigationLink` 本身。VoiceOver 焦點落在這顆 button，內層
+        // `AlbumSummaryCardView` 的 trait 被吞（reviewer 探針：button traits 只有 button）。有封面才加、占位圖不加。
+        .accessibilityAddTraits(album.cover != nil ? .isImage : [])
     }
 
     private func taggedChildren(for album: AlbumSummary) -> [Child] {

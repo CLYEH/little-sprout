@@ -30,6 +30,8 @@ extension TapTargetGateHarness {
         }
     }
 
+    /// LS-407 R2：首本相簿帶封面（`albumCoverFixtureURL`），其餘占位圖，供 `.isImage` 兩態 UITest。
+    ///
     /// LS-165：三張假相簿涵蓋厚度分級三個 tier（1–9／10–49／50+ 張）＋一張零相片
     /// （`.empty` tier，無扇影）——`ChildrenStore` 刻意不 seed（`taggedChildren` 因此對
     /// 每張卡都是空集合，署名列顯示保留高度的空白列，見 `AlbumSignatureFormatter`
@@ -84,7 +86,7 @@ extension TapTargetGateHarness {
         let store = AlbumsStore.preview()
         store.seedForPreview(albums: [
             AlbumSummary(
-                id: UUID(), title: "上禮拜的動物園一日遊", photoCount: 12, cover: nil, childIds: [],
+                id: UUID(), title: "上禮拜的動物園一日遊", photoCount: 12, cover: albumCoverFixtureURL, childIds: [],
                 createdAt: Date()
             ),
             AlbumSummary(

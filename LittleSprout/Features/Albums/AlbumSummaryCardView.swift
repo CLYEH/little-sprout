@@ -46,6 +46,9 @@ struct AlbumSummaryCardView: View {
         // LS-407（池 82a6799d）：`.combine` 只帶得上子節點的 trait；封面走 `overlay`／`AsyncImage`，念不成「圖像」。
         // 有封面（`album.cover` 或測試注入的 `coverImage`）才補 `.isImage`，占位圖不加——同時間軸相簿卡
         // （`AlbumCardView`）的判準；載入中／失敗態也念「圖像」，嚴格版（已載入才加）不在本票。
+        // 注意（R2 M1）：唯一正式呼叫端 `AlbumsView` 用 `NavigationLink` 包住本卡，VoiceOver 焦點在外層 button，
+        // 這裡的 trait 被吞；正式畫面的 `.isImage` 由 `AlbumsView.albumCard` 掛在 `NavigationLink` 上，這裡只讓單卡
+        // （Preview／harness）自足。
         .accessibilityAddTraits(hasCover ? .isImage : [])
     }
 

@@ -18,11 +18,23 @@ extension TapTargetGateHarness {
     /// （白邊壓印 Caption「相簿名 · N 張相片」；Long 為超長相簿名＋單張，稿面 `Stress / 14`）。
     /// LS-406：`timelineAlbumCover`＝同 `timelineAlbum` 但帶封面（本機 PNG 的 file URL）——驗 VoiceOver
     /// `.isImage` trait 只在有封面時出現（`timelineAlbum` 是占位圖態）。
-    /// LS-407：`albumCover`＝同 `album` 但帶封面（相簿 tab 卡 `.isImage` 兩態）；`feedAlbums`＝真的
+    /// LS-407：`feedAlbums`＝真的
     /// `TimelineView` 內有封面／占位圖兩張時間軸相簿卡，量 a11y frame 是否一致（池 1d1587a7）。
     enum PhotoCardCaptionFixture: String {
         case one, two, three, none, album, feed, descender, albumDescender, feedAxis, timelineAlbum,
-             timelineAlbumLong, timelineAlbumCover, albumCover, feedAlbums
+             timelineAlbumLong, timelineAlbumCover, feedAlbums
+    }
+
+    /// LS-406／LS-407：寫進暫存目錄的 800×400 純色 PNG，回傳 file URL（`AsyncImage` 讀得起、不打網路）。
+    static var albumCoverFixtureURL: URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("LS-406-harness-cover.png")
+        let size = CGSize(width: 800, height: 400)
+        let png = UIGraphicsImageRenderer(size: size).pngData { context in
+            UIColor(red: 0.55, green: 0.72, blue: 0.62, alpha: 1).setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
+        try? png.write(to: url)
+        return url
     }
 
     static var photoCardCaptionFixture: PhotoCardCaptionFixture {
@@ -67,14 +79,14 @@ private struct PhotoCardBabyCaptionHost: View {
                     albumsStore: .preview()
                 )
             }
-        case .album, .albumCover:
+        case .album:
             singleCard {
                 // `cardWidth` 只餵扇影比例縮放（`AlbumSummaryCardView` 文件註解），不影響署名折行；
                 // 用 iPhone 基準卡寬即可。
                 AlbumSummaryCardView(
                     album: AlbumSummary(
                         id: UUID(), title: "上禮拜的動物園一日遊", photoCount: 12,
-                        cover: fixture == .albumCover ? Self.coverMedia.signedURL : nil,
+                        cover: nil,
                         childIds: [], createdAt: Date()
                     ),
                     // 相簿卡署名是 `$fs-meta`（AX3 約 33pt），「歐陽彥廷／Emma Chen · 2 歲 3 個月」在 iPhone 17 Pro
@@ -151,20 +163,15 @@ private struct PhotoCardBabyCaptionHost: View {
             [child("歐陽彥廷", born: "2024-06-01"), child("小饅頭", born: "2025-01-01"),
              child("Gary", born: "2026-01-01")]
         case .none, .album, .feed, .albumDescender, .feedAxis, .timelineAlbum, .timelineAlbumLong,
-             .timelineAlbumCover, .albumCover, .feedAlbums: []
+             .timelineAlbumCover, .feedAlbums: []
         }
     }
 
     /// LS-406：封面＝寫進暫存目錄的純色 PNG、以 file URL 當 `signedURL`（`AsyncImage` 走 URLSession 讀得起 file URL），
-    /// 不打網路、不依賴 Storage。
+    /// 不打網路、不依賴 Storage。檔案與 URL 由 `TapTargetGateHarness.albumCoverFixtureURL` 提供（LS-407：相簿 tab
+    /// 的 `AlbumsView` fixture 共用）。
     private static var coverMedia: MediaContent {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("LS-406-harness-cover.png")
-        let size = CGSize(width: 800, height: 400)
-        let png = UIGraphicsImageRenderer(size: size).pngData { context in
-            UIColor(red: 0.55, green: 0.72, blue: 0.62, alpha: 1).setFill()
-            context.fill(CGRect(origin: .zero, size: size))
-        }
-        try? png.write(to: url)
+        let url = TapTargetGateHarness.albumCoverFixtureURL
         return MediaContent(
             id: mediaID, type: .photo, width: 800, height: 400, thumbWidth: nil, thumbHeight: nil,
             storagePath: "preview/cover.png", isThumbnail: false, signedURL: url, durationSeconds: nil

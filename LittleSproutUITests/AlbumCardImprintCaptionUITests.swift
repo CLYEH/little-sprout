@@ -117,22 +117,24 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
         )
     }
 
-    /// LS-407 範圍 1（池 82a6799d）：相簿 tab 卡（`AlbumSummaryCardView`，`.combine`）有封面才帶 `.isImage`，占位圖不加。
-    /// `.combine` 的 XCUI `elementType` 恆為 `.staticText`（子節點 Text 的 trait 優先），看不出 `.isImage`，
-    /// 所以直接讀 accessibility traits 位元（`UIAccessibilityTraits.image`＝0x4）。
-    func testAlbumTabCard_isImageTrait_onlyWhenCoverPresent() throws {
-        let withCover = launch(fixture: "albumCover", size: Self.large, scheme: "light")
-        let coverTraits = try tabCardTraits(in: withCover, context: "有封面")
+    /// LS-407 範圍 1（池 82a6799d）＋R2 M1：相簿 tab 首頁（真 `AlbumsView`，`AlbumsViewPopulatedState` fixture）每張卡是一顆
+    /// `NavigationLink` button，VoiceOver 焦點落在 button——`.isImage` 要在 button 上才念得到（內層 `.combine` 的 trait 被吞）。
+    /// 首本相簿有封面、其餘占位圖：有封面的 button 帶 image bit、占位圖的不帶。XCUI 的 `elementType` 讀不出 trait，
+    /// 直接讀 accessibility traits 位元（`UIAccessibilityTraits.image`＝0x4）。
+    func testAlbumsTabCards_isImageTrait_onlyWhenCoverPresent() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["LS_TAP_TARGET_GATE_SCREEN"] = TapTargetGateScreenName.albumsPopulatedState.rawValue
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", Self.large]
+        app.launch()
+        let coverTraits = try cardButtonTraits(in: app, title: "上禮拜的動物園一日遊")
         XCTAssertTrue(
             coverTraits.contains(.image),
-            "有封面的相簿 tab 卡應帶 .isImage trait（VoiceOver 念「圖像」），實際 traits＝\(coverTraits.rawValue)"
+            "有封面的相簿卡 button 應帶 .isImage trait（VoiceOver 念「圖像」），實際 traits＝\(coverTraits.rawValue)"
         )
-        withCover.terminate()
-        let placeholder = launch(fixture: "album", size: Self.large, scheme: "light")
-        let placeholderTraits = try tabCardTraits(in: placeholder, context: "占位圖")
+        let placeholderTraits = try cardButtonTraits(in: app, title: "跨年連假出遊")
         XCTAssertFalse(
             placeholderTraits.contains(.image),
-            "占位圖（沒有封面）的相簿 tab 卡不該帶 .isImage trait（念「圖像」會誤導），實際 traits＝\(placeholderTraits.rawValue)"
+            "占位圖（沒有封面）的相簿卡 button 不該帶 .isImage trait（念「圖像」會誤導），實際 traits＝\(placeholderTraits.rawValue)"
         )
     }
 
@@ -148,13 +150,13 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
         return app
     }
 
-    /// 相簿 tab 卡（harness id `harness.albumCard`）的 accessibility traits。XCUI 沒有公開 API 讀 trait，
+    /// 相簿卡 `NavigationLink` button（label 含相簿名）的 accessibility traits。XCUI 沒有公開 API 讀 trait，
     /// 走 element snapshot 的 `traits`（KVC）；讀不到就 fail loud，不悄悄回 0 讓「占位圖不帶 image」假綠。
-    private func tabCardTraits(in app: XCUIApplication, context: String) throws -> UIAccessibilityTraits {
-        let card = app.descendants(matching: .any).matching(identifier: "harness.albumCard").firstMatch
-        XCTAssertTrue(card.waitForExistence(timeout: 10), "[\(context)] 相簿 tab 卡沒渲染")
-        let snapshot = try XCTUnwrap(try card.snapshot() as? NSObject, "[\(context)] 讀不到 element snapshot")
-        let raw = try XCTUnwrap(snapshot.value(forKey: "traits") as? UInt64, "[\(context)] snapshot 沒有 traits")
+    private func cardButtonTraits(in app: XCUIApplication, title: String) throws -> UIAccessibilityTraits {
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "[\(title)] 相簿卡 button 沒渲染")
+        let snapshot = try XCTUnwrap(try card.snapshot() as? NSObject, "[\(title)] 讀不到 element snapshot")
+        let raw = try XCTUnwrap(snapshot.value(forKey: "traits") as? UInt64, "[\(title)] snapshot 沒有 traits")
         return UIAccessibilityTraits(rawValue: raw)
     }
 
