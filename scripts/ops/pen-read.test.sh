@@ -403,16 +403,19 @@ log = open(os.environ["PEN_STUB_RANGE_LOG"], "a")
 doc = json.load(open(os.environ["PEN_STUB_RANGE_FILE"], encoding="utf-8"))
 kids = doc["children"]
 if "SCAN_HASH_ROOT_COUNT_ONLY = true" in inp:
-    log.write("count\n"); print("ROOT-COUNT n=%d" % len(kids)); sys.exit(0)
+    log.write("count\n")
+    if os.environ.get("PEN_STUB_COUNT_FAIL"):
+        print("Error: InternalError: interrupted"); sys.exit(0)
+    print("ROOT-COUNT n=%d" % len(kids)); sys.exit(0)
 m = re.search(r"SCAN_HASH_ROOTS = \[(\d+), (\d+)\]", inp)
 if not m:
     log.write("whole\n"); print("Error: InternalError: interrupted"); sys.exit(0)
 lo, hi = int(m.group(1)), int(m.group(2))
 log.write("%d,%d\n" % (lo, hi))
-if hi - lo > int(os.environ.get("PEN_STUB_MAX_SPAN", "999")):
+if min(hi, len(kids)) - lo > int(os.environ.get("PEN_STUB_MAX_SPAN", "999")):
     print("Error: InternalError: interrupted"); sys.exit(0)
 total = 0; count = 0
-for i in range(lo, hi):
+for i in range(lo, min(hi, len(kids))):
     stack = [(kids[i], "", i)]
     while stack:
         n, pid, idx = stack.pop()
@@ -431,14 +434,15 @@ tix_repo="${work}/LS-999"; mkdir -p "$tix_repo"; ( cd "$tix_repo" && git init -q
 plain_repo="${work}/plainrepo"; mkdir -p "$plain_repo"; ( cd "$plain_repo" && git init -q ) >/dev/null 2>&1
 stats_log() { cat "${1}/.claude/evidence/${2}/pen-read-stats.log" 2>/dev/null; }
 
-# (1) 超過預算（--budget-bytes 3000，頂層總和 ~8.9 KB）→ 直接依預算分 4 段（每段 2 節點）、不先送整份、不探測 root 數；
+# (1) 超過預算（--budget-bytes 3000，頂層總和 ~8.9 KB）→ 先問一次 Pen 端頂層節點數（count，R2 B1），相同才直接依預算分 4 段
+#     （每段 2 節點，最後一段上界開放）、不先送整份；
 #     合併後 tree_hash 與磁碟一致 → exit 0；統計 log（票號從 cwd 推）記 mode=planned segments=4 interrupted=0、Terminal 在前景
 big_case_setup
 out="$(cd "$tix_repo" && run --budget-bytes 3000 "$wtBig" 2>&1)"; got=$?
 if [ "$got" -eq 0 ] && grep -qF "tree_hash=${BIG_HASH} 與磁碟一致" <<<"$out" && grep -qF '分段成功（4 段' <<<"$out" \
-  && [ "$(cat "$PEN_STUB_RANGE_LOG")" = $'0,2\n2,4\n4,6\n6,8' ] \
+  && [ "$(cat "$PEN_STUB_RANGE_LOG")" = $'count\n0,2\n2,4\n4,6\n6,2147483647' ] \
   && grep -qF 'rc=0 pen_frontmost=no frontmost=Terminal interrupted=0 mode=planned segments=4' <<<"$(stats_log "$tix_repo" LS-999)"; then
-  ok 'pen-read.sh：頂層 JSON 超過位元組預算 → 直接依預算分 4 段（不先送整份），合併後 exit 0；統計 log 記 planned／4 段／背景（LS-377）'
+  ok 'pen-read.sh：頂層 JSON 超過位元組預算 → 先 count 再直接分 4 段（不先送整份、末段上界開放），合併後 exit 0；統計 log 記 planned／4 段／背景（LS-377）'
 else
   bad "超過預算應直接分 4 段並 exit 0（實得 ${got}；execute 序＝$(tr '\n' ' ' < "$PEN_STUB_RANGE_LOG")；log＝$(stats_log "$tix_repo" LS-999 | tail -1)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
@@ -466,6 +470,47 @@ if [ "$got" -eq 3 ] && grep -qF "期望值 tree_hash=${BIG_HASH}" <<<"$out" && g
   ok 'pen-read.sh：對半重切達上限仍 interrupted → 放棄、exit 3 印期望值、不 kill，統計 log 記 rc=3（LS-377）'
 else
   bad "重切達上限應 exit 3 放棄（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# (6) merge-review R1 B1：Pen 端比磁碟多一個尾端頂層節點（設計師在 Pen 新增板尚未落地／磁碟被回退而 renderer 停在舊快照）——
+#     分段路徑必須判「不一致」走清場，不得因為前 N 個頂層節點相同而印「與磁碟一致」；舊路徑（--budget-bytes 0）同案也判不一致
+rend="${work}/renderer.pen"
+python3 - "$wantBig" "$rend" <<'PY'
+import json, sys
+doc = json.load(open(sys.argv[1], encoding="utf-8"))
+doc["children"].append({"id": "NEWBOARD", "type": "frame", "name": "renderer-only board", "x": 99, "children": []})
+json.dump(doc, open(sys.argv[2], "w", encoding="utf-8"), ensure_ascii=False)
+PY
+extra_case() {  # $1＝預算；結果放 $extra_out／$extra_rc
+  big_case_setup
+  export PEN_STUB_OSASCRIPT_KILLS=1
+  extra_out="$(cd "$tix_repo" && PEN_STUB_RANGE_FILE="$rend" run --budget-bytes "$1" "$wtBig" 2>&1)"; extra_rc=$?
+  unset PEN_STUB_OSASCRIPT_KILLS
+}
+extra_case 3000
+if [ "$extra_rc" -eq 0 ] && grep -qF 'tree_hash 不一致' <<<"$extra_out" && grep -qF 'roots-mismatch(Pencil=9,disk=8)' <<<"$extra_out" \
+  && ! grep -qF '與磁碟一致' <<<"$extra_out" && [ "$(cat "$PEN_STUB_RANGE_LOG")" = count ] && ! fake_pen_alive; then
+  ok 'pen-read.sh：Pen 端多一個尾端頂層節點 → 分段路徑先 count 發現 9≠8、判不一致並走清場，不印「與磁碟一致」，不送任何分段回讀（LS-377 R2 B1）'
+else
+  bad "Pen 端多尾端節點應判不一致（實得 ${extra_rc}；execute 序＝$(tr '\n' ' ' < "$PEN_STUB_RANGE_LOG")）"; printf '%s\n' "$extra_out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+extra_case 0
+if grep -qF 'tree_hash 不一致' <<<"$extra_out" && ! grep -qF '與磁碟一致' <<<"$extra_out"; then
+  ok 'pen-read.sh：同案 --budget-bytes 0（LS-309 舊路徑）也判不一致——B1 修法沒有改變舊路徑語意（LS-377 R2）'
+else
+  bad "舊路徑同案應判不一致（實得 ${extra_rc}）"; printf '%s\n' "$extra_out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# (7) count 探測全數失敗（Pen 端 execute 不回）→ 無法驗證，不清場、exit 3 印期望值（不猜）
+big_case_setup
+out="$(cd "$tix_repo" && PEN_STUB_COUNT_FAIL=1 run --budget-bytes 3000 "$wtBig" 2>&1)"; got=$?
+if [ "$got" -eq 3 ] && grep -qF '頂層節點數探測失敗' <<<"$out" && grep -qF "期望值 tree_hash=${BIG_HASH}" <<<"$out" && fake_pen_alive; then
+  ok 'pen-read.sh：頂層節點數探測失敗 → 不分段、不清場、exit 3 印期望值（LS-377 R2 B1）'
+else
+  bad "探測失敗應 exit 3（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 clear_fake_pen
 
@@ -511,7 +556,7 @@ else
 fi
 big_case_setup
 outA="$(cd "$tix_repo" && bash "${work}/mutA-root/scripts/ops/pen-read.sh" --budget-bytes 3000 "$wtBig" 2>&1)"; gotA=$?
-if [ "$(head -1 "$PEN_STUB_RANGE_LOG")" = whole ] && ! [ "$(cat "$PEN_STUB_RANGE_LOG")" = $'0,2\n2,4\n4,6\n6,8' ]; then
+if [ "$(head -1 "$PEN_STUB_RANGE_LOG")" = whole ]; then
   ok "mutation A：拿掉預算判斷後仍先送整份（execute 序＝$(tr '\n' ' ' < "$PEN_STUB_RANGE_LOG")），情境 (1) 的分段斷言轉紅——證明預算判斷在保護「不先送整份」"
 else
   bad "mutation A 未如預期翻轉（execute 序＝$(tr '\n' ' ' < "$PEN_STUB_RANGE_LOG")，exit ${gotA}）"; printf '%s\n' "$outA" | sed 's/^/    /' >&2
@@ -536,7 +581,7 @@ clear_fake_pen
 
 # mutation C：拿掉 interrupted 統計事件（pen_stat "interrupted" 那行）→ 情境 (2) 的 interrupted=4 斷言必須紅（會記成 0）
 mk_mutant mutC-root '/^    pen_stat "interrupted"$/d'
-if ! grep -qF 'pen_stat "interrupted"' "${work}/mutC-root/scripts/ops/pen-open.sh"; then
+if [ "$(grep -cF 'pen_stat "interrupted"' "${work}/mutC-root/scripts/ops/pen-open.sh")" -lt "$(grep -cF 'pen_stat "interrupted"' "${root}/scripts/ops/pen-open.sh")" ]; then
   ok 'mutation C：確認已拿掉 interrupted 統計事件'
 else
   bad 'mutation C：替換失敗，負控本身無效'
@@ -547,6 +592,35 @@ if [ "$gotC" -eq 0 ] && ! grep -qF 'interrupted=4' <<<"$(stats_log "$plain_repo"
   ok 'mutation C：拿掉 interrupted 事件後統計 log 記成 interrupted=0（不再是 4），情境 (2) 的計數斷言轉紅——證明計數在這裡'
 else
   bad "mutation C 未如預期翻轉（exit ${gotC}，log＝$(stats_log "$plain_repo" LS-997 | tail -1)）"; printf '%s\n' "$outC" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# mutation D（B1）：拿掉 count 比對（`if [ "$pen_roots" != "$disk_roots" ]` 改恆假）→ 情境 (6) 的「count 判不一致、不送分段」斷言必須紅
+#   （此時只剩末段開放上界的雙保險擋下，仍會走 hash 不符，但已經送了分段回讀、沒有 roots-mismatch 訊息）
+mk_mutant mutD-root 's/if \[ "\$pen_roots" != "\$disk_roots" \]; then/if false; then/'
+if grep -qF 'if false; then' "${work}/mutD-root/scripts/ops/pen-open.sh"; then ok 'mutation D：確認已拿掉 count 比對'; else bad 'mutation D：替換失敗，負控本身無效'; fi
+big_case_setup
+export PEN_STUB_OSASCRIPT_KILLS=1
+outD="$(cd "$tix_repo" && PEN_STUB_RANGE_FILE="$rend" bash "${work}/mutD-root/scripts/ops/pen-read.sh" --budget-bytes 3000 "$wtBig" 2>&1)"; gotD=$?
+unset PEN_STUB_OSASCRIPT_KILLS
+if ! grep -qF 'roots-mismatch(Pencil=9,disk=8)' <<<"$outD" && ! [ "$(cat "$PEN_STUB_RANGE_LOG")" = count ]; then
+  ok "mutation D：拿掉 count 比對後不再有 roots-mismatch、改送了分段回讀（execute 序＝$(tr '\n' ' ' < "$PEN_STUB_RANGE_LOG")），情境 (6) 轉紅——證明 count 比對在這裡"
+else
+  bad "mutation D 未如預期翻轉（exit ${gotD}）"; printf '%s\n' "$outD" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+
+# mutation E（B1 原始缺陷重現）：count 比對與末段開放上界兩道都拿掉（＝R1 版行為）→ 假陽性「與磁碟一致」，情境 (6) 必須紅
+mk_mutant mutE-root 's/if \[ "\$pen_roots" != "\$disk_roots" \]; then/if false; then/; s/if \[ -n "\$lo" \] \&\& \[ -n "\${HASH_OPEN_HI:-}" \] \&\& \[ "\$hi" -ge "\$HASH_OPEN_HI" \]; then hi_send=2147483647; fi/:/'
+if ! grep -qF 'hi_send=2147483647; fi' "${work}/mutE-root/scripts/ops/pen-open.sh" && grep -qF 'if false; then' "${work}/mutE-root/scripts/ops/pen-open.sh"; then ok 'mutation E：確認兩道防線都已拿掉'; else bad 'mutation E：替換失敗，負控本身無效'; fi
+big_case_setup
+export PEN_STUB_OSASCRIPT_KILLS=1
+outE="$(cd "$tix_repo" && PEN_STUB_RANGE_FILE="$rend" bash "${work}/mutE-root/scripts/ops/pen-read.sh" --budget-bytes 3000 "$wtBig" 2>&1)"; gotE=$?
+unset PEN_STUB_OSASCRIPT_KILLS
+if [ "$gotE" -eq 0 ] && grep -qF "tree_hash=${BIG_HASH} 與磁碟一致" <<<"$outE"; then
+  ok 'mutation E：兩道防線都拿掉後 Pen 端多尾端節點被誤判「與磁碟一致」（R1 B1 假陽性重現），情境 (6) 轉紅——證明修法擋的就是這個'
+else
+  bad "mutation E 未重現假陽性（exit ${gotE}）"; printf '%s\n' "$outE" | sed 's/^/    /' >&2
 fi
 clear_fake_pen
 unset PEN_STUB_RANGE_MODE

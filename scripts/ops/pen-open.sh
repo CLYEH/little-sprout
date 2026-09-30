@@ -346,8 +346,11 @@ PY
 # lo/hi 皆空字串＝整棵不分段（SUMMARY-HASH）；否則帶 SCAN_HASH_ROOTS=[lo,hi) 分段（SUMMARY-HASH-PART）。成功設
 # $HASH_TRY_PART（16 碼 hex）／$HASH_TRY_COUNT（節點數）並 return 0；全部失敗只印診斷、return 1（呼叫端決定下一步）。
 try_hash_range() {
-  local lo=$1 hi=$2 snippet_base=$3 attempt=0 out h n prelude="" label
-  if [ -n "$lo" ]; then prelude="SCAN_HASH_ROOTS = [${lo}, ${hi}];"; label="root 範圍 [${lo},${hi})"; else label="整份（不分段）"; fi
+  local lo=$1 hi=$2 snippet_base=$3 attempt=0 out h n prelude="" label hi_send=$2
+  # LS-377 R2（B1 雙保險）：planned 模式（HASH_OPEN_HI＝磁碟頂層節點數 N）碰到 N 為上界的段，送出的上界改成開放（snippet 對超出
+  # 範圍的 hi 照收）——就算 Pencil 端在頂層節點數探測與雜湊回讀之間多出尾端節點，也不會因段界只看磁碟 N 而漏進雜湊外
+  if [ -n "$lo" ] && [ -n "${HASH_OPEN_HI:-}" ] && [ "$hi" -ge "$HASH_OPEN_HI" ]; then hi_send=2147483647; fi
+  if [ -n "$lo" ]; then prelude="SCAN_HASH_ROOTS = [${lo}, ${hi_send}];"; label="root 範圍 [${lo},${hi})"; else label="整份（不分段）"; fi
   while [ "$attempt" -lt "$HASH_ATTEMPTS" ]; do
     attempt=$((attempt + 1))
     out=$(pen_hash_execute "$prelude" "$snippet_base") || out=""
@@ -402,9 +405,31 @@ read_pen_hash() {
   planned=$(plan_hash_segments)
   if [ -n "$planned" ]; then
     mode=planned
-    local seg
+    local seg disk_roots pen_roots="" probe_try=0
     for seg in $planned; do queue+=("${seg}:0"); done
+    disk_roots="${queue[${#queue[@]}-1]#*:}"
+    disk_roots="${disk_roots%%:*}"
     echo "  Pencil 端 tree_hash：稿的頂層節點 JSON 超過位元組預算 ${HASH_SEGMENT_BYTES}，直接分 ${#queue[@]} 段回讀（不先送整份，LS-377）" >&2
+    # LS-377 R2（merge-review B1）：分段段界只取自磁碟頂層節點數，Pencil 端多出的尾端頂層節點不會進任何一段雜湊，
+    # 各段加總恰好等於磁碟值而誤判「一致」。所以分段前先向 Pencil 端問一次頂層節點數（只走頂層、不下探，同 LS-309 探測），
+    # 與磁碟不同就直接判不一致（印哨兵字串當「Pencil 端 tree_hash」，呼叫端照舊 hash 不符路徑走清場，與舊路徑同語意）；
+    # 探測連 HASH_ATTEMPTS 次都失敗＝無法驗證，印診斷回空（呼叫端 exit 3，不猜）。
+    while [ "$probe_try" -lt "$HASH_ATTEMPTS" ]; do
+      probe_try=$((probe_try + 1))
+      pen_roots=$(probe_root_count "$snippet_base")
+      case "$pen_roots" in ''|*[!0-9]*) pen_roots=""; pen_stat "interrupted"; echo "  Pencil 端 tree_hash：頂層節點數探測第 ${probe_try}/${HASH_ATTEMPTS} 次失敗" >&2 ;; *) break ;; esac
+    done
+    if [ -z "$pen_roots" ]; then
+      echo "  Pencil 端 tree_hash：頂層節點數探測失敗，無法確認 Pencil 端與磁碟的頂層節點數一致，放棄分段" >&2
+      return 0
+    fi
+    if [ "$pen_roots" != "$disk_roots" ]; then
+      echo "  Pencil 端 tree_hash：頂層節點數不一致——Pencil 端 ${pen_roots}、磁碟 ${disk_roots}，不必分段回讀，直接判不一致" >&2
+      pen_stat "mode=roots-mismatch"
+      printf 'roots-mismatch(Pencil=%s,disk=%s)\n' "$pen_roots" "$disk_roots"
+      return 0
+    fi
+    HASH_OPEN_HI="$disk_roots"
   else
     if try_hash_range "" "" "$snippet_base"; then
       pen_stat "mode=whole"
