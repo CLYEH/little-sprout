@@ -159,9 +159,11 @@ private struct UploadQueueEntryThumbnail: View {
     private func regenerate(_ entryID: UUID?) async {
         guard let entryID, store.thumbnail(for: entryID) == nil, regenerated?.id != entryID,
               let payload = store.entries[entryID]?.payload else { return }
-        if let image = await UploadQueueEntryThumbnailLoader.load(payload) {
-            regenerated = (entryID, image)
-        }
+        let image = await UploadQueueEntryThumbnailLoader.load(payload)
+        // LS-404 merge-review m1：舊縮圖的解碼可能晚於新的完成——`.task(id:)` 換 id 時舊任務被取消，await 回來先看
+        // 有沒有被取消，別拿舊圖覆寫（顯示成色塊到下一張開始）。
+        guard !Task.isCancelled, let image else { return }
+        regenerated = (entryID, image)
     }
 }
 

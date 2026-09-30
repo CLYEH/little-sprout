@@ -46,7 +46,6 @@ final class UploadQueueEntryUITests: XCTestCase {
                     assertPlacedAboveProfileSection(row, in: app, context: context)
                     assertNotCoveredByTabBar(row, in: app, context: context)
                     XCTAssertGreaterThanOrEqual(row.frame.height, 44, "[\(context)] 列高 ≥44pt")
-                    print("LS-404 rowHeight \(context)=\(row.frame.height) width=\(row.frame.width)")
                     attach(app, name: "entry-\(fixture)-\(scheme)-\(size)")
                     app.terminate()
                 }
@@ -151,7 +150,6 @@ final class UploadQueueEntryUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 7) // 劇本 4 秒後把佇列改成只剩 1 張失敗
             XCTAssertEqual(app.staticTexts["個人"].frame.minY, headerY, accuracy: 0.5, "[\(size)] 停留期間頁面不能被搬動")
             XCTAssertEqual(row.frame.height, height, accuracy: 0.5, "[\(size)] 停留期間列高不能改變")
-            print("LS-404 progressToOnlyFailed \(size) label=\(row.label)")
             XCTAssertTrue(
                 row.label == Self.almostDoneLabel
                     || row.label == Self.onlyFailedLabel,

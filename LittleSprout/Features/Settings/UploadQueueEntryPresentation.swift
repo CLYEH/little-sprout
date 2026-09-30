@@ -6,7 +6,7 @@ import Foundation
 /// （同 `SettingsContentSafetyComposition` 的既有慣例）。
 
 /// 入口列的四態（Notes `OT5n9` 四態文案矩陣）。
-enum UploadQueueEntryPhase: Hashable, CaseIterable {
+enum UploadQueueEntryPhase: Hashable {
     case inProgress
     case inProgressWithFailure
     case onlyFailed
