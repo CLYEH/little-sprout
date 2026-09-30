@@ -28,14 +28,25 @@ struct AlbumCardView: View {
             )
             // LS-390：標題進白邊（`cmp/Card Album` `bhroo` Imprint Row `IXmLN`）後，卡片本體
             // （照片＋Caption）念成一個元素、含張數；InteractionRow 三顆按鈕不落在範圍內（LS-216，
-            // 見型別文件註解）。`.ignore`＋明確 label：不靠 combine 把照片 alt 與 Caption 各念一遍
+            // 見型別文件註解）。單一元素＋明確 label：不靠 combine 把照片 alt 與 Caption 各念一遍
             // （改前標題會念兩次），也不把 Caption 內的 U+2060／NBSP 折行字元交給 VoiceOver。
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(content.title)，\(content.photoCount) 張相片")
+            //
+            // LS-407（池 1d1587a7）：元素掛在**與紙同大的透明代理**上、卡片本身 `accessibilityHidden`，
+            // 不直接對 `PrintPhotoCard` 掛 `.accessibilityElement(children: .ignore)`。後者的 a11y frame
+            // 是整棵子樹繪製範圍的聯集、不吃 `clipped()`：染料池圓（直徑 156、圓心在四角）一起算進去、四邊各外擴 78
+            // （iPhone 17 Pro 預設字級 510×389 vs 紙 354×233），扣掉染料池後封面態又被 `scaledToFill` 的封面影像
+            // （寬 190×長寬比）撐成 380、占位態被角托外擴撐成 365，兩態不一致。代理的 frame＝紙面。
             // LS-406（LS-390 R1 I1）：`.ignore` 會吃掉照片的 `.isImage`（改前 `.combine` 帶得上），有封面時補回、
             // VoiceOver 念「圖像」；占位圖（沒有封面）不加。判準是 `cover != nil`（有簽名 URL 就是有照片要載）——
             // `AsyncImage` 的載入中／失敗態在這一層看不到，那兩態也念「圖像」，比占位圖態誤念「沒有照片」好。
-            .accessibilityAddTraits(content.cover == nil ? [] : .isImage)
+            .accessibilityHidden(true)
+            .overlay {
+                Color.clear
+                    .allowsHitTesting(false)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(content.title)，\(content.photoCount) 張相片")
+                    .accessibilityAddTraits(content.cover == nil ? [] : .isImage)
+            }
             InteractionRow(
                 kind: .album, refId: refId, timelineStore: timelineStore, familyStore: familyStore,
                 onOpenComments: onOpenComments

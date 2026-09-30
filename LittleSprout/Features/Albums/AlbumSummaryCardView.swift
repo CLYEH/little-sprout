@@ -19,7 +19,7 @@ struct AlbumSummaryCardView: View {
     let taggedChildren: [Child]
     let cardWidth: CGFloat
     var photoHeight: CGFloat = 184
-    var cornerSize: CGFloat = 26
+    var cornerSize: CGFloat = PrintPhotoCardMetrics.cornerSize
     /// 已解碼影像，優先於 `album.cover`；給單元測試注入「載入完成」的封面用（`AsyncImage` 在單元測試宿主載不起來）。
     /// 同 `PrintPhotoCard.coverImage`。
     var coverImage: Image?
@@ -43,7 +43,16 @@ struct AlbumSummaryCardView: View {
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .combine)
+        // LS-407（池 82a6799d）：`.combine` 只帶得上子節點的 trait；封面走 `overlay`／`AsyncImage`，念不成「圖像」。
+        // 有封面（`album.cover` 或測試注入的 `coverImage`）才補 `.isImage`，占位圖不加——同時間軸相簿卡
+        // （`AlbumCardView`）的判準；載入中／失敗態也念「圖像」，嚴格版（已載入才加）不在本票。
+        // 注意（R2 M1）：唯一正式呼叫端 `AlbumsView` 用 `NavigationLink` 包住本卡，VoiceOver 焦點在外層 button，
+        // 這裡的 trait 被吞；正式畫面的 `.isImage` 由 `AlbumsView.albumCard` 掛在 `NavigationLink` 上，這裡只讓單卡
+        // （Preview／harness）自足。
+        .accessibilityAddTraits(hasCover ? .isImage : [])
     }
+
+    private var hasCover: Bool { coverImage != nil || album.cover != nil }
 
     private var printCard: some View {
         VStack(alignment: .leading, spacing: 7) {
@@ -114,7 +123,7 @@ struct AlbumSummaryCardView: View {
 
     private var mountPoolGlow: some View {
         GeometryReader { proxy in
-            let diameter = cornerSize * 6
+            let diameter = PrintPhotoCardMetrics.mountPoolDiameter(cornerSize: cornerSize)
             ZStack {
                 glow(diameter: diameter, opacity: PrintPhotoCard.MountPoolOpacity.card.topLeading)
                     .position(x: 0, y: 0)

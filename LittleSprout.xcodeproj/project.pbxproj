@@ -318,6 +318,7 @@
 		70B36BA6A85B3E92222FB6A3 /* TapTargetGateHarness+FoodRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208964F834CDC11B61F3098E /* TapTargetGateHarness+FoodRecord.swift */; };
 		723D9BF3536E69706CDB5FFC /* EULAStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369CBDFE007B61C9401815AE /* EULAStore.swift */; };
 		7254CBC6D45D7DEDBFF35C17 /* MediaChildrenMarkingTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4064D125E377462ADE8239D /* MediaChildrenMarkingTrackerTests.swift */; };
+		72A087E5B785AE82FD5CEEA4 /* AlbumDetailCountTextUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FC19A840065681A1317586 /* AlbumDetailCountTextUITests.swift */; };
 		72E3B4B4BAE3E16790FCD5CC /* FoodModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B4DCE1396A1C4882A63DCB /* FoodModels.swift */; };
 		7329308266E6C8D0966F82FE /* InviteFamilyView+PendingApprovals.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF7806F951789DC6E905A8FA /* InviteFamilyView+PendingApprovals.swift */; };
 		743E06DCB634D775FB5F8D62 /* ChildAvatarViewStructureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E854A344C6B7C3A322E9BB7B /* ChildAvatarViewStructureTests.swift */; };
@@ -475,7 +476,6 @@
 		B1C19A2319494642B99A46EB /* WelcomeView+PasswordSignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FB942E7809A7A51E7E182B9 /* WelcomeView+PasswordSignIn.swift */; };
 		B21993CA0DC6C40D52D51108 /* GrowthLatestValueCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A7B3867A645071BDFCEBA3 /* GrowthLatestValueCard.swift */; };
 		B2440B7844509AC9B75634CF /* TapTargetGateHarness+DiaryDetailVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF160356D53B7385FF16C6C2 /* TapTargetGateHarness+DiaryDetailVideo.swift */; };
-		B25806D71C8C27B8288A8A88 /* PrintPhotoCardMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC761FA0790858A67971E1D /* PrintPhotoCardMetrics.swift */; };
 		B3F22A9DBC8E0F21E14C26F1 /* StubCommentAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69091E685140B608F5F75E5 /* StubCommentAPIClient.swift */; };
 		B444B88CA39F26AA7C74C7A1 /* StubPushDeviceTokenAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A94E2A486BB54362C3343ED /* StubPushDeviceTokenAPIClient.swift */; };
 		B6F140BBE36A520831E94856 /* JoinCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B283C4309A804140F52F79A /* JoinCodeView.swift */; };
@@ -759,6 +759,7 @@
 		1FC761FA0790858A67971E1D /* PrintPhotoCardMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintPhotoCardMetrics.swift; sourceTree = "<group>"; };
 		208964F834CDC11B61F3098E /* TapTargetGateHarness+FoodRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+FoodRecord.swift"; sourceTree = "<group>"; };
 		20E1D15FA67A3A9432722475 /* FoodRecordDetailFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailFlowUITests.swift; sourceTree = "<group>"; };
+		20FC19A840065681A1317586 /* AlbumDetailCountTextUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailCountTextUITests.swift; sourceTree = "<group>"; };
 		20FC8388D99E9D7882AF0207 /* AsyncGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncGate.swift; sourceTree = "<group>"; };
 		211BD68F4C6453D2D071BDE3 /* TimelineStoreRefreshDedupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreRefreshDedupTests.swift; sourceTree = "<group>"; };
 		215A4C89A62254227DDB8953 /* AssertNoOverlap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssertNoOverlap.swift; sourceTree = "<group>"; };
@@ -1365,6 +1366,7 @@
 			children = (
 				49C8B9C938E1E57BCC38B5DF /* AlbumCardImprintCaptionUITests.swift */,
 				9CC784C4A15C4C6B5C97B845 /* AlbumDetailAX3UITests.swift */,
+				20FC19A840065681A1317586 /* AlbumDetailCountTextUITests.swift */,
 				64B2D0ACAEBD4001FACDD222 /* AlbumDetailViewTests.swift */,
 				85B9B9BC87911D6859F99FAC /* AlbumsViewIPadTests.swift */,
 				55EFEBD89186C116A6062C6D /* AlbumsViewTests.swift */,
@@ -2837,6 +2839,7 @@
 			files = (
 				26B1D11F24F2AA06744F814C /* AlbumCardImprintCaptionUITests.swift in Sources */,
 				929B962D65C1284A59E86AB4 /* AlbumDetailAX3UITests.swift in Sources */,
+				72A087E5B785AE82FD5CEEA4 /* AlbumDetailCountTextUITests.swift in Sources */,
 				62880BAED51D6DE7D9EC30FF /* AlbumDetailViewTests.swift in Sources */,
 				043855BA7839CA15F042676B /* AlbumsViewIPadTests.swift in Sources */,
 				3FCA5C7F27DFB77A097EB8D8 /* AlbumsViewTests.swift in Sources */,
@@ -2873,7 +2876,6 @@
 				167E18BF37C8233457D3C4B2 /* LegalDocumentSheetUITests.swift in Sources */,
 				AC8A8F9C1879FC34779A78E6 /* PasswordSignInUITests.swift in Sources */,
 				A8872E7A1521159A9B32C357 /* PhotoCardBabyCaptionUITests.swift in Sources */,
-				B25806D71C8C27B8288A8A88 /* PrintPhotoCardMetrics.swift in Sources */,
 				DB02391F5C7C742DA21005B2 /* PushPrepromptUITests.swift in Sources */,
 				92FEF23707CA351E42C25C02 /* QAAccessibilityID.swift in Sources */,
 				44C357BA4C7DCAC0714533C9 /* QADriver+Browse.swift in Sources */,
