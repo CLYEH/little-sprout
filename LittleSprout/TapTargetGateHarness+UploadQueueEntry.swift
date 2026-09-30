@@ -15,6 +15,8 @@ import UIKit
 /// - `stayFailure`：進行中，4 秒後一張失敗、3.5 秒後另一張完成＝停留期間只更新數字、不增行。
 /// - `progressThenFailedOnly`：還有 9 張，4 秒後剩下的全部完成、最後一張失敗（9→1）＝「進行中→只剩失敗」，
 ///   用來量 iPad／中間字級列高不同時不原地換態。
+/// - LS-410（sheet 移除失敗項）：`sheetProgressFailures`＝3 張失敗（LS002／連線中斷／伺服器忙碌）＋進行中，開 sheet 是
+///   稿面 16c；`sheetOnlyFailed`＝同樣 3 張失敗、沒有進行中，開 sheet 是 16d。標記移除後的 16f／16g 由 UITest 點「移除」得到。
 /// `LS_UPLOAD_QUEUE_ENTRY_SCHEME=dark` 釘深色；`LS_UPLOAD_QUEUE_ENTRY_LAYOUT=regular` 走 iPad 兩欄版面
 /// （否則 compact，並在底部掛真正的 `SectionTabBar` 以驗「Tab Bar 不遮」）。
 extension TapTargetGateHarness {
@@ -102,6 +104,18 @@ private struct SettingsUploadQueueEntryHost: View {
         case "onlyFailed":
             (0..<29).forEach { _ in add(.completed, color: .systemTeal) }
             add(.failed(.network), color: .systemOrange)
+        case "sheetOnlyFailed":
+            (0..<4).forEach { _ in add(.completed, color: .systemTeal) }
+            add(.failed(.quota), color: .systemOrange)
+            add(.failed(.network), color: .systemRed)
+            add(.failed(.server), color: .systemBrown)
+        case "sheetProgressFailures":
+            (0..<3).forEach { _ in add(.completed, color: .systemTeal) }
+            add(.failed(.quota), color: .systemOrange)
+            add(.failed(.network), color: .systemRed)
+            add(.failed(.server), color: .systemBrown)
+            add(.uploading(progress: nil), color: .systemPink)
+            add(.waiting, color: .systemIndigo)
         default:
             (0..<3).forEach { _ in add(.completed, color: .systemTeal) }
             add(.uploading(progress: nil), color: .systemPink)

@@ -60,8 +60,9 @@ final class UploadQueueEntryPresentationTests: XCTestCase {
         )
         XCTAssertEqual(
             UploadQueueEntryCopy.value(.onlyFailed, onlyFailed),
-            "\u{770B}\u{2060}\u{539F}\u{2060}\u{56E0}\u{2060}\u{FF0C}\u{6216}\u{2060}\u{518D}"
-                + "\u{2060}\u{8A66}\u{2060}\u{4E00}\u{2060}\u{6B21}"
+            // LS-410（C2a，與 sheet 移除功能同版上線）：「看原因，再試或移除」，取代 LS-404 的「看原因，或再試一次」。
+            "\u{770B}\u{2060}\u{539F}\u{2060}\u{56E0}\u{2060}\u{FF0C}\u{518D}\u{2060}\u{8A66}"
+                + "\u{2060}\u{6216}\u{2060}\u{79FB}\u{2060}\u{9664}"
         )
 
         let done = counts(completed: 30)
@@ -87,7 +88,7 @@ final class UploadQueueEntryPresentationTests: XCTestCase {
         }
         XCTAssertEqual(
             UploadQueueEntryCopy.accessibilityLabel(.onlyFailed, counts(failed: 1, completed: 29)),
-            "有 1 張照片沒有加進去，看原因，或再試一次"
+            "有 1 張照片沒有加進去，看原因，再試或移除"
         )
     }
 
@@ -100,18 +101,54 @@ final class UploadQueueEntryPresentationTests: XCTestCase {
         XCTAssertNil(state(after: .zero).phase)
     }
 
-    func test_allDone_staysOnceThenDisappearsAtNextBoundary() {
+    /// LS-404 merge-review m2（LS-410 收斂）：「全部完成」過渡態只在停留期間原地換態時出現；情境邊界（離開再回來、
+    /// 關 sheet）遇到全部完成一律隱藏，不再多顯示一次「照片都加好了」（Notes `bqnO1`：邊界即隱藏）。
+    func test_boundary_whenEverythingCompleted_hidesInsteadOfShowingAllDoneAgain() {
         var state = state(after: counts(waiting: 3, completed: 2))
-        state.contextBoundary(counts(completed: 5)) // 離開再回來（或關 sheet）時已全部完成：暫留一次
-        XCTAssertEqual(state.phase, .allDone)
-        state.contextBoundary(counts(completed: 5)) // 下一個情境邊界才消失
-        XCTAssertNil(state.phase)
+        state.contextBoundary(counts(completed: 5)) // 離開再回來（或關 sheet）時已全部完成
+        XCTAssertNil(state.phase, "邊界遇到全部完成：直接隱藏（修前會多顯示一次 .allDone）")
         state.contextBoundary(counts(completed: 5))
-        XCTAssertNil(state.phase, "已消失後不會因為 completed 還在就又冒出來")
+        XCTAssertNil(state.phase, "已隱藏後不會因為 completed 還在就又冒出來")
+    }
+
+    /// 停留期間原地換成「全部完成」之後，下一個情境邊界才依出現條件隱藏。
+    func test_allDone_reachedInPlaceDuringStay_hidesAtNextBoundary() {
+        var state = state(after: counts(waiting: 3, completed: 2))
+        state.liveChanged(counts(completed: 5)) { _ in 75 }
+        XCTAssertEqual(state.phase, .allDone)
+        state.contextBoundary(counts(completed: 5))
+        XCTAssertNil(state.phase)
+    }
+
+    /// LS-410 i2：sheet 內把失敗項全部移除（K>0 已有完成過的）→ 關閉 sheet 的邊界，入口列直接隱藏，
+    /// 不經過對剛放棄的照片不成立的「照片都加好了」過渡態（Notes `Fq494`）。
+    func test_boundary_afterAllFailedRemoved_hidesEntryRow_evenWhenSomeWereCompleted() {
+        var state = state(after: counts(failed: 3, completed: 4)) // 只剩失敗態
+        XCTAssertEqual(state.phase, .onlyFailed)
+        state.contextBoundary(counts(failed: 0, completed: 4)) // sheet 關閉：commitRemovals 之後的快照
+        XCTAssertNil(state.phase, "全部移除後入口列直接隱藏（不論 K）")
+    }
+
+    /// 移除一部分：仍有失敗＝只剩失敗態、M 更新（Notes `oQ5SF`）。
+    func test_boundary_afterSomeFailedRemoved_keepsOnlyFailedWithUpdatedCount() {
+        var state = state(after: counts(failed: 3, completed: 4))
+        state.contextBoundary(counts(failed: 1, completed: 4))
+        XCTAssertEqual(state.phase, .onlyFailed)
+        XCTAssertEqual(UploadQueueEntryCopy.accessibilityLabel(.onlyFailed, counts(failed: 1, completed: 4)),
+                       "有 1 張照片沒有加進去，看原因，再試或移除")
+    }
+
+    /// 移除後仍有進行中：回到進行中態（移除的失敗項不再算在 N 裡）。
+    func test_boundary_afterFailedRemoved_withInFlightLeft_showsInProgress() {
+        var state = state(after: counts(waiting: 2, failed: 2, completed: 3))
+        XCTAssertEqual(state.phase, .inProgressWithFailure)
+        state.contextBoundary(counts(waiting: 2, failed: 0, completed: 3))
+        XCTAssertEqual(state.phase, .inProgress)
     }
 
     func test_boundary_afterAllDone_newUploadShowsInProgressAgain() {
         var state = state(after: counts(waiting: 1))
+        state.liveChanged(counts(completed: 1)) { _ in 75 }
         state.contextBoundary(counts(completed: 1))
         state.contextBoundary(counts(waiting: 4, completed: 1))
         XCTAssertEqual(state.phase, .inProgress)
@@ -186,6 +223,25 @@ final class UploadQueueEntryPresentationTests: XCTestCase {
         XCTAssertEqual(counts, UploadQueueEntryCounts(waiting: 1, uploading: 1, failed: 1, completed: 2))
         XCTAssertEqual(counts.completed, store.entries.count - store.remainingCount)
         XCTAssertEqual(UploadQueueEntryCounts(store: nil), .zero)
+    }
+
+    /// LS-410：sheet 開著時標記移除，入口列背後的計數不能變（否則 `liveChanged` 會在 sheet 後面先把列原地換成
+    /// 「全部完成」，見 merge-review i2 的 PLAUSIBLE）；`commitRemovals` 之後才反映（sheet 關閉的邊界重新快照）。
+    func test_countsFromStore_markingDoesNotChangeEntryCounts_untilCommit() {
+        let store = makeStore([.completed, .completed, .failed(.network), .failed(.quota)])
+        let before = UploadQueueEntryCounts(store: store)
+        XCTAssertEqual(before, UploadQueueEntryCounts(waiting: 0, uploading: 0, failed: 2, completed: 2))
+
+        store.markAllFailedRemoved()
+        XCTAssertEqual(UploadQueueEntryCounts(store: store), before, "標記階段入口列計數不動＝不會在 sheet 後面換態")
+
+        store.commitRemovals()
+        let after = UploadQueueEntryCounts(store: store)
+        XCTAssertEqual(after, UploadQueueEntryCounts(waiting: 0, uploading: 0, failed: 0, completed: 2))
+        var state = UploadQueueEntryState()
+        state.contextBoundary(before)
+        state.contextBoundary(after)
+        XCTAssertNil(state.phase, "提交後的邊界：全部移除，入口列隱藏")
     }
 
     /// 「回前景」邊界靠這個遞增（在重送翻回等候之後才評估）：沒有項目要重送時也要遞增。

@@ -6,7 +6,7 @@ import Foundation
 /// （同 `SettingsContentSafetyComposition` 的既有慣例）。
 
 /// 入口列的四態（Notes `OT5n9` 四態文案矩陣）。
-enum UploadQueueEntryPhase: Hashable, CaseIterable {
+enum UploadQueueEntryPhase: Hashable {
     case inProgress
     case inProgressWithFailure
     case onlyFailed
@@ -23,8 +23,7 @@ struct UploadQueueEntryCounts: Equatable {
     var waiting = 0
     var uploading = 0
     var failed = 0
-    /// 全部完成態的 K（Notes `OT5n9`）：`store.entries.count − store.remainingCount`，store 保留的
-    /// 已完成數，跨批次累加。
+    /// 全部完成態的 K（Notes `OT5n9`）：`store.completedCount`，store 保留的已完成數，跨批次累加。
     var completed = 0
 
     static let zero = UploadQueueEntryCounts()
@@ -53,15 +52,11 @@ struct UploadQueueEntryState: Equatable {
 
     /// 情境邊界：依佇列現況重新評估。
     /// - 還有未完成項：直接換成現況的態。
-    /// - 全部完成：原本有列（進行中／失敗）→ 暫留一次「全部完成」；原本就是「全部完成」→ 隱藏
-    ///   （「下次進入設定頁才消失」）；原本沒有列 → 維持隱藏。
+    /// - 沒有未完成項（全部完成，或失敗項在 sheet 被全部移除）：**一律隱藏**——「全部完成」過渡態只在停留期間原地換態
+    ///   （`liveChanged`）出現，邊界即隱藏（Notes `bqnO1`／`Fq494`，LS-404 merge-review m2 與 LS-410 i2：邊界不再多顯示一次
+    ///   「照片都加好了」，對剛放棄的照片也不成立）。
     mutating func contextBoundary(_ counts: UploadQueueEntryCounts) {
-        if counts.remaining > 0 {
-            phase = counts.phase
-            return
-        }
-        let hadRow = phase != nil && phase != .allDone
-        phase = hadRow && counts.completed > 0 ? .allDone : nil
+        phase = counts.remaining > 0 ? counts.phase : nil
     }
 
     /// 停留期間佇列有變化：只有「行數類別相同且實測列高相同」才原地換態，否則維持現態等下一個情境邊界。
@@ -96,7 +91,7 @@ enum UploadQueueEntryCopy {
         case .inProgress, .inProgressWithFailure:
             "還有\(space)\(counts.remaining)\(space)張還\(joiner)沒\(joiner)完\(joiner)成"
         case .onlyFailed:
-            "看\(joiner)原\(joiner)因\(joiner)，或\(joiner)再\(joiner)試\(joiner)一\(joiner)次"
+            "看\(joiner)原\(joiner)因\(joiner)，再\(joiner)試\(joiner)或\(joiner)移\(joiner)除"
         case .allDone:
             "\(counts.completed)\(space)張\(joiner)都加\(joiner)進\(joiner)相\(joiner)簿\(joiner)了"
         }

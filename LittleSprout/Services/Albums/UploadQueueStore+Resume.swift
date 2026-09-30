@@ -33,6 +33,8 @@ extension UploadQueueStore {
         var foregroundEpoch = 0
         /// 尚未終局、已落盤的紀錄（key＝entry id）；`persistManifest()` 依 `order` 輸出。
         var records: [UUID: PersistedUploadRecord] = [:]
+        /// LS-410：manifest 實際寫檔次數（含 `discardPersisted`）——`commitRemovals()` 批次只寫一次，測試靠它斷言。
+        var manifestWriteCount = 0
     }
 
     // MARK: - 嘗試編號與結果套用
@@ -81,7 +83,8 @@ extension UploadQueueStore {
         let candidates = resume.inFlightAtBackground
         resume.inFlightAtBackground = []
         var resumedAny = false
-        for id in order where candidates.contains(id) {
+        // LS-410：標記移除中的項目（`pendingRemovals`）不參與自動重試——使用者已在 sheet 放棄它們。
+        for id in order where candidates.contains(id) && !pendingRemovals.contains(id) {
             guard var entry = entries[id], entry.payload != nil else { continue }
             switch entry.state {
             case .uploading, .failed(.network): break
@@ -120,6 +123,7 @@ extension UploadQueueStore {
     /// 依 `order` 輸出尚未終局（`records` 裡還有的）項目——終局時 `discardPersisted` 已把它移出。
     func persistManifest() {
         guard let persistence else { return }
+        resume.manifestWriteCount += 1
         persistence.save(order.compactMap { resume.records[$0] })
     }
 
@@ -127,9 +131,17 @@ extension UploadQueueStore {
     /// 最壞是 manifest 少一筆而留下孤兒檔（下次還原時 `pruneOrphans` 清掉），不會是 manifest
     /// 指向已刪除的檔案。
     func discardPersisted(_ id: UUID) {
-        guard let record = resume.records.removeValue(forKey: id), let persistence else { return }
+        discardPersisted([id])
+    }
+
+    /// LS-410：批次版——一次移出多筆、manifest 只寫一次、順序同上（先寫 manifest 再刪 payload）。
+    /// 沒有落盤紀錄的 id（例如落盤失敗的項目）略過；`persistence` 為 `nil`（測試／preview）時只清簿記。
+    func discardPersisted(_ ids: [UUID]) {
+        let records = ids.compactMap { resume.records.removeValue(forKey: $0) }
+        guard !records.isEmpty, let persistence else { return }
+        resume.manifestWriteCount += 1
         persistence.save(order.compactMap { resume.records[$0] })
-        persistence.removePayload(named: record.payloadFileName)
+        records.forEach { persistence.removePayload(named: $0.payloadFileName) }
     }
 
     /// 登出：取消所有飛行中的嘗試並整個清掉落盤目錄（`AlbumsStore.reset()`）。

@@ -21,7 +21,7 @@ final class UploadQueueEntryUITests: XCTestCase {
     /// `progressThenFailedOnly`：起始「還有 9 張」、劇本結束「還有 1 張」（位數不變，見 harness 註解）。
     private static let startLabel = "正在新增照片，還有 9 張還沒完成"
     private static let almostDoneLabel = "正在新增照片，還有 1 張還沒完成"
-    private static let onlyFailedLabel = "有 1 張照片沒有加進去，看原因，或再試一次"
+    private static let onlyFailedLabel = "有 1 張照片沒有加進去，看原因，再試或移除"
 
     override func setUpWithError() throws {
         try XCTSkipIf(
@@ -46,7 +46,6 @@ final class UploadQueueEntryUITests: XCTestCase {
                     assertPlacedAboveProfileSection(row, in: app, context: context)
                     assertNotCoveredByTabBar(row, in: app, context: context)
                     XCTAssertGreaterThanOrEqual(row.frame.height, 44, "[\(context)] 列高 ≥44pt")
-                    print("LS-404 rowHeight \(context)=\(row.frame.height) width=\(row.frame.width)")
                     attach(app, name: "entry-\(fixture)-\(scheme)-\(size)")
                     app.terminate()
                 }
@@ -151,7 +150,6 @@ final class UploadQueueEntryUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 7) // 劇本 4 秒後把佇列改成只剩 1 張失敗
             XCTAssertEqual(app.staticTexts["個人"].frame.minY, headerY, accuracy: 0.5, "[\(size)] 停留期間頁面不能被搬動")
             XCTAssertEqual(row.frame.height, height, accuracy: 0.5, "[\(size)] 停留期間列高不能改變")
-            print("LS-404 progressToOnlyFailed \(size) label=\(row.label)")
             XCTAssertTrue(
                 row.label == Self.almostDoneLabel
                     || row.label == Self.onlyFailedLabel,

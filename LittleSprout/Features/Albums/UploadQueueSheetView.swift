@@ -31,6 +31,22 @@ struct UploadQueueSheetView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    /// LS-410：態與群標題列／重試槽的存在只在打開時判定一次（`UploadQueueSheetSnapshot`，brand #10 停留期間不搬版）。
+    @State var snapshot: UploadQueueSheetSnapshot
+    /// 打開後量到的摘要區 Head／重試槽實測高度——開著期間只增不減、鎖成 `minHeight`（`k4oJhV` R3：M＝0 過渡句、
+    /// 「沒有能重試的照片」換掉內容也不搬版）。
+    @State var headMinHeight: CGFloat = 0
+    @State var retrySlotHeight: CGFloat = 0
+    /// 每張失敗列（未標記時）的實測高度——標記當下墓碑列用它鎖列高（`FBoLL` R3）。
+    @State private var rowHeights: [UUID: CGFloat] = [:]
+    @State private var confirmsBatchRemove = false
+
+    init(store: UploadQueueStore, onViewStorage: @escaping () -> Void = {}) {
+        self.store = store
+        self.onViewStorage = onViewStorage
+        _snapshot = State(initialValue: UploadQueueSheetSnapshot(store: store))
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             grabber
@@ -50,6 +66,18 @@ struct UploadQueueSheetView: View {
         }
         .background(Color.lsSurface)
         .presentationDetents([.height(sheetHeight)])
+        // 「移除這 N 張」要確認（`skC6Q`：批次一次標記多張，含本來回前景會自動重試的；單張有復原、不確認）。
+        .confirmationDialog(
+            UploadQueueSheetCopy.confirmTitle(count: store.failedCount), isPresented: $confirmsBatchRemove,
+            titleVisibility: .visible
+        ) {
+            Button(UploadQueueSheetCopy.confirmAction(count: store.failedCount), role: .destructive) {
+                store.markAllFailedRemoved()
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text(UploadQueueSheetCopy.confirmMessage)
+        }
     }
 
     /// `Jxcmk`：一般字級 727、AX3 1224（實測值）。
@@ -82,118 +110,32 @@ struct UploadQueueSheetView: View {
             .accessibilityHidden(true)
     }
 
-    // MARK: - 摘要區
-
-    private var summarySection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.block) {
-            VStack(alignment: .leading, spacing: AppSpacing.label) {
-                Text("正在新增照片")
-                    .appFont(.lead, weight: .bold).foregroundStyle(Color.lsTextPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
-                VStack(alignment: .leading, spacing: AppSpacing.tight) {
-                    Text("還有 \(store.remainingCount) 張還沒完成")
-                        .appNumericFont(.body, weight: .bold)
-                        .foregroundStyle(Color.lsTextPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if !breakdownText.isEmpty {
-                        // merge-review R2 F2 實測發現：加入續傳橫幅後，AX3 下 summarySection
-                        // 的合計高度可能逼近固定 sheet 高度上限，VStack 會把「彈性最低」的
-                        // Text 往下壓縮——沒有 `.fixedSize` 時這行會被截斷成「1 張等候上傳、
-                        // 1 張…」，把「上傳中」吃掉。`.fixedSize(horizontal: false, vertical:
-                        // true)` 強制這個 Text 用完整換行後的高度，把被壓縮的空間讓給設計上
-                        // 本來就該可捲動、可以被壓縮的 `ScrollView`（`rowsSection`），不是讓
-                        // 給不該被截斷的狀態文字。
-                        Text(breakdownText)
-                            .appNumericFont(.note).foregroundStyle(Color.lsTextSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-            if store.resumedFromInterruption {
-                resumeBanner
-            }
-            // merge-review R2 F5：失敗數 > 1 才顯示批次列——單一失敗時那一列自己的「重試」
-            // 鈕就夠了，疊一條只重試同一張的批次列沒有意義；`retryableFailedCount > 0` 仍要
-            // 保留，避免「兩筆失敗但都是 LS002」顯示一顆「重試這 0 張」的空按鈕。
-            if store.failedCount > 1 && store.retryableFailedCount > 0 {
-                retryAllButton
-            }
-        }
-        // merge-review R3 M1（major）：生產常態（無失敗、無續傳橫幅）下這個 VStack 裡完全
-        // 沒有任何會撐寬到滿版的子元件（`retryAllButton`／`resumeBanner` 平常靠自己的
-        // `.frame(maxWidth: .infinity)` 撐寬，但這兩個常態下都不會渲染）——`body` 最外層的
-        // `VStack(spacing: 0)` 沒有指定 `alignment`（預設 `.center`，`grabber` 需要維持水平
-        // 置中，不能整個外層改成 `.leading`），這個 VStack 因此會用自己最窄子項的寬度當
-        // 整體寬度，被外層置中，reviewer 實測群標題 x 跑到 119.3（應為 24）。強制這裡
-        // `.frame(maxWidth: .infinity, alignment: .leading)`，不依賴「裡面剛好有東西撐滿」
-        // 這個易碎的隱性前提。
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    /// 「N 張等候上傳、M 張上傳中」——零的那半不出現（`design/littlesprout.pen` 稿面只示範
-    /// 兩者皆非零的樣本，稿面沒有畫「只剩上傳中、沒有等候中」這種局部樣本，這裡延伸同一組
-    /// 語彙，記入 handoff）。
-    private var breakdownText: String {
-        var parts: [String] = []
-        if store.waitingCount > 0 { parts.append("\(store.waitingCount) 張等候上傳") }
-        if store.uploadingCount > 0 { parts.append("\(store.uploadingCount) 張上傳中") }
-        return parts.joined(separator: "、")
-    }
-
-    private var resumeBanner: some View {
-        // `alignment: .top`＋`.fixedSize`：同 `breakdownText` 踩到的同一個坑——AX3 沒有這兩個
-        // 修飾詞時這句會被壓縮成「已接續先前中…」，且沒有 `.top` 對齊的話 icon 會卡在多行文字
-        // 正中央，不是跟第一行文字對齊。
-        HStack(alignment: .top, spacing: AppSpacing.label) {
-            Image(systemName: "arrow.counterclockwise").appIconFrame(.medium)
-            Text("已接續先前中斷的上傳。").appFont(.note).fixedSize(horizontal: false, vertical: true)
-        }
-        .foregroundStyle(Color.lsTextSecondary)
-        .padding(.horizontal, AppSpacing.item)
-        .padding(.vertical, AppSpacing.group)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.lsSurface2, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-    }
-
-    /// `iIkHT`：單一 outline 按鈕，`$accent-soft` 底＋外框，文案直接帶數量。
-    private var retryAllButton: some View {
-        Button {
-            store.retryAllRetryable()
-        } label: {
-            HStack(spacing: AppSpacing.label) {
-                Image(systemName: "arrow.clockwise").appIconFrame(.medium)
-                Text("重試這 \(store.retryableFailedCount) 張").appNumericFont(.body, weight: .bold)
-            }
-            .frame(maxWidth: .infinity, minHeight: 48)
-            .padding(.vertical, AppSpacing.controlPaddingMedium)
-            // merge-review R5：見 `UploadQueueRowView.swift` 檔頭「merge-review R5（真正的
-            // 根因）」段——CI 的 iOS 26.2+ 模擬器對 `.sheet` 內容套用 ≈0.9602 縮放，
-            // `minHeight` 要 48 才能在縮放後仍 ≥44。這顆鈕目前的 padding＋內容高度從未被 CI
-            // 抓到過，這裡一併補上是防禦性一致處理，不是修既有違規。
-            .contentShape([.interaction, .accessibility], Rectangle())
-        }
-        .foregroundStyle(Color.lsTextPrimary)
-        .background(Color.lsAccentSoft, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
-                .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
-        )
-    }
-
     // MARK: - 列表區
 
+    @ViewBuilder
     private var rowsSection: some View {
+        if snapshot.mode == .allDone {
+            // `sq2SF`／`KYq7n`：全部完成＝3 欄縮圖格，照片是主角；不可點（C1a），「關閉」是唯一動作。
+            let completed = store.sections.first { $0.kind == .completed }?.rows ?? []
+            UploadQueueDoneGrid(items: completed.map {
+                .init(id: $0.id, enqueuedAt: $0.enqueuedAt, thumbnail: store.thumbnail(for: $0.id))
+            })
+        } else {
+            groupList
+        }
+    }
+
+    private var groupList: some View {
         VStack(alignment: .leading, spacing: AppSpacing.block) {
             ForEach(store.sections) { section in
                 VStack(alignment: .leading, spacing: AppSpacing.item) {
-                    // merge-review R2 F5：對稿——群標題是 `$text-secondary`，不是
-                    // `$text-primary`（群標題是分類語意，列內容才是主要閱讀對象）。
-                    Text(section.title).appFont(.body, weight: .bold).foregroundStyle(Color.lsTextSecondary)
+                    if section.kind == .failed {
+                        failedHeader(title: section.title)
+                    } else {
+                        groupTitle(section.title)
+                    }
                     ForEach(section.rows) { row in
-                        UploadQueueRowView(
-                            row: row, thumbnail: store.thumbnail(for: row.id),
-                            onRetry: { store.retry(row.id) }, onViewStorage: onViewStorage
-                        )
+                        queueRow(row)
                     }
                 }
             }
@@ -204,10 +146,82 @@ struct UploadQueueSheetView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// merge-review R2 F5：對稿——群標題是 `$text-secondary`，不是 `$text-primary`（群標題是分類語意，列內容才是主要
+    /// 閱讀對象）。
+    private func groupTitle(_ text: String) -> some View {
+        Text(text).appFont(.body, weight: .bold).foregroundStyle(Color.lsTextSecondary)
+    }
+
+    /// 失敗群標題列：進行中態左「沒有成功」（②態和入口/標題同義，隱藏，`k4oJhV` R2 n1）、右「× 移除這 N 張」。
+    /// 批次鈕只在打開時失敗數 >1 才建立這一列；之後失敗數降到 1 只把鈕的內容隱藏、列高保留（停留期間不增減行）。
+    /// 空間不夠（AX3）改直排，同動作列（`fC2Rf`）。
+    @ViewBuilder
+    private func failedHeader(title: String) -> some View {
+        let showsTitle = snapshot.mode == .progress
+        if snapshot.hasBatchRemoveRow {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 0) {
+                    if showsTitle { groupTitle(title) }
+                    Spacer(minLength: 0)
+                    batchRemoveButton(padded: true)
+                }
+                VStack(alignment: .leading, spacing: 0) {
+                    if showsTitle { groupTitle(title) }
+                    batchRemoveButton(padded: false)
+                }
+            }
+        } else if showsTitle {
+            groupTitle(title)
+        }
+    }
+
+    @ViewBuilder
+    private func batchRemoveButton(padded: Bool) -> some View {
+        if snapshot.hasBatchRemoveRow {
+            let visible = store.failedCount > 1
+            let batchTitle = UploadQueueSheetCopy.batchRemoveTitle(count: store.failedCount)
+            Button {
+                confirmsBatchRemove = true
+            } label: {
+                HStack(spacing: AppSpacing.label) {
+                    Image(systemName: "xmark").appIconFrame(.medium).accessibilityHidden(true)
+                    Text(batchTitle).appFont(.body, weight: .semibold)
+                }
+                .padding(.leading, padded ? AppSpacing.item : 0)
+                .frame(minHeight: 48)
+                .contentShape([.interaction, .accessibility], Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Color.lsTextSecondary)
+            .accessibilityLabel(UploadQueueSheetCopy.plain(batchTitle))
+            .accessibilityIdentifier(QAAccessibilityID.uploadQueueRemoveAll)
+            .opacity(visible ? 1 : 0)
+            .allowsHitTesting(visible)
+            .accessibilityHidden(!visible)
+        }
+    }
+
+    private func queueRow(_ row: UploadQueueRow) -> some View {
+        let isFailed: Bool = if case .failed = row.state { true } else { false }
+        let isMarked = store.pendingRemovals.contains(row.id)
+        return UploadQueueRowView(
+            row: row, thumbnail: store.thumbnail(for: row.id),
+            onRetry: { store.retry(row.id) }, onViewStorage: onViewStorage,
+            onRemove: isFailed ? { store.markRemoved(row.id) } : nil,
+            onUndo: { store.undoRemove(row.id) },
+            isRemoved: isMarked, lockedHeight: rowHeights[row.id]
+        )
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+            // 只記「還沒標記」的失敗列——墓碑列是被鎖住的高度，不能反過來覆寫紀錄。
+            if isFailed && !store.pendingRemovals.contains(row.id) { rowHeights[row.id] = height }
+        }
+    }
+
     // MARK: - Footer
 
     /// `ImjbJ`：使用者點了就代表接受「背景續傳」——sheet 直接 dismiss，`UploadQueueStore`
-    /// 內飛行中的 `Task` 不受影響（見該檔檔頭「已知限制」段）。
+    /// 內飛行中的 `Task` 不受影響（見該檔檔頭「已知限制」段）。LS-410：進行中態才是「在背景繼續，關閉視窗」，其餘態「關閉」。
+    /// `.fixedSize(vertical)`＋置中、不設 lineLimit：AX3 斷成兩行時被壓縮的該是 rowsSection 的 ScrollView，不是 footer（`fC2Rf`）。
     private var footerButton: some View {
         Button {
             dismiss()
@@ -215,86 +229,14 @@ struct UploadQueueSheetView: View {
             // merge-review R5：見 `UploadQueueRowView.swift` 檔頭「merge-review R5（真正的
             // 根因）」段——CI 的 iOS 26.2+ 模擬器對 `.sheet` 內容整體套用 ≈0.9602 縮放，
             // `minHeight: 45` 落地後量到 43.2pt，改 48（48 × 0.9602 ≈ 46.09）才安全過關。
-            Text("在背景繼續，關閉視窗")
+            Text(snapshot.footerTitle)
                 .appFont(.body, weight: .medium)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, minHeight: 48)
                 .contentShape([.interaction, .accessibility], Rectangle())
         }
         .foregroundStyle(Color.lsTextPrimary)
+        .accessibilityLabel(UploadQueueSheetCopy.plain(snapshot.footerTitle))
     }
 }
-
-#if DEBUG
-#Preview("亮") {
-    Color.clear.sheet(isPresented: .constant(true)) {
-        UploadQueueSheetView(store: .previewSample())
-    }
-}
-
-#Preview("深色") {
-    Color.clear.sheet(isPresented: .constant(true)) {
-        UploadQueueSheetView(store: .previewSample())
-    }
-    .preferredColorScheme(.dark)
-}
-
-#Preview("AX3") {
-    Color.clear.sheet(isPresented: .constant(true)) {
-        UploadQueueSheetView(store: .previewSample())
-    }
-    .environment(\.dynamicTypeSize, .accessibility3)
-}
-
-extension UploadQueueStore {
-    /// Preview／harness 共用的代表性樣本——涵蓋三群、LS002 置頂、有進度百分比與無進度百分比
-    /// 兩種上傳中列，對應 `design/littlesprout.pen` `Q7HrnF`／`g8Q2W`「全部狀態展開」參考板。
-    static func previewSample() -> UploadQueueStore {
-        let store = UploadQueueStore(familyID: UUID(), mediaUploadService: PreviewMediaUploadService())
-        // merge-review R2 F2：續傳橫幅在稿面上是真實會出現的狀態，但沒有任何一組樣本把它
-        // 設成 `true` 過——preview／DEBUG harness／QA 截圖因此永遠看不到它，等於這條路徑
-        // 沒有人真的驗過長什麼樣子。這裡固定開啟，讓它跟其他三群狀態一樣「看得到」。
-        store.resumedFromInterruption = true
-        let now = Date()
-        func upload() -> PendingUpload {
-            PendingUpload(
-                kind: .photo(data: Data(), fileExtension: "jpg"), thumbnail: nil,
-                pixelSize: PixelSize(width: 4, height: 3)
-            )
-        }
-        store.seedForPreview([
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-6 * 60), state: .failed(.quota)),
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-4 * 60), state: .failed(.network)),
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-5 * 60), state: .failed(.server)),
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-1 * 60), state: .waiting),
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-2 * 60), state: .uploading(progress: 0.42)),
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-3 * 60), state: .completed),
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-3.5 * 60), state: .completed)
-        ])
-        return store
-    }
-
-    /// merge-review R3 M1：生產「常態」樣本——沒有任何失敗（不觸發 `retryAllButton`）、沒有
-    /// 續傳橫幅（`resumedFromInterruption` 維持預設 `false`）、`uploading` 也不帶百分比。
-    /// `previewSample()` 為了一次展示所有狀態，`summarySection` 裡永遠至少有一個會撐滿寬度
-    /// 的子元件（續傳橫幅或重試列），因此測不出「完全沒有撐寬元件時整塊被置中」這個 bug
-    /// （reviewer 在生產常態下量到群標題 x=119.3，應為 24）。這個樣本刻意最小、最平常，
-    /// 專門用來釘住這個回歸。
-    static func previewNormalSample() -> UploadQueueStore {
-        let store = UploadQueueStore(familyID: UUID(), mediaUploadService: PreviewMediaUploadService())
-        let now = Date()
-        func upload() -> PendingUpload {
-            PendingUpload(
-                kind: .photo(data: Data(), fileExtension: "jpg"), thumbnail: nil,
-                pixelSize: PixelSize(width: 4, height: 3)
-            )
-        }
-        store.seedForPreview([
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-60), state: .waiting),
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-30), state: .uploading(progress: nil)),
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-180), state: .completed),
-            .init(upload(), enqueuedAt: now.addingTimeInterval(-200), state: .completed)
-        ])
-        return store
-    }
-}
-#endif

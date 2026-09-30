@@ -35,6 +35,7 @@ extension UploadQueueStore {
                 compressedVideoCache.removeValue(forKey: id)
             }
             entries.removeValue(forKey: id)
+            pendingRemovals.remove(id) // LS-410：已標記移除的失敗項若同時被取消匯入，別留下指向不存在 entry 的標記。
             order.removeAll { $0 == id }
             discardPersisted(id) // LS-397：取消的批次不該在重啟後又被還原續傳。
             onUploadFailedTerminal(id)

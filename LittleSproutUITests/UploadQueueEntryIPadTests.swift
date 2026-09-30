@@ -13,7 +13,7 @@ final class UploadQueueEntryIPadTests: XCTestCase {
     /// `progressThenFailedOnly`：起始「還有 9 張」、劇本結束「還有 1 張」（位數不變，見 harness 註解）。
     private static let startLabel = "正在新增照片，還有 9 張還沒完成"
     private static let almostDoneLabel = "正在新增照片，還有 1 張還沒完成"
-    private static let onlyFailedLabel = "有 1 張照片沒有加進去，看原因，或再試一次"
+    private static let onlyFailedLabel = "有 1 張照片沒有加進去，看原因，再試或移除"
 
     override func setUpWithError() throws {
         try XCTSkipUnless(
@@ -33,7 +33,6 @@ final class UploadQueueEntryIPadTests: XCTestCase {
         XCTAssertGreaterThan(row.frame.minY, title.frame.maxY, "入口列應在側欄標題「設定」之下")
         XCTAssertLessThan(row.frame.maxY, firstNavItem.frame.minY, "入口列應在 Nav List 之上")
         XCTAssertGreaterThanOrEqual(row.frame.height, 44)
-        print("LS-404 iPad rowHeight progress=\(row.frame.height) width=\(row.frame.width)")
         attach(app, name: "entry-ipad-progress")
     }
 
@@ -61,7 +60,6 @@ final class UploadQueueEntryIPadTests: XCTestCase {
             Thread.sleep(forTimeInterval: 7)
             XCTAssertEqual(navItem.frame.minY, navY, accuracy: 0.5, "[\(size)] 停留期間 Nav List 不能被搬動")
             XCTAssertEqual(row.frame.height, height, accuracy: 0.5, "[\(size)] 停留期間列高不能改變")
-            print("LS-404 iPad progressToOnlyFailed \(size) height=\(height) label=\(row.label)")
             XCTAssertTrue(
                 row.label == Self.almostDoneLabel
                     || row.label == Self.onlyFailedLabel,
