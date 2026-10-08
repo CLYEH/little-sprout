@@ -719,13 +719,13 @@ ok("LS-418 image fill mode 同義詞：fill／fit／cover／contain 四種夾具
   const fs = require("fs");
   const os = require("os");
   const { execFileSync } = require("child_process");
-  const modeDoc = (m) => ({
+  const modeDoc = (m, themeMode) => ({
     version: "2.17",
     children: [
       { type: "frame", id: "Ph1", name: "Photo 1", width: 100, height: 100, fill: { type: "image", url: "a.jpg", mode: m[0] } },
       { type: "rectangle", id: "Ph2", name: "Photo 2", width: 50, height: 50, fill: ["$bg", { type: "image", url: "b.jpg", mode: m[1] }] },
       { type: "ref", id: "Rf3", ref: "Ph1", descendants: { Inner: { fill: { type: "image", url: "c.jpg", mode: m[2] } } } },
-      { type: "frame", id: "Ph4", name: "Photo 4", theme: { mode: "dark" }, fill: { type: "image", enabled: false, url: "d.jpg", mode: m[3] } },
+      { type: "frame", id: "Ph4", name: "Photo 4", theme: { mode: themeMode || "cover" }, fill: { type: "image", enabled: false, url: "d.jpg", mode: m[3] } },
     ],
   });
   const disk = modeDoc(["fill", "fit", "fill", "fit"]);
@@ -747,6 +747,11 @@ ok("LS-418 image fill mode 同義詞：fill／fit／cover／contain 四種夾具
     return execFileSync("python3", [pyPath, f], { encoding: "utf8", env: Object.assign({}, process.env, { PYTHONDONTWRITEBYTECODE: "1" }) }).trim();
   };
   for (const [name, d] of [["disk.pen", disk], ["pen.pen", pen], ["mixed.pen", mixed]]) assert.strictEqual(pyHash(py, d, name), hDisk, "python " + name + " 應與 js 同值");
+  // R2 m1：py 端同樣不得對映非 image 物件的 mode——Ph4 的 theme.mode 是 "cover"；改成對映後的 "fill"，js／py 都應得到另一個值
+  const themeFill = modeDoc(["fill", "fit", "fill", "fit"], "fill");
+  const hThemeFill = treeHash(treeHashLines(themeFill));
+  assert.notStrictEqual(hThemeFill, hDisk, "js：非 image 物件 theme.mode 為 cover 與 fill 應不同值（未被對映）");
+  assert.strictEqual(pyHash(py, themeFill, "theme-fill.pen"), hThemeFill, "python theme-fill.pen 應與 js 同值（非 image 物件的 mode:\"cover\" 不得對映）");
 
   const emit = [];
   assert.strictEqual(cliEmitHashSnippet(fs, (s) => emit.push(s), (s) => emit.push(s)), 0);
