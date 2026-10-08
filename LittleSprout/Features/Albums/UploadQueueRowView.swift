@@ -39,6 +39,10 @@ struct UploadQueueRowView: View {
     /// 「移除」↔「復原」原地換態後，VoiceOver 焦點跟著移到同列新出現的那顆（`FBoLL` R3）。
     private enum FocusTarget: Hashable { case remove, undo }
     @AccessibilityFocusState private var focus: FocusTarget?
+    /// LS-410 QA R1：AX 字級（AX1 起，同 `FoodBookView` 門檻）動作列／墓碑列「復原」一律直排（稿 `FIwU8` `zdknt`／
+    /// `gtBYb`、`YNP31` `Aqen6`／`NNfRI` 皆 vertical）——不交給 `ViewThatFits` 判斷：iOS 26.0 實測它對「重試＋移除」
+    /// 選了橫排，讓「移除」「復原」逐字換行。非 AX 字級維持 `ViewThatFits`（預設字級版面不變）。
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     // merge-review R2 F5：對稿——縮圖 64pt，不是 48pt。
     private static let thumbnailSize: CGFloat = 64
@@ -143,35 +147,42 @@ struct UploadQueueRowView: View {
         }
     }
 
-    /// 動作列：左＝這一列該做的事（重試／查看儲存空間），右＝「× 移除」（`onRemove` 才有）。空間不夠（AX3）改直排：
-    /// 先原有動作、再「× 移除」，左緣貼齊內容欄——用 `ViewThatFits` 量，不寫死字級門檻（`fC2Rf`）。
+    /// 動作列：左＝這一列該做的事（重試／查看儲存空間），右＝「× 移除」（`onRemove` 才有）。直排：先原有動作、再
+    /// 「× 移除」，左緣貼齊內容欄——AX 字級一律直排（`dynamicTypeSize` 說明）；非 AX 字級空間不夠時由 `ViewThatFits` 改直排。
     @ViewBuilder
     private func actionRow(reason: UploadFailureReason) -> some View {
         if let onRemove {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 0) {
-                    leadingAction(reason: reason)
-                    Spacer(minLength: 0)
-                    textAction(icon: "xmark", title: "移除", color: Color.lsTextSecondary, padded: true) {
-                        onRemove()
-                        focus = .undo
+            if dynamicTypeSize.isAccessibilitySize {
+                stackedActions(reason: reason, onRemove: onRemove)
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 0) {
+                        leadingAction(reason: reason)
+                        Spacer(minLength: 0)
+                        removeButton(padded: true, onRemove: onRemove)
                     }
-                    .accessibilityIdentifier(QAAccessibilityID.uploadQueueRemove)
-                    .accessibilityFocused($focus, equals: .remove)
-                }
-                VStack(alignment: .leading, spacing: 0) {
-                    leadingAction(reason: reason)
-                    textAction(icon: "xmark", title: "移除", color: Color.lsTextSecondary, padded: false) {
-                        onRemove()
-                        focus = .undo
-                    }
-                    .accessibilityIdentifier(QAAccessibilityID.uploadQueueRemove)
-                    .accessibilityFocused($focus, equals: .remove)
+                    stackedActions(reason: reason, onRemove: onRemove)
                 }
             }
         } else {
             leadingAction(reason: reason)
         }
+    }
+
+    private func stackedActions(reason: UploadFailureReason, onRemove: @escaping () -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            leadingAction(reason: reason)
+            removeButton(padded: false, onRemove: onRemove)
+        }
+    }
+
+    private func removeButton(padded: Bool, onRemove: @escaping () -> Void) -> some View {
+        textAction(icon: "xmark", title: "移除", color: Color.lsTextSecondary, padded: padded) {
+            onRemove()
+            focus = .undo
+        }
+        .accessibilityIdentifier(QAAccessibilityID.uploadQueueRemove)
+        .accessibilityFocused($focus, equals: .remove)
     }
 
     @ViewBuilder
@@ -225,8 +236,8 @@ struct UploadQueueRowView: View {
     // MARK: - 墓碑列（標記移除中，`p0Fw0`／`YNP31`）
 
     /// 縮圖 opacity 0.4、時間戳 `$text-secondary`、「已移除，不會加進相簿。」，右端「↶ 復原」；列高鎖原失敗列
-    /// （`lockedHeight`），「復原」貼列底＝原本「× 移除」的座標。橫排／直排跟原列同一個判斷：用同寬的隱形原動作
-    /// 撐開，`ViewThatFits` 的選擇就和原列一致。
+    /// （`lockedHeight`），「復原」貼列底＝原本「× 移除」的座標。橫排／直排跟原列同一個判斷：AX 字級一律直排；
+    /// 非 AX 用同寬的隱形原動作撐開，`ViewThatFits` 的選擇就和原列一致。
     private func tombstone(reason: UploadFailureReason) -> some View {
         let timestamp = UploadQueueTimestampFormat.string(for: row.enqueuedAt)
         return HStack(alignment: .top, spacing: AppSpacing.label) {
@@ -248,14 +259,20 @@ struct UploadQueueRowView: View {
     }
 
     private func undoRow(reason: UploadFailureReason) -> some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 0) {
-                leadingAction(reason: reason).hidden()
-                Spacer(minLength: 0)
-                undoButton(padded: true)
-            }
-            VStack(alignment: .leading, spacing: 0) {
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
                 undoButton(padded: false)
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 0) {
+                        leadingAction(reason: reason).hidden()
+                        Spacer(minLength: 0)
+                        undoButton(padded: true)
+                    }
+                    VStack(alignment: .leading, spacing: 0) {
+                        undoButton(padded: false)
+                    }
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
