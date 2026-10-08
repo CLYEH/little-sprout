@@ -9,7 +9,7 @@
 -- 三筆都放在 2100-06-15（比任何 fixture 都新），所以在家族時間軸恆為前三列。
 --
 -- 角色：A 家（fa…001）member=a2 身分走 RPC（security invoker，RLS 生效）；資料準備以 postgres 直寫。
--- Mutation 自證見 LS-415 handoff。
+-- Mutation 自證見 LS-415 handoff；§7（albums／media 沿用舊 seq）見 LS-419 handoff。
 
 \set ON_ERROR_STOP on
 
@@ -261,6 +261,76 @@ begin
       array_length(v_walk, 1), array_length(v_all, 1), v_walk[1:3], v_all[1:3];
   end if;
   raise notice 'ok：同微秒批次三本相簿，毫秒截斷游標 limit 1 逐頁走完（% 列）＝一次取完', array_length(v_all, 1);
+
+  -- ---- 7. albums／media 的 UPDATE 也沿用舊 seq（LS-419；池 `1de820f8`）----------------
+  -- §4 只編輯 diaries／child_food_records。feed_sync_albums／feed_sync_media 同樣對任何 UPDATE
+  -- 先刪後寫 feed_items；reinsert 若改回 nextval（不沿用舊 seq），被編輯的那本相簿／那張照片
+  -- 會跳到同一瞬間的最新。作法同 §1：同一個 occurred_at 各建兩筆、建立順序與 ref_id 順序相反，
+  -- 編輯「先建立」的那筆，斷言它的 seq 不變、家族時間軸順序不變。
+  -- 時間 2100-07-20（比 §1–§6 都新）→ 家族時間軸前四列恆為這四筆（相簿 09:00、照片 08:00）。
+  -- media 沒有 caption 欄，改 width／height（authenticated 有 UPDATE grant 的欄位；校正轉向的情境）。
+  declare
+    v_ax uuid := 'ffffffff-0000-4000-8000-000000004191';   -- 相簿 X：先建立
+    v_ay uuid := '00000000-0000-4000-8000-000000004191';   -- 相簿 Y：後建立
+    v_mx uuid := 'ffffffff-0000-4000-8000-000000004192';   -- 照片 X：先建立
+    v_my uuid := '00000000-0000-4000-8000-000000004192';   -- 照片 Y：後建立
+    v_order uuid[];
+    v_seq_before bigint;
+    v_seq_after bigint;
+  begin
+    reset role;
+    insert into public.albums (id, family_id, title, created_by, created_at)
+    values (v_ax, v_family, 'LS-419 相簿 X（先建立）', v_member, timestamptz '2100-07-20 09:00:00.250000+00');
+    insert into public.albums (id, family_id, title, created_by, created_at)
+    values (v_ay, v_family, 'LS-419 相簿 Y（後建立）', v_member, timestamptz '2100-07-20 09:00:00.250000+00');
+    -- taken_at 有「不得晚於 now()+1 天」的 CHECK，所以留 NULL、occurred_at 取 created_at
+    insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, created_at)
+    values (v_mx, v_family, v_family::text || '/2100/07/' || v_mx::text || '.jpg', 'photo', 1024, null, 3024, 4032,
+            v_member, timestamptz '2100-07-20 08:00:00.250000+00');
+    insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, created_at)
+    values (v_my, v_family, v_family::text || '/2100/07/' || v_my::text || '.jpg', 'photo', 1024, null, 3024, 4032,
+            v_member, timestamptz '2100-07-20 08:00:00.250000+00');
+
+    v_order := array[v_ay, v_ax, v_my, v_mx];   -- 新 → 舊（同一瞬間依建立順序倒序；ref_id desc 會剛好相反）
+
+    perform set_config('request.jwt.claims',
+      json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+    set local role authenticated;
+    select array_agg(t.ref_id order by t.n) into v_got
+      from public.get_family_timeline(v_family, null, null, null, 4)
+           with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
+    if v_got is distinct from v_order then
+      raise exception 'SETUP FAIL：§7 家族時間軸前四列應為 [相簿 Y, 相簿 X, 照片 Y, 照片 X]，實際 %（預期 %）', v_got, v_order;
+    end if;
+
+    -- 相簿：改標題
+    reset role;
+    select f.seq into v_seq_before from public.feed_items f where f.kind = 'album' and f.ref_id = v_ax;
+    update public.albums set title = 'LS-419 相簿 X 已改標題' where id = v_ax;
+    select f.seq into v_seq_after from public.feed_items f where f.kind = 'album' and f.ref_id = v_ax;
+    if v_seq_after is distinct from v_seq_before then
+      raise exception 'FAIL：相簿 X 改標題後 feed_items.seq 由 % 變成 %——feed_sync_albums 的 UPDATE（delete＋reinsert）沒沿用舊 seq', v_seq_before, v_seq_after;
+    end if;
+
+    -- 照片：改 width／height
+    select f.seq into v_seq_before from public.feed_items f where f.kind = 'media' and f.ref_id = v_mx;
+    update public.media set width = 4032, height = 3024 where id = v_mx;
+    select f.seq into v_seq_after from public.feed_items f where f.kind = 'media' and f.ref_id = v_mx;
+    if v_seq_after is distinct from v_seq_before then
+      raise exception 'FAIL：照片 X 改 width／height 後 feed_items.seq 由 % 變成 %——feed_sync_media 的 UPDATE（delete＋reinsert）沒沿用舊 seq', v_seq_before, v_seq_after;
+    end if;
+
+    perform set_config('request.jwt.claims',
+      json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+    set local role authenticated;
+    select array_agg(t.ref_id order by t.n) into v_got
+      from public.get_family_timeline(v_family, null, null, null, 4)
+           with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
+    if v_got is distinct from v_order then
+      raise exception 'FAIL：編輯相簿 X／照片 X 後家族時間軸前四列變成 %（預期仍為 %）——被編輯的卡片跳到同一瞬間的最新', v_got, v_order;
+    end if;
+  end;
+  raise notice 'ok：相簿改標題、照片改 width／height 後 seq 不變，同一瞬間的順序不變（feed_sync_albums／feed_sync_media 沿用舊 seq）';
 
   reset role;
   raise notice 'ok：LS-415 全部通過（含 ref_id 與建立順序相反的同日三筆）';
