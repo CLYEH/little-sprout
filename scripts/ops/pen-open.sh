@@ -144,6 +144,11 @@
 #      （預設 2 MiB，0＝停用）時，不再先白送兩次必 interrupted 的整份——直接把相鄰頂層節點依預算打包成段各自回讀合併；單段
 #      失敗對半重切最多 `PEN_OPEN_HASH_MAX_HALVINGS`（預設 3）次。18k 節點稿實測：舊路徑「整份 ×2 失敗→對半 2 段」
 #      → 新路徑直接 3 段。`PEN_OPEN_STATS_FILE` 有設時逐行追加 interrupted／mode／segments 事件（pen-read.sh 用來寫統計）。
+#      **LS-418**（Pen 載入正規化）：Pen 1.2.15 載入 .pen 時把 image fill `mode` 舊名改成新名（`fill`→`cover`、`fit`→`contain`），
+#      磁碟檔仍是舊名——兩端同一演算法也永遠不同值，含 image fill 的稿每跑必走清場（LS-377 QA 10-08 實測 LS-411 稿 d1acf4ce≠4f2bb098，
+#      逐 root 比對差異只有 mode）。修法在演算法本身不在本檔：`design_tree_hash.py` 與 `overflow-scan.js` 的 canon 對 `type:"image"`
+#      物件先把新名對映回磁碟舊名（對映表 `IMAGE_FILL_MODE_SYNONYMS`／`imageModeSynonyms()`，overflow-scan.test.js 釘兩表相同；方向選
+#      舊名＝既有收據 tree_hash 不變）。日後 Pen 再改名別的欄位，同樣在兩端 canon 加對映、先逐 root 比對找出欄位，不要放寬本檔的比對。
 #   2. 讀回的值與磁碟不同（renderer 真的停在舊快照、或記憶體有未落地編輯）→ 才走既有清場流程（候選枚舉＋
 #      check_root_safe＋osascript→TERM→KILL＋重開）；未落地的真實編輯仍 fail closed exit 1，與 LS-118 相同。
 #   3. 整棵單次與分段都失敗（CLI 逾時／Pencil `InternalError: interrupted`——見 1；或 CLI 輸出格式改了）→ **不殺、
