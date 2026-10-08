@@ -428,9 +428,13 @@ begin
     end if;
   end loop;
 
-  select array_agg(t.kind::text || ':' || t.ref_id::text order by t.occurred_at desc, t.ref_id desc)
+  -- LS-415 R2（merge-review B1）：平手鍵由 ref_id 改成 seq（建立順序），測試端不再自己
+  -- 重排——以 RPC 單次回傳的順序（with ordinality）為準，否則同日兩篇日記撞號時與
+  -- RPC 新序不一致（約 35% 隨機紅）。「逐頁串接＝單次查詢」斷言意圖不變。
+  select array_agg(t.kind::text || ':' || t.ref_id::text order by t.n)
     into v_full
-    from public.get_family_timeline(v_family, v_child1, null, null, 1000) t;
+    from public.get_family_timeline(v_family, v_child1, null, null, 1000)
+         with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
 
   if array_length(v_full, 1) < 20 then
     raise exception 'FAIL：灌量後 child1 篩選單次查詢應至少有 20 筆（本段迴圈新灌的），實際 %（灌量前提不成立）',

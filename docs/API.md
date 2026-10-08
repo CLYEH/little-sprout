@@ -1018,8 +1018,16 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `feed_kind` 列舉值），`occurred_at` 依 kind 各自取（album 用
   `created_at`；media 用 `coalesce(taken_at, created_at)`；diary 用 `entry_date`
   轉 UTC 午夜；`food_first` 用 `child_food_records.first_tried_on` 轉 UTC 午夜，
-  同 diary 的既有處理）。分頁用 keyset：`WHERE family_id = ? AND (occurred_at, ref_id) < (?, ?)
-  ORDER BY occurred_at DESC, ref_id DESC LIMIT n`，不要用 `OFFSET`。
+  同 diary 的既有處理）。分頁用 keyset：`WHERE family_id = ? AND (occurred_at, seq) < (?, ?)
+  ORDER BY occurred_at DESC, seq DESC LIMIT n`，不要用 `OFFSET`。
+- **`seq bigint not null`（LS-415）**：建立順序（單調遞增，`private.feed_seq`），是
+  `occurred_at` 相同時的第二排序鍵。diary（`entry_date`）與 `food_first`
+  （`first_tried_on`）的 `occurred_at` 都轉 UTC 午夜，同一天的卡片 `occurred_at` 完全相同，
+  舊的第二鍵 `ref_id` 是隨機 uuid → 同日順序隨機；現在同日依建立順序倒序（新→舊）。
+  回填依來源列 `created_at`（同秒再 `ref_id`）。編輯內容（觸發 trigger 的 delete＋reinsert）
+  沿用舊 `seq`，不會讓卡片跳到同日最新；軟刪後還原則視為重新出現、取新號。
+  `feed_item_children.seq` 由 BEFORE INSERT trigger 從同 `(kind, ref_id)` 的 `feed_items`
+  複製，兩種視角同日順序一致。**不外露**：`get_family_timeline` 回傳欄位與游標形狀不變。
 - **`media` 項目隨日記隱藏（LS-378）**：照片至少掛在一篇已軟刪的日記、沒有掛在任何
   未刪的日記、也不在任何相簿時，不出現在 `feed_items`（判準
   `private.media_hidden_by_deleted_diary()`，日記軟刪／還原與 `media` 寫入時求值；之後才
@@ -1846,19 +1854,34 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   都不傳；這支 RPC 不會為了容錯半游標而靜默回傳空集合（那會讓呼叫端誤判成「這頁真的
   沒資料了」）。**篩 child 的分頁一樣不會跳項或重複**——`feed_item_children` 對
   每個 `(kind, ref_id)` 依標記的孩子各自有一列，keyset 排序鍵與 `feed_items` 同一套
-  `(occurred_at desc, ref_id desc)`，游標語意完全一致（見
+  `(occurred_at desc, seq desc)`，游標語意完全一致（見
   `supabase/tests/97_multi_child_tags.sql`）。
+- **排序鍵與游標語意（LS-415）**：`ORDER BY occurred_at DESC, seq DESC`——`seq` 是建立順序
+  （§3 `feed_items`），同一個 `occurred_at`（例如同一天的日記與飲食初嘗卡）依建立順序倒序，
+  不再是隨機 uuid 順序。**游標形狀不變**：呼叫端仍傳上一頁最後一列的
+  `(occurred_at, ref_id)`，`seq` 不外露；函式內以 `p_cursor_ref_id`（家族版查 `feed_items`、
+  篩 child 版查 `feed_item_children`，另帶 `family_id`［`child_id`］與 `p_cursor_occurred_at`
+  ±1ms 視窗縮小索引範圍——視窗是因為 iOS 以毫秒精度序列化游標時間，而 `media`／`album`
+  的 `occurred_at` 是微秒精度）反查游標列的 `seq` 與列上真實 `occurred_at`，再以
+  `(occurred_at, seq) < (游標列真實 occurred_at, 游標 seq)` 翻頁。**游標列已不存在**
+  （兩頁之間被刪、軟刪或改期）：**退回舊的 `(occurred_at, ref_id) < (p_cursor_occurred_at,
+  p_cursor_ref_id)` 比較**，不報錯、不沿用 `LS022`，app 分頁不中斷；代價是該游標所在同日
+  群組的翻頁順序不保證（極少見的競態）。測試見
+  `supabase/tests/125_feed_items_seq_order.sql`（同日三筆 diary／food_first／diary 依建立
+  順序倒序、limit 2 跨同日邊界不重複不漏、篩 child 同案、編輯不改順序、游標列已刪退回行為）。
 - **`p_limit`**：下界會被夾到 1（傳 `0` 或負數不會被誤用成「不限筆數」）、上界夾到
   100；預設 20。兩端都有測試覆蓋（`supabase/tests/85_diaries_timeline.sql`，上界測試
   用了一個 >100 筆的家庭資料集，不是只驗小數字下「反正沒差」的空案例）。
 - **錯誤碼**：未登入時 `auth.uid()` 為 `NULL`，配合 RLS 自然回傳 0 列，不 raise；
-  游標只傳一半 `LS022`。
+  游標只傳一半 `LS022`。游標列已刪不是錯誤（見上「排序鍵與游標語意」）。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
 - **效能**：`language plpgsql`，依 `p_child_id`／游標是否為 `NULL` 拆成四條各自可以
   走索引的靜態查詢（不是同一句 SQL 裡的 `OR` 分支）——這是刻意的實作選擇，不只是
   風格：`language sql` 搭配 `set search_path` 會讓函式無法被規劃器 inline，`OR` 條件
   就下推不進 index cond。不篩 child 的兩條分支走 `feed_items` 本身既有的索引；篩
-  child 的兩條分支改走 `feed_item_children_family_child_occurred_idx`（見 §8）。
+  child 的兩條分支改走 `feed_item_children_family_child_occurred_seq_idx`（見 §8；LS-415 起兩張表
+  索引為 `(family_id, occurred_at desc, seq desc)`／`(family_id, child_id, occurred_at desc,
+  seq desc)`，舊 `ref_id` 索引已 drop）。
   每條分支各自在子查詢裡先完成「篩選＋排序＋LIMIT」，才對這一頁（≤`p_limit`
   列）逐列查一次 `child_ids`（`diary_children`／`album_children` 依 `kind` 分流的
   correlated 子查詢，走各自 PK 的索引）——跟 `list_comments` 「先子查詢篩選排序
@@ -3147,9 +3170,9 @@ owner: create_invite(family_id, role, expires_at, max_uses) -> code
     在 keyset 分頁下容易跳項或重複）。細節見
     `supabase/migrations/20260902011514_diary_album_multi_child_tags.sql` 第 0 段。
   - **keyset 分頁不跳項**：`feed_item_children` 對每個 `(kind, ref_id)` 依標記的
-    孩子各自有一列，索引 `feed_item_children_family_child_occurred_idx (family_id,
-    child_id, occurred_at desc, ref_id desc)` 與 `feed_items` 本身的排序鍵完全
-    一致，游標語意相同，見 `supabase/tests/97_multi_child_tags.sql` 的灌量測試。
+    孩子各自有一列，索引 `feed_item_children_family_child_occurred_seq_idx (family_id,
+    child_id, occurred_at desc, seq desc)`（LS-415 起第二鍵由 `ref_id` 改 `seq`）與
+    `feed_items` 本身的排序鍵完全一致，游標語意相同，見 `supabase/tests/97_multi_child_tags.sql` 的灌量測試。
 - **軟刪孩子與時間軸／照片日記的關係（LS-66；LS-47 定案第④題；LS-121 延伸到連結表）**：
   軟刪一個孩子（`set_child_deleted`）對**既有**標記完全不連動——`diary_children`／
   `album_children`／`media_children`（LS-317）／`feed_item_children` 裡既有的列
