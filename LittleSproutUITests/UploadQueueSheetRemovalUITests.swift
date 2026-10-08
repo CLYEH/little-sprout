@@ -267,6 +267,41 @@ final class UploadQueueSheetRemovalUITests: XCTestCase {
             app.terminate()
         }
     }
+
+    // MARK: - AX3 可重試失敗列：「重試」「移除」直排、各自單行；墓碑列「復原」同樣直排（QA R1：稿 `FIwU8` `zdknt`／`gtBYb`、
+    // `YNP31` `Aqen6`／`NNfRI` 皆 vertical；iOS 26.0 曾橫排，「移除」「復原」逐字換行）
+
+    func testAX3_retryableFailedRow_actionsStackVertically_singleLine_andUndoStaysStacked() {
+        let app = launch(fixture: "sheetProgressFailures", size: Self.ax3, scheme: "dark")
+        openSheet(in: app)
+        let removes = app.buttons.matching(identifier: QAAccessibilityID.uploadQueueRemove)
+        XCTAssertTrue(removes.element(boundBy: 1).waitForExistence(timeout: 5), "可重試失敗列（連線中斷）有「移除」")
+        // AX3 這列在 footer 下方：先把列表捲到看得見（截圖才拍得到；量測只比同一畫面內的相對值）。
+        let rows = app.scrollViews.containing(.button, identifier: QAAccessibilityID.uploadQueueRemove).firstMatch
+        for _ in 0..<3 where !removes.element(boundBy: 1).isHittable { rows.swipeUp(velocity: .slow) }
+        // 基準＝LS002 列（第 0 顆）的「移除」：「查看儲存空間」很寬、本來就直排不擠，它的尺寸就是單行「× 移除」的尺寸。
+        let reference = removes.element(boundBy: 0).frame
+        let retry = app.buttons.matching(NSPredicate(format: "label == '重試'")).element(boundBy: 0).frame
+        let remove = removes.element(boundBy: 1).frame
+        let measured = XCTAttachment(string: "AX3 參照移除=\(reference) 重試=\(retry) 移除=\(remove)")
+        measured.name = "measure-AX3-retryrow"
+        measured.lifetime = .keepAlways
+        add(measured)
+        attach(app, name: "16c-dark-AX3-retryrow") // 斷言前先截，紅的時候也留下證據
+        XCTAssertGreaterThanOrEqual(remove.minY, retry.maxY - 1, "「移除」在「重試」正下方（直排），重試 \(retry) 移除 \(remove)")
+        XCTAssertEqual(remove.minX, retry.minX, accuracy: 1, "直排：「移除」左緣貼齊「重試」（內容欄左緣）")
+        XCTAssertEqual(remove.height, reference.height, accuracy: 1, "「移除」單行、不逐字換行：與 LS002 列的「移除」同高")
+        XCTAssertEqual(remove.width, reference.width, accuracy: 1, "「移除」沒被擠窄：與 LS002 列的「移除」同寬")
+
+        removes.element(boundBy: 1).tap()
+        let undo = app.buttons[QAAccessibilityID.uploadQueueUndo]
+        XCTAssertTrue(undo.waitForExistence(timeout: 5), "標記後原地出現「復原」")
+        let undoFrame = undo.frame
+        attach(app, name: "16f-dark-AX3-retryrow")
+        XCTAssertEqual(undoFrame.minX, retry.minX, accuracy: 1, "墓碑列「復原」直排：貼內容欄左緣（原「移除」的 x），實際 \(undoFrame)")
+        XCTAssertEqual(undoFrame.height, reference.height, accuracy: 1, "「復原」單行、不逐字換行，實際 \(undoFrame)")
+        app.terminate()
+    }
 }
 
 extension UploadQueueSheetRemovalUITests {
