@@ -798,6 +798,20 @@ race_case "兩個連線同時 upsert_child_food_record 同一寶貝同一食物�
   food_record_race_setup.sql food_record_race_s1.sql \
   food_record_race_s2.sql food_record_race_verify.sql
 
+# LS-419（池 `9402ad1b`，來源 LS-258 R1 minor-3）：growth_records 的併發回歸。113／114 只用
+# 單一 session 驗「先後發生」的終態，沒有兩個真的並行交易。這裡比照 diary_edit_vs_delete
+# 的「軟刪先動」方向：owner 的 delete_growth_record 壓住 3 秒，作者的 upsert_growth_record
+# 必須被阻塞、解除後拿到 42501，終態內容不變且 deleted_by＝owner。
+# 這組的阻塞來自軟刪交易自己的 UPDATE，拿掉 delete_growth_record 的 `for update` 仍綠，所以
+# 再加一組鎖強度探針：S1 以 FOR KEY SHARE 佔鎖（只和 FOR UPDATE 衝突），owner 的軟刪必須被
+# 阻塞——拿掉 for update 就不等待而紅。理由見 _s1_keyshare.sql 檔頭；終態沿用同一支 verify。
+race_case "同一筆成長紀錄：owner 軟刪先動，作者編輯必須被阻塞後拿到 42501" \
+  growth_record_delete_vs_edit_setup.sql growth_record_delete_vs_edit_s1_delete.sql \
+  growth_record_delete_vs_edit_s2_update.sql growth_record_delete_vs_edit_verify.sql
+race_case "同一筆成長紀錄：FOR KEY SHARE 佔鎖時 delete_growth_record 必須被阻塞（授權判斷前先 for update）" \
+  growth_record_delete_vs_edit_setup.sql growth_record_delete_vs_edit_s1_keyshare.sql \
+  growth_record_delete_vs_edit_s2_delete.sql growth_record_delete_vs_edit_verify.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 -- LS-96 池項 8519d8a4 第 3 條（LS-172 merge-review R2-i3）：兩支併發情境的
@@ -830,7 +844,8 @@ delete from public.families where id in (
   'c2000000-0000-4000-8000-000000000001',
   'c2000000-0000-4000-8000-000000000002',
   'de000000-0000-4000-8000-000000000001',
-  '71000000-0000-4000-8000-000000000001'
+  '71000000-0000-4000-8000-000000000001',
+  '74000000-0000-4000-8000-000000000001'
 );
 delete from auth.users where id in (
   'd0000000-0000-4000-8000-000000000001',
@@ -872,7 +887,9 @@ delete from auth.users where id in (
   'c1000000-0000-4000-8000-000000000002',
   'c1000000-0000-4000-8000-000000000011',
   'c1000000-0000-4000-8000-000000000012',
-  '72000000-0000-4000-8000-000000000001'
+  '72000000-0000-4000-8000-000000000001',
+  '75000000-0000-4000-8000-000000000001',
+  '75000000-0000-4000-8000-000000000002'
 );
 SQL
 run_sql "$cleanup" > /dev/null
