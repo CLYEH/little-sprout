@@ -666,7 +666,7 @@ function runHashSnippet(snippetSrc, rootDoc, globals) {
 ok("LS-309 extractFn：五個函式逐字元從本檔原始碼抽出（找不到函式名／本體起始 { 即 throw），抽出文字是本檔子字串（不是另外手抄，不會漂移）", () => {
   const fs = require("fs");
   const src = fs.readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
-  for (const name of ["canon", "canonNode", "fnv1a64", "hex64", "addLimbs"]) {
+  for (const name of ["canon", "canonNode", "fnv1a64", "hex64", "addLimbs", "imageModeSynonyms"]) {
     const fn = extractFn(src, name);
     assert.ok(fn.startsWith("function " + name + "("), name);
     assert.ok(src.includes(fn), name + "：抽出的文字必須是原始碼的逐字元子字串（不是手抄副本）");
@@ -709,6 +709,76 @@ ok("LS-309 --emit-hash-snippet：抽出的五函式＋driver 可在 Get/Print sh
   const merged = (BigInt("0x" + p1[2]) + BigInt("0x" + p2[2])) % (1n << 64n);
   const mergedHex = merged.toString(16).padStart(16, "0");
   assert.strictEqual(mergedHex, H0, "兩段 hash_part 依 mod 2^64 相加應與不分段 tree_hash 逐位元相同（LS-309：分段＝不分段）");
+});
+
+// ───── LS-418：image fill `mode` 同義詞（Pen 1.2.15 載入時 fill→cover、fit→contain，磁碟仍舊名）——兩端對映後同值 ─────
+// 夾具四個 image fill 落在物件 fill／陣列 fill／instance descendants 覆寫三種位置；磁碟版全舊名、Pen 版全新名、混合版四種各一。
+// 斷言：js／py／snippet（Get shim）三條路對三版同值、且等於磁碟版舊演算法值（對映方向＝新名→舊名，既有收據 hash 不變）；
+// 非 image 物件的 mode、未知 mode 值不對映；js 表與 py 表逐鍵相同（單一來源由本案釘住）；mutation：js／py 各自拿掉對映即不同值。
+ok("LS-418 image fill mode 同義詞：fill／fit／cover／contain 四種夾具 js／py／snippet 同值、等於磁碟舊名值；非 image 與未知值不對映；js 表＝py 表；拿掉任一端對映即紅", () => {
+  const fs = require("fs");
+  const os = require("os");
+  const { execFileSync } = require("child_process");
+  const modeDoc = (m, themeMode) => ({
+    version: "2.17",
+    children: [
+      { type: "frame", id: "Ph1", name: "Photo 1", width: 100, height: 100, fill: { type: "image", url: "a.jpg", mode: m[0] } },
+      { type: "rectangle", id: "Ph2", name: "Photo 2", width: 50, height: 50, fill: ["$bg", { type: "image", url: "b.jpg", mode: m[1] }] },
+      { type: "ref", id: "Rf3", ref: "Ph1", descendants: { Inner: { fill: { type: "image", url: "c.jpg", mode: m[2] } } } },
+      { type: "frame", id: "Ph4", name: "Photo 4", theme: { mode: themeMode || "cover" }, fill: { type: "image", enabled: false, url: "d.jpg", mode: m[3] } },
+    ],
+  });
+  const disk = modeDoc(["fill", "fit", "fill", "fit"]);
+  const pen = modeDoc(["cover", "contain", "cover", "contain"]);
+  const mixed = modeDoc(["fill", "contain", "cover", "fit"]);
+  const hDisk = treeHash(treeHashLines(disk));
+  assert.strictEqual(treeHash(treeHashLines(pen)), hDisk, "Pen 端新名（cover／contain）應與磁碟舊名（fill／fit）同值");
+  assert.strictEqual(treeHash(treeHashLines(mixed)), hDisk, "四種混用也同值");
+  assert.strictEqual(canon({ type: "image", mode: "cover" }), '{"mode":"fill","type":"image"}');
+  assert.strictEqual(canon({ type: "image", mode: "contain" }), '{"mode":"fit","type":"image"}');
+  assert.strictEqual(canon({ mode: "cover" }), '{"mode":"cover"}', "非 image 物件的 mode 不得對映");
+  assert.notStrictEqual(treeHash(treeHashLines(modeDoc(["tile", "fit", "fill", "fit"]))), hDisk, "未知 mode 值不對映、仍參與雜湊");
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "LS-418-mode-"));
+  const py = path.join(__dirname, "..", "gates", "design_tree_hash.py");
+  const pyHash = (pyPath, d, name) => {
+    const f = path.join(dir, name);
+    fs.writeFileSync(f, JSON.stringify(d));
+    return execFileSync("python3", [pyPath, f], { encoding: "utf8", env: Object.assign({}, process.env, { PYTHONDONTWRITEBYTECODE: "1" }) }).trim();
+  };
+  for (const [name, d] of [["disk.pen", disk], ["pen.pen", pen], ["mixed.pen", mixed]]) assert.strictEqual(pyHash(py, d, name), hDisk, "python " + name + " 應與 js 同值");
+  // R2 m1：py 端同樣不得對映非 image 物件的 mode——Ph4 的 theme.mode 是 "cover"；改成對映後的 "fill"，js／py 都應得到另一個值
+  const themeFill = modeDoc(["fill", "fit", "fill", "fit"], "fill");
+  const hThemeFill = treeHash(treeHashLines(themeFill));
+  assert.notStrictEqual(hThemeFill, hDisk, "js：非 image 物件 theme.mode 為 cover 與 fill 應不同值（未被對映）");
+  assert.strictEqual(pyHash(py, themeFill, "theme-fill.pen"), hThemeFill, "python theme-fill.pen 應與 js 同值（非 image 物件的 mode:\"cover\" 不得對映）");
+
+  const emit = [];
+  assert.strictEqual(cliEmitHashSnippet(fs, (s) => emit.push(s), (s) => emit.push(s)), 0);
+  const snipOut = runHashSnippet(emit.join(""), pen, {});
+  assert.ok(snipOut.includes("tree_hash=" + hDisk), "snippet（Pen 端實際送的那份）對新名稿應算出磁碟舊名值：" + snipOut);
+
+  const pyTable = JSON.parse(execFileSync("python3", ["-c", "import sys,json; sys.dont_write_bytecode=True; sys.path.insert(0, sys.argv[1]); import design_tree_hash as d; print(json.dumps(d.IMAGE_FILL_MODE_SYNONYMS))", path.dirname(py)], { encoding: "utf8" }));
+  const jsSrc = fs.readFileSync(path.join(__dirname, "overflow-scan.js"), "utf8");
+  const jsTable = new Function(extractFn(jsSrc, "imageModeSynonyms") + "\nreturn imageModeSynonyms();")();
+  assert.deepStrictEqual(jsTable, pyTable, "js imageModeSynonyms() 與 py IMAGE_FILL_MODE_SYNONYMS 必須逐鍵相同（單一來源）");
+  assert.deepStrictEqual(pyTable, { cover: "fill", contain: "fit" });
+
+  // mutation：js 端拿掉對映（表回空物件）→ 新名稿與舊名稿不再同值
+  const tableLit = 'return { cover: "fill", contain: "fit" };';
+  assert.ok(jsSrc.includes(tableLit), "負控前提：原始碼含對映表字面");
+  const mutJs = path.join(dir, "overflow-scan.mut.js");
+  fs.writeFileSync(mutJs, jsSrc.replace(tableLit, "return {};"));
+  const M = require(mutJs);
+  assert.notStrictEqual(M.treeHash(M.treeHashLines(pen)), M.treeHash(M.treeHashLines(disk)), "mutation（js 拿掉對映）：新名／舊名稿應不同值——證明同值來自對映");
+  // mutation：py 端拿掉對映
+  const pySrc = fs.readFileSync(py, "utf8");
+  const pyLit = 'IMAGE_FILL_MODE_SYNONYMS = {"cover": "fill", "contain": "fit"}';
+  assert.ok(pySrc.includes(pyLit), "負控前提：py 原始碼含對映表字面");
+  const mutPy = path.join(dir, "design_tree_hash_mut.py");
+  fs.writeFileSync(mutPy, pySrc.replace(pyLit, "IMAGE_FILL_MODE_SYNONYMS = {}"));
+  assert.notStrictEqual(pyHash(mutPy, pen, "pen2.pen"), pyHash(mutPy, disk, "disk2.pen"), "mutation（py 拿掉對映）：新名／舊名稿應不同值");
+  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 // ───── LS-185 第六支 board_clip（LS-120 R2 spacer 推出板外／LS-177 R2 Header Row 捲離畫面的形狀；板 393×852，各板 x 平移） ─────

@@ -10,6 +10,11 @@
      （LS-171）；本檔讀磁碟 JSON 一律是完整值，兩端才會同值。
      canon＝鍵排序（code point 序）、無空白的 JSON；數字用 JavaScript Number#toString 規則（整數值不帶 .0、
      指數表示只在 ≥1e21 或 <1e-6 時出現）；字串照 JSON 轉義（雙引號／反斜線／控制字元）。
+     LS-418：canon 遇到 image fill（`type == "image"` 的物件，含陣列 fill／instance descendants 內的）時，`mode` 先依
+     IMAGE_FILL_MODE_SYNONYMS 對映——Pen 1.2.15 載入時把舊名正規化成新名（`fill`→`cover`、`fit`→`contain`），磁碟
+     .pen 仍是舊名，不對映則兩端永不同值。對映方向是「新名→磁碟舊名」：既有收據／已記錄的 tree_hash 全是舊名算的，
+     這個方向不改任何現存稿的雜湊；Pen 日後把新名存回磁碟時兩端同樣對映成舊名。JS 端同表在 overflow-scan.js
+     `imageModeSynonyms()`，overflow-scan.test.js 斷言兩表逐鍵相同。
   2. 每行 UTF-8 bytes 做 FNV-1a 64；全部逐行相加 mod 2^64（可交換，不依賴走訪順序、不用排序——JS 的 UTF-16 排序與
      python 的 code point 排序對 BMP 外字元順序不同，所以不能靠排序取得順序無關性）。
   3. 輸出 16 碼小寫 hex。
@@ -38,6 +43,9 @@ sys.dont_write_bytecode = True
 FNV_OFFSET = 0xCBF29CE484222325
 FNV_PRIME = 0x100000001B3
 MASK64 = (1 << 64) - 1
+
+# LS-418：Pen 載入時改名的 image fill mode 同義詞（Pen 端新名 → 磁碟舊名）；見檔頭演算法第 1 點
+IMAGE_FILL_MODE_SYNONYMS = {"cover": "fill", "contain": "fit"}
 
 
 def js_number(x):
@@ -97,7 +105,12 @@ def canon(v):
     if isinstance(v, list):
         return "[" + ",".join(canon(x) for x in v) + "]"
     if isinstance(v, dict):
-        return "{" + ",".join(json.dumps(k, ensure_ascii=False) + ":" + canon(v[k]) for k in sorted(v)) + "}"
+        syn = IMAGE_FILL_MODE_SYNONYMS if v.get("type") == "image" else {}
+        return "{" + ",".join(
+            json.dumps(k, ensure_ascii=False) + ":"
+            + canon(syn.get(v[k], v[k]) if k == "mode" and isinstance(v[k], str) else v[k])
+            for k in sorted(v)
+        ) + "}"
     raise TypeError("canon：不支援的型別 %s" % type(v).__name__)
 
 
