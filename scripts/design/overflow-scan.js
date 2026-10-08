@@ -71,7 +71,7 @@
 //   1d. Hash-only snippet CLI（LS-309，取代 pen-open.sh 舊版「送整份 ~101 KB 正典腳本＋`SCAN_HASH_ONLY = true;` 前綴」的
 //      回讀路徑——13–14k 節點級的稿連三輪必然失敗，LS-96 池項 `35819063`，來源 LS-251／LS-252 共 7 輪回讀無一次成功）：
 //      `node scripts/design/overflow-scan.js --emit-hash-snippet` 印出一份自包含、~3.3 KB 的最小 JS（只含 `canon`／
-//      `canonNode`／`fnv1a64`／`hex64`／`addLimbs` 五個函式的原始碼——用 `extractFn()` 逐字元從本檔抽出，不是另外手抄
+//      `canonNode`／`fnv1a64`／`hex64`／`addLimbs`／`imageModeSynonyms`（LS-418）六個函式的原始碼——用 `extractFn()` 逐字元從本檔抽出，不是另外手抄
 //      一份，跟正典演算法不會漂移——外加一段 `Get`／`Print` 走訪 driver）；送進 `pen interactive` 的 `execute` 比送整份
 //      腳本輕得多、`InternalError: interrupted` 機率更低。driver 支援三種模式（皆由 execute 前置的全域變數控制，
 //      跨呼叫不保留、每次都要重設）：
@@ -675,9 +675,19 @@ function canon(v) {
   if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
   if (typeof v === "object") {
     const keys = Object.keys(v).filter((k) => v[k] !== undefined).sort();
-    return "{" + keys.map((k) => JSON.stringify(k) + ":" + canon(v[k])).join(",") + "}";
+    const syn = v.type === "image" ? imageModeSynonyms() : null;
+    const val = (k) => (syn && k === "mode" && typeof v[k] === "string" && Object.prototype.hasOwnProperty.call(syn, v[k]) ? syn[v[k]] : v[k]);
+    return "{" + keys.map((k) => JSON.stringify(k) + ":" + canon(val(k))).join(",") + "}";
   }
   return JSON.stringify(v);
+}
+
+// LS-418：Pen 1.2.15 載入時把 image fill `mode` 舊名正規化成新名（`fill`→`cover`、`fit`→`contain`），磁碟 .pen 仍是舊名——
+// canon 遇到 `type === "image"` 的物件時先把 Pen 端新名對映回磁碟舊名（方向選舊名：既有收據／已記錄的 tree_hash 都不變）。
+// 與 scripts/gates/design_tree_hash.py `IMAGE_FILL_MODE_SYNONYMS` 同表（overflow-scan.test.js 斷言逐鍵相同）；寫成函式才會被
+// --emit-hash-snippet 的 extractFn 一起抽進 snippet（頂層常數抽不到）
+function imageModeSynonyms() {
+  return { cover: "fill", contain: "fit" };
 }
 
 function canonNode(node, parentId, index) {
@@ -1207,7 +1217,7 @@ function cliFromSnapshot(argv, fs, stdout, stderr) {
 }
 
 // ---- LS-309：--emit-hash-snippet（見檔頭 1d）----
-// 從本檔原始碼逐字元抽出 "function <name>(...) { ... }" 完整區塊（含巢狀大括號，用深度計數——五個目標函式內部沒有
+// 從本檔原始碼逐字元抽出 "function <name>(...) { ... }" 完整區塊（含巢狀大括號，用深度計數——六個目標函式內部沒有
 // 字串／正則含大括號字元，純計數安全；brace 計數比 regex 更不怕內部再有巢狀函式）。找不到函式名或函式本體起始的
 // `{` 就 throw——這是抽取器自己的程式錯誤，不是使用者輸入問題，直接讓呼叫端看到堆疊。
 function extractFn(src, name) {
@@ -1226,7 +1236,7 @@ function extractFn(src, name) {
 }
 
 // driver：三種模式見檔頭 1d。`Get`／`Print` 是 Pencil execute 環境注入的全域，這段程式碼本身不 require 任何東西——
-// 這正是「自包含」的意思，抽出的五個函式＋這段 driver 送進 execute 就是完整可執行的 snippet。
+// 這正是「自包含」的意思，抽出的六個函式＋這段 driver 送進 execute 就是完整可執行的 snippet。
 const HASH_SNIPPET_DRIVER = [
   'if (typeof Get === "function" && typeof Print === "function") {',
   '  var countOnly = typeof SCAN_HASH_ROOT_COUNT_ONLY !== "undefined" && SCAN_HASH_ROOT_COUNT_ONLY === true;',
@@ -1262,7 +1272,7 @@ const HASH_SNIPPET_DRIVER = [
 function cliEmitHashSnippet(fs, stdout, stderr) {
   let src;
   try { src = fs.readFileSync(__filename, "utf8"); } catch (e) { stderr("✗ 讀不到自己的原始碼（" + __filename + "）：" + (e && e.message ? e.message : e)); return 1; }
-  const names = ["canon", "canonNode", "fnv1a64", "hex64", "addLimbs"];
+  const names = ["canon", "canonNode", "fnv1a64", "hex64", "addLimbs", "imageModeSynonyms"];
   let fns;
   try { fns = names.map((n) => extractFn(src, n)); } catch (e) { stderr("✗ " + (e && e.message ? e.message : e)); return 1; }
   stdout(fns.join("\n\n") + "\n\n" + HASH_SNIPPET_DRIVER + "\n");

@@ -7,6 +7,7 @@
 # 全程 stub `open`／`pen`／`pgrep`／`osascript`／`ps`，不碰真正的 Pen app 或 pen CLI session。
 # LS-377 加：--help／位元組預算分段（超過預算的假節點夾具：直接分段、不先送整份、單段 interrupted 對半重切、重切上限）／
 # 統計 log（前景／背景、interrupted 次數、票號推導）＋三支 mutation（拿掉預算判斷／拿掉重切上限／拿掉 interrupted 計數）。
+# LS-418 加：情境 (9) image fill mode 同義詞（磁碟 fill／fit、Pen 端 cover／contain，假身在 node vm 真跑 snippet）＋mutation G（拿掉對映）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -90,6 +91,8 @@ input="$(cat)"
 case "$input" in
   *execute\(*)
     # LS-377：PEN_STUB_RANGE_MODE 設了就交給依 SCAN_HASH_ROOTS 算真 hash_part 的 python 假身（見下方夾具）
+    # LS-418：PEN_STUB_SNIPPET_JS 設了就在 node vm（Get／Print shim）裡真的執行 pen-open 送來的 snippet，走訪 $PEN_STUB_RANGE_FILE
+    if [ -n "${PEN_STUB_SNIPPET_JS:-}" ]; then exec node "$PEN_STUB_SNIPPET_JS" "$input"; fi
     if [ -n "${PEN_STUB_RANGE_MODE:-}" ]; then exec python3 "${PEN_STUB_RANGE_PY:?}" "$input"; fi
     hc="$(cat "${PEN_STUB_HASH:?}" 2>/dev/null || true)"
     case "$hc" in
@@ -658,6 +661,70 @@ if [ "$term_orphans" -gt 0 ] || [ "$term_tmpleft" -gt 0 ]; then
 else
   bad 'mutation F 未如預期翻轉（沒有孤兒也沒有殘檔）'
 fi
+
+# (9) LS-418：磁碟 .pen 的 image fill mode 是舊名 fill／fit，Pen 1.2.15 載入後 renderer 端是新名 cover／contain（夾具 renderer 四種
+#     並存）。pen 假身在 node vm 裡真的執行 pen-open 送來的 hash-only snippet（不是 python 代算）走訪 renderer 稿——兩端對映後
+#     必須判「與磁碟一致」、不清場；mutation G 把 py／js 兩端對映都拿掉（＝修前狀態）→ 判不一致走清場（LS-377 QA 實測的 bug 重現）。
+wtMode="${work}/wt-mode"; mkdir -p "${wtMode}/design"
+rendMode="${work}/renderer-mode.pen"
+python3 - "${wtMode}/design/littlesprout.pen" "$rendMode" <<'PY'
+import json, sys
+def doc(m):
+    kids = [{"id": "P%d" % i, "type": "frame", "fill": {"type": "image", "url": "p%d.jpg" % i, "mode": x}} for i, x in enumerate(m)]
+    kids.append({"id": "Q", "type": "rectangle", "fill": ["$bg", {"type": "image", "url": "q.jpg", "mode": m[0]}]})
+    return {"version": "1", "children": kids}
+json.dump(doc(["fill", "fit", "fill", "fit"]), open(sys.argv[1], "w"))
+json.dump(doc(["cover", "contain", "fill", "fit"]), open(sys.argv[2], "w"))
+PY
+wantMode="$(cd "${wtMode}/design" && pwd -P)/littlesprout.pen"
+MODE_HASH="$(python3 "${root}/scripts/gates/design_tree_hash.py" "$wantMode")"
+export PEN_STUB_SNIPPET_PATH="${work}/snippet_stub.js"
+cat > "$PEN_STUB_SNIPPET_PATH" <<'JS'
+const fs = require("fs"), vm = require("vm");
+const m = /execute\(\{ input: ("(?:[^"\\]|\\.)*") \}\)/.exec(process.argv[2]);
+if (!m) { console.log("Error: stub 解析不到 execute input"); process.exit(0); }
+fs.appendFileSync(process.env.PEN_STUB_RANGE_LOG, "snippet\n");
+const doc = JSON.parse(fs.readFileSync(process.env.PEN_STUB_RANGE_FILE, "utf8"));
+function Get(visit) {
+  const walk = (node, parentCtx, index) => {
+    let skip = false;
+    visit(node, { parentCtx, index, skipChildren: () => { skip = true; } });
+    if (!skip) (node.children || []).forEach((c, i) => walk(c, { node }, i));
+  };
+  (doc.children || []).forEach((c, i) => walk(c, null, i));
+}
+const sb = { Get, Print: (s) => console.log(s) };
+vm.createContext(sb);
+vm.runInContext(JSON.parse(m[1]), sb);
+JS
+mode_case() {  # $1＝pen-read.sh 路徑；結果放 $mode_out／$mode_rc
+  reset_open_tracking; clear_fake_pen; range_log_reset; set_state "PATH:${wantMode}"; start_fake_pen
+  export PEN_STUB_OSASCRIPT_KILLS=1
+  mode_out="$(cd "$tix_repo" && PEN_STUB_SNIPPET_JS="$PEN_STUB_SNIPPET_PATH" PEN_STUB_RANGE_FILE="$rendMode" bash "$1" "$wtMode" 2>&1)"; mode_rc=$?
+  unset PEN_STUB_OSASCRIPT_KILLS
+}
+mode_case "$script"
+if grep -qF '"cover"' "$rendMode" && grep -qF '"contain"' "$rendMode" && ! grep -qF '"cover"' "$wantMode" \
+  && [ "$mode_rc" -eq 0 ] && grep -qF "tree_hash=${MODE_HASH} 與磁碟一致" <<<"$mode_out" && ! grep -qF 'tree_hash 不一致' <<<"$mode_out" \
+  && [ "$(cat "$PEN_STUB_RANGE_LOG")" = snippet ] && fake_pen_alive; then
+  ok 'pen-read.sh：磁碟 image fill mode 舊名（fill／fit）、Pen 端新名（cover／contain）→ 真 snippet 回讀判「與磁碟一致」、不清場（LS-418）'
+else
+  bad "image fill mode 同義詞應判一致且不清場（實得 ${mode_rc}；execute 序＝$(tr '\n' ' ' < "$PEN_STUB_RANGE_LOG")；行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$mode_out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+# mutation G（LS-418）：py／js 兩端都拿掉 mode 對映（＝修前）→ 情境 (9) 必須紅：判不一致、走清場
+mk_mutant mutG-root 's/LS-418-NOOP//'
+sed 's/^IMAGE_FILL_MODE_SYNONYMS = {"cover": "fill", "contain": "fit"}$/IMAGE_FILL_MODE_SYNONYMS = {}/' "${root}/scripts/gates/design_tree_hash.py" > "${work}/mutG-root/scripts/gates/design_tree_hash.py"
+sed 's/return { cover: "fill", contain: "fit" };/return {};/' "${root}/scripts/design/overflow-scan.js" > "${work}/mutG-root/scripts/design/overflow-scan.js"
+if grep -qF 'IMAGE_FILL_MODE_SYNONYMS = {}' "${work}/mutG-root/scripts/gates/design_tree_hash.py" && grep -qF 'return {};' "${work}/mutG-root/scripts/design/overflow-scan.js" \
+  && ! grep -qF 'cover: "fill"' "${work}/mutG-root/scripts/design/overflow-scan.js"; then ok 'mutation G：確認 py／js 兩端對映表都已清空'; else bad 'mutation G：替換失敗，負控本身無效'; fi
+mode_case "${work}/mutG-root/scripts/ops/pen-read.sh"
+if grep -qF 'tree_hash 不一致' <<<"$mode_out" && ! grep -qF '與磁碟一致' <<<"$mode_out" && ! fake_pen_alive; then
+  ok 'mutation G：拿掉 mode 對映後 Pen 端新名稿被判不一致並清場（LS-377 QA 的每跑必殺重現），情境 (9) 轉紅——證明對映在保護「相符不殺」'
+else
+  bad "mutation G 未如預期翻轉（exit ${mode_rc}）"; printf '%s\n' "$mode_out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
 
 unset PEN_STUB_RANGE_MODE
 
