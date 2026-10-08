@@ -219,9 +219,10 @@ final class AlbumImportUploadCoordinator: ImportUploadCoordinator {
         // `UIImage(data:)` 已經先解過一次）就整筆捨棄，不上傳一張轉檔失敗的原始 HEIC。
         let (data, ext): (Data, String)
         if rawExt == "heic" || rawExt == "heif" {
-            // merge-review R1 m4：`image` 上面幾行已經解過一次（算 `pixelSize` 用）——轉檔
-            // 函式改收已解好的 `UIImage`，不用同一份 bytes 再讓 `UIImage(data:)` 解第二次。
-            guard let jpegData = ImportMediaTranscoder.convertHEICToJPEG(image) else { return nil }
+            // LS-416：轉檔改收原始 bytes 走 ImageIO（取代 LS-356 R1 m4 的「收已解好的 `UIImage`」）——
+            // `UIImage` 拿不回來源 bytes，ImageIO 需要 `CGImageSource` 才能直接解成 8-bit P3 轉正位圖，
+            // 省掉 `UIGraphicsImageRenderer` 的 16-bit 重繪（理由見 `ImportMediaTranscoder` 文件註解）。
+            guard let jpegData = ImportMediaTranscoder.convertHEICToJPEG(result.data) else { return nil }
             (data, ext) = (jpegData, "jpg")
         } else {
             (data, ext) = (result.data, rawExt)
