@@ -9,7 +9,7 @@
 -- 三筆都放在 2100-06-15（比任何 fixture 都新），所以在家族時間軸恆為前三列。
 --
 -- 角色：A 家（fa…001）member=a2 身分走 RPC（security invoker，RLS 生效）；資料準備以 postgres 直寫。
--- Mutation 自證見 LS-415 handoff；§7（albums／media 沿用舊 seq）見 LS-419 handoff。
+-- Mutation 自證見 LS-415 handoff；§7（albums／media 沿用舊 seq）、§8（封鎖＋游標＋同日）見 LS-419 handoff。
 
 \set ON_ERROR_STOP on
 
@@ -331,6 +331,134 @@ begin
     end if;
   end;
   raise notice 'ok：相簿改標題、照片改 width／height 後 seq 不變，同一瞬間的順序不變（feed_sync_albums／feed_sync_media 沿用舊 seq）';
+
+  -- ---- 8. 封鎖＋游標＋同日（LS-419；池 `c5c1dc87`）------------------------------------
+  -- get_family_timeline 的 v_has_blocks=true 有四條獨立分支（家族／per-child × 有無游標），
+  -- 文字與無封鎖版相同，但 §1–§6 都沒有封鎖，走不到。這裡讓 member（a2）封鎖 owner（a1），
+  -- 同日（2100-08-01，比 §1–§7 都新）依序建立 m1、b1、m2、b2、m3、b3（m＝a2 寫、b＝a1 寫；
+  -- 有 diary 也有 food_first；看得見的三筆 ref_id 順序與建立順序相反）。封鎖後：
+  --   - 單次查詢不含 b*，前三列＝[m3, m2, m1]；
+  --   - limit 2 第 1 頁 [m3, m2]，以 m2 為游標的第 2 頁從 m1 接續（同日群組切在頁界中間，
+  --     中間夾著被濾掉的 b1／b2），逐頁走完＝單次查詢、全程不含 b*；
+  --   - per-child 同案（四篇日記都標小芽，food_first 本身就是小芽的）。
+  declare
+    v_owner uuid := 'a0000000-0000-4000-8000-000000000001';   -- 被封鎖者
+    v_m1 uuid := 'ffffffff-0000-4000-8000-000000004193';
+    v_b1 uuid := 'c0000000-0000-4000-8000-000000004193';
+    v_m2 uuid := '80000000-0000-4000-8000-000000004193';
+    v_b2 uuid := '40000000-0000-4000-8000-000000004193';
+    v_m3 uuid := '00000000-0000-4000-8000-000000004193';
+    v_b3 uuid := '20000000-0000-4000-8000-000000004193';
+    v_bday date := date '2100-08-01';
+    v_food_m text;
+    v_food_b text;
+    v_blocked uuid[];
+    v_scope uuid;
+    v_label text;
+  begin
+    reset role;
+    -- 兩種小芽目前沒有未刪除記錄的食物（child_food_records 對 (child_id, food_id) 有部分唯一索引）
+    select c.id into v_food_m from public.food_catalog c
+     where not exists (select 1 from public.child_food_records r
+                        where r.child_id = v_child and r.food_id = c.id and r.deleted_at is null)
+     order by c.sort_order limit 1;
+    select c.id into v_food_b from public.food_catalog c
+     where c.id <> v_food_m
+       and not exists (select 1 from public.child_food_records r
+                        where r.child_id = v_child and r.food_id = c.id and r.deleted_at is null)
+     order by c.sort_order limit 1;
+
+    insert into public.diaries (id, family_id, author_id, body, entry_date)
+    values (v_m1, v_family, v_member, 'LS-419 m1', v_bday);
+    insert into public.diaries (id, family_id, author_id, body, entry_date)
+    values (v_b1, v_family, v_owner, 'LS-419 b1（被封鎖者）', v_bday);
+    insert into public.child_food_records (id, family_id, child_id, food_id, author_id, first_tried_on)
+    values (v_m2, v_family, v_child, v_food_m, v_member, v_bday);
+    insert into public.child_food_records (id, family_id, child_id, food_id, author_id, first_tried_on)
+    values (v_b2, v_family, v_child, v_food_b, v_owner, v_bday);
+    insert into public.diaries (id, family_id, author_id, body, entry_date)
+    values (v_m3, v_family, v_member, 'LS-419 m3', v_bday);
+    insert into public.diaries (id, family_id, author_id, body, entry_date)
+    values (v_b3, v_family, v_owner, 'LS-419 b3（被封鎖者）', v_bday);
+    insert into public.diary_children (family_id, diary_id, child_id) values
+      (v_family, v_m1, v_child), (v_family, v_b1, v_child),
+      (v_family, v_m3, v_child), (v_family, v_b3, v_child);
+
+    v_blocked := array[v_b1, v_b2, v_b3];
+
+    perform set_config('request.jwt.claims',
+      json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+    set local role authenticated;
+
+    -- SETUP：封鎖前六筆都看得到、依建立順序倒序——證明下面消失的 b* 是封鎖造成的
+    select array_agg(t.ref_id order by t.n) into v_got
+      from public.get_family_timeline(v_family, null, null, null, 6)
+           with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
+    if v_got is distinct from array[v_b3, v_m3, v_b2, v_m2, v_b1, v_m1] then
+      raise exception 'SETUP FAIL：§8 封鎖前家族時間軸前六列應為 [b3, m3, b2, m2, b1, m1]，實際 %', v_got;
+    end if;
+
+    perform public.block_user(v_family, v_owner);
+
+    -- 家族（p_child_id null）與 per-child 各跑一次同一組斷言
+    foreach v_scope in array array[null, v_child]::uuid[] loop
+      v_label := case when v_scope is null then '家族' else 'per-child' end;
+
+      select array_agg(t.ref_id order by t.n) into v_all
+        from public.get_family_timeline(v_family, v_scope, null, null, 100)
+             with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
+      if v_all && v_blocked then
+        raise exception 'FAIL：%時間軸封鎖後單次查詢仍含被封鎖者的卡片，實際前六列 %', v_label, v_all[1:6];
+      end if;
+      if v_all[1:3] is distinct from array[v_m3, v_m2, v_m1] then
+        raise exception 'FAIL：%時間軸封鎖後同日三筆應依建立順序倒序 [m3, m2, m1]，實際 %', v_label, v_all[1:3];
+      end if;
+
+      -- 第 1 頁（封鎖＋無游標分支）
+      select array_agg(t.ref_id order by t.n) into v_got
+        from public.get_family_timeline(v_family, v_scope, null, null, 2)
+             with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
+      if v_got is distinct from array[v_m3, v_m2] then
+        raise exception 'FAIL：%時間軸封鎖後第 1 頁（limit 2）應為 [m3, m2]，實際 %', v_label, v_got;
+      end if;
+      select t.occurred_at, t.ref_id into v_cur_at, v_cur_ref
+        from public.get_family_timeline(v_family, v_scope, null, null, 2)
+             with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n)
+       order by t.n desc limit 1;
+      -- 第 2 頁（封鎖＋游標分支）：游標＝m2，同日群組切在頁界中間
+      select array_agg(t.ref_id order by t.n) into v_got
+        from public.get_family_timeline(v_family, v_scope, v_cur_at, v_cur_ref, 2)
+             with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
+      if v_got[1] is distinct from v_m1 or v_m3 = any(v_got) or v_m2 = any(v_got) or v_got && v_blocked then
+        raise exception 'FAIL：%時間軸封鎖後第 2 頁（游標＝m2）應從 m1 接續、不重複、不含被封鎖者，實際 %', v_label, v_got;
+      end if;
+
+      -- 逐頁走完（每頁都走封鎖＋游標分支）＝單次查詢
+      v_walk := '{}';
+      v_cur_at := null; v_cur_ref := null;
+      loop
+        select array_agg(t.ref_id order by t.n) into v_got
+          from public.get_family_timeline(v_family, v_scope, v_cur_at, v_cur_ref, 2)
+               with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
+        exit when v_got is null;
+        v_walk := v_walk || v_got;
+        select t.occurred_at, t.ref_id into v_cur_at, v_cur_ref
+          from public.get_family_timeline(v_family, v_scope, v_cur_at, v_cur_ref, 2)
+               with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n)
+         order by t.n desc limit 1;
+        exit when array_length(v_walk, 1) > 1000;
+      end loop;
+      if v_walk is distinct from v_all then
+        raise exception 'FAIL：%時間軸封鎖後逐頁（limit 2）串接與一次取完不一致（% 列 vs % 列）——封鎖分支的游標條件重複或遺漏',
+          v_label, array_length(v_walk, 1), array_length(v_all, 1);
+      end if;
+      if v_walk && v_blocked then
+        raise exception 'FAIL：%時間軸封鎖後逐頁走訪仍出現被封鎖者的卡片', v_label;
+      end if;
+      raise notice 'ok：%時間軸封鎖＋游標＋同日——同日倒序 [m3, m2, m1]、跨頁從 m1 接續、逐頁走完（% 列）＝一次取完、不含被封鎖者',
+        v_label, array_length(v_all, 1);
+    end loop;
+  end;
 
   reset role;
   raise notice 'ok：LS-415 全部通過（含 ref_id 與建立順序相反的同日三筆）';
