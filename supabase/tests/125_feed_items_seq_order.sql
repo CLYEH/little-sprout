@@ -222,6 +222,46 @@ begin
   end if;
   raise notice 'ok：游標指向已刪列 → 退回 (occurred_at, ref_id) 比較，家族／per-child 皆不報錯、照常翻頁';
 
+  -- ---- 6. 游標反查的 ±1ms 視窗（merge-review R1 m1）------------------------------
+  -- iOS 以毫秒精度序列化游標時間，album／media 的 occurred_at 是微秒精度。同一微秒批次建
+  -- 3 本相簿（2100-07-01，比 1–5 段的資料都新 → 家族時間軸恆為前三列），游標時間截到毫秒
+  -- 後以 limit 1 逐頁翻：反查若改成等值比對會查不到游標列、退回 (截斷時間, ref_id) 比較，
+  -- 而截斷時間比三本的真實時間都早 → 同批另外 2 本被整批跳過。
+  reset role;
+  insert into public.albums (id, family_id, title, created_by, created_at) values
+    ('a1500000-0000-4000-8000-000000000001', v_family, 'LS-415 同微秒相簿 1', v_member, timestamptz '2100-07-01 10:00:00.123456+00'),
+    ('a1500000-0000-4000-8000-000000000002', v_family, 'LS-415 同微秒相簿 2', v_member, timestamptz '2100-07-01 10:00:00.123456+00'),
+    ('a1500000-0000-4000-8000-000000000003', v_family, 'LS-415 同微秒相簿 3', v_member, timestamptz '2100-07-01 10:00:00.123456+00');
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_member, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select array_agg(t.ref_id order by t.n) into v_all
+    from public.get_family_timeline(v_family, null, null, null, 100)
+         with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
+  if v_all[1:3] is distinct from array[
+       'a1500000-0000-4000-8000-000000000003', 'a1500000-0000-4000-8000-000000000002',
+       'a1500000-0000-4000-8000-000000000001']::uuid[] then
+    raise exception 'SETUP FAIL：同微秒三本相簿應為家族時間軸前三列（建立順序倒序），實際 %', v_all[1:3];
+  end if;
+  v_walk := '{}';
+  v_cur_at := null; v_cur_ref := null;
+  loop
+    select array_agg(t.ref_id order by t.n) into v_got
+      from public.get_family_timeline(v_family, null, v_cur_at, v_cur_ref, 1)
+           with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
+    exit when v_got is null;
+    v_walk := v_walk || v_got;
+    select date_trunc('milliseconds', t.occurred_at), t.ref_id into v_cur_at, v_cur_ref
+      from public.get_family_timeline(v_family, null, v_cur_at, v_cur_ref, 1) t;
+    exit when array_length(v_walk, 1) > 1000;
+  end loop;
+  if v_walk is distinct from v_all then
+    raise exception 'FAIL：毫秒截斷游標逐頁（limit 1）串接與一次取完不一致（% 列 vs % 列，前三列 % vs %）——游標反查少了 ±1ms 視窗，同微秒批次被跳過',
+      array_length(v_walk, 1), array_length(v_all, 1), v_walk[1:3], v_all[1:3];
+  end if;
+  raise notice 'ok：同微秒批次三本相簿，毫秒截斷游標 limit 1 逐頁走完（% 列）＝一次取完', array_length(v_all, 1);
+
   reset role;
   raise notice 'ok：LS-415 全部通過（含 ref_id 與建立順序相反的同日三筆）';
 end;
