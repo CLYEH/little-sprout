@@ -676,9 +676,12 @@ begin
 
   -- ---- (d) keyset 分頁：逐頁 limit=2 收集，串接結果必須與單次撈 1000 筆的
   --          結果「順序完全相同」（keyset 分頁沿用同一個排序鍵，不只是同一組集合）
-  select array_agg(t.kind::text || ':' || t.ref_id::text order by t.occurred_at desc, t.ref_id desc)
+  -- LS-415 R2（merge-review B1）：平手鍵由 ref_id 改成 seq（建立順序），測試端不再自己
+  -- 重排——以 RPC 單次回傳的順序（with ordinality）為準，同本檔「平手鍵」段的做法。
+  select array_agg(t.kind::text || ':' || t.ref_id::text order by t.n)
     into v_full
-    from public.get_family_timeline(v_family, null, null, null, 1000) t;
+    from public.get_family_timeline(v_family, null, null, null, 1000)
+         with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
 
   loop
     v_iterations := v_iterations + 1;
@@ -838,9 +841,12 @@ begin
   -- 且每一列都真的屬於 child1、且不含 media（child 篩選下 media 恆不出現這件事，
   -- (c) 只驗過單次查詢，這裡在分頁路徑上再確認一次不是巧合地只在單次查詢下成立）。
   -- ---------------------------------------------------------------------------
-  select array_agg(t.kind::text || ':' || t.ref_id::text order by t.occurred_at desc, t.ref_id desc)
+  -- LS-415 R2（merge-review B1）：平手鍵由 ref_id 改成 seq（建立順序），測試端不再自己
+  -- 重排——以 RPC 單次回傳的順序（with ordinality）為準，同本檔「平手鍵」段的做法。
+  select array_agg(t.kind::text || ':' || t.ref_id::text order by t.n)
     into v_full
-    from public.get_family_timeline(v_family, v_child1, null, null, 1000) t;
+    from public.get_family_timeline(v_family, v_child1, null, null, 1000)
+         with ordinality as t(kind, ref_id, occurred_at, taken_at, child_ids, comment_count, n);
 
   if array_length(v_full, 1) <> 4 then
     raise exception 'FAIL：child1 篩選單次查詢應為 4 筆，實際 %（前面 (b) 驗過的基準線跑掉了）',
