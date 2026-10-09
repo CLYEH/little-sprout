@@ -260,7 +260,7 @@ struct WelcomeView: View {
                     // 多載（iOS 16+ 起可用，行為等價，只是還沒吃到 17.4 的新 Callback 型別）。
                     try await webAuthenticationSession.authenticate(
                         using: url,
-                        callbackURLScheme: "littlesprout"
+                        callbackURLScheme: "sproutday"
                     )
                 }
             } catch {

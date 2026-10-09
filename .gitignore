@@ -55,3 +55,6 @@ design-canvas*/selftest.json
 design-canvas*/little-sprout-*.html
 design-canvas*/mengya-*.html
 design-canvas*/*-album-board.html
+
+# cf CLI 在 repo 根寫的快取（LS-437）
+.cloudflare/

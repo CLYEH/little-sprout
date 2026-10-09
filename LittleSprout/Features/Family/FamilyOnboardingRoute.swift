@@ -5,7 +5,7 @@ import Foundation
 enum FamilyOnboardingRoute: Hashable {
     case createFamily
     /// 06 輸入邀請碼（含 06b／06c 錯誤態，見 `JoinCodeView`）。`initialCode` 供 deep link
-    /// （`littlesprout://invite/<code>`）冷／熱啟動預填；一般從三岔路「我有邀請碼」卡片點進來
+    /// （`sproutday://invite/<code>`）冷／熱啟動預填；一般從三岔路「我有邀請碼」卡片點進來
     /// 是空字串。
     case joinCode(initialCode: String)
     /// 06d 等待核准——`requestJoin` 回傳 `.pending` 後導來這裡；`familyName` 不是

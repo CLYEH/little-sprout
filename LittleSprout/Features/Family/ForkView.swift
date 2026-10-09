@@ -27,7 +27,7 @@ struct ForkView: View {
     let accountAPIClient: AccountAPIClient
     /// merge-review R2 B2：轉手往下傳到 `.deleteAccount` route 的 `DeleteAccountFlowView`。
     let resumer: PendingAccountDeletionResumer
-    /// LS-108 deep link：`littlesprout://invite/<code>`（LS-39 已註冊 scheme）冷／熱啟動皆帶碼
+    /// LS-108 deep link：`sproutday://invite/<code>`（LS-39 已註冊 scheme）冷／熱啟動皆帶碼
     /// 進 06 並預填。`LittleSproutApp` 用 `.onOpenURL` 寫入這個 binding，這裡消費（讀到就清空，
     /// 避免同一個碼被重複導頁）。
     @Binding var pendingInviteCode: String?

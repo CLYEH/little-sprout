@@ -55,7 +55,7 @@ struct LittleSproutApp: App {
     /// `didRegisterForRemoteNotificationsWithDeviceToken` 這類 UIKit-only 回呼，SwiftUI `App`
     /// 沒有原生管道能收到。
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate: AppDelegate
-    /// LS-108：`littlesprout://invite/<code>` deep link（LS-39 已註冊 scheme）冷／熱啟動皆走
+    /// LS-108：`sproutday://invite/<code>` deep link（LS-39 已註冊 scheme）冷／熱啟動皆走
     /// `.onOpenURL`——寫進這裡，`ForkView` 是唯一消費者（見該檔文件）。這一層只負責接住 URL、
     /// 解析出碼，不判斷「現在該不該導頁」，那是 `ForkView` 才知道的事（是否已登入、是否已有
     /// 家庭）。

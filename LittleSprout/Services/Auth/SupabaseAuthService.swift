@@ -9,10 +9,10 @@ import Supabase
 /// （`SupabaseClient` 預設用 Keychain 儲存＋PKCE flow＋autoRefreshToken=true，
 /// 見 `SupabaseClientFactory`），這裡不重做一份。
 final class SupabaseAuthService: AuthService {
-    // LS-39：Google OAuth 的 redirect URL，須與 Info.plist 的 CFBundleURLTypes（`littlesprout`
+    // LS-39：Google OAuth 的 redirect URL，須與 Info.plist 的 CFBundleURLTypes（`sproutday`
     // scheme）＋ Supabase dashboard → Authentication → URL Configuration → Redirect URLs
     // 三處一致（後者是使用者操作，見 ticket comment 2026-08-25）。
-    private static let googleRedirectURL = URL(string: "littlesprout://auth/callback")!
+    private static let googleRedirectURL = URL(string: "sproutday://auth/callback")!
 
     private let client: SupabaseClient
     // `AuthClient.currentSession` 每次讀取都會跑 storage migration 檢查再 SecItemCopyMatching
