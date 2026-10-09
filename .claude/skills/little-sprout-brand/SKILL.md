@@ -5,7 +5,7 @@ description: Little Sprout（萌芽日記）設計語言定案——LS-46 十一
 
 # Little Sprout 設計語言（定案版）
 
-> 沿革：2026-10-09 定名 Sprout Day（原 Little Sprout；LS-148／LS-433）。本 skill 名稱與下文既有的「Little Sprout」「LITTLE SPROUT」字樣為定名前寫法，保持原樣；歡迎頁相紙壓印字是否改成 SPROUT DAY 屬設計決定，待字標設計票（LS-148 子票）處理，之前稿面仍為 LITTLE SPROUT。
+> 沿革：2026-10-09 定名 Sprout Day（原 Little Sprout；LS-148／LS-433）。本 skill 名稱與下文殘留的「Little Sprout」「LITTLE SPROUT」字樣為定名前寫法，保持原樣；歡迎頁相紙壓印字已由 LITTLE SPROUT 改為 SPROUT DAY（LS-432 設計稿、LS-438 實作），現行規格一律指 SPROUT DAY。
 
 定案來源：`design/littlesprout.pen`（LS-46 R11 APPROVE，HEAD `651a9ff`；節點數基線隨最新 landing 更新，見 COLLABORATION §7 design-landing 列，本檔不記數字）。本 skill 是它的文字鏡像——**稿與本檔衝突時以稿為準，並回頭修本檔**。
 
@@ -43,7 +43,7 @@ description: Little Sprout（萌芽日記）設計語言定案——LS-46 十一
 
 - 深色 accent 錨點：生產值 **#FCA4B5**；**#E3A9C4** 只是 D 軌歷史對照，無生產角色。
 - 字標：蠟筆四字等大「萌芽日記」，B 版式——**標題列 190pt**（iPhone，高 90.6）／247pt（iPad，1.3×）；tagline `$fs-body` 17 `$text-secondary`，字標→tagline `$sp-label` 8。深色（01c）字標＋tagline 坐在與相片同寬 361 的 `$print-paper` 紙條上（高 136.6）。
-- 「LITTLE SPROUT」小字：`fs-imprint` 12／字距 3.5／`$print-ink-secondary`／**只在歡迎頁家族相片白邊、水平置中**，其他 UI 不得出現英文名。
+- 「SPROUT DAY」小字：`fs-imprint` 12／字距 3.5／`$print-ink-secondary`／**只在歡迎頁家族相片白邊、水平置中**，其他 UI 不得出現英文名。
 - App icon＝**photo-stack**（三張扇疊照片；`design/app-icon-photo-stack.png` 1024）。「芽」字 icon 概念已被使用者否決。
 - 實測對比（WCAG 2.1，淺／深）：print-ink on print-paper **14.92／12.55**；print-ink-secondary **9.66／8.13**；text-primary on bg 12.21／15.31；text-secondary 7.91／9.41；on-accent 7.30／9.99。
 - Legal／Status 槽 **38pt** 固定高（01／01b／01c 共用；AX3 不套槽，實測 **166pt**，見 `references/motifs.md`）。
