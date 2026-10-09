@@ -118,6 +118,15 @@ case "$ticket" in
   *) echo "✗ qa-e2e：--ticket 須為 LS-<n>（得到「${ticket}」）" >&2; exit 2 ;;
 esac
 
+# LS-433：app 的 bundle id 不寫死在腳本裡——讀 project.yml 的 app target（檔內第一個 PRODUCT_BUNDLE_IDENTIFIER，
+# 測試 target 的排在後面），改名／LS-8 佔到不同 id 時只改 project.yml 一處。目前只有 upload-stall 的重啟要用，
+# 讀不到＝fail closed（放在碰任何工具之前）。
+bundle_id=
+if [ "$scenario" = upload-stall ]; then
+  bundle_id=$(sed -n 's/^[[:space:]]*PRODUCT_BUNDLE_IDENTIFIER:[[:space:]]*//p' "${root}/project.yml" 2>/dev/null | head -1 | tr -d '[:space:]')
+  [ -n "$bundle_id" ] || { echo "✗ qa-e2e：讀不到 ${root}/project.yml 的 PRODUCT_BUNDLE_IDENTIFIER——無法決定要重啟哪個 app" >&2; exit 2; }
+fi
+
 # ---- 2. 本機容器 ----
 # `supabase status` 偶爾在別的 worktree 同時跑 supabase CLI 時回空（2026-09-04 實測：容器健康、下一秒就正常），
 # 讀三次再判定容器沒跑——不然 QA 會被一次瞬間失敗誤導成「環境壞了」。
@@ -341,7 +350,7 @@ if [ "$rc" -eq 0 ] && [ "$scenario" = upload-stall ]; then
   # Keychain session 還在，app 會停在已登入；模擬器不 shutdown（booted_by_me 歸 0 讓 cleanup 略過）。
   launch_env=(SIMCTL_CHILD_LS_QA_API_URL="$api_url" SIMCTL_CHILD_LS_QA_ANON_KEY="$anon_key" SIMCTL_CHILD_LS_QA_UPLOAD_STALL_MS="$stall_ms")
   [ -z "$fail_every_n" ] || launch_env+=(SIMCTL_CHILD_LS_QA_UPLOAD_FAIL_EVERY_N="$fail_every_n")
-  if ! env "${launch_env[@]}" xcrun simctl launch --terminate-running-process "$udid" com.leoyeh.littlesprout >> "$log" 2>&1; then
+  if ! env "${launch_env[@]}" xcrun simctl launch --terminate-running-process "$udid" "$bundle_id" >> "$log" 2>&1; then
     echo "✗ qa-e2e：upload-stall 登入通過，但以開關重啟 app 失敗（simctl launch）——見 ${log}" >&2
     exit 1
   fi
