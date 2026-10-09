@@ -93,13 +93,19 @@ expect 1 '⑦ R1 m1：縮排子彈／+ 子彈沒 id → 紅' '✗ 第 3 行缺�
 + 另一條 #596'
 expect 1 '⑦ R1 m1：段落行也是事實列' '✗ 第 2 行缺引據' '# 在飛
 今天設計者把六態畫完了。'
-expect 1 '⑦ R2 m2：標題只「含」關鍵字（## 在飛（含查無）／## 建議與在飛）不豁免' '✗ 第 2 行缺引據' '## 在飛（含查無）
-- LS-425 的設計進行中
-## 建議與在飛
+expect 1 '⑦ R2 m2：標題「含」關鍵字（## 在飛（含查無））不豁免' '✗ 第 2 行缺引據' '## 在飛（含查無）
+- LS-425 的設計進行中'
+expect 1 '⑦ R3 M1：標題「開頭是」關鍵字（## 建議與在飛）不豁免——整行比對' '✗ 第 2 行缺引據' '## 建議與在飛
 - 設計者今天畫了六態'
-expect 1 '⑦ R2 m2：`#5 …` 開頭的行是事實列不是標題（本身缺 id 紅、也不切換豁免狀態）' '✗ 第 3 行缺引據' '## 在飛
-#5 這行不是標題，一位數也不是 PR 號
+expect 0 '⑦ R3 M1：標題帶括號附註（## 建議（orchestrator 補））仍整段豁免' '0 條事實列皆有引據（豁免 1 條）' '## 建議（orchestrator 補）
+- 下一步先把 LS-148 定案'
+expect 1 '⑦ R2 m2：`#5 …` 開頭的行是事實列不是標題（本身缺 id 紅）' '✗ 第 2 行缺引據' '## 在飛
+#5 這行不是標題，一位數也不是 PR 號'
+expect 0 '⑦ R3 M1：豁免段內的 `#5 …` 行不是標題、不切換豁免狀態（後續列仍豁免）' '0 條事實列皆有引據（豁免 2 條）' '## 待使用者
+#5 建議先裁名稱
 - 設計者今天畫了六態'
+expect 1 '⑦ R3 I3：「風險與查無」段裡只是「含」查無二字的句子不算缺席句（仍紅）' '✗ 第 2 行缺引據' '## 風險與查無
+- 設計者查無法在兩天內畫完六態'
 expect 1 '⑦ R2 m2：「風險與查無」段帶 id 的列照查（缺 id 且非缺席句型仍紅）' '✗ 第 4 行缺引據' '## 風險與查無
 - lane:product：本 lane 無在飛票
 - 收集員失敗：無
@@ -143,6 +149,29 @@ printf '%s\n' '# 在飛
 - 沒 id 的列' > "$work/r.md"
 outD="$(bash "$check" "$work/r.md" --sample 2 2>&1)"; gotD=$?
 if [ "$gotD" -eq 1 ] && ! printf '%s' "$outD" | grep -qF '抽驗樣本'; then echo "✓ ⑩ gate 紅時不印樣本"; else echo "✗ ⑩ gate 紅時仍印樣本或 rc≠1（rc ${gotD}）" >&2; fail=1; fi
+
+# ---- R3 M1 負控：兩支 mutant 各自讓對應的自測案翻面 ----
+mutE="$work/mutE.sh"   # 豁免退回「含關鍵字」→ 「## 建議與在飛」案必須變綠（證明整行比對是紅的原因）
+sed "s/^EXEMPT_FULL_RE=.*/EXEMPT_FULL_RE='(待使用者|待裁決|建議)'/" "$check" > "$mutE"
+if grep -q "^EXEMPT_FULL_RE='(待使用者|待裁決|建議)'$" "$mutE"; then
+  printf '%s\n' '## 建議與在飛
+- 設計者今天畫了六態' > "$work/r.md"
+  outE="$(bash "$mutE" "$work/r.md" 2>&1)"; gotE=$?
+  if [ "$gotE" -eq 0 ]; then echo "✓ mutant（豁免退回含關鍵字）：「建議與在飛」案變綠（整行比對確實是原因）"; else echo "✗ mutant 豁免退回後應 exit 0（實得 ${gotE}）" >&2; fail=1; fi
+else
+  echo "✗ mutant（豁免）的 sed 未命中（負控本身無效）" >&2; fail=1
+fi
+mutH="$work/mutH.sh"   # 標題判定退回「任何 # 開頭都算標題」→ 豁免段內 `#5 …` 案（期望 0）必須變紅
+sed '/# MUT:heading-space/s/.*/      is_heading=1/' "$check" > "$mutH"
+if ! grep -q 'MUT:heading-space' "$mutH" && grep -q 'MUT:heading-space' "$check"; then
+  printf '%s\n' '## 待使用者
+#5 建議先裁名稱
+- 設計者今天畫了六態' > "$work/r.md"
+  outH="$(bash "$mutH" "$work/r.md" 2>&1)"; gotH=$?
+  if [ "$gotH" -eq 1 ]; then echo "✓ mutant（任何 # 都算標題）：豁免段內 #5 案變紅（標題判定確實是原因）"; else echo "✗ mutant 標題判定退回後應 exit 1（實得 ${gotH}）" >&2; printf '%s\n' "$outH" | sed 's/^/    /' >&2; fail=1; fi
+else
+  echo "✗ mutant（標題）的 sed 未命中（負控本身無效）" >&2; fail=1
+fi
 
 # mutation：`# MUT:state-word` 那行改成無條件 continue → ③ 負樣本必須變綠
 mut="$work/mut.sh"

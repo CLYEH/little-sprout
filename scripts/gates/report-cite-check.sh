@@ -8,9 +8,9 @@
 #   - 每條事實列至少含一個可反查 id：≥7 位且含英文字母的 hex token（Linear comment id 前綴或 git sha；純數字如日期不算）、
 #     `#<PR 號>`（≥2 位數），或 `LS-<n>` 且同一行帶整字狀態詞（Done／In Progress／In Review／QA／Ready／Backlog／Canceled／PASS／
 #     FAIL／BLOCKED／APPROVE／ITERATE／REQUEST_CHANGES／merged／open／tag／v<版本>；`tagline`／`reopened` 不算，R1 I1）——單獨提到票號不算引據。
-#   - 標題（`#`+空白）開頭是「待使用者」「待裁決」「建議」的段落整段豁免（問句、orchestrator 補的判斷）；開頭是「風險與查無」「查無」
-#     的段落只豁免固定缺席句型（查無／無在飛票／無新 comment／無完成票／失敗：無／收集員失敗）且無 id 的列，帶 id 的列照查照抽
-#     （R2 m2：豁免不能靠 Haiku 寫的標題「含」關鍵字）。
+#   - 標題（`#`+空白）整行是「待使用者（裁決）」「待裁決」「建議」（可帶括號附註）的段落整段豁免（問句、orchestrator 補的判斷）；
+#     整行是「風險與查無」「查無」的段落只豁免「句首」為固定缺席句型（無在飛票／無新 comment／無完成票／查無／收集員失敗：無）且無 id
+#     的列，帶 id 的列照查照抽（R2 m2／R3 M1：豁免不能靠 Haiku 寫的標題「含」或「開頭含」關鍵字；R3 I3：缺席句不是「含」）。
 #   - 空行、標題、引文（`>`）、程式碼區塊（``` 內）、`|---` 分隔列、表頭不檢查。
 #   - `--sample N`：通過時另印「抽驗樣本」N 行——**由本腳本從已查事實列隨機抽**（R1 M1：不能讓受驗的 Haiku 自己挑樣本），
 #     orchestrator 對這 N 行反查 id。排序鍵由 bash RANDOM 產生（R2 m1：mawk 不理 srand），種子預設 $RANDOM，自測用 CITE_SAMPLE_SEED 釘死。
@@ -34,9 +34,12 @@ STATE_WORDS='Done|In Progress|In Review|QA|Ready|Backlog|Canceled|PASS|FAIL|BLOC
 STATE_RE="(^|[^A-Za-z_])(${STATE_WORDS})([^A-Za-z_]|$)"
 # 豁免只認「標題開頭」是版型固定字（R2 m2：Haiku 寫的標題不能靠「含關鍵字」就整段放行）：
 #   整段豁免：標題以 待使用者／待裁決／建議 開頭；缺席句豁免：標題以 風險與查無／查無 開頭，段內只豁免固定的缺席句型，帶 id 的列照查照抽。
-EXEMPT_FULL_RE='^(待使用者|待裁決|建議)'
-EXEMPT_ABSENT_RE='^(風險與查無|查無)'
-ABSENT_LINE_RE='(查無|無在飛票|無新 comment|無完成票|失敗：無|收集員失敗)'
+# R3 M1：整行比對（可帶括號附註），「建議與在飛」這種以關鍵字開頭的標題不再整段豁免
+# 註：多位元組字元不能放進 `[…]` 括號式（C locale 的 grep -E 會逐位元組比對、ubuntu runner 下失配），一律用 `(a|b)` 交替
+EXEMPT_FULL_RE='^(待使用者裁決|待使用者|待裁決|建議)((（|\().*)?$'
+EXEMPT_ABSENT_RE='^(風險與查無|查無)((（|\().*)?$'
+# 缺席句型要在（去掉清單記號與 `lane:x：`／`[lane:x]` 前綴後）整句開頭命中，不是「含」（R3 I3）
+ABSENT_LINE_RE='^(- |\* |\+ |[0-9]+\. )?(\[?lane:[a-z]+\]?(：|:)? *)?(本 lane )?(無在飛票|無新 comment|無完成票|查無|收集員失敗：無|失敗：無)'
 
 has_id() {  # ≥7 位 hex 且含字母（排除純數字日期／run id），或 #<PR>
   printf '%s' "$1" | grep -Eo '[0-9a-f]{7,}' | grep -q '[a-f]' && return 0
@@ -47,7 +50,7 @@ has_id() {  # ≥7 位 hex 且含字母（排除純數字日期／run id），�
 lines=(); total=0
 while IFS= read -r line || [ -n "$line" ]; do lines[total]=$line; total=$((total + 1)); done < "$f"
 
-checked_file="$(mktemp)"; trap 'rm -f "$checked_file"' EXIT
+checked_file="$(mktemp)"; trap 'rm -f "$checked_file" "${checked_file}.keyed"' EXIT
 bad=0; checked=0; exempt=0; in_code=0; in_exempt=0
 i=0
 while [ "$i" -lt "$total" ]; do
@@ -63,8 +66,9 @@ while [ "$i" -lt "$total" ]; do
     '#'*)
       # 標題＝`#`+ 後接空白（R2 m2：`#598 …` 開頭的事實列不是標題）；去掉 # 與空白後看開頭字
       hashes="${stripped%%[^#]*}"; rest="${stripped#"$hashes"}"
-      case "$rest" in ' '*|'	'*) ;; *) : ;; esac
-      if [ "${#hashes}" -ge 1 ] && [ "${#hashes}" -le 6 ] && { case "$rest" in ' '*|'	'*) true ;; *) false ;; esac; }; then
+      is_heading=0
+      case "$rest" in ' '*|'	'*) [ "${#hashes}" -le 6 ] && is_heading=1 ;; esac   # MUT:heading-space
+      if [ "$is_heading" -eq 1 ]; then
         title="${rest#"${rest%%[![:space:]]*}"}"
         if printf '%s' "$title" | grep -Eq "$EXEMPT_FULL_RE"; then in_exempt=1
         elif printf '%s' "$title" | grep -Eq "$EXEMPT_ABSENT_RE"; then in_exempt=2
