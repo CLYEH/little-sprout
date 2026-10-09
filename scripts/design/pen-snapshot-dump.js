@@ -16,27 +16,32 @@
 //     `snapVisit` 同語意：`x`／`y` 由父節點的絕對座標＋`c.bounds` 的相對位移逐層累加算出（Pencil `Get` 的
 //     `c.bounds` 是相對父節點的位移，不是絕對座標），`w`／`h` 直接取 `c.bounds.width`／`height`（Pencil 版面引擎
 //     已算好的展開後尺寸，text 節點的高已含 `textGrowth` 撐開的高度，不需要另外處理）。
-//   - **LS-377 起依位元組預算分段**（取代舊版 `SNAP_BATCH_ROWS` 依列數切批——14k 節點稿整份一次送必 `InternalError:
-//     interrupted`，且 Print 單次輸出 >約 7 萬字元時 Pencil 會自動把那次 Print 落到本機檔案、MCP 回應改印檔案路徑）：
-//     一次 execute 只 dump「一段」——從頂層（depth-1）子節點序 `SNAP_ROOTS = [lo, hi]`（前置全域宣告，未設＝[0, ∞)）起，
-//     依序收整棵子樹，累計 rows 的 UTF-8 位元組數（`JSON.stringify(row)` 加逗號）到 `SNAP_MAX_BYTES`（未設＝50000）就停在
-//     下一個頂層節點之前。**單一子樹本身就超過預算時**（實測 14k–18k 節點稿有頂層板的 rows 就 >64 KB；而 `pen` CLI／
-//     MCP 單次 execute 回應約 64 KB 就被截斷，DONE 行會遺失）改在該子樹內依 pre-order 列序切：`SNAP_SKIP = m` 跳過
-//     該頂層節點（序 lo）的前 m 列（仍走訪、累加座標，只是不印），印到預算為止，`SNAP-DONE` 的 `skip=` 告訴下一段從第幾列續。
-//     每段印 `SNAP<k> [...]` 行（一段通常只有一行；k＝lo×1000000＋skip＋段內已印列數＋1，跨段嚴格遞增，node 端 parser
-//     依 k 排序串接時順序仍是 pre-order，見 overflow-scan.js `parseSnapshotDump`），最後一行
-//     `SNAP-DONE roots=[lo,next) next=<下一段起點的頂層序> skip=<下一段 SNAP_SKIP> of=<頂層總數> total_rows=<n> bytes=<b> from=<本段 SNAP_SKIP>`。
-//     呼叫端迴圈：lo=0、skip=0 → 跑一段 → 讀 `next`／`skip` 當下一段的 `SNAP_ROOTS = [next, ∞]`／`SNAP_SKIP` → 直到
-//     `next` 等於 `of`（且 `skip=0`）；各段的 `SNAP<k>` 與 `SNAP-DONE` 行**全部**貼進同一個 dump 檔。
+//   - **LS-431 起逐板走訪、分段單位＝板數**（取代 LS-377 的位元組預算分段；來源 LS-425 R4：19k 節點稿在 document 級
+//     `Get(visit, {resolveInstances:true})` 整份展開走訪，光走訪 380 塊頂層板不讀座標就 2.2 秒、連 50000 位元組的段都
+//     `InternalError: interrupted`，設計者改成逐板 `Get(rootId, …)` 才 6 段跑完，與整份走訪的 r3 dump 逐列等價）：
+//     一次 execute 只 dump「一段」——先做一趟**未展開**的頂層走訪（`skipChildren`，只拿頂層板 id 順序與總數 `of`），
+//     再從頂層板序 `SNAP_ROOTS = [lo, hi]`（前置全域宣告，未設＝[0, ∞)）起，**每塊板各跑兩趟 scoped `Get(boardId, …)`**
+//     （① `resolveInstances:false` 收該板的 `ref` 對照表、② `resolveInstances:true` 展開並累加絕對座標、收 rows），最多
+//     `SNAP_BOARDS`（未設＝40）塊板就停；展開走訪永遠只碰單一板的子樹，不再有 document 級展開。板是不可再切的單位：
+//     不再有「在子樹內依列序切」，所以 `SNAP-DONE` 的 `skip=` 與 `from=` 恆為 0（欄位保留，讓 node 端 `parseSnapshotDump` 的
+//     首尾相接驗證與既有 r1–r4 的舊格式 dump 都不用改）。每段印 `SNAP<k> [...]` 行（k＝lo×1000000＋段內已印列數＋1，跨段嚴格
+//     遞增，node 端 parser 依 k 排序串接時順序仍是 pre-order，見 overflow-scan.js `parseSnapshotDump`；單一 Print 行以約 50000
+//     位元組為上限——Pencil 單次 Print >約 7 萬字元會自動落本機檔案，所以一段通常有多行、整段輸出常被 MCP 落檔），再印一行
+//     `SNAP-TIMING boards=<段內板數> root_walk_ms=… ref_walk_ms=… expand_walk_ms=… print_ms=…`（量測用，parser 不認、可不貼），最後一行
+//     `SNAP-DONE roots=[lo,next) next=<下一段起點的頂層序> skip=0 of=<頂層總數> total_rows=<n> bytes=<b> from=0`。
+//     呼叫端迴圈：lo=0 → 跑一段 → 讀 `next` 當下一段的 `SNAP_ROOTS = [next, Infinity]` → 直到 `next` 等於 `of`；各段的
+//     `SNAP<k>` 與 `SNAP-DONE` 行**全部**貼進同一個 dump 檔。
 //     **node 端會驗**（overflow-scan.js `parseSnapshotDump`，LS-377 R2）：各段 `SNAP-DONE` 的起點（`roots=[lo,…)`＋`from=`）必須
 //     首尾相接、從 (0,0) 起、最後一段 `next==of` 且 `skip=0`、各段 `total_rows` 加總等於實際貼進來的列數——缺中段／缺尾段／
-//     漏貼 SNAP 行一律報錯 exit 非 0，不會產出只涵蓋部分稿的收據。**沒帶 `SNAP_ROOTS` 只會得到第一段**（不再是舊版的全量）。
+//     漏貼 SNAP 行一律報錯 exit 非 0，不會產出只涵蓋部分稿的收據。**沒帶 `SNAP_ROOTS` 只會得到第一段**。
 //     `SNAP_ROOT_COUNT_ONLY = true`：只印 `SNAP-ROOT-COUNT n=<頂層總數>`（不走訪子樹）。
-//     **單段 interrupted 的處置（上限 3 次）**：同一個 lo 把 `SNAP_MAX_BYTES` 對半重跑（50000→25000→12500→6250），
-//     第 4 次仍 interrupted 就停下回報（不得再縮；那是環境問題——先 `open -a Pen` 置前景再試，見下）。
+//     **單段 interrupted 的處置（上限 3 次）**：同一個 lo 把 `SNAP_BOARDS` 對半重跑（40→20→10→5），第 4 次仍 interrupted 就停下
+//     回報（不得再縮；那是環境問題——先 `open -a Pen` 置前景再試，見下）。
 //     **執行前 `open -a Pen` 把 Pen 置於前景**（LS-377：背景時 execute 明顯較易 interrupted，置前景即過）。
-//     `SNAP_ROOTS`／`SNAP_SKIP`／`SNAP_MAX_BYTES`／`SNAP_ROOT_COUNT_ONLY` 是 Pencil execute 的全域變數，會在後續呼叫間殘留
-//     （見 execute 回應「Global variables … carry over」）——每一次呼叫都明確宣告 `SNAP_ROOTS`／`SNAP_SKIP`，不要依賴上一次。
+//     `SNAP_ROOTS`／`SNAP_BOARDS`／`SNAP_ROOT_COUNT_ONLY` 是 Pencil execute 的全域變數，會在後續呼叫間殘留（見 execute 回應
+//     「Global variables … carry over」）——每一次呼叫都明確宣告 `SNAP_ROOTS`／`SNAP_BOARDS`，不要依賴上一次。
+//     **舊參數明確拒絕（fail loud，不靜默忽略）**：`SNAP_BATCH_ROWS`（LS-377 前）、`SNAP_MAX_BYTES`（LS-377 的段大小旋鈕，現在
+//     對半重跑它不會讓段變小、會無限重試同一段）、非 0 的 `SNAP_SKIP`（板不再於子樹內切）一律 throw；`SNAP_SKIP = 0` 放行。
 //   - **ref 判準（LS-207）**：`resolveInstances:true` 展開後的樹裡，實例根節點本身沒有 `n.ref`（已被展開成子樹）——
 //     跟 overflow-scan.js 檔尾 Pencil execute 區塊完全相同的做法：本腳本先跑一次 `resolveInstances:false` 的唯讀
 //     走訪，把每個 `type:"ref"` 節點的 `id → ref`（元件 id）收進對照表 `refMap`；再用 `resolveInstances:true`
@@ -58,10 +63,16 @@ if (typeof Get !== "function" || typeof Print !== "function") {
   throw new Error("pen-snapshot-dump：只能當 Pencil execute snippet 跑（沒有全域 Get／Print，這裡是 node 或其他環境）");
 }
 
-// LS-377 R2（merge-review M1 d）：舊版依列數切批的 `SNAP_BATCH_ROWS` 已不再支援——靜默忽略會讓呼叫端以為自己拿到全量，
-// 實際只回第一段。明確拒絕（Pencil execute 沙盒沒有 process.exit，拋錯即 execute 失敗＝fail loud）。
+// 舊版參數一律明確拒絕——靜默忽略會讓呼叫端以為自己控制了段大小／拿到全量（Pencil execute 沙盒沒有 process.exit，拋錯即
+// execute 失敗＝fail loud）。這些全域也可能是上一次呼叫殘留的（execute 會保留全域）：第一行加 `<名稱> = undefined;` 即清掉。
 if (typeof SNAP_BATCH_ROWS !== "undefined") {
-  throw new Error("pen-snapshot-dump：SNAP_BATCH_ROWS 已不再支援（LS-377 起依位元組預算分段）——改用 SNAP_MAX_BYTES（預設 50000）＋SNAP_ROOTS／SNAP_SKIP 續跑，見本檔檔頭");
+  throw new Error("pen-snapshot-dump：SNAP_BATCH_ROWS 已不再支援（LS-377 起依段分、LS-431 起逐板分段）——改用 SNAP_BOARDS（預設 40）＋SNAP_ROOTS 續跑，見本檔檔頭；若是上一次呼叫殘留的全域，第一行加 SNAP_BATCH_ROWS = undefined;");
+}
+if (typeof SNAP_MAX_BYTES !== "undefined") {
+  throw new Error("pen-snapshot-dump：SNAP_MAX_BYTES 已不再支援（LS-431 起分段單位是板數，位元組預算改不了段大小、interrupted 時對半它會無限重試同一段）——改用 SNAP_BOARDS（預設 40，interrupted 時對半）；若是上一次呼叫殘留的全域，第一行加 SNAP_MAX_BYTES = undefined;");
+}
+if (typeof SNAP_SKIP !== "undefined" && SNAP_SKIP && Number(SNAP_SKIP) !== 0) {
+  throw new Error("pen-snapshot-dump：SNAP_SKIP=" + SNAP_SKIP + " 已不再支援（LS-431 起一塊板是不可再切的單位，續跑點只有板序 SNAP_ROOTS = [next, Infinity]；SNAP-DONE 的 skip 恆為 0）");
 }
 
 function hasImageFill(fill) {
@@ -71,17 +82,26 @@ function hasImageFill(fill) {
   return Array.isArray(fill) ? fill.some(one) : one(fill);
 }
 
-var MAX_BYTES = typeof SNAP_MAX_BYTES !== "undefined" && SNAP_MAX_BYTES ? Number(SNAP_MAX_BYTES) : 50000;
+var LINE_BYTES = 50000; // 單一 Print 行的 UTF-8 位元組上限（Pencil 單次 Print >約 7 萬字元會自動落檔；與分段大小無關）
+var BOARDS = typeof SNAP_BOARDS !== "undefined" && SNAP_BOARDS ? Number(SNAP_BOARDS) : 40;
+if (!(BOARDS >= 1)) throw new Error("pen-snapshot-dump：SNAP_BOARDS 必須是 ≥1 的整數（收到 " + SNAP_BOARDS + "）");
 var RANGE = typeof SNAP_ROOTS !== "undefined" && Array.isArray(SNAP_ROOTS) ? SNAP_ROOTS : null;
 var LO = RANGE ? Number(RANGE[0]) : 0;
 var HI = RANGE && RANGE[1] != null && RANGE[1] !== Infinity ? Number(RANGE[1]) : Infinity;
-var SKIP = typeof SNAP_SKIP !== "undefined" && SNAP_SKIP ? Number(SNAP_SKIP) : 0;
+
+// 頂層板 id 順序（未展開、skipChildren：只訪頂層節點）；頂層板順序＝文件 children 順序
+var ids = [];
+var tRoot = Date.now();
+Get(function (n, c) { if (!c.parentCtx) { ids.push(n.id); c.skipChildren(); } });
+var rootWalkMs = Date.now() - tRoot;
+var rootTotal = ids.length;
 
 if (typeof SNAP_ROOT_COUNT_ONLY !== "undefined" && SNAP_ROOT_COUNT_ONLY === true) {
-  var rc = 0;
-  Get(function (n, c) { if (!c.parentCtx) { rc++; c.skipChildren(); } });
-  Print("SNAP-ROOT-COUNT n=" + rc);
+  Print("SNAP-ROOT-COUNT n=" + rootTotal);
 } else {
+  if (LO > rootTotal) throw new Error("pen-snapshot-dump：SNAP_ROOTS 起點 " + LO + " 超過頂層板總數 " + rootTotal);
+  var end = Math.min(HI, LO + BOARDS, rootTotal);
+
   // UTF-8 位元組數（Print 落檔門檻看字元數，但 MCP 回應大小看位元組；中文名稱一字 3 bytes，用位元組較保守）
   var utf8Len = function (str) {
     var b = 0;
@@ -94,64 +114,18 @@ if (typeof SNAP_ROOT_COUNT_ONLY !== "undefined" && SNAP_ROOT_COUNT_ONLY === true
     }
     return b;
   };
-  var inRange = function (c) { return c.index >= LO && c.index < HI; };
 
-  // LS-207：resolveInstances:false 對照表——只收 type:"ref" 節點的 id → ref（元件 id）；只走範圍內的頂層子樹
-  var refMap = {};
-  var rootTotal = 0;
-  Get(function (n, c) {
-    if (!c.parentCtx) {
-      rootTotal++;
-      if (!inRange(c)) { c.skipChildren(); return; }
-    }
-    if (n.type === "ref" && n.ref != null) refMap[n.id] = n.ref;
-  }, { resolveInstances: false });
-
-  // 展開走訪：累加絕對座標＋收 rows；以「頂層子樹」為單位依位元組預算收段
   var abs = {};
-  var rows = [];        // 已接受的段內 rows
+  var rows = [];
+  var refMap = {};      // LS-207：id → 元件 id；每塊板開始前重建（實例根節點與其 ref 同在一塊板內）
   var segBytes = 0;
-  var segRoots = 0;
-  var cur = [];         // 目前頂層子樹的 rows（下一個頂層節點開始或走訪結束時才決定收不收）
-  var curBytes = 0;
-  var curIdx = -1;
-  var next = null;      // 停在哪個頂層序（null＝走到範圍尾）
-  var nextSkip = 0;     // 停在該頂層子樹的第幾列（0＝從子樹開頭）
-  var visitedInRoot = 0;
-  var finalize = function () {
-    if (curIdx < 0) return;
-    if (segBytes + curBytes <= MAX_BYTES) {
-      for (var r = 0; r < cur.length; r++) rows.push(cur[r]);
-      segBytes += curBytes;
-      segRoots++;
-    } else if (segRoots === 0) {
-      // 段內第一棵子樹就超過預算：在子樹內依列序切，至少收 1 列（保證前進）
-      var took = 0;
-      var tb = 0;
-      while (took < cur.length) {
-        var rb0 = utf8Len(JSON.stringify(cur[took])) + 1;
-        if (took > 0 && tb + rb0 > MAX_BYTES) break;
-        rows.push(cur[took]);
-        tb += rb0;
-        took++;
-      }
-      segBytes += tb;
-      segRoots++;
-      next = curIdx;
-      nextSkip = (curIdx === LO ? SKIP : 0) + took;
-    } else {
-      next = curIdx;
-    }
-    cur = []; curBytes = 0; curIdx = -1;
+  var refWalkMs = 0;
+  var expandWalkMs = 0;
+
+  var collectRefs = function (n) {
+    if (n.type === "ref" && n.ref != null) refMap[n.id] = n.ref;
   };
-  Get(function (n, c) {
-    if (!c.parentCtx) {
-      if (!inRange(c) || next != null) { c.skipChildren(); return; }
-      finalize();
-      if (next != null) { c.skipChildren(); return; }
-      curIdx = c.index;
-      visitedInRoot = 0;
-    }
+  var visit = function (n, c) {
     var pid = c.parentCtx ? c.parentCtx.node.id : null;
     if (abs[n.id]) throw new Error("pen-snapshot-dump：Get 走訪到重複 id " + n.id);
     if (pid != null && !abs[pid]) throw new Error("pen-snapshot-dump：父節點 " + pid + " 尚未走訪（訪問序非 pre-order），無法累加絕對座標");
@@ -167,32 +141,40 @@ if (typeof SNAP_ROOT_COUNT_ONLY !== "undefined" && SNAP_ROOT_COUNT_ONLY === true
       hasImageFill(n.fill) ? 1 : 0,
       a.x, a.y, b.width, b.height,
     ];
-    // 段起點那棵子樹的前 SKIP 列只走訪（座標要累加）、不收
-    if (curIdx === LO && visitedInRoot < SKIP) { visitedInRoot++; return; }
-    visitedInRoot++;
-    cur.push(row);
-    curBytes += utf8Len(JSON.stringify(row)) + 1;
-  }, { resolveInstances: true });
-  finalize();
-  var nextRoot = next != null ? next : Math.min(HI, rootTotal);
-  // 整棵子樹剛好被收完的情況（partial 切完後 nextSkip 已等於該子樹列數）由下一段自然收到 0 列、前進——不特判
+    rows.push(row);
+  };
 
-  // 段內再依同一位元組預算切 Print 行（只有單一超大子樹獨佔一段時才會多行）
+  // 逐板：每塊板各跑 scoped Get（未展開收 refMap → 展開收 rows），展開走訪只碰單一板的子樹——不得改回 document 級展開
+  // （LS-431：整份展開走訪 19k 節點稿即 interrupted）。root 節點在 scoped Get 裡 parentCtx 為 null、bounds 即絕對座標。
+  for (var bi = LO; bi < end; bi++) {
+    refMap = {};
+    var t0 = Date.now();
+    Get(ids[bi], collectRefs, { resolveInstances: false });
+    refWalkMs += Date.now() - t0;
+    t0 = Date.now();
+    Get(ids[bi], visit, { resolveInstances: true });
+    expandWalkMs += Date.now() - t0;
+  }
+
+  // 依同一位元組上限切 Print 行（一段通常多行；單列本身超過上限仍獨佔一行）
+  var tPrint = Date.now();
   var batch = [];
   var batchBytes = 0;
   var printed = 0;
   var flush = function () {
     if (!batch.length) return;
-    Print("SNAP" + (LO * 1000000 + SKIP + printed + 1) + " " + JSON.stringify(batch));
+    Print("SNAP" + (LO * 1000000 + printed + 1) + " " + JSON.stringify(batch));
     printed += batch.length;
     batch = []; batchBytes = 0;
   };
   for (var i = 0; i < rows.length; i++) {
     var rb = utf8Len(JSON.stringify(rows[i])) + 1;
-    if (batch.length && batchBytes + rb > MAX_BYTES) flush();
+    if (batch.length && batchBytes + rb > LINE_BYTES) flush();
     batch.push(rows[i]);
     batchBytes += rb;
+    segBytes += rb;
   }
   flush();
-  Print("SNAP-DONE roots=[" + LO + "," + nextRoot + ") next=" + nextRoot + " skip=" + nextSkip + " of=" + rootTotal + " total_rows=" + rows.length + " bytes=" + segBytes + " from=" + SKIP);
+  Print("SNAP-TIMING boards=" + (end - LO) + " root_walk_ms=" + rootWalkMs + " ref_walk_ms=" + refWalkMs + " expand_walk_ms=" + expandWalkMs + " print_ms=" + (Date.now() - tPrint));
+  Print("SNAP-DONE roots=[" + LO + "," + end + ") next=" + end + " skip=0 of=" + rootTotal + " total_rows=" + rows.length + " bytes=" + segBytes + " from=0");
 }
