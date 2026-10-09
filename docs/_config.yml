@@ -15,3 +15,8 @@ exclude:
   - legal/README.md
   - legal/eula-addendum.md
   - archive/
+
+# LS-436：Jekyll 預設不發佈以 `.` 開頭的目錄；`.well-known/apple-app-site-association`（Universal Links）
+# 需要被發佈。不用 `.nojekyll`——那會讓 docs/legal 的 md 不再轉 HTML。
+include:
+  - .well-known

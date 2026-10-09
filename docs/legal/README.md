@@ -1,6 +1,6 @@
 # docs/legal — 法務文件（LS-132）
 
-> **正文 v1.0.0 已於 2026-09-12 生效**（`privacy-policy.md`／`terms-of-service.md`／`eula-addendum.md`）。本 README 為法務文本的編輯來源與維護說明，是內部作業文件，不對外發佈（見 `docs/_config.yml` exclude；LS-132 merge-review R1 B1）。
+> **正文 v1.0.1 已於 2026-10-09 生效**（v1.0.0 於 2026-09-12 生效；1.0.1 僅網域與信箱改 `sproutday.app`，LS-436）（`privacy-policy.md`／`terms-of-service.md`／`eula-addendum.md`）。本 README 為法務文本的編輯來源與維護說明，是內部作業文件，不對外發佈（見 `docs/_config.yml` exclude；LS-132 merge-review R1 B1）。
 >
 > **修訂法務文本時須逐條核對下方「文本中承諾、但程式尚未落地的項目」對齊表**——表列項目若尚未上線，對應正文必須先改寫，否則是對使用者的不實陳述、也可能被 App Review 退件。**正文內不放 HTML 註解錨點**（merge-review R2 實測 `AttributedString(markdown:)` 會把 `<!-- -->` 原樣顯示為文字），待落地標記只在本表，以段落編號定位。正文括號內若出現票號（例如「（LS-153，待落地）」），是功能尚未上線的暫時標記，該功能上線後須立即移除——不變式（正文定稿後任何時候都應成立，不只是生效前）：`grep -n 'LS-[0-9]' docs/legal/privacy-policy.md docs/legal/terms-of-service.md docs/legal/eula-addendum.md` 應為空。
 
@@ -21,9 +21,9 @@
 | Placeholder | 出現於 | 說明與建議 |
 |---|---|---|
 | `[[OPERATOR_NAME]]` | 三份皆有 | **已填（2026-09-12）：CLYEH**（使用者裁決 5a，服務提供者名稱） |
-| `[[SUPPORT_EMAIL]]` | 三份皆有 | **已填（2026-09-12）：support@littlesprout.xyz**（使用者裁決 5b；轉寄至本人 Gmail，Cloudflare Email Routing） |
-| `[[SUPPORT_URL]]` | 三份皆有 | **已填（2026-09-12）：https://littlesprout.xyz/legal**（使用者裁決 5c；GitHub Pages 案 A，自訂網域 `littlesprout.xyz`，source `main`／`docs`）。文內原 `[[SUPPORT_URL]]/privacy`、`/terms` 引用已改為實際渲染路徑 `/legal/privacy-policy`、`/legal/terms-of-service`。**LS-191 起 `WelcomeView` 的《使用條款》《隱私權政策》連結已改開 in-app `LegalDocumentSheet`（直接讀 bundled markdown，不打網路），不再指向這裡的網址**——此網址仍用於文件正文內互相引用與 App Store 產品頁欄位。DNS／Pages 啟用仍待使用者於 Cloudflare 設定後由 orchestrator 綁定，網址目前尚不可開 |
-| `[[EFFECTIVE_DATE]]` | 三份皆有 | **已填（2026-09-12）：2026-09-12**（使用者核可日；LS-132） |
+| `[[SUPPORT_EMAIL]]` | 三份皆有 | **已填（2026-09-12；LS-436 改網域）：support@sproutday.app**（使用者裁決 5b；轉寄至本人 Gmail，Cloudflare Email Routing；原 `support@littlesprout.xyz`，信箱轉寄設定另處理） |
+| `[[SUPPORT_URL]]` | 三份皆有 | **已填（2026-09-12）：https://sproutday.app/legal**（使用者裁決 5c；GitHub Pages 案 A，自訂網域 `sproutday.app`，source `main`／`docs`）。文內原 `[[SUPPORT_URL]]/privacy`、`/terms` 引用已改為實際渲染路徑 `/legal/privacy-policy`、`/legal/terms-of-service`。**LS-191 起 `WelcomeView` 的《使用條款》《隱私權政策》連結已改開 in-app `LegalDocumentSheet`（直接讀 bundled markdown，不打網路），不再指向這裡的網址**——此網址仍用於文件正文內互相引用與 App Store 產品頁欄位。Pages 已啟用並綁定 `sproutday.app`（LS-436）；DNS 記錄由使用者設定，生效前網址尚不可開。**沿革（LS-436，2026-10-09）**：網域原定 `littlesprout.xyz`（LS-132），App 定名 Sprout Day 後改為 `sproutday.app`，文內網址已全數更新；`support@sproutday.app` 信箱（Cloudflare Email Routing）沿用舊網域，尚未遷移 |
+| `[[EFFECTIVE_DATE]]` | 三份皆有 | **已填（2026-09-12）：2026-09-12**（使用者核可日；LS-132）；LS-436 起 1.0.1 生效日 2026-10-09 |
 | `[[VENUE_COURT]]` | 使用條款 §14 | **已填（2026-09-12）：臺灣臺北地方法院**（本 README 建議值，待使用者確認） |
 | `[[REPORT_RETENTION]]` | 隱私權政策 §8 | **已填（2026-09-12）：1 年**（本 README 建議值） |
 
@@ -93,7 +93,7 @@ App Store Connect 的「隱私權政策 URL」與「支援 URL」都必須是公
 
 ### 自有網域（`[[SUPPORT_URL]]` 的最終形狀）
 
-三案都可再掛自有網域：Settings → Pages → Custom domain 填自訂網域（本專案已選定 `littlesprout.xyz`，見 `docs/CNAME`），DNS 端子網域用 CNAME 指到 `<owner>.github.io`、apex 用 A/ALIAS 記錄；**先在 GitHub 設定 custom domain 再改 DNS**，避免子網域被他人接管（docs.github.com「Managing a custom domain」）。
+三案都可再掛自有網域：Settings → Pages → Custom domain 填自訂網域（本專案已選定 `sproutday.app`，見 `docs/CNAME`），DNS 端子網域用 CNAME 指到 `<owner>.github.io`、apex 用 A/ALIAS 記錄；**先在 GitHub 設定 custom domain 再改 DNS**，避免子網域被他人接管（docs.github.com「Managing a custom domain」）。
 
 ### 建議
 
@@ -147,3 +147,9 @@ LS-133 票文已定：「SwiftUI 以 bundled markdown 渲染（`AttributedString
 - GitHub Pages 發佈來源：https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
 - GitHub Pages 自訂網域：https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
 - 專案內部：`docs/PLAN.md` §3、§5、§9、§10；`docs/API.md` §2–§4；`supabase/migrations/20260822120000_init_schema.sql`；`LittleSprout/Features/Auth/WelcomeView.swift:251-262`；`LittleSprout/Services/Diary/PickedItemLoader.swift`
+
+## 網域、邀請落地頁與 Universal Links（LS-436）
+
+- 網域 `sproutday.app`（`docs/CNAME`）；DNS 記錄與 Pages 設定步驟見 LS-436 票 comment／handoff。
+- `docs/invite/index.md`：非 App 使用者點開 `https://sproutday.app/invite/<code>` 的落地頁；`docs/404.html` 把 `/invite/<code>`（Pages 無此靜態路徑）轉到 `/invite/?code=<code>`。App Store 連結為佔位，**上架後補**（LS-8）。
+- `docs/.well-known/apple-app-site-association`：`appIDs` 的 `<TEAM_ID>` 是佔位，**待 LS-8 拿到 Apple Developer Team ID 後替換**為 `<Team ID>.com.leoyeh.sproutday`；Associated Domains entitlement（`applinks:sproutday.app`）也等 LS-8（免費帳號不能加）。`docs/_config.yml` 以 `include: [.well-known]` 讓 Jekyll 發佈該目錄（不用 `.nojekyll`，否則 md 不再轉 HTML）。
