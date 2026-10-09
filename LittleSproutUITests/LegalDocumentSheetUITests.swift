@@ -93,4 +93,15 @@ final class LegalDocumentSheetUITests: XCTestCase {
         // 生效」與「wiring 死碼」。
         XCTAssertEqual(closeButton.frame.width, 272, accuracy: 4, "內距應降到下限 24、內容欄應是 ≈272，不是死碼狀態的 145")
     }
+
+    /// LS-438：歡迎頁相紙壓印字改 SPROUT DAY（LS-432 核可稿）。壓印字本身 `accessibilityHidden`，
+    /// 品牌名只經相片 alt 尾段曝露，所以用 alt 斷言——改回舊名這支會紅。
+    func testWelcomePrintPhoto_altCarriesSproutDayImprint_notOldName() {
+        let app = TapTargetMeasurement.launch(.welcome)
+        TapTargetMeasurement.assertScreenRendered(.welcome, in: app)
+
+        let photo = app.images["祖母抱著嬰兒在晨光中的合照（相紙邊緣印著 SPROUT DAY）"]
+        XCTAssertTrue(photo.waitForExistence(timeout: 5), "歡迎頁相紙 alt 尾段應為「相紙邊緣印著 SPROUT DAY」")
+        XCTAssertFalse(photo.label.contains("LITTLE SPROUT"), "舊名 LITTLE SPROUT 不得再出現在壓印 alt")
+    }
 }
