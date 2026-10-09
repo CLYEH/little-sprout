@@ -27253,7 +27253,7 @@
                           "id": "zlyKR",
                           "name": "Sample",
                           "fill": "$text-secondary",
-                          "content": "2 歲 3 個⁠月",
+                          "content": "2 歲 3 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "600"
@@ -27311,7 +27311,7 @@
                           "id": "cKvkS",
                           "name": "Sample",
                           "fill": "$print-ink-secondary",
-                          "content": "2 歲 3 個⁠月",
+                          "content": "2 歲 3 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "600"
@@ -42215,7 +42215,7 @@
                                   "id": "rHMjr",
                                   "name": "Age",
                                   "fill": "$text-secondary",
-                                  "content": "2 歲 3 個月",
+                                  "content": "2 歲 3 個⁠月",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
                                   "fontWeight": "normal"
@@ -42274,7 +42274,7 @@
                                   "id": "I9GzWM",
                                   "name": "Age",
                                   "fill": "$text-secondary",
-                                  "content": "6 個月大",
+                                  "content": "6 個⁠月大",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
                                   "fontWeight": "normal"
@@ -43191,7 +43191,7 @@
                           "fill": "$print-ink",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "小安在公園盪鞦韆 · 2 歲 3 個月",
+                          "content": "小安在公園盪鞦韆 · 2 歲 3 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -44941,7 +44941,7 @@
                               "fill": "$print-ink",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "小安盪鞦韆 · 2 歲 3 個月",
+                              "content": "小安盪鞦韆 · 2 歲 3 個⁠月",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
                               "fontWeight": "600"
@@ -45183,7 +45183,7 @@
                               "fill": "$print-ink",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "小軒爬滑梯 · 6 個月大",
+                              "content": "小軒爬滑梯 · 6 個⁠月大",
                               "fontFamily": "$font",
                               "fontSize": "$fs-body",
                               "fontWeight": "600"
@@ -49915,7 +49915,7 @@
                           "fill": "$print-ink",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "小安在公園盪鞦韆 · 2 歲 3 個月",
+                          "content": "小安在公園盪鞦韆 · 2 歲 3 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -50918,7 +50918,7 @@
                           "fill": "$print-ink",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "小安在公園盪鞦韆 · 2 歲 3 個月",
+                          "content": "小安在公園盪鞦韆 · 2 歲 3 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
                           "fontWeight": "600"
@@ -62491,7 +62491,7 @@
                           "id": "NPQSl",
                           "name": "Age",
                           "fill": "$print-ink-secondary",
-                          "content": "2 歲 3 個月",
+                          "content": "2 歲 3 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "normal"
@@ -63454,7 +63454,7 @@
                           "id": "a6KhKM",
                           "name": "Age",
                           "fill": "$print-ink-secondary",
-                          "content": "2 歲 3 個月",
+                          "content": "2 歲 3 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "normal"
@@ -65339,7 +65339,7 @@
                                   "id": "caIbm",
                                   "name": "Age",
                                   "fill": "$print-ink-secondary",
-                                  "content": "2 歲 3 個月",
+                                  "content": "2 歲 3 個⁠月",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
                                   "fontWeight": "normal"
@@ -65634,7 +65634,7 @@
                           "id": "G8JdV",
                           "name": "Age",
                           "fill": "$print-ink-secondary",
-                          "content": "2 歲 3 個月",
+                          "content": "2 歲 3 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "normal"
@@ -73528,7 +73528,7 @@
                           "id": "TF9Ri",
                           "name": "Age",
                           "fill": "$print-ink-secondary",
-                          "content": "2 歲 3 個月",
+                          "content": "2 歲 3 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "normal"
@@ -78099,7 +78099,7 @@
                           "id": "oDWFZ",
                           "name": "Age",
                           "fill": "$print-ink-secondary",
-                          "content": "2 歲 3 個月",
+                          "content": "2 歲 3 個⁠月",
                           "fontFamily": "$font",
                           "fontSize": "$fs-note",
                           "fontWeight": "normal"
