@@ -56,13 +56,22 @@ enum SupabaseClientFactory {
     private static var qaOverride: (url: URL, anonKey: String)? {
         #if DEBUG
         let env = ProcessInfo.processInfo.environment
-        guard let rawURL = env["LS_QA_API_URL"], let url = URL(string: rawURL), url.host != nil,
+        guard let url = qaAPIURL(in: env),
               let anonKey = env["LS_QA_ANON_KEY"], !anonKey.isEmpty else { return nil }
         return (url, anonKey)
         #else
         return nil
         #endif
     }
+
+    #if DEBUG
+    /// `LS_QA_API_URL` 的合法判斷（可解析且有 host）——`qaOverride` 與 `QAUploadSwitches.from` 共用同一份，
+    /// 避免「URL 打錯、app 連的是 Secrets 後端，QA 上傳開關卻照樣生效」（LS-427 R1 I1）。
+    static func qaAPIURL(in env: [String: String]) -> URL? {
+        guard let raw = env["LS_QA_API_URL"], let url = URL(string: raw), url.host != nil else { return nil }
+        return url
+    }
+    #endif
 
     /// Xcode／`xcodebuild test` 執行 XCTest bundle 時一律會設這個環境變數——業界慣用的偵測法，
     /// 正式發佈的 app（TestFlight／App Store）絕對不會有它。

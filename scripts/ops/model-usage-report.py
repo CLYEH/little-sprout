@@ -41,7 +41,7 @@ PRICES = {
     "claude-haiku-5-5": (0.10, 0.50, 0.01, 0.125),
 }
 KEYS = ("input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
-KNOWN = r"(ios-dev|merge-reviewer|visual-reviewer|ui-designer|dead-code-sweeper|\bqa\b)"
+KNOWN = r"(ios-dev|merge-reviewer|visual-reviewer|ui-designer|dead-code-sweeper|Explore|\bqa\b)"  # LS-420 sweep：Explore 否則落 subagent:?
 
 
 def project_dir():
