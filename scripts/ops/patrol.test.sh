@@ -57,6 +57,9 @@ export PATROL_DISK_MIN_GB=0
 # （lm=0），不隔離的話會被寬限期擋住、既有斷言（① LS-4 未 push 即刻標 ⚠）偶發紅。統一設成 0（永不寬限，
 # 沿用改動前的即刻標記行為）；㉔ 自己在呼叫時覆寫門檻驗證寬限期本身。
 export PATROL_PUSH_GRACE_MIN=0
+# LS-429：晨報段看本機時間 ≥08:00 且當日標記檔不存在就加一筆 → 旗標——既有斷言（③ flags 恰七筆、⑧ 全正常末行「無異常」）
+# 會隨跑測試的時刻翻紅；統一把小時釘成 00（永不觸發），㊱ 自己在呼叫時覆寫 PATROL_NOW_HOUR／PATROL_TODAY／PATROL_REPORT_DIR。
+export PATROL_NOW_HOUR=00
 # LS-180：Pencil 連線探針段只在有 design 分支 worktree 時跑 pen-status.sh——它會 pgrep／lsof／pen CLI 探真的 Pen；自測
 # 一律指到假身（㉒ 自己再換成受控的假身），不碰本機真正的 Pen。
 export PATROL_PEN_STATUS_SH="$work/fake-pen-status.sh"
@@ -2709,6 +2712,34 @@ open(dst, "w", encoding="utf-8").write("".join(out))' "$report" "$m" "$from" "$t
 mut31 '㉝g' 'mutant（拿掉前空白）：PR2 被誤算、R2+ 4→5' no-space '/ R[0-9]+' '/.R[0-9]+' 'R2+ 5（62.5%'
 # ㉝h mutation（LS-352 R2）：拿掉「後面不接 `.`」（`[^0-9.]` → `[^0-9]`）→ rubric 編號 R2.1 被誤算成第 2 輪、R2+ 4→5
 mut31 '㉝h' 'mutant（拿掉後不接 `.`）：R2.1 被誤算成輪次、R2+ 4→5' no-dot '[^0-9.]' '[^0-9]' 'R2+ 5（62.5%'
+
+# ---- ㊱ 晨報（LS-429）：08:00 後且當日標記檔不存在 → 印一行「→ 晨報：<日>」動作（brief 經 add_flag 進 FLAGS）；
+#        08:00 前不印；標記檔存在不印；小時值非數字當 0 不炸；mutation 拿掉「標記檔不存在」條件 → 標記存在仍印（負控）----
+rep_dir="$work/report"; mkdir -p "$rep_dir"
+out36a="$(PATROL_NOW_HOUR=07 PATROL_TODAY=2026-10-09 PATROL_REPORT_DIR="$rep_dir" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㊱ 07 點 → 不印晨報動作' "$out36a" '→ 晨報：'
+has   '㊱ 07 點 → human 模式印「08:00 前，不印」' "$out36a" '2026-10-09 8:00 前，不印  ok'
+out36b="$(PATROL_NOW_HOUR=08 PATROL_TODAY=2026-10-09 PATROL_REPORT_DIR="$rep_dir" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㊱ 08 點且無標記 → 印 → 晨報動作（含 Workflow morning-report 與 touch 標記）' "$out36b" '→ 晨報：2026-10-09 尚未產出'
+has   '㊱ 動作行含 touch 標記檔路徑' "$out36b" "touch ${rep_dir}/2026-10-09.done"
+out36c="$(PATROL_NOW_HOUR=08 PATROL_TODAY=2026-10-09 PATROL_REPORT_DIR="$rep_dir" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" --brief 2>&1)"
+has   '㊱ --brief 也帶晨報動作行（過濾式收 →）' "$out36c" '→ 晨報：2026-10-09 尚未產出'
+touch "$rep_dir/2026-10-09.done"
+out36d="$(PATROL_NOW_HOUR=10 PATROL_TODAY=2026-10-09 PATROL_REPORT_DIR="$rep_dir" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㊱ 標記檔存在 → 不印' "$out36d" '→ 晨報：'
+has   '㊱ 標記檔存在 → human 模式印「已產出」' "$out36d" '2026-10-09 已產出  ok'
+out36e="$(PATROL_NOW_HOUR=xx PATROL_TODAY=2026-10-10 PATROL_REPORT_DIR="$rep_dir" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc36e=$?
+rc_is '㊱ 小時值非數字 → 當 0、不炸（exit 0）' 0 "$rc36e" "$out36e"
+hasnt '㊱ 小時值非數字 → 不印' "$out36e" '→ 晨報：'
+mut36="$work/patrol-mut36.sh"
+sed 's/ \&\& \[ ! -e "\${report_dir}\/\${report_day}.done" \]; then$/; then/' "$patrol" > "$mut36"
+if grep -q 'if \[ "${report_hour#0}" -ge "$REPORT_HOUR" \]; then$' "$mut36" && ! grep -q '-ge "$REPORT_HOUR" \] && \[ ! -e' "$mut36"; then
+  echo "✓ ㊱ mutant 已拿掉「標記檔不存在」條件"
+  out36m="$(PATROL_NOW_HOUR=10 PATROL_TODAY=2026-10-09 PATROL_REPORT_DIR="$rep_dir" bash "$mut36" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+  has '㊱ mutant：標記存在仍印晨報動作（條件確實是原因）' "$out36m" '→ 晨報：2026-10-09 尚未產出'
+else
+  echo "✗ ㊱ mutant 的 sed 未命中（負控本身無效）" >&2; fail=1
+fi
 
 if [ "$fail" -eq 0 ]; then
   if [ "$jq_skipped" -gt 0 ]; then
