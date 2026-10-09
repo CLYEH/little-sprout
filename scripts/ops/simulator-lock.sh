@@ -7,7 +7,7 @@
 # 自己），其餘沿用同一套邏輯。已知限制同 supabase-lock.sh 檔頭注解（pid 重用、持有者被 SIGKILL 而子命令仍在跑），
 # 不重複贅述。
 #
-# 用法：simulator-lock.sh --dir <路徑> [--timeout <秒>] [--udid <udid>] -- <命令…>
+# 用法：simulator-lock.sh [--dir <路徑>（省略時須帶 --udid，預設 /tmp/simulator-lock-<udid>）] [--timeout <秒>] [--udid <udid>] -- <命令…>
 # 環境變數：SIMULATOR_LOCK_POLL 輪詢秒（預設 1，下限 0.2，同 supabase-lock.sh 理由：0 會 busy-spin）；
 #   SIMLOCK_KEEP_UI=1 跳過下方 --udid 的字級／外觀調整（見下）
 # exit：命令的 exit code；124＝等待逾時；2＝參數／holder 寫入錯誤
@@ -35,7 +35,7 @@
 # 改善不是硬 gate）。`SIMLOCK_KEEP_UI=1` 整段跳過（含查詢），給不希望動到模擬器 UI 狀態的呼叫端。
 set -uo pipefail
 
-usage() { echo "用法：simulator-lock.sh --dir <路徑> [--timeout <秒>] [--udid <udid>] -- <命令…>" >&2; }
+usage() { echo "用法：simulator-lock.sh [--dir <路徑>（省略時須帶 --udid，預設 /tmp/simulator-lock-<udid>）] [--timeout <秒>] [--udid <udid>] -- <命令…>" >&2; }
 
 timeout=900
 poll=${SIMULATOR_LOCK_POLL:-1}
@@ -59,7 +59,12 @@ while [ $# -gt 0 ]; do
     *) break ;;
   esac
 done
-[ "$lock_set" -eq 1 ] || { echo "✗ simulator-lock：缺 --dir" >&2; usage; exit 2; }
+# LS-443 R2：省略 --dir 且有 --udid → 預設 /tmp/simulator-lock-<udid>（與 push-gate.sh 的 sim_lock_dir 預設同一把鎖）；
+# 省略且無 --udid → exit 2。預設值同樣要過下面的白名單。
+if [ "$lock_set" -ne 1 ]; then
+  [ -n "$udid" ] || { echo "✗ simulator-lock：缺 --dir（省略 --dir 時須帶 --udid，預設鎖目錄 /tmp/simulator-lock-<udid>）" >&2; usage; exit 2; }
+  lock="/tmp/simulator-lock-${udid}"
+fi
 case "$timeout" in ''|*[!0-9]*) echo "✗ simulator-lock：timeout 須為整數秒（得到「${timeout}」）" >&2; exit 2 ;; esac
 case "$poll" in ''|.|*[!0-9.]*|*.*.*) echo "✗ simulator-lock：SIMULATOR_LOCK_POLL 須為數字秒（得到「${poll}」）" >&2; exit 2 ;; esac
 awk -v p="$poll" 'BEGIN { exit !(p + 0 >= 0.2) }' || { echo "✗ simulator-lock：SIMULATOR_LOCK_POLL 下限 0.2 秒（得到「${poll}」）" >&2; exit 2; }
@@ -113,7 +118,7 @@ lock_dir_check() {
 }
 lock_dir_reject() {   # $1＝階段（參數／釋放前）
   echo "✗ simulator-lock：--dir 不合規（${1}）：${lock_reject}" >&2
-  echo "  --dir 是鎖目錄不是 worktree；要在 worktree 內操作請 cd <worktree> 後不帶 --dir（預設即可）。" >&2
+  echo "  --dir 是鎖目錄不是 worktree；要在 worktree 內操作請 cd <worktree> 後省略 --dir（帶 --udid 即用預設 /tmp/simulator-lock-<udid>，與 push-gate 同一把鎖；自訂只能指鎖目錄樣式）。" >&2
 }
 lock_dir_check "$lock" || { lock_dir_reject 參數; exit 2; }
 

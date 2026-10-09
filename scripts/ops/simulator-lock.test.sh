@@ -313,7 +313,7 @@ fi
 # 目錄完好；正控（mktemp -d 底下／預設樣式／$TMPDIR／.claude/locks）應照常取鎖並釋放。真實路徑（repo 根、/）
 # 只跑**真正的**驗證器——它在 mkdir 之前就 exit 2，不會碰到任何東西；mutation 只對 $work 底下的拋棄式假 worktree 跑。
 # =====================================================================================================
-GUIDE='--dir 是鎖目錄不是 worktree；要在 worktree 內操作請 cd <worktree> 後不帶 --dir'
+GUIDE='--dir 是鎖目錄不是 worktree；要在 worktree 內操作請 cd <worktree> 後省略 --dir（帶 --udid 即用預設 /tmp/simulator-lock-<udid>，與 push-gate 同一把鎖；自訂只能指鎖目錄樣式）'
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 fake_main="$work/fake-main"; mkdir -p "$fake_main"
 git -C "$fake_main" init -q
@@ -403,6 +403,65 @@ else
   echo "✗ mutant 應讓 TOCTOU 案的 sentinel 被刪（負控本身可能無效）" >&2; printf '%s\n' "$om2" | sed 's/^/    /' >&2; fail=1
 fi
 git -C "$fake_main" worktree prune 2>/dev/null
+
+# =====================================================================================================
+# LS-443 R2（merge-review R1 F1／i1）：
+#  F1：--dir 省略且有 --udid → 預設 /tmp/simulator-lock-<udid>（與 push-gate.sh 同一把鎖）；省略且無 --udid → exit 2。
+#  i1：reclaim() 刪 tomb 前的再驗要有測試（拿掉該再驗 → 紅）。
+# =====================================================================================================
+dflt_udid="LS443-D$$"
+dflt_dir="/tmp/simulator-lock-${dflt_udid}"
+rm -rf "$dflt_dir"
+: > "$XCRUN_LOG"
+o="$(SIMLOCK_KEEP_UI=1 bash "$lock_sh" --timeout 5 --udid "$dflt_udid" -- bash -c 'test -d "$1" && echo DEFAULT-DIR-HELD' _ "$dflt_dir" 2>&1)"; rc=$?
+rc_is 'LS-443 R2 省略 --dir＋--udid → exit 0' 0 "$rc" "$o"
+has   'LS-443 R2 省略 --dir＋--udid → 命令執行時持有 /tmp/simulator-lock-<udid>' "$o" 'DEFAULT-DIR-HELD'
+if [ -e "$dflt_dir" ]; then echo "✗ LS-443 R2 預設鎖目錄釋放後應移除（${dflt_dir}）" >&2; fail=1; else echo "✓ LS-443 R2 預設鎖目錄釋放後已移除"; fi
+# 預設路徑字面必須與 push-gate.sh 的 sim_lock_dir 預設相同（同一把鎖）；兩邊的 UDID 變數名不同，正規化後比
+pg_lit="$(grep -o '/tmp/simulator-lock-\${[a-z_]*}' "${root}/scripts/gates/push-gate.sh" | head -1 | sed 's/\${[a-z_]*}/<udid>/')"
+sl_lit="$(grep -o 'lock="/tmp/simulator-lock-\${[a-z_]*}"' "$lock_sh" | head -1 | sed 's/^lock="//; s/"$//; s/\${[a-z_]*}/<udid>/')"
+if [ -n "$pg_lit" ] && [ "$pg_lit" = "$sl_lit" ]; then echo "✓ LS-443 R2 預設鎖目錄字面與 push-gate.sh 相同（${pg_lit}）"; else echo "✗ LS-443 R2 預設鎖目錄字面與 push-gate.sh 不一致（push-gate「${pg_lit}」／simulator-lock「${sl_lit}」）" >&2; fail=1; fi
+o="$(bash "$lock_sh" --timeout 1 -- echo SHOULD-NOT-RUN 2>&1)"; rc=$?
+rc_is 'LS-443 R2 省略 --dir 且無 --udid → exit 2' 2 "$rc" "$o"
+has   'LS-443 R2 省略 --dir 且無 --udid → 印缺 --dir 說明' "$o" '缺 --dir'
+hasnt 'LS-443 R2 省略 --dir 且無 --udid → 命令沒被執行' "$o" 'SHOULD-NOT-RUN'
+# mutation：拿掉「預設鎖目錄」那一行 → 省略 --dir＋--udid 變成 exit 2（上面 exit 0 斷言會紅）
+mut4="$work/simulator-lock.no-default.sh"
+grep -v '^  lock="/tmp/simulator-lock-\${udid}"$' "$lock_sh" > "$mut4"
+if [ "$(diff "$lock_sh" "$mut4" | grep -c '^<')" -eq 1 ]; then echo "✓ mutant 只少了預設鎖目錄那一行"; else echo "✗ mutant(no-default) 產生失敗" >&2; fail=1; fi
+om="$(SIMLOCK_KEEP_UI=1 bash "$mut4" --timeout 5 --udid "$dflt_udid" -- echo MUT-RAN 2>&1)"; rcm=$?
+if [ "$rcm" -eq 2 ] && ! printf '%s' "$om" | grep -qF -- 'MUT-RAN'; then echo "✓ mutant：拿掉預設值後省略 --dir＋--udid 變 exit 2——證明『R2 省略 --dir＋--udid → exit 0』斷言由預設值產生"; else echo "✗ mutant(no-default) 應 exit 2（實得 ${rcm}）" >&2; printf '%s\n' "$om" | sed 's/^/    /' >&2; fail=1; fi
+
+# i1：reclaim() 刪 tomb 前再驗。鎖位置是合規空目錄＋死 pid holder → 取鎖時 reclaim()：mv 成 <lock>.stale.* 後
+# 用 git shim 讓「*.stale.*」路徑被判成 git 工作樹 → 再驗應拒絕 rm -rf（tomb 留著、印「回收死鎖前」），之後照常取鎖。
+real_git="$(command -v git)"
+mkdir -p "$work/gitshim"
+cat > "$work/gitshim/git" <<EOS
+#!/bin/bash
+if [ "\$1" = -C ] && [ "\$3" = rev-parse ] && [ "\$4" = --is-inside-work-tree ]; then
+  case "\$2" in *.stale.*) echo true; exit 0 ;; esac
+fi
+exec "$real_git" "\$@"
+EOS
+chmod +x "$work/gitshim/git"
+reclaim_run() {   # reclaim_run <腳本> <lock dir>
+  local sh=$1 d=$2
+  rm -rf "$d" "$d".stale.*
+  mkdir -p "$d"; printf 'pid=99999999\nstarted=1\n' > "$d/holder"
+  PATH="$work/gitshim:$PATH" bash "$sh" --timeout 5 --dir "$d" -- echo RECLAIM-RAN 2>&1
+}
+rd="$work/reclaim-simulator-lock"
+o="$(reclaim_run "$lock_sh" "$rd")"; rc=$?
+rc_is 'LS-443 R2(i1) reclaim 再驗 → 之後照常取鎖、exit 0' 0 "$rc" "$o"
+has   'LS-443 R2(i1) reclaim 再驗 → 印「回收死鎖前」拒絕' "$o" '--dir 不合規（回收死鎖前）'
+if ls -d "$rd".stale.* >/dev/null 2>&1; then echo "✓ LS-443 R2(i1) reclaim 再驗 → 被判成 git 工作樹的 tomb 沒被 rm -rf（tomb 還在）"; else echo "✗ LS-443 R2(i1) reclaim 再驗 → tomb 被刪了" >&2; fail=1; fi
+# mutation：拿掉 reclaim() 內 tomb 的 lock_dir_check → tomb 被 rm -rf
+mut5="$work/simulator-lock.no-tomb-check.sh"
+grep -v 'lock_dir_check "\$tomb"' "$lock_sh" > "$mut5"
+if [ "$(diff "$lock_sh" "$mut5" | grep -c '^<')" -eq 1 ]; then echo "✓ mutant 只少了 reclaim() 的 tomb 再驗那一行"; else echo "✗ mutant(no-tomb-check) 產生失敗" >&2; fail=1; fi
+om="$(reclaim_run "$mut5" "$work/reclaim2-simulator-lock")"
+if ! ls -d "$work/reclaim2-simulator-lock".stale.* >/dev/null 2>&1; then echo "✓ mutant：拿掉 tomb 再驗後 tomb 被 rm -rf——證明『tomb 還在』斷言由 reclaim() 再驗產生"; else echo "✗ mutant(no-tomb-check) 應刪掉 tomb（負控本身可能無效）" >&2; printf '%s\n' "$om" | sed 's/^/    /' >&2; fail=1; fi
+rm -rf "$rd".stale.* "$work/reclaim2-simulator-lock".stale.*
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ simulator-lock 自測通過"
