@@ -163,17 +163,22 @@ struct FoodFirstCardView: View {
                 .appFont(.note, weight: .semibold)
                 .foregroundStyle(Color.lsPrintInk)
         }
-        let age = Text(parts.age)
-            .appFont(.note)
-            .foregroundStyle(Color.lsPrintInkSecondary)
+        // Age Group `M4SYe`：Sep（「 ·\u{00A0}」）與 Age 之間 `$sp-tight`；Signature 內 Who Group 與 Age Group 之間也是 `$sp-tight`。
+        let ageGroup = HStack(spacing: AppSpacing.tight) {
+            Text(parts.separator)
+            Text(parts.age)
+                .multilineTextAlignment(.trailing)
+        }
+        .appFont(.note)
+        .foregroundStyle(Color.lsPrintInkSecondary)
         Group {
             if isAccessibilityLayout {
                 VStack(alignment: .trailing, spacing: 0) {
                     who
-                    age.multilineTextAlignment(.trailing)
+                    ageGroup
                 }
             } else {
-                HStack(spacing: AppSpacing.tight) { who; age }
+                HStack(spacing: AppSpacing.tight) { who; ageGroup }
             }
         }
         .frame(maxWidth: .infinity, alignment: .trailing)

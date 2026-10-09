@@ -72,7 +72,12 @@ enum FoodRecordDetailCopy {
     }
 
     /// 「媽媽記錄」（稿 `ljup8`）——`display_name` 取自 `profiles`（同家庭成員互看，`docs/API.md` §2）。
-    static func recordedBy(displayName: String) -> String { "\(displayName)記錄" }
+    /// 中英夾雜規則（LS-201／LS-367）：名稱以英數字元結尾時與「記錄」之間補一個一般空白 U+0020（「qa-e2e 記錄」）；
+    /// 純中文名不加（「媽媽記錄」）。
+    static func recordedBy(displayName: String) -> String {
+        let endsWithAlphanumeric = displayName.last.map { $0.isASCII && ($0.isLetter || $0.isNumber) } ?? false
+        return "\(displayName)\(endsWithAlphanumeric ? "\u{0020}" : "")記錄"
+    }
 
     /// 04d 非作者看沒有照片的記錄：窗內唯讀的一句話（稿 `ZmJ6Z`，三種字級同一字串、不帶換行）。
     static let noPhoto = "這筆沒有照片"

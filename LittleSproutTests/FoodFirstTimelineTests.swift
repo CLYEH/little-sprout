@@ -214,7 +214,16 @@ final class FoodFirstTimelineTests: XCTestCase {
         let parts = FoodFirstCardCopy.signature(child: child, firstTriedOn: firstTriedOn)
         XCTAssertEqual(parts.name, "小安")
         // 年齡＝第一次吃那天（6 個月大），不是今天；「·」後與年齡內 U+00A0、「個⁠月⁠大」U+2060（LS-367 規則同源）。
-        XCTAssertEqual(parts.age, " ·\u{00A0}6\u{00A0}個\u{2060}月\u{2060}大")
+        XCTAssertEqual(parts.age, "6\u{00A0}個\u{2060}月\u{2060}大")
+    }
+
+    /// LS-424：稿 `Wqlnp` Sep 節點 `c1erNo` 內容＝U+0020 · U+00A0，且「·」與年齡之間不再有字元級空白（那段 gap 改由
+    /// View 的 `$sp-tight` 負責），否則兩處疊加。
+    func test_signature_separatorCodepoints_spaceDotNBSP_andAgeHasNoLeadingGap() {
+        let firstTriedOn = BirthdayFormat.date(fromWireString: "2025-10-20")!
+        let parts = FoodFirstCardCopy.signature(child: child, firstTriedOn: firstTriedOn)
+        XCTAssertEqual(parts.separator.unicodeScalars.map(\.value), [0x20, 0xB7, 0xA0], "Sep 逐字：U+0020 · U+00A0")
+        XCTAssertEqual(parts.age.unicodeScalars.first?.value, 0x36, "年齡以數字 6 開頭，沒有殘留的前導空白或 U+00A0")
     }
 
     // MARK: - helpers

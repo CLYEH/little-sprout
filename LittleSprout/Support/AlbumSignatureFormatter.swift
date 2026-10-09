@@ -46,8 +46,12 @@ enum AlbumSignatureFormatter {
     /// `BirthdayFormat.ageDescription`。
     static func segment(for child: Child, asOf date: Date, timeZone: TimeZone = .current) -> String {
         let age = hardenedAge(BirthdayFormat.ageDescription(birthday: child.birthday, now: date, timeZone: timeZone))
-        return "\(child.name) ·\u{00A0}\(age)"
+        return "\(child.name)\(separator)\(age)"
     }
+
+    /// 姓名與年齡之間的「·」（LS-424）：前 U+0020、後 U+00A0，同 `segment(for:asOf:timeZone:)` 的拼法，
+    /// 抽出給需要把「·」拆成獨立節點的呼叫端（時間軸食物卡 `Wqlnp` 的 Sep 節點內容逐字同此）。
+    static let separator = " ·\u{00A0}"
 
     /// 署名列文字——`isOneLinePerPerson` 為 true（AX3）時多寶貝改用 `\n` 分隔，否則用「、」。
     /// 零寶貝回傳單一半形空白（保留高度，見型別文件註解）。

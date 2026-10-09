@@ -108,6 +108,16 @@ final class FoodRecordDetailCopyTests: XCTestCase {
         XCTAssertEqual(FoodRecordDetailCopy.addPhotoLabel(foodName: "南瓜"), "加一張第一次吃南瓜的照片")
     }
 
+    /// LS-424：英數名稱與「記錄」之間補 U+0020（中英夾雜規則，LS-201／LS-367）；純中文名不加。
+    func test_recordedBy_alphanumericNameGetsU0020BeforeRecord_cjkNameDoesNot() {
+        XCTAssertEqual(FoodRecordDetailCopy.recordedBy(displayName: "qa-e2e").unicodeScalars.map(\.value),
+                       Array("qa-e2e".unicodeScalars.map(\.value)) + [0x20, 0x8A18, 0x9304], "qa-e2e 後接 U+0020 再接「記錄」")
+        XCTAssertEqual(FoodRecordDetailCopy.recordedBy(displayName: "Mom2"), "Mom2\u{0020}記錄")
+        XCTAssertEqual(FoodRecordDetailCopy.recordedBy(displayName: "媽媽").unicodeScalars.map(\.value),
+                       [0x5ABD, 0x5ABD, 0x8A18, 0x9304], "純中文名不加空白")
+        XCTAssertEqual(FoodRecordDetailCopy.recordedBy(displayName: "Amy媽"), "Amy媽記錄", "以中文字結尾不加空白")
+    }
+
     func test_reactionLabel_threeValuesAndHidesUnknown() {
         XCTAssertEqual(FoodRecordDetailCopy.reaction("liked")?.label, "喜歡")
         XCTAssertEqual(FoodRecordDetailCopy.reaction("neutral")?.label, "普通")
