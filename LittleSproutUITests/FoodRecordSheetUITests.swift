@@ -127,6 +127,35 @@ final class FoodRecordSheetUITests: XCTestCase {
         XCTAssertTrue(app.buttons["從家庭相簿挑"].waitForExistence(timeout: 5), "不用照片 → 回到兩個來源鈕")
     }
 
+    /// LS-434 03g（稿 `d1LCPb`）：家庭相簿沒有照片——Empty Print＋一句話、Head Sub 隱藏、主鈕「從手機加入」
+    /// （沒有「用這張」）；沿 `K1yE6j`，不畫灰格子骨架。
+    func testFamilyPicker_emptyAlbum_showsEmptyPrintAndPhoneButton() {
+        let app = Support.launch(
+            .foodRecordSheet, Support.standard, extraArguments: ["-LSFoodRecordEmptyAlbum", "YES"]
+        )
+        Support.openTaroSheet(in: app)
+        app.buttons["從家庭相簿挑"].tap()
+
+        XCTAssertTrue(app.staticTexts["從家庭相簿挑一張"].waitForExistence(timeout: 5))
+        XCTAssertEqual(
+            Support.element("foodPhoto.emptyLine", in: app).label, "家庭相簿裡還沒有照片。", "03g 的一句話（同一字串）"
+        )
+        XCTAssertFalse(app.staticTexts["點一張照片，再按「用這張」。"].exists, "空相簿沒有東西可點：Head Sub 隱藏")
+        XCTAssertFalse(app.buttons["foodPhoto.use"].exists, "不留一顆按了沒反應的「用這張」")
+        let phone = app.buttons["foodPhoto.addFromPhone"]
+        XCTAssertTrue(phone.waitForHittable(timeout: 5), "主鈕改成「從手機加入」")
+        XCTAssertEqual(phone.label, "從手機加入")
+
+        // 按下去要真的開選取器（Notes eY1tg：不留一顆按了沒反應的主鈕）：先收 03d，再由呼叫端 onDismiss 開
+        // PhotosPicker——選取器是系統程序，但它的「Cancel」鈕（identifier）在 app 的 accessibility 樹上。
+        phone.tap()
+        XCTAssertTrue(app.staticTexts["從家庭相簿挑一張"].waitUntilGone(timeout: 5), "03d 要收起")
+        let pickerCancel = app.buttons["Cancel"]
+        XCTAssertTrue(pickerCancel.waitForExistence(timeout: 10), "03d 收完要開 PhotosPicker（看到系統選取器的 Cancel 鈕）")
+        pickerCancel.tap()
+        XCTAssertTrue(app.staticTexts["記下小安第一次吃芋頭"].waitForExistence(timeout: 5), "選取器取消後回到 03")
+    }
+
     // MARK: - 03b → 03c → 格子回未吃
 
     /// 票文範圍 3＋驗收「刪除→格子回未吃」：03b 按「刪除這筆記錄」→ 03c 文案逐字 → 確認後兩層 sheet 都收起、
@@ -161,6 +190,35 @@ final class FoodRecordSheetUITests: XCTestCase {
         XCTAssertFalse(app.buttons["從家庭相簿挑"].exists, "不能顯示成「沒選照片」")
         app.buttons["不用照片"].tap()
         XCTAssertTrue(app.buttons["從家庭相簿挑"].waitForExistence(timeout: 5), "不用照片 → 回到兩個來源鈕")
+    }
+
+    /// LS-434 03f（稿 `QeM1z`）：「換一張」叫出的 confirmationDialog 標題看得到（`titleVisibility: .visible`），
+    /// 選項只有「從家庭相簿挑」「從手機加入」＋取消——C1a 不加相機。
+    func testChangePhoto_dialogShowsTitleAndOnlyTwoSources() {
+        let app = Support.launch(.foodRecordSheetEdit, Support.standard)
+        let change = app.buttons["換一張"]
+        Support.scrollUntilHittable(change, in: app)
+        change.tap()
+
+        XCTAssertTrue(app.staticTexts["換一張照片"].waitForExistence(timeout: 5), "對話框標題要看得到（03f）")
+        XCTAssertTrue(app.buttons["從家庭相簿挑"].exists)
+        XCTAssertTrue(app.buttons["從手機加入"].exists)
+        XCTAssertFalse(app.buttons["用相機拍一張"].exists, "C1a：不加相機來源")
+    }
+
+    /// LS-434 03h（稿 `FrAp9`）：手機照片讀不出來 → Status Slot 顯示新失敗句（「請再選一張」，這個畫面沒有「換一張」
+    /// 鈕）。host 在編輯 store 上標 `photoLoadFailed`（同 `FoodRecordDetailRouter.loadPhonePhoto` 的失敗路徑）。
+    func testPhotoUnreadable_statusSlotShowsNewSentenceAndKeepsBothSources() {
+        let app = Support.launch(
+            .foodRecordSheetEdit, Support.standard,
+            extraArguments: ["-LSFoodRecordPhotoUnreadable", "YES", "-LSFoodRecordMissingPhoto", "YES"]
+        )
+        let status = Support.element("foodRecord.statusText", in: app)
+        XCTAssertTrue(
+            Support.waitForLabel(status, where: "==", "沒有加入照片：手機裡這一張讀不出來，請再選一張。"),
+            "03h 失敗句逐字：\(status.label)"
+        )
+        XCTAssertFalse(status.label.contains("請換一張"), "舊句「請換一張」不得殘留（這個畫面沒有「換一張」鈕）")
     }
 
     /// 03c AX3（稿 `d56YR`）：刪除鈕與取消都在首屏內。

@@ -36,6 +36,7 @@ struct FoodRecordSheet: View {
     @State var showsFamilyPicker = false
     @State var showsPhoneSourceChoice = false
     @State var showsPhonePicker = false
+    @State var opensPhonePickerAfterFamilyPicker = false
     @State var phoneSelection: PhotosPickerItem?
     @State var showsDeleteConfirmation = false
     /// 03c 刪除成功後，等確認 sheet 自己關完（`onDismiss`）再關本 sheet——同一個 runloop 內連關兩層會被
@@ -80,8 +81,8 @@ struct FoodRecordSheet: View {
         .sheet(isPresented: $showsDatePicker) {
             FoodRecordDatePickerSheet(selection: $store.firstTriedOn)
         }
-        .sheet(isPresented: $showsFamilyPicker) { familyPicker }
-        .confirmationDialog("換一張照片", isPresented: $showsPhoneSourceChoice, titleVisibility: .hidden) {
+        .sheet(isPresented: $showsFamilyPicker, onDismiss: openPhonePickerIfRequested) { familyPicker }
+        .confirmationDialog("換一張照片", isPresented: $showsPhoneSourceChoice, titleVisibility: .visible) {
             Button("從家庭相簿挑") { showsFamilyPicker = true }
             Button("從手機加入") { showsPhonePicker = true }
         }
@@ -135,7 +136,7 @@ struct FoodRecordSheet: View {
                 .accessibilityIdentifier("foodRecord.save")
                 textButton(title: "取消", icon: nil, color: .lsTextPrimary, action: cancel)
             }
-            if store.isEditing {
+            if store.isEditing && !store.isAddPhotoRecovery {
                 textButton(title: "刪除這筆記錄", icon: "trash", color: .lsDanger) {
                     guard !store.saveState.isSubmitting else { return }
                     showsDeleteConfirmation = true
@@ -167,7 +168,9 @@ struct FoodRecordSheet: View {
 
     private var currentStatus: FoodRecordStatus {
         if case .failure(let error) = store.saveState {
-            return .failure(FoodRecordCopy.saveFailed(error))
+            return .failure(
+                store.isAddPhotoRecovery ? FoodRecordCopy.addPhotoFailed(error) : FoodRecordCopy.saveFailed(error)
+            )
         }
         if store.photoLoadFailed { return .failure(FoodRecordCopy.photoUnsupported) }
         return .normal(FoodRecordCopy.statusNormal(foodName: store.item.nameZh, isEditing: store.isEditing))
@@ -243,7 +246,9 @@ enum FoodRecordStatus: Hashable {
     static func candidates(current: FoodRecordStatus, foodName: String, isEditing: Bool) -> [FoodRecordStatus] {
         var result: [FoodRecordStatus] = [
             .normal(FoodRecordCopy.statusNormal(foodName: foodName, isEditing: isEditing)),
-            .failure(FoodRecordCopy.saveFailedNetwork)
+            .failure(FoodRecordCopy.saveFailedNetwork),
+            // 04f：加照片存不起來的專屬句也要疊進 Slot，第一次失敗時 Slot 不長高、儲存鈕不位移。
+            .failure(FoodRecordCopy.addPhotoFailedNetwork)
         ]
         if !result.contains(current) { result.append(current) }
         return result

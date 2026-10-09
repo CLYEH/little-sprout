@@ -59,23 +59,26 @@ final class FoodRecordCopyTests: XCTestCase {
 
     // MARK: - Status Slot max() 規則（票文範圍 2）
 
-    /// 平時就把 03e 那句失敗句疊進去量高度——第一次失敗時 Slot 不長高、儲存鈕不位移。拿掉它 Slot 只量一般句，
+    /// 平時就把 03e 那句失敗句（與 LS-434 的 04f `food.add_photo_failed` 專屬句）疊進去量高度——第一次失敗時 Slot 不長高、儲存鈕不位移。拿掉它 Slot 只量一般句，
     /// 失敗時長高、儲存鈕被往下推（`FoodRecordSheetUITests.testFailureKeepsSaveButtonInPlace_AX3` 在畫面上驗）。
     func test_statusCandidates_alwaysIncludeNormalAndDesignedFailureSentence() {
         let normal = FoodRecordStatus.normal(FoodRecordCopy.statusNormal(foodName: "芋頭", isEditing: false))
         let candidates = FoodRecordStatus.candidates(current: normal, foodName: "芋頭", isEditing: false)
-        XCTAssertEqual(candidates, [normal, .failure(FoodRecordCopy.saveFailedNetwork)])
+        XCTAssertEqual(
+            candidates,
+            [normal, .failure(FoodRecordCopy.saveFailedNetwork), .failure(FoodRecordCopy.addPhotoFailedNetwork)]
+        )
     }
 
     func test_statusCandidates_appendOtherFailureOnce() {
         let other = FoodRecordStatus.failure(FoodRecordCopy.saveFailed(.rejected(message: "x", code: "42501")))
         let candidates = FoodRecordStatus.candidates(current: other, foodName: "芋頭", isEditing: true)
-        XCTAssertEqual(candidates.count, 3)
+        XCTAssertEqual(candidates.count, 4)
         XCTAssertEqual(candidates.last, other)
 
         let network = FoodRecordStatus.failure(FoodRecordCopy.saveFailedNetwork)
         XCTAssertEqual(
-            FoodRecordStatus.candidates(current: network, foodName: "芋頭", isEditing: true).count, 2, "同一句不重複疊"
+            FoodRecordStatus.candidates(current: network, foodName: "芋頭", isEditing: true).count, 3, "同一句不重複疊"
         )
     }
 

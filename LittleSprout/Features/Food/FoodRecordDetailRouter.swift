@@ -50,6 +50,7 @@ struct FoodRecordDetailRouter: View {
     @State private var showsSourceChoice = false
     @State private var showsFamilyPicker = false
     @State private var showsPhonePicker = false
+    @State private var opensPhonePickerAfterFamilyPicker = false
     @State private var phoneSelection: PhotosPickerItem?
 
     var body: some View {
@@ -74,7 +75,7 @@ struct FoodRecordDetailRouter: View {
         }
         .confirmationDialog(
             FoodRecordDetailCopy.addPhotoLabel(foodName: item.nameZh), isPresented: $showsSourceChoice,
-            titleVisibility: .hidden
+            titleVisibility: .visible
         ) {
             Button("從家庭相簿挑") { showsFamilyPicker = true }
             Button("從手機加入") { showsPhonePicker = true }
@@ -82,8 +83,10 @@ struct FoodRecordDetailRouter: View {
         .sheet(isPresented: $showsFamilyPicker, onDismiss: savePendingPhoto) {
             FoodFamilyPhotoPickerSheet(
                 childID: record.childID, recordDate: BirthdayFormat.localMidnight(from: record.firstTriedOn),
-                apiClient: apiClient, initialSelectionID: nil
-            ) { photo, _ in pendingPhoto = .family(photo) }
+                apiClient: apiClient, initialSelectionID: nil,
+                onChooseFromPhone: { opensPhonePickerAfterFamilyPicker = true },
+                onUse: { photo, _ in pendingPhoto = .family(photo) }
+            )
         }
         .photosPicker(isPresented: $showsPhonePicker, selection: $phoneSelection, matching: .images)
         .onChange(of: phoneSelection) { loadPhonePhoto() }
@@ -108,7 +111,9 @@ struct FoodRecordDetailRouter: View {
         case .delete(let target):
             deleteTarget = target
         case .addPhoto(let target):
-            addPhotoStore = makeStore(for: target)
+            let store = makeStore(for: target)
+            store.isAddPhotoRecovery = true
+            addPhotoStore = store
             showsSourceChoice = true
         }
     }
@@ -125,6 +130,11 @@ struct FoodRecordDetailRouter: View {
 
     /// 03d 收起後才存（「用這張」先記下、`onDismiss` 再送）：存不起來要開 03b，不能跟 03d 的收起動畫搶。
     private func savePendingPhoto() {
+        if opensPhonePickerAfterFamilyPicker {
+            opensPhonePickerAfterFamilyPicker = false
+            showsPhonePicker = true
+            return
+        }
         guard let photo = pendingPhoto else { return }
         pendingPhoto = nil
         save(photo)

@@ -166,7 +166,8 @@ struct FoodRecordDetailView: View {
             caption: FoodRecordDetailCopy.imprintCaption(child: child, firstTriedOn: shown.firstTriedOn),
             mountPool: isRegular ? .regular : .compact,
             addPhotoLabel: FoodRecordDetailCopy.addPhotoLabel(foodName: item.nameZh),
-            onAddPhoto: actions.contains(.edit) ? { onRoute(.addPhoto(shown)) } : nil
+            onAddPhoto: actions.contains(.edit) ? { onRoute(.addPhoto(shown)) } : nil,
+            onRetryPhoto: { Task { await store?.retryPhoto() } }
         )
     }
 

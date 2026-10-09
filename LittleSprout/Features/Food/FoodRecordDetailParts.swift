@@ -48,7 +48,10 @@ struct FoodFirstTriedStamp: View {
 ///   家族），台紙兩顆染料池（左上／右下；iPad 值另計）；深色疊 `$photo-dim`。
 /// - 沒有照片（04b）：同幾何、**零角托**、無染料池（Notes `hqrit`「空白沖印品（同 04 幾何、零角托）」）；照片窗
 ///   填 `$print-ink-secondary` 12%，作者看到 image-plus＋「加一張第一次吃〇〇的照片」、整張可點（開照片來源）；
-///   其他人只看到空白窗、不是按鈕（稿面未畫非作者版本，只拿掉邀請文字，見 handoff）。
+///   其他人（04d `P2EIHz`）看到窗內「這筆沒有照片」——regular、`$print-ink-secondary`、無 icon、不是按鈕。
+/// - 有照片但載入失敗（04e `GFvUy`，`FoodRecordDetailPhotoState.unavailable`）：角托與染料池照有（這筆確實有照片），
+///   窗底是紙上的墨（`$print-ink-secondary` 12%，深色不反轉、不疊 `$photo-dim`），窗內 image-off＋「照片沒有載入」＋
+///   「再試一次」。已刪照片再試也不會成功，v1 不另外分辨（C2a）。
 struct FoodRecordPrint: View {
     struct MountPool {
         let topLeading: Double
@@ -66,6 +69,8 @@ struct FoodRecordPrint: View {
     let addPhotoLabel: String
     /// 非 nil＝目前登入者可以補照片（作者），04b 整張是按鈕。
     let onAddPhoto: (() -> Void)?
+    /// 04e「再試一次」：重跑詳情頁的照片載入。
+    let onRetryPhoto: () -> Void
 
     static let cornerSize: CGFloat = 26
 
@@ -115,9 +120,11 @@ struct FoodRecordPrint: View {
         switch photo {
         case .none:
             blankWindow
-        case .loading, .unavailable:
+        case .loading:
             Color.lsSurface2.frame(height: photoHeight)
                 .accessibilityHidden(true)
+        case .unavailable:
+            loadFailedWindow
         case .loaded(let url):
             // 照片窗以固定高度的底色為本體、照片疊在 overlay 並裁切：蓋滿（scaledToFill）的圖本身會比窗大
             // （直式 4:3 圖在 338×400 窗內是 338×507），若把它當無障礙元素，frame 會撐出沖印品；圖片本身
@@ -143,6 +150,28 @@ struct FoodRecordPrint: View {
 
     @ScaledMetric(relativeTo: .body) private var addIconSize: CGFloat = 40
 
+    /// 04e：image-off 40（AX3 64，同 `blankWindow` 的 icon 規則）＋「照片沒有載入」600 `$print-ink`＋「再試一次」。
+    /// 高度以 `photoHeight` 為下限（AX3 內容比 400 高時往下長，不裁切）。
+    private var loadFailedWindow: some View {
+        VStack(spacing: AppSpacing.group) {
+            Image(systemName: "photo.badge.exclamationmark")
+                .resizable()
+                .scaledToFit()
+                .frame(width: min(addIconSize, 64), height: min(addIconSize, 64))
+                .foregroundStyle(Color.lsPrintInkSecondary)
+                .accessibilityHidden(true)
+            Text(FoodRecordDetailCopy.photoLoadFailed)
+                .appFont(.body, weight: .semibold)
+                .foregroundStyle(Color.lsPrintInk)
+                .multilineTextAlignment(.center)
+                .accessibilityIdentifier("foodRecordDetail.photoFailed")
+            FoodRecordPhotoRetryButton(action: onRetryPhoto)
+        }
+        .padding(.horizontal, AppSpacing.insetCard)
+        .frame(maxWidth: .infinity, minHeight: photoHeight)
+        .background(Color.lsPrintInkSecondary.opacity(0.12))
+    }
+
     private var blankWindow: some View {
         ZStack {
             Color.lsPrintInkSecondary.opacity(0.12)
@@ -159,6 +188,14 @@ struct FoodRecordPrint: View {
                 }
                 .foregroundStyle(Color.lsPrintInk)
                 .padding(.horizontal, AppSpacing.insetCard)
+            } else {
+                // 04d：唯讀的一句話，不做成按鈕（無 icon、無粗體、無 chevron；VoiceOver 不加 `.isButton`）。
+                Text(FoodRecordDetailCopy.noPhoto)
+                    .appFont(.body)
+                    .foregroundStyle(Color.lsPrintInkSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, AppSpacing.insetCard)
+                    .accessibilityIdentifier("foodRecordDetail.noPhoto")
             }
         }
         .frame(height: photoHeight)
@@ -209,6 +246,36 @@ struct FoodRecordPrint: View {
             alignment: Alignment(horizontal: isLeading ? .leading : .trailing, vertical: isTop ? .top : .bottom)
         )
         .offset(x: isLeading ? -out : out, y: isTop ? -out : out)
+    }
+}
+
+/// 04e「再試一次」（`U8Yoq`）：`cmp/Button Secondary` 實例覆寫成紙上的墨——框 `$print-ink-secondary` 1.5、
+/// rotate-cw 與字 `$print-ink`（深色不反轉）；icon 22、AX3 上限 32（Notes `PoE0n`）；寬度貼內容（fit_content）。
+struct FoodRecordPhotoRetryButton: View {
+    let action: () -> Void
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 22
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: AppSpacing.label) {
+                Image(systemName: "arrow.clockwise")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: min(iconSize, 32), height: min(iconSize, 32))
+                Text(FoodRecordDetailCopy.retryPhoto).appFont(.body, weight: .semibold)
+            }
+            .foregroundStyle(Color.lsPrintInk)
+            .padding(.vertical, AppSpacing.controlPaddingMedium)
+            .padding(.horizontal, 20)
+            .frame(minHeight: 48)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
+                    .strokeBorder(Color.lsPrintInkSecondary, lineWidth: 1.5)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("foodRecordDetail.retryPhoto")
     }
 }
 

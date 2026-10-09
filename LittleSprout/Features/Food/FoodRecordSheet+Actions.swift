@@ -8,11 +8,20 @@ extension FoodRecordSheet {
     var familyPicker: some View {
         FoodFamilyPhotoPickerSheet(
             childID: store.childID, recordDate: store.firstTriedOn, apiClient: apiClient,
-            initialSelectionID: store.photo.familyMediaID
-        ) { photo, url in
-            if let url { photoURLs[photo.displayPath] = url }
-            store.photo = .family(photo)
-        }
+            initialSelectionID: store.photo.familyMediaID,
+            onChooseFromPhone: { opensPhonePickerAfterFamilyPicker = true },
+            onUse: { photo, url in
+                if let url { photoURLs[photo.displayPath] = url }
+                store.photo = .family(photo)
+            }
+        )
+    }
+
+    /// 03g 空相簿的主鈕「從手機加入」：03d 收完才開 PhotosPicker（同一個 runloop 內連開會被系統吞掉）。
+    func openPhonePickerIfRequested() {
+        guard opensPhonePickerAfterFamilyPicker else { return }
+        opensPhonePickerAfterFamilyPicker = false
+        showsPhonePicker = true
     }
 
     /// 03c（`Oob1d`）：沿 LS-152 操作表語彙重用 `DeleteConfirmationSheet`——刪除鈕與取消釘在 ScrollView

@@ -74,6 +74,13 @@ enum FoodRecordDetailCopy {
     /// 「媽媽記錄」（稿 `ljup8`）——`display_name` 取自 `profiles`（同家庭成員互看，`docs/API.md` §2）。
     static func recordedBy(displayName: String) -> String { "\(displayName)記錄" }
 
+    /// 04d 非作者看沒有照片的記錄：窗內唯讀的一句話（稿 `ZmJ6Z`，三種字級同一字串、不帶換行）。
+    static let noPhoto = "這筆沒有照片"
+
+    /// 04e 照片載入失敗（稿 `a9LzC`／`U8Yoq`，失敗文案鍵 `food.photo_load_failed`）。
+    static let photoLoadFailed = "照片沒有載入"
+    static let retryPhoto = "再試一次"
+
     /// 04b 空白沖印品的邀請句（稿 `R0Ys6N`「加一張第一次吃南瓜的照片」）。
     static func addPhotoLabel(foodName: String) -> String { "加一張第一次吃\(foodName)的照片" }
 

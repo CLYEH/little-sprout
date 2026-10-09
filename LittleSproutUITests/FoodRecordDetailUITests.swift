@@ -109,6 +109,63 @@ final class FoodRecordDetailUITests: XCTestCase {
         XCTAssertEqual(actionButtons(in: app), ["編輯這筆記錄"])
     }
 
+    /// LS-434 04d（稿 `P2EIHz`）：非作者看沒有照片的記錄——空白沖印品窗內一句「這筆沒有照片」，唯讀（不是按鈕、
+    /// 沒有動作鈕）、零角托。
+    func testNonAuthorNoPhoto_showsReadOnlyLabelWithoutCorners() {
+        let app = launch(.foodRecordDetailViewer, Self.standard, extraArguments: ["-LSFoodRecordDetailNoPhoto", "YES"])
+        let label = app.staticTexts["foodRecordDetail.noPhoto"]
+        XCTAssertTrue(label.waitForExistence(timeout: 5), "04d：窗內要有「這筆沒有照片」")
+        XCTAssertEqual(label.label, "這筆沒有照片")
+        XCTAssertFalse(app.buttons["foodRecordDetail.addPhoto"].exists, "非作者：空白沖印品不是按鈕")
+        XCTAssertFalse(app.buttons["這筆沒有照片"].exists, "不可點：VoiceOver 不加 .isButton")
+        XCTAssertEqual(actionButtons(in: app), [], "非作者 viewer：沒有任何動作鈕")
+        let imprint = app.staticTexts["foodRecordDetail.imprint"].frame
+        // 窗高 400（compact）、字置中：窗頂＝字中線 −200；沖印品外框＝窗外擴白邊 8，下緣＝壓印行下方 `printEdgeBottom` 8。
+        let windowTop = label.frame.midY - 200
+        let print = CGRect(
+            x: 24, y: windowTop - 8, width: app.frame.width - 48, height: imprint.maxY + 8 - (windowTop - 8)
+        )
+        let ratios = cornerRatios(around: print, in: app)
+        for (name, ratio) in [
+            ("左上", ratios.topLeading), ("右上", ratios.topTrailing),
+            ("左下", ratios.bottomLeading), ("右下", ratios.bottomTrailing)
+        ] {
+            XCTAssertLessThan(ratio, 0.05, "04d 零角托：\(name)像素佔比 \(ratio)")
+        }
+    }
+
+    /// LS-434 04e（稿 `GFvUy`）：照片載入失敗——窗內「照片沒有載入」＋「再試一次」，角托（對角兩顆）照有；
+    /// 按「再試一次」會真的重載（fixture 第一輪拿不到簽名網址、重試那一輪成功）：失敗態消失、照片出現。
+    /// 「再試仍失敗就維持失敗態」（C2a）由 `FoodRecordDetailStoreTests` 鎖。
+    func testPhotoLoadFailed_showsRetryAndKeepsDiagonalCorners() {
+        let app = launch(
+            .foodRecordDetail, Self.standard, extraArguments: ["-LSFoodRecordDetailPhotoFailsFirst", "YES"]
+        )
+        let label = app.staticTexts["foodRecordDetail.photoFailed"]
+        XCTAssertTrue(label.waitForExistence(timeout: 5), "04e：窗內要有「照片沒有載入」")
+        XCTAssertEqual(label.label, "照片沒有載入")
+        let retry = app.buttons["foodRecordDetail.retryPhoto"]
+        XCTAssertTrue(retry.waitForHittable(timeout: 5), "「再試一次」可點")
+        XCTAssertEqual(retry.label, "再試一次")
+        XCTAssertFalse(element("foodRecordDetail.photo", in: app, timeout: 1).exists, "沒有載入成功的照片")
+        XCTAssertFalse(app.buttons["foodRecordDetail.addPhoto"].exists, "這筆確實有照片：不退回 04b 的邀請")
+
+        // 窗高 400（compact）、窗底在壓印行上方 gap 7：沖印品外框＝窗外擴白邊 8，下緣＝壓印行下方 `printEdgeBottom` 8。
+        let imprint = app.staticTexts["foodRecordDetail.imprint"].frame
+        let printTop = imprint.minY - 7 - 400 - 8
+        let print = CGRect(x: 24, y: printTop, width: app.frame.width - 48, height: imprint.maxY + 8 - printTop)
+        let ratios = cornerRatios(around: print, in: app)
+        XCTAssertGreaterThan(ratios.topLeading, 0.8, "左上角托保留（像素佔比 \(ratios.topLeading)）")
+        XCTAssertGreaterThan(ratios.bottomTrailing, 0.8, "右下角托保留（像素佔比 \(ratios.bottomTrailing)）")
+        XCTAssertLessThan(ratios.topTrailing, 0.05)
+        XCTAssertLessThan(ratios.bottomLeading, 0.05)
+
+        retry.tap()
+        XCTAssertTrue(label.waitUntilGone(timeout: 5), "按「再試一次」要真的重載：失敗態消失")
+        XCTAssertTrue(element("foodRecordDetail.photo", in: app).waitForExistence(timeout: 5), "重載成功：照片出現")
+        XCTAssertFalse(app.buttons["foodRecordDetail.retryPhoto"].exists, "載入成功後不再有「再試一次」")
+    }
+
     // MARK: - AX3（`z1Pg2`／`vr5zj`）
 
     /// AX3：貼紙與食物名直排（名稱貼左邊界，不在貼紙右側）；日期章 VoiceOver 仍念單行。
@@ -145,9 +202,12 @@ final class FoodRecordDetailUITests: XCTestCase {
         }
     }
 
-    private func launch(_ screen: TapTargetGateScreenName, _ size: String, dark: Bool = false) -> XCUIApplication {
+    private func launch(
+        _ screen: TapTargetGateScreenName, _ size: String, dark: Bool = false, extraArguments: [String] = []
+    ) -> XCUIApplication {
         let app = TapTargetMeasurement.launch(
-            screen, contentSizeCategory: size, extraLaunchArguments: dark ? ["-LSFoodRecordDetailDark", "YES"] : []
+            screen, contentSizeCategory: size,
+            extraLaunchArguments: (dark ? ["-LSFoodRecordDetailDark", "YES"] : []) + extraArguments
         )
         TapTargetMeasurement.assertScreenRendered(screen, in: app)
         return app
