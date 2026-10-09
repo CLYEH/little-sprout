@@ -10,8 +10,10 @@ import SwiftUI
 ///     不分頁：274 種是天花板，見 API.md §4）
 ///   - `upsertChildFoodRecord` → RPC `upsert_child_food_record`（6 個具名參數全送，自然鍵 upsert，API.md §4）
 ///   - `deleteChildFoodRecord` → RPC `delete_child_food_record(p_id)`（軟刪，作者本人或 owner）
-///   - `listFamilyPhotos`／`fetchFamilyPhoto` → 表 `media`（`type = photo`、`deleted_at is null`、該寶貝的
-///     `family_id`；`media_select` RLS 另外會讓上傳者看到自己已軟刪的列，所以 `deleted_at` 要自己濾）
+///   - `listFamilyPhotos` → RPC `list_family_photos_for_food(p_child_id, p_limit)`（LS-441：該寶貝家庭的未刪照片，
+///     排除「只屬於飲食記錄」的專屬照片，沿 LS-430 `media_hidden_as_food_record_only`；新到舊，API.md §4）
+///   - `fetchFamilyPhoto` → 表 `media`（`deleted_at is null`；`media_select` RLS 另外會讓上傳者看到自己已軟刪的列，
+///     所以 `deleted_at` 要自己濾；編輯既有記錄回填用，不經 RPC，本記錄自己綁的專屬照片因此仍取得到）
 ///   - `signedURLs` → Storage `media` bucket `createSignedURLs`（縮圖路徑）
 ///   - `uploadPhoto` → 既有 `MediaUploadService.uploadPhoto`（Storage 原檔＋縮圖 → `media` 列，同日記）
 ///   - `softDeleteMedia` → 既有 `MediaUploadService.softDeleteMedia`（`media.deleted_at`，LS-430；不是新 RPC）
@@ -22,7 +24,7 @@ protocol FoodAPIClient: Sendable {
     func listChildFoodRecords(childID: UUID) async throws -> [ChildFoodRecord]
     func upsertChildFoodRecord(_ input: FoodRecordUpsert) async throws -> ChildFoodRecord
     func deleteChildFoodRecord(id: UUID) async throws
-    /// 該寶貝所屬家庭的照片（新到舊，最多 `FamilyPhotoQuery.limit` 張，見該常數）。
+    /// 該寶貝所屬家庭的照片（新到舊，最多 `FamilyPhotoQuery.limit` 張，見該常數；不含飲食專屬照片，LS-441）。
     func listFamilyPhotos(childID: UUID) async throws -> [FamilyPhoto]
     /// 編輯既有記錄（03b）時回填照片縮圖用；已軟刪或看不到＝nil。
     func fetchFamilyPhoto(id: UUID) async throws -> FamilyPhoto?

@@ -176,34 +176,19 @@ final class SupabaseFoodAPIClientTests: XCTestCase {
         try await SupabaseFoodAPIClient(client: client).deleteChildFoodRecord(id: recordID)
     }
 
-    /// 03d：先以寶貝解出家庭，再只列該家庭、未軟刪的照片（`media_select` 會讓上傳者看到自己已軟刪的列，
-    /// `deleted_at` 要自己濾），新到舊、有上限。
-    func test_listFamilyPhotos_resolvesFamilyThenQueriesLivePhotos() async throws {
-        let familyID = "33333333-3333-3333-3333-333333333333"
+    /// 03d（LS-441）：以寶貝 id 呼叫 RPC `list_family_photos_for_food`（家庭解析、排除飲食專屬照片、新到舊都在後端），
+    /// `p_limit` 送 `FamilyPhotoQuery.limit`。
+    func test_listFamilyPhotos_callsRPCWithChildAndLimit() async throws {
         let client = TestSupabaseClient.make { [childID] request in
-            let query = URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
-            switch request.url?.path {
-            case "/rest/v1/children":
-                XCTAssertTrue(query.contains(URLQueryItem(name: "id", value: "eq.\(childID.uuidString)")), "\(query)")
-                return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
-                {"family_id": "\(familyID)"}
-                """.utf8))
-            case "/rest/v1/media":
-                XCTAssertTrue(query.contains(URLQueryItem(name: "family_id", value: "eq.\(familyID)")), "\(query)")
-                XCTAssertTrue(query.contains(URLQueryItem(name: "type", value: "eq.photo")), "\(query)")
-                XCTAssertTrue(query.contains(URLQueryItem(name: "deleted_at", value: "is.NULL")), "\(query)")
-                let limit = URLQueryItem(name: "limit", value: "\(FamilyPhotoQuery.limit)")
-                XCTAssertTrue(query.contains(limit), "\(query)")
-                let order = query.first { $0.name == "order" }?.value ?? ""
-                XCTAssertTrue(order.hasPrefix("created_at.desc"), "\(query)")
-                return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
-                [{"id": "44444444-4444-4444-4444-444444444444", "storage_path": "f/2026/08/a.jpg",
-                  "thumb_path": "f/2026/08/a_thumb.jpg", "taken_at": null, "created_at": "2026-08-20T03:00:00Z"}]
-                """.utf8))
-            default:
-                XCTFail("非預期的請求：\(request.url?.absoluteString ?? "")")
-                return MockURLProtocol.StubResponse(statusCode: 500, body: Data())
-            }
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/list_family_photos_for_food")
+            let body = try XCTUnwrap(request.bodyData)
+            let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+            XCTAssertEqual(payload["p_child_id"] as? String, childID.uuidString)
+            XCTAssertEqual(payload["p_limit"] as? Int, FamilyPhotoQuery.limit)
+            return MockURLProtocol.StubResponse(statusCode: 200, body: Data("""
+            [{"id": "44444444-4444-4444-4444-444444444444", "storage_path": "f/2026/08/a.jpg",
+              "thumb_path": "f/2026/08/a_thumb.jpg", "taken_at": null, "created_at": "2026-08-20T03:00:00Z"}]
+            """.utf8))
         }
 
         let photos = try await SupabaseFoodAPIClient(client: client).listFamilyPhotos(childID: childID)

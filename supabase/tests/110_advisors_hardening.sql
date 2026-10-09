@@ -176,6 +176,7 @@ declare
     'public.delete_my_account()',
     'public.get_my_join_request()',
     'public.list_comments(uuid, text, uuid, timestamptz, uuid, integer)',
+    'public.list_family_photos_for_food(uuid, integer)',
     'public.list_join_requests()',
     'public.register_device_token(text, text)',
     'public.reject_join(uuid)',
