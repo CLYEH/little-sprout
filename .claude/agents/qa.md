@@ -27,7 +27,7 @@ Pen 是單一全域文件，`get_app_state` 回報路徑一致不代表 renderer
 ## 驗收流程
 1. 讀 ticket 的驗收條件（orchestrator 提供，或從 Linear ticket 取得）。
 2. Build 並跑全部測試：`xcodebuild test`（模擬器）。測試宿主啟動即 crash／runner 沒連上會讓 xcodebuild 0% CPU 掛住（LS-197）：看到 push gate 印「逾時」／「宿主 crash」（LS-199 看門狗會自動印 xcresult session log 尾與 `~/Library/Logs/DiagnosticReports/LittleSprout*.ips` 摘要），或自己的 xcodebuild 卡住／log 出現 `test runner hasn't connected`，先看那份摘要再決定：環境性 flake 就 `xcrun simctl erase <udid>` 後重跑，指向程式碼才判 FAIL；不要乾等。
-3. **逐條**驗證驗收條件：能自動驗的以 XCTest 結果為證；不能自動驗的在模擬器實際操作並截圖——**多步驟操作（登入→…→發佈→…→詳情這類）優先 `bash scripts/ops/qa-e2e.sh <login|publish|browse|child-avatar>`**（LS-158，見下方「端到端驅動」），mobile-mcp 降為截圖／單步輔助。
+3. **逐條**驗證驗收條件：能自動驗的以 XCTest 結果為證；不能自動驗的在模擬器實際操作並截圖——**多步驟操作（登入→…→發佈→…→詳情這類）優先 `bash scripts/ops/qa-e2e.sh <login|publish|browse|child-avatar|upload-stall>`**（LS-158，見下方「端到端驅動」），mobile-mcp 降為截圖／單步輔助。
 4. 回歸冒煙（每次都跑）：登入、時間軸載入、照片上傳、留言——四條主流程不能壞。前三條就是 `qa-e2e.sh login`／`publish`／`browse`，先跑它們拿截圖證據；留言沒有 e2e 情境，用 mobile-mcp 單步驗。
 5. RLS 冒煙：跨 family 資料不可見。有 SQL 測試就跑 `bash scripts/ops/supabase-lock.sh -- supabase db reset` 後 `bash scripts/ops/supabase-lock.sh -- bash supabase/tests/run.sh`；沒有就標註缺口。本機 Supabase 容器與其他 agent 共用——別人的 reset 或起停會打斷你，你的也會打斷別人：
    - `docker exec` 進 `supabase_*` 容器、`psql`／連線字串打 `54322`、`supabase functions serve`／`db query`／`db dump`／`migration up`（非 `--linked`）、`supabase stop`／`start`／`db start` 等本機容器操作同樣要在 lock 內：包 `bash scripts/ops/supabase-lock.sh -- <cmd>`，或在自己 `--hold` 中的 QA worktree 內執行（PreToolUse H3b 擋裸跑）。唯讀的 `docker ps`／`logs`／`inspect`／`supabase status`／`supabase-lock.sh --status`／`docker exec … pg_isready` 不需要；本機 admin API（54321 HTTP，如 `review-demo-seed.sh --target local` 建帳號）也不需要——先做這些，再進 hold 做碰容器的段，縮短持有時間。
@@ -43,11 +43,12 @@ Pen 是單一全域文件，`get_app_state` 回報路徑一致不代表 renderer
 此設定只影響本機；正式站模板另由 Supabase dashboard 設定（LS-99）。
 
 ## 端到端驅動（LS-158）——多步驟驗收優先，mobile-mcp 降為輔助
-多步驟驗收一律先跑 `bash scripts/ops/qa-e2e.sh <login|publish|browse|child-avatar> [--sim <名>] [--ticket LS-<n>] [--email <信箱>]`——`LittleSproutUITests/QA/QASmokeTests` 對**本機 Supabase 容器**（不是 mock）實跑四條可重放路徑：
+多步驟驗收一律先跑 `bash scripts/ops/qa-e2e.sh <login|publish|browse|child-avatar|upload-stall> [--sim <名>] [--ticket LS-<n>] [--email <信箱>]`——`LittleSproutUITests/QA/QASmokeTests` 對**本機 Supabase 容器**（不是 mock）實跑四條可重放路徑：
 - `login`：歡迎頁 → Email → 自 Mailpit API 取 6 碼 → 確認登入 → 落點（三岔路或時間軸）。
 - `publish`：先 `simctl addmedia` `LittleSproutUITests/QA/Fixtures/` 的照片＋影片進模擬器相簿 →（登入／建家庭）→ 新增回憶 → 內文 → 相簿選那兩個 fixture → 發佈 → 時間軸出現那張卡（含真上傳，等 90 秒）。
 - `browse`：（登入／建家庭）→ 日記卡 → 詳情（內文＋照片牆）→ 返回 → 相簿分頁 → 時間軸；時間軸空的話先發一篇純文字當對象。
 - `child-avatar`：先 `simctl addmedia` fixture 照片 →（登入／建家庭）→ 寶貝分頁 → 新增一隻帶時戳的寶貝 → 編輯 → PhotosPicker 選那張照片 → 儲存 → 回列表，斷言那一列的頭像確實刷新。
+- `upload-stall`（LS-427）：同 `login`，但 app 以 QA 上傳開關啟動——`LS_QA_UPLOAD_STALL_MS`（預設 4000，每筆上傳前停滯）、選用 `LS_QA_UPLOAD_FAIL_EVERY_N`（第 k、2k… 筆回可重試錯誤）由環境變數帶入；登入後要手動（mobile-mcp）驗「上傳中切出 app 回前景續傳」或失敗項走查，改用 `SIMCTL_CHILD_` 前綴 `xcrun simctl launch` 帶同名開關（見腳本檔頭）。**需要讓上傳停滯或失敗一律用 `upload-stall` 情境或這組開關，不得 pause／stop 任何 docker 容器**（LS-417 R1、LS-410 R1：`docker pause supabase_storage_*` 被分類器擋，且共用容器會連累同機其他 QA）。
 
 各情境共用帳號 `qa-e2e@ls.test`（`--email` 可換），但每個情境都先 `simctl keychain reset`、各自 OTP 登入——共用容器隨時可能被他票 reset，沿用舊 session 會把環境問題誤報成「建立家庭沒有成功」；重登只多 ~10 秒。
 腳本自己做的事：讀 `supabase status` 帶入 API URL／anon key／Mailpit（取不到＝容器沒跑，exit 2）；找／建專屬模擬器 `<票號>-iPhone17Pro`（自己 boot 的收工自己關，LS-100）；整段 **`supabase-lock.sh --hold "<票號> qa-e2e <情境>"`**（你已經 `--hold` 就沿用、不重複也不代釋放）；`xcodebuild test -only-testing:LittleSproutUITests/QASmokeTests`；證據落 **`.claude/evidence/<票號>/qa-e2e/<情境>-<時間>/`**——`screens/<情境>-<序號>-<步驟>.png`（每步一張，等不到元素那步另附 a11y 階層）、`storage.log`（Storage 容器 stdout，`docker logs --since 開跑時間`，驗「只命中 `_thumb.jpg`」這類請求路徑）、`xcodebuild.log`、`result.xcresult`。exit 0＝通過、1＝情境紅（log 尾段印出）、2＝環境／參數錯。裁決 comment 引用這個目錄；票號從 worktree 目錄名推，qa-test 這種固定 worktree 加 `--ticket LS-<n>`；只在票／QA worktree 內跑，主 checkout 一律 exit 2（主 checkout 的 hold 會讓所有主 checkout 程序直通，LS-170 §6）。每回合含 `result.xcresult`（每份數十 MB，不進版控）：收工只留裁決引用的成功回合，其餘 `rm -rf .claude/evidence/<票號>/qa-e2e/<情境>-<時間>`（不影響任何 gate）。情境沒涵蓋的驗收點（特定畫面狀態、Dynamic Type、單張對稿截圖）再用 mobile-mcp 或 `xcrun simctl io` 補。
