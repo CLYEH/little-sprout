@@ -48,7 +48,7 @@ struct FoodFirstTriedStamp: View {
 ///   家族），台紙兩顆染料池（左上／右下；iPad 值另計）；深色疊 `$photo-dim`。
 /// - 沒有照片（04b）：同幾何、**零角托**、無染料池（Notes `hqrit`「空白沖印品（同 04 幾何、零角托）」）；照片窗
 ///   填 `$print-ink-secondary` 12%，作者看到 image-plus＋「加一張第一次吃〇〇的照片」、整張可點（開照片來源）；
-///   其他人只看到空白窗、不是按鈕（稿面未畫非作者版本，只拿掉邀請文字，見 handoff）。
+///   其他人（04d `P2EIHz`）看到窗內「這筆沒有照片」——regular、`$print-ink-secondary`、無 icon、不是按鈕。
 struct FoodRecordPrint: View {
     struct MountPool {
         let topLeading: Double
@@ -159,6 +159,14 @@ struct FoodRecordPrint: View {
                 }
                 .foregroundStyle(Color.lsPrintInk)
                 .padding(.horizontal, AppSpacing.insetCard)
+            } else {
+                // 04d：唯讀的一句話，不做成按鈕（無 icon、無粗體、無 chevron；VoiceOver 不加 `.isButton`）。
+                Text(FoodRecordDetailCopy.noPhoto)
+                    .appFont(.body)
+                    .foregroundStyle(Color.lsPrintInkSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, AppSpacing.insetCard)
+                    .accessibilityIdentifier("foodRecordDetail.noPhoto")
             }
         }
         .frame(height: photoHeight)

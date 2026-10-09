@@ -109,6 +109,31 @@ final class FoodRecordDetailUITests: XCTestCase {
         XCTAssertEqual(actionButtons(in: app), ["編輯這筆記錄"])
     }
 
+    /// LS-434 04d（稿 `P2EIHz`）：非作者看沒有照片的記錄——空白沖印品窗內一句「這筆沒有照片」，唯讀（不是按鈕、
+    /// 沒有動作鈕）、零角托。
+    func testNonAuthorNoPhoto_showsReadOnlyLabelWithoutCorners() {
+        let app = launch(.foodRecordDetailViewer, Self.standard, extraArguments: ["-LSFoodRecordDetailNoPhoto", "YES"])
+        let label = app.staticTexts["foodRecordDetail.noPhoto"]
+        XCTAssertTrue(label.waitForExistence(timeout: 5), "04d：窗內要有「這筆沒有照片」")
+        XCTAssertEqual(label.label, "這筆沒有照片")
+        XCTAssertFalse(app.buttons["foodRecordDetail.addPhoto"].exists, "非作者：空白沖印品不是按鈕")
+        XCTAssertFalse(app.buttons["這筆沒有照片"].exists, "不可點：VoiceOver 不加 .isButton")
+        XCTAssertEqual(actionButtons(in: app), [], "非作者 viewer：沒有任何動作鈕")
+        let imprint = app.staticTexts["foodRecordDetail.imprint"].frame
+        // 窗高 400（compact）、字置中：窗頂＝字中線 −200；沖印品外框＝窗外擴白邊 8，下緣到壓印行下方再 8（同 04 的量法）。
+        let windowTop = label.frame.midY - 200
+        let print = CGRect(
+            x: 24, y: windowTop - 8, width: app.frame.width - 48, height: imprint.maxY + 16 - (windowTop - 8)
+        )
+        let ratios = cornerRatios(around: print, in: app)
+        for (name, ratio) in [
+            ("左上", ratios.topLeading), ("右上", ratios.topTrailing),
+            ("左下", ratios.bottomLeading), ("右下", ratios.bottomTrailing)
+        ] {
+            XCTAssertLessThan(ratio, 0.05, "04d 零角托：\(name)像素佔比 \(ratio)")
+        }
+    }
+
     // MARK: - AX3（`z1Pg2`／`vr5zj`）
 
     /// AX3：貼紙與食物名直排（名稱貼左邊界，不在貼紙右側）；日期章 VoiceOver 仍念單行。
@@ -145,9 +170,12 @@ final class FoodRecordDetailUITests: XCTestCase {
         }
     }
 
-    private func launch(_ screen: TapTargetGateScreenName, _ size: String, dark: Bool = false) -> XCUIApplication {
+    private func launch(
+        _ screen: TapTargetGateScreenName, _ size: String, dark: Bool = false, extraArguments: [String] = []
+    ) -> XCUIApplication {
         let app = TapTargetMeasurement.launch(
-            screen, contentSizeCategory: size, extraLaunchArguments: dark ? ["-LSFoodRecordDetailDark", "YES"] : []
+            screen, contentSizeCategory: size,
+            extraLaunchArguments: (dark ? ["-LSFoodRecordDetailDark", "YES"] : []) + extraArguments
         )
         TapTargetMeasurement.assertScreenRendered(screen, in: app)
         return app

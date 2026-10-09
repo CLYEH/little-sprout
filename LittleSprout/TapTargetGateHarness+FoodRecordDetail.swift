@@ -19,6 +19,8 @@ extension TapTargetGateHarness {
     }
 
     static let foodRecordDetailDarkKey = "LSFoodRecordDetailDark"
+    /// `.foodRecordDetailViewer`：改看沒有照片的南瓜（04d 非作者看無照片記錄）。
+    static let foodRecordDetailNoPhotoKey = "LSFoodRecordDetailNoPhoto"
 
     /// `hostView(for:)` 的 switch 已貼著 SwiftLint `type_body_length` 上限，四個 case 併成一行、在這裡對照 fixture。
     @MainActor
@@ -61,7 +63,9 @@ private enum FoodRecordDetailSample {
 
     @MainActor
     static func view(_ fixture: TapTargetGateHarness.FoodRecordDetailFixture) -> FoodRecordDetailView {
+        let viewerSeesNoPhoto = UserDefaults.standard.bool(forKey: TapTargetGateHarness.foodRecordDetailNoPhotoKey)
         let (item, record): (FoodCatalogItem, ChildFoodRecord) = switch fixture {
+        case .viewer where viewerSeesNoPhoto: (pumpkin, pumpkinByMom)
         case .author, .viewer: (bread, breadByMom)
         case .noPhoto: (pumpkin, pumpkinByMom)
         case .owner: (bread, breadByDad)
