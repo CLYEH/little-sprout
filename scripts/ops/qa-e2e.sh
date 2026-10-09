@@ -21,11 +21,13 @@
 #            （頭像刷新）。LS-270（LS-96 池項 `66d55e5d`）：QA 三次（LS-129／130／266）做不了這段多步驟
 #            複驗——真因見上面「來源」段（缺 `Config/Secrets.xcconfig`，不是 mobile-mcp），這條情境就是
 #            它的腳本通道。
-#   upload-stall 同 `login`，但 app 以 QA 上傳開關啟動（LS-427）：`LS_QA_UPLOAD_STALL_MS`（預設 4000，每筆上傳前停滯 n 毫秒）、
-#            選用 `LS_QA_UPLOAD_FAIL_EVERY_N`（第 k、2k… 筆回可重試錯誤）——兩者讀自本腳本的環境變數，經
-#            TEST_RUNNER_ 前綴交給 XCUITest、再由 `QADriver.launch()` 注入 app（`QAUploadSwitches`，DEBUG＋QA 環境才生效）。
-#            要在登入後手動（mobile-mcp）驗「上傳中切出 app 回前景續傳」：`SIMCTL_CHILD_LS_QA_API_URL=… SIMCTL_CHILD_LS_QA_ANON_KEY=…
-#            SIMCTL_CHILD_LS_QA_UPLOAD_STALL_MS=4000 xcrun simctl launch <udid> <bundle id>`。需要讓上傳停滯或失敗一律用這組開關，
+#   upload-stall 同 `login`，登入通過後再以 QA 上傳開關重啟 app（LS-427）：`xcrun simctl launch --terminate-running-process`
+#            帶 `SIMCTL_CHILD_LS_QA_API_URL`／`ANON_KEY`（沿 login 既有值）＋`SIMCTL_CHILD_LS_QA_UPLOAD_STALL_MS`
+#            （取自本腳本環境變數 `LS_QA_UPLOAD_STALL_MS`，預設 4000，每筆上傳前停滯 n 毫秒）＋選用
+#            `SIMCTL_CHILD_LS_QA_UPLOAD_FAIL_EVERY_N`（取自 `LS_QA_UPLOAD_FAIL_EVERY_N`，第 k、2k… 筆回可重試錯誤）。
+#            app 留在已登入狀態、模擬器**保持 Booted**（不 shutdown）——目的就是把開了開關的 app 留給 qa 用 mobile-mcp
+#            操作（例：匯入 30 張、上傳中切出 app 回前景驗續傳）。XCUITest 結束時 XCTest 會殺掉它啟動的 app，所以開關不能
+#            只經 XCUITest 的 launchEnvironment 注入（merge-review R1 M1）。需要讓上傳停滯或失敗一律走這個情境，
 #            **不得** `docker pause`／`stop` 任何容器（LS-417 R1 被分類器擋、且共用容器會連累同機其他 QA）。
 #   每個情境都先 `simctl keychain reset`、從未登入狀態開始、各自 OTP 登入同一帳號——不沿用上一個情境留在 Keychain 的
 #   session：共用容器隨時可能被他票 reset（本票實測：browse 沿用 login 的 session，中間 QA 冒煙 reset 過，建家庭被後端拒），
@@ -287,8 +289,6 @@ TEST_RUNNER_LS_QA_API_URL=$api_url \
 TEST_RUNNER_LS_QA_ANON_KEY=$anon_key \
 TEST_RUNNER_LS_QA_MAILPIT=$mailpit \
 TEST_RUNNER_LS_QA_EMAIL=${email:-qa-e2e@ls.test} \
-TEST_RUNNER_LS_QA_UPLOAD_STALL_MS=$stall_ms \
-TEST_RUNNER_LS_QA_UPLOAD_FAIL_EVERY_N=$fail_every_n \
 xcodebuild test \
   -project "${root}/LittleSprout.xcodeproj" \
   -scheme LittleSprout \
@@ -336,6 +336,18 @@ else
 fi
 
 shots=$(ls "$out/screens" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$rc" -eq 0 ] && [ "$scenario" = upload-stall ]; then
+  # LS-427 M1：XCUITest 結束 XCTest 就殺掉它啟的 app——登入通過後以 SIMCTL_CHILD_ 前綴重啟，開關才會作用在之後的上傳。
+  # Keychain session 還在，app 會停在已登入；模擬器不 shutdown（booted_by_me 歸 0 讓 cleanup 略過）。
+  launch_env=(SIMCTL_CHILD_LS_QA_API_URL="$api_url" SIMCTL_CHILD_LS_QA_ANON_KEY="$anon_key" SIMCTL_CHILD_LS_QA_UPLOAD_STALL_MS="$stall_ms")
+  [ -z "$fail_every_n" ] || launch_env+=(SIMCTL_CHILD_LS_QA_UPLOAD_FAIL_EVERY_N="$fail_every_n")
+  if ! env "${launch_env[@]}" xcrun simctl launch --terminate-running-process "$udid" com.leoyeh.littlesprout >> "$log" 2>&1; then
+    echo "✗ qa-e2e：upload-stall 登入通過，但以開關重啟 app 失敗（simctl launch）——見 ${log}" >&2
+    exit 1
+  fi
+  booted_by_me=0
+  echo "→ qa-e2e：app 已帶 STALL_MS=${stall_ms}${fail_every_n:+、FAIL_EVERY_N=${fail_every_n}} 重啟，模擬器 ${udid} 保持 Booted"
+fi
 if [ "$rc" -eq 0 ]; then
   echo "✓ qa-e2e：${scenario} 通過——截圖 ${shots} 張：${out}/screens/；Storage log：${out}/storage.log；xcresult：${result}"
   exit 0

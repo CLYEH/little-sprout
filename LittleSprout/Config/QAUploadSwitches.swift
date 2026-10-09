@@ -6,8 +6,8 @@ import Foundation
 //   LS_QA_UPLOAD_STALL_MS=<n>      每筆 `UploadQueueStore.performUpload` 開頭先 sleep n 毫秒
 //   LS_QA_UPLOAD_FAIL_EVERY_N=<k>  該 store 生命週期內第 k、2k… 次 `performUpload` 呼叫丟可重試錯誤（`AppError.network`
 //                                  → `UploadFailureReason.network`，`isRetryable == true`）；重試也算一次呼叫
-// 兩者只在 `LS_QA_API_URL` 存在（＝QA 環境，同 `SupabaseClientFactory.qaOverride`）時讀；值必須是正整數，否則視為未設。
-// 經 `xcrun simctl launch` 用 `SIMCTL_CHILD_` 前綴帶入，或 `qa-e2e.sh upload-stall` 經 XCUITest launchEnvironment。
+// 兩者只在 `LS_QA_API_URL` 合法（可解析且有 host，＝QA 環境，與 `SupabaseClientFactory.qaOverride` 共用 `qaAPIURL(in:)`）時讀；
+// 值必須是正整數，否則視為未設。入口：`qa-e2e.sh upload-stall` 登入後以 `SIMCTL_CHILD_` 前綴 `simctl launch` 重啟 app 帶入。
 // Release build：只留一個什麼都不做的 `QAUploadGate` 佔位型別（讓 store 的呼叫點不必條件編譯），讀環境變數
 // 與計數／延遲／失敗邏輯全在 `#if DEBUG` 內。
 
@@ -23,7 +23,7 @@ struct QAUploadSwitches: Equatable {
     static let none = QAUploadSwitches(stallMilliseconds: nil, failEveryN: nil)
 
     static func from(environment: [String: String] = ProcessInfo.processInfo.environment) -> QAUploadSwitches {
-        guard let apiURL = environment[apiURLKey], !apiURL.isEmpty else { return .none }
+        guard SupabaseClientFactory.qaAPIURL(in: environment) != nil else { return .none }
         return QAUploadSwitches(
             stallMilliseconds: positiveInt(environment[stallKey]), failEveryN: positiveInt(environment[failEveryNKey])
         )

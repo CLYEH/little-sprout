@@ -39,6 +39,13 @@ final class UploadQueueStoreQASwitchesTests: XCTestCase {
             QAUploadSwitches.from(environment: ["LS_QA_UPLOAD_STALL_MS": "500", "LS_QA_UPLOAD_FAIL_EVERY_N": "2"]),
             .none, "不在 QA 環境（沒有 LS_QA_API_URL）時，開關不得生效"
         )
+        // `LS_QA_API_URL` 打錯（無 host）時 app 不會連 QA 後端（`qaOverride` 同判斷），開關也不得生效。
+        XCTAssertEqual(
+            QAUploadSwitches.from(environment: [
+                "LS_QA_API_URL": "127.0.0.1:54321", "LS_QA_UPLOAD_STALL_MS": "500", "LS_QA_UPLOAD_FAIL_EVERY_N": "2"
+            ]),
+            .none, "LS_QA_API_URL 無 host（打錯）時，開關不得生效"
+        )
         XCTAssertEqual(
             QAUploadSwitches.from(environment: [
                 "LS_QA_API_URL": "http://127.0.0.1:54321", "LS_QA_UPLOAD_STALL_MS": "500",
