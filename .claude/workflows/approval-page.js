@@ -56,7 +56,7 @@ ${questions.length ? questions.map((q, i) => `${i + 1}. ${q}`).join('\n') : '（
 規則：
 1. 事實列必含引據（comment id 前 8 碼、板 id 配 LS 票號＋狀態詞、或 commit sha）；「待使用者裁決」段豁免。
 2. Write 到 ${mdPath}，跑 \`bash ${gate} ${mdPath}\`；rc≠0 只修被點名列（補 id），最多 3 次；仍紅就不發布、回報 gate 原文。
-3. gate 綠後 Skill 載入 artifact-design，再用 Artifact 工具發布（檔名 approval-${a.ticket}.html，title「${a.ticket} 核可頁」，icon "design"${a.url ? '，url 參數填 ' + a.url : ''}）：板圖用 <img> 嵌入絕對路徑讀不到時改列路徑文字，不要省略任何板。
+3. gate 綠後 Skill 載入 artifact-design，再用 Artifact 工具發布（檔名 approval-${a.ticket}.html，title「${a.ticket} 核可頁」，icon "design"${a.url ? '，url 參數填 ' + a.url + ' 更新同一頁' : ''}）。**板圖必須看得到**：artifact 讀不到本機路徑，所以每張板圖先用 \`sips -Z 720 <png> --out <scratch>/approval-${a.ticket}-img/<板id>.png\` 縮到長邊 720，再用 python3 轉 base64 以 \`<img src="data:image/png;base64,…" alt="<板id>">\` 內嵌（一張一格，格下標「態名｜板 id」），總量控制在 12MB 內（超過就再縮到 540）；不要只列路徑、不要省略任何板。
 4. 回傳 md_path／gate_rc／gate_output／url／board_count，並從有 id 的事實列挑 4 條填 sample_cites（「段落｜一句｜id」）。`,
   { label: `approval:${a.ticket}`, phase: 'Compose', model: 'haiku', schema: SCHEMA },
 )
