@@ -51,7 +51,8 @@ qa|Bash ${LINEAR3} mcp__pencil__get_app_state
 dead-code-sweeper|Bash ${LINEAR3}
 ui-designer|mcp__pencil__execute
 visual-reviewer|mcp__pencil__execute
-ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
+ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}
+Explore|Bash Read Grep Glob"
 
 # 正文必含字樣規則表（LS-170）：<agent>|<字樣>——規約段落被刪即紅。先給空值、再由標記區塊填入：自測的 mutation 負控用 awk 整段
 # 拿掉標記區塊（留下空表）驗「拿掉規則後負樣本變綠」，證明紅是這條規則造成的（同 linear-issue-check.test.sh 慣例）。
@@ -304,6 +305,8 @@ FORBIDDEN_RULES="ios-dev|mcp__pencil__"
 # 同一列可列多個字首（空白分隔）。另起一行 `+=` 而非改寫上一行：⑮ 的 mutation 靠整行比對清空 ios-dev 那列，
 # LS-376 的 mutation 靠拿掉這一行，兩者各自獨立。
 PEN_WRITE="mcp__pencil__execute mcp__pencil__read_skill mcp__pencil__browser"; FORBIDDEN_RULES+=$'\n'"qa|${PEN_WRITE}"$'\n'"merge-reviewer|${PEN_WRITE}"$'\n'"dead-code-sweeper|${PEN_WRITE}"
+# LS-420：專案層 Explore（覆蓋內建、釘 haiku）必須唯讀——不得持有寫檔／派子 agent／Pencil 工具；沒有 tools: 行同樣違規。
+FORBIDDEN_RULES+=$'\n'"Explore|Edit Write NotebookEdit Agent mcp__pencil__"
 fn=0
 while IFS='|' read -r agent forbid; do
   [ -n "$agent" ] || continue
@@ -330,7 +333,7 @@ FORBID_EOF
 
 # frontmatter model: 期望值（LS-400）：COLLABORATION §1 表的 model 政策——ios-dev／qa／dead-code-sweeper 走 `sonnet` 別名
 # （Claude Code ≥2.1.284＝Sonnet 5.5，跟 CLI 升級；使用者 09-29 裁）、ui-designer／merge-reviewer／visual-reviewer 留 `opus`。
-# 政策寫在文件沒有 gate，誰順手把 qa 改回 opus（或把 VR 降 sonnet）CI 不會知道——這裡把六份定義檔的 model: 值釘住。
+# 政策寫在文件沒有 gate，誰順手把 qa 改回 opus（或把 VR 降 sonnet）CI 不會知道——這裡把七份定義檔的 model: 值釘住（LS-420 加 Explore＝haiku：專案層覆蓋內建 Explore，`haiku` 別名 ≥2.1.293＝Haiku 5.5）。
 # 沒有 model: 行＝繼承派工 session 的模型（Fable 5.1），同樣違規。改政策時同步改這張表與 §1；要釘死版本改全 ID 時也要改這裡。
 # 別名實際解析到哪個模型 CI 驗不了（那是 agent-model-check.sh 從 transcript 事後查的事）。
 MODEL_RULES="ios-dev|sonnet
@@ -338,6 +341,7 @@ qa|sonnet
 dead-code-sweeper|sonnet
 ui-designer|opus
 merge-reviewer|opus
+Explore|haiku
 visual-reviewer|opus"
 while IFS='|' read -r agent want_model; do
   [ -n "$agent" ] || continue

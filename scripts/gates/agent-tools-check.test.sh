@@ -206,12 +206,14 @@ MR_BODY="${MR_BODY} ${SELFCHECKSAMPLE}"
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求
 # （Bash／Read／Edit／Write／Grep／Glob／Agent／三支 Linear 工具），這裡的乾淨清單須包含全部才能當合法基準。
 IOS_TOOLS="Bash, Read, Edit, Write, Grep, Glob, Agent, ${LINEAR3}"
+# LS-420：專案層 Explore（覆蓋內建、釘 haiku）的乾淨白名單——唯讀四支；Edit／Write／NotebookEdit／Agent／mcp__pencil__* 被禁。
+EXPLORE_TOOLS="Bash, Read, Grep, Glob"
 # mk <agent> <tools 行的值|NONE> [<正文附加行>]：寫一份最小 agent 定義
 # model: 依 §1 政策（LS-400 MODEL_RULES）：ui-designer／merge-reviewer／visual-reviewer 是 opus，其餘 sonnet；MK_MODEL 可覆寫
 # （空字串＝不寫 model: 行）。
 mk() {
   local agent=$1 tools=$2 body=${3:-} model
-  case "$agent" in ui-designer|merge-reviewer|visual-reviewer) model=opus ;; *) model=sonnet ;; esac
+  case "$agent" in ui-designer|merge-reviewer|visual-reviewer) model=opus ;; Explore) model=haiku ;; *) model=sonnet ;; esac
   [ "${MK_MODEL-unset}" = unset ] || model=$MK_MODEL
   {
     echo "---"; echo "name: ${agent}"; echo "description: 測試用"
@@ -228,10 +230,11 @@ reset() {
   mk ui-designer NONE "$UI_BODY"
   mk visual-reviewer NONE "$VR_BODY"
   mk ios-dev "$IOS_TOOLS" "$IOS_BODY"
+  mk Explore "$EXPLORE_TOOLS"
 }
 
 # ---- ① 合法 ----
-reset; expect 0 '① 六份齊、白名單含必要工具 → exit 0' '✓ agent-tools gate 通過（6 份' 'ios-dev.md：tools: 不含被禁工具（字首「mcp__pencil__」）'
+reset; expect 0 '① 七份齊、白名單含必要工具 → exit 0' '✓ agent-tools gate 通過（7 份' 'ios-dev.md：tools: 不含被禁工具（字首「mcp__pencil__」）'
 reset; expect 0 '① ui-designer／visual-reviewer 仍可無 tools: 行（未被列進禁止工具表）→ 放行' 'ui-designer.md：無 tools: 行（繼承全部工具）→ 放行' 'visual-reviewer.md：無 tools: 行（繼承全部工具）→ 放行'
 out="$(bash "$checker" 2>&1)"; got=$?   # 不帶參數＝真 repo 的 .claude/agents
 if [ "$got" -eq 0 ]; then ok '① 真 repo 的 .claude/agents 通過'; else echo "✗ ① 真 repo 應通過（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; fi
@@ -474,6 +477,14 @@ reset; MK_MODEL=claude-sonnet-5-5 mk ios-dev "$IOS_TOOLS" "$IOS_BODY"; expect 1 
 reset; MK_MODEL= mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "${NOFORK254} ${LINEARFALLBACK}"; expect 1 '㊺ dead-code-sweeper 無 model: 行（繼承 session 模型）→ exit 1' 'dead-code-sweeper.md：無 model: 行（繼承派工 session 的模型）——§1 政策要 model: sonnet'
 reset; MK_MODEL='  sonnet  ' mk qa "$QA_TOOLS" "$QA_BODY"; expect 0 '㊺ model: 值前後空白 → 去空白後通過' 'qa.md：model: sonnet（符合 §1 政策）'
 reset; printf -- '---\r\nname: qa\r\ntools: %s\r\nmodel: sonnet\r\n---\r\n\r\n%s\r\n' "$QA_TOOLS" "$QA_BODY" > "$agents/qa.md"; expect 0 '㊺ CRLF 的 model: 行 → 通過' 'qa.md：model: sonnet（符合 §1 政策）'
+# LS-420：Explore 釘 haiku（唯讀搜尋走 Haiku 5.5）；改 sonnet／無 model: 行都紅；白名單含寫檔／派子 agent／Pencil 工具也紅（⑮ 的禁止表）
+reset; expect 0 '㊺ LS-420：Explore model: haiku → 通過' 'Explore.md：model: haiku（符合 §1 政策）' 'Explore.md：tools: 不含被禁工具（字首「Edit」「Write」「NotebookEdit」「Agent」「mcp__pencil__」）'
+reset; MK_MODEL=sonnet mk Explore "$EXPLORE_TOOLS"; expect 1 '㊺ LS-420：Explore 升 sonnet → exit 1' 'Explore.md：model: 是「sonnet」，§1 政策要「haiku」'
+reset; MK_MODEL= mk Explore "$EXPLORE_TOOLS"; expect 1 '㊺ LS-420：Explore 無 model: 行（會繼承 Fable）→ exit 1' 'Explore.md：無 model: 行'
+reset; mk Explore "${EXPLORE_TOOLS}, Edit"; expect 1 '⑮ LS-420：Explore tools: 含 Edit → exit 1' 'Explore.md：tools: 含被禁工具（字首「Edit」）'
+reset; mk Explore "${EXPLORE_TOOLS}, Agent"; expect 1 '⑮ LS-420：Explore tools: 含 Agent（可再派子 agent）→ exit 1' 'Explore.md：tools: 含被禁工具（字首「Agent」）'
+reset; mk Explore NONE; expect 1 '⑮ LS-420：Explore 無 tools: 行（繼承全部工具）→ exit 1' 'Explore.md：無 tools: 行（繼承全部工具）——隱含含有禁止工具'
+reset; rm "$agents/Explore.md"; expect 1 '③ LS-420：Explore.md 缺檔 → exit 1（MODEL 迴圈會跳過缺檔，靠 RULES 表列出）' 'Explore.md：不存在'
 # mutation：MODEL_RULES 整表清空 → 上面「qa 改回 opus」的負樣本必須變綠，證明紅是這張表造成的
 mut_model="$work/agent-tools-check.no-model-rules.sh"
 awk 'BEGIN{skip=0} /^MODEL_RULES="ios-dev\|sonnet$/{print "MODEL_RULES=\"\""; skip=1; next} skip==1{ if ($0 ~ /^visual-reviewer\|opus"$/) skip=0; next } {print}' "$checker" > "$mut_model"
