@@ -11,7 +11,7 @@
 # `open -a Pen` 之後）。路徑含空白／非 ASCII 時 sha1 可能對不上（R1 I2；本票對含空白路徑實測引號處理
 # 正確，只是若真的對不上，找不到 backup 的錯誤訊息要能提示往這個方向查）。
 #
-# 用法：pen-land.sh <worktree-or-repo-root> [--expect-nodes N] [--after EPOCH [--marker STRING]] [--allow-unchanged] [--dry-run]
+# 用法：pen-land.sh <worktree-or-repo-root> [--expect-nodes N] [--after EPOCH [--marker STRING]] [--allow-unchanged] [--allow-meta "<說明>"] [--dry-run]
 #
 # 流程：
 #   1. 算 want = <root>/design/littlesprout.pen 的絕對路徑；sha1(file://want) 找 backup。
@@ -35,7 +35,14 @@
 #      落在白名單內（目前僅 `placeholder`，pen-dev skill 定義的「工作中」UI 態旗標）時，額外印一行「僅偵測到
 #      白名單屬性…」的訊息——供 `pen-open.sh` 的 `check_root_safe` 辨識為可安全捨棄的 autosave 漂移，不影響
 #      本腳本自身的 exit code／是否落地（純資訊性，不改變既有行為）。
-#   4. meta 變了，或 diff 本身失敗（JSON 壞掉、頂層非物件等）→ 不 cp，exit 1。
+#   3b. LS-448 `--allow-meta "<說明>"`：meta 白名單的**唯一**例外——只放行 `variables` 的「純新增」
+#      （新 key 加入；既有 key 的整個定義值與名稱不變；無刪除）。`themes`／`fileToken` 任何變更照拒，
+#      variables 有任何既有 key 被改或被刪也照拒。用途：設計票新增 design token（Pen 內建 variable 面板
+#      新增一個 token）時，variables 必然與落地檔不同，過去 meta 三鍵全等的把關會把這種合法新增整個擋掉。
+#      放行時印顯著標記 `⚠ allow-meta：<說明>`（stdout；本腳本沒有 stats.log，稽核靠這一行＋handoff 引用），
+#      比照 `--allow-unchanged`；handoff／PR body 必須引用這行標記。說明不得為空。variables 新增本身算「有變更」
+#      （純 token 新增、節點樹不變時不會被「結構無差異」預設拒絕誤擋）。
+#   4. meta 變了（未被 --allow-meta 放行），或 diff 本身失敗（JSON 壞掉、頂層非物件等）→ 不 cp，exit 1。
 #   5. 結構完全無差異（R1 F1）→ 預設也視為失敗（本輪零變更或 autosave 沒追上，兩者從結構上分不出來，
 #      寧可誤擋不誤放）、印訊息、exit 1；刻意確認本輪真的沒有變更就加 `--allow-unchanged` 放行（R3 I3：
 #      放行時印顯著標記 `⚠ allow-unchanged：本輪零變更，刻意放行`，這是這道把關唯一的逃生口，讓 handoff／
@@ -58,7 +65,7 @@
 set -uo pipefail
 
 usage() {
-  echo "用法：pen-land.sh <worktree-or-repo-root> [--expect-nodes N] [--after EPOCH [--marker STRING]] [--allow-unchanged] [--dry-run]" >&2
+  echo "用法：pen-land.sh <worktree-or-repo-root> [--expect-nodes N] [--after EPOCH [--marker STRING]] [--allow-unchanged] [--allow-meta \"<說明>\"] [--dry-run]" >&2
 }
 
 if [ $# -lt 1 ]; then
@@ -74,6 +81,8 @@ after_given=0
 marker=""
 marker_given=0
 allow_unchanged=0
+allow_meta=0
+allow_meta_desc=""
 dry_run=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -106,6 +115,15 @@ while [ $# -gt 0 ]; do
     --allow-unchanged)
       allow_unchanged=1
       shift
+      ;;
+    --allow-meta)
+      if [ $# -lt 2 ] || [ -z "$(printf '%s' "${2:-}" | tr -d '[:space:]')" ]; then
+        echo "✗ pen-land：--allow-meta 需要一個非空說明字串（為什麼這輪 variables 會新增，供稽核）" >&2
+        exit 2
+      fi
+      allow_meta=1
+      allow_meta_desc=$2
+      shift 2
       ;;
     --dry-run)
       dry_run=1
@@ -183,10 +201,12 @@ fi
 
 # python 結構 diff：清單印到 stdout，最後三行印 `NODES=<N>`／`META_OK=0|1`／`UNCHANGED=0|1` 供 shell
 # 解析，事後濾掉。
-diff_out=$(PYTHONIOENCODING=utf-8 python3 - "$want" "$backup" <<'PY'
+diff_out=$(PYTHONIOENCODING=utf-8 python3 - "$want" "$backup" "$allow_meta" "$allow_meta_desc" <<'PY'
 import json, os, sys
 
 old_path, new_path = sys.argv[1], sys.argv[2]
+allow_meta = sys.argv[3] == "1"
+allow_meta_desc = sys.argv[4]
 
 
 def load(p):
@@ -232,11 +252,31 @@ def collect(d):
 old_nodes, old_count = collect(old)
 new_nodes, new_count = collect(new)
 
+def variables_added_only(o, n):
+    """LS-448：variables 是否「純新增」——兩邊皆為 dict、既有 key 全數保留且定義值完全相等、至少新增一個 key。
+    回傳新增的 key 清單；不符（含無新增、有改動、有刪除、形狀不是 dict）回傳 None。"""
+    if not isinstance(o, dict) or not isinstance(n, dict):
+        return None
+    if any(k not in n or n[k] != v for k, v in o.items()):
+        return None
+    added_keys = sorted(set(n) - set(o), key=str)
+    return added_keys or None
+
+
 meta_ok = True
+variables_added = []
 for key in ("variables", "themes", "fileToken"):
     if old.get(key) != new.get(key):
+        if key == "variables" and allow_meta:
+            added_vars = variables_added_only(old.get(key), new.get(key))
+            if added_vars is not None:
+                variables_added = added_vars
+                print(f"⚠ allow-meta：{allow_meta_desc}（variables 純新增 {len(added_vars)} 個：{added_vars}）")
+                continue
         meta_ok = False
         print(f"meta 變更：{key} 不同（落地檔 → backup）")
+        if key == "variables" and allow_meta:
+            print("（--allow-meta 只放行 variables 純新增；既有 key 被改或被刪、或形狀非 dict 皆不放行）")
 
 added = sorted(set(new_nodes) - set(old_nodes), key=str)
 removed = sorted(set(old_nodes) - set(new_nodes), key=str)
@@ -277,7 +317,7 @@ except OSError:
     pass
 
 print(f"節點總數：落地檔 {old_count} → backup {new_count}")
-unchanged = not added and not removed and prop_changes == 0 and old_count == new_count
+unchanged = not added and not removed and prop_changes == 0 and old_count == new_count and not variables_added
 if unchanged:
     print("（結構無差異——本輪零變更或 autosave 還沒追上，兩者從結構上分不出來）")
 
