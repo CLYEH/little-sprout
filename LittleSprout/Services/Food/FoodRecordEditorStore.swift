@@ -22,6 +22,12 @@ enum FoodRecordPhoto: Equatable {
         if case .family(let photo) = self { return photo.id }
         return nil
     }
+
+    /// 手機照片的 `LocalFoodPhoto.id`（LS-430：判斷「換掉的是不是已上傳的那張」）。
+    var localPhotoID: UUID? {
+        if case .local(let photo) = self { return photo.id }
+        return nil
+    }
 }
 
 /// 「從手機加入」挑到、已讀進記憶體的一張照片（`PickedItemLoader.LoadedItem.photo` 的值）。`id` 只用來
@@ -61,13 +67,24 @@ final class FoodRecordEditorStore {
         didSet { if note.count > Self.noteLimit { note = String(note.prefix(Self.noteLimit)) } }
     }
     var photo: FoodRecordPhoto = .none {
-        didSet { if photoLoadFailed, photo != oldValue { photoLoadFailed = false } }
+        didSet {
+            guard photo != oldValue else { return }
+            if photoLoadFailed { photoLoadFailed = false }
+            // LS-430：換一張／不用照片時，先前上傳了、但記錄沒綁上的那張手機照片不再有人要。
+            if let uploadedLocalPhoto, photo.localPhotoID != uploadedLocalPhoto.localID {
+                Task { await abandonUnboundUpload() }
+            }
+        }
     }
     /// 「從手機加入」讀不出照片（格式不支援等）——Status Slot 顯示 `FoodRecordCopy.photoUnsupported`。
     var photoLoadFailed = false
     private(set) var saveState: FoodRecordSaveState = .idle
     /// 已上傳成功的手機照片（`LocalFoodPhoto.id` → `media.id`），見類型文件「失敗後重送」。
     private var uploadedLocalPhoto: (localID: UUID, mediaID: UUID)?
+    /// LS-430：上傳後有任何一次 upsert 失敗「可能已送達伺服器」（逾時／5xx：伺服器可能已提交、照片其實已綁定）。
+    /// 為 true 時放棄不得軟刪——軟刪一張可能已綁在記錄上的照片會讓記錄顯示「照片沒有載入」；交給後端
+    /// 每日清理兜底（它認得有效飲食記錄的引用）。一旦為 true 就不再回到 false。
+    private var uploadMayBeBound = false
 
     static let noteLimit = 2000
 
@@ -146,10 +163,31 @@ final class FoodRecordEditorStore {
                 note: trimmedNote.isEmpty ? nil : trimmedNote, reaction: reaction
             ))
             saveState = .idle
+            uploadedLocalPhoto = nil  // 已綁定到記錄，不再是孤兒（LS-430）
             return saved
         } catch {
-            saveState = .failure(AppError.map(error))
+            let mapped = AppError.map(error)
+            if uploadedLocalPhoto != nil, Self.mayHaveReachedServer(mapped) { uploadMayBeBound = true }
+            saveState = .failure(mapped)
             return nil
+        }
+    }
+
+    /// LS-430：放棄（取消／換一張／不用照片）時，把先前「從手機加入」上傳成功、但 `upsert_child_food_record` 沒有
+    /// 套用的那張照片軟刪（`media.deleted_at`），不留孤兒佔用額度。只有失敗已確定是伺服器拒絕時才軟刪（見
+    /// `uploadMayBeBound`）；軟刪本身失敗（離線等）就算了——後端每日清理會掃掉「無任何引用的 24 小時前 media」。
+    func abandonUnboundUpload() async {
+        guard let uploaded = uploadedLocalPhoto else { return }
+        uploadedLocalPhoto = nil
+        guard !uploadMayBeBound else { return }
+        try? await apiClient.softDeleteMedia(mediaIDs: [uploaded.mediaID])
+    }
+
+    /// 網路中斷／逾時／5xx：請求可能已經在伺服器提交；`.rejected`／`.validationRetryable` 是伺服器明確拒絕。
+    private static func mayHaveReachedServer(_ error: AppError) -> Bool {
+        switch error {
+        case .network, .server, .retryableSystem: true
+        case .rejected, .validationRetryable: false
         }
     }
 

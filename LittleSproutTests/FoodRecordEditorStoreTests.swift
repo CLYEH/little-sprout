@@ -13,6 +13,9 @@ final class FoodRecordEditorStoreTests: XCTestCase {
     private final class RecordingClient: FoodAPIClient, @unchecked Sendable {
         var upserts: [FoodRecordUpsert] = []
         var uploads = 0
+        var uploadedMediaIDs: [UUID] = []
+        var softDeleted: [[UUID]] = []
+        var onSoftDelete: (() -> Void)?
         var deletes: [UUID] = []
         var upsertError: Error?
         /// 非 nil 時 upsert 會卡住直到 `resume()`——模擬 RPC 在途中。
@@ -40,7 +43,14 @@ final class FoodRecordEditorStoreTests: XCTestCase {
 
         func uploadPhoto(childID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
             uploads += 1
-            return UUID()
+            let mediaID = UUID()
+            uploadedMediaIDs.append(mediaID)
+            return mediaID
+        }
+
+        func softDeleteMedia(mediaIDs: [UUID]) async throws {
+            softDeleted.append(mediaIDs)
+            onSoftDelete?()
         }
     }
 
@@ -127,6 +137,76 @@ final class FoodRecordEditorStoreTests: XCTestCase {
         XCTAssertNotNil(saved)
         XCTAssertEqual(client.uploads, 1, "重送不重傳同一張照片")
         XCTAssertEqual(client.upserts.map(\.mediaID), [saved?.mediaID, saved?.mediaID])
+    }
+
+    // MARK: - LS-430：upsert 失敗後放棄 → 孤兒 media 清理
+
+    private func phonePhoto() -> LocalFoodPhoto {
+        LocalFoodPhoto(
+            data: Data([1, 2, 3]), fileExtension: "jpg", pixelSize: PixelSize(width: 10, height: 10), preview: nil
+        )
+    }
+
+    /// 伺服器明確拒絕（確定沒套用）→ 取消時軟刪剛上傳的那張，不留 `deleted_at IS NULL` 的孤兒（C3a）。
+    func test_abandonAfterRejectedUpsert_softDeletesTheUploadedMedia() async {
+        let client = RecordingClient()
+        client.upsertError = AppError.rejected(message: "denied", code: "42501")
+        let store = FoodRecordEditorStore(childID: UUID(), item: taro, apiClient: client)
+        store.photo = .local(phonePhoto())
+
+        let failed = await store.save()
+        XCTAssertNil(failed)
+        XCTAssertTrue(client.softDeleted.isEmpty, "失敗當下不軟刪：同一張還要留給「重送不重傳」")
+
+        await store.abandonUnboundUpload()
+
+        XCTAssertEqual(client.softDeleted, [client.uploadedMediaIDs], "放棄時軟刪剛上傳的那一張")
+        await store.abandonUnboundUpload()
+        XCTAssertEqual(client.softDeleted.count, 1, "不重複軟刪")
+    }
+
+    /// 網路中斷／逾時：伺服器可能已提交（照片其實已綁在記錄上）→ 不得軟刪，交給後端每日清理。
+    func test_abandonAfterAmbiguousNetworkFailure_doesNotSoftDelete() async {
+        let client = RecordingClient()
+        client.upsertError = AppError.network(message: "timeout")
+        let store = FoodRecordEditorStore(childID: UUID(), item: taro, apiClient: client)
+        store.photo = .local(phonePhoto())
+        _ = await store.save()
+
+        client.upsertError = AppError.rejected(message: "denied", code: "42501")
+        _ = await store.save()
+        await store.abandonUnboundUpload()
+
+        XCTAssertTrue(client.softDeleted.isEmpty, "先前有一次模糊失敗＝可能已綁定，之後即使被拒也不軟刪")
+    }
+
+    /// 失敗後「換一張」（`photo` 換成別的）→ 前一張孤兒隨即軟刪。
+    func test_changingPhotoAfterRejectedUpsert_softDeletesPreviousUpload() async {
+        let client = RecordingClient()
+        client.upsertError = AppError.rejected(message: "denied", code: "42501")
+        let store = FoodRecordEditorStore(childID: UUID(), item: taro, apiClient: client)
+        store.photo = .local(phonePhoto())
+        _ = await store.save()
+
+        let softDeleted = expectation(description: "軟刪前一張")
+        client.onSoftDelete = { softDeleted.fulfill() }
+        store.removePhoto()
+        await fulfillment(of: [softDeleted], timeout: 2)
+
+        XCTAssertEqual(client.softDeleted, [client.uploadedMediaIDs])
+    }
+
+    /// 儲存成功＝照片已綁定到記錄，之後（sheet 關閉）的放棄不得軟刪。
+    func test_abandonAfterSuccessfulSave_doesNotSoftDelete() async {
+        let client = RecordingClient()
+        let store = FoodRecordEditorStore(childID: UUID(), item: taro, apiClient: client)
+        store.photo = .local(phonePhoto())
+        let saved = await store.save()
+        XCTAssertNotNil(saved)
+
+        await store.abandonUnboundUpload()
+
+        XCTAssertTrue(client.softDeleted.isEmpty)
     }
 
     func test_edit_untouchedPhotoKeepsMediaID_removePhotoSendsNil() async {
