@@ -1,11 +1,11 @@
 {
  "ticket": "LS-432",
  "round": 2,
- "head_sha": "8d30bbf41ce51f9b4afc6fce734bc58bcbc48424",
+ "head_sha": "c05bda65daf7ad7cc87cf562d2bb007aac242a34",
  "total_nodes": 19154,
- "tree_hash": "3a27d5c5cd998e5d",
+ "tree_hash": "aa8de33eeb58f394",
  "scan_scope": "document",
- "scan_note": "snapshot mode，dump sha256=58c23f2dfd997283cbcd19c40d36a020312c0509f33b600e4d229b267c66be63；LS-432 R2：跑法同 R1（②快照模式，19154 節點）——pen-snapshot-dump.js 依 LS-425 R4 做法改逐根節點 Get(rootId, visit, {resolveInstances:false/true})（列欄位、絕對座標累加、pre-order 與原式同；VR R1 以正典原式跑 root 195–198 逐列比對 90／90 相同），3 段 roots [0,110) 500000、[110,278)／[278,381) 各 1000000，skip 皆 0，SNAP-DONE 首尾相接、合計 31329 rows；tree_hash＝scripts/gates/design_tree_hash.py 對 8d30bbf 落地檔離線值；--scan-scope document；SCAN_BOARDS 26 板＝merge-base→head 頂層 diff 全部（R1 23 板＋R2 改 Notes 文字的 jftM0／XhwG6／H73kPC）；三支 O(n²) 類別與計數與 r1 相同、分類沿用；in-scope unresolved 13＝shoxM 10＋XhwG6 3，皆 App icon 對角托 mount_pair；落地與 dump 之間無寫入，同一稿態",
+ "scan_note": "snapshot mode，dump sha256=d3d99ee3d41c96425528ad406a2eb8528be3daad7d4db1bc8236e3ae4c2338a0；LS-432 R2：跑法同 R1（②快照模式，19154 節點）——pen-snapshot-dump.js 依 LS-425 R4 做法改逐根節點 Get(rootId, visit, {resolveInstances:false/true})（列欄位、絕對座標累加、pre-order 與原式同；VR R1 以正典原式跑 root 195–198 逐列比對 90／90 相同），3 段 roots [0,110) 500000、[110,278)／[278,381) 各 1000000，skip 皆 0，SNAP-DONE 首尾相接、合計 31329 rows；tree_hash＝scripts/gates/design_tree_hash.py 對 c05bda6 落地檔離線值；--scan-scope document；SCAN_BOARDS 26 板＝merge-base→head 頂層 diff 全部（R1 23 板＋R2 改 Notes 文字的 jftM0／XhwG6／H73kPC；H73kPC 另順手修 7 個 Notes 節點年齡片語 NBSP 舊債）；三支 O(n²) 類別與計數與 r1 相同、分類沿用；in-scope unresolved 13＝shoxM 10＋XhwG6 3，皆 App icon 對角托 mount_pair；落地與 dump 之間無寫入，同一稿態",
  "scanned_nodes": 31329,
  "flags": {
   "cross_all": false,
@@ -7593,7 +7593,7 @@
      "classification": "LS-425 新板的 sheet 疊層：Status Bar／Scrim／Sheet Wrap 依繪製順序刻意相疊（同 03b／03d／03e 既有 sheet 板）；03f 另疊系統 confirmationDialog 示意的 System Scrim／Dialog Wrap，覆蓋整板是設計意圖（LS-432 R2：與 LS-432-r1／LS-425-r4 收據同類同數；本票未觸碰此類幾何；沿用分類）；同類 1 例"
     }
    ],
-   "result_hash": "41c9a33014ca654c"
+   "result_hash": "573b44d4057e4405"
   },
   "row_overflow": {
    "scope": "document",
@@ -8181,7 +8181,7 @@
      "classification": "非本票觸碰板的既有命中（板 Deljc；本票未改其子樹，document 範圍全稿掃描，未逐類審視設計意圖）（LS-432 R2：與 LS-432-r1／LS-425-r4 收據同類同數；本票未觸碰此類幾何；沿用分類）；同類 2 例"
     }
    ],
-   "result_hash": "5adddca2c92baef7"
+   "result_hash": "704f7e46b9df8db0"
   },
   "cross_parent_collision": {
    "scope": "document",
@@ -11878,7 +11878,7 @@
      "classification": "LS-425 R2 03g：sheet 內 Empty Print 的角托與板層 Scrim 疊合——Scrim 鋪滿整板、在 Sheet Wrap 之下，角托畫在 sheet 上、繪製順序在後，是 sheet 疊層不是碰撞（同 LS-326 03c 背景角托 × Scrim 類）（LS-432 R2：與 LS-432-r1／LS-425-r4 收據同類同數；本票未觸碰此類幾何；沿用分類）；同類 1 例"
     }
    ],
-   "result_hash": "f63061fc24c1a75c"
+   "result_hash": "0ba203a015758615"
   },
   "corner_anchor": {
    "scope": "document",
@@ -12357,7 +12357,7 @@
      "classification": "mount_pair"
     }
    ],
-   "result_hash": "c4f7b7ce8a144682"
+   "result_hash": "da6959727ac8253b"
   },
   "text_occlusion": {
    "scope": "document",
@@ -12392,7 +12392,7 @@
    ],
    "flagged": [],
    "document_flagged": [],
-   "result_hash": "22c2da9957510b87"
+   "result_hash": "38347c3d4804ea40"
   },
   "board_clip": {
    "scope": "document",
@@ -12427,7 +12427,7 @@
    ],
    "flagged": [],
    "document_flagged": [],
-   "result_hash": "6611dccb0cdefd05"
+   "result_hash": "7b837e6efd92dbbe"
   }
  }
 }
