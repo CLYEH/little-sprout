@@ -12,6 +12,13 @@
 #   SIMLOCK_KEEP_UI=1 跳過下方 --udid 的字級／外觀調整（見下）
 # exit：命令的 exit code；124＝等待逾時；2＝參數／holder 寫入錯誤
 #
+# LS-443（池 f2992e55；LS-397 QA R1／LS-438 QA R1 同型兩次）：`--dir` 路徑白名單。釋放段會 `rm -rf "$lock"`，qa 曾把
+# `--dir` 指到 qa-test worktree，連刪兩次、遺失證據。現在 `--dir` 只接受「絕對路徑、`..` 以外、basename 含
+# `simulator-lock`、realpath 正規化後落在系統暫存（$TMPDIR／/private/tmp／/tmp／/var/folders）或
+# `<repo>/.claude/locks/` 直屬」的路徑，且不得是 git worktree／repo 內路徑（`.claude/locks/` 例外）；其餘 exit 2。
+# 同一份判定在**解析參數後**與**每一處 `rm -rf` 前**各跑一次（TOCTOU：呼叫中途被換成 symlink／被改名）。預設值不變
+# （push-gate.sh 的 `/tmp/simulator-lock-<udid>` 本來就合規）。判定寫法比照 cleanup-merged.sh 的路徑白名單。
+#
 # LS-207（c18ef27f）：`--udid <udid>`（選填，呼叫端明確傳入，不從 --dir 路徑猜——自測與非標準 --dir 覆寫
 # 不會被誤觸）：取得鎖、跑命令前用 `xcrun simctl ui <udid> content_size` / `appearance`（無參數＝查詢）先讀出
 # 目前值存起來，再設成 `content_size large`／`appearance light`（QA／merge-reviewer 多步驟操作要看得清楚且
@@ -33,12 +40,13 @@ usage() { echo "用法：simulator-lock.sh --dir <路徑> [--timeout <秒>] [--u
 timeout=900
 poll=${SIMULATOR_LOCK_POLL:-1}
 lock=
+lock_set=0
 udid=
 while [ $# -gt 0 ]; do
   case "$1" in
     --dir)
-      [ -n "${2:-}" ] || { echo "✗ simulator-lock：--dir 缺值" >&2; exit 2; }
-      lock=$2; shift 2 ;;
+      [ $# -ge 2 ] || { echo "✗ simulator-lock：--dir 缺值" >&2; exit 2; }
+      lock=$2; lock_set=1; shift 2 ;;   # 空字串留給 lock_dir_check 拒絕（LS-443，要印指引句）
     --timeout)
       [ -n "${2:-}" ] || { echo "✗ simulator-lock：--timeout 缺值" >&2; exit 2; }
       timeout=$2; shift 2 ;;
@@ -51,11 +59,63 @@ while [ $# -gt 0 ]; do
     *) break ;;
   esac
 done
-[ -n "$lock" ] || { echo "✗ simulator-lock：缺 --dir" >&2; usage; exit 2; }
+[ "$lock_set" -eq 1 ] || { echo "✗ simulator-lock：缺 --dir" >&2; usage; exit 2; }
 case "$timeout" in ''|*[!0-9]*) echo "✗ simulator-lock：timeout 須為整數秒（得到「${timeout}」）" >&2; exit 2 ;; esac
 case "$poll" in ''|.|*[!0-9.]*|*.*.*) echo "✗ simulator-lock：SIMULATOR_LOCK_POLL 須為數字秒（得到「${poll}」）" >&2; exit 2 ;; esac
 awk -v p="$poll" 'BEGIN { exit !(p + 0 >= 0.2) }' || { echo "✗ simulator-lock：SIMULATOR_LOCK_POLL 下限 0.2 秒（得到「${poll}」）" >&2; exit 2; }
 [ $# -gt 0 ] || { echo "✗ simulator-lock：缺命令" >&2; usage; exit 2; }
+
+# ---- LS-443：--dir 白名單 ----
+# canon_path <路徑>：回傳「最近的既有祖先 cd -P 後的實體路徑 ＋ 尚不存在的尾段」（鎖目錄取鎖前還不存在，不能直接 realpath）
+canon_path() {
+  local p=$1 tail= head
+  while [ "$p" != / ] && [ ! -d "$p" ]; do tail="/${p##*/}${tail}"; p=${p%/*}; [ -n "$p" ] || p=/; done
+  head=$(cd -P "$p" 2>/dev/null && pwd -P) || return 1
+  [ "$head" = / ] && head=
+  printf '%s%s' "$head" "$tail"
+}
+# lock_dir_check <路徑>：0＝通過；1＝拒絕，原因寫進 $lock_reject。
+lock_dir_check() {
+  local raw=$1 c base root r repo anc ok=0
+  lock_reject=
+  case "$raw" in
+    '') lock_reject="路徑是空字串"; return 1 ;;
+    /*) ;;
+    *) lock_reject="必須是絕對路徑（得到「${raw}」）"; return 1 ;;
+  esac
+  case "/${raw}/" in */../*|*/./*) lock_reject="路徑不得含 . 或 .. 段（得到「${raw}」）"; return 1 ;; esac
+  c=$(canon_path "$raw") || { lock_reject="無法正規化「${raw}」"; return 1; }
+  while [ "${c%/}" != "$c" ]; do c=${c%/}; done
+  [ -n "$c" ] || { lock_reject="路徑是根目錄"; return 1; }
+  base=${c##*/}
+  case "$base" in *simulator-lock*) ;; *) lock_reject="basename 必須含 simulator-lock（得到「${base}」，正規化後 ${c}）"; return 1 ;; esac
+  repo=$(git -C "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)" rev-parse --show-toplevel 2>/dev/null) || repo=
+  [ -z "$repo" ] || repo=$(cd -P "$repo" 2>/dev/null && pwd -P) || repo=
+  # <repo>/.claude/locks/<name>（直屬）是唯一允許落在 repo 內的位置
+  if [ -n "$repo" ] && [ "${c%/*}" = "${repo}/.claude/locks" ]; then return 0; fi
+  if [ -n "$repo" ]; then
+    case "$c/" in "${repo}"/*) lock_reject="${c} 在 repo（${repo}）內，只有 .claude/locks/ 直屬路徑可以"; return 1 ;; esac
+  fi
+  for root in "${TMPDIR:-}" /private/tmp /tmp /var/folders; do
+    [ -n "$root" ] || continue
+    r=$(canon_path "$root") || continue
+    [ -n "$r" ] && [ "$r" != / ] || continue
+    case "$c/" in "${r}"/*) [ "$c" != "$r" ] && ok=1 ;; esac
+  done
+  [ "$ok" -eq 1 ] || { lock_reject="${c} 不在系統暫存（\$TMPDIR／/private/tmp／/tmp／/var/folders）或 <repo>/.claude/locks/ 之下"; return 1; }
+  # git worktree／含 .git 的目錄一律拒（就算 basename 湊巧含 simulator-lock）；尚不存在的路徑改查最近的既有祖先
+  anc=$c
+  while [ "$anc" != / ] && [ ! -d "$anc" ]; do anc=${anc%/*}; [ -n "$anc" ] || anc=/; done
+  if [ -e "$c/.git" ] || [ "$(git -C "$anc" rev-parse --is-inside-work-tree 2>/dev/null)" = true ]; then
+    lock_reject="${c} 是 git worktree／位於 git 工作樹內"; return 1
+  fi
+  return 0
+}
+lock_dir_reject() {   # $1＝階段（參數／釋放前）
+  echo "✗ simulator-lock：--dir 不合規（${1}）：${lock_reject}" >&2
+  echo "  --dir 是鎖目錄不是 worktree；要在 worktree 內操作請 cd <worktree> 後不帶 --dir（預設即可）。" >&2
+}
+lock_dir_check "$lock" || { lock_dir_reject 參數; exit 2; }
 
 alive() { case "$1" in ''|*[!0-9]*) return 1 ;; esac; ps -p "$1" -o pid= >/dev/null 2>&1; }
 age_of() { local t; t=$(date -r "$1" +%s 2>/dev/null) || t=$(date +%s); echo $(( $(date +%s) - t )); }
@@ -108,6 +168,7 @@ reclaim() {   # 0＝已回收／已讓出（呼叫端立刻重試 mkdir）；1�
   elif [ "$(age_of "$tomb")" -le 30 ]; then
     restore "$tomb"; return 0
   fi
+  if ! lock_dir_check "$tomb"; then lock_dir_reject 回收死鎖前; return 1; fi
   rm -rf "$tomb"
   echo "⚠ simulator-lock：回收死鎖（持有者 pid ${dead_pid:-?} 已不存在）" >&2
   return 0
@@ -193,7 +254,13 @@ restore_sim_ui() {
   fi
 }
 
-release() { restore_sim_ui; if read_holder && [ "$h_pid" = "$$" ]; then rm -rf "$lock"; fi; }
+release() {
+  restore_sim_ui
+  if read_holder && [ "$h_pid" = "$$" ]; then
+    # LS-443：rm -rf 前再驗一次白名單（取鎖後到釋放之間 $lock 可能已被換成 symlink／指向 worktree）
+    if lock_dir_check "$lock"; then rm -rf "$lock"; else lock_dir_reject 釋放前; echo "  ⚠ 未刪除 ${lock}（鎖目錄殘留，請人工檢查）" >&2; fi
+  fi
+}
 trap release EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM

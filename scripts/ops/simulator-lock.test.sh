@@ -75,7 +75,7 @@ run() {   # run <lock dir> <XCRUN_MODE> <額外參數…> -- <命令…>
 }
 
 # ---- ① --udid 給了、查詢與設定都成功 → 取鎖後查原值、設 large/light、跑命令、釋放前復原原值 ----
-out1="$(run "$work/l1" ok --udid UDID-1 -- echo ran)"; rc=$?
+out1="$(run "$work/l1-simulator-lock" ok --udid UDID-1 -- echo ran)"; rc=$?
 rc_is '① exit 0' 0 "$rc" "$out1"
 has   '① 命令有執行' "$out1" 'ran'
 has   '① 印已調整（含 UDID）' "$out1" '已將 UDID-1 字級／外觀改為 content_size=large appearance=light（釋放時復原）'
@@ -86,14 +86,14 @@ want1=$'query UDID-1 content_size\nset UDID-1 content_size large\nquery UDID-1 a
 if [ "$log1" = "$want1" ]; then echo "✓ ① xcrun 呼叫順序：查詢＋設 large→查詢＋設 light→（命令）→各自復原原值"; else echo "✗ ① xcrun 呼叫順序不對" >&2; echo "    實得：" >&2; printf '%s\n' "$log1" | sed 's/^/      /' >&2; fail=1; fi
 
 # ---- ② 沒有 --udid（既有呼叫端 push-gate.sh 現況）→ 完全不呼叫 xcrun ui、行為不變 ----
-out2="$(run "$work/l2" ok -- echo ran2)"; rc=$?
+out2="$(run "$work/l2-simulator-lock" ok -- echo ran2)"; rc=$?
 rc_is '② 無 --udid → exit 0' 0 "$rc" "$out2"
 has   '② 命令有執行' "$out2" 'ran2'
 if [ -s "$XCRUN_LOG" ]; then echo "✗ ② 無 --udid 不應呼叫 xcrun" >&2; cat "$XCRUN_LOG" >&2; fail=1; else echo "✓ ② 無 --udid 不呼叫 xcrun（既有呼叫端零影響）"; fi
 
 # ---- ③ SIMLOCK_KEEP_UI=1 → 即使給了 --udid 也整段跳過（含查詢） ----
 : > "$XCRUN_LOG"
-out3="$(SIMLOCK_KEEP_UI=1 XCRUN_MODE=ok bash "$lock_sh" --dir "$work/l3" --udid UDID-3 -- echo ran3 2>&1)"; rc=$?
+out3="$(SIMLOCK_KEEP_UI=1 XCRUN_MODE=ok bash "$lock_sh" --dir "$work/l3-simulator-lock" --udid UDID-3 -- echo ran3 2>&1)"; rc=$?
 rc_is '③ SIMLOCK_KEEP_UI=1 → exit 0' 0 "$rc" "$out3"
 has   '③ 命令有執行' "$out3" 'ran3'
 hasnt '③ 不印已調整' "$out3" '已將'
@@ -101,7 +101,7 @@ if [ -s "$XCRUN_LOG" ]; then echo "✗ ③ SIMLOCK_KEEP_UI=1 不應呼叫 xcrun�
 
 # ---- ③b（LS-207 merge-review R2 b907173c N4）：現值已經等於目標值（模擬器本來就在 large／light）→ 短路，
 #        只查詢、不設定、不印「已將…改為…」、不印「已復原…」（沒改過的東西不用復原）----
-out3b="$(run "$work/l3b" same --udid UDID-3B -- echo ran3b)"; rc=$?
+out3b="$(run "$work/l3b-simulator-lock" same --udid UDID-3B -- echo ran3b)"; rc=$?
 rc_is '③b exit 0' 0 "$rc" "$out3b"
 has   '③b 命令有執行' "$out3b" 'ran3b'
 hasnt '③b 現值已是目標值 → 不印已調整' "$out3b" '已將'
@@ -111,7 +111,7 @@ want3b=$'query UDID-3B content_size\nquery UDID-3B appearance'
 if [ "$log3b" = "$want3b" ]; then echo "✓ ③b xcrun 只查詢兩次、完全不呼叫 set（短路生效，省掉多餘寫入）"; else echo "✗ ③b xcrun 呼叫不對（應只查詢、不設定）" >&2; echo "    實得：" >&2; printf '%s\n' "$log3b" | sed 's/^/      /' >&2; fail=1; fi
 
 # ---- ④ 查詢失敗（兩個 key 都查不到）→ 都不設定、都不復原、各印一次警告、命令照跑（不擋鎖） ----
-out4="$(run "$work/l4" queryfail --udid UDID-4 -- echo ran4)"; rc=$?
+out4="$(run "$work/l4-simulator-lock" queryfail --udid UDID-4 -- echo ran4)"; rc=$?
 rc_is '④ 查詢失敗仍 exit 0（不擋命令）' 0 "$rc" "$out4"
 has   '④ 命令有執行' "$out4" 'ran4'
 has   '④ 印讀不到 content_size 的警告' "$out4" '讀不到 UDID-4 目前 content_size'
@@ -123,7 +123,7 @@ if printf '%s' "$log4" | grep -qF 'set UDID-4'; then echo "✗ ④ 查詢失敗�
 
 # ---- ④-b LS-207 R2（F4）：查詢回應合法但是 unknown／unsupported（simctl ui help 明列的合法值，不是查詢失敗）
 #        → 視同查不到，不當原值存起來、不設定、不復原（否則復原時會對模擬器下不存在的值） ----
-out4b="$(run "$work/l4b" unknown:unsupported --udid UDID-4B -- echo ran4b)"; rc=$?
+out4b="$(run "$work/l4b-simulator-lock" unknown:unsupported --udid UDID-4B -- echo ran4b)"; rc=$?
 rc_is '④-b 回應 unknown／unsupported 仍 exit 0' 0 "$rc" "$out4b"
 has   '④-b 命令有執行' "$out4b" 'ran4b'
 has   '④-b content_size=unknown 視同查不到、印警告' "$out4b" '讀不到 UDID-4B 目前 content_size'
@@ -133,7 +133,7 @@ log4b="$(cat "$XCRUN_LOG")"
 if printf '%s' "$log4b" | grep -qF 'set UDID-4B'; then echo "✗ ④-b unknown／unsupported 卻仍呼叫了 set" >&2; printf '%s\n' "$log4b" >&2; fail=1; else echo "✓ ④-b unknown／unsupported 不呼叫任何 set"; fi
 
 # ---- ⑤ 兩個 key 都設定失敗 → 各印一次警告、命令照跑、不呼叫復原（沒有真的改過任何一個） ----
-out5="$(run "$work/l5" setfail --udid UDID-5 -- echo ran5)"; rc=$?
+out5="$(run "$work/l5-simulator-lock" setfail --udid UDID-5 -- echo ran5)"; rc=$?
 rc_is '⑤ 設定失敗仍 exit 0（不擋命令）' 0 "$rc" "$out5"
 has   '⑤ 命令有執行' "$out5" 'ran5'
 has   '⑤ 印 content_size 設定失敗警告' "$out5" '設定 UDID-5 content_size=large 失敗'
@@ -144,7 +144,7 @@ if [ "$(printf '%s\n' "$log5" | grep -cF 'set UDID-5')" -eq 2 ]; then echo "✓ 
 
 # ---- ⑤-b LS-207 R2（F4 失敗情境 A）：content_size 設定成功、appearance 設定失敗 → 只復原 content_size，
 #        appearance 不受影響（不因對方失敗被一起放棄）；R1 用 && 短路，這種部分套用會讓 content_size 永遠復原不到 ----
-out5b="$(run "$work/l5b" ok:setfail --udid UDID-5B -- echo ran5b)"; rc=$?
+out5b="$(run "$work/l5b-simulator-lock" ok:setfail --udid UDID-5B -- echo ran5b)"; rc=$?
 rc_is '⑤-b 部分失敗仍 exit 0' 0 "$rc" "$out5b"
 has   '⑤-b 印 content_size 已調整' "$out5b" 'content_size=large'
 has   '⑤-b 印 appearance 設定失敗警告' "$out5b" '設定 UDID-5B appearance=light 失敗'
@@ -155,7 +155,7 @@ if printf '%s' "$log5b" | grep -qF 'set UDID-5B appearance dark'; then echo "✗
 if printf '%s' "$log5b" | grep -qF 'set UDID-5B content_size extraLarge'; then echo "✓ ⑤-b 有對 content_size 呼叫復原（原值 extraLarge）"; else echo "✗ ⑤-b 沒有對 content_size 呼叫復原" >&2; printf '%s\n' "$log5b" >&2; fail=1; fi
 
 # ---- ⑤-c 鏡像案：content_size 設定失敗、appearance 設定成功 → 只復原 appearance ----
-out5c="$(run "$work/l5c" setfail:ok --udid UDID-5C -- echo ran5c)"; rc=$?
+out5c="$(run "$work/l5c-simulator-lock" setfail:ok --udid UDID-5C -- echo ran5c)"; rc=$?
 rc_is '⑤-c 部分失敗仍 exit 0' 0 "$rc" "$out5c"
 has   '⑤-c 印 content_size 設定失敗警告' "$out5c" '設定 UDID-5C content_size=large 失敗'
 has   '⑤-c 印 appearance 已調整' "$out5c" 'appearance=light'
@@ -190,7 +190,7 @@ echo "stub xcrun：不認得的呼叫 $*" >&2
 exit 1
 EOS
 chmod +x "$bin/xcrun"
-out5d="$(run "$work/l5d" restorefail --udid UDID-5D -- echo ran5d)"; rc=$?
+out5d="$(run "$work/l5d-simulator-lock" restorefail --udid UDID-5D -- echo ran5d)"; rc=$?
 rc_is '⑤-d 復原失敗仍 exit 0（不擋命令，命令早就跑完了）' 0 "$rc" "$out5d"
 has   '⑤-d 命令有執行' "$out5d" 'ran5d'
 has   '⑤-d 復原 content_size 失敗時大聲印 ⚠ 並點名 UDID／原值' "$out5d" '復原 UDID-5D content_size=extraLarge 失敗'
@@ -209,7 +209,7 @@ fi
 exit 1
 EOS
 chmod +x "$bin/xcrun"
-out6="$(run "$work/l6" ok --udid UDID-6 -- sh -c 'exit 7')"; rc=$?
+out6="$(run "$work/l6-simulator-lock" ok --udid UDID-6 -- sh -c 'exit 7')"; rc=$?
 rc_is '⑥ 命令 exit 7 → 包裝也 exit 7' 7 "$rc" "$out6"
 has   '⑥ 命令失敗仍印已復原 content_size' "$out6" '已復原 UDID-6 content_size'
 has   '⑥ 命令失敗仍印已復原 appearance' "$out6" '已復原 UDID-6 appearance'
@@ -223,7 +223,7 @@ else
   echo "✓ mutant 已拿掉 apply_sim_ui／restore_sim_ui 呼叫點"
 fi
 : > "$XCRUN_LOG"
-outm="$(XCRUN_MODE=ok bash "$mut" --dir "$work/lm" --udid UDID-M -- echo ranm 2>&1)"; rcm=$?
+outm="$(XCRUN_MODE=ok bash "$mut" --dir "$work/lm-simulator-lock" --udid UDID-M -- echo ranm 2>&1)"; rcm=$?
 if [ "$rcm" -eq 0 ] && [ ! -s "$XCRUN_LOG" ]; then
   echo "✓ mutant：拿掉呼叫點後給 --udid 也不再碰 xcrun（證明 ① 的行為確實來自 apply_sim_ui／restore_sim_ui）"
 else
@@ -299,12 +299,110 @@ exit 1
 EOS
 chmod +x "$bin/xcrun"
 : > "$XCRUN_LOG"
-out_mut2="$(XCRUN_MODE=x bash "$mut2" --dir "$work/lmut2" --udid UDID-MUT2 -- echo ranmut2 2>&1)"; rc=$?
+out_mut2="$(XCRUN_MODE=x bash "$mut2" --dir "$work/lmut2-simulator-lock" --udid UDID-MUT2 -- echo ranmut2 2>&1)"; rc=$?
 if [ "$rc" -eq 0 ] && ! printf '%s' "$out_mut2" | grep -qF '已復原 UDID-MUT2 content_size'; then
   echo "✓ mutant（&& 短路）：appearance 失敗連累 content_size 也不被復原（負控證明 ⑤-b 綠是因為兩個 key 真的獨立處理）"
 else
   echo "✗ mutant（&& 短路）應該讓 content_size 也復原不到（負控本身可能無效）" >&2; printf '%s\n' "$out_mut2" | sed 's/^/    /' >&2; fail=1
 fi
+
+# =====================================================================================================
+# LS-443：--dir 路徑白名單（LS-397／LS-438 QA 把 --dir 指到 qa-test worktree，釋放時 rm -rf 把 worktree 刪掉）
+# 負控五組（worktree 路徑、repo 根、/、空字串、相對路徑）＋進階案（basename 湊巧含 simulator-lock 的 worktree、
+# 指向 worktree 的 symlink、repo 內路徑、含 .. 段、暫存目錄但名稱不含 simulator-lock）全部應 exit 2、印指引句、
+# 目錄完好；正控（mktemp -d 底下／預設樣式／$TMPDIR／.claude/locks）應照常取鎖並釋放。真實路徑（repo 根、/）
+# 只跑**真正的**驗證器——它在 mkdir 之前就 exit 2，不會碰到任何東西；mutation 只對 $work 底下的拋棄式假 worktree 跑。
+# =====================================================================================================
+GUIDE='--dir 是鎖目錄不是 worktree；要在 worktree 內操作請 cd <worktree> 後不帶 --dir'
+export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
+fake_main="$work/fake-main"; mkdir -p "$fake_main"
+git -C "$fake_main" init -q
+git -C "$fake_main" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
+fake_wt="$work/fake-wt-qa-test"
+git -C "$fake_main" worktree add -q "$fake_wt" -b fake-wt
+echo precious > "$fake_wt/sentinel"
+fake_wt_named="$work/fake-wt-simulator-lock"     # basename 湊巧含 simulator-lock 的 worktree：靠 git 判定擋
+git -C "$fake_main" worktree add -q "$fake_wt_named" -b fake-wt-named
+echo precious > "$fake_wt_named/sentinel"
+ln -s "$fake_wt" "$work/link-to-wt-simulator-lock"   # basename 合規但實體路徑是 worktree
+: > "$XCRUN_LOG"
+
+neg() {   # neg <案例名> <dir 參數> [<要檢查完好的檔>]
+  local name=$1 dir=$2 keep=${3:-}
+  local o rc2
+  o="$(bash "$lock_sh" --timeout 1 --dir "$dir" -- echo SHOULD-NOT-RUN 2>&1)"; rc2=$?
+  rc_is "LS-443 負控 ${name} → exit 2" 2 "$rc2" "$o"
+  has   "LS-443 負控 ${name} → 印指引句" "$o" "$GUIDE"
+  hasnt "LS-443 負控 ${name} → 命令沒被執行" "$o" 'SHOULD-NOT-RUN'
+  if [ -n "$keep" ]; then
+    if [ -e "$keep" ]; then echo "✓ LS-443 負控 ${name} → 目錄完好（${keep} 還在）"; else echo "✗ LS-443 負控 ${name} → ${keep} 被刪了" >&2; fail=1; fi
+  fi
+}
+neg '① worktree 路徑'            "$fake_wt"            "$fake_wt/sentinel"
+neg '② repo 根'                  "$root"               "$root/scripts/ops/simulator-lock.sh"
+neg '③ /'                        "/"
+neg '④ 空字串'                   ""
+neg '⑤ 相對路徑'                 "relative-simulator-lock"
+neg '⑥ basename 含 simulator-lock 的 worktree' "$fake_wt_named" "$fake_wt_named/sentinel"
+neg '⑦ symlink（名稱合規、實體是 worktree）' "$work/link-to-wt-simulator-lock" "$fake_wt/sentinel"
+neg '⑧ repo 內路徑（非 .claude/locks）' "$root/scripts/ops/x-simulator-lock"
+neg '⑨ 含 .. 段'                 "$work/a/../b-simulator-lock"
+neg '⑩ 在暫存目錄但 basename 不含 simulator-lock' "$work/just-a-dir"
+
+# 正控：mktemp -d 底下、預設樣式 /tmp/simulator-lock-<udid>、<repo>/.claude/locks/ 直屬、$TMPDIR 底下 都照常取鎖並釋放
+pos() {   # pos <案例名> <dir>
+  local name=$1 dir=$2 o rc2
+  o="$(bash "$lock_sh" --timeout 5 --dir "$dir" -- echo POS-RAN 2>&1)"; rc2=$?
+  rc_is "LS-443 正控 ${name} → exit 0" 0 "$rc2" "$o"
+  has   "LS-443 正控 ${name} → 命令有執行" "$o" 'POS-RAN'
+  if [ -e "$dir" ]; then echo "✗ LS-443 正控 ${name} → 釋放後鎖目錄應被移除（${dir}）" >&2; fail=1; else echo "✓ LS-443 正控 ${name} → 釋放後鎖目錄已移除"; fi
+}
+pos_d="$(mktemp -d)"
+pos 'mktemp -d/xxx-simulator-lock' "$pos_d/xxx-simulator-lock"
+pos '預設樣式 /tmp/simulator-lock-<udid>' "/tmp/simulator-lock-ls443-$$"
+mkdir -p "$work/tmpdir-x"
+o="$(TMPDIR="$work/tmpdir-x" bash "$lock_sh" --timeout 5 --dir "$work/tmpdir-x/simulator-lock-t" -- echo POS-RAN 2>&1)"; rc=$?
+rc_is 'LS-443 正控 $TMPDIR 底下 → exit 0' 0 "$rc" "$o"
+had_locks=0; [ -d "$root/.claude/locks" ] && had_locks=1
+mkdir -p "$root/.claude/locks"
+pos '<repo>/.claude/locks/ 直屬' "$root/.claude/locks/simulator-lock-ls443-$$"
+[ "$had_locks" -eq 1 ] || rmdir "$root/.claude/locks" 2>/dev/null
+rm -rf "$pos_d"
+
+# 釋放前再驗（TOCTOU）：命令跑到一半把鎖目錄換成「含 .git 的真目錄」並偽造 holder（pid＝本腳本）——釋放段
+# 若不再驗就會 rm -rf 它。斷言：sentinel 還在、印「釋放前」拒絕訊息。
+toctou_cmd='cp "$1/holder" "$1.holder.bak"; rm -rf "$1"; mkdir "$1"; git -C "$1" init -q; cp "$1.holder.bak" "$1/holder"; echo precious > "$1/sentinel"'
+toctou_run() {   # toctou_run <腳本> <lock dir>
+  local sh=$1 d=$2
+  rm -rf "$d"
+  bash "$sh" --timeout 5 --dir "$d" -- bash -c "$toctou_cmd" _ "$d" 2>&1
+}
+td="$work/toctou-simulator-lock"
+o="$(toctou_run "$lock_sh" "$td")"; rc=$?
+rc_is 'LS-443 釋放前再驗（TOCTOU）→ 包裝 exit 0（命令本身成功）' 0 "$rc" "$o"
+has   'LS-443 釋放前再驗 → 印「釋放前」拒絕' "$o" '--dir 不合規（釋放前）'
+if [ -f "$td/sentinel" ]; then echo "✓ LS-443 釋放前再驗 → 換進來的目錄沒被 rm -rf（sentinel 還在）"; else echo "✗ LS-443 釋放前再驗 → 換進來的目錄被刪了" >&2; fail=1; fi
+
+# ---- mutation：lock_dir_check 開頭加 return 0（等於拿掉白名單，參數階段＋釋放前兩處都失效）----
+mut3="$work/simulator-lock.no-whitelist.sh"
+awk '{ print } /^lock_dir_check\(\) \{$/ { print "  return 0" }' "$lock_sh" > "$mut3"
+if [ "$(diff "$lock_sh" "$mut3" | grep -c '^>')" -eq 1 ] && grep -q '^  return 0$' "$mut3"; then echo "✓ mutant 只多了 lock_dir_check 開頭的 return 0"; else echo "✗ mutant 產生失敗（負控本身無效）" >&2; fail=1; fi
+# (a) 參數階段：假 worktree 在 mutant 下不再 exit 2、不印指引句（走到 mkdir 失敗→等待逾時）→ 證明負控 ① 的 rc_is／has 斷言來自白名單
+om="$(bash "$mut3" --timeout 1 --dir "$fake_wt" -- echo MUT-RAN 2>&1)"; rcm=$?
+if [ "$rcm" -ne 2 ] && ! printf '%s' "$om" | grep -qF -- "$GUIDE"; then
+  echo "✓ mutant：拿掉白名單後 worktree 路徑不再被 exit 2 擋（得到 exit ${rcm}）——證明負控 ① 的『exit 2』與『指引句』斷言由白名單產生"
+else
+  echo "✗ mutant 應讓 worktree 路徑不再 exit 2／不印指引句（實得 exit ${rcm}）" >&2; printf '%s\n' "$om" | sed 's/^/    /' >&2; fail=1
+fi
+# (b) 釋放前：TOCTOU 案在 mutant 下 sentinel 會被刪
+td2="$work/toctou2-simulator-lock"
+om2="$(toctou_run "$mut3" "$td2")"
+if [ ! -e "$td2/sentinel" ]; then
+  echo "✓ mutant：拿掉白名單後釋放段 rm -rf 掉換進來的目錄（sentinel 消失）——證明 TOCTOU 案『sentinel 還在』斷言由釋放前再驗產生"
+else
+  echo "✗ mutant 應讓 TOCTOU 案的 sentinel 被刪（負控本身可能無效）" >&2; printf '%s\n' "$om2" | sed 's/^/    /' >&2; fail=1
+fi
+git -C "$fake_main" worktree prune 2>/dev/null
 
 if [ "$fail" -eq 0 ]; then
   echo "✓ simulator-lock 自測通過"
