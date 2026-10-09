@@ -15,6 +15,9 @@
 -- 阻塞的來源、以及被阻塞方最終拿到什麼結果，都是由**後動那一邊**（本方向是
 -- update_child）的行為決定，不是先動那一邊有沒有加鎖。
 --
+-- LS-435 補充：set_child_deleted 那把 `for update` 的鎖強度改由 FOR KEY SHARE 探針驗
+-- （children_edit_vs_delete_s1_keyshare.sql／_s2_keyshare_delete.sql，拿掉就紅）。
+--
 -- run.sh 的 race_case 在每個方向開始前都會重跑一次 children_edit_vs_delete_setup.sql，
 -- 所以這裡不必假設孩子檔案處於哪個既有狀態。
 

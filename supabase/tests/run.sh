@@ -826,6 +826,9 @@ race_case "同一本相簿：FOR KEY SHARE 佔鎖時 set_album_deleted 必須被
 race_case "同一則留言：FOR KEY SHARE 佔鎖時 set_comment_deleted 必須被阻塞（授權判斷前先 for update）" \
   comment_edit_vs_delete_setup.sql comment_edit_vs_delete_s1_keyshare.sql \
   comment_edit_vs_delete_s2_keyshare_delete.sql comment_edit_vs_delete_verify_keyshare.sql
+race_case "同一個孩子檔案：FOR KEY SHARE 佔鎖時 set_child_deleted 必須被阻塞（授權判斷前先 for update）" \
+  children_edit_vs_delete_setup.sql children_edit_vs_delete_s1_keyshare.sql \
+  children_edit_vs_delete_s2_keyshare_delete.sql children_edit_vs_delete_verify_delete_won.sql
 
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
