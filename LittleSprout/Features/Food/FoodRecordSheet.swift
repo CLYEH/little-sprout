@@ -36,6 +36,7 @@ struct FoodRecordSheet: View {
     @State var showsFamilyPicker = false
     @State var showsPhoneSourceChoice = false
     @State var showsPhonePicker = false
+    @State var opensPhonePickerAfterFamilyPicker = false
     @State var phoneSelection: PhotosPickerItem?
     @State var showsDeleteConfirmation = false
     /// 03c 刪除成功後，等確認 sheet 自己關完（`onDismiss`）再關本 sheet——同一個 runloop 內連關兩層會被
@@ -78,7 +79,7 @@ struct FoodRecordSheet: View {
         .sheet(isPresented: $showsDatePicker) {
             FoodRecordDatePickerSheet(selection: $store.firstTriedOn)
         }
-        .sheet(isPresented: $showsFamilyPicker) { familyPicker }
+        .sheet(isPresented: $showsFamilyPicker, onDismiss: openPhonePickerIfRequested) { familyPicker }
         .confirmationDialog("換一張照片", isPresented: $showsPhoneSourceChoice, titleVisibility: .visible) {
             Button("從家庭相簿挑") { showsFamilyPicker = true }
             Button("從手機加入") { showsPhonePicker = true }

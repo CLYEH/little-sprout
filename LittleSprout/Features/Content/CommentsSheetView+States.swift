@@ -131,7 +131,7 @@ extension CommentsSheetView {
 /// 邊界畫出來，而不是無邊框的純色塊）——三者皆既有 `Color.lsPaperEdge`／`Color.lsPaperShadow`／
 /// `Color.lsBorder` token，未新增或修改任何 token 值。稿面卡片為直角方形（無 cornerRadius
 /// 欄位，同 `ppXvK`「Print」等其餘沖印品 frame），故移除先前誤加的 8pt 圓角裁切。
-private struct EmptyPrintView: View {
+struct EmptyPrintView: View {
     private let outerSize: CGFloat = 120
     private let innerSize: CGFloat = 104
     private let cornerSize: CGFloat = 18

@@ -18,6 +18,8 @@ extension TapTargetGateHarness {
     static let foodRecordMissingPhotoKey = "LSFoodRecordMissingPhoto"
     /// `.foodRecordDetailFlow`：南瓜那筆已在後端被刪（圖鑑還以為吃過），開詳情即發現（接縫④）。
     static let foodRecordFlowGoneKey = "LSFoodRecordFlowGone"
+    /// `.foodRecordSheet`：家庭相簿沒有任何照片（03g）。
+    static let foodRecordEmptyAlbumKey = "LSFoodRecordEmptyAlbum"
     static let foodRecordChildName = "小安"
 
     /// 飲食圖鑑家族（LS-379 02 × 4＋LS-380 03 × 3）的 dispatch——從 `hostView(for:)` 搬來（該 enum 逼近
@@ -44,7 +46,9 @@ extension TapTargetGateHarness {
     @MainActor
     @ViewBuilder
     static var foodRecordSheetHost: some View {
-        foodRecordColorScheme(foodRecordBook(apiClient: PreviewFoodAPIClient(photos: FamilyPhoto.previewSamples())))
+        foodRecordColorScheme(foodRecordBook(apiClient: PreviewFoodAPIClient(
+            photos: UserDefaults.standard.bool(forKey: foodRecordEmptyAlbumKey) ? [] : FamilyPhoto.previewSamples()
+        )))
     }
 
     @MainActor

@@ -8,6 +8,9 @@ import SwiftUI
 /// 自動；AX3 格子改 2 欄、縮圖高 130（`CkOy9`）；iPad 同一 sheet；資料落點：選中＝純 UI 狀態，「用這張」才
 /// 回填 `media_id`。
 ///
+/// 03g（`d1LCPb`／`NY37b`／`k4qPK`）：相簿沒有照片時格子區放 Empty Print＋「家庭相簿裡還沒有照片。」，Head Sub
+/// 隱藏、主鈕換「從手機加入」（先收本 sheet，呼叫端 `onDismiss` 再開 PhotosPicker）；不畫灰色骨架。
+///
 /// 分段與排序見 `FamilyPhotoSections`（Notes `m18MTy`）；縮圖一律載 `thumb_path`（`FamilyPhoto.displayPath`，
 /// 不載原圖），簽名 URL 一次批次取（不逐張打 Storage）。
 struct FoodFamilyPhotoPickerSheet: View {
@@ -15,6 +18,8 @@ struct FoodFamilyPhotoPickerSheet: View {
     let recordDate: Date
     let apiClient: FoodAPIClient
     let initialSelectionID: UUID?
+    /// 相簿是空的時候主鈕改「從手機加入」（03g）：本 sheet 先收起，呼叫端在 `onDismiss` 再開 PhotosPicker。
+    let onChooseFromPhone: () -> Void
     let onUse: (FamilyPhoto, URL?) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -26,17 +31,19 @@ struct FoodFamilyPhotoPickerSheet: View {
 
     init(
         childID: UUID, recordDate: Date, apiClient: FoodAPIClient, initialSelectionID: UUID?,
-        onUse: @escaping (FamilyPhoto, URL?) -> Void
+        onChooseFromPhone: @escaping () -> Void, onUse: @escaping (FamilyPhoto, URL?) -> Void
     ) {
         self.childID = childID
         self.recordDate = recordDate
         self.apiClient = apiClient
         self.initialSelectionID = initialSelectionID
+        self.onChooseFromPhone = onChooseFromPhone
         self.onUse = onUse
         _selectedID = State(initialValue: initialSelectionID)
     }
 
     private var isAccessibilityLayout: Bool { dynamicTypeSize.isAccessibilitySize }
+    private var isAlbumEmpty: Bool { photos?.isEmpty == true }
 
     var body: some View {
         VStack(spacing: AppSpacing.block) {
@@ -64,9 +71,12 @@ struct FoodFamilyPhotoPickerSheet: View {
                 .appFont(.lead, weight: .bold)
                 .foregroundStyle(Color.lsTextPrimary)
                 .accessibilityAddTraits(.isHeader)
-            Text("點一張照片，再按「用這張」。")
-                .appFont(.note)
-                .foregroundStyle(Color.lsTextSecondary)
+            // 空相簿沒有東西可點，Head Sub 隱藏（03g Notes `eY1tg`）。
+            if !isAlbumEmpty {
+                Text("點一張照片，再按「用這張」。")
+                    .appFont(.note)
+                    .foregroundStyle(Color.lsTextSecondary)
+            }
         }
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
@@ -76,11 +86,16 @@ struct FoodFamilyPhotoPickerSheet: View {
     private var content: some View {
         if let photos {
             if photos.isEmpty {
-                Text("家庭相簿裡還沒有照片，可以改用「從手機加入」。")
-                    .appFont(.note)
-                    .foregroundStyle(Color.lsTextSecondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // 03g：Empty Print（同留言空狀態 `K1yE6j`）＋一句話，不畫灰色格子骨架（那是載入中的慣例）。
+                VStack(spacing: AppSpacing.item) {
+                    EmptyPrintView()
+                    Text("家庭相簿裡還沒有照片。")
+                        .appFont(.body)
+                        .foregroundStyle(Color.lsTextPrimary)
+                        .multilineTextAlignment(.center)
+                        .accessibilityIdentifier("foodPhoto.emptyLine")
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 grid(FamilyPhotoSections.make(photos: photos, recordDate: recordDate))
             }
@@ -171,8 +186,13 @@ struct FoodFamilyPhotoPickerSheet: View {
 
     private var actions: some View {
         VStack(spacing: AppSpacing.group) {
-            PrimaryButton(title: "用這張") { useSelected() }
-                .accessibilityIdentifier("foodPhoto.use")
+            if isAlbumEmpty {
+                PrimaryButton(icon: "iphone", title: "從手機加入") { chooseFromPhone() }
+                    .accessibilityIdentifier("foodPhoto.addFromPhone")
+            } else {
+                PrimaryButton(title: "用這張") { useSelected() }
+                    .accessibilityIdentifier("foodPhoto.use")
+            }
             Button {
                 dismiss()
             } label: {
@@ -184,6 +204,11 @@ struct FoodFamilyPhotoPickerSheet: View {
             }
             .buttonStyle(.plain)
         }
+    }
+
+    private func chooseFromPhone() {
+        onChooseFromPhone()
+        dismiss()
     }
 
     /// 品牌規則不 disable 主鈕：還沒選就按「用這張」＝不動作（Head Sub 已說明要先點一張）。

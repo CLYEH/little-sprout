@@ -127,6 +127,26 @@ final class FoodRecordSheetUITests: XCTestCase {
         XCTAssertTrue(app.buttons["從家庭相簿挑"].waitForExistence(timeout: 5), "不用照片 → 回到兩個來源鈕")
     }
 
+    /// LS-434 03g（稿 `d1LCPb`）：家庭相簿沒有照片——Empty Print＋一句話、Head Sub 隱藏、主鈕「從手機加入」
+    /// （沒有「用這張」）；沿 `K1yE6j`，不畫灰格子骨架。
+    func testFamilyPicker_emptyAlbum_showsEmptyPrintAndPhoneButton() {
+        let app = Support.launch(
+            .foodRecordSheet, Support.standard, extraArguments: ["-LSFoodRecordEmptyAlbum", "YES"]
+        )
+        Support.openTaroSheet(in: app)
+        app.buttons["從家庭相簿挑"].tap()
+
+        XCTAssertTrue(app.staticTexts["從家庭相簿挑一張"].waitForExistence(timeout: 5))
+        XCTAssertEqual(
+            Support.element("foodPhoto.emptyLine", in: app).label, "家庭相簿裡還沒有照片。", "03g 的一句話（同一字串）"
+        )
+        XCTAssertFalse(app.staticTexts["點一張照片，再按「用這張」。"].exists, "空相簿沒有東西可點：Head Sub 隱藏")
+        XCTAssertFalse(app.buttons["foodPhoto.use"].exists, "不留一顆按了沒反應的「用這張」")
+        let phone = app.buttons["foodPhoto.addFromPhone"]
+        XCTAssertTrue(phone.waitForHittable(timeout: 5), "主鈕改成「從手機加入」")
+        XCTAssertEqual(phone.label, "從手機加入")
+    }
+
     // MARK: - 03b → 03c → 格子回未吃
 
     /// 票文範圍 3＋驗收「刪除→格子回未吃」：03b 按「刪除這筆記錄」→ 03c 文案逐字 → 確認後兩層 sheet 都收起、
