@@ -412,6 +412,110 @@ else
   bad "⑩ 省略 --expect-nodes 的訊息不符預期（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
 fi
 
+# ---- ⑭ LS-448：--allow-meta 只放行 variables「純新增」（新 token 進檔），其餘 meta 變更照拒 ----
+NODES_2='"children":[{"id":"n1","x":1,"children":[{"id":"n2","y":2,"children":[]}]}]'
+VAR_ADDED="{\"version\":1,\"fileToken\":\"tok1\",\"variables\":{\"a\":1,\"b\":{\"type\":\"color\",\"value\":\"#8E2447\"}},\"themes\":{\"light\":{}},${NODES_2}}"
+VAR_CHANGED="{\"version\":1,\"fileToken\":\"tok1\",\"variables\":{\"a\":2,\"b\":3},\"themes\":{\"light\":{}},${NODES_2}}"
+VAR_REMOVED="{\"version\":1,\"fileToken\":\"tok1\",\"variables\":{\"b\":2},\"themes\":{\"light\":{}},${NODES_2}}"
+VAR_ADDED_THEMES_CHANGED="{\"version\":1,\"fileToken\":\"tok1\",\"variables\":{\"a\":1,\"b\":2},\"themes\":{\"dark\":{}},${NODES_2}}"
+VAR_ADDED_TOKEN_CHANGED="{\"version\":1,\"fileToken\":\"tok2\",\"variables\":{\"a\":1,\"b\":2},\"themes\":{\"light\":{}},${NODES_2}}"
+
+# ⑭a 正控：僅新增一個 variable（節點樹不變）＋旗標 → exit 0、印顯著標記、真的落地
+reset; write_backup "$VAR_ADDED"
+out="$(run "$wt" --allow-meta 'LS-448 新增 accent-on-paper' 2>&1)"; got=$?
+if [ "$got" -eq 0 ] \
+  && printf '%s' "$out" | grep -qF '⚠ allow-meta：LS-448 新增 accent-on-paper' \
+  && grep -qF '#8E2447' "${wt}/design/littlesprout.pen"; then
+  ok '⑭a --allow-meta＋variables 純新增 → exit 0、印 ⚠ allow-meta 標記、新 variable 已落地（LS-448）'
+else
+  bad "⑭a variables 純新增＋旗標應 exit 0 並落地（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑭b 負控：改既有 variable 值（外加新增一個）＋旗標 → exit 1、不 cp
+reset; write_backup "$VAR_CHANGED"
+before="$(cat "${wt}/design/littlesprout.pen")"
+out="$(run "$wt" --allow-meta 'x' 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF 'meta 變更：variables 不同' \
+  && ! printf '%s' "$out" | grep -qF '⚠ allow-meta' && [ "$before" = "$(cat "${wt}/design/littlesprout.pen")" ]; then
+  ok '⑭b --allow-meta＋改既有 variable 值 → exit 1，不 cp，不印放行標記'
+else
+  bad "⑭b 改既有 variable 值應 exit 1（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑭b2 負控：刪除既有 variable a（同時新增 b）＋旗標 → exit 1
+reset; write_backup "$VAR_REMOVED"
+out="$(run "$wt" --allow-meta 'x' 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF 'meta 變更：variables 不同'; then
+  ok '⑭b2 --allow-meta＋刪除既有 variable → exit 1'
+else
+  bad "⑭b2 刪除既有 variable 應 exit 1（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑭c 負控：themes 變（外加新增 variable）＋旗標 → exit 1；fileToken 同
+reset; write_backup "$VAR_ADDED_THEMES_CHANGED"
+before="$(cat "${wt}/design/littlesprout.pen")"
+out="$(run "$wt" --allow-meta 'x' 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF 'meta 變更：themes 不同' && [ "$before" = "$(cat "${wt}/design/littlesprout.pen")" ]; then
+  ok '⑭c --allow-meta＋themes 變更 → exit 1，不 cp'
+else
+  bad "⑭c themes 變更應 exit 1（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+reset; write_backup "$VAR_ADDED_TOKEN_CHANGED"
+out="$(run "$wt" --allow-meta 'x' 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF 'meta 變更：fileToken 不同'; then
+  ok '⑭c2 --allow-meta＋fileToken 變更 → exit 1'
+else
+  bad "⑭c2 fileToken 變更應 exit 1（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑭d 負控：無旗標新增 variable → exit 1（原有把關不退化）
+reset; write_backup "$VAR_ADDED"
+before="$(cat "${wt}/design/littlesprout.pen")"
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF 'meta 變更：variables 不同' && [ "$before" = "$(cat "${wt}/design/littlesprout.pen")" ]; then
+  ok '⑭d 無旗標新增 variable → exit 1，不 cp'
+else
+  bad "⑭d 無旗標新增 variable 應 exit 1（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑭e 旗標本身的形狀：說明為空／缺 → exit 2；有旗標但 variables 與節點皆無差異 → 仍是「零變更」預設拒絕
+reset; write_backup "$VAR_ADDED"
+out="$(run "$wt" --allow-meta '' 2>&1)"; got=$?
+out2="$(run "$wt" --allow-meta 2>&1)"; got2=$?
+if [ "$got" -eq 2 ] && [ "$got2" -eq 2 ] && printf '%s' "$out" | grep -qF -- '--allow-meta 需要一個非空說明字串'; then
+  ok '⑭e --allow-meta 缺說明／空說明 → exit 2'
+else
+  bad "⑭e --allow-meta 缺說明應 exit 2（實得 ${got}／${got2}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+reset; write_backup "$WANT_2NODE"
+out="$(run "$wt" --allow-meta 'x' 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '本輪零變更或 autosave 還沒追上'; then
+  ok '⑭e2 --allow-meta 不順帶放行「結構無差異」→ 仍 exit 1'
+else
+  bad "⑭e2 有旗標但零變更應仍 exit 1（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
+# ⑭f mutation：把「既有 key 值與名稱不變、無刪除」判斷拿掉的腳本副本——⑭b／⑭b2 的負控必須因此轉放行
+#   （exit 0＝若真有人這樣改壞腳本，⑭b／⑭b2 就會紅；這裡用副本證明該負控有鑑別力）。--dry-run 避免副本找不到 gate。
+mutant="${work}/pen-land-mutant.sh"
+python3 - "$script" "$mutant" <<'PY'
+import sys
+src = open(sys.argv[1], encoding="utf-8").read()
+needle = "    if any(k not in n or n[k] != v for k, v in o.items()):\n        return None\n"
+assert needle in src, "mutation 目標行不存在——pen-land.sh 的判斷式改了，請同步更新本 mutation"
+open(sys.argv[2], "w", encoding="utf-8").write(src.replace(needle, "", 1))
+PY
+mut_ok=1
+for body in "$VAR_CHANGED" "$VAR_REMOVED"; do
+  reset; write_backup "$body"
+  PEN_BACKUP_DIR="$backup_dir" bash "$mutant" "$wt" --allow-meta 'x' --dry-run >/dev/null 2>&1 || mut_ok=0
+done
+if [ "$mut_ok" -eq 1 ]; then
+  ok '⑭f mutation（拿掉既有 key 保持不變／無刪除判斷）→ 改值與刪除兩組負控皆被放行，證明 ⑭b／⑭b2 會紅'
+else
+  bad '⑭f mutation 後負控仍被擋——⑭b／⑭b2 對「只允許新增」沒有鑑別力'
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-land-check 自測失敗" >&2
   exit 1
