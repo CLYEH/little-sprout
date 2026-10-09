@@ -279122,7 +279122,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "未決（核可頁）",
+          "content": "已裁決（原未決，核可頁三題）",
           "fontFamily": "$font",
           "fontSize": 22,
           "fontWeight": "700"
@@ -279134,7 +279134,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "① 相機要不要加——整個家族一起決定，不單加在換照片：加的話 03 初始照片列（原草案板 s7g8p 已於 R4 刪除，原 From Camera M9VXN 隨之刪除）、03f 對話框、04b 來源對話框三處同時多一列「用相機拍一張」，裝置沒有相機時隱藏；不加就維持現稿兩種來源。草案板只供裁決，不入六態、不實作。裁決後處置——不加相機：s7g8p 與畫面級屬性列 c9qtWp 已於 R4 刪除。加相機：另開設計小票補 03 初始照片列（淺／深／AX3）、03f 三板、04b 對話框。② 04e：照片已從家庭相簿刪除時，「再試一次」不會成功。v1 不分辨，要分辨得等後端回得出「已刪除」再議。",
+          "content": "已裁：C1a／C2a（2026-10-09，orchestrator 代裁）。① C1a 不加相機：03 初始照片列、03f 對話框、04b 來源對話框都維持「從家庭相簿挑／從手機加入」兩種來源；原草案板 s7g8p 與畫面級屬性列 c9qtWp 已於 R4 刪除。② C2a 已刪照片 v1 不分辨：照片已從家庭相簿刪除時，04e 同樣顯示「照片沒有載入」＋「再試一次」，重試不會成功也不另做狀態；要分辨得等後端回得出「已刪除」再開票。\nC3a：手機新加照片只在該記錄內可見（產品裁決，不入稿面）。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
