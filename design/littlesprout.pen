@@ -144059,7 +144059,7 @@
                                     24,
                                     24
                                   ],
-                                  "fill": "$accent",
+                                  "fill": "$accent-on-paper",
                                   "width": 22,
                                   "height": 22
                                 },
@@ -144067,7 +144067,7 @@
                                   "type": "text",
                                   "id": "bdwmG",
                                   "name": "Heart Label",
-                                  "fill": "$accent",
+                                  "fill": "$accent-on-paper",
                                   "content": "已按愛心",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
@@ -144088,7 +144088,7 @@
                                   "type": "text",
                                   "id": "TP6t4",
                                   "name": "Heart Count",
-                                  "fill": "$accent",
+                                  "fill": "$accent-on-paper",
                                   "content": "4",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
@@ -144547,7 +144547,7 @@
                                     24,
                                     24
                                   ],
-                                  "fill": "$accent",
+                                  "fill": "$accent-on-paper",
                                   "width": 22,
                                   "height": 22
                                 },
@@ -144555,7 +144555,7 @@
                                   "type": "text",
                                   "id": "OdsdV",
                                   "name": "Heart Label",
-                                  "fill": "$accent",
+                                  "fill": "$accent-on-paper",
                                   "content": "已按愛心",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
@@ -144576,7 +144576,7 @@
                                   "type": "text",
                                   "id": "jDcTN",
                                   "name": "Heart Count",
-                                  "fill": "$accent",
+                                  "fill": "$accent-on-paper",
                                   "content": "4",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
@@ -145034,7 +145034,7 @@
                                     24,
                                     24
                                   ],
-                                  "fill": "$accent",
+                                  "fill": "$accent-on-paper",
                                   "width": 32,
                                   "height": 32
                                 },
@@ -145042,7 +145042,7 @@
                                   "type": "text",
                                   "id": "OEa5L",
                                   "name": "Heart Label",
-                                  "fill": "$accent",
+                                  "fill": "$accent-on-paper",
                                   "content": "已按愛心",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
@@ -145063,7 +145063,7 @@
                                   "type": "text",
                                   "id": "zNAER",
                                   "name": "Heart Count",
-                                  "fill": "$accent",
+                                  "fill": "$accent-on-paper",
                                   "content": "4",
                                   "fontFamily": "$font",
                                   "fontSize": "$fs-note",
@@ -280649,7 +280649,7 @@
                                         24,
                                         24
                                       ],
-                                      "fill": "#8E2447",
+                                      "fill": "$accent-on-paper",
                                       "width": 22,
                                       "height": 22
                                     },
@@ -280657,7 +280657,7 @@
                                       "type": "text",
                                       "id": "q2khZ",
                                       "name": "Heart Label",
-                                      "fill": "#8E2447",
+                                      "fill": "$accent-on-paper",
                                       "content": "已按愛心",
                                       "fontFamily": "$font",
                                       "fontSize": "$fs-note",
@@ -280678,7 +280678,7 @@
                                       "type": "text",
                                       "id": "IbcY7",
                                       "name": "Heart Count",
-                                      "fill": "#8E2447",
+                                      "fill": "$accent-on-paper",
                                       "content": "4",
                                       "fontFamily": "$font",
                                       "fontSize": "$fs-note",
@@ -281588,7 +281588,7 @@
                                         24,
                                         24
                                       ],
-                                      "fill": "#8E2447",
+                                      "fill": "$accent-on-paper",
                                       "width": 22,
                                       "height": 22
                                     },
@@ -281596,7 +281596,7 @@
                                       "type": "text",
                                       "id": "Ixu96",
                                       "name": "Heart Label",
-                                      "fill": "#8E2447",
+                                      "fill": "$accent-on-paper",
                                       "content": "已按愛心",
                                       "fontFamily": "$font",
                                       "fontSize": "$fs-note",
@@ -281617,7 +281617,7 @@
                                       "type": "text",
                                       "id": "LhAGz",
                                       "name": "Heart Count",
-                                      "fill": "#8E2447",
+                                      "fill": "$accent-on-paper",
                                       "content": "4",
                                       "fontFamily": "$font",
                                       "fontSize": "$fs-note",
@@ -284258,6 +284258,10 @@
     "paper-rule": {
       "type": "color",
       "value": "#5530404D"
+    },
+    "accent-on-paper": {
+      "type": "color",
+      "value": "#8E2447"
     }
   },
   "fileToken": "f75220c0-d224-4bd8-af4b-2429e968cb8e"
