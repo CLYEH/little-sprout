@@ -12,7 +12,7 @@
 # 與 `LittleSproutUITests/QA/QADriver+ChildAvatar.swift` 檔頭。
 # 同一 build 用 `xcodebuild test -only-testing:LittleSproutUITests` 一路正常——那道 assert 對 XCTest 行程放行。
 #
-# 用法：qa-e2e.sh <login|publish|browse|child-avatar> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]
+# 用法：qa-e2e.sh <login|publish|browse|child-avatar|upload-stall> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]
 #   login    歡迎頁 → Email → Mailpit 取 6 碼 → 確認登入 → 落點（三岔路或時間軸）
 #   publish  先 `simctl addmedia` LittleSproutUITests/QA/Fixtures 的照片＋影片 →（登入／建家庭）→ 新增回憶 → 相簿選圖 → 發佈 → 卡片出現
 #   browse   （登入／建家庭）→ 日記卡 → 詳情 → 返回 → 相簿分頁 → 時間軸（時間軸空的話先發一篇純文字當對象）
@@ -21,6 +21,14 @@
 #            （頭像刷新）。LS-270（LS-96 池項 `66d55e5d`）：QA 三次（LS-129／130／266）做不了這段多步驟
 #            複驗——真因見上面「來源」段（缺 `Config/Secrets.xcconfig`，不是 mobile-mcp），這條情境就是
 #            它的腳本通道。
+#   upload-stall 同 `login`，登入通過後再以 QA 上傳開關重啟 app（LS-427）：`xcrun simctl launch --terminate-running-process`
+#            帶 `SIMCTL_CHILD_LS_QA_API_URL`／`ANON_KEY`（沿 login 既有值）＋`SIMCTL_CHILD_LS_QA_UPLOAD_STALL_MS`
+#            （取自本腳本環境變數 `LS_QA_UPLOAD_STALL_MS`，預設 4000，每筆上傳前停滯 n 毫秒）＋選用
+#            `SIMCTL_CHILD_LS_QA_UPLOAD_FAIL_EVERY_N`（取自 `LS_QA_UPLOAD_FAIL_EVERY_N`，第 k、2k… 筆回可重試錯誤）。
+#            app 留在已登入狀態、模擬器**保持 Booted**（不 shutdown）——目的就是把開了開關的 app 留給 qa 用 mobile-mcp
+#            操作（例：匯入 30 張、上傳中切出 app 回前景驗續傳）。XCUITest 結束時 XCTest 會殺掉它啟動的 app，所以開關不能
+#            只經 XCUITest 的 launchEnvironment 注入（merge-review R1 M1）。需要讓上傳停滯或失敗一律走這個情境，
+#            **不得** `docker pause`／`stop` 任何容器（LS-417 R1 被分類器擋、且共用容器會連累同機其他 QA）。
 #   每個情境都先 `simctl keychain reset`、從未登入狀態開始、各自 OTP 登入同一帳號——不沿用上一個情境留在 Keychain 的
 #   session：共用容器隨時可能被他票 reset（本票實測：browse 沿用 login 的 session，中間 QA 冒煙 reset 過，建家庭被後端拒），
 #   舊 session 對應的使用者已不存在會把環境問題誤報成 app 缺陷；OTP 一次 ~10 秒、`max_frequency = "1s"`，重登不貴。
@@ -57,7 +65,7 @@
 set -uo pipefail
 
 usage() {
-  echo "用法：qa-e2e.sh <login|publish|browse|child-avatar> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]"
+  echo "用法：qa-e2e.sh <login|publish|browse|child-avatar|upload-stall> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]"
 }
 
 scenario=; sim_name=; sim_given=0; ticket=; email=
@@ -81,9 +89,16 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$scenario" ] || { echo "✗ qa-e2e：缺情境名" >&2; usage >&2; exit 2; }
 case "$scenario" in
-  login|publish|browse|child-avatar) ;;
-  *) echo "✗ qa-e2e：情境「${scenario}」不存在，只接受 login|publish|browse|child-avatar" >&2; exit 2 ;;
+  login|publish|browse|child-avatar|upload-stall) ;;
+  *) echo "✗ qa-e2e：情境「${scenario}」不存在，只接受 login|publish|browse|child-avatar|upload-stall" >&2; exit 2 ;;
 esac
+# LS-427：upload-stall 才帶 QA 上傳開關（其他情境即使環境裡剛好有也不帶，避免污染）；非正整數＝設定錯，fail closed（放在碰任何工具之前）。
+stall_ms=; fail_every_n=
+if [ "$scenario" = upload-stall ]; then
+  stall_ms=${LS_QA_UPLOAD_STALL_MS:-4000}; fail_every_n=${LS_QA_UPLOAD_FAIL_EVERY_N:-}
+  case "$stall_ms" in ''|*[!0-9]*|0) echo "✗ qa-e2e：LS_QA_UPLOAD_STALL_MS 須為正整數（得到「${stall_ms}」）" >&2; exit 2 ;; esac
+  case "$fail_every_n" in *[!0-9]*|0) echo "✗ qa-e2e：LS_QA_UPLOAD_FAIL_EVERY_N 須為正整數（得到「${fail_every_n}」）" >&2; exit 2 ;; esac
+fi
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "✗ qa-e2e：不在 git repo 內（在票 worktree 執行）" >&2; exit 2; }
@@ -321,6 +336,18 @@ else
 fi
 
 shots=$(ls "$out/screens" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$rc" -eq 0 ] && [ "$scenario" = upload-stall ]; then
+  # LS-427 M1：XCUITest 結束 XCTest 就殺掉它啟的 app——登入通過後以 SIMCTL_CHILD_ 前綴重啟，開關才會作用在之後的上傳。
+  # Keychain session 還在，app 會停在已登入；模擬器不 shutdown（booted_by_me 歸 0 讓 cleanup 略過）。
+  launch_env=(SIMCTL_CHILD_LS_QA_API_URL="$api_url" SIMCTL_CHILD_LS_QA_ANON_KEY="$anon_key" SIMCTL_CHILD_LS_QA_UPLOAD_STALL_MS="$stall_ms")
+  [ -z "$fail_every_n" ] || launch_env+=(SIMCTL_CHILD_LS_QA_UPLOAD_FAIL_EVERY_N="$fail_every_n")
+  if ! env "${launch_env[@]}" xcrun simctl launch --terminate-running-process "$udid" com.leoyeh.littlesprout >> "$log" 2>&1; then
+    echo "✗ qa-e2e：upload-stall 登入通過，但以開關重啟 app 失敗（simctl launch）——見 ${log}" >&2
+    exit 1
+  fi
+  booted_by_me=0
+  echo "→ qa-e2e：app 已帶 STALL_MS=${stall_ms}${fail_every_n:+、FAIL_EVERY_N=${fail_every_n}} 重啟，模擬器 ${udid} 保持 Booted"
+fi
 if [ "$rc" -eq 0 ]; then
   echo "✓ qa-e2e：${scenario} 通過——截圖 ${shots} 張：${out}/screens/；Storage log：${out}/storage.log；xcresult：${result}"
   exit 0

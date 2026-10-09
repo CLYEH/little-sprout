@@ -147,6 +147,10 @@ BODY_RULES=
 #     handoff「Pen 路徑」欄要求回報的格式說明——標記 multi。
 # 字串資料每一行都是下面主迴圈直接讀的實際規則列，註解只能寫在這裡（LS170-BODY-RULES-START／END 區塊內是
 # 原樣多行字串值，不能夾雜 `#` 開頭的行內註解，會被解析成一條假規則）。
+# LS-427（池項 b0c9333e；LS-417 QA R1 與 LS-410 QA R1 同型事故）：qa 正文須含「不得 pause／stop 任何 docker 容器」——QA 要讓上傳停滯／失敗
+# 時一律用 `qa-e2e.sh upload-stall`／`LS_QA_UPLOAD_*` 開關，`docker pause supabase_storage_*` 被 Claude Code 分類器拒（連帶後續截圖呼叫全被拒），
+# 且共用容器 pause 會連累同機其他 QA；那句被刪即紅。釘這句而不釘 `LS_QA_UPLOAD_`：開關名在 qa.md 出現兩次（STALL_MS／FAIL_EVERY_N），
+# 「恰好一次」檢查（LS-341）釘不住；禁令句本身才是這條規則要保的意圖。
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold|LS-170：互動式本機驗證（模擬器對本機容器的多步驟操作）前先 supabase-lock.sh --hold，收工 --release
 ios-dev|pr-body-check.sh <f> --branch <分支> --verify|LS-186：gh pr create/edit 前先用完整旗標跑 pr-body-check.sh 並直接看 exit code
@@ -159,6 +163,7 @@ ios-dev|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd �
 merge-reviewer|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
 qa|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
 qa|qa-e2e.sh|LS-158：多步驟驗收（登入／發佈／瀏覽）優先 qa-e2e.sh 端到端驅動，mobile-mcp 降為輔助|multi
+qa|不得 pause／stop 任何 docker 容器|LS-427：需要讓上傳停滯或失敗一律用 qa-e2e.sh upload-stall／LS_QA_UPLOAD_* 開關，docker pause 被分類器拒且連累同機其他 QA
 ui-designer|--kill 只在 orchestrator 明示時|LS-180：切檔一律不殺 Pen 行程，--kill／--force-reload 只在 orchestrator 明示時使用
 ui-designer|收工 Pen 停在票檔|LS-180：設計票期間 Pen 停在票檔，收工不切回主 checkout|multi
 visual-reviewer|--kill 只在 orchestrator 明示時|LS-180：切檔一律不殺 Pen 行程，--kill／--force-reload 只在 orchestrator 明示時使用

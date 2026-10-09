@@ -38,7 +38,7 @@ final class QASmokeTests: XCTestCase {
         let env = try QAEnvironment.load()
         let driver = QADriver(env: env, testCase: self)
         switch env.scenario {
-        case .login:
+        case .login, .uploadStall:
             try await driver.runLogin()
         case .publish:
             try await driver.runPublish()

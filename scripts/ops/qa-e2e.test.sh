@@ -60,6 +60,8 @@ STUB
 cat > "$bin/xcrun" <<'STUB'
 #!/bin/bash
 touch "$FAKE_WORK/INVOKED-xcrun"; echo "xcrun $*" >> "$FAKE_WORK/calls.log"
+# LS-427：simctl launch 的 SIMCTL_CHILD_ 環境另記一行（upload-stall 重啟 app 帶開關的證據）
+[ "$1 $2" = "simctl launch" ] && echo "launch-env API=[${SIMCTL_CHILD_LS_QA_API_URL-unset}] STALL=[${SIMCTL_CHILD_LS_QA_UPLOAD_STALL_MS-unset}] FAIL=[${SIMCTL_CHILD_LS_QA_UPLOAD_FAIL_EVERY_N-unset}]" >> "$FAKE_WORK/calls.log"
 [ "${FAKE_XCRUN_MODE:-dumb}" = sim ] || exit 99
 case "$1 $2 $3" in
   "simctl list devicetypes") echo "iPhone 17 Pro (com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro)" ;;
@@ -326,6 +328,32 @@ log_hasnt '⑧b 不把影片灌進相簿（頭像 picker 只吃照片）' calls.
 log_has   '⑧b lock label 帶情境名' lock.log 'lock --hold LS-321 qa-e2e child-avatar --max-minutes 25'
 log_has   '⑧b 仍只跑 QASmokeTests' calls.log '-only-testing:LittleSproutUITests/QASmokeTests'
 reset_logs
+
+# ---- ⑨ upload-stall 情境（LS-427，來源 LS-417 R1：QA 用 docker pause 製造停滯被分類器擋；R2 M1：XCTest 結束會殺掉它啟的 app）----
+#      情境名被接受；登入通過後以 `simctl launch --terminate-running-process` + SIMCTL_CHILD_ 開關重啟 app（預設 4000ms、
+#      選用 FAIL_EVERY_N），模擬器不 shutdown；login 情境不 relaunch；值不是正整數＝設定錯，在碰任何工具之前 exit 2。
+out=$(FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" upload-stall); got=$?
+expect 0 '⑨a upload-stall 被接受、走完、證據落 upload-stall-<時間>/、印重啟摘要' "$got" "$out" '通過' '/qa-e2e/upload-stall-' \
+  'app 已帶 STALL_MS=4000 重啟，模擬器 FAKE-UDID-0001 保持 Booted'
+log_has   '⑨a 預設 STALL_MS=4000、FAIL_EVERY_N 未設' calls.log 'launch-env API=[http://127.0.0.1:54321] STALL=[4000] FAIL=[unset]'
+log_has   '⑨e upload-stall 以 --terminate-running-process 重啟 app' calls.log 'xcrun simctl launch --terminate-running-process FAKE-UDID-0001 com.leoyeh.littlesprout'
+reset_logs
+out=$(LS_QA_UPLOAD_STALL_MS=9000 LS_QA_UPLOAD_FAIL_EVERY_N=3 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" upload-stall); got=$?
+expect 0 '⑨b 環境變數覆寫 STALL_MS／FAIL_EVERY_N' "$got" "$out" '通過' 'STALL_MS=9000、FAIL_EVERY_N=3 重啟'
+log_has   '⑨b 覆寫值帶進 simctl launch 的 SIMCTL_CHILD_ 環境' calls.log 'STALL=[9000] FAIL=[3]'
+reset_logs
+out=$(LS_QA_UPLOAD_STALL_MS=9000 FAKE_SIM_STATE=Shutdown FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" upload-stall); got=$?
+expect 0 '⑨g upload-stall（自己 boot 的機）也不 shutdown' "$got" "$out" '通過'
+log_hasnt '⑨g upload-stall 不呼叫 simctl shutdown' calls.log 'simctl shutdown'
+reset_logs
+out=$(LS_QA_UPLOAD_STALL_MS=9000 FAKE_SIM_STATE=Shutdown FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 0 '⑨f login 情境走完' "$got" "$out" '通過'
+log_hasnt '⑨f login 不呼叫 simctl launch（不 relaunch）' calls.log 'simctl launch'
+log_has   '⑨f 對照：login（自己 boot）收工照舊 shutdown' calls.log 'simctl shutdown'
+reset_logs
+out=$(LS_QA_UPLOAD_STALL_MS=abc FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" upload-stall); got=$?
+expect 2 '⑨d STALL_MS 非正整數 → exit 2' "$got" "$out" 'LS_QA_UPLOAD_STALL_MS 須為正整數'
+no_tools '⑨d 壞值'
 
 if [ "$fail" -ne 0 ]; then echo "✗ qa-e2e 自測失敗" >&2; exit 1; fi
 echo "✓ qa-e2e 自測通過（${n} 組樣本）"
