@@ -206,8 +206,9 @@ MR_BODY="${MR_BODY} ${SELFCHECKSAMPLE}"
 # 必然含 pencil，會被新的「禁止工具」規則擋下）。merge-review R1 M2：RULES 表現在對 ios-dev 有必要工具要求
 # （Bash／Read／Edit／Write／Grep／Glob／Agent／三支 Linear 工具），這裡的乾淨清單須包含全部才能當合法基準。
 IOS_TOOLS="Bash, Read, Edit, Write, Grep, Glob, Agent, ${LINEAR3}"
-# LS-420：專案層 Explore（覆蓋內建、釘 haiku）的乾淨白名單——唯讀四支；Edit／Write／NotebookEdit／Agent／mcp__pencil__* 被禁。
-EXPLORE_TOOLS="Bash, Read, Grep, Glob"
+# LS-420：專案層 Explore（覆蓋內建、釘 haiku）的乾淨白名單——唯讀四支＋Linear 讀取（R1 M1：orchestrator 派 Explore 讀 comment 串）；
+# Edit／Write／NotebookEdit／Agent／mcp__pencil__*／mcp__linear__save_* 被禁。
+EXPLORE_TOOLS="Bash, Read, Grep, Glob, mcp__linear__get_issue, mcp__linear__list_issues, mcp__linear__list_comments, mcp__linear__get_document"
 # mk <agent> <tools 行的值|NONE> [<正文附加行>]：寫一份最小 agent 定義
 # model: 依 §1 政策（LS-400 MODEL_RULES）：ui-designer／merge-reviewer／visual-reviewer 是 opus，其餘 sonnet；MK_MODEL 可覆寫
 # （空字串＝不寫 model: 行）。
@@ -478,7 +479,9 @@ reset; MK_MODEL= mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "${NO
 reset; MK_MODEL='  sonnet  ' mk qa "$QA_TOOLS" "$QA_BODY"; expect 0 '㊺ model: 值前後空白 → 去空白後通過' 'qa.md：model: sonnet（符合 §1 政策）'
 reset; printf -- '---\r\nname: qa\r\ntools: %s\r\nmodel: sonnet\r\n---\r\n\r\n%s\r\n' "$QA_TOOLS" "$QA_BODY" > "$agents/qa.md"; expect 0 '㊺ CRLF 的 model: 行 → 通過' 'qa.md：model: sonnet（符合 §1 政策）'
 # LS-420：Explore 釘 haiku（唯讀搜尋走 Haiku 5.5）；改 sonnet／無 model: 行都紅；白名單含寫檔／派子 agent／Pencil 工具也紅（⑮ 的禁止表）
-reset; expect 0 '㊺ LS-420：Explore model: haiku → 通過' 'Explore.md：model: haiku（符合 §1 政策）' 'Explore.md：tools: 不含被禁工具（字首「Edit」「Write」「NotebookEdit」「Agent」「mcp__pencil__」）'
+reset; expect 0 '㊺ LS-420：Explore model: haiku → 通過' 'Explore.md：model: haiku（符合 §1 政策）' 'Explore.md：tools: 不含被禁工具（字首「Edit」「Write」「NotebookEdit」「Agent」「mcp__pencil__」「mcp__linear__save_」'
+reset; mk Explore "Bash, Read, Grep, Glob"; expect 1 '② LS-420 R1 M1：Explore 缺 Linear 讀取工具（get_issue／list_comments）→ exit 1' 'Explore.md：tools: 缺 mcp__linear__get_issue mcp__linear__list_comments'
+reset; mk Explore "${EXPLORE_TOOLS}, mcp__linear__save_comment"; expect 1 '⑮ LS-420 R1 M1：Explore tools: 含 mcp__linear__save_comment（任何 save_* 都算）→ exit 1' 'Explore.md：tools: 含被禁工具（字首「mcp__linear__save_」）'
 reset; MK_MODEL=sonnet mk Explore "$EXPLORE_TOOLS"; expect 1 '㊺ LS-420：Explore 升 sonnet → exit 1' 'Explore.md：model: 是「sonnet」，§1 政策要「haiku」'
 reset; MK_MODEL= mk Explore "$EXPLORE_TOOLS"; expect 1 '㊺ LS-420：Explore 無 model: 行（會繼承 Fable）→ exit 1' 'Explore.md：無 model: 行'
 reset; mk Explore "${EXPLORE_TOOLS}, Edit"; expect 1 '⑮ LS-420：Explore tools: 含 Edit → exit 1' 'Explore.md：tools: 含被禁工具（字首「Edit」）'

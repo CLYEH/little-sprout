@@ -1,7 +1,7 @@
 ---
 name: Explore
 description: 快速唯讀程式庫搜尋 agent（覆蓋 Claude Code 內建 Explore，釘 Haiku 5.5）。orchestrator 與 ios-dev／ui-designer／visual-reviewer 要「跨多目錄找東西、讀大檔回結論」時派它；只回結論與 `檔:行` 引據，不貼整檔、不改檔。
-tools: Bash, Read, Grep, Glob
+tools: Bash, Read, Grep, Glob, mcp__linear__get_issue, mcp__linear__list_issues, mcp__linear__list_comments, mcp__linear__get_document, mcp__linear__list_documents, mcp__linear__list_cycles
 model: haiku
 ---
 
@@ -17,7 +17,8 @@ model: haiku
 
 ## 不准
 
-- 不改任何檔案、不 commit、不 push、不貼 Linear、不派子 agent（本定義刻意沒有 Edit／Write／Agent）。
+- 不改任何檔案、不 commit、不 push、不派子 agent（本定義刻意沒有 Edit／Write／Agent）。
+- Linear 只讀：`get_issue`／`list_issues`／`list_comments`／`get_document`／`list_documents`／`list_cycles`（orchestrator 常派你讀整串 comment 回結論，LS-239）；不貼 comment、不改票（本定義刻意沒有任何 `mcp__linear__save_*`）。
 - Bash 只跑唯讀命令（`git grep`／`git log`／`ls`／`wc`／`rg`／`sed -n`）；不跑會寫檔、裝東西或動模擬器的命令。
 - 不碰 `mcp__pencil__*`、不開 `.pen`（.pen 的結構用 `python3 -c` 唯讀解析 JSON 即可）。
 

@@ -52,7 +52,7 @@ dead-code-sweeper|Bash ${LINEAR3}
 ui-designer|mcp__pencil__execute
 visual-reviewer|mcp__pencil__execute
 ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}
-Explore|Bash Read Grep Glob"
+Explore|Bash Read Grep Glob mcp__linear__get_issue mcp__linear__list_comments"
 
 # 正文必含字樣規則表（LS-170）：<agent>|<字樣>——規約段落被刪即紅。先給空值、再由標記區塊填入：自測的 mutation 負控用 awk 整段
 # 拿掉標記區塊（留下空表）驗「拿掉規則後負樣本變綠」，證明紅是這條規則造成的（同 linear-issue-check.test.sh 慣例）。
@@ -305,8 +305,9 @@ FORBIDDEN_RULES="ios-dev|mcp__pencil__"
 # 同一列可列多個字首（空白分隔）。另起一行 `+=` 而非改寫上一行：⑮ 的 mutation 靠整行比對清空 ios-dev 那列，
 # LS-376 的 mutation 靠拿掉這一行，兩者各自獨立。
 PEN_WRITE="mcp__pencil__execute mcp__pencil__read_skill mcp__pencil__browser"; FORBIDDEN_RULES+=$'\n'"qa|${PEN_WRITE}"$'\n'"merge-reviewer|${PEN_WRITE}"$'\n'"dead-code-sweeper|${PEN_WRITE}"
-# LS-420：專案層 Explore（覆蓋內建、釘 haiku）必須唯讀——不得持有寫檔／派子 agent／Pencil 工具；沒有 tools: 行同樣違規。
-FORBIDDEN_RULES+=$'\n'"Explore|Edit Write NotebookEdit Agent mcp__pencil__"
+# LS-420：專案層 Explore（覆蓋內建、釘 haiku）必須唯讀——不得持有寫檔／派子 agent／Pencil 工具，Linear 只准讀（RULES 要求
+# get_issue／list_comments，merge-review R1 M1：orchestrator 常派 Explore 讀整串 comment）、任何 mcp__linear__save_* 即紅；沒有 tools: 行同樣違規。
+FORBIDDEN_RULES+=$'\n'"Explore|Edit Write NotebookEdit Agent mcp__pencil__ mcp__linear__save_ mcp__linear__create_ mcp__linear__delete_ mcp__linear__update_"
 fn=0
 while IFS='|' read -r agent forbid; do
   [ -n "$agent" ] || continue
