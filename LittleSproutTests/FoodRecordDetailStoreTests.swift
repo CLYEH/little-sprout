@@ -30,6 +30,7 @@ final class FoodRecordDetailStoreTests: XCTestCase {
         func uploadPhoto(childID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
             throw Unused()
         }
+        func softDeleteMedia(mediaIDs: [UUID]) async throws { throw Unused() }
     }
 
     private struct Unused: Error {}
@@ -261,6 +262,7 @@ final class FoodRecordDetailStoreTests: XCTestCase {
         func uploadPhoto(childID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
             throw Unused()
         }
+        func softDeleteMedia(mediaIDs: [UUID]) async throws { throw Unused() }
     }
 
     // MARK: - LS-380 R3：router 顯示的那一筆

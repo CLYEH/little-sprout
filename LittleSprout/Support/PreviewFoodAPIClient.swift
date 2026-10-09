@@ -74,6 +74,8 @@ final class PreviewFoodAPIClient: FoodAPIClient, @unchecked Sendable {
     func uploadPhoto(childID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID {
         UUID()
     }
+
+    func softDeleteMedia(mediaIDs: [UUID]) async throws {}
 }
 
 extension FamilyPhoto {

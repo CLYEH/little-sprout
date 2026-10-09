@@ -14,6 +14,7 @@ import SwiftUI
 ///     `family_id`；`media_select` RLS 另外會讓上傳者看到自己已軟刪的列，所以 `deleted_at` 要自己濾）
 ///   - `signedURLs` → Storage `media` bucket `createSignedURLs`（縮圖路徑）
 ///   - `uploadPhoto` → 既有 `MediaUploadService.uploadPhoto`（Storage 原檔＋縮圖 → `media` 列，同日記）
+///   - `softDeleteMedia` → 既有 `MediaUploadService.softDeleteMedia`（`media.deleted_at`，LS-430；不是新 RPC）
 ///
 /// 錯誤一律映射為 `AppError`，不直接往外拋 PostgREST 的錯誤型別（同 `GrowthAPIClient`）。
 protocol FoodAPIClient: Sendable {
@@ -28,6 +29,9 @@ protocol FoodAPIClient: Sendable {
     func signedURLs(forStoragePaths paths: [String]) async throws -> [String: URL]
     /// 「從手機加入」：上傳到該寶貝所屬家庭，回傳新建 `media` 列的 id。
     func uploadPhoto(childID: UUID, data: Data, fileExtension: String, pixelSize: PixelSize) async throws -> UUID
+    /// LS-430：放棄「從手機加入」已上傳、但 `upsert_child_food_record` 確定沒套用的照片時，軟刪那列 `media`
+    /// （孤兒清理；後端另有每日 job 兜底，見 `FoodRecordEditorStore.abandonUnboundUpload`）。
+    func softDeleteMedia(mediaIDs: [UUID]) async throws
 }
 
 /// 03d 一次最多列多少張家庭照片（`created_at` 新到舊）。不分頁：這是「挑一張最近的照片」的選擇器，

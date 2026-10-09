@@ -75,6 +75,8 @@ struct FoodRecordSheet: View {
         .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
         .interactiveDismissDisabled(store.saveState.isSubmitting)
+        // LS-430：取消／下滑關閉時，把上傳了卻沒綁上記錄的手機照片軟刪（儲存成功＝已綁定，no-op）。
+        .onDisappear { Task { await store.abandonUnboundUpload() } }
         .sheet(isPresented: $showsDatePicker) {
             FoodRecordDatePickerSheet(selection: $store.firstTriedOn)
         }

@@ -127,6 +127,11 @@ final class SupabaseFoodAPIClient: FoodAPIClient {
         )
     }
 
+    /// `softDeleteMedia` 自己已把錯誤映射成 `AppError`（`MediaUploadService+SoftDelete`）。
+    func softDeleteMedia(mediaIDs: [UUID]) async throws {
+        try await mediaUploadService.softDeleteMedia(mediaIDs: mediaIDs)
+    }
+
     /// `media.family_id` 必須與記錄同家庭（`child_food_records` 複合外鍵 `(family_id, media_id)`）——
     /// 以寶貝所屬家庭為準（`children_select` RLS：同家庭成員可讀）。
     private func familyID(ofChild childID: UUID) async throws -> UUID {
