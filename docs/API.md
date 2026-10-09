@@ -1,4 +1,4 @@
-# API.md — Little Sprout 後端契約（iOS 呼叫端視角）
+# API.md — Sprout Day 後端契約（iOS 呼叫端視角）
 
 > **這份文件是給 ios-dev 寫 client 程式碼時查的，不是給 DBA 看 schema 的。**
 > 契約的真身是 `supabase/migrations/*.sql`（PostgREST 自動生成 + SECURITY DEFINER RPC）；
@@ -510,6 +510,34 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
   birthday`（見上方 `children` 段）；違反同樣是標準碼 `23514`，不新開 `LSnnn`
   碼（沿用本表 `note`／`reaction` 兩支既有 CHECK 的同一組裁量，見 migration
   檔頭）。
+- **飲食記錄照片的 `media` 生命週期（LS-430，LS-425 C3a）**：「從手機加入」的照片先以一般
+  `media` 列上傳（同日記：Storage 原檔＋縮圖＋`media` INSERT），之後才由
+  `upsert_child_food_record(p_media_id)` 綁到記錄；C3a 裁決它**只在該筆記錄內可見**，不進
+  相簿、不進時間軸。「屬於飲食記錄」＝存在**未軟刪**的 `child_food_records.media_id = media.id`
+  （反查索引 `child_food_records_family_media_idx`；`media` 沒有 purpose／origin 欄位）。
+  - **清理（立即）**：`child_food_records` 上的 AFTER UPDATE trigger
+    `child_food_records_release_media`（`private.release_food_record_media()`，`SECURITY
+    DEFINER`）——舊 `media_id` 因「換成別張／`upsert` 傳 `null`（不用照片）／記錄軟刪」而不再被
+    這一列引用時，若該 `media` 沒有任何其他引用（其他未軟刪的飲食記錄、`diary_media`、
+    `album_media`）就設 `deleted_at = now()`，走既有 30 天軟刪＋purge 流程，額度由
+    `media_storage_sync()` 回落。在相簿／日記裡的照片（含 03d「從家庭相簿挑」選到的）不受影響。
+    先對舊 `media` 列取 `FOR UPDATE` 再判斷引用，避免與同時掛上新記錄的交易互踩；反方向（本交易先軟刪、
+    另一交易後掛上）殘留一個窄窗——新記錄會指向已軟刪 `media`，畫面為「照片沒有載入」。
+  - **清理（兜底）**：`private.soft_delete_unreferenced_media()` 每日 job（§6）的引用判定自 LS-430 起
+    也認**未軟刪**的飲食記錄——**修正前**掛在有效記錄上、不在相簿／日記的手機照片，上傳滿 24 小時就被
+    誤軟刪。client 取消、upsert 失敗後沒能清、write skew 漏掉的未綁定 `media` 由它在 24 小時後掃掉。
+  - **client 放棄路徑**：`FoodRecordEditorStore.abandonUnboundUpload()`（取消／下滑關閉／換一張／不用照片）
+    對**本次新上傳、確定未綁定**的 `media` 呼叫既有 `media` 軟刪（非新 RPC）。upsert 失敗若屬網路中斷／
+    逾時／5xx（伺服器可能已提交）則不軟刪，交給兜底。
+  - **讀取面**：時間軸 `feed_items(kind='media')` 不列「只屬於飲食記錄」的照片
+    （`private.media_hidden_as_food_record_only()`：掛在有效飲食記錄、不在任何日記、不在任何相簿；
+    `feed_sync_media()` 與 `child_food_records_hide_media_feed` trigger 共用）。相簿查詢一律經
+    `album_media`、`food_first` feed 卡只經 `child_food_records.media_id`，不會列出這類照片。
+    **已知殘留**：(1) 03d「從家庭相簿挑」（`FoodAPIClient.listFamilyPhotos`）查整個家庭 `media`，
+    別筆記錄的手機照片會出現在挑選器；(2) 上傳到綁定之間（數秒）時間軸短暫有一張未歸屬照片卡；
+    (3) `media_notify_insert`（「新增了 N 張照片」家庭通知）在 INSERT 當下發出。
+  - 驗證：`supabase/tests/126_food_record_media_orphan.sql`（四段：每日清理認得飲食記錄引用／
+    刪除記錄／換照片與不用照片／時間軸不列）。
 
 ### `media`
 - `storage_path` 必須符合 `{family_id}/{yyyy}/{mm}/{media_id}.{ext}`（見 §6），且有
@@ -3035,7 +3063,9 @@ pg_net 呼叫範本」小節）。
   （19:30 UTC，`purge_expired` 之後 30 分鐘），與 `purge_expired()` 各自獨立、互不
   依賴。`supabase/tests/109_soft_delete_unreferenced_media.sql` 覆蓋三案矩陣（未
   引用超期／未引用未超期／已引用）＋24 小時邊界＋額度回落＋冪等重跑＋預設寬限期
-  迴歸。
+  迴歸。**LS-430 起「已引用」也包含未軟刪的飲食記錄
+  （`child_food_records.media_id`），見 §3「`child_food_records`」末段，測試在
+  `supabase/tests/126_food_record_media_orphan.sql`。**
 - `purge-storage` Edge Function 的 `scanOrphanStorageObjects()`（LS-222 起抽到
   `purge-storage/orphan_scan.ts`）——沿用上一段「目前沒有任何東西會觸發這支
   Edge Function」的既有部署缺口（正式站排程接線由 orchestrator 依 LS-78 狀態

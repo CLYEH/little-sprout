@@ -812,6 +812,24 @@ race_case "同一筆成長紀錄：FOR KEY SHARE 佔鎖時 delete_growth_record 
   growth_record_delete_vs_edit_setup.sql growth_record_delete_vs_edit_s1_keyshare.sql \
   growth_record_delete_vs_edit_s2_delete.sql growth_record_delete_vs_edit_verify.sql
 
+# LS-435（池 `e6674427`，來源 LS-419 merge-review R1 i1）：上面 LS-419 這組的同一個缺口也存在於
+# 「軟刪先動」的 diary／album／comment／children 四件組——它們的阻塞來自軟刪交易自己的 UPDATE，
+# 拿掉 set_*_deleted 的 `for update` 仍綠，檔頭「刪除 RPC 的鎖是唯一防線」不成立。各補一個
+# FOR KEY SHARE 鎖強度探針方向（比照 growth_record 的 s1_keyshare）：S1 佔 FOR KEY SHARE 3 秒，
+# S2 呼叫刪除 RPC 必須被阻塞（拿掉 for update 就不等待而紅）。理由見各組 _s1_keyshare.sql 檔頭。
+race_case "同一篇日記：FOR KEY SHARE 佔鎖時 set_diary_deleted 必須被阻塞（授權判斷前先 for update）" \
+  diary_edit_vs_delete_setup.sql diary_edit_vs_delete_s1_keyshare.sql \
+  diary_edit_vs_delete_s2_keyshare_delete.sql diary_edit_vs_delete_verify_delete_won.sql
+race_case "同一本相簿：FOR KEY SHARE 佔鎖時 set_album_deleted 必須被阻塞（授權判斷前先 for update）" \
+  album_edit_vs_delete_setup.sql album_edit_vs_delete_s1_keyshare.sql \
+  album_edit_vs_delete_s2_keyshare_delete.sql album_edit_vs_delete_verify_keyshare.sql
+race_case "同一則留言：FOR KEY SHARE 佔鎖時 set_comment_deleted 必須被阻塞（授權判斷前先 for update）" \
+  comment_edit_vs_delete_setup.sql comment_edit_vs_delete_s1_keyshare.sql \
+  comment_edit_vs_delete_s2_keyshare_delete.sql comment_edit_vs_delete_verify_keyshare.sql
+race_case "同一個孩子檔案：FOR KEY SHARE 佔鎖時 set_child_deleted 必須被阻塞（授權判斷前先 for update）" \
+  children_edit_vs_delete_setup.sql children_edit_vs_delete_s1_keyshare.sql \
+  children_edit_vs_delete_s2_keyshare_delete.sql children_edit_vs_delete_verify_delete_won.sql
+
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
 -- LS-96 池項 8519d8a4 第 3 條（LS-172 merge-review R2-i3）：兩支併發情境的

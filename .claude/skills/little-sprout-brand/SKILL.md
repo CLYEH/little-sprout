@@ -5,6 +5,8 @@ description: Little Sprout（萌芽日記）設計語言定案——LS-46 十一
 
 # Little Sprout 設計語言（定案版）
 
+> 沿革：2026-10-09 定名 Sprout Day（原 Little Sprout；LS-148／LS-433）。本 skill 名稱與下文既有的「Little Sprout」「LITTLE SPROUT」字樣為定名前寫法，保持原樣；歡迎頁相紙壓印字是否改成 SPROUT DAY 屬設計決定，待字標設計票（LS-148 子票）處理，之前稿面仍為 LITTLE SPROUT。
+
 定案來源：`design/littlesprout.pen`（LS-46 R11 APPROVE，HEAD `651a9ff`；節點數基線隨最新 landing 更新，見 COLLABORATION §7 design-landing 列，本檔不記數字）。本 skill 是它的文字鏡像——**稿與本檔衝突時以稿為準，並回頭修本檔**。
 
 ## 靈魂（一句話）

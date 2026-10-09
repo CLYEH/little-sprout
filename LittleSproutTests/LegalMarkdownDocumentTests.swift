@@ -204,7 +204,7 @@ final class LegalMarkdownDocumentTests: XCTestCase {
 
     private static func fixtureHeader(version: String, effectiveDate: String) -> String {
         """
-        # 萌芽日記 Little Sprout 使用條款
+        # 萌芽日記 Sprout Day 使用條款
 
         > **草稿（DRAFT）——尚未生效。** 內部提醒文字，不應出現在本文區塊裡。
 

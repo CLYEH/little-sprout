@@ -109,6 +109,19 @@ git -C "$base" -c user.name=t -c user.email=t@t commit -q --allow-empty -m init
 git -C "$base" worktree add -q "$work/wt/LS-321" -b wt-321
 git -C "$base" worktree add -q "$work/wt/plain" -b wt-plain
 wt="$work/wt/LS-321"
+# LS-433：qa-e2e.sh 的 bundle id 讀 project.yml 的 app target（檔內第一個 PRODUCT_BUNDLE_IDENTIFIER，測試 target 排後面）；
+# 夾具用刻意不同於真實 app 的 id，證明值來自檔案而不是腳本寫死。
+cat > "$wt/project.yml" <<'YML'
+targets:
+  LittleSprout:
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.fixture.app
+  LittleSproutTests:
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.fixture.tests
+YML
 
 run() {   # run <目錄> [參數…]；FAKE_* 由呼叫端 export
   ( cd "$1" && shift && PATH="$bin:$PATH" bash "$script" "$@" 2>&1 )
@@ -336,7 +349,7 @@ out=$(FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" upload-stall); got=$
 expect 0 '⑨a upload-stall 被接受、走完、證據落 upload-stall-<時間>/、印重啟摘要' "$got" "$out" '通過' '/qa-e2e/upload-stall-' \
   'app 已帶 STALL_MS=4000 重啟，模擬器 FAKE-UDID-0001 保持 Booted'
 log_has   '⑨a 預設 STALL_MS=4000、FAIL_EVERY_N 未設' calls.log 'launch-env API=[http://127.0.0.1:54321] STALL=[4000] FAIL=[unset]'
-log_has   '⑨e upload-stall 以 --terminate-running-process 重啟 app' calls.log 'xcrun simctl launch --terminate-running-process FAKE-UDID-0001 com.leoyeh.littlesprout'
+log_has   '⑨e upload-stall 以 --terminate-running-process 重啟 app' calls.log 'xcrun simctl launch --terminate-running-process FAKE-UDID-0001 com.example.fixture.app'
 reset_logs
 out=$(LS_QA_UPLOAD_STALL_MS=9000 LS_QA_UPLOAD_FAIL_EVERY_N=3 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" upload-stall); got=$?
 expect 0 '⑨b 環境變數覆寫 STALL_MS／FAIL_EVERY_N' "$got" "$out" '通過' 'STALL_MS=9000、FAIL_EVERY_N=3 重啟'

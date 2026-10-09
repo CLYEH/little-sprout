@@ -1,4 +1,4 @@
-# 萌芽日記 Little Sprout
+# 萌芽日記 Sprout Day
 
 私密家庭相簿與日記 iOS app（SwiftUI + Supabase）。協作規約見 `CLAUDE.md` 與 `docs/COLLABORATION.md`，產品與架構見 `docs/PLAN.md`。
 
