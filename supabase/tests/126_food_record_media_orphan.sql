@@ -248,3 +248,87 @@ end;
 $$;
 
 rollback;
+
+-- ===========================================================================
+-- 4. 讀取面（C3a：只在該筆記錄內可見，不進時間軸當日卡）——先紅
+--    feed_sync_media 對每一列 media INSERT 都寫 feed_items(kind='media')，飲食專屬照片因此
+--    會以獨立照片卡出現在時間軸。判準＝「掛在有效飲食記錄上、且不在任何日記／相簿」。
+--    a) 上傳（media INSERT 先於綁定）再綁到記錄 → feed_items／feed_item_children 的 media 列消失
+--    b) 之後對該 media 的 UPDATE（feed_sync_media 先刪後寫）不會把它寫回時間軸
+--    c) 同一張在相簿裡（03d 挑家庭照片）→ 綁定後時間軸的卡仍在
+--    d) 沒綁記錄的一般照片 → 時間軸的卡仍在（對照組，證明沒有把所有 media 都藏起來）
+--    e) 記錄刪除 → media 軟刪，時間軸沒有殘留列
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_now timestamptz := clock_timestamp();
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_child uuid := '2a000000-0000-4000-8000-000000000001';
+  v_album uuid := 'f4300000-0000-4000-8000-0000000000b4';
+  v_food_only uuid := 'f4300000-0000-4000-8000-000000000041';
+  v_in_album uuid := 'f4300000-0000-4000-8000-000000000042';
+  v_plain uuid := 'f4300000-0000-4000-8000-000000000043';
+  v_rec uuid;
+  v_n int;
+begin
+  insert into public.albums (id, family_id, title, created_by) values (v_album, v_family, 'LS430 相簿 4', v_owner);
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, created_at)
+    select m, v_family, v_family::text || '/2026/10/' || m::text || '.jpg', 'photo', 1000, v_now, 10, 10, v_owner, v_now
+      from unnest(array[v_food_only, v_in_album, v_plain]) as m;
+  insert into public.media_children (media_id, child_id, family_id) values (v_food_only, v_child, v_family);
+  insert into public.album_media (album_id, media_id, family_id) values (v_album, v_in_album, v_family);
+
+  -- 前提：三張都已因 INSERT 在時間軸（現況行為）
+  select count(*) into v_n from public.feed_items where kind = 'media' and ref_id in (v_food_only, v_in_album, v_plain);
+  if v_n <> 3 then
+    raise exception 'FAIL（前提）：三張剛上傳的照片應都有 feed_items 列，實際 %', v_n;
+  end if;
+
+  perform set_config('request.jwt.claims', json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_rec := (public.upsert_child_food_record(v_child, 'banana', current_date, v_food_only, null, null)).id;
+  perform public.upsert_child_food_record(v_child, 'mango', current_date, v_in_album, null, null);
+  reset role;
+
+  -- a)
+  if exists (select 1 from public.feed_items where kind = 'media' and ref_id = v_food_only) then
+    raise exception 'FAIL：只掛在飲食記錄上的照片（案 a）仍在時間軸 feed_items（kind=media）——違反 C3a';
+  end if;
+  if exists (select 1 from public.feed_item_children where kind = 'media' and ref_id = v_food_only) then
+    raise exception 'FAIL：只掛在飲食記錄上的照片（案 a）在 feed_item_children 留有殘列';
+  end if;
+
+  -- b)
+  update public.media set taken_at = v_now - interval '1 day' where id = v_food_only;
+  if exists (select 1 from public.feed_items where kind = 'media' and ref_id = v_food_only) then
+    raise exception 'FAIL：對飲食專屬照片的後續 UPDATE（案 b）把它寫回時間軸了（feed_sync_media 先刪後寫）';
+  end if;
+
+  -- c) d)
+  if not exists (select 1 from public.feed_items where kind = 'media' and ref_id = v_in_album) then
+    raise exception 'FAIL：同時在相簿的照片（案 c）綁到飲食記錄後，時間軸的卡不該消失';
+  end if;
+  if not exists (select 1 from public.feed_items where kind = 'media' and ref_id = v_plain) then
+    raise exception 'FAIL：沒綁記錄的一般照片（案 d）不該被移出時間軸';
+  end if;
+
+  -- e)
+  perform set_config('request.jwt.claims', json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.delete_child_food_record(v_rec);
+  reset role;
+  if exists (select 1 from public.feed_items where kind = 'media' and ref_id = v_food_only) then
+    raise exception 'FAIL：記錄刪除（案 e）後，時間軸不該又出現這張照片';
+  end if;
+  if not exists (select 1 from public.media where id = v_food_only and deleted_at is not null) then
+    raise exception 'FAIL：記錄刪除（案 e）後照片應已軟刪';
+  end if;
+
+  raise notice 'ok：飲食專屬照片不進時間軸（含後續 UPDATE 不寫回）；相簿裡的／一般照片不受影響';
+end;
+$$;
+
+rollback;
