@@ -11,13 +11,15 @@ import SwiftUI
 ///   （`Sln4U`，1 歲 1 個月）；玉米 2026/2/20 只有日期（`A5xBK`，10 個月大）；南瓜 2025/10/20 喜歡＋一句話、沒照片
 ///   （`XYZJ5`，6 個月大）。
 /// - `dairy`：只有一張優格卡（乳製品）——穀物根莖是圖鑑預設第一類，Book Row 導向測試要用別類才驗得出「選到該類」。
+/// - `paper`（LS-446）：照片卡＋食物卡＋已按讚日記卡（附照三張、第三張疊「還有 N 張」）＋未按讚日記卡並列，
+///   給 `DiaryCardPaperScreenshotUITests` 對稿面 `Qohx3`（日記卡改整張紙面）截淺／深／AX3。
 ///
 /// `LS_FOOD_FIRST_SCHEME=dark` 釘深色（同 `diaryCardBabyCaptionHost`）。照片用 `PreviewFoodRecordDetailAPIClient`
 /// 同一張本機佔位照（稿面示範照本來就是佔位，Design Note `r7slt2`）。`\.foodAPIClient` 注入 `PreviewFoodAPIClient`（完整 274 種
 /// 目錄＋這幾筆記錄），兩個目的地才推得進去。
 extension TapTargetGateHarness {
     enum FoodFirstCardFixture: String {
-        case spec, dairy
+        case spec, dairy, paper
     }
 
     @MainActor
@@ -87,6 +89,7 @@ private enum FoodFirstCardSample {
         switch fixture {
         case .spec: [taro, bread, corn, pumpkin]
         case .dairy: [yogurt]
+        case .paper: [bread]
         }
     }
 
@@ -126,8 +129,56 @@ private enum FoodFirstCardSample {
                 at: 1
             )
         }
+        if fixture == .paper {
+            entries = paperEntries(foodEntry: entries[0], store: store)
+        }
         store.seedForPreview(entries: entries, familyID: familyID)
         return store
+    }
+
+    /// LS-446：`paper` 固定版——照片卡（最新）→ 已按讚日記卡（附照）→ 未按讚日記卡 → 食物卡。反應種子與卡片同時種進 `store`。
+    @MainActor
+    private static func paperEntries(foodEntry: TimelineEntry, store: TimelineStore) -> [TimelineEntry] {
+        func photo(_ id: UUID = UUID()) -> MediaContent {
+            MediaContent(
+                id: id, type: .photo, width: 4, height: 3, thumbWidth: nil, thumbHeight: nil,
+                storagePath: "preview/paper.jpg", isThumbnail: true,
+                signedURL: PreviewFoodRecordDetailAPIClient.samplePhotoURL, durationSeconds: nil
+            )
+        }
+        let day = BirthdayFormat.date(fromWireString: "2026-08-22")!
+        let dayBefore = BirthdayFormat.date(fromWireString: "2026-08-21")!
+        let mediaID = UUID()
+        let likedDiaryID = UUID()
+        let idleDiaryID = UUID()
+        store.seedReactionState(
+            ReactionState(count: 2, reactedByMe: false), forKey: TimelineEntry.id(kind: .media, refId: mediaID)
+        )
+        store.seedReactionState(
+            ReactionState(count: 4, reactedByMe: true), forKey: TimelineEntry.id(kind: .diary, refId: likedDiaryID)
+        )
+        store.seedReactionState(
+            ReactionState(count: 1, reactedByMe: false), forKey: TimelineEntry.id(kind: .diary, refId: idleDiaryID)
+        )
+        return [
+            TimelineEntry(
+                kind: .media, refId: mediaID, occurredAt: day, childIds: [child.id], content: .media(photo(mediaID))
+            ),
+            TimelineEntry(
+                kind: .diary, refId: likedDiaryID, occurredAt: dayBefore, childIds: [child.id],
+                content: .diary(DiaryContent(
+                    body: "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。", entryDate: dayBefore,
+                    previewPhotos: [photo(), photo(), photo()], totalPhotoCount: 5
+                ))
+            ),
+            TimelineEntry(
+                kind: .diary, refId: idleDiaryID, occurredAt: dayBefore, childIds: [child.id],
+                content: .diary(DiaryContent(
+                    body: "午睡醒來自己坐在床上玩了好久。", entryDate: dayBefore, previewPhotos: [], totalPhotoCount: 0
+                ))
+            ),
+            foodEntry
+        ]
     }
 
     private static func entry(_ record: ChildFoodRecord) -> TimelineEntry {
