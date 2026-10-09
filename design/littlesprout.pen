@@ -270712,6 +270712,1423 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "d1LCPb",
+      "x": 16690,
+      "y": 60600,
+      "name": "Food / 03g 從家庭相簿挑一張 · 相簿還沒有照片 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "avEyX",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)"
+        },
+        {
+          "type": "frame",
+          "id": "e5u83",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "VS5kO",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "clxfy",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 62,
+              "name": "Picker Sheet",
+              "width": 393,
+              "height": 790,
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "vuo72",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "qyB0R",
+                      "name": "Grabber",
+                      "fill": "$border",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "J8gyE",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "從家庭相簿挑一張",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "O4yUMq",
+                      "x": 0,
+                      "y": 61,
+                      "name": "Head Sub",
+                      "enabled": false,
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container(345)",
+                      "content": "點一張照片，再按「用這張」。",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ny974",
+                  "name": "Photo Grid",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Jzr30",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Section · 8月20日那天拍的",
+                      "enabled": false,
+                      "width": "fill_container(345)",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "cNrsi",
+                          "name": "Section Label",
+                          "fill": "$text-primary",
+                          "content": "今天拍的",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "N5ozE",
+                          "name": "Grid Row",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "PuA3T",
+                              "name": "Thumb（已選）",
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-toddler.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$text-primary",
+                              "strokeWidth": 3,
+                              "strokeAlignment": "inner",
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "h6jgTb",
+                                  "x": 83,
+                                  "y": -4,
+                                  "name": "Selected Badge",
+                                  "width": 24,
+                                  "height": 24,
+                                  "fill": "$text-primary",
+                                  "cornerRadius": "$radius-full",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "CTRAN",
+                                      "name": "Check Icon",
+                                      "width": 14,
+                                      "height": 14,
+                                      "icon": "check",
+                                      "library": "lucide",
+                                      "fill": "$surface"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "e9TPv",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-hero.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "hOqPY",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-timeline-v2.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DFj9G",
+                      "x": 0,
+                      "y": 153,
+                      "name": "Section · 更早",
+                      "enabled": false,
+                      "width": "fill_container(345)",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ML6Zf",
+                          "name": "Section Label",
+                          "fill": "$text-primary",
+                          "content": "其他照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "N3SCu",
+                          "name": "Grid Row",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "U48hC9",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-invite.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "szutl",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-join.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "KOZ8b",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-portrait.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "l6K55w",
+                          "name": "Grid Row",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "xzUdy",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-album-cover.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "aWMxa",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "rTtLi",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "o2aLcm",
+                      "name": "Empty Line",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "家庭相簿裡還沒有照片，\n可以改用「從手機加入」。",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "KcTdf",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "children": [
+                    {
+                      "id": "M4G3T",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "From Phone Button（相簿空時取代「用這張」）",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "enabled": true,
+                          "icon": "smartphone"
+                        },
+                        "w7CUP": {
+                          "content": "從手機加入"
+                        }
+                      }
+                    },
+                    {
+                      "id": "B0BPS",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "NY37b",
+      "x": 17163,
+      "y": 60600,
+      "name": "Food / 03g 從家庭相簿挑一張 · 相簿還沒有照片 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "RBE6O",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)"
+        },
+        {
+          "type": "frame",
+          "id": "Z8O4UL",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "z06D5",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "yai5S",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 62,
+              "name": "Picker Sheet",
+              "width": 393,
+              "height": 790,
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Zm1YM",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "TfONe",
+                      "name": "Grabber",
+                      "fill": "$border",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "joC3z",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "從家庭相簿挑一張",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "qkS0U",
+                      "x": 0,
+                      "y": 61,
+                      "name": "Head Sub",
+                      "enabled": false,
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container(345)",
+                      "content": "點一張照片，再按「用這張」。",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "VmZLK",
+                  "name": "Photo Grid",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "jw07B",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Section · 8月20日那天拍的",
+                      "enabled": false,
+                      "width": "fill_container(345)",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "SSwRg",
+                          "name": "Section Label",
+                          "fill": "$text-primary",
+                          "content": "今天拍的",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "o5SjCg",
+                          "name": "Grid Row",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "dAkTa",
+                              "name": "Thumb（已選）",
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-toddler.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$text-primary",
+                              "strokeWidth": 3,
+                              "strokeAlignment": "inner",
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "UCmx8",
+                                  "x": 83,
+                                  "y": -4,
+                                  "name": "Selected Badge",
+                                  "width": 24,
+                                  "height": 24,
+                                  "fill": "$text-primary",
+                                  "cornerRadius": "$radius-full",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "qvP3Y",
+                                      "name": "Check Icon",
+                                      "width": 14,
+                                      "height": 14,
+                                      "icon": "check",
+                                      "library": "lucide",
+                                      "fill": "$surface"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "p8SRE",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-hero.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "lSvcE",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-timeline-v2.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "E3vDwY",
+                      "x": 0,
+                      "y": 153,
+                      "name": "Section · 更早",
+                      "enabled": false,
+                      "width": "fill_container(345)",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "dS0Y2",
+                          "name": "Section Label",
+                          "fill": "$text-primary",
+                          "content": "其他照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "YUNTZ",
+                          "name": "Grid Row",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "O0kUcu",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-invite.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "VD5tu",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-join.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Junvo",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-portrait.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ioO76",
+                          "name": "Grid Row",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "HoyLj",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-album-cover.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "okW62",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "EzICv",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 104,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "nxTYz",
+                      "name": "Empty Line",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "家庭相簿裡還沒有照片，\n可以改用「從手機加入」。",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Y1orXl",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "children": [
+                    {
+                      "id": "XqH0x",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "From Phone Button（相簿空時取代「用這張」）",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "enabled": true,
+                          "icon": "smartphone"
+                        },
+                        "w7CUP": {
+                          "content": "從手機加入"
+                        }
+                      }
+                    },
+                    {
+                      "id": "KmNzH",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "k4qPK",
+      "x": 17636,
+      "y": 60600,
+      "name": "A11y / 03g 從家庭相簿挑一張 · 相簿還沒有照片 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 1.3497652582159625
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.01995305164319249
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "dPjQa",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)"
+        },
+        {
+          "type": "frame",
+          "id": "G3O9W",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 852,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "j6AN7",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 852,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "dNJLD",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 62,
+              "name": "Picker Sheet",
+              "width": 393,
+              "height": 790,
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "I6AwLq",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "pEkTv",
+                      "name": "Grabber",
+                      "fill": "$border",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "mafc4",
+                      "name": "Head Title",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "從家庭相簿挑一張",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-lead",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "yeD0m",
+                      "x": 0,
+                      "y": 157,
+                      "name": "Head Sub",
+                      "enabled": false,
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container(345)",
+                      "content": "點一張照片，再按「用這張」。",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Kbyeo",
+                  "name": "Photo Grid",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "xh8lp",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Section · 8月20日那天拍的",
+                      "enabled": false,
+                      "width": "fill_container(345)",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "R8IJRZ",
+                          "name": "Section Label",
+                          "fill": "$text-primary",
+                          "content": "今天拍的",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "c7BvwL",
+                          "name": "Grid Row（2 欄）",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "j4c6PX",
+                              "name": "Thumb（已選）",
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-toddler.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$text-primary",
+                              "strokeWidth": 3,
+                              "strokeAlignment": "inner",
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "V0QzAw",
+                                  "x": 142.5,
+                                  "y": -4,
+                                  "name": "Selected Badge",
+                                  "width": 24,
+                                  "height": 24,
+                                  "fill": "$text-primary",
+                                  "cornerRadius": "$radius-full",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "MCV76",
+                                      "name": "Check Icon",
+                                      "width": 14,
+                                      "height": 14,
+                                      "icon": "check",
+                                      "library": "lucide",
+                                      "fill": "$surface"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "pHGq5",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-hero.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "n2bkIK",
+                          "name": "Grid Row（2 欄）",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Znuzg",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-timeline-v2.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "w5zgXd",
+                              "name": "Empty Slot",
+                              "width": "fill_container",
+                              "height": 1
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ddLl3",
+                      "x": 0,
+                      "y": 350,
+                      "name": "Section · 更早",
+                      "enabled": false,
+                      "width": "fill_container(345)",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "eCVm6",
+                          "name": "Section Label",
+                          "fill": "$text-primary",
+                          "content": "其他照片",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "C0kLBM",
+                          "name": "Grid Row（2 欄）",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "RpTr0",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-invite.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "d7x6vd",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-grid-join.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "mBIrY",
+                          "name": "Grid Row（2 欄）",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "TZRJr",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-hero-portrait.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ASD5N",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-album-cover.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "btmFB",
+                          "name": "Grid Row（2 欄）",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "LJqf6",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-mom.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "gUEMw",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": 130,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "appstore-photos/demo-profile-dad.jpg",
+                                "mode": "cover"
+                              },
+                              "cornerRadius": "$radius-md",
+                              "layout": "none"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "O7YVGu",
+                      "name": "Empty Line",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "家庭相簿裡還沒有照片，可以改用「從手機加入」。",
+                      "textAlign": "center",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Tn7gD",
+                  "name": "Actions",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "children": [
+                    {
+                      "id": "C1Img",
+                      "type": "ref",
+                      "ref": "OKSJI",
+                      "name": "From Phone Button（相簿空時取代「用這張」）",
+                      "width": "fill_container",
+                      "descendants": {
+                        "s9bME2": {
+                          "enabled": true,
+                          "icon": "smartphone"
+                        },
+                        "w7CUP": {
+                          "content": "從手機加入"
+                        }
+                      }
+                    },
+                    {
+                      "id": "CrfwY",
+                      "type": "ref",
+                      "ref": "qe9yS",
+                      "name": "Cancel Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "breqI": {
+                          "enabled": false
+                        },
+                        "hIhVd": {
+                          "content": "取消"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
