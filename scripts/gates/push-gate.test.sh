@@ -252,7 +252,7 @@ TAP_TARGET_LOG="$work/tap-target.log"; export TAP_TARGET_LOG
 : > "$TAP_TARGET_LOG"
 
 # I2：鎖目錄固定指到 $work 底下（mktemp -d 出來的路徑），不再用 /tmp/simulator-lock-<固定字面值>。
-export SIMULATOR_LOCK_DIR="$work/simlock"
+export SIMULATOR_LOCK_DIR="$work/simulator-lock-sim"
 
 # run_gate <env 指定…>：在合成 repo 內跑 push-gate.sh；stdin 接 /dev/null（非 tty）讓開頭的
 # push-ref-check.sh 照跑——空 stdin＝seen=0＝exit 0（既有行為，維持完整 gate）。FAKE_DEST_UDID
@@ -400,7 +400,7 @@ fi
 #        避免我們自己手動製造的時序被 push-gate.sh 內部「執行 xcodebuild test」那段鎖擋住（那段鎖不是
 #        本案例要驗的對象——⑧ 才是驗真鎖排隊的時序）----
 : > "$SHUTDOWN_LOG"
-lock7="$work/lock7-dir"
+lock7="$work/simulator-lock-7"
 rm -rf "$lock7"
 printf '#!/bin/bash\nsleep 4\nexit 0\n' > "$R/scripts/gates/error-codes-check.sh"
 chmod +x "$R/scripts/gates/error-codes-check.sh"
@@ -508,7 +508,7 @@ esac; done
 exit 0
 STUB
 chmod +x "$work/racebin/xcodebuild"
-race_lock="$work/race-simlock"
+race_lock="$work/race-simulator-lock"
 run_race() {   # $1=A/B目錄 basename、$2=RACE_TEST_SECONDS
   ( cd "$race_root/$1" && env WHO="$1" CI=true RACE_TEST_SECONDS="$2" RACE_LOG="$race_log" \
       SIMULATOR_LOCK_POLL=0.2 SIMULATOR_LOCK_DIR="$race_lock" PATH="$work/racebin:$PATH" \
