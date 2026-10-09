@@ -55,16 +55,52 @@ final class PrimaryButtonRenderTests: XCTestCase {
         )
     }
 
-    /// 常數與渲染同源：`labelWeight` 是 `.bold`（iPad 行內鈕 `addPhotosInlineButton` 不吃字重，只吃 `minHeight`）。
+    /// 常數與渲染同源：`labelWeight` 是 `.bold`（iPad 行內鈕 `InlinePrimaryButtonLabel` 共用同一組常數）。
     func test_constants_matchDesign() {
         XCTAssertEqual(PrimaryButton.minHeight, 60)
         XCTAssertEqual(PrimaryButton.labelWeight, .bold)
     }
 
+    // MARK: - iPad 行內鈕（`RbEqx`，merge-review R1 M1／m1）
+
+    /// 行內鈕與滿版主鈕同高：預設 60、AX3 由 padding 撐到 ≥83（不是停在 60）。
+    func test_inlineButton_defaultSizeRendersAt60() throws {
+        let height = try renderedHeight(of: InlinePrimaryButtonLabel(icon: "photo.badge.plus", title: "加入照片"), .large)
+        XCTAssertEqual(
+            height, 60, accuracy: 0.5,
+            "iPad 行內加照片鈕預設字級應為稿面 h=60（RbEqx，LS-442 C1a）；實測 \(height)pt"
+        )
+    }
+
+    func test_inlineButton_accessibility3GrowsPastFloor() throws {
+        let height = try renderedHeight(
+            of: InlinePrimaryButtonLabel(icon: "photo.badge.plus", title: "加入照片"), .accessibility3
+        )
+        XCTAssertGreaterThanOrEqual(
+            height, 83,
+            "iPad 行內鈕 AX3 應由 padding 撐到 ≥83（LS-442 C1a），不是停在 minHeight 60；實測 \(height)pt"
+        )
+    }
+
+    /// 行內鈕文字也是 bold（C2a：消掉「滿版 regular、行內 semibold」兩種字重）。
+    func test_inlineButton_labelRendersBold() throws {
+        let inline = try ink(of: InlinePrimaryButtonLabel(icon: "photo.badge.plus", title: "加入照片")
+            .foregroundStyle(Color.lsOnAccent))
+        let primary = try ink(of: PrimaryButton(icon: "photo.badge.plus", title: "加入照片", action: {}))
+        XCTAssertEqual(
+            inline / primary, 1, accuracy: 0.05,
+            "行內鈕墨量應與滿版主鈕（bold）一致；比值 \(inline / primary)——字重不同（LS-442 C2a）"
+        )
+    }
+
     // MARK: - 渲染
 
     private func renderedHeight(_ size: DynamicTypeSize) throws -> CGFloat {
-        let content = PrimaryButton(icon: "paperplane", title: "寄送驗證碼", action: {})
+        try renderedHeight(of: PrimaryButton(icon: "paperplane", title: "寄送驗證碼", action: {}), size)
+    }
+
+    private func renderedHeight(of view: some View, _ size: DynamicTypeSize) throws -> CGFloat {
+        let content = view
             .frame(width: Self.width)
             .environment(\.dynamicTypeSize, size)
         let renderer = ImageRenderer(content: content)

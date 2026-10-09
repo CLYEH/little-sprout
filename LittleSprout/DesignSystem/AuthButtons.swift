@@ -41,6 +41,26 @@ struct PrimaryButton: View {
     }
 }
 
+/// iPad 相簿詳情「行內」加照片鈕的 label（稿 `RbEqx` 是 `OKSJI` 的 ref、`width:fit_content`）。
+/// LS-445 R2（merge-review M1／m1）：與 `PrimaryButton` 同一套——bold、`controlPaddingCTA`
+/// 垂直 padding（AX 字級由 padding 撐高）、`minHeight` 60 下限；抽成獨立 View 讓渲染測試不用
+/// 建整個 `AlbumDetailView`。`PrimaryButton` 固定 `maxWidth: .infinity`，這裡不滿版。
+struct InlinePrimaryButtonLabel: View {
+    let icon: String
+    let title: String
+
+    var body: some View {
+        HStack(spacing: AppSpacing.label) {
+            Image(systemName: icon).appIconFrame(.medium)
+            Text(title).appFont(.body, weight: PrimaryButton.labelWeight)
+        }
+        .padding(.vertical, AppSpacing.controlPaddingCTA)
+        .padding(.horizontal, AppSpacing.item)
+        .frame(minHeight: PrimaryButton.minHeight)
+        .contentShape(Rectangle())
+    }
+}
+
 /// `cmp/Button Secondary`：無填色、`$control-line` 外框——次要動作樣式，不是停用樣式
 /// （Handoff Notes 通用節「全稿『看起來不能用』掃描」）。`isDimmed` 對應 01b 登入中時
 /// Google／Email 鍵轉 `$surface-2` 的暫時態，不是永久的 disabled 視覺語彙。
