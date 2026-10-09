@@ -145,6 +145,15 @@ final class FoodRecordSheetUITests: XCTestCase {
         let phone = app.buttons["foodPhoto.addFromPhone"]
         XCTAssertTrue(phone.waitForHittable(timeout: 5), "主鈕改成「從手機加入」")
         XCTAssertEqual(phone.label, "從手機加入")
+
+        // 按下去要真的開選取器（Notes eY1tg：不留一顆按了沒反應的主鈕）：先收 03d，再由呼叫端 onDismiss 開
+        // PhotosPicker——選取器是系統程序，但它的「Cancel」鈕（identifier）在 app 的 accessibility 樹上。
+        phone.tap()
+        XCTAssertTrue(app.staticTexts["從家庭相簿挑一張"].waitUntilGone(timeout: 5), "03d 要收起")
+        let pickerCancel = app.buttons["Cancel"]
+        XCTAssertTrue(pickerCancel.waitForExistence(timeout: 10), "03d 收完要開 PhotosPicker（看到系統選取器的 Cancel 鈕）")
+        pickerCancel.tap()
+        XCTAssertTrue(app.staticTexts["記下小安第一次吃芋頭"].waitForExistence(timeout: 5), "選取器取消後回到 03")
     }
 
     // MARK: - 03b → 03c → 格子回未吃

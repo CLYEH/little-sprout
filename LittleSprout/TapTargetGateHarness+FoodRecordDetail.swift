@@ -21,8 +21,8 @@ extension TapTargetGateHarness {
     static let foodRecordDetailDarkKey = "LSFoodRecordDetailDark"
     /// `.foodRecordDetailViewer`：改看沒有照片的南瓜（04d 非作者看無照片記錄）。
     static let foodRecordDetailNoPhotoKey = "LSFoodRecordDetailNoPhoto"
-    /// `.foodRecordDetail`：照片簽名網址拿不到（04e 照片沒有載入）。
-    static let foodRecordDetailPhotoFailedKey = "LSFoodRecordDetailPhotoFailed"
+    /// `.foodRecordDetail`：第一輪照片簽名網址拿不到（04e 照片沒有載入），按「再試一次」之後才成功。
+    static let foodRecordDetailPhotoFailsFirstKey = "LSFoodRecordDetailPhotoFailsFirst"
 
     /// `hostView(for:)` 的 switch 已貼著 SwiftLint `type_body_length` 上限，四個 case 併成一行、在這裡對照 fixture。
     @MainActor
@@ -78,7 +78,9 @@ private enum FoodRecordDetailSample {
             currentUserID: isViewer ? grandma : mom, isFamilyOwner: !isViewer, canRecord: !isViewer,
             detailAPIClient: PreviewFoodRecordDetailAPIClient(
                 names: [mom: "媽媽", dad: "爸爸", grandma: "阿嬤"],
-                photoAvailable: !UserDefaults.standard.bool(forKey: TapTargetGateHarness.foodRecordDetailPhotoFailedKey)
+                failsFirstLoad: UserDefaults.standard.bool(
+                    forKey: TapTargetGateHarness.foodRecordDetailPhotoFailsFirstKey
+                )
             )
         )
     }

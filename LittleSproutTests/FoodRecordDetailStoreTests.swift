@@ -36,11 +36,13 @@ final class FoodRecordDetailStoreTests: XCTestCase {
 
     private final class StubDetailAPIClient: FoodRecordDetailAPIClient, @unchecked Sendable {
         var names: [UUID: String] = [:]
+        /// 前幾次 `photoURL` 回 nil（簽名網址拿不到），之後才成功。
+        var failuresBeforeSuccess = 0
         private(set) var photoRequests: [UUID] = []
 
         func photoURL(mediaID: UUID) async throws -> URL? {
             photoRequests.append(mediaID)
-            return Self.url(for: mediaID)
+            return photoRequests.count > failuresBeforeSuccess ? Self.url(for: mediaID) : nil
         }
 
         func displayName(userID: UUID) async throws -> String? { names[userID] }
@@ -287,5 +289,71 @@ final class FoodRecordDetailStoreTests: XCTestCase {
         )
         let other = try record(mediaID: nil, reaction: "liked")
         XCTAssertEqual(FoodRecordDetailRouter.shownRecord(caller: other, saved: saved), other, "不同筆：用呼叫端")
+    }
+}
+
+// 拆出 extension：class body 逼近 SwiftLint `type_body_length`（250）上限。
+extension FoodRecordDetailStoreTests {
+    // MARK: - LS-434 04e「再試一次」
+
+    /// 04e：簽名網址第一次拿不到 → `.unavailable`；`retryPhoto()` 重讀後拿到 → `.loaded`（「再試一次」真的會重載）。
+    func test_retryPhoto_fromUnavailable_loadsPhotoWhenSecondRequestSucceeds() async throws {
+        let mediaID = UUID()
+        let original = try record(mediaID: mediaID)
+        let detail = StubDetailAPIClient()
+        detail.failuresBeforeSuccess = 1
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: StubFoodAPIClient(records: [original]), detailAPIClient: detail
+        )
+        await store.refresh()
+        XCTAssertEqual(store.photo, .unavailable)
+        XCTAssertEqual(detail.photoRequests.count, 1)
+
+        await store.retryPhoto()
+
+        XCTAssertEqual(store.photo, .loaded(StubDetailAPIClient.url(for: mediaID)), "重試成功要換成照片")
+        XCTAssertEqual(detail.photoRequests.count, 2, "重試真的發了一次請求")
+    }
+
+    /// C2a：已刪照片再試也不會成功——回到 `.unavailable`，不另外分辨成別的態。
+    func test_retryPhoto_whenStillFailing_staysUnavailable() async throws {
+        let original = try record(mediaID: UUID())
+        let detail = StubDetailAPIClient()
+        detail.failuresBeforeSuccess = 99
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: StubFoodAPIClient(records: [original]), detailAPIClient: detail
+        )
+        await store.refresh()
+
+        await store.retryPhoto()
+
+        XCTAssertEqual(store.photo, .unavailable)
+        XCTAssertEqual(detail.photoRequests.count, 2, "有重試（兩次請求），結果仍是失敗態")
+    }
+
+    /// 連點保護：不在 `.unavailable`（載入成功、沒有照片）時 `retryPhoto()` 不發任何請求、不改狀態。
+    func test_retryPhoto_whenNotUnavailable_sendsNoRequest() async throws {
+        let mediaID = UUID()
+        let original = try record(mediaID: mediaID)
+        let detail = StubDetailAPIClient()
+        let store = FoodRecordDetailStore(
+            record: original, foodAPIClient: StubFoodAPIClient(records: [original]), detailAPIClient: detail
+        )
+        await store.refresh()
+        XCTAssertEqual(store.photo, .loaded(StubDetailAPIClient.url(for: mediaID)))
+        let requestsBefore = detail.photoRequests.count
+
+        await store.retryPhoto()
+
+        XCTAssertEqual(detail.photoRequests.count, requestsBefore, "已載入：不重送請求")
+        XCTAssertEqual(store.photo, .loaded(StubDetailAPIClient.url(for: mediaID)))
+
+        let blank = try record(mediaID: nil)
+        let blankStore = FoodRecordDetailStore(
+            record: blank, foodAPIClient: StubFoodAPIClient(records: [blank]), detailAPIClient: detail
+        )
+        await blankStore.retryPhoto()
+        XCTAssertEqual(detail.photoRequests.count, requestsBefore, "沒有照片（04b／04d）：不發請求")
+        XCTAssertEqual(blankStore.photo, .none)
     }
 }

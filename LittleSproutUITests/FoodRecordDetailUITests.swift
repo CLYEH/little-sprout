@@ -135,9 +135,12 @@ final class FoodRecordDetailUITests: XCTestCase {
     }
 
     /// LS-434 04e（稿 `GFvUy`）：照片載入失敗——窗內「照片沒有載入」＋「再試一次」，角托（對角兩顆）照有；
-    /// 再試一次後仍失敗（簽名網址一律拿不到）就還是這個態（C2a：已刪照片不另分辨）。
+    /// 按「再試一次」會真的重載（fixture 第一輪拿不到簽名網址、重試那一輪成功）：失敗態消失、照片出現。
+    /// 「再試仍失敗就維持失敗態」（C2a）由 `FoodRecordDetailStoreTests` 鎖。
     func testPhotoLoadFailed_showsRetryAndKeepsDiagonalCorners() {
-        let app = launch(.foodRecordDetail, Self.standard, extraArguments: ["-LSFoodRecordDetailPhotoFailed", "YES"])
+        let app = launch(
+            .foodRecordDetail, Self.standard, extraArguments: ["-LSFoodRecordDetailPhotoFailsFirst", "YES"]
+        )
         let label = app.staticTexts["foodRecordDetail.photoFailed"]
         XCTAssertTrue(label.waitForExistence(timeout: 5), "04e：窗內要有「照片沒有載入」")
         XCTAssertEqual(label.label, "照片沒有載入")
@@ -158,8 +161,9 @@ final class FoodRecordDetailUITests: XCTestCase {
         XCTAssertLessThan(ratios.bottomLeading, 0.05)
 
         retry.tap()
-        XCTAssertTrue(label.waitForExistence(timeout: 5), "再試一次仍失敗：還是失敗態，不另外分辨（C2a）")
-        XCTAssertTrue(retry.waitForHittable(timeout: 5))
+        XCTAssertTrue(label.waitUntilGone(timeout: 5), "按「再試一次」要真的重載：失敗態消失")
+        XCTAssertTrue(element("foodRecordDetail.photo", in: app).waitForExistence(timeout: 5), "重載成功：照片出現")
+        XCTAssertFalse(app.buttons["foodRecordDetail.retryPhoto"].exists, "載入成功後不再有「再試一次」")
     }
 
     // MARK: - AX3（`z1Pg2`／`vr5zj`）
