@@ -47,8 +47,9 @@ enum FoodRecordCopy {
     }
 
     /// 「從手機加入」選到 Storage 不收的格式（`PickedItemLoader.LoadedItem.unsupportedFormat`）或讀不出
-    /// 照片時——稿面沒畫這個邊界，沿 03e 的 Status Slot 失敗語彙（同一格、同一套開頭），不另開版面。
-    static let photoUnsupported = "沒有加入照片：這張照片讀不出來，請換一張。"
+    /// 照片時——03h（稿 `FrAp9`，失敗文案鍵 `food.photo_unreadable`），沿 03e 的 Status Slot 失敗語彙（同一格、
+    /// 同一套開頭）。「請再選一張」而非「請換一張」：這個畫面沒有「換一張」鈕（Notes `ktZfn`）。
+    static let photoUnsupported = "沒有加入照片：手機裡這一張讀不出來，請再選一張。"
 
     /// 03b 原照片縮圖讀不到（已軟刪／網路；merge-review R1 i4）——照片仍會保留，要拿掉請按「不用照片」。
     static let existingPhotoUnavailable = "原照片讀取失敗"

@@ -20,6 +20,10 @@ extension TapTargetGateHarness {
     static let foodRecordFlowGoneKey = "LSFoodRecordFlowGone"
     /// `.foodRecordSheet`：家庭相簿沒有任何照片（03g）。
     static let foodRecordEmptyAlbumKey = "LSFoodRecordEmptyAlbum"
+    /// `.foodRecordSheetEdit`：手機照片已讀不出來（03h；`FoodRecordDetailRouter.loadPhonePhoto` 失敗路徑也是
+    /// 在編輯 store 上標 `photoLoadFailed`）。要和 `foodRecordMissingPhotoKey` 一起帶——原照片讀得到時
+    /// `loadExistingPhoto` 會換上照片、把旗標清掉。
+    static let foodRecordPhotoUnreadableKey = "LSFoodRecordPhotoUnreadable"
     static let foodRecordChildName = "小安"
 
     /// 飲食圖鑑家族（LS-379 02 × 4＋LS-380 03 × 3）的 dispatch——從 `hostView(for:)` 搬來（該 enum 逼近
@@ -130,6 +134,14 @@ private struct FoodRecordEditHarnessHost: View {
         _editing = State(initialValue: record)
     }
 
+    private func editorStore(for record: ChildFoodRecord) -> FoodRecordEditorStore {
+        let editor = FoodRecordEditorStore(
+            childID: store.childID, item: bread, editingRecord: record, apiClient: apiClient
+        )
+        editor.photoLoadFailed = UserDefaults.standard.bool(forKey: TapTargetGateHarness.foodRecordPhotoUnreadableKey)
+        return editor
+    }
+
     var body: some View {
         NavigationStack(path: .constant([true])) {
             Color.clear
@@ -144,9 +156,7 @@ private struct FoodRecordEditHarnessHost: View {
         .sheet(item: $editing) { record in
             FoodRecordSheet(
                 childName: TapTargetGateHarness.foodRecordChildName,
-                store: FoodRecordEditorStore(
-                    childID: store.childID, item: bread, editingRecord: record, apiClient: apiClient
-                ),
+                store: editorStore(for: record),
                 apiClient: apiClient,
                 onSaved: { store.applySaved($0) },
                 onDeleted: { store.removeRecord(id: $0) }

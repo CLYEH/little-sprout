@@ -197,6 +197,21 @@ final class FoodRecordSheetUITests: XCTestCase {
         XCTAssertFalse(app.buttons["用相機拍一張"].exists, "C1a：不加相機來源")
     }
 
+    /// LS-434 03h（稿 `FrAp9`）：手機照片讀不出來 → Status Slot 顯示新失敗句（「請再選一張」，這個畫面沒有「換一張」
+    /// 鈕）。host 在編輯 store 上標 `photoLoadFailed`（同 `FoodRecordDetailRouter.loadPhonePhoto` 的失敗路徑）。
+    func testPhotoUnreadable_statusSlotShowsNewSentenceAndKeepsBothSources() {
+        let app = Support.launch(
+            .foodRecordSheetEdit, Support.standard,
+            extraArguments: ["-LSFoodRecordPhotoUnreadable", "YES", "-LSFoodRecordMissingPhoto", "YES"]
+        )
+        let status = Support.element("foodRecord.statusText", in: app)
+        XCTAssertTrue(
+            Support.waitForLabel(status, where: "==", "沒有加入照片：手機裡這一張讀不出來，請再選一張。"),
+            "03h 失敗句逐字：\(status.label)"
+        )
+        XCTAssertFalse(status.label.contains("請換一張"), "舊句「請換一張」不得殘留（這個畫面沒有「換一張」鈕）")
+    }
+
     /// 03c AX3（稿 `d56YR`）：刪除鈕與取消都在首屏內。
     func testDeleteConfirmation_AX3_buttonsOnFirstScreen() {
         let app = Support.launch(.foodRecordSheetEdit, Support.ax3)
