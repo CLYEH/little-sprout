@@ -1488,6 +1488,22 @@ if [ "$disk_low" -eq 1 ]; then
   add_flag "[磁碟] ${disk_flag}"
 fi
 
+# ---- 晨報（LS-429）：每天本機時間 08:00（PATROL_REPORT_HOUR）後第一輪巡檢印一行 → 動作，orchestrator 跑 Workflow
+#      morning-report（.claude/workflows/morning-report.js）產出 artifact、抽驗 2 條引據後 touch 當日標記檔
+#      ${PATROL_REPORT_DIR:-<ROOT>/.claude/evidence/morning-report}/<YYYY-MM-DD>.done；之後各輪不再印。不另建 cron（使用者
+#      10-09 裁「整入現有 patrol」）。PATROL_NOW_HOUR／PATROL_TODAY 只給自測用；標記目錄在 .claude/evidence/ 下、gitignored。
+report_dir="${PATROL_REPORT_DIR:-${ROOT}/.claude/evidence/morning-report}"
+report_day="${PATROL_TODAY:-$(date +%Y-%m-%d)}"
+report_hour="${PATROL_NOW_HOUR:-$(date +%H)}"
+REPORT_HOUR="${PATROL_REPORT_HOUR:-8}"
+REPORT_LINE=
+case "$report_hour" in ''|*[!0-9]*) report_hour=0 ;; esac   # 非數字當 0（R1 I3：原本去前導 0 後 "0"→"" 會讓 [ -ge ] 噴 integer expected）
+report_hour_n=$((10#$report_hour))
+if [ "$report_hour_n" -ge "$REPORT_HOUR" ] && [ ! -e "${report_dir}/${report_day}.done" ]; then
+  REPORT_LINE="→ 晨報：${report_day} 尚未產出（${REPORT_HOUR}:00 後第一輪）→ Workflow {name: \"morning-report\", args: {date: \"${report_day}\", now: \"<HH:MM>\", scratch: \"<scratchpad>\"}} 產出 artifact → orchestrator 自己跑 bash scripts/gates/report-cite-check.sh <md_path> --sample 2 並反查印出的 2 條（樣本由腳本隨機抽，不用 Haiku 自報的）→ 單獨一條 Bash：LS_ALLOW_MAIN_CHECKOUT_WRITE=1 sh -c 'mkdir -p ${report_dir} && touch ${report_dir}/${report_day}.done'（標記在主 checkout 的 gitignored 目錄；main-checkout-guard 只認整條命令最前面的這個前綴；LS-429）"
+  add_flag "[晨報] ${REPORT_LINE}"
+fi
+
 # ---- --linear（LS-103）：先把 patrol-linear.sh 跑完，rc 才能影響下面的「異常」判定 ----
 # R1 F6：不可讓 patrol-linear.sh 非 0 exit 被吞掉——舊版放在輸出區塊「之後」才呼叫，brief 模式的
 # 「巡檢：無異常」摘要行早就印完，Linear 段失敗（PAT 過期／curl 錯誤）在 stdout 完全看不到、只有
@@ -1593,6 +1609,10 @@ case "$MODE" in
     if [ -n "$disk_flag" ]; then echo "  ${disk_flag}"
     elif [ -n "$disk_avail_gb" ]; then echo "  可用 ${disk_avail_gb} GB，LS-* 專屬模擬器 ${disk_dedicated} 台  ok"
     else echo "  ⚠ （df 讀不到可用空間，略過——磁碟水位這輪沒查）"; fi
+    echo "== 晨報（LS-429；${REPORT_HOUR}:00 後第一輪印 → 動作，標記 ${report_dir}/<日期>.done）"
+    if [ -n "$REPORT_LINE" ]; then echo "  ${REPORT_LINE}"
+    elif [ -e "${report_dir}/${report_day}.done" ]; then echo "  ${report_day} 已產出  ok"
+    else echo "  ${report_day} ${REPORT_HOUR}:00 前，不印  ok"; fi
     echo "== Linear（需 orchestrator 用 MCP 對照：Ready 無人接／In Progress 無 worktree／QA 但 test 未含）"
     echo "  → list_issues state in (Ready, In Progress, In Review, QA)，對照上表 worktree／PR"
     ;;
