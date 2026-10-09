@@ -46,6 +46,16 @@ enum FoodRecordCopy {
         return "沒有存起來：\(error.userFacingMessage)"
     }
 
+    /// 04f 失敗句（稿 `wd8Ov`，失敗文案鍵 `food.add_photo_failed`）：04b 選好照片即存、存不起來而開 03b——使用者沒填
+    /// 欄位、也還沒按過儲存，所以不沿用 03e「填好的內容都還在」。
+    static let addPhotoFailedNetwork = "照片沒有加上去：網路好像斷了。照片還在這裡，連上網路後按「儲存」。"
+
+    /// 04f 其餘錯誤碼：同一個開頭「照片沒有加上去：」＋既有四層錯誤文法的使用者文案。
+    static func addPhotoFailed(_ error: AppError) -> String {
+        if case .network = error { return addPhotoFailedNetwork }
+        return "照片沒有加上去：\(error.userFacingMessage)"
+    }
+
     /// 「從手機加入」選到 Storage 不收的格式（`PickedItemLoader.LoadedItem.unsupportedFormat`）或讀不出
     /// 照片時——03h（稿 `FrAp9`，失敗文案鍵 `food.photo_unreadable`），沿 03e 的 Status Slot 失敗語彙（同一格、
     /// 同一套開頭）。「請再選一張」而非「請換一張」：這個畫面沒有「換一張」鈕（Notes `ktZfn`）。

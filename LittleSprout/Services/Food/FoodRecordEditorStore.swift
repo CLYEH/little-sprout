@@ -65,6 +65,9 @@ final class FoodRecordEditorStore {
     }
     /// 「從手機加入」讀不出照片（格式不支援等）——Status Slot 顯示 `FoodRecordCopy.photoUnsupported`。
     var photoLoadFailed = false
+    /// 04f：這顆 store 是 04b「選好照片即存」存不起來而開的 03b——失敗句換成 `food.add_photo_failed`，
+    /// 且不放「刪除這筆記錄」（使用者是來加照片、剛遇到失敗，破壞性按鈕不該在儲存鈕正下方）。
+    var isAddPhotoRecovery = false
     private(set) var saveState: FoodRecordSaveState = .idle
     /// 已上傳成功的手機照片（`LocalFoodPhoto.id` → `media.id`），見類型文件「失敗後重送」。
     private var uploadedLocalPhoto: (localID: UUID, mediaID: UUID)?

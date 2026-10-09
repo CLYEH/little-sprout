@@ -18,6 +18,8 @@ extension TapTargetGateHarness {
     static let foodRecordMissingPhotoKey = "LSFoodRecordMissingPhoto"
     /// `.foodRecordDetailFlow`：南瓜那筆已在後端被刪（圖鑑還以為吃過），開詳情即發現（接縫④）。
     static let foodRecordFlowGoneKey = "LSFoodRecordFlowGone"
+    /// `.foodRecordDetailFlow`：存檔（upsert）一律斷線——04f 加照片存不起來、開 03b。
+    static let foodRecordFlowUpsertFailsKey = "LSFoodRecordFlowUpsertFails"
     /// `.foodRecordSheet`：家庭相簿沒有任何照片（03g）。
     static let foodRecordEmptyAlbumKey = "LSFoodRecordEmptyAlbum"
     /// `.foodRecordSheetEdit`：手機照片已讀不出來（03h；`FoodRecordDetailRouter.loadPhonePhoto` 失敗路徑也是
@@ -189,9 +191,10 @@ private struct FoodRecordDetailFlowHarnessHost: View {
         let pumpkin = record("pumpkin", author: mom, mediaID: nil)
         let riceCereal = record("rice_cereal", author: dad, mediaID: photos.first?.id)
         let pumpkinIsGone = UserDefaults.standard.bool(forKey: TapTargetGateHarness.foodRecordFlowGoneKey)
+        let upsertFails = UserDefaults.standard.bool(forKey: TapTargetGateHarness.foodRecordFlowUpsertFailsKey)
         let apiClient = PreviewFoodAPIClient(
-            records: pumpkinIsGone ? [bread, riceCereal] : [bread, pumpkin, riceCereal], photos: photos,
-            currentUserID: mom
+            records: pumpkinIsGone ? [bread, riceCereal] : [bread, pumpkin, riceCereal],
+            upsertFailure: upsertFails ? .network(message: "harness：斷線") : nil, photos: photos, currentUserID: mom
         )
         let store = FoodBookStore.previewSeededWithDemoRecords(childID: seeded.childID, apiClient: apiClient)
         [bread, pumpkin, riceCereal].forEach(store.applySaved)

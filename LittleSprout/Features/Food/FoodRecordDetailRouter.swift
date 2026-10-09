@@ -111,7 +111,9 @@ struct FoodRecordDetailRouter: View {
         case .delete(let target):
             deleteTarget = target
         case .addPhoto(let target):
-            addPhotoStore = makeStore(for: target)
+            let store = makeStore(for: target)
+            store.isAddPhotoRecovery = true
+            addPhotoStore = store
             showsSourceChoice = true
         }
     }

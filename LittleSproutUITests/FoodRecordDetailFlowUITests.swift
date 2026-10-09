@@ -107,6 +107,35 @@ final class FoodRecordDetailFlowUITests: XCTestCase {
         XCTAssertTrue(Support.element("foodRecordDetail.photo", in: app).waitForExistence(timeout: 5))
     }
 
+    /// LS-434 04f（稿 `liRRE`）：04b 選好照片即存、存不起來 → 開 03b 帶入已選照片，Status Slot 是專屬句
+    /// `food.add_photo_failed`；恢復路徑不放「刪除這筆記錄」（Notes `PfdtV`）。
+    func testAddPhotoSaveFails_opensEditSheetWithPhotoAndDedicatedSentenceWithoutDelete() {
+        let app = Support.launch(
+            .foodRecordDetailFlow, Support.standard, extraArguments: ["-LSFoodRecordFlowUpsertFails", "YES"]
+        )
+        openDetail("pumpkin", in: app)
+        Support.element("foodRecordDetail.addPhoto", in: app).tap()
+        app.buttons["從家庭相簿挑"].tap()
+        let photo = app.buttons["foodPhoto.00000000-0000-0000-0000-000000000001"]
+        XCTAssertTrue(photo.waitForHittable(timeout: 5))
+        photo.tap()
+        app.buttons["foodPhoto.use"].tap()
+
+        XCTAssertTrue(app.staticTexts["編輯南瓜這筆記錄"].waitForExistence(timeout: 10), "存不起來要開 03b")
+        XCTAssertTrue(Support.element("foodRecord.photoThumb", in: app).waitForExistence(timeout: 5), "剛選的照片已在照片欄")
+        let status = Support.element("foodRecord.statusText", in: app)
+        XCTAssertTrue(
+            Support.waitForLabel(
+                status, where: "==", "照片沒有加上去：網路好像斷了。照片還在這裡，連上網路後按「儲存」。"
+            ),
+            "04f 專屬句逐字：\(status.label)"
+        )
+        XCTAssertTrue(app.buttons["foodRecord.save"].exists)
+        let save = app.buttons["foodRecord.save"]
+        Support.scrollUntilHittable(save, in: app)
+        XCTAssertFalse(app.buttons["foodRecord.delete"].exists, "恢復路徑不放「刪除這筆記錄」")
+    }
+
     /// 接縫④：記錄已在後端被刪（圖鑑還以為吃過）→ 開詳情一重讀就發現、返回圖鑑，格子退回未吃。
     func testRecordGoneOnRefresh_popsAndCellReturnsToUntried() {
         let app = Support.launch(
