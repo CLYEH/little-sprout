@@ -48,11 +48,11 @@ Apple 的做法是二選一：**不填**自訂 EULA 時套用 Apple 標準 EULA�
 3. 您加入他人家庭後所見之內容（包括孩子的姓名、生日與影像），僅得在該家庭內依成員合理期待之方式使用，不得未經該家庭 Owner 同意轉貼、公開或提供予家庭以外之人。
 
 四、帳號與資料
-1. 您可隨時於 App 內刪除帳號；您的個人資料與內容之處理方式，依授權人之《隱私權政策》（https://littlesprout.xyz/legal/privacy-policy）。
+1. 您可隨時於 App 內刪除帳號；您的個人資料與內容之處理方式，依授權人之《隱私權政策》（https://sproutday.app/legal/privacy-policy）。
 2. 本 App 並非備份服務，請自行保留照片與影片之原始檔案。
 
 五、其他
-1. 您對本 App 的使用亦受授權人之《使用條款》（https://littlesprout.xyz/legal/terms-of-service）拘束；該條款就服務內容、家庭與角色、使用者內容授權、禁止行為、免責與責任限制、準據法與管轄有更完整之約定。
+1. 您對本 App 的使用亦受授權人之《使用條款》（https://sproutday.app/legal/terms-of-service）拘束；該條款就服務內容、家庭與角色、使用者內容授權、禁止行為、免責與責任限制、準據法與管轄有更完整之約定。
 2. 本合約以中華民國法律為準據法。
-3. 授權人聯絡方式：CLYEH，電子郵件 support@littlesprout.xyz，支援網頁 https://littlesprout.xyz/legal。
+3. 授權人聯絡方式：CLYEH，電子郵件 support@littlesprout.xyz，支援網頁 https://sproutday.app/legal。
 <!-- END PASTE -->

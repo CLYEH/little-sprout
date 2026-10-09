@@ -8,7 +8,7 @@
 | 適用對象 | 使用「萌芽日記 Sprout Day」iOS 應用程式（下稱「本服務」或「App」）的所有使用者 |
 | 服務提供者 | CLYEH（下稱「我們」） |
 | 聯絡信箱 | support@littlesprout.xyz |
-| 本文件公開網址 | https://littlesprout.xyz/legal/privacy-policy |
+| 本文件公開網址 | https://sproutday.app/legal/privacy-policy |
 
 > 本政策依中華民國《個人資料保護法》（下稱「個資法」）第 8 條之告知義務撰寫。本服務是一個**私密的家庭相簿與日記**：您上傳的照片、影片與文字只有您所屬家庭的成員看得到，我們不販售、不分析您的內容做廣告，也不使用任何追蹤或廣告 SDK。
 
@@ -210,7 +210,7 @@
 
 ## 13. 本政策的修訂
 
-我們可能因功能變更或法規要求修訂本政策。修訂後的版本會公佈於 https://littlesprout.xyz/legal/privacy-policy 並更新版本號與生效日期；**重大變更**（例如新增蒐集項目、新增利用目的或第三方）會在生效前於 App 內通知您。修訂生效後繼續使用本服務，視為您已閱讀並同意修訂後的政策；若您不同意，可依第 8 節刪除帳號。
+我們可能因功能變更或法規要求修訂本政策。修訂後的版本會公佈於 https://sproutday.app/legal/privacy-policy 並更新版本號與生效日期；**重大變更**（例如新增蒐集項目、新增利用目的或第三方）會在生效前於 App 內通知您。修訂生效後繼續使用本服務，視為您已閱讀並同意修訂後的政策；若您不同意，可依第 8 節刪除帳號。
 
 歷史版本：
 
@@ -222,7 +222,7 @@
 ## 14. 聯絡我們
 
 - 電子郵件：support@littlesprout.xyz
-- 支援網頁：https://littlesprout.xyz/legal
+- 支援網頁：https://sproutday.app/legal
 
 ---
 

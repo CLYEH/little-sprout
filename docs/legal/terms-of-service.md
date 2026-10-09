@@ -7,9 +7,9 @@
 | 最後修訂 | 2026-09-12 |
 | 服務提供者 | CLYEH（下稱「我們」） |
 | 聯絡信箱 | support@littlesprout.xyz |
-| 本文件公開網址 | https://littlesprout.xyz/legal/terms-of-service |
+| 本文件公開網址 | https://sproutday.app/legal/terms-of-service |
 
-> 請仔細閱讀本條款。登入或使用「萌芽日記 Sprout Day」（下稱「本服務」或「App」）即表示您同意受本條款與《隱私權政策》（https://littlesprout.xyz/legal/privacy-policy）拘束。本服務是為家人打造的**私密**相簿與日記；本條款的核心是：**您的內容屬於您，只有您的家庭看得到，而我們對冒犯性內容零容忍。**
+> 請仔細閱讀本條款。登入或使用「萌芽日記 Sprout Day」（下稱「本服務」或「App」）即表示您同意受本條款與《隱私權政策》（https://sproutday.app/legal/privacy-policy）拘束。本服務是為家人打造的**私密**相簿與日記；本條款的核心是：**您的內容屬於您，只有您的家庭看得到，而我們對冒犯性內容零容忍。**
 
 ---
 
@@ -174,7 +174,7 @@
 
 ## 15. 條款的修訂
 
-我們可能修訂本條款。修訂後的版本會公佈於 https://littlesprout.xyz/legal/terms-of-service 並更新版本號與生效日期；**重大變更**會在生效前於 App 內通知您。修訂生效後繼續使用本服務，視為您同意修訂後的條款；若您不同意，可依第 9 節刪除帳號。
+我們可能修訂本條款。修訂後的版本會公佈於 https://sproutday.app/legal/terms-of-service 並更新版本號與生效日期；**重大變更**會在生效前於 App 內通知您。修訂生效後繼續使用本服務，視為您同意修訂後的條款；若您不同意，可依第 9 節刪除帳號。
 
 歷史版本：
 
@@ -198,7 +198,7 @@
 ## 17. 聯絡我們
 
 - 電子郵件：support@littlesprout.xyz
-- 支援網頁：https://littlesprout.xyz/legal
+- 支援網頁：https://sproutday.app/legal
 
 ---
 

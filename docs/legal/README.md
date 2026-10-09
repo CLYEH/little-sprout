@@ -22,7 +22,7 @@
 |---|---|---|
 | `[[OPERATOR_NAME]]` | 三份皆有 | **已填（2026-09-12）：CLYEH**（使用者裁決 5a，服務提供者名稱） |
 | `[[SUPPORT_EMAIL]]` | 三份皆有 | **已填（2026-09-12）：support@littlesprout.xyz**（使用者裁決 5b；轉寄至本人 Gmail，Cloudflare Email Routing） |
-| `[[SUPPORT_URL]]` | 三份皆有 | **已填（2026-09-12）：https://littlesprout.xyz/legal**（使用者裁決 5c；GitHub Pages 案 A，自訂網域 `littlesprout.xyz`，source `main`／`docs`）。文內原 `[[SUPPORT_URL]]/privacy`、`/terms` 引用已改為實際渲染路徑 `/legal/privacy-policy`、`/legal/terms-of-service`。**LS-191 起 `WelcomeView` 的《使用條款》《隱私權政策》連結已改開 in-app `LegalDocumentSheet`（直接讀 bundled markdown，不打網路），不再指向這裡的網址**——此網址仍用於文件正文內互相引用與 App Store 產品頁欄位。DNS／Pages 啟用仍待使用者於 Cloudflare 設定後由 orchestrator 綁定，網址目前尚不可開 |
+| `[[SUPPORT_URL]]` | 三份皆有 | **已填（2026-09-12）：https://sproutday.app/legal**（使用者裁決 5c；GitHub Pages 案 A，自訂網域 `sproutday.app`，source `main`／`docs`）。文內原 `[[SUPPORT_URL]]/privacy`、`/terms` 引用已改為實際渲染路徑 `/legal/privacy-policy`、`/legal/terms-of-service`。**LS-191 起 `WelcomeView` 的《使用條款》《隱私權政策》連結已改開 in-app `LegalDocumentSheet`（直接讀 bundled markdown，不打網路），不再指向這裡的網址**——此網址仍用於文件正文內互相引用與 App Store 產品頁欄位。Pages 已啟用並綁定 `sproutday.app`（LS-436）；DNS 記錄由使用者設定，生效前網址尚不可開。**沿革（LS-436，2026-10-09）**：網域原定 `littlesprout.xyz`（LS-132），App 定名 Sprout Day 後改為 `sproutday.app`，文內網址已全數更新；`support@littlesprout.xyz` 信箱（Cloudflare Email Routing）沿用舊網域，尚未遷移 |
 | `[[EFFECTIVE_DATE]]` | 三份皆有 | **已填（2026-09-12）：2026-09-12**（使用者核可日；LS-132） |
 | `[[VENUE_COURT]]` | 使用條款 §14 | **已填（2026-09-12）：臺灣臺北地方法院**（本 README 建議值，待使用者確認） |
 | `[[REPORT_RETENTION]]` | 隱私權政策 §8 | **已填（2026-09-12）：1 年**（本 README 建議值） |
@@ -93,7 +93,7 @@ App Store Connect 的「隱私權政策 URL」與「支援 URL」都必須是公
 
 ### 自有網域（`[[SUPPORT_URL]]` 的最終形狀）
 
-三案都可再掛自有網域：Settings → Pages → Custom domain 填自訂網域（本專案已選定 `littlesprout.xyz`，見 `docs/CNAME`），DNS 端子網域用 CNAME 指到 `<owner>.github.io`、apex 用 A/ALIAS 記錄；**先在 GitHub 設定 custom domain 再改 DNS**，避免子網域被他人接管（docs.github.com「Managing a custom domain」）。
+三案都可再掛自有網域：Settings → Pages → Custom domain 填自訂網域（本專案已選定 `sproutday.app`，見 `docs/CNAME`），DNS 端子網域用 CNAME 指到 `<owner>.github.io`、apex 用 A/ALIAS 記錄；**先在 GitHub 設定 custom domain 再改 DNS**，避免子網域被他人接管（docs.github.com「Managing a custom domain」）。
 
 ### 建議
 
