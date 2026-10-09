@@ -36,6 +36,9 @@ PRICES = {
     "claude-sonnet-5-5": (2, 10, 0.2, 2.5),  # 09-28 上線，牌價同 Sonnet 5；對表靠最長前綴
     "claude-sonnet-5": (2, 10, 0.2, 2.5),
     "claude-haiku-4-5": (1, 5, 0.1, 1.25),
+    # Haiku 5.5（10-07 上線，LS-420）：牌價以 prompt 100K token 分段——≤100K 0.10／0.50／cache read 0.01／5m write 0.125，
+    # >100K 五倍（0.50／2.50／0.05／0.625）；本表只記 ≤100K 檔，長 prompt 的 Haiku 估值會偏低（官方 pricing 頁 10-09）。
+    "claude-haiku-5-5": (0.10, 0.50, 0.01, 0.125),
 }
 KEYS = ("input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
 KNOWN = r"(ios-dev|merge-reviewer|visual-reviewer|ui-designer|dead-code-sweeper|\bqa\b)"
