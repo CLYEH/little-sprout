@@ -108,6 +108,7 @@ final class UploadQueueStore {
     var order: [UUID] = []
     /// LS-410：sheet 內「標記移除」的失敗項（只在記憶體，`commitRemovals()` 才真的移除並落盤；見 `+RemoveFailed.swift`）。
     var pendingRemovals: Set<UUID> = []
+    var qaGate = QAUploadGate() // LS-427：QA 上傳停滯／失敗開關，見 `QAUploadSwitches.swift`
 
     /// 稿面 `16 上傳佇列` `Resume Banner`（`SpAvh`）：LS-397 起由 `appDidBecomeActive()`（回前景重送）與
     /// `restorePersistedEntries`（重啟續傳）設 `true`；佇列閒置後的下一次 `enqueue` 才歸零。
@@ -354,6 +355,7 @@ final class UploadQueueStore {
     private func performUpload(
         id: UUID, _ payload: PendingUpload.Kind, pixelSize: PixelSize, takenAt: Date?
     ) async throws -> UUID {
+        try await qaGate.beforeUpload()
         switch payload {
         case .photo(let data, let fileExtension):
             return try await mediaUploadService.uploadPhoto(
@@ -394,7 +396,5 @@ final class UploadQueueStore {
         }
     }
 
-    // 拆檔（SwiftLint `file_length`）：`acquireVideoExportSlot()`／`runVideoPreparer(_:)` 見 `+VideoExportSlot.swift`；
-    // `cancelPendingImportItems(_:)` 見 `+ImportCancellation.swift`；`markRemoved`／`commitRemovals` 見
-    // `+RemoveFailed.swift`；`PreviewSeed`／`seedForPreview`／`debug*` 見 `+Preview.swift`（皆非行為分界）。
+    // 拆檔（`file_length`，皆非行為分界）：`+VideoExportSlot`／`+ImportCancellation`／`+RemoveFailed`／`+Preview`。
 }
