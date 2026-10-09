@@ -1,0 +1,9 @@
+---
+permalink: /404.html
+---
+<!-- LS-436：GitHub Pages 沒有 /invite/<code> 這種動態路徑；/invite/<code> 會落到這頁，轉去靜態邀請頁（?code=）。 -->
+<script>
+  var m = location.pathname.match(/^\/invite\/([A-Za-z0-9]+)\/?$/);
+  if (m) { location.replace("/invite/?code=" + encodeURIComponent(m[1])); }
+</script>
+<p>找不到這個頁面。</p>
