@@ -33,8 +33,10 @@
 
 ## 「LITTLE SPROUT」小字（眉標退場規則，`S1FuR`）
 
+> 沿革：2026-10-09 起改 SPROUT DAY（LS-432；LS-148 定名 Sprout Day）。下文既有的「LITTLE SPROUT」為定名前寫法，規則（唯一出現地、規格、不吃 Dynamic Type）不變，以 LS-432 設計稿為準。
+
 - **唯一出現地**：歡迎頁家族（01／01b／01c／01-iPad／AX3／F16 壓測板）相片白邊 Imprint Row。其他任何 UI 不得再出現英文名；橫式鎖版與 App Store 素材另計。
-- 規格：`fs-imprint` 12／字距 3.5／`$print-ink-secondary`／**在白邊帶內水平置中**——印品帶四角暗角漸層，靠左會讓深色對比從 8.13 掉到 3.5 附近（Lab Imprint 置中在兩顆底角漸層半徑 0.432×361＝156pt 之外，取樣證實紙色 flat #E8D9D4）。
+- 規格：`fs-imprint` 12／字距 3.5／`$print-ink-secondary`／**在白邊帶內水平置中**——印品帶四角暗角漸層，靠左會讓深色對比從 8.13 掉到 3.5 附近（Lab Imprint 置中在兩顆底角漸層之外，取樣證實紙色 flat #E8D9D4）。**判準（2026-10-09 LS-432 VR R1 更正）**：Pencil radial gradient 的 size 是橢圓**直徑**，不是半徑，舊寫法「半徑 0.432×361＝156pt 之外」量法有誤；正確判準是點 (dx, dy) 相對漸層中心滿足 (dx/rx)²+(dy/ry)² ≥ 1 才算在漸層之外，rx／ry 為橢圓半軸（iPhone rx 78×ry 53.4、iPad rx 120×ry 105.8）。
 - 它是「印在紙上的字」：不吃 Dynamic Type、不承載唯一資訊。
 
 ## App icon
