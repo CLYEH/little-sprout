@@ -51,7 +51,8 @@ qa|Bash ${LINEAR3} mcp__pencil__get_app_state
 dead-code-sweeper|Bash ${LINEAR3}
 ui-designer|mcp__pencil__execute
 visual-reviewer|mcp__pencil__execute
-ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}"
+ios-dev|Bash Read Edit Write Grep Glob Agent ${LINEAR3}
+Explore|Bash Read Grep Glob mcp__linear__get_issue mcp__linear__list_comments"
 
 # 正文必含字樣規則表（LS-170）：<agent>|<字樣>——規約段落被刪即紅。先給空值、再由標記區塊填入：自測的 mutation 負控用 awk 整段
 # 拿掉標記區塊（留下空表）驗「拿掉規則後負樣本變綠」，證明紅是這條規則造成的（同 linear-issue-check.test.sh 慣例）。
@@ -146,6 +147,10 @@ BODY_RULES=
 #     handoff「Pen 路徑」欄要求回報的格式說明——標記 multi。
 # 字串資料每一行都是下面主迴圈直接讀的實際規則列，註解只能寫在這裡（LS170-BODY-RULES-START／END 區塊內是
 # 原樣多行字串值，不能夾雜 `#` 開頭的行內註解，會被解析成一條假規則）。
+# LS-427（池項 b0c9333e；LS-417 QA R1 與 LS-410 QA R1 同型事故）：qa 正文須含「不得 pause／stop 任何 docker 容器」——QA 要讓上傳停滯／失敗
+# 時一律用 `qa-e2e.sh upload-stall`／`LS_QA_UPLOAD_*` 開關，`docker pause supabase_storage_*` 被 Claude Code 分類器拒（連帶後續截圖呼叫全被拒），
+# 且共用容器 pause 會連累同機其他 QA；那句被刪即紅。釘這句而不釘 `LS_QA_UPLOAD_`：開關名在 qa.md 出現兩次（STALL_MS／FAIL_EVERY_N），
+# 「恰好一次」檢查（LS-341）釘不住；禁令句本身才是這條規則要保的意圖。
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold|LS-170：互動式本機驗證（模擬器對本機容器的多步驟操作）前先 supabase-lock.sh --hold，收工 --release
 ios-dev|pr-body-check.sh <f> --branch <分支> --verify|LS-186：gh pr create/edit 前先用完整旗標跑 pr-body-check.sh 並直接看 exit code
@@ -158,6 +163,7 @@ ios-dev|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd �
 merge-reviewer|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
 qa|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
 qa|qa-e2e.sh|LS-158：多步驟驗收（登入／發佈／瀏覽）優先 qa-e2e.sh 端到端驅動，mobile-mcp 降為輔助|multi
+qa|不得 pause／stop 任何 docker 容器|LS-427：需要讓上傳停滯或失敗一律用 qa-e2e.sh upload-stall／LS_QA_UPLOAD_* 開關，docker pause 被分類器拒且連累同機其他 QA
 ui-designer|--kill 只在 orchestrator 明示時|LS-180：切檔一律不殺 Pen 行程，--kill／--force-reload 只在 orchestrator 明示時使用
 ui-designer|收工 Pen 停在票檔|LS-180：設計票期間 Pen 停在票檔，收工不切回主 checkout|multi
 visual-reviewer|--kill 只在 orchestrator 明示時|LS-180：切檔一律不殺 Pen 行程，--kill／--force-reload 只在 orchestrator 明示時使用
@@ -304,6 +310,9 @@ FORBIDDEN_RULES="ios-dev|mcp__pencil__"
 # 同一列可列多個字首（空白分隔）。另起一行 `+=` 而非改寫上一行：⑮ 的 mutation 靠整行比對清空 ios-dev 那列，
 # LS-376 的 mutation 靠拿掉這一行，兩者各自獨立。
 PEN_WRITE="mcp__pencil__execute mcp__pencil__read_skill mcp__pencil__browser"; FORBIDDEN_RULES+=$'\n'"qa|${PEN_WRITE}"$'\n'"merge-reviewer|${PEN_WRITE}"$'\n'"dead-code-sweeper|${PEN_WRITE}"
+# LS-420：專案層 Explore（覆蓋內建、釘 haiku）必須唯讀——不得持有寫檔／派子 agent／Pencil 工具，Linear 只准讀（RULES 要求
+# get_issue／list_comments，merge-review R1 M1：orchestrator 常派 Explore 讀整串 comment）、任何 mcp__linear__save_* 即紅；沒有 tools: 行同樣違規。
+FORBIDDEN_RULES+=$'\n'"Explore|Edit Write NotebookEdit Agent mcp__pencil__ mcp__linear__save_ mcp__linear__create_ mcp__linear__delete_ mcp__linear__update_"
 fn=0
 while IFS='|' read -r agent forbid; do
   [ -n "$agent" ] || continue
@@ -330,7 +339,7 @@ FORBID_EOF
 
 # frontmatter model: 期望值（LS-400）：COLLABORATION §1 表的 model 政策——ios-dev／qa／dead-code-sweeper 走 `sonnet` 別名
 # （Claude Code ≥2.1.284＝Sonnet 5.5，跟 CLI 升級；使用者 09-29 裁）、ui-designer／merge-reviewer／visual-reviewer 留 `opus`。
-# 政策寫在文件沒有 gate，誰順手把 qa 改回 opus（或把 VR 降 sonnet）CI 不會知道——這裡把六份定義檔的 model: 值釘住。
+# 政策寫在文件沒有 gate，誰順手把 qa 改回 opus（或把 VR 降 sonnet）CI 不會知道——這裡把七份定義檔的 model: 值釘住（LS-420 加 Explore＝haiku：專案層覆蓋內建 Explore，`haiku` 別名 ≥2.1.293＝Haiku 5.5）。
 # 沒有 model: 行＝繼承派工 session 的模型（Fable 5.1），同樣違規。改政策時同步改這張表與 §1；要釘死版本改全 ID 時也要改這裡。
 # 別名實際解析到哪個模型 CI 驗不了（那是 agent-model-check.sh 從 transcript 事後查的事）。
 MODEL_RULES="ios-dev|sonnet
@@ -338,6 +347,7 @@ qa|sonnet
 dead-code-sweeper|sonnet
 ui-designer|opus
 merge-reviewer|opus
+Explore|haiku
 visual-reviewer|opus"
 while IFS='|' read -r agent want_model; do
   [ -n "$agent" ] || continue

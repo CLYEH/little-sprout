@@ -16,6 +16,9 @@ struct QAEnvironment {
         /// LS-270（LS-96 池項 `66d55e5d`）：寶貝管理 → 建檔 → 編輯頭像 → 儲存 → 回列表看刷新。
         /// rawValue 帶連字號，與 `qa-e2e.sh` 的情境名、證據目錄前綴逐字一致。
         case childAvatar = "child-avatar"
+        /// LS-427：XCUITest 側同 `login`；登入通過後由 `qa-e2e.sh` 用 `simctl launch` 以 QA 上傳開關重啟 app
+        /// （`QAUploadSwitches`）並讓模擬器保持 Booted，給後續手動驗證穩定的停滯點，不必 `docker pause` 容器。
+        case uploadStall = "upload-stall"
     }
 
     static let scenarioKey = "LS_QA_SCENARIO"
