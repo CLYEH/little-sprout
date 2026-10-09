@@ -279108,7 +279108,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "Food / 04d 記錄詳情 · 沒有照片 · 非作者看 (iPhone)｜隱藏 Tab Bar ✗｜標題 同 04｜釘底動作帶 無｜失敗文案鍵 42501｜深色 s2qL5（紙不變黑）｜AX3 UFxW5：窗內一行｜iPad 同 04-iPad 版位｜資料落點 唯讀；media_id 為 null；無可編輯欄位",
+          "content": "Food / 04d 記錄詳情 · 沒有照片 · 非作者看 (iPhone)｜隱藏 Tab Bar ✗｜標題 同 04｜釘底動作帶 無｜失敗文案鍵 無（唯讀、沒有寫入動作）｜深色 s2qL5（紙不變黑）｜AX3 UFxW5：窗內一行｜iPad 同 04-iPad 版位｜資料落點 唯讀；media_id 為 null；無可編輯欄位",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
