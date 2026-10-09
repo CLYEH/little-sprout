@@ -47,11 +47,20 @@ enum FoodFirstCardCopy {
         return sections
     }
 
-    /// 署名「暱稱 · 年齡」拆成兩段（稿 Who Group `FCsnV` 600 主墨／Age Group `c1erNo`＋`aL05o` regular 次墨）：
-    /// 年齡＝第一次吃那天（Notes `vMFj3`），字元規則走 `FoodRecordDetailCopy.imprintCaption`
-    /// （＝`AlbumSignatureFormatter.segment`，UTC）——與記錄詳情壓印行、時間軸照片卡同源。
-    static func signature(child: Child, firstTriedOn: Date) -> (name: String, age: String) {
+    /// 署名「暱稱 · 年齡」拆成三段（稿 Signature `Wqlnp`：Who Group `J4XBHw` 600 主墨／Age Group `M4SYe`＝Sep `c1erNo`
+    /// ＋Age `aL05o` regular 次墨，Signature 與 Age Group 的 gap 都是 `$sp-tight`）：「·」獨立成 Sep 節點、
+    /// 與年齡之間由 View 的 HStack 補 `$sp-tight`。年齡＝第一次吃那天（Notes `vMFj3`），字元規則走
+    /// `FoodRecordDetailCopy.imprintCaption`（＝`AlbumSignatureFormatter.segment`，UTC）——與記錄詳情壓印行、
+    /// 時間軸照片卡同源；Sep 逐字＝`AlbumSignatureFormatter.separator`（U+0020 · U+00A0，與稿 `c1erNo` 一致）。
+    struct Signature: Equatable {
+        let name: String
+        let separator: String
+        let age: String
+    }
+
+    static func signature(child: Child, firstTriedOn: Date) -> Signature {
         let segment = FoodRecordDetailCopy.imprintCaption(child: child, firstTriedOn: firstTriedOn)
-        return (child.name, String(segment.dropFirst(child.name.count)))
+        let age = String(segment.dropFirst(child.name.count + AlbumSignatureFormatter.separator.count))
+        return Signature(name: child.name, separator: AlbumSignatureFormatter.separator, age: age)
     }
 }
