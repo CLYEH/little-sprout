@@ -105,7 +105,7 @@ log(`晨報 ${date}：6 支 Haiku 收集員並行`)
 
 const laneTasks = LANES.map(lane => () => agent(
   `${COMMON}
-範圍：lane:${lane}。用 list_issues（team LS）列狀態 Ready／In Progress／In Review／QA 的票，加上近 24h 變成 Done／Canceled 的票（updatedAt 在 24h 內），只留 labels 含 lane:${lane} 的。每張票 list_comments 取近 24h 最新一則（作者＋時間＋一句摘要＋id 前 8 碼）；comment 含「待使用者」「請裁」「回覆用」「a／b／c」這類字樣就 needs_user=true 並逐字抄問句與選項。超過 12 張票只列最新更新的 12 張，其餘在 notes 寫「另有 N 張未列」。`,
+範圍：lane:${lane}。用 list_issues（team LS）列狀態 Ready／In Progress／In Review／QA 的票，加上近 24h 變成 Done／Canceled 的票——**只算 completedAt／canceledAt 在 ${date} 前 24h 內的**（用 get_issue 看 completedAt；舊的 Done 票一律不列），只留 labels 含 lane:${lane} 的。每張票 list_comments 取近 24h 最新一則（作者＋時間＋一句摘要＋id 前 8 碼）；近 24h 沒有 comment 的在飛票 event 寫「近 24h 無新 comment」；comment 含「待使用者」「請裁」「回覆用」「a／b／c」這類字樣就 needs_user=true 並逐字抄問句與選項。超過 12 張票只列最新更新的 12 張，其餘在 notes 寫「另有 N 張未列」。`,
   { label: `collect:${lane}`, phase: 'Collect', model: 'haiku', schema: LANE_SCHEMA },
 ))
 
@@ -138,7 +138,7 @@ ${JSON.stringify({ lanes, git, missing }, null, 2)}
 ## 狀態表
 表格：main／test／development（sha＋tag）、分支漂移、open PR（每個 PR 一列：#號 標題 head→base CI 審查狀態）。
 ## 近 24h 完成
-清單：近 24h Done／Canceled 的票與併入 main 的 PR、tag，每列帶 cite。
+清單：只列收集員標為近 24h 內 Done／Canceled 的票（event 不是「近 24h 無新 comment」）與併入 main 的 PR、tag，每列帶 cite；資料裡沒有就寫一列「近 24h 無完成票」。
 ## 在飛
 依 lane 分小標（### lane:harness …），每票一列：票號 狀態，事件（cite）。lane 失敗的寫一列「本 lane 查無（收集員失敗）」。
 ## 待使用者

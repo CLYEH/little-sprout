@@ -1499,7 +1499,7 @@ REPORT_HOUR="${PATROL_REPORT_HOUR:-8}"
 REPORT_LINE=
 case "${report_hour#0}" in ''|*[!0-9]*) report_hour=0 ;; esac
 if [ "${report_hour#0}" -ge "$REPORT_HOUR" ] && [ ! -e "${report_dir}/${report_day}.done" ]; then
-  REPORT_LINE="→ 晨報：${report_day} 尚未產出（${REPORT_HOUR}:00 後第一輪）→ Workflow {name: \"morning-report\", args: {date: \"${report_day}\", now: \"<HH:MM>\", scratch: \"<scratchpad>\"}} 產出 artifact → 抽驗 2 條引據 → mkdir -p ${report_dir} && touch ${report_dir}/${report_day}.done（LS-429）"
+  REPORT_LINE="→ 晨報：${report_day} 尚未產出（${REPORT_HOUR}:00 後第一輪）→ Workflow {name: \"morning-report\", args: {date: \"${report_day}\", now: \"<HH:MM>\", scratch: \"<scratchpad>\"}} 產出 artifact → 抽驗 2 條引據 → 單獨一條 Bash：LS_ALLOW_MAIN_CHECKOUT_WRITE=1 sh -c 'mkdir -p ${report_dir} && touch ${report_dir}/${report_day}.done'（標記在主 checkout 的 gitignored 目錄；main-checkout-guard 只認整條命令最前面的這個前綴；LS-429）"
   add_flag "[晨報] ${REPORT_LINE}"
 fi
 
