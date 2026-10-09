@@ -1,4 +1,4 @@
-# API.md — Little Sprout 後端契約（iOS 呼叫端視角）
+# API.md — Sprout Day 後端契約（iOS 呼叫端視角）
 
 > **這份文件是給 ios-dev 寫 client 程式碼時查的，不是給 DBA 看 schema 的。**
 > 契約的真身是 `supabase/migrations/*.sql`（PostgREST 自動生成 + SECURITY DEFINER RPC）；

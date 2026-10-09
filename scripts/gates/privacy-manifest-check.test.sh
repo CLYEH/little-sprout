@@ -104,7 +104,7 @@ expect 0 '① 兩個用途字串鍵皆合格 → 過' '全過' "$r"
 
 r=$(mkroot); write_manifest "$r" "$good_manifest"; write_infoplist "$r" "$good_infoplist"
 write_en_strings "$r" '/* comment */
-"NSPhotoLibraryUsageDescription" = "Little Sprout needs access to your photo library so you can pick your child'"'"'s photos to upload.";
+"NSPhotoLibraryUsageDescription" = "Sprout Day needs access to your photo library so you can pick your child'"'"'s photos to upload.";
 '
 expect 0 '① en.lproj/InfoPlist.strings 存在且合格 → 過' '全過' "$r"
 

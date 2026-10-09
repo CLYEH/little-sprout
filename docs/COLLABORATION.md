@@ -1,4 +1,4 @@
-# COLLABORATION.md — Little Sprout 完整協作規約
+# COLLABORATION.md — Sprout Day 完整協作規約
 
 本檔是 `CLAUDE.md` 的完整版參考：gates 細節、Linear 狀態機、命名與訊息範本、agent model 政策、前饋↔反饋對照表。產品與技術規劃見 `docs/PLAN.md`。
 

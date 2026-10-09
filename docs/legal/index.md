@@ -1,4 +1,4 @@
-# Little Sprout 法律文件
+# Sprout Day 法律文件
 
 - [隱私權政策](privacy-policy)
 - [使用條款](terms-of-service)
