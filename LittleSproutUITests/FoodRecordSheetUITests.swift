@@ -163,6 +163,20 @@ final class FoodRecordSheetUITests: XCTestCase {
         XCTAssertTrue(app.buttons["從家庭相簿挑"].waitForExistence(timeout: 5), "不用照片 → 回到兩個來源鈕")
     }
 
+    /// LS-434 03f（稿 `QeM1z`）：「換一張」叫出的 confirmationDialog 標題看得到（`titleVisibility: .visible`），
+    /// 選項只有「從家庭相簿挑」「從手機加入」＋取消——C1a 不加相機。
+    func testChangePhoto_dialogShowsTitleAndOnlyTwoSources() {
+        let app = Support.launch(.foodRecordSheetEdit, Support.standard)
+        let change = app.buttons["換一張"]
+        Support.scrollUntilHittable(change, in: app)
+        change.tap()
+
+        XCTAssertTrue(app.staticTexts["換一張照片"].waitForExistence(timeout: 5), "對話框標題要看得到（03f）")
+        XCTAssertTrue(app.buttons["從家庭相簿挑"].exists)
+        XCTAssertTrue(app.buttons["從手機加入"].exists)
+        XCTAssertFalse(app.buttons["用相機拍一張"].exists, "C1a：不加相機來源")
+    }
+
     /// 03c AX3（稿 `d56YR`）：刪除鈕與取消都在首屏內。
     func testDeleteConfirmation_AX3_buttonsOnFirstScreen() {
         let app = Support.launch(.foodRecordSheetEdit, Support.ax3)

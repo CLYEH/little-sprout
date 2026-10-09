@@ -74,7 +74,7 @@ struct FoodRecordDetailRouter: View {
         }
         .confirmationDialog(
             FoodRecordDetailCopy.addPhotoLabel(foodName: item.nameZh), isPresented: $showsSourceChoice,
-            titleVisibility: .hidden
+            titleVisibility: .visible
         ) {
             Button("從家庭相簿挑") { showsFamilyPicker = true }
             Button("從手機加入") { showsPhonePicker = true }

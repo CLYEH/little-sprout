@@ -79,7 +79,7 @@ struct FoodRecordSheet: View {
             FoodRecordDatePickerSheet(selection: $store.firstTriedOn)
         }
         .sheet(isPresented: $showsFamilyPicker) { familyPicker }
-        .confirmationDialog("換一張照片", isPresented: $showsPhoneSourceChoice, titleVisibility: .hidden) {
+        .confirmationDialog("換一張照片", isPresented: $showsPhoneSourceChoice, titleVisibility: .visible) {
             Button("從家庭相簿挑") { showsFamilyPicker = true }
             Button("從手機加入") { showsPhonePicker = true }
         }
