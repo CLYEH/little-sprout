@@ -7,7 +7,7 @@ import SwiftUI
 /// 一份小型版本，不重用該元件——同 `AvatarPrintCard` 文件註解的既有理由：這裡的「紙」要往下
 /// 延伸包住 Caption／Signature 兩行文字（角托落在整張卡片最下緣，不是只包住照片本身，見
 /// LS-142 Handoff Notes `piK2I`／核可頁截圖 `puHZ5.png`），`PrintPhotoCard` 本身的
-/// `imprintRow` 固定印 "LITTLE SPROUT" 品牌字樣、不接受任意內容，形狀對不上。
+/// `imprintRow` 固定印 "SPROUT DAY" 品牌字樣、不接受任意內容，形狀對不上。
 ///
 /// `cardWidth` 由呼叫端（`AlbumsView`）量好傳入，不在這裡用 `GeometryReader` 自我量寬——同
 /// `DiaryCardView.previewRowWidth` 文件註解點名的既有陷阱（子節點固定寬會把自我量測撐大）。

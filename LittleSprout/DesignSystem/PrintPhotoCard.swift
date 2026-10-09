@@ -23,7 +23,7 @@ struct PrintPhotoCard: View {
     var remoteURL: URL?
     var accessibilityLabel: String = "家庭照片"
     /// LS-365：壓印行改放呼叫端給的內容（時間軸照片卡的寶貝署名，LS-367 Notes `L0xP2`），取代
-    /// `showsImprint` 的「LITTLE SPROUT」廠牌字。給了這個就不看 `showsImprint`。無障礙結構隨之
+    /// `showsImprint` 的「SPROUT DAY」廠牌字。給了這個就不看 `showsImprint`。無障礙結構隨之
     /// 改變：照片本身仍是一個 `.isImage` 元素，壓印內容留給呼叫端自己決定怎麼念（署名要念成
     /// 獨立一句、留白要隱藏）——原本整張卡 `.ignore` 會把壓印內容一起吞掉。
     /// `AnyView`：本元件的 `MountPoolOpacity` 有外部呼叫端以 `PrintPhotoCard.MountPoolOpacity`
@@ -140,7 +140,7 @@ struct PrintPhotoCard: View {
     }
 
     private var imprintRow: some View {
-        Text("LITTLE SPROUT")
+        Text("SPROUT DAY")
             .font(.system(size: 12))
             .tracking(3.5)
             .foregroundStyle(Color.lsPrintInkSecondary)
@@ -151,7 +151,7 @@ struct PrintPhotoCard: View {
     /// Lab Imprint 不吃 Dynamic Type、只印品牌名，併入相片 alt 尾段而不是留一個獨立、
     /// 系統字級縮不了的 VoiceOver 節點（Handoff Notes 通用節「字級」段的二選一規則）。
     private var imprintAccessibilityLabel: String {
-        showsImprint ? "\(accessibilityLabel)（相紙邊緣印著 LITTLE SPROUT）" : accessibilityLabel
+        showsImprint ? "\(accessibilityLabel)（相紙邊緣印著 SPROUT DAY）" : accessibilityLabel
     }
 
     private var mountPoolGlow: some View {
