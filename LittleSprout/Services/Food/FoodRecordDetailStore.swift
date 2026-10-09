@@ -100,6 +100,14 @@ final class FoodRecordDetailStore {
         }
     }
 
+    /// 04e「再試一次」：先回 `.loading`（窗口空白一下，讓使用者看得到有在重試），再整輪重讀。已刪照片再試仍會回
+    /// `.unavailable`——v1 不分辨（C2a）。
+    func retryPhoto() async {
+        guard photo == .unavailable else { return }
+        photo = .loading
+        await refresh()
+    }
+
     private func applyPhoto(_ url: URL?, for mediaID: UUID?) {
         guard mediaID != nil else {
             photo = .none

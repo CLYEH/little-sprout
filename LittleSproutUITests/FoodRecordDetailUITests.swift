@@ -120,10 +120,10 @@ final class FoodRecordDetailUITests: XCTestCase {
         XCTAssertFalse(app.buttons["這筆沒有照片"].exists, "不可點：VoiceOver 不加 .isButton")
         XCTAssertEqual(actionButtons(in: app), [], "非作者 viewer：沒有任何動作鈕")
         let imprint = app.staticTexts["foodRecordDetail.imprint"].frame
-        // 窗高 400（compact）、字置中：窗頂＝字中線 −200；沖印品外框＝窗外擴白邊 8，下緣到壓印行下方再 8（同 04 的量法）。
+        // 窗高 400（compact）、字置中：窗頂＝字中線 −200；沖印品外框＝窗外擴白邊 8，下緣＝壓印行下方 `printEdgeBottom` 8。
         let windowTop = label.frame.midY - 200
         let print = CGRect(
-            x: 24, y: windowTop - 8, width: app.frame.width - 48, height: imprint.maxY + 16 - (windowTop - 8)
+            x: 24, y: windowTop - 8, width: app.frame.width - 48, height: imprint.maxY + 8 - (windowTop - 8)
         )
         let ratios = cornerRatios(around: print, in: app)
         for (name, ratio) in [
@@ -132,6 +132,34 @@ final class FoodRecordDetailUITests: XCTestCase {
         ] {
             XCTAssertLessThan(ratio, 0.05, "04d 零角托：\(name)像素佔比 \(ratio)")
         }
+    }
+
+    /// LS-434 04e（稿 `GFvUy`）：照片載入失敗——窗內「照片沒有載入」＋「再試一次」，角托（對角兩顆）照有；
+    /// 再試一次後仍失敗（簽名網址一律拿不到）就還是這個態（C2a：已刪照片不另分辨）。
+    func testPhotoLoadFailed_showsRetryAndKeepsDiagonalCorners() {
+        let app = launch(.foodRecordDetail, Self.standard, extraArguments: ["-LSFoodRecordDetailPhotoFailed", "YES"])
+        let label = app.staticTexts["foodRecordDetail.photoFailed"]
+        XCTAssertTrue(label.waitForExistence(timeout: 5), "04e：窗內要有「照片沒有載入」")
+        XCTAssertEqual(label.label, "照片沒有載入")
+        let retry = app.buttons["foodRecordDetail.retryPhoto"]
+        XCTAssertTrue(retry.waitForHittable(timeout: 5), "「再試一次」可點")
+        XCTAssertEqual(retry.label, "再試一次")
+        XCTAssertFalse(element("foodRecordDetail.photo", in: app, timeout: 1).exists, "沒有載入成功的照片")
+        XCTAssertFalse(app.buttons["foodRecordDetail.addPhoto"].exists, "這筆確實有照片：不退回 04b 的邀請")
+
+        // 窗高 400（compact）、窗底在壓印行上方 gap 7：沖印品外框＝窗外擴白邊 8，下緣＝壓印行下方 `printEdgeBottom` 8。
+        let imprint = app.staticTexts["foodRecordDetail.imprint"].frame
+        let printTop = imprint.minY - 7 - 400 - 8
+        let print = CGRect(x: 24, y: printTop, width: app.frame.width - 48, height: imprint.maxY + 8 - printTop)
+        let ratios = cornerRatios(around: print, in: app)
+        XCTAssertGreaterThan(ratios.topLeading, 0.8, "左上角托保留（像素佔比 \(ratios.topLeading)）")
+        XCTAssertGreaterThan(ratios.bottomTrailing, 0.8, "右下角托保留（像素佔比 \(ratios.bottomTrailing)）")
+        XCTAssertLessThan(ratios.topTrailing, 0.05)
+        XCTAssertLessThan(ratios.bottomLeading, 0.05)
+
+        retry.tap()
+        XCTAssertTrue(label.waitForExistence(timeout: 5), "再試一次仍失敗：還是失敗態，不另外分辨（C2a）")
+        XCTAssertTrue(retry.waitForHittable(timeout: 5))
     }
 
     // MARK: - AX3（`z1Pg2`／`vr5zj`）

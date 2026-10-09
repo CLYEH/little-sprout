@@ -77,6 +77,10 @@ enum FoodRecordDetailCopy {
     /// 04d 非作者看沒有照片的記錄：窗內唯讀的一句話（稿 `ZmJ6Z`，三種字級同一字串、不帶換行）。
     static let noPhoto = "這筆沒有照片"
 
+    /// 04e 照片載入失敗（稿 `a9LzC`／`U8Yoq`，失敗文案鍵 `food.photo_load_failed`）。
+    static let photoLoadFailed = "照片沒有載入"
+    static let retryPhoto = "再試一次"
+
     /// 04b 空白沖印品的邀請句（稿 `R0Ys6N`「加一張第一次吃南瓜的照片」）。
     static func addPhotoLabel(foodName: String) -> String { "加一張第一次吃\(foodName)的照片" }
 
