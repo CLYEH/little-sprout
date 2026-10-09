@@ -157,8 +157,8 @@ has '③ db 記到 main- 開頭的專屬裝置' "$(cat "$db3")" 'main-iPhone17Pr
 #        整個移到 push-gate.sh 包 xcodebuild 那段。detect-simulator.sh 自己應該立刻回、不等任何東西，
 #        即使湊巧有東西佔著一個同名的舊式鎖路徑也一樣，才不會憑空多一個等待點）----
 db4="$work/db4"; fresh_db "$db4"
-rm -rf "$work/stale-old-style-lock"
-bash "${root}/scripts/ops/simulator-lock.sh" --dir "$work/stale-old-style-lock" -- sleep 5 &
+rm -rf "$work/stale-old-style-simulator-lock"
+bash "${root}/scripts/ops/simulator-lock.sh" --dir "$work/stale-old-style-simulator-lock" -- sleep 5 &
 holder_pid=$!
 sleep 0.5
 t0=$(date +%s)
@@ -173,7 +173,7 @@ if [ $((t1 - t0)) -le 1 ]; then echo "✓ ④ 立即回傳、detect-simulator.sh
 # ---- ⑤ push-gate 現在把「執行 xcodebuild test」整段包進 simulator-lock.sh、以 destination 的 UDID 為鍵
 #        （LS-83 R2 F1）：這裡直接驗那個機制——同一把鎖下先背景佔住（模擬第一個 worktree 正在跑 xcodebuild
 #        test），第二個 xcodebuild（stub）呼叫要等它放掉才跑，且確實執行到（有輸出），不是被跳過 ----
-lock5="$work/pushgate-lock"
+lock5="$work/pushgate-simulator-lock"
 rm -rf "$lock5"
 bash "${root}/scripts/ops/simulator-lock.sh" --dir "$lock5" -- xcodebuild 3 >/dev/null 2>&1 &
 holder_pid=$!
@@ -188,8 +188,8 @@ has '⑤ 等到 lock 後第二個 xcodebuild 確實有執行（有輸出，不�
 
 # ---- ⑥ CI 模式（CI=true）：不建、不 lock、直接回共用第一台，即使 lock 被佔住也不必等 ----
 db6="$work/db6"; fresh_db "$db6"
-rm -rf "$work/simlock"
-bash "${root}/scripts/ops/simulator-lock.sh" --dir "$work/simlock" -- sleep 3 &
+rm -rf "$work/simulator-lock-sim"
+bash "${root}/scripts/ops/simulator-lock.sh" --dir "$work/simulator-lock-sim" -- sleep 3 &
 holder_pid=$!
 sleep 0.5
 t0=$(date +%s)
@@ -205,7 +205,7 @@ if grep -qF 'LS-101' "$db6"; then echo "✗ ⑥ CI 模式不該建立專屬裝�
 # ---- ⑦ 建立失敗（devicetype 查不到）→ 退回共用（lock 沒人占用時立即回）----
 db7="$work/db7"; fresh_db "$db7"
 mkdir -p "$work/wt/LS-103"
-rm -rf "$work/simlock"
+rm -rf "$work/simulator-lock-sim"
 t0=$(date +%s)
 out7=$(STUB_DB="$db7" STUB_NO_DEVICETYPE=1 run_in "$work/wt/LS-103")
 t1=$(date +%s)

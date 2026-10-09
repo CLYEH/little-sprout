@@ -23,7 +23,7 @@
 | `print-paper`（R4） | #FBEBEC | **#E8D9D4** | 相片白邊／沖印品相紙背景，獨立於 surface，**不隨關燈變黑** | 淺與 surface 同值；深自訂暖米白 |
 | `print-ink`（R10） | #2B141C | #2B141C | 紙上的墨（Family Caption 等）：**不掛 theme 的單值 token**，任何模式皆＝淺色 `$text-primary` 值 | 對 print-paper **14.92／12.55** |
 | `print-ink-secondary`（R10） | #553040 | #553040 | 紙上的墨（Lab Imprint 等）：不掛 theme 的單值 token，任何模式皆＝淺色 `$text-secondary` 值；Lab Imprint 為裝飾性文字，標 accessibilityHidden | 對 print-paper **9.66／8.13** |
-| `accent-on-paper`（LS-446） | #8E2447 | #8E2447 | 紙上的已按讚／強調：**不掛 theme 的單值 token**，任何模式皆＝淺色 `$accent` 值（紙不會變黑，紙上的強調色也不該跟著深色 `$accent` #FCA4B5 變淡）；只用在 `$print-paper` 上，頁面底（`bg`）上仍用 `accent` | 對 print-paper **7.30／6.14**（深色 `accent` #FCA4B5 壓深色紙只有 1.38:1） |
+| `accent-on-paper`（LS-448） | #8E2447 | #8E2447 | 紙上的已按讚／強調：**不掛 theme 的單值 token**，任何模式皆＝淺色 `$accent` 值（同 print-ink 系列邏輯——躺在紙上的東西不該跟著 theme 反轉）。深色 `$accent`（#FCA4B5）壓在深色 `$print-paper`（#E8D9D4）上只有約 1.4:1，故紙上改用此值；不是第二個識別色，仍受「accent 每畫面最多一次實心主動作」配額約束 | 對 print-paper：淺 **7.30**（同 accent 對 surface）／深 **6.14**（#E8D9D4，自行複算 6.139） |
 | `surface-2` | #E4C8CD | #3B252D | 凹陷／次級填色。規則：只承載 text-primary 與 text-secondary；也是 in-flight 時非主鍵的「轉暗」色 | ink 11.02／11.45・ink-2 7.14／7.03 |
 | `border` | #BC969D | #5E3D47 | 純裝飾髮絲線與分組線。不承載意義，申報豁免 3:1 | 1.86／2.01 |
 | `control-line` | #8A6470 | #9B7580 | 有意義的邊界：輸入框、外框鈕、焦點框 | 3.60／4.72（≥3 ✓） |
