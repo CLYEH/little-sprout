@@ -149,7 +149,7 @@ ${JSON.stringify({ lanes, git, missing }, null, 2)}
 （本段是 gate 的豁免段，專放沒有 id 可引的缺席陳述）收集員 notes 裡的「查無／失敗」、「lane:<x> 無在飛票」、「收集員失敗：無」逐條列出，帶來源 lane；其他段落一律不得出現這類句子。
 
 規則：
-1. 每條事實列（清單列、表格資料列）必含引據：comment id 前 8 碼、PR #號、commit sha，或「LS-<n>＋狀態詞」。資料裡沒有 id 的事件改寫成「LS-<n> <狀態>」。
+1. 非豁免段裡的每一行（清單列含編號／縮排、表格資料列、段落句）都是事實列，必含引據：comment id 前 8 碼、PR #號、commit sha，或「LS-<n>＋狀態詞」。資料裡沒有 id 的事件改寫成「LS-<n> <狀態>」。
 2. 用 Write 寫到 ${mdPath}，然後跑 \`bash ${gate} ${mdPath}\`；rc≠0 就只修被點名的那幾行（補 id 或改成票號＋狀態）再跑一次，最多 3 次；仍紅就停止、不發布，回報 gate 原文。
 3. gate 綠後用 Skill 載入 artifact-design，再用 Artifact 工具發布（檔名 morning-report-${date}.html：把 markdown 轉成簡潔 HTML 頁，title「晨報 ${date}」，icon "report"${existingUrl ? '，url 參數填 ' + existingUrl + ' 更新同一頁' : ''}），回 URL。
 4. 回傳 md_path／gate_rc／gate_output／url／fact_count。不要在回覆裡貼整份報告（抽驗樣本由 orchestrator 用 gate 的 --sample 自己抽，你不必提供）。`,

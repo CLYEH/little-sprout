@@ -8,11 +8,12 @@
 #   - 每條事實列至少含一個可反查 id：≥7 位且含英文字母的 hex token（Linear comment id 前綴或 git sha；純數字如日期不算）、
 #     `#<PR 號>`（≥2 位數），或 `LS-<n>` 且同一行帶整字狀態詞（Done／In Progress／In Review／QA／Ready／Backlog／Canceled／PASS／
 #     FAIL／BLOCKED／APPROVE／ITERATE／REQUEST_CHANGES／merged／open／tag／v<版本>；`tagline`／`reopened` 不算，R1 I1）——單獨提到票號不算引據。
-#   - 標題含「待使用者」「待裁決」「建議」「查無」的段落整段豁免（問句、orchestrator 補的判斷、以及「本 lane 無在飛票」這類
-#     沒有 id 可引的缺席陳述——彙整員版型把缺席陳述集中在「風險與查無」段，其他段不得出現）。
+#   - 標題（`#`+空白）開頭是「待使用者」「待裁決」「建議」的段落整段豁免（問句、orchestrator 補的判斷）；開頭是「風險與查無」「查無」
+#     的段落只豁免固定缺席句型（查無／無在飛票／無新 comment／無完成票／失敗：無／收集員失敗）且無 id 的列，帶 id 的列照查照抽
+#     （R2 m2：豁免不能靠 Haiku 寫的標題「含」關鍵字）。
 #   - 空行、標題、引文（`>`）、程式碼區塊（``` 內）、`|---` 分隔列、表頭不檢查。
 #   - `--sample N`：通過時另印「抽驗樣本」N 行——**由本腳本從已查事實列隨機抽**（R1 M1：不能讓受驗的 Haiku 自己挑樣本），
-#     orchestrator 對這 N 行反查 id。亂數種子預設 $RANDOM，自測用 CITE_SAMPLE_SEED 釘死。
+#     orchestrator 對這 N 行反查 id。排序鍵由 bash RANDOM 產生（R2 m1：mawk 不理 srand），種子預設 $RANDOM，自測用 CITE_SAMPLE_SEED 釘死。
 # exit：0 全部有引據；1 有缺引據的列（逐行印 ✗ 行號＋內容）；2 用法／檔案錯誤。
 # 自測：scripts/gates/report-cite-check.test.sh（CI rules job；mutation 拿掉 `# MUT:state-word` 那行的狀態詞條件）。
 set -uo pipefail
@@ -31,7 +32,11 @@ done
 
 STATE_WORDS='Done|In Progress|In Review|QA|Ready|Backlog|Canceled|PASS|FAIL|BLOCKED|APPROVE|ITERATE|REQUEST_CHANGES|merged|open|tag|v[0-9]+\.[0-9]+'
 STATE_RE="(^|[^A-Za-z_])(${STATE_WORDS})([^A-Za-z_]|$)"
-EXEMPT_RE='(待使用者|待裁決|建議|查無)'   # 「風險與查無」段放「本 lane 無在飛票／收集員失敗：無」這類缺席陳述，沒有 id 可引
+# 豁免只認「標題開頭」是版型固定字（R2 m2：Haiku 寫的標題不能靠「含關鍵字」就整段放行）：
+#   整段豁免：標題以 待使用者／待裁決／建議 開頭；缺席句豁免：標題以 風險與查無／查無 開頭，段內只豁免固定的缺席句型，帶 id 的列照查照抽。
+EXEMPT_FULL_RE='^(待使用者|待裁決|建議)'
+EXEMPT_ABSENT_RE='^(風險與查無|查無)'
+ABSENT_LINE_RE='(查無|無在飛票|無新 comment|無完成票|失敗：無|收集員失敗)'
 
 has_id() {  # ≥7 位 hex 且含字母（排除純數字日期／run id），或 #<PR>
   printf '%s' "$1" | grep -Eo '[0-9a-f]{7,}' | grep -q '[a-f]' && return 0
@@ -56,8 +61,17 @@ while [ "$i" -lt "$total" ]; do
   case "$stripped" in
     '') continue ;;
     '#'*)
-      if printf '%s' "$stripped" | grep -Eq "$EXEMPT_RE"; then in_exempt=1; else in_exempt=0; fi
-      continue ;;
+      # 標題＝`#`+ 後接空白（R2 m2：`#598 …` 開頭的事實列不是標題）；去掉 # 與空白後看開頭字
+      hashes="${stripped%%[^#]*}"; rest="${stripped#"$hashes"}"
+      case "$rest" in ' '*|'	'*) ;; *) : ;; esac
+      if [ "${#hashes}" -ge 1 ] && [ "${#hashes}" -le 6 ] && { case "$rest" in ' '*|'	'*) true ;; *) false ;; esac; }; then
+        title="${rest#"${rest%%[![:space:]]*}"}"
+        if printf '%s' "$title" | grep -Eq "$EXEMPT_FULL_RE"; then in_exempt=1
+        elif printf '%s' "$title" | grep -Eq "$EXEMPT_ABSENT_RE"; then in_exempt=2
+        else in_exempt=0; fi
+        continue
+      fi
+      ;;  # `#598` 這類不是標題，落到下面當事實列
     '>'*) continue ;;
     '|'*)
       case "$stripped" in '|'*'---'*) continue ;; esac
@@ -67,6 +81,7 @@ while [ "$i" -lt "$total" ]; do
       ;;
   esac
   if [ "$in_exempt" -eq 1 ]; then exempt=$((exempt + 1)); continue; fi
+  if [ "$in_exempt" -eq 2 ] && printf '%s' "$stripped" | grep -Eq "$ABSENT_LINE_RE" && ! has_id "$stripped"; then exempt=$((exempt + 1)); continue; fi
   checked=$((checked + 1))
   if has_id "$stripped"; then printf '%s\n' "第 ${n} 行：${stripped}" >> "$checked_file"; continue; fi
   if printf '%s' "$stripped" | grep -Eq 'LS-[0-9]+'; then
@@ -84,6 +99,12 @@ echo "✓ report-cite-check：${checked} 條事實列皆有引據（豁免 ${exe
 if [ "$sample" -gt 0 ] && [ "$checked" -gt 0 ]; then
   seed="${CITE_SAMPLE_SEED:-$RANDOM}"
   echo "抽驗樣本（${sample} 條，由本腳本隨機抽、seed ${seed}；orchestrator 對每條反查 id）："
-  awk -v seed="$seed" 'BEGIN{srand(seed)} {print rand() "\t" $0}' "$checked_file" | sort | head -n "$sample" | cut -f2- | sed 's/^/  /'
+  # R2 m1：mawk 不理 srand(seed)、同種子不可重現——排序鍵改由 bash 自己的 RANDOM（RANDOM=seed 可重現）產生
+  RANDOM=$seed
+  keyed="${checked_file}.keyed"
+  : > "$keyed"
+  while IFS= read -r l; do printf '%05d\t%s\n' "$RANDOM" "$l" >> "$keyed"; done < "$checked_file"   # 不進管線：子 shell 會重新播種 RANDOM
+  sort "$keyed" | head -n "$sample" | cut -f2- | sed 's/^/  /'
+  rm -f "$keyed"
 fi
 exit 0

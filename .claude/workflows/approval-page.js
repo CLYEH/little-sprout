@@ -55,7 +55,7 @@ ${questions.length ? questions.map((q, i) => `${i + 1}. ${q}`).join('\n') : '（
 回覆格式提示一行：「回『<題號><選項>』，如 C1a C2b」。
 
 規則：
-1. 事實列必含引據（comment id 前 8 碼、板 id 配 LS 票號＋狀態詞、或 commit sha）；「待使用者裁決」段豁免。
+1. 非豁免段裡的每一行（清單列含編號／縮排、表格資料列、段落句）都是事實列，必含引據（comment id 前 8 碼、板 id 配 LS 票號＋狀態詞、或 commit sha）；只有「待使用者裁決」段（標題必須以這幾個字開頭）豁免。
 2. Write 到 ${mdPath}，跑 \`bash ${gate} ${mdPath}\`；rc≠0 只修被點名列（補 id），最多 3 次；仍紅就不發布、回報 gate 原文。
 3. gate 綠後 Skill 載入 artifact-design，再用 Artifact 工具發布（檔名 approval-${a.ticket}.html，title「${a.ticket} 核可頁」，icon "design"${a.url ? '，url 參數填 ' + a.url + ' 更新同一頁' : ''}）。**板圖必須看得到**：artifact 讀不到本機路徑，所以先 \`mkdir -p ${imgDir}\`，每張板圖用 \`sips -Z 720 <png> --out ${imgDir}/<板id>.png\` 縮到長邊 720，再用 python3 轉 base64 以 \`<img src="data:image/png;base64,…" alt="<板id>">\` 內嵌（一張一格，格下標「態名｜板 id」），總量控制在 12MB 內（超過就再縮到 540）；不要只列路徑、不要省略任何板。
 4. 回傳 md_path／gate_rc／gate_output／url／board_count（抽驗樣本由 orchestrator 用 gate 的 --sample 自己抽，你不必提供）。`,
