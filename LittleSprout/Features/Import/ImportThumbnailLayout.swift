@@ -101,7 +101,11 @@ struct ImportThumbnailCell: View {
     }
 }
 
-private struct ImportMoreCell: View {
+/// 群卡縮圖列最後一格「還有 N 張」／「+N」（`design/littlesprout.pen` Notes `sErBN`＋LS-439
+/// `F3GbnN`）：字級／長短形／縮放／VoiceOver 都在 `ThumbnailCountLabel`，這裡只給 `$surface-2`
+/// 紙面、`$text-secondary` 字色與左右內距 `$sp-tight`。非 `private` 只為讓 DEBUG harness
+/// （`TapTargetGateHarness+ThumbnailCount.swift`，三位數壓測板 `foDYi`）能直接掛這個正式元件。
+struct ImportMoreCell: View {
     let count: Int
 
     var body: some View {
@@ -109,11 +113,7 @@ private struct ImportMoreCell: View {
             .fill(Color.lsSurface2)
             .aspectRatio(1, contentMode: .fit)
             .overlay(
-                // `$fs-imprint`（12pt）刻意不吃 Dynamic Type，同 Typography.swift 檔頭文件
-                // 註解——這是唯一不用 `appFont` 的字級。
-                Text("+\(count)").font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(Color.lsTextSecondary)
+                ThumbnailCountLabel(count: count, foreground: Color.lsTextSecondary, horizontalInset: AppSpacing.tight)
             )
-            .accessibilityLabel("還有 \(count) 張")
     }
 }

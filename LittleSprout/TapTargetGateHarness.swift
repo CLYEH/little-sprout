@@ -138,7 +138,8 @@ enum TapTargetGateHarness {
         case .foodRecordDetail, .foodRecordDetailNoPhoto, .foodRecordDetailOwner, .foodRecordDetailViewer:
             foodRecordDetailHost(for: screen)
         case .foodFirstCard: foodFirstCardHost
-        case .settingsUploadQueueEntry: settingsUploadQueueEntryHost
+        // LS-440：本 enum body 已貼齊 SwiftLint `type_body_length` 250 上限，兩支併單行分派。
+        case .settingsUploadQueueEntry, .thumbnailCountStress: uploadQueueEntryOrThumbnailCountHost(for: screen)
         case .selfTestTooSmall: selfTestTooSmallHost
         case .selfTestGood: selfTestGoodHost
         case .selfTestPaddingOutsideButton: selfTestPaddingOutsideButtonHost

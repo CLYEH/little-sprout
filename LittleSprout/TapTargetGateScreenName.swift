@@ -377,6 +377,11 @@ enum TapTargetGateScreenName: String {
     // 行為斷言（同 `.diaryCardBabyCaption` 先例，不進逐元件 tap target 量測）；fixture／劇本見
     // `TapTargetGateHarness+UploadQueueEntry.swift`。
     case settingsUploadQueueEntry = "SettingsViewUploadQueueEntry"
+    // LS-440：縮圖張數疊字（`ThumbnailCountLabel`，Notes `sErBN`／LS-439 `F3GbnN`）壓測——`ImportMoreCell` 在
+    // 96／64 格 × 一／兩／三位數（壓測板 `foDYi`），或日記卡第三格暗蓋；同 `.diaryCardBabyCaption` 先例，不進逐元件
+    // tap target 量測，借這條通道餵 `ThumbnailCountLabelUITests` 與截圖對稿；fixture／深淺色見
+    // `TapTargetGateHarness+ThumbnailCount.swift`。
+    case thumbnailCountStress = "ThumbnailCountStress"
 
     // 自測樣本（LS-95 自己的 gate 自測，不是產品畫面）：`TapTargetGateSelfTests` 專用。
     case selfTestTooSmall = "SelfTestTooSmall"
