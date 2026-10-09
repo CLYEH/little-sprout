@@ -276900,7 +276900,7 @@
       "name": "Food / 04f 加照片沒有存起來 · 開 03b (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 1125,
+      "height": 1065,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -276944,7 +276944,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1125,
+          "height": 1065,
           "fill": "$paper-shadow"
         },
         {
@@ -276955,7 +276955,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1125,
+          "height": 1065,
           "layout": "none",
           "children": [
             {
@@ -277537,24 +277537,6 @@
                           }
                         }
                       ]
-                    },
-                    {
-                      "id": "yyqms",
-                      "type": "ref",
-                      "ref": "qe9yS",
-                      "name": "Delete Button",
-                      "width": "fill_container",
-                      "justifyContent": "center",
-                      "descendants": {
-                        "breqI": {
-                          "icon": "trash-2",
-                          "fill": "$danger"
-                        },
-                        "hIhVd": {
-                          "content": "刪除這筆記錄",
-                          "fill": "$danger"
-                        }
-                      }
                     }
                   ]
                 }
@@ -277575,7 +277557,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1125,
+      "height": 1065,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -277619,7 +277601,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 1125,
+          "height": 1065,
           "fill": "$paper-shadow"
         },
         {
@@ -277630,7 +277612,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 1125,
+          "height": 1065,
           "layout": "none",
           "children": [
             {
@@ -278212,24 +278194,6 @@
                           }
                         }
                       ]
-                    },
-                    {
-                      "id": "EiYXP",
-                      "type": "ref",
-                      "ref": "qe9yS",
-                      "name": "Delete Button",
-                      "width": "fill_container",
-                      "justifyContent": "center",
-                      "descendants": {
-                        "breqI": {
-                          "icon": "trash-2",
-                          "fill": "$danger"
-                        },
-                        "hIhVd": {
-                          "content": "刪除這筆記錄",
-                          "fill": "$danger"
-                        }
-                      }
                     }
                   ]
                 }
@@ -278250,7 +278214,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2693,
+      "height": 2600,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -278294,7 +278258,7 @@
           "name": "Scrim",
           "opacity": 0.45,
           "width": 393,
-          "height": 2693,
+          "height": 2600,
           "fill": "$paper-shadow"
         },
         {
@@ -278305,7 +278269,7 @@
           "y": 0,
           "name": "Sheet Wrap",
           "width": 393,
-          "height": 2693,
+          "height": 2600,
           "layout": "none",
           "children": [
             {
@@ -278894,26 +278858,6 @@
                           }
                         }
                       ]
-                    },
-                    {
-                      "id": "kpFMu",
-                      "type": "ref",
-                      "ref": "qe9yS",
-                      "name": "Delete Button",
-                      "width": "fill_container",
-                      "justifyContent": "center",
-                      "descendants": {
-                        "breqI": {
-                          "icon": "trash-2",
-                          "fill": "$danger",
-                          "width": 32,
-                          "height": 32
-                        },
-                        "hIhVd": {
-                          "content": "刪除這筆記錄",
-                          "fill": "$danger"
-                        }
-                      }
                     }
                   ]
                 }
@@ -279044,7 +278988,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "04f 加照片沒有存起來｜liRRE／J4HuI／TVRqA｜沿 03b ekxHM／K6MMar（換成南瓜這筆）；Status Icon FFhBY、Status Text wd8Ov（深 B2W6K／axHG2、AX3 cQ2dc／a2Rntt）｜「照片沒有加上去：網路好像斷了。照片還在這裡，連上網路後按「儲存」。」定案：入稿，沿現作路由——04b 選好照片即存；存不起來時開 03b（同一顆 store，其餘欄位原樣帶回，剛選的照片已在照片欄），使用者按「儲存」重送或按「不用照片」放棄。失敗句換成這條專屬句，不沿用 03e「填好的內容都還在／再按一次」——這條路使用者沒填欄位、也還沒按過儲存。其餘錯誤碼：「照片沒有加上去：」＋AppError.userFacingMessage。這句也要放進 Status Slot 的候選句。",
+          "content": "04f 加照片沒有存起來｜liRRE／J4HuI／TVRqA｜沿 03b ekxHM／K6MMar（換成南瓜這筆）；Status Icon FFhBY、Status Text wd8Ov（深 B2W6K／axHG2、AX3 cQ2dc／a2Rntt）｜「照片沒有加上去：網路好像斷了。照片還在這裡，連上網路後按「儲存」。」定案：入稿，沿現作路由——04b 選好照片即存；存不起來時開 03b（同一顆 store，其餘欄位原樣帶回，剛選的照片已在照片欄），使用者按「儲存」重送或按「不用照片」放棄。這條路由的 03b 不放「刪除這筆記錄」（R2 MN-3）：使用者是來加照片、剛遇到失敗，破壞性按鈕不該出現在儲存鈕正下方；要刪除照樣從一般的「編輯這筆記錄」進 03b。失敗句換成這條專屬句，不沿用 03e「填好的內容都還在／再按一次」——這條路使用者沒填欄位、也還沒按過儲存。其餘錯誤碼：「照片沒有加上去：」＋AppError.userFacingMessage。這句也要放進 Status Slot 的候選句。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
