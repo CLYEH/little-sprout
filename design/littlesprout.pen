@@ -292187,8 +292187,9 @@
                     {
                       "type": "frame",
                       "id": "c24KhU",
-                      "name": "Interaction Row（頁面底，兩案相同）",
+                      "name": "Interaction Row（頁面底，兩案相同；AX3 直排同 Qzz3r）",
                       "width": "fill_container",
+                      "layout": "vertical",
                       "gap": "$sp-block",
                       "children": [
                         {
@@ -292202,7 +292203,7 @@
                               "type": "frame",
                               "id": "uyzfY",
                               "name": "Like Toggle",
-                              "width": 118,
+                              "width": 220,
                               "gap": "$sp-tight",
                               "padding": 11,
                               "alignItems": "center",
@@ -292211,8 +292212,8 @@
                                   "type": "icon",
                                   "id": "Ow4Wa",
                                   "name": "Heart Icon",
-                                  "width": 22,
-                                  "height": 22,
+                                  "width": 32,
+                                  "height": 32,
                                   "icon": "heart",
                                   "library": "lucide",
                                   "fill": "$text-secondary"
@@ -292233,8 +292234,8 @@
                               "type": "frame",
                               "id": "I1n2T",
                               "name": "Count Zone",
-                              "width": 44,
-                              "height": 44,
+                              "width": 56,
+                              "height": 80,
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -292264,8 +292265,8 @@
                               "type": "icon",
                               "id": "GlWzv",
                               "name": "Comment Icon",
-                              "width": 22,
-                              "height": 22,
+                              "width": 32,
+                              "height": 32,
                               "icon": "message-circle",
                               "library": "lucide",
                               "fill": "$text-secondary"
@@ -293302,8 +293303,9 @@
                     {
                       "type": "frame",
                       "id": "S2Z47",
-                      "name": "Interaction Row（頁面底，兩案相同）",
+                      "name": "Interaction Row（頁面底，兩案相同；AX3 直排同 Qzz3r）",
                       "width": "fill_container",
+                      "layout": "vertical",
                       "gap": "$sp-block",
                       "children": [
                         {
@@ -293317,7 +293319,7 @@
                               "type": "frame",
                               "id": "nn8xx",
                               "name": "Like Toggle",
-                              "width": 118,
+                              "width": 220,
                               "gap": "$sp-tight",
                               "padding": 11,
                               "alignItems": "center",
@@ -293326,8 +293328,8 @@
                                   "type": "icon",
                                   "id": "ONfyO",
                                   "name": "Heart Icon",
-                                  "width": 22,
-                                  "height": 22,
+                                  "width": 32,
+                                  "height": 32,
                                   "icon": "heart",
                                   "library": "lucide",
                                   "fill": "$text-secondary"
@@ -293348,8 +293350,8 @@
                               "type": "frame",
                               "id": "R01GI2",
                               "name": "Count Zone",
-                              "width": 44,
-                              "height": 44,
+                              "width": 56,
+                              "height": 80,
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -293379,8 +293381,8 @@
                               "type": "icon",
                               "id": "DHuk6",
                               "name": "Comment Icon",
-                              "width": 22,
-                              "height": 22,
+                              "width": 32,
+                              "height": 32,
                               "icon": "message-circle",
                               "library": "lucide",
                               "fill": "$text-secondary"
@@ -293619,7 +293621,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "對照板 j6vJS、UhMZ6 各 6 欄，欄寬 393（iPhone 板寬，硬寫 12 次）；欄內整頁是複製來的板，沿用來源的寬高字面值（393；高 1189／2770／974.375／2106.375），本票沒有新寫高度。本板寬 900 沿用既有 Notes 板寬。其餘間距全綁 token（$screen-pad、$sp-block、$sp-group、$sp-tight）。沒有改任何元件的寬高。",
+          "content": "對照板 j6vJS、UhMZ6 各 6 欄，欄寬 393（iPhone 板寬，硬寫 12 次）；欄內整頁是複製來的板，沿用來源的寬高字面值（393；高 1189／2770／974.375／2106.375），本票沒有新寫高度。UhMZ6 的 AX3 兩欄互動列照 LS-177 AX3 規格（Qzz3r 內 DD9fZ）改直排：Like Toggle 寬 220、愛心與留言 icon 32×32、Count Zone 56×80，每欄 7 個字面值、共硬寫 14 次。本板寬 900 沿用既有 Notes 板寬。其餘間距全綁 token（$screen-pad、$sp-block、$sp-group、$sp-tight）。沒有改任何元件的寬高。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
