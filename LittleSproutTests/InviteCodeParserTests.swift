@@ -3,7 +3,7 @@ import Foundation
 import XCTest
 
 /// 06／06b／06c「改用貼上邀請連結」與 deep link（`littlesprout://invite/<code>`，LS-39 已註冊
-/// scheme）共用的解析邏輯——見 `InviteCodeParser` 文件註解。
+/// scheme；`https://sproutday.app/invite/<code>`，LS-436）共用的解析邏輯——見 `InviteCodeParser` 文件註解。
 final class InviteCodeParserTests: XCTestCase {
     // MARK: - extractCode：完整連結
 
@@ -52,8 +52,24 @@ final class InviteCodeParserTests: XCTestCase {
         XCTAssertEqual(InviteCodeParser.code(fromDeepLink: url), "K7M2FD")
     }
 
-    func test_codeFromDeepLink_wrongScheme_returnsNil() {
+    func test_codeFromDeepLink_oldDomain_returnsNil() {
         let url = URL(string: "https://littlesprout.app/invite/K7M2FD")!
         XCTAssertNil(InviteCodeParser.code(fromDeepLink: url))
+    }
+
+    // MARK: - https 分享連結（LS-436）
+
+    func test_codeFromDeepLink_sproutdayHTTPS_returnsCode() {
+        let url = URL(string: "https://sproutday.app/invite/k7m2fd")!
+        XCTAssertEqual(InviteCodeParser.code(fromDeepLink: url), "K7M2FD")
+    }
+
+    func test_extractCode_sproutdayHTTPS_returnsCode() {
+        XCTAssertEqual(InviteCodeParser.extractCode(from: "https://sproutday.app/invite/K7M2FD/"), "K7M2FD")
+    }
+
+    func test_extractCode_sproutdayHTTPSWrongPathOrOldDomain_returnsNil() {
+        XCTAssertNil(InviteCodeParser.extractCode(from: "https://sproutday.app/legal/privacy-policy"))
+        XCTAssertNil(InviteCodeParser.extractCode(from: "https://littlesprout.app/invite/K7M2FD"))
     }
 }
