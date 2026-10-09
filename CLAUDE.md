@@ -1,4 +1,4 @@
-# CLAUDE.md — Little Sprout
+# CLAUDE.md — Sprout Day
 
 私密家庭相簿與日記 iOS app（SwiftUI + Supabase）。本檔只放**每個 session 都必須知道的事**；細節在 index 指向的文件，需要時再讀。
 
