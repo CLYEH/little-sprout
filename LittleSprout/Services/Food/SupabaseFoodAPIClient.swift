@@ -64,17 +64,14 @@ final class SupabaseFoodAPIClient: FoodAPIClient {
         }
     }
 
+    /// LS-441：走 RPC（家庭解析與「排除飲食專屬照片」都在後端，沿 LS-430 判準），不再直查 `media`。
     func listFamilyPhotos(childID: UUID) async throws -> [FamilyPhoto] {
         do {
-            let familyID = try await familyID(ofChild: childID)
             let response: PostgrestResponse<[FamilyPhoto]> = try await client
-                .from("media")
-                .select(Self.photoColumns)
-                .eq("family_id", value: familyID)
-                .eq("type", value: "photo")
-                .is("deleted_at", value: nil)
-                .order("created_at", ascending: false)
-                .limit(FamilyPhotoQuery.limit)
+                .rpc(
+                    "list_family_photos_for_food",
+                    params: ListFamilyPhotosParams(childID: childID, limit: FamilyPhotoQuery.limit)
+                )
                 .execute()
             return response.value
         } catch {
@@ -142,6 +139,16 @@ final class SupabaseFoodAPIClient: FoodAPIClient {
             .single()
             .execute()
         return response.value.familyID
+    }
+}
+
+private struct ListFamilyPhotosParams: Encodable {
+    let childID: UUID
+    let limit: Int
+
+    enum CodingKeys: String, CodingKey {
+        case childID = "p_child_id"
+        case limit = "p_limit"
     }
 }
 
