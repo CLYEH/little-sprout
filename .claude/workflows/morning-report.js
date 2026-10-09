@@ -2,8 +2,9 @@
 // 用法：Workflow({name: 'morning-report', args: {date: 'YYYY-MM-DD', now: 'HH:MM', scratch: '<scratchpad 絕對路徑>', url?: '<既有 artifact URL>'}})
 // 由巡檢 cron 在每天 08:00 後第一輪印「→ 晨報」動作時觸發（scripts/ops/patrol.sh 晨報段）。
 // Phase Collect：6 支 Haiku 收集員並行（lane×5＋git／PR／CI），只回帶 id 的事實；Phase Compose：1 支 Haiku 彙整員寫 markdown、
-// 跑 scripts/gates/report-cite-check.sh、用 Artifact 工具發布。orchestrator 收到結果後抽驗 2 條引據（get_issue／git show）再把
-// 當日標記檔 touch 掉；抽到錯就同 args 重跑（Workflow resume 會快取沒變的 agent）。
+// 跑 scripts/gates/report-cite-check.sh、用 Artifact 工具發布。orchestrator 收到結果後自己跑 `report-cite-check.sh <md_path> --sample 2`
+// 取腳本隨機抽的 2 條（R1 M1：不用 Haiku 自報的樣本）反查（get_issue／list_comments／git show）再把當日標記檔 touch 掉；
+// 抽到錯就同 args 重跑（Workflow resume 會快取沒變的 agent）。
 // Date.now()／new Date() 在 workflow 內不可用，日期一律由 args 帶入。
 
 export const meta = {
@@ -89,10 +90,11 @@ const COMPOSE_SCHEMA = {
     gate_output: { type: 'string' },
     url: { type: 'string', description: 'artifact URL；gate 紅未發布則空字串' },
     fact_count: { type: 'number' },
-    sample_cites: { type: 'array', items: { type: 'string' }, description: '隨機挑 4 條「票號｜事實｜引據」供 orchestrator 抽驗' },
   },
-  required: ['md_path', 'gate_rc', 'gate_output', 'url', 'fact_count', 'sample_cites'],
+  required: ['md_path', 'gate_rc', 'gate_output', 'url', 'fact_count'],
 }
+// R1 M1：抽驗樣本不由受驗的 Haiku 自報——orchestrator 收到 md_path 後自己跑 `report-cite-check.sh <md> --sample 2`，
+// 由腳本從已查事實列隨機抽，再反查印出的 2 條。
 
 const COMMON = `今天是 ${date}${now ? ' ' + now : ''}。你是 Little Sprout 晨報的收集員，只回報「看到的事實＋可反查的 id」：
 - Linear 用 mcp__linear__* 工具（ToolSearch 載入 list_issues／get_issue／list_comments）；工具失敗改 \`bash scripts/ops/linear-post.sh get LS-<n> --comments\`，再不行就在 notes 寫「查無」。
@@ -150,7 +152,7 @@ ${JSON.stringify({ lanes, git, missing }, null, 2)}
 1. 每條事實列（清單列、表格資料列）必含引據：comment id 前 8 碼、PR #號、commit sha，或「LS-<n>＋狀態詞」。資料裡沒有 id 的事件改寫成「LS-<n> <狀態>」。
 2. 用 Write 寫到 ${mdPath}，然後跑 \`bash ${gate} ${mdPath}\`；rc≠0 就只修被點名的那幾行（補 id 或改成票號＋狀態）再跑一次，最多 3 次；仍紅就停止、不發布，回報 gate 原文。
 3. gate 綠後用 Skill 載入 artifact-design，再用 Artifact 工具發布（檔名 morning-report-${date}.html：把 markdown 轉成簡潔 HTML 頁，title「晨報 ${date}」，icon "report"${existingUrl ? '，url 參數填 ' + existingUrl + ' 更新同一頁' : ''}），回 URL。
-4. 回傳 md_path／gate_rc／gate_output／url／fact_count，並從有 id 的事實列隨機挑 4 條填 sample_cites（格式「票號或 PR｜事實一句｜id」）。不要在回覆裡貼整份報告。`,
+4. 回傳 md_path／gate_rc／gate_output／url／fact_count。不要在回覆裡貼整份報告（抽驗樣本由 orchestrator 用 gate 的 --sample 自己抽，你不必提供）。`,
   { label: 'compose', phase: 'Compose', model: 'haiku', schema: COMPOSE_SCHEMA },
 )
 

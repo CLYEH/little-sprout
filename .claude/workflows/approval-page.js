@@ -14,8 +14,9 @@ export const meta = {
 const a = args || {}
 const gate = a.gate || 'scripts/gates/report-cite-check.sh'
 for (const k of ['ticket', 'vr_comment', 'handoff_comment', 'boards_dir', 'date', 'scratch']) {
-  if (!a[k]) throw new Error(`approval-page 需要 args.${k}`)
+  if (typeof a[k] !== 'string' || !a[k]) throw new Error(`approval-page 需要字串 args.${k}`)   // R1 I4：非字串 .slice 會 TypeError
 }
+const imgDir = `${a.scratch}/approval-${a.ticket}-img`
 const questions = Array.isArray(a.questions) ? a.questions : []
 
 const SCHEMA = {
@@ -26,10 +27,10 @@ const SCHEMA = {
     gate_output: { type: 'string' },
     url: { type: 'string' },
     board_count: { type: 'number' },
-    sample_cites: { type: 'array', items: { type: 'string' } },
   },
-  required: ['md_path', 'gate_rc', 'gate_output', 'url', 'board_count', 'sample_cites'],
+  required: ['md_path', 'gate_rc', 'gate_output', 'url', 'board_count'],
 }
+// R1 M1：抽驗樣本由 orchestrator 用 `report-cite-check.sh <md> --sample 2` 自己抽，不由組頁員自報。
 
 phase('Compose')
 const mdPath = `${a.scratch}/approval-${a.ticket}-${a.date}.md`
@@ -56,8 +57,8 @@ ${questions.length ? questions.map((q, i) => `${i + 1}. ${q}`).join('\n') : '（
 規則：
 1. 事實列必含引據（comment id 前 8 碼、板 id 配 LS 票號＋狀態詞、或 commit sha）；「待使用者裁決」段豁免。
 2. Write 到 ${mdPath}，跑 \`bash ${gate} ${mdPath}\`；rc≠0 只修被點名列（補 id），最多 3 次；仍紅就不發布、回報 gate 原文。
-3. gate 綠後 Skill 載入 artifact-design，再用 Artifact 工具發布（檔名 approval-${a.ticket}.html，title「${a.ticket} 核可頁」，icon "design"${a.url ? '，url 參數填 ' + a.url + ' 更新同一頁' : ''}）。**板圖必須看得到**：artifact 讀不到本機路徑，所以每張板圖先用 \`sips -Z 720 <png> --out <scratch>/approval-${a.ticket}-img/<板id>.png\` 縮到長邊 720，再用 python3 轉 base64 以 \`<img src="data:image/png;base64,…" alt="<板id>">\` 內嵌（一張一格，格下標「態名｜板 id」），總量控制在 12MB 內（超過就再縮到 540）；不要只列路徑、不要省略任何板。
-4. 回傳 md_path／gate_rc／gate_output／url／board_count，並從有 id 的事實列挑 4 條填 sample_cites（「段落｜一句｜id」）。`,
+3. gate 綠後 Skill 載入 artifact-design，再用 Artifact 工具發布（檔名 approval-${a.ticket}.html，title「${a.ticket} 核可頁」，icon "design"${a.url ? '，url 參數填 ' + a.url + ' 更新同一頁' : ''}）。**板圖必須看得到**：artifact 讀不到本機路徑，所以先 \`mkdir -p ${imgDir}\`，每張板圖用 \`sips -Z 720 <png> --out ${imgDir}/<板id>.png\` 縮到長邊 720，再用 python3 轉 base64 以 \`<img src="data:image/png;base64,…" alt="<板id>">\` 內嵌（一張一格，格下標「態名｜板 id」），總量控制在 12MB 內（超過就再縮到 540）；不要只列路徑、不要省略任何板。
+4. 回傳 md_path／gate_rc／gate_output／url／board_count（抽驗樣本由 orchestrator 用 gate 的 --sample 自己抽，你不必提供）。`,
   { label: `approval:${a.ticket}`, phase: 'Compose', model: 'haiku', schema: SCHEMA },
 )
 

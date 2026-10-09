@@ -471,7 +471,7 @@ fi
 
 # ---- ㊺ LS-400：六份定義檔的 frontmatter model: 釘 §1 政策（ios-dev／qa／dead-code-sweeper＝sonnet、ui-designer／
 #        merge-reviewer／visual-reviewer＝opus）；不符即紅、缺行即紅、值含空白去掉後整字比對；mutation 拿掉 MODEL_RULES → 負樣本變綠 ----
-reset; expect 0 '㊺ 六份 model: 皆符合政策 → 通過並逐份印出' 'qa.md：model: sonnet（符合 §1 政策）' 'visual-reviewer.md：model: opus（符合 §1 政策）'
+reset; expect 0 '㊺ 七份 model: 皆符合政策（LS-420 起含 Explore）→ 通過並逐份印出' 'qa.md：model: sonnet（符合 §1 政策）' 'visual-reviewer.md：model: opus（符合 §1 政策）'
 reset; MK_MODEL=opus mk qa "$QA_TOOLS" "$QA_BODY"; expect 1 '㊺ qa 改回 opus → exit 1' 'qa.md：model: 是「opus」，§1 政策要「sonnet」'
 reset; MK_MODEL=sonnet mk visual-reviewer NONE "$VR_BODY"; expect 1 '㊺ visual-reviewer 降 sonnet → exit 1' 'visual-reviewer.md：model: 是「sonnet」，§1 政策要「opus」'
 reset; MK_MODEL=claude-sonnet-5-5 mk ios-dev "$IOS_TOOLS" "$IOS_BODY"; expect 1 '㊺ ios-dev 寫全 ID（政策是別名）→ exit 1，提示同步改表' 'ios-dev.md：model: 是「claude-sonnet-5-5」，§1 政策要「sonnet」' '同步改 COLLABORATION §1 與本表 MODEL_RULES'

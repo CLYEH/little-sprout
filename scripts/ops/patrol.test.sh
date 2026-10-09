@@ -2731,9 +2731,14 @@ has   '㊱ 標記檔存在 → human 模式印「已產出」' "$out36d" '2026-1
 out36e="$(PATROL_NOW_HOUR=xx PATROL_TODAY=2026-10-10 PATROL_REPORT_DIR="$rep_dir" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc36e=$?
 rc_is '㊱ 小時值非數字 → 當 0、不炸（exit 0）' 0 "$rc36e" "$out36e"
 hasnt '㊱ 小時值非數字 → 不印' "$out36e" '→ 晨報：'
+hasnt '㊱ R1 I3：小時值非數字時 stderr 不噴 integer expected' "$out36e" 'integer expected'
+out36f="$(PATROL_NOW_HOUR=00 PATROL_TODAY=2026-10-10 PATROL_REPORT_DIR="$rep_dir" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㊱ R1 I3：小時 00 也不噴 integer expected' "$out36f" 'integer expected'
+out36g="$(PATROL_NOW_HOUR=09 PATROL_TODAY=2026-10-10 PATROL_REPORT_DIR="$rep_dir" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㊱ 小時 09（前導 0）→ 以 10 進位解析、印動作' "$out36g" '→ 晨報：2026-10-10 尚未產出'
 mut36="$work/patrol-mut36.sh"
 sed 's/ \&\& \[ ! -e "\${report_dir}\/\${report_day}.done" \]; then$/; then/' "$patrol" > "$mut36"
-if grep -q 'if \[ "${report_hour#0}" -ge "$REPORT_HOUR" \]; then$' "$mut36" && ! grep -q '-ge "$REPORT_HOUR" \] && \[ ! -e' "$mut36"; then
+if grep -q 'if \[ "$report_hour_n" -ge "$REPORT_HOUR" \]; then$' "$mut36" && ! grep -q '-ge "$REPORT_HOUR" \] && \[ ! -e' "$mut36"; then
   echo "✓ ㊱ mutant 已拿掉「標記檔不存在」條件"
   out36m="$(PATROL_NOW_HOUR=10 PATROL_TODAY=2026-10-09 PATROL_REPORT_DIR="$rep_dir" bash "$mut36" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
   has '㊱ mutant：標記存在仍印晨報動作（條件確實是原因）' "$out36m" '→ 晨報：2026-10-09 尚未產出'
