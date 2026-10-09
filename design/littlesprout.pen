@@ -280125,7 +280125,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "(d) 日記卡署名位置\n板／節點：qtCd7 的 Signature Jqwww（justifyContent end，排在 Sign-off Rule u59KAY 之後）、多寶貝 Multi Caption x7k2o6（textAlign right、$fs-note 600）；票文指名的 HLXo3／kmbyt（AX3、兩位寶貝）。實例同 (c) 18 板 29 個。\n程式：DiaryCardView.swift:61「Text(MultiChildCaptionFormatter.attributed(children: taggedChildren, asOf: content.entryDate))」在卡片內容 VStack 最上方（:57「VStack(alignment: .leading, spacing: AppSpacing.group) {」），沒有分隔線；字樣 Support/MultiChildCaptionFormatter.swift:30「multi.font = .body.weight(.semibold)」。\n稿 vs 實作：內文下方靠右＋分隔線 vs 頂端靠左。對照板 ZEbYo（a 案／b 案 × 預設字級／AX3，兩位寶貝字串同 kmbyt）。\n建議裁定：以稿為準（a 案）。\n對比：兩案同字同色，無差。\n一致性：照片卡、相簿卡的「是誰」都在卡底（壓印行／署名列），食物卡實作也把署名放最後（FoodFirstCardView.swift:56「signature」在 VStack 末尾，稿 jyt14「Signature 同日記卡」）；日記卡放卡頂是唯一例外。署名是正文的落款（yec61／jevzb 定案），Sign-off Rule 就是為它畫的（LS-119）。\n實作成本：限 DiaryCardView 一個檔（署名搬到內文之後、trailing、前面一條 1pt 線）。\na 案代價（核可頁 C4 要列）：AX3 兩位以上寶貝時署名三行靠右，每行起點不同（ZEbYo 第三欄：「小安」單獨一行，下兩行起點各不相同），長輩每行都要重找起點。表態：不在 AX 字級改 leading（同一張卡隨字級換對齊，落款位置就不穩），改套照片卡 LS-367 已定的「放不下一行就一行一人」，讓每行都以名字開頭；若裁 a，ui 票一併做，稿面裁後補畫。",
+          "content": "(d) 日記卡署名位置\n板／節點：qtCd7 的 Signature Jqwww（justifyContent end，排在 Sign-off Rule u59KAY 之後）、多寶貝 Multi Caption x7k2o6（textAlign right、$fs-note 600）；票文指名的 HLXo3／kmbyt（AX3、兩位寶貝）。實例同 (c) 18 板 29 個。\n程式：DiaryCardView.swift:61「Text(MultiChildCaptionFormatter.attributed(children: taggedChildren, asOf: content.entryDate))」在卡片內容 VStack 最上方（:57「VStack(alignment: .leading, spacing: AppSpacing.group) {」），沒有分隔線；字樣 Support/MultiChildCaptionFormatter.swift:30「multi.font = .body.weight(.semibold)」。\n稿 vs 實作：內文下方靠右＋分隔線 vs 頂端靠左。對照板 YXnTc（a 案／b 案 × 預設字級／AX3，另加 a 案 AX3 緩解一欄，兩位寶貝字串同 kmbyt）。\n建議裁定：以稿為準（a 案）。\n對比：兩案同字同色，無差。\n一致性：照片卡、相簿卡的「是誰」都在卡底（壓印行／署名列），食物卡實作也把署名放最後（FoodFirstCardView.swift:56「signature」在 VStack 末尾，稿 jyt14「Signature 同日記卡」）；日記卡放卡頂是唯一例外。署名是正文的落款（yec61／jevzb 定案），Sign-off Rule 就是為它畫的（LS-119）。\n實作成本：限 DiaryCardView 一個檔（署名搬到內文之後、trailing、前面一條 1pt 線）。\na 案代價（核可頁 C4 要列）：AX3 兩位以上寶貝時署名三行靠右，每行起點不同（YXnTc 第三欄：「小安」單獨一行，下兩行起點各不相同），長輩每行都要重找起點。緩解已畫出並實測（YXnTc 第四欄）：照片卡 LS-367 的「放不下一行就一行一人」在 AX3 救不到第一位寶貝——「小安 · 2 歲 3 個月」40pt 超過內文寬 305，仍會斷成「小安」／「· 2 歲 3 個月」；可行的寫法是每人固定兩行（名字一行、「· 年齡」一行，靠右），四行結構可預期，但起點仍靠右參差，這是 a 案在 AX3 留下的代價。表態：不在 AX 字級改 leading（同一張卡隨字級換對齊，落款位置就不穩）；若裁 a，AX 字級多寶貝署名採「每人兩行」，ui 票一併做。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -280150,7 +280150,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "使用者核可後開 ui 票（blockedBy LS-442），照核可結果做；下面先寫建議案，再寫另一案。\n(a) AuthButtons.swift:27 的 vertical padding 之後加 .frame(minHeight: 60)（具名豁免見 (a)）；AlbumDetailView+Actions.swift:81 minHeight 48 改成同一套：.padding(.vertical, AppSpacing.controlPaddingCTA)＋.frame(minHeight: 60)。\n(b) AuthButtons.swift:24 改 .appFont(.body, weight: .bold)；AlbumDetailView+Actions.swift:79 semibold 改 bold。\n(c) 裁 a：先開 token 票新增單值 $accent-on-paper（#8E2447）；DiaryCardView.swift:81 改 lsPrintPaper＋1pt lsPaperEdge 外框＋lsPaperShadow（0／3，blur 12），同 FoodFirstCardView；:65 內文 lsPrintInk，署名 lsPrintInk／lsPrintInkSecondary；:141 疊紙 lsSurface2 改 lsPrintPaper（稿 uZ5Lt／kVUWa）；日記卡內 InteractionRow 未按讚 lsPrintInkSecondary、已按讚 accent-on-paper。裁 b：程式不改；稿 qtCd7 改 $surface 系，疊紙 uZ5Lt／kVUWa 改 $surface-2（對應 :141），jQp2m 已寫明食物卡材質不受影響。\n(d) DiaryCardView.swift:58–62 的署名 Text 移到內文與照片列之後，trailing、多行 .multilineTextAlignment(.trailing)；前面一條 1pt 線，線色隨 C3：a 案 lsPaperRule、b 案 lsBorder；線上下各 8（$sp-label）；多寶貝放不下一行就一行一人。\n狀態：四處都只動既有元件的外觀與位置，空、載入、錯誤態沿用各畫面既有規格，本票不新增。",
+          "content": "使用者核可後開 ui 票（blockedBy LS-442），照核可結果做；下面先寫建議案，再寫另一案。\n(a) AuthButtons.swift:27 的 vertical padding 之後加 .frame(minHeight: 60)（具名豁免見 (a)）；AlbumDetailView+Actions.swift:81 minHeight 48 改成同一套：.padding(.vertical, AppSpacing.controlPaddingCTA)＋.frame(minHeight: 60)。\n(b) AuthButtons.swift:24 改 .appFont(.body, weight: .bold)；AlbumDetailView+Actions.swift:79 semibold 改 bold。\n(c) 裁 a：先開 token 票新增單值 $accent-on-paper（#8E2447）；DiaryCardView.swift:81 改 lsPrintPaper＋1pt lsPaperEdge 外框＋lsPaperShadow（0／3，blur 12），同 FoodFirstCardView；:65 內文 lsPrintInk；:141 疊紙 lsSurface2 改 lsPrintPaper（稿 uZ5Lt／kVUWa）。兩支共用元件只對日記卡紙面情境改色，不得全域改：InteractionRow 依所在底色分兩組色——kind .diary（在紙上）未按讚 lsPrintInkSecondary、已按讚 accent-on-paper；.photo／.album 維持 :60 idleForeground lsTextSecondary 與 :125／:171 lsAccent（LS-366 修過，深色紙外不得退回 1.44–1.69:1）；MultiChildCaptionFormatter :31／:37／:41 寫死的 lsTextPrimary／lsTextSecondary 改成依底色傳入，日記卡用 lsPrintInk／lsPrintInkSecondary，DiaryDetailView.swift:232 依 Diary Note 紙面同步；ui 票補一組紙面的 InteractionRowContrastTests。裁 b：程式不改；稿 qtCd7 改 $surface 系，疊紙 uZ5Lt／kVUWa 改 $surface-2（對應 :141），jQp2m 已寫明食物卡材質不受影響。\n(d) DiaryCardView.swift:58–62 的署名 Text 移到內文與照片列之後，trailing、多行 .multilineTextAlignment(.trailing)；前面一條 1pt 線，線色隨 C3：a 案 lsPaperRule、b 案 lsBorder；線上下各 8（$sp-label）；多寶貝放不下一行就一行一人。\n狀態：四處都只動既有元件的外觀與位置，空、載入、錯誤態沿用各畫面既有規格，本票不新增。\nbrand skill：C1 或 C3 裁 a 時，同一張 ui 票（或 token 票）的 PR 內同步改 .claude/skills/little-sprout-brand/references/tokens.md——:112 具名豁免加第 ⑥ 條（主鈕 minHeight 60 下限）、新增 accent-on-paper 一列（並把十條 #2「紙上的墨」擴到 accent）；本票不動 skill。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -280225,7 +280225,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "對照板 Qohx3、ZEbYo 各 4 欄，欄寬 393（iPhone 板寬，硬寫 8 次）；feed 摘錄圓角 44 沿用 iPhone 板圓角（cornerRadius 字面值）。本板寬 900 沿用既有 Notes 板寬。其餘間距全綁 token（$screen-pad、$sp-block、$sp-group、$sp-tight、$sp-section、$sp-label）。R2 起 qtCd7 回到原值，沒有改到任何元件的寬高。",
+          "content": "對照板 Qohx3 4 欄、YXnTc 5 欄，欄寬 393（iPhone 板寬，硬寫 9 次）；feed 摘錄圓角 44 沿用 iPhone 板圓角（cornerRadius 字面值）。本板寬 900 沿用既有 Notes 板寬。其餘間距全綁 token（$screen-pad、$sp-block、$sp-group、$sp-tight、$sp-section、$sp-label）。R2 起 qtCd7 回到原值，沒有改到任何元件的寬高。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -280250,7 +280250,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "10-09 LS-442 R1：四處漂移裁定（池 0a935f38）；(c) 當時建議 b 並改了 qtCd7 與互動列三板 6 個實例的色；新增兩張對照板（原 et8Ya、原 j3vBEh，R2 整板重建為 Qohx3、ZEbYo）。\n10-10 LS-442 R2（VR R1 ITERATE，comment ae7b4883）：MJ-1 a 案已按讚改用單值 accent 字面色示意；MJ-2 每欄加入食物卡；MJ-3 四題改用同一套三欄（對比／一致性／實作成本），(c) 建議由 b 改 a，jQp2m 補寫材質；MJ-4 實心愛心補回 path geometry（R1 複製時漏帶）；MJ-5 因 (c) 改建議 a，qtCd7 與互動列三板 6 個實例改回紙面原值（R1 改稿撤回，年齡字串 NBSP 保留），深色亮紙條問題隨之消失，疊紙的程式差異寫進「給 ios-dev」(c)；MN-1 paper-rule 使用處更正；MN-2 (d) 線色隨 C3；MN-3 (d) a 案代價與表態；MN-4 (a) 具名豁免與 tokens.md:129 原文。EclPC／a1wjoE 改寫為 token bug 說明；yec61／ca7bA、mfaBi 的 R1 加註已刪（稿面回到原值）。",
+          "content": "10-09 LS-442 R1：四處漂移裁定（池 0a935f38）；(c) 當時建議 b 並改了 qtCd7 與互動列三板 6 個實例的色；新增兩張對照板（原 et8Ya、原 j3vBEh，R2 整板重建為 Qohx3 與原 ZEbYo）。\n10-10 LS-442 R2（VR R1 ITERATE，comment ae7b4883）：MJ-1 a 案已按讚改用單值 accent 字面色示意；MJ-2 每欄加入食物卡；MJ-3 四題改用同一套三欄（對比／一致性／實作成本），(c) 建議由 b 改 a，jQp2m 補寫材質；MJ-4 實心愛心補回 path geometry（R1 複製時漏帶）；MJ-5 因 (c) 改建議 a，qtCd7 與互動列三板 6 個實例改回紙面原值（R1 改稿撤回，年齡字串 NBSP 保留），深色亮紙條問題隨之消失，疊紙的程式差異寫進「給 ios-dev」(c)；MN-1 paper-rule 使用處更正；MN-2 (d) 線色隨 C3；MN-3 (d) a 案代價與表態；MN-4 (a) 具名豁免與 tokens.md:129 原文。EclPC／a1wjoE 改寫為 token bug 說明；yec61／ca7bA、mfaBi 的 R1 加註已刪（稿面回到原值）。\n10-10 LS-442 R3（VR R2 ITERATE，comment 3cfbddbc）：MJ-1「給 ios-dev」(c) 裁 a 寫明 InteractionRow 與 MultiChildCaptionFormatter 只對日記卡紙面改色、不得全域改，並要求紙面 InteractionRowContrastTests；MN-1 Qohx3 深色兩欄說明改成優點＋代價對稱；MN-2 (d) 對照板整板重建為 YXnTc（原 ZEbYo），加 a 案 AX3 緩解一欄，實測一行一人仍斷第一位寶貝，改畫每人兩行；MN-3 寫明 C1／C3 裁 a 時 tokens.md 兩處在 ui 票 PR 內補。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -281243,7 +281243,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "深色模式　紙 #E8D9D4，已按讚 #8E2447 6.14:1",
+                  "content": "深色模式　優點：三張同材質；代價：要新 token",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -281713,7 +281713,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "深色模式　日記卡變深 #2E1C22，食物卡仍是紙",
+                  "content": "深色模式　優點：零新 token；代價：日記卡變深",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -282150,7 +282150,7 @@
     },
     {
       "type": "frame",
-      "id": "ZEbYo",
+      "id": "YXnTc",
       "x": 23648,
       "y": 61807,
       "name": "LS-442 / (d) 日記卡署名位置兩版對照 (iPhone)",
@@ -282160,7 +282160,7 @@
       "children": [
         {
           "type": "frame",
-          "id": "KDW2A",
+          "id": "ov2OJ",
           "name": "Column · a 案　署名在內文下方靠右（稿，建議）",
           "width": 393,
           "layout": "vertical",
@@ -282168,7 +282168,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "nHqP1",
+              "id": "PbyOS",
               "name": "Option Label",
               "width": "fill_container",
               "layout": "vertical",
@@ -282176,7 +282176,7 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "x4ioe",
+                  "id": "obxNQ",
                   "name": "Option Title",
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
@@ -282189,7 +282189,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "D3WLx",
+                  "id": "kKIVb",
                   "name": "Option Note",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -282204,7 +282204,7 @@
             },
             {
               "type": "frame",
-              "id": "kDQkg",
+              "id": "P0Uz9",
               "name": "Feed 摘錄",
               "theme": {
                 "size": "default"
@@ -282243,7 +282243,7 @@
               ],
               "children": [
                 {
-                  "id": "LIohM",
+                  "id": "nyidG",
                   "type": "ref",
                   "ref": "qtCd7",
                   "name": "Card Diary · a 案（內文下方靠右）",
@@ -282254,7 +282254,7 @@
                     },
                     "Jqwww": {
                       "type": "frame",
-                      "id": "ga5E4",
+                      "id": "puR26",
                       "name": "Signature",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -282262,7 +282262,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "t1G8fU",
+                          "id": "D4UYWF",
                           "name": "Multi Caption",
                           "fill": "$print-ink",
                           "textGrowth": "fixed-width",
@@ -282275,21 +282275,21 @@
                         },
                         {
                           "type": "frame",
-                          "id": "T44tZ",
+                          "id": "xwGQO",
                           "name": "Interaction Row",
                           "width": "fill_container",
                           "gap": "$sp-block",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "W8etz",
+                              "id": "C7aFU",
                               "name": "Heart Group",
                               "gap": "$sp-tight",
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "p4uyzz",
+                                  "id": "q032CQ",
                                   "name": "Like Toggle",
                                   "width": 118,
                                   "gap": "$sp-tight",
@@ -282298,7 +282298,7 @@
                                   "children": [
                                     {
                                       "type": "icon",
-                                      "id": "wAPAr",
+                                      "id": "tdwKJ",
                                       "name": "Heart Icon",
                                       "width": 22,
                                       "height": 22,
@@ -282308,7 +282308,7 @@
                                     },
                                     {
                                       "type": "text",
-                                      "id": "hg6tH",
+                                      "id": "gZnQi",
                                       "name": "Heart Label",
                                       "fill": "$print-ink-secondary",
                                       "content": "愛心",
@@ -282320,7 +282320,7 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "XCu9Z",
+                                  "id": "qAB6r",
                                   "name": "Count Zone",
                                   "width": 44,
                                   "height": 44,
@@ -282329,7 +282329,7 @@
                                   "children": [
                                     {
                                       "type": "text",
-                                      "id": "p8GVTF",
+                                      "id": "H0Kg7J",
                                       "name": "Heart Count",
                                       "fill": "$print-ink-secondary",
                                       "content": "3",
@@ -282343,7 +282343,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "qOmpy",
+                              "id": "e42qX",
                               "name": "Comment Button",
                               "gap": "$sp-tight",
                               "padding": 11,
@@ -282351,7 +282351,7 @@
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "waLqG",
+                                  "id": "ONrku",
                                   "name": "Comment Icon",
                                   "width": 22,
                                   "height": 22,
@@ -282361,7 +282361,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "SdIwE",
+                                  "id": "GlOIc",
                                   "name": "Comment Label",
                                   "fill": "$print-ink-secondary",
                                   "content": "留言",
@@ -282371,7 +282371,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "N1CZT",
+                                  "id": "wyZTG",
                                   "name": "Comment Count",
                                   "fill": "$print-ink-secondary",
                                   "content": "2",
@@ -282393,7 +282393,7 @@
         },
         {
           "type": "frame",
-          "id": "r9Unh",
+          "id": "DTdEq",
           "name": "Column · b 案　署名在頂端靠左（目前程式）",
           "width": 393,
           "layout": "vertical",
@@ -282401,7 +282401,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "pBNPF",
+              "id": "zEET4",
               "name": "Option Label",
               "width": "fill_container",
               "layout": "vertical",
@@ -282409,7 +282409,7 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "nTm2P",
+                  "id": "kCpSm",
                   "name": "Option Title",
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
@@ -282422,7 +282422,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "G9iZZd",
+                  "id": "P6hDCw",
                   "name": "Option Note",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -282437,7 +282437,7 @@
             },
             {
               "type": "frame",
-              "id": "z2GaR7",
+              "id": "XCHGD",
               "name": "Feed 摘錄",
               "theme": {
                 "size": "default"
@@ -282476,7 +282476,7 @@
               ],
               "children": [
                 {
-                  "id": "x0i0R",
+                  "id": "gphUO",
                   "type": "ref",
                   "ref": "qtCd7",
                   "name": "Card Diary · b 案（頂端靠左）",
@@ -282484,7 +282484,7 @@
                   "descendants": {
                     "p2odx": {
                       "type": "frame",
-                      "id": "kMSPR",
+                      "id": "DE2u1",
                       "name": "Body Stack",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -282492,7 +282492,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "Lftca",
+                          "id": "mXhze",
                           "name": "Multi Caption",
                           "fill": "$print-ink",
                           "textGrowth": "fixed-width",
@@ -282504,7 +282504,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "tWc2b",
+                          "id": "d7u85",
                           "name": "Snippet",
                           "fill": "$print-ink",
                           "textGrowth": "fixed-width",
@@ -282522,28 +282522,28 @@
                     },
                     "Jqwww": {
                       "type": "frame",
-                      "id": "pNEmP",
+                      "id": "SLpEP",
                       "name": "Signature",
                       "width": "fill_container",
                       "layout": "vertical",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "qgkxM",
+                          "id": "FPDhq",
                           "name": "Interaction Row",
                           "width": "fill_container",
                           "gap": "$sp-block",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "n96xk",
+                              "id": "s6X9k",
                               "name": "Heart Group",
                               "gap": "$sp-tight",
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "qr5oY",
+                                  "id": "Q8tEW",
                                   "name": "Like Toggle",
                                   "width": 118,
                                   "gap": "$sp-tight",
@@ -282552,7 +282552,7 @@
                                   "children": [
                                     {
                                       "type": "icon",
-                                      "id": "sYp7U",
+                                      "id": "j3qtKR",
                                       "name": "Heart Icon",
                                       "width": 22,
                                       "height": 22,
@@ -282562,7 +282562,7 @@
                                     },
                                     {
                                       "type": "text",
-                                      "id": "fVhtM",
+                                      "id": "Sr9AM",
                                       "name": "Heart Label",
                                       "fill": "$print-ink-secondary",
                                       "content": "愛心",
@@ -282574,7 +282574,7 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "zXp8R",
+                                  "id": "aiSB9",
                                   "name": "Count Zone",
                                   "width": 44,
                                   "height": 44,
@@ -282583,7 +282583,7 @@
                                   "children": [
                                     {
                                       "type": "text",
-                                      "id": "Hcemi",
+                                      "id": "t9zBb1",
                                       "name": "Heart Count",
                                       "fill": "$print-ink-secondary",
                                       "content": "3",
@@ -282597,7 +282597,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "hGAUT",
+                              "id": "ET0bN",
                               "name": "Comment Button",
                               "gap": "$sp-tight",
                               "padding": 11,
@@ -282605,7 +282605,7 @@
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "T9Pbov",
+                                  "id": "ksLsN",
                                   "name": "Comment Icon",
                                   "width": 22,
                                   "height": 22,
@@ -282615,7 +282615,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "bA2Na",
+                                  "id": "IPulH",
                                   "name": "Comment Label",
                                   "fill": "$print-ink-secondary",
                                   "content": "留言",
@@ -282625,7 +282625,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "fhfhN",
+                                  "id": "q0UCyS",
                                   "name": "Comment Count",
                                   "fill": "$print-ink-secondary",
                                   "content": "2",
@@ -282647,7 +282647,7 @@
         },
         {
           "type": "frame",
-          "id": "tzJR6",
+          "id": "U13v1r",
           "name": "Column · a 案　署名在內文下方靠右（稿，建議）",
           "width": 393,
           "layout": "vertical",
@@ -282655,7 +282655,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "ONl8C",
+              "id": "kyN4G",
               "name": "Option Label",
               "width": "fill_container",
               "layout": "vertical",
@@ -282663,7 +282663,7 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "rKPb7",
+                  "id": "ppbzF",
                   "name": "Option Title",
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
@@ -282676,7 +282676,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "aBHbd",
+                  "id": "Q2ux9",
                   "name": "Option Note",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
@@ -282691,7 +282691,7 @@
             },
             {
               "type": "frame",
-              "id": "l0UEhc",
+              "id": "QhYuq",
               "name": "Feed 摘錄",
               "theme": {
                 "size": "ax3"
@@ -282730,7 +282730,7 @@
               ],
               "children": [
                 {
-                  "id": "vxBVH",
+                  "id": "pOnuM",
                   "type": "ref",
                   "ref": "qtCd7",
                   "name": "Card Diary · a 案（內文下方靠右）",
@@ -282741,7 +282741,7 @@
                     },
                     "Jqwww": {
                       "type": "frame",
-                      "id": "tJzOW",
+                      "id": "ZGFxq",
                       "name": "Signature",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -282749,7 +282749,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "fWHwz",
+                          "id": "o0EQi",
                           "name": "Multi Caption",
                           "fill": "$print-ink",
                           "textGrowth": "fixed-width",
@@ -282762,7 +282762,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "Pj4b0",
+                          "id": "EIIFA",
                           "name": "Interaction Row",
                           "width": "fill_container",
                           "layout": "vertical",
@@ -282770,14 +282770,14 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "iJXUC",
+                              "id": "I08WF1",
                               "name": "Heart Group",
                               "gap": "$sp-tight",
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "bQNOB",
+                                  "id": "N0TNs",
                                   "name": "Like Toggle",
                                   "width": 220,
                                   "gap": "$sp-tight",
@@ -282786,7 +282786,7 @@
                                   "children": [
                                     {
                                       "type": "icon",
-                                      "id": "Fo60A",
+                                      "id": "wNmEH",
                                       "name": "Heart Icon",
                                       "width": 32,
                                       "height": 32,
@@ -282796,7 +282796,7 @@
                                     },
                                     {
                                       "type": "text",
-                                      "id": "c3n9Ye",
+                                      "id": "eiHxH",
                                       "name": "Heart Label",
                                       "fill": "$print-ink-secondary",
                                       "content": "愛心",
@@ -282808,7 +282808,7 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "eqkuL",
+                                  "id": "Jnwpq",
                                   "name": "Count Zone",
                                   "width": 56,
                                   "height": 80,
@@ -282817,7 +282817,7 @@
                                   "children": [
                                     {
                                       "type": "text",
-                                      "id": "gY26H",
+                                      "id": "JNTFu",
                                       "name": "Heart Count",
                                       "fill": "$print-ink-secondary",
                                       "content": "3",
@@ -282831,7 +282831,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "YJIYg",
+                              "id": "t37kV",
                               "name": "Comment Button",
                               "gap": "$sp-tight",
                               "padding": 11,
@@ -282839,7 +282839,7 @@
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "YJbov",
+                                  "id": "Sttjr",
                                   "name": "Comment Icon",
                                   "width": 32,
                                   "height": 32,
@@ -282849,7 +282849,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "zoR6X",
+                                  "id": "UJD7N",
                                   "name": "Comment Label",
                                   "fill": "$print-ink-secondary",
                                   "content": "留言",
@@ -282859,7 +282859,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "TCCfe",
+                                  "id": "Tmys0",
                                   "name": "Comment Count",
                                   "fill": "$print-ink-secondary",
                                   "content": "2",
@@ -282881,15 +282881,15 @@
         },
         {
           "type": "frame",
-          "id": "cXuUT",
-          "name": "Column · b 案　署名在頂端靠左（目前程式）",
+          "id": "pNIRi",
+          "name": "Column · a 案＋緩解　一行一人",
           "width": 393,
           "layout": "vertical",
           "gap": "$sp-group",
           "children": [
             {
               "type": "frame",
-              "id": "P1bByY",
+              "id": "I5Cqtn",
               "name": "Option Label",
               "width": "fill_container",
               "layout": "vertical",
@@ -282897,12 +282897,12 @@
               "children": [
                 {
                   "type": "text",
-                  "id": "WC1PY",
+                  "id": "g308Z",
                   "name": "Option Title",
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "b 案　署名在頂端靠左（目前程式）",
+                  "content": "a 案＋緩解　名字一行、年齡一行",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -282910,12 +282910,12 @@
                 },
                 {
                   "type": "text",
-                  "id": "ps79x",
+                  "id": "NuAZF",
                   "name": "Option Note",
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "AX3　三行靠左，起點對齊內文",
+                  "content": "AX3　每人固定兩行，起點仍靠右參差",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -282925,7 +282925,7 @@
             },
             {
               "type": "frame",
-              "id": "GOapi",
+              "id": "qcnTf",
               "name": "Feed 摘錄",
               "theme": {
                 "size": "ax3"
@@ -282964,7 +282964,241 @@
               ],
               "children": [
                 {
-                  "id": "u4mrt2",
+                  "id": "Pc4Bo",
+                  "type": "ref",
+                  "ref": "qtCd7",
+                  "name": "Card Diary · a 案＋緩解（一行一人）",
+                  "width": "fill_container",
+                  "descendants": {
+                    "p2odx": {
+                      "content": "今天小安和小明一起在公園盪鞦韆，兩個人比賽誰盪得高，笑得好大聲。"
+                    },
+                    "Jqwww": {
+                      "type": "frame",
+                      "id": "A5AgW",
+                      "name": "Signature",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "OJe7b",
+                          "name": "Multi Caption",
+                          "fill": "$print-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安\n· 2 歲 3 個⁠月\n小明\n· 8 個⁠月⁠大",
+                          "textAlign": "right",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JSJ0Y",
+                          "name": "Interaction Row",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-block",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "WKqwk",
+                              "name": "Heart Group",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "D07lkV",
+                                  "name": "Like Toggle",
+                                  "width": 220,
+                                  "gap": "$sp-tight",
+                                  "padding": 11,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "MAg2w",
+                                      "name": "Heart Icon",
+                                      "width": 32,
+                                      "height": 32,
+                                      "icon": "heart",
+                                      "library": "lucide",
+                                      "fill": "$print-ink-secondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "OvIz2",
+                                      "name": "Heart Label",
+                                      "fill": "$print-ink-secondary",
+                                      "content": "愛心",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "SWTW9",
+                                  "name": "Count Zone",
+                                  "width": 56,
+                                  "height": 80,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "WsXKq",
+                                      "name": "Heart Count",
+                                      "fill": "$print-ink-secondary",
+                                      "content": "3",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ym23a",
+                              "name": "Comment Button",
+                              "gap": "$sp-tight",
+                              "padding": 11,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "tY9Q3",
+                                  "name": "Comment Icon",
+                                  "width": 32,
+                                  "height": 32,
+                                  "icon": "message-circle",
+                                  "library": "lucide",
+                                  "fill": "$print-ink-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "HehmD",
+                                  "name": "Comment Label",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "留言",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "KFwmu",
+                                  "name": "Comment Count",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "2",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "AoelS",
+          "name": "Column · b 案　署名在頂端靠左（目前程式）",
+          "width": 393,
+          "layout": "vertical",
+          "gap": "$sp-group",
+          "children": [
+            {
+              "type": "frame",
+              "id": "bLLz4",
+              "name": "Option Label",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-tight",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "k41I4",
+                  "name": "Option Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "b 案　署名在頂端靠左（目前程式）",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "k7qCvd",
+                  "name": "Option Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3　三行靠左，起點對齊內文",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "wRJEt",
+              "name": "Feed 摘錄",
+              "theme": {
+                "size": "ax3"
+              },
+              "width": "fill_container",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6997455470737914,
+                  "height": 1.3497652582159625
+                },
+                "colors": [
+                  {
+                    "color": "$bg-lit",
+                    "position": 0
+                  },
+                  {
+                    "color": "$bg",
+                    "position": 1
+                  }
+                ],
+                "center": {
+                  "x": 0.13994910941475827,
+                  "y": 0.01995305164319249
+                }
+              },
+              "cornerRadius": 44,
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "padding": [
+                "$sp-block",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "vOH0T",
                   "type": "ref",
                   "ref": "qtCd7",
                   "name": "Card Diary · b 案（頂端靠左）",
@@ -282972,7 +283206,7 @@
                   "descendants": {
                     "p2odx": {
                       "type": "frame",
-                      "id": "B4ArZY",
+                      "id": "n9Rr0P",
                       "name": "Body Stack",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -282980,7 +283214,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "A4pZXX",
+                          "id": "dr2yu",
                           "name": "Multi Caption",
                           "fill": "$print-ink",
                           "textGrowth": "fixed-width",
@@ -282992,7 +283226,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "UhJ4l",
+                          "id": "S15tjE",
                           "name": "Snippet",
                           "fill": "$print-ink",
                           "textGrowth": "fixed-width",
@@ -283010,14 +283244,14 @@
                     },
                     "Jqwww": {
                       "type": "frame",
-                      "id": "mz1G5",
+                      "id": "d4E4KU",
                       "name": "Signature",
                       "width": "fill_container",
                       "layout": "vertical",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "swqiy",
+                          "id": "cpYiR",
                           "name": "Interaction Row",
                           "width": "fill_container",
                           "layout": "vertical",
@@ -283025,14 +283259,14 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "Zwjsj",
+                              "id": "xYhes",
                               "name": "Heart Group",
                               "gap": "$sp-tight",
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "RESqY",
+                                  "id": "QZAT4",
                                   "name": "Like Toggle",
                                   "width": 220,
                                   "gap": "$sp-tight",
@@ -283041,7 +283275,7 @@
                                   "children": [
                                     {
                                       "type": "icon",
-                                      "id": "wGHuj",
+                                      "id": "lLixK",
                                       "name": "Heart Icon",
                                       "width": 32,
                                       "height": 32,
@@ -283051,7 +283285,7 @@
                                     },
                                     {
                                       "type": "text",
-                                      "id": "u4yw3",
+                                      "id": "KnGeR",
                                       "name": "Heart Label",
                                       "fill": "$print-ink-secondary",
                                       "content": "愛心",
@@ -283063,7 +283297,7 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "kID3K",
+                                  "id": "FW8x2",
                                   "name": "Count Zone",
                                   "width": 56,
                                   "height": 80,
@@ -283072,7 +283306,7 @@
                                   "children": [
                                     {
                                       "type": "text",
-                                      "id": "c7rbp",
+                                      "id": "uvq1Q",
                                       "name": "Heart Count",
                                       "fill": "$print-ink-secondary",
                                       "content": "3",
@@ -283086,7 +283320,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "JHmtq",
+                              "id": "gBIgC",
                               "name": "Comment Button",
                               "gap": "$sp-tight",
                               "padding": 11,
@@ -283094,7 +283328,7 @@
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "WxIxK",
+                                  "id": "M5iuLR",
                                   "name": "Comment Icon",
                                   "width": 32,
                                   "height": 32,
@@ -283104,7 +283338,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "Yrqf8",
+                                  "id": "zHzex",
                                   "name": "Comment Label",
                                   "fill": "$print-ink-secondary",
                                   "content": "留言",
@@ -283114,7 +283348,7 @@
                                 },
                                 {
                                   "type": "text",
-                                  "id": "MfGH8",
+                                  "id": "OyiBq",
                                   "name": "Comment Count",
                                   "fill": "$print-ink-secondary",
                                   "content": "2",
