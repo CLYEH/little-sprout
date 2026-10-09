@@ -142,11 +142,11 @@ ${JSON.stringify({ lanes, git, missing }, null, 2)}
 ## 近 24h 完成
 清單：只列收集員標為近 24h 內 Done／Canceled 的票（event 不是「近 24h 無新 comment」）與併入 main 的 PR、tag，每列帶 cite；資料裡沒有就寫一列「近 24h 無完成票」。
 ## 在飛
-依 lane 分小標（### lane:harness …），每票一列：票號 狀態，事件（cite）。lane 失敗的寫一列「本 lane 查無（收集員失敗）」。
+依 lane 分小標（### lane:harness …），每票一列：票號 狀態，事件（cite）。lane 沒有在飛票或收集員失敗時**不要在這段寫任何句子**（連小標都省），改寫進「風險與查無」段。
 ## 待使用者
 把所有 needs_user 的票列出：票號＋逐字問句與選項，一列一題（這段豁免 cite gate，但仍附 comment id）。
 ## 風險與查無
-收集員 notes 裡的「查無／失敗」逐條列出，帶來源 lane。
+（本段是 gate 的豁免段，專放沒有 id 可引的缺席陳述）收集員 notes 裡的「查無／失敗」、「lane:<x> 無在飛票」、「收集員失敗：無」逐條列出，帶來源 lane；其他段落一律不得出現這類句子。
 
 規則：
 1. 每條事實列（清單列、表格資料列）必含引據：comment id 前 8 碼、PR #號、commit sha，或「LS-<n>＋狀態詞」。資料裡沒有 id 的事件改寫成「LS-<n> <狀態>」。

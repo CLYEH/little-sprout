@@ -8,7 +8,8 @@
 #   - 每條事實列至少含一個可反查 id：≥7 位且含英文字母的 hex token（Linear comment id 前綴或 git sha；純數字如日期不算）、
 #     `#<PR 號>`（≥2 位數），或 `LS-<n>` 且同一行帶整字狀態詞（Done／In Progress／In Review／QA／Ready／Backlog／Canceled／PASS／
 #     FAIL／BLOCKED／APPROVE／ITERATE／REQUEST_CHANGES／merged／open／tag／v<版本>；`tagline`／`reopened` 不算，R1 I1）——單獨提到票號不算引據。
-#   - 標題含「待使用者」「待裁決」「建議」的段落整段豁免（那是問句與 orchestrator 補的判斷，不是事實）。
+#   - 標題含「待使用者」「待裁決」「建議」「查無」的段落整段豁免（問句、orchestrator 補的判斷、以及「本 lane 無在飛票」這類
+#     沒有 id 可引的缺席陳述——彙整員版型把缺席陳述集中在「風險與查無」段，其他段不得出現）。
 #   - 空行、標題、引文（`>`）、程式碼區塊（``` 內）、`|---` 分隔列、表頭不檢查。
 #   - `--sample N`：通過時另印「抽驗樣本」N 行——**由本腳本從已查事實列隨機抽**（R1 M1：不能讓受驗的 Haiku 自己挑樣本），
 #     orchestrator 對這 N 行反查 id。亂數種子預設 $RANDOM，自測用 CITE_SAMPLE_SEED 釘死。
@@ -30,7 +31,7 @@ done
 
 STATE_WORDS='Done|In Progress|In Review|QA|Ready|Backlog|Canceled|PASS|FAIL|BLOCKED|APPROVE|ITERATE|REQUEST_CHANGES|merged|open|tag|v[0-9]+\.[0-9]+'
 STATE_RE="(^|[^A-Za-z_])(${STATE_WORDS})([^A-Za-z_]|$)"
-EXEMPT_RE='(待使用者|待裁決|建議)'
+EXEMPT_RE='(待使用者|待裁決|建議|查無)'   # 「風險與查無」段放「本 lane 無在飛票／收集員失敗：無」這類缺席陳述，沒有 id 可引
 
 has_id() {  # ≥7 位 hex 且含字母（排除純數字日期／run id），或 #<PR>
   printf '%s' "$1" | grep -Eo '[0-9a-f]{7,}' | grep -q '[a-f]' && return 0
