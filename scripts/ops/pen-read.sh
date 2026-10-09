@@ -19,7 +19,7 @@
 #   2. 大稿依位元組預算分段：磁碟 .pen 頂層（depth-1）子節點緊湊 JSON 位元組總和超過預算（預設 2 MiB，`--budget-bytes N`
 #      或 `PEN_OPEN_HASH_SEGMENT_BYTES`，0＝停用）就不先送必失敗的整份，直接依預算把相鄰頂層節點打包成段回讀合併；單段
 #      interrupted 自動對半重切、最多 3 次（`PEN_OPEN_HASH_MAX_HALVINGS`）。分段細節與 18k 節點稿實測見 pen-open.sh
-#      檔頭 LS-377 段。（對照：`scripts/design/pen-snapshot-dump.js` 的 Print 輸出預算才是 50 KB，見其檔頭。）
+#      檔頭 LS-377 段。（對照：`scripts/design/pen-snapshot-dump.js` 與此分段無關——LS-431 起它改成逐板走訪、每段 `SNAP_BOARDS` 塊板，單一 Print 行才有 50 KB 上限，見其檔頭。）
 #   3. 每次執行把「前景／背景、interrupted 次數、分段模式與段數、exit code」追加到
 #      `<cwd 的 git toplevel>/.claude/evidence/<票號>/pen-read-stats.log`（gitignored；票號從 toplevel 目錄名 `LS-<n>` 推，
 #      推不出用 `--ticket LS-<n>`，兩者都沒有就略過並在 stderr 說明）；handoff 引用這個 log。
