@@ -1,5 +1,5 @@
 {
-  "version": "2.20",
+  "version": "2.21",
   "children": [
     {
       "type": "frame",
@@ -271113,13 +271113,81 @@
                       ]
                     },
                     {
+                      "type": "frame",
+                      "id": "c4wH5L",
+                      "name": "Empty Print",
+                      "width": 120,
+                      "height": 120,
+                      "fill": "$print-paper",
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 10
+                      },
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "MUiq3",
+                          "x": 8,
+                          "y": 8,
+                          "name": "Empty Page",
+                          "fill": "#00000000",
+                          "width": 104,
+                          "height": 104,
+                          "stroke": "$border",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "id": "z4YuS",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "kkD5H",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "x": 99,
+                          "y": 99,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
                       "type": "text",
                       "id": "o2aLcm",
                       "name": "Empty Line",
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "家庭相簿裡還沒有照片，\n可以改用「從手機加入」。",
+                      "content": "家庭相簿裡還沒有照片。",
                       "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -271578,13 +271646,81 @@
                       ]
                     },
                     {
+                      "type": "frame",
+                      "id": "ge7He",
+                      "name": "Empty Print",
+                      "width": 120,
+                      "height": 120,
+                      "fill": "$print-paper",
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 10
+                      },
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "P7JAJF",
+                          "x": 8,
+                          "y": 8,
+                          "name": "Empty Page",
+                          "fill": "#00000000",
+                          "width": 104,
+                          "height": 104,
+                          "stroke": "$border",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "id": "xTg06",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "MANmd",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "x": 99,
+                          "y": 99,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
                       "type": "text",
                       "id": "nxTYz",
                       "name": "Empty Line",
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "家庭相簿裡還沒有照片，\n可以改用「從手機加入」。",
+                      "content": "家庭相簿裡還沒有照片。",
                       "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
@@ -272068,13 +272204,81 @@
                       ]
                     },
                     {
+                      "type": "frame",
+                      "id": "CcWxP",
+                      "name": "Empty Print",
+                      "width": 120,
+                      "height": 120,
+                      "fill": "$print-paper",
+                      "stroke": "$paper-edge",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "outer",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "$paper-shadow",
+                        "offset": {
+                          "x": 0,
+                          "y": 3
+                        },
+                        "blur": 10
+                      },
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "J1UNy4",
+                          "x": 8,
+                          "y": 8,
+                          "name": "Empty Page",
+                          "fill": "#00000000",
+                          "width": 104,
+                          "height": 104,
+                          "stroke": "$border",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "id": "HAOLr",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner TL",
+                          "x": -5,
+                          "y": -5,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M0 0 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        },
+                        {
+                          "id": "ELsBa",
+                          "type": "ref",
+                          "ref": "GEBcf",
+                          "name": "Corner BR",
+                          "x": 99,
+                          "y": 99,
+                          "descendants": {
+                            "sD5Ma": {
+                              "geometry": "M26 26 L26 0 L0 26 Z"
+                            },
+                            "DhOiK": {
+                              "geometry": "M26 0 L0 26"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
                       "type": "text",
                       "id": "O7YVGu",
                       "name": "Empty Line",
                       "fill": "$text-primary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "家庭相簿裡還沒有照片，可以改用「從手機加入」。",
+                      "content": "家庭相簿裡還沒有照片。",
                       "textAlign": "center",
                       "fontFamily": "$font",
                       "fontSize": "$fs-body",
