@@ -169,9 +169,7 @@ struct DiaryCardView: View {
                         // 較大：使用者更需要知道「這篇還有更多」，而不是「這張是不是影片」）。
                         ZStack {
                             Color.black.opacity(0.75)
-                            Text("還有\(remainingPhotoCount)張")
-                                .appFont(.note, weight: .bold)
-                                .foregroundStyle(Color.lsOnPhoto)
+                            ThumbnailCountLabel(count: remainingPhotoCount, foreground: Color.lsOnPhoto)
                         }
                     } else if photo.type == .video {
                         // fix/LS-130-video-badge-fallback（QA R2 comment `a999c9af`）：修前

@@ -161,6 +161,8 @@ extension TapTargetGateScreenName {
         case .foodFirstCard: return .button(QAAccessibilityID.timelineFoodFirstCard)
         // LS-404：「個人」區塊標題（compact）／detail 欄標題（regular）——不受佇列 fixture 影響，一定會渲染。
         case .settingsUploadQueueEntry: return .staticText("個人")
+        // LS-440：兩個 fixture 共用的頂端標題。
+        case .thumbnailCountStress: return .staticText("縮圖疊字壓測")
         case .selfTestTooSmall: return .button("小按鈕")
         case .selfTestGood: return .button("好按鈕")
         case .selfTestPaddingOutsideButton: return .button("小按鈕")

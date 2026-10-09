@@ -183,6 +183,7 @@
 		3CB1682578BB0630201FB19E /* CommentRowActionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11042C3303B03B569497C31D /* CommentRowActionsTests.swift */; };
 		3CF008F18A802F26417FE3D2 /* SettingsRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24956A0B458F559DEA9A97B /* SettingsRowView.swift */; };
 		3D5A7401F8D441308FE41241 /* FoodRevealMotionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C39074E94A63A97327D17A9 /* FoodRevealMotionTests.swift */; };
+		3DD76DB392AC0B0A8E8C9B04 /* ThumbnailCountLabelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21B6B5D920A0DC9792F5F80 /* ThumbnailCountLabelTests.swift */; };
 		3DE6FD3FBE226113DC1CCC57 /* VideoPlayerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1905C686E265375F2E30D04 /* VideoPlayerScreen.swift */; };
 		3E6AD4C8220D0C00A205AFA4 /* LegalDocumentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B4A5D2DBCF16762B8D2F87 /* LegalDocumentSheet.swift */; };
 		3E851BE2E0FD96463C07D775 /* PhotoCornerShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD268EF45ACA8D3FE3F11E2 /* PhotoCornerShape.swift */; };
@@ -381,6 +382,7 @@
 		89D1747659736969487B246B /* AttributionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 051C77F4F02C900469E71445 /* AttributionSheet.swift */; };
 		8A5D00A06F596E432294806B /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D45C2CD0AC1D735E5576ABB /* AppConfig.swift */; };
 		8B1480EC9DAD0F2F17939ECC /* SettingsIconsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42EC894F62DC55A74654ED99 /* SettingsIconsTests.swift */; };
+		8B6491322930F8F0B0E023A8 /* TapTargetGateHarness+ThumbnailCount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7E399E3A4CE88ADC4B2B82 /* TapTargetGateHarness+ThumbnailCount.swift */; };
 		8C28191049D2D6F723A9CE2B /* DeleteAccountStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96073B8EE43A7B538080DA3B /* DeleteAccountStep.swift */; };
 		8CD42A33A7D04F52D172819D /* AlbumsContentAssemblerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07A1CE61F80D184428D957F /* AlbumsContentAssemblerTests.swift */; };
 		8CE989C6B03F5EDB8A5FA749 /* FoodRecordDetailAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03CDDE104E60CBBC6D519215 /* FoodRecordDetailAPIClient.swift */; };
@@ -505,6 +507,7 @@
 		BCCC6A1B7C284C355C6509FF /* DeleteAccountFlowModelResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6B2DBBC978E2E01973D4FE /* DeleteAccountFlowModelResumeTests.swift */; };
 		BD4020CA11182D2B89955653 /* DiaryDurationFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B30A3E8C7388E178BD32E /* DiaryDurationFormat.swift */; };
 		BD41888F467081226405ED53 /* TimelineModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 947DF9E9DBEDFFD993312829 /* TimelineModelsTests.swift */; };
+		BD97E0C51E81315370BF5138 /* ThumbnailCountLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB0948EED689A7B421CDB36 /* ThumbnailCountLabel.swift */; };
 		BEF3B2012A0964248A8D983B /* AppleSignInButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A80BDD3D72B37E3451EAC03 /* AppleSignInButton.swift */; };
 		BF0DA22255D22BCE9AAEC439 /* DiaryDateFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B13A37E8CC8794D85456D566 /* DiaryDateFormatTests.swift */; };
 		BF464AAE722DF3886B500846 /* SectionTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5C1334809B861267881A3E /* SectionTabBar.swift */; };
@@ -883,6 +886,7 @@
 		4B64D96ADE299BAA5D4FE329 /* TimelineStoreReactionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreReactionTests.swift; sourceTree = "<group>"; };
 		4C01DD76D1DDE246F961B0B8 /* SettingsView+Push.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsView+Push.swift"; sourceTree = "<group>"; };
 		4C4B969F26400E2ECFC1C204 /* ImportBatchFlowModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportBatchFlowModifier.swift; sourceTree = "<group>"; };
+		4C7E399E3A4CE88ADC4B2B82 /* TapTargetGateHarness+ThumbnailCount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+ThumbnailCount.swift"; sourceTree = "<group>"; };
 		4CE3353D44311219CE17B533 /* EditChildView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditChildView.swift; sourceTree = "<group>"; };
 		4D16770ED55A8DF1FD527425 /* Pill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pill.swift; sourceTree = "<group>"; };
 		4D7A562541FCFF3574CE3BAF /* FoodRecordDetailIPadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRecordDetailIPadTests.swift; sourceTree = "<group>"; };
@@ -1089,6 +1093,7 @@
 		9CC784C4A15C4C6B5C97B845 /* AlbumDetailAX3UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailAX3UITests.swift; sourceTree = "<group>"; };
 		9D02ACC3B8157341EFEC6027 /* UploadQueueDoneGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueDoneGrid.swift; sourceTree = "<group>"; };
 		9D6EBE0C328D26FD5846058F /* UploadQueueEntryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueEntryPresentation.swift; sourceTree = "<group>"; };
+		9DB0948EED689A7B421CDB36 /* ThumbnailCountLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailCountLabel.swift; sourceTree = "<group>"; };
 		9DE3263A4DCAC5B6EBB569CD /* ChildGrowthDetailView+FoodBook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChildGrowthDetailView+FoodBook.swift"; sourceTree = "<group>"; };
 		9E0F51605101C2248DFF9850 /* SafetyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyAPIClient.swift; sourceTree = "<group>"; };
 		9E3D2F360EBF9E037628E69B /* TapTargetGateHarness+DiaryCardVideoBadges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+DiaryCardVideoBadges.swift"; sourceTree = "<group>"; };
@@ -1108,6 +1113,7 @@
 		A1C80FBB4835B68D0EE95FD6 /* DiaryComposerStoreDraftCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryComposerStoreDraftCleanupTests.swift; sourceTree = "<group>"; };
 		A1FE65622DA3D1DE00028F27 /* PrintPhotoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintPhotoCard.swift; sourceTree = "<group>"; };
 		A207D395F9F7837F5497C597 /* FoodBookEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodBookEntry.swift; sourceTree = "<group>"; };
+		A21B6B5D920A0DC9792F5F80 /* ThumbnailCountLabelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailCountLabelTests.swift; sourceTree = "<group>"; };
 		A3089761759D436F793AB403 /* TimelineImportUploadCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineImportUploadCoordinatorTests.swift; sourceTree = "<group>"; };
 		A3FB5A5983F1F8C9C04E3BC2 /* UploadQueueStoreVideoCompressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueStoreVideoCompressionTests.swift; sourceTree = "<group>"; };
 		A4064D125E377462ADE8239D /* MediaChildrenMarkingTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaChildrenMarkingTrackerTests.swift; sourceTree = "<group>"; };
@@ -1804,6 +1810,7 @@
 				CC942E894CB769D576316163 /* SupabaseSafetyAPIClientReportSnippetsTests.swift */,
 				8D538922363578E9E2B88FCC /* SupabaseSafetyAPIClientTests.swift */,
 				CAB7169FDB024249D8521D64 /* SupabaseTimelineAPIClientTests.swift */,
+				A21B6B5D920A0DC9792F5F80 /* ThumbnailCountLabelTests.swift */,
 				EA808B45C621641B99EC528B /* TimelineContentAssemblerTests.swift */,
 				9B2FD827FA0B9B18B244A1DC /* TimelineContentAssemblerThumbPathTests.swift */,
 				D500E43E6BE915800BDC015C /* TimelineDayGroupingTests.swift */,
@@ -2013,6 +2020,7 @@
 				70052DB9EED77AAB95731CAD /* TapTargetGateHarness+Push.swift */,
 				82A4DFDB01C5E9345FAC1DA2 /* TapTargetGateHarness+Safety.swift */,
 				F8062CC76198B9E7F3BFCD3C /* TapTargetGateHarness+Settings.swift */,
+				4C7E399E3A4CE88ADC4B2B82 /* TapTargetGateHarness+ThumbnailCount.swift */,
 				B234575FDCCD4463DB6E74AE /* TapTargetGateHarness+Timeline.swift */,
 				BD57976BACB0CB191D6B1ADB /* TapTargetGateHarness+UploadQueue.swift */,
 				50246B0B11D81824183EEC29 /* TapTargetGateHarness+UploadQueueEntry.swift */,
@@ -2322,6 +2330,7 @@
 				1FC761FA0790858A67971E1D /* PrintPhotoCardMetrics.swift */,
 				216769BEF4D15D89E66AF64B /* ScrollableFillView.swift */,
 				B29793798CE839C104E800B1 /* Spacing.swift */,
+				9DB0948EED689A7B421CDB36 /* ThumbnailCountLabel.swift */,
 				8D28B773C8EDDC2BA7C7D993 /* Typography.swift */,
 				0C27A476B9FC174AD3BAB3E9 /* VideoDurationBadge.swift */,
 			);
@@ -2821,6 +2830,7 @@
 				A6AFA622D09D18E714E54D32 /* TapTargetGateHarness+Push.swift in Sources */,
 				C908027A6D35BBE67CE31052 /* TapTargetGateHarness+Safety.swift in Sources */,
 				DDB9CE8D278C585C84B4555D /* TapTargetGateHarness+Settings.swift in Sources */,
+				8B6491322930F8F0B0E023A8 /* TapTargetGateHarness+ThumbnailCount.swift in Sources */,
 				298387A611BAA2FC728DC3AE /* TapTargetGateHarness+Timeline.swift in Sources */,
 				FD8133F7B9A44B099DECFEEF /* TapTargetGateHarness+UploadQueue.swift in Sources */,
 				80DFE216F88F7143FC4E0E73 /* TapTargetGateHarness+UploadQueueEntry.swift in Sources */,
@@ -2828,6 +2838,7 @@
 				D6DBB2DFC19DAA2956A090C3 /* TapTargetGateScreenName+Sentinel.swift in Sources */,
 				1330DE1A2C8A701F1C64DE82 /* TapTargetGateScreenName.swift in Sources */,
 				680A71F53B2357C2C3D01FF8 /* TextWrapGuarantee.swift in Sources */,
+				BD97E0C51E81315370BF5138 /* ThumbnailCountLabel.swift in Sources */,
 				09F84913FCD1F25566F45E6A /* TimelineAPIClient.swift in Sources */,
 				0FE5CB1F362B73DC140F24CC /* TimelineContentAssembler.swift in Sources */,
 				365EEBA0356A6D011613BAAB /* TimelineDayGrouping.swift in Sources */,
@@ -3141,6 +3152,7 @@
 				6552BD52456E5000CB0BBB5E /* SupabaseSafetyAPIClientTests.swift in Sources */,
 				0997FB71931083A645DA5C8D /* SupabaseTimelineAPIClientTests.swift in Sources */,
 				FDE17BE504613C437ADC4F9C /* TestSupabaseClient.swift in Sources */,
+				3DD76DB392AC0B0A8E8C9B04 /* ThumbnailCountLabelTests.swift in Sources */,
 				5082D3510D50899E250FFFA0 /* TimelineContentAssemblerTests.swift in Sources */,
 				AFA4F86684A41CC8BA208560 /* TimelineContentAssemblerThumbPathTests.swift in Sources */,
 				9C01D3DD6268BF3514B4643A /* TimelineDayGroupingTests.swift in Sources */,
