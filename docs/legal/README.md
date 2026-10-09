@@ -1,6 +1,6 @@
 # docs/legal — 法務文件（LS-132）
 
-> **正文 v1.0.0 已於 2026-09-12 生效**（`privacy-policy.md`／`terms-of-service.md`／`eula-addendum.md`）。本 README 為法務文本的編輯來源與維護說明，是內部作業文件，不對外發佈（見 `docs/_config.yml` exclude；LS-132 merge-review R1 B1）。
+> **正文 v1.0.1 已於 2026-10-09 生效**（v1.0.0 於 2026-09-12 生效；1.0.1 僅網域與信箱改 `sproutday.app`，LS-436）（`privacy-policy.md`／`terms-of-service.md`／`eula-addendum.md`）。本 README 為法務文本的編輯來源與維護說明，是內部作業文件，不對外發佈（見 `docs/_config.yml` exclude；LS-132 merge-review R1 B1）。
 >
 > **修訂法務文本時須逐條核對下方「文本中承諾、但程式尚未落地的項目」對齊表**——表列項目若尚未上線，對應正文必須先改寫，否則是對使用者的不實陳述、也可能被 App Review 退件。**正文內不放 HTML 註解錨點**（merge-review R2 實測 `AttributedString(markdown:)` 會把 `<!-- -->` 原樣顯示為文字），待落地標記只在本表，以段落編號定位。正文括號內若出現票號（例如「（LS-153，待落地）」），是功能尚未上線的暫時標記，該功能上線後須立即移除——不變式（正文定稿後任何時候都應成立，不只是生效前）：`grep -n 'LS-[0-9]' docs/legal/privacy-policy.md docs/legal/terms-of-service.md docs/legal/eula-addendum.md` 應為空。
 
@@ -21,9 +21,9 @@
 | Placeholder | 出現於 | 說明與建議 |
 |---|---|---|
 | `[[OPERATOR_NAME]]` | 三份皆有 | **已填（2026-09-12）：CLYEH**（使用者裁決 5a，服務提供者名稱） |
-| `[[SUPPORT_EMAIL]]` | 三份皆有 | **已填（2026-09-12）：support@littlesprout.xyz**（使用者裁決 5b；轉寄至本人 Gmail，Cloudflare Email Routing） |
-| `[[SUPPORT_URL]]` | 三份皆有 | **已填（2026-09-12）：https://sproutday.app/legal**（使用者裁決 5c；GitHub Pages 案 A，自訂網域 `sproutday.app`，source `main`／`docs`）。文內原 `[[SUPPORT_URL]]/privacy`、`/terms` 引用已改為實際渲染路徑 `/legal/privacy-policy`、`/legal/terms-of-service`。**LS-191 起 `WelcomeView` 的《使用條款》《隱私權政策》連結已改開 in-app `LegalDocumentSheet`（直接讀 bundled markdown，不打網路），不再指向這裡的網址**——此網址仍用於文件正文內互相引用與 App Store 產品頁欄位。Pages 已啟用並綁定 `sproutday.app`（LS-436）；DNS 記錄由使用者設定，生效前網址尚不可開。**沿革（LS-436，2026-10-09）**：網域原定 `littlesprout.xyz`（LS-132），App 定名 Sprout Day 後改為 `sproutday.app`，文內網址已全數更新；`support@littlesprout.xyz` 信箱（Cloudflare Email Routing）沿用舊網域，尚未遷移 |
-| `[[EFFECTIVE_DATE]]` | 三份皆有 | **已填（2026-09-12）：2026-09-12**（使用者核可日；LS-132） |
+| `[[SUPPORT_EMAIL]]` | 三份皆有 | **已填（2026-09-12；LS-436 改網域）：support@sproutday.app**（使用者裁決 5b；轉寄至本人 Gmail，Cloudflare Email Routing；原 `support@littlesprout.xyz`，信箱轉寄設定另處理） |
+| `[[SUPPORT_URL]]` | 三份皆有 | **已填（2026-09-12）：https://sproutday.app/legal**（使用者裁決 5c；GitHub Pages 案 A，自訂網域 `sproutday.app`，source `main`／`docs`）。文內原 `[[SUPPORT_URL]]/privacy`、`/terms` 引用已改為實際渲染路徑 `/legal/privacy-policy`、`/legal/terms-of-service`。**LS-191 起 `WelcomeView` 的《使用條款》《隱私權政策》連結已改開 in-app `LegalDocumentSheet`（直接讀 bundled markdown，不打網路），不再指向這裡的網址**——此網址仍用於文件正文內互相引用與 App Store 產品頁欄位。Pages 已啟用並綁定 `sproutday.app`（LS-436）；DNS 記錄由使用者設定，生效前網址尚不可開。**沿革（LS-436，2026-10-09）**：網域原定 `littlesprout.xyz`（LS-132），App 定名 Sprout Day 後改為 `sproutday.app`，文內網址已全數更新；`support@sproutday.app` 信箱（Cloudflare Email Routing）沿用舊網域，尚未遷移 |
+| `[[EFFECTIVE_DATE]]` | 三份皆有 | **已填（2026-09-12）：2026-09-12**（使用者核可日；LS-132）；LS-436 起 1.0.1 生效日 2026-10-09 |
 | `[[VENUE_COURT]]` | 使用條款 §14 | **已填（2026-09-12）：臺灣臺北地方法院**（本 README 建議值，待使用者確認） |
 | `[[REPORT_RETENTION]]` | 隱私權政策 §8 | **已填（2026-09-12）：1 年**（本 README 建議值） |
 
