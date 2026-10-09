@@ -19,8 +19,8 @@ final class MultiChildCaptionFormatterTests: XCTestCase {
         )
     }
 
-    private func caption(_ children: [Child]) -> AttributedString {
-        MultiChildCaptionFormatter.attributed(children: children, asOf: asOf, timeZone: utc)
+    private func caption(_ children: [Child], ink: MultiChildCaptionFormatter.Ink = .text) -> AttributedString {
+        MultiChildCaptionFormatter.attributed(children: children, asOf: asOf, ink: ink, timeZone: utc)
     }
 
     // MARK: - 字串逐字對稿
@@ -82,5 +82,32 @@ final class MultiChildCaptionFormatterTests: XCTestCase {
         XCTAssertEqual(runs.count, 1, "多寶貝應為單一 run（稿面單一 text 節點），實際 \(runs.count) 段")
         XCTAssertEqual(runs.first?.font, .body.weight(.semibold))
         XCTAssertEqual(runs.first?.foregroundColor, Color.lsTextPrimary)
+    }
+
+    // MARK: - LS-446：依底色傳色
+
+    /// 日記卡（`DiaryCardView`）整張是 `print-paper` 紙面 → 傳 `.print`：姓名／多寶貝整串主墨
+    /// `print-ink`、單寶貝「 · 年齡」次墨 `print-ink-secondary`（不隨深色反轉）。
+    func test_printInk_singleChild_usesPrintInkPrimaryAndSecondary() {
+        let attributed = caption([child("小安", born: "2024-06-02")], ink: .print)
+        let runs = Array(attributed.runs)
+        XCTAssertEqual(runs.count, 2)
+        XCTAssertEqual(runs[0].foregroundColor, Color.lsPrintInk, "紙面姓名應為 print-ink")
+        XCTAssertEqual(runs[1].foregroundColor, Color.lsPrintInkSecondary, "紙面「 · 年齡」應為 print-ink-secondary")
+    }
+
+    func test_printInk_multipleChildren_wholeStringIsPrintInk() {
+        let attributed = caption(
+            [child("小安", born: "2024-06-02"), child("小明", born: "2026-01-02")], ink: .print
+        )
+        XCTAssertEqual(Array(attributed.runs).first?.foregroundColor, Color.lsPrintInk)
+    }
+
+    /// 詳情頁 header（`DiaryDetailView`）畫在頁面底、無紙 → `.text` 維持 text 系，深色才會反轉成可讀色。
+    func test_textInk_singleChild_usesTextPrimaryAndSecondary() {
+        let attributed = caption([child("小安", born: "2024-06-02")], ink: .text)
+        let runs = Array(attributed.runs)
+        XCTAssertEqual(runs[0].foregroundColor, Color.lsTextPrimary)
+        XCTAssertEqual(runs[1].foregroundColor, Color.lsTextSecondary)
     }
 }

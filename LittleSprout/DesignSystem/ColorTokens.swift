@@ -4,10 +4,11 @@ import SwiftUI
 /// 同名 Color Set（`Assets.xcassets`）。全部走 Any/Dark 兩欄，不寫死 hex——色值本身只在
 /// Asset Catalog 裡登記一次（見 `.claude/evidence/LS-17/spec/tokens.json` 對照表）。
 ///
-/// `print-ink`／`print-ink-secondary` 是設計刻意的例外：Color Set 只登記一份數值（Any），
-/// 不隨深色模式反轉（LS-46 R11 進場條件②「紙永遠是淺表面、墨永遠是深色」）。
+/// `print-ink`／`print-ink-secondary`／`accent-on-paper`（LS-446）是設計刻意的例外：Color Set 只登記
+/// 一份數值（Any），不隨深色模式反轉（LS-46 R11 進場條件②「紙永遠是淺表面、墨永遠是深色」）。
 extension Color {
     static let lsAccent = Color("accent")
+    static let lsAccentOnPaper = Color("accent-on-paper")
     static let lsAccentSoft = Color("accent-soft")
     static let lsAppleBackground = Color("apple-bg")
     static let lsAppleForeground = Color("apple-fg")

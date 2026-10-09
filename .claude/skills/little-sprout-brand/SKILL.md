@@ -29,7 +29,7 @@ description: Little Sprout（萌芽日記）設計語言定案——LS-46 十一
 ## 十條不可協商（各 reference 的濃縮）
 
 1. **一畫面一顆實心主鈕**：`$accent` 是唯一的「識別」飽和色，每畫面最多一次實心；danger 不做主鍵、success 一流程一次、連結一律墨色＋底線。
-2. **紙不會變黑**：`$print-paper` 深淺兩模式都是淺色（#FBEBEC／#E8D9D4）；紙上文字一律 `$print-ink` #2B141C／`$print-ink-secondary` #553040——**不掛 theme 的單值 token**，Asset Catalog 的 Any／Dark 填同值。
+2. **紙不會變黑**：`$print-paper` 深淺兩模式都是淺色（#FBEBEC／#E8D9D4）；紙上文字一律 `$print-ink` #2B141C／`$print-ink-secondary` #553040；紙上的已按讚／強調色一律 `$accent-on-paper` #8E2447（LS-446，深色紙上 `$accent` 只有 1.38:1）——**不掛 theme 的單值 token**，Asset Catalog 的 Any／Dark 填同值。
 3. **沖印品白邊 8/8/8/8**（`$print-edge`＝`$print-edge-bottom`＝8，兩 token 同值但刻意不合併），下緣視覺厚度 32＝8＋7＋Imprint Row 17，由壓印那行字「掙來」，不是 padding 調出來的。
 4. **角托三段規則**：四角托＝這是一張沖印品（只有家人的照片；現稿四顆維持現狀）；對角兩顆＝App icon（≤60pt）、既有 `cmp/Profile Print`（`OePXK`）、新畫的沖印品（例：Hero／Empty Print）；既有四顆是否統一另票對帳；零角托＝不是沖印品（表單、邀請碼卡——會過期的東西不是收藏品）。角托一律壓過紙緣 `corner-out` 5pt。
 5. **間距只有一套節奏**：8／16／24／44（群內／群間／段落／章節）＋輔助 6／12；每畫面必須出現一次 44 章節斷點（碼輸入家族 7 張具名豁免）。任何不在節奏上的數字都要有主人（具名豁免），沒有主人的是「倒推餘數」＝缺陷。

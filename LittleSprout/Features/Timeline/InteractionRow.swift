@@ -35,6 +35,13 @@ struct InteractionRow: View {
     /// LS-218：`TimelineView.openComments(kind:refId:)` 接住這個回呼，開出
     /// `CommentsSheetView`（票文 scope 1）。
     var onOpenComments: () -> Void = {}
+    /// LS-446（LS-442 C3a）：互動列是否躺在 `print-paper` 紙面上——只有 `DiaryCardView`（整張卡是
+    /// 紙）傳 `true`，字色改紙面墨色（未按讚 `print-ink-secondary`、已按讚 `accent-on-paper`）；其餘
+    /// 一律在頁面底（照片／相簿卡的相紙外 `lsBackground`、`DiaryDetailView` 的 `.appBackground()`）
+    /// 維持 LS-366 的 theme-aware `text-secondary`／`accent`，不得全域改紙面色（深色底上會退回
+    /// 1.44–1.69:1）。為什麼不直接看 `kind == .diary`：`DiaryDetailView` 的互動列同樣是
+    /// `kind: .diary`、卻畫在頁面底而非紙上，只看 kind 會把詳情頁深色底打回 LS-366 的 bug。
+    var onPaper = false
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isToggling = false
@@ -58,6 +65,17 @@ struct InteractionRow: View {
     /// theme-aware 對應 `text-secondary`：淺色同值 #553040（淺色零變化），深色 #D3AEB2
     /// 對 surface／bg 8.02／9.41:1。`internal` 讓單元測試量對比（`InteractionRowContrastTests`）。
     static let idleForeground = Color.lsTextSecondary
+    /// 已按讚態（愛心／「已按愛心」／計數）在頁面底上的字色（照片／相簿卡，LS-366 之後不變）。
+    static let likedForeground = Color.lsAccent
+    /// LS-446：紙面（`onPaper`）的未按讚字色——稿面 `IgqGF`／`VZ0wV` 原標的 `$print-ink-secondary`，
+    /// 不隨深色反轉，對 `print-paper` 9.66／8.13:1。
+    static let paperIdleForeground = Color.lsPrintInkSecondary
+    /// LS-446：紙面的已按讚字色——`accent-on-paper` #8E2447（單值），對 `print-paper` 7.30／6.14:1；
+    /// 深色紙上 `lsAccent`（#FCA4B5）只有 1.38:1，所以紙面不能沿用 `likedForeground`。
+    static let paperLikedForeground = Color.lsAccentOnPaper
+
+    private var idleColor: Color { onPaper ? Self.paperIdleForeground : Self.idleForeground }
+    private var likedColor: Color { onPaper ? Self.paperLikedForeground : Self.likedForeground }
 
     var body: some View {
         Group {
@@ -122,7 +140,7 @@ struct InteractionRow: View {
                 Text(reaction.reactedByMe ? "已按愛心" : "愛心")
                     .appFont(.note, weight: reaction.reactedByMe ? .bold : .regular)
             }
-            .foregroundStyle(reaction.reactedByMe ? Color.lsAccent : Self.idleForeground)
+            .foregroundStyle(reaction.reactedByMe ? likedColor : idleColor)
             .padding(11)
             .frame(width: likeToggleSize.width, height: likeToggleSize.height, alignment: .leading)
             .contentShape(Rectangle())
@@ -168,7 +186,7 @@ struct InteractionRow: View {
         } label: {
             Text("\(reaction.count)")
                 .appFont(.note, weight: reaction.reactedByMe ? .bold : .semibold)
-                .foregroundStyle(reaction.reactedByMe ? Color.lsAccent : Self.idleForeground)
+                .foregroundStyle(reaction.reactedByMe ? likedColor : idleColor)
                 .frame(width: countZoneSize.width, height: countZoneSize.height)
                 .frame(minWidth: 48, minHeight: 48)
                 .contentShape(Rectangle())
@@ -193,7 +211,7 @@ struct InteractionRow: View {
                 Text("\(commentCount)")
                     .appFont(.note, weight: .semibold)
             }
-            .foregroundStyle(Self.idleForeground)
+            .foregroundStyle(idleColor)
             .padding(11)
             .frame(minHeight: likeToggleSize.height)
             .contentShape(Rectangle())
@@ -215,7 +233,7 @@ struct InteractionRow: View {
                 Text("\(commentCount)")
                     .appFont(.note, weight: .semibold)
             }
-            .foregroundStyle(Self.idleForeground)
+            .foregroundStyle(idleColor)
             .padding(11)
             .frame(minHeight: likeToggleSize.height)
             .contentShape(Rectangle())
