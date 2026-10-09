@@ -1209,7 +1209,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 正式站 advisors `authenticated_security_definer_function_executable` WARN 點名的架構
 選擇：這些 RPC 都是 `SECURITY DEFINER`（RLS 由函式內部呼叫 `private.*` 集合函式把關，
 不是靠呼叫端自己的 RLS 身分），且對 `authenticated` 開放 `EXECUTE`——這是刻意的架構
-選擇，不是漏洞。以下 32 支是目前完整清單（單一清單來源：與
+選擇，不是漏洞。以下 33 支是目前完整清單（單一清單來源：與
 `supabase/tests/60_default_privileges.sql` §8 的 `v_definer_rpcs`、
 `supabase/tests/110_advisors_hardening.sql` §3 的 `v_whitelist` 三處逐字同步；新增
 對 `authenticated` 開放的 SECURITY DEFINER RPC 時，三處都要更新，`110_` 的反向掃描
@@ -1229,6 +1229,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 | `delete_my_account()` | 使用者刪除自己的帳號 |
 | `get_my_join_request()` | 申請人查自己的加入申請狀態 |
 | `list_comments(uuid, text, uuid, timestamptz, uuid, integer)` | 分頁列出留言 |
+| `list_family_photos_for_food(uuid, integer)` | 03d 家庭相簿選擇器的照片列表（排除飲食專屬照片，LS-441） |
 | `list_join_requests()` | owner 查看待審加入申請清單 |
 | `register_device_token(text, text)` | 註冊推播裝置 token |
 | `reject_join(uuid)` | owner 拒絕加入申請 |
@@ -2086,6 +2087,24 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   的 `category`／`sort_order` 分類呈現留給呼叫端。
 - **錯誤碼**：無自訂碼；未登入或不屬於的家庭，配合 RLS 自然回傳 0 列。
 - **併發**：無寫入，讀取穩定（`stable`），不會有寫入衝突。
+
+### `list_family_photos_for_food(p_child_id uuid, p_limit int default 300) -> table(id, storage_path, thumb_path, taken_at, created_at)`（LS-441）
+- **誰能呼叫**：任何已登入使用者，但只查得到 `p_child_id` 所屬、且自己是成員的家庭；`p_child_id`
+  不存在或屬於別的家庭**不報錯，回 0 列**（同 `list_child_food_records`）。**`SECURITY DEFINER`**
+  （不同於其他飲食 RPC 的 invoker）：判準函式 `private.media_hidden_as_food_record_only` 在 private
+  schema，`authenticated` 依 `60_default_privileges.sql` 對 private 函式無 `EXECUTE`（invoker 版本實測
+  撞 `permission denied for function media_hidden_as_food_record_only`），所以本函式以 definer
+  身分呼叫它，授權條件手動寫進本體：`children.family_id in (select private.family_ids())`
+  （等同 `children_select`／`media_select` 的成員條件，`auth.uid()` 取自 JWT）、`deleted_at is null`；
+  已列入上方 SECURITY DEFINER 白名單。
+- **用途**：飲食記錄 03d「從家庭相簿挑」。該家庭 `type = 'photo'`、未軟刪的 `media`，**排除**
+  `private.media_hidden_as_food_record_only(family_id, id)` 為 true 者（LS-430 判準：掛在至少一筆
+  有效飲食記錄、且不在任何日記／相簿——C3a「手機新加的照片只在該記錄內可見」）；同時在相簿／日記的
+  飲食照片照列。`created_at desc, id desc`，最多 `p_limit` 張（client 傳 `FamilyPhotoQuery.limit`＝300；
+  `null` 不限）。欄位同 client `photoColumns`。本記錄已綁的照片回填（03b）走 `media` 直查
+  `fetchFamilyPhoto`，不受影響。
+- **錯誤碼**：無自訂碼；未登入或不屬於的家庭回 0 列。
+- **併發**：唯讀、`stable`，無寫入衝突；判準與時間軸（`feed_sync_media`）共用同一支函式。
 
 ### `upsert_child_food_record(p_child_id uuid, p_food_id text, p_first_tried_on date, p_media_id uuid, p_note text, p_reaction text) -> child_food_records`（LS-325）
 - **誰能呼叫**：該家庭 owner／member（viewer 不行，PLAN §3）。同一寶貝同一食物
@@ -3290,6 +3309,7 @@ get_reaction_counts(uuid, text, uuid[])
 list_child_food_records(uuid)
 list_children(uuid)
 list_comments(uuid, text, uuid, timestamptz, uuid, integer)
+list_family_photos_for_food(uuid, integer)
 list_growth_records(uuid, integer, date, uuid)
 list_join_requests()
 notification_recipients(uuid[])

@@ -7,6 +7,7 @@
 --
 -- 案：1 相簿照片列出（含：已軟刪、影片不列）／2 飲食專屬照片不列／3 同時在相簿的飲食照片列出／
 --     4 他家庭看不到（兩個方向）／5 p_limit 生效／6 created_at 新到舊。
+-- created_at 設在未來 1 小時內，確保排在 fixtures 既有照片之前（案 6 只比較自己的兩張）。
 -- 每段 begin…rollback；fixtures 沿用 00_fixtures.sql：家庭 A（owner a0…01／member a0…02）、
 -- 寶貝 2a…01；家庭 B（owner b0…01）、寶貝 2b…01；A 家既有兩張相簿照片 3a…01／3a…02。
 
@@ -34,11 +35,11 @@ declare
   v_count int;
 begin
   insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, created_at, deleted_at) values
-    (v_plain, v_family, v_family::text || '/2026/10/' || v_plain::text || '.jpg', 'photo', 1000, v_now, 10, 10, v_owner, v_now - interval '4 minutes', null),
-    (v_food_only, v_family, v_family::text || '/2026/10/' || v_food_only::text || '.jpg', 'photo', 1000, v_now, 10, 10, v_owner, v_now - interval '3 minutes', null),
-    (v_food_album, v_family, v_family::text || '/2026/10/' || v_food_album::text || '.jpg', 'photo', 1000, v_now, 10, 10, v_owner, v_now - interval '2 minutes', null),
-    (v_deleted, v_family, v_family::text || '/2026/10/' || v_deleted::text || '.jpg', 'photo', 1000, v_now, 10, 10, v_owner, v_now - interval '1 minute', v_now),
-    (v_video, v_family, v_family::text || '/2026/10/' || v_video::text || '.mp4', 'video', 1000, v_now, 10, 10, v_owner, v_now, null);
+    (v_plain, v_family, v_family::text || '/2026/10/' || v_plain::text || '.jpg', 'photo', 1000, v_now, 10, 10, v_owner, v_now + interval '56 minutes', null),
+    (v_food_only, v_family, v_family::text || '/2026/10/' || v_food_only::text || '.jpg', 'photo', 1000, v_now, 10, 10, v_owner, v_now + interval '57 minutes', null),
+    (v_food_album, v_family, v_family::text || '/2026/10/' || v_food_album::text || '.jpg', 'photo', 1000, v_now, 10, 10, v_owner, v_now + interval '58 minutes', null),
+    (v_deleted, v_family, v_family::text || '/2026/10/' || v_deleted::text || '.jpg', 'photo', 1000, v_now, 10, 10, v_owner, v_now + interval '59 minutes', v_now),
+    (v_video, v_family, v_family::text || '/2026/10/' || v_video::text || '.mp4', 'video', 1000, v_now, 10, 10, v_owner, v_now + interval '60 minutes', null);
   insert into public.album_media (album_id, media_id, family_id) values (v_album, v_plain, v_family), (v_album, v_food_album, v_family);
 
   -- 以 postgres 直接寫入記錄（略過 RLS）：本檔只驗列表 RPC，不驗 upsert 權限。

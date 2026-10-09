@@ -514,7 +514,10 @@ declare
     'public.delete_growth_record(uuid)',
     -- LS-325：邏輯逐字沿用 delete_growth_record，理由相同，見 20260918205141_
     -- food_encyclopedia.sql 檔頭第 0 段 d
-    'public.delete_child_food_record(uuid)'
+    'public.delete_child_food_record(uuid)',
+    -- LS-441：03d 家庭相簿選擇器；判準函式在 private（authenticated 無 EXECUTE），故 definer，
+    -- 見 20261009150122_food_family_photos_rpc.sql 檔頭
+    'public.list_family_photos_for_food(uuid, integer)'
   ];
   v_invoker_rpcs text[] := array[
     'public.get_family_timeline(uuid, uuid, timestamptz, uuid, integer)',
