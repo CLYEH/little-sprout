@@ -35,12 +35,35 @@ struct PersistedUploadRecord: Codable, Equatable {
     /// LS-397 R1 M2：批次匯入「指定寶貝」的寶貝 id（標記追蹤器對這筆的落盤副本）——重啟後重新登記進
     /// 追蹤器，續傳成功才補得上標記；舊版 manifest 沒有這個 key，解碼為 `nil`。
     var babyIDs: [UUID]?
+    /// LS-423：sheet 內「標記移除」的失敗項（還沒 `commitRemovals`）的落盤旗標——app 在 sheet 開著時被回收，
+    /// 重啟的 `restorePersistedEntries` 看到 `true` 就不還原、不重傳，並把 payload 檔清掉。
+    /// 舊版 manifest 沒有這個 key，解碼為 `false`（見下方 `init(from:)`）。
+    var removed: Bool = false
 
     /// 入列當下向外部（`AlbumsStore`）查到的「這筆的連結」，落進 record。
     struct Links {
         var albumID: UUID?
         var babyIDs: [UUID]?
         static let none = Links(albumID: nil, babyIDs: nil)
+    }
+}
+
+extension PersistedUploadRecord {
+    /// 手寫解碼只為了讓 `removed` 缺 key 時回 `false`（合成的 `init(from:)` 對非 Optional 屬性缺 key 會 throw，
+    /// 整份 manifest 就被 `loadRecords` 當空佇列丟掉）；放在 extension 以保留合成的 memberwise `init`。
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        kind = try container.decode(Kind.self, forKey: .kind)
+        fileExtension = try container.decode(String.self, forKey: .fileExtension)
+        payloadFileName = try container.decode(String.self, forKey: .payloadFileName)
+        pixelWidth = try container.decode(Int.self, forKey: .pixelWidth)
+        pixelHeight = try container.decode(Int.self, forKey: .pixelHeight)
+        takenAt = try container.decodeIfPresent(Date.self, forKey: .takenAt)
+        enqueuedAt = try container.decode(Date.self, forKey: .enqueuedAt)
+        albumID = try container.decodeIfPresent(UUID.self, forKey: .albumID)
+        babyIDs = try container.decodeIfPresent([UUID].self, forKey: .babyIDs)
+        removed = try container.decodeIfPresent(Bool.self, forKey: .removed) ?? false
     }
 }
 

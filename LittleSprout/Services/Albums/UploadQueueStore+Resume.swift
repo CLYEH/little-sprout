@@ -156,10 +156,12 @@ extension UploadQueueStore {
     /// app 被回收後重新啟動：把 manifest 裡的未完成項列回佇列（狀態一律 `.waiting`，縮圖為空）、
     /// 逐筆呼叫 `register` 讓呼叫端重新登記相簿對照與寶貝標記，設 `resumedFromInterruption` 並開始重送。
     /// 不接回舊的 `URLSession`（路線 (a)）——整筆重傳。payload 檔案不見的紀錄直接丟棄。
+    /// LS-423：`removed == true`（sheet 內已標記移除、沒來得及 `commitRemovals` 就被回收）的紀錄不還原、不登記、不重傳；
+    /// 它沒進 `resume.records`，後面的 `pruneOrphans`／`persistManifest` 自然把 payload 檔與 manifest 項目一併清掉。
     func restorePersistedEntries(register: (_ record: PersistedUploadRecord) -> Void) {
         guard let persistence else { return }
         var restored = 0
-        for record in persistence.loadRecords() where entries[record.id] == nil {
+        for record in persistence.loadRecords() where entries[record.id] == nil && !record.removed {
             guard let kind = persistence.payload(for: record) else { continue }
             entries[record.id] = Entry(
                 thumbnail: nil, pixelSize: PixelSize(width: record.pixelWidth, height: record.pixelHeight),

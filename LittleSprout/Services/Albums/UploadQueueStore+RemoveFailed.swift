@@ -6,28 +6,41 @@ import Foundation
 /// `pendingRemovals`，可用 `undoRemove` 復原，墓碑列仍在 `sections`）；sheet 關閉（presenter 的
 /// `onDismiss`）才呼叫 `commitRemovals()` 真的移除並落盤——標記中的項目不計入 `failedCount`／
 /// `retryableFailedCount`／`remainingCount`、不參與 `retryAllRetryable()` 與回前景自動重試。
-/// `pendingRemovals` 不落盤：sheet 開著時 app 被回收，重啟後 `restorePersistedEntries` 會把 manifest 裡尚未提交的紀錄
-/// （含這些標記中的項目）全部還原成 `.waiting` 並自動重傳——標記不會跨行程存活（是否要「進背景即提交」屬產品／設計裁決）。
+/// **標記即落盤（LS-423）**：`markRemoved`／`undoRemove`／`markAllFailedRemoved` 同步把 manifest 紀錄的 `removed`
+/// 旗標寫盤（payload 檔不動，仍可復原）。sheet 開著時 app 被回收，重啟後 `restorePersistedEntries` 看到
+/// `removed == true` 的紀錄就不還原、不重傳、順手清 payload 檔——使用者放棄的照片不會在下次啟動悄悄傳進相簿。
 ///
 /// 都不打伺服器、不動 PhotoKit。**孤兒 Storage 物件（VR R3 I3）**：見 `commitRemovals()` 文件註解——本票核對後
 /// 決定不在這裡刪，理由與後續寫在那裡。
 extension UploadQueueStore {
     /// 標記一筆失敗項為「移除」——只對 `.failed` 生效，其他狀態 no-op（不能放棄還在飛行中或已完成的項目）。
     func markRemoved(_ id: UUID) {
-        guard case .failed? = entries[id]?.state else { return }
-        pendingRemovals.insert(id)
+        if setMark(id) { persistManifest() }
     }
 
     /// 復原一筆標記（墓碑列的「↶ 復原」）。
     func undoRemove(_ id: UUID) {
         pendingRemovals.remove(id)
+        guard resume.records[id]?.removed == true else { return }
+        resume.records[id]?.removed = false
+        persistManifest()
     }
 
-    /// 「移除這 N 張」確認後一次標記全部尚未標記的失敗項。
+    /// 「移除這 N 張」確認後一次標記全部尚未標記的失敗項（manifest 只寫一次）。
     func markAllFailedRemoved() {
-        for id in order {
-            markRemoved(id)
-        }
+        var needsWrite = false
+        for id in order where setMark(id) { needsWrite = true }
+        if needsWrite { persistManifest() }
+    }
+
+    /// 只改記憶體（`pendingRemovals`）與 `resume.records` 的旗標、不寫盤；回傳 manifest 是否需要重寫
+    /// （沒有落盤紀錄的項目——落盤失敗或 preview——只有記憶體標記，不需要寫）。
+    private func setMark(_ id: UUID) -> Bool {
+        guard case .failed? = entries[id]?.state else { return false }
+        pendingRemovals.insert(id)
+        guard resume.records[id]?.removed == false else { return false }
+        resume.records[id]?.removed = true
+        return true
     }
 
     /// sheet 關閉時呼叫：對 `pendingRemovals` 逐項移除 entry（縮圖隨之釋放）、清暫存匯出檔（影片沿
