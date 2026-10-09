@@ -78,7 +78,7 @@ extension AlbumDetailView {
                 Image(systemName: "photo.badge.plus").appIconFrame(.medium)
                 Text("加入照片").appFont(.body, weight: .semibold)
             }
-            .frame(minHeight: 48)
+            .frame(minHeight: PrimaryButton.minHeight)
             .padding(.horizontal, AppSpacing.item)
             .contentShape(Rectangle())
         }
