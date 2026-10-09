@@ -272129,6 +272129,1943 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "FrAp9",
+      "x": 18109,
+      "y": 60600,
+      "name": "Food / 03h 第一次記錄 · 手機照片讀不到 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 1009,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 1.1397423191278493
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.01684836471754212
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "zwJES",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "UcqjH",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1009,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "xtrlG",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1009,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "S6nX4",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 62,
+              "name": "Form Sheet",
+              "width": 393,
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "lrVUL",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "eQLiX",
+                      "name": "Grabber",
+                      "fill": "$border",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "frame",
+                      "id": "eMzqZ",
+                      "name": "Head Row",
+                      "width": "fill_container",
+                      "gap": "$sp-item",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "UT5pu",
+                          "type": "ref",
+                          "ref": "IikhF",
+                          "name": "Food Slot（還沒吃：灰色空位）",
+                          "width": 104,
+                          "fill": "#00000000",
+                          "stroke": "$border",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "enabled": false,
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 1,
+                              "y": 4
+                            },
+                            "blur": 8
+                          },
+                          "descendants": {
+                            "g0UaV": {
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "food-stickers/gray-preview/taro.png",
+                                "mode": "contain"
+                              },
+                              "opacity": 0.6
+                            },
+                            "SiaTC": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "kvHgi",
+                          "name": "Head Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kuGXD",
+                              "name": "Head Title",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "記下小安第一次吃芋頭",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-lead",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "sj03d",
+                              "name": "Head Sub",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "穀物根莖",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "CiM35",
+                  "name": "Fields",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ZDNiz",
+                      "name": "Date Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "V0jaJE",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "哪一天第一次吃",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xwHYV",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "padding": [
+                            "$sp-group",
+                            "$inset-card"
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NC9wQ",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "content": "8月20日（今天）",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "AT4BL",
+                              "name": "Calendar Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GmfUX",
+                          "name": "Field Help",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "JAzjw",
+                              "name": "Help Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "info",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "HRvMa",
+                              "name": "Help Text",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "忘了記也沒關係，可以選以前的日子。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hqp3h",
+                      "name": "Photo Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zWBlj",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "照片（可不選）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uprIi",
+                          "name": "Photo Options",
+                          "width": "fill_container",
+                          "gap": "$sp-group",
+                          "children": [
+                            {
+                              "id": "BnAp9",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "From Family Album",
+                              "width": "fill_container",
+                              "padding": [
+                                "$ctl-pad-md",
+                                12
+                              ],
+                              "justifyContent": "center",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "images"
+                                },
+                                "yxwnz": {
+                                  "content": "從家庭相簿挑"
+                                }
+                              }
+                            },
+                            {
+                              "id": "X1xqwl",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "From Phone",
+                              "width": "fill_container",
+                              "padding": [
+                                "$ctl-pad-md",
+                                12
+                              ],
+                              "justifyContent": "center",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "smartphone"
+                                },
+                                "yxwnz": {
+                                  "content": "從手機加入"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "PN2L0",
+                      "name": "Reaction Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Oumpo",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安覺得怎麼樣（可不選）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Qbyjl",
+                          "name": "Reaction Options",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "U5UAIC",
+                              "name": "Reaction · 喜歡",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "fMQSB",
+                                  "name": "Reaction Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "smile",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "CViwg",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "喜歡",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "JgYId",
+                              "name": "Reaction · 普通",
+                              "width": "fill_container",
+                              "fill": "$accent-soft",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$text-primary",
+                              "strokeWidth": 2,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "kux5i",
+                                  "name": "Reaction Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "meh",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "FAIWy",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "普通",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "RdqXY",
+                              "name": "Reaction · 不愛吃",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "BmoXf",
+                                  "name": "Reaction Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "frown",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "qkrGl",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "不愛吃",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LLWMy",
+                      "name": "Note Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "HCg4q",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "一句話（可不填）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "s2ccg",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 84,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "padding": "$inset-card",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "e2eM0",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "有點黏，吃了三口就搖頭。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "o7aNj",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "GUzLx",
+                      "name": "Status Slot",
+                      "width": "fill_container",
+                      "height": 56,
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "ltTRD",
+                          "name": "Status Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$danger"
+                        },
+                        {
+                          "type": "text",
+                          "id": "aKu6S",
+                          "name": "Status Text",
+                          "fill": "$danger",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "沒有加入照片：手機裡這一張讀不出來，請再選一張。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fyXPw",
+                      "name": "Actions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "id": "nScgX",
+                          "type": "ref",
+                          "ref": "OKSJI",
+                          "name": "Save Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "s9bME2": {
+                              "enabled": false
+                            },
+                            "w7CUP": {
+                              "content": "儲存"
+                            }
+                          }
+                        },
+                        {
+                          "id": "oUTET",
+                          "type": "ref",
+                          "ref": "qe9yS",
+                          "name": "Cancel Button",
+                          "width": "fill_container",
+                          "justifyContent": "center",
+                          "descendants": {
+                            "breqI": {
+                              "enabled": false
+                            },
+                            "hIhVd": {
+                              "content": "取消"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "P4kHe0",
+      "x": 18582,
+      "y": 60600,
+      "name": "Food / 03h 第一次記錄 · 手機照片讀不到 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1009,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 1.1397423191278493
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.01684836471754212
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "TGkhC",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "KblDs",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 1009,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "dYifi",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 1009,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "URsK2",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 62,
+              "name": "Form Sheet",
+              "width": 393,
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XMjs9",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "r9xziu",
+                      "name": "Grabber",
+                      "fill": "$border",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "frame",
+                      "id": "k4caj",
+                      "name": "Head Row",
+                      "width": "fill_container",
+                      "gap": "$sp-item",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "id": "YWwDz",
+                          "type": "ref",
+                          "ref": "IikhF",
+                          "name": "Food Slot（還沒吃：灰色空位）",
+                          "width": 104,
+                          "fill": "#00000000",
+                          "stroke": "$border",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "enabled": false,
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 1,
+                              "y": 4
+                            },
+                            "blur": 8
+                          },
+                          "descendants": {
+                            "g0UaV": {
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "food-stickers/gray-preview/taro.png",
+                                "mode": "contain"
+                              },
+                              "opacity": 0.6
+                            },
+                            "SiaTC": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wUdTY",
+                          "name": "Head Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "byral",
+                              "name": "Head Title",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "記下小安第一次吃芋頭",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-lead",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "aBFWx",
+                              "name": "Head Sub",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "穀物根莖",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "X5MEXY",
+                  "name": "Fields",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "HgyIX",
+                      "name": "Date Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "aVN4d",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "哪一天第一次吃",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "D4IcxA",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "padding": [
+                            "$sp-group",
+                            "$inset-card"
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "SkEoO",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "content": "8月20日（今天）",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "FdrVw",
+                              "name": "Calendar Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "OFuJE",
+                          "name": "Field Help",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Ygfem",
+                              "name": "Help Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "info",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "kNzZr",
+                              "name": "Help Text",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "忘了記也沒關係，可以選以前的日子。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wfSak",
+                      "name": "Photo Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "mOBe7",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "照片（可不選）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "lwQsI",
+                          "name": "Photo Options",
+                          "width": "fill_container",
+                          "gap": "$sp-group",
+                          "children": [
+                            {
+                              "id": "QnZRJ",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "From Family Album",
+                              "width": "fill_container",
+                              "padding": [
+                                "$ctl-pad-md",
+                                12
+                              ],
+                              "justifyContent": "center",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "images"
+                                },
+                                "yxwnz": {
+                                  "content": "從家庭相簿挑"
+                                }
+                              }
+                            },
+                            {
+                              "id": "FSirc",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "From Phone",
+                              "width": "fill_container",
+                              "padding": [
+                                "$ctl-pad-md",
+                                12
+                              ],
+                              "justifyContent": "center",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "smartphone"
+                                },
+                                "yxwnz": {
+                                  "content": "從手機加入"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oN8kt",
+                      "name": "Reaction Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "KbU4i",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安覺得怎麼樣（可不選）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bobTc",
+                          "name": "Reaction Options",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "xplxZ",
+                              "name": "Reaction · 喜歡",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "wtXb0",
+                                  "name": "Reaction Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "smile",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "JrxtP",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "喜歡",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "y0LxF",
+                              "name": "Reaction · 普通",
+                              "width": "fill_container",
+                              "fill": "$accent-soft",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$text-primary",
+                              "strokeWidth": 2,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "ohm3p",
+                                  "name": "Reaction Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "meh",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "iMX13",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "普通",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "O5Icl9",
+                              "name": "Reaction · 不愛吃",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "ZThcs",
+                                  "name": "Reaction Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "frown",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "zK3ry",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "不愛吃",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "McLlM",
+                      "name": "Note Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "mPA9D",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "一句話（可不填）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xaahm",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "height": 84,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "padding": "$inset-card",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "U3D6eP",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "有點黏，吃了三口就搖頭。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wSlnI",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "glBRq",
+                      "name": "Status Slot",
+                      "width": "fill_container",
+                      "height": 56,
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "z0IRKp",
+                          "name": "Status Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$danger"
+                        },
+                        {
+                          "type": "text",
+                          "id": "v8rr5r",
+                          "name": "Status Text",
+                          "fill": "$danger",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "沒有加入照片：手機裡這一張讀不出來，請再選一張。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "sP5re",
+                      "name": "Actions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "id": "Fpq0E",
+                          "type": "ref",
+                          "ref": "OKSJI",
+                          "name": "Save Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "s9bME2": {
+                              "enabled": false
+                            },
+                            "w7CUP": {
+                              "content": "儲存"
+                            }
+                          }
+                        },
+                        {
+                          "id": "d6gwiJ",
+                          "type": "ref",
+                          "ref": "qe9yS",
+                          "name": "Cancel Button",
+                          "width": "fill_container",
+                          "justifyContent": "center",
+                          "descendants": {
+                            "breqI": {
+                              "enabled": false
+                            },
+                            "hIhVd": {
+                              "content": "取消"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "SaeSf",
+      "x": 19055,
+      "y": 60600,
+      "name": "A11y / 03h 第一次記錄 · 手機照片讀不到 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 2438,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 0.4716981132075472
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.00697292863002461
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "M6E2dT",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar (Backdrop)",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "ppB4T",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "opacity": 0.45,
+          "width": 393,
+          "height": 2438,
+          "fill": "$paper-shadow"
+        },
+        {
+          "type": "frame",
+          "id": "WeZEr",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Sheet Wrap",
+          "width": 393,
+          "height": 2438,
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "X9AD6o",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 62,
+              "name": "Form Sheet",
+              "width": 393,
+              "fill": "$surface",
+              "cornerRadius": [
+                24,
+                24,
+                0,
+                0
+              ],
+              "stroke": "$border",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": "$sp-section",
+              "padding": [
+                "$sp-block",
+                "$screen-pad",
+                "$sp-section",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "kTMwk",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "PbXh4",
+                      "name": "Grabber",
+                      "fill": "$border",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "frame",
+                      "id": "F5NxH",
+                      "name": "Head Row",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-item",
+                      "children": [
+                        {
+                          "id": "Zfygb",
+                          "type": "ref",
+                          "ref": "IikhF",
+                          "name": "Food Slot（還沒吃：灰色空位）",
+                          "width": 104,
+                          "fill": "#00000000",
+                          "stroke": "$border",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "enabled": false,
+                            "color": "$paper-shadow",
+                            "offset": {
+                              "x": 1,
+                              "y": 4
+                            },
+                            "blur": 8
+                          },
+                          "descendants": {
+                            "g0UaV": {
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "food-stickers/gray-preview/taro.png",
+                                "mode": "contain"
+                              },
+                              "opacity": 0.6
+                            },
+                            "SiaTC": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "dVmqH",
+                          "name": "Head Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-tight",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "cgq6u",
+                              "name": "Head Title",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "記下小安第一次吃芋頭",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-lead",
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "i4xVli",
+                              "name": "Head Sub",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "穀物根莖",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "duPMU",
+                  "name": "Fields",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-block",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "p2zi4",
+                      "name": "Date Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "d6vtoE",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "哪一天第一次吃",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "e4sHx0",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "gap": "$sp-label",
+                          "padding": [
+                            "$sp-group",
+                            "$inset-card"
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "i44Gm",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "8月20日\n（今天）",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "ycNhc",
+                              "name": "Calendar Icon",
+                              "width": 40,
+                              "height": 40,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yvuO6",
+                          "name": "Field Help",
+                          "width": "fill_container",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "HogoX",
+                              "name": "Help Icon",
+                              "width": 32,
+                              "height": 32,
+                              "icon": "info",
+                              "library": "lucide",
+                              "fill": "$text-secondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "cyxWM",
+                              "name": "Help Text",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "忘了記也沒關係，可以選以前的日子。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-note",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LAPoj",
+                      "name": "Photo Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "l1ITf",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "照片（可不選）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "YZ8aB",
+                          "name": "Photo Options",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-group",
+                          "children": [
+                            {
+                              "id": "qHsGj",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "From Family Album",
+                              "width": "fill_container",
+                              "padding": [
+                                "$ctl-pad-md",
+                                12
+                              ],
+                              "justifyContent": "center",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "images",
+                                  "width": 32,
+                                  "height": 32
+                                },
+                                "yxwnz": {
+                                  "content": "從家庭相簿挑"
+                                }
+                              }
+                            },
+                            {
+                              "id": "A3jzd4",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "From Phone",
+                              "width": "fill_container",
+                              "padding": [
+                                "$ctl-pad-md",
+                                12
+                              ],
+                              "justifyContent": "center",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "smartphone",
+                                  "width": 32,
+                                  "height": 32
+                                },
+                                "yxwnz": {
+                                  "content": "從手機加入"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BFdK9",
+                      "name": "Reaction Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "qH2GM",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安覺得怎麼樣（可不選）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "efiGn",
+                          "name": "Reaction Options",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": "$sp-label",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "QZW7t",
+                              "name": "Reaction · 喜歡",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "Ik38o",
+                                  "name": "Reaction Icon",
+                                  "width": 40,
+                                  "height": 40,
+                                  "icon": "smile",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "AZU1v",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "喜歡",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Dxxz8",
+                              "name": "Reaction · 普通",
+                              "width": "fill_container",
+                              "fill": "$accent-soft",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$text-primary",
+                              "strokeWidth": 2,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "lfJYw",
+                                  "name": "Reaction Icon",
+                                  "width": 40,
+                                  "height": 40,
+                                  "icon": "meh",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "KbTo1",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "普通",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "jVqOg",
+                              "name": "Reaction · 不愛吃",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$control-line",
+                              "strokeWidth": 1.5,
+                              "gap": "$sp-tight",
+                              "padding": [
+                                "$ctl-pad-md",
+                                8
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "jSWH5",
+                                  "name": "Reaction Icon",
+                                  "width": 40,
+                                  "height": 40,
+                                  "icon": "frown",
+                                  "library": "lucide",
+                                  "fill": "$text-primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "B1I3KW",
+                                  "name": "Reaction Label",
+                                  "fill": "$text-primary",
+                                  "content": "不愛吃",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-body",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "x1cxuN",
+                      "name": "Note Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "LmhJM",
+                          "name": "Field Label",
+                          "fill": "$text-primary",
+                          "content": "一句話（可不填）",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sK8cU",
+                          "name": "Field Box",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$control-line",
+                          "strokeWidth": 1.5,
+                          "padding": "$inset-card",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "x4lSnA",
+                              "name": "Field Value",
+                              "fill": "$text-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "有點黏，吃了三口就搖頭。",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-body",
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "dyr6A",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "de8pa",
+                      "name": "Status Slot",
+                      "width": "fill_container",
+                      "height": 348,
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "WGqma",
+                          "name": "Status Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "circle-alert",
+                          "library": "lucide",
+                          "fill": "$danger"
+                        },
+                        {
+                          "type": "text",
+                          "id": "OYHFA",
+                          "name": "Status Text",
+                          "fill": "$danger",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "沒有加入照片：手機裡這一張讀不出來，請再選一張。",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GaToX",
+                      "name": "Actions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "id": "MeP3B",
+                          "type": "ref",
+                          "ref": "OKSJI",
+                          "name": "Save Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "s9bME2": {
+                              "enabled": false
+                            },
+                            "w7CUP": {
+                              "content": "儲存"
+                            }
+                          }
+                        },
+                        {
+                          "id": "iOTff",
+                          "type": "ref",
+                          "ref": "qe9yS",
+                          "name": "Cancel Button",
+                          "width": "fill_container",
+                          "justifyContent": "center",
+                          "descendants": {
+                            "breqI": {
+                              "enabled": false
+                            },
+                            "hIhVd": {
+                              "content": "取消"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
