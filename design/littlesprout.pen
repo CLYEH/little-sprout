@@ -283593,7 +283593,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "a 案　次要鈕 17 半粗（稿，建議）",
+                  "content": "a 案　以稿為準：次要鈕 17 半粗",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -283606,7 +283606,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "淺色模式　主鈕 17 粗實心、次要鈕 17 半粗外框",
+                  "content": "得：與主鈕同字級，靠填色分主次　失：改程式 1 行",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -284148,7 +284148,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "b 案　次要鈕 22 中粗（目前程式）",
+                  "content": "b 案　以實作為準：次要鈕 22 中粗",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -284161,7 +284161,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "淺色模式　次要鈕的字比主鈕大 5pt",
+                  "content": "得：程式不動　失：次要鈕字比主鈕大 5pt",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -284221,7 +284221,9 @@
                   "type": "frame",
                   "id": "B045PF",
                   "name": "Body",
+                  "clip": true,
                   "width": "fill_container",
+                  "height": 956,
                   "layout": "vertical",
                   "padding": [
                     "$sp-block",
@@ -284705,7 +284707,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "a 案　次要鈕 17 半粗（稿，建議）",
+                  "content": "a 案　以稿為準：17 半粗（深色）",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -284718,7 +284720,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "深色模式　同上，色隨主題",
+                  "content": "得：實心粉鈕仍是唯一重點　失：改程式 1 行",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -285263,7 +285265,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "b 案　次要鈕 22 中粗（目前程式）",
+                  "content": "b 案　以實作為準：22 中粗（深色）",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -285276,7 +285278,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "深色模式　同上，色隨主題",
+                  "content": "得：程式不動　失：外框鈕的字比實心鈕大",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -285339,7 +285341,9 @@
                   "type": "frame",
                   "id": "cQeoG",
                   "name": "Body",
+                  "clip": true,
                   "width": "fill_container",
+                  "height": 956,
                   "layout": "vertical",
                   "padding": [
                     "$sp-block",
@@ -285823,7 +285827,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "a 案　次要鈕 40 半粗（稿，建議）",
+                  "content": "a 案　以稿為準：40 半粗（AX3）",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -285836,7 +285840,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "AX3　主鈕 40 粗、次要鈕 40 半粗",
+                  "content": "得：與主鈕同為 40　失：改程式 1 行",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -286382,7 +286386,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "b 案　次要鈕 44 中粗（目前程式）",
+                  "content": "b 案　以實作為準：44 中粗（AX3）",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -286395,7 +286399,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "AX3　次要鈕 44，比主鈕大 4pt",
+                  "content": "得：程式不動　失：次要鈕字比主鈕大 4pt",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -286458,7 +286462,9 @@
                   "type": "frame",
                   "id": "RjBde",
                   "name": "Body",
+                  "clip": true,
                   "width": "fill_container",
+                  "height": 2472,
                   "layout": "vertical",
                   "padding": [
                     "$sp-block",
@@ -286955,7 +286961,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "a 案　內文寫在紙面便箋上（稿，建議）",
+                  "content": "a 案　以稿為準：便箋紙面",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -286968,11 +286974,277 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "淺色模式　與 feed 日記卡同紙、同墨，署名在紙底靠右",
+                  "content": "得：與 feed 卡同一張紙　失：每行少約 2 字",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
                   "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "seIpX",
+              "name": "Feed 摘錄（時間軸上的同一篇）",
+              "width": "fill_container",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6997455470737914,
+                  "height": 1.3497652582159625
+                },
+                "colors": [
+                  {
+                    "color": "$bg-lit",
+                    "position": 0
+                  },
+                  {
+                    "color": "$bg",
+                    "position": 1
+                  }
+                ],
+                "center": {
+                  "x": 0.13994910941475827,
+                  "y": 0.01995305164319249
+                }
+              },
+              "cornerRadius": 44,
+              "layout": "vertical",
+              "padding": [
+                "$sp-block",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "B7GfM",
+                  "type": "ref",
+                  "ref": "qtCd7",
+                  "name": "Card Diary · 同一篇（feed）",
+                  "width": "fill_container",
+                  "descendants": {
+                    "p2odx": {
+                      "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心，還會指著照片咯咯笑，好像知道那是誰。"
+                    },
+                    "lEgJp": {
+                      "enabled": true
+                    },
+                    "SBo3L": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "appstore-photos/demo-grid-hero.jpg",
+                        "mode": "cover"
+                      }
+                    },
+                    "h9c6d": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "appstore-photos/demo-grid-invite.jpg",
+                        "mode": "cover"
+                      }
+                    },
+                    "ekqx4": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "appstore-photos/demo-grid-join.jpg",
+                        "mode": "cover"
+                      }
+                    },
+                    "Jqwww": {
+                      "type": "frame",
+                      "id": "GXNRV",
+                      "name": "Signature",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "M5Wu3",
+                          "name": "Signature Row",
+                          "width": "fill_container",
+                          "gap": "$sp-tight",
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "kLpRi",
+                              "name": "Who Group",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "plNeJ",
+                                  "name": "Diary Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "notebook-pen",
+                                  "library": "lucide",
+                                  "fill": "$print-ink-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "do1CM",
+                                  "name": "Name",
+                                  "fill": "$print-ink",
+                                  "content": "小安",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "HIFqy",
+                              "name": "Age Group",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "vPDJF",
+                                  "name": "Sep",
+                                  "fill": "$print-ink-secondary",
+                                  "content": " · ",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "CYO27",
+                                  "name": "Age",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "2 歲 3 個⁠月",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "l1f75",
+                          "name": "Interaction Row",
+                          "width": "fill_container",
+                          "gap": "$sp-block",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Lk9Pn",
+                              "name": "Heart Group",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "FVVkb",
+                                  "name": "Like Toggle",
+                                  "width": 118,
+                                  "gap": "$sp-tight",
+                                  "padding": 11,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "pLjQZ",
+                                      "name": "Heart Icon",
+                                      "width": 22,
+                                      "height": 22,
+                                      "icon": "heart",
+                                      "library": "lucide",
+                                      "fill": "$print-ink-secondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "rdjSo",
+                                      "name": "Heart Label",
+                                      "fill": "$print-ink-secondary",
+                                      "content": "愛心",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "fNeXL",
+                                  "name": "Count Zone",
+                                  "width": 44,
+                                  "height": 44,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "I0xAY",
+                                      "name": "Heart Count",
+                                      "fill": "$print-ink-secondary",
+                                      "content": "3",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "tRW8h",
+                              "name": "Comment Button",
+                              "gap": "$sp-tight",
+                              "padding": 11,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "lgBit",
+                                  "name": "Comment Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "message-circle",
+                                  "library": "lucide",
+                                  "fill": "$print-ink-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "H5fRyw",
+                                  "name": "Comment Label",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "留言",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "x0eN8J",
+                                  "name": "Comment Count",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "2",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
                 }
               ]
             },
@@ -288072,7 +288344,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "b 案　文字直接放在頁面上（目前程式）",
+                  "content": "b 案　以實作為準：字直接在頁面上",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -288085,11 +288357,277 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "淺色模式　署名在內文上方，沒有紙緣與落影",
+                  "content": "得：程式零改動、行寬 345　失：點進來紙不見",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
                   "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "QJkoi",
+              "name": "Feed 摘錄（時間軸上的同一篇）",
+              "width": "fill_container",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6997455470737914,
+                  "height": 1.3497652582159625
+                },
+                "colors": [
+                  {
+                    "color": "$bg-lit",
+                    "position": 0
+                  },
+                  {
+                    "color": "$bg",
+                    "position": 1
+                  }
+                ],
+                "center": {
+                  "x": 0.13994910941475827,
+                  "y": 0.01995305164319249
+                }
+              },
+              "cornerRadius": 44,
+              "layout": "vertical",
+              "padding": [
+                "$sp-block",
+                "$screen-pad"
+              ],
+              "children": [
+                {
+                  "id": "dheKm",
+                  "type": "ref",
+                  "ref": "qtCd7",
+                  "name": "Card Diary · 同一篇（feed）",
+                  "width": "fill_container",
+                  "descendants": {
+                    "p2odx": {
+                      "content": "今天陪小安一起翻相簿，看到阿公抱著剛出生的小寶寶、把拔馬麻抱著小嬰兒的合照，小安每張都看得好專心，還會指著照片咯咯笑，好像知道那是誰。"
+                    },
+                    "lEgJp": {
+                      "enabled": true
+                    },
+                    "SBo3L": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "appstore-photos/demo-grid-hero.jpg",
+                        "mode": "cover"
+                      }
+                    },
+                    "h9c6d": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "appstore-photos/demo-grid-invite.jpg",
+                        "mode": "cover"
+                      }
+                    },
+                    "ekqx4": {
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "appstore-photos/demo-grid-join.jpg",
+                        "mode": "cover"
+                      }
+                    },
+                    "Jqwww": {
+                      "type": "frame",
+                      "id": "xbzPE",
+                      "name": "Signature",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "WXPMl",
+                          "name": "Signature Row",
+                          "width": "fill_container",
+                          "gap": "$sp-tight",
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "p2y33",
+                              "name": "Who Group",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "SCUmN",
+                                  "name": "Diary Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "notebook-pen",
+                                  "library": "lucide",
+                                  "fill": "$print-ink-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "thxJT",
+                                  "name": "Name",
+                                  "fill": "$print-ink",
+                                  "content": "小安",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "c8zeh",
+                              "name": "Age Group",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "pMPOS",
+                                  "name": "Sep",
+                                  "fill": "$print-ink-secondary",
+                                  "content": " · ",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "yLG6B",
+                                  "name": "Age",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "2 歲 3 個⁠月",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "WOt5L",
+                          "name": "Interaction Row",
+                          "width": "fill_container",
+                          "gap": "$sp-block",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Kb0E3",
+                              "name": "Heart Group",
+                              "gap": "$sp-tight",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "U2SYTg",
+                                  "name": "Like Toggle",
+                                  "width": 118,
+                                  "gap": "$sp-tight",
+                                  "padding": 11,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "cCt4e",
+                                      "name": "Heart Icon",
+                                      "width": 22,
+                                      "height": 22,
+                                      "icon": "heart",
+                                      "library": "lucide",
+                                      "fill": "$print-ink-secondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "ClFiv",
+                                      "name": "Heart Label",
+                                      "fill": "$print-ink-secondary",
+                                      "content": "愛心",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "UudD0",
+                                  "name": "Count Zone",
+                                  "width": 44,
+                                  "height": 44,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "GrXCf",
+                                      "name": "Heart Count",
+                                      "fill": "$print-ink-secondary",
+                                      "content": "3",
+                                      "fontFamily": "$font",
+                                      "fontSize": "$fs-note",
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Qyh5X",
+                              "name": "Comment Button",
+                              "gap": "$sp-tight",
+                              "padding": 11,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "JmutG",
+                                  "name": "Comment Icon",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "message-circle",
+                                  "library": "lucide",
+                                  "fill": "$print-ink-secondary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "KwN0U",
+                                  "name": "Comment Label",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "留言",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "NxX3b",
+                                  "name": "Comment Count",
+                                  "fill": "$print-ink-secondary",
+                                  "content": "2",
+                                  "fontFamily": "$font",
+                                  "fontSize": "$fs-note",
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
                 }
               ]
             },
@@ -289178,7 +289716,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "a 案　內文寫在紙面便箋上（稿，建議）",
+                  "content": "a 案　以稿為準：便箋紙面（深色）",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -289191,13 +289729,20 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "深色模式　紙不變黑：紙 #E8D9D4、墨 #2B141C",
+                  "content": "得：紙不變黑，同照片印品　失：亮紙佔畫面 49%",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "wLrPx",
+              "name": "Spacer（對齊 feed 摘錄）",
+              "width": "fill_container",
+              "height": 397
             },
             {
               "type": "frame",
@@ -289323,7 +289868,7 @@
                           "fill": "$print-ink",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。回家路上一直問我明天可不可以再去，我說要看天氣，他就開始祈禱明天不要下雨，講得很認真，笑死我了。晚餐吃得比平常多一碗，應該是玩累了肚子餓。",
+                          "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。回家路上一直問我明天可不可以再去，我說要看天氣，他就開始祈禱明天不要下雨，講得很認真，笑死我了。晚餐吃得比平常多一碗，應該是玩累了肚子餓。洗澡的時候還在講新朋友的名字，說他有一台會發光的小卡車，問我可不可以也買一台。我說等生日再說，他就開始數還有幾天過生日，數到一半就睡眼惺忪。睡前要我把今天的照片再翻一次，看到溜滑梯那張又笑出來，說下次要溜得更快。關燈前他小聲說，今天是最好玩的一天。",
                           "lineHeight": 1.6,
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -290298,7 +290843,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "b 案　文字直接放在頁面上（目前程式）",
+                  "content": "b 案　以實作為準（深色）",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -290311,13 +290856,20 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "深色模式　頁面底 #190E12、字 #F6E3E5",
+                  "content": "得：整頁暗，夜裡不刺眼　失：點進來紙不見",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "Br26b",
+              "name": "Spacer（對齊 feed 摘錄）",
+              "width": "fill_container",
+              "height": 397
             },
             {
               "type": "frame",
@@ -290498,7 +291050,7 @@
                           "fill": "$text-primary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。回家路上一直問我明天可不可以再去，我說要看天氣，他就開始祈禱明天不要下雨，講得很認真，笑死我了。晚餐吃得比平常多一碗，應該是玩累了肚子餓。",
+                          "content": "今天在溜滑梯上玩得好開心，還交了一個新朋友，說好下次要一起帶挖沙工具來。回家路上一直問我明天可不可以再去，我說要看天氣，他就開始祈禱明天不要下雨，講得很認真，笑死我了。晚餐吃得比平常多一碗，應該是玩累了肚子餓。洗澡的時候還在講新朋友的名字，說他有一台會發光的小卡車，問我可不可以也買一台。我說等生日再說，他就開始數還有幾天過生日，數到一半就睡眼惺忪。睡前要我把今天的照片再翻一次，看到溜滑梯那張又笑出來，說下次要溜得更快。關燈前他小聲說，今天是最好玩的一天。",
                           "lineHeight": 1.6,
                           "fontFamily": "$font",
                           "fontSize": "$fs-body",
@@ -291407,7 +291959,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "a 案　內文寫在紙面便箋上（稿，建議）",
+                  "content": "a 案　以稿為準：便箋紙面（AX3）",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -291420,13 +291972,20 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "AX3　紙的內距 20 讓每行少 1 字：內文 16 行",
+                  "content": "得：同一張紙　失：每行 7 字，內文 16 行",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "h0xwD0",
+              "name": "Spacer（對齊 feed 摘錄）",
+              "width": "fill_container",
+              "height": 397
             },
             {
               "type": "frame",
@@ -292534,7 +293093,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "b 案　文字直接放在頁面上（目前程式）",
+                  "content": "b 案　以實作為準（AX3）",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -292547,13 +293106,20 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "AX3　每行多 1 字：內文 14 行",
+                  "content": "得：每行 8 字，內文 14 行　失：署名在上、紙不見",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
                   "fontWeight": "normal"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "Fz2bY",
+              "name": "Spacer（對齊 feed 摘錄）",
+              "width": "fill_container",
+              "height": 397
             },
             {
               "type": "frame",
