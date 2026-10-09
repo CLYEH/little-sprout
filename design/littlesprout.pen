@@ -269845,6 +269845,12 @@
           "clip": true,
           "width": 393,
           "height": 790,
+          "cornerRadius": [
+            24,
+            24,
+            0,
+            0
+          ],
           "layout": "none",
           "children": [
             {
