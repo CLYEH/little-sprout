@@ -283369,6 +283369,3368 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "j6vJS",
+      "x": 27000,
+      "y": 61807,
+      "name": "LS-449 / (e) 次要鈕字級字重兩版對照 (iPhone)",
+      "fill": "$bg",
+      "gap": "$sp-block",
+      "padding": "$screen-pad",
+      "children": [
+        {
+          "type": "frame",
+          "id": "SCSbp",
+          "name": "Column · a 案　次要鈕 17 半粗（稿，建議）",
+          "width": 393,
+          "layout": "vertical",
+          "gap": "$sp-group",
+          "children": [
+            {
+              "type": "frame",
+              "id": "z81ZPZ",
+              "name": "Option Label",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-tight",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "C06TUK",
+                  "name": "Option Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "a 案　次要鈕 17 半粗（稿，建議）",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "swQ0r",
+                  "name": "Option Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "淺色模式　主鈕 17 粗實心、次要鈕 17 半粗外框",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "kQYU7",
+              "name": "07 邀請家人 · a 案",
+              "clip": true,
+              "width": 393,
+              "height": 1189,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6997455470737914,
+                  "height": 1.320321469575201
+                },
+                "colors": [
+                  {
+                    "color": "$bg-lit",
+                    "position": 0
+                  },
+                  {
+                    "color": "$bg",
+                    "position": 1
+                  }
+                ],
+                "center": {
+                  "x": 0.13994910941475827,
+                  "y": 0.01951779563719862
+                }
+              },
+              "cornerRadius": 44,
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "wdkkf",
+                  "type": "ref",
+                  "ref": "OeXop",
+                  "name": "Status Bar",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "VP4KW",
+                  "type": "ref",
+                  "ref": "W6qTyS",
+                  "name": "Nav Back",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "Z4n8S",
+                  "name": "Body",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-block",
+                    "$screen-pad"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "xgmzT",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "aHjx9",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "content": "邀請家人",
+                          "lineHeight": 1.25,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "zLM1s",
+                          "name": "Subtitle",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "把邀請碼給家人，他們輸入後向你送出申請，你核准就完成。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "R3xOTw",
+                      "name": "Code Card Wrap",
+                      "width": "fill_container",
+                      "height": 202,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "O6R9DW",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Code Paper",
+                          "width": 345,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "layout": "vertical",
+                          "gap": "$sp-item",
+                          "padding": [
+                            "$inset-card",
+                            "$inset-card",
+                            "$sp-block",
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "A1ijj",
+                              "name": "Code Label",
+                              "fill": "$text-secondary",
+                              "content": "邀請碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "700",
+                              "letterSpacing": 2
+                            },
+                            {
+                              "type": "frame",
+                              "id": "uf3sH",
+                              "name": "Code Row",
+                              "gap": "$sp-item",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "kRlhh",
+                                  "name": "Code K7M [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "K7M",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "SwdSo",
+                                  "name": "Code 2FD [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "2FD",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "KnFzK",
+                              "name": "Code Meta",
+                              "gap": "$sp-label",
+                              "justifyContent": "center",
+                              "children": [
+                                {
+                                  "id": "umPZZ",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Expiry",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "calendar-days"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "xPEWm",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "nq2hX",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "8/29",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "ltJYH",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "到期",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "x7mZt",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Uses",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "users"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "jGDIy",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "wfiXr",
+                                          "name": "Pill Pre",
+                                          "fill": "$text-secondary",
+                                          "content": "還可用",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "TD7m9",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "3",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "J7bEtp",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "次",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "n8jo4e",
+                      "name": "Role Status Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-block",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "DIOiz",
+                          "type": "ref",
+                          "ref": "D56s3k",
+                          "name": "Role Status",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FYiav",
+                      "name": "Approval Section",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "zeD3t",
+                          "type": "ref",
+                          "ref": "PXPcH",
+                          "name": "Approval Toggle",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kIPjH",
+                      "name": "Secondary Actions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "R5OEWi",
+                          "name": "Copy Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "padding": [
+                            4,
+                            0,
+                            0,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "id": "V2SqTI",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "Copy Button",
+                              "width": "fill_container",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "copy"
+                                },
+                                "yxwnz": {
+                                  "content": "複製邀請碼"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "mU2qE",
+                          "name": "Quota Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "名額不退還，需要更多名額請重新產生。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LN25R",
+                      "name": "Sec 破壞性動作",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "c0UHBY",
+                          "name": "Danger Label",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生邀請碼",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "PclvS",
+                          "name": "Danger Consequence",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生後，舊的邀請碼就不能再用了。已經拿到舊邀請碼的家人，要再跟你要一次新的。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Nrsiz",
+                          "name": "Regen Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "id": "eE4B9",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Regenerate Button",
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "fill": "$danger"
+                                },
+                                "hIhVd": {
+                                  "content": "重新產生一組",
+                                  "fill": "$danger"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yVM0D",
+                  "name": "Action Bar",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "RzIcO",
+                      "name": "Bar Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ot4rl",
+                      "name": "Bar Button Wrap",
+                      "width": "fill_container",
+                      "padding": [
+                        "$sp-item",
+                        "$screen-pad"
+                      ],
+                      "children": [
+                        {
+                          "id": "WYldy",
+                          "type": "ref",
+                          "ref": "OKSJI",
+                          "name": "Share Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "s9bME2": {
+                              "icon": "share-2"
+                            },
+                            "w7CUP": {
+                              "content": "分享邀請連結"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ACZ91",
+                  "name": "Home Indicator Area",
+                  "width": "fill_container",
+                  "height": 34,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "Yvdq4",
+                      "name": "Home Indicator",
+                      "fill": "$home-indicator",
+                      "width": 140,
+                      "height": 5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "RmrRp",
+          "name": "Column · b 案　次要鈕 22 中粗（目前程式）",
+          "width": 393,
+          "layout": "vertical",
+          "gap": "$sp-group",
+          "children": [
+            {
+              "type": "frame",
+              "id": "vFuTW",
+              "name": "Option Label",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-tight",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "buGY1",
+                  "name": "Option Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "b 案　次要鈕 22 中粗（目前程式）",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "fDkl2",
+                  "name": "Option Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "淺色模式　次要鈕的字比主鈕大 5pt",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "AKr6R",
+              "name": "07 邀請家人 · b 案",
+              "clip": true,
+              "width": 393,
+              "height": 1189,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6997455470737914,
+                  "height": 1.320321469575201
+                },
+                "colors": [
+                  {
+                    "color": "$bg-lit",
+                    "position": 0
+                  },
+                  {
+                    "color": "$bg",
+                    "position": 1
+                  }
+                ],
+                "center": {
+                  "x": 0.13994910941475827,
+                  "y": 0.01951779563719862
+                }
+              },
+              "cornerRadius": 44,
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "Pwtuc",
+                  "type": "ref",
+                  "ref": "OeXop",
+                  "name": "Status Bar",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "r0Ynu",
+                  "type": "ref",
+                  "ref": "W6qTyS",
+                  "name": "Nav Back",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "B045PF",
+                  "name": "Body",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-block",
+                    "$screen-pad"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "sF5XS",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "YRz7R",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "content": "邀請家人",
+                          "lineHeight": 1.25,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "gGHlp",
+                          "name": "Subtitle",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "把邀請碼給家人，他們輸入後向你送出申請，你核准就完成。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bhVEh",
+                      "name": "Code Card Wrap",
+                      "width": "fill_container",
+                      "height": 202,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "q6JtH",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Code Paper",
+                          "width": 345,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "layout": "vertical",
+                          "gap": "$sp-item",
+                          "padding": [
+                            "$inset-card",
+                            "$inset-card",
+                            "$sp-block",
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "B4bFV",
+                              "name": "Code Label",
+                              "fill": "$text-secondary",
+                              "content": "邀請碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "700",
+                              "letterSpacing": 2
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ka6ZB",
+                              "name": "Code Row",
+                              "gap": "$sp-item",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "bk1iT",
+                                  "name": "Code K7M [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "K7M",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "OOos6",
+                                  "name": "Code 2FD [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "2FD",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "S8TP2i",
+                              "name": "Code Meta",
+                              "gap": "$sp-label",
+                              "justifyContent": "center",
+                              "children": [
+                                {
+                                  "id": "mR1nB",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Expiry",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "calendar-days"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "y709Zs",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "g0mzq",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "8/29",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "gRKCi",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "到期",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "r03UsY",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Uses",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "users"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "tziRx",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "g9adJB",
+                                          "name": "Pill Pre",
+                                          "fill": "$text-secondary",
+                                          "content": "還可用",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "SD7HN",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "3",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "khKzI",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "次",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "RrTTN",
+                      "name": "Role Status Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-block",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "XZvh1",
+                          "type": "ref",
+                          "ref": "D56s3k",
+                          "name": "Role Status",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "k7fZ7",
+                      "name": "Approval Section",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "H6GNYg",
+                          "type": "ref",
+                          "ref": "PXPcH",
+                          "name": "Approval Toggle",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "uEx8N",
+                      "name": "Secondary Actions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "n5seal",
+                          "name": "Copy Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "padding": [
+                            4,
+                            0,
+                            0,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "id": "T6vngn",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "Copy Button",
+                              "width": "fill_container",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "copy"
+                                },
+                                "yxwnz": {
+                                  "content": "複製邀請碼",
+                                  "fontSize": "$fs-lead",
+                                  "fontWeight": "500"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "Su3I6",
+                          "name": "Quota Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "名額不退還，需要更多名額請重新產生。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "g4vU5x",
+                      "name": "Sec 破壞性動作",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "z46td",
+                          "name": "Danger Label",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生邀請碼",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tVgqV",
+                          "name": "Danger Consequence",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生後，舊的邀請碼就不能再用了。已經拿到舊邀請碼的家人，要再跟你要一次新的。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "flN7t",
+                          "name": "Regen Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "id": "pyXED",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Regenerate Button",
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "fill": "$danger"
+                                },
+                                "hIhVd": {
+                                  "content": "重新產生一組",
+                                  "fill": "$danger"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zxm3D",
+                  "name": "Action Bar",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "EVxEE",
+                      "name": "Bar Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "R6eok",
+                      "name": "Bar Button Wrap",
+                      "width": "fill_container",
+                      "padding": [
+                        "$sp-item",
+                        "$screen-pad"
+                      ],
+                      "children": [
+                        {
+                          "id": "tZJhg",
+                          "type": "ref",
+                          "ref": "OKSJI",
+                          "name": "Share Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "s9bME2": {
+                              "icon": "share-2"
+                            },
+                            "w7CUP": {
+                              "content": "分享邀請連結"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "EPG3o",
+                  "name": "Home Indicator Area",
+                  "width": "fill_container",
+                  "height": 34,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "KHBfg",
+                      "name": "Home Indicator",
+                      "fill": "$home-indicator",
+                      "width": 140,
+                      "height": 5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "AcU4y",
+          "name": "Column · a 案　深色",
+          "width": 393,
+          "layout": "vertical",
+          "gap": "$sp-group",
+          "children": [
+            {
+              "type": "frame",
+              "id": "siJDa",
+              "name": "Option Label",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-tight",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "uRFmL",
+                  "name": "Option Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "a 案　次要鈕 17 半粗（稿，建議）",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "VmpTT",
+                  "name": "Option Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "深色模式　同上，色隨主題",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "X7Fbl",
+              "name": "07 邀請家人 · a 案 · 深色",
+              "theme": {
+                "mode": "dark"
+              },
+              "clip": true,
+              "width": 393,
+              "height": 1189,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6997455470737914,
+                  "height": 1.320321469575201
+                },
+                "colors": [
+                  {
+                    "color": "$bg-lit",
+                    "position": 0
+                  },
+                  {
+                    "color": "$bg",
+                    "position": 1
+                  }
+                ],
+                "center": {
+                  "x": 0.13994910941475827,
+                  "y": 0.01951779563719862
+                }
+              },
+              "cornerRadius": 44,
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "BOSz8",
+                  "type": "ref",
+                  "ref": "OeXop",
+                  "name": "Status Bar",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "JEzEZ",
+                  "type": "ref",
+                  "ref": "W6qTyS",
+                  "name": "Nav Back",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "U10D6G",
+                  "name": "Body",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-block",
+                    "$screen-pad"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "kvX6A",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "u6PDe",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "content": "邀請家人",
+                          "lineHeight": 1.25,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "qrJkj",
+                          "name": "Subtitle",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "把邀請碼給家人，他們輸入後向你送出申請，你核准就完成。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r6pI6",
+                      "name": "Code Card Wrap",
+                      "width": "fill_container",
+                      "height": 202,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pmqZU",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Code Paper",
+                          "width": 345,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "layout": "vertical",
+                          "gap": "$sp-item",
+                          "padding": [
+                            "$inset-card",
+                            "$inset-card",
+                            "$sp-block",
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "hU1Qy",
+                              "name": "Code Label",
+                              "fill": "$text-secondary",
+                              "content": "邀請碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "700",
+                              "letterSpacing": 2
+                            },
+                            {
+                              "type": "frame",
+                              "id": "anIkj",
+                              "name": "Code Row",
+                              "gap": "$sp-item",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "HJAqz",
+                                  "name": "Code K7M [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "K7M",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "GKXHp",
+                                  "name": "Code 2FD [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "2FD",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "pif8d",
+                              "name": "Code Meta",
+                              "gap": "$sp-label",
+                              "justifyContent": "center",
+                              "children": [
+                                {
+                                  "id": "h1KgO",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Expiry",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "calendar-days"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "PBe6R",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "IzaPN",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "8/29",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "oL6TR",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "到期",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "UuzHL",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Uses",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "users"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "roUFr",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "ZHcV2",
+                                          "name": "Pill Pre",
+                                          "fill": "$text-secondary",
+                                          "content": "還可用",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "BhNIF",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "3",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "O0xUU4",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "次",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v4XcxI",
+                      "name": "Role Status Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-block",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "myWHt",
+                          "type": "ref",
+                          "ref": "D56s3k",
+                          "name": "Role Status",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b88j3P",
+                      "name": "Approval Section",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "JADnJ",
+                          "type": "ref",
+                          "ref": "PXPcH",
+                          "name": "Approval Toggle",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NW9Lk",
+                      "name": "Secondary Actions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pS2rA",
+                          "name": "Copy Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "padding": [
+                            4,
+                            0,
+                            0,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "id": "b7hqW",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "Copy Button",
+                              "width": "fill_container",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "copy"
+                                },
+                                "yxwnz": {
+                                  "content": "複製邀請碼"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "YbWqy",
+                          "name": "Quota Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "名額不退還，需要更多名額請重新產生。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pZ1hZ",
+                      "name": "Sec 破壞性動作",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zBJZA",
+                          "name": "Danger Label",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生邀請碼",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "gKw12",
+                          "name": "Danger Consequence",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生後，舊的邀請碼就不能再用了。已經拿到舊邀請碼的家人，要再跟你要一次新的。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Jjdrr",
+                          "name": "Regen Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "id": "LURlb",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Regenerate Button",
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "fill": "$danger"
+                                },
+                                "hIhVd": {
+                                  "content": "重新產生一組",
+                                  "fill": "$danger"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "otJGR",
+                  "name": "Action Bar",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "yM4QL",
+                      "name": "Bar Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fm2H5",
+                      "name": "Bar Button Wrap",
+                      "width": "fill_container",
+                      "padding": [
+                        "$sp-item",
+                        "$screen-pad"
+                      ],
+                      "children": [
+                        {
+                          "id": "xPATM",
+                          "type": "ref",
+                          "ref": "OKSJI",
+                          "name": "Share Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "s9bME2": {
+                              "icon": "share-2"
+                            },
+                            "w7CUP": {
+                              "content": "分享邀請連結"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zYsDE",
+                  "name": "Home Indicator Area",
+                  "width": "fill_container",
+                  "height": 34,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "SXCaK",
+                      "name": "Home Indicator",
+                      "fill": "$home-indicator",
+                      "width": 140,
+                      "height": 5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "XmlXd",
+          "name": "Column · b 案　深色",
+          "width": 393,
+          "layout": "vertical",
+          "gap": "$sp-group",
+          "children": [
+            {
+              "type": "frame",
+              "id": "uhttK",
+              "name": "Option Label",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-tight",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "C9RSee",
+                  "name": "Option Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "b 案　次要鈕 22 中粗（目前程式）",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "r1Lf1",
+                  "name": "Option Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "深色模式　同上，色隨主題",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RWEFF",
+              "name": "07 邀請家人 · b 案 · 深色",
+              "theme": {
+                "mode": "dark"
+              },
+              "clip": true,
+              "width": 393,
+              "height": 1189,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6997455470737914,
+                  "height": 1.320321469575201
+                },
+                "colors": [
+                  {
+                    "color": "$bg-lit",
+                    "position": 0
+                  },
+                  {
+                    "color": "$bg",
+                    "position": 1
+                  }
+                ],
+                "center": {
+                  "x": 0.13994910941475827,
+                  "y": 0.01951779563719862
+                }
+              },
+              "cornerRadius": 44,
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "Z4dDKs",
+                  "type": "ref",
+                  "ref": "OeXop",
+                  "name": "Status Bar",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "LYbrz",
+                  "type": "ref",
+                  "ref": "W6qTyS",
+                  "name": "Nav Back",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "cQeoG",
+                  "name": "Body",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-block",
+                    "$screen-pad"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "i4K10",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "UgG4q",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "content": "邀請家人",
+                          "lineHeight": 1.25,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "j0WPFU",
+                          "name": "Subtitle",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "把邀請碼給家人，他們輸入後向你送出申請，你核准就完成。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "O1moGe",
+                      "name": "Code Card Wrap",
+                      "width": "fill_container",
+                      "height": 202,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ZZ5Ox",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Code Paper",
+                          "width": 345,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "layout": "vertical",
+                          "gap": "$sp-item",
+                          "padding": [
+                            "$inset-card",
+                            "$inset-card",
+                            "$sp-block",
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "q1TOc",
+                              "name": "Code Label",
+                              "fill": "$text-secondary",
+                              "content": "邀請碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "700",
+                              "letterSpacing": 2
+                            },
+                            {
+                              "type": "frame",
+                              "id": "h8Nvr",
+                              "name": "Code Row",
+                              "gap": "$sp-item",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Wk2qA",
+                                  "name": "Code K7M [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "K7M",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "N2Yg7",
+                                  "name": "Code 2FD [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "2FD",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "N1x1vP",
+                              "name": "Code Meta",
+                              "gap": "$sp-label",
+                              "justifyContent": "center",
+                              "children": [
+                                {
+                                  "id": "PZBbd",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Expiry",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "calendar-days"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "R5SjCU",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "xm6sa",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "8/29",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "xuSY4",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "到期",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "BGQ05",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Uses",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "users"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "AGezr",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "S9iZf",
+                                          "name": "Pill Pre",
+                                          "fill": "$text-secondary",
+                                          "content": "還可用",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "mn7p2",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "3",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "G5Oe2A",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "次",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NrGz3",
+                      "name": "Role Status Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-block",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "n1thxp",
+                          "type": "ref",
+                          "ref": "D56s3k",
+                          "name": "Role Status",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HJ0MO",
+                      "name": "Approval Section",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "JQkJk",
+                          "type": "ref",
+                          "ref": "PXPcH",
+                          "name": "Approval Toggle",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TAgSP",
+                      "name": "Secondary Actions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "NeGeP",
+                          "name": "Copy Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "padding": [
+                            4,
+                            0,
+                            0,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "id": "lYPu5",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "Copy Button",
+                              "width": "fill_container",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "copy"
+                                },
+                                "yxwnz": {
+                                  "content": "複製邀請碼",
+                                  "fontSize": "$fs-lead",
+                                  "fontWeight": "500"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "lnuWZ",
+                          "name": "Quota Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "名額不退還，需要更多名額請重新產生。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "iKjXX",
+                      "name": "Sec 破壞性動作",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pmT3q",
+                          "name": "Danger Label",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生邀請碼",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wAheq",
+                          "name": "Danger Consequence",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生後，舊的邀請碼就不能再用了。已經拿到舊邀請碼的家人，要再跟你要一次新的。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "qjQ32",
+                          "name": "Regen Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "id": "oyoPq",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Regenerate Button",
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "fill": "$danger"
+                                },
+                                "hIhVd": {
+                                  "content": "重新產生一組",
+                                  "fill": "$danger"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xDQyu",
+                  "name": "Action Bar",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "mJvMf",
+                      "name": "Bar Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ao58R",
+                      "name": "Bar Button Wrap",
+                      "width": "fill_container",
+                      "padding": [
+                        "$sp-item",
+                        "$screen-pad"
+                      ],
+                      "children": [
+                        {
+                          "id": "A5uz1",
+                          "type": "ref",
+                          "ref": "OKSJI",
+                          "name": "Share Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "s9bME2": {
+                              "icon": "share-2"
+                            },
+                            "w7CUP": {
+                              "content": "分享邀請連結"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "nuHHJ",
+                  "name": "Home Indicator Area",
+                  "width": "fill_container",
+                  "height": 34,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "vjc5l",
+                      "name": "Home Indicator",
+                      "fill": "$home-indicator",
+                      "width": 140,
+                      "height": 5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "RLVUT",
+          "name": "Column · a 案　AX3",
+          "width": 393,
+          "layout": "vertical",
+          "gap": "$sp-group",
+          "children": [
+            {
+              "type": "frame",
+              "id": "dB8iA",
+              "name": "Option Label",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-tight",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "VKmGj",
+                  "name": "Option Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "a 案　次要鈕 40 半粗（稿，建議）",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "qYPcF",
+                  "name": "Option Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3　主鈕 40 粗、次要鈕 40 半粗",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qGX56",
+              "name": "07 邀請家人 · a 案",
+              "theme": {
+                "size": "ax3"
+              },
+              "clip": true,
+              "width": 393,
+              "height": 2770,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6997455470737914,
+                  "height": 1.320321469575201
+                },
+                "colors": [
+                  {
+                    "color": "$bg-lit",
+                    "position": 0
+                  },
+                  {
+                    "color": "$bg",
+                    "position": 1
+                  }
+                ],
+                "center": {
+                  "x": 0.13994910941475827,
+                  "y": 0.01951779563719862
+                }
+              },
+              "cornerRadius": 44,
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "L11dU0",
+                  "type": "ref",
+                  "ref": "OeXop",
+                  "name": "Status Bar",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "aFJ2S",
+                  "type": "ref",
+                  "ref": "W6qTyS",
+                  "name": "Nav Back",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "u7uog",
+                  "name": "Body",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-block",
+                    "$screen-pad"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "unrMi",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "k3kUi",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "content": "邀請家人",
+                          "lineHeight": 1.25,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "DWpYp",
+                          "name": "Subtitle",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "把邀請碼給家人，他們輸入後向你送出申請，你核准就完成。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ROPdv",
+                      "name": "Code Card Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "f4FD4",
+                          "name": "Code Paper",
+                          "width": 345,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "layout": "vertical",
+                          "gap": "$sp-item",
+                          "padding": [
+                            "$inset-card",
+                            "$inset-card",
+                            "$sp-block",
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bYSWj",
+                              "name": "Code Label",
+                              "fill": "$text-secondary",
+                              "content": "邀請碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "700",
+                              "letterSpacing": 2
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ODjru",
+                              "name": "Code Row",
+                              "gap": "$sp-item",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "ok9A0",
+                                  "name": "Code K7M [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "K7M",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Z2HW5",
+                                  "name": "Code 2FD [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "2FD",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "RXBIa",
+                              "name": "Code Meta",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$sp-label",
+                              "justifyContent": "center",
+                              "children": [
+                                {
+                                  "id": "lHQzj",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Expiry",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "calendar-days"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "RsNNo",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "J5yHC",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "8/29",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "uZjsu",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "到期",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "j1Sm2",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Uses",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "users"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "MimHB",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "VhDNH",
+                                          "name": "Pill Pre",
+                                          "fill": "$text-secondary",
+                                          "content": "還可用",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "Q7uMn",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "3",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "OBnBj",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "次",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zK8Rq",
+                      "name": "Role Status Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-block",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "dtEHX",
+                          "type": "ref",
+                          "ref": "D56s3k",
+                          "name": "Role Status",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ljdHI",
+                      "name": "Approval Section",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "WTU6e",
+                          "type": "ref",
+                          "ref": "PXPcH",
+                          "name": "Approval Toggle",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "gQG5u",
+                      "name": "Secondary Actions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "S6mRY",
+                          "name": "Copy Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "padding": [
+                            4,
+                            0,
+                            0,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "id": "jmcZr",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "Copy Button",
+                              "width": "fill_container",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "copy"
+                                },
+                                "yxwnz": {
+                                  "content": "複製邀請碼"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "KoxmM",
+                          "name": "Quota Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "名額不退還，需要更多名額請重新產生。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Kqn9C",
+                      "name": "Sec 破壞性動作",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "csp6p",
+                          "name": "Danger Label",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生邀請碼",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "G4AEp",
+                          "name": "Danger Consequence",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生後，舊的邀請碼就不能再用了。已經拿到舊邀請碼的家人，要再跟你要一次新的。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "NFlBZ",
+                          "name": "Regen Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "id": "Klx8o",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Regenerate Button",
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "fill": "$danger"
+                                },
+                                "hIhVd": {
+                                  "content": "重新產生一組",
+                                  "fill": "$danger"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PdifV",
+                  "name": "Action Bar",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "TA7SE",
+                      "name": "Bar Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "sYXC0",
+                      "name": "Bar Button Wrap",
+                      "width": "fill_container",
+                      "padding": [
+                        "$sp-item",
+                        "$screen-pad"
+                      ],
+                      "children": [
+                        {
+                          "id": "OPvE9",
+                          "type": "ref",
+                          "ref": "OKSJI",
+                          "name": "Share Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "s9bME2": {
+                              "icon": "share-2"
+                            },
+                            "w7CUP": {
+                              "content": "分享邀請連結"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "nAseU",
+                  "name": "Home Indicator Area",
+                  "width": "fill_container",
+                  "height": 34,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "vfk21",
+                      "name": "Home Indicator",
+                      "fill": "$home-indicator",
+                      "width": 140,
+                      "height": 5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "b09yw",
+          "name": "Column · b 案　AX3",
+          "width": 393,
+          "layout": "vertical",
+          "gap": "$sp-group",
+          "children": [
+            {
+              "type": "frame",
+              "id": "K0gohe",
+              "name": "Option Label",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-tight",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RoZF8",
+                  "name": "Option Title",
+                  "fill": "$text-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "b 案　次要鈕 44 中粗（目前程式）",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "JXSUI",
+                  "name": "Option Note",
+                  "fill": "$text-secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "AX3　次要鈕 44，比主鈕大 4pt",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "p6yFe",
+              "name": "07 邀請家人 · b 案",
+              "theme": {
+                "size": "ax3"
+              },
+              "clip": true,
+              "width": 393,
+              "height": 2770,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.6997455470737914,
+                  "height": 1.320321469575201
+                },
+                "colors": [
+                  {
+                    "color": "$bg-lit",
+                    "position": 0
+                  },
+                  {
+                    "color": "$bg",
+                    "position": 1
+                  }
+                ],
+                "center": {
+                  "x": 0.13994910941475827,
+                  "y": 0.01951779563719862
+                }
+              },
+              "cornerRadius": 44,
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "MFjPs",
+                  "type": "ref",
+                  "ref": "OeXop",
+                  "name": "Status Bar",
+                  "width": "fill_container"
+                },
+                {
+                  "id": "Jy4Rl",
+                  "type": "ref",
+                  "ref": "W6qTyS",
+                  "name": "Nav Back",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "RjBde",
+                  "name": "Body",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    "$sp-block",
+                    "$screen-pad"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Ma4h2",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Lu9z1",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "content": "邀請家人",
+                          "lineHeight": 1.25,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "dB4Rz",
+                          "name": "Subtitle",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "把邀請碼給家人，他們輸入後向你送出申請，你核准就完成。",
+                          "lineHeight": 1.6,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "woInM",
+                      "name": "Code Card Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "J8CgRC",
+                          "name": "Code Paper",
+                          "width": 345,
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "$paper-edge",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "outer",
+                          "layout": "vertical",
+                          "gap": "$sp-item",
+                          "padding": [
+                            "$inset-card",
+                            "$inset-card",
+                            "$sp-block",
+                            "$inset-card"
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xnb6z",
+                              "name": "Code Label",
+                              "fill": "$text-secondary",
+                              "content": "邀請碼",
+                              "fontFamily": "$font",
+                              "fontSize": "$fs-meta",
+                              "fontWeight": "700",
+                              "letterSpacing": 2
+                            },
+                            {
+                              "type": "frame",
+                              "id": "bVrL7",
+                              "name": "Code Row",
+                              "gap": "$sp-item",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "R8wRd",
+                                  "name": "Code K7M [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "K7M",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "AhrhT",
+                                  "name": "Code 2FD [tabular]",
+                                  "fill": "$text-primary",
+                                  "content": "2FD",
+                                  "lineHeight": 1.1,
+                                  "fontFamily": "$font-num",
+                                  "fontSize": "$fs-code",
+                                  "fontWeight": "700",
+                                  "letterSpacing": 4
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "vx2Lk",
+                              "name": "Code Meta",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$sp-label",
+                              "justifyContent": "center",
+                              "children": [
+                                {
+                                  "id": "o1SeJ2",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Expiry",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "calendar-days"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "MVlbJ",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "vSpGB",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "8/29",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "w5Wz6J",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "到期",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "b2gSEE",
+                                  "type": "ref",
+                                  "ref": "AqN3F",
+                                  "name": "Pill Uses",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "KR7zN": {
+                                      "icon": "users"
+                                    },
+                                    "g7Fnj": {
+                                      "type": "frame",
+                                      "id": "El0cf",
+                                      "name": "Pill Content",
+                                      "gap": 3,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "mNhIn",
+                                          "name": "Pill Pre",
+                                          "fill": "$text-secondary",
+                                          "content": "還可用",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "Iw4KE",
+                                          "name": "Pill Num [tabular]",
+                                          "fill": "$text-secondary",
+                                          "content": "3",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "V3EoT",
+                                          "name": "Pill Unit",
+                                          "fill": "$text-secondary",
+                                          "content": "次",
+                                          "fontFamily": "$font",
+                                          "fontSize": "$fs-note",
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hOVdR",
+                      "name": "Role Status Wrap",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-block",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "SnizY",
+                          "type": "ref",
+                          "ref": "D56s3k",
+                          "name": "Role Status",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "K155J7",
+                      "name": "Approval Section",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "I7eHv",
+                          "type": "ref",
+                          "ref": "PXPcH",
+                          "name": "Approval Toggle",
+                          "width": "fill_container"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "CKju1",
+                      "name": "Secondary Actions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-label",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "huYLW",
+                          "name": "Copy Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "padding": [
+                            4,
+                            0,
+                            0,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "id": "XEZ1t",
+                              "type": "ref",
+                              "ref": "XggYA",
+                              "name": "Copy Button",
+                              "width": "fill_container",
+                              "descendants": {
+                                "G4R75k": {
+                                  "icon": "copy"
+                                },
+                                "yxwnz": {
+                                  "content": "複製邀請碼",
+                                  "fontSize": "$fs-lead",
+                                  "fontWeight": "500"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "IqIqh",
+                          "name": "Quota Note",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "名額不退還，需要更多名額請重新產生。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "y5Umfj",
+                      "name": "Sec 破壞性動作",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        "$sp-section",
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "VsTEZ",
+                          "name": "Danger Label",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生邀請碼",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "utOen",
+                          "name": "Danger Consequence",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "重新產生後，舊的邀請碼就不能再用了。已經拿到舊邀請碼的家人，要再跟你要一次新的。",
+                          "lineHeight": 1.5,
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Zuf4F",
+                          "name": "Regen Wrap",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "id": "ErGqW",
+                              "type": "ref",
+                              "ref": "qe9yS",
+                              "name": "Regenerate Button",
+                              "descendants": {
+                                "breqI": {
+                                  "icon": "refresh-cw",
+                                  "fill": "$danger"
+                                },
+                                "hIhVd": {
+                                  "content": "重新產生一組",
+                                  "fill": "$danger"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "y5m9TN",
+                  "name": "Action Bar",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "TK4VB",
+                      "name": "Bar Hairline",
+                      "fill": "$border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "m1fbqV",
+                      "name": "Bar Button Wrap",
+                      "width": "fill_container",
+                      "padding": [
+                        "$sp-item",
+                        "$screen-pad"
+                      ],
+                      "children": [
+                        {
+                          "id": "aisFv",
+                          "type": "ref",
+                          "ref": "OKSJI",
+                          "name": "Share Button",
+                          "width": "fill_container",
+                          "descendants": {
+                            "s9bME2": {
+                              "icon": "share-2"
+                            },
+                            "w7CUP": {
+                              "content": "分享邀請連結"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "WYcMW",
+                  "name": "Home Indicator Area",
+                  "width": "fill_container",
+                  "height": 34,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": "$radius-full",
+                      "id": "iqAS0",
+                      "name": "Home Indicator",
+                      "fill": "$home-indicator",
+                      "width": 140,
+                      "height": 5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
