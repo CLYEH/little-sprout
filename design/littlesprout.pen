@@ -278923,7 +278923,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "03f 換一張 → 選照片來源｜QeM1z／UFRLp／YcMSK｜背景沿 03b ekxHM（AX3 沿 K6MMar，sheet 內容捲到照片欄：Sheet Wrap ZRemp 自板內 y 62 起 clip，Form Sheet P2Yya 板內 y −722，「換一張」web3f 下緣 358 露在對話框 Action Group g43hDM 上緣 465 之上）；系統對話框 Sxzra：標題 GRc0B、選項 SLwoy／bZgrc、取消 TrMP0｜標題「換一張照片」；選項依序「從家庭相簿挑」「從手機加入」，再一顆「取消」——與 03 初始照片列、現作 FoodRecordSheet.swift／FoodRecordDetailRouter.swift 的兩種來源一致（R2 MJ-5 拿掉相機那一列）。實作：SwiftUI .confirmationDialog，titleVisibility 改 .visible（現作 .hidden，長輩看得到這是在換哪一張）；畫面是 iOS 系統 action sheet，稿面顏色與圓角只是示意，不要自刻選單。04b 點空白沖印品的來源選擇用同一個對話框，標題換成「加一張第一次吃〇〇的照片」。相機見未決①與草案板 s7g8p。",
+          "content": "03f 換一張 → 選照片來源｜QeM1z／UFRLp／YcMSK｜背景沿 03b ekxHM（AX3 沿 K6MMar，sheet 內容捲到照片欄：Sheet Wrap ZRemp 自板內 y 62 起 clip，Form Sheet P2Yya 板內 y −722，「換一張」web3f 下緣 358 露在對話框 Action Group g43hDM 上緣 465 之上）；系統對話框 Sxzra：標題 GRc0B、選項 SLwoy／bZgrc、取消 TrMP0（深 ACo4l：標題 pn6eE、選項 b0zzeL／c7HANs、取消 SuWSV；AX3 dlffG：標題 kosMZ、選項 VoqbZ／l6EXju、取消 DQ0aj）｜標題「換一張照片」；選項依序「從家庭相簿挑」「從手機加入」，再一顆「取消」——與 03 初始照片列、現作 FoodRecordSheet.swift／FoodRecordDetailRouter.swift 的兩種來源一致（R2 MJ-5 拿掉相機那一列）。實作：SwiftUI .confirmationDialog，titleVisibility 改 .visible（現作 .hidden，長輩看得到這是在換哪一張）；畫面是 iOS 系統 action sheet，稿面顏色與圓角只是示意，不要自刻選單。04b 點空白沖印品的來源選擇用同一個對話框，標題換成「加一張第一次吃〇〇的照片」。相機見未決①與草案板 s7g8p。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
