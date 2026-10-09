@@ -219,7 +219,7 @@ HASH_ATTEMPTS=${PEN_OPEN_HASH_ATTEMPTS:-2}
 # LS-377：位元組預算分段——磁碟 .pen 頂層（depth-1）子節點 JSON 位元組總和超過此值就不先送整份（14k+ 節點稿整份必
 # InternalError: interrupted），直接依預算把相鄰頂層節點打包成段；0＝停用（維持 LS-309 先整份、失敗才對半）。單段
 # interrupted 對半重切最多 HASH_MAX_HALVINGS 次。預設 2 MiB／段：實測（18k 節點、4.8 MB 稿）每次 execute 固定 ~2 秒，
-# 8.4k–10k 節點／段可成功、整份 18k 不行；50 KB 會切出 ~100 段（~200 秒），只有 pen-snapshot-dump.js 的 Print 輸出才用 50 KB。
+# 8.4k–10k 節點／段可成功、整份 18k 不行；50 KB 會切出 ~100 段（~200 秒）。（pen-snapshot-dump.js 與此預算無關：LS-431 起它逐板走訪、以 `SNAP_BOARDS` 塊板為一段，50 KB 只是它單一 Print 行的上限。）
 HASH_SEGMENT_BYTES=${PEN_OPEN_HASH_SEGMENT_BYTES:-2097152}
 HASH_MAX_HALVINGS=${PEN_OPEN_HASH_MAX_HALVINGS:-3}
 for v in "$POLL_TIMEOUT" "$ATTEMPT_TIMEOUT" "$POLL_INTERVAL" "$QUIT_TIMEOUT" "$QUIT_GRACE" "$HASH_TIMEOUT" "$HASH_ATTEMPTS" "$HASH_SEGMENT_BYTES" "$HASH_MAX_HALVINGS"; do
