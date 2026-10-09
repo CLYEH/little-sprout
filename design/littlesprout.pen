@@ -246993,17 +246993,12 @@
                               "descendants": {
                                 "vQWWw": {
                                   "type": "frame",
-                                  "id": "UJBIQ",
+                                  "id": "Amz2G",
                                   "name": "Thumb",
                                   "clip": true,
                                   "width": 44,
                                   "height": 44,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": 2
                                 },
                                 "iOlfc": {
@@ -249978,17 +249973,12 @@
                               "descendants": {
                                 "vQWWw": {
                                   "type": "frame",
-                                  "id": "bmD2U",
+                                  "id": "iSOOD",
                                   "name": "Thumb",
                                   "clip": true,
                                   "width": 44,
                                   "height": 44,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": 2
                                 },
                                 "iOlfc": {
@@ -252234,17 +252224,12 @@
                               "descendants": {
                                 "vQWWw": {
                                   "type": "frame",
-                                  "id": "K95LvP",
+                                  "id": "z0T6H",
                                   "name": "Thumb",
                                   "clip": true,
                                   "width": 44,
                                   "height": 44,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": 2
                                 },
                                 "iOlfc": {
@@ -255488,17 +255473,12 @@
                               "descendants": {
                                 "vQWWw": {
                                   "type": "frame",
-                                  "id": "R4xEvv",
+                                  "id": "j1p0N",
                                   "name": "Thumb",
                                   "clip": true,
                                   "width": 44,
                                   "height": 44,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": 2
                                 },
                                 "iOlfc": {
@@ -256228,12 +256208,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -257375,12 +257350,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -258676,12 +258646,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -260050,12 +260015,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -261354,12 +261314,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -262464,12 +262419,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -263621,12 +263571,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -264740,12 +264685,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -265895,12 +265835,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -267280,12 +267215,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
