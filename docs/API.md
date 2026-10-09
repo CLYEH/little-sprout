@@ -40,7 +40,7 @@
   不需要也不應該嘗試。
 - 認證：Supabase Auth（Sign in with Apple／Email OTP，LS-17；Google OAuth，LS-39——走
   `signInWithOAuth`＋`ASWebAuthenticationSession`／SwiftUI `WebAuthenticationSession`，
-  redirect URL `littlesprout://auth/callback`，不裝 Google Sign-In SDK；帳號密碼登入，
+  redirect URL `sproutday://auth/callback`，不裝 Google Sign-In SDK；帳號密碼登入，
   LS-164——`client.auth.signIn(email:password:)`，審核帳號用，方案 B：app 內沒有密碼註冊
   入口，密碼帳號只由 admin API 建立）。所有表與 RPC 的權限判斷
   一律吃 `auth.uid()`（登入後的 JWT `sub`），未登入呼叫任何一支表或 RPC 都會被 RLS／
