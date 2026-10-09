@@ -289,7 +289,8 @@ extension InviteFamilyView {
     }
 
     func inviteURL(_ code: String) -> URL {
-        URL(string: "https://sproutday.app/invite/\(code)") ?? URL(string: "https://sproutday.app/invite")!
+        let host = InviteCodeParser.universalLinkHost
+        return URL(string: "https://\(host)/invite/\(code)") ?? URL(string: "https://\(host)/invite")!
     }
 
     /// 6 碼邀請碼（LS-90：`23456789ABCDEFGHJKLMNPQRSTUVWXYZ`，32 字元表）3+3 分組顯示；
