@@ -272210,7 +272210,9 @@
                       "descendants": {
                         "s9bME2": {
                           "enabled": true,
-                          "icon": "smartphone"
+                          "icon": "smartphone",
+                          "width": 40,
+                          "height": 40
                         },
                         "w7CUP": {
                           "content": "從手機加入"
@@ -276702,7 +276704,9 @@
                           "descendants": {
                             "G4R75k": {
                               "icon": "rotate-cw",
-                              "fill": "$print-ink"
+                              "fill": "$print-ink",
+                              "width": 32,
+                              "height": 32
                             },
                             "yxwnz": {
                               "content": "再試一次",
