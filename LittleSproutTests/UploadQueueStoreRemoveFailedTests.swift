@@ -3,8 +3,9 @@ import Foundation
 import XCTest
 
 /// LS-410（LS-403 iOS 段，`design/littlesprout.pen` Notes `FBoLL`）：上傳佇列的「移除失敗項」兩段式契約——
-/// `markRemoved`／`undoRemove`／`markAllFailedRemoved` 只改記憶體狀態，`commitRemovals()`（sheet onDismiss）才
-/// 真的移除並落盤，且 manifest 只寫一次。標記中的項目不計入失敗計數、不參與任何自動或批次重試。
+/// `markRemoved`／`undoRemove`／`markAllFailedRemoved` 標記即把 manifest 紀錄的 `removed` 旗標落盤（LS-423，
+/// payload 檔不動、仍可復原；回收重啟後不還原），`commitRemovals()`（sheet onDismiss）才真的移除並清 payload，
+/// 且 manifest 只寫一次。標記中的項目不計入失敗計數、不參與任何自動或批次重試。
 @MainActor
 final class UploadQueueStoreRemoveFailedTests: XCTestCase {
     private let familyID = UUID(uuidString: "44444444-4444-4444-4444-444444444444")!
@@ -73,7 +74,7 @@ final class UploadQueueStoreRemoveFailedTests: XCTestCase {
             .filter { $0 != "manifest.json" }.sorted()
     }
 
-    // MARK: - 標記／復原（只改記憶體）
+    // MARK: - 標記／復原（寫 manifest 旗標，不動 payload）
 
     /// `markRemoved` 只對失敗項生效：等候／上傳中／完成一律 no-op（不能放棄還在飛行中或已完成的項目）。
     func test_markRemoved_onlyAffectsFailedEntries() async {
@@ -320,5 +321,27 @@ final class UploadQueueStoreRemoveFailedTests: XCTestCase {
 
         XCTAssertEqual(records.count, 1, "舊格式 manifest 要能解碼")
         XCTAssertEqual(records.first?.removed, false, "沒有 removed key 視為 false")
+    }
+}
+
+// LS-423 R2：獨立 extension（主類別 body 已逼近 SwiftLint `type_body_length` 250 行上限）。
+extension UploadQueueStoreRemoveFailedTests {
+    /// 「移除這 N 張」批次入口（`markAllFailedRemoved`）也要落盤：標記全部後回收重啟，三張都不還原、不排程上傳。
+    /// 守住批次路徑的寫盤——最常用的入口若漏寫，使用者放棄的照片會在下次啟動自動傳進相簿。
+    func test_relaunchAfterMarkAllFailedRemoved_doesNotRestoreAnyMarkedEntry() async {
+        let fixture = await makeStoreWithThreeRetryableFailures()
+        fixture.store.markAllFailedRemoved()
+
+        let relaunchService = StubMediaUploadService()
+        relaunchService.setUploadPhotoHandler { _, _, _, _ in throw AppError.network(message: "offline") }
+        let restarted = UploadQueueStore(
+            familyID: familyID, mediaUploadService: relaunchService, persistence: fixture.persistence
+        )
+        restarted.restorePersistedEntries { _ in }
+        try? await Task.sleep(nanoseconds: 100_000_000) // 給被誤還原的項目機會排程上傳
+
+        XCTAssertTrue(restarted.rows.isEmpty, "批次標記的三張都不能被還原進佇列")
+        XCTAssertEqual(relaunchService.uploadPhotoCalls.count, 0, "標記項不可被排程上傳")
+        XCTAssertTrue(payloadFiles(fixture.persistence).isEmpty, "批次標記項的 payload 檔要在還原時清掉")
     }
 }

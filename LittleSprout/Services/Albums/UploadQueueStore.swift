@@ -106,7 +106,7 @@ final class UploadQueueStore {
     /// 插入順序——`entries` 是字典（用 id 查找／更新方便），排序另外靠這份陣列記住「先進
     /// 佇列的排前面」，不依賴字典本身不保證的走訪順序。
     var order: [UUID] = []
-    /// LS-410：sheet 內「標記移除」的失敗項（只在記憶體，`commitRemovals()` 才真的移除並落盤；見 `+RemoveFailed.swift`）。
+    /// LS-410：sheet 內「標記移除」的失敗項（`commitRemovals()` 才真移除；LS-423 起旗標同步落盤，見 `+RemoveFailed.swift`）。
     var pendingRemovals: Set<UUID> = []
     var qaGate = QAUploadGate() // LS-427：QA 上傳停滯／失敗開關，見 `QAUploadSwitches.swift`
 
