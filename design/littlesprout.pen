@@ -274066,6 +274066,1142 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "P2EIHz",
+      "x": 15271,
+      "y": 63500,
+      "name": "Food / 04d 記錄詳情 · 沒有照片 · 非作者看 (iPhone)",
+      "clip": true,
+      "width": 393,
+      "height": 1020.2382991771346,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 1.0265672945164672
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.015175342614591256
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "WUyV6",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar"
+        },
+        {
+          "id": "nWBfx",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "descendants": {
+            "VCU41": {
+              "content": "飲食圖鑑"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "Z8jeDB",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            "$sp-item",
+            "$screen-pad",
+            "$sp-section",
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "EHe3B",
+              "name": "Head Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "RAHbN",
+                  "name": "Food Identity",
+                  "width": "fill_container",
+                  "gap": "$sp-item",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "k9ldAh",
+                      "name": "Sticker",
+                      "width": 96,
+                      "height": 96,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "food-stickers/stickers/pumpkin.png",
+                        "mode": "contain"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yAbbc",
+                      "name": "Identity Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "q0j6O",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "南瓜",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "m6RTv",
+                          "name": "Category",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "穀物根莖",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "cM9Lz",
+                  "name": "Date Anchor",
+                  "width": "fill_container",
+                  "padding": [
+                    6,
+                    4
+                  ],
+                  "children": [
+                    {
+                      "id": "n0KY8",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "First Date Stamp",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VDOco": {
+                          "content": "2025年11月18日 第一次吃到",
+                          "fontSize": "$fs-lead"
+                        },
+                        "ci8cq": {
+                          "content": "2025年11月18日 第一次吃到",
+                          "fontSize": "$fs-lead"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "AAxBT",
+              "name": "Memory Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "kLxD1",
+                  "name": "Blank Print（沒有照片，不可點）",
+                  "width": "fill_container",
+                  "fill": "$print-paper",
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 2,
+                      "y": 8
+                    },
+                    "blur": 16
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "vtaJi",
+                      "name": "Photo Slot",
+                      "width": "fill_container",
+                      "height": 400,
+                      "fill": "#5530401F",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "O3hOgG",
+                          "x": 144.5,
+                          "y": 161.5,
+                          "name": "Add Photo Icon",
+                          "enabled": false,
+                          "width": 40,
+                          "height": 40,
+                          "icon": "image-plus",
+                          "library": "lucide",
+                          "fill": "$print-ink"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZmJ6Z",
+                          "name": "Add Photo Label",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這筆記錄沒有照片",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nau28",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Z5s5V",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安 · 6 個⁠月⁠大",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bAl4b",
+                  "name": "Reaction Note",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "xR6Ao",
+                      "name": "Reaction Chip",
+                      "fill": "$accent-soft",
+                      "cornerRadius": "$radius-full",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-label",
+                        "$sp-item"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "wHecF",
+                          "name": "Reaction Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "smile",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "LOmon",
+                          "name": "Reaction Label",
+                          "fill": "$text-primary",
+                          "content": "喜歡",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "KGfo1",
+                      "name": "Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "一口接一口，把整碗吃光了。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ndwdU",
+                      "name": "Recorded By",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "媽媽記錄",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "z4N0Ts",
+              "type": "ref",
+              "ref": "XggYA",
+              "name": "Edit Button",
+              "width": "fill_container(345)",
+              "enabled": false,
+              "descendants": {
+                "G4R75k": {
+                  "icon": "pencil"
+                },
+                "yxwnz": {
+                  "content": "編輯這筆記錄"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Wu0ul",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "VgWNy",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "s2qL5",
+      "x": 15744,
+      "y": 63500,
+      "name": "Food / 04d 記錄詳情 · 沒有照片 · 非作者看 · 深色",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1020.2382991771346,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 1.0265672945164672
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.015175342614591256
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "o1wZD2",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar"
+        },
+        {
+          "id": "flemB",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "descendants": {
+            "VCU41": {
+              "content": "飲食圖鑑"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "eWjnb",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            "$sp-item",
+            "$screen-pad",
+            "$sp-section",
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "ksNCB",
+              "name": "Head Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Kq9Rm",
+                  "name": "Food Identity",
+                  "width": "fill_container",
+                  "gap": "$sp-item",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "A9qEH2",
+                      "name": "Sticker",
+                      "width": 96,
+                      "height": 96,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "food-stickers/stickers/pumpkin.png",
+                        "mode": "contain"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "sKgy1",
+                      "name": "Identity Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "dnNBs",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "南瓜",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "c6MT9w",
+                          "name": "Category",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "穀物根莖",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FdBnx",
+                  "name": "Date Anchor",
+                  "width": "fill_container",
+                  "padding": [
+                    6,
+                    4
+                  ],
+                  "children": [
+                    {
+                      "id": "afd6I",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "First Date Stamp",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VDOco": {
+                          "content": "2025年11月18日 第一次吃到",
+                          "fontSize": "$fs-lead"
+                        },
+                        "ci8cq": {
+                          "content": "2025年11月18日 第一次吃到",
+                          "fontSize": "$fs-lead"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "B7CnDj",
+              "name": "Memory Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "y7kfjo",
+                  "name": "Blank Print（沒有照片，不可點）",
+                  "width": "fill_container",
+                  "fill": "$print-paper",
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 2,
+                      "y": 8
+                    },
+                    "blur": 16
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "z4fNN",
+                      "name": "Photo Slot",
+                      "width": "fill_container",
+                      "height": 400,
+                      "fill": "#5530401F",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "maq1q",
+                          "x": 144.5,
+                          "y": 161.5,
+                          "name": "Add Photo Icon",
+                          "enabled": false,
+                          "width": 40,
+                          "height": 40,
+                          "icon": "image-plus",
+                          "library": "lucide",
+                          "fill": "$print-ink"
+                        },
+                        {
+                          "type": "text",
+                          "id": "LvYqP",
+                          "name": "Add Photo Label",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這筆記錄沒有照片",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GJims",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "LniI9",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安 · 6 個⁠月⁠大",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Q2Gig",
+                  "name": "Reaction Note",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "mkeTc",
+                      "name": "Reaction Chip",
+                      "fill": "$accent-soft",
+                      "cornerRadius": "$radius-full",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-label",
+                        "$sp-item"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "Y2Pd80",
+                          "name": "Reaction Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "smile",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wp4SZ",
+                          "name": "Reaction Label",
+                          "fill": "$text-primary",
+                          "content": "喜歡",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "J0sD1",
+                      "name": "Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "一口接一口，把整碗吃光了。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "t0woP",
+                      "name": "Recorded By",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "媽媽記錄",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "c8ujEn",
+              "type": "ref",
+              "ref": "XggYA",
+              "name": "Edit Button",
+              "width": "fill_container(345)",
+              "enabled": false,
+              "descendants": {
+                "G4R75k": {
+                  "icon": "pencil"
+                },
+                "yxwnz": {
+                  "content": "編輯這筆記錄"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Orq0H",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "zvhGZ",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "UFxW5",
+      "x": 16217,
+      "y": 63500,
+      "name": "A11y / 04d 記錄詳情 · 沒有照片 · 非作者看 · Dynamic Type AX3（body 40pt）",
+      "theme": {
+        "size": "ax3"
+      },
+      "clip": true,
+      "width": 393,
+      "height": 1479.6380782950746,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6997,
+          "height": 0.7131172303805524
+        },
+        "colors": [
+          {
+            "color": "$bg-lit",
+            "position": 0
+          },
+          {
+            "color": "$bg",
+            "position": 1
+          }
+        ],
+        "center": {
+          "x": 0.13995,
+          "y": 0.01054173297084295
+        }
+      },
+      "cornerRadius": 44,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Zw4ei",
+          "type": "ref",
+          "ref": "OeXop",
+          "name": "Status Bar"
+        },
+        {
+          "id": "sthmw",
+          "type": "ref",
+          "ref": "W6qTyS",
+          "name": "Nav Back",
+          "descendants": {
+            "VCU41": {
+              "content": "飲食圖鑑"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "Z5XUc6",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$sp-section",
+          "padding": [
+            "$sp-item",
+            "$screen-pad",
+            "$sp-section",
+            "$screen-pad"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "fcL5H",
+              "name": "Head Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-item",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "GAecy",
+                  "name": "Food Identity",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-label",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "k5mp3j",
+                      "name": "Sticker",
+                      "width": 96,
+                      "height": 96,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "food-stickers/stickers/pumpkin.png",
+                        "mode": "contain"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "AlNDr",
+                      "name": "Identity Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$sp-tight",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ClB0U",
+                          "name": "Title",
+                          "fill": "$text-primary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "南瓜",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-display",
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "K1aKvj",
+                          "name": "Category",
+                          "fill": "$text-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "穀物根莖",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ieUGX",
+                  "name": "Date Anchor",
+                  "width": "fill_container",
+                  "padding": [
+                    6,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "NwnS4",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "First Date Stamp",
+                      "width": "fill_container",
+                      "descendants": {
+                        "OCYqN": {
+                          "width": 339
+                        },
+                        "VDOco": {
+                          "content": "2025年11月18日\n第一次吃到",
+                          "fontSize": "$fs-note"
+                        },
+                        "ci8cq": {
+                          "content": "2025年11月18日\n第一次吃到",
+                          "fontSize": "$fs-note"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "JldoB",
+              "name": "Memory Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$sp-block",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "KWfvh",
+                  "name": "Blank Print（沒有照片，不可點）",
+                  "width": "fill_container",
+                  "fill": "$print-paper",
+                  "stroke": "$paper-edge",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$paper-shadow",
+                    "offset": {
+                      "x": 2,
+                      "y": 8
+                    },
+                    "blur": 16
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": [
+                    "$print-edge",
+                    "$print-edge",
+                    "$print-edge-bottom",
+                    "$print-edge"
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "RJcBO",
+                      "name": "Photo Slot",
+                      "width": "fill_container",
+                      "height": 400,
+                      "fill": "#5530401F",
+                      "layout": "vertical",
+                      "gap": "$sp-group",
+                      "padding": [
+                        0,
+                        "$inset-card"
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "mkeo5",
+                          "x": 132.5,
+                          "y": 104,
+                          "name": "Add Photo Icon",
+                          "enabled": false,
+                          "width": 64,
+                          "height": 64,
+                          "icon": "image-plus",
+                          "library": "lucide",
+                          "fill": "$print-ink"
+                        },
+                        {
+                          "type": "text",
+                          "id": "vQc2e",
+                          "name": "Add Photo Label",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "這筆記錄\n沒有照片",
+                          "textAlign": "center",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "j5qTK",
+                      "name": "Imprint Row",
+                      "width": "fill_container",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "RXlki",
+                          "name": "Caption",
+                          "fill": "$print-ink-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小安 · 6 個⁠月⁠大",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xZyoW",
+                  "name": "Reaction Note",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-group",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "tZt4j",
+                      "name": "Reaction Chip",
+                      "fill": "$accent-soft",
+                      "cornerRadius": "$radius-full",
+                      "gap": "$sp-tight",
+                      "padding": [
+                        "$sp-label",
+                        "$sp-item"
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "n4ob4y",
+                          "name": "Reaction Icon",
+                          "width": 40,
+                          "height": 40,
+                          "icon": "smile",
+                          "library": "lucide",
+                          "fill": "$text-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "lLwJB",
+                          "name": "Reaction Label",
+                          "fill": "$text-primary",
+                          "content": "喜歡",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-body",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "oxNxM",
+                      "name": "Note",
+                      "fill": "$text-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "一口接一口，把整碗吃光了。",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "PLqD3",
+                      "name": "Recorded By",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "媽媽記錄",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "XGKIL",
+              "type": "ref",
+              "ref": "XggYA",
+              "name": "Edit Button",
+              "width": "fill_container(345)",
+              "enabled": false,
+              "descendants": {
+                "G4R75k": {
+                  "icon": "pencil",
+                  "width": 32,
+                  "height": 32
+                },
+                "yxwnz": {
+                  "content": "編輯這筆記錄"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cuyoZ",
+          "name": "Home Indicator Area",
+          "width": "fill_container",
+          "height": 34,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": "$radius-full",
+              "id": "fL7j2",
+              "name": "Home Indicator",
+              "fill": "$home-indicator",
+              "width": 140,
+              "height": 5
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
