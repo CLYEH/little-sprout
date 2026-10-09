@@ -30860,7 +30860,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "【縮圖張數疊字統一規則（VR R2 MJ-1；取代本票 R2 的「AX3 顯示 +N」與 Import 實作註記 iSOb3／R5OnW 的「縮圖疊字 +N 一律 $fs-imprint 12」）】適用：cmp/Card Diary 第三格暗蓋上的 More Count（CQpms）與 Import 縮圖列的 More Cell「+N」（例 m7ZCDg 的 ymHpc），兩者是同一條規則，只差底（75% 暗蓋／$surface-2 紙面）。\n・字級 $fs-note 17、粗體、隨 Dynamic Type 放大；不用 $fs-imprint——「還有幾張」是要讀的資訊（skill 十條第 6 條：寫著數量的字 ≥17），不是印在紙上的廠牌字。\n・長短形由可用寬度決定，不看字級名稱：SwiftUI ViewThatFits(in: .horizontal) { Text(\"還有 N 張\")；Text(\"+N\") }——放得下長形就顯示長形，放不下才退回短形「+N」；短形仍放不下（64pt 格遇 AX3 多位數）時加 .lineLimit(1).minimumScaleFactor(0.5) 收進格內，不裁字、不溢出。\n・稿面對照：96 寬縮圖在預設字級顯示長形「還有 2 張」（實測寬 69，WitwS）；AX3 40pt 長形寬 162 放不下，退短形「+2」（寬 48，MiQyy／xNqOC）；AX1／AX2 依實測寬度自然落在其中一形，不另訂字級門檻。\n・VoiceOver：兩形的 accessibilityLabel 一律「還有 N 張」。\n・Import 各板稿面現畫的 12pt「+N」是 LS-307 定案當時的畫法，本票未重畫；實作以本條為準，Import 稿面回填交下一張觸及 Import 的票（已記 LS-354）。寶貝 chip 頭像姓名縮寫字不在本條範圍，仍依 R5OnW 用 $fs-imprint 12。",
+                  "content": "【縮圖張數疊字統一規則（VR R2 MJ-1；取代本票 R2 的「AX3 顯示 +N」與 Import 實作註記 iSOb3／R5OnW 的「縮圖疊字 +N 一律 $fs-imprint 12」）】適用：cmp/Card Diary 第三格暗蓋上的 More Count（CQpms）與 Import 縮圖列的 More Cell「+N」（例 m7ZCDg 的 ymHpc），兩者是同一條規則，只差底（75% 暗蓋／$surface-2 紙面）。\n・字級 $fs-note 17、粗體、隨 Dynamic Type 放大；不用 $fs-imprint——「還有幾張」是要讀的資訊（skill 十條第 6 條：寫著數量的字 ≥17），不是印在紙上的廠牌字。\n・長短形由可用寬度決定，不看字級名稱：SwiftUI ViewThatFits(in: .horizontal) { Text(\"還有 N 張\")；Text(\"+N\") }——放得下長形就顯示長形，放不下才退回短形「+N」；短形仍放不下（64pt 格遇 AX3 多位數）時加 .lineLimit(1).minimumScaleFactor(0.5) 收進格內，不裁字、不溢出。\n・稿面對照：96 寬縮圖在預設字級顯示長形「還有 2 張」（實測寬 69，WitwS）；AX3 40pt 長形寬 162 放不下，退短形「+2」（寬 48，MiQyy／xNqOC）；AX1／AX2 依實測寬度自然落在其中一形，不另訂字級門檻。\n・VoiceOver：兩形的 accessibilityLabel 一律「還有 N 張」。\n・Import 各板稿面現畫的 12pt「+N」是 LS-307 定案當時的畫法，本票未重畫；實作以本條為準，Import 稿面回填交下一張觸及 Import 的票（已記 LS-354）。寶貝 chip 頭像姓名縮寫字不在本條範圍，仍依 R5OnW 用 $fs-imprint 12。\n・沿革（LS-439）：Import 家族 16 板 30 處 More Cell 已回填（見 LS-439 Notes 板 F3GbnN 對照表二）；上句「本票未重畫……（已記 LS-354）」僅存沿革。Import More Cell 另加左右內距 $sp-tight（F3GbnN bPD0S），cmp/Card Diary CQpms 無。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -94430,7 +94430,7 @@
       "type": "frame",
       "id": "kHDk4",
       "x": 17400,
-      "y": 6273,
+      "y": 5110,
       "name": "LS-142 / 實作註記 · Handoff Notes (ios-dev)",
       "width": 900,
       "fill": "#FBEBEC",
@@ -97167,7 +97167,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "【R2 改寫】位置不變：iPhone＝設定頁 Content 第一段（Header Row 之下、「個人」段之上），獨立一張 Card（clip:true，$radius-lg 圓角＋1pt $border——R1 未 clip、列底蓋掉圓角，MN-1 已修），不加段標題；iPad＝Sidebar 標題「設定」之下、Nav List 之上。元件：cmp/Settings Row 實例；icon 槽換成 44×44 縮圖（圓角 2＝同頁 MN0WF，R3 由 $radius-md 改；clip、零白邊零角托——還在路上的照片不是沖印品），右側 chevron。\n四態文案矩陣（N＝waiting＋uploading＋failed、M＝failed；數字與「張」之間 U+00A0，字間 U+2060 只留語意斷點；板上「30 張已完成 3」所以 N＝27）：\n・進行中（有 waiting／uploading、無 failed）：縮圖＝正在上傳那張｜Label「正在新增照片」｜Value「還有 N 張還沒完成」。\n・進行中＋失敗（有 waiting／uploading、也有 failed）：縮圖＝正在上傳那張（隊伍仍在前進）｜同上兩行＋第三行「M 張沒有成功」$danger 600。\n・只剩失敗（只有 failed）：縮圖＝第一張失敗的｜Label「有 M 張照片沒有加進去」$danger 600（R3 由 $text-primary 改）｜Value「看原因，或再試一次」$text-secondary（R3 由「點這裡看怎麼處理」改——chevron 已表示可點；「或」保留容量已滿這類重試無效的出路）。\n・全部完成（停留中過渡態，見 bqnO1）：縮圖＝最後完成那張｜Label「照片都加好了」｜Value「K 張都加進相簿了」，K＝store.entries.count−store.remainingCount（store 保留的已完成數；store 在 App 啟動時只還原未完成項，所以 K＝本次啟動以來加進去的張數，跨批次累加）。\n顏色規則（MN-3）：sheet 外唯一的失敗訊號——進行中＋失敗態的第三行——用 $danger 600，因為它要從中性的進度句裡被分辨出來；sheet 內的計數維持中性（群組標題 H6b7Lq、Import 05 y3wNj 皆 $text-secondary），逐張錯誤文字才用 $danger（oFUQ3）。【R3 訂正，取代 R2「只剩失敗態不用 $danger」】只剩失敗態同樣是 sheet 外唯一的失敗訊號，Label 用 $danger 600。不變式：失敗訊號的顯眼度不得低於進行中＋失敗態——使用者要對照的是上一次看到的那一列，紅字不能在「只剩這張要處理」時消失。對比：$danger 對 $surface 淺 10.34／深 8.40。\n出現條件：佇列有任一 waiting／uploading／failed＝顯示；全部 completed 或空＝不顯示（停留中不立即移除，見 bqnO1）。失敗項退場：LS-142 sheet（rTEGf）只有「重試」「重試這 N 張」「查看儲存空間」，沒有移除／放棄——容量已滿（LS002）這類重試不會成功的項目會讓入口一直停在「只剩失敗」態；待 LS-142 補移除動作，在那之前入口常駐（已回報 orchestrator 決定是否開票）。與橫幅：橫幅只在 sheet 內、resumedFromInterruption 為真時出現，入口列不顯示「已接續」。點擊：四態都 present 同一個佇列 sheet（LS-142 16 同 detent），不 push；iPad 同樣 sheet。沿革：ImjbJ「sheet 直接 dismiss、不縮成 pill／不留 Dynamic Island 提示」仍成立。\nAX3 行數（JNDUz 實測）：進行中／只剩失敗／全部完成皆 4 行、列高 257；兩個含失敗行的態 6 行、列高 379——縮圖讓文字欄剩 219pt，失敗行 M=1 起就在「張」之後斷成兩行（R1「失敗行一行」作廢）；壓測 N=128、M=12（bdzSs）同為 6 行不破版。預設字級四態列高 75／106／75／75。板：HOKKA（淺，四態）／Ej5G5（深，三態）／JNDUz（AX3，四態＋壓測）／Hzv2U（iPad，三態）。\n【LS-403 R2 訂正】只剩失敗態 Value 改「看原因，再試或移除」（取代上文 R3 的「看原因，或再試一次」，舊句保留；四板 icaOf／PKXAQ／bWxFr／P2BkW 已同步，列高 75／257／125 不變）。失敗項自 LS-403 起可在 sheet 內移除，上文「失敗項退場：…在那之前入口常駐」由 Fq494 取代。\n【LS-403 R3 補（R2-m1）】上線閘門：入口 Value 新句「看原因，再試或移除」與 LS-403 iOS 段的移除動作（UploadQueueStore.markRemoved／commitRemovals＋sheet 墓碑列）同一版上線；在那之前，實作（含 LS-404）維持舊句「看原因，或再試一次」——入口不能承諾 sheet 裡還做不到的事。",
+              "content": "【R2 改寫】位置不變：iPhone＝設定頁 Content 第一段（Header Row 之下、「個人」段之上），獨立一張 Card（clip:true，$radius-lg 圓角＋1pt $border——R1 未 clip、列底蓋掉圓角，MN-1 已修），不加段標題；iPad＝Sidebar 標題「設定」之下、Nav List 之上。元件：cmp/Settings Row 實例；icon 槽換成 44×44 縮圖（圓角 2＝同頁 MN0WF，R3 由 $radius-md 改；clip、零白邊零角托——還在路上的照片不是沖印品），右側 chevron。\n四態文案矩陣（N＝waiting＋uploading＋failed、M＝failed；數字與「張」之間 U+00A0，字間 U+2060 只留語意斷點；板上「30 張已完成 3」所以 N＝27）：\n・進行中（有 waiting／uploading、無 failed）：縮圖＝正在上傳那張｜Label「正在新增照片」｜Value「還有 N 張還沒完成」。\n・進行中＋失敗（有 waiting／uploading、也有 failed）：縮圖＝正在上傳那張（隊伍仍在前進）｜同上兩行＋第三行「M 張沒有成功」$danger 600。\n・只剩失敗（只有 failed）：縮圖＝第一張失敗的（依佇列順序）：有記憶體縮圖或能由 payload 重產就是真圖，兩者都沒有才退回佔位底色 $surface-2（LS-439，見文末【LS-439 訂正】；稿面畫的是容量已滿、離開 05 前已終局的代表態）｜Label「有 M 張照片沒有加進去」$danger 600（R3 由 $text-primary 改）｜Value「看原因，或再試一次」$text-secondary（R3 由「點這裡看怎麼處理」改——chevron 已表示可點；「或」保留容量已滿這類重試無效的出路）。\n・全部完成（停留中過渡態，見 bqnO1）：縮圖＝最後完成那張的記憶體縮圖，已被釋放時退回 $surface-2（LS-439，見文末【LS-439 訂正】）｜Label「照片都加好了」｜Value「K 張都加進相簿了」，K＝store.entries.count−store.remainingCount（store 保留的已完成數；store 在 App 啟動時只還原未完成項，所以 K＝本次啟動以來加進去的張數，跨批次累加）。\n顏色規則（MN-3）：sheet 外唯一的失敗訊號——進行中＋失敗態的第三行——用 $danger 600，因為它要從中性的進度句裡被分辨出來；sheet 內的計數維持中性（群組標題 H6b7Lq、Import 05 y3wNj 皆 $text-secondary），逐張錯誤文字才用 $danger（oFUQ3）。【R3 訂正，取代 R2「只剩失敗態不用 $danger」】只剩失敗態同樣是 sheet 外唯一的失敗訊號，Label 用 $danger 600。不變式：失敗訊號的顯眼度不得低於進行中＋失敗態——使用者要對照的是上一次看到的那一列，紅字不能在「只剩這張要處理」時消失。對比：$danger 對 $surface 淺 10.34／深 8.40。\n出現條件：佇列有任一 waiting／uploading／failed＝顯示；全部 completed 或空＝不顯示（停留中不立即移除，見 bqnO1）。失敗項退場：LS-142 sheet（rTEGf）只有「重試」「重試這 N 張」「查看儲存空間」，沒有移除／放棄——容量已滿（LS002）這類重試不會成功的項目會讓入口一直停在「只剩失敗」態；待 LS-142 補移除動作，在那之前入口常駐（已回報 orchestrator 決定是否開票）。與橫幅：橫幅只在 sheet 內、resumedFromInterruption 為真時出現，入口列不顯示「已接續」。點擊：四態都 present 同一個佇列 sheet（LS-142 16 同 detent），不 push；iPad 同樣 sheet。沿革：ImjbJ「sheet 直接 dismiss、不縮成 pill／不留 Dynamic Island 提示」仍成立。\nAX3 行數（JNDUz 實測）：進行中／只剩失敗／全部完成皆 4 行、列高 257；兩個含失敗行的態 6 行、列高 379——縮圖讓文字欄剩 219pt，失敗行 M=1 起就在「張」之後斷成兩行（R1「失敗行一行」作廢）；壓測 N=128、M=12（bdzSs）同為 6 行不破版。預設字級四態列高 75／106／75／75。板：HOKKA（淺，四態）／Ej5G5（深，三態）／JNDUz（AX3，四態＋壓測）／Hzv2U（iPad，三態）。\n【LS-403 R2 訂正】只剩失敗態 Value 改「看原因，再試或移除」（取代上文 R3 的「看原因，或再試一次」，舊句保留；四板 icaOf／PKXAQ／bWxFr／P2BkW 已同步，列高 75／257／125 不變）。失敗項自 LS-403 起可在 sheet 內移除，上文「失敗項退場：…在那之前入口常駐」由 Fq494 取代。\n【LS-403 R3 補（R2-m1）】上線閘門：入口 Value 新句「看原因，再試或移除」與 LS-403 iOS 段的移除動作（UploadQueueStore.markRemoved／commitRemovals＋sheet 墓碑列）同一版上線；在那之前，實作（含 LS-404）維持舊句「看原因，或再試一次」——入口不能承諾 sheet 裡還做不到的事。\n【LS-439 訂正（R2 改寫；取代上文 R2「只剩失敗：縮圖＝第一張失敗的」）】入口列與 sheet 的縮圖＝store 記憶體裡的 thumbnail，沒有就退回佔位底色 $surface-2（Color.lsSurface2；尺寸、圓角不變）。分界看「記憶體縮圖還在不在」，不看可不可重試：①離開匯入 04（在背景繼續、取消整批）或 05（完成）的那一刻，UploadQueueStore.releaseThumbnails 對當下已終局的項目（已完成、不可重試失敗）釋放縮圖→佔位；②在那之後才終局的項目縮圖仍在記憶體→真圖（finish() 只清 payload、不清 thumbnail；大批次按「在背景繼續」後才撞上容量已滿，就是真圖）；③可重試失敗不會被釋放→真圖；④app 重啟後只還原未終局的項目（含先前的可重試失敗），一律以等候上傳重新排入、都帶 payload、thumbnail 為 nil，不會有失敗項（已完成與不可重試失敗在終局時已被 discardPersisted，不會還原）：sheet 列不重產縮圖→一律佔位；入口列由 payload 重產→真圖。稿面畫的是代表態「離開 05 時已終局」：只剩失敗入口列與 sheet 的容量已滿列／其墓碑畫佔位，可重試失敗列畫真圖；同一畫面在其他時序出現真圖也是正確實作——QA 不要據此開 bug，ios-dev 不需改程式。全部完成態同理：最後完成那張若在離開 05 前就完成，同樣退回佔位。理由（記憶體取捨，保留）：200 張批次的縮圖常駐到登出成本可觀；失敗項縮圖小圖落盤（讓容量已滿列辨認得出是哪一張）已記 LS-413 池 067c029b (e)。佔位對比刻意靜默：$surface-2 對 card $surface 淺 1.35／深 1.14，墓碑（opacity 0.4）淺 1.12／深 1.05——佔位的意思是「這裡沒有圖」，不承載資訊（accessibilityHidden），不需要文字對比；不加描邊——不修，理由：佔位不承載資訊，加描邊需動共用元件（UploadQueueRowView／UploadQueueEntryThumbnail），orchestrator 裁 B 維持現狀。以上分界是讀碼結論（ImportBatchFlowContainer.swift 三個 releaseThumbnails 呼叫點、UploadQueueStore.swift finish()、UploadQueueStore+Resume.swift restorePersistedEntries、UploadQueueSheetView.swift、UploadQueueEntryCard.swift），未在模擬器實測。入口列 Thumb：Amz2G（HOKKA）／iSOOD（Ej5G5）／z0T6H（JNDUz）／j1p0N（Hzv2U）；sheet 側清單見 LS-439 Notes 板 F3GbnN。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -97481,7 +97481,7 @@
               "fill": "#2B141C",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "【LS-403 R2 改寫，取代 R1 版】UploadQueueStore 契約（範圍 2，兩段式）：markRemoved(_ id: UUID)——只對 state==.failed 生效，把 id 放進記憶體的 pendingRemovals（其他狀態 no-op）；undoRemove(_ id:)——從 pendingRemovals 拿掉；兩者都不碰落盤。標記中的項目不計入 failedCount／retryableFailedCount、不參與 retryAllRetryable 與回前景自動重試（LS-397），但留在 sections 裡以墓碑列呈現。markAllFailedRemoved()——confirmationDialog 確認後一次標記全部未標記的 failed。commitRemovals()——sheet onDismiss 呼叫：對 pendingRemovals 逐項移除 entry、釋放縮圖、刪該項落盤檔與暫存匯出檔（影片沿 cleanupVideoTempFiles），最後只寫一次 manifest（persistManifest），在同一個 MainActor 呼叫內完成。App 在 sheet 開著時被系統回收：pendingRemovals 不落盤，重啟後那幾張仍是失敗項（安全的方向，使用者可再移除）。都不打伺服器、不動 PhotoKit。PLAUSIBLE（未讀 performUpload 核實）：失敗項若已上傳 Storage 物件但 media INSERT 失敗（LS002 由 trigger 擋 INSERT 的路徑），commit 後物件成孤兒——ios-dev 核對失敗點；若會留孤兒，回報設計端決定是否順帶刪物件（不在本稿範圍）。sheet：UploadQueueRowView 失敗分支加 onRemove、墓碑分支（縮圖 opacity 0.4、時間戳 $text-secondary、「已移除，不會加進相簿。」$text-secondary $fs-note 400、右端「↶ 復原」cmp/Button Text lucide undo-2 $text-primary，列高與原失敗列相同）；群標題列在打開時 failedCount>1 才建立。\n【LS-403 R3 補（R2-M1／R2-m3）】墓碑列高度：標記當下用 GeometryReader／PreferenceKey 記下該失敗列的實測高度 recordedHeight，墓碑分支 .frame(minHeight: recordedHeight, alignment: .top)——等高靠 minHeight，不是預設字級剛好都是 106 的巧合（AX3 失敗列 381／398，墓碑內容本身只有約 263）。墓碑列內部：上方群（時間戳＋「已移除，不會加進相簿。」）靠上，「↶ 復原」用 Spacer(minLength: 0) 推到列底——和原本「× 移除」同一個座標（兩者都是動作列最後一顆、同一個 cmp/Button Text 內距 左 $sp-item／右 0，預設字級靠右、AX3 靠左）。這是刻意設計：同一個點連按兩次＝自己取消，不會移到下一張。實測：p0Fw0 墓碑列 GEoiB 106＝原列 106、下一列 y 不變；AX3 YNP31 墓碑列 PMfLO 381＝FIwU8 原列 BLe86 381，下一列 y 548＝FIwU8 同列 548，「↶ 復原」Sh5nt 板內座標 (96,1021)＝FIwU8「× 移除」VmPk3 (96,1021)。VoiceOver：墓碑列 accessibilityElement(children: .combine)，label「今天 14:29 的照片，已移除，不會加進相簿」；復原鈕 label「復原，把這張放回來」；按下「移除」後用 AccessibilityFocusState 把焦點移到同列的復原鈕，按下復原後焦點回到同列的「移除」。",
+              "content": "【LS-403 R2 改寫，取代 R1 版；LS-439 依 LS-423（v0.27.33）改寫落盤語意】UploadQueueStore 契約（範圍 2，兩段式）：markRemoved(_ id: UUID)——只對 state==.failed 生效，把 id 放進記憶體的 pendingRemovals（其他狀態 no-op）；undoRemove(_ id:)——從 pendingRemovals 拿掉。【LS-423】markRemoved／undoRemove／markAllFailedRemoved 都在同一個呼叫內把 manifest 該筆紀錄的 removed 旗標寫盤（標記＝true、復原＝false；payload 檔不動，所以仍可復原；沒有落盤紀錄的項目——落盤失敗或 preview——只有記憶體標記）。標記中的項目不計入 failedCount／retryableFailedCount、不參與 retryAllRetryable 與回前景自動重試（LS-397），但留在 sections 裡以墓碑列呈現。markAllFailedRemoved()——confirmationDialog 確認後一次標記全部未標記的 failed。commitRemovals()——sheet onDismiss 呼叫：對 pendingRemovals 逐項移除 entry（縮圖隨之釋放）、清暫存匯出檔（影片沿 cleanupVideoTempFiles）；接著呼叫 discardPersisted——先寫一次 manifest、再刪這幾筆的 payload 檔（回收安全順序：中途被回收最壞只留孤兒檔，下次還原時 pruneOrphans 清掉）；再對每筆呼叫 onUploadFailedTerminal 解除相簿登記與寶貝標記簿記；最後 advance()。全部在同一個 MainActor 呼叫內完成。App 在 sheet 開著時被系統回收（LS-423）：重啟的 restorePersistedEntries 跳過 removed＝true 的紀錄——不還原、不登記、不重傳，payload 檔與 manifest 項目由 pruneOrphans／persistManifest 一併清掉。也就是被標記的照片靜默丟棄：不會在下次啟動悄悄傳進相簿，重啟後 sheet 裡也不再出現（沒有墓碑列、無從復原）；只有 sheet 還開著時標記可以復原（undoRemove 把旗標寫回 false）。sheet 關閉（onDismiss → commitRemovals）才真的移除 entry。都不打伺服器、不動 PhotoKit。已核實（LS-410，見 commitRemovals 文件註解）：失敗項若已上傳 Storage 物件但 media INSERT 失敗（LS002 由 trigger 擋 INSERT 等路徑），commit 後確實留下孤兒物件；決定不在 commitRemovals 刪（commit 不打伺服器、物件路徑含上傳當下的年月無法還原、.network／.server 無法確定 INSERT 是否成功），由 purge-storage 孤兒掃描在 24 小時寬限後回收，也不計入 storage_used_bytes。sheet：UploadQueueRowView 失敗分支加 onRemove、墓碑分支（縮圖 opacity 0.4、時間戳 $text-secondary、「已移除，不會加進相簿。」$text-secondary $fs-note 400、右端「↶ 復原」cmp/Button Text lucide undo-2 $text-primary，列高與原失敗列相同）；群標題列在打開時 failedCount>1 才建立。\n【LS-403 R3 補（R2-M1／R2-m3）】墓碑列高度：標記當下用 GeometryReader／PreferenceKey 記下該失敗列的實測高度 recordedHeight，墓碑分支 .frame(minHeight: recordedHeight, alignment: .top)——等高靠 minHeight，不是預設字級剛好都是 106 的巧合（AX3 失敗列 381／398，墓碑內容本身只有約 263）。墓碑列內部：上方群（時間戳＋「已移除，不會加進相簿。」）靠上，「↶ 復原」用 Spacer(minLength: 0) 推到列底——和原本「× 移除」同一個座標（兩者都是動作列最後一顆、同一個 cmp/Button Text 內距 左 $sp-item／右 0，預設字級靠右、AX3 靠左）。這是刻意設計：同一個點連按兩次＝自己取消，不會移到下一張。實測：p0Fw0 墓碑列 GEoiB 106＝原列 106、下一列 y 不變；AX3 YNP31 墓碑列 PMfLO 381＝FIwU8 原列 BLe86 381，下一列 y 548＝FIwU8 同列 548，「↶ 復原」Sh5nt 板內座標 (96,1021)＝FIwU8「× 移除」VmPk3 (96,1021)。VoiceOver：墓碑列 accessibilityElement(children: .combine)，label「今天 14:29 的照片，已移除，不會加進相簿」；復原鈕 label「復原，把這張放回來」；按下「移除」後用 AccessibilityFocusState 把焦點移到同列的復原鈕，按下復原後焦點回到同列的「移除」。\n沿革（LS-439）：LS-403 R2 原寫「兩者都不碰落盤」與「pendingRemovals 不落盤，重啟後那幾張仍是失敗項（安全的方向，使用者可再移除）」；LS-423（v0.27.33）改為標記即寫盤 removed 旗標、回收後靜默丟棄，本段已同步。",
               "lineHeight": 1.6,
               "fontFamily": "Noto Sans TC",
               "fontSize": 17,
@@ -166719,6 +166719,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -166727,9 +166731,9 @@
                                   "id": "ymHpc",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+21",
+                                  "content": "還有 21 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -167039,6 +167043,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -167047,9 +167055,9 @@
                                   "id": "JD6Mc",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+3",
+                                  "content": "還有 3 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -167554,6 +167562,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -167562,9 +167574,9 @@
                                   "id": "r6Tqe",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+21",
+                                  "content": "還有 21 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -167874,6 +167886,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -167882,9 +167898,9 @@
                                   "id": "r7IQ2d",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+3",
+                                  "content": "還有 3 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -168393,6 +168409,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -168403,7 +168423,7 @@
                                   "fill": "$text-secondary",
                                   "content": "+21",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -168721,6 +168741,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -168731,7 +168755,7 @@
                                   "fill": "$text-secondary",
                                   "content": "+3",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -169294,6 +169318,10 @@
                                   "height": 96,
                                   "fill": "$surface-2",
                                   "cornerRadius": "$radius-md",
+                                  "padding": [
+                                    0,
+                                    "$sp-tight"
+                                  ],
                                   "justifyContent": "center",
                                   "alignItems": "center",
                                   "children": [
@@ -169302,9 +169330,9 @@
                                       "id": "ofBmn",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+18",
+                                      "content": "還有 18 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -170187,6 +170215,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -170195,9 +170227,9 @@
                                   "id": "rzYze",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+3",
+                                  "content": "還有 3 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -170465,6 +170497,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -170473,9 +170509,9 @@
                                   "id": "ElhGe",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+5",
+                                  "content": "還有 5 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -170974,6 +171010,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -170984,7 +171024,7 @@
                               "fill": "$text-secondary",
                               "content": "+28",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -171206,6 +171246,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -171216,7 +171260,7 @@
                               "fill": "$text-secondary",
                               "content": "+23",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -171652,6 +171696,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -171660,9 +171708,9 @@
                                   "id": "X71cM",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+3",
+                                  "content": "還有 3 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -171930,6 +171978,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -171938,9 +171990,9 @@
                                   "id": "WQYE2",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+5",
+                                  "content": "還有 5 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -172442,6 +172494,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -172452,7 +172508,7 @@
                               "fill": "$text-secondary",
                               "content": "+28",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -172674,6 +172730,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -172684,7 +172744,7 @@
                               "fill": "$text-secondary",
                               "content": "+23",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -173124,6 +173184,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -173134,7 +173198,7 @@
                                   "fill": "$text-secondary",
                                   "content": "+3",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -173408,6 +173472,10 @@
                               "height": 96,
                               "fill": "$surface-2",
                               "cornerRadius": "$radius-md",
+                              "padding": [
+                                0,
+                                "$sp-tight"
+                              ],
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -173418,7 +173486,7 @@
                                   "fill": "$text-secondary",
                                   "content": "+5",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -173926,6 +173994,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -173936,7 +174008,7 @@
                               "fill": "$text-secondary",
                               "content": "+28",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": 29,
                               "fontWeight": "700"
                             }
                           ]
@@ -174165,6 +174237,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -174175,7 +174251,7 @@
                               "fill": "$text-secondary",
                               "content": "+23",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": 29,
                               "fontWeight": "700"
                             }
                           ]
@@ -175050,6 +175126,10 @@
                                   "height": 96,
                                   "fill": "$surface-2",
                                   "cornerRadius": "$radius-md",
+                                  "padding": [
+                                    0,
+                                    "$sp-tight"
+                                  ],
                                   "justifyContent": "center",
                                   "alignItems": "center",
                                   "children": [
@@ -175058,9 +175138,9 @@
                                       "id": "Hv1wj",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+2",
+                                      "content": "還有 2 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -175626,6 +175706,10 @@
                                   "height": 96,
                                   "fill": "$surface-2",
                                   "cornerRadius": "$radius-md",
+                                  "padding": [
+                                    0,
+                                    "$sp-tight"
+                                  ],
                                   "justifyContent": "center",
                                   "alignItems": "center",
                                   "children": [
@@ -175634,9 +175718,9 @@
                                       "id": "d0c0W",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+26",
+                                      "content": "還有 26 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -175925,6 +176009,10 @@
                                   "height": 96,
                                   "fill": "$surface-2",
                                   "cornerRadius": "$radius-md",
+                                  "padding": [
+                                    0,
+                                    "$sp-tight"
+                                  ],
                                   "justifyContent": "center",
                                   "alignItems": "center",
                                   "children": [
@@ -175933,9 +176021,9 @@
                                       "id": "sSOFl",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+21",
+                                      "content": "還有 21 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -182887,6 +182975,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -182897,7 +182989,7 @@
                               "fill": "$text-secondary",
                               "content": "+11",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -183119,6 +183211,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -183129,7 +183225,7 @@
                               "fill": "$text-secondary",
                               "content": "+3",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -184000,6 +184096,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -184010,7 +184110,7 @@
                               "fill": "$text-secondary",
                               "content": "+11",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -184232,6 +184332,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -184242,7 +184346,7 @@
                               "fill": "$text-secondary",
                               "content": "+3",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -185125,6 +185229,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -185135,7 +185243,7 @@
                               "fill": "$text-secondary",
                               "content": "+11",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": 29,
                               "fontWeight": "700"
                             }
                           ]
@@ -185363,6 +185471,10 @@
                           "height": 64,
                           "fill": "$surface-2",
                           "cornerRadius": "$radius-md",
+                          "padding": [
+                            0,
+                            "$sp-tight"
+                          ],
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -185373,7 +185485,7 @@
                               "fill": "$text-secondary",
                               "content": "+3",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -186301,6 +186413,10 @@
                                   "height": 96,
                                   "fill": "$surface-2",
                                   "cornerRadius": "$radius-md",
+                                  "padding": [
+                                    0,
+                                    "$sp-tight"
+                                  ],
                                   "justifyContent": "center",
                                   "alignItems": "center",
                                   "children": [
@@ -186309,9 +186425,9 @@
                                       "id": "gQHyy",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+9",
+                                      "content": "還有 9 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -186600,6 +186716,10 @@
                                   "height": 96,
                                   "fill": "$surface-2",
                                   "cornerRadius": "$radius-md",
+                                  "padding": [
+                                    0,
+                                    "$sp-tight"
+                                  ],
                                   "justifyContent": "center",
                                   "alignItems": "center",
                                   "children": [
@@ -186608,9 +186728,9 @@
                                       "id": "I94HC",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+1",
+                                      "content": "還有 1 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -187462,7 +187582,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "字級：畫面標題 $fs-display 34／05 成功統計數字 $fs-display 34（R2 改版，原設計失敗與成功同 $fs-lead 22 對稱置中，已改不對稱）／區塊標題 $fs-lead 22／04 進度計數「已處理 42/128 張」$fs-lead 22（R3 由 $fs-body 升級，原與其標籤「整體進度」同字級同字重、主角數字認不出主角，見 SH-13）／內文與按鈕 $fs-body 17／次要說明與狀態列 $fs-note 17／寶貝 chip 頭像姓名縮寫字 $fs-imprint 12／縮圖疊字「+N」【LS-296 R3 取代】改依統一規則 sErBN（$fs-note＋ViewThatFits 長形放不下才退「+N」），本板 12pt 稿面是 LS-307 當時畫法。",
+                  "content": "字級：畫面標題 $fs-display 34／05 成功統計數字 $fs-display 34（R2 改版，原設計失敗與成功同 $fs-lead 22 對稱置中，已改不對稱）／區塊標題 $fs-lead 22／04 進度計數「已處理 42/128 張」$fs-lead 22（R3 由 $fs-body 升級，原與其標籤「整體進度」同字級同字重、主角數字認不出主角，見 SH-13）／內文與按鈕 $fs-body 17／次要說明與狀態列 $fs-note 17／寶貝 chip 頭像姓名縮寫字 $fs-imprint 12／縮圖疊字「還有 N 張」／「+N」依統一規則 sErBN（$fs-note 粗體＋ViewThatFits，長形放不下才退「+N」，短形仍放不下 minimumScaleFactor 0.5；VoiceOver 一律讀「還有 N 張」）。沿革：LS-307 原畫 12pt「+N」，LS-296 R3 改依 sErBN，LS-439 已回填本家族各板 More Cell。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -187771,7 +187891,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無（整理態尚未上傳，無失敗情境）｜深色 VrvV5：色彩 token 隨主題切換，版面/角托/字標幾何不變｜AX3 e0S0TW：Info Row（相簿 chip＋略過鈕）與 Babies Row（寶貝 chip）皆改 layout:vertical 直式堆疊避免碰撞；縮圖「+N」徽章與 chip 姓名縮寫維持 $fs-imprint 12 不隨放大｜iPad k3jwB：560pt 置中欄＋44pt 章節斷點，群卡縮圖改 2×3 grid（96×96，Left Col 304）",
+                  "content": "Import / 01 匯入整理頁 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無（整理態尚未上傳，無失敗情境）｜深色 VrvV5：色彩 token 隨主題切換，版面/角托/字標幾何不變｜AX3 e0S0TW：Info Row（相簿 chip＋略過鈕）與 Babies Row（寶貝 chip）皆改 layout:vertical 直式堆疊避免碰撞；chip 姓名縮寫維持 $fs-imprint 12 不隨放大；縮圖疊字依 sErBN（AX3 短形「+N」40pt；64 格兩位數縮放示意 29pt 見 Q8jHEZ／jENvo）｜iPad k3jwB：560pt 置中欄＋44pt 章節斷點，群卡縮圖改 2×3 grid（96×96，Left Col 304）",
                   "fontFamily": "Inter",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187802,7 +187922,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Import / 02 日期不明群 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無｜深色 EcgUO：同 01，色彩隨主題、版面不變｜AX3 eweX7：同 01（Info Row／Babies Row 改直式堆疊、$fs-imprint 12 徽章字）｜iPad YSShl：560pt 置中欄，群卡縮圖 2×3 grid（96×96）",
+                  "content": "Import / 02 日期不明群 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無｜深色 EcgUO：同 01，色彩隨主題、版面不變｜AX3 eweX7：同 01（Info Row／Babies Row 改直式堆疊、chip 姓名縮寫 $fs-imprint 12；縮圖疊字依 sErBN）｜iPad YSShl：560pt 置中欄，群卡縮圖 2×3 grid（96×96）",
                   "fontFamily": "Inter",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187833,7 +187953,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Import / 03 上限與規則提示 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無（達上限為資訊提示非錯誤，circle-alert 非 danger）｜深色 gkS1Q：同 01，Limit Banner 維持 $surface-2＋$text-primary＋circle-alert｜AX3 Q8jHEZ：同 01（Info Row／Babies Row 改直式堆疊、$fs-imprint 12 徽章字）｜iPad y0FLsZ：560pt 置中欄，群卡縮圖 2×3 grid（96×96）",
+                  "content": "Import / 03 上限與規則提示 (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無（達上限為資訊提示非錯誤，circle-alert 非 danger）｜深色 gkS1Q：同 01，Limit Banner 維持 $surface-2＋$text-primary＋circle-alert｜AX3 Q8jHEZ：同 01（Info Row／Babies Row 改直式堆疊、chip 姓名縮寫 $fs-imprint 12；縮圖疊字依 sErBN）｜iPad y0FLsZ：560pt 置中欄，群卡縮圖 2×3 grid（96×96）",
                   "fontFamily": "Inter",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -187988,7 +188108,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Import / 06a 權限態 · Limited Library (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無｜深色 DnRLA：Limited Library Banner 維持 $surface-2＋$text-primary＋circle-alert（與 03 上限橫幅同語意，非 danger）｜AX3 jENvo：同 01/02/03（Info Row／Babies Row 改直式堆疊、$fs-imprint 12 徽章字）｜iPad O3WN3：560pt 置中欄，群卡縮圖 2×3 grid（96×96）",
+                  "content": "Import / 06a 權限態 · Limited Library (iPhone)｜隱藏 Tab Bar ✓｜標題 自訂｜釘底動作帶 有 93pt｜失敗文案鍵 無｜深色 DnRLA：Limited Library Banner 維持 $surface-2＋$text-primary＋circle-alert（與 03 上限橫幅同語意，非 danger）｜AX3 jENvo：同 01/02/03（Info Row／Babies Row 改直式堆疊、chip 姓名縮寫 $fs-imprint 12；縮圖疊字依 sErBN）｜iPad O3WN3：560pt 置中欄，群卡縮圖 2×3 grid（96×96）",
                   "fontFamily": "Inter",
                   "fontSize": 14,
                   "fontWeight": "normal"
@@ -188652,7 +188772,7 @@
                   "fill": "#2B141C",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "AX3 主題下，固定尺寸縮圖／膠囊上疊加的計數徽章（如「+N」）與寶貝 chip 頭像姓名縮寫字若字級跟著 $fs-note／$fs-meta 走到 40pt，會撐爆固定容器造成溢出——R2 已統一改用 $fs-imprint 12（不隨主題放大的 token，語意「印在固定物件上的字不長大」；見「ios-dev 抄值表」字級段），非字面值覆寫。同理，Action Bar 的純文字 Dismiss Button（無 icon）在 AX3 下（body 40pt）自然寬度會超出 393pt 版面，需顯式覆寫該文字節點 textGrowth:\"fixed-width\"＋固定寬度（本票用 320）並置中，讓文字自然換行而非橫向溢出。【LS-296 R3 訂正】上句的計數徽章「+N」改依縮圖張數疊字統一規則 sErBN（不再用 $fs-imprint）；chip 縮寫字不變。",
+                  "content": "AX3 主題下，寶貝 chip 頭像姓名縮寫字若字級跟著 $fs-note／$fs-meta 走到 40pt，會撐爆固定容器造成溢出——R2 改用 $fs-imprint 12（不隨主題放大的 token，語意「印在固定物件上的字不長大」；見「ios-dev 抄值表」字級段），非字面值覆寫。縮圖疊字計數不適用此條，一律依縮圖張數疊字統一規則 sErBN（$fs-note 粗體、ViewThatFits 長形「還有 N 張」放不下才退短形「+N」、短形仍放不下 minimumScaleFactor 0.5；LS-439 已回填 Import 各板 More Cell）。同理，Action Bar 的純文字 Dismiss Button（無 icon）在 AX3 下（body 40pt）自然寬度會超出 393pt 版面，需顯式覆寫該文字節點 textGrowth:\"fixed-width\"＋固定寬度（本票用 320）並置中，讓文字自然換行而非橫向溢出。沿革：R2 原把計數徽章「+N」一併改 $fs-imprint 12；LS-296 R3 改依 sErBN，LS-439 改寫本段首句。",
                   "lineHeight": 1.6,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -246993,17 +247113,12 @@
                               "descendants": {
                                 "vQWWw": {
                                   "type": "frame",
-                                  "id": "UJBIQ",
+                                  "id": "Amz2G",
                                   "name": "Thumb",
                                   "clip": true,
                                   "width": 44,
                                   "height": 44,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": 2
                                 },
                                 "iOlfc": {
@@ -249978,17 +250093,12 @@
                               "descendants": {
                                 "vQWWw": {
                                   "type": "frame",
-                                  "id": "bmD2U",
+                                  "id": "iSOOD",
                                   "name": "Thumb",
                                   "clip": true,
                                   "width": 44,
                                   "height": 44,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": 2
                                 },
                                 "iOlfc": {
@@ -252234,17 +252344,12 @@
                               "descendants": {
                                 "vQWWw": {
                                   "type": "frame",
-                                  "id": "K95LvP",
+                                  "id": "z0T6H",
                                   "name": "Thumb",
                                   "clip": true,
                                   "width": 44,
                                   "height": 44,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": 2
                                 },
                                 "iOlfc": {
@@ -255488,17 +255593,12 @@
                               "descendants": {
                                 "vQWWw": {
                                   "type": "frame",
-                                  "id": "R4xEvv",
+                                  "id": "j1p0N",
                                   "name": "Thumb",
                                   "clip": true,
                                   "width": 44,
                                   "height": 44,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": 2
                                 },
                                 "iOlfc": {
@@ -256228,12 +256328,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -257375,12 +257470,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -258676,12 +258766,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -260050,12 +260135,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -261354,12 +261434,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -262464,12 +262539,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -263621,12 +263691,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -264740,12 +264805,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -265895,12 +265955,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -267280,12 +267335,7 @@
                                   "clip": true,
                                   "width": 64,
                                   "height": 64,
-                                  "fill": {
-                                    "type": "image",
-                                    "enabled": true,
-                                    "url": "https://images.unsplash.com/photo-1560785496-3c9d27877182?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-                                    "mode": "cover"
-                                  },
+                                  "fill": "$surface-2",
                                   "cornerRadius": "$radius-md"
                                 },
                                 {
@@ -279468,6 +279518,514 @@
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "F3GbnN",
+      "x": 21548,
+      "y": 60600,
+      "name": "LS-439 / 實作註記 · Handoff Notes (ios-dev)",
+      "width": 900,
+      "fill": "$surface",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 40,
+      "children": [
+        {
+          "type": "text",
+          "id": "n6xVll",
+          "name": "Title",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "LS-439 上傳佇列／匯入稿面與實作同步三則 · Handoff Notes（R1）",
+          "fontFamily": "$font",
+          "fontSize": 30,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "Hnabp",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "範圍：三則「稿面敘述與已上線實作相反」的同步，不改流程邏輯、不改 token、不動 cell 尺寸與版面。①上傳佇列移除契約改 LS-423 落盤語意（Notes FBoLL）；②失敗項縮圖改佔位底色（Notes hmkwR＋上傳佇列板）；③Import 縮圖疊字回填 sErBN 統一規則（Notes iSOb3／R5OnW＋Import 家族 More Cell）。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "z8vGO",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "對照表一：Notes 改寫（板 id／節點 id｜前→後｜理由）",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "J8Cmp",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "kHDk4／FBoLL｜「markRemoved／undoRemove 兩者都不碰落盤；sheet 開著被回收時 pendingRemovals 不落盤，重啟後那幾張仍是失敗項」→「markRemoved／undoRemove／markAllFailedRemoved 同步寫盤 manifest 的 removed 旗標；restorePersistedEntries 跳過已標記項（不還原、不重傳、清 payload）＝回收後靜默丟棄；sheet 開著時仍可復原；sheet 關閉 commitRemovals 才真移除」，段尾留沿革一行｜LS-423（v0.27.33）已上線，讀碼核對 UploadQueueStore+RemoveFailed.swift 與 +Resume.swift 一致。\nkHDk4／hmkwR｜只剩失敗態「縮圖＝第一張失敗的」→ 條件句「第一張失敗的：有記憶體縮圖或能由 payload 重產＝真圖，否則佔位 $surface-2」，文末加【LS-439 訂正】段寫分界（①～④）｜分界依【LS-439 訂正】，不在此重述；失敗項縮圖小圖落盤記 LS-413 池 067c029b (e)。\nX6iCY／iSOb3｜首句把「+N」與 chip 縮寫字一起改 $fs-imprint 12 →只留 chip 縮寫字，「+N」改引用 sErBN，原 LS-296 R3 訂正句改寫成沿革｜sErBN（LS-296 R3 MJ-1）已取代。\nX6iCY／R5OnW｜字級表「+N【LS-296 R3 取代】…本板 12pt 稿面是 LS-307 當時畫法」→「還有 N 張／+N 依 sErBN」＋沿革｜同上，且本票已回填稿面。\njftM0／sErBN｜規則本體四條不動；R2 在末條補沿革一行「Import 家族已回填」，原句「本票未重畫……（已記 LS-354）」保留為沿革｜正典規則不能和稿面打架。\nX6iCY／Si9vP、K8n0o2、hors9、akKNQ（畫面級屬性 AX3 欄）｜「+N 徽章（字）維持 $fs-imprint 12」→「chip 姓名縮寫 $fs-imprint 12；縮圖疊字依 sErBN」｜R1 漏改，R2 全文搜尋「+N／疊字／徽章」＋「12／imprint」後補齊，剩下的命中只在沿革句與本板前→後表。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "YHBCH",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "對照表二：Import 家族 More Cell 疊字（板 id／文字節點 id｜前→後｜理由）",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "bPD0S",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "全部：$fs-imprint 12 粗體「+N」→ $fs-note 粗體，依 sErBN 由可用寬度決定長短形；數字與「張」之間 U+00A0。More Cell 底 $surface-2、字 $text-secondary、格寬高與圓角都不動。\nR2 起 More Cell 加左右內距 $sp-tight 6（左右各 6，可用寬＝格寬−12：96 格 84、64 格 52），讓字不貼格緣；34 個 More Cell（含壓測板 foDYi）都綁 $sp-tight。\n預設字級、96 格（長形實測寬 1 位數 69／2 位數 79 ≤ 84）→「還有 N 張」：m7ZCDg／ymHpc（21）、JD6Mc（3）；VrvV5（深色）／r6Tqe（21）、r7IQ2d（3）；k3jwB（iPad）／ofBmn（18）；wL5FG／rzYze（3）、ElhGe（5）；EcgUO（深色）／X71cM（3）、WQYE2（5）；YSShl（iPad）／Hv1wj（2）；y0FLsZ（iPad）／d0c0W（26）、sSOFl（21）；O3WN3（iPad）／gQHyy（9）、I94HC（1）。\n預設字級、64 格（長形 69／79 > 52）→ 短形「+N」（寬 21／31）：mWiBG／Pmvtq（28）、VffV4（23）；gkS1Q（深色）／C8EIwP（28）、DEaYv（23）；A721Zq／L8FIx（11）、Dwcy2（3）；DnRLA（深色）／p4RhB（11）、V6oGSm（3）。\nAX3（$fs-note＝40，長形一位數約 162、兩位數約 186，一律放不下）→ 短形「+N」：e0S0TW／Bm32q（21，寬 71 ≤ 84）、iZfKd（3，寬 48）；eweX7／h57Yj（3）、v5KE9R（5）；jENvo／ooGs5（3，寬 48 ≤ 52）。\nAX3、64 格、兩位數：短形 40pt 寬 71 > 52 → minimumScaleFactor 的渲染結果，稿面畫 29pt（40×0.73，寬 52，收進內距內）：Q8jHEZ／tXrsP（28）、XhK25（23）；jENvo／rXY2U（11）。\n三位數壓測（匯入單次上限 200，三位數會出現；板 foDYi，N＝128，實測）：預設 96 格長形「還有 128 張」寬 89 > 84 → 短形「+128」寬 41（E2KcD）；預設 64 格「+128」寬 41（IipUW）；AX3 96 格「+128」40pt 寬 95 > 84 → 縮到 35pt 寬 83（eM4o6）；AX3 64 格 → 縮到 21pt 寬 50（E9nuFe；52/95＝0.547≈21.9pt，稿面 21pt 為取整、向下取以保證不超出可用寬，仍高於 minimumScaleFactor 下限 0.5）。29pt 同理：52/71＝0.732≈29.3pt。29／35／21 都是規格值、不是 token，只用來示意縮放後的樣子。\n預設字級 96 格三位數因內距退短形「+128」是刻意取捨（VR R2 MN-8，orchestrator 裁 B）：實作只有一個 ImportMoreCell、單一內距值 $sp-tight，長短形共用；沒有內距時長形 89 ≤ 96 放得下，但兩形邊距就會不一致。一兩位數（日常最多）不受影響。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "r6vKV5",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "對照表三：上傳佇列失敗項縮圖（板 id／縮圖節點 id｜前→後｜理由）",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ecYND",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "全部：Thumb 填色 照片 image fill →$surface-2（同實作 nil-thumbnail 退回 Color.lsSurface2）；尺寸、圓角、opacity 不變。\nsheet 不可重試失敗列（相簿容量已滿）：rU2zY／bVpr8、KaONe／GHOgt、sq2SF／o107TY（該群在本板 enabled:false，資料同步）、FgH6v（深色）／Q7m4TE、FIwU8（AX3）／LWCXM、ri0AF（AX3）／PrYlt。\n同一列的墓碑（已標記移除，opacity 0.4 保留）：p0Fw0／GOEzY、YNP31（AX3）／pPAun、x2it3Q／mmuur、GUu7b（AX3）／YZXNa。\n設定頁入口列「只剩失敗」態（cmp/Settings Row 實例內的 Thumb 換成新節點）：HOKKA／icaOf→Amz2G、Ej5G5（深色）／PKXAQ→iSOOD、JNDUz（AX3）／bWxFr→z0T6H、Hzv2U（iPad）／P2BkW→j1p0N。\n分界（R2 訂正，與 hmkwR【LS-439 訂正】同一套）：縮圖看的是「記憶體縮圖還在不在」，不是可不可重試。離開匯入 04／05 那一刻已終局（已完成、不可重試失敗）的項目被 releaseThumbnails 釋放→佔位；之後才終局的仍是真圖；可重試失敗不釋放→真圖；app 重啟後 sheet 不重產縮圖→一律佔位，入口列由 payload 重產（只有可重試項有）。稿面畫的是「離開 05 時已終局」這個代表態，所以只有容量已滿列、它的墓碑與只剩失敗入口列畫佔位；其他時序看到真圖也是正確實作。全部完成態同理（hmkwR 已補）。已完成列稿面維持真圖，不在本票範圍。\n佔位對比刻意靜默（VR R1 MN-3，orchestrator 裁 B）：$surface-2 對 $surface 淺 1.35／深 1.14，墓碑淺 1.12／深 1.05；佔位＝「這裡沒有圖」，不承載資訊，不需文字對比；不加描邊——不修，理由：佔位不承載資訊，加描邊需動共用元件。\nLS-142 的 16／16b 佇列板（rTEGf、JnQrT、FyV5I、Q7HrnF、g8Q2W）屬他票板，本票未動，同一列「容量已滿」仍畫真圖，回填交下一張觸及 LS-142 佇列板的票。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "eB6XZ",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "給 ios-dev",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "x8rzme",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "上傳佇列：程式不需要改。FBoLL 契約就是 LS-423 現況；失敗項佔位就是 UploadQueueEntryThumbnail／UploadQueueRowView.thumbnailView 既有的 Color.lsSurface2 退回，稿面只是改成畫實作會出現的樣子。\nImport More Cell：現行 ImportThumbnailLayout.swift 的 ImportMoreCell 仍是 Text(\"+\\(count)\").font(.system(size: 12, weight: .bold))，要照 sErBN 改：ViewThatFits(in: .horizontal) { Text(\"還有 N 張\")；Text(\"+N\") }，字級 fs-note（17，隨 Dynamic Type）粗體、$text-secondary，外層 .padding(.horizontal, AppSpacing 的 sp-tight 6)，ViewThatFits 量的是扣掉內距後的寬；短形加 .lineLimit(1).minimumScaleFactor(0.5)；三位數照壓測板 foDYi 驗；accessibilityLabel 兩形一律「還有 N 張」。本票不動程式，這一項另開 ui 小票。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "xc6UY",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "畫面級屬性",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "E1uuji",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "本票新增一個壓測畫面（其餘各板既有屬性不變）：\nStress / Import More Cell · 三位數壓測（N＝128）｜隱藏 Tab Bar ✓（非整頁畫面，只示意 More Cell）｜標題 自訂（板內說明）｜釘底動作帶 無｜失敗文案鍵 無｜深色特例 無（More Cell 色隨主題，同 VrvV5）｜AX3 特例 板內 AX3 區段以 theme size:ax3 示意 40pt 與縮放｜iPad 無（96 格即 iPad 縮圖尺寸）｜資料落點 無持久化（純 UI 狀態，N 來自匯入群組張數）",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "XGyZ5",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "尺寸規格值（寬高收不了 $variable）",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "QXna6",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "R1：入口列 4 個 Thumb 換節點時照抄原本的 44×44（cmp/Settings Row 縮圖槽規格值，硬寫 4 次：Amz2G、iSOOD、z0T6H、j1p0N）。\nR2：壓測板 foDYi 寬 393（iPhone 板寬，硬寫 1 次）、More Cell 96×96 與 64×64 各 2 個（縮圖格規格值，硬寫 4 次：OBhJQ、DCKNw、KJ1wy、S8r9s）。內距綁 $sp-tight，不是字面值。\nfontSize（不是寬高）縮放規格值：29 三處（tXrsP、XhK25、rXY2U，R1 的 36 改 29）、35 一處（eM4o6）、21 一處（E9nuFe）。本板寬 900 沿用既有 Notes 板寬。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "xANhT",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "沿革",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ZfiC8",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "10-09 LS-439 R1：三則稿面與實作同步（池 3159ead0、f33253da）；Import 家族 16 板 30 處 More Cell、上傳佇列 14 處失敗項縮圖、Notes 四段改寫。\n10-09 LS-439 R2（VR R1 ITERATE）：hmkwR 分界改寫（MJ-1）、sErBN 補沿革（MJ-2）、Import 畫面級屬性四列改引用 sErBN（MJ-3）、FBoLL commitRemovals 順序與孤兒句（MN-1／I-1）、More Cell 內距 $sp-tight＋三位數壓測板 foDYi（MN-2）、佔位對比寫理由（MN-3）、落盤小圖指向池 067c029b（MN-4）、AX3 長形寬訂正（NIT-2）。\n10-09 LS-439 R3（VR R2 ITERATE，只改 Notes）：hmkwR 只剩失敗態改條件句（MN-6）、小圖落盤改指池 067c029b (e)（MN-7）、96 格三位數退短形寫為刻意取捨並在 foDYi 加旁註 x77Pw1（MN-8）、重啟敘述（NIT-3）、21pt 取整註記（NIT-4）、sErBN 補內距差異與描邊改不修＋理由（NIT-5）。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "foDYi",
+      "x": 8669,
+      "y": 96301,
+      "name": "Stress / Import More Cell · 三位數壓測（N＝128）",
+      "clip": true,
+      "width": 393,
+      "fill": "$bg",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": [
+        24,
+        16,
+        44,
+        16
+      ],
+      "children": [
+        {
+          "type": "text",
+          "id": "jXxlJ",
+          "name": "Title",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "縮圖疊字三位數壓測（匯入單次上限 200 張）",
+          "fontFamily": "$font",
+          "fontSize": "$fs-body",
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "Add4F",
+          "name": "Section 預設字級",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 8,
+          "children": [
+            {
+              "type": "text",
+              "id": "BhEwR",
+              "name": "Section Label",
+              "fill": "$text-secondary",
+              "content": "預設字級",
+              "fontFamily": "$font",
+              "fontSize": "$fs-meta",
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "IwBjl",
+              "name": "Cell Row",
+              "gap": 16,
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "wLrz7",
+                  "name": "Col 96",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "OBhJQ",
+                      "name": "More Cell",
+                      "width": 96,
+                      "height": 96,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "padding": [
+                        0,
+                        "$sp-tight"
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "E2KcD",
+                          "name": "More Count",
+                          "fill": "$text-secondary",
+                          "content": "+128",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "H49UHK",
+                      "name": "Cell Caption",
+                      "fill": "$text-secondary",
+                      "content": "96 格",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vqwCK",
+                  "name": "Col 64",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "KJ1wy",
+                      "name": "More Cell",
+                      "width": 64,
+                      "height": 64,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "padding": [
+                        0,
+                        "$sp-tight"
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "IipUW",
+                          "name": "More Count",
+                          "fill": "$text-secondary",
+                          "content": "+128",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "p1a4FA",
+                      "name": "Cell Caption",
+                      "fill": "$text-secondary",
+                      "content": "64 格",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Zu9Yv",
+          "name": "Section AX3（$fs-note＝40）",
+          "theme": {
+            "size": "ax3"
+          },
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 8,
+          "children": [
+            {
+              "type": "text",
+              "id": "JnE64",
+              "name": "Section Label",
+              "fill": "$text-secondary",
+              "content": "AX3（字級 40pt）",
+              "fontFamily": "$font",
+              "fontSize": "$fs-meta",
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "UJIr4",
+              "name": "Cell Row",
+              "gap": 16,
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "gXIm7",
+                  "name": "Col 96",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "DCKNw",
+                      "name": "More Cell",
+                      "width": 96,
+                      "height": 96,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "padding": [
+                        0,
+                        "$sp-tight"
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "eM4o6",
+                          "name": "More Count",
+                          "fill": "$text-secondary",
+                          "content": "+128",
+                          "fontFamily": "$font",
+                          "fontSize": 35,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "j1Usog",
+                      "name": "Cell Caption",
+                      "fill": "$text-secondary",
+                      "content": "96 格",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vkwZy",
+                  "name": "Col 64",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "S8r9s",
+                      "name": "More Cell",
+                      "width": 64,
+                      "height": 64,
+                      "fill": "$surface-2",
+                      "cornerRadius": "$radius-md",
+                      "padding": [
+                        0,
+                        "$sp-tight"
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "E9nuFe",
+                          "name": "More Count",
+                          "fill": "$text-secondary",
+                          "content": "+128",
+                          "fontFamily": "$font",
+                          "fontSize": 21,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "z9UzB",
+                      "name": "Cell Caption",
+                      "fill": "$text-secondary",
+                      "content": "64 格",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-meta",
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "x77Pw1",
+          "name": "Stress Note",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "預設字級 96 格三位數因內距（$sp-tight）退短形「+128」是刻意取捨：實作只有一個 ImportMoreCell、單一內距值。",
+          "lineHeight": 1.4,
+          "fontFamily": "$font",
+          "fontSize": "$fs-meta",
           "fontWeight": "normal"
         }
       ]
