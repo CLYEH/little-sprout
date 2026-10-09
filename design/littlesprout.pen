@@ -886,7 +886,8 @@
                         "RtVvi": {
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
-                          "lineHeight": 1.1364
+                          "lineHeight": 1.1364,
+                          "content": "使用 Google 登⁠入"
                         }
                       }
                     }
@@ -916,7 +917,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登入",
+                          "content": "改用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -4590,7 +4591,8 @@
                         "RtVvi": {
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
-                          "lineHeight": 1.1364
+                          "lineHeight": 1.1364,
+                          "content": "使用 Google 登⁠入"
                         }
                       }
                     }
@@ -4620,7 +4622,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登入",
+                          "content": "改用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -6092,10 +6094,14 @@
                       "fill": "$apple-fg"
                     },
                     "QJPNG": {
+                      "type": "text",
+                      "id": "lPWOk",
+                      "name": "Apple Label",
+                      "fill": "$apple-fg",
                       "content": "登入中…",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "500",
-                      "lineHeight": 1.1364
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
                     }
                   }
                 },
@@ -6125,7 +6131,8 @@
                           "fill": "$text-secondary",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
-                          "lineHeight": 1.1364
+                          "lineHeight": 1.1364,
+                          "content": "使用 Google 登⁠入"
                         }
                       }
                     }
@@ -6160,7 +6167,7 @@
                           "fill": "$text-secondary"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登入",
+                          "content": "改用 Email 登⁠入",
                           "fill": "$text-secondary",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
@@ -6729,7 +6736,8 @@
                         "RtVvi": {
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
-                          "lineHeight": 1.1364
+                          "lineHeight": 1.1364,
+                          "content": "使用 Google 登⁠入"
                         }
                       }
                     }
@@ -6759,7 +6767,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登入",
+                          "content": "改用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -35604,7 +35612,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1345.6,
+      "height": 1346.6,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -36040,15 +36048,16 @@
                   "ref": "y6MxMV",
                   "name": "Sign in with Apple",
                   "width": "fill_container",
+                  "height": 132,
                   "descendants": {
                     "QJPNG": {
-                      "fontSize": "$fs-lead",
+                      "fontSize": 32,
                       "fontWeight": "500",
                       "lineHeight": 1.1364,
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
                       "textAlign": "center",
-                      "content": "使用 Apple 登⁠入"
+                      "content": "使用 Apple 登入"
                     }
                   }
                 },
@@ -134475,7 +134484,8 @@
                         "RtVvi": {
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
-                          "lineHeight": 1.1364
+                          "lineHeight": 1.1364,
+                          "content": "使用 Google 登⁠入"
                         }
                       }
                     }
@@ -134505,7 +134515,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登入",
+                          "content": "改用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -135197,7 +135207,8 @@
                         "RtVvi": {
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
-                          "lineHeight": 1.1364
+                          "lineHeight": 1.1364,
+                          "content": "使用 Google 登⁠入"
                         }
                       }
                     }
@@ -135227,7 +135238,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登入",
+                          "content": "改用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -135426,7 +135437,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 1432.6,
+      "height": 1433.6,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -135862,15 +135873,16 @@
                   "ref": "y6MxMV",
                   "name": "Sign in with Apple",
                   "width": "fill_container",
+                  "height": 132,
                   "descendants": {
                     "QJPNG": {
-                      "fontSize": "$fs-lead",
+                      "fontSize": 32,
                       "fontWeight": "500",
                       "lineHeight": 1.1364,
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
                       "textAlign": "center",
-                      "content": "使用 Apple 登⁠入"
+                      "content": "使用 Apple 登入"
                     }
                   }
                 },
@@ -140074,7 +140086,8 @@
                         "RtVvi": {
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
-                          "lineHeight": 1.1364
+                          "lineHeight": 1.1364,
+                          "content": "使用 Google 登⁠入"
                         }
                       }
                     }
@@ -140104,7 +140117,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登入",
+                          "content": "改用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -153668,10 +153681,14 @@
                       "fill": "$apple-fg"
                     },
                     "QJPNG": {
+                      "type": "text",
+                      "id": "qlxCk",
+                      "name": "Apple Label",
+                      "fill": "$apple-fg",
                       "content": "登入中…",
-                      "fontSize": "$fs-lead",
-                      "fontWeight": "500",
-                      "lineHeight": 1.1364
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-body",
+                      "fontWeight": "600"
                     }
                   }
                 },
@@ -153699,7 +153716,8 @@
                         "RtVvi": {
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
-                          "lineHeight": 1.1364
+                          "lineHeight": 1.1364,
+                          "content": "使用 Google 登⁠入"
                         }
                       }
                     }
@@ -153730,7 +153748,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登入",
+                          "content": "改用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -283606,7 +283624,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "得：與主鈕同字級，靠填色分主次　失：改程式 1 行",
+                  "content": "得：靠填色分主次　失：改 1 處＋歡迎頁傳參數",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -284720,7 +284738,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "得：實心粉鈕仍是唯一重點　失：改程式 1 行",
+                  "content": "得：實心鈕仍最醒目　失：改 1 處＋歡迎頁傳參數",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -285840,7 +285858,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "得：與主鈕同為 40　失：改程式 1 行",
+                  "content": "得：與主鈕同為 40　失：改 1 處＋歡迎頁傳參數",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -294251,7 +294269,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "(e) 次要鈕字級字重（C1）\n板／節點：cmp/Button Secondary XggYA（Secondary Label yxwnz $fs-body 600）；扣掉歡迎頁後實例 108 個、86 板（AX3 26、深色 16、iPad 10），沒有實例覆寫字級。程式：LittleSprout/DesignSystem/AuthButtons.swift:53「Text(title).appFont(.lead, weight: .medium)」，6 個檔呼叫（WelcomeView.swift:226、JoinCodeView.swift:185、InviteFamilyView+ActionBar.swift:36／:75／:78、InviteFamilyView+PendingApprovals.swift:96、LegalDocumentSheet.swift:233／:295）；另 4 支手刻同款鈕已照稿 body 600：FoodRecordDetailParts.swift:312、FoodBookEntrySection.swift:139、ImportEntryButton.swift:45、DeleteAccountFlowView.swift:205。稿 vs 實作：17 半粗 vs 22 中粗（AX3 40 vs 44）。對照板 j6vJS（07 邀請家人整頁，只換「複製邀請碼」KUtIk 的字）。\n建議裁定：以稿為準（a 案）。\n對比：兩案同色，數字相同——字 $text-primary 對頁面底 12.21／15.31、外框 $control-line 3.60／4.72、主鈕 on-accent 壓 accent 7.30／9.99。分主次的是實心填色，不是字。對比不分勝負。\n一致性：tokens.md:82 把按鈕標籤列在 body，原文「主／次以字重＋色分」。b 案次要鈕的字 22 比主鈕 17 大 5pt（AX3 44 對 40），字級把主次反過來。程式自己也已分裂：SecondaryButton 22 中粗，手刻的 4 支 17 半粗。\n實作成本：a 案改 AuthButtons.swift:53 一行，7 個非歡迎頁呼叫點自動跟上。b 案程式不動，但稿要改 XggYA 一個字級、牽動 108 個實例，按鈕標籤佔用 lead 還得在 tokens.md:113 新增一條涵蓋全部次要鈕的具名豁免，4 支手刻鈕也要改成 22 才一致。鈕高（PLAUSIBLE，SF 行高約 1.19× 推算、未實機量）：b 案次要鈕約 57、LS-445 後主鈕 60；j6vJS b 欄 63 是 Pencil 字框高，不代表實作。",
+          "content": "(e) 次要鈕字級字重（C1）\n板／節點：cmp/Button Secondary XggYA（Secondary Label yxwnz $fs-body 600）；扣掉歡迎頁後實例 108 個、86 板（AX3 26、深色 16、iPad 10），沒有實例覆寫字級。程式：LittleSprout/DesignSystem/AuthButtons.swift:53「Text(title).appFont(.lead, weight: .medium)」，6 個檔呼叫（WelcomeView.swift:226、JoinCodeView.swift:185、InviteFamilyView+ActionBar.swift:36／:75／:78、InviteFamilyView+PendingApprovals.swift:96、LegalDocumentSheet.swift:233／:295）；另 4 支手刻同款鈕已照稿 body 600：FoodRecordDetailParts.swift:312、FoodBookEntrySection.swift:139、ImportEntryButton.swift:45、DeleteAccountFlowView.swift:205。稿 vs 實作：17 半粗 vs 22 中粗（AX3 40 vs 44）。對照板 j6vJS（07 邀請家人整頁，只換「複製邀請碼」KUtIk 的字）。\n建議裁定：以稿為準（a 案）。\n對比：兩案同色，數字相同——字 $text-primary 對頁面底 12.21／15.31、外框 $control-line 3.60／4.72、主鈕 on-accent 壓 accent 7.30／9.99。分主次的是實心填色，不是字。對比不分勝負。\n一致性：tokens.md:82 把按鈕標籤列在 body，原文「主／次以字重＋色分」。b 案次要鈕的字 22 比主鈕 17 大 5pt（AX3 44 對 40），字級把主次反過來。程式自己也已分裂：SecondaryButton 22 中粗，手刻的 4 支 17 半粗。\n實作成本：a 案改 AuthButtons.swift:53 一處，加上 SecondaryButton 字級參數、WelcomeView.swift:226 傳 lead medium、改寫 :40–42 註解（C3b 前提）；7 個非歡迎頁呼叫點自動跟上。b 案程式不動，但稿要改 XggYA 一個字級、牽動 108 個實例，按鈕標籤佔用 lead 還得在 tokens.md:113 新增一條涵蓋全部次要鈕的具名豁免，4 支手刻鈕也要改成 22 才一致。鈕高（PLAUSIBLE，SF 行高約 1.19× 推算、未實機量）：b 案次要鈕約 57、LS-445 後主鈕 60；j6vJS b 欄 63 是 Pencil 字框高，不代表實作。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -294264,7 +294282,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "(e-2) 歡迎頁登入三鈕字級（C3）\n板／節點：01 家族 10 板的三顆登入鈕——Apple y6MxMV／QJPNG、Google mjiPp／RtVvi、Email XggYA／yxwnz：svedU BDrtd pcSdz IUJ5Q e7G3Lk Yc4EC M2qW9 aEb17 g1pZ15 FEuAL；XUAAQ 是「01-alt 未採用」存檔，不改。程式：AuthButtons.swift:53（Email）與 :88「Text(\"使用 Google 登入\").appFont(.lead, weight: .medium)」；Apple 是官方鈕，AppleSignInButton.swift:44「@ScaledMetric(relativeTo: .body) private var buttonHeight: CGFloat = 56」由高度推導字級、不能自訂字型；AuthButtons.swift:40–41 註解寫明 Email 對齊 Apple 鈕實測值（LS-101，使用者回饋按鈕字級字型要一致）。稿 vs 實作：原稿三顆 17（600／500／600）vs 程式 22 中粗。對照板 WNc5T（a＝原稿，b＝現稿）。\n建議裁定：以實作為準（b 案）；本票已改稿。\n對比：兩案同色——Apple 21.00、Google 16.48／14.47、Email 字 $text-primary 12.21／15.31。對比不分勝負。\n一致性：歡迎頁沒有實心 accent 主鈕，三顆都是同一層級的登入方式，22 不會把任何主次反過來，這是和 C1 不同的地方。三顆要一樣大，而 Apple 官方鈕的字改不了，只能讓 Google、Email 對齊它。按鈕標籤用 lead 偏離 tokens.md:82，以具名豁免處理，主人是官方 Apple 鈕。\n實作成本：b 案程式零改動；稿已改 10 板 30 個標籤為 $fs-lead／500、行高 1.1364，預設字級鈕高維持 56，01／01b／01c 按鈕帶座標逐板比對 Get bounds 不變。AX3 兩板（e7G3Lk、aEb17）照程式畫成兩行（LS-39 QA：AX3 換兩行），標籤加 U+2060 讓「登入」不拆；Google 鈕在 AX3 改高度隨內容加 $ctl-pad-md 內距（同程式 controlPaddingMedium），板高由 1173／1260 改為 1345.6／1432.6。a 案程式改兩行，但 Apple 官方鈕仍是約 22 級，三顆又會不一樣大，退回 LS-101 之前。已知限制：Apple 官方鈕在 AX3 字級會封頂（AppleSignInButton.swift:24–33），稿面 AX3 以 lead 示意。",
+          "content": "(e-2) 歡迎頁登入三鈕字級（C3）\n板／節點：01 家族 10 板的三顆登入鈕——Apple y6MxMV／QJPNG、Google mjiPp／RtVvi、Email XggYA／yxwnz：svedU BDrtd pcSdz IUJ5Q e7G3Lk Yc4EC M2qW9 aEb17 g1pZ15 FEuAL；XUAAQ 是「01-alt 未採用」存檔，不改。程式：AuthButtons.swift:53（Email）與 :88「Text(\"使用 Google 登入\").appFont(.lead, weight: .medium)」；Apple 是官方鈕，AppleSignInButton.swift:44「@ScaledMetric(relativeTo: .body) private var buttonHeight: CGFloat = 56」由高度推導字級、不能自訂字型；AuthButtons.swift:40–41 註解寫明 Email 對齊 Apple 鈕實測值（LS-101，使用者回饋按鈕字級字型要一致）。稿 vs 實作：原稿三顆 17（600／500／600）vs 程式 22 中粗。對照板 WNc5T：a＝以稿為準時程式實際會長的樣子——Apple 官方鈕改不了仍約 22，Google、Email 17，三顆不一樣大；b＝現稿。\n建議裁定：以實作為準（b 案）；本票已改稿。\n對比：兩案同色——Apple 21.00、Google 16.48／14.47、Email 字 $text-primary 12.21／15.31。對比不分勝負。\n一致性：歡迎頁沒有實心 accent 主鈕，三顆都是同一層級的登入方式，22 不會把任何主次反過來，這是和 C1 不同的地方。三顆要一樣大，而 Apple 官方鈕的字改不了，只能讓 Google、Email 對齊它。按鈕標籤用 lead 偏離 tokens.md:82，以具名豁免處理，主人是官方 Apple 鈕。\n實作成本：b 案程式零改動；稿已改 10 板：預設字級的三顆標籤改 $fs-lead／500（26 處，01b pcSdz、01e-b FEuAL 的 Apple「登入中…」不改，維持程式 AppleSignInButton.swift:61「Text(\"登入中…\").appFont(.body)」的 body）。Google、Email 標籤在「登」「入」之間加 U+2060（10 板全部）。行高 1.1364 是具名的 Pencil 替身：主人是 Apple 鈕 buttonHeight 56（AppleSignInButton.swift:44），用來讓三顆在稿上同為 56；程式 Google／Email 是 title2 行高加 15.5×2，約 57–59（PLAUSIBLE），QA 不以 56 驗這兩顆。01／01b／01c 按鈕帶座標逐板比對 Get bounds 不變。AX3 兩板（e7G3Lk、aEb17）照程式實測畫：Google、Email lead 44 換兩行（LS-39 QA），Google 鈕高度隨內容加 $ctl-pad-md 內距，兩顆約 131；Apple 官方鈕在 AX3 只放大約 1.43–1.47×（AppleSignInButton.swift:24–32 實測：ink 約 28.7pt，Google 約 39.0、Email 約 35.7），稿畫成字 32（22×1.45，PLAUSIBLE）一行、鈕高 132（56×40／17，@ScaledMetric 推算，PLAUSIBLE），三顆約等高、Apple 字較小，這是程式已接受的已知限制。板高改為 1346.6／1433.6。a 案程式改兩行，但 Apple 官方鈕仍約 22，三顆不一樣大，退回 LS-101 之前。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -294290,7 +294308,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "範圍外、未裁（同頁另見，可直接入池；方向與 P 等級為建議）：\n①詳情頁日期：稿 Date Anchor（oLN0e 實例）「8月31日（今天）」$fs-lead vs 程式 DiaryDetailView.swift:228–230 meta 13 半粗「2026年8月31日」。建議程式改成 Date Anchor 樣式；P2——日期是要讀的資訊，tokens.md 規定 13pt 只給不讀也能完成任務的內容。\n②留言占位：稿 7 板仍是「留言功能即將推出，敬請期待。」（vzYXz／qBnvn），程式 LS-241 已換成互動列。建議稿改 7 板換成互動列（UhMZ6 已示範，AX3 用 Qzz3r 直排規格）；P2。\n③「⋯」內容操作鈕：稿面 7 板沒有，程式 :236 contentActionsButton（LS-189）。建議稿補到 7 板 header；P3。\n④AuthButtons.swift:42 註解「這裡只在 WelcomeView 用」已過期。建議程式改，隨 C1 的 ui 票一起；P3。\n⑤歡迎頁 Email 鈕文案：稿「改用 Email 登入」vs 程式 WelcomeView.swift:228「使用 Email 登入」。建議稿改成「使用」，與 Apple、Google 同一個動詞；P3。",
+          "content": "範圍外、未裁（同頁另見，可直接入池；方向與 P 等級為建議）：\n①詳情頁日期：稿 Date Anchor（oLN0e 實例）「8月31日（今天）」$fs-lead vs 程式 DiaryDetailView.swift:228–230 meta 13 半粗「2026年8月31日」。建議程式改成 Date Anchor 樣式；P2——日期是要讀的資訊，tokens.md 規定 13pt 只給不讀也能完成任務的內容。\n②留言占位：稿 7 板仍是「留言功能即將推出，敬請期待。」（vzYXz／qBnvn），程式 LS-241 已換成互動列。建議稿改 7 板換成互動列（UhMZ6 已示範，AX3 用 Qzz3r 直排規格）；P2。\n③「⋯」內容操作鈕：稿面 7 板沒有，程式 :236 contentActionsButton（LS-189）。建議稿補到 7 板 header；P3。\n④AuthButtons.swift:42 註解「這裡只在 WelcomeView 用」已過期。建議程式改，隨 C1 的 ui 票一起；P3。\n⑤歡迎頁 Email 鈕文案：稿「改用 Email 登入」vs 程式 WelcomeView.swift:228「使用 Email 登入」。建議稿改成「使用」，與 Apple、Google 同一個動詞；P3。\n⑥歡迎頁 Apple「登入中…」疊層：程式 AppleSignInButton.swift:61 用 .appFont(.body)，比旁邊兩顆 22 小（稿 pcSdz、FEuAL 照程式畫 body）。建議程式改成 lead medium，和三鈕同級；P3。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -294315,7 +294333,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "尚待使用者裁 C1／C2／C3；以下照建議案寫，裁成另一案的題目本段不做。\n(e) C1a：AuthButtons.swift:53 改 .appFont(.body, weight: .semibold)；SecondaryButton 加字級參數（預設 body 半粗），WelcomeView.swift:226 那一顆傳 lead medium（C3 具名豁免）；:40–42 註解改寫成「預設照稿 XggYA；歡迎頁登入三鈕具名豁免」。其餘 7 個呼叫點不用改呼叫端。\n(e-2) C3b：程式字級不改。Google（AuthButtons.swift:88）與歡迎頁 Email 的標題在「登」「入」之間插 U+2060，AX 字級換行時不拆「登入」（稿 e7G3Lk／aEb17）。tokens.md:113 具名豁免加一條「歡迎頁登入三鈕 lead medium（主人：官方 Apple 鈕）」，由 ui 票 PR 同步改。\n(f) C2a：DiaryDetailView.swift 的 bodyText（:275–280）包進紙面——lsPrintPaper＋1pt lsPaperEdge＋lsPaperShadow（0／3，blur 12）＋radiusLarge＋insetCard 內距，與 DiaryCardView（LS-446）抽成同一個樣式；內文 lsPrintInk；紙內 spacing 16（$sp-item，稿 KDHsx）。署名從 header（:231–233）移到紙內、內文之後：前一條 1pt lsPaperRule、trailing、MultiChildCaptionFormatter 傳 ink: .print，AX 字級每人兩行沿用 LS-447。header 只留日期與「⋯」。iPad（:211–213）共用同一函式。互動列（:313–318）在紙外、頁面底，不傳 onPaper。\n狀態：三題都只動既有元件外觀；空、載入（missingOrLoadingState）、錯誤態沿用既有規格，本票不新增。",
+          "content": "尚待使用者裁 C1／C2／C3；以下照建議案寫，裁成另一案的題目本段不做。\n(e) C1a：AuthButtons.swift:53 改 .appFont(.body, weight: .semibold)；SecondaryButton 加字級參數（預設 body 半粗），WelcomeView.swift:226 那一顆傳 lead medium（C3 具名豁免）；:40–42 註解改寫成「預設照稿 XggYA；歡迎頁登入三鈕具名豁免」。其餘 7 個呼叫點不用改呼叫端。\n(e-2) C3b：程式字級不改。Google（AuthButtons.swift:88）與歡迎頁 Email 的標題在「登」「入」之間插 U+2060，AX 字級換行時不拆「登入」（稿 e7G3Lk／aEb17；10 板 content 一致）。Apple 是系統標籤，不插。tokens.md:113 具名豁免加一條「歡迎頁登入三鈕 lead medium（主人：官方 Apple 鈕）」，由 ui 票 PR 同步改。\n(f) C2a：DiaryDetailView.swift 的 bodyText（:275–280）包進紙面——lsPrintPaper＋1pt lsPaperEdge＋lsPaperShadow（0／3，blur 12）＋radiusLarge＋insetCard 內距，與 DiaryCardView（LS-446）抽成同一個樣式；內文 lsPrintInk；紙內 spacing 16（$sp-item，稿 KDHsx）。署名從 header（:231–233）移到紙內、內文之後：前一條 1pt lsPaperRule、trailing、MultiChildCaptionFormatter 傳 ink: .print，AX 字級每人兩行沿用 LS-447。header 只留日期與「⋯」。iPad（:211–213）共用同一函式。互動列（:313–318）在紙外、頁面底，不傳 onPaper。\n狀態：三題都只動既有元件外觀；空、載入（missingOrLoadingState）、錯誤態沿用既有規格，本票不新增。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -294390,7 +294408,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "對照板 j6vJS、UhMZ6 各 6 欄、WNc5T 2 欄，欄寬 393（iPhone 板寬，硬寫 14 次）。欄內整頁是複製來的板，沿用來源寬高。R2 新寫的寬高字面值：j6vJS b 欄 Body 高 956、956、2472（與 a 欄同高，3 次）；UhMZ6 四欄 Spacer 高 397（對齊 feed 摘錄，4 次）；AX3 互動列 Like Toggle 220、icon 32×32、Count Zone 56×80，每欄 7 個、共 14 次；01 AX3 兩板板高 1345.6、1432.6（2 次）。另有一個非尺寸的字面值：歡迎頁三鈕標籤行高 1.1364（30 處，讓預設字級鈕高維持 56）。本板寬 900 沿用既有 Notes 板寬。沒有改任何元件定義的寬高；mjiPp 的高度只在兩張 AX3 板的實例上覆寫成隨內容。",
+          "content": "對照板 j6vJS、UhMZ6 各 6 欄、WNc5T 2 欄，欄寬 393（iPhone 板寬，硬寫 14 次）。欄內整頁是複製來的板，沿用來源寬高。R2 新寫的寬高字面值：j6vJS b 欄 Body 高 956、956、2472（與 a 欄同高，3 次）；UhMZ6 四欄 Spacer 高 397（對齊 feed 摘錄，4 次）；AX3 互動列 Like Toggle 220、icon 32×32、Count Zone 56×80，每欄 7 個、共 14 次；01 AX3 兩板板高 1346.6、1433.6（2 次）；AX3 兩板 Apple 鈕高 132（2 次，56×40／17）。非尺寸字面值：AX3 Apple 標籤字級 32（2 處，22×1.45）；歡迎頁三鈕標籤行高 1.1364（具名 Pencil 替身，主人 Apple buttonHeight 56；程式 Google／Email 約 57–59，QA 不以 56 驗）。本板寬 900 沿用既有 Notes 板寬。沒有改任何元件定義的寬高；mjiPp 的高度只在兩張 AX3 板的實例上覆寫成隨內容。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -294415,7 +294433,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "10-10 LS-449 R1：(e)(f) 漂移裁定（池 05965c53，LS-442 merge-review I4）；新增對照板 j6vJS（e）、UhMZ6（f）與本 Notes 板；兩題的 a 案即現稿，未改任何既有板。\n10-10 LS-449 R2（VR R1 ITERATE，comment 928edc34）：F1 (e) 改用 22 對 17 字級反轉與 tokens.md:82 立論，鈕高改成程式推導值並標 PLAUSIBLE；F2 改引 :82，刪「62 板」配額論；F3 歡迎頁三鈕拆成 C3、新增對照板 WNc5T，建議以實作為準，01 家族 10 板三鈕改 lead 中粗（XUAAQ 存檔不改）；F4／F7 兩板 12 個欄頂改成對稱的「以稿為準／以實作為準」加一行得失，板上不再寫「建議」，全部一行對齊；F5 (f) 深色兩欄改長日記，寫出亮紙佔比與 13.75:1（複算後更正 VR 估的 9.4）；F6 (f) 淺色兩欄頂上加同一篇的 feed 日記卡；F8 j6vJS b 欄 Body 固定與 a 同高，動作帶與 Home Indicator 回到同一位置；F9 (e) 段縮成三欄；F10 範圍外四則加方向與 P 等級，另補第⑤則；F11 FoodRecordDetailParts 兩行分開逐字引用。舊池 docs/archive/linear/LS-96-pool-2026-09.md:113 建議「cmp/Button Secondary 字級對齊 app 的 .lead medium」，當時只看歡迎頁；R2 拆題後，該條由 C3 涵蓋，C1 另裁。\nR2 另：01 AX3 兩板加高後與鄰板重疊，設計註記 ZBIhu 移到 e7G3Lk 右側（x 2740）、aEb17 移到 x −500（位置調整，內容不變）。",
+          "content": "10-10 LS-449 R1：(e)(f) 漂移裁定（池 05965c53，LS-442 merge-review I4）；新增對照板 j6vJS（e）、UhMZ6（f）與本 Notes 板；兩題的 a 案即現稿，未改任何既有板。\n10-10 LS-449 R2（VR R1 ITERATE，comment 928edc34）：F1 (e) 改用 22 對 17 字級反轉與 tokens.md:82 立論，鈕高改成程式推導值並標 PLAUSIBLE；F2 改引 :82，刪「62 板」配額論；F3 歡迎頁三鈕拆成 C3、新增對照板 WNc5T，建議以實作為準，01 家族 10 板三鈕改 lead 中粗（XUAAQ 存檔不改）；F4／F7 兩板 12 個欄頂改成對稱的「以稿為準／以實作為準」加一行得失，板上不再寫「建議」，全部一行對齊；F5 (f) 深色兩欄改長日記，寫出亮紙佔比與 13.75:1（複算後更正 VR 估的 9.4）；F6 (f) 淺色兩欄頂上加同一篇的 feed 日記卡；F8 j6vJS b 欄 Body 固定與 a 同高，動作帶與 Home Indicator 回到同一位置；F9 (e) 段縮成三欄；F10 範圍外四則加方向與 P 等級，另補第⑤則；F11 FoodRecordDetailParts 兩行分開逐字引用。舊池 docs/archive/linear/LS-96-pool-2026-09.md:113 建議「cmp/Button Secondary 字級對齊 app 的 .lead medium」，當時只看歡迎頁；R2 拆題後，該條由 C3 涵蓋，C1 另裁。\nR2 另：01 AX3 兩板加高後與鄰板重疊，設計註記 ZBIhu 移到 e7G3Lk 右側（x 2740）、aEb17 移到 x −500（位置調整，內容不變）。\n10-10 LS-449 R3（VR R2 ITERATE，comment 97234146）：H1 C3 照程式畫——WNc5T a 欄 Apple 改 22（官方鈕改不了，代價畫出）；e7G3Lk／aEb17 的 AX3 Apple 改成字 32、一行、鈕高 132（官方鈕 AX3 封頂），拿掉 U+2060；pcSdz／FEuAL 的「登入中…」退回 body（AppleSignInButton.swift:61）。WNc5T b 欄「得」改成「預設字級三顆一樣大」。H2 行高 1.1364 寫成具名 Pencil 替身，註明程式 Google／Email 約 57–59。H3 U+2060 補到其餘 8 塊 01 板與 WNc5T b 欄的 Google、Email。H4 C1 a 欄「失」改成「改 1 處＋歡迎頁傳參數」，PkxZ6 同步。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -294903,7 +294921,14 @@
                           "type": "ref",
                           "ref": "y6MxMV",
                           "name": "Sign in with Apple",
-                          "width": "fill_container"
+                          "width": "fill_container",
+                          "descendants": {
+                            "QJPNG": {
+                              "fontSize": "$fs-lead",
+                              "fontWeight": "500",
+                              "lineHeight": 1.1364
+                            }
+                          }
                         },
                         {
                           "type": "frame",
@@ -295124,7 +295149,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "得：三顆一樣大（LS-101）　失：按鈕字用了 lead",
+                  "content": "得：預設字級三顆一樣大　失：按鈕字用了 lead",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -295590,7 +295615,8 @@
                                 "RtVvi": {
                                   "fontSize": "$fs-lead",
                                   "fontWeight": "500",
-                                  "lineHeight": 1.1364
+                                  "lineHeight": 1.1364,
+                                  "content": "使用 Google 登⁠入"
                                 }
                               }
                             }
@@ -295620,7 +295646,7 @@
                                   "icon": "mail"
                                 },
                                 "yxwnz": {
-                                  "content": "改用 Email 登入",
+                                  "content": "改用 Email 登⁠入",
                                   "fontSize": "$fs-lead",
                                   "fontWeight": "500",
                                   "lineHeight": 1.1364
