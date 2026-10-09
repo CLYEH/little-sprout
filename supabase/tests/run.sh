@@ -820,6 +820,9 @@ race_case "同一筆成長紀錄：FOR KEY SHARE 佔鎖時 delete_growth_record 
 race_case "同一篇日記：FOR KEY SHARE 佔鎖時 set_diary_deleted 必須被阻塞（授權判斷前先 for update）" \
   diary_edit_vs_delete_setup.sql diary_edit_vs_delete_s1_keyshare.sql \
   diary_edit_vs_delete_s2_keyshare_delete.sql diary_edit_vs_delete_verify_delete_won.sql
+race_case "同一本相簿：FOR KEY SHARE 佔鎖時 set_album_deleted 必須被阻塞（授權判斷前先 for update）" \
+  album_edit_vs_delete_setup.sql album_edit_vs_delete_s1_keyshare.sql \
+  album_edit_vs_delete_s2_keyshare_delete.sql album_edit_vs_delete_verify_keyshare.sql
 
 cleanup="$tmp/cc_cleanup.sql"
 cat > "$cleanup" <<'SQL'
