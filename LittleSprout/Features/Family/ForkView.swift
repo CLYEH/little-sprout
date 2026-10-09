@@ -159,7 +159,7 @@ struct ForkView: View {
             VStack(alignment: .leading, spacing: 0) {
                 PrintPhotoCard(
                     photoHeight: 200,
-                    cornerSize: 26,
+                    cornerSize: PrintPhotoCardMetrics.cornerSize,
                     mountPoolOpacity: .fork,
                     showsImprint: false,
                     imageName: "JoinParents",
