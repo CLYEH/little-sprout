@@ -533,13 +533,19 @@ LS-46 使用者定案本來就是「邀請碼英數 6 碼」，LS-33 落地時�
     （`private.media_hidden_as_food_record_only()`：掛在有效飲食記錄、不在任何日記、不在任何相簿；
     `feed_sync_media()` 與 `child_food_records_hide_media_feed` trigger 共用）。相簿查詢一律經
     `album_media`、`food_first` feed 卡只經 `child_food_records.media_id`，不會列出這類照片。
-    **已知殘留**：(1) 03d「從家庭相簿挑」（`FoodAPIClient.listFamilyPhotos`）查整個家庭 `media`，
-    別筆記錄的手機照片會出現在挑選器；(2) 上傳到綁定之間（數秒）時間軸短暫有一張未歸屬照片卡；
-    (3) `media_notify_insert`（「新增了 N 張照片」家庭通知）在 INSERT 當下發出。
+    LS-441（v0.27.40）起 03d「從家庭相簿挑」走 `list_family_photos_for_food` 排除飲食專屬照片
+    （見 §4；LS-444 起以子查詢解出 `family_id` 走 `media_family_created_idx`，不再全家庭先判準再排序）。
+    **已知殘留**：(1) 上傳到綁定之間（數秒）時間軸短暫有一張未歸屬照片卡；
+    (2) `media_notify_insert`（「新增了 N 張照片」家庭通知）在 INSERT 當下發出。
   - 驗證：`supabase/tests/126_food_record_media_orphan.sql`（四段：每日清理認得飲食記錄引用／
     刪除記錄／換照片與不用照片／時間軸不列）。
 
 ### `media`
+- **索引 `media_family_created_idx (family_id, created_at desc, id desc) where deleted_at is null`**
+  （init schema）是「某家庭最新未刪照片」的主查詢路徑。依家庭取照片再逐列判準的 RPC（如
+  `list_family_photos_for_food`，LS-444）必須讓 `family_id` 以**單值**（子查詢／參數）出現在 `media`
+  的 WHERE，planner 才會走這支索引、免 Sort 並在 `limit` 提早停；把 `family_id` 當 join 欄位會退化成
+  Sort 全家庭（10k 張 44ms → 6.7ms）。詳見 §4 該 RPC 的「效能」條。
 - `storage_path` 必須符合 `{family_id}/{yyyy}/{mm}/{media_id}.{ext}`（見 §6），且有
   `CHECK` 強制前綴＝`family_id`。
 - **`created_at` 自 LS-337 起是伺服器專屬（欄位級 INSERT grant 已排除，一律吃
@@ -1229,7 +1235,7 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
 | `delete_my_account()` | 使用者刪除自己的帳號 |
 | `get_my_join_request()` | 申請人查自己的加入申請狀態 |
 | `list_comments(uuid, text, uuid, timestamptz, uuid, integer)` | 分頁列出留言 |
-| `list_family_photos_for_food(uuid, integer)` | 03d 家庭相簿選擇器的照片列表（排除飲食專屬照片，LS-441） |
+| `list_family_photos_for_food(uuid, integer)` | 03d 家庭相簿選擇器的照片列表（排除飲食專屬照片，LS-441；LS-444 先解 family_id 走索引，10k 張 44ms→6.7ms） |
 | `list_join_requests()` | owner 查看待審加入申請清單 |
 | `register_device_token(text, text)` | 註冊推播裝置 token |
 | `reject_join(uuid)` | owner 拒絕加入申請 |
@@ -2104,6 +2110,14 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   `null` 不限）。欄位同 client `photoColumns`。本記錄已綁的照片回填（03b）走 `media` 直查
   `fetchFamilyPhoto`，不受影響。
 - **錯誤碼**：無自訂碼；未登入或不屬於的家庭回 0 列。
+- **效能（LS-444）**：先以 uncorrelated 子查詢把 `children.family_id` 解成單值（找不到、他家庭、
+  已軟刪寶貝 → NULL → 回 0 列），再以 `media.family_id = <單值>` 過濾，planner 走既有 partial index
+  `media_family_created_idx (family_id, created_at desc, id desc) where deleted_at is null`，輸出已依
+  `created_at desc, id desc` 排序、`limit` 掃到 `p_limit` 張通過判準的就停，**計畫無 Sort**（舊寫法
+  `children join media on family_id` 會 Sort 全家庭、每張先跑判準三個 EXISTS）。本機 10,000 張種子
+  （其中最新 1,000 張為飲食專屬）`p_limit = 300`：中位數 44.4ms → 6.7ms，結果逐列相同。**不需新索引**。
+  `supabase/tests/127_food_family_photos_rpc.sql` 案 11 對函式本體做 `explain (format json)`，擋
+  media Seq Scan／非 `media_family_created_idx`／Sort（改回舊寫法會紅）。
 - **併發**：唯讀、`stable`，無寫入衝突；判準與時間軸（`feed_sync_media`）共用同一支函式。
 
 ### `upsert_child_food_record(p_child_id uuid, p_food_id text, p_first_tried_on date, p_media_id uuid, p_note text, p_reaction text) -> child_food_records`（LS-325）
