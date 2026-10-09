@@ -10,7 +10,7 @@
 - **空白 caption 型印品（格狀照片牆專用，LS-119 R6）**：多張小尺寸印品排成格狀牆時（見下「20 張上限」），若每格 Imprint Row 只填單一空白字元（既有「空欄位態」慣例），空白字元仍會照字級走 Dynamic Type（預設 25pt、AX3 58pt），導致 AX3 每格憑空多出一大塊空白且角托 y 要跟著兩套數字跑（R5 的 BL-1 就是這樣算錯的：假設 Imprint Row＝17 的字面值，但空白字元的真實渲染高是 25/58，全部對不上）。**格狀牆改用第三種公式**：整條 Imprint Row 拿掉，下緣改固定 `padding-bottom: 32`（承接同一個「下緣視覺厚度 32」數字，但這次是**寫死的 padding，不是任何一行字撐出來的**——因為這裡本來就沒有要顯示的壓印文字，不需要用文字把厚度「掙」出來）。好處：①預設密度與 AX3 每格幾何完全相同（不再有兩套角托 y）②角托 y 永遠＝`8+wrapH+32-21`，只跟該格的照片高度 `wrapH` 有關，不受任何文字內容影響。這個公式**只適用於「格子小、caption 本來就留空」的格狀牆**；只要哪一格開始要顯示真實文字（例如之後要在格狀牆加逐格 caption），必須改回上一條「caption 型印品」的 `fit_content` 公式，不能繼續套固定 32。
 - Print 一律 `fit_content`，**板高跟著內容走，不從板高倒推 Print 高**（R9-B：倒推出的 63.9 白邊沒有主人；R10 修正後八張 Print 全部閉合 230.1／iPad 582）。
 - 照片出血：Hero Photo 刻意大於 `clip:true` 容器，靠 frame 裁出構圖（01 家族 345×190.1 的窗、Hero 本體 345×515 y−84）。這類 partially clipped 是設計意圖，計入已知溢出白名單（R11 51／LS-72 後 50，見 SKILL.md 數字速查）。
-- 壓印行內容：歡迎家族＝「LITTLE SPROUT」（置中、fs-imprint）；建立家庭＝家庭名 Family Caption（`$print-ink`，超長以 `.lineLimit(1).truncationMode(.tail)` 真截斷）；空欄位態＝單一空白 `" "`（保住 Imprint Row 32pt 行高、卡高 175 不塌縮，**不可整列隱藏**）。
+- 壓印行內容：歡迎家族＝「SPROUT DAY」（置中、fs-imprint）；建立家庭＝家庭名 Family Caption（`$print-ink`，超長以 `.lineLimit(1).truncationMode(.tail)` 真截斷）；空欄位態＝單一空白 `" "`（保住 Imprint Row 32pt 行高、卡高 175 不塌縮，**不可整列隱藏**）。
 - 空白沖印品（`H0KHI` 同構）用來填 02／02b／05／05b 的大片空洞——延續母題，不是裝飾。
 
 ## 瀑布流（masonry）詳情頁照片牆（LS-119 R10 起）

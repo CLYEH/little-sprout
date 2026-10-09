@@ -29,7 +29,7 @@
 
 - 字標 image 節點帶 metadata：`accessibilityLabel:"萌芽日記"`／`exemptDynamicType:true`／`role:"image"`；SwiftUI `Image(...).accessibilityLabel("萌芽日記")`＋`.accessibilityAddTraits(.isHeader)`。
 - 字標不吃 Dynamic Type（AX3 板實證 190pt 固定、與 tagline 保持 8pt 不擠壓）——因為系統文字換成點陣圖是可及性倒退，所以 tagline／信任列必須是系統文字且隨字級長。
-- Lab Imprint「LITTLE SPROUT」標 `.accessibilityHidden(true)` 或併進相片 alt 尾段（「…（相紙邊緣印著 LITTLE SPROUT）」），否則 VoiceOver 會把同一品牌名念兩種語言。
+- Lab Imprint「SPROUT DAY」標 `.accessibilityHidden(true)` 或併進相片 alt 尾段（「…（相紙邊緣印著 SPROUT DAY）」），否則 VoiceOver 會把同一品牌名念兩種語言。
 
 ## 「LITTLE SPROUT」小字（眉標退場規則，`S1FuR`）
 

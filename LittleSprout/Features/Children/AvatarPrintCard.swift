@@ -7,7 +7,7 @@ import SwiftUI
 /// 「選圖後大概會長怎樣」，不必等真正裁完。壓印行顯示即時姓名預覽（空欄位時退回單一空白，
 /// 撐住行高，同 `CreateFamilyView.FamilyPreviewCard` 的 `content:" "` 慣例）。與
 /// `PrintPhotoCard` 結構相同但相片內容／壓印文字皆不同，未重用該元件（`PrintPhotoCard`
-/// 壓印行固定印 "LITTLE SPROUT"，唯一出現地是歡迎頁家族，見 `little-sprout-brand` skill
+/// 壓印行固定印 "SPROUT DAY"，唯一出現地是歡迎頁家族，見 `little-sprout-brand` skill
 /// 進場條件④）——這裡另建一份小型、僅本畫面使用的版本。
 ///
 /// 從 `CreateChildView.swift` 拆出獨立檔案（LS-169）：加完 `PhotosPicker` 相關邏輯後那支
