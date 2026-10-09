@@ -274395,22 +274395,9 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "id": "O3hOgG",
-                          "x": 144.5,
-                          "y": 161.5,
-                          "name": "Add Photo Icon",
-                          "enabled": false,
-                          "width": 40,
-                          "height": 40,
-                          "icon": "image-plus",
-                          "library": "lucide",
-                          "fill": "$print-ink"
-                        },
-                        {
                           "type": "text",
                           "id": "ZmJ6Z",
-                          "name": "Add Photo Label",
+                          "name": "No Photo Label",
                           "fill": "$print-ink-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
@@ -274773,22 +274760,9 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "id": "maq1q",
-                          "x": 144.5,
-                          "y": 161.5,
-                          "name": "Add Photo Icon",
-                          "enabled": false,
-                          "width": 40,
-                          "height": 40,
-                          "icon": "image-plus",
-                          "library": "lucide",
-                          "fill": "$print-ink"
-                        },
-                        {
                           "type": "text",
                           "id": "LvYqP",
-                          "name": "Add Photo Label",
+                          "name": "No Photo Label",
                           "fill": "$print-ink-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
@@ -275154,22 +275128,9 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "id": "mkeo5",
-                          "x": 132.5,
-                          "y": 104,
-                          "name": "Add Photo Icon",
-                          "enabled": false,
-                          "width": 64,
-                          "height": 64,
-                          "icon": "image-plus",
-                          "library": "lucide",
-                          "fill": "$print-ink"
-                        },
-                        {
                           "type": "text",
                           "id": "vQc2e",
-                          "name": "Add Photo Label",
+                          "name": "No Photo Label",
                           "fill": "$print-ink-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
