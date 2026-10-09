@@ -1,4 +1,4 @@
-# 萌芽日記 Little Sprout — EULA 附加條款
+# 萌芽日記 Sprout Day — EULA 附加條款
 
 | 項目 | 內容 |
 |---|---|
@@ -28,7 +28,7 @@ Apple 的做法是二選一：**不填**自訂 EULA 時套用 Apple 標準 EULA�
 ---
 
 <!-- BEGIN PASTE -->
-萌芽日記 Little Sprout 使用者授權合約
+萌芽日記 Sprout Day 使用者授權合約
 
 生效日期：2026-09-12　版本：1.0.0
 

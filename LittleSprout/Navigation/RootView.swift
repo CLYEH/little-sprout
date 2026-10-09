@@ -286,7 +286,7 @@ private struct SectionSplitView: View {
             List(AppSection.allCases, selection: sidebarSelection) { section in
                 Label(section.title, systemImage: section.systemImage)
             }
-            .navigationTitle("Little Sprout")
+            .navigationTitle("Sprout\u{00A0}Day")
         } detail: {
             // detail 欄共用單一 NavigationStack（隱式 path）：切 section 時 SwiftUI 已自動把 stack
             // 退回根頁（LS-396 實測 iOS 26.0／26.5，sidebar 點選與程式改 selection 皆然），不另加

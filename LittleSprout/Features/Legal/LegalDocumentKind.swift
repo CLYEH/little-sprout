@@ -3,7 +3,7 @@ import Foundation
 /// LS-191（依 LS-133 設計稿）：法務文件 in-app 檢視 sheet 可顯示的兩份文件。
 ///
 /// `title` 是 Head 顯示的短標題，**不是**讀自 markdown 的 H1（H1 是完整名稱「萬芽日記
-/// Little Sprout 使用條款／隱私權政策」，太長不適合當 Head 標題）——固定字串取自 LS-133
+/// Sprout Day 使用條款／隱私權政策」，太長不適合當 Head 標題）——固定字串取自 LS-133
 /// Notes `jaQmb` 的兩份文件字串對照表，兩份文件目前逐字相同，日後分岔也不影響這裡（這只是
 /// 標題，不是版本／生效日期，那兩個欄位動態讀 markdown 檔頭，見 `LegalMarkdownDocument`）。
 enum LegalDocumentKind: String, Identifiable, CaseIterable {

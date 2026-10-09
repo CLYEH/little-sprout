@@ -29,7 +29,7 @@ enum TimelineContentAssembler {
     /// LS-329：`FeedKind` 尚無法辨識的值（見該型別文件註解）——`subsystem` 用 bundle id，
     /// 找不到時退回硬編字面值，同 `PushNotificationStore.logger` 既有理由。
     private static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "com.leoyeh.littlesprout", category: "timeline"
+        subsystem: Bundle.main.bundleIdentifier ?? "com.leoyeh.sproutday", category: "timeline"
     )
 
     static func assemble(

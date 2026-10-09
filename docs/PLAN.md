@@ -1,7 +1,9 @@
-# Little Sprout 🌱 — 家庭相簿與日記 App 規劃
+# Sprout Day 🌱 — 家庭相簿與日記 App 規劃
 
 > 一個給家人分享小孩照片、影片與成長日記的 iOS app。
 > 私密、簡單、以「家庭」為單位，支援多個家庭各自分享自己的孩子。
+>
+> 沿革：2026-10-09 定名 Sprout Day（原 Little Sprout；LS-148 查重後使用者裁決，LS-433 同步 bundle id `com.leoyeh.sproutday` 與對外名稱）。中文名「萌芽日記」不變；repo 名、scheme／target 名 `LittleSprout` 不改。
 
 ## 1. 產品定位
 
@@ -238,7 +240,7 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 ### D. 名稱查重（送審前）
 
-搜 App Store 有無同名 app、確認無明顯商標衝突。「Little Sprout」是常見詞組，撞名機率不低。上架後改名會丟掉既有連結與安裝基礎，所以在 Phase 2 送審前確認完畢。
+搜 App Store 有無同名 app、確認無明顯商標衝突。「Little Sprout」（原名；2026-10-09 已改定名 Sprout Day，見文首沿革）是常見詞組，撞名機率不低。上架後改名會丟掉既有連結與安裝基礎，所以在 Phase 2 送審前確認完畢。
 
 ## 10. 公開上架（listed）的營運責任
 

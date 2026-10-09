@@ -1,11 +1,11 @@
-# 萌芽日記 Little Sprout 隱私權政策
+# 萌芽日記 Sprout Day 隱私權政策
 
 | 項目 | 內容 |
 |---|---|
 | 版本 | 1.0.0 |
 | 生效日期 | 2026-09-12 |
 | 最後修訂 | 2026-09-12 |
-| 適用對象 | 使用「萌芽日記 Little Sprout」iOS 應用程式（下稱「本服務」或「App」）的所有使用者 |
+| 適用對象 | 使用「萌芽日記 Sprout Day」iOS 應用程式（下稱「本服務」或「App」）的所有使用者 |
 | 服務提供者 | CLYEH（下稱「我們」） |
 | 聯絡信箱 | support@littlesprout.xyz |
 | 本文件公開網址 | https://littlesprout.xyz/legal/privacy-policy |
