@@ -189,7 +189,7 @@ final class UploadQueueStoreRemoveFailedTests: XCTestCase {
 
     // MARK: - commit：真的移除、落盤一次
 
-    /// 標記階段完全不碰落盤（manifest 與 payload 檔都不變）；`commitRemovals` 一次移除標記的兩張、manifest 只寫一次、
+    /// 標記階段只改 manifest 的 `removed` 旗標（LS-423，payload 檔不動）；`commitRemovals` 一次移除標記的兩張、manifest 只寫一次、
     /// 刪對應 payload 檔，沒標記的那張與完成的那張不受影響，`onUploadFailedTerminal` 對移除的每張各呼叫一次。
     func test_commitRemovals_removesMarkedOnly_writesManifestOnce_deletesPayloads() async {
         var terminated: [UUID] = []
@@ -197,18 +197,17 @@ final class UploadQueueStoreRemoveFailedTests: XCTestCase {
         let (store, persistence, failedIDs) = (fixture.store, fixture.persistence, fixture.failedIDs)
         XCTAssertEqual(persistence.loadRecords().count, 3, "三張可重試失敗都還在 manifest（完成的已移出）")
         XCTAssertEqual(payloadFiles(persistence).count, 3)
-        let writesBeforeMark = store.resume.manifestWriteCount
 
         store.markRemoved(failedIDs[0])
         store.markRemoved(failedIDs[1])
-        XCTAssertEqual(store.resume.manifestWriteCount, writesBeforeMark, "標記只改記憶體，不寫 manifest")
-        XCTAssertEqual(persistence.loadRecords().count, 3, "sheet 還開著：落盤與畫面標記不同步是刻意的（回收後重啟仍是失敗項）")
-        XCTAssertEqual(payloadFiles(persistence).count, 3)
+        XCTAssertEqual(persistence.loadRecords().count, 3, "標記不移除紀錄，只加旗標")
+        XCTAssertEqual(payloadFiles(persistence).count, 3, "sheet 還開著、可復原：payload 檔不動")
+        let writesBeforeCommit = store.resume.manifestWriteCount
 
         let removed = store.commitRemovals()
 
         XCTAssertEqual(removed, 2)
-        XCTAssertEqual(store.resume.manifestWriteCount, writesBeforeMark + 1, "批次提交 manifest 只寫一次（不是每筆一次）")
+        XCTAssertEqual(store.resume.manifestWriteCount, writesBeforeCommit + 1, "批次提交 manifest 只寫一次（不是每筆一次）")
         XCTAssertEqual(persistence.loadRecords().map(\.id), [failedIDs[2]], "manifest 只剩沒標記的那張")
         XCTAssertEqual(payloadFiles(persistence), ["\(failedIDs[2].uuidString).jpg"], "標記兩張的 payload 檔要刪掉")
         XCTAssertEqual(store.rows.count, 2, "沒標記的失敗項＋完成的那張")
@@ -224,13 +223,14 @@ final class UploadQueueStoreRemoveFailedTests: XCTestCase {
     func test_commitRemovals_afterUndo_keepsEverything_andWritesNothing() async {
         let fixture = await makeStoreWithThreeRetryableFailures()
         let (store, persistence, failedIDs) = (fixture.store, fixture.persistence, fixture.failedIDs)
-        let writesBefore = store.resume.manifestWriteCount
 
         store.markRemoved(failedIDs[0])
         store.undoRemove(failedIDs[0])
+        let writesBeforeCommit = store.resume.manifestWriteCount
 
         XCTAssertEqual(store.commitRemovals(), 0)
-        XCTAssertEqual(store.resume.manifestWriteCount, writesBefore, "沒有標記就不該寫 manifest")
+        XCTAssertEqual(store.resume.manifestWriteCount, writesBeforeCommit, "沒有標記就不該寫 manifest")
+        XCTAssertTrue(persistence.loadRecords().allSatisfy { !$0.removed }, "復原要把旗標寫回 false")
         XCTAssertEqual(persistence.loadRecords().count, 3)
         XCTAssertEqual(store.failedCount, 3)
     }
@@ -278,5 +278,47 @@ final class UploadQueueStoreRemoveFailedTests: XCTestCase {
         store.cancelPendingImportItems([upload.id])
 
         XCTAssertTrue(store.pendingRemovals.isEmpty)
+    }
+
+    // MARK: - LS-423：標記落盤，回收後重啟尊重標記
+
+    /// 標記移除一筆可重試失敗項後 app 被回收（用同一份 manifest 重建 store）：該項不能被還原成 `.waiting` 並自動重傳，
+    /// 否則使用者放棄的照片會在下次啟動悄悄傳進相簿；其餘沒標記的失敗項照舊還原重送，被標記項的 payload 檔隨之清掉。
+    func test_relaunchAfterMarkingRemoved_doesNotRestoreOrReuploadMarkedEntry() async {
+        let fixture = await makeStoreWithThreeRetryableFailures()
+        let marked = fixture.failedIDs[0]
+        fixture.store.markRemoved(marked)
+
+        let relaunchService = StubMediaUploadService()
+        relaunchService.setUploadPhotoHandler { _, _, _, _ in throw AppError.network(message: "offline") }
+        let restarted = UploadQueueStore(
+            familyID: familyID, mediaUploadService: relaunchService, persistence: fixture.persistence
+        )
+        restarted.restorePersistedEntries { _ in }
+        await waitUntil { relaunchService.uploadPhotoCalls.count >= 2 }
+        try? await Task.sleep(nanoseconds: 100_000_000) // 給多餘的第三次上傳（標記項被誤還原）機會冒出來
+
+        XCTAssertNil(restarted.entries[marked], "已標記移除的項目不能被還原進佇列")
+        XCTAssertEqual(restarted.rows.count, 2, "只還原沒標記的兩張")
+        XCTAssertEqual(relaunchService.uploadPhotoCalls.count, 2, "標記項不可被排程上傳（只剩兩張沒標記的）")
+        let expectedFiles = fixture.failedIDs.dropFirst().map { "\($0.uuidString).jpg" }.sorted()
+        XCTAssertEqual(payloadFiles(fixture.persistence), expectedFiles, "標記項的 payload 檔要在還原時清掉")
+    }
+
+    /// 舊版 manifest（LS-423 之前寫的）沒有 `removed` 這個 key：解碼為 false（照舊還原重送），不能整份解碼失敗而丟掉佇列。
+    func test_legacyManifestWithoutRemovedKey_decodesAsNotRemoved() throws {
+        let persistence = UploadQueuePersistence(directory: makeDirectory())
+        try FileManager.default.createDirectory(at: persistence.directory, withIntermediateDirectories: true)
+        let legacy = """
+        [{"id":"55555555-5555-5555-5555-555555555555","kind":"photo","fileExtension":"jpg",\
+        "payloadFileName":"55555555-5555-5555-5555-555555555555.jpg","pixelWidth":4,"pixelHeight":3,\
+        "enqueuedAt":0}]
+        """
+        try Data(legacy.utf8).write(to: persistence.directory.appendingPathComponent("manifest.json"))
+
+        let records = persistence.loadRecords()
+
+        XCTAssertEqual(records.count, 1, "舊格式 manifest 要能解碼")
+        XCTAssertEqual(records.first?.removed, false, "沒有 removed key 視為 false")
     }
 }
