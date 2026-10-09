@@ -12,7 +12,7 @@
 # 與 `LittleSproutUITests/QA/QADriver+ChildAvatar.swift` 檔頭。
 # 同一 build 用 `xcodebuild test -only-testing:LittleSproutUITests` 一路正常——那道 assert 對 XCTest 行程放行。
 #
-# 用法：qa-e2e.sh <login|publish|browse|child-avatar> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]
+# 用法：qa-e2e.sh <login|publish|browse|child-avatar|upload-stall> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]
 #   login    歡迎頁 → Email → Mailpit 取 6 碼 → 確認登入 → 落點（三岔路或時間軸）
 #   publish  先 `simctl addmedia` LittleSproutUITests/QA/Fixtures 的照片＋影片 →（登入／建家庭）→ 新增回憶 → 相簿選圖 → 發佈 → 卡片出現
 #   browse   （登入／建家庭）→ 日記卡 → 詳情 → 返回 → 相簿分頁 → 時間軸（時間軸空的話先發一篇純文字當對象）
@@ -21,6 +21,12 @@
 #            （頭像刷新）。LS-270（LS-96 池項 `66d55e5d`）：QA 三次（LS-129／130／266）做不了這段多步驟
 #            複驗——真因見上面「來源」段（缺 `Config/Secrets.xcconfig`，不是 mobile-mcp），這條情境就是
 #            它的腳本通道。
+#   upload-stall 同 `login`，但 app 以 QA 上傳開關啟動（LS-427）：`LS_QA_UPLOAD_STALL_MS`（預設 4000，每筆上傳前停滯 n 毫秒）、
+#            選用 `LS_QA_UPLOAD_FAIL_EVERY_N`（第 k、2k… 筆回可重試錯誤）——兩者讀自本腳本的環境變數，經
+#            TEST_RUNNER_ 前綴交給 XCUITest、再由 `QADriver.launch()` 注入 app（`QAUploadSwitches`，DEBUG＋QA 環境才生效）。
+#            要在登入後手動（mobile-mcp）驗「上傳中切出 app 回前景續傳」：`SIMCTL_CHILD_LS_QA_API_URL=… SIMCTL_CHILD_LS_QA_ANON_KEY=…
+#            SIMCTL_CHILD_LS_QA_UPLOAD_STALL_MS=4000 xcrun simctl launch <udid> <bundle id>`。需要讓上傳停滯或失敗一律用這組開關，
+#            **不得** `docker pause`／`stop` 任何容器（LS-417 R1 被分類器擋、且共用容器會連累同機其他 QA）。
 #   每個情境都先 `simctl keychain reset`、從未登入狀態開始、各自 OTP 登入同一帳號——不沿用上一個情境留在 Keychain 的
 #   session：共用容器隨時可能被他票 reset（本票實測：browse 沿用 login 的 session，中間 QA 冒煙 reset 過，建家庭被後端拒），
 #   舊 session 對應的使用者已不存在會把環境問題誤報成 app 缺陷；OTP 一次 ~10 秒、`max_frequency = "1s"`，重登不貴。
@@ -57,7 +63,7 @@
 set -uo pipefail
 
 usage() {
-  echo "用法：qa-e2e.sh <login|publish|browse|child-avatar> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]"
+  echo "用法：qa-e2e.sh <login|publish|browse|child-avatar|upload-stall> [--sim <模擬器名>] [--ticket LS-<n>] [--email <收件信箱>]"
 }
 
 scenario=; sim_name=; sim_given=0; ticket=; email=
@@ -81,9 +87,16 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$scenario" ] || { echo "✗ qa-e2e：缺情境名" >&2; usage >&2; exit 2; }
 case "$scenario" in
-  login|publish|browse|child-avatar) ;;
-  *) echo "✗ qa-e2e：情境「${scenario}」不存在，只接受 login|publish|browse|child-avatar" >&2; exit 2 ;;
+  login|publish|browse|child-avatar|upload-stall) ;;
+  *) echo "✗ qa-e2e：情境「${scenario}」不存在，只接受 login|publish|browse|child-avatar|upload-stall" >&2; exit 2 ;;
 esac
+# LS-427：upload-stall 才帶 QA 上傳開關（其他情境即使環境裡剛好有也不帶，避免污染）；非正整數＝設定錯，fail closed（放在碰任何工具之前）。
+stall_ms=; fail_every_n=
+if [ "$scenario" = upload-stall ]; then
+  stall_ms=${LS_QA_UPLOAD_STALL_MS:-4000}; fail_every_n=${LS_QA_UPLOAD_FAIL_EVERY_N:-}
+  case "$stall_ms" in ''|*[!0-9]*|0) echo "✗ qa-e2e：LS_QA_UPLOAD_STALL_MS 須為正整數（得到「${stall_ms}」）" >&2; exit 2 ;; esac
+  case "$fail_every_n" in *[!0-9]*|0) echo "✗ qa-e2e：LS_QA_UPLOAD_FAIL_EVERY_N 須為正整數（得到「${fail_every_n}」）" >&2; exit 2 ;; esac
+fi
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "✗ qa-e2e：不在 git repo 內（在票 worktree 執行）" >&2; exit 2; }
@@ -274,6 +287,8 @@ TEST_RUNNER_LS_QA_API_URL=$api_url \
 TEST_RUNNER_LS_QA_ANON_KEY=$anon_key \
 TEST_RUNNER_LS_QA_MAILPIT=$mailpit \
 TEST_RUNNER_LS_QA_EMAIL=${email:-qa-e2e@ls.test} \
+TEST_RUNNER_LS_QA_UPLOAD_STALL_MS=$stall_ms \
+TEST_RUNNER_LS_QA_UPLOAD_FAIL_EVERY_N=$fail_every_n \
 xcodebuild test \
   -project "${root}/LittleSprout.xcodeproj" \
   -scheme LittleSprout \

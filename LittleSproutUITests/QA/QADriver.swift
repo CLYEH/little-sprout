@@ -35,6 +35,9 @@ final class QADriver {
         app.launchEnvironment["LS_QA_API_URL"] = env.apiURL
         app.launchEnvironment["LS_QA_ANON_KEY"] = env.anonKey
         app.launchEnvironment["LS_QA_SCENARIO"] = env.scenario.rawValue
+        // LS-427：上傳停滯／失敗開關（`QAUploadSwitches`，DEBUG 且 LS_QA_API_URL 存在才讀）。
+        if let stall = env.uploadStallMS { app.launchEnvironment[QAEnvironment.uploadStallKey] = stall }
+        if let every = env.uploadFailEveryN { app.launchEnvironment[QAEnvironment.uploadFailEveryNKey] = every }
         app.launch()
     }
 

@@ -72,6 +72,7 @@ STUB
 cat > "$bin/xcodebuild" <<'STUB'
 #!/bin/bash
 touch "$FAKE_WORK/INVOKED-xcodebuild"; echo "xcodebuild $*" >> "$FAKE_WORK/calls.log"
+echo "xcodebuild-env STALL=[${TEST_RUNNER_LS_QA_UPLOAD_STALL_MS-unset}] FAIL=[${TEST_RUNNER_LS_QA_UPLOAD_FAIL_EVERY_N-unset}]" >> "$FAKE_WORK/calls.log"
 case "${FAKE_XCODEBUILD_MODE:-none}" in
   pass) echo "Test Suite 'All tests' passed"; exit 0 ;;
   fail) echo "error: -[LittleSproutUITests.QASmokeTests testScenario] : failed - 步驟 3"; echo "** TEST FAILED **"; exit 65 ;;
@@ -326,6 +327,25 @@ log_hasnt '⑧b 不把影片灌進相簿（頭像 picker 只吃照片）' calls.
 log_has   '⑧b lock label 帶情境名' lock.log 'lock --hold LS-321 qa-e2e child-avatar --max-minutes 25'
 log_has   '⑧b 仍只跑 QASmokeTests' calls.log '-only-testing:LittleSproutUITests/QASmokeTests'
 reset_logs
+
+# ---- ⑨ upload-stall 情境（LS-427，來源 LS-417 R1：QA 用 docker pause 製造停滯被分類器擋）----
+#      情境名被接受、跑 xcodebuild 時帶 QA 上傳開關（預設 4000ms、選用 FAIL_EVERY_N）；非 upload-stall 情境不帶；
+#      值不是正整數＝設定錯，在碰任何工具之前 exit 2。
+out=$(FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" upload-stall); got=$?
+expect 0 '⑨a upload-stall 被接受、走完、證據落 upload-stall-<時間>/' "$got" "$out" '通過' '/qa-e2e/upload-stall-'
+log_has   '⑨a 預設 STALL_MS=4000、FAIL_EVERY_N 未設' calls.log 'xcodebuild-env STALL=[4000] FAIL=[]'
+reset_logs
+out=$(LS_QA_UPLOAD_STALL_MS=9000 LS_QA_UPLOAD_FAIL_EVERY_N=3 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" upload-stall); got=$?
+expect 0 '⑨b 環境變數覆寫 STALL_MS／FAIL_EVERY_N' "$got" "$out" '通過'
+log_has   '⑨b 覆寫值帶進 xcodebuild' calls.log 'xcodebuild-env STALL=[9000] FAIL=[3]'
+reset_logs
+out=$(LS_QA_UPLOAD_STALL_MS=9000 FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" login); got=$?
+expect 0 '⑨c login 不帶上傳開關（即使環境裡有）' "$got" "$out" '通過'
+log_has   '⑨c login 的 xcodebuild 沒有上傳開關' calls.log 'xcodebuild-env STALL=[] FAIL=[]'
+reset_logs
+out=$(LS_QA_UPLOAD_STALL_MS=abc FAKE_LOCK_MODE=ok FAKE_XCODEBUILD_MODE=pass e2e "$wt" upload-stall); got=$?
+expect 2 '⑨d STALL_MS 非正整數 → exit 2' "$got" "$out" 'LS_QA_UPLOAD_STALL_MS 須為正整數'
+no_tools '⑨d 壞值'
 
 if [ "$fail" -ne 0 ]; then echo "✗ qa-e2e 自測失敗" >&2; exit 1; fi
 echo "✓ qa-e2e 自測通過（${n} 組樣本）"

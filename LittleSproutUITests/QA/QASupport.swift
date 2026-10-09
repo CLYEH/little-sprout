@@ -16,6 +16,9 @@ struct QAEnvironment {
         /// LS-270（LS-96 池項 `66d55e5d`）：寶貝管理 → 建檔 → 編輯頭像 → 儲存 → 回列表看刷新。
         /// rawValue 帶連字號，與 `qa-e2e.sh` 的情境名、證據目錄前綴逐字一致。
         case childAvatar = "child-avatar"
+        /// LS-427：同 `login`，但 app 以 QA 上傳停滯／失敗開關啟動（`QAUploadSwitches`），讓後續手動驗證
+        /// 有穩定的停滯點，不必 `docker pause` 容器。
+        case uploadStall = "upload-stall"
     }
 
     static let scenarioKey = "LS_QA_SCENARIO"
@@ -23,6 +26,8 @@ struct QAEnvironment {
     static let anonKeyKey = "LS_QA_ANON_KEY"
     static let mailpitKey = "LS_QA_MAILPIT"
     static let emailKey = "LS_QA_EMAIL"
+    static let uploadStallKey = "LS_QA_UPLOAD_STALL_MS"
+    static let uploadFailEveryNKey = "LS_QA_UPLOAD_FAIL_EVERY_N"
     /// 四個情境共用同一個帳號（`browse` 才看得到 `publish` 剛發的那篇），但**每個情境各自 OTP 登入**：
     /// `qa-e2e.sh` 跑前一律 `simctl keychain reset`——沿用上一情境的 session 在共用容器被他票 reset 後會
     /// 變成「使用者已不存在」的假缺陷（本票實測），重登只多 ~10 秒。
@@ -33,6 +38,9 @@ struct QAEnvironment {
     let anonKey: String
     let mailpitURL: URL
     let email: String
+    /// LS-427：`upload-stall` 情境才由 `qa-e2e.sh` 帶入；其餘情境為 `nil`（空字串視為未設）。
+    let uploadStallMS: String?
+    let uploadFailEveryN: String?
 
     static func load(_ env: [String: String] = ProcessInfo.processInfo.environment) throws -> QAEnvironment {
         let required = [scenarioKey, apiURLKey, anonKeyKey, mailpitKey]
@@ -58,7 +66,9 @@ struct QAEnvironment {
         let email = env[emailKey].flatMap { $0.isEmpty ? nil : $0 } ?? defaultEmail
         return QAEnvironment(
             scenario: scenario, apiURL: env[apiURLKey] ?? "", anonKey: env[anonKeyKey] ?? "",
-            mailpitURL: mailpitURL, email: email
+            mailpitURL: mailpitURL, email: email,
+            uploadStallMS: env[uploadStallKey].flatMap { $0.isEmpty ? nil : $0 },
+            uploadFailEveryN: env[uploadFailEveryNKey].flatMap { $0.isEmpty ? nil : $0 }
         )
     }
 }
