@@ -99,3 +99,102 @@ end;
 $$;
 
 rollback;
+
+-- ---------------------------------------------------------------------------
+-- LS-444：邊界（寶貝不存在／已軟刪／p_limit 0 與 null）＋計畫形狀（10k 張級家庭不得全表掃）。
+-- 上面的 LS-441 案不改，本段只追加。
+-- ---------------------------------------------------------------------------
+
+-- 案 7–10：邊界。家庭 A 既有兩張相簿照片 3a…01／3a…02（fixtures），本段再加一個已軟刪寶貝。
+begin;
+
+do $$
+declare
+  v_owner uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_family uuid := 'fa000000-0000-4000-8000-000000000001';
+  v_child uuid := '2a000000-0000-4000-8000-000000000001';
+  v_gone_child uuid := '2a000000-0000-4000-8000-0000000000d1';
+  v_ids uuid[];
+  v_all int;
+begin
+  insert into public.children (id, family_id, name, birthday, deleted_at)
+    values (v_gone_child, v_family, '已軟刪寶貝', date '2024-01-01', now());
+
+  perform set_config('request.jwt.claims', json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  select count(*) into v_all from public.list_family_photos_for_food(v_child, null);
+  select coalesce(array_agg(id), '{}') into v_ids from public.list_family_photos_for_food(v_gone_child);
+  if coalesce(array_length(v_ids, 1), 0) <> 0 then
+    raise exception 'FAIL（案 7）：已軟刪的寶貝應回空，實際 %', v_ids;
+  end if;
+  select coalesce(array_agg(id), '{}') into v_ids from public.list_family_photos_for_food('2a000000-0000-4000-8000-0000000000ff');
+  if coalesce(array_length(v_ids, 1), 0) <> 0 then
+    raise exception 'FAIL（案 8）：不存在的寶貝 id 應回空（不報錯），實際 %', v_ids;
+  end if;
+  select coalesce(array_agg(id), '{}') into v_ids from public.list_family_photos_for_food(v_child, 0);
+  if coalesce(array_length(v_ids, 1), 0) <> 0 then
+    raise exception 'FAIL（案 9）：p_limit = 0 應回空，實際 %', v_ids;
+  end if;
+  reset role;
+  -- p_limit = null 不限：至少含 fixtures 兩張相簿照片（案 10）
+  if v_all < 2 then
+    raise exception 'FAIL（案 10）：p_limit = null 應回全部（>= 2 張），實際 % 張', v_all;
+  end if;
+
+  raise notice 'ok：list_family_photos_for_food 邊界（不存在／已軟刪寶貝回空、limit 0 空、null 不限）';
+end;
+$$;
+
+rollback;
+
+-- 案 11：計畫形狀。對「函式本體」做 explain（從 pg_proc.prosrc 取、把 p_child_id／p_limit 代成字面值），
+-- 所以 migration 改動時不必同步第二份 SQL；以 postgres 身分執行並設 JWT claims
+-- （private.family_ids() 取 auth.uid()）。
+-- 為什麼不能只擋 Seq Scan：舊寫法（children join media on family_id）planner 在 5000 張級資料量下
+-- 也用 media_family_created_idx，但 family_id 是 join 欄位 → 索引序無法保證輸出順序 → 計畫頂上多一個 Sort，
+-- 全家庭每張 media 都先跑判準函式再排序（10k 張 39.6–52ms），limit 不能提早停。
+-- 新寫法（family_id = 單值子查詢）→ Limit 直接疊在 index scan 上，無 Sort。所以斷言三件：
+-- ① media 無 Seq Scan ② 用 media_family_created_idx ③ 無 Sort 節點。
+begin;
+
+do $$
+declare
+  v_owner uuid := 'c0000000-0000-4000-8000-000000000001';
+  v_family uuid := 'fc000000-0000-4000-8000-000000000001';
+  v_child uuid := '2c000000-0000-4000-8000-0000000000a1';
+  v_src text;
+  v_sql text;
+  v_plan jsonb;
+begin
+  insert into public.children (id, family_id, name, birthday) values (v_child, v_family, 'perf', date '2024-01-01');
+  insert into public.media (id, family_id, storage_path, type, byte_size, taken_at, width, height, uploaded_by, created_at)
+  select gen_random_uuid(), v_family, v_family::text || '/2026/10/p' || i || '.jpg', 'photo', 1000, now(), 10, 10,
+         v_owner, now() - (i || ' seconds')::interval
+    from generate_series(1, 5000) i;
+  analyze public.media;
+  perform set_config('request.jwt.claims', json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+
+  select prosrc into v_src from pg_proc
+   where oid = 'public.list_family_photos_for_food(uuid, int)'::regprocedure;
+  v_sql := replace(replace(rtrim(rtrim(v_src), ';'), 'p_child_id', quote_literal(v_child) || '::uuid'), 'p_limit', '300');
+  if v_sql like '%p_child_id%' or v_sql like '%p_limit%' then
+    raise exception 'FAIL（案 11 前置）：函式本體參數未代換乾淨，EXPLAIN 不可信：%', v_sql;
+  end if;
+
+  execute 'explain (format json) ' || v_sql into v_plan;
+
+  if jsonb_path_exists(v_plan, '$.** ? (@."Node Type" == "Seq Scan" && @."Relation Name" == "media")') then
+    raise exception 'FAIL（案 11）：函式主查詢對 media 做了 Seq Scan，計畫：%', v_plan;
+  end if;
+  if not jsonb_path_exists(v_plan, '$.** ? (@."Index Name" == "media_family_created_idx")') then
+    raise exception 'FAIL（案 11）：函式主查詢應走 media_family_created_idx，計畫：%', v_plan;
+  end if;
+  if jsonb_path_exists(v_plan, '$.** ? (@."Node Type" == "Sort")') then
+    raise exception 'FAIL（案 11）：計畫含 Sort——order by 沒有被索引序吃掉、limit 不能提早停（family_id 須為單值子查詢，LS-444），計畫：%', v_plan;
+  end if;
+
+  raise notice 'ok：list_family_photos_for_food 計畫走 media_family_created_idx、無 Seq Scan／Sort';
+end;
+$$;
+
+rollback;
