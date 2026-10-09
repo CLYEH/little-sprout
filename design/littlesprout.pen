@@ -166727,9 +166727,9 @@
                                   "id": "ymHpc",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+21",
+                                  "content": "還有 21 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -167047,9 +167047,9 @@
                                   "id": "JD6Mc",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+3",
+                                  "content": "還有 3 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -167562,9 +167562,9 @@
                                   "id": "r6Tqe",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+21",
+                                  "content": "還有 21 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -167882,9 +167882,9 @@
                                   "id": "r7IQ2d",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+3",
+                                  "content": "還有 3 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -168403,7 +168403,7 @@
                                   "fill": "$text-secondary",
                                   "content": "+21",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -168731,7 +168731,7 @@
                                   "fill": "$text-secondary",
                                   "content": "+3",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -169302,9 +169302,9 @@
                                       "id": "ofBmn",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+18",
+                                      "content": "還有 18 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -170195,9 +170195,9 @@
                                   "id": "rzYze",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+3",
+                                  "content": "還有 3 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -170473,9 +170473,9 @@
                                   "id": "ElhGe",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+5",
+                                  "content": "還有 5 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -170984,7 +170984,7 @@
                               "fill": "$text-secondary",
                               "content": "+28",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -171216,7 +171216,7 @@
                               "fill": "$text-secondary",
                               "content": "+23",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -171660,9 +171660,9 @@
                                   "id": "X71cM",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+3",
+                                  "content": "還有 3 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -171938,9 +171938,9 @@
                                   "id": "WQYE2",
                                   "name": "More Count",
                                   "fill": "$text-secondary",
-                                  "content": "+5",
+                                  "content": "還有 5 張",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -172452,7 +172452,7 @@
                               "fill": "$text-secondary",
                               "content": "+28",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -172684,7 +172684,7 @@
                               "fill": "$text-secondary",
                               "content": "+23",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -173134,7 +173134,7 @@
                                   "fill": "$text-secondary",
                                   "content": "+3",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -173418,7 +173418,7 @@
                                   "fill": "$text-secondary",
                                   "content": "+5",
                                   "fontFamily": "$font",
-                                  "fontSize": "$fs-imprint",
+                                  "fontSize": "$fs-note",
                                   "fontWeight": "700"
                                 }
                               ]
@@ -173936,7 +173936,7 @@
                               "fill": "$text-secondary",
                               "content": "+28",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": 36,
                               "fontWeight": "700"
                             }
                           ]
@@ -174175,7 +174175,7 @@
                               "fill": "$text-secondary",
                               "content": "+23",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": 36,
                               "fontWeight": "700"
                             }
                           ]
@@ -175058,9 +175058,9 @@
                                       "id": "Hv1wj",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+2",
+                                      "content": "還有 2 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -175634,9 +175634,9 @@
                                       "id": "d0c0W",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+26",
+                                      "content": "還有 26 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -175933,9 +175933,9 @@
                                       "id": "sSOFl",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+21",
+                                      "content": "還有 21 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -182897,7 +182897,7 @@
                               "fill": "$text-secondary",
                               "content": "+11",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -183129,7 +183129,7 @@
                               "fill": "$text-secondary",
                               "content": "+3",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -184010,7 +184010,7 @@
                               "fill": "$text-secondary",
                               "content": "+11",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -184242,7 +184242,7 @@
                               "fill": "$text-secondary",
                               "content": "+3",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -185135,7 +185135,7 @@
                               "fill": "$text-secondary",
                               "content": "+11",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": 36,
                               "fontWeight": "700"
                             }
                           ]
@@ -185373,7 +185373,7 @@
                               "fill": "$text-secondary",
                               "content": "+3",
                               "fontFamily": "$font",
-                              "fontSize": "$fs-imprint",
+                              "fontSize": "$fs-note",
                               "fontWeight": "700"
                             }
                           ]
@@ -186309,9 +186309,9 @@
                                       "id": "gQHyy",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+9",
+                                      "content": "還有 9 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
@@ -186608,9 +186608,9 @@
                                       "id": "I94HC",
                                       "name": "More Count",
                                       "fill": "$text-secondary",
-                                      "content": "+1",
+                                      "content": "還有 1 張",
                                       "fontFamily": "$font",
-                                      "fontSize": "$fs-imprint",
+                                      "fontSize": "$fs-note",
                                       "fontWeight": "700"
                                     }
                                   ]
