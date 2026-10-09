@@ -17,7 +17,7 @@ import SwiftUI
 struct AvatarPrintCard: View {
     let name: String
     var photoHeight: CGFloat = 88
-    var cornerSize: CGFloat = 26
+    var cornerSize: CGFloat = PrintPhotoCardMetrics.cornerSize
     var pickedImage: UIImage?
 
     /// LS-67 R3 F24：08/08c 染料池四角 opacity（TL.429 TR.275 BL.367 BR.245）。
@@ -83,7 +83,7 @@ struct AvatarPrintCard: View {
 
     private var mountPoolGlow: some View {
         GeometryReader { proxy in
-            let diameter = cornerSize * 6
+            let diameter = PrintPhotoCardMetrics.mountPoolDiameter(cornerSize: cornerSize)
             ZStack {
                 glow(diameter: diameter, opacity: Self.mountPoolOpacity.topLeading)
                     .position(x: 0, y: 0)

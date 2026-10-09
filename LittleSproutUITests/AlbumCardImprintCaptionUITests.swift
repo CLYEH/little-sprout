@@ -170,7 +170,7 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
     /// 右緣對稱。回傳的 raster 以裁切左緣為 x=0（`leftmostInkX` 需再加 15）。
     private func captionRaster(paper: XCUIElement, in app: XCUIApplication, context: String) throws -> InkRaster {
         // LS-407：卡片元素的 a11y frame＝紙面（`AlbumCardView` 用與紙同大的透明代理承載 a11y 元素，
-        // 不再把染料池圓算進 frame，改前四邊各外擴 78——LS-406 的裁圖得扣 `PrintPhotoCardMetrics.mountPoolRadius()`）。
+        // 不把染料池圓算進 frame，裁圖直接以紙面 frame 為準，不需再扣染料池半徑）。
         let frame = paper.frame
         let area = CGRect(x: frame.minX + 15, y: frame.minY + 205, width: frame.width - 30, height: frame.height - 213)
         let screenshot = app.screenshot().image

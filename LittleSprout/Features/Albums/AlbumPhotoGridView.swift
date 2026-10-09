@@ -44,7 +44,7 @@ private struct AlbumPhotoPrintCell: View {
     let photo: MediaContent
     let columnWidth: CGFloat
 
-    private static let cornerSize: CGFloat = 26
+    private static let cornerSize: CGFloat = PrintPhotoCardMetrics.cornerSize
     /// Notes `kHDk4` `pVSXP` 板 `Print Cell` 節點四角染料池不透明度實測值——與
     /// `PrintPhotoCard.MountPoolOpacity.welcome` 不同（那組服務的是有 Caption 的沖印品），
     /// 這格沒有 Caption、染料池比例跟著版面改變，因此另建一組本地常數，不重用既有 preset
@@ -91,7 +91,7 @@ private struct AlbumPhotoPrintCell: View {
 
     private var mountPoolGlow: some View {
         GeometryReader { proxy in
-            let diameter = Self.cornerSize * 6
+            let diameter = PrintPhotoCardMetrics.mountPoolDiameter(cornerSize: Self.cornerSize)
             ZStack {
                 glow(diameter: diameter, opacity: Self.mountPoolTopLeading).position(x: 0, y: 0)
                 glow(diameter: diameter, opacity: Self.mountPoolTopTrailing).position(x: proxy.size.width, y: 0)

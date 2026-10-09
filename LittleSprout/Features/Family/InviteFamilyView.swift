@@ -165,7 +165,7 @@ struct InviteFamilyView: View {
             VStack(alignment: .leading, spacing: AppSpacing.label) {
                 PrintPhotoCard(
                     photoHeight: 194,
-                    cornerSize: 26,
+                    cornerSize: PrintPhotoCardMetrics.cornerSize,
                     mountPoolOpacity: .inviteSample,
                     showsImprint: false,
                     imageName: "InviteGrandma",
