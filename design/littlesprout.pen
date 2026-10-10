@@ -294954,7 +294954,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "範圍外、未裁（同頁另見，可直接入池；方向與 P 等級為建議）：\n①詳情頁日期：稿 Date Anchor（oLN0e 實例）「8月31日（今天）」$fs-lead vs 程式 DiaryDetailView.swift:228–230 meta 13 半粗「2026年8月31日」。建議程式改成 Date Anchor 樣式；P2——日期是要讀的資訊，tokens.md 規定 13pt 只給不讀也能完成任務的內容。\n②留言占位：稿 7 板仍是「留言功能即將推出，敬請期待。」（vzYXz／qBnvn），程式 LS-241 已換成互動列。建議稿改 7 板換成互動列（UhMZ6 已示範，AX3 用 Qzz3r 直排規格）；P2。\n③「⋯」內容操作鈕：稿面 7 板沒有，程式 :236 contentActionsButton（LS-189）。建議稿補到 7 板 header；P3。\n④AuthButtons.swift:42 註解「這裡只在 WelcomeView 用」已過期。建議程式改，隨 C1 的 ui 票一起；P3。\n⑤歡迎頁 Email 鈕文案：稿「改用 Email 登入」vs 程式 WelcomeView.swift:228「使用 Email 登入」。建議稿改成「使用」，與 Apple、Google 同一個動詞；P3。\n⑥歡迎頁 Apple「登入中…」疊層：程式 AppleSignInButton.swift:61 用 .appFont(.body)，比旁邊兩顆 22 小（稿 pcSdz、FEuAL 照程式畫 body）。建議程式改成 lead medium，和三鈕同級；P3。",
+          "content": "範圍外、未裁（同頁另見，可直接入池；方向與 P 等級為建議）：\n①詳情頁日期：稿 Date Anchor（oLN0e 實例）「8月31日（今天）」$fs-lead vs 程式 DiaryDetailView.swift:228–230 meta 13 半粗「2026年8月31日」。建議程式改成 Date Anchor 樣式；P2——日期是要讀的資訊，tokens.md 規定 13pt 只給不讀也能完成任務的內容。\n②留言占位：稿 7 板仍是「留言功能即將推出，敬請期待。」（vzYXz；原 qBnvn 已於 LS-453 R1 刪除，七板已改畫互動列），程式 LS-241 已換成互動列。建議稿改 7 板換成互動列（UhMZ6 已示範，AX3 用 Qzz3r 直排規格）；P2。\n③「⋯」內容操作鈕：稿面 7 板沒有，程式 :236 contentActionsButton（LS-189）。建議稿補到 7 板 header；P3。\n④AuthButtons.swift:42 註解「這裡只在 WelcomeView 用」已過期。建議程式改，隨 C1 的 ui 票一起；P3。\n⑤歡迎頁 Email 鈕文案：稿「改用 Email 登入」vs 程式 WelcomeView.swift:228「使用 Email 登入」。建議稿改成「使用」，與 Apple、Google 同一個動詞；P3。\n⑥歡迎頁 Apple「登入中…」疊層：程式 AppleSignInButton.swift:61 用 .appFont(.body)，比旁邊兩顆 22 小（稿 pcSdz、FEuAL 照程式畫 body）。建議程式改成 lead medium，和三鈕同級；P3。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -296431,6 +296431,188 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "e9tlOi",
+      "x": 30684,
+      "y": 61807,
+      "name": "LS-453 / 實作註記 · Handoff Notes (ios-dev)",
+      "width": 900,
+      "fill": "$surface",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 40,
+      "children": [
+        {
+          "type": "text",
+          "id": "b7cRY0",
+          "name": "Title",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "LS-453 日記詳情頁家族稿面同步 · Handoff Notes",
+          "fontFamily": "$font",
+          "fontSize": 30,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ZXAcv",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "範圍：LS-449 Notes y5ysnR 範圍外三項（池 83e0ebe0 ②；③⑤ 併入）。三處都是稿落後程式，一律以程式為準改稿、不動程式、不改互動列規格本身、不動 variables／themes。",
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "X8R860",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "對照表 ②：留言占位 → 互動列（板 id｜改項｜程式 檔:行）",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "F9byV2",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "vzYXz 13 日記詳情 (iPhone)｜原 qBnvn 留言占位已於 LS-453 R1 刪除，改畫互動列 k8AO5（一般字級，同 UhMZ6 JNEvv 規格，與 IgqGF 同源）｜DiaryDetailView.swift:172 interactionRow、:316–321 InteractionRow\nQCJfh 13 日記詳情 · 深色｜原 zFKzO 已於 LS-453 R1 刪除，改畫互動列 YjkQh（idle $text-secondary、已按讚 $accent，隨板上 mode:dark 解析，同 VZ0wV 頁面底色；不用 accent-on-paper——互動列在頁面底、不在紙上）｜同上，InteractionRow.swift:67–69\ncqgkc A11y 13 · AX3｜原 u0RPV 已於 LS-453 R1 刪除，改畫互動列 hCsNo（直排，同 Qzz3r／UhMZ6 c24KhU）｜InteractionRow.swift:83 isAX3 直排分支\nIH80C Stress 13 · 20 張｜原 Z6KvWT 已於 LS-453 R1 刪除，改畫互動列 uwi9J｜同 vzYXz\nGgtNs A11y 13 · 20 張 · AX3｜原 tOZlX 已於 LS-453 R1 刪除，改畫互動列 y87IFf（直排）｜同 cqgkc\nMjRcr 13-iPad｜原 irzyy 已於 LS-453 R1 刪除，互動列 m4jjuT 移到雙欄下方整寬（padding 上 $sp-block、左右 $screen-pad-lg），Body jV9TW 高改 fit_content，下方 zWQeS 捲動餘白撐滿 1155 板高｜DiaryDetailView.swift:204–217 iPadLayout 外層 VStack（merge-review R2 M1：右欄寬不夠放互動列）\nKjDsM Stress 13-iPad · 20 張｜原 f0KG45 已於 LS-453 R1 刪除，互動列 p8HWzZ 整寬接在 2203pt 照片欄之後｜同 MjRcr",
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "tOpNJ",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "對照表 ③：日期列右側補「⋯」內容操作鈕",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "R8Jn4",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "七板各加 Header Row（日期章＋⋯，gap $sp-group 12，頂端對齊）：vzYXz V9lto／QCJfh bQc0g／cqgkc eblHk／IH80C p8FCf／GgtNs pk2Y4／MjRcr J9Nf4T（在右欄 Anchor Group dmauc 內）／KjDsM OrBNX（在右欄 ddc99 內）。\n⋯ 鈕 48×48 觸碰框、lucide circle-ellipsis（＝SF ellipsis.circle）、$text-primary；一般字級 icon 22（icon-md），AX3 板 icon 40（icon-md AX3）。按鈕 id：Z6Pad／lAoYw／yB3J7／ZWoUh／UYLkA／FNe9w／w8JZUg。\n程式：DiaryDetailView.swift:225–240 header(_:) 的 HStack(alignment: .top, spacing: group)＋Spacer＋:239 contentActionsButton；DiaryDetailView+ContentActions.swift:19–38（ellipsis.circle、.frame(width: 48, height: 48)、accessibilityLabel「更多操作」）。票文寫 :236，現行行號 :239。\n位置取程式、不取 Nav Back 列：⋯ 在內容區第一列（日期列）右側，不在 Nav Back（W6qTyS）那一列——ContentActions.swift:29–35 記錄 toolbar 版熱區只有 57×36pt，所以改放內容區。左右對稱的是日期列：日期章靠左、⋯ 靠右，右緣對齊版心 $screen-pad。\nAX3 兩板（cqgkc aNTzo、GgtNs Jxu7Z）日期章文字改兩行「8月31日／（今天）」：AX3 章寬 365 放不進 285（345 − 12 − 48），對應程式 header 左欄文字在 AX3 會折行。",
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "vPLS8",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "對照表 ⑤：歡迎頁 Email 鈕文案",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "r4nThg",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "「改用 Email 登入」→「使用 Email 登入」（登與入之間保留 U+2060，與原稿一致），與 Apple／Google 同一個動詞｜WelcomeView.swift:228。\n改了 10 個 XggYA 實例（10 板）：svedU IWwXg／BDrtd V2tUwZ／pcSdz g1NhQ／IUJ5Q j91tdy／e7G3Lk nBxPn／Yc4EC V1sTUw／M2qW9 L9KuYZ／aEb17 cpFn4／g1pZ15 Rvt8Q／FEuAL lFegO。\n實際命中：改前 13 個實例分布在 12 板；改後剩 3 個實例在 2 板，刻意不改：XUAAQ l9Rp9h（01-alt 未採用 A′ 對照存檔，保留當時原樣）、WNc5T z9klM6／GSQAT（LS-449 (e-2) 字級兩版對照，是當時的裁定證據）。這兩板不是 app 畫面，ios-dev 不必對照。",
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "y3h0d",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "給 ios-dev",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "UyZXu",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "本票不動程式。以下兩項是稿面對照時看到的現況，未在模擬器上驗證，標 PLAUSIBLE，供另票判斷：\n(a) ⋯ 顏色：contentActionsButton 沒有設 foregroundStyle，專案也沒有 AccentColor asset 或全域 .tint，按鈕可能用系統藍。稿面是 $text-primary，與 Nav Back 同墨色。建議 P3：加 .foregroundStyle(Color.lsTextPrimary)。\n(b) ⋯ 在 AX3：圖示走 ScaledMetric（22 relativeTo body，AX3 約 52），外框固定 48×48，圖示可能超出外框。稿面 AX3 用 icon 40、外框 48。建議 P3：外框改 minWidth／minHeight 48。\n範圍外、沿用既有：互動列上方的 Spacer Section 仍是 44（同 UhMZ6），程式 VStack spacing 是 block 24——這是既有漂移，不在本票範圍。",
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "LDucg",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "尺寸規格值（寬高收不了 $variable）",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "XDuVN",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "本輪新增的寬高字面值：⋯ 外框 48×48 ×7（觸碰框，對應 AppSpacing 無 token、程式字面 48）；icon 22×22 ×5（icon-md）、40×40 ×2（icon-md AX3）。互動列複本沿用 UhMZ6 的字面值（Like Toggle 118／220、Count Zone 44×44／56×80、icon 22／32）。板高改為內容高：vzYXz 936.022、QCJfh 963.022、cqgkc 2160.067、IH80C 2722.772、GgtNs 3919.817、KjDsM 2422；MjRcr 維持 1155。",
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "yuaNB",
+          "name": "Heading",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "沿革",
+          "fontFamily": "$font",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "NsM5x",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "10-10 LS-453 R1：②七板留言占位換互動列、③七板日期列補⋯、⑤歡迎頁 10 板 Email 鈕改「使用」；LS-449 Notes y5ysnR ② 的 qBnvn 引用改為沿革寫法。",
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
         }
       ]
     }
