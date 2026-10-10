@@ -5,6 +5,8 @@ description: Orchestrator 派任何 Sonnet 5.5 agent（ios-dev／qa／dead-code-
 
 # Sonnet 5.5 派工寫法（本專案版）
 
+> LS-421（2026-10-10）：dead-code-sweeper 試點改 `model: haiku`、非 UI 票的 qa 由 Agent 工具 `model: haiku` 覆寫——派這兩種情況改讀 `haiku-dispatch`（本檔十條仍是它的底，那份只寫 Haiku 差異）；下文提到 sweeper 之處在退場改回 sonnet 時才適用。
+
 來源：https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5 與 https://platform.claude.com/docs/en/models/sonnet-5-5/whats-new-sonnet-5-5（2026-09-29 讀取）。適用對象：所有 `model: sonnet` 的 subagent（COLLABORATION §1 表：ios-dev／qa／dead-code-sweeper；Claude Code ≥2.1.284 的 `sonnet` 別名指 `claude-sonnet-5-5`）。opus agent（ui-designer／merge-reviewer／visual-reviewer）讀 `opus-dispatch`；兩份共用的六條（finish line、判斷材料、stop/go、PLAUSIBLE、checklist 落檔、續派鎖項）本檔只寫差異，寫法本身以 opus-dispatch 為準。
 
 ## 別名與版本

@@ -127,6 +127,9 @@ print("effort：%s" % effort)
 print("Claude Code 版本（該 session）：%s" % cli_version)
 if model == "claude-sonnet-5":
     print("⚠ sonnet 別名解析到 Sonnet 5——該 session 的 Claude Code < 2.1.284；/exit 重開 session（磁碟版本已更新也一樣）再派（LS-400）")
+# LS-421：haiku 別名 2.1.293 起才指 claude-haiku-5-5；舊 CLI 會落到 Haiku 4.5（無 effort 檔位、行為不同），同樣要重開 session
+if model.startswith("claude-haiku-") and model != "claude-haiku-5-5":
+    print("⚠ haiku 別名解析到 %s 而不是 Haiku 5.5——該 session 的 Claude Code < 2.1.293；/exit 重開 session（磁碟版本已更新也一樣）再派（LS-421）" % model)
 print("時間：%s" % ts)
 print("檔案：%s" % path)
 PY
