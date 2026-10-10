@@ -15,12 +15,27 @@ import SwiftUI
 /// 字級：稿面三個節點皆 `$fs-note`（17／AX3 40）＝ SwiftUI `.body`（17pt，AX3 40pt）；用語意
 /// 字級而非絕對 pt，本身隨 Dynamic Type 縮放（這裡是純函式，拿不到 `@ScaledMetric` 環境）。
 ///
-/// 顏色：稿面 `$print-ink`／`$print-ink-secondary` 只適用紙面（`$print-paper`，深色仍是淺紙）；
-/// 本元件實際畫在 `lsSurface`（`DiaryCardView`）／`lsBackground`（`DiaryDetailView`）上，深色
-/// 會變暗——沿 LS-142 `motifs.md`「沒有紙的地方用 `$text-primary`／`$text-secondary`、不能沿用
-/// print-ink」判準取同角色的 text token（淺色 hex 與 print-ink 系完全相同，深色才反轉成可讀色）。
+/// 顏色（LS-446 起依底色傳入，`Ink`）：稿面 `$print-ink`／`$print-ink-secondary` 只適用紙面
+/// （`$print-paper`，深色仍是淺紙）。`DiaryCardView` 自 LS-446 起整張是紙面 → 傳 `.print`；
+/// `DiaryDetailView` header 畫在 `lsBackground`（頁面底、無紙）上，深色會變暗——沿 LS-142
+/// `motifs.md`「沒有紙的地方用 `$text-primary`／`$text-secondary`、不能沿用 print-ink」判準傳
+/// `.text`（淺色 hex 與 print-ink 系完全相同，深色才反轉成可讀色）。
 enum MultiChildCaptionFormatter {
-    static func attributed(children: [Child], asOf date: Date, timeZone: TimeZone = .current) -> AttributedString {
+    /// 署名所在的底色，決定主墨／次墨用哪一組 token（見型別文件「顏色」）。刻意沒有預設值——
+    /// 每個呼叫端都要自己說明畫在紙上還是頁面底上。
+    enum Ink {
+        /// 頁面底（無紙）：`text-primary`／`text-secondary`，深色反轉。
+        case text
+        /// `print-paper` 紙面：`print-ink`／`print-ink-secondary`，不隨深色反轉。
+        case print
+
+        var primary: Color { self == .print ? .lsPrintInk : .lsTextPrimary }
+        var secondary: Color { self == .print ? .lsPrintInkSecondary : .lsTextSecondary }
+    }
+
+    static func attributed(
+        children: [Child], asOf date: Date, ink: Ink, timeZone: TimeZone = .current
+    ) -> AttributedString {
         guard children.count == 1, let child = children.first else {
             var multi = AttributedString(
                 AlbumSignatureFormatter.signatureText(
@@ -28,17 +43,17 @@ enum MultiChildCaptionFormatter {
                 )
             )
             multi.font = .body.weight(.semibold)
-            multi.foregroundColor = Color.lsTextPrimary
+            multi.foregroundColor = ink.primary
             return multi
         }
         let segment = AlbumSignatureFormatter.segment(for: child, asOf: date, timeZone: timeZone)
         var nameRun = AttributedString(child.name)
         nameRun.font = .body.weight(.semibold)
-        nameRun.foregroundColor = Color.lsTextPrimary
+        nameRun.foregroundColor = ink.primary
         // 「 ·⎵年齡」＝ segment 扣掉開頭姓名——分隔字元與 NBSP 規則只在 `AlbumSignatureFormatter` 定義。
         var ageRun = AttributedString(String(segment.dropFirst(child.name.count)))
         ageRun.font = .body
-        ageRun.foregroundColor = Color.lsTextSecondary
+        ageRun.foregroundColor = ink.secondary
         return nameRun + ageRun
     }
 }

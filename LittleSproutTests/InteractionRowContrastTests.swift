@@ -9,6 +9,12 @@ import XCTest
 /// `print-ink-secondary`，深色只剩 1.44–1.69:1，長輩幾乎看不見「留言 N」。
 /// 4.5:1 是長輩硬約束（一般文字 AA）；淺色必須與舊值一致（票文範圍 3「淺色不變」）。
 ///
+/// LS-446（LS-442 C3a）：日記卡整張改 `print-paper` 紙面，互動列在紙上改走紙面墨色
+/// （`onPaper: true`：未按讚 `print-ink-secondary`、已按讚 `accent-on-paper`）；照片／相簿卡
+/// 與詳情頁仍在頁面底，維持上面的 theme-aware 色。**兩組色互斥**：紙面色放到深色頁面底上是
+/// 1.44–1.69:1，頁面底色放到深色紙上是 1.38–1.46:1——所以下面「頁面底」案與「紙面」案各自
+/// 獨立驗，任何一邊被改成另一邊的顏色，都會有一組測試紅。
+///
 /// `@MainActor`（LS-371，池 `10c04878`）：`InteractionRow` 是 View、其 static 屬性跟著屬於
 /// MainActor，非隔離 test method 讀取會出 main-actor isolation warning。
 @MainActor
@@ -54,6 +60,55 @@ final class InteractionRowContrastTests: XCTestCase {
         XCTAssertEqual(now.blue, before.blue, accuracy: 0.001, "淺色互動列字色不得改變（票文範圍 3）")
     }
 
+    // MARK: - LS-446：紙面（日記卡）字色
+
+    /// 紙面兩個字色（未按讚 `print-ink-secondary`／已按讚 `accent-on-paper`）在 `print-paper` 上
+    /// 淺／深都 ≥4.5:1。深色紙是 #E8D9D4（不反轉），已按讚若誤用 `lsAccent`（#FCA4B5）只有 1.38:1。
+    func test_paperForegrounds_meetElderContrastOnPrintPaper_inBothSchemes() {
+        let foregrounds: [(String, Color)] = [
+            ("未按讚 print-ink-secondary", InteractionRow.paperIdleForeground),
+            ("已按讚 accent-on-paper", InteractionRow.paperLikedForeground)
+        ]
+        for scheme in [ColorScheme.light, .dark] {
+            for (name, foreground) in foregrounds {
+                let ratio = contrast(resolve(foreground, scheme), resolve(.lsPrintPaper, scheme))
+                XCTAssertGreaterThanOrEqual(
+                    ratio, Self.elderMinimumContrast,
+                    "紙面互動列字色（\(name)）對 print-paper（\(scheme)）只有 \(String(format: "%.2f", ratio)):1，低於長輩硬約束 4.5:1"
+                )
+            }
+        }
+    }
+
+    /// `accent-on-paper` 是不掛 theme 的單值 token（#8E2447）：淺／深解析結果必須一致。
+    func test_accentOnPaper_isSingleValueToken_notThemeAware() {
+        let light = resolve(.lsAccentOnPaper, .light)
+        let dark = resolve(.lsAccentOnPaper, .dark)
+        XCTAssertEqual(light.red, dark.red, accuracy: 0.001, "accent-on-paper 不得隨深色改值")
+        XCTAssertEqual(light.green, dark.green, accuracy: 0.001, "accent-on-paper 不得隨深色改值")
+        XCTAssertEqual(light.blue, dark.blue, accuracy: 0.001, "accent-on-paper 不得隨深色改值")
+        XCTAssertEqual(light.red, Float(0x8E) / 255, accuracy: 0.002, "accent-on-paper 應為 #8E2447")
+        XCTAssertEqual(light.green, Float(0x24) / 255, accuracy: 0.002, "accent-on-paper 應為 #8E2447")
+        XCTAssertEqual(light.blue, Float(0x47) / 255, accuracy: 0.002, "accent-on-paper 應為 #8E2447")
+    }
+
+    /// 頁面底（照片／相簿卡）的已按讚字色仍是 theme-aware `lsAccent`——不得被紙面的單值色取代
+    /// （深色頁面底上 #8E2447 只有約 1.7:1）。
+    func test_likedForeground_onPageBackgrounds_meetsElderContrast_inBothSchemes() {
+        let backgrounds: [(String, Color)] = [
+            ("surface", .lsSurface), ("bg", .lsBackground), ("bg-lit", .lsBackgroundLit)
+        ]
+        for scheme in [ColorScheme.light, .dark] {
+            for (name, background) in backgrounds {
+                let ratio = contrast(resolve(InteractionRow.likedForeground, scheme), resolve(background, scheme))
+                XCTAssertGreaterThanOrEqual(
+                    ratio, Self.elderMinimumContrast,
+                    "頁面底已按讚字色對 \(name)（\(scheme)）只有 \(String(format: "%.2f", ratio)):1，低於長輩硬約束 4.5:1"
+                )
+            }
+        }
+    }
+
     // MARK: - LS-371：Count Zone 實際渲染後的計數對比（三態）
 
     /// LS-371：讚數 N=0 時 `Count Zone` 曾掛 `.disabled(reaction.count == 0)`，SwiftUI 把
@@ -74,13 +129,39 @@ final class InteractionRowContrastTests: XCTestCase {
         for scheme in [ColorScheme.light, .dark] {
             for (backgroundName, background) in backgrounds {
                 for (stateName, state) in states {
-                    let ratio = try renderedCountZoneContrast(state: state, background: background, scheme: scheme)
+                    // LS-446：頁面底案用 `.media`（照片卡）——日記卡改紙面後不再落在這幾種底色上。
+                    let ratio = try renderedCountZoneContrast(
+                        kind: .media, onPaper: false, state: state, background: background, scheme: scheme
+                    )
                     XCTAssertGreaterThanOrEqual(
                         ratio, Self.elderMinimumContrast,
                         "讚數（\(stateName)）渲染後對 \(backgroundName)（\(scheme)）只有 "
                             + "\(String(format: "%.2f", ratio)):1，低於長輩硬約束 4.5:1"
                     )
                 }
+            }
+        }
+    }
+
+    /// LS-446：日記卡（`kind: .diary, onPaper: true`）畫在 `print-paper` 上，三態計數渲染後
+    /// 淺／深都 ≥4.5:1。深色紙是淺色 #E8D9D4：未按讚若退回 `lsTextSecondary`（#D3AEB2）約 1.4:1、
+    /// 已按讚若退回 `lsAccent`（#FCA4B5）1.38:1。
+    func test_countZone_renderedOnPaper_meetsElderContrast_inAllReactionStates() throws {
+        let states: [(String, ReactionState)] = [
+            ("0 讚", ReactionState(count: 0, reactedByMe: false)),
+            ("N>0 未按讚", ReactionState(count: 3, reactedByMe: false)),
+            ("已按讚", ReactionState(count: 4, reactedByMe: true))
+        ]
+        for scheme in [ColorScheme.light, .dark] {
+            for (stateName, state) in states {
+                let ratio = try renderedCountZoneContrast(
+                    kind: .diary, onPaper: true, state: state, background: .lsPrintPaper, scheme: scheme
+                )
+                XCTAssertGreaterThanOrEqual(
+                    ratio, Self.elderMinimumContrast,
+                    "紙面日記卡讚數（\(stateName)）渲染後對 print-paper（\(scheme)）只有 "
+                        + "\(String(format: "%.2f", ratio)):1，低於長輩硬約束 4.5:1"
+                )
             }
         }
     }
@@ -96,12 +177,14 @@ final class InteractionRowContrastTests: XCTestCase {
     }
 
     private func renderedCountZoneContrast(
-        state: ReactionState, background: Color, scheme: ColorScheme
+        kind: FeedKind, onPaper: Bool, state: ReactionState, background: Color, scheme: ColorScheme
     ) throws -> Double {
         let store = TimelineStore.preview()
         let refId = UUID()
-        store.seedReactionState(state, forKey: TimelineEntry.id(kind: .diary, refId: refId))
-        let content = InteractionRow(kind: .diary, refId: refId, timelineStore: store, familyStore: .preview())
+        store.seedReactionState(state, forKey: TimelineEntry.id(kind: kind, refId: refId))
+        let content = InteractionRow(
+            kind: kind, refId: refId, timelineStore: store, familyStore: .preview(), onPaper: onPaper
+        )
             .frame(width: Self.rowWidth, alignment: .leading)
             .background(background)
             .environment(\.colorScheme, scheme)

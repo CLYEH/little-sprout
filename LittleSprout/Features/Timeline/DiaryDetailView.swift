@@ -229,7 +229,10 @@ struct DiaryDetailView: View {
                     .appFont(.meta, weight: .semibold)
                     .foregroundStyle(Color.lsTextSecondary)
                 if !taggedChildren.isEmpty {
-                    Text(MultiChildCaptionFormatter.attributed(children: taggedChildren, asOf: content.entryDate))
+                    // LS-446：詳情頁 header 畫在頁面底（`.appBackground()`）、無紙 → 維持 text 系。
+                    Text(MultiChildCaptionFormatter.attributed(
+                        children: taggedChildren, asOf: content.entryDate, ink: .text
+                    ))
                 }
             }
             Spacer(minLength: AppSpacing.group)

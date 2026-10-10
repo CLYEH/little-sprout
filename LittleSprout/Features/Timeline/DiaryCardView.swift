@@ -58,11 +58,14 @@ struct DiaryCardView: View {
                 if !taggedChildren.isEmpty {
                     // LS-374：不設 lineLimit——稿面 Multi Caption（`x7k2o6`）`fixed-width` 隨內容長高，
                     // 年齡改 `$fs-note` 後三位寶貝在 AX3 超過兩行，截斷會吃掉寶貝名字。
-                    Text(MultiChildCaptionFormatter.attributed(children: taggedChildren, asOf: content.entryDate))
+                    // LS-446：整張卡是 `print-paper` 紙面 → 署名傳 print-ink 系。
+                    Text(MultiChildCaptionFormatter.attributed(
+                        children: taggedChildren, asOf: content.entryDate, ink: .print
+                    ))
                 }
                 Text(content.body)
                     .appFont(.body)
-                    .foregroundStyle(Color.lsTextPrimary)
+                    .foregroundStyle(Color.lsPrintInk)
                     .lineLimit(4)
                 if !content.previewPhotos.isEmpty {
                     previewPhotosRow
@@ -73,12 +76,25 @@ struct DiaryCardView: View {
             .accessibilityElement(children: .combine)
             InteractionRow(
                 kind: .diary, refId: refId, timelineStore: timelineStore, familyStore: familyStore,
-                onOpenComments: onOpenComments
+                onOpenComments: onOpenComments, onPaper: true
             )
         }
         .padding(AppSpacing.insetCard)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.lsSurface, in: RoundedRectangle(cornerRadius: AppSpacing.radiusLarge))
+        // LS-446（LS-442 C3a，稿 `qtCd7`）：整張紙面——`print-paper` 底＋`paper-edge` 外擴 1pt 紙緣＋
+        // `paper-shadow` 落影（0／3，blur 12＝SwiftUI radius 6），與食物卡（`FoodFirstCardView`）、
+        // 照片印品同材質；深色紙仍是淺紙（#E8D9D4），內文／署名／互動列全走不隨主題的紙上墨色。
+        .background {
+            RoundedRectangle(cornerRadius: AppSpacing.radiusLarge)
+                .fill(Color.lsPrintPaper)
+                .shadow(color: .lsPaperShadow, radius: 6, x: 0, y: 3)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: AppSpacing.radiusLarge + 1)
+                .strokeBorder(Color.lsPaperEdge, lineWidth: 1)
+                .padding(-1)
+                .accessibilityHidden(true)
+        }
     }
 
     private var remainingPhotoCount: Int {
@@ -138,7 +154,13 @@ struct DiaryCardView: View {
             // （LS-126：稿面 Stack Sheet 精確規格待 Pen 復連後核對，見 handoff）。
             if showsRemainingBadge {
                 RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
-                    .fill(Color.lsSurface2)
+                    // LS-446：疊紙隨卡面改紙色（稿 `uZ5Lt`／`kVUWa`：`$print-paper` 填＋`$paper-shadow`
+                    // 1pt 描邊）——紙疊在紙上，沒有描邊就與卡面融成一片、「還有更多」的暗示消失。
+                    .fill(Color.lsPrintPaper)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
+                            .strokeBorder(Color.lsPaperShadow, lineWidth: 1)
+                    )
                     .rotationEffect(.degrees(4))
                     .offset(x: 2, y: 2)
             }
