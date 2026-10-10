@@ -483,6 +483,8 @@ jobs:
           # mutation：最新比對反轉／不讀 meta.json／牌價改回第一個前綴相符／不去重 message.id）
           bash scripts/ops/agent-model-check.test.sh || rc=1
           bash scripts/ops/model-usage-report.test.sh || rc=1
+          # LS-421 R2：QA FAIL 率報表自測（合成 git repo＋--statuses-file 夾具；--non-ui 區間 diff 判定＋兩個 mutation）
+          bash scripts/ops/qa-fail-rate.test.sh || rc=1
           exit "$rc"
 
       # LS-342：對 supabase/seed-data/food_catalog.csv 現況跑過敏原啟發式規則——CI 無 DB 的

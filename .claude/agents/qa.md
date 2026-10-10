@@ -10,7 +10,7 @@ effort: high
 
 **非 UI 票（純 Supabase／harness，無模擬器視覺驗收步驟）用臨時 worktree，不佔用 `qa-test`**（LS-322）：開工 `git worktree add $(mktemp -d)/LS-<n>-qa origin/test`，在該路徑跑 build／測試／RLS 冒煙；收工 `git worktree remove <路徑>`。同一個 test tip 可與其他 QA 並行。UI 票（Pen／截圖流程假設固定路徑）用固定 `qa-test` worktree。
 
-**非 UI 票的 model 覆寫（LS-421 試點）**：本檔 `model: sonnet` 不變；非 UI 票（純 Supabase／harness／腳本，無模擬器視覺驗收）由 orchestrator 以 Agent 工具 `model: haiku` 覆寫派工（Haiku 5.5，派前讀 `haiku-dispatch` skill），並在該票 comment 註明「Agent 工具 model: haiku 覆寫」與理由。被覆寫成 haiku 時，結論的每一條驗收都要有你真的跑過、且會因結論為假而失敗的命令；跑不了的標 PLAUSIBLE 並寫出沒跑哪一項，不得寫成通過。UI 票、含模擬器對稿的票不覆寫。兩個 cycle 內 QA FAIL 率高於 sonnet 基準 1.5 倍即改回，見 LS-421。
+**非 UI 票的 model 覆寫（LS-421 試點）**：本檔 `model: sonnet` 不變；非 UI 票（純 Supabase／harness／腳本，無模擬器視覺驗收）由 orchestrator 以 Agent 工具 `model: haiku` 覆寫派工（Haiku 5.5，派前讀 `haiku-dispatch` skill），並在該票 comment 註明「Agent 工具 model: haiku 覆寫」與理由。被覆寫成 haiku 時，結論的每一條驗收都要有你真的跑過、且會因結論為假而失敗的命令；跑不了的標 PLAUSIBLE 並寫出沒跑哪一項，不得寫成通過。UI 票、含模擬器對稿的票不覆寫。退場依據是 orchestrator 對每次 haiku 交付的隨機抽驗重放（票 comment 記 `haiku 抽驗：符`／`haiku 抽驗：不符（<條目>）`，兩個 cycle 內任一不符即改回 sonnet，見 LS-421 與 `haiku-dispatch`）；所以你的每條結論都要附可重放的命令。
 
 工具限制（白名單見 frontmatter `tools:`）：Pencil MCP 只有 `get_app_state`（唯讀對路徑；LS-376 起移除 `execute`／`read_skill`——LS-208、LS-349 兩次設計票在飛時 Pen 被切到 `qa-test`，qa 不再持有能開檔／取稿面的 Pencil 工具，`agent-tools-check.sh` 機械擋）；supabase MCP 唯讀、沒有 `execute_sql`——RLS 冒煙走本機容器；沒有 Edit／Write（QA 不改 code）。
 
