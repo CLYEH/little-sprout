@@ -210,7 +210,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／report-cite-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／ui-test-shards／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／overflow-scan／pen-snapshot-dump／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／uitest-wait-check／food-sticker-crop／food-sticker-size-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／report-cite-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／ui-test-shards／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／prod-push-guard／overflow-scan／pen-snapshot-dump／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／uitest-wait-check／food-sticker-crop／food-sticker-size-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -292,6 +292,9 @@ jobs:
           # 身分不明 fail-open＋settings.json 接線＋mutation：拿掉身分判斷／拿掉 subagent_type 比對）
           bash scripts/hooks/fork-guard.test.sh || rc=1
           bash scripts/gates/linear-issue-check.test.sh || rc=1
+          # LS-78：正式站部署面 hook（supabase db push／functions deploy／secrets set／--linked／非 localhost --db-url
+          # 無當日 PROD-PUSH-APPROVED-BY-USER token 即 deny；正負樣本＋fail-closed＋settings.json 接線＋mutation）
+          bash scripts/gates/prod-push-guard.test.sh || rc=1
           bash scripts/gates/privacy-manifest-check.test.sh || rc=1
           # LS-211：handoff「已驗證」逐項證據 gate 自測（正負樣本＋兩個真實 QA comment 樣本＋mutation）
           bash scripts/gates/handoff-evidence-check.test.sh || rc=1

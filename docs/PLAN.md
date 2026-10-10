@@ -202,6 +202,8 @@ blocked_users    (family_id, blocker_id, blocked_id, created_at)
 
 送審規定以**送審當下**的 App Review Guidelines 為準，Apple 改得比文件快；下列條號僅供定位。真的要送之前，把 Guideline 1.2 與 5.1.1 重讀一次。
 
+**TestFlight 起正式站有真實家庭資料，部署（`supabase db push`／Edge Function／secrets）需人審**：每次需使用者當次授權，由 PreToolUse hook 機械擋（`scripts/gates/prod-push-guard.sh`，見 COLLABORATION §6，LS-78）。
+
 ### A. 影響資料模型 —— 現在就做（已併入 §3 / §5）
 
 | 項目 | 為什麼不能等 | 落點 |
