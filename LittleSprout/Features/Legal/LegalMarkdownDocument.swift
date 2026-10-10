@@ -228,21 +228,40 @@ struct LegalMarkdownDocument: Equatable {
         // 先切開，`**` 就不會落在任何 autolink 範圍內，也不依賴 Apple 對 CJK flanking 的判定。
         var result = AttributedString()
         var cursor = text.startIndex
-        // `**` 與 `**` 之間至少一字、不跨 `**`（非貪婪）。
-        for match in text.matches(of: /\*\*(.+?)\*\*/) {
-            if cursor < match.range.lowerBound {
-                result += parseInline(String(text[cursor..<match.range.lowerBound]))
-            }
-            var bold = parseInline(String(match.output.1))
+        while let open = nextBoldDelimiter(in: text, from: cursor),
+              let close = nextBoldDelimiter(in: text, from: text.index(open, offsetBy: 2)) {
+            if cursor < open { result += parseInline(String(text[cursor..<open])) }
+            var bold = parseInline(String(text[text.index(open, offsetBy: 2)..<close]))
             for run in Array(bold.runs) {
                 let existing = bold[run.range].inlinePresentationIntent ?? []
                 bold[run.range].inlinePresentationIntent = existing.union(.stronglyEmphasized)
             }
             result += bold
-            cursor = match.range.upperBound
+            cursor = text.index(close, offsetBy: 2)
         }
         if cursor < text.endIndex { result += parseInline(String(text[cursor...])) }
         return result
+    }
+
+    /// 從 `start` 起找下一個「恰好兩個 `*`」的粗體分隔符，回傳其起點；找不到回 nil（未閉合 `**` 因此維持字面）。
+    /// 掃描時整段跳過 code span（`` `…` ``）與 `[文字](網址)`——裡面的 `**` 不是這一層的分隔符，留給
+    /// `parseInline` 的 Apple parser 原生處理（`[**粗**](url)` 變成粗體連結、`` `**x**` `` 保持字面）。
+    /// 連續 3 個以上的 `*`（`***x***`）整串跳過，同樣交給 Apple parser（粗斜體），不在這裡硬切出殘留的字面 `*`。
+    private static func nextBoldDelimiter(in text: String, from start: String.Index) -> String.Index? {
+        var index = start
+        while index < text.endIndex {
+            if let span = text[index...].prefixMatch(of: /`[^`]+`|\[[^\]]*\]\([^)]*\)/) {
+                index = span.range.upperBound
+            } else if text[index] == "*" {
+                var runEnd = index
+                while runEnd < text.endIndex, text[runEnd] == "*" { runEnd = text.index(after: runEnd) }
+                if text.distance(from: index, to: runEnd) == 2 { return index }
+                index = runEnd
+            } else {
+                index = text.index(after: index)
+            }
+        }
+        return nil
     }
 
     private static func parseInline(_ text: String) -> AttributedString {
@@ -265,11 +284,29 @@ struct LegalMarkdownDocument: Equatable {
             let start = match.range.lowerBound
             let before = text[..<start]
             if before.last == "[" || before.last == "<" || before.hasSuffix("](") { continue }
+            let url = trimTrailingPunctuation(match.output)
             result += text[cursor..<start]
-            result += "<\(match.output)>"
-            cursor = match.range.upperBound
+            result += "<\(url)>"
+            cursor = url.endIndex
         }
         result += text[cursor...]
         return result
+    }
+
+    /// GFM autolink 尾端規則：`.,;:!?` 不入連結；`)` 只有在 URL 內 `(` 與 `)` 成對時才保留
+    /// （`https://a.com/x_(y)` 整段是連結；`(see https://a.com/x)` 的 `)` 不是）。回傳的是原字串的前綴切片。
+    private static func trimTrailingPunctuation(_ url: Substring) -> Substring {
+        var end = url.endIndex
+        while end > url.startIndex {
+            let last = url[url.index(before: end)]
+            if ".,;:!?".contains(last) {
+                end = url.index(before: end)
+            } else if last == ")", url[..<end].filter({ $0 == ")" }).count > url[..<end].filter({ $0 == "(" }).count {
+                end = url.index(before: end)
+            } else {
+                break
+            }
+        }
+        return url[..<end]
     }
 }

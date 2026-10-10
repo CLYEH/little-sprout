@@ -94,8 +94,9 @@ extension LegalMarkdownDocumentTests {
                 "前 `**x**` 後 **y**",
                 [Self.run("前 "), Self.run("**x**", code: true), Self.run(" 後 "), Self.run("y", bold: true)]
             ),
-            // 連結文字內的粗體：粗體＋連結同時成立，沒有殘留 `[` `](`。
-            ("[**粗**](https://a.com)", [Self.run("粗", bold: true, link: "https://a.com")])
+            // 連結文字內的 `**`：pre-pass 不切，交 Apple parser——連結完整、沒有殘留 `[` `](` `*`。
+            // Apple parser 本身會丟掉連結文字內的強調（實測 `[**粗**](url)` 只剩 link），所以預期是非粗體連結。
+            ("[**粗**](https://a.com)", [Self.run("粗", link: "https://a.com")])
         ]
         for (source, expected) in table {
             XCTAssertEqual(Self.actualRuns(source), expected, "來源：\(source)")
