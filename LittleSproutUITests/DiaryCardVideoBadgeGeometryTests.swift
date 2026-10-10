@@ -171,7 +171,7 @@ final class DiaryCardVideoBadgeGeometryTests: XCTestCase {
     private func launch() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["LS_TAP_TARGET_GATE_SCREEN"] = "DiaryCardVideoBadges"
-        app.launch()
+        app.launchWithRetry()
         return app
     }
 

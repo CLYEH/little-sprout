@@ -58,7 +58,7 @@ final class DiaryCardPaperScreenshotUITests: XCTestCase {
         app.launchEnvironment["LS_FOOD_FIRST_FIXTURE"] = "paper"
         app.launchEnvironment["LS_FOOD_FIRST_SCHEME"] = scheme
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
-        app.launch()
+        app.launchWithRetry()
         XCTAssertTrue(
             app.buttons["qa.interactionRow.media.likeToggle"].firstMatch.waitForExistence(timeout: 10),
             "paper fixture 沒渲染（照片卡互動列不見）"

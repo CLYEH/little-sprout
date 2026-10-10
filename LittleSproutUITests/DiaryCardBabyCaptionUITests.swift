@@ -117,7 +117,7 @@ final class DiaryCardBabyCaptionUITests: XCTestCase {
         app.launchEnvironment["LS_DIARY_CARD_CAPTION_FIXTURE"] = fixture
         app.launchEnvironment["LS_DIARY_CARD_CAPTION_SCHEME"] = scheme
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
-        app.launch()
+        app.launchWithRetry()
         return app
     }
 
@@ -143,7 +143,7 @@ final class DiaryCardBabyCaptionUITests: XCTestCase {
                 app.launchEnvironment["LS_DIARY_CARD_CAPTION_FIXTURE"] = fixture
                 app.launchEnvironment["LS_DIARY_CARD_CAPTION_SCHEME"] = scheme
                 app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
-                app.launch()
+                app.launchWithRetry()
                 // 署名＋正文 `.combine` 成的那個元素（正文固定含「溜滑梯」）。
                 let card = app.descendants(matching: .any)
                     .matching(NSPredicate(format: "label CONTAINS %@", "溜滑梯")).firstMatch

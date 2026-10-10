@@ -125,7 +125,7 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["LS_TAP_TARGET_GATE_SCREEN"] = TapTargetGateScreenName.albumsPopulatedState.rawValue
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", Self.large]
-        app.launch()
+        app.launchWithRetry()
         let coverTraits = try cardButtonTraits(in: app, title: "上禮拜的動物園一日遊")
         XCTAssertTrue(
             coverTraits.contains(.image),
@@ -146,7 +146,7 @@ final class AlbumCardImprintCaptionUITests: XCTestCase {
         app.launchEnvironment["LS_PHOTO_CARD_CAPTION_FIXTURE"] = fixture
         app.launchEnvironment["LS_PHOTO_CARD_CAPTION_SCHEME"] = scheme
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
-        app.launch()
+        app.launchWithRetry()
         return app
     }
 

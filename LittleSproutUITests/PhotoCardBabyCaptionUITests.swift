@@ -188,7 +188,7 @@ final class PhotoCardBabyCaptionUITests: XCTestCase {
         app.launchEnvironment["LS_TAP_TARGET_GATE_SCREEN"] = TapTargetGateScreenName.photoCardBabyCaption.rawValue
         app.launchEnvironment["LS_PHOTO_CARD_CAPTION_FIXTURE"] = fixture
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
-        app.launch()
+        app.launchWithRetry()
         return app
     }
 

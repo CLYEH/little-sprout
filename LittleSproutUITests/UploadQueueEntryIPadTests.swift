@@ -79,7 +79,7 @@ final class UploadQueueEntryIPadTests: XCTestCase {
         app.launchEnvironment["LS_UPLOAD_QUEUE_ENTRY_SCHEME"] = scheme
         app.launchEnvironment["LS_UPLOAD_QUEUE_ENTRY_LAYOUT"] = "regular"
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
-        app.launch()
+        app.launchWithRetry()
         return app
     }
 
