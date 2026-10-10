@@ -87,13 +87,8 @@ struct ImportPermissionDeniedView: View {
         Button {
             openSettings()
         } label: {
-            Text("開啟「照片」權限")
-                .appFont(.body, weight: .bold)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppSpacing.controlPaddingCTA)
+            PrimaryButtonLabel(title: "開啟「照片」權限")
         }
-        .foregroundStyle(Color.lsOnAccent)
-        .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
     }
 
     /// 已拒絕的相片庫權限只能到系統設定改——`PHPhotoLibrary.requestAuthorization` 對已決定

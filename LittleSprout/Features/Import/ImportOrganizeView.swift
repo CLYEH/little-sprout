@@ -267,13 +267,8 @@ struct ImportOrganizeView: View {
                 // 循序 fullScreenCover」段。
                 onImportStarted(uploadCoordinator.startImport(plan: plan))
             } label: {
-                Text("開始匯入 \(plan.pendingAssetCount) 張")
-                    .appFont(.body, weight: .bold)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, AppSpacing.controlPaddingCTA)
+                PrimaryButtonLabel(title: "開始匯入 \(plan.pendingAssetCount) 張")
             }
-            .foregroundStyle(Color.lsOnAccent)
-            .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
         }
         .padding(.horizontal, AppSpacing.screenPad)
         .padding(.vertical, AppSpacing.item)
