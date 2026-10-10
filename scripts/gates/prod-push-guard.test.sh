@@ -91,6 +91,36 @@ expect '⑪e npx supabase db push --linked（deny）' 2 'npx supabase db push --
 expect '⑪f 絕對路徑 supabase（deny）' 2 '/opt/homebrew/bin/supabase db push --linked'
 expect '⑪g 管線後的 supabase（deny）' 2 'yes | supabase db push --linked'
 
+# ---- R2：引號感知（M2）／行尾續行（M3）／任意位置前綴（m1）／涵蓋面（m2）----
+expect 'R2-M2a 旗標在含括號的 SQL 後面（deny）' 2 'supabase db query "select count(*) from t" --linked'
+expect 'R2-M2b 旗標在含分號的 SQL 後面（deny）' 2 'supabase db query "alter table t add c int;" --linked'
+expect 'R2-M2c 遠端 --db-url 在 SQL 後面（deny）' 2 "supabase db query \"select now()\" --db-url ${REMOTE}"
+expect 'R2-M2d 引號內的 && 不當分段符（deny）' 2 'supabase db query "a && b" --linked'
+expect 'R2-M2e SQL 內容寫 db push 的本機查詢不誤擋（allow）' 0 "supabase db query \"select 'db push'\""
+expect 'R2-M2f 未閉合引號 fail closed（deny）' 2 'supabase db push --linked "'
+expect 'R2-M3a 續行：supabase 與子指令分兩行（deny）' 2 $'supabase \\\n  db push'
+expect 'R2-M3b 續行：--linked 在最後一行（deny）' 2 $'supabase db query \\\n  -f x.sql \\\n  --linked'
+expect 'R2-m1a timeout 前綴（deny）' 2 'timeout 60 supabase db push'
+expect 'R2-m1b gtimeout -k 前綴（deny）' 2 'gtimeout -k 5 60 supabase db push --linked'
+expect 'R2-m1c if then 後（deny）' 2 'if true; then supabase db push; fi'
+expect 'R2-m1d 大括號群組（deny）' 2 '{ supabase db push; }'
+expect 'R2-m1e 黏在一起的 true&&supabase（deny）' 2 'true&&supabase db push'
+expect 'R2-m1f eval 內文（deny）' 2 "eval 'supabase db push --linked'"
+expect 'R2-m1g heredoc 餵 bash（deny）' 2 $'bash <<\'X\'\nsupabase db push --linked\nX'
+expect 'R2-m1h --workdir 夾在中間（deny）' 2 'supabase --workdir x db push'
+expect 'R2-m1i URL 查詢字串有 & 後面接 --linked（deny）' 2 'supabase db push --db-url "postgresql://postgres@127.0.0.1:54322/postgres?a=1&b=2" --linked'
+expect 'R2-m1j 本機 URL 含 & 的 db push（allow）' 0 'supabase db push --db-url "postgresql://postgres@127.0.0.1:54322/postgres?a=1&b=2"'
+expect 'R2-m1k cd supabase 目錄後做本機 reset（allow）' 0 'cd supabase && supabase db reset'
+expect 'R2-m1l 多行：先 start 再本機 reset（allow）' 0 $'supabase start\nsupabase db reset'
+expect 'R2-m2a secrets unset（deny）' 2 'supabase secrets unset FOO'
+expect 'R2-m2b functions delete（deny）' 2 'supabase functions delete foo'
+expect 'R2-m2c config push（deny）' 2 'supabase config push'
+expect 'R2-m2d migration repair 預設 linked（deny）' 2 'supabase migration repair --status applied 20260101000000'
+expect 'R2-m2e migration repair --local（allow）' 0 'supabase migration repair --local --status applied 20260101000000'
+expect 'R2-m2f storage rm（deny）' 2 'supabase storage rm ss:///media/x.png'
+expect 'R2-m2g storage cp --local（allow）' 0 'supabase storage cp --local a.png ss:///media/a.png'
+expect 'R2-m2h secrets unset 有當日 token（allow）' 0 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase secrets unset FOO"
+
 # ---- fail-closed ----
 out=$(printf '' | bash "$gate" 2>&1); got=$?
 if [ "$got" -eq 2 ]; then echo '✓ fail-closed：stdin 空（deny）'; else echo "✗ fail-closed：stdin 空期望 2 實得 ${got}：${out}" >&2; fail=1; fi
@@ -148,13 +178,21 @@ mutate_expect_allow() {  # $1=label $2=sed 表達式 $3=原本會 deny 的 comma
 mutate_expect_allow 'M1：拿掉 token 比對（一律放行已偵測者）→ 無 token 的 --linked 改判 allow' \
   's/^sys.exit(0 if tok.search(cmd) else 2)$/sys.exit(0)/' 'supabase db push --linked'
 mutate_expect_allow 'M2：拿掉 db push 預設 linked 判斷 → 裸跑 db push 改判 allow' \
-  's/db\\s+push(?=\\s|$)", text) and dburl is None and not has_local/db\\s+push(?=\\s|$)", text) and False/' 'supabase db push'
+  's/ and dburl is None and not has_local/ and False/' 'supabase db push'
 mutate_expect_allow 'M3：拿掉 --db-url 主機判斷 → 遠端 --db-url 改判 allow' \
   's/if dburl is not None and host_of(dburl) not in LOCAL_HOSTS:/if False:/' "supabase migration up --db-url ${REMOTE}"
 mutate_expect_allow 'M4：拿掉 functions deploy／secrets set 規則 → functions deploy 改判 allow' \
-  's/(functions\\s+deploy|secrets\\s+set)/(zzz_never)/' 'supabase functions deploy foo'
+  's/^    if re.search(ALWAYS_REMOTE, text):$/    if False:/' 'supabase functions deploy foo'
 mutate_expect_allow 'M5：拿掉 --linked 判斷 → db query --linked 改判 allow' \
   's/^    if linked:$/    if False:/' "supabase db query --linked 'select 1'"
+mutate_expect_allow 'M6：拿掉行尾續行摺疊 → 續行寫法的 --linked 改判 allow' \
+  's/^    command = command.replace.*$/    command = command/' $'supabase db query \\\n  -f x.sql \\\n  --linked'
+mutate_expect_allow 'M7：拿掉 migration repair 預設 linked → 改判 allow' \
+  's/migration\\s+repair/zzz_never/' 'supabase migration repair --status applied 20260101000000'
+mutate_expect_allow 'M8：拿掉 secrets unset 規則 → 改判 allow' \
+  's/secrets\\s+(?:set|unset)/secrets\\s+set/' 'supabase secrets unset FOO'
+mutate_expect_allow 'M9：tokenize 改成不認引號的括號切段 → 旗標在含括號 SQL 後面的 --linked 改判 allow' \
+  's/^    return list(s)$/    return re.split(r"[();]", cmd)/' 'supabase db query "select count(*) from t" --linked'
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ prod-push-guard.test.sh 有失敗項目" >&2

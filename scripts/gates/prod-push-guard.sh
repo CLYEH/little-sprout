@@ -8,29 +8,37 @@
 # 資料的正式站，不可逆；擋錯只是多一次回報使用者（極性判準見 scripts/hooks/README.md）。
 #
 # 規則（docs/COLLABORATION.md §6「DB migration gate」末段「正式站 `supabase db push` 每次需使用者
-# 當次授權」、§7 對照表）：
-#   命令位置（命令串首、或 ; && || | 換行 ( 之後，可帶 env 賦值／sudo／env／time／xargs／npx／
-#   `bash scripts/ops/supabase-lock.sh --`／`bash -c '…'` 這類前綴）出現 `supabase …`，且屬下列任一 → 視為「打正式站」：
-#     (a) 帶 `--linked`（任何子指令）
+# 當次授權」引用本段為涵蓋清單的唯一來源，§7 對照表同；R2 改版，LS-78）：
+#   命令文字（先把行尾 `\`＋換行摺成空白，再用 shlex 依引號切 token，`; && || | & ( ) 換行 反引號` 是運算子
+#   token、引號內的這些字元不算）任一處出現 `supabase` token（basename 等於 supabase，前面是 timeout／
+#   env／sudo／xargs／npx／`supabase-lock.sh --`／then／{ 等任何東西都算；`bash|sh|zsh -c '…'`／`eval '…'`
+#   的引號內文遞迴再掃），取其後到下一個運算子 token 為止的 args，屬下列任一 → 視為「打正式站」：
+#     (a) 帶 `--linked`（任何子指令；含唯讀的 `db query --linked`／`db dump --linked`）
 #     (b) 帶 `--db-url` 且 host 不在 127.0.0.1／localhost／host.docker.internal（值取不出來或是
 #         `$VAR` 之類無法判斷者一律視為非 localhost，fail closed）
-#     (c) `db push` 且沒有 `--local`、也沒有 localhost 的 `--db-url`（`db push` 預設就是 linked）
-#     (d) `functions deploy`／`secrets set`（沒有本機模式，一律打遠端；票文只列 db push／migration
-#         up／--db-url，這兩個同屬正式站部署面，orchestrator 裁定納入）
+#     (c) 預設 linked 的寫入類子指令：`db push`、`migration repair`、`config push`、`storage rm|cp|mv`
+#         （storage 三者依 CLI help 只列 --linked／--local，預設值未實測，保守當 linked），沒有 `--local`、
+#         也沒有 localhost 的 `--db-url` 時
+#     (d) 沒有本機模式、一律打遠端的子指令：`functions deploy`、`functions delete`、`secrets set`、
+#         `secrets unset`（票文只列 db push／migration up／--db-url，其餘同屬正式站寫入面，orchestrator 裁定納入）
 #   `migration up` 不帶 --linked／遠端 --db-url 時預設是本機（CLI 預設 --local），放行。
 #   本機 `supabase start`／`stop`／`status`／`db reset`／`db query`（無 --linked）放行。
+#   子指令比對只看不含空白的 args token（引號內整段 SQL 之類不參與），regex 對串起來的 args 比對，所以
+#   `supabase --workdir x db push` 這種旗標夾在 supabase 與子指令之間仍會擋。
+#   shlex 遇到未閉合引號等 ValueError 時 fail closed：把整段原文當 args 再判一次。
 #   「打正式站」且命令全文（不分位置）沒有 `PROD-PUSH-APPROVED-BY-USER=<今日>` → deny。
 #   今日＝`date +%F`；環境變數 `PROD_PUSH_GUARD_TODAY=YYYY-MM-DD` 可覆寫（只供自測；hook 行程的環境
 #   變數，agent 寫在命令前綴的同名賦值不影響 hook）。過期日期、少一位、日期後再接數字皆不算。
 #   寫法：連字號名稱不是合法 shell 賦值，前綴要用 `env PROD-PUSH-APPROVED-BY-USER=<日期> supabase db push …`
-#   （或同命令內 `echo`／註解帶字面）；本檔解析認得 env 後帶連字號名稱的 token。
+#   （或同命令內 `echo`／註解帶字面）。
 #   token 只有使用者能在對話中給出：orchestrator 不得自行生成，deny 理由刻意只印格式佔位
 #   `<YYYY-MM-DD>`，不印今日日期。
 #
 # 已知盲區（靠規約 §6「不改寫指令繞過」與 auto-mode 分類器）：把指令包進 .sh 腳本再執行（命令文字
-# 不含 supabase，如 `bash scripts/ops/foo.sh`）、`supabase --workdir x db push` 這種旗標夾在子指令
-# 中間、變數展開組字串、`psql`／`curl` 直打 Management API 或正式站連線字串——這些不經此 hook。
-# 子指令比對是對 supabase 之後的字串做 regex，不剖析旗標值。
+# 不含 supabase，如 `bash scripts/ops/foo.sh`）、變數展開組字串、旗標夾在子指令兩個字之間
+# （`db --workdir x push`）、`ssh`／`docker exec` 等引號內遠端命令、`psql`／`curl` 直打
+# Management API 或正式站連線字串——這些不經此 hook。已知誤擋（寧可擋錯）：無引號的 `supabase db push`
+# 字樣出現在 echo／heredoc 散文、`# supabase db push` 整行註解。
 #
 # deny 輸出：stdout `{"hookSpecificOutput":{…"permissionDecision":"deny","permissionDecisionReason":"…"}}`
 # ＋stderr 同一句理由，exit 2；允許＝exit 0 無輸出。reason 只放本檔案自己寫的靜態文字，不回顯命令內容。
@@ -79,16 +87,18 @@ import json, os, re, shlex, sys
 from urllib.parse import urlparse
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "host.docker.internal"}
-SEP = re.compile(r"\$\(|&&|\|\||[;|\n()`]|\s&\s")
-WRAPPERS = {"env", "sudo", "time", "command", "exec", "nohup", "xargs", "npx", "bunx", "nice", "builtin"}
+OPS = set(";|&()\n`")
 SHELLS = {"bash", "sh", "zsh"}
+ALWAYS_REMOTE = r"(?:^|\s)(?:functions\s+(?:deploy|delete)|secrets\s+(?:set|unset))(?=\s|$)"
+DEFAULT_LINKED = r"(?:^|\s)(?:db\s+push|migration\s+repair|config\s+push|storage\s+(?:rm|cp|mv))(?=\s|$)"
 
 
-def toks(seg):
-    try:
-        return shlex.split(seg)
-    except ValueError:
-        return seg.split()
+def tokenize(cmd, punct):
+    s = shlex.shlex(cmd, posix=True, punctuation_chars=punct)
+    s.whitespace_split = True
+    s.commenters = ""
+    s.whitespace = " \t\r"
+    return list(s)
 
 
 def host_of(url):
@@ -106,8 +116,8 @@ def host_of(url):
 
 
 def remote_target(args):
-    """args＝supabase 之後的 token。回傳 True＝打正式站。"""
-    text = " ".join(args)
+    """args＝supabase 之後、下一個運算子之前的 token。回傳 True＝打正式站。"""
+    text = " ".join(a for a in args if not re.search(r"\s", a))
     linked = any(a == "--linked" or a.startswith("--linked=") for a in args)
     has_local = "--local" in args
     dburl = None
@@ -120,41 +130,49 @@ def remote_target(args):
         return True
     if dburl is not None and host_of(dburl) not in LOCAL_HOSTS:
         return True
-    if re.search(r"(?:^|\s)(functions\s+deploy|secrets\s+set)(?=\s|$)", text):
+    if re.search(ALWAYS_REMOTE, text):
         return True
-    if re.search(r"(?:^|\s)db\s+push(?=\s|$)", text) and dburl is None and not has_local:
+    if re.search(DEFAULT_LINKED, text) and dburl is None and not has_local:
         return True
+    return False
+
+
+def is_op(tok):
+    return tok != "" and all(ch in OPS for ch in tok)
+
+
+def scan_tokens(t, depth):
+    for i, tok in enumerate(t):
+        base = os.path.basename(tok)
+        if base == "supabase":
+            j = i + 1
+            while j < len(t) and not is_op(t[j]):
+                j += 1
+            if remote_target(t[i + 1:j]):
+                return True
+        elif (base in SHELLS or base == "eval") and depth < 3:
+            if base == "eval":
+                inner = t[i + 1] if i + 1 < len(t) else None
+            else:
+                c = next((k for k in range(i + 1, len(t)) if re.match(r"^-[a-z]*c[a-z]*$", t[k])), None)
+                inner = t[c + 1] if c is not None and c + 1 < len(t) else None
+            if inner and scan(inner, depth + 1):
+                return True
     return False
 
 
 def scan(command, depth=0):
-    for seg in SEP.split(command):
-        t = toks(seg)
-        i = 0
-        while i < len(t):
-            tok = t[i]
-            base = os.path.basename(tok)
-            if re.match(r"^[A-Za-z_][\w-]*=", tok) or base in WRAPPERS:
-                i += 1
-            elif base == "supabase":
-                if remote_target(t[i + 1:]):
-                    return True
-                break
-            elif base == "supabase-lock.sh":
-                j = t.index("--") if "--" in t[i:] else None
-                if j is None:
-                    break
-                i = j + 1
-            elif base in SHELLS:
-                c = next((k for k in range(i + 1, len(t)) if re.match(r"^-[a-z]*c[a-z]*$", t[k])), None)
-                if c is not None and c + 1 < len(t) and depth < 3:
-                    if scan(t[c + 1], depth + 1):
-                        return True
-                    break
-                i += 1
-            else:
-                break
-    return False
+    command = command.replace("\\\n", " ")
+    # 兩種標點集合各掃一次取聯集：含 & 時 URL 查詢字串的 & 會切斷 args（--db-url 後的 --linked 掉出去）；
+    # 不含 & 時 `true&&supabase` 這種黏在一起的寫法看不到 supabase token。
+    try:
+        for punct in ("();<>|&\n`", "();<>|\n`"):
+            if scan_tokens(tokenize(command, punct), depth):
+                return True
+        return False
+    except ValueError:
+        raw = command.split()
+        return any(os.path.basename(w) == "supabase" for w in raw) and remote_target(raw)
 
 
 try:
