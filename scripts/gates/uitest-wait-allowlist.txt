@@ -1,0 +1,19 @@
+# uitest-wait-check.sh 規則 ii 的檔案層級 allowlist（LS-458）。一行一個 `LittleSproutUITests/<相對路徑>`，`#` 後寫理由。
+# 這是**歷史債**清單：LS-458 落地時以下 12 檔共 53 處「讀 .exists／.label／.value 前同 func 內無 wait」的斷言
+# （多數是 launch 後直接讀、同步點在 TapTargetMeasurement.launch／assertScreenRendered 或 helper 內，未必真會紅，
+# 但 gate 靜態看不出來）。只擋新增、不要求一次清完。
+# 棘輪：條目對應的檔案一旦沒有規則 ii 命中（修完了）或檔案不存在，gate 就紅——請把該行刪掉，債只減不留。
+# 規則 i（XCTAssertFalse(waitForExistence)）沒有檔案層級豁免，不列在這裡。
+# 清理這份債不在 LS-458 範圍（票文「不重構測試 helper 架構」）；動到下列檔案時順手補 wait 並刪條目。
+LittleSproutUITests/AlbumDetailViewTests.swift          # 4 處
+LittleSproutUITests/AlbumsViewTests.swift               # 1 處
+LittleSproutUITests/DeleteAccountFlowUITests.swift      # 1 處
+LittleSproutUITests/DiaryCardPaperScreenshotUITests.swift # 3 處
+LittleSproutUITests/FoodBookEntryUITests.swift          # 8 處
+LittleSproutUITests/FoodBookUITests.swift               # 13 處
+LittleSproutUITests/FoodFirstCardUITests.swift          # 1 處
+LittleSproutUITests/FoodRecordDetailFlowUITests.swift   # 1 處
+LittleSproutUITests/FoodRecordDetailUITests.swift       # 8 處
+LittleSproutUITests/FoodRecordSheetUITests.swift        # 4 處
+LittleSproutUITests/PhotoCardBabyCaptionUITests.swift   # 2 處
+LittleSproutUITests/UploadQueueEntryUITests.swift       # 7 處

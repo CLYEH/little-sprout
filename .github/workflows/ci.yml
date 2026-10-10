@@ -204,7 +204,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／report-cite-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／ui-test-shards／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／overflow-scan／pen-snapshot-dump／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／food-sticker-crop／food-sticker-size-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／report-cite-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／ui-test-shards／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／overflow-scan／pen-snapshot-dump／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／uitest-wait-check／food-sticker-crop／food-sticker-size-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -304,6 +304,9 @@ jobs:
           # LS-270（LS-96 池項 `d4c1add5`／`e850cb7f`(3)）：`pipefail` ＋ `| grep -q` 偵測自己的自測（夾具正負
           # 各一——票文指定的 mutation 就是「拿掉 set -o pipefail → 無 ⚠」；另含純註解行不算／非 *.test.sh 不掃）
           bash scripts/gates/pipefail-grep-q-check.test.sh || rc=1
+          # LS-458（池 P1 `e0f65a8f`／`f608d582`／`def25a8f`）：UITest 等待紀律 gate 自己的自測（夾具正負樣本＋修前原文
+          # 回歸樣本＋allowlist 棘輪＋五組 mutation：拿掉規則 i／lookback func 下限／註解剔除／棘輪／行內標記各一）
+          bash scripts/gates/uitest-wait-check.test.sh || rc=1
           # LS-346：「背景 push gate 等待迴圈」不會自我比對（GNU/Linux pgrep 預設不排除祖先
           # 行程，只有 ubuntu-latest 這個通道能重現 LS-344 回報的自我比對，mutation 拿掉 $_self 排除）；
           # LS-358 起 ① 檢查 scripts/ops/push-gate-wait.sh 的 gate_running()（ios-dev.md 已不再抄迴圈）
@@ -327,6 +330,14 @@ jobs:
       - name: 自測清單對帳（selftest-wiring-check，LS-267）
         if: ${{ !cancelled() }}
         run: bash scripts/gates/selftest-wiring-check.sh
+
+      # LS-458（LS-413 池 P1 `e0f65a8f`／`f608d582`／`def25a8f`）：UITest 等待紀律——`XCTAssertFalse(x.waitForExistence(...))`
+      # （消失斷言等待方向相反，sheet 還在關閉動畫時立刻紅）與讀 `.exists`／`.label`／`.value` 前沒有 wait 的斷言，慢 runner
+      # 才紅，每例耗一輪 rerun 17–25 分。**擋**（exit 1）；口徑、行內豁免 `// uitest-wait-ok: <理由>`、規則 ii 歷史債 allowlist
+      # 與棘輪全部寫在 scripts/gates/uitest-wait-check.sh 檔頭；規範見 docs/COLLABORATION.md §7「UITest 等待紀律」。純檔案比對。
+      - name: UITest 等待紀律（uitest-wait-check，LS-458）
+        if: ${{ !cancelled() }}
+        run: bash scripts/gates/uitest-wait-check.sh
 
       # LS-267（LS-96 池項 `c8215a9e`；LS-263 收尾 lesson review）：5 個 UITest 檔曾累積 8 份 byte-identical
       # 的 `waitForHittable`／`waitForNonExistence` 複本，直到肉眼才抓到。這支把「跨檔重複 private func 本體」
