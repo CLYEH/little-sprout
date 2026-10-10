@@ -232,7 +232,8 @@ merge-reviewer|四維度檢查項的單一來源是 \`docs/REVIEW-RUBRIC.md\`|LS
 ios-dev|## 自檢（依 docs/REVIEW-RUBRIC.md）|LS-352：handoff 必含 rubric 自檢段，逐條對 docs/REVIEW-RUBRIC.md 每個 R<n>.<m> 寫通過／不適用／已知未處理＋證據，handoff-evidence-check.sh --require-selfcheck 機械驗；那句被刪即紅
 merge-reviewer|自檢已宣告通過的項只抽驗、不重寫|LS-352：ios-dev 自檢段宣告通過的項只抽驗、不從頭重審；informational 只有 P1／P2 記 LS-413 池、P3 不入池、不得要求本 PR 修，那句被刪即紅
 qa|字級矩陣至少含 xSmall、預設、AX3|LS-346（來源 LS-343 verdict b975e587）：只驗預設與放大會漏掉「比預設小」那端的回歸（LS-343 時間軸 Header 在 390pt 只有 Small／XS 字級破版，與範圍 4 的機型寬度問題是兩件事），那句被刪即紅
-qa|只比 \`design/evidence/\`／visual-reviewer 匯出的 PNG，不跑 pen-read.sh|LS-398（來源 LS-376 R1 m1）：pen-read.sh＝pen-open --force-reload，qa 跑它會把 qa-test 的 .pen 載成 Pen active（LS-349 設計票在飛時 Pen 跑到 qa-test 的根因）；設計票在飛時 qa 對稿只比 VR 匯出 PNG、不跑 pen-read.sh，那句被刪即紅"
+qa|只比 \`design/evidence/\`／visual-reviewer 匯出的 PNG，不跑 pen-read.sh|LS-398（來源 LS-376 R1 m1）：pen-read.sh＝pen-open --force-reload，qa 跑它會把 qa-test 的 .pen 載成 Pen active（LS-349 設計票在飛時 Pen 跑到 qa-test 的根因）；設計票在飛時 qa 對稿只比 VR 匯出 PNG、不跑 pen-read.sh，那句被刪即紅
+merge-reviewer|UI 斷言前必有等待；消失用 waitForNonExistence|LS-458（池 P1 e0f65a8f／f608d582／def25a8f）：慢 runner 下 UITest 斷言前沒等就緒、消失斷言寫成 XCTAssertFalse(waitForExistence) 同型 6 例，每例耗一輪 rerun 17–25 分；uitest-wait-check.sh 只抓兩型靜態形狀，tap 前等 isHittable／split view 就緒靠 reviewer 人工核對，那句被刪即紅"
 # LS170-BODY-RULES-END
 
 # frontmatter tools: 解析（LS-209 抽成函式：RULES 必要工具與 FORBIDDEN_RULES 禁止工具兩張表都要用同一套解析，
