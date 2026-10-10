@@ -137,6 +137,23 @@ expect 'R3-l 同行兩個 heredoc 內文皆略過（allow）' 0 $'cat <<A <<B\ns
 expect 'R3-m gh pr create --body-file - heredoc（allow）' 0 $'gh pr create --body-file - <<\'X\'\nrun supabase db push --linked\nX'
 expect 'R3-n here-string <<< 不是 heredoc（allow）' 0 'cat <<< hello'
 
+# ---- R4：接收端只看含 << 的 simple command 首詞＋其後管線段首詞（m3／i5）----
+expect 'R4-a 每份 handoff 的標準寫法：cat heredoc 後 && bash 檢查腳本（allow）' 0 $'cat > f <<\'X\'\nsupabase db push --linked\nX\n'
+expect 'R4-a2 同一行 cat <<X 後接 && bash scripts/gates/handoff-evidence-check.sh f（allow）' 0 $'cat > f <<\'X\' && bash scripts/gates/handoff-evidence-check.sh f\nsupabase db push --linked\nX'
+expect 'R4-b linear-post.sh 備援：bash 腳本 stdin（allow）' 0 $'bash scripts/ops/linear-post.sh comment LS-78 /dev/stdin <<\'X\'\n本票 supabase db push --linked 已授權\nX'
+expect 'R4-c bash <<X 內文含 supabase db push（deny）' 2 $'bash <<\'X\'\nsupabase db push\nX'
+expect 'R4-d bash -s <<X（deny）' 2 $'bash -s <<\'X\'\nsupabase db push --linked\nX'
+expect 'R4-e sh - <<X（deny）' 2 $'sh - <<\'X\'\nsupabase db push --linked\nX'
+expect 'R4-f source /dev/stdin <<X（deny）' 2 $'source /dev/stdin <<X\nsupabase db push --linked\nX'
+expect 'R4-f2 . /dev/stdin <<X（deny）' 2 $'. /dev/stdin <<X\nsupabase db push --linked\nX'
+expect 'R4-g cat <<X … X | bash 管線接收端是 shell（deny）' 2 $'cat <<\'X\' | bash\nsupabase db push --linked\nX'
+expect 'R4-g2 cat <<X | tee f | bash 多段管線（deny）' 2 $'cat <<\'X\' | tee f | bash\nsupabase db push --linked\nX'
+expect 'R4-h cat <<X … X | tee f（allow）' 0 $'cat <<\'X\' | tee f\nsupabase db push --linked\nX'
+expect 'R4-i env 前綴後的 bash <<X（deny）' 2 $'env A=1 bash <<\'X\'\nsupabase db push --linked\nX'
+expect 'R4-j cat <<X ; bash（同行別段的 bash 不算，allow）' 0 $'cat <<\'X\' > f; bash scripts/x.sh\nsupabase db push --linked\nX'
+expect 'R4-k bash -c $(cat <<X …) 命令替換內退回整行判斷（deny）' 2 $'bash -c $(cat <<\'X\'\nsupabase db push --linked\nX\n)'
+expect 'R4-l x=$(cat <<X …) 純取字串（allow）' 0 $'x=$(cat <<\'X\'\nsupabase db push --linked\nX\n)'
+
 # ---- fail-closed ----
 out=$(printf '' | bash "$gate" 2>&1); got=$?
 if [ "$got" -eq 2 ]; then echo '✓ fail-closed：stdin 空（deny）'; else echo "✗ fail-closed：stdin 空期望 2 實得 ${got}：${out}" >&2; fail=1; fi
@@ -212,7 +229,7 @@ mutate_expect_deny() {  # $1=label $2=sed 表達式 $3=原本會 allow 的 comma
 mutate_expect_deny 'M10：拿掉 heredoc 內文剝除 → cat heredoc 內文含 supabase db push --linked 改判 deny' \
   's/^    command = strip_heredocs(\(.*\))$/    command = \1/' $'cat > f <<\'X\'\nsupabase db push --linked\nX'
 mutate_expect_allow 'M11：接收端一律略過內文（不分 shell 直譯器）→ bash heredoc 內文改判 allow' \
-  's/^                keep = any(.*$/                keep = False/' $'bash <<\'X\'\nsupabase db push --linked\nX'
+  's/^            keep = stdin_is_shell(words)$/            keep = False/' $'bash <<\'X\'\nsupabase db push --linked\nX'
 mutate_expect_allow 'M6：拿掉行尾續行摺疊 → 續行寫法的 --linked 改判 allow' \
   's/command\.replace(.*, " "))$/command)/' $'supabase db query \\\n  -f x.sql \\\n  --linked'
 mutate_expect_allow 'M7：拿掉 migration repair 預設 linked → 改判 allow' \
