@@ -248,6 +248,28 @@ struct LegalMarkdownDocument: Equatable {
     private static func parseInline(_ text: String) -> AttributedString {
         var options = AttributedString.MarkdownParsingOptions()
         options.interpretedSyntax = .inlineOnlyPreservingWhitespace
-        return (try? AttributedString(markdown: text, options: options)) ?? AttributedString(text)
+        let wrapped = wrapBareURLs(text)
+        return (try? AttributedString(markdown: wrapped, options: options)) ?? AttributedString(text)
+    }
+
+    /// LS-457 pre-pass：把裸 URL 包成 `<url>`（CommonMark autolink），讓連結範圍＝URL 本體。
+    /// 原因（對 `docs/legal/*.md` 實測）：Apple parser 的裸 URL autolink 延伸到下一個空白，中文段落沒有空白，
+    /// 於是 terms:12 的「（https://…）拘束。本服務是為家人打造的」整段被吞進連結（藍字＋連結目的含中文垃圾位址）。
+    /// URL 到空白、漢字（`\p{Han}`）、全形標點（`U+3000–303F`、`U+FF00–FFEF`，含 `）`）為止；ASCII 的
+    /// `?`／`#`／`%`／`=`／`&` 都是 URL 合法字元，不截。已是 `[text](url)`、`[url](…)`、`<url>` 的不重複包裝
+    /// （前一字元是 `[`／`<`，或前兩字元是 `](`）。
+    private static func wrapBareURLs(_ text: String) -> String {
+        var result = ""
+        var cursor = text.startIndex
+        for match in text.matches(of: /https?:\/\/[^\s\p{Han}\u{3000}-\u{303F}\u{FF00}-\u{FFEF}]+/) {
+            let start = match.range.lowerBound
+            let before = text[..<start]
+            if before.last == "[" || before.last == "<" || before.hasSuffix("](") { continue }
+            result += text[cursor..<start]
+            result += "<\(match.output)>"
+            cursor = match.range.upperBound
+        }
+        result += text[cursor...]
+        return result
     }
 }
