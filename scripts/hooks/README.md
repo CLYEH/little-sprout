@@ -23,6 +23,7 @@ Claude Code PreToolUse hook 的 exit code 語意：**exit 0＝允許**（stdout 
 | PreToolUse `Bash` | `background-bash-guard.sh`（＋`background_bash_guard.py`，H-BG） | 是 | fail-closed（腳本內亦 fail-closed；「找不到 agent 身分 → allow」是規則層的判定，不是極性） | `background-bash-guard.test.sh` |
 | PreToolUse `Bash\|Read` | `large-file-read-guard.sh`（＋`large_file_read_guard.py`，H-LF） | 是 | fail-closed（腳本內亦 fail-closed） | `large-file-read-guard.test.sh` ⑭② |
 | PreToolUse `Agent` | `fork-guard.sh`（＋`fork_guard.py`，LS-254） | **否** | **fail-open**（腳本內亦 fail-open：stdin 空／python3 缺席／JSON 壞 → exit 0＋stderr 註明） | `fork-guard.test.sh` ⑤② |
+| PreToolUse `Bash` | `scripts/gates/prod-push-guard.sh`（LS-78，正式站部署面需當日 `PROD-PUSH-APPROVED-BY-USER` token） | 是 | fail-closed（腳本內亦 fail-closed） | `scripts/gates/prod-push-guard.test.sh` wiring①–③ |
 | PreToolUse `mcp__linear__save_issue` | `scripts/gates/linear-issue-check.sh`（規則 A–E） | 是 | fail-closed | `scripts/gates/linear-issue-check.test.sh` |
 
 ## 新增 hook 檢查表
