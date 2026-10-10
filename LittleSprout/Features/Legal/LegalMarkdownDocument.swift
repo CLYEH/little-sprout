@@ -212,20 +212,18 @@ struct LegalMarkdownDocument: Equatable {
         return trimmed.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
     }
 
-    /// 已剝掉區塊語法字元的單行/單段文字，交給系統 inline markdown 解析器處理粗體／連結。
-    /// **必須明確指定 `interpretedSyntax: .inlineOnlyPreservingWhitespace`**——
-    /// `AttributedString(markdown:)` 不帶 `options` 時的預設值其實是 `.full`（實測驗證，
-    /// 不是文件字面暗示的「純 inline」），對「1. 條款的接受與適用」這種本身就長得像合法
-    /// 單項清單的節標題文字，會把 `1. ` 這個清單標記當結構吃掉、只留下「條款的接受與適用」
-    /// ——LittleSproutTests 抓到這個回歸（全部節標題數字消失），已改用明確的 inline-only
-    /// 選項修正：同樣的字面文字現在保證原樣保留，只處理粗體／連結。
-    /// 解析失敗（理論上不會，見 LittleSproutTests 對全文兩份文件的覆蓋測試）時退回純文字，
-    /// 不讓一個排版問題讓整份文件開不了。
+    /// inline 解析入口：已剝掉區塊語法字元的單行／單段文字 → `AttributedString`。內含兩個 pre-pass，
+    /// **順序固定：先粗體切塊（本函式）、再對每一塊做裸 URL 包裝（`parseInline` → `wrapBareURLs`）**。
+    ///
+    /// 1. 粗體 pre-pass（LS-456）：把 `**…**` 切成獨立的粗體 run，其餘文字各自交給 `parseInline`。
+    ///    原因（對 `docs/legal/*.md` 實測）：裸 URL（`（https://…）`）後 Apple parser 會把 URL autolink
+    ///    延伸到下一個空白為止，連同後面的 `**…**` 一起吞進連結 URL，字面 `**` 漏到畫面（terms:12）。
+    ///    先切開，`**` 就不會落在任何 autolink 範圍內，也不依賴 Apple 對 CJK flanking 的判定。
+    ///    **邊界**（LS-459，見 `nextBoldDelimiter`）：只認「恰好兩個 `*`」的分隔符；code span 與
+    ///    `[文字](網址)` 內的 `**` 不切（交 Apple parser，前者保持字面、後者連結完整但 Apple 會丟掉連結內強調）；
+    ///    `***x***` 整串不切、交 Apple parser 做粗斜體；未閉合的 `**` 維持字面。
+    /// 2. 裸 URL 包裝（LS-457）：見 `wrapBareURLs`。因為在粗體切塊「之後」才跑，URL 的尾端一定止於 `**` 之前。
     private static func inlineAttributed(_ text: String) -> AttributedString {
-        // LS-456 pre-pass：先把 `**…**` 切成獨立的粗體 run，其餘文字各自交給 `parseInline`。
-        // 原因（對 `docs/legal/*.md` 實測）：裸 URL（`（https://…）`）後 Apple parser 會把 URL autolink
-        // 延伸到下一個空白為止，連同後面的 `**…**` 一起吞進連結 URL，字面 `**` 漏到畫面（terms:12）。
-        // 先切開，`**` 就不會落在任何 autolink 範圍內，也不依賴 Apple 對 CJK flanking 的判定。
         var result = AttributedString()
         var cursor = text.startIndex
         while let open = nextBoldDelimiter(in: text, from: cursor),
@@ -264,6 +262,16 @@ struct LegalMarkdownDocument: Equatable {
         return nil
     }
 
+    /// 已剝掉區塊語法字元的單行/單段文字，交給系統 inline markdown 解析器處理粗體／連結。
+    /// **必須明確指定 `interpretedSyntax: .inlineOnlyPreservingWhitespace`**——
+    /// `AttributedString(markdown:)` 不帶 `options` 時的預設值其實是 `.full`（實測驗證，
+    /// 不是文件字面暗示的「純 inline」），對「1. 條款的接受與適用」這種本身就長得像合法
+    /// 單項清單的節標題文字，會把 `1. ` 這個清單標記當結構吃掉、只留下「條款的接受與適用」
+    /// ——LittleSproutTests 抓到這個回歸（全部節標題數字消失），已改用明確的 inline-only
+    /// 選項修正：同樣的字面文字現在保證原樣保留，只處理粗體／連結。
+    /// 解析失敗（理論上不會，見 LittleSproutTests 對全文兩份文件的覆蓋測試）時退回純文字，
+    /// 不讓一個排版問題讓整份文件開不了。
+    /// 輸入先過 `wrapBareURLs`（裸 URL → `<url>`，LS-457）再交 Apple parser；呼叫端（`inlineAttributed`）已先做完粗體切塊。
     private static func parseInline(_ text: String) -> AttributedString {
         var options = AttributedString.MarkdownParsingOptions()
         options.interpretedSyntax = .inlineOnlyPreservingWhitespace
@@ -277,6 +285,9 @@ struct LegalMarkdownDocument: Equatable {
     /// URL 到空白、漢字（`\p{Han}`）、全形標點（`U+3000–303F`、`U+FF00–FFEF`，含 `）`）為止；ASCII 的
     /// `?`／`#`／`%`／`=`／`&` 都是 URL 合法字元，不截。已是 `[text](url)`、`[url](…)`、`<url>` 的不重複包裝
     /// （前一字元是 `[`／`<`，或前兩字元是 `](`）。
+    /// **尾端標點**（LS-459，`trimTrailingPunctuation`）：URL 本體不含尾端 `.,;:!?` 與不成對的 `)`，
+    /// 這些字元留在 `<…>` 外當一般文字——否則 `(see https://a.com/x)` 的 `)` 會被算進連結。
+    /// 順序：本函式跑在粗體切塊之後，所以輸入裡不會有跨越 `**` 的 URL。
     private static func wrapBareURLs(_ text: String) -> String {
         var result = ""
         var cursor = text.startIndex
