@@ -154,23 +154,29 @@ struct GoogleSignInButton: View {
     }
 }
 
-// R1 review F3：`PrimaryButton`（`.body` 17pt，EmailSignInView／OTPVerificationView 用）與
-// `SecondaryButton`／`GoogleSignInButton`（`.lead` 22pt medium，只有 WelcomeView 用，LS-101
-// point 5 對齊 Apple 官方鈕實測值）字級不同——分成兩個 Preview，各自反映實際出現的畫面情境，
-// 不要把兩種字級併在同一張預覽裡看起來像沒對齊。
+// R1 review F3：`PrimaryButton`／預設 `SecondaryButton`（`.body` 17pt，EmailSignInView／
+// OTPVerificationView 等用）與歡迎頁登入三鈕（`GoogleSignInButton`＋傳 `.lead` medium 的
+// `SecondaryButton`，LS-101 point 5 對齊 Apple 官方鈕實測值）字級不同——分成兩個 Preview，各自
+// 反映實際出現的畫面情境，不要把兩種字級併在同一張預覽裡看起來像沒對齊。
 
-#Preview("Primary（EmailSignInView／OTPVerificationView）") {
+#Preview("Primary／Secondary 預設（EmailSignInView／OTPVerificationView）") {
     VStack(spacing: AppSpacing.label) {
         PrimaryButton(icon: "paperplane", title: "寄送驗證碼", action: {})
         PrimaryButton(icon: "paperplane", title: "寄送驗證碼", isLoading: true, action: {})
+        SecondaryButton(icon: "xmark", title: "關閉", action: {})
     }
     .padding()
 }
 
 #Preview("Secondary／Google（WelcomeView）") {
     VStack(spacing: AppSpacing.group) {
-        SecondaryButton(icon: "envelope", title: "使用 Email 登入", action: {})
-        SecondaryButton(icon: "envelope", title: "使用 Email 登入", isDimmed: true, action: {})
+        SecondaryButton(
+            icon: "envelope", title: WelcomeButtonTitle.email, labelToken: .lead, labelWeight: .medium, action: {}
+        )
+        SecondaryButton(
+            icon: "envelope", title: WelcomeButtonTitle.email, isDimmed: true,
+            labelToken: .lead, labelWeight: .medium, action: {}
+        )
         GoogleSignInButton(action: {})
     }
     .padding()
