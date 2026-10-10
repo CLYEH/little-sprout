@@ -309295,11 +309295,15 @@
                                   "name": "Card Photo 1",
                                   "width": "fill_container",
                                   "descendants": {
+                                    "O6ami": {
+                                      "x": 306
+                                    },
                                     "SNbd8": {
                                       "y": 302
                                     },
                                     "P15GB": {
-                                      "y": 302
+                                      "y": 302,
+                                      "x": 306
                                     }
                                   }
                                 },
@@ -309399,11 +309403,15 @@
                                       "y": 323,
                                       "enabled": true
                                     },
+                                    "JgUK8": {
+                                      "x": 306
+                                    },
                                     "mlORb": {
                                       "y": 302
                                     },
                                     "atAkU": {
-                                      "y": 302
+                                      "y": 302,
+                                      "x": 306
                                     }
                                   }
                                 },
@@ -310334,11 +310342,15 @@
                                   "name": "Card Photo 1",
                                   "width": "fill_container",
                                   "descendants": {
+                                    "O6ami": {
+                                      "x": 306
+                                    },
                                     "SNbd8": {
                                       "y": 302
                                     },
                                     "P15GB": {
-                                      "y": 302
+                                      "y": 302,
+                                      "x": 306
                                     }
                                   }
                                 },
@@ -310438,11 +310450,15 @@
                                       "y": 323,
                                       "enabled": true
                                     },
+                                    "JgUK8": {
+                                      "x": 306
+                                    },
                                     "mlORb": {
                                       "y": 302
                                     },
                                     "atAkU": {
-                                      "y": 302
+                                      "y": 302,
+                                      "x": 306
                                     }
                                   }
                                 },
@@ -311885,7 +311901,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "本票新寫的寬高字面值：欄寬 393 共 22 次（O2zWC 6、EJz78 11、lvdD5 5）、375 共 4 次（lvdD5 兩欄＋兩張 375 寬時間軸）；375 寬時間軸 Tab Bar 寬 343 共 2 次；O2zWC a 欄 Body 高 796、823、1988（與 b 欄同高，3 次）；UhMZ6 u0J68、qJMPS 與 lvdD5 E0kRCU 板高 2160.067（3 次）；草案 dNRrh 寬 345、高 57，icon 22×22。非尺寸字面值：dNRrh 左右內距 20（同 OKSJI）。EJz78 b 案已產生的 Body 改 fill_container，不是字面值。本板寬 900 沿用既有 Notes 板寬。沒有改任何既有元件定義的寬高。",
+          "content": "本票新寫的寬高字面值：欄寬 393 共 22 次（O2zWC 6、EJz78 11、lvdD5 5）、375 共 4 次（lvdD5 兩欄＋兩張 375 寬時間軸）；375 寬時間軸 Tab Bar 寬 343 共 2 次；O2zWC a 欄 Body 高 796、823、1988（與 b 欄同高，3 次）；UhMZ6 u0J68、qJMPS 與 lvdD5 E0kRCU 板高 2160.067（3 次）；草案 dNRrh 寬 345、高 57，icon 22×22。非尺寸字面值：dNRrh 左右內距 20（同 OKSJI）；375 寬兩張時間軸裡 4 張卡（QUnYn、JrOjB 照片卡，v5x8GX、dkatH 相簿卡）的右側角托 x 改 306（版心 327＋corner-out 5－角托 26），共 8 處。EJz78 b 案已產生的 Body 改 fill_container，不是字面值。本板寬 900 沿用既有 Notes 板寬。沒有改任何既有元件定義的寬高。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
