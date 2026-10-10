@@ -87,13 +87,19 @@ extension ChildrenManagementView {
                 } label: {
                     HStack(spacing: AppSpacing.label) {
                         Image(systemName: "person.crop.circle.badge.plus").appIconFrame(.medium)
-                        Text("新增寶貝").appFont(.body)
+                        Text("新增寶貝").appFont(.body, weight: .semibold)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, AppSpacing.controlPaddingCTA)
+                    .padding(.vertical, AppSpacing.controlPaddingMedium)
+                    .padding(.horizontal, 20)
                 }
-                .foregroundStyle(Color.lsOnAccent)
-                .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+                // LS-462（LS-454 C1a #2）：同一個 split view 右欄已有實心「儲存」，左欄改次要鈕外觀
+                // （稿 `OqQUC`＝`XggYA`：無填色、`$control-line` 外框，同 `SecondaryButton`）。
+                .foregroundStyle(Color.lsTextPrimary)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppSpacing.radiusMedium)
+                        .strokeBorder(Color.lsControlLine, lineWidth: 1.5)
+                )
                 .padding(.horizontal, AppSpacing.screenPadLarge)
                 .padding(.bottom, AppSpacing.item)
             }

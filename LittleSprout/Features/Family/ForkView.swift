@@ -196,6 +196,9 @@ struct ForkView: View {
         .foregroundStyle(Color.lsOnAccent)
         .frame(maxWidth: .infinity)
         .padding(.vertical, AppSpacing.controlPaddingCTA)
+        // LS-462（LS-454 C1a #3）：卡底列補 `PrimaryButton.minHeight` 下限（稿 `h06TU` 高 60）；
+        // 整張卡是 Button，這裡不換元件。
+        .frame(minHeight: PrimaryButton.minHeight)
         .background(Color.lsAccent)
     }
 

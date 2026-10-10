@@ -61,6 +61,32 @@ struct InlinePrimaryButtonLabel: View {
     }
 }
 
+/// 滿寬主鈕的 label（LS-462，LS-454 C1a；稿 `OKSJI`）：給 `NavigationLink`／`ShareLink`／自帶 label 的
+/// `Button` 用——這些呼叫端不能直接用 `PrimaryButton`（它包的是帶 `action` 的 `Button`），過去各自手刻
+/// 「bold＋`controlPaddingCTA`」而沒有 `minHeight` 下限，所以停在 57（比 `PrimaryButton` 的 60 矮 3pt）。
+/// 這裡與 `PrimaryButton` 共用同一組常數（bold、`controlPaddingCTA`、水平 20、`minHeight` 下限 60、
+/// accent 底、`radiusMedium`），AX 字級下限不介入、由 padding 撐高。`icon` 為 `nil`＝純文字。
+struct PrimaryButtonLabel: View {
+    var icon: String?
+    let title: String
+
+    var body: some View {
+        HStack(spacing: AppSpacing.label) {
+            if let icon {
+                Image(systemName: icon).appIconFrame(.medium)
+            }
+            Text(title).appFont(.body, weight: PrimaryButton.labelWeight)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AppSpacing.controlPaddingCTA)
+        .padding(.horizontal, 20)
+        .frame(minHeight: PrimaryButton.minHeight)
+        .foregroundStyle(Color.lsOnAccent)
+        .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+        .contentShape(RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+    }
+}
+
 /// 歡迎頁 Google／Email 鈕標題（LS-450，LS-449 C3b；稿 `e7G3Lk`／`aEb17`）：「登」「入」之間插
 /// U+2060（WORD JOINER），AX 字級換行時不拆「登入」。VoiceOver／UITest 用 `cleaned` 拿掉 U+2060，
 /// 標籤維持「使用 Google 登入」「使用 Email 登入」。Apple 鈕是系統標籤，不插。

@@ -225,16 +225,8 @@ struct ChildrenManagementView: View {
 
     private var addChildButton: some View {
         NavigationLink(value: ChildrenRoute.create) {
-            HStack(spacing: AppSpacing.label) {
-                Image(systemName: "person.crop.circle.badge.plus").appIconFrame(.medium)
-                Text("新增寶貝").appFont(.body)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, AppSpacing.controlPaddingCTA)
-            .padding(.horizontal, 20)
+            PrimaryButtonLabel(icon: "person.crop.circle.badge.plus", title: "新增寶貝")
         }
-        .foregroundStyle(Color.lsOnAccent)
-        .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
     }
 }
 
