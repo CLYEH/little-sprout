@@ -123,6 +123,7 @@ final class InteractionRowUITests: XCTestCase {
         // `waitForExistence` 積極輪詢一段時間再判斷「真的沒有出現」，同 `SettingsViewTests`
         // 等既有「等一段時間確認不存在」的既有慣例（見該檔案系列 `XCTAssertFalse(...
         // waitForExistence(timeout:))` 寫法）。
+        // uitest-wait-ok: 反向斷言——視窗期內「不得出現」（見上方說明：若真的開了 sheet，開啟動畫要跑一段時間才畫出來）
         XCTAssertFalse(likersSheetHeadline(in: app).waitForExistence(timeout: 3), "計數 0 時點擊不應該開啟按讚名單 sheet")
     }
 

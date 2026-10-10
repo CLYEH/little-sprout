@@ -117,6 +117,9 @@ final class UploadQueueSheetRemovalUITests: XCTestCase {
 
     // MARK: - 16d → 16g：只剩失敗標題、數字更新不換版面、M＝0 過渡句、不自動關閉
 
+    /// LS-458（def25a8f，#628 run 38025472355 `[dark-default] M＝0：過渡標題` 紅）：該輪 xcresult 的螢幕錄影＝M＝0 那一下 tap
+    /// 有按下效果（「移除」變暗一格）卻沒觸發動作、標題 5 秒內沒變（sheet 仍開著）——是 tap 掉了，不是過渡標題在動畫中被讀到
+    /// （app 端無動畫，`markRemoved` 同步）。本機 24 次（含 CPU 壓力）未重現。修法：M＝0 以標題翻轉為狀態驗證，tap 掉才重點。
     func testOnlyFailed_titleFollowsCount_layoutHoldsStill_andAllRemovedShowsTransition_lightDark_defaultAX3() {
         for scheme in ["light", "dark"] {
             for size in [Self.large, Self.ax3] {
@@ -141,19 +144,20 @@ final class UploadQueueSheetRemovalUITests: XCTestCase {
                 )
 
                 // 先標兩張可重試的（連線中斷、伺服器忙碌），留 LS002：可重試數降到 0、失敗數降到 1。
+                let wait = UITestTimeouts.standard
                 removes.element(boundBy: 1).tap()
-                XCTAssertTrue(app.staticTexts["有 2 張照片沒有加進去"].waitForExistence(timeout: 5), "[\(tag)] 標題數字更新 3→2")
+                XCTAssertTrue(app.staticTexts["有 2 張照片沒有加進去"].waitForExistence(timeout: wait), "[\(tag)] 標題數字更新 3→2")
                 removes.element(boundBy: 1).tap()
-                XCTAssertTrue(app.staticTexts["有 1 張照片沒有加進去"].waitForExistence(timeout: 5), "[\(tag)] 標題 2→1")
-                XCTAssertTrue(app.staticTexts["沒有能重試的照片"].waitForExistence(timeout: 5), "[\(tag)] 可重試數降到 0：槽位改一行說明")
+                XCTAssertTrue(app.staticTexts["有 1 張照片沒有加進去"].waitForExistence(timeout: wait), "[\(tag)] 標題 2→1")
+                XCTAssertTrue(app.staticTexts["沒有能重試的照片"].waitForExistence(timeout: wait), "[\(tag)] 可重試數降到 0：槽位改一行說明")
                 XCTAssertFalse(app.buttons["重試這 2 張"].exists)
                 XCTAssertFalse(app.buttons[QAAccessibilityID.uploadQueueRemoveAll].exists, "[\(tag)] 失敗數降到 1：批次鈕內容隱藏")
                 assertLayoutHolds(app, anchors, tag: tag)
 
-                removes.element(boundBy: 0).tap() // 標最後一張（LS002）
+                let transition = app.staticTexts["這幾張不加進相簿了"]
                 XCTAssertTrue(
-                    app.staticTexts["這幾張不加進相簿了"].waitForExistence(timeout: 5), "[\(tag)] M＝0：過渡標題，不宣稱都加好了"
-                )
+                    tapRemove(removes.element(boundBy: 0), until: transition), "[\(tag)] M＝0：過渡標題，不宣稱都加好了"
+                ) // 標最後一張（LS002）
                 XCTAssertTrue(
                     app.staticTexts["照片還在手機裡。關閉這個視窗前，都可以按「復原」放回來。"].exists,
                     "[\(tag)] 過渡主行取稿面 x2it3Q 的 R3 版本"
@@ -173,6 +177,7 @@ final class UploadQueueSheetRemovalUITests: XCTestCase {
         // 全部移除 → 關閉：入口列直接隱藏。
         var app = launch(fixture: "sheetOnlyFailed", size: Self.large, scheme: "light")
         let row = entryRow(in: app)
+        // uitest-wait-ok: entryRow(in:) 內已 waitForExistence(timeout: 10)，row 此刻必在 accessibility tree 上
         XCTAssertEqual(row.label, "有 3 張照片沒有加進去，看原因，再試或移除", "入口只剩失敗態 Value 新句（C2a 同版上線）")
         openSheet(in: app)
         app.buttons[QAAccessibilityID.uploadQueueRemoveAll].tap()
@@ -364,6 +369,16 @@ extension UploadQueueSheetRemovalUITests {
         let matches = app.buttons.matching(NSPredicate(format: "label == %@", title))
         XCTAssertGreaterThanOrEqual(matches.count, 1)
         matches.element(boundBy: matches.count - 1).tap()
+    }
+
+    /// LS-458：點「移除」並等 `expected`；tap 沒生效（`expected` 沒出現、這顆「移除」鈕仍在——生效會變「復原」）才重點一次。
+    private func tapRemove(_ remove: XCUIElement, until expected: XCUIElement) -> Bool {
+        for _ in 0..<2 {
+            remove.tap() // 不先等 isHittable：列在 footer 下方時 tap 會自己捲到看得見（hittable 是捲完才成立）
+            if expected.waitForExistence(timeout: UITestTimeouts.standard) { return true }
+            guard remove.exists else { return false }
+        }
+        return false
     }
 
     private func waitForLabel(_ element: XCUIElement, _ label: String, timeout: TimeInterval) -> Bool {

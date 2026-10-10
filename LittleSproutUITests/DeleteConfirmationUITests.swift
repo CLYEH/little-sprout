@@ -24,8 +24,8 @@ final class DeleteConfirmationUITests: XCTestCase {
         XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
         confirmButton.tap()
 
-        XCTAssertFalse(
-            app.staticTexts["要刪除這則留言嗎？"].waitForExistence(timeout: 3),
+        XCTAssertTrue(
+            app.staticTexts["要刪除這則留言嗎？"].waitForNonExistence(timeout: UITestTimeouts.standard),
             "PreviewCommentAPIClient 呼叫必成功，確認後 sheet 應該關閉"
         )
     }
@@ -38,7 +38,9 @@ final class DeleteConfirmationUITests: XCTestCase {
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 5))
         cancelButton.tap()
 
-        XCTAssertFalse(app.staticTexts["要刪除這則留言嗎？"].waitForExistence(timeout: 3), "取消應該直接關閉 sheet")
+        XCTAssertTrue(
+            app.staticTexts["要刪除這則留言嗎？"].waitForNonExistence(timeout: UITestTimeouts.standard), "取消應該直接關閉 sheet"
+        )
     }
 
     /// 對稱覆蓋刪除日記（10）——標題應嵌入日記摘要（`DiaryDeleteConfirmationCopy`）。
@@ -58,6 +60,10 @@ final class DeleteConfirmationUITests: XCTestCase {
         XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
         confirmButton.tap()
 
-        XCTAssertFalse(app.buttons["刪除這篇日記"].waitForExistence(timeout: 3), "確認後 sheet 應該關閉")
+        // LS-458：消失斷言一律 waitForNonExistence。修前 `XCTAssertFalse(waitForExistence(timeout: 3))`：sheet 還在關閉動畫時
+        // 元素仍存在，waitForExistence 立刻回 true → 立刻紅（e0f65a8f），根本沒等到它消失。
+        XCTAssertTrue(
+            app.buttons["刪除這篇日記"].waitForNonExistence(timeout: UITestTimeouts.standard), "確認後 sheet 應該關閉"
+        )
     }
 }

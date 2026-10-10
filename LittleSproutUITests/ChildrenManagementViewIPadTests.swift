@@ -38,22 +38,25 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
 
         collapseSidebar(in: app)
         let showSidebarButton = app.buttons["顯示側邊欄"]
-        XCTAssertTrue(showSidebarButton.waitForHittable(timeout: 5), "收起側邊欄後應該有可點的「顯示側邊欄」鈕")
+        XCTAssertTrue(showSidebarButton.waitForHittable(timeout: UITestTimeouts.standard), "收起側邊欄後應該有可點的「顯示側邊欄」鈕")
         assertChildrenTitleAppearsExactlyOnce(in: app, context: "收起側邊欄後")
 
-        childRow(in: app).tap()
+        childRow(in: app).tapWhenHittable()
         XCTAssertTrue(
-            app.staticTexts[Self.placeholderTitle].waitForNonExistence(timeout: 5),
+            app.staticTexts[Self.placeholderTitle].waitForNonExistence(timeout: UITestTimeouts.standard),
             "點選寶貝後右欄不應該還是「選擇一個寶貝」佔位"
         )
         assertChildrenTitleAppearsExactlyOnce(in: app, context: "點選寶貝後")
-        showSidebarButton.tap()
+        showSidebarButton.tapWhenHittable()
 
-        app.cells.staticTexts["相簿"].firstMatch.tap()
-        XCTAssertTrue(app.staticTexts["還沒有相簿"].waitForExistence(timeout: 5), "切去相簿後 detail 欄應該是相簿空狀態")
-        app.cells.staticTexts["寶貝"].firstMatch.tap()
+        app.cells.staticTexts["相簿"].firstMatch.tapWhenHittable()
         XCTAssertTrue(
-            app.staticTexts[Self.childName].firstMatch.waitForExistence(timeout: 5),
+            app.staticTexts["還沒有相簿"].waitForExistence(timeout: UITestTimeouts.standard),
+            "切去相簿後 detail 欄應該是相簿空狀態"
+        )
+        app.cells.staticTexts["寶貝"].firstMatch.tapWhenHittable()
+        XCTAssertTrue(
+            app.staticTexts[Self.childName].firstMatch.waitForExistence(timeout: UITestTimeouts.standard),
             "切回寶貝後左欄應該回到寶貝清單"
         )
         assertChildrenTitleAppearsExactlyOnce(in: app, context: "切去相簿再切回寶貝")
@@ -69,13 +72,13 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
 
         let showSidebarButton = app.buttons["顯示側邊欄"]
         XCTAssertTrue(
-            showSidebarButton.waitForHittable(timeout: 5),
+            showSidebarButton.waitForHittable(timeout: UITestTimeouts.standard),
             "收起側邊欄後，寶貝分頁應該還有可點的「顯示側邊欄」鈕——這是收起側邊欄後，非手勢" +
             "（entry-conditions.md ⑬）能回到其他分頁的唯一路徑（LS-344 R1 M1，LS-370 不得無條件隱藏 nav bar）"
         )
-        showSidebarButton.tap()
+        showSidebarButton.tapWhenHittable()
         XCTAssertTrue(
-            app.cells.staticTexts["相簿"].firstMatch.waitForHittable(timeout: 5),
+            app.cells.staticTexts["相簿"].firstMatch.waitForHittable(timeout: UITestTimeouts.standard),
             "點「顯示側邊欄」後側欄應該回來，其他分頁的導覽列（例如「相簿」）要可點"
         )
     }
@@ -91,16 +94,16 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
         let app = launchOnChildren()
         collapseSidebar(in: app)
         XCTAssertTrue(
-            app.staticTexts[Self.placeholderTitle].waitForExistence(timeout: 5),
+            app.staticTexts[Self.placeholderTitle].waitForExistence(timeout: UITestTimeouts.standard),
             "尚未選取寶貝時右欄應該是「選擇一個寶貝」佔位"
         )
-        childRow(in: app).tap()
+        childRow(in: app).tapWhenHittable()
         XCTAssertTrue(
-            app.staticTexts["最新紀錄"].waitForExistence(timeout: 5),
+            app.staticTexts["最新紀錄"].waitForExistence(timeout: UITestTimeouts.standard),
             "點選左欄寶貝後，右欄應該顯示該寶貝的詳情（ChildGrowthDetailView 06「最新紀錄」）"
         )
         XCTAssertTrue(
-            childRow(in: app).isHittable,
+            childRow(in: app).waitForHittable(timeout: UITestTimeouts.standard),
             "右欄顯示詳情時左欄寶貝清單應該仍在（稿面 JbTfv 兩欄並列，不是 push 蓋掉）"
         )
     }
@@ -114,15 +117,18 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
             "iPad 專屬版面測試，非 iPad 裝置（例如 push-gate 常態用的 iPhone 專屬機）略過"
         )
         let app = launchOnChildren()
-        childRow(in: app).tap()
+        childRow(in: app).tapWhenHittable()
         let editButton = app.buttons["編輯"]
-        XCTAssertTrue(editButton.waitForExistence(timeout: 5), "點選寶貝後應該出現寶貝詳情（Identity Header「編輯」）")
+        XCTAssertTrue(
+            editButton.waitForHittable(timeout: UITestTimeouts.standard),
+            "點選寶貝後應該出現寶貝詳情（Identity Header「編輯」）；等到可點＝推入轉場結束，才量 frame"
+        )
         let window = app.windows.firstMatch.frame
         XCTAssertLessThanOrEqual(
             editButton.frame.maxX, window.maxX,
             "外層側欄展開時寶貝詳情不得被擠出螢幕右緣（編輯鈕 frame \(editButton.frame)，視窗 \(window)）"
         )
-        XCTAssertTrue(editButton.isHittable, "外層側欄展開時寶貝詳情的「編輯」鈕應該可點")
+        XCTAssertTrue(editButton.waitForHittable(timeout: UITestTimeouts.standard), "外層側欄展開時寶貝詳情的「編輯」鈕應該可點")
     }
 
     private func childRow(in app: XCUIApplication) -> XCUIElement {
@@ -133,9 +139,9 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
         let app = TapTargetMeasurement.launch(.sectionSplitViewWithChildren)
         TapTargetMeasurement.assertScreenRendered(.sectionSplitViewWithChildren, in: app)
         // 外層 sidebar 的 `List(selection:)` row 是 `Cell`，label 落在裡面的 `StaticText`（同 `AlbumsViewIPadTests`）。
-        app.cells.staticTexts["寶貝"].firstMatch.tap()
+        app.cells.staticTexts["寶貝"].firstMatch.tapWhenHittable(file: file, line: line)
         XCTAssertTrue(
-            app.staticTexts[Self.childName].firstMatch.waitForExistence(timeout: 5),
+            app.staticTexts[Self.childName].firstMatch.waitForExistence(timeout: UITestTimeouts.standard),
             "切到寶貝分頁後左欄應該列出 seed 的寶貝「\(Self.childName)」",
             file: file, line: line
         )
@@ -143,16 +149,15 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
     }
 
     /// 側邊欄展開時，`NavigationSplitView` 系統提供的側欄開關鈕在 detail 欄 nav bar 上——label 措辭
-    /// 不綁死，用 CONTAINS「側邊欄」找到就點（同 `TimelineViewIPadTests`）。
+    /// 不綁死，用 CONTAINS「側邊欄」找到就點（同 `TimelineViewIPadTests`）。LS-458：慢 runner 上這一下 tap 可能
+    /// 沒生效（f608d582），改走 `collapseSidebarUntilShowButtonHittable`：以開關鈕 label 為狀態，沒翻才重點。
     private func collapseSidebar(in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
-        let sidebarToggle = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "側邊欄")).firstMatch
         XCTAssertTrue(
-            sidebarToggle.waitForHittable(timeout: 5),
+            app.collapseSidebarUntilShowButtonHittable(),
             "寶貝分頁 detail 欄應該有系統提供的側邊欄開關鈕（不應被無條件的 .toolbar(.hidden, for:" +
-            " .navigationBar) 一併藏掉）",
+            " .navigationBar) 一併藏掉），且點下去後側欄收起（出現可點的「顯示側邊欄」）",
             file: file, line: line
         )
-        sidebarToggle.tap()
     }
 
     /// 判準沿用 `AlbumsViewIPadTests.assertAlbumsTitleAppearsExactlyOnce`：系統標題不論 large 或 inline、
@@ -162,6 +167,9 @@ final class ChildrenManagementViewIPadTests: XCTestCase {
         in app: XCUIApplication, context: String, file: StaticString = #filePath, line: UInt = #line
     ) {
         let titlePredicate = NSPredicate(format: "label == %@", "寶貝")
+        // LS-458：先等「寶貝」文字出現再數——慢 runner 上版面還在換欄時 `.count` 快照會讀到 0，把「還沒畫好」誤報成
+        // 「標題被拿掉了」。這裡只等「至少一顆」，「恰好一顆／nav bar 零顆」仍由下面的 count 斷言即時判定。
+        _ = app.staticTexts.matching(titlePredicate).firstMatch.waitForExistence(timeout: UITestTimeouts.standard)
         let navBarTitleCount = app.navigationBars.staticTexts.matching(titlePredicate).count
         let inPageTitleCount = app.staticTexts.matching(titlePredicate).count
             - app.cells.staticTexts.matching(titlePredicate).count - navBarTitleCount

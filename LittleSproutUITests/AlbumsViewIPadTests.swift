@@ -40,23 +40,23 @@ final class AlbumsViewIPadTests: XCTestCase {
         // sidebar 的 `List(selection:)` row 是 `Cell`（不是 `Button`），label 落在裡面的
         // `StaticText` 子節點——同 compact `SectionTabBar` 用 `Button` 語意不同，不能沿用
         // `app.buttons["相簿"]`（實測 debug tree：`Cell` 包住 `StaticText, label: '相簿'`）。
-        app.staticTexts["相簿"].tap()
+        app.staticTexts["相簿"].tapWhenHittable()
         XCTAssertTrue(
-            app.staticTexts["還沒有相簿"].waitForExistence(timeout: 5),
+            app.staticTexts["還沒有相簿"].waitForExistence(timeout: UITestTimeouts.standard),
             "切到相簿分頁後 detail 欄應該顯示 AlbumsView 的空狀態"
         )
         // 側邊欄展開狀態下，NavigationSplitView 系統提供的側欄開關鈕存在——不管當下 label 是
-        // 「隱藏側邊欄」還是別的措辭，用 CONTAINS 找到它就點一下（收起側邊欄）。
-        let sidebarToggle = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "側邊欄")).firstMatch
+        // 「隱藏側邊欄」還是別的措辭，用 CONTAINS 找到它就點一下（收起側邊欄）。LS-458：慢 runner 上這一下
+        // tap 可能沒生效（f608d582 / e0f65a8f），改走 `collapseSidebarUntilShowButtonHittable`（以開關鈕 label
+        // 為狀態，沒翻才重點）。
         XCTAssertTrue(
-            sidebarToggle.waitForExistence(timeout: 5),
+            app.collapseSidebarUntilShowButtonHittable(),
             "相簿分頁 detail 欄應該有系統提供的側邊欄開關鈕（不應被無條件的 .toolbar(.hidden, for:" +
-            " .navigationBar) 一併藏掉）"
+            " .navigationBar) 一併藏掉），且點下去後側欄收起"
         )
-        sidebarToggle.tap()
         let showSidebarButton = app.buttons["顯示側邊欄"]
         XCTAssertTrue(
-            showSidebarButton.waitForExistence(timeout: 5),
+            showSidebarButton.waitForHittable(timeout: UITestTimeouts.standard),
             "收起側邊欄後，相簿分頁應該還有「顯示側邊欄」鈕可以點回去——這是收起側邊欄後，" +
             "非手勢（entry-conditions.md ⑬）能回到其他分頁的唯一路徑"
         )
@@ -80,28 +80,28 @@ final class AlbumsViewIPadTests: XCTestCase {
         )
         let app = TapTargetMeasurement.launch(.sectionSplitView)
         TapTargetMeasurement.assertScreenRendered(.sectionSplitView, in: app)
-        app.staticTexts["相簿"].tap()
+        app.staticTexts["相簿"].tapWhenHittable()
         XCTAssertTrue(
-            app.staticTexts["還沒有相簿"].waitForExistence(timeout: 5),
+            app.staticTexts["還沒有相簿"].waitForExistence(timeout: UITestTimeouts.standard),
             "切到相簿分頁後 detail 欄應該顯示 AlbumsView 的空狀態"
         )
         assertAlbumsTitleAppearsExactlyOnce(in: app, context: "首次切到相簿")
 
-        let sidebarToggle = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "側邊欄")).firstMatch
-        XCTAssertTrue(sidebarToggle.waitForExistence(timeout: 5), "相簿分頁 detail 欄應該有系統側邊欄開關鈕")
-        sidebarToggle.tap()
+        XCTAssertTrue(app.collapseSidebarUntilShowButtonHittable(), "相簿分頁 detail 欄應該有系統側邊欄開關鈕，點下去後側欄收起")
         let showSidebarButton = app.buttons["顯示側邊欄"]
-        XCTAssertTrue(showSidebarButton.waitForExistence(timeout: 5), "收起側邊欄後應該有「顯示側邊欄」鈕")
+        XCTAssertTrue(showSidebarButton.waitForHittable(timeout: UITestTimeouts.standard), "收起側邊欄後應該有「顯示側邊欄」鈕")
         assertAlbumsTitleAppearsExactlyOnce(in: app, context: "收起側邊欄後")
-        showSidebarButton.tap()
+        showSidebarButton.tapWhenHittable()
 
-        app.cells.staticTexts["時間軸"].firstMatch.tap()
+        app.cells.staticTexts["時間軸"].firstMatch.tapWhenHittable()
         XCTAssertTrue(
-            app.staticTexts["還沒有相簿"].waitForNonExistence(timeout: 5),
+            app.staticTexts["還沒有相簿"].waitForNonExistence(timeout: UITestTimeouts.standard),
             "切去時間軸後 detail 欄不應該還是相簿空狀態"
         )
-        app.cells.staticTexts["相簿"].firstMatch.tap()
-        XCTAssertTrue(app.staticTexts["還沒有相簿"].waitForExistence(timeout: 5), "切回相簿後應該回到空狀態")
+        app.cells.staticTexts["相簿"].firstMatch.tapWhenHittable()
+        XCTAssertTrue(
+            app.staticTexts["還沒有相簿"].waitForExistence(timeout: UITestTimeouts.standard), "切回相簿後應該回到空狀態"
+        )
         assertAlbumsTitleAppearsExactlyOnce(in: app, context: "切去時間軸再切回相簿")
     }
 
@@ -119,31 +119,34 @@ final class AlbumsViewIPadTests: XCTestCase {
         )
         let app = TapTargetMeasurement.launch(.sectionSplitViewWithAlbum)
         TapTargetMeasurement.assertScreenRendered(.sectionSplitViewWithAlbum, in: app)
-        app.cells.staticTexts["相簿"].firstMatch.tap()
+        app.cells.staticTexts["相簿"].firstMatch.tapWhenHittable()
         // 卡片 `.accessibilityElement(children: .combine)` 包在 `NavigationLink` 裡——合成一顆 Button，
         // label 是標題＋張數等子節點串接，用 CONTAINS 找。
         let albumCard = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "上禮拜的動物園一日遊")).firstMatch
-        XCTAssertTrue(albumCard.waitForExistence(timeout: 5), "相簿列表應該顯示 harness 帶的那本相簿")
-        albumCard.tap()
+        XCTAssertTrue(albumCard.waitForExistence(timeout: UITestTimeouts.standard), "相簿列表應該顯示 harness 帶的那本相簿")
+        albumCard.tapWhenHittable()
         // 詳情頁的空照片牆文案（`PreviewAlbumsAPIClient.fetchAlbumMediaLinks` 回 `[]`）——列表頁沒有這句。
         let detailEmptyState = app.staticTexts["還沒有照片"]
-        XCTAssertTrue(detailEmptyState.waitForExistence(timeout: 5), "點相簿卡片後應該 push 進相簿詳情")
-
-        app.cells.staticTexts["時間軸"].firstMatch.tap()
         XCTAssertTrue(
-            detailEmptyState.waitForNonExistence(timeout: 5),
+            detailEmptyState.waitForExistence(timeout: UITestTimeouts.standard), "點相簿卡片後應該 push 進相簿詳情"
+        )
+
+        app.cells.staticTexts["時間軸"].firstMatch.tapWhenHittable()
+        XCTAssertTrue(
+            detailEmptyState.waitForNonExistence(timeout: UITestTimeouts.standard),
             "切到時間軸後 detail 欄不應該還疊著相簿詳情（共用 NavigationStack 未重置）"
         )
         XCTAssertTrue(
-            app.staticTexts["這裡還沒有任何回憶"].waitForExistence(timeout: 5),
+            app.staticTexts["這裡還沒有任何回憶"].waitForExistence(timeout: UITestTimeouts.standard),
             "切到時間軸後 detail 欄應該是時間軸根頁（空狀態），不是殘留 path 的佔位畫面"
         )
-        app.cells.staticTexts["相簿"].firstMatch.tap()
+        app.cells.staticTexts["相簿"].firstMatch.tapWhenHittable()
         XCTAssertTrue(
-            app.buttons["新增相簿"].waitForExistence(timeout: 5),
+            app.buttons["新增相簿"].waitForExistence(timeout: UITestTimeouts.standard),
             "切回相簿應該回到相簿列表（header 的「新增相簿」鈕在）——detail stack 應在切 section 時重置"
         )
         // 等 2 秒而不是當下 `.exists`：延遲還原的 path（例如 onChange 後非同步寫回）也要抓得到。
+        // uitest-wait-ok: 反向斷言——視窗期內「不得出現」（不是等它消失），waitForNonExistence 會立刻通過、抓不到延遲還原
         XCTAssertFalse(
             detailEmptyState.waitForExistence(timeout: 2),
             "切回相簿不應該掉回上次 push 的相簿詳情——detail stack 應在切 section 時重置"
