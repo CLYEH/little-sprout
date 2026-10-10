@@ -308462,7 +308462,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "a 案　全稿規則：AX 字級在括號前斷行",
+                  "content": "a 案　全稿規則：AX 字級在附註前斷行",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
