@@ -54,14 +54,7 @@ extension InviteFamilyView {
                 item: inviteURL(invite.code),
                 subject: Text("邀請你加入「\(familyStore.myFamily?.name ?? "")」")
             ) {
-                HStack(spacing: AppSpacing.label) {
-                    Image(systemName: "square.and.arrow.up").appIconFrame(.medium)
-                    Text("分享邀請連結").appFont(.body, weight: .bold)
-                }
-                .foregroundStyle(Color.lsOnAccent)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppSpacing.controlPaddingCTA)
-                .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+                PrimaryButtonLabel(icon: "square.and.arrow.up", title: "分享邀請連結")
             }
         }
     }

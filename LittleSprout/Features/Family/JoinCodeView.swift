@@ -164,17 +164,10 @@ struct JoinCodeView: View {
     }
 
     /// 06b／06c 的主要動作是「傳訊息跟家人要新的」，不是重送同一支已經確定過期／用盡的碼
-    /// ——樣式沿用 `InviteFamilyView` 既有 `ShareLink` 主鍵手刻寫法（見該檔 `.generated` case）。
+    /// ——樣式用 `PrimaryButtonLabel`（LS-462，與 `PrimaryButton` 同一組 60／bold 常數）。
     private var shareForNewCodeButton: some View {
         ShareLink(item: prewrittenMessage) {
-            HStack(spacing: AppSpacing.label) {
-                Image(systemName: "paperplane.fill").appIconFrame(.medium)
-                Text("傳訊息跟家人要新的").appFont(.body, weight: .bold)
-            }
-            .foregroundStyle(Color.lsOnAccent)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, AppSpacing.controlPaddingCTA)
-            .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
+            PrimaryButtonLabel(icon: "paperplane.fill", title: "傳訊息跟家人要新的")
         }
     }
 
