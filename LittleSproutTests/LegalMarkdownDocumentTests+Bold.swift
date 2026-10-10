@@ -47,7 +47,7 @@ extension LegalMarkdownDocumentTests {
 
     /// 兩份進 bundle 的文件讀 bundle 內副本（證明出貨檔案本身過關）；EULA 附加條款不進 bundle
     /// （`project.yml` 只列兩檔），以 `#filePath` 回推 repo 根讀 `docs/legal/eula-addendum.md`。
-    private static func legalSources(file: StaticString = #filePath) throws -> [(name: String, raw: String)] {
+    static func legalSources(file: StaticString = #filePath) throws -> [(name: String, raw: String)] {
         var sources: [(name: String, raw: String)] = []
         for name in ["terms-of-service", "privacy-policy"] {
             let url = try XCTUnwrap(Bundle.main.url(forResource: name, withExtension: "md"), "\(name).md 不在 bundle")
@@ -59,7 +59,7 @@ extension LegalMarkdownDocumentTests {
         return sources
     }
 
-    private static func attributedText(_ block: LegalMarkdownBlock) -> AttributedString {
+    static func attributedText(_ block: LegalMarkdownBlock) -> AttributedString {
         switch block {
         case .heading(let text), .paragraph(let text), .listItem(let text, _), .tableRow(let text, _): text
         }
