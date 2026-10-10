@@ -102,7 +102,7 @@ dead-code-sweeper（常駐 haiku）與非 UI QA（覆寫 haiku）的主要風險
    - `haiku 抽驗：符`
    - `haiku 抽驗：不符（<條目>）`——`<條目>` 寫被抽中的那條結論與重放結果的差異。
 
-   **兩個 cycle 內任一「不符」＝改回 sonnet**（`dead-code-sweeper.md` 改 `model: sonnet` 並同步 `agent-tools-check.sh` MODEL_RULES；停止 qa 的 haiku 覆寫），並記回 LS-421。量法：`gh` 或 Linear 取票 comment 後 `grep -c 'haiku 抽驗：不符'`（兩 cycle 全票累計）。
+   **兩個 cycle 內任一「不符」＝改回 sonnet**（`dead-code-sweeper.md` 改 `model: sonnet` 並同步 `agent-tools-check.sh` MODEL_RULES；停止 qa 的 haiku 覆寫），並記回 LS-421。量法：取票 comment 全文存檔（`<f>`）後，不符數 `grep -cE '^haiku 抽驗：不符（[^<]' <f>`、符數 `grep -cxF 'haiku 抽驗：符' <f>`（兩 cycle 全票累計）——錨定行首且排除 `<條目>` 佔位字面，引述本規則的文字不會被算進去，所以記錄那一行必須單獨成行、不加項目符號。
 2. **控制組，不當退場依據**：全 repo fix commit 的 R3+ 比例（`bash scripts/ops/review-rounds-report.sh --days 14 --ref origin/main`）是 merge-review 對 ios-dev 的輪次，不分 agent，sweeper／qa 換 haiku 幾乎不會動它；只用來確認試點期間整體審查品質沒有別的原因惡化。
 3. **輔助：QA FAIL 率，只算非 UI**：`bash scripts/ops/qa-fail-rate.sh --since 14 --non-ui`（判定與格式見檔頭；UI 判定＝QA 區間 diff 動到 `LittleSprout/`、`LittleSproutUITests/`、`design/`）。**方向要雙向看**：明顯**高於**基準＝haiku 誤判失敗；明顯**低於**基準同樣可疑（偽 PASS），兩者都先加抽驗，不是只有高於才處理。基準與樣本數貼在 LS-421 票 comment 的新量測表（非 UI 基準樣本很小，沒有可用的 1.5× 閾值，只當警訊）。
 

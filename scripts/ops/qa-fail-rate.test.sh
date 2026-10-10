@@ -53,6 +53,20 @@ run --bogus; expect_exit 2 "$rc" '④ 未知旗標 → exit 2'
 out="$(bash "$script" --repo "$repo" --ref nope --statuses-file "$st" 2>&1)"; rc=$?
 expect_exit 2 "$rc" '④ ref 不存在 → exit 2'
 
+# ⑤ R2 m1：UI 區間含大量檔案（>64KB 的 diff 輸出）時仍判 UI——`git diff | grep -q` 在 pipefail 下 grep 提早退出、git 收 SIGPIPE，
+#    會把 UI 區間誤算成非 UI。UI 檔 `LittleSprout/…` 排序在前、後面接 3000 個長檔名，grep 命中後 git 還在寫。
+big="$work/big"; mkdir -p "$big"; git -C "$big" init -q -b test
+bg() { git -C "$big" -c user.name=t -c user.email=t@t "$@"; }
+echo r > "$big/r.md"; bg add -A >/dev/null; bg commit -q -m r0
+mkdir -p "$big/LittleSprout" "$big/docs"; echo v > "$big/LittleSprout/V.swift"
+for i in $(seq 1 3000); do : > "$big/docs/long-file-name-for-sigpipe-regression-test-$i.md"; done
+bg add -A >/dev/null; bg commit -q -m big; bigsha=$(bg rev-parse HEAD)
+printf '%s\tFAILURE\n' "$bigsha" > "$work/big.tsv"
+for k in 1 2 3; do
+  out="$(bash "$script" --repo "$big" --ref test --statuses-file "$work/big.tsv" --non-ui 2>&1)"; rc=$?
+  expect_has "$out" 'FAIL 0／0＝—' "⑤ 大區間（3001 檔）含 UI 檔 → 算 UI、非 UI 樣本為 0（第 ${k} 次）"
+done
+
 # ---- mutation：改壞腳本，--non-ui 的負樣本必須變綠（輸出不再是 FAIL 1／3） ----
 mut() { # mut <sed 表達式> <case 名>
   local m="$work/mut.sh"; sed "$1" "$script" > "$m"

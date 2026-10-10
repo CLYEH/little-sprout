@@ -85,7 +85,10 @@ while IFS=$'\t' read -r sha state; do
   base=${prev:-${sha}^}
   prev=$sha
   if [ "$NONUI" -eq 1 ]; then
-    if git -C "$REPO" diff --name-only "$base" "$sha" 2>/dev/null | LC_ALL=C grep -qE '^(LittleSprout/|LittleSproutUITests/|design/)'; then
+    # diff 先寫暫存檔再 grep（R2 m1）：`git diff | grep -q` 在 pipefail 下，區間檔案多（≥1000）時 grep 命中即提早退出、
+    # git 收 SIGPIPE，管線整體判失敗，UI 區間會被靜默算成非 UI。
+    git -C "$REPO" diff --name-only "$base" "$sha" > "$work/diff.txt" 2>/dev/null
+    if LC_ALL=C grep -qE '^(LittleSprout/|LittleSproutUITests/|design/)' "$work/diff.txt"; then
       continue
     fi
   fi
