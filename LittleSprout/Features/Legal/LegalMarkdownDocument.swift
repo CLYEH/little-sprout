@@ -222,6 +222,30 @@ struct LegalMarkdownDocument: Equatable {
     /// 解析失敗（理論上不會，見 LittleSproutTests 對全文兩份文件的覆蓋測試）時退回純文字，
     /// 不讓一個排版問題讓整份文件開不了。
     private static func inlineAttributed(_ text: String) -> AttributedString {
+        // LS-456 pre-pass：先把 `**…**` 切成獨立的粗體 run，其餘文字各自交給 `parseInline`。
+        // 原因（對 `docs/legal/*.md` 實測）：裸 URL（`（https://…）`）後 Apple parser 會把 URL autolink
+        // 延伸到下一個空白為止，連同後面的 `**…**` 一起吞進連結 URL，字面 `**` 漏到畫面（terms:12）。
+        // 先切開，`**` 就不會落在任何 autolink 範圍內，也不依賴 Apple 對 CJK flanking 的判定。
+        var result = AttributedString()
+        var cursor = text.startIndex
+        // `**` 與 `**` 之間至少一字、不跨 `**`（非貪婪）。
+        for match in text.matches(of: /\*\*(.+?)\*\*/) {
+            if cursor < match.range.lowerBound {
+                result += parseInline(String(text[cursor..<match.range.lowerBound]))
+            }
+            var bold = parseInline(String(match.output.1))
+            for run in Array(bold.runs) {
+                let existing = bold[run.range].inlinePresentationIntent ?? []
+                bold[run.range].inlinePresentationIntent = existing.union(.stronglyEmphasized)
+            }
+            result += bold
+            cursor = match.range.upperBound
+        }
+        if cursor < text.endIndex { result += parseInline(String(text[cursor...])) }
+        return result
+    }
+
+    private static func parseInline(_ text: String) -> AttributedString {
         var options = AttributedString.MarkdownParsingOptions()
         options.interpretedSyntax = .inlineOnlyPreservingWhitespace
         return (try? AttributedString(markdown: text, options: options)) ?? AttributedString(text)
