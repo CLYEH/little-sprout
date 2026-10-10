@@ -23,6 +23,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# LS-458：UITest 慢 runner 判定。XCUITest 的測試 runner 行程不繼承 xcodebuild 的環境，只有 `TEST_RUNNER_` 前綴的變數會被剝掉前綴傳進去；
+# `LittleSproutUITests/Support/UITestTimeouts.swift` 讀 `LS_UITEST_SLOW_RUNNER=1` 把 `UITestTimeouts.standard` 由 5 秒放大到 10 秒
+# （CI 單次 accessibility 快照 5–15 秒，字面值 5 秒的 waitFor… 等於沒等）。本機／push-gate 不設，維持 5 秒。頂層設定：ci／ci-ui／ci-ipad 都吃到。
+env:
+  TEST_RUNNER_LS_UITEST_SLOW_RUNNER: "1"
+
 jobs:
   # 規約檢查（ubuntu，快且免費）。pull_request 與 push 都跑（LS-85）：rules 若在 push 事件下整 job 跳過，該 SHA 的
   # check-run conclusion 是 skipped——promote.sh 拒、GitHub required checks 也不算綠。缺 PR 上下文（base_ref／head_ref／
