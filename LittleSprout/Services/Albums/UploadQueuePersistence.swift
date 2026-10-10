@@ -71,7 +71,7 @@ struct UploadQueuePersistence: Sendable {
     let directory: URL
 
     private static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "com.leoyeh.sproutday", category: "upload-queue"
+        subsystem: Bundle.main.bundleIdentifier ?? AppConfig.bundleIDFallback, category: "upload-queue"
     )
 
     private var manifestURL: URL { directory.appendingPathComponent("manifest.json") }
