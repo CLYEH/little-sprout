@@ -110,7 +110,7 @@
 
 **內縮節奏 padding**：ctl-pad-nav 9／ctl-pad-tap 9.5／ctl-pad-md 15.5／ctl-pad-cta 17.5／inset-card 20／screen-pad 24／screen-pad-lg 40。**控件高度一律由 padding 推導，不寫死**——順帶讓 AX 字級自己長高。ctl-pad 的半點值是為了讓列高剛好落在 44／56／60，不是排版節奏。
 
-**具名豁免**：①系統列複製 iOS 規格（pad 0/28、gap 7、icon 18），不吃本節奏也不吃 Dynamic Type；②返回鍵 gap 2（chevron 字形自帶 7pt 內留白）；③數量膠囊 gap 2（「2 位」是一個詞）；④ctl-pad-* 半點值；⑤*Wrap 間距補正外框（pad 4/8/12/16）是 Pencil 單一 gap 的產物，實作直接用 `VStack(spacing:)`，不要照抄。
+**具名豁免**：①系統列複製 iOS 規格（pad 0/28、gap 7、icon 18），不吃本節奏也不吃 Dynamic Type；②返回鍵 gap 2（chevron 字形自帶 7pt 內留白）；③數量膠囊 gap 2（「2 位」是一個詞）；④ctl-pad-* 半點值；⑤*Wrap 間距補正外框（pad 4/8/12/16）是 Pencil 單一 gap 的產物，實作直接用 `VStack(spacing:)`，不要照抄；⑥主鈕 minHeight 60 下限（LS-442 C1a）：iOS 內容 22 比 Pencil 25 少 3，用下限補回稿面意圖，AX 字級仍由 padding 撐高。
 
 ## ⑤ 尺寸與圓角 Size／Radius
 

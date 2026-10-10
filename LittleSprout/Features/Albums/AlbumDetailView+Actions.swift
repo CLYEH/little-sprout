@@ -69,18 +69,13 @@ extension AlbumDetailView {
     }
 
     /// iPad「行內」版（Notes `rFiLJ` `RbEqx`：`width:fit_content`，不像 Action Bar 版滿版）——
-    /// `PrimaryButton` 固定 `maxWidth: .infinity`，這裡沿 LS-315 前的行內 accent 寫法。
+    /// `PrimaryButton` 固定 `maxWidth: .infinity`，這裡用同一套 bold／padding／minHeight 的
+    /// `InlinePrimaryButtonLabel`（LS-445 R2：與滿版主鈕同高同字重）。
     var addPhotosInlineButton: some View {
         Button {
             showsBatchImport = true
         } label: {
-            HStack(spacing: AppSpacing.label) {
-                Image(systemName: "photo.badge.plus").appIconFrame(.medium)
-                Text("加入照片").appFont(.body, weight: .semibold)
-            }
-            .frame(minHeight: 48)
-            .padding(.horizontal, AppSpacing.item)
-            .contentShape(Rectangle())
+            InlinePrimaryButtonLabel(icon: "photo.badge.plus", title: "加入照片")
         }
         .foregroundStyle(Color.lsOnAccent)
         .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))

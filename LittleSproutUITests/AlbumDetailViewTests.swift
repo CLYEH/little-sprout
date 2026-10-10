@@ -69,10 +69,8 @@ final class AlbumDetailViewTests: XCTestCase {
     /// 皆為 `cmp/Button Primary`（`OKSJI`）instance、`width:"fill_container"`、h=60——「加入照片」
     /// 是頁內主要動作，不是 `cmp/Button Import` 那顆 48pt 次要匯入鈕（LS-315 曾誤換成它）。
     /// 量 `XCUIElement.frame`：寬度撐滿動作帶（LS-315 R2 M1 的滿版幾何）＋高度落在實心主鈕
-    /// 區間（`PrimaryButton` 高度由 `controlPaddingCTA` 17.5×2＋22pt icon 框推導，iOS 26.5
-    /// 實測 57.0pt；稿面 h=60 的 3pt 差是 `PrimaryButton` 全 app 既有的漂移、非本票引入）——
-    /// 次要匯入鈕只有 48pt 點擊區，換回去會轉紅；區間上限放到 61.5 讓日後把 `PrimaryButton`
-    /// 對齊到 60 時這支不必跟著改。
+    /// 區間（LS-445：`PrimaryButton` 以 `minHeight` 60 下限對齊稿面 h=60，原 padding 推導
+    /// 只有 57pt）——次要匯入鈕只有 48pt 點擊區，換回去會轉紅；區間上限留 61.5 容許 pt 取整。
     func testAddPhotosBarButtonIsFullWidthPrimaryButton() {
         let app = TapTargetMeasurement.launch(.albumDetailOwner)
         TapTargetMeasurement.assertScreenRendered(.albumDetailOwner, in: app)
@@ -91,7 +89,7 @@ final class AlbumDetailViewTests: XCTestCase {
         )
         let height = button.frame.height
         XCTAssertTrue(
-            (55...61.5).contains(height),
+            (59.5...61.5).contains(height),
             "「加入照片」應為實心主鈕 cmp/Button Primary（OKSJI，LS-321 裁決 C1a），"
                 + "不是 48pt 的 cmp/Button Import 次要匯入鈕；實測高度 \(height)pt"
         )
