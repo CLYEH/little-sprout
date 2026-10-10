@@ -32,6 +32,14 @@ enum QAAccessibilityID {
     /// LS-365：時間軸照片卡壓印行的寶貝署名（`PhotoCardSignature`，整段 `.combine` 成一個元素；
     /// 未標記時整行 `.accessibilityHidden`，這個 identifier 就不存在）。
     static let photoCardSignature = "qa.timeline.photoCardSignature"
+    /// LS-447：時間軸日記卡的版面量測掛勾（`DiaryCardView`，僅 DEBUG 帶著，見該檔 `qaFrameHook`）——
+    /// 整張卡 `.combine` 成一個元素，內文／分隔線／署名各自的 frame 只有這些透明疊層量得到。
+    /// 署名行掛勾 `<prefix><序號>`：預設字級只有一個（`diaryCardSignature`），AX 多寶貝每人兩行
+    /// （`diaryCardSignatureLinePrefix` + 0…2n-1）。
+    static let diaryCardBody = "qa.diaryCard.body"
+    static let diaryCardSignOffRule = "qa.diaryCard.signOffRule"
+    static let diaryCardSignature = "qa.diaryCard.signature"
+    static let diaryCardSignatureLinePrefix = "qa.diaryCard.signatureLine."
     /// 13 日記詳情的內文。
     static let diaryDetailBody = "qa.diaryDetail.body"
     /// LS-188：01 設定頁「個人」列（`SettingsView` 包 `ProfileSummaryRow` 的

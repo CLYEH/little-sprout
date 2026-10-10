@@ -63,6 +63,7 @@ struct DiaryCardView: View {
                         .appFont(.body)
                         .foregroundStyle(Color.lsPrintInk)
                         .lineLimit(4)
+                        .qaFrameHook(QAAccessibilityID.diaryCardBody)
                     if !content.previewPhotos.isEmpty {
                         previewPhotosRow
                     }
@@ -105,6 +106,7 @@ struct DiaryCardView: View {
             Rectangle()
                 .fill(Color.lsPaperRule)
                 .frame(height: 1)
+                .qaFrameHook(QAAccessibilityID.diaryCardSignOffRule)
             HStack(spacing: 0) {
                 Spacer(minLength: 0)
                 signature
@@ -126,10 +128,12 @@ struct DiaryCardView: View {
     private var signature: some View {
         if dynamicTypeSize.isAccessibilitySize, taggedChildren.count > 1 {
             VStack(alignment: .trailing, spacing: 0) {
-                ForEach(taggedChildren) { child in
+                ForEach(Array(taggedChildren.enumerated()), id: \.element.id) { index, child in
                     let lines = MultiChildCaptionFormatter.twoLines(for: child, asOf: content.entryDate)
                     Text(lines.name)
+                        .qaFrameHook("\(QAAccessibilityID.diaryCardSignatureLinePrefix)\(index * 2)")
                     Text(lines.age)
+                        .qaFrameHook("\(QAAccessibilityID.diaryCardSignatureLinePrefix)\(index * 2 + 1)")
                 }
             }
             .font(.body.weight(.semibold))
@@ -144,6 +148,7 @@ struct DiaryCardView: View {
                 children: taggedChildren, asOf: content.entryDate, ink: .print
             ))
             .multilineTextAlignment(.trailing)
+            .qaFrameHook(QAAccessibilityID.diaryCardSignature)
         }
     }
 
@@ -290,6 +295,22 @@ struct DiaryCardView: View {
                 Color.lsSurface2
             }
         }
+    }
+}
+
+private extension View {
+    /// 版面量測用的透明掛勾（`DiaryCardVideoBadgeGeometryTests`／`DiaryCardBabyCaptionUITests`）：卡片外層
+    /// `.accessibilityElement(children: .combine)` 會吃掉子節點自己的 identifier，所以在目標節點上疊一個
+    /// 不含子節點的 `Color.clear` 並自己宣告 `.accessibilityElement()`——能穿透祖先的 `.combine` 單獨曝光，
+    /// 疊層與被疊加的 view 同尺寸，量到的 frame 就是該節點實際渲染框（同 `previewPhotosRow` 的
+    /// `previewTile<n>`，merge-review R1 `3119a0cc` M1 的理由：整段圍 `#if DEBUG`，Release 不改 a11y tree）。
+    @ViewBuilder
+    func qaFrameHook(_ identifier: String) -> some View {
+        #if DEBUG
+        overlay(Color.clear.accessibilityElement().accessibilityIdentifier(identifier))
+        #else
+        self
+        #endif
     }
 }
 
