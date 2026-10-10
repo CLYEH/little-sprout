@@ -215,11 +215,11 @@ IOS_TOOLS="Bash, Read, Edit, Write, Grep, Glob, Agent, ${LINEAR3}"
 # Edit／Write／NotebookEdit／Agent／mcp__pencil__*／mcp__linear__save_* 被禁。
 EXPLORE_TOOLS="Bash, Read, Grep, Glob, mcp__linear__get_issue, mcp__linear__list_issues, mcp__linear__list_comments, mcp__linear__get_document"
 # mk <agent> <tools 行的值|NONE> [<正文附加行>]：寫一份最小 agent 定義
-# model: 依 §1 政策（LS-400 MODEL_RULES）：ui-designer／merge-reviewer／visual-reviewer 是 opus，其餘 sonnet；MK_MODEL 可覆寫
+# model: 依 §1 政策（LS-400 MODEL_RULES）：ui-designer／merge-reviewer／visual-reviewer 是 opus，Explore／dead-code-sweeper（LS-421）是 haiku，其餘 sonnet；MK_MODEL 可覆寫
 # （空字串＝不寫 model: 行）。
 mk() {
   local agent=$1 tools=$2 body=${3:-} model
-  case "$agent" in ui-designer|merge-reviewer|visual-reviewer) model=opus ;; Explore) model=haiku ;; *) model=sonnet ;; esac
+  case "$agent" in ui-designer|merge-reviewer|visual-reviewer) model=opus ;; Explore|dead-code-sweeper) model=haiku ;; *) model=sonnet ;; esac
   [ "${MK_MODEL-unset}" = unset ] || model=$MK_MODEL
   {
     echo "---"; echo "name: ${agent}"; echo "description: 測試用"
@@ -474,13 +474,13 @@ else
   echo "✗ ㊹ mutant 應 exit 0 且不印「tools: 含被禁工具」（實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1
 fi
 
-# ---- ㊺ LS-400：六份定義檔的 frontmatter model: 釘 §1 政策（ios-dev／qa／dead-code-sweeper＝sonnet、ui-designer／
+# ---- ㊺ LS-400：六份定義檔的 frontmatter model: 釘 §1 政策（ios-dev／qa＝sonnet、dead-code-sweeper＝haiku（LS-421）、ui-designer／
 #        merge-reviewer／visual-reviewer＝opus）；不符即紅、缺行即紅、值含空白去掉後整字比對；mutation 拿掉 MODEL_RULES → 負樣本變綠 ----
 reset; expect 0 '㊺ 七份 model: 皆符合政策（LS-420 起含 Explore）→ 通過並逐份印出' 'qa.md：model: sonnet（符合 §1 政策）' 'visual-reviewer.md：model: opus（符合 §1 政策）'
 reset; MK_MODEL=opus mk qa "$QA_TOOLS" "$QA_BODY"; expect 1 '㊺ qa 改回 opus → exit 1' 'qa.md：model: 是「opus」，§1 政策要「sonnet」'
 reset; MK_MODEL=sonnet mk visual-reviewer NONE "$VR_BODY"; expect 1 '㊺ visual-reviewer 降 sonnet → exit 1' 'visual-reviewer.md：model: 是「sonnet」，§1 政策要「opus」'
 reset; MK_MODEL=claude-sonnet-5-5 mk ios-dev "$IOS_TOOLS" "$IOS_BODY"; expect 1 '㊺ ios-dev 寫全 ID（政策是別名）→ exit 1，提示同步改表' 'ios-dev.md：model: 是「claude-sonnet-5-5」，§1 政策要「sonnet」' '同步改 COLLABORATION §1 與本表 MODEL_RULES'
-reset; MK_MODEL= mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "${NOFORK254} ${LINEARFALLBACK}"; expect 1 '㊺ dead-code-sweeper 無 model: 行（繼承 session 模型）→ exit 1' 'dead-code-sweeper.md：無 model: 行（繼承派工 session 的模型）——§1 政策要 model: sonnet'
+reset; MK_MODEL= mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "${NOFORK254} ${LINEARFALLBACK}"; expect 1 '㊺ dead-code-sweeper 無 model: 行（繼承 session 模型）→ exit 1' 'dead-code-sweeper.md：無 model: 行（繼承派工 session 的模型）——§1 政策要 model: haiku'
 reset; MK_MODEL='  sonnet  ' mk qa "$QA_TOOLS" "$QA_BODY"; expect 0 '㊺ model: 值前後空白 → 去空白後通過' 'qa.md：model: sonnet（符合 §1 政策）'
 reset; printf -- '---\r\nname: qa\r\ntools: %s\r\nmodel: sonnet\r\n---\r\n\r\n%s\r\n' "$QA_TOOLS" "$QA_BODY" > "$agents/qa.md"; expect 0 '㊺ CRLF 的 model: 行 → 通過' 'qa.md：model: sonnet（符合 §1 政策）'
 # LS-420：Explore 釘 haiku（唯讀搜尋走 Haiku 5.5）；改 sonnet／無 model: 行都紅；白名單含寫檔／派子 agent／Pencil 工具也紅（⑮ 的禁止表）
@@ -489,6 +489,10 @@ reset; mk Explore "Bash, Read, Grep, Glob"; expect 1 '② LS-420 R1 M1：Explore
 reset; mk Explore "${EXPLORE_TOOLS}, mcp__linear__save_comment"; expect 1 '⑮ LS-420 R1 M1：Explore tools: 含 mcp__linear__save_comment（任何 save_* 都算）→ exit 1' 'Explore.md：tools: 含被禁工具（字首「mcp__linear__save_」）'
 reset; MK_MODEL=sonnet mk Explore "$EXPLORE_TOOLS"; expect 1 '㊺ LS-420：Explore 升 sonnet → exit 1' 'Explore.md：model: 是「sonnet」，§1 政策要「haiku」'
 reset; MK_MODEL= mk Explore "$EXPLORE_TOOLS"; expect 1 '㊺ LS-420：Explore 無 model: 行（會繼承 Fable）→ exit 1' 'Explore.md：無 model: 行'
+# LS-421：dead-code-sweeper 試點改 haiku；改回 sonnet 要同步改表（退場時），升 opus 也紅
+reset; expect 0 '㊺ LS-421：dead-code-sweeper model: haiku → 通過' 'dead-code-sweeper.md：model: haiku（符合 §1 政策）'
+reset; MK_MODEL=sonnet mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "${NOFORK254} ${LINEARFALLBACK}"; expect 1 '㊺ LS-421：dead-code-sweeper 仍是 sonnet（試點未落地／被順手改回）→ exit 1' 'dead-code-sweeper.md：model: 是「sonnet」，§1 政策要「haiku」'
+reset; MK_MODEL=opus mk dead-code-sweeper "Bash, Read, Grep, Glob, ${LINEAR3}" "${NOFORK254} ${LINEARFALLBACK}"; expect 1 '㊺ LS-421：dead-code-sweeper 升 opus → exit 1' 'dead-code-sweeper.md：model: 是「opus」，§1 政策要「haiku」'
 reset; mk Explore "${EXPLORE_TOOLS}, Edit"; expect 1 '⑮ LS-420：Explore tools: 含 Edit → exit 1' 'Explore.md：tools: 含被禁工具（字首「Edit」）'
 reset; mk Explore "${EXPLORE_TOOLS}, Agent"; expect 1 '⑮ LS-420：Explore tools: 含 Agent（可再派子 agent）→ exit 1' 'Explore.md：tools: 含被禁工具（字首「Agent」）'
 reset; mk Explore NONE; expect 1 '⑮ LS-420：Explore 無 tools: 行（繼承全部工具）→ exit 1' 'Explore.md：無 tools: 行（繼承全部工具）——隱含含有禁止工具'

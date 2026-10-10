@@ -337,14 +337,14 @@ done <<FORBID_EOF
 $FORBIDDEN_RULES
 FORBID_EOF
 
-# frontmatter model: 期望值（LS-400）：COLLABORATION §1 表的 model 政策——ios-dev／qa／dead-code-sweeper 走 `sonnet` 別名
+# frontmatter model: 期望值（LS-400）：COLLABORATION §1 表的 model 政策——ios-dev／qa 走 `sonnet` 別名（LS-421 起 dead-code-sweeper 試點改 `haiku`；非 UI 票的 qa 覆寫 haiku 是派工時 Agent 工具的 model 參數，不改定義檔，此表不管）
 # （Claude Code ≥2.1.284＝Sonnet 5.5，跟 CLI 升級；使用者 09-29 裁）、ui-designer／merge-reviewer／visual-reviewer 留 `opus`。
 # 政策寫在文件沒有 gate，誰順手把 qa 改回 opus（或把 VR 降 sonnet）CI 不會知道——這裡把七份定義檔的 model: 值釘住（LS-420 加 Explore＝haiku：專案層覆蓋內建 Explore，`haiku` 別名 ≥2.1.293＝Haiku 5.5）。
 # 沒有 model: 行＝繼承派工 session 的模型（Fable 5.1），同樣違規。改政策時同步改這張表與 §1；要釘死版本改全 ID 時也要改這裡。
 # 別名實際解析到哪個模型 CI 驗不了（那是 agent-model-check.sh 從 transcript 事後查的事）。
 MODEL_RULES="ios-dev|sonnet
 qa|sonnet
-dead-code-sweeper|sonnet
+dead-code-sweeper|haiku
 ui-designer|opus
 merge-reviewer|opus
 Explore|haiku

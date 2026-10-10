@@ -1,9 +1,11 @@
 ---
 name: sonnet-dispatch
-description: Orchestrator 派任何 Sonnet 5.5 agent（ios-dev／qa／dead-code-sweeper，agent 定義 model sonnet；Claude Code ≥2.1.284 的 sonnet 別名＝claude-sonnet-5-5）前必載——把官方「Prompting Claude Sonnet 5.5」翻成本專案派工單與 SendMessage 續派的固定寫法：effort 由定義檔決定（派工不調）、先用 agent-model-check 確認別名真的解析到 5.5、做到完才停、不做沒要求的、真跑檢查才算完成、判斷材料代替叫它想、不索取內部推理、續派自報身分避免被當注入、查現況不憑記憶、對稿先裁圖、未證實標 PLAUSIBLE、finish line 與 handoff 落檔沿 opus-dispatch。寫 Agent prompt 或 SendMessage 續派時對照本檔逐條自檢；agent 是 opus 時改讀 opus-dispatch。
+description: Orchestrator 派任何 Sonnet 5.5 agent（ios-dev／qa，agent 定義 model sonnet；dead-code-sweeper 與非 UI qa 覆寫是 haiku，改讀 haiku-dispatch；Claude Code ≥2.1.284 的 sonnet 別名＝claude-sonnet-5-5）前必載——把官方「Prompting Claude Sonnet 5.5」翻成本專案派工單與 SendMessage 續派的固定寫法：effort 由定義檔決定（派工不調）、先用 agent-model-check 確認別名真的解析到 5.5、做到完才停、不做沒要求的、真跑檢查才算完成、判斷材料代替叫它想、不索取內部推理、續派自報身分避免被當注入、查現況不憑記憶、對稿先裁圖、未證實標 PLAUSIBLE、finish line 與 handoff 落檔沿 opus-dispatch。寫 Agent prompt 或 SendMessage 續派時對照本檔逐條自檢；agent 是 opus 時改讀 opus-dispatch。
 ---
 
 # Sonnet 5.5 派工寫法（本專案版）
+
+> LS-421（2026-10-10）：dead-code-sweeper 試點改 `model: haiku`、非 UI 票的 qa 由 Agent 工具 `model: haiku` 覆寫——派這兩種情況改讀 `haiku-dispatch`（本檔十條仍是它的底，那份只寫 Haiku 差異）；下文提到 sweeper 之處在退場改回 sonnet 時才適用。
 
 來源：https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5 與 https://platform.claude.com/docs/en/models/sonnet-5-5/whats-new-sonnet-5-5（2026-09-29 讀取）。適用對象：所有 `model: sonnet` 的 subagent（COLLABORATION §1 表：ios-dev／qa／dead-code-sweeper；Claude Code ≥2.1.284 的 `sonnet` 別名指 `claude-sonnet-5-5`）。opus agent（ui-designer／merge-reviewer／visual-reviewer）讀 `opus-dispatch`；兩份共用的六條（finish line、判斷材料、stop/go、PLAUSIBLE、checklist 落檔、續派鎖項）本檔只寫差異，寫法本身以 opus-dispatch 為準。
 

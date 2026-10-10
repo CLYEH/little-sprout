@@ -46,6 +46,9 @@ reset() {
   f="$proj/s2/subagents/agent-b5.jsonl"
   { user "審稿"; asst 2026-08-01T00:00:00Z claude-opus-5; } > "$f"; meta "$f" visual-reviewer
   python3 -c 'import os,sys,time; t=time.time()-30*86400; os.utime(sys.argv[1],(t,t))' "$f"
+  # LS-421：Explore 解析到舊 Haiku 4.5（CLI < 2.1.293）要印 ⚠；dead-code-sweeper 不放這裡（⑥ 用它當「找不到」樣本）
+  f="$proj/s2/subagents/agent-b6.jsonl"
+  { user "搜尋"; asst 2026-09-16T00:00:00Z claude-haiku-4-5; } > "$f"; meta "$f" Explore
   # 主 session 檔（不在 subagents/）不得被當成 agent
   { user "ios-dev"; asst 2026-09-22T00:00:00Z claude-fable-5-1; } > "$proj/s1.jsonl"
 }
@@ -97,15 +100,28 @@ run ios-dev
 expect_exit 1 "$rc" '⑧ 專案 slug 目錄不存在 → exit 1'
 expect_has "$out" '找不到專案 transcript 目錄' '⑧ 說明找不到專案目錄'
 
+# ⑨ LS-421：haiku 別名落到非 5.5 → ⚠ 重開 session；解析到 5.5 → 不警告
+reset
+run Explore
+expect_exit 0 "$rc" '⑨ Explore 找得到 → exit 0'
+expect_has "$out" 'model：claude-haiku-4-5' '⑨ 印舊 Haiku 模型'
+expect_has "$out" '⚠ haiku 別名解析到 claude-haiku-4-5 而不是 Haiku 5.5' '⑨ 舊 haiku 別名印 ⚠'
+f="$proj/s2/subagents/agent-b7.jsonl"
+{ user "搜尋"; asst 2026-09-16T05:00:00Z claude-haiku-5-5; } > "$f"; meta "$f" Explore
+run Explore
+expect_has "$out" 'model：claude-haiku-5-5' '⑨ 取最新 turn（Haiku 5.5）'
+expect_not_has "$out" '⚠ haiku 別名' '⑨ Haiku 5.5 不警告'
+
 # ---- mutation：改壞腳本必須紅 ----
 mut() { # mut <sed 表達式> <case 名> <期望在輸出中的字樣>
   local m="$work/mut.sh"; sed "$1" "$script" > "$m"
   if cmp -s "$m" "$script"; then fail "${2}（mutation 沒有改到任何字，sed 表達式失效）"; return; fi
-  reset; SCRIPT="$m" run ios-dev
+  reset; SCRIPT="$m" run "${MUT_AGENT:-ios-dev}"
   if has "$out" "$3"; then fail "${2}（mutation 後仍綠：輸出含「${3}」）"; else ok "$2"; fi
 }
 mut 's/ts >= best\[0\]/ts <= best[0]/' 'M1 最新比對方向反轉 → ① 紅' '時間：2026-09-20T02:00:00Z'
 mut 's/if os.path.exists(meta):/if False:/' 'M2 不讀 meta.json → 來源不再是 meta' '來源：meta.json'
+MUT_AGENT=Explore mut 's/model != "claude-haiku-5-5"/model == "claude-haiku-5-5"/' 'M4 haiku 警告條件反轉 → ⑨ 舊 Haiku 警告消失' '⚠ haiku 別名解析到'
 mut 's/"subagents", "\*.jsonl"/"*.jsonl"/' 'M3 不限 subagents/ → 主 session 被誤算（最新 turn 變 fable）' 'model：claude-opus-5-5'
 
 n=${selftest_helpers_n}
