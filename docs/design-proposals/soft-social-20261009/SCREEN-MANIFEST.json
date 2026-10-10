@@ -1,0 +1,244 @@
+{
+  "document": "littlesprout-soft-social.pen",
+  "source_issue": "https://github.com/CLYEH/little-sprout/issues/597",
+  "ticket": "LS-455",
+  "design_date": "2026-10-09",
+  "delivery_date": "2026-10-10",
+  "scope": "12 屏柔粉社群靜態視覺提案與獨立品牌 skill；不含 App 實作",
+  "font": {
+    "family": "Noto Sans TC",
+    "bundled": false
+  },
+  "screens": [
+    {
+      "id": "c-home",
+      "node": "rsm56",
+      "title": "家庭動態",
+      "file": "exports/01-home.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "f0412c9422add2773c9d7c52911dde0f0185ba294bd5f57a32fbaca244266721",
+      "sha256": "18b6fd6fa4ac9b460c1bd2ce1c12beec7cd0bcbbe363c75ab2fefaea69ed0377"
+    },
+    {
+      "id": "c-memory",
+      "node": "M7qpWP",
+      "title": "回憶詳情",
+      "file": "exports/02-memory.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "a156d378352707d5b93ad1d8bf2060f2686ffed647a9fe38e1ea390c4634cbf1",
+      "sha256": "797ba5b676cc09f4b9ae95d7efd66e5e640feb611efe130d6c9dcd7a24b6ffc1"
+    },
+    {
+      "id": "c-albums",
+      "node": "WavOD",
+      "title": "相簿",
+      "file": "exports/03-albums.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "e868d89b74757bf068f88b224c41df72dc587a636482e34ca39332d6df686475",
+      "sha256": "e38e6fe1a0f2de889c7a0b6b813a56959390f096a058fa154b7e0cd11acce87d"
+    },
+    {
+      "id": "c-child",
+      "node": "ftrBE",
+      "title": "寶貝成長",
+      "file": "exports/04-child.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "0a8369f1117f7b07b40956104417c0aa37e9a1282ef6632d450785ed0db67da2",
+      "sha256": "0a8369f1117f7b07b40956104417c0aa37e9a1282ef6632d450785ed0db67da2"
+    },
+    {
+      "id": "c-food",
+      "node": "e347tY",
+      "title": "飲食小記",
+      "file": "exports/05-food.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "ba03edf3a5ffef16fe4ff89c4f0bef733a223fddc8e98a3e0229ea2c71fe4011",
+      "sha256": "ba03edf3a5ffef16fe4ff89c4f0bef733a223fddc8e98a3e0229ea2c71fe4011"
+    },
+    {
+      "id": "c-family",
+      "node": "CxGiV",
+      "title": "家庭",
+      "file": "exports/06-family.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "435a0ac51d550b40b23aafa3520994fbb6ad5363d192f837c3aaae0b6bf6b662",
+      "sha256": "435a0ac51d550b40b23aafa3520994fbb6ad5363d192f837c3aaae0b6bf6b662"
+    },
+    {
+      "id": "c-composer",
+      "node": "LefzY",
+      "title": "加入照片",
+      "file": "exports/07-composer.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "924e0e4e625d254965fe4e2a8bb70fbb7f2f696ec972fdaaf786d9c97a2dff19",
+      "sha256": "5566cca4168fb5ead1a72f003f12b34815dc4a7cbae30e08b06f57e3cb7223a3"
+    },
+    {
+      "id": "c-album-detail",
+      "node": "m8Dfo",
+      "title": "相簿內頁",
+      "file": "exports/08-album-detail.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "190e9bf762cef9fb1471724fba3607f2adae1d8e0d83df068bfb70c7b7dc8bc6",
+      "sha256": "3f08f40bfaeb2793c3e5003f5db9ea6a6097b4f54b57eb4013ab33d518efb910"
+    },
+    {
+      "id": "c-notifications",
+      "node": "Y506Lc",
+      "title": "通知",
+      "file": "exports/09-notifications.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "ab107dc8a15bb0b49be8f2b76075f96cbe6989cf2c6ba8f33465eb89d07e6826",
+      "sha256": "ab107dc8a15bb0b49be8f2b76075f96cbe6989cf2c6ba8f33465eb89d07e6826"
+    },
+    {
+      "id": "c-search",
+      "node": "MZghz",
+      "title": "回憶搜尋",
+      "file": "exports/10-search.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "a5cf6570a52c0bc64cadecabcd2fea6c4eab46802295d5deb59ed6b1e68115bd",
+      "sha256": "a5cf6570a52c0bc64cadecabcd2fea6c4eab46802295d5deb59ed6b1e68115bd"
+    },
+    {
+      "id": "c-invite",
+      "node": "g5YJ4r",
+      "title": "邀請家人",
+      "file": "exports/11-invite.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "96ff463ca3f6d881630beb3367c3e6abebf75d13e079ce3b4c41434ae90794eb",
+      "sha256": "96ff463ca3f6d881630beb3367c3e6abebf75d13e079ce3b4c41434ae90794eb"
+    },
+    {
+      "id": "c-album-empty",
+      "node": "Qr7b0",
+      "title": "相簿尚無照片",
+      "file": "exports/12-album-empty.png",
+      "dimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "scale": 2,
+      "source": "Pencil native export; repository PNG optimized where needed",
+      "source_sha256": "807f6696b4135bf5aef6720cbae603df28b395f464709ab83c3709f64bf45722",
+      "sha256": "807f6696b4135bf5aef6720cbae603df28b395f464709ab83c3709f64bf45722"
+    }
+  ],
+  "assets": [
+    {
+      "file": "assets/wordmark.png",
+      "kind": "approved-existing-brand",
+      "source_description": "既有儲存庫品牌／示範素材",
+      "sha256": "f17e92c5ffe215356ff5a8d54ad25f842efa11d4c49fbc6ced1707be3c38195b"
+    },
+    {
+      "file": "assets/app-icon.png",
+      "kind": "approved-existing-brand",
+      "source_description": "既有儲存庫品牌／示範素材",
+      "sha256": "356a7f56136abe8068c7c2d21a3dc73d6287e5faea88ec8186e79361d7d77a37"
+    },
+    {
+      "file": "assets/family-moment.jpg",
+      "kind": "existing-repository-demo",
+      "source_description": "既有儲存庫品牌／示範素材",
+      "sha256": "b603e388bdd7638b2a17c6cb9cfb1ac236e1394b2fe6c3bb06220af37a3a3754"
+    },
+    {
+      "file": "assets/child.jpg",
+      "kind": "existing-repository-demo",
+      "source_description": "既有儲存庫品牌／示範素材",
+      "sha256": "768dc67cfcb193a6fe344af6dabab781153c000926b871847917e38bfeebf127"
+    },
+    {
+      "file": "assets/mom.jpg",
+      "kind": "existing-repository-demo",
+      "source_description": "既有儲存庫品牌／示範素材",
+      "sha256": "dbef7acf304bd38e436824f3c0469724659da3d9c245879edff9f15e0774ccf4"
+    },
+    {
+      "file": "assets/dad.jpg",
+      "kind": "existing-repository-demo",
+      "source_description": "既有儲存庫品牌／示範素材",
+      "sha256": "2e5538256f84012de3f3f21f92682a29f10e620bc982f2ef0ec9ce71fcc19fd4"
+    },
+    {
+      "file": "assets/grandma.jpg",
+      "kind": "existing-repository-demo",
+      "source_description": "既有儲存庫品牌／示範素材",
+      "sha256": "2e4faf9cb95ca983c64d907a951998d67a9e55d1699e2f906f0a41c8b965ee5d"
+    },
+    {
+      "file": "assets/family-picnic.jpg",
+      "kind": "synthetic-this-round-derivative",
+      "source_description": "2026-10-09 提案的 ImageGen 合成素材",
+      "sha256": "18d2601ab4bc6e4bbd737ff916aae6ca8368ecbdc6bba612577cbc405e2184ff"
+    },
+    {
+      "file": "assets/child-leaf.jpg",
+      "kind": "synthetic-this-round-derivative",
+      "source_description": "2026-10-09 提案的 ImageGen 合成素材",
+      "sha256": "f57ac0bbdab129a61dd51a99eb8c0444c531075cfd1705d6b651524645b8cf7f"
+    },
+    {
+      "file": "assets/mandarin-sticker.png",
+      "kind": "synthetic-this-round-illustration",
+      "source_description": "2026-10-09 提案的 ImageGen 合成素材",
+      "sha256": "e25b803b978c20bf9e7f61ca30882aa766fdc06c2e8f97db049afa82b5bbef0b"
+    }
+  ]
+}
