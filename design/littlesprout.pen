@@ -57298,7 +57298,15 @@
                       "type": "ref",
                       "ref": "oLN0e",
                       "name": "Day Divider 1",
-                      "width": "fill_container"
+                      "width": "fill_container",
+                      "descendants": {
+                        "VDOco": {
+                          "content": "8月31日\n（今天）"
+                        },
+                        "ci8cq": {
+                          "content": "8月31日\n（今天）"
+                        }
+                      }
                     },
                     {
                       "type": "frame",
@@ -57386,13 +57394,13 @@
                           "rotation": -3.0000000000000004
                         },
                         "VDOco": {
-                          "content": "8月30日（昨天）"
+                          "content": "8月30日\n（昨天）"
                         },
                         "xlLIo": {
                           "rotation": -6.000000000000001
                         },
                         "ci8cq": {
-                          "content": "8月30日（昨天）"
+                          "content": "8月30日\n（昨天）"
                         }
                       }
                     },
@@ -66919,6 +66927,7 @@
       "x": 8176,
       "y": 28671,
       "name": "cmp/Day Divider",
+      "context": "cmp/Day Divider 規格（LS-454 C3a，使用者 2026-10-11 裁決 comment cfac5b4c）：AX 字級時，日期章最多兩行，在本體與附註之間斷：「8月31日／（今天）」「12月28日／星期日」「2025年／12月28日」（年份在上，同 FoodRecordCopy）。只有本體的日期（9月10日、2026年）一行。字不縮小，章寬跟著字。實例覆寫 VDOco 與 ci8cq 兩個 Date Text 的 content，用換行字元斷在本體與附註之間。",
       "reusable": true,
       "width": 345,
       "children": [
@@ -90790,6 +90799,12 @@
                       "descendants": {
                         "OCYqN": {
                           "width": 333.8000638528543
+                        },
+                        "VDOco": {
+                          "content": "8月31日\n（今天）"
+                        },
+                        "ci8cq": {
+                          "content": "8月31日\n（今天）"
                         }
                       }
                     }
@@ -90852,13 +90867,13 @@
                           "rotation": -3.0000000000000004
                         },
                         "VDOco": {
-                          "content": "8月30日（昨天）"
+                          "content": "8月30日\n（昨天）"
                         },
                         "xlLIo": {
                           "rotation": -6.000000000000001
                         },
                         "ci8cq": {
-                          "content": "8月30日（昨天）"
+                          "content": "8月30日\n（昨天）"
                         }
                       }
                     }
@@ -213428,7 +213443,15 @@
                       "type": "ref",
                       "ref": "oLN0e",
                       "name": "Day Divider 1",
-                      "width": "fill_container"
+                      "width": "fill_container",
+                      "descendants": {
+                        "VDOco": {
+                          "content": "8月31日\n（今天）"
+                        },
+                        "ci8cq": {
+                          "content": "8月31日\n（今天）"
+                        }
+                      }
                     },
                     {
                       "type": "frame",
@@ -213516,13 +213539,13 @@
                           "rotation": -3.0000000000000004
                         },
                         "VDOco": {
-                          "content": "8月30日（昨天）"
+                          "content": "8月30日\n（昨天）"
                         },
                         "xlLIo": {
                           "rotation": -6.000000000000001
                         },
                         "ci8cq": {
-                          "content": "8月30日（昨天）"
+                          "content": "8月30日\n（昨天）"
                         }
                       }
                     },
@@ -215601,6 +215624,12 @@
                   "descendants": {
                     "OCYqN": {
                       "width": 333.8000638528543
+                    },
+                    "VDOco": {
+                      "content": "8月31日\n（今天）"
+                    },
+                    "ci8cq": {
+                      "content": "8月31日\n（今天）"
                     }
                   }
                 },
@@ -242539,10 +242568,10 @@
                       "width": 336
                     },
                     "VDOco": {
-                      "content": "8月20日（今天）"
+                      "content": "8月20日\n（今天）"
                     },
                     "ci8cq": {
-                      "content": "8月20日（今天）"
+                      "content": "8月20日\n（今天）"
                     }
                   }
                 },
