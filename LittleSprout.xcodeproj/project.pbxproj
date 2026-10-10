@@ -3223,7 +3223,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.leoyeh.sproutday;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clyeh.sproutday;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -3239,7 +3239,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.leoyeh.sproutday.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clyeh.sproutday.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LittleSprout.app/LittleSprout";
@@ -3323,7 +3323,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.leoyeh.sproutday;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clyeh.sproutday;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -3339,7 +3339,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.leoyeh.sproutday.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clyeh.sproutday.uitests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = LittleSprout;
@@ -3415,7 +3415,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.leoyeh.sproutday.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clyeh.sproutday.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LittleSprout.app/LittleSprout";
@@ -3432,7 +3432,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.leoyeh.sproutday.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clyeh.sproutday.uitests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = LittleSprout;
