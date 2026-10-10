@@ -61,6 +61,19 @@ struct InlinePrimaryButtonLabel: View {
     }
 }
 
+/// 歡迎頁 Google／Email 鈕標題（LS-450，LS-449 C3b；稿 `e7G3Lk`／`aEb17`）：「登」「入」之間插
+/// U+2060（WORD JOINER），AX 字級換行時不拆「登入」。VoiceOver／UITest 用 `cleaned` 拿掉 U+2060，
+/// 標籤維持「使用 Google 登入」「使用 Email 登入」。Apple 鈕是系統標籤，不插。
+enum WelcomeButtonTitle {
+    static let joiner = "\u{2060}"
+    static let google = "使用 Google 登\(joiner)入"
+    static let email = "使用 Email 登\(joiner)入"
+
+    static func cleaned(_ title: String) -> String {
+        title.replacingOccurrences(of: joiner, with: "")
+    }
+}
+
 /// `cmp/Button Secondary`：無填色、`$control-line` 外框——次要動作樣式，不是停用樣式
 /// （Handoff Notes 通用節「全稿『看起來不能用』掃描」）。`isDimmed` 對應 01b 登入中時
 /// Google／Email 鍵轉 `$surface-2` 的暫時態，不是永久的 disabled 視覺語彙。
@@ -81,7 +94,10 @@ struct SecondaryButton: View {
         Button(action: action) {
             HStack(spacing: AppSpacing.label) {
                 Image(systemName: icon).appIconFrame(.medium)
-                Text(title).appFont(labelToken, weight: labelWeight)
+                Text(title)
+                    .appFont(labelToken, weight: labelWeight)
+                    .multilineTextAlignment(.center)
+                    .accessibilityLabel(WelcomeButtonTitle.cleaned(title))
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
@@ -116,7 +132,10 @@ struct GoogleSignInButton: View {
         Button(action: action) {
             HStack(spacing: AppSpacing.group) {
                 Image("GoogleG").resizable().scaledToFit().appIconFrame(.google)
-                Text("使用 Google 登入").appFont(.lead, weight: .medium)
+                Text(WelcomeButtonTitle.google)
+                    .appFont(.lead, weight: .medium)
+                    .multilineTextAlignment(.center)
+                    .accessibilityLabel(WelcomeButtonTitle.cleaned(WelcomeButtonTitle.google))
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)

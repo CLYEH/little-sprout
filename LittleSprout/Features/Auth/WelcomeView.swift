@@ -225,7 +225,7 @@ struct WelcomeView: View {
             }
             SecondaryButton(
                 icon: "envelope",
-                title: "使用 Email 登入",
+                title: WelcomeButtonTitle.email,
                 isDimmed: authButtonsState.emailIsDimmed,
                 // LS-450（LS-449 C3b）：歡迎頁登入三鈕具名豁免——與 Apple／Google 鈕同為 lead medium。
                 labelToken: .lead,
