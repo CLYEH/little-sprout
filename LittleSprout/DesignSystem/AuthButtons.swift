@@ -61,24 +61,43 @@ struct InlinePrimaryButtonLabel: View {
     }
 }
 
+/// 歡迎頁 Google／Email 鈕標題（LS-450，LS-449 C3b；稿 `e7G3Lk`／`aEb17`）：「登」「入」之間插
+/// U+2060（WORD JOINER），AX 字級換行時不拆「登入」。VoiceOver／UITest 用 `cleaned` 拿掉 U+2060，
+/// 標籤維持「使用 Google 登入」「使用 Email 登入」。Apple 鈕是系統標籤，不插。
+enum WelcomeButtonTitle {
+    static let joiner = "\u{2060}"
+    static let google = "使用 Google 登\(joiner)入"
+    static let email = "使用 Email 登\(joiner)入"
+
+    static func cleaned(_ title: String) -> String {
+        title.replacingOccurrences(of: joiner, with: "")
+    }
+}
+
 /// `cmp/Button Secondary`：無填色、`$control-line` 外框——次要動作樣式，不是停用樣式
 /// （Handoff Notes 通用節「全稿『看起來不能用』掃描」）。`isDimmed` 對應 01b 登入中時
 /// Google／Email 鍵轉 `$surface-2` 的暫時態，不是永久的 disabled 視覺語彙。
 ///
-/// 字級／字重見 LS-101 point 5：官方 `SignInWithAppleButton` 不開放自訂字型（見
-/// `AppleSignInButton.swift` R3/R4 review 定論），因此文字改對齊 Apple 鈕實測值，而不是反過來。
-/// 這裡只在 WelcomeView 用（見用量檢查），不影響其他畫面。
+/// 字級／字重：預設照稿 `XggYA`（`.body` 半粗 600，LS-450／LS-449 C1a），全 app 其餘呼叫端吃預設。
+/// 歡迎頁登入三鈕是具名豁免（tokens.md 具名豁免⑦）：官方 `SignInWithAppleButton` 不開放自訂字型
+/// （見 `AppleSignInButton.swift` R3/R4 review 定論），Email 鈕傳 `.lead` medium 對齊 Apple 鈕實測值
+/// （LS-101 point 5），而不是反過來。
 struct SecondaryButton: View {
     let icon: String
     let title: String
     var isDimmed = false
+    var labelToken: AppFontToken = .body
+    var labelWeight: Font.Weight = .semibold
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: AppSpacing.label) {
                 Image(systemName: icon).appIconFrame(.medium)
-                Text(title).appFont(.lead, weight: .medium)
+                Text(title)
+                    .appFont(labelToken, weight: labelWeight)
+                    .multilineTextAlignment(.center)
+                    .accessibilityLabel(WelcomeButtonTitle.cleaned(title))
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
@@ -113,7 +132,10 @@ struct GoogleSignInButton: View {
         Button(action: action) {
             HStack(spacing: AppSpacing.group) {
                 Image("GoogleG").resizable().scaledToFit().appIconFrame(.google)
-                Text("使用 Google 登入").appFont(.lead, weight: .medium)
+                Text(WelcomeButtonTitle.google)
+                    .appFont(.lead, weight: .medium)
+                    .multilineTextAlignment(.center)
+                    .accessibilityLabel(WelcomeButtonTitle.cleaned(WelcomeButtonTitle.google))
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
@@ -132,23 +154,29 @@ struct GoogleSignInButton: View {
     }
 }
 
-// R1 review F3：`PrimaryButton`（`.body` 17pt，EmailSignInView／OTPVerificationView 用）與
-// `SecondaryButton`／`GoogleSignInButton`（`.lead` 22pt medium，只有 WelcomeView 用，LS-101
-// point 5 對齊 Apple 官方鈕實測值）字級不同——分成兩個 Preview，各自反映實際出現的畫面情境，
-// 不要把兩種字級併在同一張預覽裡看起來像沒對齊。
+// R1 review F3：`PrimaryButton`／預設 `SecondaryButton`（`.body` 17pt，EmailSignInView／
+// OTPVerificationView 等用）與歡迎頁登入三鈕（`GoogleSignInButton`＋傳 `.lead` medium 的
+// `SecondaryButton`，LS-101 point 5 對齊 Apple 官方鈕實測值）字級不同——分成兩個 Preview，各自
+// 反映實際出現的畫面情境，不要把兩種字級併在同一張預覽裡看起來像沒對齊。
 
-#Preview("Primary（EmailSignInView／OTPVerificationView）") {
+#Preview("Primary／Secondary 預設（EmailSignInView／OTPVerificationView）") {
     VStack(spacing: AppSpacing.label) {
         PrimaryButton(icon: "paperplane", title: "寄送驗證碼", action: {})
         PrimaryButton(icon: "paperplane", title: "寄送驗證碼", isLoading: true, action: {})
+        SecondaryButton(icon: "xmark", title: "關閉", action: {})
     }
     .padding()
 }
 
 #Preview("Secondary／Google（WelcomeView）") {
     VStack(spacing: AppSpacing.group) {
-        SecondaryButton(icon: "envelope", title: "使用 Email 登入", action: {})
-        SecondaryButton(icon: "envelope", title: "使用 Email 登入", isDimmed: true, action: {})
+        SecondaryButton(
+            icon: "envelope", title: WelcomeButtonTitle.email, labelToken: .lead, labelWeight: .medium, action: {}
+        )
+        SecondaryButton(
+            icon: "envelope", title: WelcomeButtonTitle.email, isDimmed: true,
+            labelToken: .lead, labelWeight: .medium, action: {}
+        )
         GoogleSignInButton(action: {})
     }
     .padding()

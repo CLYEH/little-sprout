@@ -188,6 +188,7 @@
 		3DE6FD3FBE226113DC1CCC57 /* VideoPlayerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1905C686E265375F2E30D04 /* VideoPlayerScreen.swift */; };
 		3E6AD4C8220D0C00A205AFA4 /* LegalDocumentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B4A5D2DBCF16762B8D2F87 /* LegalDocumentSheet.swift */; };
 		3E851BE2E0FD96463C07D775 /* PhotoCornerShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD268EF45ACA8D3FE3F11E2 /* PhotoCornerShape.swift */; };
+		3EBF2B42A310B57311D4C719 /* SecondaryButtonRenderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D2CF432F1F98C7CC75C944 /* SecondaryButtonRenderTests.swift */; };
 		3EE7F5C3DDFD67DC1C27DBD1 /* UploadQueueStoreResumeRaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECC46AD407EF94BEFC63093B /* UploadQueueStoreResumeRaceTests.swift */; };
 		3EF7D1DC36BF1CB888308BF5 /* CommentsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0C7AE2D49AF5987CD1CEBC /* CommentsStore.swift */; };
 		3EFC0C57ED75313D4F4AA023 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18AB0FEB21BA55A39EB67982 /* Assets.xcassets */; };
@@ -1312,6 +1313,7 @@
 		F1DAB46AC3F3092BECE9EE37 /* StubChildAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubChildAPIClient.swift; sourceTree = "<group>"; };
 		F210F5BDD14ADE30EF4B005D /* UploadQueueStore+VideoExportSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UploadQueueStore+VideoExportSlot.swift"; sourceTree = "<group>"; };
 		F2142CC06A92030D5E7A0D49 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F4D2CF432F1F98C7CC75C944 /* SecondaryButtonRenderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondaryButtonRenderTests.swift; sourceTree = "<group>"; };
 		F56EF256D3B9E2D1400A5F1E /* ReportInboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportInboxView.swift; sourceTree = "<group>"; };
 		F56FB37A90BCA2F75055D3D7 /* LabeledTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabeledTextField.swift; sourceTree = "<group>"; };
 		F5CC227F2B168D39029462E5 /* StubFamilyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubFamilyAPIClient.swift; sourceTree = "<group>"; };
@@ -1789,6 +1791,7 @@
 				68CC5B8416F7028D1103B61C /* PushPrepromptPolicyTests.swift */,
 				0DD82679EDD789F70A8A8999 /* ReportInboxAssemblerTests.swift */,
 				1676990AFF88042719C8300B /* SafetyModelsTests.swift */,
+				F4D2CF432F1F98C7CC75C944 /* SecondaryButtonRenderTests.swift */,
 				775F76A6FD49940CFBE1EE85 /* SettingsContentSafetyCompositionTests.swift */,
 				42EC894F62DC55A74654ED99 /* SettingsIconsTests.swift */,
 				520AF87D9CED8414F39B70E9 /* SettingsPushRowCompositionTests.swift */,
@@ -3118,6 +3121,7 @@
 				57EBF6862351A27816C83A1A /* PushPrepromptPolicyTests.swift in Sources */,
 				F13AD1A73B09DDC419EAC93B /* ReportInboxAssemblerTests.swift in Sources */,
 				5006E2F67FD5072CA07B41F3 /* SafetyModelsTests.swift in Sources */,
+				3EBF2B42A310B57311D4C719 /* SecondaryButtonRenderTests.swift in Sources */,
 				5526B3A33052BAFCF2286C04 /* SessionFixture.swift in Sources */,
 				AD4CBDFADEEAE93EDBDFE000 /* SettingsContentSafetyCompositionTests.swift in Sources */,
 				8B1480EC9DAD0F2F17939ECC /* SettingsIconsTests.swift in Sources */,
