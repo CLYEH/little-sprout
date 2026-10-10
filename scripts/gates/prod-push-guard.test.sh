@@ -121,6 +121,22 @@ expect 'R2-m2f storage rm（deny）' 2 'supabase storage rm ss:///media/x.png'
 expect 'R2-m2g storage cp --local（allow）' 0 'supabase storage cp --local a.png ss:///media/a.png'
 expect 'R2-m2h secrets unset 有當日 token（allow）' 0 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase secrets unset FOO"
 
+# ---- R3：heredoc 內文（reviewer i4：verdict／PR body 草稿要寫到這些字）----
+expect 'R3-a cat heredoc 內文含 supabase db push --linked（allow）' 0 $'cat > f <<\'X\'\nsupabase db push --linked\nX'
+expect 'R3-b bash heredoc 內文含之（deny）' 2 $'bash <<\'X\'\nsupabase db push --linked\nX'
+expect 'R3-c sh -e heredoc 帶旗標（deny）' 2 $'sh -e <<X\nsupabase db push\nX'
+expect 'R3-d python3 - heredoc 內 subprocess.run（allow，接受的盲區）' 0 $'python3 - <<\'X\'\nimport subprocess\nsubprocess.run(["supabase","db","push"])\nX'
+expect 'R3-e tee f <<X（allow）' 0 $'tee f <<X\nsupabase db push --linked\nX'
+expect 'R3-f heredoc 行尾再接 && supabase db push --linked（deny）' 2 $'cat <<\'X\' && supabase db push --linked\nbody\nX'
+expect 'R3-g 終止符之後的行再接 supabase db push --linked（deny）' 2 $'cat <<\'X\'\nbody\nX\nsupabase db push --linked'
+expect 'R3-h cat heredoc 管線給 bash（deny）' 2 $'cat <<X | bash\nsupabase db push\nX'
+expect 'R3-i 引號內的 << 不算 heredoc（deny）' 2 $'echo "<<X"\nsupabase db push --linked'
+expect 'R3-j 找不到終止符不剝（deny）' 2 $'cat <<\'X\'\nsupabase db push --linked'
+expect 'R3-k <<- 搭 tab 縮排終止符（allow）' 0 $'cat <<-X\n\tsupabase db push\n\tX'
+expect 'R3-l 同行兩個 heredoc 內文皆略過（allow）' 0 $'cat <<A <<B\nsupabase db push\nA\nsupabase db push --linked\nB'
+expect 'R3-m gh pr create --body-file - heredoc（allow）' 0 $'gh pr create --body-file - <<\'X\'\nrun supabase db push --linked\nX'
+expect 'R3-n here-string <<< 不是 heredoc（allow）' 0 'cat <<< hello'
+
 # ---- fail-closed ----
 out=$(printf '' | bash "$gate" 2>&1); got=$?
 if [ "$got" -eq 2 ]; then echo '✓ fail-closed：stdin 空（deny）'; else echo "✗ fail-closed：stdin 空期望 2 實得 ${got}：${out}" >&2; fail=1; fi
@@ -185,8 +201,20 @@ mutate_expect_allow 'M4：拿掉 functions deploy／secrets set 規則 → funct
   's/^    if re.search(ALWAYS_REMOTE, text):$/    if False:/' 'supabase functions deploy foo'
 mutate_expect_allow 'M5：拿掉 --linked 判斷 → db query --linked 改判 allow' \
   's/^    if linked:$/    if False:/' "supabase db query --linked 'select 1'"
+mutate_expect_deny() {  # $1=label $2=sed 表達式 $3=原本會 allow 的 command（拿掉某段保護後必須改判 deny）
+  local label=$1 expr=$2 cmd=$3 m="${mut_dir}/m.sh"
+  sed "$expr" "$gate" > "$m"
+  if cmp -s "$gate" "$m"; then echo "✗ ${label}（sed 沒改到任何東西，負控本身無效）" >&2; fail=1; return; fi
+  local out got
+  out=$(payload "$cmd" | bash "$m" 2>&1); got=$?
+  if [ "$got" -eq 2 ]; then echo "✓ ${label}"; else echo "✗ ${label}（mutant 仍判 ${got}：${out}）" >&2; fail=1; fi
+}
+mutate_expect_deny 'M10：拿掉 heredoc 內文剝除 → cat heredoc 內文含 supabase db push --linked 改判 deny' \
+  's/^    command = strip_heredocs(\(.*\))$/    command = \1/' $'cat > f <<\'X\'\nsupabase db push --linked\nX'
+mutate_expect_allow 'M11：接收端一律略過內文（不分 shell 直譯器）→ bash heredoc 內文改判 allow' \
+  's/^                keep = any(.*$/                keep = False/' $'bash <<\'X\'\nsupabase db push --linked\nX'
 mutate_expect_allow 'M6：拿掉行尾續行摺疊 → 續行寫法的 --linked 改判 allow' \
-  's/^    command = command.replace.*$/    command = command/' $'supabase db query \\\n  -f x.sql \\\n  --linked'
+  's/command\.replace(.*, " "))$/command)/' $'supabase db query \\\n  -f x.sql \\\n  --linked'
 mutate_expect_allow 'M7：拿掉 migration repair 預設 linked → 改判 allow' \
   's/migration\\s+repair/zzz_never/' 'supabase migration repair --status applied 20260101000000'
 mutate_expect_allow 'M8：拿掉 secrets unset 規則 → 改判 allow' \

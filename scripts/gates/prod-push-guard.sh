@@ -25,6 +25,11 @@
 #   本機 `supabase start`／`stop`／`status`／`db reset`／`db query`（無 --linked）放行。
 #   子指令比對只看不含空白的 args token（引號內整段 SQL 之類不參與），regex 對串起來的 args 比對，所以
 #   `supabase --workdir x db push` 這種旗標夾在 supabase 與子指令之間仍會擋。
+#   heredoc（R3，LS-78）：`<<`／`<<-` 到獨佔行終止符之間的內文，**只有同一行出現 shell 直譯器字**
+#   （bash／sh／zsh／dash／ksh／eval，含 `bash -s`、`cat <<X | bash`）才保留內文照掃；其餘接收端
+#   （cat／tee／python3／node／`gh … --body-file -`／`supabase db query` 等）內文一律略過——DB 票的 verdict／PR body
+#   草稿幾乎都要寫到 `supabase db push` 字樣。`<<` 本行（含 `&& supabase db push --linked` 這種後接命令）與
+#   終止符之後的行照掃；找不到終止符就整段不剝（fail closed）；引號內的 `<<` 不算。
 #   shlex 遇到未閉合引號等 ValueError 時 fail closed：把整段原文當 args 再判一次。
 #   「打正式站」且命令全文（不分位置）沒有 `PROD-PUSH-APPROVED-BY-USER=<今日>` → deny。
 #   今日＝`date +%F`；環境變數 `PROD_PUSH_GUARD_TODAY=YYYY-MM-DD` 可覆寫（只供自測；hook 行程的環境
@@ -37,8 +42,9 @@
 # 已知盲區（靠規約 §6「不改寫指令繞過」與 auto-mode 分類器）：把指令包進 .sh 腳本再執行（命令文字
 # 不含 supabase，如 `bash scripts/ops/foo.sh`）、變數展開組字串、旗標夾在子指令兩個字之間
 # （`db --workdir x push`）、`ssh`／`docker exec` 等引號內遠端命令、`psql`／`curl` 直打
-# Management API 或正式站連線字串——這些不經此 hook。已知誤擋（寧可擋錯）：無引號的 `supabase db push`
-# 字樣出現在 echo／heredoc 散文、`# supabase db push` 整行註解。
+# Management API 或正式站連線字串、`python3 - <<X` 等非 shell 直譯器 heredoc 內文裡 `subprocess.run(["supabase",
+# "db","push"])` 這類程式碼（R3 接受的盲區）——這些不經此 hook。已知誤擋（寧可擋錯）：無引號的 `supabase db push`
+# 字樣出現在 echo 散文、`# supabase db push` 整行註解。
 #
 # deny 輸出：stdout `{"hookSpecificOutput":{…"permissionDecision":"deny","permissionDecisionReason":"…"}}`
 # ＋stderr 同一句理由，exit 2；允許＝exit 0 無輸出。reason 只放本檔案自己寫的靜態文字，不回顯命令內容。
@@ -88,7 +94,7 @@ from urllib.parse import urlparse
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "host.docker.internal"}
 OPS = set(";|&()\n`")
-SHELLS = {"bash", "sh", "zsh"}
+SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
 ALWAYS_REMOTE = r"(?:^|\s)(?:functions\s+(?:deploy|delete)|secrets\s+(?:set|unset))(?=\s|$)"
 DEFAULT_LINKED = r"(?:^|\s)(?:db\s+push|migration\s+repair|config\s+push|storage\s+(?:rm|cp|mv))(?=\s|$)"
 
@@ -161,8 +167,77 @@ def scan_tokens(t, depth):
     return False
 
 
+def heredocs_on(line):
+    """回傳這一行（引號外）所有 heredoc：[(終止符, 是否 <<-, 該行是否有 shell 直譯器／eval 字)]。"""
+    found = []
+    q = None
+    i = 0
+    while i < len(line):
+        ch = line[i]
+        if q:
+            if ch == q:
+                q = None
+            elif ch == "\\" and q == '"':
+                i += 1
+        elif ch in "'\"":
+            q = ch
+        elif ch == "\\":
+            i += 1
+        elif line.startswith("<<<", i):
+            i += 3
+            continue
+        elif line.startswith("<<", i):
+            m = re.match(r"<<(-?)\s*(?:'([^']*)'|\"([^\"]*)\"|([^\s;|&()<>]+))", line[i:])
+            if m:
+                delim = next(g for g in m.groups()[1:] if g is not None)
+                # 接收端判定看整行（含 `cat <<X | bash` 這種後接管線的直譯器），任一 shell／eval 字就保留內文
+                try:
+                    words = tokenize(line, "();<>|&`")
+                except ValueError:
+                    words = line.split()
+                keep = any(os.path.basename(w) in SHELLS or w == "eval" for w in words)
+                found.append((delim, m.group(1) == "-", keep))
+                i += m.end()
+                continue
+        i += 1
+    return found
+
+
+def strip_heredocs(command):
+    """剝掉非 shell 直譯器接收端（cat／tee／python3／gh --body-file - 等）的 heredoc 內文；終止符找不到就整行不剝（fail closed）。"""
+    lines = command.split("\n")
+    out = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        out.append(line)
+        i += 1
+        hs = heredocs_on(line)
+        if not hs:
+            continue
+        spans = []
+        j = i
+        ok = True
+        for delim, dash, keep in hs:
+            k = j
+            while k < len(lines) and (lines[k].lstrip("\t") if dash else lines[k]) != delim:
+                k += 1
+            if k >= len(lines):
+                ok = False
+                break
+            spans.append((j, k, keep))
+            j = k + 1
+        if not ok:
+            continue
+        for a, b, keep in spans:
+            if keep:
+                out.extend(lines[a:b + 1])
+        i = j
+    return "\n".join(out)
+
+
 def scan(command, depth=0):
-    command = command.replace("\\\n", " ")
+    command = strip_heredocs(command.replace("\\\n", " "))
     # 兩種標點集合各掃一次取聯集：含 & 時 URL 查詢字串的 & 會切斷 args（--db-url 後的 --linked 掉出去）；
     # 不含 & 時 `true&&supabase` 這種黏在一起的寫法看不到 supabase token。
     try:
