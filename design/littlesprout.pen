@@ -917,7 +917,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登⁠入",
+                          "content": "使用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -4622,7 +4622,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登⁠入",
+                          "content": "使用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -6167,7 +6167,7 @@
                           "fill": "$text-secondary"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登⁠入",
+                          "content": "使用 Email 登⁠入",
                           "fill": "$text-secondary",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
@@ -6767,7 +6767,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登⁠入",
+                          "content": "使用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -36123,7 +36123,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登⁠入",
+                          "content": "使用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364,
@@ -62404,7 +62404,7 @@
       "name": "LS-21 / 13 日記詳情 (iPhone)",
       "clip": true,
       "width": 393,
-      "height": 974.375,
+      "height": 936.022,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -62465,21 +62465,51 @@
           ],
           "children": [
             {
-              "id": "XJNSY",
-              "type": "ref",
-              "ref": "oLN0e",
-              "name": "Date Anchor",
+              "type": "frame",
+              "id": "V9lto",
+              "name": "Header Row（日期＋⋯，程式 header(_:)）",
               "width": "fill_container",
-              "descendants": {
-                "VDOco": {
-                  "content": "8月31日（今天）",
-                  "fontSize": "$fs-lead"
+              "gap": "$sp-group",
+              "children": [
+                {
+                  "id": "XJNSY",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Date Anchor",
+                  "width": "fill_container",
+                  "descendants": {
+                    "VDOco": {
+                      "content": "8月31日（今天）",
+                      "fontSize": "$fs-lead"
+                    },
+                    "ci8cq": {
+                      "content": "8月31日（今天）",
+                      "fontSize": "$fs-lead"
+                    }
+                  }
                 },
-                "ci8cq": {
-                  "content": "8月31日（今天）",
-                  "fontSize": "$fs-lead"
+                {
+                  "type": "frame",
+                  "id": "Z6Pad",
+                  "name": "More Button（⋯ 內容操作 48×48，程式 contentActionsButton）",
+                  "width": 48,
+                  "height": 48,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "w8I99",
+                      "name": "More Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "circle-ellipsis",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    }
+                  ]
                 }
-              }
+              ]
             },
             {
               "type": "frame",
@@ -63285,50 +63315,111 @@
             },
             {
               "type": "frame",
-              "id": "qBnvn",
-              "name": "Comments Section",
+              "id": "k8AO5",
+              "name": "Interaction Row（頁面底，程式 InteractionRow）",
               "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-label",
+              "gap": "$sp-block",
               "children": [
                 {
                   "type": "frame",
-                  "id": "d70kTz",
-                  "name": "Comments Header",
+                  "id": "P4V5Db",
+                  "name": "Heart Group",
                   "gap": "$sp-tight",
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "ZoaYE",
-                      "name": "Icon",
-                      "width": 22,
-                      "height": 22,
-                      "icon": "message-circle",
-                      "library": "lucide",
-                      "fill": "$text-primary"
+                      "type": "frame",
+                      "id": "Impkl",
+                      "name": "Like Toggle",
+                      "width": 118,
+                      "gap": "$sp-tight",
+                      "padding": 11,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "uNvRM",
+                          "name": "Heart Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "heart",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "WrzgE",
+                          "name": "Heart Label",
+                          "fill": "$text-secondary",
+                          "content": "愛心",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "y8Uqt",
-                      "name": "Label",
-                      "fill": "$text-primary",
-                      "content": "留言",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-body",
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "vNITF",
+                      "name": "Count Zone",
+                      "width": 44,
+                      "height": 44,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "CNP4p",
+                          "name": "Heart Count",
+                          "fill": "$text-secondary",
+                          "content": "3",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "type": "text",
-                  "id": "e9xHmd",
-                  "name": "Comments Placeholder",
-                  "fill": "$text-secondary",
-                  "content": "留言功能即將推出，敬請期待。",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
+                  "type": "frame",
+                  "id": "AEXoo",
+                  "name": "Comment Button",
+                  "gap": "$sp-tight",
+                  "padding": 11,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "vvOQb",
+                      "name": "Comment Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "message-circle",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "p8onx",
+                      "name": "Comment Label",
+                      "fill": "$text-secondary",
+                      "content": "留言",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "hpNKq",
+                      "name": "Comment Count",
+                      "fill": "$text-secondary",
+                      "content": "2",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
                 }
               ]
             }
@@ -63367,7 +63458,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 974.375,
+      "height": 963.022,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -63428,21 +63519,51 @@
           ],
           "children": [
             {
-              "id": "ur5ZQ",
-              "type": "ref",
-              "ref": "oLN0e",
-              "name": "Date Anchor",
+              "type": "frame",
+              "id": "bQc0g",
+              "name": "Header Row（日期＋⋯，程式 header(_:)）",
               "width": "fill_container",
-              "descendants": {
-                "VDOco": {
-                  "content": "8月31日（今天）",
-                  "fontSize": "$fs-lead"
+              "gap": "$sp-group",
+              "children": [
+                {
+                  "id": "ur5ZQ",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Date Anchor",
+                  "width": "fill_container",
+                  "descendants": {
+                    "VDOco": {
+                      "content": "8月31日（今天）",
+                      "fontSize": "$fs-lead"
+                    },
+                    "ci8cq": {
+                      "content": "8月31日（今天）",
+                      "fontSize": "$fs-lead"
+                    }
+                  }
                 },
-                "ci8cq": {
-                  "content": "8月31日（今天）",
-                  "fontSize": "$fs-lead"
+                {
+                  "type": "frame",
+                  "id": "lAoYw",
+                  "name": "More Button（⋯ 內容操作 48×48，程式 contentActionsButton）",
+                  "width": 48,
+                  "height": 48,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "gOVuX",
+                      "name": "More Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "circle-ellipsis",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    }
+                  ]
                 }
-              }
+              ]
             },
             {
               "type": "frame",
@@ -64248,50 +64369,111 @@
             },
             {
               "type": "frame",
-              "id": "zFKzO",
-              "name": "Comments Section",
+              "id": "YjkQh",
+              "name": "Interaction Row（頁面底，程式 InteractionRow）",
               "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-label",
+              "gap": "$sp-block",
               "children": [
                 {
                   "type": "frame",
-                  "id": "h8Oerk",
-                  "name": "Comments Header",
+                  "id": "sGyyG",
+                  "name": "Heart Group",
                   "gap": "$sp-tight",
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "b4usqm",
-                      "name": "Icon",
-                      "width": 22,
-                      "height": 22,
-                      "icon": "message-circle",
-                      "library": "lucide",
-                      "fill": "$text-primary"
+                      "type": "frame",
+                      "id": "jvT5f",
+                      "name": "Like Toggle",
+                      "width": 118,
+                      "gap": "$sp-tight",
+                      "padding": 11,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "hIHns",
+                          "name": "Heart Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "heart",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KR4a6",
+                          "name": "Heart Label",
+                          "fill": "$text-secondary",
+                          "content": "愛心",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "L19yp",
-                      "name": "Label",
-                      "fill": "$text-primary",
-                      "content": "留言",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-body",
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "frMhy",
+                      "name": "Count Zone",
+                      "width": 44,
+                      "height": 44,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ABHOM",
+                          "name": "Heart Count",
+                          "fill": "$text-secondary",
+                          "content": "3",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "type": "text",
-                  "id": "OzBi2",
-                  "name": "Comments Placeholder",
-                  "fill": "$text-secondary",
-                  "content": "留言功能即將推出，敬請期待。",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
+                  "type": "frame",
+                  "id": "DcRFH",
+                  "name": "Comment Button",
+                  "gap": "$sp-tight",
+                  "padding": 11,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "zVyER",
+                      "name": "Comment Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "message-circle",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "btSvE",
+                      "name": "Comment Label",
+                      "fill": "$text-secondary",
+                      "content": "留言",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "VPv8y",
+                      "name": "Comment Count",
+                      "fill": "$text-secondary",
+                      "content": "2",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
                 }
               ]
             }
@@ -64379,7 +64561,6 @@
           "id": "jV9TW",
           "name": "Body",
           "width": "fill_container",
-          "height": "fill_container",
           "gap": "$screen-pad-lg",
           "padding": [
             8,
@@ -65320,21 +65501,51 @@
                   "gap": "$sp-label",
                   "children": [
                     {
-                      "id": "a32gb7",
-                      "type": "ref",
-                      "ref": "oLN0e",
-                      "name": "Date Anchor",
+                      "type": "frame",
+                      "id": "J9Nf4T",
+                      "name": "Header Row（日期＋⋯，程式 header(_:)）",
                       "width": "fill_container",
-                      "descendants": {
-                        "VDOco": {
-                          "content": "8月31日（今天）",
-                          "fontSize": "$fs-lead"
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "id": "a32gb7",
+                          "type": "ref",
+                          "ref": "oLN0e",
+                          "name": "Date Anchor",
+                          "width": "fill_container",
+                          "descendants": {
+                            "VDOco": {
+                              "content": "8月31日（今天）",
+                              "fontSize": "$fs-lead"
+                            },
+                            "ci8cq": {
+                              "content": "8月31日（今天）",
+                              "fontSize": "$fs-lead"
+                            }
+                          }
                         },
-                        "ci8cq": {
-                          "content": "8月31日（今天）",
-                          "fontSize": "$fs-lead"
+                        {
+                          "type": "frame",
+                          "id": "FNe9w",
+                          "name": "More Button（⋯ 內容操作 48×48，程式 contentActionsButton）",
+                          "width": 48,
+                          "height": 48,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "l8V0A",
+                              "name": "More Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "circle-ellipsis",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
                         }
-                      }
+                      ]
                     },
                     {
                       "type": "frame",
@@ -65453,62 +65664,133 @@
                       ]
                     }
                   ]
-                },
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "m4jjuT",
+          "name": "Interaction Row（頁面底整寬，程式 iPadLayout 外層 VStack）",
+          "width": "fill_container",
+          "gap": "$sp-block",
+          "padding": [
+            "$sp-block",
+            "$screen-pad-lg",
+            0,
+            "$screen-pad-lg"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "IGqD4",
+              "name": "Heart Group",
+              "gap": "$sp-tight",
+              "alignItems": "center",
+              "children": [
                 {
                   "type": "frame",
-                  "id": "irzyy",
-                  "name": "Comments Section",
-                  "width": "fill_container",
-                  "fill": "#00000000",
-                  "layout": "vertical",
-                  "gap": "$sp-label",
+                  "id": "AMKoI",
+                  "name": "Like Toggle",
+                  "width": 118,
+                  "gap": "$sp-tight",
+                  "padding": 11,
+                  "alignItems": "center",
                   "children": [
                     {
-                      "type": "frame",
-                      "id": "C5epL",
-                      "name": "Comments Header",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "A0TGB",
-                          "name": "Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "message-circle",
-                          "library": "lucide",
-                          "fill": "$text-primary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "WiLaQ",
-                          "name": "Label",
-                          "fill": "$text-primary",
-                          "content": "留言",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "700"
-                        }
-                      ]
+                      "type": "icon",
+                      "id": "tIB7p",
+                      "name": "Heart Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "heart",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     },
                     {
                       "type": "text",
-                      "id": "SRpx0",
-                      "name": "Comments Placeholder",
+                      "id": "L7MTP",
+                      "name": "Heart Label",
                       "fill": "$text-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "留言功能即將推出，敬請期待。",
+                      "content": "愛心",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "y8000",
+                  "name": "Count Zone",
+                  "width": 44,
+                  "height": 44,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "eOpZj",
+                      "name": "Heart Count",
+                      "fill": "$text-secondary",
+                      "content": "3",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sBQSi",
+              "name": "Comment Button",
+              "gap": "$sp-tight",
+              "padding": 11,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "shlXF",
+                  "name": "Comment Icon",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "message-circle",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "XbaGI",
+                  "name": "Comment Label",
+                  "fill": "$text-secondary",
+                  "content": "留言",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "A2ckzP",
+                  "name": "Comment Count",
+                  "fill": "$text-secondary",
+                  "content": "2",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "600"
                 }
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "zWQeS",
+          "name": "Scroll Remainder（捲動餘白）",
+          "width": "fill_container",
+          "height": "fill_container"
         },
         {
           "type": "frame",
@@ -65543,7 +65825,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 2106.375,
+      "height": 2160.067,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -65604,21 +65886,51 @@
           ],
           "children": [
             {
-              "id": "aNTzo",
-              "type": "ref",
-              "ref": "oLN0e",
-              "name": "Date Anchor",
+              "type": "frame",
+              "id": "eblHk",
+              "name": "Header Row（日期＋⋯，程式 header(_:)）",
               "width": "fill_container",
-              "descendants": {
-                "VDOco": {
-                  "content": "8月31日（今天）",
-                  "fontSize": "$fs-lead"
+              "gap": "$sp-group",
+              "children": [
+                {
+                  "id": "aNTzo",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Date Anchor",
+                  "width": "fill_container",
+                  "descendants": {
+                    "VDOco": {
+                      "content": "8月31日\n（今天）",
+                      "fontSize": "$fs-lead"
+                    },
+                    "ci8cq": {
+                      "content": "8月31日\n（今天）",
+                      "fontSize": "$fs-lead"
+                    }
+                  }
                 },
-                "ci8cq": {
-                  "content": "8月31日（今天）",
-                  "fontSize": "$fs-lead"
+                {
+                  "type": "frame",
+                  "id": "yB3J7",
+                  "name": "More Button（⋯ 內容操作 48×48，程式 contentActionsButton）",
+                  "width": 48,
+                  "height": 48,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "k8HwV5",
+                      "name": "More Icon",
+                      "width": 40,
+                      "height": 40,
+                      "icon": "circle-ellipsis",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    }
+                  ]
                 }
-              }
+              ]
             },
             {
               "type": "frame",
@@ -66428,52 +66740,112 @@
             },
             {
               "type": "frame",
-              "id": "u0RPV",
-              "name": "Comments Section",
+              "id": "hCsNo",
+              "name": "Interaction Row（頁面底，程式 InteractionRow）",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": "$sp-label",
+              "gap": "$sp-block",
               "children": [
                 {
                   "type": "frame",
-                  "id": "XiwIZ",
-                  "name": "Comments Header",
+                  "id": "aQBbf",
+                  "name": "Heart Group",
                   "gap": "$sp-tight",
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "KRWsm",
-                      "name": "Icon",
-                      "width": 40,
-                      "height": 40,
-                      "icon": "message-circle",
-                      "library": "lucide",
-                      "fill": "$text-primary"
+                      "type": "frame",
+                      "id": "TJDsh",
+                      "name": "Like Toggle",
+                      "width": 220,
+                      "gap": "$sp-tight",
+                      "padding": 11,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "FUkEw",
+                          "name": "Heart Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "heart",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KakdC",
+                          "name": "Heart Label",
+                          "fill": "$text-secondary",
+                          "content": "愛心",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "nb0np",
-                      "name": "Label",
-                      "fill": "$text-primary",
-                      "content": "留言",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-body",
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "iwMLB",
+                      "name": "Count Zone",
+                      "width": 56,
+                      "height": 80,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "f7AyBY",
+                          "name": "Heart Count",
+                          "fill": "$text-secondary",
+                          "content": "3",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "type": "text",
-                  "id": "NXUot",
-                  "name": "Comments Placeholder",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "留言功能即將推出，敬請期待。",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
+                  "type": "frame",
+                  "id": "EhA9c",
+                  "name": "Comment Button",
+                  "gap": "$sp-tight",
+                  "padding": 11,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "a920Qe",
+                      "name": "Comment Icon",
+                      "width": 32,
+                      "height": 32,
+                      "icon": "message-circle",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "V3iu2J",
+                      "name": "Comment Label",
+                      "fill": "$text-secondary",
+                      "content": "留言",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "XwKna",
+                      "name": "Comment Count",
+                      "fill": "$text-secondary",
+                      "content": "2",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
                 }
               ]
             }
@@ -73441,7 +73813,7 @@
       "name": "Stress / 13 日記詳情 · 20 張照片壓測",
       "clip": true,
       "width": 393,
-      "height": 2734.125,
+      "height": 2722.772,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -73502,21 +73874,51 @@
           ],
           "children": [
             {
-              "id": "iXELg",
-              "type": "ref",
-              "ref": "oLN0e",
-              "name": "Date Anchor",
+              "type": "frame",
+              "id": "p8FCf",
+              "name": "Header Row（日期＋⋯，程式 header(_:)）",
               "width": "fill_container",
-              "descendants": {
-                "VDOco": {
-                  "content": "8月31日（今天）",
-                  "fontSize": "$fs-lead"
+              "gap": "$sp-group",
+              "children": [
+                {
+                  "id": "iXELg",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Date Anchor",
+                  "width": "fill_container",
+                  "descendants": {
+                    "VDOco": {
+                      "content": "8月31日（今天）",
+                      "fontSize": "$fs-lead"
+                    },
+                    "ci8cq": {
+                      "content": "8月31日（今天）",
+                      "fontSize": "$fs-lead"
+                    }
+                  }
                 },
-                "ci8cq": {
-                  "content": "8月31日（今天）",
-                  "fontSize": "$fs-lead"
+                {
+                  "type": "frame",
+                  "id": "ZWoUh",
+                  "name": "More Button（⋯ 內容操作 48×48，程式 contentActionsButton）",
+                  "width": 48,
+                  "height": 48,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "nykbR",
+                      "name": "More Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "circle-ellipsis",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    }
+                  ]
                 }
-              }
+              ]
             },
             {
               "type": "frame",
@@ -77926,50 +78328,111 @@
             },
             {
               "type": "frame",
-              "id": "Z6KvWT",
-              "name": "Comments Section",
+              "id": "uwi9J",
+              "name": "Interaction Row（頁面底，程式 InteractionRow）",
               "width": "fill_container",
-              "layout": "vertical",
-              "gap": "$sp-label",
+              "gap": "$sp-block",
               "children": [
                 {
                   "type": "frame",
-                  "id": "F86Fq",
-                  "name": "Comments Header",
+                  "id": "oV8jB",
+                  "name": "Heart Group",
                   "gap": "$sp-tight",
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "S8ORX",
-                      "name": "Icon",
-                      "width": 22,
-                      "height": 22,
-                      "icon": "message-circle",
-                      "library": "lucide",
-                      "fill": "$text-primary"
+                      "type": "frame",
+                      "id": "I1lckh",
+                      "name": "Like Toggle",
+                      "width": 118,
+                      "gap": "$sp-tight",
+                      "padding": 11,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "DuxzK",
+                          "name": "Heart Icon",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "heart",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ys5Ao",
+                          "name": "Heart Label",
+                          "fill": "$text-secondary",
+                          "content": "愛心",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "DxY9U",
-                      "name": "Label",
-                      "fill": "$text-primary",
-                      "content": "留言",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-body",
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "bLPqW",
+                      "name": "Count Zone",
+                      "width": 44,
+                      "height": 44,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "aKNlA",
+                          "name": "Heart Count",
+                          "fill": "$text-secondary",
+                          "content": "3",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "type": "text",
-                  "id": "HodnG",
-                  "name": "Comments Placeholder",
-                  "fill": "$text-secondary",
-                  "content": "留言功能即將推出，敬請期待。",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
+                  "type": "frame",
+                  "id": "U8BjgX",
+                  "name": "Comment Button",
+                  "gap": "$sp-tight",
+                  "padding": 11,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "QCj6k",
+                      "name": "Comment Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "message-circle",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "mb5Ni",
+                      "name": "Comment Label",
+                      "fill": "$text-secondary",
+                      "content": "留言",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "j0fL0",
+                      "name": "Comment Count",
+                      "fill": "$text-secondary",
+                      "content": "2",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
                 }
               ]
             }
@@ -78008,7 +78471,7 @@
       },
       "clip": true,
       "width": 393,
-      "height": 3866.125,
+      "height": 3919.817,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -78069,21 +78532,51 @@
           ],
           "children": [
             {
-              "id": "Jxu7Z",
-              "type": "ref",
-              "ref": "oLN0e",
-              "name": "Date Anchor",
+              "type": "frame",
+              "id": "pk2Y4",
+              "name": "Header Row（日期＋⋯，程式 header(_:)）",
               "width": "fill_container",
-              "descendants": {
-                "VDOco": {
-                  "content": "8月31日（今天）",
-                  "fontSize": "$fs-lead"
+              "gap": "$sp-group",
+              "children": [
+                {
+                  "id": "Jxu7Z",
+                  "type": "ref",
+                  "ref": "oLN0e",
+                  "name": "Date Anchor",
+                  "width": "fill_container",
+                  "descendants": {
+                    "VDOco": {
+                      "content": "8月31日\n（今天）",
+                      "fontSize": "$fs-lead"
+                    },
+                    "ci8cq": {
+                      "content": "8月31日\n（今天）",
+                      "fontSize": "$fs-lead"
+                    }
+                  }
                 },
-                "ci8cq": {
-                  "content": "8月31日（今天）",
-                  "fontSize": "$fs-lead"
+                {
+                  "type": "frame",
+                  "id": "UYLkA",
+                  "name": "More Button（⋯ 內容操作 48×48，程式 contentActionsButton）",
+                  "width": 48,
+                  "height": 48,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "a0m7cM",
+                      "name": "More Icon",
+                      "width": 40,
+                      "height": 40,
+                      "icon": "circle-ellipsis",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    }
+                  ]
                 }
-              }
+              ]
             },
             {
               "type": "frame",
@@ -82497,52 +82990,112 @@
             },
             {
               "type": "frame",
-              "id": "tOZlX",
-              "name": "Comments Section",
+              "id": "y87IFf",
+              "name": "Interaction Row（頁面底，程式 InteractionRow）",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": "$sp-label",
+              "gap": "$sp-block",
               "children": [
                 {
                   "type": "frame",
-                  "id": "HsW5s",
-                  "name": "Comments Header",
+                  "id": "a7eCer",
+                  "name": "Heart Group",
                   "gap": "$sp-tight",
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "G0McCI",
-                      "name": "Icon",
-                      "width": 40,
-                      "height": 40,
-                      "icon": "message-circle",
-                      "library": "lucide",
-                      "fill": "$text-primary"
+                      "type": "frame",
+                      "id": "p2Jcg",
+                      "name": "Like Toggle",
+                      "width": 220,
+                      "gap": "$sp-tight",
+                      "padding": 11,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "lsGC7",
+                          "name": "Heart Icon",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "heart",
+                          "library": "lucide",
+                          "fill": "$text-secondary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "JoaHY",
+                          "name": "Heart Label",
+                          "fill": "$text-secondary",
+                          "content": "愛心",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "normal"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "ALyBk",
-                      "name": "Label",
-                      "fill": "$text-primary",
-                      "content": "留言",
-                      "fontFamily": "$font",
-                      "fontSize": "$fs-body",
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "Hepxy",
+                      "name": "Count Zone",
+                      "width": 56,
+                      "height": 80,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Jg3Qr",
+                          "name": "Heart Count",
+                          "fill": "$text-secondary",
+                          "content": "3",
+                          "fontFamily": "$font",
+                          "fontSize": "$fs-note",
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "type": "text",
-                  "id": "IYJuP",
-                  "name": "Comments Placeholder",
-                  "fill": "$text-secondary",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "留言功能即將推出，敬請期待。",
-                  "fontFamily": "$font",
-                  "fontSize": "$fs-note",
-                  "fontWeight": "normal"
+                  "type": "frame",
+                  "id": "t95O34",
+                  "name": "Comment Button",
+                  "gap": "$sp-tight",
+                  "padding": 11,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "H4RPU0",
+                      "name": "Comment Icon",
+                      "width": 32,
+                      "height": 32,
+                      "icon": "message-circle",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "x4yKz",
+                      "name": "Comment Label",
+                      "fill": "$text-secondary",
+                      "content": "留言",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "V6zJR",
+                      "name": "Comment Count",
+                      "fill": "$text-secondary",
+                      "content": "2",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
                 }
               ]
             }
@@ -82578,7 +83131,7 @@
       "name": "Stress / 13-iPad 日記詳情 · 20 張照片壓測",
       "clip": true,
       "width": 834,
-      "height": 2356.2,
+      "height": 2422,
       "fill": {
         "type": "gradient",
         "gradientType": "radial",
@@ -82630,7 +83183,6 @@
           "id": "GShdA",
           "name": "Body",
           "width": "fill_container",
-          "height": "fill_container",
           "gap": "$screen-pad-lg",
           "padding": [
             8,
@@ -86939,21 +87491,51 @@
                   "gap": "$sp-label",
                   "children": [
                     {
-                      "id": "XE1mm",
-                      "type": "ref",
-                      "ref": "oLN0e",
-                      "name": "Date Anchor",
+                      "type": "frame",
+                      "id": "OrBNX",
+                      "name": "Header Row（日期＋⋯，程式 header(_:)）",
                       "width": "fill_container",
-                      "descendants": {
-                        "VDOco": {
-                          "content": "8月31日（今天）",
-                          "fontSize": "$fs-lead"
+                      "gap": "$sp-group",
+                      "children": [
+                        {
+                          "id": "XE1mm",
+                          "type": "ref",
+                          "ref": "oLN0e",
+                          "name": "Date Anchor",
+                          "width": "fill_container",
+                          "descendants": {
+                            "VDOco": {
+                              "content": "8月31日（今天）",
+                              "fontSize": "$fs-lead"
+                            },
+                            "ci8cq": {
+                              "content": "8月31日（今天）",
+                              "fontSize": "$fs-lead"
+                            }
+                          }
                         },
-                        "ci8cq": {
-                          "content": "8月31日（今天）",
-                          "fontSize": "$fs-lead"
+                        {
+                          "type": "frame",
+                          "id": "w8JZUg",
+                          "name": "More Button（⋯ 內容操作 48×48，程式 contentActionsButton）",
+                          "width": 48,
+                          "height": 48,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Zplvw",
+                              "name": "More Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "circle-ellipsis",
+                              "library": "lucide",
+                              "fill": "$text-primary"
+                            }
+                          ]
                         }
-                      }
+                      ]
                     },
                     {
                       "type": "frame",
@@ -87072,58 +87654,122 @@
                       ]
                     }
                   ]
-                },
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "p8HWzZ",
+          "name": "Interaction Row（頁面底整寬，程式 iPadLayout 外層 VStack）",
+          "width": "fill_container",
+          "gap": "$sp-block",
+          "padding": [
+            "$sp-block",
+            "$screen-pad-lg",
+            0,
+            "$screen-pad-lg"
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "WLN8t",
+              "name": "Heart Group",
+              "gap": "$sp-tight",
+              "alignItems": "center",
+              "children": [
                 {
                   "type": "frame",
-                  "id": "f0KG45",
-                  "name": "Comments Section",
-                  "width": "fill_container",
-                  "fill": "#00000000",
-                  "layout": "vertical",
-                  "gap": "$sp-label",
+                  "id": "Qm2YE",
+                  "name": "Like Toggle",
+                  "width": 118,
+                  "gap": "$sp-tight",
+                  "padding": 11,
+                  "alignItems": "center",
                   "children": [
                     {
-                      "type": "frame",
-                      "id": "T1s7R",
-                      "name": "Comments Header",
-                      "gap": "$sp-tight",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "c9W5j",
-                          "name": "Icon",
-                          "width": 22,
-                          "height": 22,
-                          "icon": "message-circle",
-                          "library": "lucide",
-                          "fill": "$text-primary"
-                        },
-                        {
-                          "type": "text",
-                          "id": "vxkzc",
-                          "name": "Label",
-                          "fill": "$text-primary",
-                          "content": "留言",
-                          "fontFamily": "$font",
-                          "fontSize": "$fs-body",
-                          "fontWeight": "700"
-                        }
-                      ]
+                      "type": "icon",
+                      "id": "BWRlR",
+                      "name": "Heart Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "heart",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     },
                     {
                       "type": "text",
-                      "id": "FWHBe",
-                      "name": "Comments Placeholder",
+                      "id": "VWGdj",
+                      "name": "Heart Label",
                       "fill": "$text-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "留言功能即將推出，敬請期待。",
+                      "content": "愛心",
                       "fontFamily": "$font",
                       "fontSize": "$fs-note",
                       "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jD1WW",
+                  "name": "Count Zone",
+                  "width": 44,
+                  "height": 44,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "RZXfc",
+                      "name": "Heart Count",
+                      "fill": "$text-secondary",
+                      "content": "3",
+                      "fontFamily": "$font",
+                      "fontSize": "$fs-note",
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "rH9ct",
+              "name": "Comment Button",
+              "gap": "$sp-tight",
+              "padding": 11,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "GJ8UP",
+                  "name": "Comment Icon",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "message-circle",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "SKVyN",
+                  "name": "Comment Label",
+                  "fill": "$text-secondary",
+                  "content": "留言",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "SqY7N",
+                  "name": "Comment Count",
+                  "fill": "$text-secondary",
+                  "content": "2",
+                  "fontFamily": "$font",
+                  "fontSize": "$fs-note",
+                  "fontWeight": "600"
                 }
               ]
             }
@@ -134515,7 +135161,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登⁠入",
+                          "content": "使用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -135238,7 +135884,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登⁠入",
+                          "content": "使用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -135948,7 +136594,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登⁠入",
+                          "content": "使用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364,
@@ -140117,7 +140763,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登⁠入",
+                          "content": "使用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
@@ -153748,7 +154394,7 @@
                           "icon": "mail"
                         },
                         "yxwnz": {
-                          "content": "改用 Email 登⁠入",
+                          "content": "使用 Email 登⁠入",
                           "fontSize": "$fs-lead",
                           "fontWeight": "500",
                           "lineHeight": 1.1364
