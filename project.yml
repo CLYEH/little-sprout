@@ -8,7 +8,7 @@
 name: LittleSprout
 
 options:
-  bundleIdPrefix: com.leoyeh
+  bundleIdPrefix: com.clyeh
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
@@ -71,9 +71,9 @@ targets:
     settings:
       base:
         # LS-433（LS-148 定名 Sprout Day）：bundle ID 仍須與 LS-8（Apple Developer 註冊）實際佔到的
-        # App ID 對齊後才定案；LS-8 尚無「已佔 <id>」留言時暫用 com.leoyeh.sproutday。
+        # App ID 對齊後才定案；LS-8 尚無「已佔 <id>」留言時暫用 com.clyeh.sproutday。
         # 改這裡時 scripts/ops/qa-e2e.sh 的 BUNDLE_ID 會自動跟（它讀本行），不必再手改。
-        PRODUCT_BUNDLE_IDENTIFIER: com.leoyeh.sproutday
+        PRODUCT_BUNDLE_IDENTIFIER: com.clyeh.sproutday
         # LS-49 實測推翻原本的假設：GENERATE_INFOPLIST_FILE 的 INFOPLIST_KEY_<Key> 機制
         # 只認 Apple 預先登記的已知 key（CFBundleDisplayName、UIApplicationSceneManifest 這類）
         # ——不是「任意 key 都生效」，塞 SupabaseURL/SupabaseAnonKey 這種自訂 key 會被靜默忽略
@@ -99,7 +99,7 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: true
-        PRODUCT_BUNDLE_IDENTIFIER: com.leoyeh.sproutday.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.clyeh.sproutday.tests
 
   # LS-95：≥44pt 點擊目標機械 gate。simctl 沒有 accessibility dump 子指令、本機也未裝 idb
   # （`which idb`／`idb_companion` 皆找不到）——XCUITest 是這台 Xcode 26.6 環境唯一能實際
@@ -132,7 +132,7 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: true
-        PRODUCT_BUNDLE_IDENTIFIER: com.leoyeh.sproutday.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: com.clyeh.sproutday.uitests
 
 schemes:
   # CI（.github/workflows/ci.yml）與 push gate 都寫死 -scheme LittleSprout，

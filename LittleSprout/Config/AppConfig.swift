@@ -10,6 +10,11 @@ import Foundation
 /// 是設定錯誤而非可恢復的執行期狀態，因此用 `precondition` 讓 app 直接停在啟動點，
 /// 而不是讓 SupabaseClient 用一個空字串默默建出來、之後在第一次網路呼叫才爆出難懂的錯誤。
 enum AppConfig {
+    /// app 的 bundle id（對齊 `project.yml` app target 的 `PRODUCT_BUNDLE_IDENTIFIER`，LS-452）。
+    /// 只給 Logger subsystem 在 `Bundle.main.bundleIdentifier` 為 nil 時的 fallback 用，
+    /// 三處 Logger 共用，改 bundle id 時不必再 grep 散落字串。
+    static let bundleIDFallback = "com.clyeh.sproutday"
+
     /// Supabase 專案的 REST/Auth/Storage 基底 URL。
     static var supabaseURL: URL {
         guard let raw = Bundle.main.object(forInfoDictionaryKey: "SupabaseURL") as? String,

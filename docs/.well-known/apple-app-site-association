@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["<TEAM_ID>.com.leoyeh.sproutday"],
+        "appIDs": ["<TEAM_ID>.com.clyeh.sproutday"],
         "components": [
           { "/": "/invite/*" }
         ]

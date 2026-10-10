@@ -24,7 +24,7 @@ final class PushNotificationStore {
     /// 也留得下紀錄（`subsystem` 用 bundle id，找不到時退回硬編字面值——測試環境的
     /// `Bundle.main.bundleIdentifier` 未必是 app 的 bundle id，但 log 訊息本身不影響測試）。
     private static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "com.leoyeh.sproutday", category: "push"
+        subsystem: Bundle.main.bundleIdentifier ?? AppConfig.bundleIDFallback, category: "push"
     )
 
     private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
