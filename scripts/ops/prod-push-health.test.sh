@@ -10,7 +10,7 @@
 #
 # Mutation（本機手動跑一次、斷言原文貼票 handoff，不進 commit；同 prod-purge-health.test.sh 慣例）：
 #   - python 內 `if backlog > threshold:` 改成 `>=` → ⑥「積壓恰等於閾值不報」轉紅（exit 1，印 ⚠）。
-#   - python 內 `status != "succeeded"` 判斷整段拿掉 → ③「最近一次排程 failed」轉紅（exit 0）。
+#   - python 內 `status != "succeeded"` 改成 `status == "never"`（等於不再偵測 failed）→ ③「最近一次排程 failed」轉紅（exit 0）。
 #   - python 內 `> STALE_MINUTES` 改成 `> 9999` → ⑤「最新回應過舊」轉紅（exit 0）。
 set -uo pipefail
 

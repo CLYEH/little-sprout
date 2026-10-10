@@ -3865,27 +3865,41 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   # 2. 部署 Edge Function（config.toml 已有 [functions.push-dispatch] verify_jwt = false）
   supabase functions deploy push-dispatch
 
-  # 3. 五個 APNS_* secrets（APNS_P8 從檔案讀，值不進 repo／不進 shell history 以外的地方；
-  #    APNS_ENV：TestFlight／App Store 簽署的 build 用 production，Xcode 直接安裝的 debug
-  #    build 的 device token 屬 sandbox——兩者不可混用，值錯會全部 BadDeviceToken）
+  # 3. 五個 APNS_* secrets。APNS_ENV 不給預設值，必須依「範圍 4 實機驗收用的 build」二選一填入：
+  #    - Xcode 直接灌版（現行 LittleSprout.entitlements aps-environment=development）→ sandbox
+  #    - TestFlight／App Store 簽署的 build → production
+  #    兩種 build 不能同時驗。填錯的後果無法自行復原：APNs 對每個 token 回 400 BadDeviceToken，
+  #    push-dispatch 把它當失效 token 刪掉 device_tokens 那一列（apns.ts invalidToken → handler.ts
+  #    removeDeviceToken）；改回正確值後仍收不到，因為 App 端 LS-217 的 UserDefaults 去重
+  #    （PushDeviceTokenSubmissionRecord）認為「同 user＋同 token 已送過」不會重送，登出再登入也一樣，
+  #    只能刪 App 重裝。EF 在全部送失敗時仍回 HTTP 200，prod-push-health.sh 只看 status_code，
+  #    所以這種錯誤健康檢查會是綠的——務必做第 6 步的 content 檢查。
   supabase secrets set APNS_TEAM_ID=VWBQ67Y2L6 APNS_KEY_ID=LCL8V6H7U5 \
-    APNS_BUNDLE_ID=com.clyeh.sproutday APNS_ENV=production
+    APNS_BUNDLE_ID=com.clyeh.sproutday APNS_ENV=<sandbox|production>
   supabase secrets set "APNS_P8=$(cat /path/to/AuthKey_LCL8V6H7U5.p8)"
   supabase secrets list   # 只列名稱與 digest，確認五個 APNS_* 都在
 
-  # 4. 最後才上排程 migration
+  # 4. 歷史事件處理（緊接在第 5 步 db push 之前執行）。排程一上線第一分鐘就會 claim 所有
+  #    sent_at is null 且 occurred_at 早於 5 分鐘的事件並推給成員（LS-172 起累積的歷史事件）。
+  #    先看數量：
+  supabase db query --linked "select count(*) as pending from public.notification_events where sent_at is null;"
+  #    不想推舊事件就先標記已送（<部署當下 UTC> 填執行當下的 UTC 時間，例如 2026-10-11T04:00:00Z；
+  #    晚於此時間才產生的事件不受影響）。是否標記由 orchestrator 決定：
+  supabase db query --linked "update public.notification_events set sent_at = now() where sent_at is null and created_at < '<部署當下 UTC>';"
+
+  # 5. 最後才上排程 migration（排程一上線即開始 claim）
   supabase db push
 
-  # 5. 驗證（等 2–3 分鐘讓 cron 跑過）
+  # 6. 驗證（等 2–3 分鐘讓 cron 跑過）
   bash scripts/ops/prod-push-health.sh
+  #    prod-push-health 看不到 APNs 層失敗（EF 回 200）。第一次真的送出後，查 EF 回應內容的
+  #    sent／failed／tokens_removed：failed>0 且 sent=0、或 tokens_removed 異常增加＝APNS_ENV／APNS_P8
+  #    設錯（立刻 unschedule 回滾，見下）。
+  supabase db query --linked "select created, status_code, content from net._http_response order by created desc limit 5;"
   ```
   回滾：`supabase db query --linked "select cron.unschedule('ls395-push-dispatch-every-minute');"`
   （停排程，不刪函式；事件會繼續累積在 `notification_events`，待重新排程後依 claim 條件處理）。
-  **首次上線注意**：正式站既有的、`occurred_at` 早於 5 分鐘且 `sent_at is null` 的歷史事件會在第一次
-  執行時被一併 claim 並推播給有 token 的成員；上線前先查 `select count(*) from
-  public.notification_events where sent_at is null;`，如不想推舊事件，先把它們標記
-  `sent_at`（orchestrator 決定）。健康度巡檢：`bash scripts/ops/prod-push-health.sh`
-  （docs/COLLABORATION.md §4-b）。
+  健康度巡檢：`bash scripts/ops/prod-push-health.sh`（docs/COLLABORATION.md §4-b）。
 - **本機測試**：
   - `supabase/functions/push-dispatch/{handler,apns}.test.ts`（Deno 內建
     `Deno.test`，注入 fake deps／fake `fetch`／`StubApnsProvider`，不需要跑
@@ -3938,9 +3952,12 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
 - **部署**（正式站，orchestrator 依 LS-78 授權狀態執行，含 vault secrets 與 `db push` 的完整順序清單見上方「排程」段，LS-395）：
   ```
   supabase functions deploy push-dispatch --project-ref mzkkkzbiejgvhwjyiokf
-  supabase secrets set APNS_TEAM_ID=... APNS_KEY_ID=... APNS_BUNDLE_ID=... APNS_ENV=production
+  supabase secrets set APNS_TEAM_ID=... APNS_KEY_ID=... APNS_BUNDLE_ID=... APNS_ENV=<sandbox|production>
   supabase secrets set APNS_P8="$(cat AuthKey_XXXXXXXXXX.p8)"
   ```
+  `APNS_ENV` 不可寫死 `production`：Xcode 直接灌版（`aps-environment=development`）＝`sandbox`，
+  TestFlight／App Store 簽署 build＝`production`，填錯會導致 token 被刪且 App 不會重送（完整後果與復原
+  方式見上方「排程」段部署清單第 3 步）。
   `SUPABASE_URL`／`SUPABASE_SECRET_KEYS`／`SUPABASE_SERVICE_ROLE_KEY` 由
   Supabase 平台自動注入，不需要另外設定（LS-196：admin client 與鑑權判定改用
   `resolveSecretKey()`／`isAuthorizedServiceCall()`，見上方「鑑權」段）；
