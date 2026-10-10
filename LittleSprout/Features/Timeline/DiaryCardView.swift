@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// 時間軸日記卡（`cmp/Card Diary`，LS-126 票文 Scope 1）——多寶貝 caption＋日記全文（截斷）
-/// ＋附照預覽（最多 3 張，第 3 張若還有更多張疊上「還有 N 張」暗蓋）＋底部互動列
+/// 時間軸日記卡（`cmp/Card Diary`，LS-126 票文 Scope 1）——日記全文（截斷）
+/// ＋附照預覽（最多 3 張，第 3 張若還有更多張疊上「還有 N 張」暗蓋）＋署名落款（LS-447）＋底部互動列
 /// （`InteractionRow`，LS-216）。
 ///
 /// 純顯示元件，不含導覽——外層（`TimelineView`）決定要不要包一層 `NavigationLink`。
@@ -52,23 +52,24 @@ struct DiaryCardView: View {
     /// 模擬器像素量測驗證：兩種情境量到的 tile 邊長都正確跟著外層容器縮放。
     let previewRowWidth: CGFloat
 
+    /// LS-447：AX 字級多寶貝署名改每人兩行（`signature`）——見該屬性文件註解。
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.group) {
-            VStack(alignment: .leading, spacing: AppSpacing.group) {
-                if !taggedChildren.isEmpty {
-                    // LS-374：不設 lineLimit——稿面 Multi Caption（`x7k2o6`）`fixed-width` 隨內容長高，
-                    // 年齡改 `$fs-note` 後三位寶貝在 AX3 超過兩行，截斷會吃掉寶貝名字。
-                    // LS-446：整張卡是 `print-paper` 紙面 → 署名傳 print-ink 系。
-                    Text(MultiChildCaptionFormatter.attributed(
-                        children: taggedChildren, asOf: content.entryDate, ink: .print
-                    ))
+        VStack(alignment: .leading, spacing: taggedChildren.isEmpty ? AppSpacing.group : AppSpacing.label) {
+            VStack(alignment: .leading, spacing: AppSpacing.label) {
+                VStack(alignment: .leading, spacing: AppSpacing.group) {
+                    Text(content.body)
+                        .appFont(.body)
+                        .foregroundStyle(Color.lsPrintInk)
+                        .lineLimit(4)
+                        .qaFrameHook(QAAccessibilityID.diaryCardBody)
+                    if !content.previewPhotos.isEmpty {
+                        previewPhotosRow
+                    }
                 }
-                Text(content.body)
-                    .appFont(.body)
-                    .foregroundStyle(Color.lsPrintInk)
-                    .lineLimit(4)
-                if !content.previewPhotos.isEmpty {
-                    previewPhotosRow
+                if !taggedChildren.isEmpty {
+                    signOff
                 }
             }
             // LS-216：`.combine` 只圍住上面這段「純顯示」內容——`InteractionRow` 留在範圍
@@ -94,6 +95,60 @@ struct DiaryCardView: View {
                 .strokeBorder(Color.lsPaperEdge, lineWidth: 1)
                 .padding(-1)
                 .accessibilityHidden(true)
+        }
+    }
+
+    /// LS-447（LS-442 C4a，稿 `kmbyt`／`YXnTc`）：署名在內文與照片列之後落款——1pt `paper-rule` 線（稿
+    /// `u59KAY`，線上下各 `$sp-label`）＋靠右署名（`Jqwww` justify end），與照片卡、食物卡落款同一個位置。
+    /// 沒有標記寶貝時整段不畫（沒有名字可落款，只剩一條線反而像殘缺）。
+    private var signOff: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.label) {
+            Rectangle()
+                .fill(Color.lsPaperRule)
+                .frame(height: 1)
+                .qaFrameHook(QAAccessibilityID.diaryCardSignOffRule)
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                signature
+            }
+        }
+    }
+
+    /// 署名文字（LS-446：整張卡是 print-paper 紙面 → 署名傳 print-ink 系）。
+    ///
+    /// LS-374：不設 lineLimit——稿面 Multi Caption（`x7k2o6`）`fixed-width` 隨內容長高，年齡 `$fs-note`
+    /// 後三位寶貝在 AX3 超過兩行，截斷會吃掉寶貝名字。
+    ///
+    /// LS-447（稿 `YXnTc` 第四欄）：AX 字級＋多寶貝時，單一字串靠自然折行在 AX3 會把「小安 · 2 歲 3 個月」
+    /// 這種單人片段也切斷（LS-442 R3 實測），改每人固定兩行——名字一行、「· 年齡」一行，兩個 `Text`
+    /// trailing 對齊（`MultiChildCaptionFormatter.twoLines`）；代價「起點仍靠右參差」已核可。單寶貝與
+    /// 非 AX 字級維持單一字串。VoiceOver 念法不變：AX 分支把四個 `Text` 收成一個元素、label 仍是
+    /// 「小安 · 2 歲 3 個月、小明 · 8 個月大」（`AlbumSignatureFormatter.signatureText`），不念成四段。
+    @ViewBuilder
+    private var signature: some View {
+        if dynamicTypeSize.isAccessibilitySize, taggedChildren.count > 1 {
+            VStack(alignment: .trailing, spacing: 0) {
+                ForEach(Array(taggedChildren.enumerated()), id: \.element.id) { index, child in
+                    let lines = MultiChildCaptionFormatter.twoLines(for: child, asOf: content.entryDate)
+                    Text(lines.name)
+                        .qaFrameHook("\(QAAccessibilityID.diaryCardSignatureLinePrefix)\(index * 2)")
+                    Text(lines.age)
+                        .qaFrameHook("\(QAAccessibilityID.diaryCardSignatureLinePrefix)\(index * 2 + 1)")
+                }
+            }
+            .font(.body.weight(.semibold))
+            .foregroundStyle(Color.lsPrintInk)
+            .multilineTextAlignment(.trailing)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(AlbumSignatureFormatter.signatureText(
+                children: taggedChildren, asOf: content.entryDate, isOneLinePerPerson: false
+            ))
+        } else {
+            Text(MultiChildCaptionFormatter.attributed(
+                children: taggedChildren, asOf: content.entryDate, ink: .print
+            ))
+            .multilineTextAlignment(.trailing)
+            .qaFrameHook(QAAccessibilityID.diaryCardSignature)
         }
     }
 
@@ -240,6 +295,22 @@ struct DiaryCardView: View {
                 Color.lsSurface2
             }
         }
+    }
+}
+
+private extension View {
+    /// 版面量測用的透明掛勾（`DiaryCardVideoBadgeGeometryTests`／`DiaryCardBabyCaptionUITests`）：卡片外層
+    /// `.accessibilityElement(children: .combine)` 會吃掉子節點自己的 identifier，所以在目標節點上疊一個
+    /// 不含子節點的 `Color.clear` 並自己宣告 `.accessibilityElement()`——能穿透祖先的 `.combine` 單獨曝光，
+    /// 疊層與被疊加的 view 同尺寸，量到的 frame 就是該節點實際渲染框（同 `previewPhotosRow` 的
+    /// `previewTile<n>`，merge-review R1 `3119a0cc` M1 的理由：整段圍 `#if DEBUG`，Release 不改 a11y tree）。
+    @ViewBuilder
+    func qaFrameHook(_ identifier: String) -> some View {
+        #if DEBUG
+        overlay(Color.clear.accessibilityElement().accessibilityIdentifier(identifier))
+        #else
+        self
+        #endif
     }
 }
 
