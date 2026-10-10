@@ -243,14 +243,18 @@ struct LegalMarkdownDocument: Equatable {
 
     /// 從 `start` 起找下一個「恰好兩個 `*`」的粗體分隔符，回傳其起點；找不到回 nil（未閉合 `**` 因此維持字面）。
     /// 掃描時整段跳過 code span（`` `…` ``）與 `[文字](網址)`——裡面的 `**` 不是這一層的分隔符，留給
-    /// `parseInline` 的 Apple parser 原生處理（`[**粗**](url)` 變成粗體連結、`` `**x**` `` 保持字面）。
+    /// `parseInline` 的 Apple parser 原生處理（`[**粗**](url)` 連結完整但 Apple parser 會丟掉連結文字內的強調，輸出為非粗體連結；
+    /// `` `**x**` `` 保持字面）。
     /// 連續 3 個以上的 `*`（`***x***`）整串跳過，同樣交給 Apple parser（粗斜體），不在這裡硬切出殘留的字面 `*`。
     private static func nextBoldDelimiter(in text: String, from start: String.Index) -> String.Index? {
         var index = start
         while index < text.endIndex {
-            if let span = text[index...].prefixMatch(of: /`[^`]+`|\[[^\]]*\]\([^)]*\)/) {
+            let char = text[index]
+            // 只有 `` ` ``／`[` 才可能起一個要跳過的 span；其餘字元不碰 Regex（逐字元跑 prefixMatch 在 sheet
+            // `.onAppear` 主執行緒上量到 terms 16→223 ms，M1）。
+            if char == "`" || char == "[", let span = text[index...].prefixMatch(of: /`[^`]+`|\[[^\]]*\]\([^)]*\)/) {
                 index = span.range.upperBound
-            } else if text[index] == "*" {
+            } else if char == "*" {
                 var runEnd = index
                 while runEnd < text.endIndex, text[runEnd] == "*" { runEnd = text.index(after: runEnd) }
                 if text.distance(from: index, to: runEnd) == 2 { return index }
