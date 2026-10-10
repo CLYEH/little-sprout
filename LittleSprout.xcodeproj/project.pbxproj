@@ -215,6 +215,7 @@
 		4745595CF57FC4BD4AC2CD8B /* SupabasePushDeviceTokenAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836F59F33B1A7FC62365AB9F /* SupabasePushDeviceTokenAPIClient.swift */; };
 		474B709868BB57FD0311A355 /* PendingAccountDeletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A74AC2B81C1D091FB956275 /* PendingAccountDeletion.swift */; };
 		4779DBBACB425B20189D11F6 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B29793798CE839C104E800B1 /* Spacing.swift */; };
+		477EA6F53E9B2A5690EE70F1 /* DayDividerLabelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCFF682580C51431EFB5E98A /* DayDividerLabelTests.swift */; };
 		47F024E1268E315400D0BC8A /* SupabaseFamilyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994C01308D56E827DA85A61 /* SupabaseFamilyAPIClient.swift */; };
 		47F7D68FCFBA68AF81B00EC0 /* PreviewFoodAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176FB0785E221A5AA44B62CB /* PreviewFoodAPIClient.swift */; };
 		48BFF19ACF1EB80C58276A13 /* FoodRecordCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C8E1CB7F40315CD4A6BE2E /* FoodRecordCopy.swift */; };
@@ -1346,6 +1347,7 @@
 		FBF2B62443AA0559B13A0839 /* FamilyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStore.swift; sourceTree = "<group>"; };
 		FC4A90607F9BB3E712524500 /* FamilyStoreRefreshQuotaRaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyStoreRefreshQuotaRaceTests.swift; sourceTree = "<group>"; };
 		FC6B2DBBC978E2E01973D4FE /* DeleteAccountFlowModelResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountFlowModelResumeTests.swift; sourceTree = "<group>"; };
+		FCFF682580C51431EFB5E98A /* DayDividerLabelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayDividerLabelTests.swift; sourceTree = "<group>"; };
 		FD964BECBC2322D792D6B3C0 /* AlbumPhotoGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumPhotoGridView.swift; sourceTree = "<group>"; };
 		FDA1DCFCB88BBB8BE8816F43 /* AlbumImportUploadCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumImportUploadCoordinator.swift; sourceTree = "<group>"; };
 		FDEAC50154EF831F02F1315B /* FoodBookUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodBookUITests.swift; sourceTree = "<group>"; };
@@ -1702,6 +1704,7 @@
 				A711F7DFF4A82BB7D08AF553 /* CommentsStoreTests.swift */,
 				98F91F255268FEE8F549166E /* ContentActionsTests.swift */,
 				AF7DBEF2E911E54BAE123A7B /* CreateChildViewBirthdayLabelTests.swift */,
+				FCFF682580C51431EFB5E98A /* DayDividerLabelTests.swift */,
 				41B7B10C2108552F0A805115 /* DeleteAccountFlowModelRaceTests.swift */,
 				FC6B2DBBC978E2E01973D4FE /* DeleteAccountFlowModelResumeTests.swift */,
 				63CDD3E63AAEAD23512BDFBA /* DeleteAccountFlowModelTests.swift */,
@@ -3040,6 +3043,7 @@
 				1CBA80A960EAA16E708E4F9F /* CommentsStoreTests.swift in Sources */,
 				D7ED98C0BB0F1AA10D10D890 /* ContentActionsTests.swift in Sources */,
 				317BD5FBE300AA30B61FAE06 /* CreateChildViewBirthdayLabelTests.swift in Sources */,
+				477EA6F53E9B2A5690EE70F1 /* DayDividerLabelTests.swift in Sources */,
 				947B5736557D6D1227AC9252 /* DeleteAccountFlowModelRaceTests.swift in Sources */,
 				BCCC6A1B7C284C355C6509FF /* DeleteAccountFlowModelResumeTests.swift in Sources */,
 				28E5FB900660E9320FF010BB /* DeleteAccountFlowModelTests.swift in Sources */,

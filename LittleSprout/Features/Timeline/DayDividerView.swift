@@ -9,9 +9,11 @@ import SwiftUI
 struct DayDividerView: View {
     let date: Date
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         HStack(spacing: AppSpacing.label) {
-            Text(dayLabel)
+            Text(Self.label(for: date, twoLines: dynamicTypeSize.isAccessibilitySize))
                 .appFont(.note, weight: .bold)
                 .foregroundStyle(Color.lsTextSecondary)
             Rectangle()
@@ -21,19 +23,29 @@ struct DayDividerView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private var dayLabel: String {
-        let calendar = Calendar.current
-        if calendar.isDateInToday(date) {
+    /// 日期章文字。`twoLines`＝AX 字級（LS-464／LS-454 C3a，`design/littlesprout.pen` 規則卡 `lvdD5` `i1Jn6`）：
+    /// 有附註時在「日期本體」與「附註」之間明確換行（「M月d日\n星期X」），最多兩行、字不縮小；
+    /// 只有本體（「今天」「昨天」）一行。非 AX 字級輸出維持原樣。
+    nonisolated static func label(
+        for date: Date,
+        now: Date = Date(),
+        calendar: Calendar = .current,
+        twoLines: Bool
+    ) -> String {
+        if calendar.isDate(date, inSameDayAs: now) {
             return "今天"
         }
-        if calendar.isDateInYesterday(date) {
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: now),
+           calendar.isDate(date, inSameDayAs: yesterday) {
             return "昨天"
         }
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "zh_Hant_TW")
         formatter.calendar = calendar
-        formatter.dateFormat = "M月d日 EEEE"
-        return formatter.string(from: date)
+        formatter.dateFormat = "M月d日"
+        let body = formatter.string(from: date)
+        formatter.dateFormat = "EEEE"
+        return body + (twoLines ? "\n" : " ") + formatter.string(from: date)
     }
 }
 
