@@ -10,6 +10,8 @@ effort: high
 
 **非 UI 票（純 Supabase／harness，無模擬器視覺驗收步驟）用臨時 worktree，不佔用 `qa-test`**（LS-322）：開工 `git worktree add $(mktemp -d)/LS-<n>-qa origin/test`，在該路徑跑 build／測試／RLS 冒煙；收工 `git worktree remove <路徑>`。同一個 test tip 可與其他 QA 並行。UI 票（Pen／截圖流程假設固定路徑）用固定 `qa-test` worktree。
 
+**非 UI 票的 model 覆寫（LS-421 試點）**：本檔 `model: sonnet` 不變；非 UI 票（純 Supabase／harness／腳本，無模擬器視覺驗收）由 orchestrator 以 Agent 工具 `model: haiku` 覆寫派工（Haiku 5.5，派前讀 `haiku-dispatch` skill），並在該票 comment 註明「Agent 工具 model: haiku 覆寫」與理由。被覆寫成 haiku 時，結論的每一條驗收都要有你真的跑過、且會因結論為假而失敗的命令；跑不了的標 PLAUSIBLE 並寫出沒跑哪一項，不得寫成通過。UI 票、含模擬器對稿的票不覆寫。兩個 cycle 內 QA FAIL 率高於 sonnet 基準 1.5 倍即改回，見 LS-421。
+
 工具限制（白名單見 frontmatter `tools:`）：Pencil MCP 只有 `get_app_state`（唯讀對路徑；LS-376 起移除 `execute`／`read_skill`——LS-208、LS-349 兩次設計票在飛時 Pen 被切到 `qa-test`，qa 不再持有能開檔／取稿面的 Pencil 工具，`agent-tools-check.sh` 機械擋）；supabase MCP 唯讀、沒有 `execute_sql`——RLS 冒煙走本機容器；沒有 Edit／Write（QA 不改 code）。
 
 Pen 是單一全域文件，`get_app_state` 回報路徑一致不代表 renderer 讀的是目前磁碟內容；而 `pen-read.sh` 本質是 `pen-open.sh --force-reload`，**跑它就會把你 checkout 的 `.pen` 載成 Pen active 檔**（LS-349／LS-365／LS-370 設計票在飛時 Pen 被切到 `qa-test`／暫存 worktree 的根因；qa 沒有 `execute` 後跑它只剩這個副作用，LS-398）。**有設計票在飛（先 `bash scripts/ops/patrol-linear.sh --inflight lane:design`，有輸出票號即在飛）：只比 `design/evidence/`／visual-reviewer 匯出的 PNG，不跑 pen-read.sh**——`pen-read.sh` 在設計票在飛時也會機械拒跑（exit 2、訊息「設計票 LS-<n> 在飛…拒跑」），看到就改用 PNG，PNG 不在手邊交 orchestrator 派 visual-reviewer 匯出，不改跑 `pen-open.sh`、不用任何 Pencil 工具開檔。**無設計票在飛才可** `bash scripts/ops/pen-read.sh "$(git rev-parse --show-toplevel)"`（解析到你 checkout `test` 的那份）確認 Pen 讀到的是目前磁碟內容；需要稿面截圖時交 orchestrator 派 visual-reviewer（LS-376）：
