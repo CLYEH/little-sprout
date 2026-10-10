@@ -305754,7 +305754,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "b 案　手刻鈕定為次級鈕（照 tokens）",
+                  "content": "b 案　以實作為準：保留手刻 57 實心",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -305767,7 +305767,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "得：有元件可用　失：8 個畫面沒有主鈕",
+                  "content": "得：程式不動　失：兩種主鈕高度、#4 跳 3pt",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -305787,16 +305787,21 @@
               "padding": "$inset-card",
               "children": [
                 {
-                  "id": "P1VDu0",
+                  "id": "olX5h",
                   "type": "ref",
-                  "ref": "XggYA",
-                  "name": "Secondary Sample",
+                  "ref": "OKSJI",
+                  "name": "Compact Sample（程式現況 57）",
                   "width": "fill_container",
+                  "height": 57,
+                  "padding": [
+                    0,
+                    20
+                  ],
                   "descendants": {
-                    "G4R75k": {
+                    "s9bME2": {
                       "icon": "share-2"
                     },
-                    "yxwnz": {
+                    "w7CUP": {
                       "content": "分享邀請連結"
                     }
                   }
@@ -305823,7 +305828,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "上：照 tokens 的次級鈕（外框、body 600）。下：主鈕 60。",
+                  "content": "上：程式現況手刻 57 實心。下：主鈕 60。同色、同字重、同圓角，只差 3pt。",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 15,
@@ -305836,7 +305841,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "tokens.md ③：主／次以字重＋色分。保留 57 實心只是與主鈕同色同字重的第二種主鈕高度，不是次級；改成真正的次級鈕，這 8 處又都是該畫面唯一的主要動作，換掉後畫面就沒有主鈕。所以 b 案不成立。#2 iPad 左欄不論哪案都改外框（十條 #1）。",
+                  "content": "57＝內容 22＋上下 17.5，沒有高度下限，是推出來的餘數。tokens.md ③ 主／次以字重＋色分，所以它不是次級，是第二種主鈕高度。也不能升級成照 tokens 的次級鈕（外框）：#1、#3–#8 這 7 處各是該畫面唯一的主要動作，改外框後畫面就沒有主鈕，06b 還會剩兩顆等權外框。#2 iPad 左欄不論哪案都改外框（右欄已有實心「儲存」，十條 #1）。",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 15,
@@ -306347,7 +306352,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "分享鈕改次級：畫面沒有主鈕",
+                  "content": "分享鈕 57：動作帶縮 3pt",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -306825,16 +306830,21 @@
                       ],
                       "children": [
                         {
-                          "id": "T6gQr8",
+                          "id": "cuiwu",
                           "type": "ref",
-                          "ref": "XggYA",
-                          "name": "Share Button（次級鈕 XggYA）",
+                          "ref": "OKSJI",
+                          "name": "Share Button（程式現況手刻 57）",
                           "width": "fill_container",
+                          "height": 57,
+                          "padding": [
+                            0,
+                            20
+                          ],
                           "descendants": {
-                            "G4R75k": {
+                            "s9bME2": {
                               "icon": "share-2"
                             },
-                            "yxwnz": {
+                            "w7CUP": {
                               "content": "分享邀請連結"
                             }
                           }
@@ -307380,7 +307390,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "要新碼鈕改次級：畫面沒有主鈕",
+                  "content": "要新碼鈕 57：同流程兩種主鈕高度",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -307741,16 +307751,21 @@
                               ],
                               "children": [
                                 {
-                                  "id": "z1uxn",
+                                  "id": "AAM1G",
                                   "type": "ref",
-                                  "ref": "XggYA",
-                                  "name": "Join Button（次級鈕 XggYA）",
+                                  "ref": "OKSJI",
+                                  "name": "Join Button（程式現況手刻 57）",
                                   "width": "fill_container",
+                                  "height": 57,
+                                  "padding": [
+                                    0,
+                                    20
+                                  ],
                                   "descendants": {
-                                    "G4R75k": {
+                                    "s9bME2": {
                                       "icon": "send"
                                     },
-                                    "yxwnz": {
+                                    "w7CUP": {
                                       "content": "傳訊息跟家人要新的"
                                     }
                                   }
@@ -311809,7 +311824,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "範圍：三處既有漂移逐處給建議裁定（做法同 LS-442 F6EAA、LS-449 bMnQM）。核可頁三題：C1＝(a) 手刻實心 CTA 8 處、C2＝(b) 日記詳情頁互動列上方間距、C3＝(c) AX3 日期章斷行。比較用同一套三欄：對比／一致性／實作成本。對照板：EJz78（C1）、O2zWC（C2）、lvdD5（C3）；板上欄頂只寫得失，建議只寫在本板。本票不動程式、不改 PrimaryButton／SecondaryButton、不動 LS-451 的便箋範圍。\n暫定建議：C1 a（b 案不成立，仍列出理由）、C2 b、C3 a，待使用者裁決。C1、C2 的建議案在稿面上本來就是現在的樣子，只寫實作註記；C3 兩案都要改的 UhMZ6 兩例已改（見沿革），C3 a 案多出來的 8 個實例與元件說明等裁決後再改。",
+          "content": "範圍：三處既有漂移逐處給建議裁定（做法同 LS-442 F6EAA、LS-449 bMnQM）。核可頁三題：C1＝(a) 手刻實心 CTA 8 處、C2＝(b) 日記詳情頁互動列上方間距、C3＝(c) AX3 日期章斷行。比較用同一套三欄：對比／一致性／實作成本。對照板：EJz78（C1）、O2zWC（C2）、lvdD5（C3）；板上欄頂只寫得失，建議只寫在本板。本票不動程式、不改 PrimaryButton／SecondaryButton、不動 LS-451 的便箋範圍。\n暫定建議：C1 a（b 案＝程式現況手刻 57 實心，作為規格不成立，核可頁仍列兩案）、C2 b、C3 a，待使用者裁決。C1、C2 的建議案在稿面上本來就是現在的樣子，只寫實作註記；C3 兩案都要改的 UhMZ6 兩例已改（見沿革），C3 a 案多出來的 8 個實例與元件說明等裁決後再改。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311847,7 +311862,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "(a) 三欄與建議\n建議裁定：以稿為準（a 案）。b 案不成立，核可頁仍列出，讓使用者看到為什麼只有一案。\n對比：兩案同色——on-accent 壓 accent 7.30／9.99；次要鈕字 $text-primary 對頁面底 12.21／15.31、外框 $control-line 3.60／4.72。不分勝負。\n一致性：a 案 #4 同一個釘底動作帶各狀態都是 60（十條 #10）；#5 與送出鈕本來就不同位置，a 案的意義是同一流程只有一種主鈕高度。b 案依票文是「次級實心鈕」，但 tokens.md ③ 規定主／次以字重＋色分：保留 57 實心＝與主鈕同色同字重，只是第二種主鈕高度，不是次級；照 tokens 改成真正的次級鈕（既有 XggYA 外框、body 600），這 8 處又都是該畫面唯一的主要動作，畫面就沒有主鈕（EJz78 b 欄 07、06b）。兩種讀法都不成立。#2 iPad 左欄不論哪案都改外框：右欄已有實心「儲存」，留實心違十條 #1。\n實作成本：a 案把 PrimaryButton 的滿寬外觀抽成可共用的 label（現有 InlinePrimaryButtonLabel 是行內寬，AuthButtons.swift:48–62），#1 NavigationLink、#4／#5 ShareLink、#6–#8 Button 改用它；#2 改用 SecondaryButton 外觀；#3 卡底列補 .frame(minHeight: PrimaryButton.minHeight)；共 8 處＋1 個共用 label。b 案程式量相近，但留下沒有主鈕的畫面。",
+          "content": "(a) 三欄與建議\n建議裁定：以稿為準（a 案）。b 案（程式現況）作為規格不成立，核可頁仍列 a／b 兩案。\n對比：兩案同色——on-accent 壓 accent 7.30／9.99；次要鈕字 $text-primary 對頁面底 12.21／15.31、外框 $control-line 3.60／4.72。不分勝負。\n一致性：a 案 #4 同一個釘底動作帶各狀態都是 60（十條 #10）；#5 與送出鈕本來就不同位置，a 案的意義是同一流程只有一種主鈕高度。b 案（EJz78 b 欄照程式現況畫：手刻 57 實心）：57＝內容 22＋上下 17.5、沒有高度下限，是推出來的餘數；tokens.md ③ 主／次以字重＋色分，它與主鈕同色同字重，不是次級，而是第二種主鈕高度，#4 切到 .generated 時動作帶 93→90。b 案也不能升級成照 tokens 的次級鈕（外框）：#1、#3–#8 這 7 處各是該畫面唯一的主要動作，改外框後畫面沒有主鈕，06b 還會剩兩顆等權外框。所以 b 案作為規格不成立，核可頁仍列 a／b 兩案（b＝程式零改動的現況），建議 a。#2 iPad 左欄不論哪案都改外框：右欄已有實心「儲存」，留實心違十條 #1。\n實作成本：a 案把 PrimaryButton 的滿寬外觀抽成可共用的 label（現有 InlinePrimaryButtonLabel 是行內寬，AuthButtons.swift:48–62），#1 NavigationLink、#4／#5 ShareLink、#6–#8 Button 改用它；#2 改用 SecondaryButton 外觀；#3 卡底列補 .frame(minHeight: PrimaryButton.minHeight)；共 8 處＋1 個共用 label。b 案程式不動（#2 仍要改外框；#6 的 83 仍與其他 57 不一致）。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311949,7 +311964,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "本票新增：對照板 EJz78（C1）、O2zWC（C2）、lvdD5（C3），本 Notes 板。R1 的草案元件已於 R2 刪除（b 案改用既有次要鈕 XggYA 畫出「次級」的後果）。\n本票已改：UhMZ6 g0cQU、YZ2Fl 改兩行「8月31日／（今天）」（C3 兩案共同），所在的 u0J68、qJMPS 板高 2106.375→2160.067（同 cqgkc，a／b 欄同高）。\n裁決後才改：C2a——vzYXz、QCJfh、cqgkc、IH80C、GgtNs；C3a——lKoZG、HLXo3、aGkJ1、ai2w5、CgmBD 的 8 個日期章與 oLN0e 說明。C1 b 案不成立，沒有待改稿。選到需要改稿的那一案時，改稿後回 visual-reviewer 聚焦輪並重掃收據。",
+          "content": "本票新增：對照板 EJz78（C1）、O2zWC（C2）、lvdD5（C3），本 Notes 板。R1 的草案元件已於 R2 刪除；R3 起 b 欄改用主鈕 OKSJI 實例覆寫高 57 畫程式現況（cuiwu、AAM1G、olX5h）。\n本票已改：UhMZ6 g0cQU、YZ2Fl 改兩行「8月31日／（今天）」（C3 兩案共同），所在的 u0J68、qJMPS 板高 2106.375→2160.067（同 cqgkc，a／b 欄同高）。\n裁決後才改：C2a——vzYXz、QCJfh、cqgkc、IH80C、GgtNs；C3a——lKoZG、HLXo3、aGkJ1、ai2w5、CgmBD 的 8 個日期章與 oLN0e 說明。C1 b 案不成立，沒有待改稿。選到需要改稿的那一案時，改稿後回 visual-reviewer 聚焦輪並重掃收據。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311974,7 +311989,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "本票新增三個對照畫面（說明用，不是 app 畫面）：\nLS-454 / (a) 手刻實心 CTA 兩版對照 (iPhone)｜隱藏 Tab Bar ✓（欄內整頁取自 07 kcGJa、07c CHLio、06 VCMrA、06b gCeDF、AX3 VRq1c，原畫面就沒有 Tab Bar）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 有 93pt（07 的 Action Bar；b 案已產生改次級鈕後 89pt）｜失敗文案鍵 無｜深色特例 無（元件同色，深色見既有板）｜AX3 特例 最後一欄取自 VRq1c（theme size ax3），兩案相同｜iPad 無（#2 iPad 見 JbTfv）｜資料落點 無持久化（純 UI 外觀）\nLS-454 / (b) 日記詳情頁互動列上方間距兩版對照 (iPhone)｜隱藏 Tab Bar ✓（同 vzYXz）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 無｜失敗文案鍵 無｜深色特例 第三、四欄取自 QCJfh（theme mode dark）｜AX3 特例 第五、六欄取自 cqgkc（theme size ax3），互動列直排｜iPad 無（iPad 已是 24，見 MjRcr）｜資料落點 無持久化（純 UI 間距）\nLS-454 / (c) AX3 日期章斷行兩版對照 (iPhone)｜隱藏 Tab Bar ✗（時間軸欄取自 lKoZG，有 Tab Bar）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 無｜失敗文案鍵 無｜深色特例 無（墨色與紙不隨深色變）｜AX3 特例 全板都是 AX3（theme size ax3），375 寬兩欄模擬 SE／mini｜iPad 無｜資料落點 無持久化（日期是時間軸依日分組的日子，TimelineView.swift:314 group.day，唯讀）",
+          "content": "本票新增三個對照畫面（說明用，不是 app 畫面）：\nLS-454 / (a) 手刻實心 CTA 兩版對照 (iPhone)｜隱藏 Tab Bar ✓（欄內整頁取自 07 kcGJa、07c CHLio、06 VCMrA、06b gCeDF、AX3 VRq1c，原畫面就沒有 Tab Bar）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 有 93pt（07 的 Action Bar；b 案已產生照程式現況 57 實心，動作帶 90pt）｜失敗文案鍵 無｜深色特例 無（元件同色，深色見既有板）｜AX3 特例 最後一欄取自 VRq1c（theme size ax3），兩案相同｜iPad 無（#2 iPad 見 JbTfv）｜資料落點 無持久化（純 UI 外觀）\nLS-454 / (b) 日記詳情頁互動列上方間距兩版對照 (iPhone)｜隱藏 Tab Bar ✓（同 vzYXz）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 無｜失敗文案鍵 無｜深色特例 第三、四欄取自 QCJfh（theme mode dark）｜AX3 特例 第五、六欄取自 cqgkc（theme size ax3），互動列直排｜iPad 無（iPad 已是 24，見 MjRcr）｜資料落點 無持久化（純 UI 間距）\nLS-454 / (c) AX3 日期章斷行兩版對照 (iPhone)｜隱藏 Tab Bar ✗（時間軸欄取自 lKoZG，有 Tab Bar）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 無｜失敗文案鍵 無｜深色特例 無（墨色與紙不隨深色變）｜AX3 特例 全板都是 AX3（theme size ax3），375 寬兩欄模擬 SE／mini｜iPad 無｜資料落點 無持久化（日期是時間軸依日分組的日子，TimelineView.swift:314 group.day，唯讀）",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311999,7 +312014,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "本票新寫的寬高字面值：欄寬 393 共 22 次（O2zWC 6、EJz78 11、lvdD5 5）、375 共 4 次（lvdD5 兩欄＋兩張 375 寬時間軸）；375 寬時間軸 Tab Bar 寬 343 共 2 次；O2zWC a 欄 Body 高 796、823、1988（與 b 欄同高，3 次）；UhMZ6 u0J68、qJMPS 與 lvdD5 E0kRCU 板高 2160.067（3 次）。R1 草案元件的 345×57、icon 22×22 與左右內距 20 已隨元件刪除。lvdD5 a 規則卡的三個 AX3 日期章樣本寬 fill_container，沒有新字面值。非尺寸字面值：375 寬兩張時間軸裡 4 張卡（QUnYn、JrOjB 照片卡，v5x8GX、dkatH 相簿卡）的右側角托 x 改 306（版心 327＋corner-out 5－角托 26），共 8 處；同兩張 375 寬時間軸，相簿卡 v5x8GX、dkatH 的 Stack Sheet 1–3 寬 303→285（6 次），日記卡 n0LET4、nyZod 的「+2」More Scrim 寬 96.3→90.33、Stack Sheet 1／2 x 跟著左移 6（寬 2 次、x 4 處）——版心從 345 縮成 327，跟著縮。EJz78 b 案已產生的 Body 改 fill_container，不是字面值。本板寬 900 沿用既有 Notes 板寬。沒有改任何既有元件定義的寬高。",
+          "content": "本票新寫的寬高字面值：欄寬 393 共 22 次（O2zWC 6、EJz78 11、lvdD5 5）、375 共 4 次（lvdD5 兩欄＋兩張 375 寬時間軸）；375 寬時間軸 Tab Bar 寬 343 共 2 次；O2zWC a 欄 Body 高 796、823、1988（與 b 欄同高，3 次）；UhMZ6 u0J68、qJMPS 與 lvdD5 E0kRCU 板高 2160.067（3 次）。R1 草案元件的 345×57、icon 22×22 與左右內距 20 已隨元件刪除。R3：b 欄程式現況鈕 cuiwu、AAM1G、olX5h 是 OKSJI 實例覆寫高 57（3 次）、內距 [0,20]——57 是程式 22＋2×17.5 的現況值，不是規格。lvdD5 a 規則卡的三個 AX3 日期章樣本寬 fill_container，沒有新字面值。非尺寸字面值：375 寬兩張時間軸裡 4 張卡（QUnYn、JrOjB 照片卡，v5x8GX、dkatH 相簿卡）的右側角托 x 改 306（版心 327＋corner-out 5－角托 26），共 8 處；同兩張 375 寬時間軸，相簿卡 v5x8GX、dkatH 的 Stack Sheet 1–3 寬 303→285（6 次），日記卡 n0LET4、nyZod 的「+2」More Scrim 寬 96.3→90.33、Stack Sheet 1／2 x 跟著左移 6（寬 2 次、x 4 處）——版心從 345 縮成 327，跟著縮。EJz78 b 案已產生的 Body 改 fill_container，不是字面值。本板寬 900 沿用既有 Notes 板寬。沒有改任何既有元件定義的寬高。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -312024,7 +312039,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "10-10 LS-454 R1：(a)(b)(c) 漂移裁定；新增對照板 EJz78、O2zWC、lvdD5、草案元件與本 Notes 板（草案 dNRrh 已於 R2 刪除）；UhMZ6 兩例日期章改兩行（C3 兩案共同部分），其餘既有板未改。\n10-10 LS-454 R2（VR R1 ITERATE，comment b747fa45）：M1 (a) #5 的「同位置跳 3pt」不成立——稿上送出鈕 y 572、要新碼鈕 y 438，06→06b 上方區塊重排；LS-445 merge-review i1 的「同一位置」只對 #4 成立，跳高例只留 #4。M2 (b) AX3 改用實測間距（字形 a 46／67、b 66／67），刪掉「44 才看得出成組」與字高比論述，C2b 只站在十條 #5。M3 (a) b 案依票文是次級鈕，照 tokens 主／次以字重＋色分畫成既有次要鈕 XggYA，8 個畫面因此沒有主鈕，b 案不成立；R1 草案元件刪除；#2 iPad 左欄兩案都改外框。M4 (c) 規則改成本體與附註之間斷，涵蓋星期與年份，補三個 AX3 樣本與量測。m1 給 ios-dev 改逐段間距 8／16／44、O2zWC a 欄頂註明其餘照稿；m2 b 案失敗情境改為系統在字中間斷行，b 欄 375 寬照此畫；m3 補裁決後改稿回 VR 聚焦輪；m4 隨草案元件刪除。i1 採納：#1–#5 高度改引 LS-445 mutation 1 實測 57.0。i2 不修（InteractionRow 既有版式，兩案相同，範圍外）。",
+          "content": "10-10 LS-454 R1：(a)(b)(c) 漂移裁定；新增對照板 EJz78、O2zWC、lvdD5、草案元件與本 Notes 板（草案 dNRrh 已於 R2 刪除）；UhMZ6 兩例日期章改兩行（C3 兩案共同部分），其餘既有板未改。\n10-10 LS-454 R2（VR R1 ITERATE，comment b747fa45）：M1 (a) #5 的「同位置跳 3pt」不成立——稿上送出鈕 y 572、要新碼鈕 y 438，06→06b 上方區塊重排；LS-445 merge-review i1 的「同一位置」只對 #4 成立，跳高例只留 #4。M2 (b) AX3 改用實測間距（字形 a 46／67、b 66／67），刪掉「44 才看得出成組」與字高比論述，C2b 只站在十條 #5。M3 (a) b 案依票文是次級鈕，照 tokens 主／次以字重＋色分畫成既有次要鈕 XggYA，8 個畫面因此沒有主鈕，b 案不成立；R1 草案元件刪除；#2 iPad 左欄兩案都改外框。M4 (c) 規則改成本體與附註之間斷，涵蓋星期與年份，補三個 AX3 樣本與量測。m1 給 ios-dev 改逐段間距 8／16／44、O2zWC a 欄頂註明其餘照稿；m2 b 案失敗情境改為系統在字中間斷行，b 欄 375 寬照此畫；m3 補裁決後改稿回 VR 聚焦輪；m4 隨草案元件刪除。i1 採納：#1–#5 高度改引 LS-445 mutation 1 實測 57.0。i2 不修（InteractionRow 既有版式，兩案相同，範圍外）。\n10-10 LS-454 R3（VR R2 ITERATE，comment a3618438）：M5 C1 b 欄改回程式現況手刻 57 實心（OKSJI 實例覆寫高 57，不新增元件），R2 的外框次級鈕只留在 Spec Card 與三欄裡當「為什麼 b 不能升級」的說明；核可頁 C1 列 a／b 兩案、建議 a。m5「唯一主要動作」更正為 #1、#3–#8 共 7 處（#2 的 JbTfv 唯一實心是右欄「儲存」）。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
