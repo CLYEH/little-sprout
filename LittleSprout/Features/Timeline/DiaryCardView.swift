@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// 時間軸日記卡（`cmp/Card Diary`，LS-126 票文 Scope 1）——多寶貝 caption＋日記全文（截斷）
-/// ＋附照預覽（最多 3 張，第 3 張若還有更多張疊上「還有 N 張」暗蓋）＋底部互動列
+/// 時間軸日記卡（`cmp/Card Diary`，LS-126 票文 Scope 1）——日記全文（截斷）
+/// ＋附照預覽（最多 3 張，第 3 張若還有更多張疊上「還有 N 張」暗蓋）＋署名落款（LS-447）＋底部互動列
 /// （`InteractionRow`，LS-216）。
 ///
 /// 純顯示元件，不含導覽——外層（`TimelineView`）決定要不要包一層 `NavigationLink`。
@@ -116,11 +116,35 @@ struct DiaryCardView: View {
     ///
     /// LS-374：不設 lineLimit——稿面 Multi Caption（`x7k2o6`）`fixed-width` 隨內容長高，年齡 `$fs-note`
     /// 後三位寶貝在 AX3 超過兩行，截斷會吃掉寶貝名字。
+    ///
+    /// LS-447（稿 `YXnTc` 第四欄）：AX 字級＋多寶貝時，單一字串靠自然折行在 AX3 會把「小安 · 2 歲 3 個月」
+    /// 這種單人片段也切斷（LS-442 R3 實測），改每人固定兩行——名字一行、「· 年齡」一行，兩個 `Text`
+    /// trailing 對齊（`MultiChildCaptionFormatter.twoLines`）；代價「起點仍靠右參差」已核可。單寶貝與
+    /// 非 AX 字級維持單一字串。VoiceOver 念法不變：AX 分支把四個 `Text` 收成一個元素、label 仍是
+    /// 「小安 · 2 歲 3 個月、小明 · 8 個月大」（`AlbumSignatureFormatter.signatureText`），不念成四段。
+    @ViewBuilder
     private var signature: some View {
-        Text(MultiChildCaptionFormatter.attributed(
-            children: taggedChildren, asOf: content.entryDate, ink: .print
-        ))
-        .multilineTextAlignment(.trailing)
+        if dynamicTypeSize.isAccessibilitySize, taggedChildren.count > 1 {
+            VStack(alignment: .trailing, spacing: 0) {
+                ForEach(taggedChildren) { child in
+                    let lines = MultiChildCaptionFormatter.twoLines(for: child, asOf: content.entryDate)
+                    Text(lines.name)
+                    Text(lines.age)
+                }
+            }
+            .font(.body.weight(.semibold))
+            .foregroundStyle(Color.lsPrintInk)
+            .multilineTextAlignment(.trailing)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(AlbumSignatureFormatter.signatureText(
+                children: taggedChildren, asOf: content.entryDate, isOneLinePerPerson: false
+            ))
+        } else {
+            Text(MultiChildCaptionFormatter.attributed(
+                children: taggedChildren, asOf: content.entryDate, ink: .print
+            ))
+            .multilineTextAlignment(.trailing)
+        }
     }
 
     private var remainingPhotoCount: Int {

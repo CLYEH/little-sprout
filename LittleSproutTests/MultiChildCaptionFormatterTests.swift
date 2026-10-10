@@ -110,4 +110,30 @@ final class MultiChildCaptionFormatterTests: XCTestCase {
         XCTAssertEqual(runs[0].foregroundColor, Color.lsTextPrimary)
         XCTAssertEqual(runs[1].foregroundColor, Color.lsTextSecondary)
     }
+
+    // MARK: - LS-447：AX 每人兩行
+
+    /// 稿 `YXnTc` 第四欄 `OJe7b`：「小安」／「· 2 歲 3 個⁠月」——第二行以「·」領銜、不帶名字後那格可斷空白；
+    /// 「·」後 U+00A0、年齡內 U+00A0／U+2060 與單一來源 `AlbumSignatureFormatter` 逐字相同。
+    func test_twoLines_nameThenDotLeadingAge_noTrailingBreakableSpace() {
+        let lines = MultiChildCaptionFormatter.twoLines(
+            for: child("小安", born: "2024-06-02"), asOf: asOf, timeZone: utc
+        )
+        XCTAssertEqual(lines.name, "小安")
+        XCTAssertEqual(lines.age, "·\u{00A0}2\u{00A0}歲\u{00A0}3\u{00A0}個\u{2060}月")
+        XCTAssertFalse(lines.name.hasSuffix(" "))
+        XCTAssertFalse(lines.age.contains("\n"), "兩行是兩個 Text，不靠換行字元")
+    }
+
+    /// 未滿一歲：「8 個⁠月⁠大」（LS-365 月⁠大 U+2060）原樣保留；兩行接回去＝單一來源的 segment。
+    func test_twoLines_rejoinedEqualsAlbumSignatureSegment() {
+        for kid in [child("小明", born: "2026-01-02"), child("Emma Chen", born: "2023-09-02")] {
+            let lines = MultiChildCaptionFormatter.twoLines(for: kid, asOf: asOf, timeZone: utc)
+            XCTAssertEqual(
+                lines.name + " " + lines.age,
+                AlbumSignatureFormatter.segment(for: kid, asOf: asOf, timeZone: utc),
+                "\(kid.name)：兩行重組應等於 AlbumSignatureFormatter.segment"
+            )
+        }
+    }
 }

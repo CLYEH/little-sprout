@@ -56,4 +56,16 @@ enum MultiChildCaptionFormatter {
         ageRun.foregroundColor = ink.secondary
         return nameRun + ageRun
     }
+
+    /// AX 字級多寶貝署名每人固定兩行（LS-447，LS-442 C4a，稿 `YXnTc` 第四欄／`gHl8E`）：第一行名字、
+    /// 第二行「· 年齡」。兩行是兩個 `Text`、不靠 `\n`——折行點由版面決定，字串內的 U+00A0／U+2060 照舊。
+    /// 字串取 `AlbumSignatureFormatter.segment(for:)`（單一來源）：名字之後的 U+0020 是「可斷」空白，
+    /// 兩行拆開後會變成名字行的尾隨空白，所以在這裡丟掉，第二行以「·」領銜。
+    static func twoLines(
+        for child: Child, asOf date: Date, timeZone: TimeZone = .current
+    ) -> (name: String, age: String) {
+        let segment = AlbumSignatureFormatter.segment(for: child, asOf: date, timeZone: timeZone)
+        let rest = segment.dropFirst(child.name.count).drop { $0 == " " }
+        return (child.name, String(rest))
+    }
 }
