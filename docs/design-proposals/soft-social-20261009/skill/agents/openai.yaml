@@ -1,0 +1,4 @@
+interface:
+  display_name: "萌芽日記・柔粉社群品牌"
+  short_description: "延伸萌芽日記柔粉社群視覺，維持清楚照片層級與溫馨成長配色"
+  default_prompt: "使用 $little-sprout-soft-social-brand 設計並檢視萌芽日記的新視覺畫面。"
