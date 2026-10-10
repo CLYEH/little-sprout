@@ -296719,7 +296719,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "a 案　以實作為準：互動列上方 24",
+                  "content": "a 案　以實作為準：互動列上方 24，其餘照稿",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -301160,7 +301160,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "上方 24 等於列內間距 24，分不出組",
+                  "content": "愛心離照片 46、離留言 67：偏向照片",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -302274,7 +302274,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "上方 44 大於列內 24，看得出是一組",
+                  "content": "愛心離照片 66、離留言 67：約等距",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -303355,47 +303355,6 @@
     },
     {
       "type": "frame",
-      "id": "dNRrh",
-      "x": 34510,
-      "y": 61507,
-      "name": "cmp/Button Solid Compact · 草案（LS-454 (a) b 案，未核可）",
-      "reusable": true,
-      "width": 345,
-      "height": 57,
-      "fill": "$accent",
-      "cornerRadius": "$radius-md",
-      "gap": "$sp-label",
-      "padding": [
-        0,
-        20
-      ],
-      "justifyContent": "center",
-      "alignItems": "center",
-      "children": [
-        {
-          "type": "icon",
-          "id": "NUAz9",
-          "name": "Compact Icon",
-          "width": 22,
-          "height": 22,
-          "icon": "arrow-right",
-          "library": "lucide",
-          "fill": "$on-accent"
-        },
-        {
-          "type": "text",
-          "id": "KQNk6",
-          "name": "Compact Label",
-          "fill": "$on-accent",
-          "content": "次級實心動作",
-          "fontFamily": "$font",
-          "fontSize": "$fs-body",
-          "fontWeight": "700"
-        }
-      ]
-    },
-    {
-      "type": "frame",
       "id": "EJz78",
       "x": 34510,
       "y": 61807,
@@ -303440,7 +303399,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "得：狀態切換不跳高　失：改 8 處＋抽出主鈕外觀",
+                  "content": "得：#4 切換不跳高　失：改 8 處＋抽出主鈕外觀",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -303523,7 +303482,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "ChildrenManagementView+Regular.swift:85–98\n實心 57 → 次要鈕外框（稿 OqQUC；右欄已有實心「儲存」aC7Ku）",
+                      "content": "ChildrenManagementView+Regular.swift:85–98\n實心 57 → 次要鈕外框（稿 OqQUC；右欄已有實心「儲存」aC7Ku；兩案都改）",
                       "lineHeight": 1.4,
                       "fontFamily": "$font",
                       "fontSize": 15,
@@ -303631,7 +303590,7 @@
                       "fill": "$text-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "JoinCodeView.swift:168–178（過期／用盡）\n57 → 主鈕 60（稿 wy8tf、ThIQA）；送出鈕已是主鈕 60",
+                      "content": "JoinCodeView.swift:168–178（過期／用盡）\n57 → 主鈕 60（稿 wy8tf、ThIQA）；與送出鈕不同位置，各自歸元件",
                       "lineHeight": 1.4,
                       "fontFamily": "$font",
                       "fontSize": 15,
@@ -305284,7 +305243,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "要新碼鈕歸主鈕：60，同位置不跳",
+                  "content": "要新碼鈕歸主鈕：60（與送出鈕不同位置）",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -305795,7 +305754,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "b 案　以實作為準：新增次級實心鈕",
+                  "content": "b 案　手刻鈕定為次級鈕（照 tokens）",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -305808,7 +305767,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "得：程式幾乎不動　失：同位置仍跳 3pt",
+                  "content": "得：有元件可用　失：8 個畫面沒有主鈕",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -305828,16 +305787,16 @@
               "padding": "$inset-card",
               "children": [
                 {
-                  "id": "jSey6",
+                  "id": "P1VDu0",
                   "type": "ref",
-                  "ref": "dNRrh",
-                  "name": "Compact Sample",
+                  "ref": "XggYA",
+                  "name": "Secondary Sample",
                   "width": "fill_container",
                   "descendants": {
-                    "NUAz9": {
+                    "G4R75k": {
                       "icon": "share-2"
                     },
-                    "KQNk6": {
+                    "yxwnz": {
                       "content": "分享邀請連結"
                     }
                   }
@@ -305864,7 +305823,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "上：次級實心鈕草案 57。下：主鈕 60。同色、同字重、同圓角，只差 3pt。",
+                  "content": "上：照 tokens 的次級鈕（外框、body 600）。下：主鈕 60。",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 15,
@@ -305877,7 +305836,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "草案規格：高 57＝內容 22＋上下 17.5，沒有高度下限；$accent 底、$on-accent 字、body 粗、圓角 14、滿寬。8 處統一照這個規格：#1、#2 一般字重改粗，#6 拿掉 48 下限。AX3 由內距撐高，與主鈕同為約 83。",
+                  "content": "tokens.md ③：主／次以字重＋色分。保留 57 實心只是與主鈕同色同字重的第二種主鈕高度，不是次級；改成真正的次級鈕，這 8 處又都是該畫面唯一的主要動作，換掉後畫面就沒有主鈕。所以 b 案不成立。#2 iPad 左欄不論哪案都改外框（十條 #1）。",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 15,
@@ -306388,7 +306347,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "分享鈕用草案：57，動作帶縮 3pt",
+                  "content": "分享鈕改次級：畫面沒有主鈕",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -306866,16 +306825,16 @@
                       ],
                       "children": [
                         {
-                          "id": "bDwf7",
+                          "id": "T6gQr8",
                           "type": "ref",
-                          "ref": "dNRrh",
-                          "name": "Share Button（草案 57）",
+                          "ref": "XggYA",
+                          "name": "Share Button（次級鈕 XggYA）",
                           "width": "fill_container",
                           "descendants": {
-                            "NUAz9": {
+                            "G4R75k": {
                               "icon": "share-2"
                             },
-                            "KQNk6": {
+                            "yxwnz": {
                               "content": "分享邀請連結"
                             }
                           }
@@ -307421,7 +307380,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "要新碼鈕用草案：57，同位置縮 3pt",
+                  "content": "要新碼鈕改次級：畫面沒有主鈕",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -307782,16 +307741,16 @@
                               ],
                               "children": [
                                 {
-                                  "id": "BWyAq",
+                                  "id": "z1uxn",
                                   "type": "ref",
-                                  "ref": "dNRrh",
-                                  "name": "Join Button（草案 57）",
+                                  "ref": "XggYA",
+                                  "name": "Join Button（次級鈕 XggYA）",
                                   "width": "fill_container",
                                   "descendants": {
-                                    "NUAz9": {
+                                    "G4R75k": {
                                       "icon": "send"
                                     },
-                                    "KQNk6": {
+                                    "yxwnz": {
                                       "content": "傳訊息跟家人要新的"
                                     }
                                   }
@@ -308516,7 +308475,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "得：任何寬度都不溢出　失：多改 8 處＋說明",
+                  "content": "得：最寬兩行章 201，窄螢幕放得下　失：多改 8 處",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -308555,7 +308514,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "AX 字級時，日期章在「（今天）」「（昨天）」前斷成兩行；沒有括號的日期（9月10日、2026年）維持一行。字不縮小，章寬跟著字。",
+                  "content": "AX 字級時，日期章最多兩行，在本體與附註之間斷：「8月31日／（今天）」「12月28日／星期日」「2025年／12月28日」（年份在上，同 FoodRecordCopy）。只有本體的日期（9月10日、2026年）一行。字不縮小，章寬跟著字。",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 15,
@@ -308581,11 +308540,69 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "全稿日期章 100 個，在 AX3 板上 29 個（19 板）。帶括號的 12 個：已是兩行 2 個（cqgkc、GgtNs）；單行 10 個——溢出 2 個（UhMZ6，+20.14），放得下 8 個（lKoZG、HLXo3、aGkJ1 各 2，ai2w5、CgmBD 各 1；章寬 334–336，版心 345）。a 案改這 10 個，其餘 17 個不動。",
+                  "content": "全稿日期章 100 個，在 AX3 板上 29 個（19 板）。帶括號的 12 個：已是兩行 4 個（cqgkc、GgtNs、UhMZ6 兩例）；單行 8 個（lKoZG、HLXo3、aGkJ1 各 2，ai2w5、CgmBD 各 1），a 案改這 8 個。\n量測（AX3 $fs-note 40 粗，Stamp 旋轉後寬）：單行「12月28日（今天）」358.02、「8月31日（今天）」334.08、「2025年12月28日」333.08、「12月28日 星期日」327.10；兩行最寬 201.46。詳情頁 $fs-lead 44：單行最寬 391.36，兩行最寬 219.25。",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 15,
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "QIdgX",
+                  "name": "AX3 Samples（375 版心 327）",
+                  "theme": {
+                    "size": "ax3"
+                  },
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": "$sp-item",
+                  "children": [
+                    {
+                      "id": "q8zQyy",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "Sample 12月28日（今天）",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VDOco": {
+                          "content": "12月28日\n（今天）"
+                        },
+                        "ci8cq": {
+                          "content": "12月28日\n（今天）"
+                        }
+                      }
+                    },
+                    {
+                      "id": "MOg89",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "Sample 12月28日 星期日",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VDOco": {
+                          "content": "12月28日\n星期日"
+                        },
+                        "ci8cq": {
+                          "content": "12月28日\n星期日"
+                        }
+                      }
+                    },
+                    {
+                      "id": "NCDRc",
+                      "type": "ref",
+                      "ref": "oLN0e",
+                      "name": "Sample 2025年12月28日",
+                      "width": "fill_container",
+                      "descendants": {
+                        "VDOco": {
+                          "content": "2025年\n12月28日"
+                        },
+                        "ci8cq": {
+                          "content": "2025年\n12月28日"
+                        }
+                      }
+                    }
+                  ]
                 }
               ]
             }
@@ -309596,7 +309613,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "得：只動 2 個實例　失：沒有規則，窄螢幕會溢出",
+                  "content": "得：只動 2 個實例　失：窄螢幕由系統在字中間斷行",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -309635,7 +309652,7 @@
                   "fill": "$text-primary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "UhMZ6 的 g0cQU、YZ2Fl 改成「8月31日／（今天）」兩行。元件說明不加規則。",
+                  "content": "UhMZ6 的 g0cQU、YZ2Fl 改成「8月31日／（今天）」兩行（本輪已改，兩案共同）。元件說明不加規則。",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 15,
@@ -309661,7 +309678,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "時間軸等 5 板的 8 個單行章在 393 寬剩 9.5–10.9pt；375 寬（SE、mini）的版心 327，超出 7.1–8.5pt。",
+                  "content": "時間軸等 5 板的 8 個單行章在 393 寬剩 9.49–10.92pt；375 寬（SE、mini）版心 327 放不下 334–336 的單行章。SwiftUI 不會溢出，會在字中間斷行，例如「8月31日（今／天）」（斷點為推算，PLAUSIBLE）。",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 15,
@@ -310171,7 +310188,7 @@
                   "fill": "$text-secondary",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "單行章 334 超出版心 327",
+                  "content": "單行放不下，系統在字中間斷",
                   "lineHeight": 1.4,
                   "fontFamily": "$font",
                   "fontSize": 17,
@@ -310342,7 +310359,15 @@
                               "type": "ref",
                               "ref": "oLN0e",
                               "name": "Day Divider 1",
-                              "width": "fill_container"
+                              "width": "fill_container",
+                              "descendants": {
+                                "VDOco": {
+                                  "content": "8月31日（今\n天）"
+                                },
+                                "ci8cq": {
+                                  "content": "8月31日（今\n天）"
+                                }
+                              }
                             },
                             {
                               "type": "frame",
@@ -310437,13 +310462,13 @@
                                   "rotation": -3.0000000000000004
                                 },
                                 "VDOco": {
-                                  "content": "8月30日（昨天）"
+                                  "content": "8月30日（昨\n天）"
                                 },
                                 "xlLIo": {
                                   "rotation": -6.000000000000001
                                 },
                                 "ci8cq": {
-                                  "content": "8月30日（昨天）"
+                                  "content": "8月30日（昨\n天）"
                                 }
                               }
                             },
@@ -311784,7 +311809,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "範圍：三處既有漂移逐處給建議裁定（做法同 LS-442 F6EAA、LS-449 bMnQM）。核可頁三題：C1＝(a) 手刻實心 CTA 8 處、C2＝(b) 日記詳情頁互動列上方間距、C3＝(c) AX3 日期章斷行。比較用同一套三欄：對比／一致性／實作成本。對照板：EJz78（C1）、O2zWC（C2）、lvdD5（C3）；板上欄頂只寫得失，建議只寫在本板。本票不動程式、不改 PrimaryButton／SecondaryButton、不動 LS-451 的便箋範圍。\n暫定建議：C1 a、C2 b、C3 a（待使用者裁決）。C1、C2 的建議案在稿面上本來就是現在的樣子，只寫實作註記；C3 兩案都要改的 UhMZ6 兩例本輪已改（見沿革），C3 a 案多出來的 8 個實例與元件說明等裁決後再改。",
+          "content": "範圍：三處既有漂移逐處給建議裁定（做法同 LS-442 F6EAA、LS-449 bMnQM）。核可頁三題：C1＝(a) 手刻實心 CTA 8 處、C2＝(b) 日記詳情頁互動列上方間距、C3＝(c) AX3 日期章斷行。比較用同一套三欄：對比／一致性／實作成本。對照板：EJz78（C1）、O2zWC（C2）、lvdD5（C3）；板上欄頂只寫得失，建議只寫在本板。本票不動程式、不改 PrimaryButton／SecondaryButton、不動 LS-451 的便箋範圍。\n暫定建議：C1 a（b 案不成立，仍列出理由）、C2 b、C3 a，待使用者裁決。C1、C2 的建議案在稿面上本來就是現在的樣子，只寫實作註記；C3 兩案都要改的 UhMZ6 兩例已改（見沿革），C3 a 案多出來的 8 個實例與元件說明等裁決後再改。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311809,7 +311834,20 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "(a) 手刻實心 CTA 8 處（C1；池 3c07edc1，LS-445 comment 180dcb0c）\n程式現況（行號以 daca5c5 為準；高度＝內容 22＋上下 controlPaddingCTA 17.5，行高 22 為推算、未實機量，PLAUSIBLE）：\n1 ChildrenManagementView.swift:226–238 寶貝管理「新增寶貝」——57、一般字重（:230）｜稿 gpSsR i9YVWY／lhvb5 H95BLm 主鈕 OKSJI 60 粗\n2 ChildrenManagementView+Regular.swift:85–98 iPad 左欄「新增寶貝」——實心 57、一般字重（:90）｜稿 JbTfv OqQUC 是次要鈕 XggYA 外框；右欄已有實心「儲存」aC7Ku\n3 ForkView.swift:189–200 首次進入「輸入邀請碼」卡底列——57、粗、無自身圓角（整張卡是 Button，:156–186）｜稿 RxXvq h06TU 卡片底列高 60（不是元件）\n4 InviteFamilyView+ActionBar.swift:53–65 邀請家人「分享邀請連結」（.generated）——57｜稿 kcGJa Sbx9o 主鈕 60；同一位置 .empty（:42）、.generating（:45–51）是 PrimaryButton 60\n5 JoinCodeView.swift:168–178「傳訊息跟家人要新的」（.expired／.exhausted）——57｜稿 gCeDF wy8tf、Gp3Sl ThIQA 主鈕 60；同一位置 submitButton（:156–164）是 PrimaryButton 60\n6 Import05SummaryView.swift:237–246「回到時間軸」——minHeight 48 在 padding 之前（:242），高 48＋35＝83｜稿 L6zy2 BMpPK 主鈕 60\n7 ImportOrganizeView.swift:259–276「開始匯入 N 張」——57｜稿 m7ZCDg oUNID 主鈕 60\n8 ImportPermissionDeniedView.swift:87–96「開啟「照片」權限」——57｜稿 PFvEX eFFju 主鈕 60\n稿 vs 實作：稿 8 處都是元件（7 處主鈕、1 處次要鈕），程式手刻；同位置 60↔57 跳 3pt 的兩組是 #4、#5。\n建議裁定：以稿為準（a 案）。\n對比：兩案同色，數字相同——on-accent 壓 accent 7.30／9.99；#2 改外框後字 $text-primary 對頁面底 12.21／15.31、外框 $control-line 3.60／4.72。不分勝負。\n一致性：a 案同一位置不論狀態都是 60，符合十條 #10「狀態切換不搬動版面」；#2 改外框後 iPad 寶貝管理只剩一顆實心（十條 #1），程式現在左欄、右欄各一顆實心。b 案次級實心鈕與主鈕同色、同字重、同圓角、只差 3pt，畫面上分不出主次（EJz78 Spec Card 兩顆並排）；#4、#5 在預設字級照樣跳 3pt（EJz78 b 欄動作帶 93→90）。AX3 兩案一樣：padding 撐高，都約 83（PLAUSIBLE，依 LS-445 渲染測試推算）。\n實作成本：a 案把 PrimaryButton 的滿寬外觀抽成可共用的 label（現有 InlinePrimaryButtonLabel 是行內寬，AuthButtons.swift:48–62），ShareLink（#4、#5）、NavigationLink（#1）、Button（#6–#8）都用它；#2 改用 SecondaryButton 外觀；#3 卡底列補 .frame(minHeight: PrimaryButton.minHeight)；共 8 處＋1 個共用 label。b 案程式要新增一個 57 高的元件給 8 處用（#1、#2 改粗、#6 拿掉 48），稿要把草案 dNRrh 轉正、8 處所在板的主鈕實例換掉；#4、#5 的跳動不會消失。",
+          "content": "(a) 手刻實心 CTA 8 處（C1；池 3c07edc1，LS-445 comment 180dcb0c）——現況\n程式（行號以 daca5c5 為準）｜稿：\n1 ChildrenManagementView.swift:226–238 寶貝管理「新增寶貝」——57、一般字重（:230）｜gpSsR i9YVWY／lhvb5 H95BLm 主鈕 OKSJI 60 粗\n2 ChildrenManagementView+Regular.swift:85–98 iPad 左欄「新增寶貝」——實心 57、一般字重（:90）｜JbTfv OqQUC 次要鈕 XggYA 外框；同一個 split view 右欄已有實心「儲存」aC7Ku（EditChildView.swift:240 PrimaryButton）\n3 ForkView.swift:189–200 首次進入「輸入邀請碼」卡底列——57、粗（整張卡是 Button，:156–186）｜RxXvq h06TU 卡片底列高 60（不是元件）\n4 InviteFamilyView+ActionBar.swift:53–65「分享邀請連結」（.generated）——57｜kcGJa Sbx9o 主鈕 60。同一個釘底動作帶在 .empty（:42）、.generating（:45–51）是 PrimaryButton 60，切到 .generated 縮 3pt——8 處裡唯一真正「同位置跳高」的一組\n5 JoinCodeView.swift:168–178「傳訊息跟家人要新的」（.expired／.exhausted）——57｜gCeDF wy8tf、Gp3Sl ThIQA 主鈕 60。送出鈕 submitButton（:156–164）是 PrimaryButton 60，但兩顆不在同一位置：06→06b 上方區塊重排（JoinCodeView.swift:65–86），稿上送出鈕在 y 572、要新碼鈕在 y 438；這組是同一流程裡主鈕有兩種高度，不是同位置跳高\n6 Import05SummaryView.swift:237–246「回到時間軸」——minHeight 48 在 padding 之前（:242），高 48＋35＝83｜L6zy2 BMpPK 主鈕 60\n7 ImportOrganizeView.swift:259–276「開始匯入 N 張」——57｜m7ZCDg oUNID 主鈕 60\n8 ImportPermissionDeniedView.swift:87–96「開啟「照片」權限」——57｜PFvEX eFFju 主鈕 60\n高度：#1–#5 與主鈕同為 icon 框 22＋字的 HStack、上下 17.5，LS-445 mutation 1 實測主鈕拿掉下限是 57.0（comment 8a556354），以此為準；#7、#8 只有字，57 是推算（PLAUSIBLE）。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "L0Sme",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "(a) 三欄與建議\n建議裁定：以稿為準（a 案）。b 案不成立，核可頁仍列出，讓使用者看到為什麼只有一案。\n對比：兩案同色——on-accent 壓 accent 7.30／9.99；次要鈕字 $text-primary 對頁面底 12.21／15.31、外框 $control-line 3.60／4.72。不分勝負。\n一致性：a 案 #4 同一個釘底動作帶各狀態都是 60（十條 #10）；#5 與送出鈕本來就不同位置，a 案的意義是同一流程只有一種主鈕高度。b 案依票文是「次級實心鈕」，但 tokens.md ③ 規定主／次以字重＋色分：保留 57 實心＝與主鈕同色同字重，只是第二種主鈕高度，不是次級；照 tokens 改成真正的次級鈕（既有 XggYA 外框、body 600），這 8 處又都是該畫面唯一的主要動作，畫面就沒有主鈕（EJz78 b 欄 07、06b）。兩種讀法都不成立。#2 iPad 左欄不論哪案都改外框：右欄已有實心「儲存」，留實心違十條 #1。\n實作成本：a 案把 PrimaryButton 的滿寬外觀抽成可共用的 label（現有 InlinePrimaryButtonLabel 是行內寬，AuthButtons.swift:48–62），#1 NavigationLink、#4／#5 ShareLink、#6–#8 Button 改用它；#2 改用 SecondaryButton 外觀；#3 卡底列補 .frame(minHeight: PrimaryButton.minHeight)；共 8 處＋1 個共用 label。b 案程式量相近，但留下沒有主鈕的畫面。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311822,7 +311860,20 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "(b) 日記詳情頁互動列上方間距（C2；LS-453 VR R1 I-3，LS-453 Notes UyZXu 已記）\n板／節點：iPhone 5 板的 Spacer Section 44——vzYXz im7DS、QCJfh Yz0R7、cqgkc EgTrf、IH80C UGZbZ、GgtNs z12HU；iPad MjRcr m4jjuT、KjDsM p8HWzZ 已是上方 $sp-block 24（右欄另有 $sp-section 44）。程式：DiaryDetailView.swift:168 compactLayout VStack spacing AppSpacing.block 24，interactionRow 在 :172；iPad :204 同樣 24。\n稿 vs 實作：照片牆到互動列 44 vs 24。\n建議裁定：以稿為準（b 案，程式改 44）。\n對比：只差間距，顏色一樣，不分勝負。\n一致性：十條 #5 每畫面要有一次 44 章節斷點；iPhone 詳情頁 Body 依序是日期章 8、紙面 16、照片牆、互動列，44 只出現在互動列上方。a 案改 24 後 iPhone 詳情頁沒有 44，要新增具名豁免。AX3 量：互動列直排時兩鈕之間是 $sp-block 24（InteractionRow.swift:83）；a 案照片牆→愛心 24、愛心→留言 24，愛心離照片和離留言一樣近，分不出它屬於哪一組；b 案 44 對 24，看得出兩鈕是同一組。字高比：預設字級 24＝1.4 個 body 字高、44＝2.6 個；AX3 body 40，24＝0.6 個、44＝1.1 個——AX3 下 24 比一個字還矮。首屏：AX3 互動列在 Body 內 y 1784（a）／1804（b），都在第三屏以後，差 20 不影響首屏。\n實作成本：a 案程式不動，稿要改 5 板（cqgkc、IH80C、GgtNs 三張 AX3／Stress 依規定整板重建）＋新增豁免。b 案改 DiaryDetailView.swift:168–172 一處（interactionRow 上方多 20，合計 AppSpacing.section 44），iPad 不動，稿不動。",
+          "content": "(b) 日記詳情頁互動列上方間距（C2；LS-453 VR R1 I-3，LS-453 Notes UyZXu 已記）——現況\n板／節點：iPhone 5 板的 Spacer Section 44——vzYXz im7DS、QCJfh Yz0R7、cqgkc EgTrf、IH80C UGZbZ、GgtNs z12HU；iPad MjRcr m4jjuT、KjDsM p8HWzZ 已是上方 $sp-block 24（右欄另有 $sp-section 44）。程式：DiaryDetailView.swift:168 compactLayout VStack 統一 spacing AppSpacing.block 24（header、bodyText、photoWallSection、interactionRow 四段都是 24），iPad :204 同樣 24。稿的同一欄依序是日期列 8、紙面 16、照片牆 44、互動列。\n稿 vs 實作：照片牆到互動列 44 vs 24（另兩段 8／16 vs 24 也不同，見給 ios-dev）。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "tPfPZ",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "(b) 三欄與建議\n建議裁定：以稿為準（b 案，程式改 44）。\n對比：只差間距，不分勝負。\n一致性：十條 #5 每畫面要有一次 44 章節斷點；iPhone 詳情頁的 44 只出現在互動列上方，a 案改 24 後整頁沒有 44，要新增具名豁免。AX3 實測（kt2WT／ux4OK）：字框間距（照片牆底→愛心字框頂／愛心字框底→留言字框頂）a 35／46、b 55／46；截圖量字形間距 a 46／67、b 66／67。a 案愛心偏向照片那組，b 案約等距——兩案在 AX3 都沒讓互動列自成一組，b 案只是不讓愛心看起來屬於照片牆。AX3 要讓兩鈕成組，槓桿在列內（InteractionRow.swift:83 VStack spacing block 24，加上兩鈕各 11 內距），不在本題範圍。首屏：AX3 互動列在 Body 內 y 1784（a）／1804（b），都在第三屏以後。\n實作成本：a 案程式不動，稿要改 5 板（cqgkc、IH80C、GgtNs 三張 AX3／Stress 依規定整板重建）＋新增豁免。b 案改 DiaryDetailView.swift:168 一個 VStack（見給 ios-dev），iPad 不動，稿不動。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311835,7 +311886,20 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "(c) AX3 日期章單行溢出（C3；LS-453 VR R1 I-4）\n板／節點：UhMZ6 的 g0cQU、YZ2Fl（$fs-lead，AX3 44）單行時 Stamp Wrap 365.14、版心 345，溢出 20.14。全稿 cmp/Day Divider oLN0e 實例 100 個（python 唯讀解析，Pencil 量測複核），AX3 板上 29 個、19 板；帶「（今天）」「（昨天）」的 12 個：已是兩行 2 個（cqgkc aNTzo、GgtNs Jxu7Z，LS-453）、單行溢出 2 個（上述）、單行放得下 8 個（lKoZG f9KM0G Tuw0p、HLXo3 x4GZ9K PvbTR、aGkJ1 YzMRY IigLd、ai2w5 e29JW、CgmBD tVTRJ；$fs-note 40，章寬 334.08–335.51、版心 345）；其餘 17 個是純日期或食物「第一次吃到」，不受影響。程式：時間軸 DayDividerView.swift:12–37 目前是純文字「今天／昨天／M月d日 EEEE」，還沒有日期章（LS-449 y5ysnR ①）；食物記錄 FoodRecordCopy.swift:23–30 已有 AX 兩行（twoLines）寫法。\n建議裁定：a 案（全稿規則）。\n對比：章的墨色與紙不變，不分勝負。\n一致性：a 案一條規則管全部 AX 日期章，與食物記錄（Food Notes jyt14、vMFj3 先例）、詳情頁 AX3 兩板一致。b 案只修兩例，時間軸 8 個仍是單行：393 寬剩 9.49–10.92pt，375 寬（iPhone SE、mini）版心 327，超出 7.08–8.51（lvdD5 b 欄 375 寬）；同一個元件在詳情頁兩行、時間軸一行。\n實作成本：a 案稿多改 8 個實例，oLN0e 說明加一句；程式在實作日期章時照 FoodRecordCopy 寫法，isAccessibilitySize 時在「（」前插 \\n。b 案稿只改 2 個（本輪已改），程式沒有規則可照，要自己判斷何時斷行。",
+          "content": "(c) AX3 日期章單行溢出（C3；LS-453 VR R1 I-4）——現況\n板／節點：UhMZ6 g0cQU、YZ2Fl（$fs-lead，AX3 44）單行時 Stamp Wrap 365.14、版心 345，溢出 20.14——兩案都要改，本輪已改兩行。全稿 cmp/Day Divider oLN0e 實例 100 個（python 唯讀解析，Pencil 量測複核），AX3 板上 29 個、19 板；帶括號 12 個：已是兩行 4 個（cqgkc aNTzo、GgtNs Jxu7Z、UhMZ6 g0cQU、YZ2Fl）、單行 8 個（lKoZG f9KM0G Tuw0p、HLXo3 x4GZ9K PvbTR、aGkJ1 YzMRY IigLd、ai2w5 e29JW、CgmBD tVTRJ；$fs-note 40，章寬 334.08–335.51、393 寬版心 345）；其餘 17 個是純日期或食物「第一次吃到」。\n程式會產生的格式：時間軸 DayDividerView.swift:24–37 是「今天」「昨天」與「M月d日 EEEE」（帶星期），還沒有日期章（LS-449 y5ysnR ①）；詳情頁 DiaryDateFormat.swift:23「8月31日（今天）」；食物記錄 FoodRecordCopy.swift:19–30 AX 時「8月20日\\n（今天）」「2026年\\n6月8日」（年份在上）。\n量測（Pencil，AX3，Stamp 旋轉後寬）：$fs-note 40 單行「12月28日（今天）」358.02、「8月31日（今天）」334.08、「2025年12月28日」333.08、「12月28日 星期日」327.10、「12月28日」197.41；兩行最寬 201.46。$fs-lead 44 單行最寬 391.36、兩行最寬 219.25。",
+          "lineHeight": 1.5,
+          "fontFamily": "$font",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "hnWdr",
+          "name": "Para",
+          "fill": "$text-primary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "(c) 三欄與建議\n建議裁定：a 案（全稿規則）。\n對比：墨色與紙不變，不分勝負。\n一致性：a 案一條規則管全部 AX 日期章——在本體與附註之間斷：「8月31日／（今天）」「12月28日／星期日」「2025年／12月28日」，與 FoodRecordCopy、Food Notes jyt14／vMFj3、詳情頁 AX3 兩板一致；兩行最寬 201.46，375 寬版心 327、詳情頁日期欄 253 都放得下（lvdD5 a 規則卡三個 AX3 樣本）。b 案只修兩例：時間軸 8 個單行章在 393 寬剩 9.49–10.92，375 寬（SE、mini）版心 327 放不下 334–336；SwiftUI 不會溢出，而是系統在字中間斷行（例「8月31日（今／天）」，斷點推算、PLAUSIBLE；lvdD5 b 欄 375 寬照此畫），正是 FoodRecordCopy 註解說的「不讓系統在字中間斷」。帶星期的「12月28日 星期日」單行 327.10，在 375 寬剛好卡在版心邊上。\n實作成本：a 案稿多改 8 個實例、oLN0e 說明加一句；程式在實作日期章時照 FoodRecordCopy.dateValue(twoLines:) 的寫法。b 案稿只改 2 個（本輪已改），程式沒有規則可照。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311860,7 +311924,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "本票不動程式。以下是建議案（C1a、C2b、C3a）的實作方向，使用者裁決後改成定案語。\n(a) C1a：PrimaryButton 抽出滿寬 label（字 bold、上下 controlPaddingCTA、.frame(minHeight: PrimaryButton.minHeight)、accent 底、圓角 radiusMedium），#1 NavigationLink、#4／#5 ShareLink、#6–#8 Button 改用它；#6 拿掉 minHeight 48。#2 iPad 左欄改用 SecondaryButton 外觀（外框、無填色）。#3 卡底列補 minHeight 60。完成後 #4 .generating→.generated、#5 送出↔要新碼同一位置都是 60。\n(b) C2b：DiaryDetailView.swift:168–172 互動列上方改成 AppSpacing.section 44（其餘三段仍是 block 24，不在本題）；iPad :204–217 不動。\n(c) C3a：日期章實作時（LS-449 y5ysnR ①），dynamicTypeSize.isAccessibilitySize 為 true 時在「（今天）」「（昨天）」前插換行，寫法同 FoodRecordCopy.dateValue(twoLines:)；沒有括號的日期不斷行。\n狀態：三題都只動既有元件外觀與間距；空、載入、錯誤態沿用既有規格，本票不新增。\n範圍外、未裁（同頁另見）：iPhone 詳情頁其餘兩段間距稿是 8（日期章→紙）、16（紙→照片牆），程式都是 block 24（DiaryDetailView.swift:168），LS-451 改便箋時一併對照即可，P3 不入池。",
+          "content": "本票不動程式。以下是建議案（C1a、C2b、C3a）的實作方向，使用者裁決後改成定案語。\n(a) C1a：PrimaryButton 抽出滿寬 label（bold、上下 controlPaddingCTA、.frame(minHeight: PrimaryButton.minHeight)、accent 底、圓角 radiusMedium），#1 NavigationLink、#4／#5 ShareLink、#6–#8 Button 改用它；#6 拿掉 minHeight 48。#2 iPad 左欄改 SecondaryButton 外觀（外框、無填色）。#3 卡底列補 minHeight 60。完成後 #4 .generating→.generated 動作帶不變高，#5 與送出鈕同為 60。\n(b) C2b：DiaryDetailView.swift:168 的 VStack 不再用統一 spacing，改逐段：日期列→內文 AppSpacing.label 8、內文→照片牆 AppSpacing.item 16、照片牆→互動列 AppSpacing.section 44（同稿 vzYXz）。前兩段與 LS-451 便箋是同一個 VStack，一起改；iPad :204–217 不動。\n(c) C3a：日期章實作時（LS-449 y5ysnR ①），dynamicTypeSize.isAccessibilitySize 為 true 時在本體與附註之間換行：「M月d日\\n（今天）」「M月d日\\n星期X」「yyyy年\\nM月d日」，寫法同 FoodRecordCopy.dateValue(twoLines:)；只有本體時一行。\n狀態：三題都只動既有元件外觀與間距；空、載入、錯誤態沿用既有規格，本票不新增。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311885,7 +311949,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "本票新增：對照板 EJz78（C1）、O2zWC（C2）、lvdD5（C3），草案元件 dNRrh（cmp/Button Solid Compact，C1 b 案用，C1 裁 a 後刪除），本 Notes 板。\n本票已改：UhMZ6 g0cQU、YZ2Fl 改兩行「8月31日／（今天）」（C3 兩案都要做），所在的 u0J68、qJMPS 板高 2106.375→2160.067（同 cqgkc，a／b 欄同高）。\n裁決後才改：C1b——8 處所在板的主鈕實例換成草案；C2a——vzYXz、QCJfh、cqgkc、IH80C、GgtNs；C3a——lKoZG、HLXo3、aGkJ1、ai2w5、CgmBD 的 8 個日期章與 oLN0e 說明。",
+          "content": "本票新增：對照板 EJz78（C1）、O2zWC（C2）、lvdD5（C3），本 Notes 板。R1 的草案元件已於 R2 刪除（b 案改用既有次要鈕 XggYA 畫出「次級」的後果）。\n本票已改：UhMZ6 g0cQU、YZ2Fl 改兩行「8月31日／（今天）」（C3 兩案共同），所在的 u0J68、qJMPS 板高 2106.375→2160.067（同 cqgkc，a／b 欄同高）。\n裁決後才改：C2a——vzYXz、QCJfh、cqgkc、IH80C、GgtNs；C3a——lKoZG、HLXo3、aGkJ1、ai2w5、CgmBD 的 8 個日期章與 oLN0e 說明。C1 b 案不成立，沒有待改稿。選到需要改稿的那一案時，改稿後回 visual-reviewer 聚焦輪並重掃收據。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311910,7 +311974,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "本票新增三個對照畫面（說明用，不是 app 畫面）：\nLS-454 / (a) 手刻實心 CTA 兩版對照 (iPhone)｜隱藏 Tab Bar ✓（欄內整頁取自 07 kcGJa、07c CHLio、06 VCMrA、06b gCeDF、AX3 VRq1c，原畫面就沒有 Tab Bar）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 有 93pt（07 的 Action Bar；b 案已產生 90pt）｜失敗文案鍵 無｜深色特例 無（元件同色，深色見既有板）｜AX3 特例 最後一欄取自 VRq1c（theme size ax3），兩案相同｜iPad 無（#2 iPad 見 JbTfv）｜資料落點 無持久化（純 UI 外觀）\nLS-454 / (b) 日記詳情頁互動列上方間距兩版對照 (iPhone)｜隱藏 Tab Bar ✓（同 vzYXz）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 無｜失敗文案鍵 無｜深色特例 第三、四欄取自 QCJfh（theme mode dark）｜AX3 特例 第五、六欄取自 cqgkc（theme size ax3），互動列直排｜iPad 無（iPad 已是 24，見 MjRcr）｜資料落點 無持久化（純 UI 間距）\nLS-454 / (c) AX3 日期章斷行兩版對照 (iPhone)｜隱藏 Tab Bar ✗（時間軸欄取自 lKoZG，有 Tab Bar）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 無｜失敗文案鍵 無｜深色特例 無（墨色與紙不隨深色變）｜AX3 特例 全板都是 AX3（theme size ax3），375 寬兩欄模擬 SE／mini｜iPad 無｜資料落點 無持久化（日期是時間軸依日分組的日子，TimelineView.swift:314 group.day，唯讀）",
+          "content": "本票新增三個對照畫面（說明用，不是 app 畫面）：\nLS-454 / (a) 手刻實心 CTA 兩版對照 (iPhone)｜隱藏 Tab Bar ✓（欄內整頁取自 07 kcGJa、07c CHLio、06 VCMrA、06b gCeDF、AX3 VRq1c，原畫面就沒有 Tab Bar）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 有 93pt（07 的 Action Bar；b 案已產生改次級鈕後 89pt）｜失敗文案鍵 無｜深色特例 無（元件同色，深色見既有板）｜AX3 特例 最後一欄取自 VRq1c（theme size ax3），兩案相同｜iPad 無（#2 iPad 見 JbTfv）｜資料落點 無持久化（純 UI 外觀）\nLS-454 / (b) 日記詳情頁互動列上方間距兩版對照 (iPhone)｜隱藏 Tab Bar ✓（同 vzYXz）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 無｜失敗文案鍵 無｜深色特例 第三、四欄取自 QCJfh（theme mode dark）｜AX3 特例 第五、六欄取自 cqgkc（theme size ax3），互動列直排｜iPad 無（iPad 已是 24，見 MjRcr）｜資料落點 無持久化（純 UI 間距）\nLS-454 / (c) AX3 日期章斷行兩版對照 (iPhone)｜隱藏 Tab Bar ✗（時間軸欄取自 lKoZG，有 Tab Bar）｜標題 自訂（欄頂 a 案／b 案得失）｜釘底動作帶 無｜失敗文案鍵 無｜深色特例 無（墨色與紙不隨深色變）｜AX3 特例 全板都是 AX3（theme size ax3），375 寬兩欄模擬 SE／mini｜iPad 無｜資料落點 無持久化（日期是時間軸依日分組的日子，TimelineView.swift:314 group.day，唯讀）",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311935,7 +311999,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "本票新寫的寬高字面值：欄寬 393 共 22 次（O2zWC 6、EJz78 11、lvdD5 5）、375 共 4 次（lvdD5 兩欄＋兩張 375 寬時間軸）；375 寬時間軸 Tab Bar 寬 343 共 2 次；O2zWC a 欄 Body 高 796、823、1988（與 b 欄同高，3 次）；UhMZ6 u0J68、qJMPS 與 lvdD5 E0kRCU 板高 2160.067（3 次）；草案 dNRrh 寬 345、高 57，icon 22×22。非尺寸字面值：dNRrh 左右內距 20（同 OKSJI）；375 寬兩張時間軸裡 4 張卡（QUnYn、JrOjB 照片卡，v5x8GX、dkatH 相簿卡）的右側角托 x 改 306（版心 327＋corner-out 5－角托 26），共 8 處；同兩張 375 寬時間軸，相簿卡 v5x8GX、dkatH 的 Stack Sheet 1–3 寬 303→285（6 次），日記卡 n0LET4、nyZod 的「+2」More Scrim 寬 96.3→90.33、Stack Sheet 1／2 x 跟著左移 6（寬 2 次、x 4 處）——版心從 345 縮成 327，跟著縮。EJz78 b 案已產生的 Body 改 fill_container，不是字面值。本板寬 900 沿用既有 Notes 板寬。沒有改任何既有元件定義的寬高。",
+          "content": "本票新寫的寬高字面值：欄寬 393 共 22 次（O2zWC 6、EJz78 11、lvdD5 5）、375 共 4 次（lvdD5 兩欄＋兩張 375 寬時間軸）；375 寬時間軸 Tab Bar 寬 343 共 2 次；O2zWC a 欄 Body 高 796、823、1988（與 b 欄同高，3 次）；UhMZ6 u0J68、qJMPS 與 lvdD5 E0kRCU 板高 2160.067（3 次）。R1 草案元件的 345×57、icon 22×22 與左右內距 20 已隨元件刪除。lvdD5 a 規則卡的三個 AX3 日期章樣本寬 fill_container，沒有新字面值。非尺寸字面值：375 寬兩張時間軸裡 4 張卡（QUnYn、JrOjB 照片卡，v5x8GX、dkatH 相簿卡）的右側角托 x 改 306（版心 327＋corner-out 5－角托 26），共 8 處；同兩張 375 寬時間軸，相簿卡 v5x8GX、dkatH 的 Stack Sheet 1–3 寬 303→285（6 次），日記卡 n0LET4、nyZod 的「+2」More Scrim 寬 96.3→90.33、Stack Sheet 1／2 x 跟著左移 6（寬 2 次、x 4 處）——版心從 345 縮成 327，跟著縮。EJz78 b 案已產生的 Body 改 fill_container，不是字面值。本板寬 900 沿用既有 Notes 板寬。沒有改任何既有元件定義的寬高。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
@@ -311960,7 +312024,7 @@
           "fill": "$text-primary",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "10-10 LS-454 R1：(a)(b)(c) 漂移裁定；新增對照板 EJz78、O2zWC、lvdD5、草案元件 dNRrh 與本 Notes 板；UhMZ6 兩例日期章改兩行（C3 兩案共同部分），其餘既有板未改。",
+          "content": "10-10 LS-454 R1：(a)(b)(c) 漂移裁定；新增對照板 EJz78、O2zWC、lvdD5、草案元件與本 Notes 板（草案 dNRrh 已於 R2 刪除）；UhMZ6 兩例日期章改兩行（C3 兩案共同部分），其餘既有板未改。\n10-10 LS-454 R2（VR R1 ITERATE，comment b747fa45）：M1 (a) #5 的「同位置跳 3pt」不成立——稿上送出鈕 y 572、要新碼鈕 y 438，06→06b 上方區塊重排；LS-445 merge-review i1 的「同一位置」只對 #4 成立，跳高例只留 #4。M2 (b) AX3 改用實測間距（字形 a 46／67、b 66／67），刪掉「44 才看得出成組」與字高比論述，C2b 只站在十條 #5。M3 (a) b 案依票文是次級鈕，照 tokens 主／次以字重＋色分畫成既有次要鈕 XggYA，8 個畫面因此沒有主鈕，b 案不成立；R1 草案元件刪除；#2 iPad 左欄兩案都改外框。M4 (c) 規則改成本體與附註之間斷，涵蓋星期與年份，補三個 AX3 樣本與量測。m1 給 ios-dev 改逐段間距 8／16／44、O2zWC a 欄頂註明其餘照稿；m2 b 案失敗情境改為系統在字中間斷行，b 欄 375 寬照此畫；m3 補裁決後改稿回 VR 聚焦輪；m4 隨草案元件刪除。i1 採納：#1–#5 高度改引 LS-445 mutation 1 實測 57.0。i2 不修（InteractionRow 既有版式，兩案相同，範圍外）。",
           "lineHeight": 1.5,
           "fontFamily": "$font",
           "fontSize": 15,
