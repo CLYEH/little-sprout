@@ -3571,9 +3571,9 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   ——原本的 `!==` 是逐字元短路比較，理論上可被拿來做 timing attack 猜出正確的
   金鑰。
 - **呼叫時機**：設計給排程（`pg_cron`＋`pg_net`，或 Supabase 原生 Scheduled Edge
-  Function）定期呼叫。**本票只記載下方「排程（未建立）」的部署清單，不實際建立**
-  ——同 `purge-storage`（LS-153）的既有先例，目前**沒有任何東西會觸發**這支函式，
-  接排程由 orchestrator 依 LS-78 授權狀態後續處理。
+  Function）定期呼叫。**排程由 migration `20261010185810_push_dispatch_cron.sql`
+  建立（LS-395）；正式站部署步驟見下方「排程」段與 LS-395**——LS-172 當時只記載清單、
+  不建立排程，那段「沒有任何東西會觸發」的狀態到 LS-395 部署完成為止。
 - **處理流程**（R2 依 merge-reviewer m1 改成批次＋有上限併發＋時間預算，見下方
   「批次取件、併發送出與時間預算」段的完整取捨）：
   1. 非 `POST` → `405`。
@@ -3837,29 +3837,55 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
     就丟例外，不悄悄退回預設的 `ok:true`。未設定＝維持原本一律 `ok:true` 的
     行為。正式站部署不設定這個變數（只在 `PUSH_DISPATCH_PROVIDER=stub` 才有
     意義，正式站本來就不會設 `PUSH_DISPATCH_PROVIDER`）。
-- **排程（未建立，僅記載部署清單）**：`pg_cron` 每分鐘一次呼叫 `pg_net.http_post`
-  打本函式，`apikey` header 從 `vault` 讀取（不寫死在 migration 裡，LS-196 訂正
-  ——不再是 `Authorization` header 帶 `service_role` key，見上方「鑑權」段與
-  §6 `purge-storage` 的完整背景）——同 `purge-storage`（§6「自動清除」執行機制
-  段）的既有排程形狀，差別只在頻率（`purge-storage` 每日一次，`push-dispatch`
-  需要更即時，故每分鐘一次）與 vault secret 名稱：
-  ```sql
-  select net.http_post(
-    url := '<SUPABASE_URL>/functions/v1/push-dispatch',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'apikey', (
-        select decrypted_secret from vault.decrypted_secrets
-        where name = 'ls172_push_dispatch_secret_key'
-      )
-    ),
-    body := '{}'::jsonb,
-    timeout_milliseconds := 60000
-  );
+- **排程（LS-395 起由 migration 建立；部署步驟見 LS-395）**：
+  `20261010185810_push_dispatch_cron.sql` 建立 pg_cron job
+  `ls395-push-dispatch-every-minute`（`* * * * *`），指令是
+  `select private.invoke_push_dispatch();`。該函式（security definer，`private`
+  schema，不對外 grant）讀兩個 `vault` secret——`ls172_push_dispatch_url`（EF 完整
+  URL，不寫死在 migration，否則本機／CI 的 cron 會打正式站）與
+  `ls172_push_dispatch_secret_key`（新式 `sb_secret_…` default key，作 `apikey`
+  header，見上方「鑑權」段與 §6 `purge-storage`）——再 `net.http_post(...,
+  body := '{}', timeout_milliseconds := 60000)`（pg_net 預設 5000 ms，EF 時間預算
+  60 秒；LS-196 R2 N1）。**任一 secret 缺就 `raise exception`**，該分鐘
+  `cron.job_run_details` 記 failed、不發出請求（避免 `{"apikey": null}` 造成看似
+  金鑰錯的 401）；本機／CI 不建 vault secret，cron 每分鐘記一筆 failed 屬預期。
+  `pg_cron` 缺時 migration fail-soft（只留 NOTICE，同 `ls153-purge-expired-daily`）。
+  非 BREAKING（只新增函式與 job）。
+
+  **正式站部署清單（orchestrator 依 LS-78 授權執行；順序有意義，在已 `supabase link`
+  的主 checkout 跑）**。排程一上線就開始 claim 事件，而 claim 後送失敗不回滾（寧可漏送不重送），
+  所以 EF 與 secrets 必須先就緒，**最後才 `db push`**：
+  ```bash
+  # 1. vault secrets（金鑰值不離開 DB：複製既有 purge-storage 用的同一把 default key）
+  supabase db query --linked "select vault.create_secret('https://mzkkkzbiejgvhwjyiokf.supabase.co/functions/v1/push-dispatch', 'ls172_push_dispatch_url', 'LS-395 push-dispatch cron URL');"
+  supabase db query --linked "select vault.create_secret((select decrypted_secret from vault.decrypted_secrets where name = 'ls153_purge_storage_secret_key'), 'ls172_push_dispatch_secret_key', 'LS-395 push-dispatch cron apikey');"
+  # 確認兩個都在、且 key 非 NULL（只印名稱與長度，不印值）
+  supabase db query --linked "select name, length(decrypted_secret) as len from vault.decrypted_secrets where name in ('ls172_push_dispatch_url','ls172_push_dispatch_secret_key');"
+
+  # 2. 部署 Edge Function（config.toml 已有 [functions.push-dispatch] verify_jwt = false）
+  supabase functions deploy push-dispatch
+
+  # 3. 五個 APNS_* secrets（APNS_P8 從檔案讀，值不進 repo／不進 shell history 以外的地方；
+  #    APNS_ENV：TestFlight／App Store 簽署的 build 用 production，Xcode 直接安裝的 debug
+  #    build 的 device token 屬 sandbox——兩者不可混用，值錯會全部 BadDeviceToken）
+  supabase secrets set APNS_TEAM_ID=VWBQ67Y2L6 APNS_KEY_ID=LCL8V6H7U5 \
+    APNS_BUNDLE_ID=com.clyeh.sproutday APNS_ENV=production
+  supabase secrets set "APNS_P8=$(cat /path/to/AuthKey_LCL8V6H7U5.p8)"
+  supabase secrets list   # 只列名稱與 digest，確認五個 APNS_* 都在
+
+  # 4. 最後才上排程 migration
+  supabase db push
+
+  # 5. 驗證（等 2–3 分鐘讓 cron 跑過）
+  bash scripts/ops/prod-push-health.sh
   ```
-  `body`／`timeout_milliseconds` 兩個參數同 §6 `purge-storage` 範本（pg_net 預設
-  5000 ms 逾時；LS-196 R2 N1）。
-  **本票不執行這段部署**，接排程由 orchestrator 依 LS-78 授權狀態決定時機。
+  回滾：`supabase db query --linked "select cron.unschedule('ls395-push-dispatch-every-minute');"`
+  （停排程，不刪函式；事件會繼續累積在 `notification_events`，待重新排程後依 claim 條件處理）。
+  **首次上線注意**：正式站既有的、`occurred_at` 早於 5 分鐘且 `sent_at is null` 的歷史事件會在第一次
+  執行時被一併 claim 並推播給有 token 的成員；上線前先查 `select count(*) from
+  public.notification_events where sent_at is null;`，如不想推舊事件，先把它們標記
+  `sent_at`（orchestrator 決定）。健康度巡檢：`bash scripts/ops/prod-push-health.sh`
+  （docs/COLLABORATION.md §4-b）。
 - **本機測試**：
   - `supabase/functions/push-dispatch/{handler,apns}.test.ts`（Deno 內建
     `Deno.test`，注入 fake deps／fake `fetch`／`StubApnsProvider`，不需要跑
@@ -3909,7 +3935,7 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   Apple／Google 撤銷的既有先例。JWT 的簽章正確性（ES256、header/payload 形狀）
   已用測試金鑰對驗證過（見上方 `apns.test.ts`），未驗證的只是「Apple 伺服器
   真的接受這把 JWT」這一步。
-- **部署**（正式站，orchestrator 依 LS-78 授權狀態執行，不在本票落地範圍）：
+- **部署**（正式站，orchestrator 依 LS-78 授權狀態執行，含 vault secrets 與 `db push` 的完整順序清單見上方「排程」段，LS-395）：
   ```
   supabase functions deploy push-dispatch --project-ref mzkkkzbiejgvhwjyiokf
   supabase secrets set APNS_TEAM_ID=... APNS_KEY_ID=... APNS_BUNDLE_ID=... APNS_ENV=production
