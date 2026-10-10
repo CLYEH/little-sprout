@@ -1,7 +1,7 @@
 {
  "ticket": "LS-454",
  "round": 2,
- "head_sha": "a042258b3409929704a5ac5255a359da954665fc",
+ "head_sha": "0568d38eb23485d4e538e147f27a0b449afb174f",
  "scanned_nodes": 35106,
  "scan_scope": "document",
  "scans": {
@@ -7646,7 +7646,7 @@
      "classification": "LS-454 R1 新類：lvdD5 的 AX3 時間軸欄整頁複製自 lKoZG；來源板有同名同類命中（「Spacer · Body 收窄補償 × Tab Bar @ A11y / 11 時間軸 · Dynamic Type AX3」，既有分類）——Tab Bar 浮在為它保留高度的補償 Spacer 上，設計意圖；375 寬欄 Tab Bar 寬 343（版心縮 18）；同類 1 例（LS-454 R2：與 LS-454-r1 收據同類同數；沿用分類）"
     }
    ],
-   "result_hash": "85dfdfe85f6568f2"
+   "result_hash": "73694a8ffc2f9d9f"
   },
   "row_overflow": {
    "scope": "document",
@@ -8244,7 +8244,7 @@
      "classification": "LS-454 R1 新類：lvdD5 兩張 375 寬 AX3 時間軸欄（xd2cC、x6jGg）的「載入更多」字在 393 寬放得下、375 寬多 8.5；它位在 Feed 第 2288pt 之後，被螢幕框（1500 高、clip）整個裁在畫面外，看不到；本欄只用來比較日期章，未調整畫面外內容；同類 2 例（LS-454 R2：與 LS-454-r1 收據同類同數；沿用分類）"
     }
    ],
-   "result_hash": "7a71a1e63a27c191"
+   "result_hash": "67fb0c8dd6f1f63e"
   },
   "cross_parent_collision": {
    "scope": "document",
@@ -12349,7 +12349,7 @@
      "classification": "LS-454 R1 新類：lvdD5 兩案共同欄 E0kRCU 整頁複製自 UhMZ6 u0J68（只把日期章改兩行、板高跟著加 53.69）；同名同類命中見 LS-449 對照板與 13 日記詳情各板（既有分類）——角托 corner-out 5pt 壓進相鄰 Spacer（純空白、無內容），設計意圖；同類 1 例（LS-454 R2：與 LS-454-r1 收據同類同數；沿用分類）"
     }
    ],
-   "result_hash": "04d3f7b94b3f2454"
+   "result_hash": "f25d6260e8095901"
   },
   "corner_anchor": {
    "scope": "document",
@@ -12598,7 +12598,7 @@
      "classification": "mount_pair"
     }
    ],
-   "result_hash": "7f60139e3662723e"
+   "result_hash": "6ce97e45d32ca6eb"
   },
   "text_occlusion": {
    "scope": "document",
@@ -12612,7 +12612,7 @@
    ],
    "flagged": [],
    "document_flagged": [],
-   "result_hash": "f3ff8ab95d7a7abe"
+   "result_hash": "e188f560fa44af6b"
   },
   "board_clip": {
    "scope": "document",
@@ -12626,14 +12626,14 @@
    ],
    "flagged": [],
    "document_flagged": [],
-   "result_hash": "374e8ceb13086c3c"
+   "result_hash": "24d7f792afd2a0e9"
   }
  },
  "total_nodes": 21116,
- "tree_hash": "2a72b5b0d3ad8845",
+ "tree_hash": "d5c90cd469e6e0a9",
  "flags": {
   "cross_all": false,
   "custom_overlay_re": false
  },
- "scan_note": "snapshot mode，dump sha256=b377bb7f8ae6ea5fa27434aaef7452ad0d7db6355a88cb3c7a7c596d09060e36；LS-454 R2：跑法②快照模式（21116 節點，395 塊頂層板），正典 dump（scripts/design/pen-snapshot-dump.js 程式本體，只拿掉註解、縮短三則舊參數拒絕訊息字串，走訪與輸出邏輯未改），SNAP_BOARDS 100／300、2 段 [0,100) [100,395) 皆一次成功、無 interrupted；tree_hash 由 scripts/gates/design_tree_hash.py 對 head_sha（a042258b）那份已落地 .pen 離線算出；--scan-scope document、--boards EJz78,O2zWC,lvdD5,ELpbg,UhMZ6（R1 的草案元件 R2 已刪除，不再列）；兩段 dump 皆在末次落地（a042258b）之後、同一稿態，期間無寫入；前三支各類對 LS-454-r1 收據逐類比對：同類同數沿用分類，增量逐類說明；R1 刻意保留的 Day Divider 1／2 :: Stamp Wrap 兩類因 b 欄改畫系統斷行而消失"
+ "scan_note": "snapshot mode，dump sha256=b437786f27272cdeb23e44eff0270a7feb4cee0e7341ec97dadb4422f5b88d8b；LS-454 R2：跑法②快照模式（21116 節點，395 塊頂層板），正典 dump（scripts/design/pen-snapshot-dump.js 程式本體，只拿掉註解、縮短三則舊參數拒絕訊息字串，走訪與輸出邏輯未改），SNAP_BOARDS 100／300、2 段 [0,100) [100,395) 皆一次成功、無 interrupted；tree_hash 由 scripts/gates/design_tree_hash.py 對 head_sha（0568d38e）那份已落地 .pen 離線算出；--scan-scope document、--boards EJz78,O2zWC,lvdD5,ELpbg,UhMZ6（R1 的草案元件 R2 已刪除，不再列）；兩段 dump 皆在末次落地（0568d38e）之後、同一稿態，期間無寫入；前三支各類對 LS-454-r1 收據逐類比對：同類同數沿用分類，增量逐類說明；R1 刻意保留的 Day Divider 1／2 :: Stamp Wrap 兩類因 b 欄改畫系統斷行而消失；R2 末次落地只改 lvdD5 a 欄頂標題文字（uh5jO），掃描在其後重跑，前三支各類與上一版 R2 收據同類同數"
 }
