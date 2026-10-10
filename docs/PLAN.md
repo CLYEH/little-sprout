@@ -3,7 +3,7 @@
 > 一個給家人分享小孩照片、影片與成長日記的 iOS app。
 > 私密、簡單、以「家庭」為單位，支援多個家庭各自分享自己的孩子。
 >
-> 沿革：2026-10-09 定名 Sprout Day（原 Little Sprout；LS-148 查重後使用者裁決，LS-433 同步 bundle id `com.leoyeh.sproutday` 與對外名稱）。中文名「萌芽日記」不變；repo 名、scheme／target 名 `LittleSprout` 不改。
+> 沿革：2026-10-09 定名 Sprout Day（原 Little Sprout；LS-148 查重後使用者裁決，LS-433 同步 bundle id 與對外名稱；2026-10-10 LS-452 改 `com.clyeh.sproutday`，LS-8 尚未佔 App ID 前改名零外部成本）。中文名「萌芽日記」不變；repo 名、scheme／target 名 `LittleSprout` 不改。
 
 ## 1. 產品定位
 
