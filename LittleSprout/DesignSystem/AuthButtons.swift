@@ -13,6 +13,13 @@ struct PrimaryButton: View {
     var loadingTitle = "正在處理…"
     let action: () -> Void
 
+    /// LS-445（LS-442 C1a）：稿 `OKSJI` h=60 由內容 25 推出，iOS 內容只有 22（icon 框）→ 光靠
+    /// `controlPaddingCTA` 17.5×2 只有 57。用 `minHeight` **下限**補回稿面意圖、不是固定高：
+    /// AX 字級下內容與 padding 自己長高（AX3 約 83），下限不介入。
+    static let minHeight: CGFloat = 60
+    /// LS-445（LS-442 C2a）：稿 700；主鈕應比次要鈕（`.lead medium`）重一級。
+    static let labelWeight: Font.Weight = .bold
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: AppSpacing.label) {
@@ -21,15 +28,36 @@ struct PrimaryButton: View {
                 } else if let icon {
                     Image(systemName: icon).appIconFrame(.medium)
                 }
-                Text(isLoading ? loadingTitle : title).appFont(.body)
+                Text(isLoading ? loadingTitle : title).appFont(.body, weight: Self.labelWeight)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingCTA)
             .padding(.horizontal, 20)
+            .frame(minHeight: Self.minHeight)
         }
         .foregroundStyle(Color.lsOnAccent)
         .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
         .disabled(isLoading)
+    }
+}
+
+/// iPad 相簿詳情「行內」加照片鈕的 label（稿 `RbEqx` 是 `OKSJI` 的 ref、`width:fit_content`）。
+/// LS-445 R2（merge-review M1／m1）：與 `PrimaryButton` 同一套——bold、`controlPaddingCTA`
+/// 垂直 padding（AX 字級由 padding 撐高）、`minHeight` 60 下限；抽成獨立 View 讓渲染測試不用
+/// 建整個 `AlbumDetailView`。`PrimaryButton` 固定 `maxWidth: .infinity`，這裡不滿版。
+struct InlinePrimaryButtonLabel: View {
+    let icon: String
+    let title: String
+
+    var body: some View {
+        HStack(spacing: AppSpacing.label) {
+            Image(systemName: icon).appIconFrame(.medium)
+            Text(title).appFont(.body, weight: PrimaryButton.labelWeight)
+        }
+        .padding(.vertical, AppSpacing.controlPaddingCTA)
+        .padding(.horizontal, AppSpacing.item)
+        .frame(minHeight: PrimaryButton.minHeight)
+        .contentShape(Rectangle())
     }
 }
 
