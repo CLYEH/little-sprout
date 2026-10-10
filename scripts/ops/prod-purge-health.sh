@@ -52,7 +52,10 @@
 # 呼叫者，也沒有任何 DB webhook／trigger 會呼叫 pg_net」**（唯讀查過
 # `pg_trigger` 為 0 筆）。之後若新增任何其他 pg_net 呼叫來源（例如
 # push-dispatch 的排程真的接上、或新增 DB webhook），這一行會靜默換成別人的
-# 回應而不會有任何警示——加人務必同時檢查這個假設是否還成立，必要時把輔訊號
+# 回應而不會有任何警示——**LS-395 起此前提已不成立**：push-dispatch 每分鐘排程
+# （ls395-push-dispatch-every-minute）也寫進同一張表，本腳本第三行「最新 HTTP 回應」
+# 實務上會是 push 的而非 purge 的，只當參考、不要拿來判斷 purge-storage；push 側的
+# 回應看 prod-push-health.sh。加人務必同時檢查這個假設是否還成立，必要時把輔訊號
 # 改成過濾特定呼叫來源（目前 `net._http_response` 本身不記錄來源 URL，見
 # `queue_retry.ts` 檔頭「已知限制」同型說明）。
 #

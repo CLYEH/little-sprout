@@ -412,3 +412,49 @@ end;
 $$;
 
 rollback;
+
+-- ===========================================================================
+-- 8. pg_cron 排程存在性（LS-395）：每分鐘 job 與其呼叫的 private.invoke_push_dispatch()。
+--    本機映像若沒有 pg_cron，只留 NOTICE（migration 為 fail-soft 設計，見
+--    20261010185810_push_dispatch_cron.sql 檔頭）；函式本身不依賴 pg_cron，一律驗。
+-- ===========================================================================
+do $$
+declare
+  v_schedule text;
+  v_command text;
+  v_active boolean;
+begin
+  if not exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'private' and p.proname = 'invoke_push_dispatch' and p.prosecdef
+  ) then
+    raise exception 'FAIL：private.invoke_push_dispatch() 不存在或不是 security definer';
+  end if;
+  if has_function_privilege('authenticated', 'private.invoke_push_dispatch()', 'execute')
+     or has_function_privilege('anon', 'private.invoke_push_dispatch()', 'execute') then
+    raise exception 'FAIL：authenticated／anon 不該能執行 private.invoke_push_dispatch()';
+  end if;
+
+  if not exists (select 1 from pg_extension where extname = 'pg_cron') then
+    raise notice '略過 cron.job 檢查：本環境沒有啟用 pg_cron（fail-soft 設計預期內）';
+    return;
+  end if;
+
+  select schedule, command, active into v_schedule, v_command, v_active
+    from cron.job where jobname = 'ls395-push-dispatch-every-minute';
+  if v_schedule is null then
+    raise exception 'FAIL：pg_cron 已啟用，但找不到 ls395-push-dispatch-every-minute 這個 job';
+  end if;
+  if v_schedule <> '* * * * *' then
+    raise exception 'FAIL：ls395-push-dispatch-every-minute 的 schedule 不是每分鐘，實際 %', v_schedule;
+  end if;
+  if v_command <> 'select private.invoke_push_dispatch();' then
+    raise exception 'FAIL：ls395-push-dispatch-every-minute 的 command 不對，實際 %', v_command;
+  end if;
+  if not v_active then
+    raise exception 'FAIL：ls395-push-dispatch-every-minute 未啟用（active=false）';
+  end if;
+
+  raise notice 'ok 8：push-dispatch 排程存在，schedule=%，command=%', v_schedule, v_command;
+end;
+$$;
