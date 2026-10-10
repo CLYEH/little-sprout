@@ -152,4 +152,4 @@ LS-133 票文已定：「SwiftUI 以 bundled markdown 渲染（`AttributedString
 
 - 網域 `sproutday.app`（`docs/CNAME`）；DNS 記錄與 Pages 設定步驟見 LS-436 票 comment／handoff。
 - `docs/invite/index.md`：非 App 使用者點開 `https://sproutday.app/invite/<code>` 的落地頁；`docs/404.html` 把 `/invite/<code>`（Pages 無此靜態路徑）轉到 `/invite/?code=<code>`。App Store 連結為佔位，**上架後補**（LS-8）。
-- `docs/.well-known/apple-app-site-association`：`appIDs` 的 `<TEAM_ID>` 是佔位，**待 LS-8 拿到 Apple Developer Team ID 後替換**為 `<Team ID>.com.clyeh.sproutday`；Associated Domains entitlement（`applinks:sproutday.app`）也等 LS-8（免費帳號不能加）。`docs/_config.yml` 以 `include: [.well-known]` 讓 Jekyll 發佈該目錄（不用 `.nojekyll`，否則 md 不再轉 HTML）。
+- `docs/.well-known/apple-app-site-association`：`appIDs` 已於 LS-460 填入 Team ID VWBQ67Y2L6（`VWBQ67Y2L6.com.clyeh.sproutday`）；Associated Domains entitlement（`applinks:sproutday.app`）仍等 App ID 建好（LS-8）。`docs/_config.yml` 以 `include: [.well-known]` 讓 Jekyll 發佈該目錄（不用 `.nojekyll`，否則 md 不再轉 HTML）。
