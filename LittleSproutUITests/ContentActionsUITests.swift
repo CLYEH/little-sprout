@@ -36,6 +36,7 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 5))
         cancelButton.tap()
 
+        // uitest-wait-ok: 反向斷言——視窗期內「不得出現」子 sheet（本來就不存在，不是等它消失）
         XCTAssertFalse(app.staticTexts["「今天在溜滑梯上玩得好開心。」"].waitForExistence(timeout: 3))
         XCTAssertFalse(app.staticTexts["檢舉這則內容"].exists)
     }
@@ -81,8 +82,8 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertTrue(doneButton.waitForExistence(timeout: 5))
         doneButton.tap()
 
-        XCTAssertFalse(
-            app.staticTexts["已送出，家庭管理者會處理"].waitForExistence(timeout: 3),
+        XCTAssertTrue(
+            app.staticTexts["已送出，家庭管理者會處理"].waitForNonExistence(timeout: UITestTimeouts.standard),
             "按下完成後 05c 應該關閉"
         )
     }
@@ -99,6 +100,7 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 5))
         cancelButton.tap()
 
+        // uitest-wait-ok: 反向斷言——視窗期內「不得出現」（取消後不應送出檢舉）
         XCTAssertFalse(app.staticTexts["已送出，家庭管理者會處理"].waitForExistence(timeout: 3), "取消不應該送出檢舉")
     }
 
@@ -150,8 +152,8 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertTrue(closeButton.waitForExistence(timeout: 5))
         closeButton.tap()
 
-        XCTAssertFalse(
-            app.staticTexts["這則內容已經不存在了，無法檢舉。"].waitForExistence(timeout: 3),
+        XCTAssertTrue(
+            app.staticTexts["這則內容已經不存在了，無法檢舉。"].waitForNonExistence(timeout: UITestTimeouts.standard),
             "按下關閉後 sheet 應該收起"
         )
     }
@@ -175,7 +177,9 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
         confirmButton.tap()
 
-        XCTAssertFalse(app.staticTexts["要封鎖「這位成員」嗎？"].waitForExistence(timeout: 3), "確認後 05d 應該關閉")
+        XCTAssertTrue(
+            app.staticTexts["要封鎖「這位成員」嗎？"].waitForNonExistence(timeout: UITestTimeouts.standard), "確認後 05d 應該關閉"
+        )
     }
 
     // MARK: - 05 → 05e：Owner 移除內容——成功後本地移除＋日記詳情變成「找不到這篇日記」
@@ -262,8 +266,8 @@ final class ContentActionsUITests: XCTestCase {
         XCTAssertTrue(noIssueButton.waitForExistence(timeout: 5))
         noIssueButton.tap()
 
-        XCTAssertFalse(
-            app.staticTexts["「這張照片真的很醜」"].waitForExistence(timeout: 3),
+        XCTAssertTrue(
+            app.staticTexts["「這張照片真的很醜」"].waitForNonExistence(timeout: UITestTimeouts.standard),
             "標成沒問題後，這張卡片應該從清單移除"
         )
         XCTAssertTrue(

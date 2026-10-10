@@ -33,6 +33,8 @@ effort: high
 
 **對 handoff 勾選表抽兩列重放（LS-300，LS-96 池項 `3aa46c78`）**：實作者 handoff 若含「畫面級屬性（逐條勾選）」子段（見 `handoff_evidence_check.py`），不只信「已勾選」的申報——抽其中兩列，對照設計稿 Notes 板「畫面級屬性」段（板名｜隱藏 Tab Bar｜標題型態｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大）與實際實作（模擬器或程式碼）重放核對是否相符，對不上列 finding（來源 LS-125／126 QA 視覺 FAIL 四項全是「稿有、實作漏」——設計稿 Notes 板有寫、ios-dev 沒逐條對、merge-reviewer 沒查）。
 
+**UI 斷言前必有等待；消失用 waitForNonExistence（LS-458，來源 LS-413 池 P1 `e0f65a8f`／`f608d582`／`def25a8f`）**：審 UITest 變更時，每則讀 `.exists`／`.label`／`.value` 或 tap 的 UI 斷言之前必須有等待（`waitForExistence`／`waitForHittable`／`waitUntilGone`／`waitForNonExistence`），timeout 走 `UITestTimeouts.standard` 不寫字面值；「消失」一律 `XCTAssertTrue(x.waitForNonExistence(timeout:))`，`XCTAssertFalse(x.waitForExistence(...))` 在元素尚在消失動畫時立刻紅（慢 runner 每例耗一輪 rerun 17–25 分）；單元測試禁「先 poll 中間狀態旗標再斷言 stub 結果」（LS-214／LS-221）。`scripts/gates/uitest-wait-check.sh` 只抓兩型靜態形狀（規則全文與 gate 看不到的型態見 `docs/COLLABORATION.md` §7「UITest 等待紀律」）——tap 前是否等 `isHittable`、split view 是否就緒這類由你人工核對，漏等待列 major。
+
 ## 四個必審維度
 race condition／運算效能／平行優化／scope——四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`（`R<n>.<m>` 編號條目；本檔不另抄一份，審前先讀該檔，finding 標上對應編號）。
 

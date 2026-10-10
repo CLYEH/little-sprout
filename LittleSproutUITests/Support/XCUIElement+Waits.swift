@@ -104,4 +104,17 @@ extension XCUIElement {
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: self)
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
+
+    /// LS-458：等就緒再點。split view／sheet／轉場之後立刻 `tap()`，慢 runner 上目標可能還在動畫中（hit point
+    /// 算在舊位置，點空）或根本還沒出現——先 `waitForHittable` 再點；逾時就記失敗並**不點**（對不可點元素硬
+    /// `tap()` 會再多記一筆框架硬失敗，淹沒真正的原因）。timeout 預設走 `UITestTimeouts.standard`。
+    func tapWhenHittable(
+        timeout: TimeInterval = UITestTimeouts.standard, file: StaticString = #filePath, line: UInt = #line
+    ) {
+        guard waitForHittable(timeout: timeout) else {
+            XCTFail("等 \(timeout) 秒元素仍不可點，未執行 tap：\(self)", file: file, line: line)
+            return
+        }
+        tap()
+    }
 }

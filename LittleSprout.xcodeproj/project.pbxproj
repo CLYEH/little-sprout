@@ -143,6 +143,7 @@
 		2D6B7200292271FD2DCEC9C1 /* TimelineRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F94CB4C84E1E0211A97014 /* TimelineRoute.swift */; };
 		2E76D119F27B4E357C50E035 /* DiaryCardPaperScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FBB38A14033B414343325F8 /* DiaryCardPaperScreenshotUITests.swift */; };
 		2F20417D75FD139017656732 /* ChildFilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56D5F16A89805E3F5F5C23F3 /* ChildFilterBar.swift */; };
+		2FA19CF8057573D1B2449B2E /* XCUIApplication+SplitViewSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62A24F7712A6A14E696A495C /* XCUIApplication+SplitViewSidebar.swift */; };
 		309B18EC6D3EE73BE4B49FF4 /* ContentActionsAX3UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBCECC0CD6861F5DE00F4FC /* ContentActionsAX3UITests.swift */; };
 		30C42A1A4B913993F2F76730 /* privacy-policy.md in Resources */ = {isa = PBXBuildFile; fileRef = 267EACE4E1129F9AEA336AB0 /* privacy-policy.md */; };
 		30E6D71BFB6C6946819AA123 /* SupabaseAccountAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A0ED71C407A29B4944732E /* SupabaseAccountAPIClient.swift */; };
@@ -330,6 +331,7 @@
 		743E06DCB634D775FB5F8D62 /* ChildAvatarViewStructureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E854A344C6B7C3A322E9BB7B /* ChildAvatarViewStructureTests.swift */; };
 		74E602F347273C1919B3B01A /* TimelineView+Comments.swift in Sources */ = {isa = PBXBuildFile; fileRef = B382FF9798D526E3A1B37E63 /* TimelineView+Comments.swift */; };
 		75184E8BA66D7A49E43F718C /* UploadQueueSheetRemovalUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4337ADE34B07E365CC8647F4 /* UploadQueueSheetRemovalUITests.swift */; };
+		7573DE1A8724CA13F37FBB70 /* UITestTimeouts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59A4DA4E2E266A9920A1F729 /* UITestTimeouts.swift */; };
 		75C2E68E2A23BFC610922AD1 /* PushNotificationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F7B424F9E6558EAD1AB844F /* PushNotificationStore.swift */; };
 		764C8B42926AA6E94EC2C4CF /* TapTargetGateHarness+DiaryCardVideoBadges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3D2F360EBF9E037628E69B /* TapTargetGateHarness+DiaryCardVideoBadges.swift */; };
 		76B16560EF93FFF134B8FDE7 /* AppleSignInNonceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */; };
@@ -934,6 +936,7 @@
 		58DA7F206D313220AB3A1284 /* FoodCategoryTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCategoryTabs.swift; sourceTree = "<group>"; };
 		597390A518CBE1D672313074 /* DiaryCardBabyCaptionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryCardBabyCaptionUITests.swift; sourceTree = "<group>"; };
 		599FF146CDF65A58E0FBDA1B /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
+		59A4DA4E2E266A9920A1F729 /* UITestTimeouts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestTimeouts.swift; sourceTree = "<group>"; };
 		59A92C29B308B3D8C31A3C23 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
 		59D9C1DF3A30F5BC6061B8A3 /* TimelineStoreImportRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStoreImportRefreshTests.swift; sourceTree = "<group>"; };
 		5C145E4F8790E4886DC169E0 /* PreviewDiaryAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewDiaryAPIClient.swift; sourceTree = "<group>"; };
@@ -952,6 +955,7 @@
 		604B48C433197767C7EAA5D6 /* JoinCodePhaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinCodePhaseTests.swift; sourceTree = "<group>"; };
 		610553A99DBEBF3A5A73E479 /* VideoDurationFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDurationFormatTests.swift; sourceTree = "<group>"; };
 		624688AFC3955A62AA8C6193 /* LegalMarkdownDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalMarkdownDocument.swift; sourceTree = "<group>"; };
+		62A24F7712A6A14E696A495C /* XCUIApplication+SplitViewSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCUIApplication+SplitViewSidebar.swift"; sourceTree = "<group>"; };
 		632CFE2E7B2079181B3E636E /* SectionTabBarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionTabBarTests.swift; sourceTree = "<group>"; };
 		63669E8DAD14B79A6DCAD9FD /* ChildAvatarInitialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildAvatarInitialTests.swift; sourceTree = "<group>"; };
 		63B4DCE1396A1C4882A63DCB /* FoodModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodModels.swift; sourceTree = "<group>"; };
@@ -1563,6 +1567,8 @@
 			children = (
 				215A4C89A62254227DDB8953 /* AssertNoOverlap.swift */,
 				7F62B8A0EC356B247800CF5B /* FoodRecordUITestSupport.swift */,
+				59A4DA4E2E266A9920A1F729 /* UITestTimeouts.swift */,
+				62A24F7712A6A14E696A495C /* XCUIApplication+SplitViewSidebar.swift */,
 				3BA76C163AC1B48771D0C701 /* XCUIElement+Waits.swift */,
 			);
 			path = Support;
@@ -2966,10 +2972,12 @@
 				1443649E1BA8C29E939A9F96 /* TimelineHeaderNarrowWidthUITests.swift in Sources */,
 				C0DB8C9DEF3898A082A02411 /* TimelineImportEntryUITests.swift in Sources */,
 				B8A3F47FE2F3CBAB9FC23E5D /* TimelineViewIPadTests.swift in Sources */,
+				7573DE1A8724CA13F37FBB70 /* UITestTimeouts.swift in Sources */,
 				3A339472D9B1ED71263B44AF /* UploadQueueEntryIPadTests.swift in Sources */,
 				3FE70F724E82464B018063C1 /* UploadQueueEntryUITests.swift in Sources */,
 				75184E8BA66D7A49E43F718C /* UploadQueueSheetRemovalUITests.swift in Sources */,
 				FC29BEFB2E6B8EFF9F451EE8 /* UploadQueueSheetUITests.swift in Sources */,
+				2FA19CF8057573D1B2449B2E /* XCUIApplication+SplitViewSidebar.swift in Sources */,
 				0A228566E448CAE5C07A187F /* XCUIElement+Waits.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

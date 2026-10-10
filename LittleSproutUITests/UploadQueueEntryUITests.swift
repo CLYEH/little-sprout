@@ -75,6 +75,7 @@ final class UploadQueueEntryUITests: XCTestCase {
 
     func testNoUnfinishedItems_rowAbsent_andNoExtraGapAboveProfileSection() {
         let app = launch(fixture: "none", size: Self.large, scheme: "light")
+        // uitest-wait-ok: 反向斷言——視窗期內「不得出現」入口列（沒有未完成項時本來就不存在，不是等它消失）
         XCTAssertFalse(
             app.buttons[QAAccessibilityID.settingsUploadQueueRow].waitForExistence(timeout: 2),
             "全部完成、沒有任何未完成項：不顯示入口列"

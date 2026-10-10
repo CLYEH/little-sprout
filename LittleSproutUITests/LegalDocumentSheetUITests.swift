@@ -26,7 +26,7 @@ final class LegalDocumentSheetUITests: XCTestCase {
         )
 
         closeButton.tap()
-        XCTAssertFalse(docTitle.waitForExistence(timeout: 3), "點擊關閉後 sheet 應消失")
+        XCTAssertTrue(docTitle.waitForNonExistence(timeout: UITestTimeouts.standard), "點擊關閉後 sheet 應消失")
     }
 
     func testWelcomeViewLegalLink_privacyPolicy_opensCorrectDocument() {
