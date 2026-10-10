@@ -65,20 +65,23 @@ struct InlinePrimaryButtonLabel: View {
 /// （Handoff Notes 通用節「全稿『看起來不能用』掃描」）。`isDimmed` 對應 01b 登入中時
 /// Google／Email 鍵轉 `$surface-2` 的暫時態，不是永久的 disabled 視覺語彙。
 ///
-/// 字級／字重見 LS-101 point 5：官方 `SignInWithAppleButton` 不開放自訂字型（見
-/// `AppleSignInButton.swift` R3/R4 review 定論），因此文字改對齊 Apple 鈕實測值，而不是反過來。
-/// 這裡只在 WelcomeView 用（見用量檢查），不影響其他畫面。
+/// 字級／字重：預設照稿 `XggYA`（`.body` 半粗 600，LS-450／LS-449 C1a），全 app 其餘呼叫端吃預設。
+/// 歡迎頁登入三鈕是具名豁免（tokens.md 具名豁免⑦）：官方 `SignInWithAppleButton` 不開放自訂字型
+/// （見 `AppleSignInButton.swift` R3/R4 review 定論），Email 鈕傳 `.lead` medium 對齊 Apple 鈕實測值
+/// （LS-101 point 5），而不是反過來。
 struct SecondaryButton: View {
     let icon: String
     let title: String
     var isDimmed = false
+    var labelToken: AppFontToken = .body
+    var labelWeight: Font.Weight = .semibold
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: AppSpacing.label) {
                 Image(systemName: icon).appIconFrame(.medium)
-                Text(title).appFont(.lead, weight: .medium)
+                Text(title).appFont(labelToken, weight: labelWeight)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.controlPaddingMedium)
