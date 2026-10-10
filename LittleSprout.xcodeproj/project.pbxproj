@@ -1225,6 +1225,7 @@
 		C7D473DE3138F83DFC456719 /* Import05FillBabiesButtonContrastTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Import05FillBabiesButtonContrastTests.swift; sourceTree = "<group>"; };
 		C7DC283EF19BEF096CF3385F /* ImportOrganizeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportOrganizeView.swift; sourceTree = "<group>"; };
 		C7E25D7350CC4F526A8117F3 /* CommentsSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentsSheetView.swift; sourceTree = "<group>"; };
+		C7FB3A1BDA4429F7DD1F232E /* LittleSprout.Push.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LittleSprout.Push.entitlements; sourceTree = "<group>"; };
 		C816FAA01B9DC5A5FEF7683E /* InteractionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionRow.swift; sourceTree = "<group>"; };
 		C83589E845F988100234ED0A /* ImportBatchFlowContainerRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportBatchFlowContainerRegressionTests.swift; sourceTree = "<group>"; };
 		C8613F9B6DA141E7F034F153 /* TapTargetMeasurement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapTargetMeasurement.swift; sourceTree = "<group>"; };
@@ -2022,6 +2023,7 @@
 				18AB0FEB21BA55A39EB67982 /* Assets.xcassets */,
 				6559B92B7B6A289D59C6481F /* Info.plist */,
 				FE80483D9C4D2806145D4CE1 /* LittleSprout.entitlements */,
+				C7FB3A1BDA4429F7DD1F232E /* LittleSprout.Push.entitlements */,
 				3ADE9B28C92582D4C51FF485 /* LittleSproutApp.swift */,
 				F2142CC06A92030D5E7A0D49 /* PrivacyInfo.xcprivacy */,
 				D4B8B83A763BF11381A8A48B /* QAAccessibilityID.swift */,
@@ -2496,6 +2498,10 @@
 				TargetAttributes = {
 					563269728BE7057217010E1B = {
 						TestTargetID = F2C05988D2849D562345990D;
+					};
+					F2C05988D2849D562345990D = {
+						DevelopmentTeam = VWBQ67Y2L6;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -3246,6 +3252,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = VWBQ67Y2L6;
 				INFOPLIST_FILE = LittleSprout/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3346,6 +3354,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = VWBQ67Y2L6;
 				INFOPLIST_FILE = LittleSprout/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

@@ -50,8 +50,14 @@ PUSH_ENTITLEMENT = NO
 // （例如只在需要時對 `iphoneos*` 覆寫，不要寫不帶 `[sdk=...]` 的裸 `PUSH_ENTITLEMENT = YES`
 // 覆蓋全域，否則會連帶把這裡的模擬器行為改掉）。
 PUSH_ENTITLEMENT[sdk=iphonesimulator*] = YES
-CODE_SIGN_ENTITLEMENTS_NO =
-CODE_SIGN_ENTITLEMENTS_YES = LittleSprout/LittleSprout.entitlements
+// LS-461：Associated Domains（`applinks:sproutday.app`，universal link）要在所有組態生效，所以
+// 開關不再決定「要不要引用 entitlements 檔」，只決定「引用哪一份」：NO → `LittleSprout.entitlements`
+// （只有 associated-domains）；YES → `LittleSprout.Push.entitlements`（associated-domains＋
+// `aps-environment`）。上面各段文件註解裡「完全不引用 `LittleSprout.entitlements`」「YES 才引用該檔」
+// 的描述以本段為準——`aps-environment` 的開關語意與 SDK 條件式覆寫都不變。
+// `CODE_SIGNING_ALLOWED=NO`（CI）下 entitlements 不簽入，不受影響。
+CODE_SIGN_ENTITLEMENTS_NO = LittleSprout/LittleSprout.entitlements
+CODE_SIGN_ENTITLEMENTS_YES = LittleSprout/LittleSprout.Push.entitlements
 CODE_SIGN_ENTITLEMENTS = $(CODE_SIGN_ENTITLEMENTS_$(PUSH_ENTITLEMENT))
 
 #include? "Secrets.xcconfig"

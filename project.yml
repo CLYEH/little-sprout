@@ -74,6 +74,11 @@ targets:
         # App ID 對齊後才定案；LS-8 尚無「已佔 <id>」留言時暫用 com.clyeh.sproutday。
         # 改這裡時 scripts/ops/qa-e2e.sh 的 BUNDLE_ID 會自動跟（它讀本行），不必再手改。
         PRODUCT_BUNDLE_IDENTIFIER: com.clyeh.sproutday
+        # LS-461（LS-8 子票）：Apple Developer Program 付費 team（App ID com.clyeh.sproutday 已註冊，
+        # capabilities：Associated Domains／Push／Sign In with Apple）；自動簽署。只設 app target，
+        # tests／uitests target 不加。
+        DEVELOPMENT_TEAM: VWBQ67Y2L6
+        CODE_SIGN_STYLE: Automatic
         # LS-49 實測推翻原本的假設：GENERATE_INFOPLIST_FILE 的 INFOPLIST_KEY_<Key> 機制
         # 只認 Apple 預先登記的已知 key（CFBundleDisplayName、UIApplicationSceneManifest 這類）
         # ——不是「任意 key 都生效」，塞 SupabaseURL/SupabaseAnonKey 這種自訂 key 會被靜默忽略
