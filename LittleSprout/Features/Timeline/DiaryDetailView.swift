@@ -165,11 +165,18 @@ struct DiaryDetailView: View {
 
     private func compactLayout(_ content: DiaryContent) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.block) {
-                header(content)
-                bodyText(content)
+            // LS-463（LS-454 C2b，稿 vzYXz Body 的 Spacer 8／16／44＝`qvSm3`／`CJ2BA`／`im7DS`）：
+            // 日期列→內文 `label` 8、內文→照片牆 `item` 16、照片牆→互動列 `section` 44，不再是
+            // 統一的 `block` 24。外層 spacing＝`item`，互動列再補 `section − item`，所以沒有附照時
+            // （`photoWallSection` 不產出任何 view、VStack 不為它留間距）內文→互動列也是 44。
+            VStack(alignment: .leading, spacing: AppSpacing.item) {
+                VStack(alignment: .leading, spacing: AppSpacing.label) {
+                    header(content)
+                    bodyText(content)
+                }
                 photoWallSection
                 interactionRow
+                    .padding(.top, AppSpacing.section - AppSpacing.item)
             }
             // merge-review R1 M6：`.background` 必須掛在 `.padding` 之前（同 `ChildFilterBar`
             // 的既有寫法，見該檔）——`.background` 接在 `.padding` 之後量到的是「已經加上
