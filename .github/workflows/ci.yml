@@ -1632,7 +1632,7 @@ jobs:
   # 有標記而沒有 androidTest-results → Gradle 在 emulator 開機後、測試跑起來前就失敗（androidTest 編譯錯、建置錯）＝程式錯，擋；
   # 有 androidTest-results 而紅 → 測試或 app 的問題。emulator-runner 釘 commit SHA（v2.38.0）。
   # R2 M2：另跑一次 LS_QA_SCENARIO=login 的 QaSmokeTest（login 情境只冷啟動 app、不需 Supabase），讓 QaDriver 每次 CI 都在裝置上真跑，
-  # 並 adb pull 截圖驗證 scoped storage 路徑（/sdcard/Android/data/<test pkg>/files）可寫可拉。
+  # 並 adb pull 截圖驗證 scoped storage 路徑（/sdcard/Android/data/com.clyeh.sproutday/files，被測 app 的目錄）可寫可拉。
   android-connected:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -1716,6 +1716,13 @@ jobs:
             exit 1
           }
           echo "→ cmdline-tools ${CMDLINE_TOOLS_VERSION}：avdmanager 有 pixel_8"
+      # LS-479 起 MainActivity 一啟動就用 SupabaseClientFactory 建 client，BuildConfig 的 SUPABASE_URL／KEY 為空會 fail loud 而 crash，
+      # QaSmokeTest 的 rule 與 login 情境都會跟著紅。CI 的 instrumented 測試不碰後端（login 只驗冷啟動、首頁文字可見），
+      # 寫一份**佔位**的 android/local.properties（gitignored、不含任何真值）讓 client 能建出來。
+      - name: 寫佔位 local.properties（instrumented 測試不碰後端）
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          printf 'SUPABASE_URL=http://10.0.2.2:54321\nSUPABASE_ANON_KEY=ci-placeholder-not-a-secret\n' > android/local.properties
       - name: instrumented 測試（emulator API ${{ steps.api.outputs.api }}，Pixel 8）
         if: steps.scope.outputs.run == 'true'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
