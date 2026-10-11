@@ -24,6 +24,7 @@ Claude Code PreToolUse hook 的 exit code 語意：**exit 0＝允許**（stdout 
 | PreToolUse `Bash\|Read` | `large-file-read-guard.sh`（＋`large_file_read_guard.py`，H-LF） | 是 | fail-closed（腳本內亦 fail-closed） | `large-file-read-guard.test.sh` ⑭② |
 | PreToolUse `Agent` | `fork-guard.sh`（＋`fork_guard.py`，LS-254） | **否** | **fail-open**（腳本內亦 fail-open：stdin 空／python3 缺席／JSON 壞 → exit 0＋stderr 註明） | `fork-guard.test.sh` ⑤② |
 | PreToolUse `Bash` | `scripts/gates/prod-push-guard.sh`（LS-78，正式站部署面需當日 `PROD-PUSH-APPROVED-BY-USER` token） | 是 | fail-closed（腳本內亦 fail-closed） | `scripts/gates/prod-push-guard.test.sh` wiring①–③ |
+| PreToolUse `Bash` | `scripts/gates/emu-all-guard.sh`（LS-477，擋 `adb kill-server`／無 `-s` 的 `adb emu kill`／刪非本票的 `avdmanager delete avd`） | **否** | **fail-open**（腳本內亦 fail-open：stdin 空／python3 缺席／JSON 壞 → exit 0＋stderr 註明；漏擋＝別人的 emulator 被關、可重開，擋錯＝整條 Bash 卡死） | `scripts/gates/emu-all-guard.test.sh` W1 |
 | PreToolUse `mcp__linear__save_issue` | `scripts/gates/linear-issue-check.sh`（規則 A–E） | 是 | fail-closed | `scripts/gates/linear-issue-check.test.sh` |
 
 ## 新增 hook 檢查表

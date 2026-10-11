@@ -300,6 +300,8 @@ jobs:
           # LS-78：正式站部署面 hook（supabase db push／functions deploy／secrets set／--linked／非 localhost --db-url
           # 無當日 PROD-PUSH-APPROVED-BY-USER token 即 deny；正負樣本＋fail-closed＋settings.json 接線＋mutation）
           bash scripts/gates/prod-push-guard.test.sh || rc=1
+          # LS-477：擋 adb kill-server／無 -s 的 adb emu kill／刪非本票的 AVD（正負樣本＋fail-open＋settings.json 接線極性＋mutation）
+          bash scripts/gates/emu-all-guard.test.sh || rc=1
           bash scripts/gates/privacy-manifest-check.test.sh || rc=1
           # LS-211：handoff「已驗證」逐項證據 gate 自測（正負樣本＋兩個真實 QA comment 樣本＋mutation）
           bash scripts/gates/handoff-evidence-check.test.sh || rc=1
