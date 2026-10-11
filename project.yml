@@ -30,7 +30,9 @@ settings:
     SWIFT_VERSION: "6.0"
     # iPhone + iPad universal（PLAN §9-C3 已定案）
     TARGETED_DEVICE_FAMILY: "1,2"
-    MARKETING_VERSION: "0.1.0"
+    # LS-466：fallback 值——正式值由 Config/Version.xcconfig 注入（scripts/ops/release-version.sh，
+    # 取最新 release tag 與 commit 數）；沒跑腳本時（CI 一般 job、新機器）用這組仍能 build。
+    MARKETING_VERSION: "0.0.0"
     CURRENT_PROJECT_VERSION: "1"
 
 targets:

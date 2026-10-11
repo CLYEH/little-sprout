@@ -15,6 +15,9 @@ build/
 .env
 Secrets.xcconfig
 
+# LS-466：release-version.sh 產生的版本號注入檔
+Config/Version.xcconfig
+
 # Claude Code
 .claude/worktrees/
 .claude/settings.local.json
