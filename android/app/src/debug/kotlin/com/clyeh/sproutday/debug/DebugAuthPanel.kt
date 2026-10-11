@@ -1,5 +1,8 @@
 package com.clyeh.sproutday.debug
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +27,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clyeh.sproutday.supabase.AuthState
+import com.clyeh.sproutday.upload.UploadSource
+import java.util.UUID
 
 /**
  * 除錯用登入面板（LS-479）：純文字按鈕，只為手動驗證資料層——不是產品畫面、不對 .pen、不進 tap-target 登記。
@@ -44,6 +49,7 @@ fun DebugAuthPanel(viewModel: DebugAuthViewModel) {
         Text(authLine(ui.auth), modifier = Modifier.testTag("auth-state"))
         SignInSection(viewModel, enabled = !ui.busy)
         FamilySection(viewModel, ui, enabled = !ui.busy)
+        UploadSection(viewModel, ui, enabled = !ui.busy)
         Text("紀錄", style = MaterialTheme.typography.titleSmall)
         ui.log.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
     }
@@ -80,6 +86,40 @@ private fun FamilySection(
     }
     ui.family?.let { Text("家庭：${it.name}") }
     ui.members.forEach { Text("  ${it.role.name} ${it.displayName}（${it.userId.take(UID_PREVIEW)}…）") }
+}
+
+@Composable
+private fun UploadSection(
+    viewModel: DebugAuthViewModel,
+    ui: DebugUiState,
+    enabled: Boolean,
+) {
+    // 用 applicationContext 的 ContentResolver：選圖結果的讀取在 ViewModel 的協程裡進行，不能抓著 Activity。
+    val resolver = LocalContext.current.applicationContext.contentResolver
+    val picker =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                val source =
+                    UploadSource(resolver.getType(uri)) {
+                        checkNotNull(resolver.openInputStream(uri)) { "無法開啟 $uri" }
+                    }
+                viewModel.uploadPicked(UUID.randomUUID().toString(), source)
+            }
+        }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        DebugButton("建相簿", enabled, "create-album") { viewModel.createAlbum() }
+        DebugButton("選一張圖上傳", enabled, "pick-upload") {
+            picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        }
+        DebugButton("列照片", enabled, "list-photos") { viewModel.listPhotos() }
+    }
+    ui.album?.let { Text("相簿：${it.title}") }
+    ui.uploads.forEach {
+        Text(
+            "上傳 ${it.id.take(UID_PREVIEW)}… ${it.state} 第${it.attempt}次 ${it.lastError.orEmpty()}",
+            modifier = Modifier.testTag("upload-${it.id}"),
+        )
+    }
 }
 
 @Composable
