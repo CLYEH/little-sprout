@@ -333,11 +333,14 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
+# LS-488：正式站 2026-10-12 已 PATCH 為同值（apple enabled、client id = bundle id）。iOS 走原生
+# signInWithIdToken，不需 secret；Android web OAuth 另需 Apple Service ID（client_id 逗號加上）＋secret，
+# 屆時再把 secret 改回 env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)（env() 變數未設會讓 supabase start 失敗）。
 [auth.external.apple]
-enabled = false
-client_id = ""
+enabled = true
+client_id = "com.clyeh.sproutday"
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
-secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
+secret = ""
 # Overrides the default auth callback URL derived from auth.external_url.
 redirect_uri = ""
 # Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
