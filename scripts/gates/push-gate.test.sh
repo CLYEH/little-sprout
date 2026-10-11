@@ -1788,6 +1788,185 @@ else
 fi
 rm -rf "$mut37" "$cache_dir"
 
+# ============================================================
+# ㊸ LS-477（Android 前置 A3）：三段路徑選擇（iOS／Android／契約）與 Android 段行為
+#    - 純 android/**（＋釘住檔）→ Android 段跑、SwiftLint／xcodegen 漂移／xcodebuild 全跳過
+#    - 純 iOS → 行為不變、Android 段不進
+#    - 含 supabase/** 或 docs/API.md → 段落摘要標契約對帳執行
+#    - Android 段：釘住檔缺即紅；env 不齊（android-env-check exit 3）→ 醒目 ⚠⚠⚠ 略過、不擋；齊了 → 跑
+#      `./gradlew ktlintCheck detekt :app:testDebugUnitTest :core-supabase:testDebugUnitTest`；Gradle 紅 → push gate 紅；
+#      同 tree 快取／CACHE_ONLY 語意同步驟 2
+#    環境一律夾具：android-env-check.sh 換成可控假身（它本身另有 android-env-check.test.sh），`android/gradlew` 假身記參數。
+#    mutation：把 skip_android_steps=1 的賦值改成 0 → 純 iOS 案例必須轉成「Gradle 被叫到」。
+# ============================================================
+g checkout -q -b base-android-43 origin/development
+mkdir -p "$R/android"
+cat > "$R/android/gradlew" <<'STUB'
+#!/bin/bash
+printf 'cwd=%s args=%s\n' "$(basename "$PWD")" "$*" >> "${ANDROID_GRADLE_LOG:?ANDROID_GRADLE_LOG 未設定}"
+exit "${STUB_GRADLE_RC:-0}"
+STUB
+chmod +x "$R/android/gradlew"
+printf '17\n' > "$R/.jdk-version"; printf '36\n' > "$R/.android-api"; printf '8.14.5\n' > "$R/.gradle-version"
+cat > "$R/scripts/gates/android-env-check.sh" <<'STUB'
+#!/bin/bash
+echo "${STUB_ANDROID_ENV_MSG:-✓ android-env：假身（齊）}"
+exit "${STUB_ANDROID_ENV_RC:-0}"
+STUB
+g add android .jdk-version .android-api .gradle-version scripts/gates/android-env-check.sh
+g commit -qm 'chore: LS-477 baseline android skeleton for segment tests'
+g update-ref refs/remotes/origin/development HEAD
+
+# 43a 純 android/**：Android 段跑（env 齊）、iOS 全跳過（連 xcodegen 漂移檢查——project.yml 以未追蹤檔模擬存在）
+g checkout -q -b feature/LS-477-android-only origin/development
+mkdir -p "$R/android/app/src"; echo 'class A' > "$R/android/app/src/A.kt"; g add android/app/src/A.kt; g commit -qm 'feat: LS-477 android only'
+: > "$R/project.yml"
+gl43a="$work/gradle-log-43a.txt"; : > "$gl43a"; tl43a="$work/test-log-43a.txt"; : > "$tl43a"; : > "$SHUTDOWN_LOG"
+out43a=$(run_gate STUB_TEST_RC=0 TEST_LOG="$tl43a" ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0); rc43a=$?
+rm -f "$R/project.yml"
+if [ "$rc43a" -eq 0 ] && has "$out43a" '變更段落：iOS 跳過／Android 執行' && has "$out43a" '無 Swift 變更，跳過 SwiftLint' \
+   && has "$out43a" '跳過 XcodeGen 漂移檢查' && has "$out43a" '無 Swift 變更，跳過 unit tests' \
+   && [ ! -s "$tl43a" ] && [ ! -s "$SHUTDOWN_LOG" ] \
+   && has "$(cat "$gl43a")" 'cwd=android args=--no-daemon ktlintCheck detekt :app:testDebugUnitTest :core-supabase:testDebugUnitTest'; then
+  echo "✓ ㊸a 純 android/**：Android 段跑 gradlew（cwd=android、四個任務）、SwiftLint／xcodegen／xcodebuild 全跳過、模擬器沒動"
+else
+  echo "✗ ㊸a 純 android/** 段落選擇不對（exit ${rc43a}；gradle log=$(cat "$gl43a")；test log=$(cat "$tl43a")）" >&2
+  printf '%s\n' "$out43a" | sed 's/^/    /' >&2; fail=1
+fi
+
+# 43b env 不齊（android-env-check exit 3）→ 醒目 ⚠⚠⚠ 略過、exit 0、gradlew 不被叫到（本機無 JDK／SDK 的真實狀況）
+: > "$gl43a"
+out43b=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=3 STUB_ANDROID_ENV_MSG='⚠ android-env：本機 Android 環境不齊：JDK'); rc43b=$?
+if [ "$rc43b" -eq 0 ] && has "$out43b" '⚠⚠⚠ push gate：Android 段略過：以 CI 為準' && has "$out43b" 'android-env：本機 Android 環境不齊' && [ ! -s "$gl43a" ] && has "$out43b" '✓ push gate 通過'; then
+  echo "✓ ㊸b env 不齊：印 ⚠⚠⚠「Android 段略過：以 CI 為準」＋原因、不擋 push（exit 0）、gradlew 沒被叫到"
+else
+  echo "✗ ㊸b env 不齊應 ⚠ 略過且不擋（exit ${rc43b}）" >&2; printf '%s\n' "$out43b" | sed 's/^/    /' >&2; fail=1
+fi
+
+# 43c android-env-check 自己壞掉（exit 1）→ push gate 紅（不當成「未安裝」）
+out43c=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=1 STUB_ANDROID_ENV_MSG='boom'); rc43c=$?
+if [ "$rc43c" -ne 0 ] && has "$out43c" 'android-env-check.sh 失敗（exit 1）'; then
+  echo "✓ ㊸c android-env-check exit 1（釘住檔壞等）→ push gate 紅，不被當成未安裝"
+else
+  echo "✗ ㊸c android-env-check exit 1 應擋下（exit ${rc43c}）" >&2; printf '%s\n' "$out43c" | sed 's/^/    /' >&2; fail=1
+fi
+
+# 43d Gradle 紅 → push gate 紅
+out43d=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0 STUB_GRADLE_RC=1); rc43d=$?
+if [ "$rc43d" -ne 0 ] && ! has "$out43d" '✓ push gate 通過'; then
+  echo "✓ ㊸d Gradle 失敗（exit 1）→ push gate 紅"
+else
+  echo "✗ ㊸d Gradle 失敗應讓 push gate 紅（exit ${rc43d}）" >&2; printf '%s\n' "$out43d" | sed 's/^/    /' >&2; fail=1
+fi
+
+# 43e 釘住檔缺（.gradle-version）→ exit 1 點名
+mv "$R/.gradle-version" "$work/gradle-version.bak"
+out43e=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0); rc43e=$?
+mv "$work/gradle-version.bak" "$R/.gradle-version"
+if [ "$rc43e" -eq 1 ] && has "$out43e" '缺 .gradle-version'; then
+  echo "✓ ㊸e 釘住檔 .gradle-version 缺 → exit 1 點名（同 .xcode-version 做法）"
+else
+  echo "✗ ㊸e 缺釘住檔應 exit 1（實得 ${rc43e}）" >&2; printf '%s\n' "$out43e" | sed 's/^/    /' >&2; fail=1
+fi
+
+# 43f 快取：全綠寫 <tree>.android；同 tree 第二次跳過；CACHE_ONLY 未命中 exit 4、命中 exit 0；env 略過不寫快取
+rm -rf "$cache_dir"
+: > "$gl43a"
+out43f1=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=3 LS_PUSH_GATE_NO_CACHE=0)
+if ! ls "$cache_dir"/*.android >/dev/null 2>&1; then echo "✓ ㊸f1 env 略過不寫 Android 快取"; else echo "✗ ㊸f1 env 略過不該寫快取" >&2; fail=1; fi
+out43f2=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0 LS_PUSH_GATE_CACHE_ONLY=1 LS_PUSH_GATE_NO_CACHE=0); rc43f2=$?
+if [ "$rc43f2" -eq 4 ] && has "$out43f2" 'Android 段快取未命中' && [ ! -s "$gl43a" ]; then
+  echo "✓ ㊸f2 CACHE_ONLY＋Android 快取未命中：exit 4、Gradle 沒被叫到"
+else
+  echo "✗ ㊸f2 CACHE_ONLY 未命中應 exit 4（實得 ${rc43f2}）" >&2; printf '%s\n' "$out43f2" | sed 's/^/    /' >&2; fail=1
+fi
+out43f3=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0 LS_PUSH_GATE_NO_CACHE=0); rc43f3=$?
+n43f3=$(wc -l < "$gl43a" | tr -d ' ')
+out43f4=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0 LS_PUSH_GATE_NO_CACHE=0 LS_PUSH_GATE_CACHE_ONLY=1); rc43f4=$?
+n43f4=$(wc -l < "$gl43a" | tr -d ' ')
+if [ "$rc43f3" -eq 0 ] && [ "$n43f3" -eq 1 ] && ls "$cache_dir"/*.android >/dev/null 2>&1 && [ "$rc43f4" -eq 0 ] && [ "$n43f4" -eq 1 ] && has "$out43f4" 'Android 段（ktlint／detekt／unit tests）已於'; then
+  echo "✓ ㊸f3 全綠寫 <tree>.android；同 tree 再跑（含 CACHE_ONLY）跳過、Gradle 只被叫過 1 次"
+else
+  echo "✗ ㊸f3 快取行為不對（rc ${rc43f3}/${rc43f4}、Gradle 次數 ${n43f3}/${n43f4}）" >&2; printf '%s\n' "$out43f4" | sed 's/^/    /' >&2; fail=1
+fi
+rm -rf "$cache_dir"
+
+# 43g 純 iOS（LittleSprout/Bar.swift）：行為不變、Android 段不進、段落摘要標 Android 跳過
+g checkout -q -b feature/LS-477-ios-only origin/development
+echo 'struct Bar {}' > "$R/LittleSprout/Bar.swift"; g add LittleSprout/Bar.swift; g commit -qm 'feat: LS-477 ios only'
+: > "$gl43a"; tl43g="$work/test-log-43g.txt"; : > "$tl43g"
+out43g=$(run_gate STUB_TEST_RC=0 TEST_LOG="$tl43g" ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0); rc43g=$?
+if [ "$rc43g" -eq 0 ] && has "$out43g" '變更段落：iOS 執行／Android 跳過' && [ ! -s "$gl43a" ] && [ -s "$tl43g" ] && ! has "$out43g" 'Android 段略過'; then
+  echo "✓ ㊸g 純 iOS：xcodebuild 照跑、Android 段不進（Gradle 沒被叫到）"
+else
+  echo "✗ ㊸g 純 iOS 段落選擇不對（exit ${rc43g}；gradle log=$(cat "$gl43a")）" >&2; printf '%s\n' "$out43g" | sed 's/^/    /' >&2; fail=1
+fi
+
+# 43h iOS＋Android 混改：兩段都跑
+g checkout -q -b feature/LS-477-mixed origin/development
+echo 'struct Baz {}' > "$R/LittleSprout/Baz.swift"; echo 'class B' > "$R/android/B.kt"; g add LittleSprout/Baz.swift android/B.kt; g commit -qm 'feat: LS-477 mixed'
+: > "$gl43a"; tl43h="$work/test-log-43h.txt"; : > "$tl43h"
+out43h=$(run_gate STUB_TEST_RC=0 TEST_LOG="$tl43h" ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0); rc43h=$?
+if [ "$rc43h" -eq 0 ] && has "$out43h" '變更段落：iOS 執行／Android 執行' && [ -s "$gl43a" ] && [ -s "$tl43h" ]; then
+  echo "✓ ㊸h iOS＋Android 混改：兩段都跑（Gradle 與 xcodebuild 都被叫到）"
+else
+  echo "✗ ㊸h 混改應兩段都跑（exit ${rc43h}）" >&2; printf '%s\n' "$out43h" | sed 's/^/    /' >&2; fail=1
+fi
+
+# 43i 含 docs/API.md（契約軸）：摘要標契約對帳執行（iOS／Android 皆跳過）
+g checkout -q -b feature/LS-477-contract origin/development
+mkdir -p "$R/docs"; echo api > "$R/docs/API.md"; g add docs/API.md; g commit -qm 'docs: LS-477 api'
+: > "$gl43a"
+out43i=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0); rc43i=$?
+if [ "$rc43i" -eq 0 ] && has "$out43i" '變更段落：iOS 跳過／Android 跳過／契約對帳 執行' && [ ! -s "$gl43a" ]; then
+  echo "✓ ㊸i 含 docs/API.md：摘要標「契約對帳 執行」（兩邊掃描器）、iOS／Android 段皆跳過"
+else
+  echo "✗ ㊸i 契約軸摘要不對（exit ${rc43i}）" >&2; printf '%s\n' "$out43i" | sed 's/^/    /' >&2; fail=1
+fi
+g checkout -q -b feature/LS-477-contract2 origin/development
+mkdir -p "$R/supabase/functions"; echo x > "$R/supabase/functions/x.ts"; g add supabase/functions/x.ts; g commit -qm 'feat: LS-477 supabase'
+out43i2=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0); rc43i2=$?
+if [ "$rc43i2" -eq 0 ] && has "$out43i2" '契約對帳 執行'; then
+  echo "✓ ㊸i2 含 supabase/**：摘要標「契約對帳 執行」"
+else
+  echo "✗ ㊸i2 supabase/** 應標契約軸（exit ${rc43i2}）" >&2; printf '%s\n' "$out43i2" | sed 's/^/    /' >&2; fail=1
+fi
+
+# 43j 只動釘住檔（.android-api）：Android 軸命中
+g checkout -q -b feature/LS-477-pin origin/development
+printf '36\n' > "$R/.android-api"; echo "# bump" >> "$R/.android-api"; g add .android-api; g commit -qm 'chore: LS-477 pin'
+: > "$gl43a"
+out43j=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0); rc43j=$?
+if [ "$rc43j" -eq 0 ] && has "$out43j" 'iOS 跳過／Android 執行' && [ -s "$gl43a" ]; then
+  echo "✓ ㊸j 只動釘住檔 .android-api：Android 段跑、iOS 跳過"
+else
+  echo "✗ ㊸j 釘住檔變更應觸發 Android 段（exit ${rc43j}）" >&2; printf '%s\n' "$out43j" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ㊸ mutation：skip_android_steps 的賦值改成 0（Android 軸恆跑）→ ㊸g 純 iOS 案例必須轉成「Gradle 被叫到」
+mut43=$(mktemp -d)
+anchor43='        skip_android_steps=1'
+if ! grep -qF "$anchor43" "$gate_src"; then
+  echo "✗ ㊸ mutation 錨點不在 push-gate.sh：${anchor43}" >&2; fail=1
+else
+  sed "s/^        skip_android_steps=1/        skip_android_steps=0/" "$gate_src" > "$mut43/push-gate.sh"
+  if diff -q "$gate_src" "$mut43/push-gate.sh" >/dev/null 2>&1; then
+    echo '✗ ㊸ mutant 與原始檔完全相同（sed 未命中）' >&2; fail=1
+  else
+    cp "$mut43/push-gate.sh" "$R/scripts/gates/push-gate.sh"
+    g checkout -q feature/LS-477-ios-only
+    : > "$gl43a"
+    out43m=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$gl43a" STUB_ANDROID_ENV_RC=0); rc43m=$?
+    cp "$gate_src" "$R/scripts/gates/push-gate.sh"
+    if [ -s "$gl43a" ]; then
+      echo "✓ ㊸ mutant：Android 軸恆跑後，純 iOS 案例 Gradle 被叫到（㊸g 的「Gradle 沒被叫到」確由 skip_android_steps 造成）"
+    else
+      echo "✗ ㊸ mutant 應讓純 iOS 案例叫到 Gradle（exit ${rc43m}）" >&2; printf '%s\n' "$out43m" | sed 's/^/    /' >&2; fail=1
+    fi
+  fi
+fi
+rm -rf "$mut43" "$cache_dir"
+
 if [ "$fail" -eq 0 ]; then
   echo "✓ push-gate 模擬器自測通過"
 fi

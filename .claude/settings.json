@@ -54,6 +54,16 @@
         ]
       },
       {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/gates/emu-all-guard.sh\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "Bash|Read",
         "hooks": [
           {

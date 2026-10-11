@@ -30,13 +30,19 @@ Gradle（Kotlin DSL）專案：`:app`（`com.clyeh.sproutday`，Compose＋Materi
 
 ### AVD 命名
 
-Emulator 一律 `LS-<票號>-Pixel8`（例：`LS-480-Pixel8`），與 iOS 專屬模擬器 `<票號>-iPhone17Pro` 同理：一票一台、用完刪。
-A1 不跑 emulator／connected test（後續票）。
+Emulator 一律 `LS-<票號>-Pixel8`（例：`LS-480-Pixel8`），與 iOS 專屬模擬器 `<票號>-iPhone17Pro` 同理：一票一台、用完關、結案刪。
+`bash scripts/gates/detect-emulator.sh` 依票號找／建／開（system image 讀 `.android-api`，缺就印 `sdkmanager "…"` 指令、不自動下載）並印
+`emulator: <name> <serial> API <ver>（pinned <ver>）`；用完 `bash scripts/gates/detect-emulator.sh --stop`；結案 `bash scripts/ops/cleanup-merged.sh --apply LS-<n>`
+連 AVD 一起刪。操作某台 emulator 的整段指令包進 `bash scripts/ops/emulator-lock.sh --serial <serial> -- <命令>`。
+hook `emu-all-guard.sh` 擋 `adb kill-server`、無 `-s` 的 `adb emu kill`、刪非本票的 AVD。connected test 在後續票（LS-478）。
 
 ## 本機沒裝 JDK／Android SDK 時
 
 - 不能跑 `./gradlew`，所以 ktlint／detekt／unit test 只有 CI 的 `android-lint`／`android-unit` job 會跑；
-  push gate（`scripts/gates/push-gate.sh`）目前沒有 Android 段（A3 才加），`android/**` 變更在 push gate 走純文件路徑（不跑 xcodebuild）。
+  push gate（`scripts/gates/push-gate.sh`）的 Android 段（LS-477）偵測到本機環境不齊（`scripts/gates/android-env-check.sh` exit 3）會印
+  `⚠⚠⚠ Android 段略過：以 CI 為準` 並**不擋 push**——handoff 須註明這次 Android 段沒在本機跑；`android/**` 變更同時跳過 SwiftLint／xcodegen／xcodebuild。
+  裝齊（JDK 對 `.jdk-version`、SDK 有 platform-tools 與 `.android-api` 的 platform）後，push gate 會自動跑
+  `./gradlew ktlintCheck detekt :app:testDebugUnitTest :core-supabase:testDebugUnitTest`。
 - 純 bash 能驗的部分本機仍會跑：`bash scripts/ops/release-version.test.sh`（含 `android/version.properties` 案）、`tracked-ignored-check`、`scan-secrets`。
 
 ## Gradle wrapper

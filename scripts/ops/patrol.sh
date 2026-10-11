@@ -1411,6 +1411,64 @@ $boot_nonexempt
 EOF
 fi
 
+# ---- Booted emulator 殘機（LS-477，Android 前置 A3；iOS 對應物＝上面的「專屬模擬器」第一層＋「Booted 模擬器」）：
+#      `adb devices` 列出 `emulator-*` 且在線（device／offline）的，逐台 `adb -s <serial> emu avd name` 取 AVD 名：
+#        - `LS-<n>-Pixel8`（detect-emulator.sh 建的專屬機）且該票 worktree 已不在（ticket_has_worktree，整字比對同 LS-187）
+#          → ⚠ 殘機＋動作行：只關機 `adb -s <serial> emu kill`（永遠帶 -s）；連 AVD 一起清 `bash scripts/ops/cleanup-merged.sh
+#          --apply LS-<n>`（(e) 段連刪 emulator＋AVD，worktree 早已清也照清）。握著 emulator-lock（`${EMULATOR_LOCK_ROOT:-/tmp}/
+#          emulator-lock-<serial>`）的印「鎖中——勿關」不標殘機。
+#        - 票 worktree 還在（在飛）→ 只計數；`main-Pixel8`、使用者自己的 AVD（Android Studio 建的）→ 不是這段管轄，只計數。
+#      Done／Canceled 但 worktree 還在的票（iOS 專屬機的 LS-187 --linear 路徑）這裡**沒做**：emulator 殘機的主因是 worktree 清掉
+#      後忘了關，先收這一類；要補再另票。無 adb（沒裝 Android SDK）→ 整段略過、不當異常。`adb devices` 第一次會順手起 adb server，
+#      所以用看門狗限 5 秒（逾時只印略過，不卡巡檢；hook timeout 30s）。adb 路徑可用 PATROL_ADB 覆寫（自測餵假身，隔離本機真的 adb）。
+EMU_LINES=; emu_total=0; emu_flagged=0; emu_note=
+emu_run_bounded() {  # $1=秒 其餘=命令；stdout 印命令輸出；逾時被殺回非 0。背景子程序 fd 全接 /dev/null（同 fetch 看門狗的理由）
+  local secs=$1 tmp pid wd rc=0; shift
+  tmp=$(mktemp)
+  "$@" >"$tmp" 2>/dev/null </dev/null & pid=$!
+  ( sleep "$secs"; kill "$pid" ) >/dev/null 2>&1 </dev/null & wd=$!
+  wait "$pid" 2>/dev/null || rc=$?
+  kill "$wd" >/dev/null 2>&1; wait "$wd" 2>/dev/null
+  cat "$tmp"; rm -f "$tmp"; return "$rc"
+}
+emu_adb="${PATROL_ADB:-}"
+if [ -z "$emu_adb" ]; then
+  # shellcheck source=../gates/lib/android-tools.sh
+  source "${here}/../gates/lib/android-tools.sh"
+  emu_adb=$(android_tool adb "$ROOT")
+fi
+if [ -z "$emu_adb" ] || [ ! -x "$emu_adb" ]; then
+  emu_note="無 adb（沒裝 Android SDK），略過"
+else
+  emu_devs=$(emu_run_bounded 5 "$emu_adb" devices) || emu_devs=
+  if [ -z "$emu_devs" ]; then
+    emu_note="adb devices 逾時／無輸出，略過"
+  else
+    while IFS= read -r emu_serial; do
+      [ -n "$emu_serial" ] || continue
+      emu_total=$((emu_total + 1))
+      emu_name=$(emu_run_bounded 5 "$emu_adb" -s "$emu_serial" emu avd name | tr -d '\r' | head -1)
+      case "$emu_name" in
+        LS-[0-9]*-Pixel8) emu_ticket=${emu_name#LS-}; emu_ticket="LS-${emu_ticket%%-*}" ;;
+        *) continue ;;   # main-Pixel8／使用者自己的 AVD／讀不到名稱：不是這段管轄，只計入 emu_total
+      esac
+      if [ -d "${EMULATOR_LOCK_ROOT:-/tmp}/emulator-lock-${emu_serial}" ]; then
+        EMU_LINES="${EMU_LINES}  ⓘ ${emu_name}（${emu_serial}）鎖中（emulator-lock 持有中）——勿關"$'\n'
+        continue
+      fi
+      if ticket_has_worktree "$emu_ticket"; then
+        EMU_LINES="${EMU_LINES}  ${emu_name}（${emu_serial}）票 ${emu_ticket} worktree 仍在，使用中"$'\n'
+        continue
+      fi
+      emu_flagged=$((emu_flagged + 1))
+      EMU_LINES="${EMU_LINES}  ⚠ ${emu_name}（${emu_serial}）票 ${emu_ticket} 的 worktree 已不在（殘機）→ adb -s ${emu_serial} emu kill｜連 AVD 一起清：bash scripts/ops/cleanup-merged.sh --apply ${emu_ticket}"$'\n'
+      add_flag "[Booted emulator ${emu_name}] 票 ${emu_ticket} 的 worktree 已不在（殘機，LS-477）→ adb -s ${emu_serial} emu kill｜連 AVD 一起清：bash scripts/ops/cleanup-merged.sh --apply ${emu_ticket}"
+    done <<EOF
+$(printf '%s\n' "$emu_devs" | awk 'NR>1 && $1 ~ /^emulator-[0-9]+$/ && ($2=="device"||$2=="offline"){print $1}')
+EOF
+  fi
+fi
+
 # ---- 磁碟水位（LS-176；LS-96 池項 7c9fe5bd／0e75271d：Devices 146 GB／77 台＋每 worktree 一份 DerivedData 兩次把磁碟
 #      填滿、Docker VM 弄掛）：df 可用 <DISK_MIN_GB GB 印 ⚠ 並列 CoreSimulator/Devices／DerivedData 體積（du，看門狗）與
 #      LS-* 專屬模擬器台數（從上面同一份 sim_rows 算，不再多打一次 xcrun）；處置指到 cleanup-merged.sh --apply LS-<n>
@@ -1605,6 +1663,8 @@ case "$MODE" in
     fi
     echo "== Booted 模擬器（LS-100；demo-* 豁免；>1 台非豁免同時 Booted＝用完沒關）"
     if [ -n "$BOOT_LINES" ]; then printf '%s' "$BOOT_LINES"; else echo "  （無異常；Booted ${boot_total} 台，非 demo-* ${nonexempt_boot_count} 台）"; fi
+    echo "== Booted emulator（LS-477；adb devices 的 emulator-* 對照 worktree，票 worktree 已不在＝殘機 ⚠；無 adb 略過）"
+    if [ -n "$EMU_LINES" ]; then printf '%s' "$EMU_LINES"; elif [ -n "$emu_note" ]; then echo "  （${emu_note}）"; else echo "  （無殘機；線上 emulator ${emu_total} 台）"; fi
     echo "== 磁碟水位（LS-176；可用 <${DISK_MIN_GB} GB 標 ⚠ 並列 Devices／DerivedData 體積；PATROL_DISK_MIN_GB 可調）"
     if [ -n "$disk_flag" ]; then echo "  ${disk_flag}"
     elif [ -n "$disk_avail_gb" ]; then echo "  可用 ${disk_avail_gb} GB，LS-* 專屬模擬器 ${disk_dedicated} 台  ok"

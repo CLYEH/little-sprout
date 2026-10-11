@@ -234,7 +234,9 @@ TEST_NAME_RE = re.compile(r"\btest[A-Z][A-Za-z0-9_]*\b|\b[A-Za-z_][A-Za-z0-9_]*T
 # （merge-review R1 `a7e72913` informational-1）**：票文字面另要求補 `.test.py`，但 `.test.py` 字尾必含
 # `.py`，已被既有無條件子字串 `\.py\b` 完整涵蓋（`foo.test.py` 對 `\.py\b` 必為 True），是無害但無意義
 # 的重複分支、也從未有夾具單獨驗證它的必要性——予以移除，不另補隔離夾具（二擇一，見票文 informational）。
-PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|\.test\.js|scratchpad/|evidence/|\.swift\b|\.py\b|\.sh\b|\.md\b|\.yml\b|\.json\b")  # HANDOFF-EVIDENCE-PATH
+# LS-477（Android 前置 A3，LS-474 審查 i6）：補 `.kt`／`.kts`（Kotlin 原始碼與 Gradle Kotlin DSL 檔，Android 票引用來當
+# 「怎麼驗」依據）——同 `.swift` 既有行為，只是子字串比對、不驗證那個路徑真的存在。
+PATH_RE = re.compile(r"\.png|\.log|\.test\.sh|\.test\.js|scratchpad/|evidence/|\.swift\b|\.kts?\b|\.py\b|\.sh\b|\.md\b|\.yml\b|\.json\b")  # HANDOFF-EVIDENCE-PATH
 # R4（LS-228，來源 LS-96 池項 `acb4e2df`）：白名單目錄下的具體路徑，必須驗證檔案真的存在（見 (b2)
 # 檔頭說明）。`supabase/functions`／`supabase`（.sh）／`scripts`／`docs`／`.claude` 允許任意層級子目錄
 # （`(?:[\w.-]+/)+` 或 `(?:[\w.-]+/)*`）；`supabase/migrations`／`supabase/tests`（.sql）只認直接掛在
@@ -269,7 +271,10 @@ PATH_ANCHOR_RE = re.compile(
 # 「path」語意），`module`／`is`／`語言的行為與預期相符`／`版本相容`／`結構` 皆不含 `/`／`.`，不再誤判；
 # `scripts/design/pen-snapshot-dump`（無副檔名但含 `/`）、`scripts/gates/handoff_evidence_check.py`
 # （含 `/` 與 `.`）、`scripts/tools/format-check`（含 `/`）等真實路徑寫法仍會命中。
-COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|\.xcresult|\bgit\s+(?:log|diff|status|push|fetch|merge-base|ls-remote|worktree|grep|merge-tree)\b|\b(?:node|python3|swift)\s+\S*[./]\S*")  # HANDOFF-EVIDENCE-COMMAND
+# LS-477（Android 前置 A3，LS-474 審查 i6）：補 `shasum`／`curl`（校驗下載物 sha256、取官方發行檔——LS-474 的 Gradle wrapper 驗證
+# 就是這兩個命令）與 `gradlew`（跑 Gradle 任務，如 `./gradlew ktlintCheck detekt :app:testDebugUnitTest`）。三者都要求 `\b`
+# 獨立字，避免詞中字誤配。Gradle 任務名本身**不是**測試名，見 `is_gradle_task_name`——命令證據改由 `gradlew` 這個命令字承擔。
+COMMAND_RE = re.compile(r"xcodebuild|bash scripts/|gh run view|\.xcresult|\bgit\s+(?:log|diff|status|push|fetch|merge-base|ls-remote|worktree|grep|merge-tree)\b|\b(?:node|python3|swift)\s+\S*[./]\S*|\bshasum\b|\bcurl\b|\bgradlew\b")  # HANDOFF-EVIDENCE-COMMAND
 # LS-346（範圍 2(a)）：讀 Linear comment 當「怎麼驗」依據——白名單原本無法表達這種證據形態，見檔頭 (d)。
 # LS-346 R2（merge-review R1 i1）：R1 版 `LINEAR_EVIDENCE_RE = mcp__linear__\w+|linear-post\.sh\s+get\b`
 # 收得太寬——票文要的是「讀了一則 Linear comment」，`mcp__linear__\w+` 連寫入類工具
@@ -543,12 +548,40 @@ def is_mutation_context(text, start):
     return bool(MUTATION_CONTEXT_RE.search(line))
 
 
+GRADLE_UNIT_TASK_RE = re.compile(r"^test(?:[A-Z][a-z0-9]*)*UnitTest$")
+
+
+def is_gradle_task_name(text, start, end):
+    """LS-477（LS-474 審查 i6）：Gradle 任務名（`testDebugUnitTest`）形狀同 `test[A-Z]\\w*`，會被當成 XCTest/JUnit 方法名去 repo
+    裡找 `func`／`fun` 宣告、找不到就判「引用不存在的測試名」。任務名不是測試名，三種形狀擇一就排除：
+      (1) 前面緊接 `:`——Gradle 專案路徑（`:app:testDebugUnitTest`、`:core-supabase:testDebugUnitTest`）；
+      (2) 名稱整個符合 `test<Variant>UnitTest`（AGP 的單元測試任務命名，`testDebugUnitTest`／`testReleaseUnitTest`）；
+      (3) 同一行含 `gradlew` 且候選前面是空白或反引號（`./gradlew test testDebugUnitTest` 的獨立任務引數；
+          `--tests Foo.testBar` 的 `testBar` 前面是 `.`，不在此列，仍當測試名驗證）。"""
+    name = text[start:end]
+    if start > 0 and text[start - 1] == ":":
+        return True
+    if GRADLE_UNIT_TASK_RE.match(name):
+        return True
+    line_start = text.rfind("\n", 0, start) + 1
+    line_end = text.find("\n", start)
+    line = text[line_start:line_end if line_end != -1 else len(text)]
+    return "gradlew" in line and start > 0 and text[start - 1] in " `\t"
+
+
+def iter_test_name_matches(text):
+    """TEST_NAME_RE 的命中，扣掉 Gradle 任務名（`is_gradle_task_name`）。"""
+    for m in TEST_NAME_RE.finditer(text):
+        if not is_gradle_task_name(text, m.start(), m.end()):
+            yield m
+
+
 def test_name_candidates(block):
     """回傳 [(name, skip_existence_check)]——skip 者仍算作候選（計入 has_evidence 的判斷依據，
     因為候選本身即符合 TEST_NAME_RE），但不驗證是否存在（glob／否定／mutation 語境，三者皆為
     候選層級的判準，見各自函式；R3 前 mutation 語境曾是區塊層級，見 m1 修正）。"""
     out = {}
-    for m in TEST_NAME_RE.finditer(block):
+    for m in iter_test_name_matches(block):
         name = m.group(0)
         skip = is_glob_candidate(block, m.start()) or is_negated(block, m.start(), m.end()) or is_mutation_context(block, m.start())  # HANDOFF-SKIP-CHECK
         # 同名候選只要有一次出現「不必驗」，整體就不必驗（同一列項內，只要有一次是合法的否定／
@@ -586,7 +619,9 @@ def test_name_exists(repo, name, ref=None):
     # exit 1（誤判不存在）；`-P` 才真的支援 `\b`（實測 rc=0）。
     # R2（merge-review R1 F1-1）：補 struct／enum／extension——`extension` 涵蓋檔名與內部宣告型別
     # 不同名的檔案（真實案例：`TimelineStoreVideoTests.swift` 內部其實是 `extension TimelineStoreTests`）。
-    kinds = ("func", "class", "struct", "enum", "extension")
+    # LS-477（Android 前置 A3，LS-474 審查 i6）：補 Kotlin 的 `fun`（`fun testFoo()`）與 `object`；`func ` 與 `fun ` 後面的
+    # 空白使兩者互不誤配（`func testX` 不含子字串 `fun testX`）。
+    kinds = ("func", "fun", "class", "struct", "enum", "extension", "object")
     pattern = "|".join(r"%s %s\b" % (k, re.escape(name)) for k in kinds)
     # LS-346（範圍 2(b)）：帶 `--ref` 時 `git grep` 直接對該 tree-ish 掃（git 原生支援，語法只差多一個
     # tree-ish 位置引數，pathspec 排除寫法不變）——掃的是審查 head 當下的樹，不是工作樹目前狀態。
@@ -607,9 +642,11 @@ def test_name_exists(repo, name, ref=None):
     # `SettingsViewPadTests.swift`（若存在）都會命中，任何「真實檔名的可變長度後綴」都被誤判成存在
     # （reviewer 實測 `IPadTests`／`PadTests` 皆因 `SettingsViewIPadTests.swift` 判為 True）。
     target = name + ".swift"
+    kt_target = name + ".kt"   # LS-477：Kotlin 測試檔同理（`FooTest.kt`）
     all_files = _git_ls_files(repo, ref)
     for relpath in all_files:
-        if relpath.split("/")[-1] == target:  # HANDOFF-BASENAME-EQ
+        base = relpath.split("/")[-1]
+        if base == target or base == kt_target:  # HANDOFF-BASENAME-EQ
             return True
     # R2（merge-review R1 F1-1）：目錄存在即算——涵蓋 `LittleSproutTests`／`LittleSproutUITests` 這種
     # 測試 target 名（`xcodebuild test -only-testing:LittleSproutTests` 是本 repo 標準句，target 名
@@ -681,7 +718,7 @@ def path_exists_in_repo(repo, p, ref=None):
 
 def has_evidence(text):
     linear_evidence = LINEAR_READ_TOOL_RE.search(text) and LINEAR_ID_RE.search(text)  # HANDOFF-EVIDENCE-LINEAR-CHECK
-    return bool(TEST_NAME_RE.search(text) or PATH_RE.search(text) or PATH_ANCHOR_RE.search(text) or COMMAND_RE.search(text) or linear_evidence)  # HANDOFF-HAS-EVIDENCE-PATH-ANCHOR
+    return bool(next(iter_test_name_matches(text), None) or PATH_RE.search(text) or PATH_ANCHOR_RE.search(text) or COMMAND_RE.search(text) or linear_evidence)  # HANDOFF-HAS-EVIDENCE-PATH-ANCHOR
 
 
 def resolve_repo(repo):
