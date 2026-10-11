@@ -5,7 +5,7 @@
 // 跑法：`deno test supabase/functions/push-dispatch/`（不需要 --allow-net，這裡的
 // 每一個依賴都是 fake，不會真的發出網路請求）。
 
-import { assertEquals, assertThrows } from "jsr:@std/assert@1";
+import { assert, assertEquals, assertThrows } from "jsr:@std/assert@1";
 import {
   type ApnsOutcome,
   type ApnsProvider,
@@ -499,6 +499,126 @@ Deno.test("runDispatch：APNs 回報 410（失效 token）→ tokensRemoved++，
   assertEquals(summary.failed, 0);
   assertEquals(summary.tokensRemoved, 1);
   assertEquals(removedToken, "tok-dead");
+});
+
+Deno.test("runDispatch：混合 platform 批次——ios 走 apnsProvider、android 走 fcmProvider，各自只收到自己的 token，共用同一次 summary（LS-473）", async () => {
+  const apns = new StubApnsProvider();
+  const fcm = new StubApnsProvider();
+  const deps = makeDeps({
+    claimEvents: onceThenEmpty([makeEvent()]),
+    getRecipients: () =>
+      Promise.resolve({
+        recipients: [
+          { userId: "u1", token: "tok-ios", platform: "ios", eventId: "event-1" },
+          { userId: "u1", token: "tok-android", platform: "android", eventId: "event-1" },
+        ],
+      }),
+    apnsProvider: apns,
+    fcmProvider: fcm,
+  });
+  const summary = await runDispatch(deps);
+  assertEquals(apns.calls.map((c) => c.token), ["tok-ios"]);
+  assertEquals(fcm.calls.map((c) => c.token), ["tok-android"]);
+  assertEquals(summary.recipients, 2);
+  assertEquals(summary.sent, 2);
+  assertEquals(summary.failed, 0);
+});
+
+Deno.test("runDispatch：FCM 回報失效 token → 走同一條 removeDeviceToken 清除路徑（LS-473）", async () => {
+  const fcm = new StubApnsProvider(() => ({
+    ok: false,
+    invalidToken: true,
+    error: "FCM 404",
+  }));
+  const removed: string[] = [];
+  const deps = makeDeps({
+    claimEvents: onceThenEmpty([makeEvent()]),
+    getRecipients: () =>
+      Promise.resolve({
+        recipients: [
+          { userId: "u1", token: "tok-android", platform: "android", eventId: "event-1" },
+        ],
+      }),
+    fcmProvider: fcm,
+    removeDeviceToken: (t) => {
+      removed.push(t);
+      return Promise.resolve({ ok: true, deleted: true });
+    },
+  });
+  const summary = await runDispatch(deps);
+  assertEquals(removed, ["tok-android"]);
+  assertEquals(summary.tokensRemoved, 1);
+  assertEquals(summary.failed, 0);
+});
+
+Deno.test("runDispatch：fcmProvider 缺席（FCM_SERVICE_ACCOUNT 未設定）→ android 收件者計 failed、記 log、不刪 token；ios 批次不受影響（LS-473）", async () => {
+  const apns = new StubApnsProvider();
+  const logs: string[] = [];
+  let removeCalls = 0;
+  const deps = makeDeps({
+    claimEvents: onceThenEmpty([makeEvent()]),
+    getRecipients: () =>
+      Promise.resolve({
+        recipients: [
+          { userId: "u1", token: "tok-ios", platform: "ios", eventId: "event-1" },
+          { userId: "u2", token: "tok-android-1", platform: "android", eventId: "event-1" },
+          { userId: "u3", token: "tok-android-2", platform: "android", eventId: "event-1" },
+        ],
+      }),
+    apnsProvider: apns,
+    fcmProvider: undefined,
+    removeDeviceToken: () => {
+      removeCalls++;
+      return Promise.resolve({ ok: true, deleted: true });
+    },
+    log: (m) => logs.push(m),
+  });
+  const summary = await runDispatch(deps);
+  assertEquals(summary.sent, 1);
+  assertEquals(summary.failed, 2);
+  assertEquals(summary.tokensRemoved, 0);
+  assertEquals(removeCalls, 0, "缺 FCM 設定不是 token 失效，不可刪 token");
+  assertEquals(apns.calls.map((c) => c.token), ["tok-ios"]);
+  assert(
+    logs.some((m) => m.includes("FCM 未設定")),
+    "應記一則點名 FCM 未設定的 log",
+  );
+});
+
+Deno.test("runDispatch：未知 platform → 計 failed 並記 log，不誤送 APNs（LS-473）", async () => {
+  const apns = new StubApnsProvider();
+  const deps = makeDeps({
+    claimEvents: onceThenEmpty([makeEvent()]),
+    getRecipients: () =>
+      Promise.resolve({
+        recipients: [
+          { userId: "u1", token: "tok-x", platform: "webos", eventId: "event-1" },
+        ],
+      }),
+    apnsProvider: apns,
+  });
+  const summary = await runDispatch(deps);
+  assertEquals(summary.failed, 1);
+  assertEquals(apns.calls.length, 0);
+});
+
+Deno.test("runDispatch：stub 模式兩平台共用同一個 stub（index.ts 把 fcmProvider 設成同一實例）（LS-473）", async () => {
+  const stub = new StubApnsProvider();
+  const deps = makeDeps({
+    claimEvents: onceThenEmpty([makeEvent()]),
+    getRecipients: () =>
+      Promise.resolve({
+        recipients: [
+          { userId: "u1", token: "tok-ios", platform: "ios", eventId: "event-1" },
+          { userId: "u1", token: "tok-android", platform: "android", eventId: "event-1" },
+        ],
+      }),
+    apnsProvider: stub,
+    fcmProvider: stub,
+  });
+  const summary = await runDispatch(deps);
+  assertEquals(stub.calls.map((c) => c.token).sort(), ["tok-android", "tok-ios"]);
+  assertEquals(summary.sent, 2);
 });
 
 Deno.test("runDispatch：APNs 回報其他失敗（非失效 token）→ failed++，不呼叫 removeDeviceToken", async () => {
