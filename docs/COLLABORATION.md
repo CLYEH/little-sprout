@@ -25,7 +25,7 @@
 | ios-dev | sonnet（≥2.1.284＝Sonnet 5.5） | high | 跨模組重構、race 密集（上傳佇列／router 交錯）、size L 或票文寫「需持續判斷」；同一票 sonnet 兩輪被 reviewer 以 major 退回 | 批次改名、純文件修補、腳本回報型任務 |
 | qa | sonnet（≥2.1.284＝Sonnet 5.5） | high | 對稿板數 ≥20 且含深色／AX3 矩陣、需實機判讀動效 | **非 UI 票（純 Supabase／harness／腳本，無模擬器視覺驗收）由 orchestrator 以 Agent 工具 `model: haiku` 覆寫並在票 comment 註明**（LS-421 試點；定義檔 `model: sonnet` 不改，`qa.md` 正文有同一段）；UI 票不降。退場：orchestrator 對每次 haiku 交付隨機抽一條結論重放，票 comment 記 `haiku 抽驗：符`／`haiku 抽驗：不符（<條目>）`，兩 cycle 內任一「不符」即停止覆寫（R1 M1：FAIL 率測不到偽 PASS，只當輔助，見 `haiku-dispatch`） |
 | dead-code-sweeper | haiku（≥2.1.293＝Haiku 5.5；LS-421 試點，原 sonnet） | （不設，沿模型預設 medium） | 大型 feature 批次或跨模組重構後的巡檢：先以 Agent 工具 `model: sonnet` 覆寫，仍不夠才 opus | 已是 haiku（常駐）；單次派工 prompt 控在 100K 內（大 diff 先 `git diff --stat` 分段）。退場：同一套「haiku 抽驗」（每次交付隨機抽一條『無人引用／找不到』的 grep 重放，票 comment 記 `haiku 抽驗：符`／`不符（<條目>）`），兩 cycle 內任一「不符」即 `dead-code-sweeper.md` 改回 `model: sonnet`（同步改 MODEL_RULES）並記回 LS-421；R3+ 比例只當全 repo 控制組、不當退場依據 |
-| android-dev（定義檔 LS-475 落地） | sonnet（≥2.1.284＝Sonnet 5.5） | high | 同 ios-dev | 同 ios-dev |
+| android-dev（定義檔 `.claude/agents/android-dev.md`，LS-475 落地；`agent-tools-check.sh` 釘工具／model／正文四條） | sonnet（≥2.1.284＝Sonnet 5.5） | high | 同 ios-dev | 同 ios-dev |
 | merge-reviewer | opus | high | 已是 opus：race／覆蓋／scope 判斷是 gate 本體，先不降 | 不降 haiku；純文件 diff review 可以 Agent 工具 `model: sonnet` 降到 Sonnet 5.5（session ≥2.1.284） |
 | ui-designer | opus | high | 已是 opus：與 visual-reviewer 戰力對等（LS-353 升級理由），等 LS-400 第 5 項數據再議 | Notes 板文字修補、token 名稱對齊 |
 | visual-reviewer | opus | high | 已是 opus：不降級，視覺判斷是對抗審查的核心能力 | — |

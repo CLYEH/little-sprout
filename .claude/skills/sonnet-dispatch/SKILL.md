@@ -1,13 +1,13 @@
 ---
 name: sonnet-dispatch
-description: Orchestrator 派任何 Sonnet 5.5 agent（ios-dev／qa，agent 定義 model sonnet；dead-code-sweeper 與非 UI qa 覆寫是 haiku，改讀 haiku-dispatch；Claude Code ≥2.1.284 的 sonnet 別名＝claude-sonnet-5-5）前必載——把官方「Prompting Claude Sonnet 5.5」翻成本專案派工單與 SendMessage 續派的固定寫法：effort 由定義檔決定（派工不調）、先用 agent-model-check 確認別名真的解析到 5.5、做到完才停、不做沒要求的、真跑檢查才算完成、判斷材料代替叫它想、不索取內部推理、續派自報身分避免被當注入、查現況不憑記憶、對稿先裁圖、未證實標 PLAUSIBLE、finish line 與 handoff 落檔沿 opus-dispatch。寫 Agent prompt 或 SendMessage 續派時對照本檔逐條自檢；agent 是 opus 時改讀 opus-dispatch。
+description: Orchestrator 派任何 Sonnet 5.5 agent（ios-dev／android-dev／qa，agent 定義 model sonnet；dead-code-sweeper 與非 UI qa 覆寫是 haiku，改讀 haiku-dispatch；Claude Code ≥2.1.284 的 sonnet 別名＝claude-sonnet-5-5）前必載——把官方「Prompting Claude Sonnet 5.5」翻成本專案派工單與 SendMessage 續派的固定寫法：effort 由定義檔決定（派工不調）、先用 agent-model-check 確認別名真的解析到 5.5、做到完才停、不做沒要求的、真跑檢查才算完成、判斷材料代替叫它想、不索取內部推理、續派自報身分避免被當注入、查現況不憑記憶、對稿先裁圖、未證實標 PLAUSIBLE、finish line 與 handoff 落檔沿 opus-dispatch。寫 Agent prompt 或 SendMessage 續派時對照本檔逐條自檢；agent 是 opus 時改讀 opus-dispatch。
 ---
 
 # Sonnet 5.5 派工寫法（本專案版）
 
 > LS-421（2026-10-10）：dead-code-sweeper 試點改 `model: haiku`、非 UI 票的 qa 由 Agent 工具 `model: haiku` 覆寫——派這兩種情況改讀 `haiku-dispatch`（本檔十條仍是它的底，那份只寫 Haiku 差異）；下文提到 sweeper 之處在退場改回 sonnet 時才適用。
 
-來源：https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5 與 https://platform.claude.com/docs/en/models/sonnet-5-5/whats-new-sonnet-5-5（2026-09-29 讀取）。適用對象：所有 `model: sonnet` 的 subagent（COLLABORATION §1 表：ios-dev／qa／dead-code-sweeper；Claude Code ≥2.1.284 的 `sonnet` 別名指 `claude-sonnet-5-5`）。opus agent（ui-designer／merge-reviewer／visual-reviewer）讀 `opus-dispatch`；兩份共用的六條（finish line、判斷材料、stop/go、PLAUSIBLE、checklist 落檔、續派鎖項）本檔只寫差異，寫法本身以 opus-dispatch 為準。
+來源：https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5 與 https://platform.claude.com/docs/en/models/sonnet-5-5/whats-new-sonnet-5-5（2026-09-29 讀取）。適用對象：所有 `model: sonnet` 的 subagent（COLLABORATION §1 表：ios-dev／android-dev／qa／dead-code-sweeper；Claude Code ≥2.1.284 的 `sonnet` 別名指 `claude-sonnet-5-5`）。opus agent（ui-designer／merge-reviewer／visual-reviewer）讀 `opus-dispatch`；兩份共用的六條（finish line、判斷材料、stop/go、PLAUSIBLE、checklist 落檔、續派鎖項）本檔只寫差異，寫法本身以 opus-dispatch 為準。
 
 ## 別名與版本
 
@@ -97,6 +97,22 @@ Sonnet 5.5 讀密集截圖（多板對稿、AX3 長頁）時漏細節；給它�
 - 寫法：`對稿時先用 sips／Preview 把截圖裁到該區塊（或 UITest 附件的單一元件截圖）再比對；稿面用 design/evidence 既有 PNG 或 VR 匯出圖，路徑寫全，不要轉述畫面。`
 - 反例：`看一下整頁截圖有沒有跟稿不一樣。`
 
+## Android 派工（android-dev，LS-475；十條寫法照用，只換下面四處）
+
+`android-dev`（定義檔 `.claude/agents/android-dev.md`，`lane:android`）與 ios-dev 同模型政策（sonnet／high），十條寫法與多輪續派規則全部沿用；差異只有四處：
+
+1. **判斷材料（第 5 條）換成 Android 的 race 來源**，派工單把票文對得上的幾條寫進去，不寫「仔細思考」：
+   - **coroutine scope 取消**：這段工作掛在哪個 scope（`viewModelScope`／`rememberCoroutineScope`／WorkManager 的 `CoroutineWorker`）、誰取消、取消時 `CancellationException` 有沒有被 `catch (e: Exception)` 吞掉；登出、換家庭、畫面離開各自對應的狀態。
+   - **Flow 收集生命週期**：UI 是否用 `collectAsStateWithLifecycle()`／`repeatOnLifecycle`（背景時停收）、`stateIn`／`shareIn` 的 `SharingStarted` 選擇、旋轉與行程被殺後重建時 state 從哪來。
+   - **WorkManager 重跑與冪等**：系統會在行程被殺、約束恢復、重試退避時重跑同一個 Worker；寫法要對「同一筆上傳被執行兩次」「上一次執行到一半」各給結論（unique work／`ExistingWorkPolicy`、client 端冪等鍵、Room 狀態列）。
+   - **recomposition**：`remember`／`derivedStateOf` 的 key、lambda 穩定性、list 的 `key =`、`LaunchedEffect` 的 key（key 寫錯會重跑副作用，例如重複送出）。
+   - 寫法：`race 維度請看：連點兩次送出、Worker 被系統重跑、旋轉重建、登出中途，各對照 StateFlow 與 Room 狀態列。`
+2. **驗證句（第 4 條）換成 Gradle 系列**：`改到可以跑的 Kotlin，回報完成前一定要真的跑過：cd android && ./gradlew ktlintCheck detekt :app:testDebugUnitTest :core-supabase:testDebugUnitTest（= CI android-lint＋android-unit）；只有編譯過、或命令根本沒起來，都不算。` 長命令仍前景帶 timeout 600000，超過 10 分鐘以 `--tests` 或單模組分段。
+3. **本機無 Android SDK 時以 CI 為準，並在派工單寫明 handoff 標 PLAUSIBLE**：先判斷 JDK（`java -version` exit 0 或 `/usr/libexec/java_home -v 17` 成功（macOS 的 `/usr/bin/java` 是 stub，`command -v java` 永遠有值））、`command -v adb` 與看 `android/local.properties` 是否有 `sdk.dir`（現況查證，第 9 條），沒有就不能跑 `./gradlew`。派工單固定帶一句：`本機沒跑的 Gradle 檢查（ktlint／detekt／單元測試／connected test）在 handoff「已驗證」欄標 PLAUSIBLE，寫明沒跑哪一項、靠哪個 CI job（android-lint／android-unit）驗；不要把「push gate 綠」寫成 Android 程式碼已驗過——push gate 目前沒有 Android 段，android/** 走純文件路徑（LS-477 才加）。` `detect-emulator.sh`／`emulator-lock.sh` 由 LS-477 落地，落地前本機 connected test 略過、以 CI 為準；落地後 emulator 只用 `LS-<n>-Pixel8`、只 `adb -s <serial> emu kill` 關自己那台。
+4. **對稿（第 10 條）加 Material 差異板與長輩約束**：路徑除了 .pen 板的 `design/evidence` PNG，還要給該畫面的 Material 差異板；驗收列 48dp、字型縮放 200%、TalkBack 三項（對應票文寫的驗收，不另加）。沒有 Material 差異板的畫面 agent 會停下回報，派工前先確認有。
+
+派工單自檢多一條：`[ ] Android：判斷材料用了 scope／Flow／WorkManager／recomposition 之中對得上票文的幾條、驗證句是 Gradle 系列、寫了無 SDK 時 PLAUSIBLE 與 CI 為準`。
+
 ## 多輪續派（SendMessage）的三條
 
 - **鎖住已核銷項**（同 opus-dispatch）：開頭列「R1 已核銷：…（不要回頭改）」。
@@ -121,4 +137,5 @@ Sonnet 5.5 讀密集截圖（多板對稿、AX3 長頁）時漏細節；給它�
 - [ ] 要它查現況的地方寫了「先 grep／讀檔」（第 9 條）
 - [ ] 對稿有裁圖與路徑（第 10 條）
 - [ ] 要 handoff 落檔＋Linear comment（沿 opus-dispatch 第 7 條）
+- [ ] Android 票（android-dev）：照上方「Android 派工」段加判斷材料／Gradle 驗證句／無 SDK 時 PLAUSIBLE 與 CI 為準（非 Android 票略過）
 - [ ] 首張 sonnet 派工已用 agent-model-check 確認該 session 版本 ≥2.1.284 且 model 是 `claude-sonnet-5-5`（不是就重開 session）
