@@ -1,9 +1,22 @@
 package com.clyeh.sproutday.supabase
 
+import io.github.jan.supabase.annotations.SupabaseInternal
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.FlowType
+import io.github.jan.supabase.auth.MemoryCodeVerifierCache
+import io.github.jan.supabase.auth.SessionManager
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.user.UserSession
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.storage.resumable.MemoryResumableCache
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -91,6 +104,63 @@ class MediaContractTest {
             assertNotNull(error.message)
             assertTrue("LS002 不可重試", !error.isTransient)
         }
+
+    @Test
+    fun coldStartClientWaitsForSessionBeforeUploading() =
+        runBlocking<Unit> {
+            val owner = TestUsers.signIn(config, "cold")
+            val family = owner.family.createFamily("冷啟動契約測試家庭")
+            val session = checkNotNull(owner.client.auth.currentSessionOrNull())
+
+            // 行程被殺後由 WorkManager 在沒有 Activity 的行程喚起 worker：client 剛建好、session 還在背景從 storage 載入。
+            for (loadDelayMs in listOf(50L, 300L)) {
+                val repo = MediaRepository(coldClient(session, loadDelayMs))
+                val path = MediaPaths.thumbnail(family.id, UUID.randomUUID().toString(), Instant.now())
+                try {
+                    repo.ensureSession()
+                    repo.uploadBytes(path, TINY_JPEG, MediaLimits.THUMBNAIL_CONTENT_TYPE)
+                } catch (e: BackendError) {
+                    fail(
+                        "session 延遲 ${loadDelayMs}ms 載入時上傳失敗（transient=${e.isTransient}）：" +
+                            "${e::class.simpleName} ${e.message}",
+                    )
+                }
+            }
+        }
+
+    /** `autoLoadFromStorage = true` 的 client，session 要等 [loadDelayMs] 才從 storage 回來。 */
+    @OptIn(SupabaseInternal::class)
+    private fun coldClient(
+        session: UserSession,
+        loadDelayMs: Long,
+    ) = createSupabaseClient(supabaseUrl = config.url, supabaseKey = config.anonKey) {
+        install(Auth) {
+            sessionManager = DelayedSessionManager(session, loadDelayMs)
+            codeVerifierCache = MemoryCodeVerifierCache()
+            autoLoadFromStorage = true
+            autoSaveToStorage = false
+            alwaysAutoRefresh = false
+            autoSetupPlatform = false
+            enableLifecycleCallbacks = false
+            flowType = FlowType.PKCE
+        }
+        install(Postgrest)
+        install(Storage) { resumable { cache = MemoryResumableCache() } }
+    }
+
+    private class DelayedSessionManager(
+        private val session: UserSession,
+        private val delayMs: Long,
+    ) : SessionManager {
+        override suspend fun saveSession(session: UserSession) = Unit
+
+        override suspend fun loadSession(): UserSession {
+            delay(delayMs)
+            return session
+        }
+
+        override suspend fun deleteSession() = Unit
+    }
 
     private companion object {
         const val DEFAULT_QUOTA_BYTES = 5L * 1024 * 1024 * 1024

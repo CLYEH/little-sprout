@@ -1,6 +1,8 @@
 package com.clyeh.sproutday.supabase
 
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
@@ -14,6 +16,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.io.File
+import java.io.IOException
 import java.time.Instant
 
 /**
@@ -21,6 +24,13 @@ import java.time.Instant
  * 所有方法都必須**可重送**：系統會重跑同一筆 work，行程可能在任何兩步之間被殺。
  */
 interface MediaUploadBackend {
+    /**
+     * 確認已有可用的登入 session 才打網路：先等 auth 初始化完成（冷啟動時 session 由背景協程從 storage 載入，沒等就送請求會帶
+     * anon key 被 RLS 擋下，被誤判成終局失敗）。沒有 session → [BackendError.NotSignedIn]；session 載入後 refresh 失敗 →
+     * [BackendError.Network]。兩者都是暫時性錯誤（見 [isTransient]）。
+     */
+    suspend fun ensureSession()
+
     /** PUT 一個本機檔到 `media` bucket（`upsert`：同路徑覆寫，重送不會因「已存在」失敗）。串流上傳，不整檔讀進記憶體。 */
     suspend fun uploadFile(
         path: String,
@@ -53,6 +63,7 @@ interface MediaUploadBackend {
  * 沒有 `create_album` RPC：建相簿是直接 INSERT `albums`（同 [FamilyRepository.createFamily] 的作法）；
  * 軟刪相簿的唯一路徑是 `set_album_deleted` RPC，軟刪照片是 UPDATE `media.deleted_at`（欄位級 grant）。
  */
+@Suppress("TooManyFunctions") // 一支 repository 對應 albums／media／Storage 的一組動作（含 [MediaUploadBackend] 五個）
 class MediaRepository(
     private val client: SupabaseClient,
 ) : MediaUploadBackend {
@@ -129,6 +140,14 @@ class MediaRepository(
                     }.decodeList<MediaIdRow>()
             }
         if (rows.isEmpty()) throw BackendError.NoRowsAffected("沒有權限刪除這些照片，或照片不存在")
+    }
+
+    override suspend fun ensureSession() {
+        client.auth.awaitInitialization()
+        if (client.auth.sessionStatus.value is SessionStatus.RefreshFailure) {
+            throw BackendError.Network(IOException("session 重新整理失敗（離線？）"))
+        }
+        client.requireUserId()
     }
 
     override suspend fun uploadFile(

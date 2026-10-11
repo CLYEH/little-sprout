@@ -1,5 +1,6 @@
 package com.clyeh.sproutday.supabase
 
+import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
@@ -47,6 +48,7 @@ internal class TestUser(
     val join: JoinRepository,
     val account: AccountRepository,
     val media: MediaRepository,
+    val client: SupabaseClient,
     val id: String,
 )
 
@@ -69,6 +71,7 @@ internal object TestUsers {
             JoinRepository(client),
             AccountRepository(client),
             MediaRepository(client),
+            client,
             (state as AuthState.SignedIn).userId,
         )
     }
