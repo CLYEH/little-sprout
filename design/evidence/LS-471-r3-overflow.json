@@ -1,0 +1,191 @@
+{
+ "ticket": "LS-471",
+ "round": 3,
+ "head_sha": "5dc6659e99c2dbb5185e197711a416af14104197",
+ "scanned_nodes": 940,
+ "scan_scope": "document",
+ "scans": {
+  "sibling_intersection": {
+   "scope": "document",
+   "document_count": 6,
+   "classes": 6,
+   "flagged": [
+    {
+     "node_a": "Nskf1",
+     "node_b": "Irnr7",
+     "name_a": "Google G blue",
+     "name_b": "Google G green",
+     "parent": "oV9r5",
+     "parent_name": "Google 標誌",
+     "overlap": [
+      18,
+      18
+     ],
+     "class": "Google G blue × Google G green @ Google 標誌",
+     "count": 1,
+     "classification": "intentional overlay：Google 官方四色 G 由四條同一 18×18 viewBox 的 path 疊合成一個標誌（每對 path 外接框必然相交，非碰撞）（同類各 1 例，共 6 例）"
+    },
+    {
+     "node_a": "Nskf1",
+     "node_b": "k8U5dA",
+     "name_a": "Google G blue",
+     "name_b": "Google G yellow",
+     "parent": "oV9r5",
+     "parent_name": "Google 標誌",
+     "overlap": [
+      18,
+      18
+     ],
+     "class": "Google G blue × Google G yellow @ Google 標誌",
+     "count": 1,
+     "classification": "intentional overlay：Google 官方四色 G 由四條同一 18×18 viewBox 的 path 疊合成一個標誌（每對 path 外接框必然相交，非碰撞）（同類各 1 例，共 6 例）"
+    },
+    {
+     "node_a": "Nskf1",
+     "node_b": "O4Q7IQ",
+     "name_a": "Google G blue",
+     "name_b": "Google G red",
+     "parent": "oV9r5",
+     "parent_name": "Google 標誌",
+     "overlap": [
+      18,
+      18
+     ],
+     "class": "Google G blue × Google G red @ Google 標誌",
+     "count": 1,
+     "classification": "intentional overlay：Google 官方四色 G 由四條同一 18×18 viewBox 的 path 疊合成一個標誌（每對 path 外接框必然相交，非碰撞）（同類各 1 例，共 6 例）"
+    },
+    {
+     "node_a": "Irnr7",
+     "node_b": "k8U5dA",
+     "name_a": "Google G green",
+     "name_b": "Google G yellow",
+     "parent": "oV9r5",
+     "parent_name": "Google 標誌",
+     "overlap": [
+      18,
+      18
+     ],
+     "class": "Google G green × Google G yellow @ Google 標誌",
+     "count": 1,
+     "classification": "intentional overlay：Google 官方四色 G 由四條同一 18×18 viewBox 的 path 疊合成一個標誌（每對 path 外接框必然相交，非碰撞）（同類各 1 例，共 6 例）"
+    },
+    {
+     "node_a": "Irnr7",
+     "node_b": "O4Q7IQ",
+     "name_a": "Google G green",
+     "name_b": "Google G red",
+     "parent": "oV9r5",
+     "parent_name": "Google 標誌",
+     "overlap": [
+      18,
+      18
+     ],
+     "class": "Google G green × Google G red @ Google 標誌",
+     "count": 1,
+     "classification": "intentional overlay：Google 官方四色 G 由四條同一 18×18 viewBox 的 path 疊合成一個標誌（每對 path 外接框必然相交，非碰撞）（同類各 1 例，共 6 例）"
+    },
+    {
+     "node_a": "k8U5dA",
+     "node_b": "O4Q7IQ",
+     "name_a": "Google G yellow",
+     "name_b": "Google G red",
+     "parent": "oV9r5",
+     "parent_name": "Google 標誌",
+     "overlap": [
+      18,
+      18
+     ],
+     "class": "Google G yellow × Google G red @ Google 標誌",
+     "count": 1,
+     "classification": "intentional overlay：Google 官方四色 G 由四條同一 18×18 viewBox 的 path 疊合成一個標誌（每對 path 外接框必然相交，非碰撞）（同類各 1 例，共 6 例）"
+    }
+   ],
+   "result_hash": "927d6e054f6117f1"
+  },
+  "row_overflow": {
+   "scope": "document",
+   "document_count": 1,
+   "classes": 1,
+   "flagged": [
+    {
+     "node": "mhgPF",
+     "name": "Wordmark image",
+     "parent": "xuD6C",
+     "parent_name": "萌芽日記字標",
+     "overflow": 12.4,
+     "class": "萌芽日記字標 :: Wordmark image",
+     "count": 1,
+     "classification": "intentional crop：字標 PNG（1024×488）四周有透明留白，圖片子節點刻意大於 clip:true 外框並以負位移裁掉留白，讓墨跡左緣對齊 tagline；外框 clip 後無可見溢出（同類 1 例）"
+    }
+   ],
+   "result_hash": "2a1d11b65403af7e"
+  },
+  "cross_parent_collision": {
+   "scope": "document",
+   "document_count": 0,
+   "classes": 0,
+   "flagged": [],
+   "result_hash": "99fa248e7618990f"
+  },
+  "corner_anchor": {
+   "scope": "document",
+   "document_count": 0,
+   "boards": [
+    "LPjkx",
+    "oyd9x",
+    "alfdM",
+    "YJXzx",
+    "qladF"
+   ],
+   "containers": 0,
+   "points": 0,
+   "mismatch": 0,
+   "flagged": [],
+   "unresolved": [],
+   "ref_hits": 0,
+   "ref_hits_defs": 0,
+   "document_containers": 0,
+   "document_points": 0,
+   "document_mismatch": 0,
+   "document_flagged": [],
+   "document_unresolved": [],
+   "result_hash": "d7e53ce886e4e344"
+  },
+  "text_occlusion": {
+   "scope": "document",
+   "document_count": 0,
+   "boards": [
+    "LPjkx",
+    "oyd9x",
+    "alfdM",
+    "YJXzx",
+    "qladF"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "4c84b403adfcebc4"
+  },
+  "board_clip": {
+   "scope": "document",
+   "document_count": 0,
+   "boards": [
+    "LPjkx",
+    "oyd9x",
+    "alfdM",
+    "YJXzx",
+    "qladF"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "8fd3b635638add42"
+  }
+ },
+ "total_nodes": 940,
+ "tree_hash": "41e985279e4624c2",
+ "flags": {
+  "cross_all": false,
+  "custom_overlay_re": false
+ },
+ "scan_note": "snapshot mode，dump sha256=8c882c8c852d5795d8f486f1353250e251861b01cc3f88c9942cdd443a51c44f；快照模式（LS-289 第②級；940 節點小稿，選快照模式因正典腳本全文 112 KB 送 execute 成本過高，非逾時）；對象＝提案稿 docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen；SNAP_ROOTS=[0,Infinity] SNAP_BOARDS=40 一段 18 板；--scan-scope document --boards LPjkx,oyd9x,alfdM,YJXzx,qladF；tree_hash＝Pencil 端 hash-only 與 design_tree_hash.py 對 head_sha 落地檔皆 41e985279e4624c2，同一次 execute 內先算雜湊再 dump，中間無寫入。R3 首次重掃（a08bba2f）與 R3b 首次重掃因螢幕鎖定期間 Pencil Get bounds 未刷新（y+50）作廢、未交；本收據於解鎖、open -a Pen 置前景並以 bounds 探針（ebxWd 162／O0LBuf 11／Q9CyG 114 與節點 y 相等）確認後重掃。R3b 落地由 orchestrator 複製 Pen autosave backup。PLAUSIBLE（orchestrator 裁定不擋）：corner_anchor ref_hits=0／document_containers=0 是結構性——提案稿依柔粉 skill 無角托元件"
+}
