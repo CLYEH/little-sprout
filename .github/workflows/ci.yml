@@ -1506,6 +1506,101 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
+  # LS-474（Android 前置 A1）：Android 骨架的 lint／單元測試。ubuntu、不是 required check（protection-apply.sh 的
+  # contexts 不含這兩個，branch protection 不動）、不進 ci-tree-record 的 needs，也不吃 ci-dedup（不用 macOS runner）。
+  # 路徑過濾：pull_request 只在 diff 含 android/**、.jdk-version／.android-api／.gradle-version 或本檔時實跑，
+  # 其餘印「略過」仍 success；push／dispatch 一律實跑（ubuntu 成本低，寧可多跑）。diff 取不到時 files 為空 → 保守實跑。
+  # JDK 版本讀 .jdk-version（單一來源），Gradle 快取由 setup-gradle 管。
+  android-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 判定是否需要跑（LS-474）
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          run=true
+          if [ "$EVENT" = pull_request ]; then
+            files=$(git -c core.quotePath=false diff --name-only --no-renames "origin/$BASE_REF...HEAD") || files=
+            if [ -n "$files" ] && ! printf '%s\n' "$files" | grep -Eq '^(android/|\.jdk-version$|\.android-api$|\.gradle-version$|\.github/workflows/ci\.yml$)'; then
+              run=false
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          if [ "$run" = true ]; then echo "→ android-lint：執行"; else echo "→ android-lint：略過（本 PR 未動 android/**、釘住檔、ci.yml）"; fi
+      - uses: actions/setup-java@v4
+        if: steps.scope.outputs.run == 'true'
+        with:
+          distribution: temurin
+          java-version-file: .jdk-version
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.scope.outputs.run == 'true'
+      - name: Gradle wrapper 校驗（jar 須為官方發行版）
+        if: steps.scope.outputs.run == 'true'
+        uses: gradle/actions/wrapper-validation@v4
+      - name: wrapper 版本與 .gradle-version 一致
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          pin="$(tr -d '[:space:]' < .gradle-version)"
+          grep -q "gradle-${pin}-bin.zip" android/gradle/wrapper/gradle-wrapper.properties \
+            || { echo "::error::.gradle-version（${pin}）與 android/gradle/wrapper/gradle-wrapper.properties 的 distributionUrl 不一致"; exit 1; }
+      - name: ktlint＋detekt（LS-474）
+        if: steps.scope.outputs.run == 'true'
+        working-directory: android
+        run: ./gradlew --no-daemon ktlintCheck detekt
+
+  android-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 判定是否需要跑（LS-474）
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          run=true
+          if [ "$EVENT" = pull_request ]; then
+            files=$(git -c core.quotePath=false diff --name-only --no-renames "origin/$BASE_REF...HEAD") || files=
+            if [ -n "$files" ] && ! printf '%s\n' "$files" | grep -Eq '^(android/|\.jdk-version$|\.android-api$|\.gradle-version$|\.github/workflows/ci\.yml$)'; then
+              run=false
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          if [ "$run" = true ]; then echo "→ android-unit：執行"; else echo "→ android-unit：略過（本 PR 未動 android/**、釘住檔、ci.yml）"; fi
+      - uses: actions/setup-java@v4
+        if: steps.scope.outputs.run == 'true'
+        with:
+          distribution: temurin
+          java-version-file: .jdk-version
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.scope.outputs.run == 'true'
+      - name: Gradle wrapper 校驗（jar 須為官方發行版）
+        if: steps.scope.outputs.run == 'true'
+        uses: gradle/actions/wrapper-validation@v4
+      - name: wrapper 版本與 .gradle-version 一致
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          pin="$(tr -d '[:space:]' < .gradle-version)"
+          grep -q "gradle-${pin}-bin.zip" android/gradle/wrapper/gradle-wrapper.properties \
+            || { echo "::error::.gradle-version（${pin}）與 android/gradle/wrapper/gradle-wrapper.properties 的 distributionUrl 不一致"; exit 1; }
+      - name: 單元測試（LS-474）
+        if: steps.scope.outputs.run == 'true'
+        working-directory: android
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :core-supabase:testDebugUnitTest
+
   # LS-350：登記 tree 快取——只在「完整 run」（ci-dedup mode=full 且 record=true：push／dispatch，或 PR 且
   # ui-test-trigger 判定要跑 UITests）且 db／lint／ci／ci-ui（matrix 全片，LS-385）／ci-ipad 全 success 時，上傳名為 ci-tree-<tree> 的
   # artifact；之後同 tree 的 run（FF 晉升、空 merge commit、PR 併入後 base 未動的 development merge commit）由
