@@ -1300,8 +1300,11 @@ WITH CHECK 擋下並噴出真正的 `42501`。沒有採用，是因為這種寫�
   DB 裡，新持有者的裝置會繼續收到前一個帳號所屬家庭的推播。這支 RPC 用
   `SECURITY DEFINER` 繞過 RLS，先刪掉「別人的」那一列再插入自己的——這不是提權漏洞，
   push token 本身就是裝置持有者才拿得到的憑據。
-- **參數**：`p_platform` 目前只接受 `"ios"`（cast 成 `device_platform` enum，其他值
-  拿 `22P02`）。
+- **參數**：`p_platform` 接受 `"ios"`（APNs）與 `"android"`（FCM，LS-473 起；
+  `20261011063100_device_platform_android.sql` 為 `device_platform` enum 加值）。
+  cast 成 `device_platform` enum，其他值拿 `22P02`。RPC 簽章與本體不變，iOS 既有
+  呼叫固定傳 `"ios"` 不受影響；`push-dispatch` 依 `notification_recipients()` 回傳的
+  `platform` 分流 provider（見 §10 push-dispatch「FCM（Android）」小節）。
 - **錯誤碼**：未登入 → `42501`。
 - **併發**：無特殊語意，單一 statement。
 
@@ -3817,6 +3820,40 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
     修法兩層：(a) 記錄簽發時間，超過 45 分鐘（保守值，留在 Apple 1 小時上限之前）
     就重簽；(b) 保底：即使 45 分鐘的估計不準，收到 `403 ExpiredProviderToken`
     時當場重簽一次並重試一次（不是無限重試，其他錯誤不觸發這個重試）。
+- **FCM（Android）provider（LS-473，Android 前置 A5）**
+  （`supabase/functions/push-dispatch/fcm.ts`）：`buildRealFcmProvider({serviceAccountJson, fetch})`
+  實作與 `ApnsProvider` 同一個 `PushProvider` 介面（`handler.ts`；`ApnsProvider` 為其別名）。
+  - **平台分流**：`handler.ts` 依 `notification_recipients()` 回傳的 `platform` 選
+    provider——`ios` → `apnsProvider`，`android` → `fcmProvider`；`device_tokens.platform`
+    欄自初始 schema 就存在（`device_platform` enum），LS-473 只為 enum 加 `android` 值，
+    **不新增欄位、不改 RPC**（票文原假設的 `apns|fcm` 字串未採用：值域是「裝置平台」而非
+    「推播服務」，provider 由 handler 決定）。既有列與 iOS 既有呼叫全是 `ios`，APNs 路徑行為不變。
+    兩 provider 共用同一組併發 worker（`concurrency`）與時間預算；其他 platform 值（理論上不會
+    出現）計 `failed` 並記 log，不誤送 APNs。
+  - **secret**：`FCM_SERVICE_ACCOUNT`＝Firebase service account JSON 的**整份字串**
+    （含 `client_email`／`private_key`／`project_id`）。流程：RS256 JWT（scope
+    `firebase.messaging`）→ `https://oauth2.googleapis.com/token` 換 access token
+    （快取 50 分鐘；併發 `send()` 共用同一次交換；交換失敗不快取；`401` 時強制重換並重試一次）
+    → `POST https://fcm.googleapis.com/v1/projects/<project_id>/messages:send`。每次 fetch 帶
+    10 秒 `AbortSignal.timeout`。
+  - **缺值行為**：`FCM_SERVICE_ACCOUNT` 缺或格式不對時，`index.ts` 冷啟動只 `console.error`
+    一次、**不讓 isolate 失敗**（否則連 iOS 的 APNs 推播一起拖垮）；之後每個 `android`
+    收件者計入 `failed` 並 log「FCM 未設定」，**不刪 token**、不影響 `ios` 批次。
+    `PUSH_DISPATCH_PROVIDER=stub` 時兩平台共用同一個 `StubApnsProvider`。
+  - **失效 token 判定（比 APNs 窄，刻意）**：只有 `404` 且 `error.details[].errorCode ==
+    "UNREGISTERED"`，或 `400 INVALID_ARGUMENT` 且訊息指明 registration token，才回
+    `invalidToken` → 走同一條 `removeDeviceToken` 路徑。單看 `404` 不夠：`project_id` 設錯時
+    所有送出都是 `404`，會把全部 token 刪光；其餘 4xx/5xx 一律 `failed`、只記 log。
+  - **部署（需使用者當日 token `PROD-PUSH-APPROVED-BY-USER`，LS-78；本票不執行任何正式站命令）**：
+    ```
+    supabase db push --linked   # 1. migration 20261011063100（enum 加 android）
+    supabase secrets set FCM_SERVICE_ACCOUNT="$(cat ~/.secrets/<service-account>.json)" --project-ref mzkkkzbiejgvhwjyiokf
+    supabase functions deploy push-dispatch --project-ref mzkkkzbiejgvhwjyiokf
+    ```
+    順序：先 `db push`（enum 值要先存在，Android 才註冊得了 `android`）；secrets 與 functions
+    deploy 順序可互換，但兩者都完成後 Android token 才會真的送出。未做後兩步時行為同「缺值」。
+  - **未端到端驗證**：沒有對真正的 Google 伺服器送過（需要 Firebase 專案與 Android client 註冊，A7
+    之後）；JWT 簽章（RS256）與錯誤分類已用測試金鑰＋fake fetch 驗證（`fcm.test.ts`）。
 - **`StubApnsProvider`**（`handler.ts`）：本機／CI 用，只記錄呼叫的
   `token`/`title`/`body`，不打真正的 APNs；可注入 `responder` callback 依 token
   回傳任意結果（含模擬 410，供測試驗證失效 token 清除路徑）。由環境變數

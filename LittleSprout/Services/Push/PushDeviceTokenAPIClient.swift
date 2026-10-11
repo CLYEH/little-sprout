@@ -8,7 +8,7 @@ import Foundation
 ///
 /// **只有這兩個參數**——`docs/API.md` §3 `device_tokens` 表只有 `token`／`user_id`／
 /// `platform`／`updated_at` 四欄，沒有 sandbox/production 環境或 app 版本欄位；`p_platform`
-/// 目前只接受 `"ios"`（RPC 端 cast 失敗會回 `22P02`，見 API.md §4）。
+/// 接受 `"ios"`｜`"android"`（LS-473 起；RPC 端 cast 失敗會回 `22P02`，見 API.md §4）。
 ///
 /// 錯誤一律映射為 `AppError`，不直接往外拋 PostgREST 的 error 型別。
 protocol PushDeviceTokenAPIClient: Sendable {
