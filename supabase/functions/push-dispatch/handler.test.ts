@@ -509,8 +509,18 @@ Deno.test("runDispatch：混合 platform 批次——ios 走 apnsProvider、andr
     getRecipients: () =>
       Promise.resolve({
         recipients: [
-          { userId: "u1", token: "tok-ios", platform: "ios", eventId: "event-1" },
-          { userId: "u1", token: "tok-android", platform: "android", eventId: "event-1" },
+          {
+            userId: "u1",
+            token: "tok-ios",
+            platform: "ios",
+            eventId: "event-1",
+          },
+          {
+            userId: "u1",
+            token: "tok-android",
+            platform: "android",
+            eventId: "event-1",
+          },
         ],
       }),
     apnsProvider: apns,
@@ -536,7 +546,12 @@ Deno.test("runDispatch：FCM 回報失效 token → 走同一條 removeDeviceTok
     getRecipients: () =>
       Promise.resolve({
         recipients: [
-          { userId: "u1", token: "tok-android", platform: "android", eventId: "event-1" },
+          {
+            userId: "u1",
+            token: "tok-android",
+            platform: "android",
+            eventId: "event-1",
+          },
         ],
       }),
     fcmProvider: fcm,
@@ -560,9 +575,24 @@ Deno.test("runDispatch：fcmProvider 缺席（FCM_SERVICE_ACCOUNT 未設定）�
     getRecipients: () =>
       Promise.resolve({
         recipients: [
-          { userId: "u1", token: "tok-ios", platform: "ios", eventId: "event-1" },
-          { userId: "u2", token: "tok-android-1", platform: "android", eventId: "event-1" },
-          { userId: "u3", token: "tok-android-2", platform: "android", eventId: "event-1" },
+          {
+            userId: "u1",
+            token: "tok-ios",
+            platform: "ios",
+            eventId: "event-1",
+          },
+          {
+            userId: "u2",
+            token: "tok-android-1",
+            platform: "android",
+            eventId: "event-1",
+          },
+          {
+            userId: "u3",
+            token: "tok-android-2",
+            platform: "android",
+            eventId: "event-1",
+          },
         ],
       }),
     apnsProvider: apns,
@@ -592,7 +622,12 @@ Deno.test("runDispatch：未知 platform → 計 failed 並記 log，不誤送 A
     getRecipients: () =>
       Promise.resolve({
         recipients: [
-          { userId: "u1", token: "tok-x", platform: "webos", eventId: "event-1" },
+          {
+            userId: "u1",
+            token: "tok-x",
+            platform: "webos",
+            eventId: "event-1",
+          },
         ],
       }),
     apnsProvider: apns,
@@ -609,15 +644,28 @@ Deno.test("runDispatch：stub 模式兩平台共用同一個 stub（index.ts 把
     getRecipients: () =>
       Promise.resolve({
         recipients: [
-          { userId: "u1", token: "tok-ios", platform: "ios", eventId: "event-1" },
-          { userId: "u1", token: "tok-android", platform: "android", eventId: "event-1" },
+          {
+            userId: "u1",
+            token: "tok-ios",
+            platform: "ios",
+            eventId: "event-1",
+          },
+          {
+            userId: "u1",
+            token: "tok-android",
+            platform: "android",
+            eventId: "event-1",
+          },
         ],
       }),
     apnsProvider: stub,
     fcmProvider: stub,
   });
   const summary = await runDispatch(deps);
-  assertEquals(stub.calls.map((c) => c.token).sort(), ["tok-android", "tok-ios"]);
+  assertEquals(stub.calls.map((c) => c.token).sort(), [
+    "tok-android",
+    "tok-ios",
+  ]);
   assertEquals(summary.sent, 2);
 });
 
