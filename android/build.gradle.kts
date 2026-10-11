@@ -22,6 +22,8 @@ subprojects {
     configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
         buildUponDefaultConfig = true
         config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+        // 預設只掃 src/main 與 src/test；app 的除錯面板在 src/debug、release 根畫面在 src/release，要一起掃
+        source.setFrom(files(listOf("main", "debug", "release", "test").map { "src/$it/kotlin" }))
     }
 
     // detekt 1.23.x 以 Kotlin 2.0.21 編譯；專案 Kotlin 較新時它會因版本不符拒跑，官方 FAQ 的做法是把 detekt

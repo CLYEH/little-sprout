@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- debug 建置才允許明文連本機 Supabase 容器（emulator 以 adb reverse 把 127.0.0.1:54321 轉到宿主機；10.0.2.2 為備援）。 -->
+    <application android:networkSecurityConfig="@xml/network_security_config" />
+
+</manifest>
