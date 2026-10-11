@@ -119,7 +119,8 @@ sealed class BackendError(
     /** 缺少設定（例如尚未提供 Google Web client ID）；fail loud，不當成網路錯誤。 */
     class Misconfigured(
         message: String,
-    ) : BackendError(message, null)
+        cause: Throwable? = null,
+    ) : BackendError(message, null, cause)
 
     /** 其他自訂碼或標準 Postgres／HTTP 錯誤。 */
     class Server(
