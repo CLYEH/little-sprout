@@ -268,7 +268,161 @@ else
   fail=1
 fi
 
+# ㉒-㉟（LS-477，Android 前置 A3）：Kotlin 掃描器（api_contract_check.py --kotlin；經 api-contract-check.sh 的
+#    API_CONTRACT_ANDROID_DIR 進場，同時驗接線）。夾具 API.md 帶 §5 錯誤碼表＋§9 RPC 區塊。
+kt_doc() {  # $1=輸出路徑
+  cat > "$1" <<'DOC'
+## 5. 錯誤碼
+
+| 碼 | 說明 |
+| --- | --- |
+| `LS001` | 示範碼一 |
+| `LS023`（diary_body_too_long） | 示範碼二 |
+| 其他 | `LS999` 只在說明欄提到，不算定義 |
+
+## 6. 別的章節
+
+| `LS500` | 不在 §5 |
+
+<!-- API-CONTRACT:RPC
+list_children(uuid)
+get_my_join_request()
+-->
+
+<!-- API-CONTRACT:TABLES
+children
+-->
+DOC
+}
+kt_new() {  # $1=樣本名 → echo android 目錄；呼叫端自己寫 .kt
+  local dir="$work/$1/android"; mkdir -p "$dir/app/src/main/kotlin"; echo "$dir"
+}
+kt_expect() {  # kt_expect <期望 exit> <名稱> <android 目錄> <API.md> [須含的輸出片段]
+  local want=$1 name=$2 dir=$3 doc=$4 needle=${5:-} out got
+  out="$(API_CONTRACT_ANDROID_DIR="$dir" bash "$checker" "$doc" "$work/kt-migrations" 2>&1)"
+  got=$?
+  if [ "$got" -ne "$want" ]; then
+    echo "✗ ${name}（期望 exit ${want}，實得 ${got}）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; return
+  fi
+  if [ -n "$needle" ] && ! has "$out" "$needle"; then
+    echo "✗ ${name}（輸出應含「${needle}」）" >&2; printf '%s\n' "$out" | sed 's/^/    /' >&2; fail=1; return
+  fi
+  echo "✓ ${name}"
+}
+# kt 夾具搭配的 text 模式 migrations 要自己對得上 doc（text 模式會先跑）：children 表＋兩支 RPC
+mkdir -p "$work/kt-migrations"
+cat > "$work/kt-migrations/001.sql" <<'SQL'
+create table public.children (id uuid primary key);
+create function public.list_children(a uuid) returns void language sql as $$ select 1 $$;
+create function public.get_my_join_request() returns void language sql as $$ select 1 $$;
+SQL
+kt_doc "$work/kt-api.md"
+
+# ㉒ android/ 沒有任何呼叫端 → 綠（0 支／0 個）
+dk=$(kt_new case22); echo 'package x; fun main() {}' > "$dk/app/src/main/kotlin/A.kt"
+kt_expect 0 '㉒ 無 RPC 呼叫／無錯誤碼常數 → 綠' "$dk" "$work/kt-api.md" 'RPC 呼叫 0 支'
+
+# ㉓ rpc("list_children" 在 §9 → 綠
+dk=$(kt_new case23); cat > "$dk/app/src/main/kotlin/A.kt" <<'KT'
+suspend fun f(c: C) { c.postgrest.rpc("list_children", mapOf("p" to 1)) }
+KT
+kt_expect 0 '㉓ rpc("list_children") 在 §9 → 綠' "$dk" "$work/kt-api.md" 'RPC 呼叫 1 支'
+
+# ㉔ 幽靈 RPC（§9 沒有）→ 紅，點名名稱與檔:行
+dk=$(kt_new case24); cat > "$dk/app/src/main/kotlin/A.kt" <<'KT'
+suspend fun f(c: C) {
+    c.postgrest.rpc("ghost_fn")
+}
+KT
+kt_expect 1 '㉔ 幽靈 RPC → 紅（點名 ghost_fn 與行號）' "$dk" "$work/kt-api.md" 'ghost_fn  @'
+
+# ㉕ 具名引數 rpc(function = "…") 與換行寫法都抓得到（幽靈仍紅）
+dk=$(kt_new case25); cat > "$dk/app/src/main/kotlin/A.kt" <<'KT'
+suspend fun f(c: C) {
+    c.postgrest.rpc(
+        function = "named_ghost",
+    )
+    c.postgrest.rpc(
+        "multiline_ghost",
+    )
+}
+KT
+kt_expect 1 '㉕ 具名引數／換行寫法抓得到 → 紅' "$dk" "$work/kt-api.md" 'named_ghost'
+out25=$(API_CONTRACT_ANDROID_DIR="$dk" bash "$checker" "$work/kt-api.md" "$work/kt-migrations" 2>&1)
+expect_has "$out25" 'multiline_ghost' '㉕b 換行寫法（rpc( 後換行才給名稱）也被點名'
+
+# ㉖ 註解內的 rpc("ghost")／"LS777" 不算（行註解、巢狀區塊註解）→ 綠
+dk=$(kt_new case26); cat > "$dk/app/src/main/kotlin/A.kt" <<'KT'
+// c.postgrest.rpc("ghost_in_comment")  "LS777"
+/* outer /* nested rpc("ghost_nested") "LS778" */ still comment rpc("ghost_after_nested") */
+suspend fun f(c: C) { c.postgrest.rpc("get_my_join_request") }
+KT
+kt_expect 0 '㉖ 註解（行／巢狀區塊）內的 rpc 與 LS 碼不算 → 綠' "$dk" "$work/kt-api.md" 'RPC 呼叫 1 支'
+
+# ㉗ 字串內的 "//" 不被當成行註解（其後的真實幽靈呼叫仍要抓到）
+dk=$(kt_new case27); cat > "$dk/app/src/main/kotlin/A.kt" <<'KT'
+val url = "https://x.example/a"; suspend fun f(c: C) { c.postgrest.rpc("after_url_ghost") }
+KT
+kt_expect 1 '㉗ 字串內 "//" 不吃掉同行後面的呼叫 → 紅' "$dk" "$work/kt-api.md" 'after_url_ghost'
+
+# ㉘ 錯誤碼常數：§5 有的 → 綠；§5 沒有的 → 紅；只在說明欄（LS999）／別的章節（LS500）出現的不算定義 → 紅
+dk=$(kt_new case28a); cat > "$dk/app/src/main/kotlin/E.kt" <<'KT'
+object Codes { const val A = "LS001"; const val B = "LS023" }
+KT
+kt_expect 0 '㉘a 錯誤碼常數在 §5（含帶括號註記的首欄）→ 綠' "$dk" "$work/kt-api.md" '錯誤碼常數 2 個'
+dk=$(kt_new case28b); echo 'object Codes { const val X = "LS042" }' > "$dk/app/src/main/kotlin/E.kt"
+kt_expect 1 '㉘b 幽靈錯誤碼 LS042 → 紅' "$dk" "$work/kt-api.md" 'LS042  @'
+dk=$(kt_new case28c); echo 'object Codes { const val X = "LS999"; const val Y = "LS500" }' > "$dk/app/src/main/kotlin/E.kt"
+kt_expect 1 '㉘c 說明欄提到的 LS999／別章的 LS500 不算 §5 定義 → 紅' "$dk" "$work/kt-api.md" 'LS999'
+
+# ㉙ rpc( 第一個引數不是字串字面值 → fail loud（不解析常數）
+dk=$(kt_new case29); cat > "$dk/app/src/main/kotlin/A.kt" <<'KT'
+const val NAME = "list_children"
+suspend fun f(c: C) { c.postgrest.rpc(NAME) }
+KT
+kt_expect 1 '㉙ rpc(NAME) 非字面值 → 紅（本掃描器不解析常數）' "$dk" "$work/kt-api.md" '不是字串字面值'
+
+# ㉚ `fun rpc(` 定義與 `fun X.rpc(` 擴充定義不算呼叫 → 綠
+dk=$(kt_new case30); cat > "$dk/app/src/main/kotlin/A.kt" <<'KT'
+interface Api { fun rpc(name: String): Int }
+fun Api.Companion.rpc(function: String) = 1
+KT
+kt_expect 0 '㉚ fun rpc(…) 定義不算呼叫 → 綠' "$dk" "$work/kt-api.md" 'RPC 呼叫 0 支'
+
+# ㉛ 測試目錄（src/test、src/androidTest）與 build/ 不掃 → 綠
+dk=$(kt_new case31); mkdir -p "$dk/app/src/test/kotlin" "$dk/app/src/androidTest/kotlin" "$dk/app/build/generated"
+echo 'fun t(c: C) { c.rpc("test_ghost"); val x = "LS888" }' > "$dk/app/src/test/kotlin/T.kt"
+echo 'fun t(c: C) { c.rpc("at_ghost") }' > "$dk/app/src/androidTest/kotlin/T.kt"
+echo 'fun t(c: C) { c.rpc("build_ghost") }' > "$dk/app/build/generated/G.kt"
+kt_expect 0 '㉛ src/test、src/androidTest、build/ 不掃 → 綠' "$dk" "$work/kt-api.md" '掃 0 個 .kt 檔'
+
+# ㉜ 預設路徑接線：不設 API_CONTRACT_ANDROID_DIR、帶自訂路徑 → 不掃真的 android/（合成樣本不被真 android/ 污染）
+out32="$(bash "$checker" "$work/kt-api.md" "$work/kt-migrations" 2>&1)"
+expect_not_has "$out32" 'Kotlin 掃描器' '㉜ 自訂路徑呼叫且沒給 API_CONTRACT_ANDROID_DIR → 不跑 Kotlin 掃描器'
+# ㉝ 環境變數指到不存在的目錄 → fail loud（不當成「沒有 android/」）
+out33="$(API_CONTRACT_ANDROID_DIR="$work/no-such" bash "$checker" "$work/kt-api.md" "$work/kt-migrations" 2>&1)"; rc33=$?
+expect_exit 1 "$rc33" '㉝ API_CONTRACT_ANDROID_DIR 指到不存在目錄 → 紅'
+
+# ㉞ 真的 repo（預設路徑）：現在的 android/ 對真的 API.md 綠，且確實掃了 .kt 檔
+out34="$(bash "$checker" 2>&1)"; rc34=$?
+expect_exit 0 "$rc34" '㉞ 預設路徑跑真 repo（text 模式＋Kotlin 掃描器）→ 綠'
+expect_has "$out34" 'Kotlin 掃描器）通過：掃' '㉞b 預設路徑真的有跑 Kotlin 掃描器'
+
+# ㉟ mutation：Kotlin 掃描器的「幽靈 RPC」比對拿掉 → ㉔ 必翻成綠（證明 ㉔ 釘住該判斷）
+mutk=$(mktemp -d)
+anchor_k='ghost_rpc = sorted(set(rpc_calls) - doc_rpc_names)'
+if ! grep -qF "$anchor_k" "${root}/scripts/gates/api_contract_check.py"; then
+  echo "✗ ㉟ mutation 錨點不在 api_contract_check.py：${anchor_k}" >&2; fail=1
+else
+  sed "s/ghost_rpc = sorted(set(rpc_calls) - doc_rpc_names)/ghost_rpc = []/" "${root}/scripts/gates/api_contract_check.py" > "$mutk/api_contract_check.py"
+  dk=$(kt_new case35); printf 'suspend fun f(c: C) { c.postgrest.rpc("ghost_fn") }\n' > "$dk/app/src/main/kotlin/A.kt"
+  out35=$(PYTHONIOENCODING=utf-8 python3 "$mutk/api_contract_check.py" --kotlin "$work/kt-api.md" "$dk" 2>&1); rc35=$?
+  if [ "$rc35" -eq 0 ]; then echo "✓ ㉟ mutant：拿掉幽靈 RPC 比對後 ㉔ 的樣本翻成綠（㉔ 確由該判斷造成）"
+  else echo "✗ ㉟ mutant 應讓幽靈 RPC 樣本翻綠（exit ${rc35}）" >&2; printf '%s\n' "$out35" | sed 's/^/    /' >&2; fail=1; fi
+fi
+rm -rf "$mutk"
+
 if [ "$fail" -eq 0 ]; then
-  echo "✓ api-contract-check 自測通過（21 組樣本：①-⑬／⑰-⑳ --text、⑭-⑯ --catalog 合成輸入、㉑ catalog SQL 靜態斷言；psql 查活 DB 靠 CI db job 本身回歸）"
+  echo "✓ api-contract-check 自測通過（①-⑬／⑰-⑳ --text、⑭-⑯ --catalog 合成輸入、㉑ catalog SQL 靜態斷言、㉒-㉟ Kotlin 掃描器；psql 查活 DB 靠 CI db job 本身回歸）"
 fi
 exit "$fail"
