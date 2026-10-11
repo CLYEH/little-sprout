@@ -4000,6 +4000,19 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
   `resolveSecretKey()`／`isAuthorizedServiceCall()`，見上方「鑑權」段）；
   `PUSH_DISPATCH_PROVIDER` 正式站不設定（預設值 `"apns"` 即為正確行為）。
 
+### 正式站 Auth providers 現況（LS-488，2026-10-12）
+
+| provider | 狀態 | client id 來源 | secret |
+| --- | --- | --- | --- |
+| apple | enabled | bundle id `com.clyeh.sproutday`（iOS 原生 `signInWithIdToken`） | 無（原生流程不需；Android web OAuth 需 Service ID＋secret，另票） |
+| google | enabled | GCP OAuth web client（本機 config.toml 讀 env `GOOGLE_CLIENT_ID`／`GOOGLE_CLIENT_SECRET`） | 正式站 dashboard 設定 |
+| email | enabled | 不適用 | SMTP 設定見 LS-487 |
+
+`uri_allow_list`：`littlesprout://auth/callback,sproutday://auth/callback`。
+
+正式站值以 Management API `GET /config/auth` 為準；改動走 PATCH 或 `supabase config push`，需使用者授權
+（LS-78，當日 token）。`supabase/config.toml` 只是本機與文件對照，不會自動同步到正式站。
+
 ---
 
 ## 11. 營運操作手冊
