@@ -94,6 +94,44 @@ EOF
 chmod +x "$work/bin/xcrun"
 export SIM_STUB_DB="$work/simdb-empty" SIM_STUB_LOG="$work/simlog-early" LS_DERIVED_DATA_ROOT="$work/dd-empty"
 : > "$SIM_STUB_DB"; : > "$SIM_STUB_LOG"; mkdir -p "$LS_DERIVED_DATA_ROOT"
+# ---- stub adb／avdmanager＋隔離 Android 環境（LS-477 (e) Android AVD 段）：同 xcrun 的理由一開始就裝上——(e) 段在任何
+#      指名 LS-<n> 的呼叫都會跑，本機真的 /opt/homebrew/bin/adb（platform-tools）會被 PATH 找到，測試不能依開發機當下狀態
+#      去 kill／delete 真 emulator。AVD 名單在 $AVD_STUB_DB（一行一個名稱）；在跑的 emulator 在 $ADB_STUB_DEVICES
+#      （serial\tdevice\tAVD 名）；每次 delete／kill 的 argv 記到 $AVD_STUB_LOG。unset ANDROID_HOME 讓 android-tools.sh 只走 PATH。
+unset ANDROID_HOME ANDROID_SDK_ROOT
+cat > "$work/bin/avdmanager" <<'EOF'
+#!/bin/bash
+db="${AVD_STUB_DB:-/dev/null}"
+case "${1:-} ${2:-}" in
+  "list avd") cat "$db" ;;
+  "delete avd")
+    printf 'avdmanager %s\n' "$*" >> "${AVD_STUB_LOG:-/dev/null}"
+    [ "${3:-}" = -n ] || exit 1
+    grep -qxF "${4:-}" "$db" || { echo "Error: no AVD named ${4:-}" >&2; exit 1; }
+    grep -vxF "${4:-}" "$db" > "$db.tmp"; mv "$db.tmp" "$db" ;;
+  *) exit 1 ;;
+esac
+EOF
+cat > "$work/bin/adb" <<'EOF'
+#!/bin/bash
+dev="${ADB_STUB_DEVICES:-/dev/null}"
+S=; if [ "${1:-}" = -s ]; then S=$2; shift 2; fi
+case "${1:-}" in
+  devices)
+    echo "List of devices attached"
+    while IFS=$'\t' read -r s st n || [ -n "$s" ]; do [ -n "$s" ] && printf '%s\t%s\n' "$s" "$st"; done < "$dev"
+    echo ;;
+  emu)
+    case "${2:-}" in
+      avd) awk -F'\t' -v s="$S" '$1==s{print $3}' "$dev"; echo OK ;;
+      kill) printf 'adb S=%s emu kill\n' "$S" >> "${AVD_STUB_LOG:-/dev/null}"
+            grep -v "^${S}	" "$dev" > "$dev.tmp"; mv "$dev.tmp" "$dev"; echo OK ;;
+    esac ;;
+esac
+EOF
+chmod +x "$work/bin/avdmanager" "$work/bin/adb"
+export AVD_STUB_DB="$work/avddb" ADB_STUB_DEVICES="$work/adbdevs" AVD_STUB_LOG="$work/avdlog" EMULATOR_LOCK_ROOT="$work/emu-locks"
+: > "$AVD_STUB_DB"; : > "$ADB_STUB_DEVICES"; : > "$AVD_STUB_LOG"; mkdir -p "$EMULATOR_LOCK_ROOT"
 
 # ---- stub pen（LS-141）：cleanup-merged.sh 移除前跑 pen-open.sh --status，後者只認 `pen interactive --app desktop`
 #      輸出的「Currently active canvas editor: `…`」那一行。PEN_STUB_PATH 有值就印那一行，否則模擬沒有 active 文件
@@ -765,6 +803,76 @@ grep -q 'simctl delete SIM-940$' "$SIM_STUB_LOG" && echo "✓ ㉑ 孤兒專屬�
 if grep -qF 'SIM-9400' "$SIM_STUB_DB" && grep -qF 'SIM-MAIN' "$SIM_STUB_DB" && ! grep -qF 'SIM-940'$'\t' "$SIM_STUB_DB"; then echo "✓ ㉑ db 只少了 SIM-940（LS-9400／main-* 仍在）"; else echo "✗ ㉑ db 內容不符" >&2; cat "$SIM_STUB_DB" >&2; fail=1; fi
 if [ ! -d "$LS_DERIVED_DATA_ROOT/LittleSprout-ggg" ] && [ -d "$LS_DERIVED_DATA_ROOT/LittleSprout-hhh" ]; then echo "✓ ㉑ DerivedData ggg 已刪、hhh（LS-9400）仍在"; else echo "✗ ㉑ DerivedData ggg／hhh 狀態不符" >&2; fail=1; fi
 has   '㉑ 摘要含專屬模擬器 1／DerivedData 1' "$out21" '專屬模擬器 1／DerivedData 1'
+
+
+# ---- ㉒ LS-477：Android AVD `LS-<n>-Pixel8` 連同專屬模擬器一起清（(e) 段；孤兒情境：票 worktree 早已清）。
+#        在跑的 emulator 先 `adb -s <serial> emu kill`（永遠帶 -s）再 `avdmanager delete avd -n`；鎖中跳過；鄰近票號
+#        LS-9500／別票／main-Pixel8 不動；AVD 不存在、本機沒 avdmanager 都不是錯。dry-run 零副作用。
+#        mutation：拿掉 emulator-lock 護欄 → ㉒c 的「鎖中」案例會被 kill＋delete ----
+avd_reset() {
+  printf 'LS-950-Pixel8\nLS-9500-Pixel8\nLS-951-Pixel8\nmain-Pixel8\n' > "$AVD_STUB_DB"
+  printf 'emulator-5554\tdevice\tLS-950-Pixel8\nemulator-5556\tdevice\tLS-951-Pixel8\n' > "$ADB_STUB_DEVICES"
+  : > "$AVD_STUB_LOG"; rm -rf "$EMULATOR_LOCK_ROOT"/*
+}
+avd_reset
+out22d="$(bash "$cleanup" --dry-run --repo "$e/repo" LS-950 2>&1)"; rc22d=$?
+rc_is '㉒a dry-run exit 0' 0 "$rc22d" "$out22d"
+has   '㉒a dry-run 列關閉在跑的 emulator（帶 -s serial）' "$out22d" '[dry-run] 關閉 Android emulator LS-950-Pixel8（emulator-5554；adb -s emulator-5554 emu kill）'
+has   '㉒a dry-run 列 delete AVD' "$out22d" '[dry-run] delete Android AVD LS-950-Pixel8'
+hasnt '㉒a 鄰近票號 LS-9500 不動' "$out22d" 'LS-9500-Pixel8'
+hasnt '㉒a 別票 LS-951 不動' "$out22d" 'LS-951-Pixel8'
+hasnt '㉒a main-Pixel8 不動' "$out22d" 'main-Pixel8'
+if [ ! -s "$AVD_STUB_LOG" ]; then echo "✓ ㉒a dry-run 未呼叫 adb emu kill／avdmanager delete"; else echo "✗ ㉒a dry-run 不該有副作用" >&2; cat "$AVD_STUB_LOG" >&2; fail=1; fi
+
+out22="$(bash "$cleanup" --apply --repo "$e/repo" LS-950 2>&1)"; rc22=$?
+rc_is '㉒b apply exit 0' 0 "$rc22" "$out22"
+ln_k=$(grep -n 'adb S=emulator-5554 emu kill' "$AVD_STUB_LOG" | head -1 | cut -d: -f1); ln_d=$(grep -n 'avdmanager delete avd -n LS-950-Pixel8' "$AVD_STUB_LOG" | head -1 | cut -d: -f1)
+if [ -n "$ln_k" ] && [ -n "$ln_d" ] && [ "$ln_k" -lt "$ln_d" ]; then echo "✓ ㉒b 先 adb -s emulator-5554 emu kill 再 avdmanager delete（stub log 順序）"; else echo "✗ ㉒b 應先 kill 再 delete（kill 行 ${ln_k:-無}、delete 行 ${ln_d:-無}）" >&2; cat "$AVD_STUB_LOG" >&2; fail=1; fi
+if grep -qE 'S= emu kill' "$AVD_STUB_LOG"; then echo "✗ ㉒b 出現無 -s 的 emu kill" >&2; fail=1; else echo "✓ ㉒b 沒有無 -s 的 emu kill"; fi
+if grep -qF 'LS-9500-Pixel8' "$AVD_STUB_DB" && grep -qF 'LS-951-Pixel8' "$AVD_STUB_DB" && grep -qF 'main-Pixel8' "$AVD_STUB_DB" && ! grep -qxF 'LS-950-Pixel8' "$AVD_STUB_DB" && grep -qF 'emulator-5556' "$ADB_STUB_DEVICES"; then echo "✓ ㉒b 只少了 LS-950-Pixel8，別票 AVD／emulator 都在"; else echo "✗ ㉒b db 內容不符" >&2; cat "$AVD_STUB_DB" "$ADB_STUB_DEVICES" >&2; fail=1; fi
+has   '㉒b 摘要含 Android AVD 1' "$out22" 'Android AVD 1'
+
+# ㉒c 鎖中（emulator-lock 持有中）→ 不 kill 不 delete，印鎖中
+avd_reset
+mkdir "$EMULATOR_LOCK_ROOT/emulator-lock-emulator-5554"
+out22c="$(bash "$cleanup" --apply --repo "$e/repo" LS-950 2>&1)"; rc22c=$?
+rc_is '㉒c 鎖中 exit 0' 0 "$rc22c" "$out22c"
+has   '㉒c 鎖中印原因' "$out22c" 'Android AVD LS-950-Pixel8（emulator-5554）鎖中'
+if [ ! -s "$AVD_STUB_LOG" ] && grep -qxF 'LS-950-Pixel8' "$AVD_STUB_DB"; then echo "✓ ㉒c 鎖中未 kill／未 delete"; else echo "✗ ㉒c 鎖中不該動" >&2; cat "$AVD_STUB_LOG" >&2; fail=1; fi
+has   '㉒c 摘要 AVD 鎖中 1' "$out22c" 'AVD 鎖中 1'
+
+# ㉒d 沒在跑的 AVD：直接 delete，不 kill
+avd_reset; printf 'emulator-5556\tdevice\tLS-951-Pixel8\n' > "$ADB_STUB_DEVICES"
+out22e="$(bash "$cleanup" --apply --repo "$e/repo" LS-950 2>&1)"; rc22e=$?
+if [ "$rc22e" -eq 0 ] && grep -qF 'avdmanager delete avd -n LS-950-Pixel8' "$AVD_STUB_LOG" && ! grep -qF 'emu kill' "$AVD_STUB_LOG"; then echo "✓ ㉒d 沒在跑 → 只 delete、不 kill"; else echo "✗ ㉒d 沒在跑不該 kill（exit ${rc22e}）" >&2; cat "$AVD_STUB_LOG" >&2; fail=1; fi
+
+# ㉒e AVD 不存在 → 不是錯
+avd_reset; printf 'LS-9500-Pixel8\n' > "$AVD_STUB_DB"
+out22f="$(bash "$cleanup" --apply --repo "$e/repo" LS-950 2>&1)"; rc22f=$?
+rc_is '㉒e AVD 不存在 exit 0' 0 "$rc22f" "$out22f"
+has   '㉒e 印無 AVD' "$out22f" '無 Android AVD LS-950-Pixel8'
+
+# ㉒f 本機沒有 avdmanager（沒裝 Android SDK）→ 略過、不是錯
+avd_reset; mv "$work/bin/avdmanager" "$work/avdmanager.bak"
+out22g="$(bash "$cleanup" --apply --repo "$e/repo" LS-950 2>&1)"; rc22g=$?
+mv "$work/avdmanager.bak" "$work/bin/avdmanager"
+rc_is '㉒f 無 avdmanager exit 0' 0 "$rc22g" "$out22g"
+has   '㉒f 印略過 Android AVD 段' "$out22g" '無 avdmanager，略過 Android AVD 段'
+
+# ㉒g mutation：拿掉 emulator-lock 護欄 → ㉒c 的鎖中案例變成真的 kill＋delete
+mutc=$(mktemp -d); mkdir -p "$mutc/scripts/ops" "$mutc/scripts/gates/lib"
+python3 - "$cleanup" "$mutc/scripts/ops/cleanup-merged.sh" <<'PY'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+old = 'if [ -n "$avd_serial" ] && [ -d "${EMULATOR_LOCK_ROOT:-/tmp}/emulator-lock-${avd_serial}" ]; then'
+assert old in s, "anchor missing"
+open(sys.argv[2], "w", encoding="utf-8").write(s.replace(old, "if false; then", 1))
+PY
+cp "${root}/scripts/gates/lib/android-tools.sh" "$mutc/scripts/gates/lib/"
+avd_reset; mkdir "$EMULATOR_LOCK_ROOT/emulator-lock-emulator-5554"
+out22m="$(bash "$mutc/scripts/ops/cleanup-merged.sh" --apply --repo "$e/repo" LS-950 2>&1)"
+if grep -qF 'adb S=emulator-5554 emu kill' "$AVD_STUB_LOG" && grep -qF 'avdmanager delete avd -n LS-950-Pixel8' "$AVD_STUB_LOG"; then echo "✓ ㉒g mutant：拿掉鎖護欄後鎖中的 emulator 被 kill＋delete（㉒c 的不動確由該護欄造成）"; else echo "✗ ㉒g mutant 應讓鎖中案例被動到" >&2; printf '%s\n' "$out22m" | sed 's/^/    /' >&2; fail=1; fi
+rm -rf "$mutc"
 
 if [ "$fail" -eq 0 ]; then echo "✓ cleanup-merged.test.sh 全綠"; else echo "✗ cleanup-merged.test.sh 有失敗" >&2; fi
 exit "$fail"

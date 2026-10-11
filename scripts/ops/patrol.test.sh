@@ -36,6 +36,24 @@ export SUPABASE_LOCK_DIR="$work/lock"
 # ⑮～⑰（本票：驗 Booted 判定）各自在呼叫時明講 SIMCTL_LIST_JSON（⑭ 特意設成空字串讓它照舊落回
 # PATH 裡的 xcrun stub——patrol.sh 用 `${SIMCTL_LIST_JSON:-…}`，空字串與未設值同樣觸發預設值）。
 export SIMCTL_LIST_JSON='{"devices":{}}'
+# LS-477：Booted emulator 殘機段（patrol.sh 讀 `adb devices`）同理隔離——本機真的 /opt/homebrew/bin/adb 在 PATH 上，
+# 不隔離的話既有案例會去打真 adb（順手起 adb server、列出本機真 emulator）。預設指到只回表頭的假 adb（無裝置）；㊲ 自己餵
+# FAKE_ADB_DEVICES。FAKE_ADB_HANG=1 讓 `devices` 睡 30 秒，驗 5 秒看門狗。
+cat > "$work/fake-adb" <<'EOF'
+#!/bin/bash
+S=; if [ "${1:-}" = -s ]; then S=$2; shift 2; fi
+dev="${FAKE_ADB_DEVICES:-/dev/null}"
+case "${1:-}" in
+  devices)
+    [ "${FAKE_ADB_HANG:-0}" = 1 ] && sleep 30
+    echo "List of devices attached"
+    while IFS=$'\t' read -r s st n || [ -n "$s" ]; do [ -n "$s" ] && printf '%s\t%s\n' "$s" "$st"; done < "$dev"
+    echo ;;
+  emu) [ "${2:-}" = avd ] && { awk -F'\t' -v s="$S" '$1==s{print $3}' "$dev"; echo OK; } ;;
+esac
+EOF
+chmod +x "$work/fake-adb"
+export PATROL_ADB="$work/fake-adb"
 # LS-260：Supabase 容器啟動時間段同款隔離——本機真的有 supabase 容器在跑時（開發機幾乎必然），
 # 啟動時間差超過門檻就會掛旗標，讓 ③／⑧ 這類「全正常無 ⚠」的既有斷言隨本機狀態偶發紅。預設餵一支
 # 「查不到任何容器」的假 docker；㉙ 自己在呼叫時覆寫成有內容的假身。
@@ -2745,6 +2763,51 @@ if grep -q 'if \[ "$report_hour_n" -ge "$REPORT_HOUR" \]; then$' "$mut36" && ! g
 else
   echo "✗ ㊱ mutant 的 sed 未命中（負控本身無效）" >&2; fail=1
 fi
+
+# ---- ㊲ LS-477：Booted emulator 殘機（Android 前置 A3；iOS 對應物＝㉓ 專屬模擬器第一層＋⑮ Booted 模擬器）：
+#        `adb devices` 的 emulator-* 逐台取 AVD 名，`LS-<n>-Pixel8` 且票 worktree 已不在 → ⚠ 殘機＋動作行
+#        （`adb -s <serial> emu kill`｜`cleanup-merged.sh --apply LS-<n>`）；worktree 在 → 使用中不標；握著 emulator-lock → ⓘ 不標；
+#        main-Pixel8／使用者自己的 AVD → 不管；無 adb → 略過；adb 卡住 → 5 秒看門狗後略過（不卡巡檢）。
+#        假 adb 讀 $FAKE_ADB_DEVICES（serial\tstate\tAVD 名）；EMULATOR_LOCK_ROOT 指到暫存目錄。
+#        mutation：worktree 判斷拿掉（恆視為不在）→ 在飛票的 emulator 也被標殘機 ----
+export EMULATOR_LOCK_ROOT="$work/emu-locks"; mkdir -p "$EMULATOR_LOCK_ROOT"
+# LS-40 的 worktree 在（㉓ 已建）；LS-999／LS-4／LS-998 沒有（整字比對：LS-4 不能被 LS-40 命中）
+printf 'emulator-5554\tdevice\tLS-999-Pixel8\nemulator-5556\tdevice\tLS-40-Pixel8\nemulator-5558\tdevice\tLS-998-Pixel8\nemulator-5560\tdevice\tmain-Pixel8\nemulator-5562\tdevice\tPixel_8_API_36\nemulator-5564\toffline\tLS-4-Pixel8\n' > "$work/fake-adb-devices.txt"
+mkdir -p "$EMULATOR_LOCK_ROOT/emulator-lock-emulator-5558"
+out37="$(FAKE_ADB_DEVICES="$work/fake-adb-devices.txt" PATROL_ADB="$work/fake-adb" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
+rc_is '㊲ 有殘機仍 exit 0' 0 "$rc" "$out37"
+has   '㊲ (a) LS-999-Pixel8（worktree 不在）→ ⚠ 殘機＋kill 與 cleanup 動作行' "$out37" '⚠ LS-999-Pixel8（emulator-5554）票 LS-999 的 worktree 已不在（殘機）→ adb -s emulator-5554 emu kill｜連 AVD 一起清：bash scripts/ops/cleanup-merged.sh --apply LS-999'
+has   '㊲ (a) LS-4-Pixel8（offline）也算；整字比對不被 LS-40 的 worktree 命中' "$out37" '⚠ LS-4-Pixel8（emulator-5564）票 LS-4 的 worktree 已不在'
+has   '㊲ (b) LS-40-Pixel8（worktree 在）→ 使用中、不標 ⚠' "$out37" 'LS-40-Pixel8（emulator-5556）票 LS-40 worktree 仍在，使用中'
+hasnt '㊲ (b) LS-40 不進 ⚠' "$out37" '⚠ LS-40-Pixel8'
+has   '㊲ (c) 握著 emulator-lock → ⓘ 鎖中勿關' "$out37" 'ⓘ LS-998-Pixel8（emulator-5558）鎖中（emulator-lock 持有中）——勿關'
+hasnt '㊲ (c) 鎖中的不進 ⚠' "$out37" '⚠ LS-998-Pixel8'
+hasnt '㊲ main-Pixel8 不管' "$out37" 'main-Pixel8（emulator'
+hasnt '㊲ 使用者自己的 AVD 不管' "$out37" 'Pixel_8_API_36（emulator'
+brief37="$(FAKE_ADB_DEVICES="$work/fake-adb-devices.txt" PATROL_ADB="$work/fake-adb" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㊲ --brief 帶 [Booted emulator LS-999-Pixel8] 旗標（add_flag）' "$brief37" '[Booted emulator LS-999-Pixel8]'
+hasnt '㊲ --brief 不帶在飛票／鎖中的旗標' "$brief37" '[Booted emulator LS-40-Pixel8]'
+# 無 adb → 略過
+out37n="$(PATROL_ADB="$work/no-such-adb" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㊲ 無 adb → 印略過、不當異常' "$out37n" '（無 adb（沒裝 Android SDK），略過）'
+hasnt '㊲ 無 adb → 不產生 Booted emulator 旗標' "$out37n" '[Booted emulator'
+# adb 卡住（devices 睡 30 秒）→ 5 秒看門狗後略過，巡檢不被拖住
+t0=$(date +%s)
+out37h="$(FAKE_ADB_HANG=1 FAKE_ADB_DEVICES="$work/fake-adb-devices.txt" PATROL_ADB="$work/fake-adb" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"; rc=$?
+t1=$(date +%s)
+rc_is '㊲ adb 卡住仍 exit 0' 0 "$rc" "$out37h"
+has   '㊲ adb 卡住 → 印逾時略過' "$out37h" '（adb devices 逾時／無輸出，略過）'
+if [ $((t1 - t0)) -lt 20 ]; then echo "✓ ㊲ adb 卡住 5 秒看門狗：巡檢在 $((t1 - t0)) 秒內完成（< 20）"; else echo "✗ ㊲ adb 卡住拖慢巡檢（$((t1 - t0)) 秒）" >&2; fail=1; fi
+# mutation：worktree 判斷恆視為「不在」→ 在飛票 LS-40 也被標殘機（證明 (b) 確由 ticket_has_worktree 造成）
+mut37="$work/patrol-mut37.sh"
+sed 's/^      if ticket_has_worktree "\$emu_ticket"; then$/      if false; then/' "$patrol" > "$mut37"
+if ! diff -q "$patrol" "$mut37" >/dev/null 2>&1; then
+  out37m="$(FAKE_ADB_DEVICES="$work/fake-adb-devices.txt" PATROL_ADB="$work/fake-adb" bash "$mut37" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+  has '㊲ mutant：拿掉 worktree 判斷後 LS-40-Pixel8 也被標 ⚠（(b) 的不標確由該判斷造成）' "$out37m" '⚠ LS-40-Pixel8（emulator-5556）'
+else
+  echo "✗ ㊲ mutant 的 sed 未命中（負控本身無效）" >&2; fail=1
+fi
+rm -rf "$EMULATOR_LOCK_ROOT"/*
 
 if [ "$fail" -eq 0 ]; then
   if [ "$jq_skipped" -gt 0 ]; then

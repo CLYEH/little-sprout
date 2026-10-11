@@ -54,7 +54,10 @@
 #      Pen 開著／cwd 保護）代表可能還有人在用，附屬資源一律不動並印原因。worktree 早已清、連 git worktree 記錄都
 #      沒有的「孤兒」（只剩專屬機／DerivedData——巡檢殘機動作行 `→ cleanup-merged.sh --apply LS-<n>` 指到這裡，LS-187）
 #      同樣走這條：沒有 worktree 命中就沒有東西擋，(e) 段照清（自測 ㉑）。--all 不套用（沒有票號就沒有前綴
-#      可比）。無 xcrun（CI／非 macOS）只跳過模擬器段。模擬器與 DerivedData 都是可再生的快取（detect-simulator.sh
+#      可比）。無 xcrun（CI／非 macOS）只跳過模擬器段。**LS-477（Android 前置 A3）**：同一段也連刪該票的 Android AVD
+#      `LS-<n>-Pixel8`（detect-emulator.sh 建的）——還在跑的先 `adb -s <serial> emu kill`（永遠帶 -s）、握著 emulator-lock
+#      （`${EMULATOR_LOCK_ROOT:-/tmp}/emulator-lock-<serial>`）的跳過不刪，再 `avdmanager delete avd -n LS-<n>-Pixel8`；
+#      AVD 不存在、或本機沒有 avdmanager（沒裝 Android SDK）都不是錯（印一行略過）。模擬器與 DerivedData 都是可再生的快取（detect-simulator.sh
 #      下次會重建、xcodebuild 會重編），刪錯的代價是一次重建，不是資料遺失；自測用 PATH 前置的 stub xcrun＋
 #      LS_DERIVED_DATA_ROOT 假目錄，不碰真機。
 #
@@ -362,7 +365,7 @@ fail=0
 wt_removed=0; wt_skipped_dirty=0; wt_skipped_unmerged=0; wt_skipped_recent=0; wt_skipped_race=0; wt_skipped_pen=0
 br_removed=0; br_skipped_unmerged=0; br_skipped_recent=0
 rb_removed=0; rb_skipped_pr=0; rb_skipped_nogh=0; rb_skipped_recent=0
-sim_removed=0; sim_skipped_lock=0; dd_removed=0
+sim_removed=0; sim_skipped_lock=0; dd_removed=0; avd_removed=0; avd_skipped_lock=0
 OUT_WT=; OUT_BR=; OUT_RB=; OUT_E=
 FILTER_WT_PATHS=      # (e)：指名票命中的 worktree 路徑（含被 cwd 保護／略過的），一行一個
 FILTER_WT_HANDLED=    # (e)：其中本次已移除／dry-run 判定將移除／目錄本就不存在的
@@ -662,6 +665,37 @@ EOF
   else
     OUT_E="${OUT_E}  （無 xcrun，略過專屬模擬器段）"$'\n'
   fi
+  # Android AVD（LS-477）：`<票號>-Pixel8`（detect-emulator.sh 建的）。avdmanager／adb 經 android-tools.sh 定位（SDK 內固定位置
+  # 優先、再 PATH）；沒有 avdmanager＝本機沒裝 Android SDK，印略過、不算錯。不存在的 AVD 也不算錯（`delete avd` 對不存在的會
+  # 回非 0，所以先 `list avd -c` 確認名稱存在才刪）。
+  # shellcheck source=../gates/lib/android-tools.sh
+  source "${SELF_DIR}/../gates/lib/android-tools.sh"
+  avd_name="${FILTER}-Pixel8"
+  avdm=$(android_tool avdmanager "$ROOT"); adbt=$(android_tool adb "$ROOT")
+  if [ -z "$avdm" ]; then
+    OUT_E="${OUT_E}  （無 avdmanager，略過 Android AVD 段）"$'\n'
+  elif ! "$avdm" list avd -c 2>/dev/null | tr -d '\r' | grep -qxF "$avd_name"; then
+    OUT_E="${OUT_E}  （無 Android AVD ${avd_name}）"$'\n'
+  else
+    avd_serial=
+    if [ -n "$adbt" ]; then
+      for avd_s in $("$adbt" devices 2>/dev/null | awk 'NR>1 && $1 ~ /^emulator-[0-9]+$/ && ($2=="device"||$2=="offline"){print $1}'); do
+        if [ "$("$adbt" -s "$avd_s" emu avd name 2>/dev/null | tr -d '\r' | head -1)" = "$avd_name" ]; then avd_serial=$avd_s; break; fi
+      done
+    fi
+    if [ -n "$avd_serial" ] && [ -d "${EMULATOR_LOCK_ROOT:-/tmp}/emulator-lock-${avd_serial}" ]; then
+      avd_skipped_lock=$((avd_skipped_lock + 1))
+      OUT_E="${OUT_E}  ⚠ Android AVD ${avd_name}（${avd_serial}）鎖中（emulator-lock 持有中），不刪"$'\n'
+    else
+      avd_ok=1
+      if [ -n "$avd_serial" ]; then
+        act "關閉 Android emulator ${avd_name}（${avd_serial}；adb -s ${avd_serial} emu kill）" "$adbt" -s "$avd_serial" emu kill || avd_ok=0
+      fi
+      if [ "$avd_ok" -eq 1 ]; then
+        act "delete Android AVD ${avd_name}" "$avdm" delete avd -n "$avd_name" && avd_removed=$((avd_removed + 1))
+      fi
+    fi
+  fi
   # DerivedData：info.plist 是 Xcode 寫的 XML plist（本機實測），WorkspacePath 的 <string> 緊接在 <key> 下一行。
   if [ -d "$dd_root" ]; then
     for d in "$dd_root"/LittleSprout-*; do
@@ -692,7 +726,7 @@ if [ "$rb_removed" -gt 0 ]; then
 fi
 echo "== (e) 附屬資源（指名 LS-<n>：專屬模擬器 LS-<n>-*＋DerivedData WorkspacePath 指向該票；worktree 仍留在磁碟則不動；LS-176）"
 [ -n "$OUT_E" ] && printf '%s' "$OUT_E" || echo "  （無略過項；動作見上方 act 輸出）"
-echo "== 摘要（${MODE}）：worktree ${wt_removed}／本機分支 ${br_removed}／遠端分支 ${rb_removed}／專屬模擬器 ${sim_removed}／DerivedData ${dd_removed}（略過：worktree dirty ${wt_skipped_dirty}、worktree 未併入 ${wt_skipped_unmerged}、worktree 太新 ${wt_skipped_recent}、worktree 重驗生變 ${wt_skipped_race}、worktree Pen 開著 ${wt_skipped_pen}、本機分支未併入 ${br_skipped_unmerged}、本機分支太新 ${br_skipped_recent:-0}、遠端無法確認或有 PR $((rb_skipped_pr + rb_skipped_nogh))、遠端太新 ${rb_skipped_recent:-0}、專屬模擬器鎖中 ${sim_skipped_lock}）"
+echo "== 摘要（${MODE}）：worktree ${wt_removed}／本機分支 ${br_removed}／遠端分支 ${rb_removed}／專屬模擬器 ${sim_removed}／DerivedData ${dd_removed}／Android AVD ${avd_removed}（略過：worktree dirty ${wt_skipped_dirty}、worktree 未併入 ${wt_skipped_unmerged}、worktree 太新 ${wt_skipped_recent}、worktree 重驗生變 ${wt_skipped_race}、worktree Pen 開著 ${wt_skipped_pen}、本機分支未併入 ${br_skipped_unmerged}、本機分支太新 ${br_skipped_recent:-0}、遠端無法確認或有 PR $((rb_skipped_pr + rb_skipped_nogh))、遠端太新 ${rb_skipped_recent:-0}、專屬模擬器鎖中 ${sim_skipped_lock}、AVD 鎖中 ${avd_skipped_lock}）"
 if [ "$MODE" = dry-run ]; then
   echo "（dry-run：以上為將執行的動作，尚未做任何變更；加 --apply 實際執行）"
 fi

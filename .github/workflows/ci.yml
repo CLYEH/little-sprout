@@ -246,6 +246,8 @@ jobs:
           # LS-477：Android 本機環境檢查（JDK major 對 .jdk-version、SDK platform-tools＋platforms/android-<api>、emulator 資訊性；
           # 假 java／假 SDK 夾具＋mutation：拿掉 JDK major 比對→版本不符案例轉通過）
           bash scripts/gates/android-env-check.test.sh || rc=1
+          # LS-477：本票專屬 Android emulator 偵測／建立／重用／port 分配（假 adb／emulator／avdmanager；併發 alloc 鎖＋mutation）
+          bash scripts/gates/detect-emulator.test.sh || rc=1
           # LS-264 M1 的第二個差集（同 `ece3dc5b`）：`stale-xcodebuild-check.test.sh`（LS-236，13 組含 mutation）
           # 同樣只存在於 repo、沒被列進來。它 fixture 化 `pgrep`／`ps`，⑫／⑬ 另用真 `pgrep`／`ps` 驗 pattern
           # 自我誤判，兩者在 `ubuntu:24.04` 皆可跑（實測全綠），不需 Xcode 或模擬器。
@@ -461,6 +463,8 @@ jobs:
           # LS-207（c18ef27f）：--udid 字級／外觀自動調整＋復原；push-gate.test.sh 另外覆蓋核心互斥／逾時邏輯（把
           # 真正的 simulator-lock.sh 複製進合成 repo），這裡只補新參數
           bash scripts/ops/simulator-lock.test.sh || rc=1
+          # LS-477：以 adb serial 為鍵的 emulator 鎖（互斥／不同 serial 不競爭／逾時 124／死鎖回收／--status／SIGTERM 釋放／mutation）
+          bash scripts/ops/emulator-lock.test.sh || rc=1
           bash scripts/ops/promote.test.sh || rc=1
           bash scripts/ops/promote-follow.test.sh || rc=1
           # LS-299：等 CI 分段前景輪詢（qa/ios-dev 撞 gh run watch 跑超過 Bash 工具 600s 上限、系統移背景
