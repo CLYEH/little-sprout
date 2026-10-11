@@ -458,3 +458,101 @@ begin
   raise notice 'ok 8：push-dispatch 排程存在，schedule=%，command=%', v_schedule, v_command;
 end;
 $$;
+
+-- ===========================================================================
+-- 9. platform 分流（LS-473，Android 前置 A5）：device_platform 列舉含 'android'；
+--    register_device_token 對 'ios'（iOS 既有呼叫形狀）與 'android' 都寫對 platform；
+--    未知平台字串仍被擋；notification_recipients() 對混合平台的成員回傳各 token 正確的
+--    platform（handler.ts 靠這一欄選 APNs／FCM）。獨立交易，rollback 不留痕跡。
+-- ===========================================================================
+begin;
+
+do $$
+declare
+  v_owner  uuid := 'e1000000-0000-4000-8000-000000000001'; -- actor
+  v_mom    uuid := 'e1000000-0000-4000-8000-000000000002'; -- 兩支裝置：iOS＋Android
+  v_family uuid := 'e2000000-0000-4000-8000-000000000001';
+  v_event  uuid := 'e3000000-0000-4000-8000-000000000001';
+  v_platform text;
+  v_n int;
+  v_ios_seen boolean;
+  v_android_seen boolean;
+begin
+  set local role postgres;
+
+  insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+  values
+    (v_owner, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls473-dad@ls473.test', now(), now(), '{}', '{}'),
+    (v_mom,   '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ls473-mom@ls473.test', now(), now(), '{}', '{}');
+  insert into public.families (id, name, created_by) values (v_family, 'LS473 測試家', v_owner);
+  insert into public.family_members (family_id, user_id, role) values
+    (v_family, v_owner, 'owner'), (v_family, v_mom, 'member')
+  on conflict do nothing;
+
+  -- 9a. 列舉含 android；既有值 ios 仍在（APNs 路徑的 platform 值不變）
+  if not exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid
+                  where t.typname = 'device_platform' and e.enumlabel = 'android') then
+    raise exception 'FAIL 9a：device_platform 列舉缺 android';
+  end if;
+  if not exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid
+                  where t.typname = 'device_platform' and e.enumlabel = 'ios') then
+    raise exception 'FAIL 9a：device_platform 列舉缺 ios';
+  end if;
+  raise notice 'ok 9a：device_platform 含 ios 與 android';
+
+  -- 9b. register_device_token：iOS 既有呼叫形狀（p_platform=''ios''）→ ios；android → android
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_mom::text, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.register_device_token('ls473-tok-ios', 'ios');
+  perform public.register_device_token('ls473-tok-android', 'android');
+  reset role;
+  select platform::text into v_platform from public.device_tokens where token = 'ls473-tok-ios';
+  if v_platform is distinct from 'ios' then
+    raise exception 'FAIL 9b：iOS 既有呼叫應寫入 platform=ios，實際 %', v_platform;
+  end if;
+  select platform::text into v_platform from public.device_tokens where token = 'ls473-tok-android';
+  if v_platform is distinct from 'android' then
+    raise exception 'FAIL 9b：android 註冊應寫入 platform=android，實際 %', v_platform;
+  end if;
+  raise notice 'ok 9b：register_device_token(''ios'')→ios、(''android'')→android';
+
+  -- 9c. 未知平台字串仍被列舉轉型擋下（不因加值而放寬成任意字串）
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_mom::text, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.register_device_token('ls473-tok-bogus', 'fcm');
+    reset role;
+    raise exception 'FAIL 9c：未知平台 fcm 不該註冊成功';
+  exception when invalid_text_representation then
+    reset role;
+  end;
+  select count(*) into v_n from public.device_tokens where token = 'ls473-tok-bogus';
+  if v_n <> 0 then
+    raise exception 'FAIL 9c：未知平台的 token 不該留下列';
+  end if;
+  raise notice 'ok 9c：未知平台字串被擋（invalid_text_representation），不留列';
+
+  -- 9d. notification_recipients() 對混合平台成員回傳各 token 正確的 platform
+  insert into public.notification_events
+    (id, family_id, kind, target_type, target_id, actor_id, event_count, occurred_at)
+  values (v_event, v_family, 'diary', 'diary', 'e4000000-0000-4000-8000-000000000001',
+          v_owner, 1, now() - interval '10 minutes');
+
+  set local role service_role;
+  select bool_or(token = 'ls473-tok-ios' and platform::text = 'ios'),
+         bool_or(token = 'ls473-tok-android' and platform::text = 'android'),
+         count(*)
+    into v_ios_seen, v_android_seen, v_n
+    from public.notification_recipients(array[v_event]);
+  reset role;
+  if v_n <> 2 or not coalesce(v_ios_seen, false) or not coalesce(v_android_seen, false) then
+    raise exception 'FAIL 9d：混合平台收件人應為 2 列且各帶正確 platform（n=% ios=% android=%）',
+      v_n, v_ios_seen, v_android_seen;
+  end if;
+  raise notice 'ok 9d：notification_recipients() 對混合平台回傳 ios／android 各一列且 platform 正確';
+end;
+$$;
+
+rollback;

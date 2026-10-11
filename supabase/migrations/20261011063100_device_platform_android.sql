@@ -1,0 +1,18 @@
+-- LS-473（Android 前置 A5）— device_platform 列舉加 'android'，讓 push-dispatch 能依
+-- 平台分流到 FCM。
+--
+-- 與票文的出入（已在 PR body／handoff 說明）：票文假設 `device_tokens.platform` 欄尚不存在、
+-- 要新增 `text 'apns'|'fcm'`；實際上該欄自初始 schema 就存在（`20260822120000_init_schema.sql`：
+-- `platform public.device_platform not null default 'ios'`，列舉當時只有 'ios'），iOS 現行
+-- 呼叫固定傳 'ios'（PushNotificationStore.swift），`register_device_token(p_token, p_platform)`
+-- 與 `notification_recipients()` 的回傳欄位也早已含 platform。因此：
+--   - 不新增欄位、不改 `register_device_token`／`notification_recipients()`／
+--     `claim_notification_events()`（簽章與本體皆不動；RPC 的 `p_platform::public.device_platform`
+--     轉型自動接受新值，未知平台字串仍會被列舉轉型擋下）；
+--   - 值域語意是「裝置平台」：'ios' → APNs、'android' → FCM（provider 由 push-dispatch 的
+--     handler.ts 依 platform 決定，SQL 面不知道也不需要知道 provider）；
+--   - 既有列不需回填（全是 'ios'）。
+--
+-- ALTER TYPE ... ADD VALUE 在 migration-breaking-check.sh 屬 B7（BREAKING）：既有消費端
+-- （push-dispatch handler.ts 的 platform 分派）需認得新值——本票同 PR 一併處理。
+alter type public.device_platform add value if not exists 'android';
