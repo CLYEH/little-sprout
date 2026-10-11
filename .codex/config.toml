@@ -1,0 +1,6 @@
+# LS-482: project-only worker defaults. Keep parent model/effort, permissions,
+# MCP connections and authentication under the invoking runtime's control.
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
+default_subagent_model = "gpt-6.1-sol"
