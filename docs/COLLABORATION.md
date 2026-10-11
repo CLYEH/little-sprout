@@ -401,5 +401,5 @@ hook 隨分支內容走（舊分支可能沒有新 hook）、且可被 `--no-ver
 
 | 前饋規則 | 機械反饋 gate | 狀態 |
 |---|---|---|
-| Android 變更也要過 push gate（Gradle 單元測試＋lint）；emulator 與本機容器共用資源，需 lock，並有 hook 擋裸跑（對應 iOS 的 push-gate／simulator 規約） | `LS-<A3>`：push gate Android 段＋emulator lock＋hook | 待落地 |
-| Android CI 需有 instrumented 測試、QA e2e，且可點元件 ≥48dp（對應 iOS 的 tap-target 44pt 規則） | `LS-<A4>`：CI `android-connected`＋`qa-e2e-android`＋48dp 檢查 | 待落地 |
+| Android 變更也要過 push gate（Gradle 單元測試＋lint）；emulator 與本機容器共用資源，需 lock，並有 hook 擋裸跑（對應 iOS 的 push-gate／simulator 規約） | `LS-477`：push gate Android 段＋emulator lock＋emu-all-guard | 待落地 |
+| Android CI 需有 instrumented 測試、QA e2e，且可點元件 ≥48dp（對應 iOS 的 tap-target 44pt 規則） | `LS-478`：CI `android-connected`＋`qa-e2e-android`＋48dp 檢查 | 待落地 |
