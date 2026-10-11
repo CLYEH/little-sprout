@@ -5,7 +5,10 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 
 /** Supabase 連線設定。值來自 android/local.properties 經 BuildConfig（見 core-supabase/build.gradle.kts）。 */
-data class SupabaseConfig(val url: String, val anonKey: String) {
+data class SupabaseConfig(
+    val url: String,
+    val anonKey: String,
+) {
     init {
         require(url.isNotBlank()) { "SUPABASE_URL 為空：請複製 android/local.properties.example 為 local.properties 並填值" }
         require(anonKey.isNotBlank()) {

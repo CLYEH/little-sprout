@@ -51,7 +51,8 @@ A1 不跑 emulator／connected test（後續票）。
 ## 版本選擇（2026-10 時點）
 
 AGP 8.13.2（刻意不上 9.x，DSL／內建 Kotlin 變動大）、Gradle 8.14.5、Kotlin 2.3.21（supabase-kt 3.8.0 以 Kotlin 2.4 編譯，
-Kotlin 編譯器可讀高一個 minor 的 metadata，所以 Kotlin 不能停在 2.2）、Compose BOM 2026.09.00、supabase-kt BOM 3.8.0、
+Kotlin 編譯器可讀高一個 minor 的 metadata，所以 Kotlin 不能停在 2.2）、Compose BOM 2026.06.01、activity-compose 1.10.1（兩者 minCompileSdk 35；BOM 2026.08+／activity 1.11+ 要 compileSdk 36 以上，
+隨 `.android-api` 一起升）、supabase-kt BOM 3.8.0、
 ktor 3.5.1（與 supabase-kt 同版）、detekt 1.23.8（見下）、ktlint-gradle 14.2.0。
 全部集中在 `gradle/libs.versions.toml`。
 
