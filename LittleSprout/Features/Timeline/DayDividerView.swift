@@ -16,6 +16,7 @@ struct DayDividerView: View {
             Text(Self.label(for: date, twoLines: dynamicTypeSize.isAccessibilitySize))
                 .appFont(.note, weight: .bold)
                 .foregroundStyle(Color.lsTextSecondary)
+                .layoutPriority(1)
             Rectangle()
                 .fill(Color.lsBorder)
                 .frame(height: 1)
@@ -42,6 +43,7 @@ struct DayDividerView: View {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "zh_Hant_TW")
         formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
         formatter.dateFormat = "M月d日"
         let body = formatter.string(from: date)
         formatter.dateFormat = "EEEE"
