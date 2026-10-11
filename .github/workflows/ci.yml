@@ -1678,6 +1678,20 @@ jobs:
             exit 1
           fi
           ls -l /dev/kvm
+      # 第 1 次 run（38147176597）實測：runner image 內建的 avdmanager 太舊，`avdmanager create avd --device pixel_8` 回
+      # 「No device found matching --device pixel_8」（emulator-runner 的 Create AVD 階段，環境性、與測試無關）；
+      # cmdline-tools 13.0（13114758）的 `avdmanager list device -c` 有 pixel_8。先升到 latest 再讓 emulator-runner 建 AVD。
+      - name: 更新 cmdline-tools（內建 avdmanager 沒有 pixel_8 裝置定義）
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager --install 'cmdline-tools;latest' > /dev/null
+          avdmanager list device -c | grep -qx pixel_8 || {
+            echo "::error::環境性失敗：升級後 avdmanager 仍列不出 pixel_8 裝置定義（$(avdmanager --version 2>&1 | tail -1)）"
+            avdmanager list device -c | head -30
+            exit 1
+          }
+          echo "→ avdmanager 有 pixel_8"
       - name: instrumented 測試（emulator API ${{ steps.api.outputs.api }}，Pixel 8）
         if: steps.scope.outputs.run == 'true'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
