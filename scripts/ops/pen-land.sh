@@ -11,10 +11,16 @@
 # `open -a Pen` 之後）。路徑含空白／非 ASCII 時 sha1 可能對不上（R1 I2；本票對含空白路徑實測引號處理
 # 正確，只是若真的對不上，找不到 backup 的錯誤訊息要能提示往這個方向查）。
 #
-# 用法：pen-land.sh <worktree-or-repo-root> [--expect-nodes N] [--after EPOCH [--marker STRING]] [--allow-unchanged] [--allow-meta "<說明>"] [--dry-run]
+# 用法：pen-land.sh <worktree-or-repo-root> [--pen <path>] [--expect-nodes N] [--after EPOCH [--marker STRING]] [--allow-unchanged] [--allow-meta "<說明>"] [--dry-run]
+#
+# **LS-480 `--pen <path>`**（絕對路徑或相對 <root>；省略＝`<root>/design/littlesprout.pen`，行為一字不變）：落地目標改為
+# 指定的 .pen 檔（例如提案檔 `docs/design-proposals/<slug>/<name>.pen`）。解析與 backup 路徑算法由
+# `lib/pen-path.sh` 提供；backup sha1 由**解析後的實體絕對路徑**算。「節點數基線」：本腳本的結構 diff 本來就是
+# 「目標檔目前內容（before）vs backup（after）」，不看 git base，所以非主稿路徑不需要另一套基線——目標檔必須已存在於
+# 磁碟（`--pen` 路徑不存在 exit 2）；非主稿路徑時額外印一行說明，讓 handoff／review 一眼看出基線是「該檔目前內容」。
 #
 # 流程：
-#   1. 算 want = <root>/design/littlesprout.pen 的絕對路徑；sha1(file://want) 找 backup。
+#   1. 算 want = <root>/design/littlesprout.pen（或 --pen 指定檔）的絕對路徑；sha1(file://want) 找 backup。
 #   2. --after EPOCH（R1 F1，LS-26 步驟 2 的機械版）：backup mtime 早於 EPOCH 即拒、印兩邊時間、exit 1，
 #      不往下跑——ui-designer 在最後一次 execute 之後立刻 `t=$(date +%s)`，用 `--after $t` 呼叫，擋住
 #      「autosave 還沒追上最新編輯」這種假落地。省略則不做新鮮度檢查（相容舊呼叫，但 ui-designer 的收工
@@ -63,9 +69,12 @@
 #
 # 自測：scripts/ops/pen-land.test.sh。
 set -uo pipefail
+pen_land_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pen-path.sh
+source "${pen_land_script_dir}/lib/pen-path.sh"
 
 usage() {
-  echo "用法：pen-land.sh <worktree-or-repo-root> [--expect-nodes N] [--after EPOCH [--marker STRING]] [--allow-unchanged] [--allow-meta \"<說明>\"] [--dry-run]" >&2
+  echo "用法：pen-land.sh <worktree-or-repo-root> [--pen <path>] [--expect-nodes N] [--after EPOCH [--marker STRING]] [--allow-unchanged] [--allow-meta \"<說明>\"] [--dry-run]" >&2
 }
 
 if [ $# -lt 1 ]; then
@@ -84,8 +93,17 @@ allow_unchanged=0
 allow_meta=0
 allow_meta_desc=""
 dry_run=0
+pen_arg=""
 while [ $# -gt 0 ]; do
   case "$1" in
+    --pen)
+      if [ $# -lt 2 ] || [ -z "${2:-}" ]; then
+        echo "✗ pen-land：--pen 需要一個 .pen 路徑參數（絕對或相對 <root>）" >&2
+        exit 2
+      fi
+      pen_arg=$2
+      shift 2
+      ;;
     --expect-nodes)
       if [ $# -lt 2 ] || ! printf '%s' "${2:-}" | grep -qE '^[0-9]+$'; then
         echo "✗ pen-land：--expect-nodes 需要一個非負整數參數" >&2
@@ -146,11 +164,8 @@ root=$(cd "$target" 2>/dev/null && pwd -P) || {
   echo "✗ pen-land：找不到目錄「${target}」" >&2
   exit 2
 }
-want="${root}/design/littlesprout.pen"
-[ -f "$want" ] || {
-  echo "✗ pen-land：找不到「${want}」" >&2
-  exit 2
-}
+pen_resolve_path pen-land "$root" "$pen_arg" || exit 2
+want=$PEN_RESOLVED_PATH
 command -v python3 >/dev/null 2>&1 || {
   echo "✗ pen-land：需要 python3 解析 .pen 結構" >&2
   exit 2
@@ -161,8 +176,10 @@ command -v shasum >/dev/null 2>&1 || {
 }
 
 backup_dir="${PEN_BACKUP_DIR:-$HOME/.pencil/backup}"
-sha=$(printf '%s' "file://${want}" | shasum | awk '{print $1}')
-backup="${backup_dir}/${sha}"
+backup=$(pen_backup_path "$want" "$backup_dir")
+if [ -n "$pen_arg" ] && [ "$want" != "${root}/design/littlesprout.pen" ]; then
+  echo "（--pen 非主稿「${want}」：節點數基線＝該檔目前內容（before）vs backup（after），不比對 git base 快照，LS-480）"
+fi
 [ -f "$backup" ] || {
   echo "✗ pen-land：找不到 backup「${backup}」（Pen 可能沒開過這個路徑、autosave 還沒發生，或路徑含空白／非 ASCII 導致 sha1 對不上——先 pen-open.sh 切檔並等 autosave；仍找不到再檢查路徑編碼）" >&2
   exit 2

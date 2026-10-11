@@ -505,6 +505,8 @@ needle = "    if any(k not in n or n[k] != v for k, v in o.items()):\n        re
 assert needle in src, "mutation 目標行不存在——pen-land.sh 的判斷式改了，請同步更新本 mutation"
 open(sys.argv[2], "w", encoding="utf-8").write(src.replace(needle, "", 1))
 PY
+# LS-480：pen-land.sh 現在 source 同層 lib/pen-path.sh——mutation 副本放在別的目錄，要把 lib 一起帶過去（否則副本是 source 失敗而非 mutation 生效）
+mkdir -p "${work}/lib" && cp "$(dirname "$script")/lib/pen-path.sh" "${work}/lib/pen-path.sh"
 mut_ok=1
 for body in "$VAR_CHANGED" "$VAR_REMOVED"; do
   reset; write_backup "$body"
@@ -514,6 +516,64 @@ if [ "$mut_ok" -eq 1 ]; then
   ok '⑭f mutation（拿掉既有 key 保持不變／無刪除判斷）→ 改值與刪除兩組負控皆被放行，證明 ⑭b／⑭b2 會紅'
 else
   bad '⑭f mutation 後負控仍被擋——⑭b／⑭b2 對「只允許新增」沒有鑑別力'
+fi
+
+# ---- ⑮ LS-480 --pen <path>：提案檔落地；省略＝主稿（行為不變）；不存在／非 .pen／缺參數 exit 2 ----
+prop_rel="docs/design-proposals/soft-social/prop.pen"
+prop_abs() { printf '%s/%s' "$(cd "${wt}/docs/design-proposals/soft-social" && pwd -P)" "prop.pen"; }
+write_prop_backup() { printf '%s' "$1" > "${backup_dir}/$(printf '%s' "file://$(prop_abs)" | shasum | awk '{print $1}')"; }
+reset_prop() {
+  reset
+  mkdir -p "${wt}/docs/design-proposals/soft-social"
+  cp "${wt}/design/littlesprout.pen" "${wt}/$prop_rel"
+}
+# ⑮a 相對路徑 --pen：落地到提案檔、主稿一字不動、sha1 由提案檔路徑算
+reset_prop; write_prop_backup "$BACKUP_3NODE"
+main_before="$(cat "${wt}/design/littlesprout.pen")"
+out="$(run "$wt" --pen "$prop_rel" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && grep -qF '"x":99' "${wt}/${prop_rel}" && [ "$main_before" = "$(cat "${wt}/design/littlesprout.pen")" ] \
+  && printf '%s' "$out" | grep -qF -- '--pen 非主稿' && printf '%s' "$out" | grep -qF '✓ pen-land：已落地到'; then
+  ok '⑮a --pen 相對路徑：落地到提案檔、主稿不動、印非主稿基線說明'
+else
+  bad "⑮a --pen 相對路徑應落地到提案檔且主稿不動（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+# ⑮b 絕對路徑等價
+reset_prop; write_prop_backup "$BACKUP_3NODE"
+out="$(run "$wt" --pen "$(prop_abs)" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && grep -qF '"x":99' "${wt}/${prop_rel}"; then
+  ok '⑮b --pen 絕對路徑落地提案檔'
+else
+  bad "⑮b --pen 絕對路徑應落地（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+# ⑮c backup 只放在「主稿路徑」的 sha1 下、--pen 提案檔 → 找不到 backup exit 2（證明 sha1 由 --pen 解析後路徑算，不是寫死主稿）
+reset_prop; write_backup "$BACKUP_3NODE"
+out="$(run "$wt" --pen "$prop_rel" 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '找不到 backup' && ! grep -qF '"x":99' "${wt}/${prop_rel}"; then
+  ok '⑮c --pen 提案檔：backup sha1 由提案檔路徑算（主稿 backup 不誤用）'
+else
+  bad "⑮c --pen 提案檔不得吃主稿的 backup（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+# ⑮d 省略 --pen：即使提案檔與其 backup 都在，仍落地主稿、提案檔不動（預設不變）
+reset_prop; write_backup "$BACKUP_3NODE"; write_prop_backup "$BACKUP_3NODE"
+prop_before="$(cat "${wt}/${prop_rel}")"
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && grep -qF '"x":99' "${wt}/design/littlesprout.pen" && [ "$prop_before" = "$(cat "${wt}/${prop_rel}")" ] \
+  && ! printf '%s' "$out" | grep -qF -- '--pen 非主稿'; then
+  ok '⑮d 省略 --pen：落地主稿、提案檔不動、不印非主稿說明（預設行為不變）'
+else
+  bad "⑮d 省略 --pen 應只落地主稿（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+# ⑮e 負案：不存在／非 .pen／缺參數 → exit 2＋用法
+reset_prop
+out="$(run "$wt" --pen docs/design-proposals/nope.pen 2>&1)"; got=$?
+out2="$(run "$wt" --pen design/README.txt 2>&1)"; got2=$?
+out3="$(run "$wt" --pen 2>&1)"; got3=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '不存在' && printf '%s' "$out" | grep -qF '用法' \
+  && [ "$got2" -eq 2 ] && printf '%s' "$out2" | grep -qF '須指向 .pen 檔' \
+  && [ "$got3" -eq 2 ] && printf '%s' "$out3" | grep -qF -- '--pen 需要'; then
+  ok '⑮e --pen 不存在／非 .pen／缺參數 → exit 2＋用法'
+else
+  bad "⑮e --pen 負案應皆 exit 2（實得 ${got}／${got2}／${got3}）"; printf '%s\n' "$out" "$out2" "$out3" | sed 's/^/    /' >&2
 fi
 
 if [ "$fail" -ne 0 ]; then

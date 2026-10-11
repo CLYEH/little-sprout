@@ -977,6 +977,7 @@ mk_mutant() {
   sed "$sed_expr" "$script" > "${mut_root}/scripts/ops/pen-open.sh"
   cp "${root}/scripts/ops/pen-land.sh" "${mut_root}/scripts/ops/pen-land.sh"
   cp "${root}/scripts/ops/lib/pencil-mcp.sh" "${mut_root}/scripts/ops/lib/pencil-mcp.sh"
+  cp "${root}/scripts/ops/lib/pen-path.sh" "${mut_root}/scripts/ops/lib/"  # LS-480：pen-open.sh／pen-land.sh source 同層 lib/pen-path.sh
   mkdir -p "${mut_root}/scripts/gates"
   cp "${root}/scripts/gates/design_tree_hash.py" "${mut_root}/scripts/gates/design_tree_hash.py"
 }
@@ -1080,6 +1081,99 @@ else
   bad "㉓ 應 exit 0 且印跳過訊息（實得 exit ${got23}）"; printf '%s\n' "$out23" | sed 's/^/    /' >&2
 fi
 clear_fake_pen
+
+# ---- ㉖（LS-480）：--pen <path>——切檔／對帳／雜湊／清場候選對提案檔的行為；省略＝主稿不變 ----
+mkdir -p "${wt}/docs/design-proposals/soft-social"
+printf '%s' '{"version":1,"children":[{"id":"p1","x":0,"y":0,"children":[]}]}' > "${wt}/docs/design-proposals/soft-social/prop.pen"
+prop_rel="docs/design-proposals/soft-social/prop.pen"
+wantProp="$(cd "${wt}/docs/design-proposals/soft-social" && pwd -P)/prop.pen"
+prop_backup() { printf '%s' "$1" > "${PEN_BACKUP_DIR}/$(printf '%s' "file://${wantProp}" | shasum | awk '{print $1}')"; }
+wt_backup_safe
+
+# ㉖a Pen 目前在主稿、--pen 提案檔（相對路徑）→ open 收到提案檔路徑（不是主稿），切過去後 exit 0
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files
+set_state "PATH:${want}"
+export PEN_STUB_OPEN_SUCCEED_AT=1
+out="$(run "$wt" --pen "$prop_rel" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "Pen 目前文件＝${wantProp}" \
+  && grep -qF -- "-a Pen ${wantProp}" "$PEN_STUB_OPEN_LOG" && ! grep -qF -- "${want}" "$PEN_STUB_OPEN_LOG"; then
+  ok '㉖a --pen 相對路徑提案檔：open 目標＝提案檔絕對路徑（非主稿），切檔後 exit 0'
+else
+  bad "㉖a --pen 提案檔應 open 提案檔並 exit 0（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2; cat "$PEN_STUB_OPEN_LOG" >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT
+# ㉖b 絕對路徑等價；旗標位置不拘（--pen 在模式旗標之後）
+reset_open_tracking; clear_fake_pen
+set_state "PATH:${want}"
+export PEN_STUB_OPEN_SUCCEED_AT=1
+out="$(run "$wt" --no-quit --pen "$wantProp" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && grep -qF -- "-a Pen ${wantProp}" "$PEN_STUB_OPEN_LOG"; then
+  ok '㉖b --pen 絕對路徑＋旗標位置不拘（--no-quit 在前）→ 切到提案檔'
+else
+  bad "㉖b --pen 絕對路徑應切檔（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT
+# ㉖c 負案：不存在／非 .pen／缺參數／搭 --status → exit 2，且 open 一次都不呼叫
+reset_open_tracking; set_state "PATH:${want}"
+out1="$(run "$wt" --pen docs/design-proposals/nope.pen 2>&1)"; g1=$?
+out2="$(run "$wt" --pen design/notes.txt 2>&1)"; g2=$?
+out3="$(run "$wt" --pen 2>&1)"; g3=$?
+out4="$(run --status --pen "$prop_rel" 2>&1)"; g4=$?
+if [ "$g1" -eq 2 ] && printf '%s' "$out1" | grep -qF '不存在' && printf '%s' "$out1" | grep -qF '用法' \
+  && [ "$g2" -eq 2 ] && [ "$g3" -eq 2 ] && [ "$g4" -eq 2 ] && [ "$(open_calls)" -eq 0 ]; then
+  ok '㉖c --pen 不存在／非 .pen／缺參數／搭 --status → exit 2＋用法，open 零次'
+else
+  bad "㉖c --pen 負案應皆 exit 2 且不 open（實得 ${g1}／${g2}／${g3}／${g4}，open $(open_calls) 次）"; printf '%s\n' "$out1" "$out2" "$out3" "$out4" | sed 's/^/    /' >&2
+fi
+# ㉖d --force-reload --pen：已在提案檔且 tree_hash 與「提案檔磁碟」一致 → exit 0 不清場（雜湊算的是提案檔、不是主稿）
+reset_open_tracking; clear_fake_pen; clear_ps_pen_files
+PROP_HASH="$(python3 "${root}/scripts/gates/design_tree_hash.py" "$wantProp")"
+set_hash "HASH:${PROP_HASH}"; set_state "PATH:${wantProp}"
+start_fake_pen
+out="$(run "$wt" --pen "$prop_rel" --force-reload 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "tree_hash=${PROP_HASH} 與磁碟一致" && fake_pen_alive; then
+  ok '㉖d --force-reload --pen：tree_hash 對提案檔磁碟比對，相符不清場'
+else
+  bad "㉖d 應以提案檔的磁碟雜湊比對並 exit 0（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+# ㉖d2 同情境但 Pencil 端雜湊＝主稿的值（錯檔）→ 不相符、走清場流程（證明比對對象是提案檔）
+set_hash "HASH:${WT_HASH}"; reset_open_tracking; prop_backup '{"version":1,"children":[{"id":"p1","x":0,"y":0,"children":[]}]}'
+export PEN_STUB_OSASCRIPT_KILLS=1
+out="$(run "$wt" --pen "$prop_rel" --force-reload 2>&1)"; got=$?
+if printf '%s' "$out" | grep -qF 'tree_hash 不一致' && ! fake_pen_alive; then
+  ok '㉖d2 --force-reload --pen：Pencil 端雜湊≠提案檔磁碟雜湊 → 走清場（比對對象是提案檔不是主稿）'
+else
+  bad "㉖d2 雜湊不符應走清場（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OSASCRIPT_KILLS; clear_fake_pen
+# ㉖e 清場候選：ps 枚舉到「隱藏」的提案檔且有未落地編輯 → 拒絕清場（過去只認 design/littlesprout.pen，會一併殺掉）
+reset_open_tracking; clear_fake_pen; wt_backup_safe
+prop_backup '{"version":1,"children":[{"id":"p1","x":0,"y":0,"children":[{"id":"p2","children":[]}]}]}'
+set_state "PATH:${want2}"; wt2_backup_safe
+set_ps_pen_files "$wantProp"
+start_fake_pen
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF "${wantProp}" && printf '%s' "$out" | grep -qF '不自動 quit' && fake_pen_alive; then
+  ok '㉖e 清場候選含提案檔：隱藏的提案檔有未落地編輯 → 不清場（exit 1、行程存活）'
+else
+  bad "㉖e 隱藏提案檔不安全應拒絕清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+# ㉖f 同情境提案檔 backup 與磁碟相同（已落地）→ 視為安全 → 清場成功
+reset_open_tracking; clear_fake_pen; wt_backup_safe
+prop_backup '{"version":1,"children":[{"id":"p1","x":0,"y":0,"children":[]}]}'
+set_state "PATH:${want2}"; wt2_backup_safe
+set_ps_pen_files "$wantProp"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "清場後 Pen 目前文件＝${want}" && ! fake_pen_alive; then
+  ok '㉖f 隱藏提案檔已落地（backup＝磁碟）→ 視為安全，清場切檔成功'
+else
+  bad "㉖f 提案檔已落地應可清場（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen; clear_ps_pen_files
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-open-check 自測失敗" >&2

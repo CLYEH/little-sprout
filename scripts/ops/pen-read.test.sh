@@ -571,6 +571,7 @@ mk_mutant() {
   sed "$sed_expr" "${root}/scripts/ops/pen-open.sh" > "${mut_root}/scripts/ops/pen-open.sh"
   cp "${root}/scripts/ops/pen-read.sh" "${root}/scripts/ops/pen-land.sh" "${mut_root}/scripts/ops/"
   cp "${root}/scripts/ops/lib/pencil-mcp.sh" "${mut_root}/scripts/ops/lib/"
+  cp "${root}/scripts/ops/lib/pen-path.sh" "${mut_root}/scripts/ops/lib/"  # LS-480：pen-open.sh／pen-land.sh source 同層 lib/pen-path.sh
   cp "${root}/scripts/gates/design_tree_hash.py" "${mut_root}/scripts/gates/"
   cp "${root}/scripts/design/overflow-scan.js" "${mut_root}/scripts/design/"
 }
@@ -727,6 +728,31 @@ fi
 clear_fake_pen
 
 unset PEN_STUB_RANGE_MODE
+
+# ---- LS-480：--pen <path> 轉給 pen-open.sh --force-reload --pen（提案檔）；省略＝主稿（上面各案即預設路徑）----
+mkdir -p "${wt}/docs/design-proposals/soft-social"
+printf '%s' '{"version":1,"children":[{"id":"p1","x":0,"children":[]}]}' > "${wt}/docs/design-proposals/soft-social/prop.pen"
+prop_rel="docs/design-proposals/soft-social/prop.pen"
+wantProp="$(cd "${wt}/docs/design-proposals/soft-social" && pwd -P)/prop.pen"
+PROP_HASH="$(python3 "${root}/scripts/gates/design_tree_hash.py" "$wantProp")"
+reset_open_tracking; clear_fake_pen; set_hash "HASH:${PROP_HASH}"
+set_state "PATH:${wantProp}"
+start_fake_pen
+out="$(run --pen "$prop_rel" "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF "Pen 目前文件＝${wantProp}" && printf '%s' "$out" | grep -qF "tree_hash=${PROP_HASH} 與磁碟一致" \
+  && grep -qF -- "-a Pen ${wantProp}" "$PEN_STUB_OPEN_LOG" && fake_pen_alive; then
+  ok 'pen-read.sh --pen <提案檔> <root>：轉給 pen-open.sh --force-reload --pen，對提案檔比 tree_hash、相符不清場（LS-480）'
+else
+  bad "--pen 提案檔應 exit 0 並以提案檔比雜湊（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+out="$(run --pen docs/design-proposals/nope.pen "$wt" 2>&1)"; got=$?
+out2="$(run --pen 2>&1)"; got2=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '不存在' && [ "$got2" -eq 2 ] && printf '%s' "$out2" | grep -qF '用法'; then
+  ok 'pen-read.sh --pen 不存在路徑／缺參數 → exit 2＋用法（LS-480）'
+else
+  bad "--pen 負案應 exit 2（實得 ${got}／${got2}）"; printf '%s\n' "$out" "$out2" | sed 's/^/    /' >&2
+fi
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-read-check 自測失敗" >&2

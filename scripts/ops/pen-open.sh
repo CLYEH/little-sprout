@@ -20,8 +20,16 @@
 # 與目標路徑比對；不一致時嘗試自動清場後重試一次（R2，見下）。
 #
 # 用法：
-#   pen-open.sh <worktree-or-repo-root> [--no-quit|--force-reload|--kill]
+#   pen-open.sh <worktree-or-repo-root> [--pen <path>] [--no-quit|--force-reload|--kill]
 #                                                       把 Pen 切到 <root>/design/littlesprout.pen 並輪詢對帳；
+#                                                       **LS-480 `--pen <path>`**（絕對路徑或相對 <root> 的 .pen 檔；省略＝
+#                                                       `<root>/design/littlesprout.pen`，行為一字不變）改切到指定檔——
+#                                                       提案檔 `docs/design-proposals/<slug>/<name>.pen` 等。解析與不存在
+#                                                       路徑 exit 2 見 `lib/pen-path.sh`。`--force-reload`／`--kill` 的 tree_hash
+#                                                       比對、清場安全判定（逐一 pen-land --dry-run）對 `--pen` 檔照常運作；
+#                                                       **清場候選清單**（目前開著的 .pen）除主稿外也認 `docs/design-proposals/**/*.pen`
+#                                                       （過去只認 `design/littlesprout.pen`，提案檔開著時 `--kill`／自動清場會
+#                                                       不經檢查就一併殺掉它的未落地編輯）；其他路徑的 .pen 仍不列入（與舊行為相同）。
 #                                                       不一致時預設嘗試自動清場重試，`--no-quit` 關掉這步
 #                                                       （只對帳、不清場，等同 R2 之前的行為）。**LS-118／LS-180**：
 #                                                       `--force-reload` 不信任「路徑已一致」——既有 renderer 仍可能
@@ -202,9 +210,11 @@ set -uo pipefail
 pen_open_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/pencil-mcp.sh
 source "${pen_open_script_dir}/lib/pencil-mcp.sh"
+# shellcheck source=lib/pen-path.sh
+source "${pen_open_script_dir}/lib/pen-path.sh"
 
 usage() {
-  echo "用法：pen-open.sh <worktree-or-repo-root> [--no-quit|--force-reload|--kill]｜pen-open.sh --status｜pen-open.sh --restore" >&2
+  echo "用法：pen-open.sh <worktree-or-repo-root> [--pen <path>] [--no-quit|--force-reload|--kill]｜pen-open.sh --status｜pen-open.sh --restore" >&2
 }
 
 PEN_BIN=${PEN_BIN:-pen}
@@ -229,7 +239,34 @@ for v in "$POLL_TIMEOUT" "$ATTEMPT_TIMEOUT" "$POLL_INTERVAL" "$QUIT_TIMEOUT" "$Q
 done
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
+# LS-480：先抽出 --pen <path>（位置不拘），剩下的參數沿用舊的「<root> [模式旗標]」解析
+pen_arg=""
+rest_args=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --pen)
+      if [ $# -lt 2 ] || [ -z "${2:-}" ]; then
+        echo "✗ pen-open：--pen 需要一個 .pen 路徑參數（絕對或相對 <root>）" >&2
+        usage
+        exit 2
+      fi
+      pen_arg=$2
+      shift 2
+      ;;
+    *)
+      rest_args+=("$1")
+      shift
+      ;;
+  esac
+done
+set -- "${rest_args[@]+"${rest_args[@]}"}"
+
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+  usage
+  exit 2
+fi
+if [ -n "$pen_arg" ] && { [ "$1" = "--status" ] || [ "$1" = "--restore" ]; }; then
+  echo "✗ pen-open：--pen 只用於切檔模式，不能搭 $1" >&2
   usage
   exit 2
 fi
@@ -587,11 +624,8 @@ root=$(cd "$target" 2>/dev/null && pwd -P) || {
   echo "✗ pen-open：找不到目錄「${target}」" >&2
   exit 2
 }
-want="${root}/design/littlesprout.pen"
-[ -f "$want" ] || {
-  echo "✗ pen-open：找不到「${want}」" >&2
-  exit 2
-}
+pen_resolve_path pen-open "$root" "$pen_arg" || exit 2
+want=$PEN_RESOLVED_PATH
 
 # 輪詢到 $want 一致就 echo 訊息並回傳 0；逾時回傳 1（不一致，$LAST_SEEN 非空）或 2（讀不到路徑，$LAST_SEEN 空）。
 # 用全域變數 LAST_SEEN 而非 local 回傳值，好讓呼叫端（清場後重試）也讀得到最後看到的路徑。
@@ -667,7 +701,8 @@ suffix="/design/littlesprout.pen"
 # 列出目前所有 Pen renderer 行程命令列裡帶的 design/littlesprout.pen file:// URI（唯讀查詢，R3 實測可行：
 # 每個開著的文件各自是一個獨立的 `Pen Helper (Renderer)` 行程，`--init-params` 帶著它的 fileURI）。
 list_open_pen_paths() {
-  ps -Ao command 2>/dev/null | grep 'Pen Helper' | grep -oE 'file://[^"]*/design/littlesprout\.pen' | sed 's#^file://##'
+  # LS-480：除主稿外也列 docs/design-proposals/**/*.pen（提案檔），否則清場前的安全判定看不到它、一併殺掉未落地編輯
+  ps -Ao command 2>/dev/null | grep 'Pen Helper' | grep -oE 'file://[^"]*(/design/littlesprout\.pen|/docs/design-proposals/[^"]*\.pen)' | sed 's#^file://##'
 }
 
 # check_root_safe <root>：用 pen-land.sh --dry-run 判斷這個 root 是否「沒有未落地的變更、或只有可安全捨棄的
@@ -684,12 +719,25 @@ list_open_pen_paths() {
 #      「無法確認」混在一起判不安全，LS-152／LS-163 worktree 清理後每張後續設計票的 pen-read.sh 都被擋、
 #      renderer 讀現稿的新鮮度保證失效。路徑存在的 root 仍照 a–c／mtime 方向判定，dirty 照舊擋。
 check_root_safe() {
-  local root=$1 out rc
-  if [ ! -e "${root}${suffix}" ]; then
-    echo "  舊路徑不存在，視為已捨棄：${root}${suffix}" >&2
+  # LS-480：第二參數 pen_abs（選填）＝非主稿的 .pen 絕對路徑（提案檔）；省略＝<root>/design/littlesprout.pen（舊行為，訊息一字不變）。
+  # 提案檔時 pen-land 帶 --pen、git 狀態查該檔本身；訊息裡的「design/littlesprout.pen」換成實際檔名。
+  local root=$1 pen_abs=${2:-} out rc pen_file pen_label
+  local land_args=() git_path
+  if [ -n "$pen_abs" ]; then
+    pen_file=$pen_abs
+    pen_label=$pen_abs
+    land_args=(--pen "$pen_abs")
+    git_path=$pen_abs
+  else
+    pen_file="${root}${suffix}"
+    pen_label="design/littlesprout.pen"
+    git_path="design/littlesprout.pen"
+  fi
+  if [ ! -e "$pen_file" ]; then
+    echo "  舊路徑不存在，視為已捨棄：${pen_file}" >&2
     return 0
   fi
-  out=$(bash "${script_root}/scripts/ops/pen-land.sh" "$root" --dry-run 2>&1)
+  out=$(bash "${script_root}/scripts/ops/pen-land.sh" "$root" "${land_args[@]+"${land_args[@]}"}" --dry-run 2>&1)
   rc=$?
   if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -qF '本輪零變更或 autosave 還沒追上'; then
     echo "  「${root}」安全：本輪零變更（backup 與落地檔結構相同）" >&2
@@ -701,11 +749,11 @@ check_root_safe() {
   fi
   if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -qF '僅偵測到白名單屬性'; then
     if git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
-      && [ -z "$(git -C "$root" status --porcelain -- design/littlesprout.pen 2>/dev/null)" ]; then
-      echo "  「${root}」安全：僅偵測到白名單（placeholder）UI 態差異，節點總數不變，且 design/littlesprout.pen 對 git 全程 clean——視為可安全捨棄的 autosave 漂移" >&2
+      && [ -z "$(git -C "$root" status --porcelain -- "$git_path" 2>/dev/null)" ]; then
+      echo "  「${root}」安全：僅偵測到白名單（placeholder）UI 態差異，節點總數不變，且 ${pen_label} 對 git 全程 clean——視為可安全捨棄的 autosave 漂移" >&2
       return 0
     fi
-    echo "  「${root}」僅偵測到白名單屬性差異，但 design/littlesprout.pen 不是 git-clean（或無法確認是否為 git 倉庫）——不視為安全，需人工確認" >&2
+    echo "  「${root}」僅偵測到白名單屬性差異，但 ${pen_label} 不是 git-clean（或無法確認是否為 git 倉庫）——不視為安全，需人工確認" >&2
   fi
   # LS-118 R1 F2（merge-review）：mtime 方向訊號——落地檔比 backup 新，代表 backup 是陳舊快取（本票要治的
   # 場景：QA git pull 後 Pen 那份 renderer／autosave 還停在舊版），不是「有真實未落地編輯」。這種情況下
@@ -715,7 +763,7 @@ check_root_safe() {
   # 提前 return，落到下面的通用訊息（其中已把「陳舊快取」列為優先假設）。
   if printf '%s' "$out" | grep -qF '落地檔 mtime 晚於 backup'; then
     if git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
-      && [ -z "$(git -C "$root" status --porcelain -- design/littlesprout.pen 2>/dev/null)" ]; then
+      && [ -z "$(git -C "$root" status --porcelain -- "$git_path" 2>/dev/null)" ]; then
       echo "  「${root}」安全：backup mtime 早於落地檔——落地檔在 Pen 上次 autosave 之後被更新（例如 git checkout／merge／pull），backup 是陳舊快取而非未落地的新編輯，且落地檔對 git 全程 clean——視為安全，不要跑 pen-land.sh（會用舊快照覆蓋較新的落地檔），直接強制重新載入即可" >&2
       return 0
     fi
@@ -746,14 +794,21 @@ check_all_candidates_safe() {
   while IFS= read -r p; do
     [ -n "$p" ] || continue
     case "$p" in
-      */design/littlesprout.pen) root=${p%$suffix} ;;
+      */design/littlesprout.pen)
+        root=${p%$suffix}
+        check_root_safe "$root" || ok=0
+        ;;
+      */docs/design-proposals/*.pen)
+        # LS-480：提案檔——root＝其所在 worktree（取 /docs/design-proposals/ 之前的前綴）
+        root=${p%%/docs/design-proposals/*}
+        check_root_safe "$root" "$p" || ok=0
+        ;;
       *)
-        echo "  「${p}」不是預期的 .../design/littlesprout.pen 形狀——無法安全判定，視為不安全" >&2
+        echo "  「${p}」不是預期的 .../design/littlesprout.pen 或 .../docs/design-proposals/**/*.pen 形狀——無法安全判定，視為不安全" >&2
         ok=0
         continue
         ;;
     esac
-    check_root_safe "$root" || ok=0
   done <<PATHS
 $candidates
 PATHS
