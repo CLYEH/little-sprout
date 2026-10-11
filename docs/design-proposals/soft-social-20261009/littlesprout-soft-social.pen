@@ -11052,6 +11052,977 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "qladF",
+      "x": 7050,
+      "y": 300,
+      "name": "C / 16 家庭動態 · AX3（body 40pt）",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        20,
+        0
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "VZ0pQ",
+          "name": "System status",
+          "width": "fill_container",
+          "height": 24,
+          "padding": [
+            0,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "MZMri",
+              "name": "Time",
+              "fill": "$ink",
+              "textGrowth": "fixed-width",
+              "width": 60,
+              "content": "9:41",
+              "lineHeight": 1.4,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "BG69s",
+              "name": "System signals",
+              "width": 60,
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "QnJmw",
+                  "name": "Mobile signal",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "signal",
+                  "library": "lucide",
+                  "fill": "$ink"
+                },
+                {
+                  "type": "icon",
+                  "id": "B1RPm",
+                  "name": "Battery",
+                  "width": 22,
+                  "height": 16,
+                  "icon": "battery-full",
+                  "library": "lucide",
+                  "fill": "$ink"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "th5VS",
+          "name": "Navigation header",
+          "width": "fill_container",
+          "gap": 8,
+          "padding": [
+            6,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "Y46dfv",
+              "name": "Page title",
+              "fill": "$ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "家庭動態",
+              "lineHeight": 1.25,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 44,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "rqlL4",
+              "name": "Button · 通知",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "通知",
+                "role": "button"
+              },
+              "width": 44,
+              "height": 44,
+              "gap": 8,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "ZPOOL",
+                  "name": "通知",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "bell",
+                  "library": "lucide",
+                  "fill": "$rose"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "h5OuZ",
+          "name": "Main content",
+          "clip": true,
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            8,
+            12
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "N9Pyb",
+              "name": "Quick share composer",
+              "clip": true,
+              "width": "fill_container",
+              "fill": "$white",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 10,
+              "padding": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "G8YSNd",
+                  "name": "Composer prompt",
+                  "width": "fill_container",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "teIOK",
+                      "name": "媽媽的分享頭像",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "媽媽的分享頭像",
+                        "role": "image"
+                      },
+                      "clip": true,
+                      "width": 44,
+                      "height": 44,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/mom.jpg",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 22,
+                      "layout": "none"
+                    },
+                    {
+                      "type": "text",
+                      "id": "h57tQ",
+                      "name": "Share prompt",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "今天想和家人\n分享什麼？",
+                      "lineHeight": 1.3,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 40,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PNH6N",
+                  "name": "Share shortcuts",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "NM5Sn",
+                      "name": "Button · 加入照片",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "加入照片",
+                        "role": "button"
+                      },
+                      "width": "fill_container",
+                      "fill": "$rose-soft",
+                      "cornerRadius": 10,
+                      "stroke": "$control",
+                      "strokeWidth": 1,
+                      "gap": 12,
+                      "padding": [
+                        8,
+                        16
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "cA1tH",
+                          "name": "加入照片",
+                          "width": 34,
+                          "height": 34,
+                          "icon": "image-plus",
+                          "library": "lucide",
+                          "fill": "$rose"
+                        },
+                        {
+                          "type": "text",
+                          "id": "G1ujH",
+                          "name": "Photos shortcut label",
+                          "fill": "$rose",
+                          "content": "加入照片",
+                          "lineHeight": 1.3,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 40,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "cgH8V",
+                      "name": "Button · 寫日記",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "寫日記",
+                        "role": "button"
+                      },
+                      "width": "fill_container",
+                      "fill": "$white",
+                      "cornerRadius": 10,
+                      "gap": 12,
+                      "padding": [
+                        8,
+                        16
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "U47x0x",
+                          "name": "寫日記",
+                          "width": 34,
+                          "height": 34,
+                          "icon": "pencil",
+                          "library": "lucide",
+                          "fill": "$rose"
+                        },
+                        {
+                          "type": "text",
+                          "id": "GpRvE",
+                          "name": "Diary shortcut label",
+                          "fill": "$rose",
+                          "content": "寫日記",
+                          "lineHeight": 1.3,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 40,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "m5AIBh",
+              "name": "Child filter chips",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "z1qTk",
+                  "name": "Chip row",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "AZH9u",
+                      "name": "Button · 全部",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "全部孩子",
+                        "role": "button",
+                        "selected": true
+                      },
+                      "fill": "$blush",
+                      "cornerRadius": 22,
+                      "stroke": "$green",
+                      "strokeWidth": 1,
+                      "gap": 8,
+                      "padding": [
+                        6,
+                        22
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "M3Rzxj",
+                          "name": "All children label",
+                          "fill": "$rose",
+                          "content": "全部",
+                          "lineHeight": 1.3,
+                          "textAlign": "center",
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 40,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "D0zRJh",
+                      "name": "Button · 小禾",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "小禾",
+                        "role": "button"
+                      },
+                      "fill": "$white",
+                      "cornerRadius": 22,
+                      "gap": 10,
+                      "padding": [
+                        6,
+                        18,
+                        6,
+                        10
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "P8f3BQ",
+                          "name": "小禾篩選頭像",
+                          "metadata": {
+                            "type": "accessibility",
+                            "accessibilityLabel": "小禾篩選頭像",
+                            "role": "image"
+                          },
+                          "clip": true,
+                          "width": 44,
+                          "height": 44,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "assets/child-leaf.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 22,
+                          "layout": "none"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Dl0Zk",
+                          "name": "Child filter label",
+                          "fill": "$ink",
+                          "content": "小禾",
+                          "lineHeight": 1.3,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 40,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "m3Z0tt",
+                  "name": "Button · 林家的小日子",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "林家的小日子",
+                    "role": "button"
+                  },
+                  "width": "fill_container",
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    4
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ndb5B",
+                      "name": "Family context",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "林家的小日子",
+                      "lineHeight": 1.3,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 40,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ikXJe",
+              "name": "Family photo post",
+              "clip": true,
+              "width": "fill_container",
+              "fill": "$white",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ic4zD",
+                  "name": "Post author",
+                  "width": "fill_container",
+                  "gap": 10,
+                  "padding": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "HdsmK",
+                      "name": "媽媽的圓形頭像",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "媽媽的圓形頭像",
+                        "role": "image"
+                      },
+                      "clip": true,
+                      "width": 44,
+                      "height": 44,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/mom.jpg",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 22,
+                      "layout": "none"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VlYKX",
+                      "name": "Author and time",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "o0mCSc",
+                          "name": "Author name",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "媽媽",
+                          "lineHeight": 1.3,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 40,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "W9UDRB",
+                      "name": "Button · 貼文更多選項",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "貼文更多選項",
+                        "role": "button"
+                      },
+                      "width": 44,
+                      "height": 44,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "nVwJr",
+                          "name": "貼文更多選項",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "ellipsis",
+                          "library": "lucide",
+                          "fill": "$rose"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Dbs0L",
+                  "name": "Post time row",
+                  "width": "fill_container",
+                  "padding": [
+                    0,
+                    12,
+                    8,
+                    66
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dMvuv",
+                      "name": "Post time",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "今天 15:42・小禾",
+                      "lineHeight": 1.3,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 33,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "sODbp",
+                  "name": "Post caption",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    12,
+                    8,
+                    12
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "yhzPy",
+                      "name": "Post story",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "公園的一片葉子，\n也能開心好久。",
+                      "lineHeight": 1.3,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 40,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "GT3st",
+                  "name": "小禾拿著秋天的落葉",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "小禾蹲在公園裡，看著手上的落葉。",
+                    "role": "image"
+                  },
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": 220,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "assets/child-leaf.jpg",
+                    "mode": "cover"
+                  },
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "UZxrv",
+                  "name": "Post reaction summary",
+                  "width": "fill_container",
+                  "padding": [
+                    6,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Z3kUg",
+                      "name": "Reaction count",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "2 位家人喜歡・2 則留言",
+                      "lineHeight": 1.3,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 40,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "AqISD",
+                  "name": "Post reaction actions",
+                  "width": "fill_container",
+                  "stroke": "$line",
+                  "strokeWidth": {
+                    "top": 1
+                  },
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": [
+                    4,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "z2zIP",
+                      "name": "Button · 喜歡",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "喜歡",
+                        "role": "button"
+                      },
+                      "width": "fill_container",
+                      "gap": 8,
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "CZPhD",
+                          "name": "喜歡",
+                          "width": 36,
+                          "height": 36,
+                          "icon": "heart",
+                          "library": "lucide",
+                          "fill": "$rose"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xsAVU",
+                          "name": "Like label",
+                          "fill": "$rose",
+                          "content": "喜歡",
+                          "lineHeight": 1.3,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 40,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "N5OIhD",
+                      "name": "Button · 留言",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "留言",
+                        "role": "button"
+                      },
+                      "width": "fill_container",
+                      "gap": 8,
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "E27sJ3",
+                          "name": "留言",
+                          "width": 36,
+                          "height": 36,
+                          "icon": "message-circle",
+                          "library": "lucide",
+                          "fill": "$rose"
+                        },
+                        {
+                          "type": "text",
+                          "id": "jr9IJ",
+                          "name": "Comment label",
+                          "fill": "$rose",
+                          "content": "留言",
+                          "lineHeight": 1.3,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 40,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "P0Enm",
+          "name": "Tab bar",
+          "width": "fill_container",
+          "height": 84,
+          "fill": "$white",
+          "stroke": "$line",
+          "strokeWidth": {
+            "top": 1
+          },
+          "padding": [
+            8,
+            12
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "MTzoM",
+              "name": "Tab · 動態",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "動態",
+                "role": "tab",
+                "selected": true
+              },
+              "width": 76,
+              "height": 68,
+              "layout": "vertical",
+              "gap": 3,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "w3cbJ",
+                  "name": "動態",
+                  "width": 26,
+                  "height": 26,
+                  "icon": "house",
+                  "library": "lucide",
+                  "fill": "$rose"
+                },
+                {
+                  "type": "text",
+                  "id": "UZoGY",
+                  "name": "Tab label · 動態",
+                  "fill": "$rose",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "動態",
+                  "lineHeight": 1.4,
+                  "textAlign": "center",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "pVob1",
+                  "name": "Tab selection indicator",
+                  "width": 28,
+                  "height": 3,
+                  "fill": "$rose",
+                  "cornerRadius": 1.5,
+                  "layout": "vertical"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PDwTR",
+              "name": "Tab · 相簿",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "相簿",
+                "role": "tab",
+                "selected": false
+              },
+              "width": 76,
+              "height": 68,
+              "layout": "vertical",
+              "gap": 3,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "W0A5RS",
+                  "name": "相簿",
+                  "width": 24,
+                  "height": 24,
+                  "icon": "images",
+                  "library": "lucide",
+                  "fill": "$muted"
+                },
+                {
+                  "type": "text",
+                  "id": "QcF0E",
+                  "name": "Tab label · 相簿",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "相簿",
+                  "lineHeight": 1.4,
+                  "textAlign": "center",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "iTxX0",
+                  "name": "Tab selection indicator",
+                  "width": 28,
+                  "height": 3,
+                  "fill": "$white",
+                  "cornerRadius": 1.5,
+                  "layout": "vertical"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "JlaQi",
+              "name": "Tab · 寶貝",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "寶貝",
+                "role": "tab",
+                "selected": false
+              },
+              "width": 76,
+              "height": 68,
+              "layout": "vertical",
+              "gap": 3,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "P0ZYJr",
+                  "name": "寶貝",
+                  "width": 24,
+                  "height": 24,
+                  "icon": "baby",
+                  "library": "lucide",
+                  "fill": "$muted"
+                },
+                {
+                  "type": "text",
+                  "id": "lfeA2",
+                  "name": "Tab label · 寶貝",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "寶貝",
+                  "lineHeight": 1.4,
+                  "textAlign": "center",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "U1vgAT",
+                  "name": "Tab selection indicator",
+                  "width": 28,
+                  "height": 3,
+                  "fill": "$white",
+                  "cornerRadius": 1.5,
+                  "layout": "vertical"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "g2o2U",
+              "name": "Tab · 家庭",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "家庭",
+                "role": "tab",
+                "selected": false
+              },
+              "width": 76,
+              "height": 68,
+              "layout": "vertical",
+              "gap": 3,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "K1h8T",
+                  "name": "家庭",
+                  "width": 24,
+                  "height": 24,
+                  "icon": "users",
+                  "library": "lucide",
+                  "fill": "$muted"
+                },
+                {
+                  "type": "text",
+                  "id": "Fz0vv",
+                  "name": "Tab label · 家庭",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "家庭",
+                  "lineHeight": 1.4,
+                  "textAlign": "center",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "Zdogg",
+                  "name": "Tab selection indicator",
+                  "width": 28,
+                  "height": 3,
+                  "fill": "$white",
+                  "cornerRadius": 1.5,
+                  "layout": "vertical"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "variables": {
