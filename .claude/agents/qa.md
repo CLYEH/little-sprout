@@ -84,6 +84,14 @@ Pen 是單一全域文件，`get_app_state` 回報路徑一致不代表 renderer
 3. status 綁 SHA、不隨分支走：`test` 再前進（下一次 promote）就要重驗重貼，舊 SHA 的 PASS 不算數。
 4. 貼失敗（gh 未登入、SHA 錯、腳本 exit 非 0）不得靜默：handoff「未完成」欄明說「status 未貼」，由 orchestrator 補貼。
 
+## Android 驗收（`lane:android` 票，LS-478）
+iOS 票照上面各段；Android 票在 emulator 上做同一套事，差別如下（非 UI 票的 haiku 覆寫規則不變）：
+- **專屬機**：只用 `bash scripts/gates/detect-emulator.sh` 選出（或建出）的 `LS-<n>-Pixel8`（AVD 命名見 `android/README.md`），看它印的 `emulator: <name> <serial> API <ver>（pinned <ver>）` 那行，API 與 `.android-api` 不同要在裁決註明；操作某台 emulator 的整段指令包進 `bash scripts/ops/emulator-lock.sh --serial <serial> -- <命令>`。本機沒裝 JDK／SDK／emulator（`detect-emulator.sh`、`qa-e2e-android.sh` 回 exit 3）：該項標 BLOCKED 或 PLAUSIBLE 並寫明缺什麼、靠 CI 哪個 job（`android-lint`／`android-unit`／`android-connected`）驗，**不得寫成通過**。
+- **對稿**：UI 票在 emulator 實跑後截圖——`mkdir -p .claude/evidence/<票號>/<輪次> && adb -s <serial> exec-out screencap -p > .claude/evidence/<票號>/<輪次>/<名>.png`（絕對路徑規則同 mobile-mcp 的 `saveTo`），對該畫面的 .pen 板（版面、文案）與 Material 差異板（M3 元件對映、系統返回／邊到邊、系統列、Bottom Navigation）；沒有 Material 差異板就停下回報，不自己判。
+- **多步驟**：優先 `bash scripts/ops/qa-e2e-android.sh <login|publish|browse> [--ticket LS-<n>]`（內部先持有 Supabase 的 hold、後取 emulator 鎖；證據落 `.claude/evidence/<票號>/qa-e2e/<情境>-<時間>/`：`screens/`、`config.txt`、`gradle.log`、`instrument.log`、`logcat.log`）。exit 0＝通過、1＝情境紅（log 尾段印出）、2＝環境／參數／lock 錯誤、**3＝本機 Android 環境不齊（⚠，不是情境紅）**。目前 app 只有骨架：`login` 只走到冷啟動首頁，`publish`／`browse` 會 fail loud（「尚未實作」）——等畫面票補情境，不要把它們的紅當成 app 缺陷，也不要因此改用 mobile-mcp 假裝走完。
+- **長輩約束取代對照**：字型縮放 200% 取代 AX3——`adb -s <serial> shell settings put system font_scale 2.0`（矩陣至少 0.85、1.0、2.0 對應 xSmall／預設／AX3，另把「顯示大小」開到最大各驗一次），**收工前還原** `adb -s <serial> shell settings put system font_scale 1.0` 並在 handoff 寫「font_scale 已復原」；TalkBack 取代 VoiceOver——設定 → 無障礙開 TalkBack 走完主流程（每個可互動元件有朗讀名稱、讀取順序合理），收工關掉；可點元件 ≥48dp 由 CI `android-connected` 的 `TapTargetGateTest`（登記制，`android/tap-target-exemptions.txt`）機械擋，你只抽查畫面差異。
+- **收工關機**：只關自己 boot 的那台——`adb -s <serial> emu kill`（serial 取 `adb devices` 中屬於 `LS-<n>-Pixel8` 的 `emulator-<port>`；`qa-e2e-android.sh` 自己 boot 的它會自己關）。**禁止**無 `-s` 的 `adb emu kill`、`adb kill-server`、`pkill -f emulator`（會打掉他票的機器；PreToolUse `emu-all-guard.sh` 機械擋）。handoff 產出位置加「emulator 已關：<serial>」（沒 boot 過寫「無」）與「font_scale 已復原」。
+
 ## 收工前關模擬器（LS-100）
 任務結束、交 handoff 前，`xcrun simctl shutdown <UDID>`——自己這次驗收 boot 的每一台都要關（機器空跑浪費資源、也會讓下一個 agent／patrol 誤判「已有人在用」）。`demo-*` 名稱的模擬器（demo 環境的持久機）豁免，不要關。
 
