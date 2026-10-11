@@ -19,6 +19,8 @@
 #   （`screen_attr_missing` 恆回空列表）→ ⑱ 的缺列樣本改判綠，證明紅是這條檢查造成的。
 #   ㉘～㉙ LS-322 畫面級屬性「資料落點」必列欄：既有（本 PR 未新增）畫面板 Notes 缺此欄不回溯（白名單）、本 PR 只新增
 #   另一塊資料落點齊全的畫面 → 綠；本 PR 新增的畫面缺資料落點欄 → 紅，只點名該畫面、不誤點既有舊畫面。
+#   ㉚～㉚-d LS-484 新增 .pen（base 無此路徑）：整份新增＋Notes 齊 → 綠＋（新增）行；Notes 無畫面級屬性 → 紅；範圍內建了又刪的 id → 紅；
+#   base commit 讀不到 → exit 2。mutation：main() 改回 load_snapshot → ㉚ 起全部 exit 2（#626 原錯誤字樣）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -390,6 +392,47 @@ if [ "$got" -eq 1 ] && grep -qF '✗ 資料落點缺列：正典畫面 Import / 
   echo "✓ ㉙ 本 PR 新增畫面缺資料落點欄 → 紅，只點名新畫面（Import/10）、不回溯要求舊畫面（Import/09）"
 else
   echo "✗ ㉙ 應只點名 Import / 10 缺資料落點、不誤點 Import / 09（實得 exit ${got}）" >&2
+  printf '%s\n' "$out" | sed 's/^/    /' >&2
+  fail=1
+fi
+
+# ───── LS-484：新增 .pen（base 無此路徑＝提案稿首次入庫，#626 曾因 git show 失敗 exit 2）─────
+# ㉚ 正：base 沒有 docs/design-proposals/p/proposal.pen，head 新增；Notes 引用活 id、畫面級屬性列齊含資料落點 → 綠＋（新增）行
+# ㉚-b 負：同樣整份新增但 Notes 沒有畫面級屬性段 → 紅，head 全部正典畫面都算新增（不因 base 無檔就整份放行）
+# ㉚-c 負：同樣整份新增、本 PR 中間 commit 建了節點後刪掉、Notes 仍引用 → 紅（範圍內 .pen commit 的死 id 候選照舊）
+# ㉚-d fail closed：直接呼叫 .py 給讀不到的 base commit → exit 2（「base 無此路徑」只認 commit 可讀且路徑不在 tree）
+prop="docs/design-proposals/p/proposal.pen"
+prop_pen() {
+  local body
+  body=$(IFS=,; printf '%s' "$*")
+  mkdir -p "$R/$(dirname "$prop")"
+  printf '{"version":"2.18","children":[%s]}\n' "$body" > "$R/$prop"
+  g add "$prop"
+}
+g checkout -q -b ls484-new-ok "$base_ref"
+prop_pen "$(board P01 'C / 01 家庭動態' '{"type":"frame","id":"Pr0w1","name":"Row"}')" \
+    "$(notes PT1 '列 Pr0w1 高 52。畫面級屬性：C / 01 家庭動態｜隱藏 Tab Bar ✗｜標題 自訂｜釘底動作帶 無｜失敗文案鍵 feed.load_failed｜深色 無特例｜AX3 無特例｜iPad 放大｜資料落點 無持久化')"
+g commit -qm 'design(proposal): LS-484 新增提案稿'
+expect 0 '㉚ base 無此 .pen（整份新增）、Notes 活 id＋畫面級屬性齊 → 綠並印（新增）行' '新增正典畫面 1、畫面級屬性缺列 0、資料落點缺列 0' 'git show' "$prop" --base "$base_ref"
+expect 0 '㉚ 輸出含（新增）說明行' '（新增）docs/design-proposals/p/proposal.pen 在 base' '' "$prop" --base "$base_ref"
+
+g checkout -q -b ls484-new-noattr "$base_ref"
+prop_pen "$(board P01 'C / 01 家庭動態' '')" "$(board P02 'C / 02 回憶詳情' '')" "$(notes PT1 '整體色票見 visual-system')"
+g commit -qm 'design(proposal): LS-484 新增提案稿（Notes 無畫面級屬性）'
+expect 1 '㉚-b 整份新增但 Notes 無畫面級屬性段 → 紅，兩個畫面都點名' '✗ 畫面級屬性缺列：正典畫面 C / 02' '' "$prop" --base "$base_ref"
+
+g checkout -q -b ls484-new-dead "$base_ref"
+prop_pen "$(board P01 'C / 01 家庭動態' '{"type":"frame","id":"Gh0st1","name":"Row"}')" "$(notes PT1 '列 Gh0st1 高 52。畫面級屬性：C / 01 家庭動態｜資料落點 無持久化')"
+g commit -qm 'design(proposal): LS-484 r1'
+prop_pen "$(board P01 'C / 01 家庭動態' '')" "$(notes PT1 '列 Gh0st1 高 52。畫面級屬性：C / 01 家庭動態｜資料落點 無持久化')"
+g commit -qm 'design(proposal): LS-484 r2 刪 Row 但 Notes 沒改'
+expect 1 '㉚-c 整份新增、範圍內 commit 建了又刪的 id 仍被引用 → 紅' '缺失 id Gh0st1' '' "$prop" --base "$base_ref"
+
+out="$(cd "$R" && python3 "${root}/scripts/gates/design_notes_check.py" --pen "$prop" --head HEAD --base 0000000000000000000000000000000000000000 2>&1)"; got=$?
+if [ "$got" -eq 2 ] && has "$out" 'git ls-tree 0000000'; then
+  echo '✓ ㉚-d base commit 讀不到 → exit 2（不當成「整份新增」放行）'
+else
+  echo "✗ ㉚-d base commit 讀不到應 exit 2 且點名 git ls-tree（實得 ${got}）" >&2
   printf '%s\n' "$out" | sed 's/^/    /' >&2
   fail=1
 fi

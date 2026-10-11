@@ -10,6 +10,7 @@
 #   ⑤ ref 實例 descendants content 覆寫也掃得到（不是只有直接 text 節點）
 #   ⑥ 參數 fail closed：缺 --base／找不到 .pen／非 git 目錄 → exit 2
 #   ⑦ --head-sha 指定 PR head（同 design-notes-check.sh 的 LS-127 案例）
+#   ⑧ LS-484 base 無此 .pen（提案稿首次入庫）→ 整份新增、全部板算觸碰：正確綠（⑧a）、U+0020 紅（⑧b）
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -122,6 +123,26 @@ if [ "$got" -eq 2 ]; then echo '✓ ⑥c 非 git 目錄 → exit 2'; else echo "
 # ⑦ --head-sha 指定 PR head（LS-127 情境）
 head_sha_for_good="$(g rev-parse pr-good)"
 expect 0 '⑦ --head-sha 指定 PR head → 依該 head 判定，綠' '違規 0' '' design/littlesprout.pen --base "$base_ref" --head-sha "$head_sha_for_good"
+
+# ⑧ LS-484：base 沒有這份 .pen（提案稿首次入庫，#626 曾因 git show 失敗 exit 2）→ 整份新增、head 全部板都算觸碰
+#   ⑧a 正：新增稿年齡字串 codepoint 正確 → 綠，觸碰板數＝head 全部頂層板
+#   ⑧b 負：新增稿年齡字串 U+0020 → 紅（不因 base 無檔就整份放行）
+prop="docs/design-proposals/p/proposal.pen"
+prop_pen() {
+  local body
+  body=$(IFS=,; printf '%s' "$*")
+  mkdir -p "$R/$(dirname "$prop")"
+  printf '{"version":"2.18","children":[%s]}\n' "$body" > "$R/$prop"
+  g add "$prop"
+}
+g checkout -q -b ls484-new-good "$base_ref"
+prop_pen "$(board P01 'C / 04 寶貝成長概覽' "$(text PA1 "$GOOD_FULL")")" "$(board P02 'C / 05 飲食小記' '')"
+g commit -qm 'design(proposal): LS-484 新增提案稿（年齡正確）'
+expect 0 '⑧a base 無此 .pen（整份新增）、年齡 codepoint 正確 → 綠，head 兩塊板皆算觸碰' '本 PR 觸碰板 2 塊、年齡字串違規 0' 'git show' "$prop" --base "$base_ref"
+g checkout -q -b ls484-new-bad "$base_ref"
+prop_pen "$(board P01 'C / 04 寶貝成長概覽' "$(text PA1 "$BAD_SPACE_FULL")")"
+g commit -qm 'design(proposal): LS-484 新增提案稿（年齡 U+0020）'
+expect 1 '⑧b base 無此 .pen（整份新增）、年齡 U+0020 → 紅' '板 P01（C / 04 寶貝成長概覽）／節點 PA1' '' "$prop" --base "$base_ref"
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ design-identity-header-check 自測失敗" >&2

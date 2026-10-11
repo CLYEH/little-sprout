@@ -60,6 +60,10 @@
 # 的列」——板名恰好出現在段落內其他畫面的敘述文字裡也會被誤判命中（誤放行方向，不誤擋；R2 起同一正典畫面本來就
 # 允許任一變體命中，這個盲區只影響「命中的是不是同一正典畫面內的敘述」這個更細的判斷）。
 #
+# LS-484 新增 .pen：merge-base 的 tree 沒有這份 .pen（提案稿 docs/design-proposals/** 首次入庫；#626 曾因 `git show` 失敗
+# exit 2）→ 視為整份新增：base 快照當空文件（印「（新增）」行），head 全樹皆算新增／觸碰——無 base 沿革比對，畫面級屬性／
+# 資料落點對 head 全部正典畫面要求、NBSP 對全部板算違規；範圍內各次 .pen commit 的死 id 候選照舊。commit 讀不到仍 exit 2。
+#
 # 用法：design-notes-check.sh <path.pen> --base <ref> [--head-sha <sha>]
 # exit：0＝無缺失且無 NBSP 違規；1＝有缺失或 NBSP 違規；2＝參數／git 錯誤（fail closed）。自測：design-notes-check.test.sh（CI rules job）。
 set -uo pipefail

@@ -39,6 +39,9 @@
 # （㊼-e）／board_clip hash 綁到別的 tree_hash 紅（㊼-f）／text_occlusion hash 的 scope 不同紅（㊼-g）／缺 scan_note 或空白紅（㊼-h／i）／
 # cutoff 前舊形狀綠＋放行行（㊼-j）、cutoff 前但 hash 在且不符仍紅（㊼-k）／PR head 已含標記而最新收據缺欄位紅、補齊綠（㊼-l／l-b）。
 # cutoff＝腳本含 `result_hash` 字面（同形）。
+#
+# LS-484：㊽～㊽-d 驗新增 .pen（提案稿 docs/design-proposals/**，base 無此路徑）——無角托元件時 document_containers／ref_hits 全零綠（㊽）、
+# boards 漏頂層板紅（㊽-b，base 無檔＝全部頂層板算觸碰）、提案稿含 cmp/Photo Corner 時全零照舊紅（㊽-c／d）；主稿路徑不套用由 ㊺／㊻-e 釘住。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -1166,6 +1169,70 @@ g add design/evidence/LS-67-r9-overflow.json
 g commit -qm 'design(evidence): LS-67 r9 收據（補 result_hash＋scan_note）'
 expect 0 '㊼-l-b 同 head_sha 補齊 result_hash＋scan_note → 綠' '六支各帶 result_hash' \
   "$R/design/littlesprout.pen" --ticket LS-67 --base "$base_ref"
+
+# ───── LS-484：新增 .pen（提案稿 docs/design-proposals/**，base 無此路徑；#626）─────
+# ㊽ 正：整份新增、快照無角托元件（cmp/Photo Corner／GEBcf）、boards＝head 全部頂層板、document_containers=0、ref_hits=0、
+#    scan_scope=document → 綠（結構性零值不判）
+# ㊽-b 負：同上但 boards 漏一塊頂層板 → 紅（base 無檔＝head 全部頂層板都算觸碰）
+# ㊽-c 負：提案稿含 cmp/Photo Corner 元件定義而 document_containers=0 → 紅（有角托元件就照 LS-202 判歸零）
+# ㊽-d 負：同 ㊽-c 而 ref_hits=0（document_containers 非零）→ 紅（照 LS-207）
+# 主稿路徑不受影響：㊺／㊻-e 的主稿（pen4，無角托元件）全零收據仍紅。
+prop="docs/design-proposals/p/proposal.pen"
+prop_plain='{"version":"2.18","children":[{"id":"p1","type":"frame","name":"C / 01 家庭動態","children":[{"id":"p1a","children":[]}]},{"id":"p2","type":"frame","name":"C / 02 回憶詳情","children":[]}]}'
+prop_corner='{"version":"2.18","children":[{"id":"p1","type":"frame","name":"C / 01 家庭動態","children":[{"id":"p1a","children":[]}]},{"id":"p2","type":"frame","name":"C / 02 回憶詳情","children":[]},{"id":"pc","type":"frame","name":"cmp/Photo Corner","reusable":true,"children":[]}]}'
+land10() {
+  # land10 <branch> <pen-json>：自 base_ref 新增提案稿（base 無此路徑）＋含 result_hash 標記的正典腳本
+  g checkout -q -b "$1" "$base_ref"
+  mkdir -p "$R/$(dirname "$prop")" "$R/scripts/design"
+  printf '%s\n' "$2" > "$R/$prop"
+  printf '// synthetic canonical script\nfunction scanTextOcclusion() {}\nfunction scanBoardClip() {}\n// tag: scope + document_count\nref_hits\n// tag: result_hash\n' > "$R/scripts/design/overflow-scan.js"
+  g add "$prop" scripts/design/overflow-scan.js
+  g commit -qm 'design(proposal): LS-67 新增提案稿（LS-484 樣本）'
+  g rev-parse HEAD
+}
+prop_hash_of() { g show "$1:$prop" > "$work/hash-prop.pen"; python3 "$root/scripts/gates/design_tree_hash.py" "$work/hash-prop.pen"; }
+prop_nodes_of() { g show "$1:$prop" > "$work/nodes-prop.pen"; bash "$landing" "$work/nodes-prop.pen" --print-nodes; }
+write_receipt10() {
+  # write_receipt10 <path> <head_sha> <boards-json> <document_containers> <ref_hits>
+  local path=$1 sha=$2 boards=$3 dcont=$4 rhits=$5 hash nodes
+  hash="$(prop_hash_of "$sha")"; nodes="$(prop_nodes_of "$sha")"
+  local ca='{"flagged":[],"unresolved":[]}' empty='{"flagged":[]}' ps='"scope":"document","document_count":0,'
+  mkdir -p "$(dirname "$path")"
+  printf '%s\n' '{"ticket":"LS-67","round":10,"head_sha":"'"$sha"'","total_nodes":'"$nodes"',"tree_hash":"'"$hash"'","scan_scope":"document","scan_note":"不分批；SCAN_BOARDS=全部頂層板；scope=document",' \
+    ' "scans":{"sibling_intersection":{'"$ps"'"flagged":[],"result_hash":"'"$(rh9 sibling_intersection document "$hash" "$empty")"'"},' \
+    '  "row_overflow":{'"$ps"'"flagged":[],"result_hash":"'"$(rh9 row_overflow document "$hash" "$empty")"'"},' \
+    '  "cross_parent_collision":{'"$ps"'"flagged":[],"result_hash":"'"$(rh9 cross_parent_collision document "$hash" "$empty")"'"},' \
+    '  "corner_anchor":{'"$ps"'"boards":'"$boards"',"containers":0,"points":0,"mismatch":0,"document_containers":'"$dcont"',"document_mismatch":0,"ref_hits":'"$rhits"',"flagged":[],"unresolved":[],"result_hash":"'"$(rh9 corner_anchor document "$hash" "$ca")"'"},' \
+    '  "text_occlusion":{'"$ps"'"flagged":[],"document_flagged":[],"result_hash":"'"$(rh9 text_occlusion document "$hash" "$empty")"'"},' \
+    '  "board_clip":{'"$ps"'"flagged":[],"document_flagged":[],"result_hash":"'"$(rh9 board_clip document "$hash" "$empty")"'"}}}' > "$path"
+}
+
+# ㊽ 整份新增、無角托元件、boards 全列、全零 → 綠
+sha70="$(land10 pr-ls484-new-ok "$prop_plain")"
+write_receipt10 "$R/design/evidence/LS-67-r10-overflow.json" "$sha70" '["p1","p2"]' 0 0
+g add design/evidence/LS-67-r10-overflow.json
+g commit -qm 'design(evidence): LS-67 r10 收據（新增提案稿、無角托元件）'
+expect 0 '㊽ 新增提案稿、無角托元件、boards＝全部頂層板、document_containers=0／ref_hits=0 → 綠' '無角托元件 cmp/Photo Corner（document_containers／ref_hits 零值不判，LS-484）' \
+  "$R/$prop" --ticket LS-67 --base "$base_ref"
+# ㊽-b boards 漏 p2 → 紅
+write_receipt10 "$R/design/evidence/LS-67-r10-overflow.json" "$sha70" '["p1"]' 0 0
+g add design/evidence/LS-67-r10-overflow.json
+g commit -qm 'design(evidence): LS-67 r10 收據（boards 漏 p2）'
+expect 1 '㊽-b 新增提案稿、boards 漏一塊頂層板 → 紅（base 無檔＝全部頂層板都算觸碰）' '漏列本 PR 對 .pen 有變更的頂層節點：p2（C / 02 回憶詳情）' \
+  "$R/$prop" --ticket LS-67 --base "$base_ref"
+# ㊽-c 提案稿有 cmp/Photo Corner 元件、document_containers=0 → 紅
+sha71="$(land10 pr-ls484-new-corner "$prop_corner")"
+write_receipt10 "$R/design/evidence/LS-67-r10-overflow.json" "$sha71" '["p1","p2","pc"]' 0 3
+g add design/evidence/LS-67-r10-overflow.json
+g commit -qm 'design(evidence): LS-67 r10 收據（有角托元件、document_containers=0）'
+expect 1 '㊽-c 提案稿含 cmp/Photo Corner、document_containers=0 → 紅（有元件就判歸零）' 'scans.corner_anchor.document_containers 為 0 而 scan_scope=document' \
+  "$R/$prop" --ticket LS-67 --base "$base_ref"
+# ㊽-d 提案稿有 cmp/Photo Corner 元件、ref_hits=0 → 紅
+write_receipt10 "$R/design/evidence/LS-67-r10-overflow.json" "$sha71" '["p1","p2","pc"]' 4 0
+g add design/evidence/LS-67-r10-overflow.json
+g commit -qm 'design(evidence): LS-67 r10 收據（有角托元件、ref_hits=0）'
+expect 1 '㊽-d 提案稿含 cmp/Photo Corner、ref_hits=0 → 紅（有元件就判 ref 判準）' 'scans.corner_anchor.ref_hits 為 0 而 scan_scope=document' \
+  "$R/$prop" --ticket LS-67 --base "$base_ref"
 
 if [ "$fail" -eq 0 ]; then
   echo "design-evidence-check.test.sh：全數通過"

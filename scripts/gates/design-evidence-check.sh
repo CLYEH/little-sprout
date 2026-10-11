@@ -84,6 +84,12 @@
 #     被改過、hash 從別次掃描抄來、tree_hash 對不上都抓得到；三支 O(n²) 收據只存代表、只驗格式；(c) `scan_note` 必填非空（跑法與範圍
 #     自述：分批批次／SCAN_BOARDS／scope／同一稿態）。cutoff 同形（RESULT_HASH_MARKER `result_hash`）：舊收據缺欄位放行並印一行，
 #     result_hash 若在仍驗；輪次最高的收據另看 PR head tree。
+#   - **LS-484：新增 .pen（提案稿 docs/design-proposals/**）**——(a) base 沒有這份 .pen＝整份新增：corner_anchor.boards
+#     的覆蓋要求＝head_sha 快照的全部頂層節點（touched 基準快照讀不到即視為空，既有行為，自測 ㊽-b 釘住）；(b) 非主稿
+#     路徑且 head_sha 快照全樹沒有角托元件（id `GEBcf` 或名稱 `cmp/Photo Corner`，即 overflow-scan.js ref 判準的唯一對象）
+#     → `document_containers==0`／`ref_hits==0` 是結構性零值、不判歸零（仍必填、仍須非負整數）；主稿 `design/littlesprout.pen`
+#     一律不套用（㊺／㊻-e 的主稿全零收據照舊紅）。盲區：提案稿若用別的元件名做角托（不叫 cmp/Photo Corner），第四支本來就
+#     認不得，這裡也不會要求非零。
 # 掃描「有沒有真的跑對」（演算法本身正確性）不是這支腳本能驗的——那需要 Pen 的版面引擎，只能靠
 # visual-reviewer 用同方法重掃比對（見 .claude/agents/visual-reviewer.md）。
 #
@@ -277,6 +283,12 @@ RECOMPUTE = ("corner_anchor", "text_occlusion", "board_clip")
 HEX16 = re.compile(r"[0-9a-f]{16}")
 SIX = FOUR + ("text_occlusion", "board_clip")
 SCAN_SCOPES = ("boards", "document")
+# LS-484：角托元件（overflow-scan.js 的 PHOTO_CORNER_ID／PHOTO_CORNER_NAME，ref 判準的唯一對象）。非主稿的 .pen（提案稿
+# docs/design-proposals/**）快照裡完全沒有這個元件定義時，document_containers／ref_hits 為 0 是結構性零值、不是第四支停擺；
+# 主稿路徑不套用（主稿一律照 LS-202／LS-207 判歸零）。
+MAIN_PEN = "design/littlesprout.pen"
+PHOTO_CORNER_ID = "GEBcf"
+PHOTO_CORNER_NAME = "cmp/Photo Corner"
 sys.path.insert(0, os.path.dirname(os.path.abspath(landing_script)))
 import design_tree_hash  # noqa: E402
 
@@ -296,6 +308,18 @@ def has_marker(rev, marker):
 
 def has_fifth(rev):
     return has_marker(rev, FIFTH_MARKER)
+
+
+def has_corner_component(doc):
+    """LS-484：快照全樹（含巢狀）有沒有角托元件——id＝PHOTO_CORNER_ID 或 name＝PHOTO_CORNER_NAME 任一即算有。"""
+    stack = list(doc.get("children") or []) if isinstance(doc, dict) else []
+    while stack:
+        n = stack.pop()
+        if isinstance(n, dict):
+            if n.get("id") == PHOTO_CORNER_ID or n.get("name") == PHOTO_CORNER_NAME:
+                return True
+            stack.extend(n.get("children") or [])
+    return False
 
 def top_level(blob):
     """.pen 快照的頂層節點 {id: 正規化 JSON}（board／元件定義都在這一層）；解析失敗回 None。"""
@@ -337,6 +361,7 @@ refhits_marker = False
 refhits_marker_at_sha = False
 resulthash = False
 resulthash_at_sha = False
+no_corner_motif = False
 
 if not isinstance(sha, str) or sha not in pen_commits:
     errs.append(
@@ -355,7 +380,9 @@ else:
     else:
         head_roots = top_level(show.stdout)
         try:
-            want_hash = design_tree_hash.tree_hash(json.loads(show.stdout.decode("utf-8")))
+            snap = json.loads(show.stdout.decode("utf-8"))
+            want_hash = design_tree_hash.tree_hash(snap)
+            no_corner_motif = pen_relpath != MAIN_PEN and not has_corner_component(snap)
         except (UnicodeDecodeError, json.JSONDecodeError, TypeError) as e:
             errs.append(f"無法對 {sha[:7]}:{pen_relpath} 快照算 tree_hash（{type(e).__name__}: {e}）")
         fifth_at_sha = has_fifth(sha)
@@ -578,7 +605,7 @@ if perscan and isinstance(scans, dict):
                 f"scans.corner_anchor.document_containers 必填且須為非負整數（收據={dcont!r}）——LS-202 起用它判第四支有沒有停擺，省略此鍵不得繞過；"
                 "抄 SUMMARY 的 document=<containers>/<points>/<mismatch> 第一個數（ui-designer.md 收據模板列有此鍵，R3 minor-1）"
             )
-        elif scan_scope != "boards" and dcont == 0:
+        elif scan_scope != "boards" and dcont == 0 and not no_corner_motif:
             errs.append(
                 "scans.corner_anchor.document_containers 為 0 而 scan_scope=document——整份快照沒有任何角托容器＝第四支靜默停擺"
                 "（Pencil 快照沒讀到 ref、名稱備援 Corner TL/… 也沒命中；development 現稿應在 220–261 級），不是「這輪沒有錯位」，查快照欄位後重跑"
@@ -601,7 +628,7 @@ if refhits_marker and isinstance(scans, dict):
                 f"scans.corner_anchor.ref_hits 必填且須為非負整數（收據={rhits!r}）——LS-207 起用它判 ref 判準本身有沒有接上，省略此鍵不得繞過；"
                 "抄 SUMMARY 的 ref_hits=<n>（正典腳本已含此欄位）"
             )
-        elif scan_scope != "boards" and rhits == 0:
+        elif scan_scope != "boards" and rhits == 0 and not no_corner_motif:
             errs.append(
                 "scans.corner_anchor.ref_hits 為 0 而 scan_scope=document——ref 判準沒有命中任何節點（快照沒有 ref 欄位、或 "
                 "resolveInstances:false 對照表沒建成／沒套上），即使 document_containers 非零也只是名稱備援撐住，Mount TL/BR "
@@ -680,6 +707,8 @@ if perscan:
 elif lacks_perscan():
     also = "、PR head 的亦無" if is_latest else ""
     print(f"（{p}：head_sha={sha_disp} 快照的 {FIFTH_SCRIPT} 尚無 per-scan scope／document_count{also}，LS-202 新欄位不要求——舊收據放行）")
+if no_corner_motif:
+    schema += f"、{pen_relpath} 無角托元件 {PHOTO_CORNER_NAME}（document_containers／ref_hits 零值不判，LS-484）"
 if resulthash:
     schema += "、六支各帶 result_hash（corner_anchor／text_occlusion／board_clip 重算相符）、scan_note"
 elif lacks_result_hash():
