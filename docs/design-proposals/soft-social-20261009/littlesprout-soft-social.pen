@@ -10417,6 +10417,641 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "YJXzx",
+      "x": 6580,
+      "y": 300,
+      "name": "C / 15 新增成長紀錄",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        20,
+        0
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "JtYrM",
+          "name": "System status",
+          "width": "fill_container",
+          "height": 24,
+          "padding": [
+            0,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "a04x9A",
+              "name": "Time",
+              "fill": "$ink",
+              "textGrowth": "fixed-width",
+              "width": 60,
+              "content": "9:41",
+              "lineHeight": 1.4,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "qBekn",
+              "name": "System signals",
+              "width": 60,
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "cKjkD",
+                  "name": "Mobile signal",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "signal",
+                  "library": "lucide",
+                  "fill": "$ink"
+                },
+                {
+                  "type": "icon",
+                  "id": "mw3zF",
+                  "name": "Battery",
+                  "width": 22,
+                  "height": 16,
+                  "icon": "battery-full",
+                  "library": "lucide",
+                  "fill": "$ink"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "MP5ik",
+          "name": "Navigation header",
+          "width": "fill_container",
+          "height": 52,
+          "gap": 8,
+          "padding": [
+            0,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Fr4NY",
+              "name": "Button · 返回上一頁",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "返回上一頁",
+                "role": "button"
+              },
+              "width": 44,
+              "height": 44,
+              "gap": 8,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "M06iJR",
+                  "name": "返回上一頁",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "chevron-left",
+                  "library": "lucide",
+                  "fill": "$rose"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "Tmn1J",
+              "name": "Page title",
+              "fill": "$ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "新增成長紀錄",
+              "lineHeight": 1.4,
+              "textAlign": "center",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "WH4aJ",
+              "name": "Header balance",
+              "width": 44,
+              "height": 44,
+              "layout": "vertical"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vQkPB",
+          "name": "Main content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            8,
+            12
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "CaC8u",
+              "name": "Child context",
+              "width": "fill_container",
+              "gap": 12,
+              "padding": [
+                4,
+                4,
+                6,
+                4
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "CwbEZ",
+                  "name": "小禾的圓形頭像",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "小禾的圓形頭像",
+                    "role": "image"
+                  },
+                  "clip": true,
+                  "width": 44,
+                  "height": 44,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "assets/child-leaf.jpg",
+                    "mode": "cover"
+                  },
+                  "cornerRadius": 22,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "NyXWR",
+                  "name": "Child name and age",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "HkomI",
+                      "name": "Child name",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "小禾",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 17,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "hx4YW",
+                      "name": "Child age",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "1 歲 3 個月",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Jxlrn",
+              "name": "Measured date",
+              "width": "fill_container",
+              "fill": "$white",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "padding": [
+                0,
+                12
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "a6b5R",
+                  "name": "Button · 量的日期",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "量的日期，10 月 11 日",
+                    "role": "button"
+                  },
+                  "width": "fill_container",
+                  "height": 56,
+                  "gap": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "T4vv6p",
+                      "name": "量的日期",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "calendar-days",
+                      "library": "lucide",
+                      "fill": "$rose"
+                    },
+                    {
+                      "type": "text",
+                      "id": "PzRcO",
+                      "name": "Date label",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "量的日期",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "XItFb",
+                      "name": "Date value",
+                      "fill": "$rose",
+                      "content": "10 月 11 日",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "o4JlPW",
+                      "name": "選擇日期",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$rose"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vY7iu",
+              "name": "Growth inputs",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "e9Bcn",
+                  "name": "Growth input 身高",
+                  "width": "fill_container",
+                  "fill": "$mint",
+                  "cornerRadius": 16,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "t41sO",
+                      "name": "Measurement label 身高",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "cXbZa",
+                          "name": "身高",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "ruler",
+                          "library": "lucide",
+                          "fill": "$rose"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ReGS6",
+                          "name": "Label 身高",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "身高",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 17,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "qsR6Q",
+                      "name": "Input 身高",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "身高，78.2 公分",
+                        "role": "textField"
+                      },
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$white",
+                      "cornerRadius": 12,
+                      "stroke": "$control",
+                      "strokeWidth": 1,
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "D1SPA",
+                          "name": "Value 身高",
+                          "fill": "$ink",
+                          "content": "78.2",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 26,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Xaiqd",
+                          "name": "Unit spacer",
+                          "width": "fill_container",
+                          "height": 1,
+                          "layout": "none"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Gqjbr",
+                          "name": "Unit 身高",
+                          "fill": "$muted",
+                          "content": "cm",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 17,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "Msl2N",
+                      "name": "Previous 身高",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "上次 77.4 cm",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FTcx4",
+                  "name": "Growth input 體重",
+                  "width": "fill_container",
+                  "fill": "$yellow",
+                  "cornerRadius": 16,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "odIIO",
+                      "name": "Measurement label 體重",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "lpD7O",
+                          "name": "體重",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "scale",
+                          "library": "lucide",
+                          "fill": "$rose"
+                        },
+                        {
+                          "type": "text",
+                          "id": "VrqCX",
+                          "name": "Label 體重",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "體重",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 17,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "N9PpU",
+                      "name": "Input 體重",
+                      "metadata": {
+                        "type": "accessibility",
+                        "accessibilityLabel": "體重，10.1 公斤",
+                        "role": "textField"
+                      },
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "$white",
+                      "cornerRadius": 12,
+                      "stroke": "$rose",
+                      "strokeWidth": 2,
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "hmqbs",
+                          "name": "Value 體重",
+                          "fill": "$ink",
+                          "content": "10.1",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 26,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "MNuXm",
+                          "name": "Caret",
+                          "fill": "$rose",
+                          "width": 2,
+                          "height": 30
+                        },
+                        {
+                          "type": "frame",
+                          "id": "T7pHm2",
+                          "name": "Unit spacer",
+                          "width": "fill_container",
+                          "height": 1,
+                          "layout": "none"
+                        },
+                        {
+                          "type": "text",
+                          "id": "PENb4",
+                          "name": "Unit 體重",
+                          "fill": "$muted",
+                          "content": "kg",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 17,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "KFX8i",
+                      "name": "Previous 體重",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "上次 9.8 kg",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ZAFe3",
+              "name": "Share note",
+              "width": "fill_container",
+              "gap": 10,
+              "padding": [
+                6,
+                8
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "wJh0k",
+                  "name": "家人看得到",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "users",
+                  "library": "lucide",
+                  "fill": "$muted"
+                },
+                {
+                  "type": "text",
+                  "id": "tLgwg",
+                  "name": "Share note text",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "儲存後，家人在「寶貝」頁\n就看得到這次的身高和體重。",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cp2FN",
+          "name": "Growth save action",
+          "width": "fill_container",
+          "height": 76,
+          "fill": "$white",
+          "padding": [
+            8,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "FlQxL",
+              "name": "Button · 儲存紀錄",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "儲存紀錄",
+                "role": "button"
+              },
+              "width": "fill_container",
+              "height": 52,
+              "fill": "$rose-soft",
+              "cornerRadius": 12,
+              "stroke": "$control",
+              "strokeWidth": 1,
+              "padding": [
+                10,
+                12
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NMmHW",
+                  "name": "Button label · 儲存紀錄",
+                  "fill": "$rose",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "儲存紀錄",
+                  "lineHeight": 1.4,
+                  "textAlign": "center",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "variables": {
