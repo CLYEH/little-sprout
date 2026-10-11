@@ -32,6 +32,7 @@ Supabase lock／simulator 常數的既有模式）。
 """
 import argparse
 import datetime
+import glob
 import hashlib
 import io
 import json
@@ -483,8 +484,8 @@ def design_forced_full(issues, root, script_dir):
     視為滿——否則巡檢可能同時補位派出兩張要動 Pen 的票，撞同一份文件（LS-81／LS-91 同型事故）。
 
     機械判定二擇一：① `pen-open.sh --status` 回傳的目前 active 路徑＝該 ui 票 worktree 的
-    design/littlesprout.pen；② 該檔案的 Pen autosave backup（sha1(file://<abs path>)，同
-    pen-land.sh 的算法）mtime 落在 30 分鐘內。任一步找不到 worktree／pen-open.sh 不可執行／backup
+    design/littlesprout.pen（LS-480：或 docs/design-proposals/**/*.pen 提案檔）；② 該檔案的 Pen autosave backup
+    （sha1(file://<abs path>)，同 pen-land.sh 的算法）mtime 落在 30 分鐘內。任一步找不到 worktree／pen-open.sh 不可執行／backup
     目錄不存在都當作「無法判定為滿」，不 fail loud——這是盡力而為的輔助判斷，§5-b 主要仍靠規約承載
     （patrol-linear.sh 不追蹤 Pen 是否真的忙碌到什麼程度，只做這個粗略、保守但非完備的信號）。
     """
@@ -503,17 +504,21 @@ def design_forced_full(issues, root, script_dir):
         wt = worktrees.get(n)
         if not wt:
             continue
-        want = os.path.join(wt, "design", "littlesprout.pen")
-        if active_real and active_real == os.path.realpath(want):
-            return True
-        sha = hashlib.sha1(("file://%s" % want).encode("utf-8")).hexdigest()
-        backup = os.path.join(backup_dir, sha)
-        try:
-            mtime = os.path.getmtime(backup)
-        except OSError:
-            continue
-        if now - mtime < 1800:
-            return True
+        # LS-480：票 worktree 內任一 .pen 都算（主稿或 docs/design-proposals/**/*.pen 提案檔）
+        wants = [os.path.join(wt, "design", "littlesprout.pen")] + sorted(
+            glob.glob(os.path.join(wt, "docs", "design-proposals", "**", "*.pen"), recursive=True)
+        )
+        for want in wants:
+            if active_real and active_real == os.path.realpath(want):
+                return True
+            sha = hashlib.sha1(("file://%s" % want).encode("utf-8")).hexdigest()
+            backup = os.path.join(backup_dir, sha)
+            try:
+                mtime = os.path.getmtime(backup)
+            except OSError:
+                continue
+            if now - mtime < 1800:
+                return True
     return False
 
 

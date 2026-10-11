@@ -11,7 +11,11 @@
 # 強制重新載入（必要時清場重開 Pen，讓全新 renderer 從磁碟讀取當下內容）成為 active document，讀者
 # 再對這份 active document 做唯讀查詢（get_app_state／execute 不帶會寫入的操作）。
 #
-# 用法：pen-read.sh [--ticket LS-<n>] [--budget-bytes <N>] [--help] <worktree-or-repo-root>
+# 用法：pen-read.sh [--ticket LS-<n>] [--budget-bytes <N>] [--pen <path>] [--help] <worktree-or-repo-root>
+#
+# **LS-480 `--pen <path>`**（絕對路徑或相對 <root> 的 .pen 檔；省略＝`<root>/design/littlesprout.pen`，行為一字不變）：
+# 原樣轉給 `pen-open.sh <root> --force-reload --pen <path>`，讀提案檔（`docs/design-proposals/**/*.pen`）等非主稿；
+# 設計票在飛拒跑（LS-398）仍只看 <root> 是否為在飛設計票自己的 worktree，與 --pen 無關。
 #
 # **LS-377 起**（來源 LS-354 池 P1 兩項：14k 節點稿 exit 3／單段 interrupted、Pen 在背景時 interrupted 明顯較多）：
 #   1. **執行前先 `open -a Pen` 把 Pen 置於前景**——execute 在背景視窗明顯較易 `InternalError: interrupted`，置前景即過。
@@ -67,17 +71,18 @@ set -uo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-usage() { echo "用法：pen-read.sh [--ticket LS-<n>] [--budget-bytes <N>] [--help] <worktree-or-repo-root>" >&2; }
+usage() { echo "用法：pen-read.sh [--ticket LS-<n>] [--budget-bytes <N>] [--pen <path>] [--help] <worktree-or-repo-root>" >&2; }
 
 print_help() {
   cat <<'HELP'
-用法：pen-read.sh [--ticket LS-<n>] [--budget-bytes <N>] [--help] <worktree-or-repo-root>
+用法：pen-read.sh [--ticket LS-<n>] [--budget-bytes <N>] [--pen <path>] [--help] <worktree-or-repo-root>
 
 唯讀讀稿前，把目標 root 的 design/littlesprout.pen 確認為 Pen 的 active document，並驗 Pencil 端 tree_hash＝磁碟。
 
 執行前：先 `open -a Pen` 把 Pen 置於前景（背景時大稿 execute 明顯較易 InternalError: interrupted）。
   --ticket LS-<n>      統計 log 的票號（預設從 cwd 的 git toplevel 目錄名推）；log：<toplevel>/.claude/evidence/<票號>/pen-read-stats.log
   --budget-bytes <N>   分段位元組預算（預設 2097152＝2 MiB；0＝停用預算分段、維持先整份再對半的舊路徑）
+  --pen <path>         （LS-480）改讀指定 .pen（絕對或相對 root，例如提案檔）；省略＝<root>/design/littlesprout.pen
   --help               本說明
 
 Exit code：
@@ -91,6 +96,7 @@ HELP
 
 ticket=""
 budget=""
+pen_arg=""
 positional=()
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -101,6 +107,9 @@ while [ $# -gt 0 ]; do
     --budget-bytes)
       [ $# -ge 2 ] || { usage; exit 2; }
       budget=$2; shift 2 ;;
+    --pen)
+      [ $# -ge 2 ] && [ -n "${2:-}" ] || { usage; exit 2; }
+      pen_arg=$2; shift 2 ;;
     -*) usage; exit 2 ;;
     *) positional+=("$1"); shift ;;
   esac
@@ -160,7 +169,9 @@ stats_tmp=$(mktemp "${TMPDIR:-/tmp}/pen-read-stats.XXXXXX") || stats_tmp=""
 started=$SECONDS
 # LS-377 R2（merge-review m1）：子行程化後 pen-read 被 TERM／INT／HUP 時 pen-open 會變孤兒繼續跑（可能照樣走完清場重開）、
 # 統計暫存殘留——背景啟動後 wait，trap 轉送信號給子行程並清暫存（exec 時代 pen-read 的 PID 就是 pen-open，不需要這些）
-bash "${script_dir}/pen-open.sh" "$root_arg" --force-reload &
+pen_fwd=()
+[ -z "$pen_arg" ] || pen_fwd=(--pen "$pen_arg")
+bash "${script_dir}/pen-open.sh" "$root_arg" --force-reload "${pen_fwd[@]+"${pen_fwd[@]}"}" &
 child=$!
 # 子行程樹的 pid 清單（先收集再殺——父先死子會被 init 收養、找不到）：pen-open.sh 用 $(…) 子殼與 `pen interactive`／看門狗 sleep，
 # 只殺 pen-open 本體會留下它們（實測孤兒）。用絕對路徑 /bin/ps（PATH 上的 ps 可能是自測 stub）。

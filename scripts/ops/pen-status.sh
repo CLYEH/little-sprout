@@ -27,6 +27,9 @@
 #       pen-status.sh --path   （LS-211 I-c，來源 LS-96 池項 edbc460c：只印目前開檔絕對路徑，機器
 #       可讀，供 patrol.sh「Pen 開錯檔」偵測讀取——不必再自己解析上面那行組合字串的字面格式，改措辭
 #       就不會靜默退回舊路徑、fail-open）
+#       pen-status.sh --pen <path>   （LS-480）對帳：除了照常印那一行，再把目前 active 路徑與 <path>（絕對或相對 cwd 的 .pen 檔，
+#       例如提案檔）比對——路徑段多印「（＝--pen 期望 ✓）」或「（≠--pen 期望 <path> ✗）」，不一致時 exit 1（與「路徑讀不到」
+#       同級）；<path> 不存在／非 .pen exit 2。不帶 --pen 的輸出與 exit code 一字不變；`--pen` 不能與 `--path` 併用（exit 2）。
 # 輸出：一行 `Pencil：行程 ✓（pid N）／✗ · 路徑 <path>／✗（…） · MCP：本 session mcp-server ✓（pid N，…）／
 #       本 session 沒有 mcp-server 行程（…）；另有 K 支別 session 的 mcp-server（informational）` 到 stdout
 #       （--path：只印路徑一行；讀不到則不印任何東西，exit 1）
@@ -37,11 +40,17 @@ set -uo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/pencil-mcp.sh
 source "${script_dir}/lib/pencil-mcp.sh"
+# shellcheck source=lib/pen-path.sh
+source "${script_dir}/lib/pen-path.sh"
 path_only=0
+want_pen=""
 if [ $# -eq 1 ] && [ "$1" = "--path" ]; then
   path_only=1
+elif [ $# -eq 2 ] && [ "$1" = "--pen" ] && [ -n "$2" ]; then
+  pen_resolve_path pen-status "$(pwd -P)" "$2" || exit 2
+  want_pen=$PEN_RESOLVED_PATH
 elif [ $# -ne 0 ]; then
-  echo "用法：pen-status.sh [--path]" >&2
+  echo "用法：pen-status.sh [--path｜--pen <path>]" >&2
   exit 2
 fi
 
@@ -72,6 +81,13 @@ if [ -n "$pen_pid" ]; then
   path=$(bash "${script_dir}/pen-open.sh" --status 2>/dev/null)
   if [ -n "$path" ]; then
     path_txt="路徑 ${path}"
+    if [ -n "$want_pen" ]; then
+      if [ "$path" = "$want_pen" ]; then
+        path_txt="${path_txt}（＝--pen 期望 ✓）"
+      else
+        path_txt="${path_txt}（≠--pen 期望 ${want_pen} ✗）"; bad=1
+      fi
+    fi
   else
     path_txt="路徑 ✗（pen CLI 讀不到 active 文件——CLI 未登入／desktop socket 連不上）"; bad=1
   fi

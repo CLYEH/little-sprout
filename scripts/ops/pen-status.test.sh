@@ -188,6 +188,46 @@ else
   bad "⑨d 應 exit 2（實得 ${got}）"
 fi
 
+# ---- ⑩（LS-480）：--pen <path> 對帳 active 路徑；不帶 --pen 輸出不變 ----
+pdir="${work}/proj/docs/design-proposals/x"; mkdir -p "$pdir"; printf '%s' '{"version":1,"children":[]}' > "${pdir}/p.pen"
+pabs="$(cd "$pdir" && pwd -P)/p.pen"
+reset; set_pen 3185; set_mcp 24097; set_mcp_parent 24097 900 claude; set_state "PATH:${pabs}"
+out="$(run --pen "$pabs" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '（＝--pen 期望 ✓）'; then
+  ok '⑩a --pen：active＝期望 → 路徑段標 ✓、exit 0'
+else
+  bad "⑩a 應標 ✓ exit 0（實得 exit ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+set_state "PATH:${want}"
+out="$(run --pen "$pabs" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '（≠--pen 期望' && printf '%s' "$out" | grep -qF "$pabs"; then
+  ok '⑩b --pen：active≠期望 → 路徑段標 ✗＋期望路徑、exit 1'
+else
+  bad "⑩b 應標 ✗ exit 1（實得 exit ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+set_state "PATH:${pabs}"
+out="$(cd "${work}/proj" && run --pen docs/design-proposals/x/p.pen 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '（＝--pen 期望 ✓）'; then
+  ok '⑩c --pen 相對路徑（相對 cwd）解析後比對 ✓'
+else
+  bad "⑩c --pen 相對路徑應 ✓（實得 exit ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+out="$(run --pen "${work}/proj/nope.pen" 2>&1)"; got=$?
+out2="$(run --path --pen "$pabs" 2>&1)"; got2=$?
+out3="$(run --pen 2>&1)"; got3=$?
+if [ "$got" -eq 2 ] && printf '%s' "$out" | grep -qF '不存在' && [ "$got2" -eq 2 ] && [ "$got3" -eq 2 ]; then
+  ok '⑩d --pen 不存在路徑／搭 --path／缺參數 → exit 2'
+else
+  bad "⑩d 負案應皆 exit 2（實得 ${got}／${got2}／${got3}）"
+fi
+reset; set_pen 3185; set_mcp 24097; set_mcp_parent 24097 900 claude; set_state "PATH:${want}"
+out="$(run 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && ! printf '%s' "$out" | grep -qF -- '--pen'; then
+  ok '⑩e 不帶 --pen：輸出無 --pen 字樣、exit 0（預設不變）'
+else
+  bad "⑩e 不帶 --pen 應與舊行為一致（實得 exit ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-status 自測失敗" >&2
   exit 1
