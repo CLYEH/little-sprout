@@ -22,7 +22,7 @@ data class PendingTransferFamily(
 
 /**
  * 後端錯誤的 sealed 表示（docs/API.md §5）。`code` 是 Postgres SQLSTATE（`LSnnn`／`42501`…），沒有則為 null。
- * 對應 iOS `LSErrorCode`／`AppError`；這裡只列本層（Auth＋profiles／families／family_members＋邀請／加入流程＋媒體＋時間軸／留言／愛心）會碰到的碼，
+ * 對應 iOS `LSErrorCode`／`AppError`；這裡只列本層（Auth＋profiles／families／family_members＋邀請／加入流程＋媒體＋時間軸／留言／愛心＋寶貝／成長／飲食）會碰到的碼，
  * 其餘自訂碼落到 [Server]（保留原始 code），之後的票遇到時再補成具名 case。
  */
 sealed class BackendError(
@@ -91,6 +91,26 @@ sealed class BackendError(
     class RemovedByOwner(
         cause: Throwable?,
     ) : BackendError("這則內容已被家庭管理者移除，只有管理者能還原", "LS027", cause)
+
+    /** `LS041`：`update_child`／`set_child_deleted` 的寶貝不存在，或（`update_child`）已被軟刪、須先還原。 */
+    class ChildNotFound(
+        cause: Throwable?,
+    ) : BackendError("寶貝檔案不存在，或已被移除須先還原", "LS041", cause)
+
+    /** `LS042`：`update_child` 的呼叫者已不是該家庭 owner／member（例如被降級成 viewer）。 */
+    class NotChildEditor(
+        cause: Throwable?,
+    ) : BackendError("你不是這個家庭的 owner 或 member，無法編輯寶貝檔案", "LS042", cause)
+
+    /** `LS043`：`set_child_deleted(false)` 還原已超過 30 天的軟刪。 */
+    class RestoreWindowExpired(
+        cause: Throwable?,
+    ) : BackendError("寶貝檔案已被移除超過 30 天，無法還原", "LS043", cause)
+
+    /** `LS044`：寶貝已軟刪，不能再歸屬新內容（新增日記／相簿標記、成長紀錄、飲食紀錄）。 */
+    class ChildDeleted(
+        cause: Throwable?,
+    ) : BackendError("寶貝已移除，無法歸屬新內容", "LS044", cause)
 
     /** `LS050`（刪帳號）或 `LS057`（退出／被移除）：唯一 owner 且家庭還有其他成員，須先轉移 owner。 */
     class MustTransferOwnership(
@@ -233,6 +253,10 @@ private val simpleMappers: Map<String, (PostgrestRestException) -> BackendError>
         "LS024" to { BackendError.CommentNotFound(it) },
         "LS026" to { BackendError.TargetFamilyMismatch(it) },
         "LS027" to { BackendError.RemovedByOwner(it) },
+        "LS041" to { BackendError.ChildNotFound(it) },
+        "LS042" to { BackendError.NotChildEditor(it) },
+        "LS043" to { BackendError.RestoreWindowExpired(it) },
+        "LS044" to { BackendError.ChildDeleted(it) },
         "LS051" to { BackendError.AccountDeletionPending(it) },
         "LS052" to { BackendError.AccountSuspended(it) },
         "LS053" to { BackendError.FamilySuspended(it) },
