@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.ksp) apply false
 }
 
 // 釘住檔在 repo 根（單一來源，shell／CI／Gradle 共讀）；android/ 是 Gradle 根，所以往上一層。

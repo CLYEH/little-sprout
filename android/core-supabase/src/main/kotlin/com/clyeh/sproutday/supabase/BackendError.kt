@@ -34,6 +34,11 @@ sealed class BackendError(
         cause: Throwable?,
     ) : BackendError("家庭必須至少保留一位 owner", "LS001", cause)
 
+    /** `media` 的 INSERT／UPDATE 被額度 trigger 擋下：家庭已達儲存額度上限（重試同一筆不會成功）。 */
+    class StorageQuotaExceeded(
+        cause: Throwable?,
+    ) : BackendError("家庭儲存空間已滿，無法再上傳", "LS002", cause)
+
     class InviteNotFound(
         cause: Throwable?,
     ) : BackendError("邀請碼不存在", "LS010", cause)
@@ -122,6 +127,11 @@ sealed class BackendError(
         cause: Throwable? = null,
     ) : BackendError(message, null, cause)
 
+    /** Storage 以 413 擋下超過 bucket `file_size_limit`（50 MiB）的檔案；重試同一份檔案不會成功。 */
+    class PayloadTooLarge(
+        cause: Throwable?,
+    ) : BackendError("檔案超過 50 MiB 上限", null, cause)
+
     /** 其他自訂碼或標準 Postgres／HTTP 錯誤。 */
     class Server(
         message: String,
@@ -155,13 +165,42 @@ internal fun RestException.toBackendError(): BackendError =
     when (this) {
         is PostgrestRestException -> mapPostgrest(this)
         is AuthRestException -> BackendError.Auth(errorCode?.value, errorDescription, this)
-        else -> BackendError.Server(description ?: error, null, this)
+        else ->
+            if (statusCode ==
+                HTTP_PAYLOAD_TOO_LARGE
+            ) {
+                BackendError.PayloadTooLarge(this)
+            } else {
+                BackendError.Server(description ?: error, null, this)
+            }
     }
+
+private const val HTTP_PAYLOAD_TOO_LARGE = 413
+private const val HTTP_REQUEST_TIMEOUT = 408
+private const val HTTP_TOO_MANY_REQUESTS = 429
+private const val HTTP_SERVER_ERROR = 500
+
+/**
+ * 同一份請求稍後重送有機會成功嗎？上傳佇列用它決定「排退避重試」或「終局失敗」：
+ * 連線失敗、伺服器 5xx／408／429、session 暫時失效（token 刷新中、尚未登入）→ true；
+ * 額度（LS002）、413、權限（42501）、其餘自訂碼與 4xx → false（重送同樣的位元組只會得到同樣的結果）。
+ */
+val BackendError.isTransient: Boolean
+    get() =
+        when (this) {
+            is BackendError.Network, is BackendError.NotSignedIn, is BackendError.Auth -> true
+            is BackendError.Server -> (cause as? RestException)?.statusCode?.let(::isTransientStatus) ?: false
+            else -> false
+        }
+
+private fun isTransientStatus(status: Int): Boolean =
+    status >= HTTP_SERVER_ERROR || status == HTTP_REQUEST_TIMEOUT || status == HTTP_TOO_MANY_REQUESTS
 
 /** 一對一的簡單映射（docs/API.md §5）；需要解析 DETAIL 或帶訊息的碼在 [mapPostgrest] 另外處理。 */
 private val simpleMappers: Map<String, (PostgrestRestException) -> BackendError> =
     mapOf(
         "LS001" to { BackendError.FamilyMustHaveOwner(it) },
+        "LS002" to { BackendError.StorageQuotaExceeded(it) },
         "LS010" to { BackendError.InviteNotFound(it) },
         "LS011" to { BackendError.InviteExpired(it) },
         "LS012" to { BackendError.InviteExhausted(it) },

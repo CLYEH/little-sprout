@@ -39,12 +39,14 @@ internal object ContractEnv {
 }
 
 /** 一個已用 Email OTP 登入的測試使用者（各自獨立的 in-memory client，互不干擾）。 */
+@Suppress("LongParameterList") // 測試夾具：一個使用者一組 repository
 internal class TestUser(
     val email: String,
     val auth: AuthRepository,
     val family: FamilyRepository,
     val join: JoinRepository,
     val account: AccountRepository,
+    val media: MediaRepository,
     val id: String,
 )
 
@@ -66,6 +68,7 @@ internal object TestUsers {
             FamilyRepository(client),
             JoinRepository(client),
             AccountRepository(client),
+            MediaRepository(client),
             (state as AuthState.SignedIn).userId,
         )
     }

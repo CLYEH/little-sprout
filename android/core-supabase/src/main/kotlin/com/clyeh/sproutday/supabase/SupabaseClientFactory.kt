@@ -8,6 +8,7 @@ import io.github.jan.supabase.auth.MemoryCodeVerifierCache
 import io.github.jan.supabase.auth.MemorySessionManager
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.storage.Storage
 
 /** Supabase 連線設定。值來自 android/local.properties 經 BuildConfig（見 core-supabase/build.gradle.kts）。 */
 data class SupabaseConfig(
@@ -41,6 +42,7 @@ object SupabaseClientFactory {
                 flowType = FlowType.PKCE // supabase-kt 3.8.0 預設 IMPLICIT（token 放 fragment 交回 app）；與 iOS 一致改用 PKCE
             }
             install(Postgrest)
+            install(Storage)
         }
 
     /**
@@ -61,5 +63,6 @@ object SupabaseClientFactory {
                 flowType = FlowType.PKCE
             }
             install(Postgrest)
+            install(Storage)
         }
 }
