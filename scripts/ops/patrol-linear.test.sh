@@ -652,6 +652,33 @@ out_pen_c="$(PEN_OPEN_SH="$work/bin_pen_status_miss/pen-open.sh" PEN_BACKUP_DIR=
 if [ "$rc" -ne 0 ]; then echo "✗ ⑧c 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_pen_c" | sed 's/^/    /' >&2; fail=1; fi
 assert_design_lane '⑧c R1 F2：active 路徑查不到但 autosave backup mtime 30 分鐘內 → design lane 仍視為滿' out_pen_c yes
 
+# ⑧d（LS-480）：ui 票 worktree 內的提案檔（docs/design-proposals/**/*.pen）是 Pen 目前 active → design lane 視為滿
+mkdir -p "$work/wt/LS-950/docs/design-proposals/soft-social"
+: > "$work/wt/LS-950/docs/design-proposals/soft-social/prop.pen"
+prop_path="${wt_reported}/docs/design-proposals/soft-social/prop.pen"
+mkdir -p "$work/bin_pen_status_prop"
+cat > "$work/bin_pen_status_prop/pen-open.sh" <<EOF
+#!/bin/bash
+echo "${prop_path}"
+EOF
+chmod +x "$work/bin_pen_status_prop/pen-open.sh"
+out_pen_d="$(PEN_OPEN_SH="$work/bin_pen_status_prop/pen-open.sh" PEN_BACKUP_DIR="$backup_dir_empty" PATH="$work/bin_pen:$PATH" bash "$plsh" --repo "$repo_pen" --json 2>&1)"; rc=$?
+if [ "$rc" -ne 0 ]; then echo "✗ ⑧d 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_pen_d" | sed 's/^/    /' >&2; fail=1; fi
+assert_design_lane '⑧d LS-480：active＝ui 票 worktree 的提案檔 → design lane 視為滿' out_pen_d yes
+
+# ⑧e（LS-480）：提案檔的 autosave backup mtime 在 30 分鐘內（active 查不到）→ 也視為滿
+backup_dir_prop="$work/pen-backup-prop"
+mkdir -p "$backup_dir_prop"
+sha_prop=$(python3 -c "import hashlib,sys; print(hashlib.sha1(('file://'+sys.argv[1]).encode('utf-8')).hexdigest())" "$prop_path")
+: > "$backup_dir_prop/$sha_prop"
+out_pen_e="$(PEN_OPEN_SH="$work/bin_pen_status_miss/pen-open.sh" PEN_BACKUP_DIR="$backup_dir_prop" PATH="$work/bin_pen:$PATH" bash "$plsh" --repo "$repo_pen" --json 2>&1)"; rc=$?
+if [ "$rc" -ne 0 ]; then echo "✗ ⑧e 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out_pen_e" | sed 's/^/    /' >&2; fail=1; fi
+assert_design_lane '⑧e LS-480：提案檔 backup mtime 30 分鐘內 → design lane 視為滿' out_pen_e yes
+# ⑧f 負控：提案檔存在但 active 不是它、也沒近期 backup → 不視為滿（⑧d／⑧e 的綠確實來自提案檔比對）
+out_pen_f="$(PEN_OPEN_SH="$work/bin_pen_status_miss/pen-open.sh" PEN_BACKUP_DIR="$backup_dir_empty" PATH="$work/bin_pen:$PATH" bash "$plsh" --repo "$repo_pen" --json 2>&1)"; rc=$?
+if [ "$rc" -ne 0 ]; then echo "✗ ⑧f 應 exit 0（實得 ${rc}）" >&2; fail=1; fi
+assert_design_lane '⑧f LS-480 負控：有提案檔但 active／backup 都沒命中 → design lane 不視為滿' out_pen_f no
+
 # ---- ⑨ R2 m1：current cycle 無法判定（cycles 查詢為空，沒有 active 也沒有 upcoming）時，
 #        lane 補位不應選中候補、不應印出 "cycle=?"（之前 lane_candidates() 的 current_cycle_number
 #        為 None 時，會把 cycle 也是 null 的候補誤判成「在目前 cycle 內」而選中並印不可執行的動作行）----

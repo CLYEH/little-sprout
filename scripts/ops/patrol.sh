@@ -1089,10 +1089,18 @@ if [ -n "$pen_abs" ]; then
     for t in $design_tix; do
       [ -n "$first_design" ] || first_design=$t
       design_list="${design_list:+${design_list}、}$t"
-      [ "$pen_path" = "${ROOT}/.claude/worktrees/${t}/design/littlesprout.pen" ] && pen_on_design=1
+      # LS-480：票 worktree 內任一 .pen 命中即正確——主稿 design/littlesprout.pen，或提案檔 docs/design-proposals/**/*.pen
+      # （LS-471 柔粉實驗：設計票的稿放提案檔，Pen 開在提案檔上被舊判準誤報「開錯檔」）
+      case "$pen_path" in
+        "${ROOT}/.claude/worktrees/${t}/design/littlesprout.pen"|"${ROOT}/.claude/worktrees/${t}/docs/design-proposals/"*.pen) pen_on_design=1 ;;
+      esac
     done
     if [ "$pen_on_design" -eq 0 ]; then
-      PEN_DESIGN_LINE="⚠ Pen 開錯檔：${pen_path}（設計票 ${design_list} 在飛）→ bash scripts/ops/pen-open.sh ${ROOT}/.claude/worktrees/${first_design}"
+      # 切回命令：設計票若有提案檔（docs/design-proposals/**/*.pen）就附 --pen 提示（預設只會切到主稿）
+      pen_hint=
+      first_prop=$(find "${ROOT}/.claude/worktrees/${first_design}/docs/design-proposals" -name '*.pen' -type f 2>/dev/null | sort | head -1)
+      [ -z "$first_prop" ] || pen_hint="（該票有提案檔 → 改用 … --pen ${first_prop#"${ROOT}/.claude/worktrees/${first_design}/"}）"
+      PEN_DESIGN_LINE="⚠ Pen 開錯檔：${pen_path}（設計票 ${design_list} 在飛）→ bash scripts/ops/pen-open.sh ${ROOT}/.claude/worktrees/${first_design}${pen_hint}"
       # LS-398（LS-376 R1 i1）：上一段（LS209）已因「Pen 開在非 design 票的票 worktree」掛過一條 [Pen] flag 時，這裡不再疊第二條
       # flag（同一份 Pen 狀態兩段各掛一條）；PEN_DESIGN_LINE 仍設，切回命令照常在 brief／human 出現一次。
       case "$PEN_WRONG_LINE" in

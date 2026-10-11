@@ -1629,6 +1629,24 @@ else
   echo "✗ ㊺ mutant 應 exit 0 且不印「⚠ Pen 開錯檔：」（實得 ${rc}）" >&2; printf '%s\n' "$out45m" | sed 's/^/    /' >&2; fail=1
 fi
 
+# ㊺(h)(i)(j) LS-480：設計票的稿放在提案檔（docs/design-proposals/**/*.pen）——Pen 開在票 worktree 的提案檔上＝正確，
+#        不再被「只認主稿」誤報開錯檔（LS-471 柔粉實驗實例）；開在別張票的提案檔仍要報；切回命令對有提案檔的票附 --pen 提示
+fake_ps_prop388="$work/fake-pen-status-prop388.sh"
+mk_fake_pen_status "$fake_ps_prop388" "${repo}/.claude/worktrees/LS-388/docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen"
+out45h="$(PATROL_DESIGN_TICKETS=LS-388 PATROL_PEN_STATUS_SH="$fake_ps_prop388" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+hasnt '㊺(h) Pen 開在在飛設計票 LS-388 的提案檔 → 不印 ⚠ Pen 開錯檔（任一 .pen 命中即正確，LS-480）' "$out45h" '⚠ Pen 開錯檔'
+brief45h="$(PATROL_DESIGN_TICKETS=LS-388 PATROL_PEN_STATUS_SH="$fake_ps_prop388" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+hasnt '㊺(h) --brief 不掛 [Pen] flag' "$brief45h" '[Pen]'
+out45i="$(PATROL_DESIGN_TICKETS=LS-390 PATROL_PEN_STATUS_SH="$fake_ps_prop388" PATROL_LINEAR_SH="$fake_plsh_lane" LANE_STUB='lane:design' bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㊺(i) Pen 開在別張票（LS-388）的提案檔、在飛的是 LS-390 → 仍報 ⚠ Pen 開錯檔' "$out45i" '⚠ Pen 開錯檔：'
+# 切回命令的 --pen 提示：在飛設計票 worktree 內真有提案檔才附
+mkdir -p "${repo}/.claude/worktrees/LS-390/docs/design-proposals/soft-social-20261009"
+: > "${repo}/.claude/worktrees/LS-390/docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen"
+out45j="$(PATROL_DESIGN_TICKETS=LS-390 PATROL_PEN_STATUS_SH="$fake_ps_qatest" PATROL_LINEAR_SH="$fake_plsh_lane" bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㊺(j) 在飛設計票有提案檔 → 切回命令附 --pen <相對提案檔路徑> 提示' "$out45j" '改用 … --pen docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen'
+hasnt '㊺(j) 對照：沒有提案檔的票（LS-388，(a)）切回命令不附 --pen 提示' "$out45a" '--pen'
+rm -rf "${repo}/.claude/worktrees/LS-390"
+
 # 假 pgrep／lsof（LS-207 R2 F6）：不碰真的系統行程表。fake-pgrep 只回 $FAKE_PGREP_PIDS（空白分隔，忽略實際參數）；
 # fake-lsof 只回 $FAKE_LSOF_CWD 當成查到的 pid 的 cwd（-Fn 格式：p<pid> 一行、n<路徑> 一行）。
 cat > "$work/fake-pgrep" <<'EOS'
