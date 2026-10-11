@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -9,6 +10,19 @@
         android:label="Sprout Day"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <!-- WorkManager 隨需初始化（SproutDayApplication 實作 Configuration.Provider，Worker 由我們的 factory 建立）：
+             必須移除 androidx.startup 的預設初始化項，否則它搶先以預設設定初始化，Worker 會因沒有 (Context, WorkerParameters)
+             建構子而建立失敗。只移除這一項 meta-data；InitializationProvider 本身仍要留著（supabase-kt 靠它拿 Context）。 -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
         <!-- singleTask：Apple OAuth 的 Custom Tab 回到 sproutday://auth/callback 時，由既有 Activity 的 onNewIntent 接手。 -->
         <activity
             android:name=".MainActivity"
