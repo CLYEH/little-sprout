@@ -8,12 +8,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
-import java.io.File
 import java.time.Instant
+import java.util.Base64
 import java.util.UUID
-import javax.imageio.ImageIO
 
 /**
  * 契約測試（LS-490）：對本機 Supabase 容器驗證 docs/API.md §3「上傳流程順序」與 §6 的 Storage 路徑規約——
@@ -42,8 +39,7 @@ class MediaContractTest {
 
             val mediaId = UUID.randomUUID().toString()
             val now = Instant.now()
-            val original = writeJpeg(tmp.newFile("original.jpg"), 64, 48)
-            val thumbBytes = jpegBytes(32, 24)
+            val original = tmp.newFile("original.jpg").also { it.writeBytes(TINY_JPEG) }
             val path = MediaPaths.original(family.id, mediaId, "jpg", now)
             val thumbPath = MediaPaths.thumbnail(family.id, mediaId, now)
             val media =
@@ -51,7 +47,7 @@ class MediaContractTest {
 
             // docs/API.md §3 的順序：①②先 PUT 物件（可並行），③ 才 INSERT media 列。
             owner.media.uploadFile(path, original, "image/jpeg")
-            owner.media.uploadBytes(thumbPath, thumbBytes, MediaLimits.THUMBNAIL_CONTENT_TYPE)
+            owner.media.uploadBytes(thumbPath, TINY_JPEG, MediaLimits.THUMBNAIL_CONTENT_TYPE)
             owner.media.insertMedia(media)
             owner.media.attachToAlbum(album.id, family.id, mediaId)
 
@@ -96,24 +92,14 @@ class MediaContractTest {
             assertTrue("LS002 不可重試", !error.isTransient)
         }
 
-    private fun jpegBytes(
-        width: Int,
-        height: Int,
-    ): ByteArray =
-        ByteArrayOutputStream().use { out ->
-            check(
-                ImageIO.write(BufferedImage(width, height, BufferedImage.TYPE_INT_RGB), "jpg", out),
-            ) { "JDK 沒有 jpg writer" }
-            out.toByteArray()
-        }
-
-    private fun writeJpeg(
-        file: File,
-        width: Int,
-        height: Int,
-    ): File = file.also { it.writeBytes(jpegBytes(width, height)) }
-
     private companion object {
         const val DEFAULT_QUOTA_BYTES = 5L * 1024 * 1024 * 1024
+
+        /** 合法的 1×1 JPEG（Storage 只驗 Content-Type 與大小；`media.width／height` 由呼叫端宣告，DB 不核對）。 */
+        val TINY_JPEG: ByteArray =
+            Base64.getDecoder().decode(
+                "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////" +
+                    "////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=",
+            )
     }
 }

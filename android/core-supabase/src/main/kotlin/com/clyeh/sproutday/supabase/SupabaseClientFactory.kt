@@ -9,6 +9,7 @@ import io.github.jan.supabase.auth.MemorySessionManager
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.storage.resumable.MemoryResumableCache
 
 /** Supabase 連線設定。值來自 android/local.properties 經 BuildConfig（見 core-supabase/build.gradle.kts）。 */
 data class SupabaseConfig(
@@ -63,6 +64,9 @@ object SupabaseClientFactory {
                 flowType = FlowType.PKCE
             }
             install(Postgrest)
-            install(Storage)
+            // 預設的續傳快取走 Android SharedPreferences（需要 Context），JVM 測試沒有；本資料層不用 resumable，換成記憶體版即可。
+            install(Storage) {
+                resumable { cache = MemoryResumableCache() }
+            }
         }
 }
