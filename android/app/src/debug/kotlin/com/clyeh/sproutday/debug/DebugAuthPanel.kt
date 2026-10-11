@@ -50,6 +50,7 @@ fun DebugAuthPanel(viewModel: DebugAuthViewModel) {
         SignInSection(viewModel, enabled = !ui.busy)
         FamilySection(viewModel, ui, enabled = !ui.busy)
         UploadSection(viewModel, ui, enabled = !ui.busy)
+        FeedSection(viewModel, ui, enabled = !ui.busy)
         Text("紀錄", style = MaterialTheme.typography.titleSmall)
         ui.log.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
     }
@@ -118,6 +119,24 @@ private fun UploadSection(
         Text(
             "上傳 ${it.id.take(UID_PREVIEW)}… ${it.state} 失敗${it.attempt}次 ${it.lastError.orEmpty()}",
             modifier = Modifier.testTag("upload-${it.id}"),
+        )
+    }
+}
+
+@Composable
+private fun FeedSection(
+    viewModel: DebugAuthViewModel,
+    ui: DebugUiState,
+    enabled: Boolean,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        DebugButton("列時間軸（前 5 筆）", enabled, "list-timeline") { viewModel.listTimeline() }
+        DebugButton("對第一筆留言", enabled, "comment-first") { viewModel.commentOnFirst() }
+    }
+    ui.timeline.forEach {
+        Text(
+            "${it.kind.wire} ${it.refId.take(UID_PREVIEW)}… 留言${it.commentCount}",
+            modifier = Modifier.testTag("timeline-${it.refId}"),
         )
     }
 }

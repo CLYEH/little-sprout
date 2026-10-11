@@ -7,6 +7,8 @@ import com.clyeh.sproutday.debug.DebugAuthPanel
 import com.clyeh.sproutday.debug.DebugAuthViewModel
 import com.clyeh.sproutday.supabase.AuthRepository
 import com.clyeh.sproutday.supabase.FamilyRepository
+import com.clyeh.sproutday.supabase.FeedRepository
+import com.clyeh.sproutday.supabase.SocialRepository
 import io.github.jan.supabase.SupabaseClient
 
 /** debug 建置的根畫面＝除錯登入面板（LS-479）；release 的同名函式在 src/release，不含任何除錯類別。 */
@@ -21,6 +23,8 @@ fun RootContent(supabase: SupabaseClient) {
                     FamilyRepository(supabase),
                     app.mediaRepository,
                     app.uploadQueue,
+                    FeedRepository(supabase),
+                    SocialRepository(supabase),
                 ),
         )
     DebugAuthPanel(vm)

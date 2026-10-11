@@ -34,6 +34,11 @@ data class MediaRow(
     @SerialName("deleted_at") val deletedAt: String? = null,
 )
 
+/** `media` 的可讀欄位清單（[MediaRow] 的全部欄位）；PostgREST 內嵌 `media!inner(...)` 時共用，避免各處各列一份而漂移。 */
+internal const val MEDIA_COLUMNS =
+    "id,family_id,storage_path,type,byte_size,width,height," +
+        "thumb_path,thumb_width,thumb_height,created_at,deleted_at"
+
 /** 縮圖實際輸出的檔案路徑與像素尺寸；`media` 的三個 `thumb_*` 欄同為 NULL 或同為非 NULL（CHECK），所以包成一個值。 */
 data class ThumbnailInfo(
     val path: String,

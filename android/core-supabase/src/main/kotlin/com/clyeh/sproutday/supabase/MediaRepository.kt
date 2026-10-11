@@ -234,9 +234,6 @@ class MediaRepository(
 
     private companion object {
         const val UNIQUE_VIOLATION = "23505"
-        const val MEDIA_COLUMNS =
-            "id,family_id,storage_path,type,byte_size,width,height," +
-                "thumb_path,thumb_width,thumb_height,created_at,deleted_at"
     }
 }
 

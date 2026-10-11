@@ -22,7 +22,7 @@ data class PendingTransferFamily(
 
 /**
  * 後端錯誤的 sealed 表示（docs/API.md §5）。`code` 是 Postgres SQLSTATE（`LSnnn`／`42501`…），沒有則為 null。
- * 對應 iOS `LSErrorCode`／`AppError`；這裡只列本層（Auth＋profiles／families／family_members＋邀請／加入流程）會碰到的碼，
+ * 對應 iOS `LSErrorCode`／`AppError`；這裡只列本層（Auth＋profiles／families／family_members＋邀請／加入流程＋媒體＋時間軸／留言／愛心）會碰到的碼，
  * 其餘自訂碼落到 [Server]（保留原始 code），之後的票遇到時再補成具名 case。
  */
 sealed class BackendError(
@@ -71,6 +71,26 @@ sealed class BackendError(
     class InviteParamsInvalid(
         cause: Throwable?,
     ) : BackendError("邀請碼參數不合法（到期時間或可用次數超出範圍）", "LS017", cause)
+
+    /** `LS022`：keyset 游標只給了一半（`get_family_timeline`／`list_comments` 的兩個游標參數要嘛都給、要嘛都不給）。 */
+    class PartialCursor(
+        cause: Throwable?,
+    ) : BackendError("分頁游標只給了一半", "LS022", cause)
+
+    /** `LS024`：`set_comment_deleted` 的留言不存在。 */
+    class CommentNotFound(
+        cause: Throwable?,
+    ) : BackendError("留言不存在", "LS024", cause)
+
+    /** `LS026`：留言／按讚的 target 存在，但屬於別的家庭（呼叫端組錯 family 參數的訊號，換輸入重試沒有用）。 */
+    class TargetFamilyMismatch(
+        cause: Throwable?,
+    ) : BackendError("這個內容不屬於這個家庭", "LS026", cause)
+
+    /** `LS027`：留言已被家庭管理者移除，作者無法自行還原（只有 owner 能還原）。 */
+    class RemovedByOwner(
+        cause: Throwable?,
+    ) : BackendError("這則內容已被家庭管理者移除，只有管理者能還原", "LS027", cause)
 
     /** `LS050`（刪帳號）或 `LS057`（退出／被移除）：唯一 owner 且家庭還有其他成員，須先轉移 owner。 */
     class MustTransferOwnership(
@@ -209,6 +229,10 @@ private val simpleMappers: Map<String, (PostgrestRestException) -> BackendError>
         "LS015" to { BackendError.JoinRequestNotFound(it) },
         "LS016" to { BackendError.InviteCodeCollision(it) },
         "LS017" to { BackendError.InviteParamsInvalid(it) },
+        "LS022" to { BackendError.PartialCursor(it) },
+        "LS024" to { BackendError.CommentNotFound(it) },
+        "LS026" to { BackendError.TargetFamilyMismatch(it) },
+        "LS027" to { BackendError.RemovedByOwner(it) },
         "LS051" to { BackendError.AccountDeletionPending(it) },
         "LS052" to { BackendError.AccountSuspended(it) },
         "LS053" to { BackendError.FamilySuspended(it) },
