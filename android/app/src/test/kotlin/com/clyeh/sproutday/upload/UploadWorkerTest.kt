@@ -173,6 +173,27 @@ class UploadWorkerTest {
         }
 
     @Test
+    fun missingSessionRetriesBeforeAnyUploadAndKeepsTheCopy() =
+        runBlocking<Unit> {
+            val item = queue.enqueue(newId(), familyId, albumId, jpegSource())
+            backend.failEnsureOnce = BackendError.NotSignedIn()
+
+            // 冷啟動時 session 還沒就緒：必須在第一個 PUT 之前就擋下，當暫時性錯誤退避重試，不得終局、不得刪副本。
+            val result = buildWorker(item.id).doWork()
+
+            assertEquals(
+                androidx.work.ListenableWorker.Result
+                    .retry(),
+                result,
+            )
+            assertEquals("session 未就緒時不得上傳任何物件", 0, backend.uploadCalls.get())
+            val row = checkNotNull(db.dao().get(item.id))
+            assertEquals(UploadState.PENDING, row.state)
+            assertEquals("attempt 是失敗次數", 1, row.attempt)
+            assertTrue("暫時性失敗不得刪本機副本", File(item.localPath).exists())
+        }
+
+    @Test
     fun inFlightUploadsAreCappedAtThreeAcrossItems() =
         runBlocking<Unit> {
             val items = List(6) { queue.enqueue(newId(), familyId, albumId, jpegSource()) }
@@ -254,7 +275,14 @@ private class FakeBackend : MediaUploadBackend {
     val inFlight = AtomicInteger()
     val maxInFlight = AtomicInteger()
 
-    override suspend fun ensureSession() = Unit
+    var failEnsureOnce: BackendError? = null
+
+    override suspend fun ensureSession() {
+        failEnsureOnce?.let {
+            failEnsureOnce = null
+            throw it
+        }
+    }
 
     override suspend fun uploadFile(
         path: String,
