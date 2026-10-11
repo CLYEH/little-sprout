@@ -744,6 +744,16 @@ check_root_safe() {
     return 0
   fi
   if [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -qF '找不到 backup'; then
+    # LS-480 R2（merge-review m1）：提案檔路徑是人取的名字，含空白／非 ASCII 時 sha1 可能對不上 Pen 實際的 backup 檔名
+    # （pen-land.sh 檔頭 R1 I2）——「找不到 backup」此時不能當「從未編輯過」，拒絕清場（主稿路徑恆為 ASCII，不受影響）
+    if [ -n "$pen_abs" ]; then
+      case "$pen_abs" in
+        *[!A-Za-z0-9._/-]*)
+          echo "  「${root}」找不到 backup，請確認路徑（含空白／非 ASCII 時 sha1 可能對不上）：${pen_abs}——不視為安全" >&2
+          return 1
+          ;;
+      esac
+    fi
     echo "  「${root}」安全：查無 Pen backup（從未編輯過這個路徑）" >&2
     return 0
   fi

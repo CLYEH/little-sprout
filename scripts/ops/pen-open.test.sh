@@ -1174,6 +1174,36 @@ else
 fi
 unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
 clear_fake_pen; clear_ps_pen_files
+# ㉖g（LS-480 R2，merge-review m1）：提案檔路徑含空白／非 ASCII，ps 枚舉得到、查無 backup（sha1 可能對不上）→ 拒絕清場，不當「從未編輯過」
+mkdir -p "${wt}/docs/design-proposals/柔粉 v2"
+printf '%s' '{"version":1,"children":[{"id":"s1","x":0,"y":0,"children":[]}]}' > "${wt}/docs/design-proposals/柔粉 v2/稿 x.pen"
+wantSp="$(cd "${wt}/docs/design-proposals/柔粉 v2" && pwd -P)/稿 x.pen"
+reset_open_tracking; clear_fake_pen; wt_backup_safe
+set_state "PATH:${want2}"; wt2_backup_safe
+set_ps_pen_files "$wantSp"
+start_fake_pen
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 1 ] && printf '%s' "$out" | grep -qF '找不到 backup，請確認路徑（含空白／非 ASCII 時 sha1 可能對不上）' && printf '%s' "$out" | grep -qF '不自動 quit' && fake_pen_alive; then
+  ok '㉖g 含空白／非 ASCII 的提案檔查無 backup → 不視為安全、拒絕清場（exit 1、行程存活）'
+else
+  bad "㉖g 含空白路徑查無 backup 應拒絕清場（實得 ${got}，行程存活＝$(fake_pen_alive && echo yes || echo no)）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+clear_fake_pen
+# ㉖h 對照：純 ASCII 的提案檔查無 backup → 仍視為安全（rule b 不被這條收緊誤傷）
+rm -f "${PEN_BACKUP_DIR}/$(printf '%s' "file://${wantProp}" | shasum | awk '{print $1}')"
+reset_open_tracking; clear_fake_pen; wt_backup_safe
+set_state "PATH:${want2}"; wt2_backup_safe
+set_ps_pen_files "$wantProp"
+start_fake_pen
+export PEN_STUB_OPEN_SUCCEED_AT=2 PEN_STUB_OSASCRIPT_KILLS=1
+out="$(run "$wt" 2>&1)"; got=$?
+if [ "$got" -eq 0 ] && printf '%s' "$out" | grep -qF '查無 Pen backup' && ! fake_pen_alive; then
+  ok '㉖h 純 ASCII 提案檔查無 backup → 仍視為安全，清場成功（對照 ㉖g）'
+else
+  bad "㉖h ASCII 提案檔查無 backup 應可清場（實得 ${got}）"; printf '%s\n' "$out" | sed 's/^/    /' >&2
+fi
+unset PEN_STUB_OPEN_SUCCEED_AT PEN_STUB_OSASCRIPT_KILLS
+clear_fake_pen; clear_ps_pen_files
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ pen-open-check 自測失敗" >&2
