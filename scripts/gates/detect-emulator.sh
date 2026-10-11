@@ -19,8 +19,7 @@
 #   4. 等 `sys.boot_completed`=1（DETECT_EMULATOR_BOOT_TIMEOUT 秒，預設 240），讀 `ro.build.version.sdk`，印：
 #        emulator: <name> <serial> API <ver>（pinned <ver>）            （stdout；ver≠pinned 另在 stderr 印 ⚠）
 #
-# 用法：detect-emulator.sh [--serial-only] [--stop]
-#   --serial-only  stdout 只印 serial（給 `S=$(detect-emulator.sh --serial-only)` 用）
+# 用法：detect-emulator.sh [--stop]
 #   --stop         關掉本票專屬 emulator（`adb -s <serial> emu kill`——永遠帶 -s，不用無 -s 的 emu kill）；沒在跑就印一行、exit 0
 # 環境變數：DETECT_EMULATOR_BOOT_TIMEOUT（預設 240）、DETECT_EMULATOR_REGISTER_TIMEOUT（等出現在 adb devices，預設 90）、
 #   DETECT_EMULATOR_ABI、DETECT_EMULATOR_WINDOW=1（顯示視窗）、DETECT_EMULATOR_POLL（輪詢秒，預設 2；自測用）。
@@ -32,13 +31,12 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/android-tools.sh
 source "$here/lib/android-tools.sh"
 
-serial_only=0; stop_mode=0
+stop_mode=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --serial-only) serial_only=1; shift ;;
     --stop) stop_mode=1; shift ;;
     -h|--help) sed -n '2,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *) echo "✗ detect-emulator：未知參數「$1」。用法：detect-emulator.sh [--serial-only] [--stop]" >&2; exit 2 ;;
+    *) echo "✗ detect-emulator：未知參數「$1」。用法：detect-emulator.sh [--stop]" >&2; exit 2 ;;
   esac
 done
 
@@ -70,7 +68,7 @@ boot_timeout=${DETECT_EMULATOR_BOOT_TIMEOUT:-240}
 register_timeout=${DETECT_EMULATOR_REGISTER_TIMEOUT:-90}
 for v in "$boot_timeout" "$register_timeout"; do case "$v" in ''|*[!0-9]*) echo "✗ detect-emulator：timeout 環境變數須為整數秒（得到「${v}」）" >&2; exit 2 ;; esac; done
 
-say() { [ "$serial_only" -eq 1 ] || echo "→ detect-emulator：$*" >&2; }
+say() { echo "→ detect-emulator：$*" >&2; }
 
 # 目前在跑且 AVD 名等於本票 AVD 的 serial（沒有印空字串）
 running_serial() {
@@ -144,7 +142,7 @@ else
   alloc_out=$(mktemp)
   trap 'rm -f "$alloc_out"' EXIT
   # start_emulator 在子 bash 裡跑（emulator-lock.sh 包住的是外部命令）：函式與變數 export 過去
-  export adb emulator avd poll register_timeout serial_only alloc_out
+  export adb emulator avd poll register_timeout alloc_out
   export -f say start_emulator
   if ! bash "$here/../ops/emulator-lock.sh" --serial alloc -- bash -c start_emulator; then
     exit 1
@@ -167,8 +165,5 @@ ver=$("$adb" -s "$serial" shell getprop ro.build.version.sdk 2>/dev/null | tr -d
 if [ "$ver" != "$pin" ]; then
   echo "⚠ detect-emulator：${avd} 是 API ${ver:-?}，與釘住版 API ${pin} 不同（CI/Gradle compileSdk 為 ${pin}）；不自動重建，如需對齊請 avdmanager delete avd -n ${avd} 後重跑" >&2
 fi
-if [ "$serial_only" -eq 1 ]; then printf '%s\n' "$serial"
-else
-  printf 'emulator: %s %s API %s（pinned %s）\n' "$avd" "$serial" "${ver:-?}" "$pin"
-  echo "→ detect-emulator：用完請關：bash scripts/gates/detect-emulator.sh --stop（= adb -s ${serial} emu kill）" >&2
-fi
+printf 'emulator: %s %s API %s（pinned %s）\n' "$avd" "$serial" "${ver:-?}" "$pin"
+echo "→ detect-emulator：用完請關：bash scripts/gates/detect-emulator.sh --stop（= adb -s ${serial} emu kill）" >&2

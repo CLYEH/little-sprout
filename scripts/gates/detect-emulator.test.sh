@@ -118,9 +118,9 @@ expect_has "$sout" "emulator: LS-123-Pixel8 emulator-5556 API 36" "③ 5554 被�
 if [ ! -s "$FAKE_STATE/avdmanager.log" ]; then ok "③ AVD 已存在不重建"; else fail "③ 不該重建已存在的 AVD"; fi
 expect_has "$out" "AVD LS-123-Pixel8 已存在" "③ 印 AVD 已存在"
 
-# ④ --serial-only：stdout 只有 serial
-run "$R1" -- --serial-only
-if [ "$sout" = "emulator-5556" ]; then ok "④ --serial-only stdout 只有 serial"; else fail "④ --serial-only stdout 應只有 serial，實得：${sout}"; fi
+# ④ stdout 恰一行（約定格式），其餘（提示、AVD 選擇）都在 stderr——呼叫端可 `awk '{print $3}'` 取 serial
+run "$R1" -- 
+if [ "$(printf '%s\n' "$sout" | wc -l | tr -d ' ')" = 1 ] && [ "$(printf '%s' "$sout" | awk '{print $3}')" = emulator-5556 ]; then ok "④ stdout 只有約定格式一行、第三欄是 serial"; else fail "④ stdout 應只有一行且第三欄是 serial，實得：${sout}"; fi
 
 # ⑤ API 與釘住版不同 → 仍成功，但 stderr 印 ⚠ 且輸出行帶實際 API
 reset_state
@@ -191,10 +191,10 @@ race() {  # race <腳本根目錄> → 設 p1 p2（兩邊挑到的 serial）
   local ra rb
   ra=$(mkrepo LS-201); rb=$(mkrepo LS-202)
   ( env JAVA_HOME="$work/jdk" ANDROID_HOME="$sdk" EMULATOR_LOCK_ROOT="$work/locks" EMULATOR_LOCK_POLL=0.2 DETECT_EMULATOR_POLL=0.2 \
-      DETECT_EMULATOR_ABI=arm64-v8a TMPDIR="$work/tmp" FAKE_EMU_REGISTER_DELAY=1 bash "$ra/scripts/gates/detect-emulator.sh" --serial-only > "$work/race-a.txt" 2>/dev/null ) &
+      DETECT_EMULATOR_ABI=arm64-v8a TMPDIR="$work/tmp" FAKE_EMU_REGISTER_DELAY=1 bash "$ra/scripts/gates/detect-emulator.sh" 2>/dev/null | awk '{print $3}' > "$work/race-a.txt" ) &
   local pa=$!
   ( env JAVA_HOME="$work/jdk" ANDROID_HOME="$sdk" EMULATOR_LOCK_ROOT="$work/locks" EMULATOR_LOCK_POLL=0.2 DETECT_EMULATOR_POLL=0.2 \
-      DETECT_EMULATOR_ABI=arm64-v8a TMPDIR="$work/tmp" FAKE_EMU_REGISTER_DELAY=1 bash "$rb/scripts/gates/detect-emulator.sh" --serial-only > "$work/race-b.txt" 2>/dev/null ) &
+      DETECT_EMULATOR_ABI=arm64-v8a TMPDIR="$work/tmp" FAKE_EMU_REGISTER_DELAY=1 bash "$rb/scripts/gates/detect-emulator.sh" 2>/dev/null | awk '{print $3}' > "$work/race-b.txt" ) &
   local pb=$!
   wait "$pa" "$pb"
   p1=$(cat "$work/race-a.txt"); p2=$(cat "$work/race-b.txt")
@@ -214,9 +214,9 @@ PY
 cp "$mutroot/detect-emulator.sh" "$work/LS-201/scripts/gates/detect-emulator.sh"; cp "$mutroot/detect-emulator.sh" "$work/LS-202/scripts/gates/detect-emulator.sh"
 # race 會重新 mkrepo（覆寫成原版）——mutation 版需在 mkrepo 之後套上：改用旗標讓 race 之後替換
 reset_state
-( env JAVA_HOME="$work/jdk" ANDROID_HOME="$sdk" EMULATOR_LOCK_ROOT="$work/locks" EMULATOR_LOCK_POLL=0.2 DETECT_EMULATOR_POLL=0.2 DETECT_EMULATOR_ABI=arm64-v8a TMPDIR="$work/tmp" FAKE_EMU_REGISTER_DELAY=1 bash "$work/LS-201/scripts/gates/detect-emulator.sh" --serial-only > "$work/race-a.txt" 2>/dev/null ) &
+( env JAVA_HOME="$work/jdk" ANDROID_HOME="$sdk" EMULATOR_LOCK_ROOT="$work/locks" EMULATOR_LOCK_POLL=0.2 DETECT_EMULATOR_POLL=0.2 DETECT_EMULATOR_ABI=arm64-v8a TMPDIR="$work/tmp" FAKE_EMU_REGISTER_DELAY=1 bash "$work/LS-201/scripts/gates/detect-emulator.sh" 2>/dev/null | awk '{print $3}' > "$work/race-a.txt" ) &
 pa=$!
-( env JAVA_HOME="$work/jdk" ANDROID_HOME="$sdk" EMULATOR_LOCK_ROOT="$work/locks" EMULATOR_LOCK_POLL=0.2 DETECT_EMULATOR_POLL=0.2 DETECT_EMULATOR_ABI=arm64-v8a TMPDIR="$work/tmp" FAKE_EMU_REGISTER_DELAY=1 bash "$work/LS-202/scripts/gates/detect-emulator.sh" --serial-only > "$work/race-b.txt" 2>/dev/null ) &
+( env JAVA_HOME="$work/jdk" ANDROID_HOME="$sdk" EMULATOR_LOCK_ROOT="$work/locks" EMULATOR_LOCK_POLL=0.2 DETECT_EMULATOR_POLL=0.2 DETECT_EMULATOR_ABI=arm64-v8a TMPDIR="$work/tmp" FAKE_EMU_REGISTER_DELAY=1 bash "$work/LS-202/scripts/gates/detect-emulator.sh" 2>/dev/null | awk '{print $3}' > "$work/race-b.txt" ) &
 pb=$!
 wait "$pa" "$pb"
 m1=$(cat "$work/race-a.txt"); m2=$(cat "$work/race-b.txt")
