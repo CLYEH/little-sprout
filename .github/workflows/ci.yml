@@ -481,6 +481,7 @@ jobs:
           # LS-351 範圍 2：gate 30 天攔截盤點（stub gh＋合成 repo；含 mutation）
           bash scripts/ops/gate-usage-report.test.sh || rc=1
           bash scripts/ops/cleanup-merged.test.sh || rc=1
+          bash scripts/ops/release-version.test.sh || rc=1
           # LS-235：正式站 purge-storage 排程健康度巡檢腳本自測（全 fixture 化，不連線任何真正的 Supabase 專案）
           bash scripts/ops/prod-purge-health.test.sh || rc=1
           # LS-240：Storage 上傳重試／--storage-only 續傳／psql 偵測 libpq 候選路徑（全假身化，不連線任何真正的 Supabase 專案）
