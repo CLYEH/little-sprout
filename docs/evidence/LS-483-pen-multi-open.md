@@ -109,7 +109,7 @@ Saved …/probe-headless-out.pen          → 1,028 bytes：{"version":"2.17","c
 - (c) 鎖屏 bounds：無從量起，因為 headless 載入的是空文件。
 - (d) 匯出：沒產出，Export 所在的 block 因為找不到節點整段 rollback。
 
-**資料遺失陷阱**：版本不符時，CLI 只印 ERROR，然後照樣用「空 children＋保留 variables」繼續跑，`save()` 也照寫。如果 `--out` 和 `--in` 是同一個路徑，整份稿會被清空。
+**資料遺失陷阱**：版本不符時，CLI 只印 ERROR，然後照樣用「空 children＋保留 variables」繼續跑，`save()` 也照寫。如果 `--out` 和 `--in` 是同一個路徑，整份稿會被清空（PLAUSIBLE：未實跑同路徑，由「save() 照寫 1,028 bytes 空稿」推論）。
 
 ### (B) 結論：**不支援（Mac 上 pen CLI 0.3.4 讀不了本專案的 .pen 2.18／2.21）**
 
@@ -138,7 +138,7 @@ Saved …/probe-headless-out.pen          → 1,028 bytes：{"version":"2.17","c
 | `scripts/ops/patrol.sh` 的 Pencil 段 | 只需加路徑參數（只看 active 一條路徑；主 checkout 寫回偵測寫死主稿） | patrol.sh:358,1044–1046 |
 | CI `rules` job 的 .pen 段（落地／收據／Notes／Identity） | job 層已支援多檔（對 `git diff --diff-filter=ACM -- '*.pen'` 的每一份逐檔呼叫）；能不能過，要看上面各腳本 | ci.yml:648–653,672–684,692–700,708–716 |
 
-**現成實例 #626**（`feature/LS-455-soft-social-proposal`，run 38023669238）：`rules` 紅了兩條，分別是 `.pen Notes 節點 id gate（LS-168）` 和 `.pen Identity Header 年齡 NBSP gate（LS-309）`，訊息都是 `✗ design_notes_check：git show 9f68ffa:docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen 失敗（fatal: path … exists on disk, but not in '9f68ffa6…`。這和上表「假設 base 有檔」兩列完全對上。
+**現成實例 #626**（`feature/LS-455-soft-social-proposal`，run 38023669238）：`rules` 紅了四條：evidence-path、收據缺件，以及 `.pen Notes 節點 id gate（LS-168）` 和 `.pen Identity Header 年齡 NBSP gate（LS-309）`——後兩條訊息都是 `✗ design_notes_check：git show 9f68ffa:docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen 失敗（fatal: path … exists on disk, but not in '9f68ffa6…`。這和上表「假設 base 有檔」兩列完全對上。
 
 ### C-6 元件和變數能不能跨檔引用 → **格式層有跨檔 import，而且桌面 Pen 實測可以解析**
 
@@ -164,7 +164,7 @@ vars {"variables":{"lib:accent":{"type":"color","value":"#FF0000"}}}
 ## 建議（只是建議，規則改動另外開票）
 
 1. **design lane WIP＝1：維持**。理由有三：
-   - 桌面 Pen 雖然能同行程多文件，但對帳儀器（`get_app_state`、`pen-status.sh`、`pen-bounds-probe.sh`、`pen-open.sh` 輪詢）全部只認 active 一份，`open -a` 又奪不回背景文件，兩個 ui-designer 會互相改掉對方的 active。
+   - 桌面 Pen 雖然能同行程多文件，但對帳儀器（`get_app_state`、`pen-status.sh`、`pen-bounds-probe.sh`、`pen-open.sh` 輪詢）全部只認 active 一份，`open -a` 又奪不回背景文件，兩個 ui-designer 會互相改掉對方的 active（PLAUSIBLE：未實跑雙 agent 情境，由單 agent 切換實測推論）。
    - `--kill` 清場會一次殺掉全部文件。
    - headless 在 Mac 上根本讀不了本專案的檔。
 
