@@ -1459,6 +1459,52 @@ jobs:
           retention-days: 3
           if-no-files-found: warn
 
+  # LS-466（LS-25 子票）：iphoneos SDK archive 乾跑——Release 組態、generic/platform=iOS、不簽章，只確認
+  # 真機 SDK 編得過、`release-version.sh` 注入的版本號設定可用（TestFlight 上傳前的前置保險）。
+  # 不是 required check（protection-apply.sh 的 contexts 不含 archive，branch protection 不動）、
+  # 不進 ci-tree-record 的 needs：紅了只是提醒，不擋併入。跟 ci／ci-ipad 同樣吃 ci-dedup 的略過判定。
+  archive:
+    needs: ci-dedup
+    if: ${{ !cancelled() }}
+    runs-on: ${{ needs.ci-dedup.outputs.skip_macos == 'true' && 'ubuntu-latest' || 'macos-26' }}
+    timeout-minutes: 30
+    steps:
+      - name: CI 去重（LS-350）
+        if: needs.ci-dedup.outputs.skip_macos == 'true'
+        env:
+          MODE: ${{ needs.ci-dedup.outputs.mode }}
+          MSG: ${{ needs.ci-dedup.outputs.message }}
+        run: |
+          echo "$MSG"
+          [ "$MODE" != blocked ]
+      # full history＋tags：release-version.sh 要 `git describe --tags` 與 `git rev-list --count HEAD`。
+      - uses: actions/checkout@v4
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
+        with:
+          fetch-depth: 0
+
+      - name: xcode-select（讀 .xcode-version 單一來源，同 ci job，LS-106）
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
+        run: |
+          pin="$(tr -d '[:space:]' < .xcode-version)"
+          dev="/Applications/Xcode_${pin}.app/Contents/Developer"
+          [ -d "$dev" ] || { echo "::error::.xcode-version 指定的 Xcode_${pin} 不在此 runner image；可用：$(ls -d /Applications/Xcode*.app 2>/dev/null | tr '\n' ' ')"; exit 1; }
+          sudo xcode-select -s "$dev"
+          xcodebuild -version
+
+      - name: archive 乾跑（iphoneos，不簽章，LS-466）
+        if: needs.ci-dedup.outputs.skip_macos != 'true'
+        run: |
+          bash scripts/ops/release-version.sh
+          xcodebuild archive \
+            -project LittleSprout.xcodeproj \
+            -scheme LittleSprout \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/LS.xcarchive" \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
   # LS-350：登記 tree 快取——只在「完整 run」（ci-dedup mode=full 且 record=true：push／dispatch，或 PR 且
   # ui-test-trigger 判定要跑 UITests）且 db／lint／ci／ci-ui（matrix 全片，LS-385）／ci-ipad 全 success 時，上傳名為 ci-tree-<tree> 的
   # artifact；之後同 tree 的 run（FF 晉升、空 merge commit、PR 併入後 base 未動的 development merge commit）由
