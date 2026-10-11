@@ -1965,7 +1965,7 @@ android_check '㉑a lane:android 上限＝2、在飛 0' "$out21" 'a["limit"] == 
 android_check '㉑b 補位選中 LS-9201 並產生 save_issue state=Ready cycle=5' "$out21" 'a["chosen"] == "LS-9201" and any("save_issue LS-9201 state=Ready cycle=5" in x for x in a["actions"])'
 out21h="$(PATH="$work/bin_android:$PATH" bash "$plsh" --repo "$repo_ready" 2>&1)"
 expect_has "$out21h" 'lane:android' '㉑c human：lane 表有 lane:android 行'
-expect_has "$out21h" '上限2' '㉑c human：lane 表印「上限2」'
+expect_has "$out21h" 'lane:android   上限2' '㉑c human：lane 表 lane:android 行印「lane:android   上限2」（整行含 lane 名；lane:ui 行也印上限2，不能只比「上限2」）'
 # ㉑d mutation：LANE_LIMITS 拿掉 lane:android → lanes 不再含這個 lane（證明 ㉑a／㉑b 的綠來自常數那一項）
 mutdir21="$work/mut21"
 rm -rf "$mutdir21"; mkdir -p "$mutdir21"
@@ -1979,6 +1979,49 @@ else
     echo "✓ ㉑d mutant（LANE_LIMITS 拿掉 lane:android）：lanes 不再含 lane:android——證明 ㉑a／㉑b 的綠來自常數"
   else
     echo "✗ ㉑d mutant 未如預期翻轉" >&2; fail=1
+  fi
+fi
+# ㉑c mutation（merge-review R1 m1）：android 上限 2→1 → 「lane:android   上限2」消失（lane:ui 行的「上限2」不能代答）
+mutdir21c="$work/mut21c"
+rm -rf "$mutdir21c"; mkdir -p "$mutdir21c"
+cp -R "${root}/scripts" "$mutdir21c/scripts"
+sed 's/"lane:android": 2}/"lane:android": 1}/' "${root}/scripts/ops/patrol_linear.py" > "$mutdir21c/scripts/ops/patrol_linear.py"
+if cmp -s "${root}/scripts/ops/patrol_linear.py" "$mutdir21c/scripts/ops/patrol_linear.py"; then
+  echo "✗ ㉑c mutant 沒被正確合成" >&2; fail=1
+else
+  out21cm="$(PATH="$work/bin_android:$PATH" bash "$mutdir21c/scripts/ops/patrol-linear.sh" --repo "$repo_ready" 2>&1)"
+  expect_not_has "$out21cm" 'lane:android   上限2' '㉑c mutant（android 上限 2→1）：不再有「lane:android   上限2」——證明 ㉑c 釘得住 android 那一行'
+fi
+
+# ---- ㉒（LS-472，merge-review R1 M1）lane:android 空著時開票來源＝「無機械候選」，不得落進 design／ui 的 Design gate 來源。
+#      夾具重用 ⑩（$fx_ot／$repo_ot／bin_ot）：其中 LS-970／LS-974 是 lane:ui 的 Design gate Story、且沒有任何 lane:android 票 ----
+out22="$(PATH="$work/bin_ot:$PATH" bash "$plsh" --repo "$repo_ot" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ㉒ lane:android 空 fixture exit 0"; else echo "✗ ㉒ 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out22" | sed 's/^/    /' >&2; fail=1; fi
+check22() {
+  local name=$1 json=$2 expr=$3
+  if AJ="$json" python3 -c 'import json,os,sys; d=json.loads(os.environ["AJ"]); a=d["lanes"]["lane:android"]; ds=d["lanes"]["lane:design"]; sys.exit(0 if ('"$expr"') else 1)' 2>"$work/check22-err"; then
+    echo "✓ ${name}"
+  else
+    echo "✗ ${name}" >&2; cat "$work/check22-err" >&2; printf '%s\n' "$json" | sed 's/^/    /' >&2; fail=1
+  fi
+}
+check22 '㉒a android 空 → open_ticket.sources 為空（不列 iOS Design gate Story）' "$out22" 'a["open_ticket"] is not None and a["open_ticket"]["sources"] == []'
+check22 '㉒b android 開票動作行含「無機械候選」且不含「先開 lane:design」' "$out22" 'any("開票：lane:android" in x and "無機械候選" in x and "先開 lane:design" not in x and "LS-970" not in x for x in d["actions"])'
+check22 '㉒c 對照：lane:ui 的來源照樣列出 Design gate Story LS-970（分流沒把 design／ui 一起關掉）' "$out22" 'any(s["id"] == "LS-970" for s in d["lanes"]["lane:ui"]["open_ticket"]["sources"])'
+# ㉒d mutation：分流條件改回「一律往下走 design_gate_sources」（舊行為）→ android 列出 Design gate Story，㉒a／㉒b 轉紅
+mutdir22="$work/mut22"
+rm -rf "$mutdir22"; mkdir -p "$mutdir22"
+cp -R "${root}/scripts" "$mutdir22/scripts"
+sed 's/^        if lane not in ("lane:backend", "lane:design", "lane:ui"):$/        if False:  # LS-472 mutation test (android routing disabled)/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir22/scripts/ops/patrol_linear.py"
+if ! grep -q 'LS-472 mutation test (android routing disabled)' "$mutdir22/scripts/ops/patrol_linear.py"; then
+  echo "✗ ㉒d mutant 沒被正確合成" >&2; fail=1
+else
+  out22m="$(PATH="$work/bin_ot:$PATH" bash "$mutdir22/scripts/ops/patrol-linear.sh" --repo "$repo_ot" --json 2>&1)"
+  if AJ="$out22m" python3 -c 'import json,os,sys; d=json.loads(os.environ["AJ"]); a=d["lanes"]["lane:android"]["open_ticket"]; sys.exit(0 if (a is not None and a["sources"] != []) else 1)'; then
+    echo "✓ ㉒d mutant（分流改回 else）：android 又列出 Design gate 來源——證明 ㉒a／㉒b 的綠來自這段分流"
+  else
+    echo "✗ ㉒d mutant 未如預期翻轉" >&2; fail=1
   fi
 fi
 

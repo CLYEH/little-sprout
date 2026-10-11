@@ -1094,6 +1094,10 @@ def build_report(token, root, team_key, team_id, sim_lines):
                 ordered = [(p, landed[p]) for p in prefixes if p in landed]
                 notes.append(format_landed_note(ordered))
             return sources, notes
+        # LS-472（merge-review R1 M1）：design／ui／backend 各有機械來源；其他 lane（目前只有 lane:android）沒有——
+        # 回空清單、印「無機械候選」，不能掉進下面 design_gate_sources（那是 iOS 畫面群 Story，會誤導 android 開票）。
+        if lane not in ("lane:backend", "lane:design", "lane:ui"):
+            return [], notes
         alls, err = all_issues()
         if err:
             notes.append(err)
