@@ -9,6 +9,9 @@
 #   browse   骨架：等時間軸／詳情畫面票；同上
 #   --ticket 票號；預設從目前 worktree 目錄名推（`.claude/worktrees/LS-<n>`），推不出就要求明給。只影響證據路徑——
 #            emulator 由 detect-emulator.sh 依 worktree 名挑（`LS-<n>-Pixel8`，固定 QA worktree 則是 `main-Pixel8`）。
+#   **前置**：App 一啟動就建 Supabase client（LS-479），所以要有 android/local.properties（gitignored，範本 local.properties.example）；login 情境
+#            不連後端，佔位值即可（SUPABASE_URL／SUPABASE_ANON_KEY 非空）。缺檔時 instrument 紅、訊息「SUPABASE_URL 為空」。
+#            注意：local.properties 存在時 core-supabase 的 JVM contract test 會改打該 URL，跑 unit test 前先移走佔位檔。
 #   **只准在票 worktree 內跑**：supabase-lock.sh --hold 的持有者判定看 worktree（LS-170 §6），主 checkout 一律 exit 2。
 #
 # 做的事（順序即防線）：
