@@ -34,7 +34,15 @@ Emulator 一律 `LS-<票號>-Pixel8`（例：`LS-480-Pixel8`），與 iOS 專屬
 `bash scripts/gates/detect-emulator.sh` 依票號找／建／開（system image 讀 `.android-api`，缺就印 `sdkmanager "…"` 指令、不自動下載）並印
 `emulator: <name> <serial> API <ver>（pinned <ver>）`；用完 `bash scripts/gates/detect-emulator.sh --stop`；結案 `bash scripts/ops/cleanup-merged.sh --apply LS-<n>`
 連 AVD 一起刪。操作某台 emulator 的整段指令包進 `bash scripts/ops/emulator-lock.sh --serial <serial> -- <命令>`。
-hook `emu-all-guard.sh` 擋 `adb kill-server`、無 `-s` 的 `adb emu kill`、刪非本票的 AVD。connected test 在後續票（LS-478）。
+hook `emu-all-guard.sh` 擋 `adb kill-server`、無 `-s` 的 `adb emu kill`、刪非本票的 AVD。
+
+### Instrumented 測試與 QA e2e（LS-478）
+
+- `./gradlew :app:connectedDebugAndroidTest` 在專屬 emulator 上跑 `androidTest`：`TapTargetGateTest`（登記制 48dp：`android/app` 每個 `*Screen` composable
+  登記進 `TapTargetGateScreens.kt` 或在 `android/tap-target-exemptions.txt` 具名排除，對帳腳本 `scripts/gates/android-tap-target-registry-check.sh`）。
+  CI 對應 job `android-connected`（非 required，穩定度追蹤見 LS-478 票）。
+- 多步驟 QA 情境：`bash scripts/ops/qa-e2e-android.sh <login|publish|browse>`（證據 `.claude/evidence/<票>/qa-e2e/<情境>-<時間>/`；
+  本機環境不齊 exit 3）。目前 app 只有骨架：`login` 走到冷啟動首頁，`publish`／`browse` 等畫面票。
 
 ## 本機沒裝 JDK／Android SDK 時
 

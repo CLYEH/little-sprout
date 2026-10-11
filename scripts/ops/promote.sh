@@ -5,8 +5,9 @@
 # merge-reviewer 不動（本來就只審 feature／fix／hotfix PR）；gate 不減、換位置：
 #   server-side：test／main 的 required status checks 對推上去的 SHA 生效（沒有綠 check 的 SHA 推不上去，GH006；
 #               scripts/ops/protection-apply.sh）
-#   client-side：本腳本驗 FF＋`$REQUIRED_CHECKS`（目前八個：ci／ci-ipad／ci-ui-1／ci-ui-2／ci-ui-3／db／lint／rules，LS-209 加
-#               ci-ipad、LS-385 加 ci-ui-1..3——UITests 自 ci 拆出分三片；
+#   client-side：本腳本驗 FF＋`$REQUIRED_CHECKS`（目前十個：ci／ci-ipad／ci-ui-1／ci-ui-2／ci-ui-3／db／lint／rules／android-lint／
+#               android-unit，LS-209 加 ci-ipad、LS-385 加 ci-ui-1..3——UITests 自 ci 拆出分三片、LS-478 加 android-lint／android-unit
+#               ——兩個 job 永遠建立 check-run，PR 未動 android 路徑時只跑判定 step 即 success；
 #               改動 required check 集合時只需改該變數，這段敘述不會跟著自動更新，請一併訂正）；
 #               push-gate（scripts/gates/push-ref-check.sh）擋繞過本腳本的 test／main 推送；
 #               漂移由 scripts/ops/patrol.sh 偵測。
@@ -37,7 +38,7 @@ set -uo pipefail
 # 但把可診斷的紅換成了要人自己去猜的泛用訊息。成功訊息改讀這個變數、不再硬寫四個名字。
 # LS-385：UITests 自 ci job 拆到 ci.yml 的 ci-ui matrix（job 名 ci-ui-<n>，分片數＝matrix.shard 清單長度）——少列一片＝
 # 該片紅照樣晉升；改分片數時這裡、protection-apply.sh 與 branch protection 三處同步。
-REQUIRED_CHECKS="ci ci-ipad ci-ui-1 ci-ui-2 ci-ui-3 db lint rules"
+REQUIRED_CHECKS="ci ci-ipad ci-ui-1 ci-ui-2 ci-ui-3 db lint rules android-lint android-unit"
 CHECKS_APP_ID=15368   # GitHub Actions；分支保護的 required checks 也限這個 app（scripts/ops/protection-apply.sh）
 # commit status（LS-87）：merge-review 兩個方向都要（分支保護亦列為 required check）；qa 只在 test→main（release 前提＝QA PASS）
 

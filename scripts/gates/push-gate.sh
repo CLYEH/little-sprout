@@ -296,6 +296,67 @@ esac
 #     Gradle 全綠後寫 `<tree>.android` 同 tree 快取標記（與步驟 2 的 LS-306 快取同目錄、同 24h 過期、同
 #     LS_PUSH_GATE_NO_CACHE／LS_PUSH_GATE_CACHE_ONLY 語意，LS-358：CACHE_ONLY 未命中＝exit 4）；env 不齊而略過的不寫快取
 #     （略過是瞬間完成，且裝好環境後必須真的跑）。刻意不放在步驟 2 之後：Gradle 約數分鐘、xcodebuild 約 25 分，便宜的先紅。
+#     LS-478 R2（merge-review M1）再補兩件，補上票文範圍 3「push gate Android 段與 CI connected 都跑 48dp gate」：
+#       ① 48dp 登記對帳（android-tap-target-registry-check.sh，純文字、不需 SDK）**無條件跑**（釘住檔之後、env-check 之前）；
+#       ② `:app:connectedDebugAndroidTest`（含 TapTargetGateTest／SelfTest）只在 env 齊且 detect-emulator.sh 找得到／建得起本票
+#          專屬機時跑（`ANDROID_SERIAL` 釘死目標、包在 emulator-lock.sh 內）；detect-emulator 非 0（沒 emulator／沒 system image／
+#          起機逾時）＝印 ⚠⚠⚠「略過：以 CI android-connected 為準」、不擋（android-connected 非 required，滿 10 次綠才升）。
+#          自己 boot 的 emulator 跑完就 `detect-emulator.sh --stop`（只關本票那台）。鎖：emulator-lock 只包 Gradle 那一段，
+#          與後面 simulator-lock（只包 xcodebuild）從不巢狀、不互相阻塞。快取標記 `<tree>.android-connected`（真跑綠才寫）；
+#          略過寫 `<tree>.android-connected-skip`，只供 LS_PUSH_GATE_CACHE_ONLY=1 放行（否則 --confirm 在無 emulator 機器上永遠 exit 4），
+#          一般重跑仍會再試一次 detect（裝好 emulator 後必須真的跑）。
+# LS-478 R2 M1：connected test（含 TapTargetGateTest）——見上方註解 ②。只在 Android 段 env 齊（android-env-check exit 0）時被呼叫。
+android_connected_gate() {
+  local root tree cfile sfile detect_err detect_out detect_rc serial booted gradle_rc
+  root="$(git rev-parse --show-toplevel)"
+  tree="$(git rev-parse 'HEAD^{tree}')"
+  cfile="${android_cache_dir}/${tree}.android-connected"
+  sfile="${android_cache_dir}/${tree}.android-connected-skip"
+  if [ "${LS_PUSH_GATE_NO_CACHE:-0}" != 1 ] && [ -f "$cfile" ] && [ -z "$(find "$cfile" -mmin +1440 2>/dev/null)" ]; then
+    echo "✓ push gate：Android connected（含 48dp gate）已於 $(date -r "$cfile" '+%Y-%m-%d %H:%M:%S') 對同一 tree 通過，跳過（快取；LS-478）"
+    return 0
+  fi
+  if [ "${LS_PUSH_GATE_CACHE_ONLY:-0}" = 1 ]; then
+    if [ -f "$sfile" ] && [ -z "$(find "$sfile" -mmin +1440 2>/dev/null)" ]; then
+      echo "⚠ push gate：Android connected 先前已判定略過（本機無可用 emulator），CACHE_ONLY 放行（以 CI android-connected 為準；LS-478）"
+      return 0
+    fi
+    echo "✗ push gate：Android connected 快取未命中（LS_PUSH_GATE_CACHE_ONLY=1，不起 emulator；LS-358／LS-478）"
+    exit 4
+  fi
+  detect_err="$(mktemp)"
+  detect_rc=0
+  detect_out="$(bash "${root}/scripts/gates/detect-emulator.sh" 2>"$detect_err")" || detect_rc=$?
+  if [ "$detect_rc" -ne 0 ]; then
+    echo "⚠⚠⚠ push gate：Android connected 略過：以 CI android-connected 為準——找不到／建不起本票專屬 emulator（detect-emulator.sh exit ${detect_rc}），48dp gate 與 instrumented 測試這次沒有在本機跑（LS-478；handoff 須記）：" >&2
+    tail -n 8 "$detect_err" | sed 's/^/    /' >&2
+    rm -f "$detect_err"
+    mkdir -p "$android_cache_dir"
+    : > "$sfile"
+    return 0
+  fi
+  serial="$(printf '%s\n' "$detect_out" | awk '/^emulator: /{print $3; exit}')"
+  booted=1
+  grep -q '重用' "$detect_err" && booted=0
+  rm -f "$detect_err"
+  if [ -z "$serial" ]; then
+    echo "✗ push gate：讀不到 detect-emulator.sh 印的 serial（輸出：${detect_out}）" >&2
+    exit 1
+  fi
+  echo "→ push gate：Android connected 開始（$(date '+%H:%M:%S')，${detect_out}；./gradlew :app:connectedDebugAndroidTest，ANDROID_SERIAL=${serial}，emulator-lock 內）…"
+  gradle_rc=0
+  (cd "${root}/android" && ANDROID_SERIAL="$serial" bash "${root}/scripts/ops/emulator-lock.sh" --serial "$serial" -- ./gradlew --no-daemon :app:connectedDebugAndroidTest) || gradle_rc=$?
+  if [ "$booted" = 1 ]; then
+    bash "${root}/scripts/gates/detect-emulator.sh" --stop >/dev/null 2>&1 || echo "⚠ push gate：關本票 emulator（${serial}）失敗，請手動 adb -s ${serial} emu kill" >&2
+  fi
+  if [ "$gradle_rc" -ne 0 ]; then
+    echo "✗ push gate：Android connected（instrumented 測試／48dp gate）失敗（exit ${gradle_rc}）。報告：android/app/build/reports/androidTests/（LS-478）" >&2
+    exit 1
+  fi
+  mkdir -p "$android_cache_dir"
+  : > "$cfile"
+}
+
 if [ -d android ] && [ "$skip_android_steps" = 0 ]; then
   for android_pin_file in .jdk-version .android-api .gradle-version; do
     if [ ! -f "$android_pin_file" ]; then
@@ -303,6 +364,11 @@ if [ -d android ] && [ "$skip_android_steps" = 0 ]; then
       exit 1
     fi
   done
+  # LS-478 R2 M1：48dp 登記對帳（純文字、不需 JDK／SDK／emulator，無條件跑；iOS 對應物＝步驟 3 的 tap-target-registry-check）
+  if ! bash "$(git rev-parse --show-toplevel)/scripts/gates/android-tap-target-registry-check.sh"; then
+    echo "✗ push gate：Android 48dp 登記對帳失敗（畫面未登記進 TapTargetGateScreens.kt／android/tap-target-exemptions.txt，或登記過期；LS-478）。" >&2
+    exit 1
+  fi
   android_env_rc=0
   android_env_out=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/android-env-check.sh" 2>&1) || android_env_rc=$?
   case "$android_env_rc" in
@@ -323,6 +389,7 @@ if [ -d android ] && [ "$skip_android_steps" = 0 ]; then
         mkdir -p "$android_cache_dir"
         : > "$android_cache_file"
       fi
+      android_connected_gate
       ;;
     3)
       echo "⚠⚠⚠ push gate：Android 段略過：以 CI 為準（android-lint／android-unit）——本機 Android 環境不齊，ktlint／detekt／unit tests 這次沒有在本機跑（LS-477；handoff 須記）：" >&2

@@ -154,6 +154,9 @@ BODY_RULES=
 # 時一律用 `qa-e2e.sh upload-stall`／`LS_QA_UPLOAD_*` 開關，`docker pause supabase_storage_*` 被 Claude Code 分類器拒（連帶後續截圖呼叫全被拒），
 # 且共用容器 pause 會連累同機其他 QA；那句被刪即紅。釘這句而不釘 `LS_QA_UPLOAD_`：開關名在 qa.md 出現兩次（STALL_MS／FAIL_EVERY_N），
 # 「恰好一次」檢查（LS-341）釘不住；禁令句本身才是這條規則要保的意圖。
+# LS-478：qa.md 新增「Android 驗收」段，正文須含三句（缺即紅）：`qa-e2e-android.sh`（Android 多步驟驗收腳本；在 qa.md 該段多處引用，標 multi）、
+# `settings put system font_scale 2.0`（字型縮放 200% 取代 AX3 的具體做法，恰好一次；收工還原 1.0 的句子在同一段）、
+# `adb -s <serial> emu kill`（收工只關自己那台，恰好一次；禁令側的無 -s 寫法另由 PreToolUse emu-all-guard.sh 機械擋）。條數 88→91。
 # LS170-BODY-RULES-START
 BODY_RULES="ios-dev|supabase-lock.sh --hold|LS-170：互動式本機驗證（模擬器對本機容器的多步驟操作）前先 supabase-lock.sh --hold，收工 --release
 ios-dev|pr-body-check.sh <f> --branch <分支> --verify|LS-186：gh pr create/edit 前先用完整旗標跑 pr-body-check.sh 並直接看 exit code
@@ -171,6 +174,9 @@ merge-reviewer|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184�
 qa|cd <worktree> && bash scripts/ops/supabase-lock.sh --hold|LS-184：cd 與 --hold 須同一條命令鏈，避免背景化後 cwd 重設回主 checkout
 qa|qa-e2e.sh|LS-158：多步驟驗收（登入／發佈／瀏覽）優先 qa-e2e.sh 端到端驅動，mobile-mcp 降為輔助|multi
 qa|不得 pause／stop 任何 docker 容器|LS-427：需要讓上傳停滯或失敗一律用 qa-e2e.sh upload-stall／LS_QA_UPLOAD_* 開關，docker pause 被分類器拒且連累同機其他 QA
+qa|qa-e2e-android.sh|LS-478：Android 票多步驟驗收優先 qa-e2e-android.sh（exit 3＝本機 Android 環境不齊，標 PLAUSIBLE 不得寫通過），那段被刪即紅|multi
+qa|settings put system font_scale 2.0|LS-478：Android 長輩約束以字型縮放 200% 取代 AX3，收工須還原 1.0 並在 handoff 列已復原，那句被刪即紅
+qa|adb -s <serial> emu kill|LS-478：Android 收工只關自己 boot 的那台 emulator，禁無 -s 的 adb emu kill／kill-server（打掉他票的機器），那句被刪即紅
 ui-designer|--kill 只在 orchestrator 明示時|LS-180：切檔一律不殺 Pen 行程，--kill／--force-reload 只在 orchestrator 明示時使用
 ui-designer|收工 Pen 停在票檔|LS-180：設計票期間 Pen 停在票檔，收工不切回主 checkout|multi
 visual-reviewer|--kill 只在 orchestrator 明示時|LS-180：切檔一律不殺 Pen 行程，--kill／--force-reload 只在 orchestrator 明示時使用
