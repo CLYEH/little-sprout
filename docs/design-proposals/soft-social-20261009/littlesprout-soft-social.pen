@@ -1,5 +1,5 @@
 {
-  "version": "2.18",
+  "version": "2.21",
   "children": [
     {
       "type": "frame",
@@ -37,7 +37,7 @@
                 "type": "image",
                 "enabled": true,
                 "url": "assets/wordmark.png",
-                "mode": "fit"
+                "mode": "contain"
               },
               "layout": "none"
             },
@@ -417,7 +417,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/mom.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 22,
                       "layout": "none"
@@ -630,7 +630,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/child-leaf.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 14,
                       "layout": "none"
@@ -719,7 +719,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/mom.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 22,
                       "layout": "none"
@@ -832,7 +832,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/child-leaf.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "layout": "none"
                 },
@@ -1373,7 +1373,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/mom.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 22,
                   "layout": "none"
@@ -1458,7 +1458,7 @@
                 "type": "image",
                 "enabled": true,
                 "url": "assets/child-leaf.jpg",
-                "mode": "fill"
+                "mode": "cover"
               },
               "layout": "none"
             },
@@ -1669,7 +1669,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/grandma.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 22,
                   "layout": "none"
@@ -2107,7 +2107,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/child-leaf.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         },
@@ -2184,7 +2184,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/family-picnic.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         },
@@ -2271,7 +2271,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/family-moment.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         },
@@ -2348,7 +2348,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/child.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         },
@@ -2866,7 +2866,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/child-leaf.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 14,
                       "layout": "none"
@@ -2970,7 +2970,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/child-leaf.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 42,
                   "layout": "none"
@@ -3322,7 +3322,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/mandarin-sticker.png",
-                    "mode": "fit"
+                    "mode": "contain"
                   },
                   "layout": "none"
                 },
@@ -3833,7 +3833,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/child-leaf.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 16,
                   "layout": "none"
@@ -3931,7 +3931,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/mandarin-sticker.png",
-                    "mode": "fit"
+                    "mode": "contain"
                   },
                   "layout": "none"
                 }
@@ -4497,7 +4497,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/app-icon.png",
-                        "mode": "fit"
+                        "mode": "contain"
                       },
                       "cornerRadius": 12,
                       "layout": "none"
@@ -4607,7 +4607,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/mom.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 24,
                       "layout": "none"
@@ -4702,7 +4702,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/dad.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 24,
                       "layout": "none"
@@ -4797,7 +4797,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/grandma.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 24,
                       "layout": "none"
@@ -5388,7 +5388,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/mom.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 22,
                   "layout": "none"
@@ -5456,7 +5456,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/child-leaf.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "layout": "none"
                 },
@@ -6065,7 +6065,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/family-picnic.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         }
@@ -6104,7 +6104,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/child-leaf.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         }
@@ -6153,7 +6153,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/family-moment.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         }
@@ -6192,7 +6192,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/child.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         }
@@ -6538,7 +6538,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/grandma.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 22,
                       "layout": "none"
@@ -6642,7 +6642,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/child-leaf.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 8,
                       "layout": "none"
@@ -6683,7 +6683,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/dad.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 22,
                       "layout": "none"
@@ -6787,7 +6787,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/child-leaf.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 8,
                       "layout": "none"
@@ -6850,7 +6850,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/dad.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 22,
                       "layout": "none"
@@ -6944,7 +6944,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/family-picnic.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 8,
                       "layout": "none"
@@ -7376,7 +7376,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/child-leaf.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 10,
                   "layout": "none"
@@ -7465,7 +7465,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/family-picnic.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 10,
                   "layout": "none"
@@ -7554,7 +7554,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/family-moment.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 10,
                   "layout": "none"
@@ -8034,7 +8034,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/app-icon.png",
-                        "mode": "fit"
+                        "mode": "contain"
                       },
                       "cornerRadius": 12,
                       "layout": "none"
@@ -8893,6 +8893,466 @@
                   "fill": "$white",
                   "cornerRadius": 1.5,
                   "layout": "vertical"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "LPjkx",
+      "x": 5640,
+      "y": 300,
+      "name": "C / 13 歡迎登入",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        20,
+        0
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "J1xxq1",
+          "name": "System status",
+          "width": "fill_container",
+          "height": 24,
+          "padding": [
+            0,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "gXzgT",
+              "name": "Time",
+              "fill": "$ink",
+              "textGrowth": "fixed-width",
+              "width": 60,
+              "content": "9:41",
+              "lineHeight": 1.4,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "U9v9J",
+              "name": "System signals",
+              "width": 60,
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Q4tcqT",
+                  "name": "Mobile signal",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "signal",
+                  "library": "lucide",
+                  "fill": "$ink"
+                },
+                {
+                  "type": "icon",
+                  "id": "qLTJj",
+                  "name": "Battery",
+                  "width": 22,
+                  "height": 16,
+                  "icon": "battery-full",
+                  "library": "lucide",
+                  "fill": "$ink"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "W9TI8",
+          "name": "Welcome content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            24,
+            16,
+            8,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "zqoGO",
+              "name": "Brand",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "xuD6C",
+                  "name": "萌芽日記字標",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "萌芽日記",
+                    "role": "image"
+                  },
+                  "clip": true,
+                  "width": 200,
+                  "height": 52,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "mhgPF",
+                      "x": -15.6,
+                      "y": -28.3,
+                      "name": "Wordmark image",
+                      "width": 228,
+                      "height": 109,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/wordmark.png",
+                        "mode": "stretch"
+                      },
+                      "layout": "none"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "d3GFxl",
+                  "name": "Tagline",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "一家人的照片和日記，只給家人看。",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SyLfl",
+              "name": "Family photo card",
+              "clip": true,
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "$white",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "OjF7x",
+                  "name": "林家野餐的照片",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "爸爸、媽媽和小禾坐在草地上野餐。",
+                    "role": "image"
+                  },
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "assets/family-picnic.jpg",
+                    "mode": "cover"
+                  },
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "BsQw9",
+                  "name": "Privacy caption",
+                  "width": "fill_container",
+                  "gap": 8,
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "M0hPn",
+                      "name": "只有家人看得到",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "lock-keyhole",
+                      "library": "lucide",
+                      "fill": "$rose"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Ver99",
+                      "name": "Privacy caption text",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "只有你邀請的家人，看得到這些照片。",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sgt1M",
+              "name": "Sign-in options",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VekrQ",
+                  "name": "Button · 用 Apple 帳號繼續",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "用 Apple 帳號繼續",
+                    "role": "button"
+                  },
+                  "width": "fill_container",
+                  "height": 52,
+                  "fill": "$rose-soft",
+                  "cornerRadius": 12,
+                  "stroke": "$control",
+                  "strokeWidth": 1,
+                  "gap": 10,
+                  "padding": [
+                    10,
+                    16
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Al7Mc",
+                      "name": "用 Apple 帳號繼續 圖示",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "apple-logo",
+                      "library": "phosphor",
+                      "fill": "$rose"
+                    },
+                    {
+                      "type": "text",
+                      "id": "B0A4ma",
+                      "name": "Button label · 用 Apple 帳號繼續",
+                      "fill": "$rose",
+                      "content": "用 Apple 帳號繼續",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "r8sPIC",
+                  "name": "Button · 用 Google 帳號繼續",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "用 Google 帳號繼續",
+                    "role": "button"
+                  },
+                  "width": "fill_container",
+                  "height": 52,
+                  "fill": "$white",
+                  "cornerRadius": 12,
+                  "stroke": "$control",
+                  "strokeWidth": 1,
+                  "gap": 10,
+                  "padding": [
+                    10,
+                    16
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "x8fK6W",
+                      "name": "用 Google 帳號繼續 圖示",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "google-logo",
+                      "library": "phosphor",
+                      "fill": "$rose"
+                    },
+                    {
+                      "type": "text",
+                      "id": "o5sHR1",
+                      "name": "Button label · 用 Google 帳號繼續",
+                      "fill": "$rose",
+                      "content": "用 Google 帳號繼續",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "a7yXv",
+                  "name": "Button · 用 Email 繼續",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "用 Email 繼續",
+                    "role": "button"
+                  },
+                  "width": "fill_container",
+                  "height": 52,
+                  "fill": "$white",
+                  "cornerRadius": 12,
+                  "stroke": "$control",
+                  "strokeWidth": 1,
+                  "gap": 10,
+                  "padding": [
+                    10,
+                    16
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Ak5G6",
+                      "name": "用 Email 繼續 圖示",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "mail",
+                      "library": "lucide",
+                      "fill": "$rose"
+                    },
+                    {
+                      "type": "text",
+                      "id": "I7gC6b",
+                      "name": "Button label · 用 Email 繼續",
+                      "fill": "$rose",
+                      "content": "用 Email 繼續",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "R4ryos",
+          "name": "Legal links",
+          "width": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            8,
+            16,
+            0,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "w2RehV",
+              "name": "Legal note",
+              "fill": "$muted",
+              "content": "繼續即表示你同意",
+              "lineHeight": 1.4,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "a9VEA6",
+              "name": "Legal link row",
+              "gap": 24,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "r5Q81",
+                  "name": "Link · 隱私權政策",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "隱私權政策",
+                    "role": "link"
+                  },
+                  "height": 44,
+                  "padding": [
+                    0,
+                    4
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "WGKXA",
+                      "name": "Link label · 隱私權政策",
+                      "fill": "$rose",
+                      "content": "隱私權政策",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wL5OU",
+                  "name": "Link · 使用條款",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "使用條款",
+                    "role": "link"
+                  },
+                  "height": 44,
+                  "padding": [
+                    0,
+                    4
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "i1xzc",
+                      "name": "Link label · 使用條款",
+                      "fill": "$rose",
+                      "content": "使用條款",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    }
+                  ]
                 }
               ]
             }
