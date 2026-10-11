@@ -9359,6 +9359,1064 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "oUCww",
+      "x": 6110,
+      "y": 300,
+      "name": "C / 14 加入家庭",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        20,
+        0
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "S5Ctky",
+          "name": "System status",
+          "width": "fill_container",
+          "height": 24,
+          "padding": [
+            0,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "Imaf1",
+              "name": "Time",
+              "fill": "$ink",
+              "textGrowth": "fixed-width",
+              "width": 60,
+              "content": "9:41",
+              "lineHeight": 1.4,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "c3aOV",
+              "name": "System signals",
+              "width": 60,
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "ySKpe",
+                  "name": "Mobile signal",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "signal",
+                  "library": "lucide",
+                  "fill": "$ink"
+                },
+                {
+                  "type": "icon",
+                  "id": "KZM6R",
+                  "name": "Battery",
+                  "width": 22,
+                  "height": 16,
+                  "icon": "battery-full",
+                  "library": "lucide",
+                  "fill": "$ink"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "QGPKn",
+          "name": "Navigation header",
+          "width": "fill_container",
+          "height": 52,
+          "gap": 8,
+          "padding": [
+            0,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "H5o6Z",
+              "name": "Button · 返回上一頁",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "返回上一頁",
+                "role": "button"
+              },
+              "width": 44,
+              "height": 44,
+              "gap": 8,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "lVdhm",
+                  "name": "返回上一頁",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "chevron-left",
+                  "library": "lucide",
+                  "fill": "$rose"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "n3lPW",
+              "name": "Page title",
+              "fill": "$ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "加入家庭",
+              "lineHeight": 1.4,
+              "textAlign": "center",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "PhkdB",
+              "name": "Header balance",
+              "width": 44,
+              "height": 44,
+              "layout": "vertical"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gTNRT",
+          "name": "Main content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            16,
+            16,
+            8,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "f11i9s",
+              "name": "Join intro",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "gcLF7",
+                  "name": "Join title",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "輸入家人給你的邀請碼",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 22,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "Sa3UI",
+                  "name": "Join description",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "邀請碼在家人手機的「邀請家人」頁，共 6 碼。",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "kDxac",
+              "name": "Invite code entry",
+              "width": "fill_container",
+              "fill": "$white",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dwO28",
+                  "name": "Code label",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "邀請碼",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "zHITS",
+                  "name": "Code cells",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "邀請碼，已輸入 K 7 P",
+                    "role": "textField"
+                  },
+                  "width": "fill_container",
+                  "gap": 20,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Ouu3d",
+                      "name": "Code group 1",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "oVRK0",
+                          "name": "Code cell 1",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$control",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "c4Ytz",
+                              "name": "Code char 1",
+                              "fill": "$ink",
+                              "content": "K",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 26,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "TMT1t",
+                          "name": "Code cell 2",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$control",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "C3At9",
+                              "name": "Code char 2",
+                              "fill": "$ink",
+                              "content": "7",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 26,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "R7Vnne",
+                          "name": "Code cell 3",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$control",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "I0xz7",
+                              "name": "Code char 3",
+                              "fill": "$ink",
+                              "content": "P",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 26,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "i3QIHb",
+                      "name": "Code group 2",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "axJVA",
+                          "name": "Code cell 4",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$rose",
+                          "strokeWidth": 2,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "id": "e75qGU",
+                              "name": "Caret",
+                              "fill": "$rose",
+                              "width": 2,
+                              "height": 28
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ipGxe",
+                          "name": "Code cell 5",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$control",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "SjgFO",
+                          "name": "Code cell 6",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$control",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DYpNI",
+              "name": "Live reply · 輸入提示",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "輸入提示",
+                "role": "text"
+              },
+              "width": "fill_container",
+              "height": 104,
+              "cornerRadius": 12,
+              "gap": 10,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "eLf4h",
+                  "name": "輸入提示",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "info",
+                  "library": "lucide",
+                  "fill": "$muted"
+                },
+                {
+                  "type": "text",
+                  "id": "Q668N",
+                  "name": "Live reply text",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "英文字母和數字都可以，大小寫不拘。\n邀請碼裡不會有 0、O、1、I。",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CgDPl",
+              "name": "Approval note",
+              "width": "fill_container",
+              "gap": 10,
+              "padding": [
+                0,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "R9zoXs",
+                  "name": "家人確認後加入",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "users",
+                  "library": "lucide",
+                  "fill": "$muted"
+                },
+                {
+                  "type": "text",
+                  "id": "gQXUd",
+                  "name": "Approval note text",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "送出後要等家人確認，\n確認後就看得到家裡的照片。",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "s5Ihx",
+          "name": "Join action",
+          "width": "fill_container",
+          "height": 76,
+          "fill": "$white",
+          "padding": [
+            8,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "HycEZ",
+              "name": "Button · 加入",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "加入",
+                "role": "button"
+              },
+              "width": "fill_container",
+              "height": 52,
+              "fill": "$rose-soft",
+              "cornerRadius": 12,
+              "stroke": "$control",
+              "strokeWidth": 1,
+              "padding": [
+                10,
+                12
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KG8mY",
+                  "name": "Button label · 加入",
+                  "fill": "$rose",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "加入",
+                  "lineHeight": 1.4,
+                  "textAlign": "center",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "mHCiF",
+      "x": 6110,
+      "y": 1224,
+      "name": "C / 14b 加入家庭 · 碼錯誤",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        20,
+        0
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "Ringa",
+          "name": "System status",
+          "width": "fill_container",
+          "height": 24,
+          "padding": [
+            0,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "E5Mzs",
+              "name": "Time",
+              "fill": "$ink",
+              "textGrowth": "fixed-width",
+              "width": 60,
+              "content": "9:41",
+              "lineHeight": 1.4,
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "uM61J",
+              "name": "System signals",
+              "width": 60,
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "rHj3k",
+                  "name": "Mobile signal",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "signal",
+                  "library": "lucide",
+                  "fill": "$ink"
+                },
+                {
+                  "type": "icon",
+                  "id": "OvLfG",
+                  "name": "Battery",
+                  "width": 22,
+                  "height": 16,
+                  "icon": "battery-full",
+                  "library": "lucide",
+                  "fill": "$ink"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "v0UM8",
+          "name": "Navigation header",
+          "width": "fill_container",
+          "height": 52,
+          "gap": 8,
+          "padding": [
+            0,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "QWgvD",
+              "name": "Button · 返回上一頁",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "返回上一頁",
+                "role": "button"
+              },
+              "width": 44,
+              "height": 44,
+              "gap": 8,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "zDUYH",
+                  "name": "返回上一頁",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "chevron-left",
+                  "library": "lucide",
+                  "fill": "$rose"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "iHZXY",
+              "name": "Page title",
+              "fill": "$ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "加入家庭",
+              "lineHeight": 1.4,
+              "textAlign": "center",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "yhTL6",
+              "name": "Header balance",
+              "width": 44,
+              "height": 44,
+              "layout": "vertical"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "x7XHMp",
+          "name": "Main content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            16,
+            16,
+            8,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "gk3SV",
+              "name": "Join intro",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Bl8Wt",
+                  "name": "Join title",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "輸入家人給你的邀請碼",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 22,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "VakZ6",
+                  "name": "Join description",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "邀請碼在家人手機的「邀請家人」頁，共 6 碼。",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dH6UA",
+              "name": "Invite code entry",
+              "width": "fill_container",
+              "fill": "$white",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "WUEzI",
+                  "name": "Code label",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "邀請碼",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "ucGLN",
+                  "name": "Code cells",
+                  "metadata": {
+                    "type": "accessibility",
+                    "accessibilityLabel": "邀請碼，K 7 P M 2 Z",
+                    "role": "textField"
+                  },
+                  "width": "fill_container",
+                  "gap": 20,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "g8Uwmk",
+                      "name": "Code group 1",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "GBPU5",
+                          "name": "Code cell 1",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$rose",
+                          "strokeWidth": 2,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YMRs5",
+                              "name": "Code char 1",
+                              "fill": "$ink",
+                              "content": "K",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 26,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "i1QC0",
+                          "name": "Code cell 2",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$rose",
+                          "strokeWidth": 2,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "pom5H",
+                              "name": "Code char 2",
+                              "fill": "$ink",
+                              "content": "7",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 26,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "k8fqS",
+                          "name": "Code cell 3",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$rose",
+                          "strokeWidth": 2,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Ro3fq",
+                              "name": "Code char 3",
+                              "fill": "$ink",
+                              "content": "P",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 26,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hl5RP",
+                      "name": "Code group 2",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "A0upY",
+                          "name": "Code cell 4",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$rose",
+                          "strokeWidth": 2,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "smZD1",
+                              "name": "Code char 4",
+                              "fill": "$ink",
+                              "content": "M",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 26,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bVD9P",
+                          "name": "Code cell 5",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$rose",
+                          "strokeWidth": 2,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "eeiUE",
+                              "name": "Code char 5",
+                              "fill": "$ink",
+                              "content": "2",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 26,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Gp2lg",
+                          "name": "Code cell 6",
+                          "width": 46,
+                          "height": 60,
+                          "fill": "$bg",
+                          "cornerRadius": 12,
+                          "stroke": "$rose",
+                          "strokeWidth": 2,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "G9R1X",
+                              "name": "Code char 6",
+                              "fill": "$ink",
+                              "content": "Z",
+                              "lineHeight": 1.2,
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 26,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "P5dG5",
+              "name": "Live reply · 找不到邀請碼",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "找不到這組邀請碼",
+                "role": "alert"
+              },
+              "width": "fill_container",
+              "height": 104,
+              "fill": "$white",
+              "cornerRadius": 12,
+              "stroke": "$rose",
+              "strokeWidth": 2,
+              "gap": 10,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "XWRGn",
+                  "name": "找不到邀請碼",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "circle-alert",
+                  "library": "lucide",
+                  "fill": "$rose"
+                },
+                {
+                  "type": "text",
+                  "id": "dyPQs",
+                  "name": "Live reply text",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "找不到 K7P M2Z 這組邀請碼。\n請對照家人傳來的訊息再輸入一次，\n或請家人重新分享。",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "f24UKu",
+              "name": "Approval note",
+              "width": "fill_container",
+              "gap": 10,
+              "padding": [
+                0,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "NFkch",
+                  "name": "家人確認後加入",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "users",
+                  "library": "lucide",
+                  "fill": "$muted"
+                },
+                {
+                  "type": "text",
+                  "id": "uqSd0",
+                  "name": "Approval note text",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "送出後要等家人確認，\n確認後就看得到家裡的照片。",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "I7J84i",
+          "name": "Join action",
+          "width": "fill_container",
+          "height": 76,
+          "fill": "$white",
+          "padding": [
+            8,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "PdqZH",
+              "name": "Button · 加入",
+              "metadata": {
+                "type": "accessibility",
+                "accessibilityLabel": "加入",
+                "role": "button"
+              },
+              "width": "fill_container",
+              "height": 52,
+              "fill": "$rose-soft",
+              "cornerRadius": 12,
+              "stroke": "$control",
+              "strokeWidth": 1,
+              "padding": [
+                10,
+                12
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "GONsB",
+                  "name": "Button label · 加入",
+                  "fill": "$rose",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "加入",
+                  "lineHeight": 1.4,
+                  "textAlign": "center",
+                  "fontFamily": "Noto Sans TC",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "variables": {
