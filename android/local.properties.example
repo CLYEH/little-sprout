@@ -1,0 +1,6 @@
+# 複製成 android/local.properties（gitignored）後填值；對應 Secrets.xcconfig.example 的做法。
+# 值只進本機 BuildConfig，不進 repo。anon key 為公開的 publishable key，仍不入版控以便各環境切換。
+# sdk.dir 由 Android Studio 自動寫入；命令列自行指定 ANDROID_HOME 時可省略。
+sdk.dir=/Users/<you>/Library/Android/sdk
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=<anon-key>
