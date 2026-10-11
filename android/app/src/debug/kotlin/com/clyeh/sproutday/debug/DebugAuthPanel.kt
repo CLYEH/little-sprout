@@ -51,6 +51,7 @@ fun DebugAuthPanel(viewModel: DebugAuthViewModel) {
         FamilySection(viewModel, ui, enabled = !ui.busy)
         UploadSection(viewModel, ui, enabled = !ui.busy)
         FeedSection(viewModel, ui, enabled = !ui.busy)
+        ChildSection(viewModel, ui, enabled = !ui.busy)
         Text("紀錄", style = MaterialTheme.typography.titleSmall)
         ui.log.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
     }
@@ -139,6 +140,20 @@ private fun FeedSection(
             modifier = Modifier.testTag("timeline-${it.refId}"),
         )
     }
+}
+
+@Composable
+private fun ChildSection(
+    viewModel: DebugAuthViewModel,
+    ui: DebugUiState,
+    enabled: Boolean,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        DebugButton("建寶貝", enabled, "create-child") { viewModel.createChild() }
+        DebugButton("加一筆身高", enabled, "add-height") { viewModel.addHeight() }
+        DebugButton("列飲食圖鑑前 3 筆", enabled, "list-food") { viewModel.listFood() }
+    }
+    ui.child?.let { Text("寶貝：${it.name}", modifier = Modifier.testTag("child-${it.id}")) }
 }
 
 @Composable

@@ -6,8 +6,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clyeh.sproutday.debug.DebugAuthPanel
 import com.clyeh.sproutday.debug.DebugAuthViewModel
 import com.clyeh.sproutday.supabase.AuthRepository
+import com.clyeh.sproutday.supabase.ChildrenRepository
 import com.clyeh.sproutday.supabase.FamilyRepository
 import com.clyeh.sproutday.supabase.FeedRepository
+import com.clyeh.sproutday.supabase.FoodRepository
+import com.clyeh.sproutday.supabase.GrowthRepository
 import com.clyeh.sproutday.supabase.SocialRepository
 import io.github.jan.supabase.SupabaseClient
 
@@ -25,6 +28,9 @@ fun RootContent(supabase: SupabaseClient) {
                     app.uploadQueue,
                     FeedRepository(supabase),
                     SocialRepository(supabase),
+                    ChildrenRepository(supabase),
+                    GrowthRepository(supabase),
+                    FoodRepository(supabase),
                 ),
         )
     DebugAuthPanel(vm)
