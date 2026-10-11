@@ -68,6 +68,14 @@ fi
 # ⑤ --print-nodes 只在「恰好 2 個參數且第二個是 --print-nodes」時生效；3 個參數帶 --print-nodes 落回舊版驗證
 expect 1 '⑤ 3 參數帶 --print-nodes（非 --expect-nodes）→ 落回用法錯誤' '第二參數必須恰為 --expect-nodes' "$f" --print-nodes extra
 
+# ⑥（LS-480）非主稿路徑（提案檔 docs/design-proposals/<slug>/<name>.pen）：landing check 不看路徑、只看該檔自身內容；
+#      --expect-nodes 照常比對（pen-land --pen 落地提案檔時以「該檔 backup 自身」對帳，沒有主稿 base 基線）
+mkdir -p "$work/docs/design-proposals/soft-social"
+pf="$work/docs/design-proposals/soft-social/littlesprout-soft-social.pen"
+cp "$f" "$pf"
+expect 0 '⑥a 提案檔路徑：合法 .pen + --expect-nodes 3 → 通過' '節點數與畫布一致（3）' "$pf" --expect-nodes 3
+expect 1 '⑥b 提案檔路徑：--expect-nodes 99 → 紅（落地檔比記憶體舊）' '節點數 3 ≠ 畫布預期 99' "$pf" --expect-nodes 99
+
 if [ "$fail" -eq 0 ]; then
   echo "design-landing-check.test.sh：全數通過"
 else
