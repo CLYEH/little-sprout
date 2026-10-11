@@ -1,0 +1,7 @@
+# LS-478：android/app 主程式碼裡 `fun <Name>Screen(` 的畫面 composable，尚未進 androidTest 的
+# `TapTargetGateScreens`（android/app/src/androidTest/kotlin/com/clyeh/sproutday/TapTargetGateScreens.kt）登記的，
+# 具名排除並附理由——「要嘛被量、要嘛大聲排除，不准靜默通過」（iOS 對應物：scripts/gates/tap-target-exemptions.txt）。
+# 格式：<ScreenName>：<理由>（純文字，一行一支；`#` 開頭與空行忽略）。scripts/gates/android-tap-target-registry-check.sh 逐一核對。
+#
+# 新增畫面票時：能用預設狀態（免登入、免假資料、不需 ViewModel）直接渲染的，優先登記進 TapTargetGateScreens；
+# 建構成本高（多步驟表單、需要特定流程狀態）才排除到這裡，理由要講清楚為什麼現在不補、下一步在哪。
