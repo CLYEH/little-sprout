@@ -243,6 +243,9 @@ jobs:
           bash scripts/gates/pick-ipad-runtime.test.sh || rc=1
           bash scripts/gates/detect-simulator.test.sh || rc=1
           bash scripts/gates/push-gate.test.sh || rc=1
+          # LS-477：Android 本機環境檢查（JDK major 對 .jdk-version、SDK platform-tools＋platforms/android-<api>、emulator 資訊性；
+          # 假 java／假 SDK 夾具＋mutation：拿掉 JDK major 比對→版本不符案例轉通過）
+          bash scripts/gates/android-env-check.test.sh || rc=1
           # LS-264 M1 的第二個差集（同 `ece3dc5b`）：`stale-xcodebuild-check.test.sh`（LS-236，13 組含 mutation）
           # 同樣只存在於 repo、沒被列進來。它 fixture 化 `pgrep`／`ps`，⑫／⑬ 另用真 `pgrep`／`ps` 驗 pattern
           # 自我誤判，兩者在 `ubuntu:24.04` 皆可跑（實測全綠），不需 Xcode 或模擬器。

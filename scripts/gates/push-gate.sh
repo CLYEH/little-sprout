@@ -62,7 +62,21 @@ fi
 #     沒補上時本 PR 自己在 worktree 實跑就重現——只改這個檔會被判定「無 Swift 變更」而整段跳過，
 #     偏偏「CI runner 升版、只改 `.ios-runtime` 一行」正是最需要在新 runtime 上跑一次 unit tests 的
 #     情境（CI 仍無條件全跑，這裡只是本機前置失守）。
+#
+#     LS-477（Android 前置 A3）：同一份 diff 另判兩個軸，合起來是三段路徑選擇——
+#       iOS 軸（上面那組 regex，沿用）：命中才跑 SwiftLint／xcodegen 漂移／unit tests（skip_swift_steps）。
+#       Android 軸（skip_android_steps）：diff 含 `android/**`、三個釘住檔（`.jdk-version`／`.android-api`／
+#         `.gradle-version`）或 `.github/workflows/ci.yml`（android-lint／android-unit 的路徑過濾同一組，ci.yml 無法
+#         區分「Android 相關片段」，與 CI 一致一律算）才跑下方 Android 段。只動 `android/**` 的 PR 因此兩軸一次到位：
+#         iOS 軸 skip（不跑 SwiftLint／xcodegen／xcodebuild）＋Android 軸 run；只動 iOS 路徑的 PR 行為與改動前一致
+#         （Android 段整段不進）。
+#       契約軸（seg_contract，只用來印段落摘要）：diff 含 `supabase/**` 或 `docs/API.md`。契約對帳（步驟 3／4）本來就
+#         無條件跑、且兩邊掃描器（Swift 錯誤碼／Kotlin RPC＋錯誤碼）都在裡面，所以「兩邊契約對帳都跑」不需要額外分支，
+#         這個旗標只讓段落選擇在輸出裡看得見。
+#     保護分支／detached／target ref 未 fetch：沒有「相對 target 的 diff」可判，兩軸都不跳過（同上述安全預設）。
 skip_swift_steps=0
+skip_android_steps=0
+seg_contract=0
 diff_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
 case "$diff_branch" in
   main|test|development|DETACHED) ;;
@@ -73,9 +87,18 @@ case "$diff_branch" in
       if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)LittleSproutUITests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$|(^|/)Config/.*\.xcconfig$|(^|/)\.xcode-version$|(^|/)\.ios-runtime$'; then
         skip_swift_steps=1
       fi
+      if ! printf '%s\n' "$diff_changed" | grep -qE '^android/|^\.jdk-version$|^\.android-api$|^\.gradle-version$|^\.github/workflows/ci\.yml$'; then
+        skip_android_steps=1
+      fi
+      if printf '%s\n' "$diff_changed" | grep -qE '^supabase/|^docs/API\.md$'; then
+        seg_contract=1
+      fi
+      echo "→ push gate：變更段落：iOS $([ "$skip_swift_steps" = 1 ] && echo 跳過 || echo 執行)／Android $([ "$skip_android_steps" = 1 ] && echo 跳過 || echo 執行)／契約對帳 $([ "$seg_contract" = 1 ] && echo '執行（含 supabase／API.md：Swift 錯誤碼＋Kotlin 掃描器兩邊都對）' || echo '照常（無條件跑）')（LS-477）"
     fi
     ;;
 esac
+android_only_diff=0   # 1＝Android 軸要跑、iOS 軸全跳過（只動 android/** 等）——步驟 1a 據此也跳過 xcodegen 漂移檢查
+[ "$skip_swift_steps" = 1 ] && [ "$skip_android_steps" = 0 ] && android_only_diff=1
 
 # 1) SwiftLint（有 Swift 檔才要求；有檔沒工具 → fail loud；LS-76：無 Swift／專案檔變更則跳過）
 if [ -n "$(git ls-files '*.swift')" ]; then
@@ -109,7 +132,9 @@ XCODE_SCHEME="${XCODE_SCHEME:-LittleSprout}"
 #     符號連結覆寫到真正的專案，等於這個唯讀檢查偷偷改了工作目錄），讓 xcodegen 在暫存目錄內
 #     產生時看到的相對路徑與 repo 根一致（本票實測：鏡射後的 project.pbxproj 與 repo 根生成的
 #     版本逐位元組相同）。
-if [ -f project.yml ]; then
+if [ -f project.yml ] && [ "$android_only_diff" = 1 ]; then
+  echo "→ push gate：diff 只動 Android 路徑（無 iOS 變更），跳過 XcodeGen 漂移檢查（LS-477；CI 仍跑）"
+elif [ -f project.yml ]; then
   if ! command -v xcodegen >/dev/null 2>&1; then
     echo "✗ push gate：repo 內有 project.yml 但未安裝 xcodegen（brew install xcodegen）。" >&2
     exit 1
@@ -260,6 +285,54 @@ case "$branch" in
     bash "$(git rev-parse --show-toplevel)/scripts/gates/merge-conflict-check.sh" --target "$target_ref"
     ;;
 esac
+
+# 2a) Android 段（LS-477，Android 前置 A3；iOS 對應物＝步驟 1／1a／2）：`android/` 存在且本分支 diff 含 Android 路徑
+#     （見 0b 的 skip_android_steps）才進。順序：釘住檔缺檔即紅（同 `.xcode-version` 做法）→ android-env-check.sh
+#     （JDK 版本＝釘住、SDK 有 platform-tools 與釘住 API 的 platform）→ 本機沒裝／不齊就印醒目 ⚠ 並**略過本段、不擋
+#     push**（fail-open 到 CI 的 android-lint／android-unit，票文裁決；handoff 須記「Android 段略過：以 CI 為準」）→
+#     齊了就 `./gradlew ktlintCheck detekt :app:testDebugUnitTest :core-supabase:testDebugUnitTest`（= CI 兩個 job 的合集）。
+#     Gradle 全綠後寫 `<tree>.android` 同 tree 快取標記（與步驟 2 的 LS-306 快取同目錄、同 24h 過期、同
+#     LS_PUSH_GATE_NO_CACHE／LS_PUSH_GATE_CACHE_ONLY 語意，LS-358：CACHE_ONLY 未命中＝exit 4）；env 不齊而略過的不寫快取
+#     （略過是瞬間完成，且裝好環境後必須真的跑）。刻意不放在步驟 2 之後：Gradle 約數分鐘、xcodebuild 約 25 分，便宜的先紅。
+if [ -d android ] && [ "$skip_android_steps" = 0 ]; then
+  for android_pin_file in .jdk-version .android-api .gradle-version; do
+    if [ ! -f "$android_pin_file" ]; then
+      echo "✗ push gate：缺 ${android_pin_file}，CI 的 android-lint／android-unit 會紅（單一來源釘住檔；LS-474／LS-477）。" >&2
+      exit 1
+    fi
+  done
+  android_env_rc=0
+  android_env_out=$(bash "$(git rev-parse --show-toplevel)/scripts/gates/android-env-check.sh" 2>&1) || android_env_rc=$?
+  case "$android_env_rc" in
+    0)
+      echo "→ push gate：${android_env_out}"
+      android_cache_dir="$(git rev-parse --git-common-dir)/ls-push-gate"
+      android_cache_file="${android_cache_dir}/$(git rev-parse HEAD^{tree}).android"
+      if [ "${LS_PUSH_GATE_NO_CACHE:-0}" != 1 ] && [ -f "$android_cache_file" ] \
+         && [ -z "$(find "$android_cache_file" -mmin +1440 2>/dev/null)" ]; then
+        echo "✓ push gate：Android 段（ktlint／detekt／unit tests）已於 $(date -r "$android_cache_file" '+%Y-%m-%d %H:%M:%S') 對同一 tree 通過，跳過（快取；LS_PUSH_GATE_NO_CACHE=1 強制重跑；LS-477）"
+      else
+        if [ "${LS_PUSH_GATE_CACHE_ONLY:-0}" = 1 ]; then
+          echo "✗ push gate：Android 段快取未命中（LS_PUSH_GATE_CACHE_ONLY=1，不跑 Gradle；LS-358／LS-477）"
+          exit 4
+        fi
+        echo "→ push gate：Android 段開始（$(date '+%H:%M:%S')，./gradlew ktlintCheck detekt :app:testDebugUnitTest :core-supabase:testDebugUnitTest；冷啟動約數分鐘）…"
+        (cd android && ./gradlew --no-daemon ktlintCheck detekt :app:testDebugUnitTest :core-supabase:testDebugUnitTest)
+        mkdir -p "$android_cache_dir"
+        : > "$android_cache_file"
+      fi
+      ;;
+    3)
+      echo "⚠⚠⚠ push gate：Android 段略過：以 CI 為準（android-lint／android-unit）——本機 Android 環境不齊，ktlint／detekt／unit tests 這次沒有在本機跑（LS-477；handoff 須記）：" >&2
+      printf '%s\n' "$android_env_out" | sed 's/^/    /' >&2
+      ;;
+    *)
+      echo "✗ push gate：android-env-check.sh 失敗（exit ${android_env_rc}）：" >&2
+      printf '%s\n' "$android_env_out" | sed 's/^/    /' >&2
+      exit 1
+      ;;
+  esac
+fi
 
 # 2) Unit tests（Xcode 專案存在才跑；Phase 0 建專案時如 scheme 不同請更新此處與 CI；LS-76：無 Swift／
 #    專案檔變更則跳過整段——省純文件 harness PR 吃模擬器 flake 的成本，CI 的 ci job 不受影響仍全跑）
