@@ -13,6 +13,7 @@ import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
 import java.net.URLEncoder
+import java.util.Base64
 import java.util.UUID
 
 /**
@@ -138,3 +139,10 @@ internal suspend inline fun <reified E : BackendError> expectError(block: () -> 
     fail("預期丟出 ${E::class.simpleName}，但呼叫成功了")
     error("unreachable")
 }
+
+/** 合法的 1×1 JPEG（Storage 只驗 Content-Type 與大小；`media.width／height` 由呼叫端宣告，DB 不核對）。 */
+internal val TINY_JPEG: ByteArray =
+    Base64.getDecoder().decode(
+        "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////" +
+            "////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=",
+    )

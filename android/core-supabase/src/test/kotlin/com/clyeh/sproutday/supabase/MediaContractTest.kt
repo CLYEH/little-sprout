@@ -22,7 +22,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.time.Instant
-import java.util.Base64
 import java.util.UUID
 
 /**
@@ -164,12 +163,5 @@ class MediaContractTest {
 
     private companion object {
         const val DEFAULT_QUOTA_BYTES = 5L * 1024 * 1024 * 1024
-
-        /** 合法的 1×1 JPEG（Storage 只驗 Content-Type 與大小；`media.width／height` 由呼叫端宣告，DB 不核對）。 */
-        val TINY_JPEG: ByteArray =
-            Base64.getDecoder().decode(
-                "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////" +
-                    "////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=",
-            )
     }
 }
