@@ -98,7 +98,8 @@ class AuthRepository(
     }
 
     /**
-     * Apple 登入（Supabase web OAuth，PKCE）：開 Custom Tab 後立即返回；session 在 redirect 回 app 時由
+     * Apple 登入（Supabase web OAuth，PKCE；[SupabaseClientFactory] 明確設 flowType，SDK 預設是 IMPLICIT）：
+     * 開 Custom Tab 後立即返回；session 在 redirect 回 app 時由
      * `SupabaseClient.handleDeeplinks(intent)` 完成，結果走 [authState]。
      * 需要 Apple Service ID 與 Supabase Auth 的 Apple provider（使用者辦）。
      */

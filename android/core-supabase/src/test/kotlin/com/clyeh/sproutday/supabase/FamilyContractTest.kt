@@ -51,7 +51,7 @@ class FamilyContractTest {
             val auth = AuthRepository(SupabaseClientFactory.createInMemory(config))
             auth.sendEmailOtp(email)
             val error = expectError<BackendError.Auth> { auth.verifyEmailOtp(email, "000000") }
-            assertNotNull("GoTrue 應回 error_code", error.code)
+            assertEquals("GoTrue 的 error_code 字面值（AuthErrorCode.value，非 enum 名）", "otp_expired", error.code)
             assertNull("驗證失敗不得留下 session", auth.currentUserId())
         }
 

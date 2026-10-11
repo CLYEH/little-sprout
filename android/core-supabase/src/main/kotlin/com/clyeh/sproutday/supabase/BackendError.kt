@@ -154,7 +154,7 @@ internal inline fun <T> backend(block: () -> T): T =
 internal fun RestException.toBackendError(): BackendError =
     when (this) {
         is PostgrestRestException -> mapPostgrest(this)
-        is AuthRestException -> BackendError.Auth(errorCode?.name, errorDescription, this)
+        is AuthRestException -> BackendError.Auth(errorCode?.value, errorDescription, this)
         else -> BackendError.Server(description ?: error, null, this)
     }
 

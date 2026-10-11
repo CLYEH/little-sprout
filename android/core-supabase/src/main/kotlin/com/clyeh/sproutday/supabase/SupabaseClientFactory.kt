@@ -3,6 +3,7 @@ package com.clyeh.sproutday.supabase
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseInternal
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.auth.MemoryCodeVerifierCache
 import io.github.jan.supabase.auth.MemorySessionManager
 import io.github.jan.supabase.createSupabaseClient
@@ -37,6 +38,7 @@ object SupabaseClientFactory {
                 scheme = AUTH_SCHEME
                 host = AUTH_HOST
                 defaultRedirectUrl = AUTH_REDIRECT_URL
+                flowType = FlowType.PKCE // supabase-kt 3.8.0 預設 IMPLICIT（token 放 fragment 交回 app）；與 iOS 一致改用 PKCE
             }
             install(Postgrest)
         }
@@ -56,6 +58,7 @@ object SupabaseClientFactory {
                 alwaysAutoRefresh = false
                 autoSetupPlatform = false
                 enableLifecycleCallbacks = false
+                flowType = FlowType.PKCE
             }
             install(Postgrest)
         }
