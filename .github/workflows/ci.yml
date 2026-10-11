@@ -1685,13 +1685,18 @@ jobs:
         if: steps.scope.outputs.run == 'true'
         run: |
           # sdkmanager／avdmanager 此時還不在 PATH（emulator-runner 之後才自己加），用 ANDROID_HOME 下的絕對路徑。
-          # 第 3 次 run 實測：`cmdline-tools;latest` 已存在時 sdkmanager 不覆蓋、改裝到 `latest-2`——新版在 latest-2，
-          # 所以裝完以 latest-2 優先（沒有才退 latest），並把它放進 PATH 最前面讓 emulator-runner 用同一份。
+          # 實測（run 38148105531／38148628908）：`cmdline-tools;latest` 已存在時 sdkmanager 不覆蓋、改裝到 `latest-2`；
+          # 光把 latest-2 放進 GITHUB_PATH 不夠——emulator-runner 的 `avdmanager create avd` 仍解析到舊的 latest（它自己會把
+          # cmdline-tools/latest/bin 加進 PATH 最前）。所以把新版換到 `latest`（舊版留作 latest-old），任何 PATH 順序都拿到新版。
           root="${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools"
           yes | "$root/latest/bin/sdkmanager" --licenses > /dev/null || true
           "$root/latest/bin/sdkmanager" --install 'cmdline-tools;latest' > /dev/null
-          bin="$root/latest-2/bin"; [ -x "$bin/avdmanager" ] || bin="$root/latest/bin"
-          echo "$bin" >> "$GITHUB_PATH"
+          if [ -x "$root/latest-2/bin/avdmanager" ]; then
+            sudo rm -rf "$root/latest-old"
+            sudo mv "$root/latest" "$root/latest-old"
+            sudo mv "$root/latest-2" "$root/latest"
+          fi
+          bin="$root/latest/bin"
           "$bin/avdmanager" list device -c | grep -qx pixel_8 || {
             echo "::error::環境性失敗：升級後 avdmanager（$bin）仍列不出 pixel_8 裝置定義"
             ls -l "$root"
