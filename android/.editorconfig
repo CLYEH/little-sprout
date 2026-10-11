@@ -1,0 +1,7 @@
+root = true
+
+[*.{kt,kts}]
+indent_size = 4
+max_line_length = 120
+# Compose 的 @Composable 函式慣例為 PascalCase
+ktlint_function_naming_ignore_when_annotated_with = Composable

@@ -1,5 +1,5 @@
 #!/bin/bash
-# release-version.sh 的自測（LS-466）。CI rules job 每個 PR 都跑。
+# release-version.sh 的自測（LS-466；LS-474 加 android/version.properties 三案）。CI rules job 每個 PR 都跑。
 # 若退化成——無 tag 時不是 0.0.0、版本沒去掉開頭 v、build 號不是 HEAD 的 commit 數、被非 `v*` tag 誤導
 # （例如 `qa-1`）、取到不可達的較新 tag、重跑內容漂移、Version.xcconfig 沒被 .gitignore——這裡會紅。
 # 每案用獨立合成 repo（腳本以 `git rev-parse --show-toplevel` 找根目錄，所以在 repo 內放一份腳本副本）。
@@ -50,5 +50,22 @@ check "⑤ 重跑一致" "$first" "$(run "$r")"
 
 # ⑥ repo 的 .gitignore 涵蓋 Version.xcconfig
 if (cd "$root" && git check-ignore -q Config/Version.xcconfig); then echo "✓ ⑥ Version.xcconfig 被 .gitignore"; else echo "✗ ⑥ Config/Version.xcconfig 未被 .gitignore"; fail=1; fi
+
+# ⑦ LS-474：android/version.properties 內容與 xcconfig 同值（VERSION_NAME 去 v、VERSION_CODE＝commit 數）
+r="$(newrepo androidtag)"; commit "$r" a; g -C "$r" tag v1.2.3; commit "$r" b; commit "$r" c
+run "$r" >/dev/null
+check "⑦ android/version.properties → 1.2.3／3" $'VERSION_NAME=1.2.3\nVERSION_CODE=3' "$(cat "$r/android/version.properties")"
+
+# ⑧ 無 tag fallback：VERSION_NAME 為 0.0.0（Gradle 端缺檔 fallback 0.0.0／1 由 app 的 VersionPropertiesTest 驗）
+r="$(newrepo androidnotag)"; commit "$r" a
+run "$r" >/dev/null
+check "⑧ 無 tag → android/version.properties 0.0.0／1" $'VERSION_NAME=0.0.0\nVERSION_CODE=1' "$(cat "$r/android/version.properties")"
+
+# ⑨ 重跑不漂移（android 版）
+first="$(cat "$r/android/version.properties")"; run "$r" >/dev/null
+check "⑨ android 版重跑一致" "$first" "$(cat "$r/android/version.properties")"
+
+# ⑩ repo 的 .gitignore 涵蓋 android/version.properties
+if (cd "$root" && git check-ignore -q android/version.properties); then echo "✓ ⑩ android/version.properties 被 .gitignore"; else echo "✗ ⑩ android/version.properties 未被 .gitignore"; fail=1; fi
 
 exit "$fail"

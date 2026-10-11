@@ -17,6 +17,14 @@ Secrets.xcconfig
 
 # LS-466：release-version.sh 產生的版本號注入檔
 Config/Version.xcconfig
+# LS-474：Android 版（release-version.sh 一併寫入）與本機 Gradle／IDE 產物；local.properties 放 Supabase URL／anon key
+android/version.properties
+android/local.properties
+android/.gradle/
+android/.kotlin/
+android/.idea/
+android/captures/
+*.iml
 
 # Claude Code
 .claude/worktrees/

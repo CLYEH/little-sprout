@@ -1,0 +1,10 @@
+# 在 detekt 預設規則上只覆寫必要項（buildUponDefaultConfig = true）。
+naming:
+  FunctionNaming:
+    # Compose 的 @Composable 函式慣例為 PascalCase
+    ignoreAnnotated:
+      - Composable
+style:
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreAnnotation: true
