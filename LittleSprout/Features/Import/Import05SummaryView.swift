@@ -235,15 +235,8 @@ struct Import05SummaryView: View {
             Rectangle().fill(Color.lsBorder).frame(height: 1)
             VStack(spacing: AppSpacing.label) {
                 Button(action: onDone) {
-                    HStack(spacing: AppSpacing.label) {
-                        Image(systemName: "clock").appIconFrame(.medium)
-                        Text("回到時間軸").appFont(.body, weight: .bold)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .padding(.vertical, AppSpacing.controlPaddingCTA)
+                    PrimaryButtonLabel(icon: "clock", title: "回到時間軸")
                 }
-                .foregroundStyle(Color.lsOnAccent)
-                .background(Color.lsAccent, in: RoundedRectangle(cornerRadius: AppSpacing.radiusMedium))
                 if retryableFailedCount > 0 {
                     // 票文範圍 3：「重試失敗項（只重跑失敗項）」——`retryRetryable(in:)` 只翻
                     // 這個批次自己範圍內可重試的失敗列回 `.waiting`，不動已完成／不可重試
