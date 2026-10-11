@@ -14,8 +14,11 @@ import androidx.work.workDataOf
 import com.clyeh.sproutday.supabase.BackendError
 import com.clyeh.sproutday.supabase.MediaUploadBackend
 import com.clyeh.sproutday.supabase.NewMedia
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -127,7 +130,7 @@ class UploadWorkerTest {
 
             val done = checkNotNull(db.dao().get(item.id))
             assertEquals(UploadState.DONE, done.state)
-            assertEquals(2, done.attempt)
+            assertEquals("attempt 只計失敗次數，認領不累計", 1, done.attempt)
             assertEquals("重送只會對應同一個 media id", setOf(item.id), backend.mediaRows.keys)
             assertEquals("重送只會寫到同一組物件路徑", setOf(item.storagePath, item.thumbPath), backend.objectUploads.keys)
             assertEquals(setOf(item.id), backend.attached)
@@ -169,6 +172,30 @@ class UploadWorkerTest {
             )
         }
 
+    @Test
+    fun inFlightUploadsAreCappedAtThreeAcrossItems() =
+        runBlocking<Unit> {
+            val items = List(6) { queue.enqueue(newId(), familyId, albumId, jpegSource()) }
+            val gate = CompletableDeferred<Unit>()
+            backend.uploadGate = gate
+
+            // 6 筆同時被系統喚起（各自是獨立的 unique work）；原檔 PUT 卡在 gate 上，觀察同時在飛的數量。
+            val runs = items.map { async(Dispatchers.Default) { buildWorker(it.id).doWork() } }
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(WAIT_SECONDS)
+            while (backend.inFlight.get() < UploadWorker.MAX_CONCURRENT_UPLOADS &&
+                System.nanoTime() < deadline
+            ) {
+                delay(POLL_MS)
+            }
+            delay(SETTLE_MS) // 沒有上限的話，多出來的 worker 也會在這段時間內走到 PUT
+            gate.complete(Unit)
+            runs.awaitAll()
+
+            assertEquals("同時進行中的上傳不得超過上限，且滿載時剛好用滿", 3, backend.maxInFlight.get())
+            assertEquals(6, backend.mediaRows.size)
+            assertTrue("全部都要完成", items.all { db.dao().get(it.id)?.state == UploadState.DONE })
+        }
+
     private fun newId() = UUID.randomUUID().toString()
 
     private fun jpegSource(onOpen: () -> Unit = {}) =
@@ -206,6 +233,7 @@ class UploadWorkerTest {
         const val JPEG_BYTES = 2048
         const val WAIT_SECONDS = 10L
         const val POLL_MS = 20L
+        const val SETTLE_MS = 300L
     }
 }
 
@@ -221,11 +249,27 @@ private class FakeBackend : MediaUploadBackend {
     var failAttachOnce: BackendError? = null
     var failInsertOnce: BackendError? = null
 
+    /** 設了就讓原檔 PUT 停在這裡，供並發上限測試觀察同時在飛的數量。 */
+    @Volatile var uploadGate: CompletableDeferred<Unit>? = null
+    val inFlight = AtomicInteger()
+    val maxInFlight = AtomicInteger()
+
+    override suspend fun ensureSession() = Unit
+
     override suspend fun uploadFile(
         path: String,
         file: File,
         contentType: String,
-    ) = recordUpload(path)
+    ) {
+        val now = inFlight.incrementAndGet()
+        maxInFlight.accumulateAndGet(now) { a, b -> maxOf(a, b) }
+        try {
+            uploadGate?.await()
+        } finally {
+            inFlight.decrementAndGet()
+        }
+        recordUpload(path)
+    }
 
     override suspend fun uploadBytes(
         path: String,

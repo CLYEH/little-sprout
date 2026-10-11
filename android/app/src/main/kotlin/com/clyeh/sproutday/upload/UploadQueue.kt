@@ -75,12 +75,12 @@ class UploadQueue(
         dao.unfinished().forEach { schedule(it.id) }
     }
 
-    /** 登出：取消所有排程中的 work、刪掉未完成的列與其本機副本。正在跑的 worker 會收到取消（協程取消，不吞）。 */
+    /** 登出：取消所有排程中的 work、刪掉未完成（含 FAILED）的列與其本機副本。正在跑的 worker 會收到取消（協程取消，不吞）。 */
     suspend fun clear() {
         workManager.cancelAllWorkByTag(TAG).await()
-        val unfinished = dao.unfinished()
-        dao.deleteUnfinished()
-        withContext(io) { unfinished.forEach { File(it.localPath).delete() } }
+        val doomed = dao.notDone()
+        dao.deleteNotDone()
+        withContext(io) { doomed.forEach { File(it.localPath).delete() } }
     }
 
     internal fun schedule(id: String) {

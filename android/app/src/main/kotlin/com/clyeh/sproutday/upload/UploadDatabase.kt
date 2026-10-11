@@ -35,6 +35,7 @@ data class UploadItem(
     val storagePath: String,
     val thumbPath: String,
     val state: UploadState,
+    /** 已失敗（暫時性）的次數：只在 [UploadDao.release] 累計；系統停掉 worker（約束失效、時限）那幾輪不算。 */
     val attempt: Int,
     val lastError: String?,
     val createdAt: Long,
@@ -55,11 +56,12 @@ interface UploadDao {
     @Query("SELECT * FROM upload_items WHERE state IN ('PENDING', 'UPLOADING')")
     suspend fun unfinished(): List<UploadItem>
 
-    /** 認領：只有未終局的列會被改成 UPLOADING 並累計次數；回傳 0＝已終局（DONE／FAILED）或已被清掉。 */
-    @Query(
-        "UPDATE upload_items SET state = 'UPLOADING', attempt = attempt + 1 " +
-            "WHERE id = :id AND state IN ('PENDING', 'UPLOADING')",
-    )
+    /** 除了 DONE 以外的列（含 FAILED：用盡重試的 FAILED 仍留著本機副本，登出時要一併清）。 */
+    @Query("SELECT * FROM upload_items WHERE state != 'DONE'")
+    suspend fun notDone(): List<UploadItem>
+
+    /** 認領：只有未終局的列會被改成 UPLOADING；回傳 0＝已終局（DONE／FAILED）或已被清掉。不累計次數（見 [UploadItem.attempt]）。 */
+    @Query("UPDATE upload_items SET state = 'UPLOADING' WHERE id = :id AND state IN ('PENDING', 'UPLOADING')")
     suspend fun claim(id: String): Int
 
     /** 終局寫入（DONE／FAILED）；同樣只動未終局的列，已被登出清掉的不會復活。 */
@@ -73,16 +75,19 @@ interface UploadDao {
         error: String?,
     ): Int
 
-    /** 暫時性失敗：放回 PENDING 等 WorkManager 退避後重跑。 */
-    @Query("UPDATE upload_items SET state = 'PENDING', lastError = :error WHERE id = :id AND state = 'UPLOADING'")
+    /** 暫時性失敗：失敗次數 +1，放回 PENDING 等 WorkManager 退避後重跑。 */
+    @Query(
+        "UPDATE upload_items SET state = 'PENDING', attempt = attempt + 1, lastError = :error " +
+            "WHERE id = :id AND state = 'UPLOADING'",
+    )
     suspend fun release(
         id: String,
         error: String?,
     ): Int
 
-    /** 登出：清掉所有未完成的列（DONE 保留當歷史）。 */
+    /** 登出：清掉所有未完成的列（DONE 保留當歷史；FAILED 也清）。 */
     @Query("DELETE FROM upload_items WHERE state != 'DONE'")
-    suspend fun deleteUnfinished(): Int
+    suspend fun deleteNotDone(): Int
 }
 
 @Database(entities = [UploadItem::class], version = 1, exportSchema = false)

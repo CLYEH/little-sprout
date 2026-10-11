@@ -116,7 +116,7 @@ private fun UploadSection(
     ui.album?.let { Text("相簿：${it.title}") }
     ui.uploads.forEach {
         Text(
-            "上傳 ${it.id.take(UID_PREVIEW)}… ${it.state} 第${it.attempt}次 ${it.lastError.orEmpty()}",
+            "上傳 ${it.id.take(UID_PREVIEW)}… ${it.state} 失敗${it.attempt}次 ${it.lastError.orEmpty()}",
             modifier = Modifier.testTag("upload-${it.id}"),
         )
     }
