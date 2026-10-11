@@ -9336,7 +9336,7 @@
               "content": "繼續即表示你同意",
               "lineHeight": 1.4,
               "fontFamily": "Noto Sans TC",
-              "fontSize": 13,
+              "fontSize": 17,
               "fontWeight": "normal"
             },
             {
@@ -10036,29 +10036,197 @@
         },
         {
           "type": "frame",
-          "id": "jNckc",
-          "name": "System keyboard placeholder",
+          "id": "s7Z8K",
+          "name": "System keyboard · 數字含小數點",
           "metadata": {
             "type": "accessibility",
-            "accessibilityLabel": "系統數字鍵盤（示意）",
+            "accessibilityLabel": "系統數字鍵盤",
             "role": "none"
           },
           "width": "fill_container",
           "height": 250,
           "fill": "#D1D4DA",
-          "justifyContent": "center",
-          "alignItems": "center",
+          "layout": "vertical",
+          "gap": 6,
+          "padding": [
+            6,
+            6,
+            42,
+            6
+          ],
           "children": [
             {
-              "type": "text",
-              "id": "u8Tu0m",
-              "name": "Keyboard note",
-              "fill": "#3C3C43",
-              "content": "系統數字鍵盤・含小數點（示意，約 250pt）",
-              "lineHeight": 1.4,
-              "fontFamily": "Noto Sans TC",
-              "fontSize": 17,
-              "fontWeight": "normal"
+              "type": "frame",
+              "id": "c0uxlL",
+              "name": "Key row 1",
+              "width": "fill_container",
+              "height": "fill_container",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "WEcQn",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "ugxmY",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "KoCL8",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mcUPE",
+              "name": "Key row 2",
+              "width": "fill_container",
+              "height": "fill_container",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "K5EB2",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "SM9CO",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "BxSdN",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "m8qii",
+              "name": "Key row 3",
+              "width": "fill_container",
+              "height": "fill_container",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "DInKd",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "l4tsvw",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "W8OPG",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Zc7Lk",
+              "name": "Key row 4",
+              "width": "fill_container",
+              "height": "fill_container",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "FidiA",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "c3gcQ",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "dNvVz",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#D1D4DA",
+                  "cornerRadius": 5,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "vCZWg",
+                      "name": "刪除鍵",
+                      "width": 24,
+                      "height": 24,
+                      "icon": "delete",
+                      "library": "lucide",
+                      "fill": "#1C1C1E"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -11423,7 +11591,6 @@
                 "role": "text"
               },
               "width": "fill_container",
-              "height": 96,
               "fill": "$white",
               "cornerRadius": 12,
               "gap": 10,
@@ -11514,29 +11681,430 @@
         },
         {
           "type": "frame",
-          "id": "YyZs2",
-          "name": "System keyboard placeholder",
+          "id": "w0HZl5",
+          "name": "System keyboard · 英數",
           "metadata": {
             "type": "accessibility",
-            "accessibilityLabel": "系統英數鍵盤（示意）",
+            "accessibilityLabel": "系統英數鍵盤",
             "role": "none"
           },
           "width": "fill_container",
           "height": 336,
           "fill": "#D1D4DA",
-          "justifyContent": "center",
-          "alignItems": "center",
+          "layout": "vertical",
+          "gap": 11,
+          "padding": [
+            8,
+            3,
+            0,
+            3
+          ],
           "children": [
             {
-              "type": "text",
-              "id": "tHwmH",
-              "name": "Keyboard note",
-              "fill": "#3C3C43",
-              "content": "系統英數鍵盤（示意，約 336pt）",
-              "lineHeight": 1.4,
-              "fontFamily": "Noto Sans TC",
-              "fontSize": 17,
-              "fontWeight": "normal"
+              "type": "frame",
+              "id": "zSN3i",
+              "name": "Key row 1",
+              "width": "fill_container",
+              "height": 42,
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "OPt0O",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "E39tb",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "h6vUiu",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "r5c9jp",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "X6GAP",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "S166g",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "GT86N",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "TARim",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "YWHAt",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "AuDwU",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "EJMQT",
+              "name": "Key row 2",
+              "width": "fill_container",
+              "height": 42,
+              "gap": 6,
+              "padding": [
+                0,
+                19
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "x5ZrH0",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "u5FxL",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "crx85",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "moQi6",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "d4t5MB",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "VLVkq",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "brsAE",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "DjN5F",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "BygvF",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "x5kzC",
+              "name": "Key row 3",
+              "width": "fill_container",
+              "height": 42,
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ZE6ny",
+                  "name": "Shift",
+                  "width": 42,
+                  "height": "fill_container",
+                  "fill": "#ABB0BA",
+                  "cornerRadius": 5,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "ZMTjQ",
+                      "name": "Shift 鍵",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "arrow-big-up",
+                      "library": "lucide",
+                      "fill": "#1C1C1E"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xXa7b",
+                  "name": "Gap",
+                  "width": 8,
+                  "height": 1,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "hmPam",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "O2I511",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "t8dgeL",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "IsQ5i",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "dQcVf",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "QDbVL",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "BC6fF",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "cSI9L",
+                  "name": "Gap",
+                  "width": 8,
+                  "height": 1,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "Jb4Yf",
+                  "name": "Delete",
+                  "width": 42,
+                  "height": "fill_container",
+                  "fill": "#ABB0BA",
+                  "cornerRadius": 5,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "ldtwY",
+                      "name": "刪除鍵",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "delete",
+                      "library": "lucide",
+                      "fill": "#1C1C1E"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vXxBl",
+              "name": "Key row 4",
+              "width": "fill_container",
+              "height": 42,
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "kfGOy",
+                  "name": "Numbers",
+                  "width": 42,
+                  "height": "fill_container",
+                  "fill": "#ABB0BA",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "JFDtT",
+                  "name": "Emoji",
+                  "width": 42,
+                  "height": "fill_container",
+                  "fill": "#ABB0BA",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "kJkYx",
+                  "name": "Space",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "wVM5I",
+                  "name": "Return",
+                  "width": 88,
+                  "height": "fill_container",
+                  "fill": "#ABB0BA",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                }
+              ]
             }
           ]
         }
@@ -11900,8 +12468,9 @@
                           "height": 60,
                           "fill": "$bg",
                           "cornerRadius": 12,
-                          "stroke": "$control",
-                          "strokeWidth": 1,
+                          "stroke": "$rose",
+                          "strokeWidth": 2,
+                          "gap": 2,
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -11915,6 +12484,14 @@
                               "fontFamily": "Noto Sans TC",
                               "fontSize": 26,
                               "fontWeight": "700"
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "m96WKZ",
+                              "name": "Caret",
+                              "fill": "$rose",
+                              "width": 2,
+                              "height": 28
                             }
                           ]
                         }
@@ -11934,7 +12511,6 @@
                 "role": "alert"
               },
               "width": "fill_container",
-              "height": 96,
               "fill": "$white",
               "cornerRadius": 12,
               "stroke": "$rose",
@@ -12027,29 +12603,430 @@
         },
         {
           "type": "frame",
-          "id": "q7VPd",
-          "name": "System keyboard placeholder",
+          "id": "J9DQ8",
+          "name": "System keyboard · 英數",
           "metadata": {
             "type": "accessibility",
-            "accessibilityLabel": "系統英數鍵盤（示意）",
+            "accessibilityLabel": "系統英數鍵盤",
             "role": "none"
           },
           "width": "fill_container",
           "height": 336,
           "fill": "#D1D4DA",
-          "justifyContent": "center",
-          "alignItems": "center",
+          "layout": "vertical",
+          "gap": 11,
+          "padding": [
+            8,
+            3,
+            0,
+            3
+          ],
           "children": [
             {
-              "type": "text",
-              "id": "MArS0",
-              "name": "Keyboard note",
-              "fill": "#3C3C43",
-              "content": "系統英數鍵盤（示意，約 336pt）",
-              "lineHeight": 1.4,
-              "fontFamily": "Noto Sans TC",
-              "fontSize": 17,
-              "fontWeight": "normal"
+              "type": "frame",
+              "id": "lLRQ5",
+              "name": "Key row 1",
+              "width": "fill_container",
+              "height": 42,
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "kINjp",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "pmYOj",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "bdW8y",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "Bslel",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "QDgF4",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "RPp8N",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "ZnN1e",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "sfgiL",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "pQ79c",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "R7dYkK",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "B1WpM",
+              "name": "Key row 2",
+              "width": "fill_container",
+              "height": 42,
+              "gap": 6,
+              "padding": [
+                0,
+                19
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "hl64U",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "lnDSF",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "x9GeA",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "Jr04B",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "rdhYD",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "Dj68B",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "QVdzJ",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "o1QPh",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "eYXd8",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "iySnW",
+              "name": "Key row 3",
+              "width": "fill_container",
+              "height": 42,
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "aqwRA",
+                  "name": "Shift",
+                  "width": 42,
+                  "height": "fill_container",
+                  "fill": "#ABB0BA",
+                  "cornerRadius": 5,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "dCfbq",
+                      "name": "Shift 鍵",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "arrow-big-up",
+                      "library": "lucide",
+                      "fill": "#1C1C1E"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "gCW1d",
+                  "name": "Gap",
+                  "width": 8,
+                  "height": 1,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "DN1Me",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "Le860",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "UH8mG",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "c67QP",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "YEn9I",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "zQzU9",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "L2UoI",
+                  "name": "Key",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "VxboT",
+                  "name": "Gap",
+                  "width": 8,
+                  "height": 1,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "h80Dsz",
+                  "name": "Delete",
+                  "width": 42,
+                  "height": "fill_container",
+                  "fill": "#ABB0BA",
+                  "cornerRadius": 5,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "C44H8",
+                      "name": "刪除鍵",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "delete",
+                      "library": "lucide",
+                      "fill": "#1C1C1E"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mWxzP",
+              "name": "Key row 4",
+              "width": "fill_container",
+              "height": 42,
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Jr39i",
+                  "name": "Numbers",
+                  "width": 42,
+                  "height": "fill_container",
+                  "fill": "#ABB0BA",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "qp95E",
+                  "name": "Emoji",
+                  "width": 42,
+                  "height": "fill_container",
+                  "fill": "#ABB0BA",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "D70G0",
+                  "name": "Space",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "XkbyV",
+                  "name": "Return",
+                  "width": 88,
+                  "height": "fill_container",
+                  "fill": "#ABB0BA",
+                  "cornerRadius": 5,
+                  "layout": "none"
+                }
+              ]
             }
           ]
         }
