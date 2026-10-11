@@ -1684,11 +1684,14 @@ jobs:
       - name: 更新 cmdline-tools（內建 avdmanager 沒有 pixel_8 裝置定義）
         if: steps.scope.outputs.run == 'true'
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager --install 'cmdline-tools;latest' > /dev/null
-          avdmanager list device -c | grep -qx pixel_8 || {
-            echo "::error::環境性失敗：升級後 avdmanager 仍列不出 pixel_8 裝置定義（$(avdmanager --version 2>&1 | tail -1)）"
-            avdmanager list device -c | head -30
+          # sdkmanager／avdmanager 此時還不在 PATH（emulator-runner 之後才自己加），用 ANDROID_HOME 下的絕對路徑
+          bin="${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools/latest/bin"
+          yes | "$bin/sdkmanager" --licenses > /dev/null || true
+          "$bin/sdkmanager" --install 'cmdline-tools;latest' > /dev/null
+          echo "$bin" >> "$GITHUB_PATH"
+          "$bin/avdmanager" list device -c | grep -qx pixel_8 || {
+            echo "::error::環境性失敗：升級後 avdmanager 仍列不出 pixel_8 裝置定義"
+            "$bin/avdmanager" list device -c | head -30
             exit 1
           }
           echo "→ avdmanager 有 pixel_8"
