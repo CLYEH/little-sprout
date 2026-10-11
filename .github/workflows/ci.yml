@@ -1627,8 +1627,12 @@ jobs:
   # LS-478（Android 前置 A4）：instrumented 測試（TapTargetGateTest 48dp 登記制、gate 自測；QaSmokeTest 因無 LS_QA_SCENARIO 而略過）
   # 跑在 ubuntu KVM 加速的 emulator 上。**不進 required checks**（票文：滿 10 次綠才另票提 required；穩定度追蹤表在 LS-478 票 comment）。
   # 路徑過濾同 android-unit（step 層早退，永遠建立 check-run）。API level 讀 .android-api（單一來源，與 compileSdk／detect-emulator.sh 同值）。
-  # 紅燈判讀（flake 面）：KVM 不可用 → 專屬 step 印 ::error::「環境性」並失敗；emulator 沒開機就逾時 → 沒有 androidTest-results 目錄，
-  # 「判讀」step 印「環境性」；有 androidTest-results 而紅 → 測試或 app 的問題。emulator-runner 釘 commit SHA（v2.38.0）。
+  # 紅燈判讀（flake 面，R2 m1）：KVM 不可用 → 專屬 step 印 ::error::「環境性」並失敗；emulator 沒開機 → 沒有 booted 標記
+  # （$RUNNER_TEMP/ls-emulator-booted，emulator-runner 的 script 在 emulator 開機後才 touch）→「判讀」step 印「環境性」；
+  # 有標記而沒有 androidTest-results → Gradle 在 emulator 開機後、測試跑起來前就失敗（androidTest 編譯錯、建置錯）＝程式錯，擋；
+  # 有 androidTest-results 而紅 → 測試或 app 的問題。emulator-runner 釘 commit SHA（v2.38.0）。
+  # R2 M2：另跑一次 LS_QA_SCENARIO=login 的 QaSmokeTest（login 情境只冷啟動 app、不需 Supabase），讓 QaDriver 每次 CI 都在裝置上真跑，
+  # 並 adb pull 截圖驗證 scoped storage 路徑（/sdcard/Android/data/<test pkg>/files）可寫可拉。
   android-connected:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -1679,31 +1683,39 @@ jobs:
           fi
           ls -l /dev/kvm
       # 第 1 次 run（38147176597）實測：runner image 內建的 avdmanager 太舊，`avdmanager create avd --device pixel_8` 回
-      # 「No device found matching --device pixel_8」（emulator-runner 的 Create AVD 階段，環境性、與測試無關）；
-      # cmdline-tools 13.0（13114758）的 `avdmanager list device -c` 有 pixel_8。先升到 latest 再讓 emulator-runner 建 AVD。
-      - name: 更新 cmdline-tools（內建 avdmanager 沒有 pixel_8 裝置定義）
+      # 「No device found matching --device pixel_8」（emulator-runner 的 Create AVD 階段，環境性、與測試無關）。
+      # R2 m2：不再追 `cmdline-tools;latest`（每次裝 Google 當下的最新版；新版 sdkmanager 已印 deprecated 警告，下一版若移除
+      # sdkmanager／avdmanager，PR 沒動也會變紅、污染 10 次追蹤）。改釘 `cmdline-tools;19.0`（= commandlinetools-linux-13114758，
+      # Google 下載頁的 build 號；`sdkmanager --list` 的 package 版本號 19.0）。來源：reactivecircus/android-emulator-runner v2.38.0 沒有
+      # cmdline-tools 版本 input，它的 src/sdk-installer.ts 只在 $ANDROID_HOME/cmdline-tools 不存在時才裝自己釘的 14742923——runner image
+      # 內建目錄存在，所以這一步才是實際決定 avdmanager 版本的地方。要升版：改 CMDLINE_TOOLS_VERSION 並在穩定度追蹤表註記。
+      - name: 更新 cmdline-tools（內建 avdmanager 沒有 pixel_8 裝置定義；釘 19.0）
         if: steps.scope.outputs.run == 'true'
+        env:
+          CMDLINE_TOOLS_VERSION: "19.0"
         run: |
           # sdkmanager／avdmanager 此時還不在 PATH（emulator-runner 之後才自己加），用 ANDROID_HOME 下的絕對路徑。
-          # 實測（run 38148105531／38148628908）：`cmdline-tools;latest` 已存在時 sdkmanager 不覆蓋、改裝到 `latest-2`；
-          # 光把 latest-2 放進 GITHUB_PATH 不夠——emulator-runner 的 `avdmanager create avd` 仍解析到舊的 latest（它自己會把
-          # cmdline-tools/latest/bin 加進 PATH 最前）。所以把新版換到 `latest`（舊版留作 latest-old），任何 PATH 順序都拿到新版。
+          # sdkmanager 把指定版本裝到 $root/<版本>；emulator-runner 的 `avdmanager create avd` 一律解析 cmdline-tools/latest/bin
+          # （它自己把 latest/bin 放 PATH 最前，GITHUB_PATH 蓋不過——run 38148628908 實測），所以把它換成 latest（舊版留作 latest-old）。
           root="${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools"
           yes | "$root/latest/bin/sdkmanager" --licenses > /dev/null || true
-          "$root/latest/bin/sdkmanager" --install 'cmdline-tools;latest' > /dev/null
-          if [ -x "$root/latest-2/bin/avdmanager" ]; then
-            sudo rm -rf "$root/latest-old"
-            sudo mv "$root/latest" "$root/latest-old"
-            sudo mv "$root/latest-2" "$root/latest"
-          fi
+          "$root/latest/bin/sdkmanager" --install "cmdline-tools;${CMDLINE_TOOLS_VERSION}" > /dev/null
+          [ -x "$root/${CMDLINE_TOOLS_VERSION}/bin/avdmanager" ] || {
+            echo "::error::環境性失敗：sdkmanager 沒把 cmdline-tools;${CMDLINE_TOOLS_VERSION} 裝到 $root/${CMDLINE_TOOLS_VERSION}"
+            ls -l "$root"
+            exit 1
+          }
+          sudo rm -rf "$root/latest-old"
+          sudo mv "$root/latest" "$root/latest-old"
+          sudo mv "$root/${CMDLINE_TOOLS_VERSION}" "$root/latest"
           bin="$root/latest/bin"
           "$bin/avdmanager" list device -c | grep -qx pixel_8 || {
-            echo "::error::環境性失敗：升級後 avdmanager（$bin）仍列不出 pixel_8 裝置定義"
+            echo "::error::環境性失敗：釘住的 cmdline-tools ${CMDLINE_TOOLS_VERSION}（$bin）列不出 pixel_8 裝置定義"
             ls -l "$root"
             "$bin/avdmanager" list device -c | head -30
             exit 1
           }
-          echo "→ avdmanager 有 pixel_8"
+          echo "→ cmdline-tools ${CMDLINE_TOOLS_VERSION}：avdmanager 有 pixel_8"
       - name: instrumented 測試（emulator API ${{ steps.api.outputs.api }}，Pixel 8）
         if: steps.scope.outputs.run == 'true'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
@@ -1716,16 +1728,26 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           working-directory: android
+          # emulator-runner 把 script 逐行交給 sh 執行，任一行 exit ≠ 0 即整個 step 失敗。
+          # touch 標記是紅燈判讀的分界：它之前紅＝環境（KVM／冷啟動／system image），它之後紅＝Gradle 或測試（程式錯）。
+          # 第 2 行：全部 instrumented 測試（QaSmokeTest 因無 LS_QA_SCENARIO 以 assumption 略過）。
+          # 第 3 行：只跑 QaSmokeTest 帶 LS_QA_SCENARIO=login（R2 M2）；leaveApksInstalledAfterRun 讓測試 APK 的 external files 留到下一行
+          # adb pull（AGP 預設跑完就 uninstall，截圖會跟著消失）。第 4 行：pull 並斷言真有 png，證明 QaDriver 在裝置上真的跑完且 scoped storage 可寫可拉。
           script: |
-            echo "→ android-connected：emulator 已開機；以下才是測試（此行之後紅＝測試或 app 問題，此行之前紅＝環境）"
+            touch "$RUNNER_TEMP/ls-emulator-booted"
+            echo "→ android-connected：emulator 已開機；以下才是測試（此行之後紅＝Gradle／測試／app 問題，此行之前紅＝環境）"
             ./gradlew --no-daemon :app:connectedDebugAndroidTest
-      - name: 紅燈判讀（環境 vs 測試）
+            ./gradlew --no-daemon :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true -Pandroid.testInstrumentationRunnerArguments.class=com.clyeh.sproutday.qa.QaSmokeTest -Pandroid.testInstrumentationRunnerArguments.LS_QA_SCENARIO=login
+            mkdir -p "$RUNNER_TEMP/qa-e2e-login" && adb pull /sdcard/Android/data/com.clyeh.sproutday/files/qa-e2e/login/. "$RUNNER_TEMP/qa-e2e-login/" && ls "$RUNNER_TEMP"/qa-e2e-login/login-*.png
+      - name: 紅燈判讀（環境 vs 建置／編譯 vs 測試）
         if: ${{ failure() && steps.scope.outputs.run == 'true' }}
         run: |
-          if [ -d android/app/build/outputs/androidTest-results ]; then
-            echo "::error::有 androidTest-results：emulator 已開機、測試有跑——紅＝測試或 app 的問題，見 artifact android-connected-reports"
+          if [ ! -e "$RUNNER_TEMP/ls-emulator-booted" ]; then
+            echo "::error::emulator 還沒開機就失敗——環境性（KVM／emulator 冷啟動逾時／system image 下載），先 rerun；連續兩次紅再回報（LS-478 穩定度追蹤表）"
+          elif [ ! -d android/app/build/outputs/androidTest-results ]; then
+            echo "::error::emulator 已開機、但沒有 androidTest-results：Gradle 在測試跑起來前就失敗＝建置或 androidTest 編譯錯（程式錯，不是環境性，不要 rerun 了事），見 job log 的 Gradle 輸出"
           else
-            echo "::error::沒有 androidTest-results：測試根本沒跑到——多半是環境性（KVM／emulator 冷啟動逾時／system image 下載），先 rerun；連續兩次紅再回報（LS-478 穩定度追蹤表）"
+            echo "::error::有 androidTest-results：emulator 已開機、測試有跑——紅＝測試或 app 的問題，見 artifact android-connected-reports"
           fi
       - name: 上傳測試報告
         if: ${{ always() && steps.scope.outputs.run == 'true' }}
@@ -1735,6 +1757,7 @@ jobs:
           path: |
             android/app/build/reports/androidTests/
             android/app/build/outputs/androidTest-results/
+            ${{ runner.temp }}/qa-e2e-login/
           if-no-files-found: warn
           retention-days: 7
 

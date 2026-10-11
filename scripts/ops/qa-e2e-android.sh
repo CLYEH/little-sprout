@@ -1,6 +1,6 @@
 #!/bin/bash
 # QA 端到端情境驅動（Android 版，LS-478；iOS 對應物：qa-e2e.sh）：不依賴 mobile-mcp，用 androidTest 的
-# `com.clyeh.sproutday.qa.QaSmokeTest`（內含 QaDriver，UiAutomator）對本機 Supabase 容器實跑情境，
+# `com.clyeh.sproutday.qa.QaSmokeTest`（內含 QaDriver：App 內畫面用 Compose 語意節點、系統層用 UiAutomator）對本機 Supabase 容器實跑情境，
 # 截圖與 logcat 落地成驗收證據。
 #
 # 用法：qa-e2e-android.sh <login|publish|browse> [--ticket LS-<n>]
@@ -168,6 +168,7 @@ echo "→ qa-e2e-android：${detect_out}（$([ "$booted_by_me" -eq 1 ] && echo '
 to_device_url() { printf '%s' "$1" | sed -e 's#//127\.0\.0\.1#//10.0.2.2#' -e 's#//localhost#//10.0.2.2#'; }
 dev_api=$(to_device_url "$api_url"); dev_mailpit=$(to_device_url "$mailpit")
 test_pkg=com.clyeh.sproutday.test
+app_pkg=com.clyeh.sproutday
 runner=androidx.test.runner.AndroidJUnitRunner
 
 run_on_device() {   # 在 emulator-lock 內執行（子 bash：變數 export、函式 export -f）
@@ -175,7 +176,7 @@ run_on_device() {   # 在 emulator-lock 內執行（子 bash：變數 export、�
   "$adb" -s "$serial" install -r -t "$app_apk" >> "$out/instrument.log" 2>&1 \
     && "$adb" -s "$serial" install -r -t "$test_apk" >> "$out/instrument.log" 2>&1 \
     || { echo "✗ qa-e2e-android：adb install 失敗（見 ${out}/instrument.log）" >&2; return 2; }
-  "$adb" -s "$serial" shell pm clear com.clyeh.sproutday >> "$out/instrument.log" 2>&1 || true   # 每情境從乾淨狀態開始（同 iOS 的 keychain reset）
+  "$adb" -s "$serial" shell pm clear "$app_pkg" >> "$out/instrument.log" 2>&1 || true   # 每情境從乾淨狀態開始（同 iOS 的 keychain reset）
   "$adb" -s "$serial" logcat -c >/dev/null 2>&1 || true
   "$adb" -s "$serial" shell am instrument -w \
     -e LS_QA_SCENARIO "$scenario" -e LS_QA_API_URL "$dev_api" -e LS_QA_ANON_KEY "$anon_key" \
@@ -191,13 +192,13 @@ run_on_device() {   # 在 emulator-lock 內執行（子 bash：變數 export、�
   fi
   # 成功失敗都收：最後一張 screencap（失敗時就是失敗當下的畫面）、QaDriver 的逐步截圖、logcat
   "$adb" -s "$serial" exec-out screencap -p > "$out/screens/${scenario}-99-final-screencap.png" 2>/dev/null || echo "⚠ qa-e2e-android：screencap 失敗" >&2
-  "$adb" -s "$serial" pull "/sdcard/Android/data/${test_pkg}/files/qa-e2e/${scenario}/." "$out/screens/" >> "$out/instrument.log" 2>&1 \
+  "$adb" -s "$serial" pull "/sdcard/Android/data/${app_pkg}/files/qa-e2e/${scenario}/." "$out/screens/" >> "$out/instrument.log" 2>&1 \
     || echo "⚠ qa-e2e-android：adb pull 逐步截圖失敗（裝置端沒有 qa-e2e/${scenario}？）" >&2
   [ -f "$out/screens/config.txt" ] && mv "$out/screens/config.txt" "$out/config.txt"
   "$adb" -s "$serial" logcat -d -v time > "$out/logcat.log" 2>&1 || true
   return "$rc"
 }
-export adb serial out scenario app_apk test_apk dev_api anon_key dev_mailpit test_pkg runner
+export adb serial out scenario app_apk test_apk dev_api anon_key dev_mailpit test_pkg app_pkg runner
 export -f run_on_device
 
 echo "→ qa-e2e-android：${scenario} @ ${serial} → ${out}"
