@@ -1934,6 +1934,103 @@ else
   expect_not_has "$out20e" '待辦池出現 P3（3 則）' '⑳e mutant（拿掉建立日過濾）：封存前的舊 P3 被算進去、不再是 3 則——證明 ⑳a 的「3」守住舊池不誤報'
 fi
 
+# ---- ㉑（LS-472）lane:android（上限 2）：lane 空時 Backlog 候補被補位選中；lane 表印「上限2」。
+#      夾具重用 ⑯ 的假 repo／cycle／curl stub，只換 issues（一張 lane:android Backlog、cycle 5、票文完整）----
+fx_and="$work/fixtures_android"
+mkdir -p "$fx_and"
+cp "$fx_ready/cycles.json" "$fx_ready/documents.json" "$fx_ready/cycle_issues.json" "$fx_and/"
+cat > "$fx_and/issues_page1.json" <<'EOF'
+{"data":{"issues":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+  {"identifier":"LS-9201","title":"Android：骨架","description":"## 驗收\n過","priority":2,"createdAt":"2026-01-01T00:00:00.000Z",
+   "state":{"name":"Backlog","type":"backlog"},"labels":{"nodes":[{"name":"lane:android"}]},
+   "cycle":{"id":"cyc-5","number":5},"project":{"name":"Phase 1 test"},"projectMilestone":{"name":"M1"},"parent":null,
+   "inverseRelations":{"nodes":[]}}
+]}}}
+EOF
+mkdir -p "$work/bin_android"
+sed "s#^fx=.*#fx=\"${fx_and}\"#" "$work/bin_ready/curl" > "$work/bin_android/curl"
+chmod +x "$work/bin_android/curl"
+
+out21="$(PATH="$work/bin_android:$PATH" bash "$plsh" --repo "$repo_ready" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ㉑ LS-472 lane:android fixture exit 0"; else echo "✗ ㉑ 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out21" | sed 's/^/    /' >&2; fail=1; fi
+android_check() {
+  local name=$1 json=$2 expr=$3
+  if AJ="$json" python3 -c 'import json,os,sys; d=json.loads(os.environ["AJ"]); a=d["lanes"]["lane:android"]; sys.exit(0 if ('"$expr"') else 1)' 2>"$work/android-err"; then
+    echo "✓ ${name}"
+  else
+    echo "✗ ${name}" >&2; cat "$work/android-err" >&2; printf '%s\n' "$json" | sed 's/^/    /' >&2; fail=1
+  fi
+}
+android_check '㉑a lane:android 上限＝2、在飛 0' "$out21" 'a["limit"] == 2 and a["wip"] == 0'
+android_check '㉑b 補位選中 LS-9201 並產生 save_issue state=Ready cycle=5' "$out21" 'a["chosen"] == "LS-9201" and any("save_issue LS-9201 state=Ready cycle=5" in x for x in a["actions"])'
+out21h="$(PATH="$work/bin_android:$PATH" bash "$plsh" --repo "$repo_ready" 2>&1)"
+expect_has "$out21h" 'lane:android' '㉑c human：lane 表有 lane:android 行'
+expect_has "$out21h" 'lane:android   上限2' '㉑c human：lane 表 lane:android 行印「lane:android   上限2」（整行含 lane 名；lane:ui 行也印上限2，不能只比「上限2」）'
+# ㉑d mutation：LANE_LIMITS 拿掉 lane:android → lanes 不再含這個 lane（證明 ㉑a／㉑b 的綠來自常數那一項）
+mutdir21="$work/mut21"
+rm -rf "$mutdir21"; mkdir -p "$mutdir21"
+cp -R "${root}/scripts" "$mutdir21/scripts"
+sed 's/, "lane:android": 2}/}/' "${root}/scripts/ops/patrol_linear.py" > "$mutdir21/scripts/ops/patrol_linear.py"
+if cmp -s "${root}/scripts/ops/patrol_linear.py" "$mutdir21/scripts/ops/patrol_linear.py"; then
+  echo "✗ ㉑d mutant 沒被正確合成" >&2; fail=1
+else
+  out21m="$(PATH="$work/bin_android:$PATH" bash "$mutdir21/scripts/ops/patrol-linear.sh" --repo "$repo_ready" --json 2>&1)"
+  if AJ="$out21m" python3 -c 'import json,os,sys; d=json.loads(os.environ["AJ"]); sys.exit(0 if "lane:android" not in d["lanes"] else 1)'; then
+    echo "✓ ㉑d mutant（LANE_LIMITS 拿掉 lane:android）：lanes 不再含 lane:android——證明 ㉑a／㉑b 的綠來自常數"
+  else
+    echo "✗ ㉑d mutant 未如預期翻轉" >&2; fail=1
+  fi
+fi
+# ㉑c mutation（merge-review R1 m1）：android 上限 2→1 → 「lane:android   上限2」消失（lane:ui 行的「上限2」不能代答）
+mutdir21c="$work/mut21c"
+rm -rf "$mutdir21c"; mkdir -p "$mutdir21c"
+cp -R "${root}/scripts" "$mutdir21c/scripts"
+sed 's/"lane:android": 2}/"lane:android": 1}/' "${root}/scripts/ops/patrol_linear.py" > "$mutdir21c/scripts/ops/patrol_linear.py"
+if cmp -s "${root}/scripts/ops/patrol_linear.py" "$mutdir21c/scripts/ops/patrol_linear.py"; then
+  echo "✗ ㉑c mutant 沒被正確合成" >&2; fail=1
+else
+  out21cm="$(PATH="$work/bin_android:$PATH" bash "$mutdir21c/scripts/ops/patrol-linear.sh" --repo "$repo_ready" 2>&1)"
+  expect_not_has "$out21cm" 'lane:android   上限2' '㉑c mutant（android 上限 2→1）：不再有「lane:android   上限2」——證明 ㉑c 釘得住 android 那一行'
+fi
+
+# ---- ㉒（LS-472，merge-review R1 M1）lane:android 空著時開票來源＝「無機械候選」，不得落進 design／ui 的 Design gate 來源。
+#      夾具重用 ⑩（$fx_ot／$repo_ot／bin_ot）：其中 LS-970／LS-974 是 lane:ui 的 Design gate Story、且沒有任何 lane:android 票 ----
+out22="$(PATH="$work/bin_ot:$PATH" bash "$plsh" --repo "$repo_ot" --json 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ]; then echo "✓ ㉒ lane:android 空 fixture exit 0"; else echo "✗ ㉒ 應 exit 0（實得 ${rc}）" >&2; printf '%s\n' "$out22" | sed 's/^/    /' >&2; fail=1; fi
+check22() {
+  local name=$1 json=$2 expr=$3
+  if AJ="$json" python3 -c 'import json,os,sys; d=json.loads(os.environ["AJ"]); a=d["lanes"]["lane:android"]; ds=d["lanes"]["lane:design"]; sys.exit(0 if ('"$expr"') else 1)' 2>"$work/check22-err"; then
+    echo "✓ ${name}"
+  else
+    echo "✗ ${name}" >&2; cat "$work/check22-err" >&2; printf '%s\n' "$json" | sed 's/^/    /' >&2; fail=1
+  fi
+}
+check22 '㉒a android 空 → open_ticket.sources 為空（不列 iOS Design gate Story）' "$out22" 'a["open_ticket"] is not None and a["open_ticket"]["sources"] == []'
+check22 '㉒b android 開票動作行含「無機械候選」且不含「先開 lane:design」' "$out22" 'any("開票：lane:android" in x and "無機械候選" in x and "先開 lane:design" not in x and "LS-970" not in x for x in d["actions"])'
+check22 '㉒c 對照：lane:ui 的來源照樣列出 Design gate Story LS-970（分流沒把 design／ui 一起關掉）' "$out22" 'any(s["id"] == "LS-970" for s in d["lanes"]["lane:ui"]["open_ticket"]["sources"])'
+# ㉒d mutation：分流條件改回「一律往下走 design_gate_sources」（舊行為）→ android 列出 Design gate Story，㉒a／㉒b 轉紅
+mutdir22="$work/mut22"
+rm -rf "$mutdir22"; mkdir -p "$mutdir22"
+cp -R "${root}/scripts" "$mutdir22/scripts"
+sed 's/^        if lane not in ("lane:backend", "lane:design", "lane:ui"):$/        if False:  # LS-472 mutation test (android routing disabled)/' \
+  "${root}/scripts/ops/patrol_linear.py" > "$mutdir22/scripts/ops/patrol_linear.py"
+if ! grep -q 'LS-472 mutation test (android routing disabled)' "$mutdir22/scripts/ops/patrol_linear.py"; then
+  echo "✗ ㉒d mutant 沒被正確合成" >&2; fail=1
+else
+  out22m="$(PATH="$work/bin_ot:$PATH" bash "$mutdir22/scripts/ops/patrol-linear.sh" --repo "$repo_ot" --json 2>&1)"
+  if AJ="$out22m" python3 -c 'import json,os,sys; d=json.loads(os.environ["AJ"]); a=d["lanes"]["lane:android"]["open_ticket"]; sys.exit(0 if (a is not None and a["sources"] != []) else 1)'; then
+    echo "✓ ㉒d mutant（分流改回 else）：android 又列出 Design gate 來源——證明 ㉒a／㉒b 的綠來自這段分流"
+  else
+    echo "✗ ㉒d mutant 未如預期翻轉" >&2; fail=1
+  fi
+fi
+
+# ---- ㉓（LS-472，merge-review R1 m2）--inflight 白名單只留 python 端 LANE_LIMITS 一份：lane:android 不 exit 2、未知 lane 仍 exit 2 ----
+out23="$(PATH="$work/bin_inflight:$PATH" bash "$plsh" --inflight lane:android --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] && [ -z "$out23" ]; then echo "✓ ㉓a --inflight lane:android → exit 0、無在飛票不印"; else echo "✗ ㉓a --inflight lane:android 應 exit 0 且無輸出（實得 rc=${rc}、out=${out23}）" >&2; fail=1; fi
+out23b="$(PATH="$work/bin_inflight:$PATH" bash "$plsh" --inflight lane:bogus --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 2 ] && printf '%s' "$out23b" | grep -qF -- '--inflight 須為 lane 名'; then echo "✓ ㉓b --inflight lane:bogus → exit 2（python 端 LANE_LIMITS 驗）"; else echo "✗ ㉓b --inflight lane:bogus 應 exit 2（實得 rc=${rc}、out=${out23b}）" >&2; fail=1; fi
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2
   exit 1

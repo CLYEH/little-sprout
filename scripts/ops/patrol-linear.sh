@@ -48,7 +48,9 @@ while [ $# -gt 0 ]; do
       case "$2" in *[!0-9]*|'') echo "✗ patrol-linear：--lane 須為單一票號數字（得到「$2」）" >&2; exit 2 ;; esac
       MODE=lane; LANE_NUM=$2; shift ;;
     --inflight)
-      case "${2:-}" in lane:harness|lane:backend|lane:design|lane:ui) ;; *) echo "✗ patrol-linear：--inflight 須為 lane 名（得到「${2:-}」）" >&2; exit 2 ;; esac
+      # LS-472（merge-review R1 m2）：lane 名白名單只留 patrol_linear.py 的 LANE_LIMITS 一份（單一來源，不在這裡再抄一份）——
+      # bash 只擋缺值，不認得的 lane 由 python 端 exit 2。
+      [ -n "${2:-}" ] || { echo "✗ patrol-linear：--inflight 缺值" >&2; exit 2; }
       MODE=inflight; INFLIGHT_LANE=$2; shift ;;
     --repo)
       [ -n "${2:-}" ] || { echo "✗ patrol-linear：--repo 缺值" >&2; exit 2; }

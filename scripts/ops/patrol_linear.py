@@ -45,7 +45,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  # pen-open.sh 與本檔
 
 # docs/COLLABORATION.md §5-b：同 lane 狀態 In Progress + In Review 的票數上限。lane:product 不派工、
 # 不在這裡列（永遠跳過）。改了上限要同步這裡與 §5-b 表格，兩邊沒有機械對帳（巡檢承載，同既有模式）。
-LANE_LIMITS = {"lane:harness": 1, "lane:backend": 3, "lane:design": 1, "lane:ui": 2}  # lane:ui：LS-46＋LS-67（2026-08-31 核可）；上限＝已核可設計稿畫面群數（§5-b）
+LANE_LIMITS = {"lane:harness": 1, "lane:backend": 3, "lane:design": 1, "lane:ui": 2, "lane:android": 2}  # lane:ui：LS-46＋LS-67（2026-08-31 核可）；上限＝已核可設計稿畫面群數（§5-b）。lane:android：使用者 2026-10-11 裁：Android（LS-472）；與 lane:ui 同上限
 WIP_STATES = ("In Progress", "In Review")
 BACKLOG_STATES = ("Backlog", "Spec")
 # cycle 對帳 (a) 的「active」定義抄自 §4-b 巡檢 cron 模板本文（狀態名稱，不是 state.type）
@@ -1094,6 +1094,10 @@ def build_report(token, root, team_key, team_id, sim_lines):
                 ordered = [(p, landed[p]) for p in prefixes if p in landed]
                 notes.append(format_landed_note(ordered))
             return sources, notes
+        # LS-472（merge-review R1 M1）：design／ui／backend 各有機械來源；其他 lane（目前只有 lane:android）沒有——
+        # 回空清單、印「無機械候選」，不能掉進下面 design_gate_sources（那是 iOS 畫面群 Story，會誤導 android 開票）。
+        if lane not in ("lane:backend", "lane:design", "lane:ui"):
+            return [], notes
         alls, err = all_issues()
         if err:
             notes.append(err)
