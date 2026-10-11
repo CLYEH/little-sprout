@@ -210,7 +210,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／report-cite-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／ui-test-shards／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／prod-push-guard／overflow-scan／pen-snapshot-dump／pen-bounds-probe／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／uitest-wait-check／food-sticker-crop／food-sticker-size-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／report-cite-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／android-tap-target-registry-check／ui-test-trigger／ui-test-shards／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／prod-push-guard／overflow-scan／pen-snapshot-dump／pen-bounds-probe／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／uitest-wait-check／food-sticker-crop／food-sticker-size-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -254,6 +254,8 @@ jobs:
           bash scripts/gates/stale-xcodebuild-check.test.sh || rc=1
           bash scripts/gates/tap-target-check.test.sh || rc=1
           bash scripts/gates/tap-target-registry-check.test.sh || rc=1
+          # LS-478：Android 48dp 登記制對帳（androidTest 的 TapTargetGateScreens／android/tap-target-exemptions.txt 對 *Screen；夾具＋對真 repo 的 mutation）
+          bash scripts/gates/android-tap-target-registry-check.test.sh || rc=1
           bash scripts/gates/ui-test-trigger.test.sh || rc=1
           # LS-385：ci-ui 分片清單（真 repo 每個 XCTestCase 類別恰好一片、略過清單＝全集減本片、LPT 分配＋mutation）
           bash scripts/gates/ui-test-shards.test.sh || rc=1
@@ -512,6 +514,8 @@ jobs:
           # reviewer 與實作者各在 `ubuntu:24.04`（只裝 git＋curl）實跑全綠（LS-264 當時 58 組；LS-267 加
           # `LS_QA_PSQL_BIN` seam 後 ⑦f 不再 SKIP、另加 ⑦g，現為 63 組——這行數字以實跑輸出為準）。
           bash scripts/ops/qa-e2e.test.sh || rc=1
+          # LS-478：qa-e2e-android.sh 自測（PATH shim＋LS_*_SH seam；鎖順序先 supabase 後 AVD、-s emu kill、TERM 釋放、am instrument 看輸出判定）
+          bash scripts/ops/qa-e2e-android.test.sh || rc=1
           # LS-342：food_catalog 過敏原啟發式規則自測（純 CSV／Python，不需要 DB；夾具正負樣本＋
           # 兩個 mutation：白名單拿掉一條轉紅、SQL 生成器同步失去排除子句）
           bash scripts/ops/food-catalog-allergen-check.test.sh || rc=1
