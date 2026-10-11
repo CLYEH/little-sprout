@@ -14,6 +14,7 @@ model: haiku
 3. **SQL 殘留**：無人引用的 function／policy／index／欄位。注意：「表與 RLS 第一天就建、UI 晚點做」是 docs/PLAN.md §5 的明定策略（如 content_reports、blocked_users），這類不是死碼，不要誤報。
 4. **鷹架殘留**：註解掉的程式碼塊、已完成未刪的 TODO、debug print、測試用假資料、暫時旗標、紅綠驗證殘留。
 5. **設定殘留**：ci／gate script／config 中已無作用的條目（例如指向已改名檔案的路徑）。
+6. **Android（Kotlin／Gradle，`android/` 下本 feature 引入的部分，LS-475）**：未被引用的 Kotlin 符號（`private`／`internal` 的 fun、class、property、`@Composable`、Room `@Dao` 方法、WorkManager `Worker` 類別）、未被引用的資源（`res/` 的 string／drawable／color、`libs.versions.toml` 的 version／library 條目與 `build.gradle.kts` 的依賴）。有 Android SDK 時以工具為準：`cd android && ./gradlew lint` 看 `UnusedResources`（報告在 `app/build/reports/lint-results-debug.html`），`./gradlew detekt` 看 `UnusedPrivateMember`／`UnusedPrivateProperty`／`UnusedImports`；**本機沒有 SDK 時**（`command -v java` 或 `android/local.properties` 的 `sdk.dir` 不在）不能跑 Gradle，改以 `git grep -n '<符號名>' -- android/` 反查宣告與引用點（符號名、檔名、`R.string.<name>`／`R.drawable.<name>`、`libs.<alias>`），並在報告「搜尋方法與盲區」明寫「Gradle lint／detekt 未跑，結論為 PLAUSIBLE」。注意 Android 的隱式引用不可誤報：`AndroidManifest.xml` 宣告的 Activity／Service／Receiver／`<meta-data>`、`@Composable` 的 `@Preview`、Hilt／Room／WorkManager 的註解處理或反射（`@Entity`、`@Dao`、`@HiltWorker`、`ListenableWorker` 由 `WorkRequest` 以類別名建立）、`kotlinx.serialization` 的 `@Serializable`、資源由 XML 互相引用或字串拼接（`getIdentifier`）。
 
 ## 規則
 
