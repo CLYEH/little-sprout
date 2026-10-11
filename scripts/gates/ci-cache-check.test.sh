@@ -154,6 +154,22 @@ run "$checker" --event pull_request --base main
 expect_has "$outs" "mode=full" "不可略過：scripts/ 下的 .swift 不略過（swiftlint --strict 範圍）" || fail=1
 expect_has "$out" "不可略過檔 scripts/ops/review-demo-genvideo.swift" "不可略過：點名 .swift 檔" || fail=1
 
+# LS-477：android/** 與三個釘住檔視同 harness（macOS job 不讀）→ Android-only PR 略過 macOS；混 iOS 路徑則不略過
+pr_case android android/app/src/main/kotlin/A.kt android/gradle/libs.versions.toml .android-api .jdk-version .gradle-version
+run "$checker" --event pull_request --base main
+expect_has "$outs" "mode=harness-skip" "Android-only（android/** ＋三個釘住檔）：mode=harness-skip" || fail=1
+expect_has "$outs" "skip_macos=true" "Android-only：skip_macos=true" || fail=1
+expect_has "$outs" "skip_db=false" "Android-only：db 照跑" || fail=1
+pr_case android-mixed android/app/src/main/kotlin/A.kt LittleSprout/Views/B.swift
+run "$checker" --event pull_request --base main
+expect_has "$outs" "mode=full" "Android＋iOS 混改：不略過" || fail=1
+pr_case android-mixed2 android/app/src/main/kotlin/A.kt project.yml
+run "$checker" --event pull_request --base main
+expect_has "$out" "非 harness-only（含 project.yml）" "Android＋project.yml 混改：點名非 harness 檔" || fail=1
+pr_case android-lookalike androidx/foo.txt
+run "$checker" --event pull_request --base main
+expect_has "$outs" "mode=full" "鄰近路徑 androidx/ 不算 android/（前綴比對含斜線）" || fail=1
+
 # 非 harness、非 UI（supabase/）→ 全跑但不登記
 pr_case db supabase/migrations/1.sql
 run "$checker" --event pull_request --base main
@@ -193,6 +209,13 @@ expect_has "$outs" "mode=harness-skip" "M3 拿掉 docs/legal：legal 夾具翻�
 git -C "$repo" checkout -q pr-swift
 run "$mut" --event pull_request --base main
 expect_has "$outs" "mode=harness-skip" "M3 拿掉 .swift：swift 夾具翻成略過（證明夾具釘住該規則）" || fail=1
+
+# M4（LS-477）：harness 清單拿掉 android/ 與三個釘住檔 → Android-only 夾具必翻成 mode=full（證明夾具釘住該規則）
+sed '/# CI-CACHE-HARNESS$/s/|android\/|\\\.jdk-version\$|\\\.android-api\$|\\\.gradle-version\$)/)/' "$checker" > "$mut"
+if grep -q 'android/' <(grep 'CI-CACHE-HARNESS$' "$mut"); then fail "M4 mutant 沒建成（CI-CACHE-HARNESS 行形狀變了）"; fi
+git -C "$repo" checkout -q pr-android
+run "$mut" --event pull_request --base main
+expect_has "$outs" "mode=full" "M4 拿掉 android/ 與釘住檔：Android-only 夾具翻成 mode=full（證明夾具釘住該規則）" || fail=1
 
 if [ "$fail" -ne 0 ]; then
   echo "✗ ci-cache-check.test.sh：有失敗" >&2

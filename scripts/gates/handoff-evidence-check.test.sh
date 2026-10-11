@@ -131,6 +131,15 @@ printf '#!/bin/bash\necho run\n' > "$R/supabase/tests/run.sh"
 # COMMAND_RE 皆不驗這個路徑真的存在，見檔頭 (b)／(c) 說明；建成真實存在只是同時示範良好寫法）。
 mkdir -p "$R/scripts/design"
 printf '// fixture\n' > "$R/scripts/design/overflow-scan.test.js"
+# LS-477（Android 前置 A3）：Kotlin fixture——`fun testKotlinFixture`（fun 存在性）與 `KtBaseNameTests.kt`（檔名整字相等；
+# 檔內不宣告同名型別，只靠檔名）。放 android/ 下，同真實 repo 形狀。
+mkdir -p "$R/android/app/src/test/kotlin"
+cat > "$R/android/app/src/test/kotlin/FixtureKtTest.kt" <<'EOF'
+class FixtureKtTest {
+    @Test fun testKotlinFixture() {}
+}
+EOF
+printf '// 只有檔名\n' > "$R/android/app/src/test/kotlin/KtBaseNameTests.kt"
 
 git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false add -A
 git -C "$R" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q -m 'chore(harness): LS-211 fixture'
@@ -1575,6 +1584,114 @@ else
   echo "✗ ㉙c mutate：找不到插入點，負控本身無效" >&2
   fail=1
 fi
+
+# ==== ㉚ LS-477（Android 前置 A3，LS-474 審查 i6）：Kotlin／Gradle 證據白名單 ====
+#   (b) 路徑：`.kt`／`.kts`；(c) 命令：`shasum`／`curl`／`gradlew`；(a) 測試名存在性：Kotlin `fun`、`.kt` 檔名整字相等；
+#   Gradle 任務名（`:app:testDebugUnitTest`、`test<Variant>UnitTest`、`gradlew` 行上的獨立任務引數）不當測試名。
+expect 0 '㉚a 路徑證據 .kts（Gradle Kotlin DSL）' '' \
+'## 已驗證
+- 條件 1：對照 `android/app/build.gradle.kts` 的 compileSdk 讀 `.android-api`
+'
+expect 0 '㉚b 路徑證據 .kt:行號' '' \
+'## 已驗證
+- 條件 1：程式碼審查 `SupabaseClientFactory.kt:42`
+'
+expect 0 '㉚c Kotlin `fun testKotlinFixture` 存在 → 測試名存在性通過' '' \
+'## 已驗證
+- 條件 1：`testKotlinFixture` 綠
+'
+expect 1 '㉚d Kotlin 不存在的測試名 → 紅（fun 存在性驗證有效，不是一律放行）' '找不到' \
+'## 已驗證
+- 條件 1：`testKotlinGhost` 綠
+'
+expect 0 '㉚e 測試名以 .kt 檔名整字相等算存在（KtBaseNameTests.kt）' '' \
+'## 已驗證
+- 條件 1：`KtBaseNameTests` 全綠
+'
+expect 0 '㉚f 命令證據 shasum（校驗下載物）' '' \
+'## 已驗證
+- 條件 1：`shasum -a 256 gradle-wrapper.jar` 與官方公布值一致
+'
+expect 0 '㉚g 命令證據 curl（取官方 sha256）' '' \
+'## 已驗證
+- 條件 1：`curl -fsSL` 取官方公布值後比對
+'
+expect 0 '㉚h Gradle 專案路徑任務名 + gradlew：任務名不當測試名（不報「找不到」）' '' \
+'## 已驗證
+- 條件 1：`./gradlew :app:testDebugUnitTest :core-supabase:testDebugUnitTest` 綠
+'
+expect 0 '㉚i gradlew 行上的獨立任務引數（test testReleaseUnitTest）不當測試名' '' \
+'## 已驗證
+- 條件 1：`./gradlew test testReleaseUnitTest` 綠
+'
+expect 1 '㉚j 只寫 Gradle 任務名、沒有任何命令／路徑／真測試名 → 仍缺證據（任務名本身不算測試證據）' '缺『怎麼驗』證據' \
+'## 已驗證
+- 條件 1：`:app:testDebugUnitTest` 綠
+'
+expect 1 '㉚k gradlew 行上 --tests 指定的真測試名仍被驗證（前面是 . 不是任務引數）' '找不到' \
+'## 已驗證
+- 條件 1：`./gradlew :app:testDebugUnitTest --tests com.x.FooKtTest.testKotlinGhost2` 綠
+'
+expect 0 '㉚l --tests 指到存在的 Kotlin fun → 通過' '' \
+'## 已驗證
+- 條件 1：`./gradlew :app:testDebugUnitTest --tests com.x.FixtureKtTest.testKotlinFixture` 綠
+'
+
+# ㉚ mutation 一：拿掉 Gradle 任務名排除 → ㉚h 必翻紅（任務名被當成不存在的測試名）
+mut_gradle="$work/handoff_evidence_check.no-gradle-exclude.py"
+python3 - "$py" "$mut_gradle" <<'PY'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+old = "        if not is_gradle_task_name(text, m.start(), m.end()):\n            yield m"
+assert old in s, "anchor missing"
+open(sys.argv[2], "w", encoding="utf-8").write(s.replace(old, "        if True:\n            yield m", 1))
+PY
+printf '%s' '## 已驗證
+- 條件 1：`./gradlew :app:testDebugUnitTest :core-supabase:testDebugUnitTest` 綠
+' > "$work/gradle-task.md"
+out_gm="$(python3 "$mut_gradle" "$work/gradle-task.md" --repo "$R" 2>&1)"; rc_gm=$?
+if [ "$rc_gm" -eq 1 ] && has "$out_gm" '找不到'; then
+  echo "✓ ㉚ mutant（拿掉 Gradle 任務名排除）：㉚h 翻紅——證明任務名不被當測試名是這段排除造成的"
+else
+  echo "✗ ㉚ mutant 未如預期翻轉（實得 exit ${rc_gm}）" >&2; printf '%s\n' "$out_gm" | sed 's/^/    /' >&2; fail=1
+fi
+# ㉚ mutation 二：命令白名單拿掉 shasum／curl／gradlew → ㉚f／㉚g 必翻紅
+mut_cmd="$work/handoff_evidence_check.no-kt-cmd.py"
+python3 - "$py" "$mut_cmd" <<'PY'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+old = r"|\bshasum\b|\bcurl\b|\bgradlew\b"
+assert old in s, "anchor missing"
+open(sys.argv[2], "w", encoding="utf-8").write(s.replace(old, "", 1))
+PY
+printf '%s' '## 已驗證
+- 條件 1：`shasum -a 256 gradle-wrapper.jar` 與官方公布值一致
+' > "$work/shasum.md"
+out_cm="$(python3 "$mut_cmd" "$work/shasum.md" --repo "$R" 2>&1)"; rc_cm=$?
+if [ "$rc_cm" -eq 1 ] && has "$out_cm" '缺『怎麼驗』證據'; then
+  echo "✓ ㉚ mutant（命令白名單拿掉 shasum／curl／gradlew）：㉚f 翻紅——證明是這三個命令字在放行"
+else
+  echo "✗ ㉚ mutant 未如預期翻轉（實得 exit ${rc_cm}）" >&2; printf '%s\n' "$out_cm" | sed 's/^/    /' >&2; fail=1
+fi
+# ㉚ mutation 三：路徑白名單拿掉 .kt／.kts → ㉚a 必翻紅
+mut_kt="$work/handoff_evidence_check.no-kt-path.py"
+python3 - "$py" "$mut_kt" <<'PY'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+old = r"|\.kts?\b"
+assert old in s, "anchor missing"
+open(sys.argv[2], "w", encoding="utf-8").write(s.replace(old, "", 1))
+PY
+printf '%s' '## 已驗證
+- 條件 1：程式碼審查 `SupabaseClientFactory.kt:42`
+' > "$work/ktpath.md"
+out_km="$(python3 "$mut_kt" "$work/ktpath.md" --repo "$R" 2>&1)"; rc_km=$?
+if [ "$rc_km" -eq 1 ] && has "$out_km" '缺『怎麼驗』證據'; then
+  echo "✓ ㉚ mutant（路徑白名單拿掉 .kt／.kts）：㉚b 翻紅——證明是副檔名在放行"
+else
+  echo "✗ ㉚ mutant 未如預期翻轉（實得 exit ${rc_km}）" >&2; printf '%s\n' "$out_km" | sed 's/^/    /' >&2; fail=1
+fi
+
 
 if [ "$fail" -eq 0 ]; then
   n=$(grep -c '^✓' "$count_log")

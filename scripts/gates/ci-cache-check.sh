@@ -109,7 +109,10 @@ fi
 if [ "$event" = pull_request ]; then
   changed=$(git -c core.quotePath=false diff --name-only --no-renames "${base}...HEAD" 2>/dev/null) || {
     emit full false false false "" "::warning::CI 去重：git diff ${base}...HEAD 失敗，照全跑（不登記快取）"; }
-  harness='^(CLAUDE\.md$|docs/|\.claude/|scripts/|\.githooks/|\.github/|\.mcp\.json$)'   # CI-CACHE-HARNESS
+  # LS-477（LS-474 審查 i1）：Android 骨架（android/**）與三個釘住檔（.jdk-version／.android-api／.gradle-version）只被 ubuntu 的
+  # android-lint／android-unit job 讀（它們不吃 ci-dedup、有自己的路徑過濾），macOS job（lint／ci／ci-ui／ci-ipad）完全不讀——
+  # 不算 harness 的話 Android-only PR 會被判 mode=full 白跑整套 macOS，併入後的 push run 也命中不了 tree 快取。
+  harness='^(CLAUDE\.md$|docs/|\.claude/|scripts/|\.githooks/|\.github/|\.mcp\.json$|android/|\.jdk-version$|\.android-api$|\.gradle-version$)'   # CI-CACHE-HARNESS
   # 不可略過清單（macOS job 會讀到的 harness 路徑檔，與機制檔同一處維護；LS-350 R1 M1）：
   #   docs/legal/**  project.yml 打包進 app bundle，LittleSproutTests/LegalMarkdownDocumentTests 斷言其 version
   #   *.swift        任何路徑的 Swift 檔都在 lint job `swiftlint lint --strict` 範圍內（例：scripts/ops/review-demo-genvideo.swift）
