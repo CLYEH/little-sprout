@@ -11,11 +11,15 @@ import com.clyeh.sproutday.supabase.Album
 import com.clyeh.sproutday.supabase.AuthRepository
 import com.clyeh.sproutday.supabase.AuthState
 import com.clyeh.sproutday.supabase.BackendError
+import com.clyeh.sproutday.supabase.Child
+import com.clyeh.sproutday.supabase.ChildrenRepository
 import com.clyeh.sproutday.supabase.Family
 import com.clyeh.sproutday.supabase.FamilyMember
 import com.clyeh.sproutday.supabase.FamilyRepository
 import com.clyeh.sproutday.supabase.FeedPointer
 import com.clyeh.sproutday.supabase.FeedRepository
+import com.clyeh.sproutday.supabase.FoodRepository
+import com.clyeh.sproutday.supabase.GrowthRepository
 import com.clyeh.sproutday.supabase.MediaRepository
 import com.clyeh.sproutday.supabase.SocialRepository
 import com.clyeh.sproutday.supabase.contentTarget
@@ -32,6 +36,7 @@ import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.LocalTime
 
 /** 除錯面板的畫面狀態（不可變；只透過 `update {}` 改）。 */
@@ -43,6 +48,7 @@ data class DebugUiState(
     val album: Album? = null,
     val uploads: List<UploadItem> = emptyList(),
     val timeline: List<FeedPointer> = emptyList(),
+    val child: Child? = null,
     val log: List<String> = emptyList(),
 )
 
@@ -50,7 +56,7 @@ data class DebugUiState(
  * 除錯用登入面板的 ViewModel（LS-479）：不是產品畫面。auth 狀態來自 supabase-kt 的 sessionStatus（旋轉／行程重建後由 storage 還原），
  * 本地狀態用單一 [MutableStateFlow] + `update {}`；`busy` 以原子 `getAndUpdate` 擋重複送出（OTP 連點兩次只會走一次）。
  */
-@Suppress("TooManyFunctions") // 除錯面板：一個動作一個函式，不是產品邏輯
+@Suppress("TooManyFunctions", "LongParameterList") // 除錯面板：一個動作一個函式、一個 repository 一個參數，不是產品邏輯
 class DebugAuthViewModel(
     private val auth: AuthRepository,
     private val families: FamilyRepository,
@@ -58,6 +64,9 @@ class DebugAuthViewModel(
     private val uploadQueue: UploadQueue,
     private val feed: FeedRepository,
     private val social: SocialRepository,
+    private val children: ChildrenRepository,
+    private val growth: GrowthRepository,
+    private val food: FoodRepository,
 ) : ViewModel() {
     private val local = MutableStateFlow(DebugUiState())
 
@@ -100,7 +109,9 @@ class DebugAuthViewModel(
         run("登出") {
             uploadQueue.clear() // 先取消佇列：登出後的 session 不該再替上一個帳號上傳
             auth.signOut()
-            local.update { it.copy(family = null, members = emptyList(), album = null, timeline = emptyList()) }
+            local.update {
+                it.copy(family = null, members = emptyList(), album = null, timeline = emptyList(), child = null)
+            }
             "已登出"
         }
 
@@ -175,6 +186,32 @@ class DebugAuthViewModel(
             "已留言 ${id.take(ID_PREVIEW)}…（${first.kind.wire} ${first.refId.take(ID_PREVIEW)}…，共 $total 則）"
         }
 
+    /** 建一個除錯寶貝（`create_child`），再 `list_children` 讀回；之後「加一筆身高」用它。 */
+    fun createChild() =
+        run("建寶貝") {
+            val family = currentFamily() ?: return@run "還沒有家庭"
+            val id = children.createChild(family.id, "除錯寶貝 ${LocalTime.now().withNano(0)}", DEBUG_BIRTHDAY)
+            val child = children.listChildren(family.id).first { it.id == id }
+            local.update { it.copy(family = family, child = child) }
+            "${child.name}（${child.id.take(ID_PREVIEW)}…）"
+        }
+
+    /** 對除錯寶貝新增一筆今天的身高（`upsert_growth_record`），並讀回成長紀錄筆數（`list_growth_records`）。 */
+    fun addHeight() =
+        run("加身高") {
+            val child = local.value.child ?: return@run "先建寶貝"
+            val today = LocalDate.now().toString()
+            val record = growth.upsert(null, child.id, today, DEBUG_HEIGHT_CM, null, null, null)
+            "已記 ${record.heightCm}cm（${record.id.take(ID_PREVIEW)}…，共 ${growth.list(child.id).size} 筆）"
+        }
+
+    /** 飲食圖鑑目錄前 3 筆（`food_catalog`，依 sort_order）與目錄總數。 */
+    fun listFood() =
+        run("列飲食圖鑑") {
+            val catalog = food.catalog()
+            "${catalog.size} 種；前 $FOOD_PREVIEW：" + catalog.take(FOOD_PREVIEW).joinToString { "${it.nameZh}(${it.id})" }
+        }
+
     private suspend fun currentFamily(): Family? = local.value.family ?: families.fetchMyFamilies().firstOrNull()
 
     private fun run(
@@ -204,6 +241,9 @@ class DebugAuthViewModel(
         private const val LOG_LIMIT = 30
         private const val TIMELINE_PREVIEW = 5
         private const val ID_PREVIEW = 8
+        private const val FOOD_PREVIEW = 3
+        private const val DEBUG_BIRTHDAY = "2025-01-01"
+        private const val DEBUG_HEIGHT_CM = 70.5
 
         @Suppress("LongParameterList") // 除錯面板：一個 repository 一個參數，不是產品邏輯
         fun factory(
@@ -213,9 +253,14 @@ class DebugAuthViewModel(
             uploadQueue: UploadQueue,
             feed: FeedRepository,
             social: SocialRepository,
+            children: ChildrenRepository,
+            growth: GrowthRepository,
+            food: FoodRepository,
         ): ViewModelProvider.Factory =
             viewModelFactory {
-                initializer { DebugAuthViewModel(auth, families, media, uploadQueue, feed, social) }
+                initializer {
+                    DebugAuthViewModel(auth, families, media, uploadQueue, feed, social, children, growth, food)
+                }
             }
     }
 }
