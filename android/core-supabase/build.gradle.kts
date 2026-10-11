@@ -44,6 +44,7 @@ kotlin {
 
 dependencies {
     api(platform(libs.supabase.bom))
+    api(libs.supabase.auth)
     api(libs.supabase.postgrest)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.kotlinx.serialization.json)

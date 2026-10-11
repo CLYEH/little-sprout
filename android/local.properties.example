@@ -4,3 +4,6 @@
 sdk.dir=/Users/<you>/Library/Android/sdk
 SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_ANON_KEY=<anon-key>
+# Google 原生登入（Credential Manager）用的 OAuth Web client ID（Google Cloud → Credentials → Web application）。
+# 缺值時 Google 登入會明確報錯，Email OTP／Apple 不受影響。
+GOOGLE_WEB_CLIENT_ID=<web-client-id>.apps.googleusercontent.com
