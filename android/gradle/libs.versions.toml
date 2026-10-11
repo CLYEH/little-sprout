@@ -1,12 +1,14 @@
 # 版本於 2026-10 取自 Maven 中繼資料的最新「穩定」版；AGP 刻意停在 8.x 最新（9.x 的 DSL／內建 Kotlin 變動大，
 # 骨架票不吃新風險），Gradle 8.14.5 為 AGP 8.13 支援範圍。升級流程見 android/README.md。
-# compileSdk 釘 35（.android-api）：Compose BOM 2026.06.01（foundation 1.11.4，minCompileSdk 35）與 activity-compose 1.10.1
-# （minCompileSdk 35）是不需 compileSdk 36+ 的最新組合；BOM 2026.08+／activity 1.11+ 要 36 以上，隨 .android-api 一起升。
+# compileSdk／targetSdk 釘 36（.android-api）：supabase-kt 3.8.0 的傳遞依賴 androidx.browser 1.10.0 要 compileSdk 36 以上
+# （票文原寫 35，CI 實測 checkDebugAarMetadata 擋下）。Compose BOM 停在 2026.06.01（foundation 1.11.4）：2026.08+ 的
+# foundation 1.12 要 compileSdk 37，而 AGP 8.13 建議上限是 36。
+
 [versions]
 agp = "8.13.2"
 kotlin = "2.3.21"
 composeBom = "2026.06.01"
-activityCompose = "1.10.1"
+activityCompose = "1.12.4"
 supabaseBom = "3.8.0"
 ktor = "3.5.1"
 serialization = "1.10.0"
