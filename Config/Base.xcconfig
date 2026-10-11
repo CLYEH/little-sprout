@@ -60,4 +60,8 @@ CODE_SIGN_ENTITLEMENTS_NO = LittleSprout/LittleSprout.entitlements
 CODE_SIGN_ENTITLEMENTS_YES = LittleSprout/LittleSprout.Push.entitlements
 CODE_SIGN_ENTITLEMENTS = $(CODE_SIGN_ENTITLEMENTS_$(PUSH_ENTITLEMENT))
 
+// LS-466：版本號由 scripts/ops/release-version.sh 寫入 Version.xcconfig（gitignored）；檔案不存在
+// （CI 未跑腳本、新機器）時 #include? 靜默略過，退回 project.yml 的 fallback（0.0.0／1）。
+// 放在 Secrets.xcconfig 之前：同名 key 後定義者勝，本機 Secrets.xcconfig 想臨時覆寫版本號仍可行。
+#include? "Version.xcconfig"
 #include? "Secrets.xcconfig"
