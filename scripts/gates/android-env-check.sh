@@ -6,7 +6,7 @@
 # （fail-open 到 CI 的 android-lint／android-unit，LS-477 票文），由呼叫端印醒目 ⚠ 並在 handoff 註明。
 #
 # 檢查（單一來源＝repo 根釘住檔，與 CI／Gradle 同讀）：
-#   1. JDK：`$JAVA_HOME/bin/java` 優先、否則 PATH 的 `java`，`-version` 解析出的 major 必須等於 `.jdk-version`
+#   1. JDK：`$JAVA_HOME/bin/java` 優先、否則 PATH 的 `java`，`-version` 解析出 major；跑不出版本＝未安裝（exit 3），major ≠ `.jdk-version` 只印 ⚠ 照跑（LS-477 R2）
 #      （macOS 的 /usr/bin/java 是「找不到 Java Runtime」的 stub，-version 無版本字串＝視為未安裝）
 #   2. Android SDK：android_sdk_root（$ANDROID_HOME／$ANDROID_SDK_ROOT／android/local.properties 的 sdk.dir）
 #      下有 `platform-tools/`（含 adb）與 `platforms/android-<.android-api>/`
@@ -67,7 +67,9 @@ fi
 if [ -z "$jdk_major" ]; then
   add_problem "找不到可用的 JDK（JAVA_HOME／PATH 的 java 都跑不出版本字串）——需要 JDK ${jdk_pin}（brew install --cask temurin@${jdk_pin}）"
 elif [ "$jdk_major" != "$jdk_pin" ]; then
-  add_problem "JDK major ${jdk_major} ≠ .jdk-version 釘住的 ${jdk_pin}（${java_bin}）——CI 用 ${jdk_pin}，本機版本不同可能行為不一致"
+  # LS-477 R2（merge-review m2）：版本不符只警告、照跑（同 push-gate 1b 對 Xcode 主次版號不一致的做法）——JDK 21 通常也能跑
+  # Gradle，整段略過等於 Android-only 變更本機零驗證；真正的不一致交給 CI（用 .jdk-version）。「找不到 JDK」才算沒裝（exit 3）。
+  jdk_warn="⚠ android-env：JDK major ${jdk_major} ≠ .jdk-version 釘住的 ${jdk_pin}（${java_bin}）——CI 用 ${jdk_pin}，本機版本不同可能行為不一致；照跑，建議對齊（brew install --cask temurin@${jdk_pin}）"
 fi
 
 # ---- 2. Android SDK ----
@@ -90,5 +92,6 @@ if [ -n "$problems" ]; then
   printf '%s' "$problems"
   exit 3
 fi
+[ -z "${jdk_warn:-}" ] || echo "$jdk_warn"
 echo "✓ android-env：JDK ${jdk_major}（${java_bin}）、SDK ${sdk}（platform-tools、platforms/android-${api_pin}）齊；emulator：${emu_bin:-未安裝（unit test 不需要）}"
 exit 0

@@ -2,7 +2,7 @@
 # android-env-check.sh 的自測（LS-477）。CI rules job 跑。
 # 本機沒有真 JDK／Android SDK，所以「已安裝」路徑一律靠夾具：假 java（印指定版本字串）＋假 SDK 目錄結構；
 # PATH 只放最小工具集的 symlink（ubuntu runner 的 /usr/bin/java 會污染「未安裝」案例）。
-# 負控（mutation）：把 JDK major 比對拿掉 → 版本不符案例必須翻成通過（證明該案例釘住該判斷）。
+# 負控（mutation）：把 JDK major 比對拿掉 → 版本不符的 ⚠ 必須消失（證明該案例釘住該判斷）。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -63,11 +63,12 @@ fake_sdk "$work/sdk2" 36 1
 run JAVA_HOME="$work/jdk17" ANDROID_SDK_ROOT="$work/sdk2" -- --repo "$R" --require-emulator
 expect_exit 0 "$rc" "③b --require-emulator 有 emulator（ANDROID_SDK_ROOT 路徑）：exit 0"
 
-# ④ JDK 版本不符（21 ≠ 17）→ exit 3 點名版本
+# ④ JDK 版本不符（21 ≠ 17）→ 只印 ⚠ 照跑（exit 0，LS-477 R2 m2；同 push-gate 1b 對 Xcode 版本不符的做法）
 fake_java "$work/jdk21/bin" "21.0.2"
 run JAVA_HOME="$work/jdk21" ANDROID_HOME="$work/sdk" -- --repo "$R"
-expect_exit 3 "$rc" "④ JDK 21 ≠ 釘住 17：exit 3"
-expect_has "$out" "JDK major 21 ≠ .jdk-version 釘住的 17" "④ 點名版本差"
+expect_exit 0 "$rc" "④ JDK 21 ≠ 釘住 17：⚠ 照跑，exit 0"
+expect_has "$out" "⚠ android-env：JDK major 21 ≠ .jdk-version 釘住的 17" "④ 印版本差 ⚠"
+expect_has "$out" "✓ android-env：JDK 21" "④ 仍印齊備行（照跑）"
 
 # ⑤ 舊式版本字串 1.8 → major 8 ≠ 17
 fake_java "$work/jdk8/bin" "1.8.0_392"
@@ -115,7 +116,7 @@ expect_exit 2 "$rc" "⑫ 未知參數：exit 2"
 run -- --repo "$root"
 if [ "$rc" -eq 0 ] || [ "$rc" -eq 3 ]; then echo "✓ ⑬ 真 repo 釘住檔可解析（exit ${rc}）"; else echo "✗ ⑬ 真 repo 釘住檔解析失敗（exit ${rc}）：${out}" >&2; fail=1; fi
 
-# ---- mutation：拿掉 JDK major 比對 → ④ 必翻成通過 ----
+# ---- mutation：拿掉 JDK major 比對 → ④ 的版本差 ⚠ 必須消失 ----
 mut="$work/mut"; mkdir -p "$mut/lib"
 anchor='elif [ "$jdk_major" != "$jdk_pin" ]; then'
 if ! grep -qF "$anchor" "$checker"; then
@@ -124,8 +125,8 @@ else
   sed "s/\[ \"\$jdk_major\" != \"\$jdk_pin\" \]/false/" "$checker" > "$mut/android-env-check.sh"
   cp "${root}/scripts/gates/lib/android-tools.sh" "$mut/lib/android-tools.sh"
   out=$(env -i PATH="$minbin" HOME="$work" JAVA_HOME="$work/jdk21" ANDROID_HOME="$work/sdk" "$minbin/bash" "$mut/android-env-check.sh" --repo "$R" 2>&1); rc=$?
-  if [ "$rc" -eq 0 ]; then echo "✓ mutation：拿掉 JDK major 比對後 ④ 的 JDK 21 翻成通過（④ 確由該判斷造成）"
-  else echo "✗ mutation：拿掉 JDK major 比對後仍 exit ${rc}（④ 沒釘住該判斷）：${out}" >&2; fail=1; fi
+  if ! has "$out" "JDK major 21 ≠"; then echo "✓ mutation：拿掉 JDK major 比對後 ④ 的版本差 ⚠ 消失（④ 確由該判斷造成）"
+  else echo "✗ mutation：拿掉 JDK major 比對後仍印版本差 ⚠（④ 沒釘住該判斷）：${out}" >&2; fail=1; fi
 fi
 
 if [ "$fail" -eq 0 ] && [ "${selftest_helpers_fail:-0}" -eq 0 ]; then echo "✓ android-env-check 自測通過"; exit 0; fi
