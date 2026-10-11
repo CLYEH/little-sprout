@@ -91,7 +91,8 @@ if [ "$stop_mode" -eq 1 ]; then
 fi
 
 # ---- 2. AVD ----
-if ! "$avdmanager" list avd -c 2>/dev/null | tr -d '\r' | grep -qxF "$avd"; then
+avd_list=$("$avdmanager" list avd -c 2>/dev/null | tr -d '\r')
+if ! grep -qxF "$avd" <<<"$avd_list"; then
   abi=${DETECT_EMULATOR_ABI:-}
   if [ -z "$abi" ]; then case "$(uname -m)" in arm64|aarch64) abi=arm64-v8a ;; *) abi=x86_64 ;; esac; fi
   pkg="system-images;android-${pin};google_apis;${abi}"
@@ -117,7 +118,7 @@ else
     local used port="" p logf win_args
     used=$("$adb" devices 2>/dev/null | awk 'NR>1 && $1 ~ /^emulator-[0-9]+$/{sub(/^emulator-/,"",$1); print $1}')
     for p in $(seq 5554 2 5584); do
-      printf '%s\n' "$used" | grep -qx "$p" && continue
+      grep -qx "$p" <<<"$used" && continue
       port=$p; break
     done
     [ -n "$port" ] || { echo "✗ detect-emulator：5554–5584 的 port 都被占用（先關掉不用的 emulator）" >&2; return 1; }
@@ -129,7 +130,7 @@ else
     disown 2>/dev/null || true
     local t0 now
     t0=$(date +%s)
-    while ! "$adb" devices 2>/dev/null | awk 'NR>1{print $1}' | grep -qx "emulator-${port}"; do
+    while ! grep -qx "emulator-${port}" <<<"$("$adb" devices 2>/dev/null | awk 'NR>1{print $1}')"; do
       now=$(date +%s)
       if [ $((now - t0)) -ge "$register_timeout" ]; then
         echo "✗ detect-emulator：emulator-${port} ${register_timeout} 秒內沒出現在 adb devices。log 尾：" >&2

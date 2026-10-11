@@ -87,10 +87,12 @@ case "$diff_branch" in
       if ! printf '%s\n' "$diff_changed" | grep -qE '(^|/)LittleSprout/|(^|/)LittleSproutTests/|(^|/)LittleSproutUITests/|(^|/)project\.yml$|\.xcodeproj(/|$)|(^|/)Package\.resolved$|(^|/)\.swiftlint\.yml$|(^|/)Config/.*\.xcconfig$|(^|/)\.xcode-version$|(^|/)\.ios-runtime$'; then
         skip_swift_steps=1
       fi
-      if ! printf '%s\n' "$diff_changed" | grep -qE '^android/|^\.jdk-version$|^\.android-api$|^\.gradle-version$|^\.github/workflows/ci\.yml$'; then
+      # 本軸（LS-477）用 here-string 而非 `printf | grep -q`：pipefail 下 grep -q 早退會讓 printf 吃 SIGPIPE、整條管線判失敗
+      # （diff 檔數大時機率上升，LS-270 R2 B2 實測），條件會被誤判。上面 iOS 軸既有寫法不動。
+      if ! grep -qE '^android/|^\.jdk-version$|^\.android-api$|^\.gradle-version$|^\.github/workflows/ci\.yml$' <<<"$diff_changed"; then
         skip_android_steps=1
       fi
-      if printf '%s\n' "$diff_changed" | grep -qE '^supabase/|^docs/API\.md$'; then
+      if grep -qE '^supabase/|^docs/API\.md$' <<<"$diff_changed"; then
         seg_contract=1
       fi
       echo "→ push gate：變更段落：iOS $([ "$skip_swift_steps" = 1 ] && echo 跳過 || echo 執行)／Android $([ "$skip_android_steps" = 1 ] && echo 跳過 || echo 執行)／契約對帳 $([ "$seg_contract" = 1 ] && echo '執行（含 supabase／API.md：Swift 錯誤碼＋Kotlin 掃描器兩邊都對）' || echo '照常（無條件跑）')（LS-477）"
