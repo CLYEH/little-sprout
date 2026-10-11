@@ -127,7 +127,7 @@ final class ThumbnailCountLabelUITests: XCTestCase {
         app.launchEnvironment["LS_THUMBNAIL_COUNT_SCHEME"] = scheme
         for (key, value) in env { app.launchEnvironment[key] = value }
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
-        app.launch()
+        app.launchWithRetry()
         return app
     }
 

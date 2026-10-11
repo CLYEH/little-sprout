@@ -1286,6 +1286,19 @@ jobs:
           fi
           dest=$(bash scripts/gates/detect-simulator.sh)
           echo "simulator: ${dest}（pinned $(tr -d '[:space:]' < .ios-runtime 2>/dev/null || echo '?')）"
+          # LS-465（池 e3c7a7ed／9461c6b6／4c89ef28）：慢 runner 上第一支測試的 app 啟動常逾時（Timed out while launching／
+          # Failed to get launch progress，ci-ipad 三次、每次吃一輪 rerun）。xcodebuild 前先把模擬器 boot 到就緒並啟動一次
+          # 系統 app 預熱；失敗只印警告不擋（預熱是盡力而為，測試端另有 launchWithRetry 兜底）。
+          sim_udid_warm="$(printf '%s' "$dest" | sed -n 's/.*id=//p')"
+          if xcrun simctl boot "$sim_udid_warm" >/dev/null 2>&1; then echo "→ 預熱：已 boot $sim_udid_warm"; else echo "→ 預熱：$sim_udid_warm 已是 boot 狀態或 boot 回非 0（續行）"; fi
+          if xcrun simctl bootstatus "$sim_udid_warm" -b >/dev/null 2>&1 \
+            && xcrun simctl launch "$sim_udid_warm" com.apple.Preferences >/dev/null 2>&1; then
+            sleep 3
+            xcrun simctl terminate "$sim_udid_warm" com.apple.Preferences >/dev/null 2>&1 || true
+            echo "→ 預熱完成：$sim_udid_warm"
+          else
+            echo "::warning::模擬器預熱失敗（bootstatus／launch com.apple.Preferences），續跑測試（LS-465）"
+          fi
           # 分配表（每片都印同一張，決定性；分片不均看這張＋下方「印 test bundle 耗時」步驟）
           bash scripts/gates/ui-test-shards.sh --plan "$SHARD_TOTAL"
           bash scripts/gates/tap-target-check.sh "$(printf '%s' "$dest" | sed -n 's/.*id=//p')" LittleSprout --shard "${SHARD}/${SHARD_TOTAL}"
@@ -1415,6 +1428,19 @@ jobs:
           printf '%s\n' "$list"
           only_args=()
           while IFS= read -r t; do [ -n "$t" ] && only_args+=("-only-testing:${t}"); done <<< "$list"
+          # LS-465（池 e3c7a7ed／9461c6b6／4c89ef28）：慢 runner 上第一支測試的 app 啟動常逾時（Timed out while launching／
+          # Failed to get launch progress，ci-ipad 三次、每次吃一輪 rerun）。xcodebuild 前先把模擬器 boot 到就緒並啟動一次
+          # 系統 app 預熱；失敗只印警告不擋（預熱是盡力而為，測試端另有 launchWithRetry 兜底）。
+          sim_udid_warm="${ipad_udid}"
+          if xcrun simctl boot "$sim_udid_warm" >/dev/null 2>&1; then echo "→ 預熱：已 boot $sim_udid_warm"; else echo "→ 預熱：$sim_udid_warm 已是 boot 狀態或 boot 回非 0（續行）"; fi
+          if xcrun simctl bootstatus "$sim_udid_warm" -b >/dev/null 2>&1 \
+            && xcrun simctl launch "$sim_udid_warm" com.apple.Preferences >/dev/null 2>&1; then
+            sleep 3
+            xcrun simctl terminate "$sim_udid_warm" com.apple.Preferences >/dev/null 2>&1 || true
+            echo "→ 預熱完成：$sim_udid_warm"
+          else
+            echo "::warning::模擬器預熱失敗（bootstatus／launch com.apple.Preferences），續跑測試（LS-465）"
+          fi
           xcodebuild test \
             -scheme LittleSprout \
             -destination "platform=iOS Simulator,id=${ipad_udid}" \

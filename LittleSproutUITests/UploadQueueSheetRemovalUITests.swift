@@ -343,7 +343,7 @@ extension UploadQueueSheetRemovalUITests {
         app.launchEnvironment["LS_UPLOAD_QUEUE_ENTRY_FIXTURE"] = fixture
         app.launchEnvironment["LS_UPLOAD_QUEUE_ENTRY_SCHEME"] = scheme
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
-        app.launch()
+        app.launchWithRetry()
         return app
     }
 

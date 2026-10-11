@@ -138,6 +138,8 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: true
         PRODUCT_BUNDLE_IDENTIFIER: com.clyeh.sproutday.uitests
+        # LS-465：啟動逾時重試需要 @try/@catch（`Support/LSExceptionCatcher.m`），Swift 接不住 XCTest 丟的例外。
+        SWIFT_OBJC_BRIDGING_HEADER: LittleSproutUITests/Support/LittleSproutUITests-Bridging-Header.h
 
 schemes:
   # CI（.github/workflows/ci.yml）與 push gate 都寫死 -scheme LittleSprout，

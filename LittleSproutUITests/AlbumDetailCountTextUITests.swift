@@ -9,7 +9,7 @@ final class AlbumDetailCountTextUITests: XCTestCase {
     func testDetailCountText_usesSameBreakCharactersAsCardCaption() throws {
         let app = XCUIApplication()
         app.launchEnvironment["LS_TAP_TARGET_GATE_SCREEN"] = TapTargetGateScreenName.albumDetailPopulated.rawValue
-        app.launch()
+        app.launchWithRetry()
         // `AlbumDetailScreenshotAPIClient(photoCount: 12)`：張數 Text 是畫面上唯一含「張」的靜態文字。
         let count = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "張")).firstMatch
         XCTAssertTrue(count.waitForExistence(timeout: 10), "相簿詳情頁沒有含「張」的張數節點")

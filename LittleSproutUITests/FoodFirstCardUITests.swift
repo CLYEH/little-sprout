@@ -172,7 +172,7 @@ final class FoodFirstCardUITests: XCTestCase {
         app.launchEnvironment["LS_FOOD_FIRST_FIXTURE"] = fixture
         app.launchEnvironment["LS_FOOD_FIRST_SCHEME"] = scheme
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
-        app.launch()
+        app.launchWithRetry()
         XCTAssertTrue(app.buttons[Self.cardID].firstMatch.waitForExistence(timeout: 10), "食物卡沒渲染")
         return app
     }

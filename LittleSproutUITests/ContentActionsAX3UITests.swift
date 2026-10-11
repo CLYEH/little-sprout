@@ -25,7 +25,10 @@ final class ContentActionsAX3UITests: XCTestCase {
         let removeRow = app.buttons["移除這則內容"]
         let cancelButton = app.buttons["取消"]
         for element in [reportRow, blockRow, removeRow, cancelButton] {
-            XCTAssertTrue(element.waitForExistence(timeout: 10), "AX3 下所有列都應該存在於畫面樹")
+            // LS-465：CI 慢 runner 上 sheet 呈現＋AX3 版面可晚到 10 秒以上；慢 runner 加倍、本機維持 10 秒。
+            XCTAssertTrue(
+                element.waitForExistence(timeout: UITestTimeouts.standard * 2), "AX3 下所有列都應該存在於畫面樹"
+            )
         }
         scrollUntilAllHittable([reportRow, blockRow, removeRow, cancelButton], in: app)
 

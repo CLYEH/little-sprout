@@ -18,7 +18,8 @@ final class ContentActionsUITests: XCTestCase {
         moreButton.tap()
 
         XCTAssertTrue(
-            app.staticTexts["「今天在溜滑梯上玩得好開心。」"].waitForExistence(timeout: 5),
+            // LS-465：CI 慢 runner 上 sheet 呈現可晚到 5 秒以上（ci-ui-2 xcresult：tap 後 5 秒內未出現）。
+            app.staticTexts["「今天在溜滑梯上玩得好開心。」"].waitForExistence(timeout: UITestTimeouts.standard),
             "Head Title 應顯示日記本文摘要（見 DiaryDeleteConfirmationCopy.excerpt）"
         )
         XCTAssertTrue(app.buttons["檢舉這則內容"].exists)
