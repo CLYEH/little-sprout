@@ -1803,7 +1803,8 @@ g checkout -q -b base-android-43 origin/development
 mkdir -p "$R/android"
 cat > "$R/android/gradlew" <<'STUB'
 #!/bin/bash
-printf 'cwd=%s args=%s\n' "$(basename "$PWD")" "$*" >> "${ANDROID_GRADLE_LOG:?ANDROID_GRADLE_LOG 未設定}"
+printf 'cwd=%s args=%s serial=%s\n' "$(basename "$PWD")" "$*" "${ANDROID_SERIAL:-}" >> "${ANDROID_GRADLE_LOG:?ANDROID_GRADLE_LOG 未設定}"
+case "$*" in *connectedDebugAndroidTest*) exit "${STUB_CONNECTED_RC:-0}" ;; esac
 exit "${STUB_GRADLE_RC:-0}"
 STUB
 chmod +x "$R/android/gradlew"
@@ -1813,7 +1814,30 @@ cat > "$R/scripts/gates/android-env-check.sh" <<'STUB'
 echo "${STUB_ANDROID_ENV_MSG:-✓ android-env：假身（齊）}"
 exit "${STUB_ANDROID_ENV_RC:-0}"
 STUB
-g add android .jdk-version .android-api .gradle-version scripts/gates/android-env-check.sh
+# LS-478 R2 M1：Android 段新增三個外部腳本的假身（各自另有專屬自測）——48dp 登記對帳（預設綠）、detect-emulator（預設 exit 3＝本機沒
+# emulator，所以 ㊸a～㊸j 既有案例的行為不變）、emulator-lock（記參數後執行 `--` 之後的命令）。
+cat > "$R/scripts/gates/android-tap-target-registry-check.sh" <<'STUB'
+#!/bin/bash
+echo "${STUB_ANDROID_REGISTRY_MSG:-✓ android-tap-target-registry：假身}"
+exit "${STUB_ANDROID_REGISTRY_RC:-0}"
+STUB
+cat > "$R/scripts/gates/detect-emulator.sh" <<'STUB'
+#!/bin/bash
+if [ "${1:-}" = "--stop" ]; then echo "stop" >> "${DETECT_LOG:-/dev/null}"; exit 0; fi
+rc="${STUB_DETECT_RC:-3}"
+if [ "$rc" -ne 0 ]; then echo "⚠ 假身 detect-emulator：本機沒有可用 emulator" >&2; exit "$rc"; fi
+if [ "${STUB_DETECT_REUSE:-0}" = 1 ]; then echo "→ detect-emulator：選到 LS-477-Pixel8（emulator-5554，已在跑，重用）" >&2; else echo "→ detect-emulator：起機 LS-477-Pixel8" >&2; fi
+echo "emulator: LS-477-Pixel8 emulator-5554 API 36（pinned 36）"
+STUB
+cat > "$R/scripts/ops/emulator-lock.sh" <<'STUB'
+#!/bin/bash
+echo "emulator-lock $*" >> "${LOCK_LOG:-/dev/null}"
+while [ $# -gt 0 ] && [ "$1" != "--" ]; do shift; done
+shift
+exec "$@"
+STUB
+chmod +x "$R/scripts/gates/android-tap-target-registry-check.sh" "$R/scripts/gates/detect-emulator.sh" "$R/scripts/ops/emulator-lock.sh"
+g add android .jdk-version .android-api .gradle-version scripts/gates/android-env-check.sh scripts/gates/android-tap-target-registry-check.sh scripts/gates/detect-emulator.sh scripts/ops/emulator-lock.sh
 g commit -qm 'chore: LS-477 baseline android skeleton for segment tests'
 g update-ref refs/remotes/origin/development HEAD
 
@@ -1942,6 +1966,115 @@ if [ "$rc43j" -eq 0 ] && has "$out43j" 'iOS 跳過／Android 執行' && [ -s "$g
 else
   echo "✗ ㊸j 釘住檔變更應觸發 Android 段（exit ${rc43j}）" >&2; printf '%s\n' "$out43j" | sed 's/^/    /' >&2; fail=1
 fi
+
+# ============================================================
+# ㊹ LS-478 R2 M1：Android 段補 48dp 登記對帳（無條件）＋ connected test（有 emulator 才跑）
+#    現在在 feature/LS-477-pin（diff 只含釘住檔 → Android 軸跑）。假身見上方 baseline。
+#    mutation（本段末）：拿掉 ANDROID_SERIAL 傳遞／登記對帳判斷／自己 boot 的 emulator 收工關機 → 對應案例必須轉紅。
+# ============================================================
+glk="$work/gradle-log-44.txt"; dlk="$work/detect-log-44.txt"; llk="$work/lock-log-44.txt"
+reset44() { rm -rf "${cache_dir:?}"; : > "$glk"; : > "$dlk"; : > "$llk"; }
+
+# 44a 登記對帳紅（env 齊）→ push gate 紅、Gradle 沒被叫到
+reset44
+out44a=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_ANDROID_REGISTRY_RC=1 STUB_ANDROID_REGISTRY_MSG='✗ 假身：畫面 FooScreen 未登記'); rc44a=$?
+if [ "$rc44a" -ne 0 ] && has "$out44a" '48dp 登記對帳失敗' && [ ! -s "$glk" ]; then
+  echo "✓ ㊹a 48dp 登記對帳紅 → push gate 紅、Gradle 沒被叫到"
+else
+  echo "✗ ㊹a 登記對帳紅應擋下且不跑 Gradle（exit ${rc44a}、gradle log=$(cat "$glk")）" >&2; printf '%s\n' "$out44a" | sed 's/^/    /' >&2; fail=1
+fi
+# 44b 登記對帳無條件：env 不齊（無 SDK，exit 3）時仍然紅——純文字檢查不該被「本機沒 SDK」略過
+reset44
+out44b=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=3 STUB_ANDROID_REGISTRY_RC=1); rc44b=$?
+if [ "$rc44b" -ne 0 ] && has "$out44b" '48dp 登記對帳失敗'; then
+  echo "✓ ㊹b 本機無 SDK（android-env exit 3）時登記對帳照跑、紅照擋"
+else
+  echo "✗ ㊹b 無 SDK 時登記對帳仍應擋（exit ${rc44b}）" >&2; printf '%s\n' "$out44b" | sed 's/^/    /' >&2; fail=1
+fi
+# 44c 有 emulator（自己 boot）：connected 跑、ANDROID_SERIAL 釘死、包在 emulator-lock 內、跑完關自己那台、寫快取
+reset44
+out44c=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_DETECT_RC=0 DETECT_LOG="$dlk" LOCK_LOG="$llk" LS_PUSH_GATE_NO_CACHE=0); rc44c=$?
+if [ "$rc44c" -eq 0 ] && has "$(cat "$glk")" 'args=--no-daemon :app:connectedDebugAndroidTest serial=emulator-5554' \
+   && has "$(cat "$llk")" 'emulator-lock --serial emulator-5554 -- ./gradlew' && has "$(cat "$dlk")" 'stop' \
+   && ls "${cache_dir:?}"/*.android-connected >/dev/null 2>&1 && has "$out44c" '✓ push gate 通過'; then
+  echo "✓ ㊹c 有 emulator：connected 在 emulator-lock 內以 ANDROID_SERIAL=emulator-5554 跑、自己 boot 的收工 --stop、寫 .android-connected 快取"
+else
+  echo "✗ ㊹c 有 emulator 應跑 connected（exit ${rc44c}；gradle=$(cat "$glk")；lock=$(cat "$llk")；detect=$(cat "$dlk")）" >&2; printf '%s\n' "$out44c" | sed 's/^/    /' >&2; fail=1
+fi
+# 44d 重用既有 emulator：跑 connected、不 --stop
+reset44
+out44d=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_DETECT_RC=0 STUB_DETECT_REUSE=1 DETECT_LOG="$dlk" LOCK_LOG="$llk"); rc44d=$?
+if [ "$rc44d" -eq 0 ] && has "$(cat "$glk")" ':app:connectedDebugAndroidTest' && ! has "$(cat "$dlk")" 'stop'; then
+  echo "✓ ㊹d 重用既有 emulator：connected 照跑、收工不關（不是我 boot 的）"
+else
+  echo "✗ ㊹d 重用既有 emulator 不該 --stop（exit ${rc44d}、detect=$(cat "$dlk")）" >&2; printf '%s\n' "$out44d" | sed 's/^/    /' >&2; fail=1
+fi
+# 44e 沒 emulator（detect exit 3）：⚠⚠⚠ 略過、不擋、connected 沒被叫到
+reset44
+out44e=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_DETECT_RC=3); rc44e=$?
+if [ "$rc44e" -eq 0 ] && has "$out44e" '⚠⚠⚠ push gate：Android connected 略過：以 CI android-connected 為準' && ! has "$(cat "$glk")" 'connectedDebugAndroidTest' && has "$out44e" '✓ push gate 通過'; then
+  echo "✓ ㊹e 本機找不到 emulator：印 ⚠⚠⚠「以 CI android-connected 為準」、不擋 push、connected 沒被叫到"
+else
+  echo "✗ ㊹e 無 emulator 應略過不擋（exit ${rc44e}）" >&2; printf '%s\n' "$out44e" | sed 's/^/    /' >&2; fail=1
+fi
+# 44f connected 紅（48dp／測試失敗）→ push gate 紅、仍關自己 boot 的 emulator、不寫快取
+reset44
+out44f=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_DETECT_RC=0 STUB_CONNECTED_RC=1 DETECT_LOG="$dlk" LOCK_LOG="$llk" LS_PUSH_GATE_NO_CACHE=0); rc44f=$?
+if [ "$rc44f" -ne 0 ] && has "$out44f" 'Android connected（instrumented 測試／48dp gate）失敗' && has "$(cat "$dlk")" 'stop' \
+   && ! ls "${cache_dir:?}"/*.android-connected >/dev/null 2>&1 && ! has "$out44f" '✓ push gate 通過'; then
+  echo "✓ ㊹f connected 失敗 → push gate 紅、失敗也 --stop 自己 boot 的 emulator、不寫 .android-connected"
+else
+  echo "✗ ㊹f connected 失敗應擋下並關機（exit ${rc44f}；detect=$(cat "$dlk")）" >&2; printf '%s\n' "$out44f" | sed 's/^/    /' >&2; fail=1
+fi
+# 44g 快取：綠後同 tree 再跑 connected 不再叫；CACHE_ONLY 命中放行；無任何標記 → exit 4；只有略過標記時 CACHE_ONLY 放行
+reset44
+run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_DETECT_RC=0 DETECT_LOG="$dlk" LOCK_LOG="$llk" LS_PUSH_GATE_NO_CACHE=0 >/dev/null
+n44g1=$(grep -c connectedDebugAndroidTest "$glk" || true)
+out44g2=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_DETECT_RC=0 DETECT_LOG="$dlk" LOCK_LOG="$llk" LS_PUSH_GATE_NO_CACHE=0 LS_PUSH_GATE_CACHE_ONLY=1); rc44g2=$?
+n44g2=$(grep -c connectedDebugAndroidTest "$glk" || true)
+tree44=$(git -C "$R" rev-parse 'HEAD^{tree}')
+rm -f "${cache_dir:?}/${tree44}.android-connected"
+out44g3=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_DETECT_RC=0 DETECT_LOG="$dlk" LOCK_LOG="$llk" LS_PUSH_GATE_NO_CACHE=0 LS_PUSH_GATE_CACHE_ONLY=1); rc44g3=$?
+: > "${cache_dir:?}/${tree44}.android-connected-skip"
+out44g4=$(run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_DETECT_RC=0 LS_PUSH_GATE_NO_CACHE=0 LS_PUSH_GATE_CACHE_ONLY=1); rc44g4=$?
+if [ "$n44g1" -eq 1 ] && [ "$rc44g2" -eq 0 ] && [ "$n44g2" -eq 1 ] && has "$out44g2" 'Android connected（含 48dp gate）已於' \
+   && [ "$rc44g3" -eq 4 ] && has "$out44g3" 'Android connected 快取未命中' \
+   && [ "$rc44g4" -eq 0 ] && has "$out44g4" 'CACHE_ONLY 放行'; then
+  echo "✓ ㊹g 快取：綠後同 tree 不再起 connected／CACHE_ONLY 命中 exit 0；無任何標記 exit 4；只有略過標記 CACHE_ONLY 放行"
+else
+  echo "✗ ㊹g 快取行為不對（connected 次數 ${n44g1}/${n44g2}；rc ${rc44g2}/${rc44g3}/${rc44g4}）" >&2; printf '%s\n' "$out44g3" | sed 's/^/    /' >&2; fail=1
+fi
+
+# ㊹ mutation：三處各拿掉一次，對應案例必須轉紅（斷言訊息原文＝上面各案的 ✗ 行）
+mutate44() {   # $1=sed 表達式 $2=錨點（grep -F）→ 以 mutant 取代 R 的 push-gate.sh，呼叫者跑完要還原
+  local mut; mut=$(mktemp -d)
+  if ! grep -qF "$2" "$gate_src"; then echo "✗ ㊹ mutation 錨點不在 push-gate.sh：$2" >&2; fail=1; rm -rf "${mut:?}"; return 1; fi
+  sed "$1" "$gate_src" > "$mut/push-gate.sh"
+  if diff -q "$gate_src" "$mut/push-gate.sh" >/dev/null 2>&1; then echo "✗ ㊹ mutant 與原始檔相同（sed 未命中）：$2" >&2; fail=1; rm -rf "${mut:?}"; return 1; fi
+  cp "$mut/push-gate.sh" "$R/scripts/gates/push-gate.sh"; rm -rf "${mut:?}"
+}
+# m1：拿掉 ANDROID_SERIAL 傳遞 → connected 不再釘 serial（㊹c 的 serial=emulator-5554 斷言由這段造成）
+if mutate44 's/(cd "${root}\/android" \&\& ANDROID_SERIAL="$serial" bash/(cd "${root}\/android" \&\& bash/' 'ANDROID_SERIAL="$serial" bash'; then
+  reset44
+  run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_DETECT_RC=0 DETECT_LOG="$dlk" LOCK_LOG="$llk" >/dev/null; cp "$gate_src" "$R/scripts/gates/push-gate.sh"
+  if ! has "$(cat "$glk")" 'serial=emulator-5554'; then echo "✓ ㊹ mutant：拿掉 ANDROID_SERIAL 後，connected 沒有釘 serial（㊹c 的 serial=emulator-5554 斷言確由這段造成）"
+  else echo "✗ ㊹ mutant（拿掉 ANDROID_SERIAL）應讓 gradle 看不到 serial" >&2; fail=1; fi
+fi
+# m2：登記對帳的失敗判斷改成恆假 → ㊹a 轉成「Gradle 被叫到、push gate 沒紅」
+if mutate44 's/^  if ! bash "$(git rev-parse --show-toplevel)\/scripts\/gates\/android-tap-target-registry-check.sh"; then/  if false; then/' 'android-tap-target-registry-check.sh"; then'; then
+  reset44
+  run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_ANDROID_REGISTRY_RC=1 >/dev/null; rc44m2=$?; cp "$gate_src" "$R/scripts/gates/push-gate.sh"
+  if [ "$rc44m2" -eq 0 ] && [ -s "$glk" ]; then echo "✓ ㊹ mutant：拿掉登記對帳後，登記紅也不擋、Gradle 照跑（㊹a 的「紅且 Gradle 沒被叫到」確由這段造成）"
+  else echo "✗ ㊹ mutant（拿掉登記對帳）應放行（exit ${rc44m2}）" >&2; fail=1; fi
+fi
+# m3：自己 boot 的 emulator 收工不關 → ㊹c 的 stop 斷言轉紅
+if mutate44 's/  if \[ "$booted" = 1 \]; then/  if [ "$booted" = 99 ]; then/' '  if [ "$booted" = 1 ]; then'; then
+  reset44
+  run_gate STUB_TEST_RC=0 ANDROID_GRADLE_LOG="$glk" STUB_ANDROID_ENV_RC=0 STUB_DETECT_RC=0 DETECT_LOG="$dlk" LOCK_LOG="$llk" >/dev/null; cp "$gate_src" "$R/scripts/gates/push-gate.sh"
+  if ! has "$(cat "$dlk")" 'stop'; then echo "✓ ㊹ mutant：拿掉收工關機後，自己 boot 的 emulator 沒被 --stop（㊹c 的 stop 斷言確由這段造成）"
+  else echo "✗ ㊹ mutant（拿掉收工關機）應讓 --stop 不被叫到" >&2; fail=1; fi
+fi
+rm -rf "${cache_dir:?}"
 
 # ㊸ mutation：skip_android_steps 的賦值改成 0（Android 軸恆跑）→ ㊸g 純 iOS 案例必須轉成「Gradle 被叫到」
 mut43=$(mktemp -d)

@@ -210,7 +210,7 @@ jobs:
       # R2（merge-review R1 fd783f6c I2）：用 `!cancelled()` 而非 `always()`——`always()` 連 job 被取消（例如撞
       # timeout-minutes）也會硬跑，等於逾時取消後還讓這步再跑一輪自測，浪費時間又不會有結果；`!cancelled()`
       # 涵蓋「前面步驟失敗但 job 沒被取消」這個真正要解的情境，job 被取消時就不跑。
-      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／report-cite-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／ui-test-trigger／ui-test-shards／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／prod-push-guard／overflow-scan／pen-snapshot-dump／pen-bounds-probe／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／uitest-wait-check／food-sticker-crop／food-sticker-size-check）
+      - name: Gate 腳本自測（destructive-approval-check／approval-comment-check／api-contract-check／error-codes-check／migration-breaking-check／migration-version-check／migration-immutable-check／breaking-section-check／branch-ticket-check／merge-conflict-check／conflict-marker-check／pr-body-check／report-cite-check／evidence-path-check／brand-skill-check／push-ref-check／agent-tools-check／selftest-helpers／list-ipad-tests／pick-ipad-runtime／detect-simulator／push-gate／stale-xcodebuild-check／pretool／main-checkout-guard／background-bash-guard／large-file-read-guard／fork-guard／tap-target-check／tap-target-registry-check／android-tap-target-registry-check／ui-test-trigger／ui-test-shards／ci-cache-check／design-landing-check／design-evidence-check／design-notes-check／design-identity-header-check／design-ref-check／ci-head-sha-check／design-asset-size-check／linear-issue-check／prod-push-guard／overflow-scan／pen-snapshot-dump／pen-bounds-probe／privacy-manifest-check／db-reset-retry／handoff-evidence-check／ax-launch-check／qa-driver-gate-check／selftest-wiring-check／uitest-dup-helper-check／pipefail-grep-q-check／uitest-wait-check／food-sticker-crop／food-sticker-size-check）
         if: ${{ !cancelled() }}
         run: |
           # LS-54 N5：每支各收各的 rc、最後一起 exit——run: 預設 bash -e 會在第一支紅時
@@ -254,6 +254,8 @@ jobs:
           bash scripts/gates/stale-xcodebuild-check.test.sh || rc=1
           bash scripts/gates/tap-target-check.test.sh || rc=1
           bash scripts/gates/tap-target-registry-check.test.sh || rc=1
+          # LS-478：Android 48dp 登記制對帳（androidTest 的 TapTargetGateScreens／android/tap-target-exemptions.txt 對 *Screen；夾具＋對真 repo 的 mutation）
+          bash scripts/gates/android-tap-target-registry-check.test.sh || rc=1
           bash scripts/gates/ui-test-trigger.test.sh || rc=1
           # LS-385：ci-ui 分片清單（真 repo 每個 XCTestCase 類別恰好一片、略過清單＝全集減本片、LPT 分配＋mutation）
           bash scripts/gates/ui-test-shards.test.sh || rc=1
@@ -469,6 +471,8 @@ jobs:
           bash scripts/ops/simulator-lock.test.sh || rc=1
           # LS-477：以 adb serial 為鍵的 emulator 鎖（互斥／不同 serial 不競爭／逾時 124／死鎖回收／--status／SIGTERM 釋放／mutation）
           bash scripts/ops/emulator-lock.test.sh || rc=1
+          # LS-478：分支保護套用腳本（假 gh、只跑 --dry-run）：test／main／development 清單含 android-lint／android-unit、冪等、與 promote.sh 同步
+          bash scripts/ops/protection-apply.test.sh || rc=1
           bash scripts/ops/promote.test.sh || rc=1
           bash scripts/ops/promote-follow.test.sh || rc=1
           # LS-299：等 CI 分段前景輪詢（qa/ios-dev 撞 gh run watch 跑超過 Bash 工具 600s 上限、系統移背景
@@ -512,6 +516,8 @@ jobs:
           # reviewer 與實作者各在 `ubuntu:24.04`（只裝 git＋curl）實跑全綠（LS-264 當時 58 組；LS-267 加
           # `LS_QA_PSQL_BIN` seam 後 ⑦f 不再 SKIP、另加 ⑦g，現為 63 組——這行數字以實跑輸出為準）。
           bash scripts/ops/qa-e2e.test.sh || rc=1
+          # LS-478：qa-e2e-android.sh 自測（PATH shim＋LS_*_SH seam；鎖順序先 supabase 後 AVD、-s emu kill、TERM 釋放、am instrument 看輸出判定）
+          bash scripts/ops/qa-e2e-android.test.sh || rc=1
           # LS-342：food_catalog 過敏原啟發式規則自測（純 CSV／Python，不需要 DB；夾具正負樣本＋
           # 兩個 mutation：白名單拿掉一條轉紅、SQL 生成器同步失去排除子句）
           bash scripts/ops/food-catalog-allergen-check.test.sh || rc=1
@@ -1519,11 +1525,15 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
-  # LS-474（Android 前置 A1）：Android 骨架的 lint／單元測試。ubuntu、不是 required check（protection-apply.sh 的
-  # contexts 不含這兩個，branch protection 不動）、不進 ci-tree-record 的 needs，也不吃 ci-dedup（不用 macOS runner）。
+  # LS-474（Android 前置 A1）：Android 骨架的 lint／單元測試。ubuntu、不進 ci-tree-record 的 needs，也不吃 ci-dedup（不用 macOS runner）。
+  # LS-478 範圍 6：android-lint／android-unit 進 required checks（scripts/ops/promote.sh REQUIRED_CHECKS、protection-apply.sh 的
+  # test／main 清單與 development 的 patch；套用 GitHub 設定由 orchestrator 在本變更併入 development 後執行）。因為是 required，
+  # 這兩個 job **永遠建立 check-run**（沒有 job 層 if——job 被 skipped 時 promote.sh 拒收、純 iOS PR 也不能被卡住），
+  # 無 android 相關變更時由下面的「判定是否需要跑」step 設 run=false，其餘 step 全部跳過 → job success（同 ci-dedup 的早退精神，但
+  # 判定在 step 層、不靠 needs）。
   # 路徑過濾：pull_request 只在 diff 含 android/**、.jdk-version／.android-api／.gradle-version 或本檔時實跑，
-  # 其餘印「略過」仍 success；push／dispatch 一律實跑（ubuntu 成本低，寧可多跑）。diff 取不到時 files 為空 → 保守實跑。
-  # JDK 版本讀 .jdk-version（單一來源），Gradle 快取由 setup-gradle 管。
+  # 其餘印「略過」仍 success；push／dispatch 一律實跑（ubuntu 成本低，寧可多跑，且 promote.sh 查的是 push 到 test／main 的 SHA）。
+  # diff 取不到時 files 為空 → 保守實跑。JDK 版本讀 .jdk-version（單一來源），Gradle 快取由 setup-gradle 管。
   android-lint:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -1613,6 +1623,150 @@ jobs:
         if: steps.scope.outputs.run == 'true'
         working-directory: android
         run: ./gradlew --no-daemon :app:testDebugUnitTest :core-supabase:testDebugUnitTest
+
+  # LS-478（Android 前置 A4）：instrumented 測試（TapTargetGateTest 48dp 登記制、gate 自測；QaSmokeTest 因無 LS_QA_SCENARIO 而略過）
+  # 跑在 ubuntu KVM 加速的 emulator 上。**不進 required checks**（票文：滿 10 次綠才另票提 required；穩定度追蹤表在 LS-478 票 comment）。
+  # 路徑過濾同 android-unit（step 層早退，永遠建立 check-run）。API level 讀 .android-api（單一來源，與 compileSdk／detect-emulator.sh 同值）。
+  # 紅燈判讀（flake 面，R2 m1）：KVM 不可用 → 專屬 step 印 ::error::「環境性」並失敗；emulator 沒開機 → 沒有 booted 標記
+  # （$RUNNER_TEMP/ls-emulator-booted，emulator-runner 的 script 在 emulator 開機後才 touch）→「判讀」step 印「環境性」；
+  # 有標記而沒有 androidTest-results → Gradle 在 emulator 開機後、測試跑起來前就失敗（androidTest 編譯錯、建置錯）＝程式錯，擋；
+  # 有 androidTest-results 而紅 → 測試或 app 的問題。emulator-runner 釘 commit SHA（v2.38.0）。
+  # R2 M2：另跑一次 LS_QA_SCENARIO=login 的 QaSmokeTest（login 情境只冷啟動 app、不需 Supabase），讓 QaDriver 每次 CI 都在裝置上真跑，
+  # 並 adb pull 截圖驗證 scoped storage 路徑（/sdcard/Android/data/com.clyeh.sproutday/files，被測 app 的目錄）可寫可拉。
+  android-connected:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 判定是否需要跑（LS-478）
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          run=true
+          if [ "$EVENT" = pull_request ]; then
+            files=$(git -c core.quotePath=false diff --name-only --no-renames "origin/$BASE_REF...HEAD") || files=
+            if [ -n "$files" ] && ! printf '%s\n' "$files" | grep -Eq '^(android/|\.jdk-version$|\.android-api$|\.gradle-version$|\.github/workflows/ci\.yml$)'; then
+              run=false
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          if [ "$run" = true ]; then echo "→ android-connected：執行"; else echo "→ android-connected：略過（本 PR 未動 android/**、釘住檔、ci.yml）"; fi
+      - uses: actions/setup-java@v4
+        if: steps.scope.outputs.run == 'true'
+        with:
+          distribution: temurin
+          java-version-file: .jdk-version
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.scope.outputs.run == 'true'
+      - name: 讀 .android-api
+        id: api
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          api="$(tr -d '[:space:]' < .android-api)"
+          case "$api" in ''|*[!0-9]*) echo "::error::.android-api 須為整數（得到「${api}」）"; exit 1 ;; esac
+          echo "api=$api" >> "$GITHUB_OUTPUT"
+      - name: 啟用 KVM（emulator 硬體加速）
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          if [ ! -e /dev/kvm ]; then
+            echo "::error::環境性失敗：runner 沒有 /dev/kvm，emulator 無法硬體加速（不是測試紅；請 rerun，連續兩次再回報）"
+            exit 1
+          fi
+          ls -l /dev/kvm
+      # 第 1 次 run（38147176597）實測：runner image 內建的 avdmanager 太舊，`avdmanager create avd --device pixel_8` 回
+      # 「No device found matching --device pixel_8」（emulator-runner 的 Create AVD 階段，環境性、與測試無關）。
+      # R2 m2：不再追 `cmdline-tools;latest`（每次裝 Google 當下的最新版；新版 sdkmanager 已印 deprecated 警告，下一版若移除
+      # sdkmanager／avdmanager，PR 沒動也會變紅、污染 10 次追蹤）。改釘 `cmdline-tools;19.0`（= commandlinetools-linux-13114758，
+      # Google 下載頁的 build 號；`sdkmanager --list` 的 package 版本號 19.0）。來源：reactivecircus/android-emulator-runner v2.38.0 沒有
+      # cmdline-tools 版本 input，它的 src/sdk-installer.ts 只在 $ANDROID_HOME/cmdline-tools 不存在時才裝自己釘的 14742923——runner image
+      # 內建目錄存在，所以這一步才是實際決定 avdmanager 版本的地方。要升版：改 CMDLINE_TOOLS_VERSION 並在穩定度追蹤表註記。
+      - name: 更新 cmdline-tools（內建 avdmanager 沒有 pixel_8 裝置定義；釘 19.0）
+        if: steps.scope.outputs.run == 'true'
+        env:
+          CMDLINE_TOOLS_VERSION: "19.0"
+        run: |
+          # sdkmanager／avdmanager 此時還不在 PATH（emulator-runner 之後才自己加），用 ANDROID_HOME 下的絕對路徑。
+          # sdkmanager 把指定版本裝到 $root/<版本>；emulator-runner 的 `avdmanager create avd` 一律解析 cmdline-tools/latest/bin
+          # （它自己把 latest/bin 放 PATH 最前，GITHUB_PATH 蓋不過——run 38148628908 實測），所以把它換成 latest（舊版留作 latest-old）。
+          root="${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools"
+          yes | "$root/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$root/latest/bin/sdkmanager" --install "cmdline-tools;${CMDLINE_TOOLS_VERSION}" > /dev/null
+          [ -x "$root/${CMDLINE_TOOLS_VERSION}/bin/avdmanager" ] || {
+            echo "::error::環境性失敗：sdkmanager 沒把 cmdline-tools;${CMDLINE_TOOLS_VERSION} 裝到 $root/${CMDLINE_TOOLS_VERSION}"
+            ls -l "$root"
+            exit 1
+          }
+          sudo rm -rf "$root/latest-old"
+          sudo mv "$root/latest" "$root/latest-old"
+          sudo mv "$root/${CMDLINE_TOOLS_VERSION}" "$root/latest"
+          bin="$root/latest/bin"
+          "$bin/avdmanager" list device -c | grep -qx pixel_8 || {
+            echo "::error::環境性失敗：釘住的 cmdline-tools ${CMDLINE_TOOLS_VERSION}（$bin）列不出 pixel_8 裝置定義"
+            ls -l "$root"
+            "$bin/avdmanager" list device -c | head -30
+            exit 1
+          }
+          echo "→ cmdline-tools ${CMDLINE_TOOLS_VERSION}：avdmanager 有 pixel_8"
+      # LS-479 起 MainActivity 一啟動就用 SupabaseClientFactory 建 client，BuildConfig 的 SUPABASE_URL／KEY 為空會 fail loud 而 crash，
+      # QaSmokeTest 的 rule 與 login 情境都會跟著紅。CI 的 instrumented 測試不碰後端（login 只驗冷啟動、首頁文字可見），
+      # 寫一份**佔位**的 android/local.properties（gitignored、不含任何真值）讓 client 能建出來。
+      - name: 寫佔位 local.properties（instrumented 測試不碰後端）
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          printf 'SUPABASE_URL=http://10.0.2.2:54321\nSUPABASE_ANON_KEY=ci-placeholder-not-a-secret\n' > android/local.properties
+      - name: instrumented 測試（emulator API ${{ steps.api.outputs.api }}，Pixel 8）
+        if: steps.scope.outputs.run == 'true'
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: ${{ steps.api.outputs.api }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_8
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          working-directory: android
+          # emulator-runner 把 script 逐行交給 sh 執行，任一行 exit ≠ 0 即整個 step 失敗。
+          # touch 標記是紅燈判讀的分界：它之前紅＝環境（KVM／冷啟動／system image），它之後紅＝Gradle 或測試（程式錯）。
+          # 第 2 行：全部 instrumented 測試（QaSmokeTest 因無 LS_QA_SCENARIO 以 assumption 略過）。
+          # 第 3 行：只跑 QaSmokeTest 帶 LS_QA_SCENARIO=login（R2 M2）；leaveApksInstalledAfterRun 讓測試 APK 的 external files 留到下一行
+          # adb pull（AGP 預設跑完就 uninstall，截圖會跟著消失）。第 4 行：pull 並斷言真有 png，證明 QaDriver 在裝置上真的跑完且 scoped storage 可寫可拉。
+          script: |
+            touch "$RUNNER_TEMP/ls-emulator-booted"
+            echo "→ android-connected：emulator 已開機；以下才是測試（此行之後紅＝Gradle／測試／app 問題，此行之前紅＝環境）"
+            ./gradlew --no-daemon :app:connectedDebugAndroidTest
+            ./gradlew --no-daemon :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true -Pandroid.testInstrumentationRunnerArguments.class=com.clyeh.sproutday.qa.QaSmokeTest -Pandroid.testInstrumentationRunnerArguments.LS_QA_SCENARIO=login
+            mkdir -p "$RUNNER_TEMP/qa-e2e-login" && adb pull /sdcard/Android/data/com.clyeh.sproutday/files/qa-e2e/login/. "$RUNNER_TEMP/qa-e2e-login/" && ls "$RUNNER_TEMP"/qa-e2e-login/login-*.png
+      - name: 紅燈判讀（環境 vs 建置／編譯 vs 測試）
+        if: ${{ failure() && steps.scope.outputs.run == 'true' }}
+        run: |
+          if [ ! -e "$RUNNER_TEMP/ls-emulator-booted" ]; then
+            echo "::error::emulator 還沒開機就失敗——環境性（KVM／emulator 冷啟動逾時／system image 下載），先 rerun；連續兩次紅再回報（LS-478 穩定度追蹤表）"
+          elif [ ! -d android/app/build/outputs/androidTest-results ]; then
+            echo "::error::emulator 已開機、但沒有 androidTest-results：Gradle 在測試跑起來前就失敗＝建置或 androidTest 編譯錯（程式錯，不是環境性，不要 rerun 了事），見 job log 的 Gradle 輸出"
+          else
+            echo "::error::有 androidTest-results：emulator 已開機、測試有跑——紅＝測試或 app 的問題，見 artifact android-connected-reports"
+          fi
+      - name: 上傳測試報告
+        if: ${{ always() && steps.scope.outputs.run == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-connected-reports
+          path: |
+            android/app/build/reports/androidTests/
+            android/app/build/outputs/androidTest-results/
+            ${{ runner.temp }}/qa-e2e-login/
+          if-no-files-found: warn
+          retention-days: 7
 
   # LS-350：登記 tree 快取——只在「完整 run」（ci-dedup mode=full 且 record=true：push／dispatch，或 PR 且
   # ui-test-trigger 判定要跑 UITests）且 db／lint／ci／ci-ui（matrix 全片，LS-385）／ci-ipad 全 success 時，上傳名為 ci-tree-<tree> 的

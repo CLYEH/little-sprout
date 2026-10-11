@@ -36,6 +36,8 @@ android {
         targetSdk = androidApi
         versionCode = appVersionCode
         versionName = appVersionName
+        // LS-478：connectedDebugAndroidTest（CI android-connected、qa-e2e-android.sh）用的 instrumentation runner。
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
     }
 
@@ -70,4 +72,12 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(libs.junit)
+
+    // LS-478：instrumented 測試（TapTargetGateTest、QaDriver）。ui-test-manifest 提供 createComposeRule 要啟動的 ComponentActivity。
+    debugImplementation(libs.compose.ui.test.manifest)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.uiautomator)
 }

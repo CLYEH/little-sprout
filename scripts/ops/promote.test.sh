@@ -65,7 +65,8 @@ runs() {
 # LS-209 merge-review R1 M3：promote.sh 的 REQUIRED_CHECKS 加了 ci-ipad，這裡的「全綠」罐頭同步補上，
 # 否則既有「全綠 → exit 0」樣本會因為多一個「check ci-ipad: 缺」而假紅。
 # LS-385：REQUIRED_CHECKS 再加 ci-ui-1..3（UITests 分片），罐頭同步。
-ALL_GREEN="ci:completed:success ci-ipad:completed:success ci-ui-1:completed:success ci-ui-2:completed:success ci-ui-3:completed:success db:completed:success lint:completed:success rules:completed:success"
+# LS-478：再加 android-lint／android-unit，罐頭同步。
+ALL_GREEN="ci:completed:success ci-ipad:completed:success ci-ui-1:completed:success ci-ui-2:completed:success ci-ui-3:completed:success db:completed:success lint:completed:success rules:completed:success android-lint:completed:success android-unit:completed:success"
 # statuses <context:state[:description]>…：產生 combined status 罐頭 JSON（GitHub 每個 context 只回最新一筆；不給參數＝沒人貼過）
 statuses() {
   local items= spec c st d
@@ -184,8 +185,18 @@ reset_logs
 expect 1 '⑦b ci-ui-2 缺 → exit 1' 'check ci-ui-2: 缺' development test
 no_push '⑦b 分片 check 缺不推'
 
+# ---- ⑦c LS-478：android-lint／android-unit 進 REQUIRED_CHECKS——缺任一個 → exit 1、點名（Android 紅燈要擋得住晉升）----
+runs "ci:completed:success" "ci-ipad:completed:success" "ci-ui-1:completed:success" "ci-ui-2:completed:success" "ci-ui-3:completed:success" "db:completed:success" "lint:completed:success" "rules:completed:success" "android-lint:completed:success"
+reset_logs
+expect 1 '⑦c android-unit 缺 → exit 1' 'check android-unit: 缺' development test
+no_push '⑦c android check 缺不推'
+runs "ci:completed:success" "ci-ipad:completed:success" "ci-ui-1:completed:success" "ci-ui-2:completed:success" "ci-ui-3:completed:success" "db:completed:success" "lint:completed:success" "rules:completed:success" "android-lint:completed:failure" "android-unit:completed:success"
+reset_logs
+expect 1 '⑦c android-lint 紅 → exit 1' 'check android-lint: ✗ completed/failure' development test
+no_push '⑦c android-lint 紅不推'
+
 # ---- ⑧ 正常：全綠（ci 舊紅新綠）→ 推、remote test＝origin/development、hook 收到 PROMOTE_VIA_SCRIPT=1 與 refspec ----
-runs "ci:completed:failure" "db:completed:success" "lint:completed:success" "rules:completed:success" "ci-ipad:completed:success" "ci-ui-1:completed:success" "ci-ui-2:completed:success" "ci-ui-3:completed:success" "ci:completed:success"
+runs "ci:completed:failure" "db:completed:success" "lint:completed:success" "rules:completed:success" "ci-ipad:completed:success" "ci-ui-1:completed:success" "ci-ui-2:completed:success" "ci-ui-3:completed:success" "ci:completed:success" "android-lint:completed:success" "android-unit:completed:success"
 reset_logs
 expect 0 '⑧ 全綠（ci 舊紅新綠）→ exit 0' '已晉升 test' development test
 is    '⑧ remote test 前進到 origin/development' "$(rsha test)" "$dev1"
