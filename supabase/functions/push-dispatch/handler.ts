@@ -152,9 +152,11 @@ export type ApnsOutcome =
   | { ok: true }
   | { ok: false; invalidToken: boolean; error: string };
 
-export interface ApnsProvider {
+/** 單一裝置推播的最小共用介面（LS-473：APNs 與 FCM 共用；outcome 形狀沿用 ApnsOutcome）。 */
+export interface PushProvider {
   send(token: string, title: string, body: string): Promise<ApnsOutcome>;
 }
+export type ApnsProvider = PushProvider;
 
 export interface Deps {
   /** service 呼叫鑑權用的原始環境變數（LS-196，見 `_shared/keys.ts`）：
@@ -182,6 +184,10 @@ export interface Deps {
     eventIds: string[],
   ): Promise<{ recipients: BatchRecipientRow[]; error?: string }>;
   apnsProvider: ApnsProvider;
+  /** LS-473：platform='android' 的收件者走這個 provider。缺值（`FCM_SERVICE_ACCOUNT`
+   * 未設定或格式不對）時，android 收件者計入 failed 並記 log，不丟 token、不影響
+   * APNs 批次。`PUSH_DISPATCH_PROVIDER=stub` 時 index.ts 讓它與 apnsProvider 同一個 stub。 */
+  fcmProvider?: PushProvider;
   /** `deleted`：DELETE 是否真的刪到列（true）還是該列本來就不存在（false）——
    * 只有真的刪到才該計入 tokensRemoved（LS-172 R2，merge-reviewer m2／i2）。
    * `ok=false` 時 `deleted` 無意義（一律當作 false）。 */
@@ -410,6 +416,16 @@ async function mapWithConcurrency<T>(
   await Promise.all(Array.from({ length: workerCount }, () => worker()));
 }
 
+/** platform → provider；'ios' → APNs、'android' → FCM（可能缺席）、其餘 undefined。 */
+function pickProvider(
+  platform: string,
+  deps: Deps,
+): PushProvider | undefined {
+  if (platform === "ios") return deps.apnsProvider;
+  if (platform === "android") return deps.fcmProvider;
+  return undefined;
+}
+
 export async function runDispatch(deps: Deps): Promise<DispatchSummary> {
   const summary: DispatchSummary = {
     claimed: 0,
@@ -465,7 +481,7 @@ export async function runDispatch(deps: Deps): Promise<DispatchSummary> {
       else recipientsByEvent.set(r.eventId, [r]);
     }
 
-    const jobs: { token: string; body: string }[] = [];
+    const jobs: { token: string; platform: string; body: string }[] = [];
     for (const event of events) {
       const eventRecipients = recipientsByEvent.get(event.id) ?? [];
       if (eventRecipients.length === 0) continue; // 沒有人符合條件（例如唯一收件人剛好封鎖了 actor），不算失敗
@@ -476,15 +492,25 @@ export async function runDispatch(deps: Deps): Promise<DispatchSummary> {
         event.targetType,
         event.actorDisplayName,
       );
-      for (const r of eventRecipients) jobs.push({ token: r.token, body });
+      for (const r of eventRecipients) {
+        jobs.push({ token: r.token, platform: r.platform, body });
+      }
     }
 
     await mapWithConcurrency(jobs, deps.concurrency, async (job) => {
-      const outcome = await deps.apnsProvider.send(
-        job.token,
-        APP_TITLE,
-        job.body,
-      );
+      // LS-473：依 platform 選 provider——'ios'（含舊資料與無 platform 的舊呼叫，
+      // 預設值即 'ios'）走 APNs，'android' 走 FCM；兩者共用同一組併發 worker 與時間預算。
+      const provider = pickProvider(job.platform, deps);
+      if (!provider) {
+        summary.failed++;
+        deps.log(
+          job.platform === "android"
+            ? `push-dispatch: FCM 未設定（FCM_SERVICE_ACCOUNT 缺或無效），略過 android token=${job.token}`
+            : `push-dispatch: 未知 platform=${job.platform}，略過 token=${job.token}`,
+        );
+        return;
+      }
+      const outcome = await provider.send(job.token, APP_TITLE, job.body);
       if (outcome.ok) {
         summary.sent++;
         return;

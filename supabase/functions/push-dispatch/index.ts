@@ -18,6 +18,8 @@ import {
   StubApnsProvider,
 } from "./handler.ts";
 import { buildRealApnsProvider } from "./apns.ts";
+import { buildRealFcmProvider } from "./fcm.ts";
+import type { PushProvider } from "./handler.ts";
 import { resolveSecretKey, type SecretKeyEnv } from "../_shared/keys.ts";
 
 // SUPABASE_URL／SUPABASE_SECRET_KEYS（或過渡期的 legacy
@@ -82,6 +84,24 @@ const apnsProvider =
       fetch,
     );
 
+// LS-473：FCM provider（platform='android' 的收件者）。stub 模式與 apnsProvider 同一個 stub
+// （兩平台都只記錄）。正式模式讀 FCM_SERVICE_ACCOUNT（整份 service account JSON）；缺或格式
+// 不對時**不讓 isolate 冷啟動失敗**（那會連 iOS 的 APNs 推播一起拖垮），只 console.error 一次，
+// fcmProvider 留空——handler 會把每個 android 收件者計 failed 並 log（見 handler.ts runDispatch）。
+let fcmProvider: PushProvider | undefined;
+if ((Deno.env.get("PUSH_DISPATCH_PROVIDER") ?? "apns") === "stub") {
+  fcmProvider = apnsProvider;
+} else {
+  try {
+    fcmProvider = buildRealFcmProvider({
+      serviceAccountJson: Deno.env.get("FCM_SERVICE_ACCOUNT"),
+      fetch,
+    });
+  } catch (err) {
+    console.error(`push-dispatch: FCM 未啟用——${String(err)}`);
+  }
+}
+
 const BATCH_LIMIT = 50; // 單次 claim 呼叫的上限，對齊 claim_notification_events() 的預設值。
 const MAX_BATCHES = 20; // 安全上限（20 × 50 = 1000 筆／次 invocation），比照 purge-storage 既有慣例。
 const CONCURRENCY = 8; // 有上限的併發送出數（LS-172 R2，merge-reviewer m1）。
@@ -143,6 +163,7 @@ function buildProdDeps(): Deps {
     },
 
     apnsProvider,
+    fcmProvider,
 
     // `.select("token")`（LS-172 R2，merge-reviewer i2）：要求 PostgREST 用
     // `Prefer: return=representation` 回傳實際被刪掉的列，藉此分辨「真的刪到
