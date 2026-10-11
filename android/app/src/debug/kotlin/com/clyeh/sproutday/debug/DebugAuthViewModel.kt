@@ -14,7 +14,11 @@ import com.clyeh.sproutday.supabase.BackendError
 import com.clyeh.sproutday.supabase.Family
 import com.clyeh.sproutday.supabase.FamilyMember
 import com.clyeh.sproutday.supabase.FamilyRepository
+import com.clyeh.sproutday.supabase.FeedPointer
+import com.clyeh.sproutday.supabase.FeedRepository
 import com.clyeh.sproutday.supabase.MediaRepository
+import com.clyeh.sproutday.supabase.SocialRepository
+import com.clyeh.sproutday.supabase.contentTarget
 import com.clyeh.sproutday.upload.UploadItem
 import com.clyeh.sproutday.upload.UploadQueue
 import com.clyeh.sproutday.upload.UploadRejectedException
@@ -38,6 +42,7 @@ data class DebugUiState(
     val members: List<FamilyMember> = emptyList(),
     val album: Album? = null,
     val uploads: List<UploadItem> = emptyList(),
+    val timeline: List<FeedPointer> = emptyList(),
     val log: List<String> = emptyList(),
 )
 
@@ -51,6 +56,8 @@ class DebugAuthViewModel(
     private val families: FamilyRepository,
     private val media: MediaRepository,
     private val uploadQueue: UploadQueue,
+    private val feed: FeedRepository,
+    private val social: SocialRepository,
 ) : ViewModel() {
     private val local = MutableStateFlow(DebugUiState())
 
@@ -93,7 +100,7 @@ class DebugAuthViewModel(
         run("登出") {
             uploadQueue.clear() // 先取消佇列：登出後的 session 不該再替上一個帳號上傳
             auth.signOut()
-            local.update { it.copy(family = null, members = emptyList(), album = null) }
+            local.update { it.copy(family = null, members = emptyList(), album = null, timeline = emptyList()) }
             "已登出"
         }
 
@@ -147,6 +154,29 @@ class DebugAuthViewModel(
                 }
         }
 
+    /** 時間軸前 5 筆（`get_family_timeline`）；結果存進 state，給「對第一筆留言」用。 */
+    fun listTimeline() =
+        run("列時間軸") {
+            val family = currentFamily() ?: return@run "還沒有家庭"
+            val items = feed.timeline(family.id, limit = TIMELINE_PREVIEW)
+            local.update { it.copy(family = family, timeline = items) }
+            "${items.size} 筆"
+        }
+
+    /** 對最近一次列出的第一筆留言，並讀回該項目的留言數（`create_comment` → `list_comments`）。 */
+    fun commentOnFirst() =
+        run("留言") {
+            val family = currentFamily() ?: return@run "還沒有家庭"
+            val first = local.value.timeline.firstOrNull() ?: return@run "先列時間軸"
+            val target = first.kind.contentTarget ?: return@run "${first.kind.wire} 沒有留言功能"
+            val body = "除錯留言 ${LocalTime.now().withNano(0)}"
+            val id = social.createComment(family.id, target, first.refId, body)
+            val total = social.listComments(family.id, target, first.refId).totalCount
+            "已留言 ${id.take(ID_PREVIEW)}…（${first.kind.wire} ${first.refId.take(ID_PREVIEW)}…，共 $total 則）"
+        }
+
+    private suspend fun currentFamily(): Family? = local.value.family ?: families.fetchMyFamilies().firstOrNull()
+
     private fun run(
         label: String,
         block: suspend () -> String,
@@ -172,16 +202,20 @@ class DebugAuthViewModel(
     companion object {
         private const val STOP_TIMEOUT_MS = 5_000L
         private const val LOG_LIMIT = 30
+        private const val TIMELINE_PREVIEW = 5
         private const val ID_PREVIEW = 8
 
+        @Suppress("LongParameterList") // 除錯面板：一個 repository 一個參數，不是產品邏輯
         fun factory(
             auth: AuthRepository,
             families: FamilyRepository,
             media: MediaRepository,
             uploadQueue: UploadQueue,
+            feed: FeedRepository,
+            social: SocialRepository,
         ): ViewModelProvider.Factory =
             viewModelFactory {
-                initializer { DebugAuthViewModel(auth, families, media, uploadQueue) }
+                initializer { DebugAuthViewModel(auth, families, media, uploadQueue, feed, social) }
             }
     }
 }
