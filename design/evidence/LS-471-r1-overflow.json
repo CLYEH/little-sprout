@@ -1,0 +1,100 @@
+{
+ "ticket": "LS-471",
+ "round": 1,
+ "head_sha": "41d3363e79fe80b589aa52b8c831f00105156b6f",
+ "scanned_nodes": 863,
+ "scan_scope": "document",
+ "scans": {
+  "sibling_intersection": {
+   "scope": "document",
+   "document_count": 0,
+   "classes": 0,
+   "flagged": [],
+   "result_hash": "e12a301f7a36da34"
+  },
+  "row_overflow": {
+   "scope": "document",
+   "document_count": 1,
+   "classes": 1,
+   "flagged": [
+    {
+     "node": "mhgPF",
+     "name": "Wordmark image",
+     "parent": "xuD6C",
+     "parent_name": "萌芽日記字標",
+     "overflow": 12.4,
+     "class": "萌芽日記字標 :: Wordmark image",
+     "count": 1,
+     "classification": "intentional crop：字標 PNG（1024×488）四周有透明留白，圖片子節點刻意大於 clip:true 外框並以負位移裁掉留白，讓墨跡左緣對齊 tagline；外框 clip 後無可見溢出（同類 1 例）"
+    }
+   ],
+   "result_hash": "64ec973f4c8e6063"
+  },
+  "cross_parent_collision": {
+   "scope": "document",
+   "document_count": 0,
+   "classes": 0,
+   "flagged": [],
+   "result_hash": "d4c9aa176ea349f4"
+  },
+  "corner_anchor": {
+   "scope": "document",
+   "document_count": 0,
+   "boards": [
+    "LPjkx",
+    "oUCww",
+    "mHCiF",
+    "YJXzx",
+    "qladF"
+   ],
+   "containers": 0,
+   "points": 0,
+   "mismatch": 0,
+   "flagged": [],
+   "unresolved": [],
+   "ref_hits": 0,
+   "ref_hits_defs": 0,
+   "document_containers": 0,
+   "document_points": 0,
+   "document_mismatch": 0,
+   "document_flagged": [],
+   "document_unresolved": [],
+   "result_hash": "12b4c2717f6f9429"
+  },
+  "text_occlusion": {
+   "scope": "document",
+   "document_count": 0,
+   "boards": [
+    "LPjkx",
+    "oUCww",
+    "mHCiF",
+    "YJXzx",
+    "qladF"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "8754398ca6879ca9"
+  },
+  "board_clip": {
+   "scope": "document",
+   "document_count": 0,
+   "boards": [
+    "LPjkx",
+    "oUCww",
+    "mHCiF",
+    "YJXzx",
+    "qladF"
+   ],
+   "flagged": [],
+   "document_flagged": [],
+   "result_hash": "caa33bbe5c158e27"
+  }
+ },
+ "total_nodes": 863,
+ "tree_hash": "7cbda59e4e356509",
+ "flags": {
+  "cross_all": false,
+  "custom_overlay_re": false
+ },
+ "scan_note": "snapshot mode，dump sha256=9e6872632ffa37b6d51e075515361d0fc096d4cfa3233fb0cc310718c080529c；快照模式（LS-289 第②級；稿僅 863 節點，選快照模式是因正典腳本全文 112 KB 送 execute 成本過高，非逾時）；對象＝提案稿 docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen（非 design/littlesprout.pen）；SNAP_ROOTS=[0,Infinity] SNAP_BOARDS=40 一段 18 板；--scan-scope document --boards LPjkx,oUCww,mHCiF,YJXzx,qladF；tree_hash 由 scripts/gates/design_tree_hash.py 對 head_sha 落地檔離線算；dump 與 hash 同一稿態（Pen File>Save 之後無寫入）。PLAUSIBLE：corner_anchor ref_hits=0／document_containers=0 是結構性——提案稿依柔粉 skill 不含任何角托元件（cmp/Photo Corner 不存在），WARNING 在此稿無法消除"
+}
