@@ -5,3 +5,7 @@
 #
 # 新增畫面票時：能用預設狀態（免登入、免假資料、不需 ViewModel）直接渲染的，優先登記進 TapTargetGateScreens；
 # 建構成本高（多步驟表單、需要特定流程狀態）才排除到這裡，理由要講清楚為什麼現在不補、下一步在哪。
+#
+# 註（LS-478 合併 LS-479 後）：app 的根畫面現在是 `RootContent`（src/debug＝DebugAuthPanel、src/release＝文字），不是 `*Screen` 命名，
+# registry-check 只掃 src/main 的 `fun <Name>Screen(`，所以不在此清單。debug 面板需要 SupabaseClient／ViewModel、無法在預設狀態渲染；
+# 產品畫面票把真畫面做成 `*Screen`（src/main）時再登記或排除。`HomeScreen` 仍是登記表的唯一畫面（minClickables=0 的空跑，牙齒在 SelfTest）。

@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import java.io.File
@@ -63,14 +62,13 @@ class QaDriver(
     private fun awaitHome() {
         try {
             composeRule.waitUntil(LAUNCH_TIMEOUT_MS) {
-                composeRule.onAllNodesWithText(HOME_TEXT).fetchSemanticsNodes().isNotEmpty()
+                composeRule.onAllNodesWithText(HOME_TEXT, substring = true).fetchSemanticsNodes().isNotEmpty()
             }
         } catch (e: ComposeTimeoutException) {
             // 不吞：補一張失敗當下的截圖再原樣重拋，證據目錄裡看得到 app 到底停在哪。
             device.takeScreenshot(File(outDir, "$scenario-00-await-home-timeout.png"))
             throw AssertionError("冷啟動後 ${LAUNCH_TIMEOUT_MS}ms 內看不到首頁文字「$HOME_TEXT」", e)
         }
-        composeRule.onNodeWithText(HOME_TEXT).assertExists()
     }
 
     /** 檔名 `<情境>-<序號>-<步驟>.png`，同 iOS QADriver.snap 的命名，script 直接收進 screens/。 */
@@ -89,6 +87,8 @@ class QaDriver(
 
     private companion object {
         val SCENARIOS = listOf("login", "publish", "browse")
+
+        // 子字串比對：release 根畫面是「Sprout Day」、debug 根畫面是「Sprout Day — 除錯登入面板」（LS-479），兩種建置都要過。
         const val HOME_TEXT = "Sprout Day"
         const val LAUNCH_TIMEOUT_MS = 15_000L
     }
