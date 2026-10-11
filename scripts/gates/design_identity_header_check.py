@@ -136,7 +136,7 @@ def main(argv):
         dnc.die("design_identity_header_check：缺 --pen／--head／--base")
 
     head_doc = dnc.load_snapshot(head, pen)
-    base_doc = dnc.load_snapshot(base, pen)
+    base_doc = dnc.load_base_snapshot(base, pen)
     touched = dnc.touched_roots(base_doc, head_doc)
 
     hits = identity_header_hits(head_doc, touched)

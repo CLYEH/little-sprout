@@ -152,6 +152,19 @@ def load_snapshot(sha, pen):
     return d
 
 
+def load_base_snapshot(sha, pen):
+    """LS-484：base（merge-base）的 tree 裡沒有這個路徑＝本 PR 整份新增（提案稿 `docs/design-proposals/**/*.pen` 首次入庫，
+    #626 rules 曾因此 exit 2）→ 回空文件：head 全樹皆算新增／觸碰，沒有 base 沿革可比。commit 本身讀不到（ls-tree 非 0）
+    仍 fail closed；路徑存在就走 load_snapshot（讀不出／壞 JSON 照舊 die），主稿 `design/littlesprout.pen` 在 base 一定存在、行為不變。"""
+    ls = subprocess.run(["git", "ls-tree", "--name-only", sha, "--", pen], capture_output=True)
+    if ls.returncode != 0:
+        die("git ls-tree %s -- %s 失敗（%s）" % (sha[:7], pen, ls.stderr.decode("utf-8", "replace").strip()))
+    if not ls.stdout.strip():
+        print("（新增）%s 在 base %s 不存在——視為本 PR 整份新增：head 全樹皆算新增，無 base 沿革比對（LS-484）" % (pen, sha[:7]))
+        return {"children": []}
+    return load_snapshot(sha, pen)
+
+
 def all_ids(doc):
     ids = set()
     stack = list(doc.get("children") or [])
@@ -403,7 +416,7 @@ def main(argv):
 
     head_doc = load_snapshot(head, pen)
     head_ids = all_ids(head_doc)
-    base_doc = load_snapshot(base, pen)
+    base_doc = load_base_snapshot(base, pen)
     candidates = set(all_ids(base_doc))
     seen = {head, base}
     for sha in history_shas:

@@ -17,6 +17,9 @@
 # 也不像 design-notes-check.sh 的署名 NBSP 檢查那樣印「（舊債）」警告行——這支的範圍本來就限定觸碰板；
 # (3) 「觸碰的板」用頂層 JSON 是否變更判定，動某板子樹深處的一個節點就得順手核對整塊板的年齡字串。
 #
+# LS-484：merge-base 沒有這份 .pen（提案稿首次入庫）→ 同 design-notes-check.sh 視為整份新增（共用
+# design_notes_check.load_base_snapshot），head 全部板都算觸碰。
+#
 # 用法：design-identity-header-check.sh <path.pen> --base <ref> [--head-sha <sha>]
 # exit：0＝無違規；1＝有違規；2＝參數／git 錯誤（fail closed）。自測：design-identity-header-check.test.sh（CI rules job）。
 set -uo pipefail
