@@ -2025,6 +2025,12 @@ else
   fi
 fi
 
+# ---- ㉓（LS-472，merge-review R1 m2）--inflight 白名單只留 python 端 LANE_LIMITS 一份：lane:android 不 exit 2、未知 lane 仍 exit 2 ----
+out23="$(PATH="$work/bin_inflight:$PATH" bash "$plsh" --inflight lane:android --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] && [ -z "$out23" ]; then echo "✓ ㉓a --inflight lane:android → exit 0、無在飛票不印"; else echo "✗ ㉓a --inflight lane:android 應 exit 0 且無輸出（實得 rc=${rc}、out=${out23}）" >&2; fail=1; fi
+out23b="$(PATH="$work/bin_inflight:$PATH" bash "$plsh" --inflight lane:bogus --repo "$repo" 2>&1)"; rc=$?
+if [ "$rc" -eq 2 ] && printf '%s' "$out23b" | grep -qF -- '--inflight 須為 lane 名'; then echo "✓ ㉓b --inflight lane:bogus → exit 2（python 端 LANE_LIMITS 驗）"; else echo "✗ ㉓b --inflight lane:bogus 應 exit 2（實得 rc=${rc}、out=${out23b}）" >&2; fail=1; fi
+
 if [ "$fail" -ne 0 ]; then
   echo "✗ patrol-linear 自測失敗" >&2
   exit 1
