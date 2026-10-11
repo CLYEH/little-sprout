@@ -471,6 +471,8 @@ jobs:
           bash scripts/ops/simulator-lock.test.sh || rc=1
           # LS-477：以 adb serial 為鍵的 emulator 鎖（互斥／不同 serial 不競爭／逾時 124／死鎖回收／--status／SIGTERM 釋放／mutation）
           bash scripts/ops/emulator-lock.test.sh || rc=1
+          # LS-478：分支保護套用腳本（假 gh、只跑 --dry-run）：test／main／development 清單含 android-lint／android-unit、冪等、與 promote.sh 同步
+          bash scripts/ops/protection-apply.test.sh || rc=1
           bash scripts/ops/promote.test.sh || rc=1
           bash scripts/ops/promote-follow.test.sh || rc=1
           # LS-299：等 CI 分段前景輪詢（qa/ios-dev 撞 gh run watch 跑超過 Bash 工具 600s 上限、系統移背景
@@ -1523,11 +1525,15 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
-  # LS-474（Android 前置 A1）：Android 骨架的 lint／單元測試。ubuntu、不是 required check（protection-apply.sh 的
-  # contexts 不含這兩個，branch protection 不動）、不進 ci-tree-record 的 needs，也不吃 ci-dedup（不用 macOS runner）。
+  # LS-474（Android 前置 A1）：Android 骨架的 lint／單元測試。ubuntu、不進 ci-tree-record 的 needs，也不吃 ci-dedup（不用 macOS runner）。
+  # LS-478 範圍 6：android-lint／android-unit 進 required checks（scripts/ops/promote.sh REQUIRED_CHECKS、protection-apply.sh 的
+  # test／main 清單與 development 的 patch；套用 GitHub 設定由 orchestrator 在本變更併入 development 後執行）。因為是 required，
+  # 這兩個 job **永遠建立 check-run**（沒有 job 層 if——job 被 skipped 時 promote.sh 拒收、純 iOS PR 也不能被卡住），
+  # 無 android 相關變更時由下面的「判定是否需要跑」step 設 run=false，其餘 step 全部跳過 → job success（同 ci-dedup 的早退精神，但
+  # 判定在 step 層、不靠 needs）。
   # 路徑過濾：pull_request 只在 diff 含 android/**、.jdk-version／.android-api／.gradle-version 或本檔時實跑，
-  # 其餘印「略過」仍 success；push／dispatch 一律實跑（ubuntu 成本低，寧可多跑）。diff 取不到時 files 為空 → 保守實跑。
-  # JDK 版本讀 .jdk-version（單一來源），Gradle 快取由 setup-gradle 管。
+  # 其餘印「略過」仍 success；push／dispatch 一律實跑（ubuntu 成本低，寧可多跑，且 promote.sh 查的是 push 到 test／main 的 SHA）。
+  # diff 取不到時 files 為空 → 保守實跑。JDK 版本讀 .jdk-version（單一來源），Gradle 快取由 setup-gradle 管。
   android-lint:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -1617,6 +1623,94 @@ jobs:
         if: steps.scope.outputs.run == 'true'
         working-directory: android
         run: ./gradlew --no-daemon :app:testDebugUnitTest :core-supabase:testDebugUnitTest
+
+  # LS-478（Android 前置 A4）：instrumented 測試（TapTargetGateTest 48dp 登記制、gate 自測；QaSmokeTest 因無 LS_QA_SCENARIO 而略過）
+  # 跑在 ubuntu KVM 加速的 emulator 上。**不進 required checks**（票文：滿 10 次綠才另票提 required；穩定度追蹤表在 LS-478 票 comment）。
+  # 路徑過濾同 android-unit（step 層早退，永遠建立 check-run）。API level 讀 .android-api（單一來源，與 compileSdk／detect-emulator.sh 同值）。
+  # 紅燈判讀（flake 面）：KVM 不可用 → 專屬 step 印 ::error::「環境性」並失敗；emulator 沒開機就逾時 → 沒有 androidTest-results 目錄，
+  # 「判讀」step 印「環境性」；有 androidTest-results 而紅 → 測試或 app 的問題。emulator-runner 釘 commit SHA（v2.38.0）。
+  android-connected:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 判定是否需要跑（LS-478）
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          run=true
+          if [ "$EVENT" = pull_request ]; then
+            files=$(git -c core.quotePath=false diff --name-only --no-renames "origin/$BASE_REF...HEAD") || files=
+            if [ -n "$files" ] && ! printf '%s\n' "$files" | grep -Eq '^(android/|\.jdk-version$|\.android-api$|\.gradle-version$|\.github/workflows/ci\.yml$)'; then
+              run=false
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          if [ "$run" = true ]; then echo "→ android-connected：執行"; else echo "→ android-connected：略過（本 PR 未動 android/**、釘住檔、ci.yml）"; fi
+      - uses: actions/setup-java@v4
+        if: steps.scope.outputs.run == 'true'
+        with:
+          distribution: temurin
+          java-version-file: .jdk-version
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.scope.outputs.run == 'true'
+      - name: 讀 .android-api
+        id: api
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          api="$(tr -d '[:space:]' < .android-api)"
+          case "$api" in ''|*[!0-9]*) echo "::error::.android-api 須為整數（得到「${api}」）"; exit 1 ;; esac
+          echo "api=$api" >> "$GITHUB_OUTPUT"
+      - name: 啟用 KVM（emulator 硬體加速）
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          if [ ! -e /dev/kvm ]; then
+            echo "::error::環境性失敗：runner 沒有 /dev/kvm，emulator 無法硬體加速（不是測試紅；請 rerun，連續兩次再回報）"
+            exit 1
+          fi
+          ls -l /dev/kvm
+      - name: instrumented 測試（emulator API ${{ steps.api.outputs.api }}，Pixel 8）
+        if: steps.scope.outputs.run == 'true'
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: ${{ steps.api.outputs.api }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_8
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          working-directory: android
+          script: |
+            echo "→ android-connected：emulator 已開機；以下才是測試（此行之後紅＝測試或 app 問題，此行之前紅＝環境）"
+            ./gradlew --no-daemon :app:connectedDebugAndroidTest
+      - name: 紅燈判讀（環境 vs 測試）
+        if: ${{ failure() && steps.scope.outputs.run == 'true' }}
+        run: |
+          if [ -d android/app/build/outputs/androidTest-results ]; then
+            echo "::error::有 androidTest-results：emulator 已開機、測試有跑——紅＝測試或 app 的問題，見 artifact android-connected-reports"
+          else
+            echo "::error::沒有 androidTest-results：測試根本沒跑到——多半是環境性（KVM／emulator 冷啟動逾時／system image 下載），先 rerun；連續兩次紅再回報（LS-478 穩定度追蹤表）"
+          fi
+      - name: 上傳測試報告
+        if: ${{ always() && steps.scope.outputs.run == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-connected-reports
+          path: |
+            android/app/build/reports/androidTests/
+            android/app/build/outputs/androidTest-results/
+          if-no-files-found: warn
+          retention-days: 7
 
   # LS-350：登記 tree 快取——只在「完整 run」（ci-dedup mode=full 且 record=true：push／dispatch，或 PR 且
   # ui-test-trigger 判定要跑 UITests）且 db／lint／ci／ci-ui（matrix 全片，LS-385）／ci-ipad 全 success 時，上傳名為 ci-tree-<tree> 的

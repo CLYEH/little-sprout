@@ -1,7 +1,9 @@
 #!/bin/bash
 # 分支保護套用（LS-85 G1／LS-87 G1）：test／main 改成「required status checks＋禁 force push／刪除＋enforce_admins」、關閉 require PR——
 # 晉升改 fast-forward push（scripts/ops/promote.sh）後，PR 只剩 feature→development 與 hotfix→main；每個進到 test／main 的 SHA
-# 仍須八個 check（ci／ci-ipad／ci-ui-1／ci-ui-2／ci-ui-3／db／lint／rules，LS-209 加 ci-ipad、LS-385 加 UITests 三片 ci-ui-1..3）全綠
+# 仍須十個 check（ci／ci-ipad／ci-ui-1／ci-ui-2／ci-ui-3／db／lint／rules／android-lint／android-unit，LS-209 加 ci-ipad、LS-385 加
+# UITests 三片 ci-ui-1..3、LS-478 加 android-lint／android-unit——兩個 job 永遠建立 check-run，PR 未動 android 路徑時早退 success，
+# 所以進 required 不會卡住純 iOS PR）全綠
 # 才推得上去（server-side：沒有綠 check 的 SHA 被 GH006 拒收）。
 # LS-87：required checks 再加 commit status context `merge-review`（merge-reviewer 以 scripts/ops/post-status.sh 用 gh 使用者 token 貼，
 # 不是 GitHub Actions → app_id -1＝任何來源皆可；GitHub required status checks 可混用 check-run 與 status context）——沒有
@@ -54,8 +56,8 @@ after="$OUT/protection-${branch}-after.json"
 summary() {  # 一行摘要：require_pr／checks／enforce_admins／force_push／deletions／linear／restrictions
   jq -r '"require_pr=\(.required_pull_request_reviews != null) checks=\([.required_status_checks.checks[]? | "\(.context)@\(if .app_id == null or .app_id == -1 then "any" else .app_id end)"] | join(",")) strict=\(.required_status_checks.strict) enforce_admins=\(.enforce_admins.enabled) force_push=\(.allow_force_pushes.enabled) deletions=\(.allow_deletions.enabled) linear_history=\(.required_linear_history.enabled) restrictions=\(.restrictions != null)"' "$1"
 }
-# 目標狀態：merge-review@any（GET 回讀 -1 或 null 都算「任何 app」）。test／main：**九個** context 齊、**八個** Actions
-# check@15368（LS-209 加 ci-ipad、LS-385 加 ci-ui-1..3；與 promote.sh REQUIRED_CHECKS 同步）；另驗 require PR 關、enforce_admins、禁 force push／刪除；development：contexts＝before
+# 目標狀態：merge-review@any（GET 回讀 -1 或 null 都算「任何 app」）。test／main：**十一個** context 齊、**十個** Actions
+# check@15368（LS-209 加 ci-ipad、LS-385 加 ci-ui-1..3、LS-478 加 android-lint／android-unit；與 promote.sh REQUIRED_CHECKS 同步）；另驗 require PR 關、enforce_admins、禁 force push／刪除；development：contexts＝before
 # 的 contexts ∪ merge-review、其餘 check 的 context／app_id 與 before 相同（與 request 同源、不硬寫五個——development 的
 # required checks 日後增減不會讓 verify 誤報，R3 F3）＋require PR 仍開（其餘欄位本腳本不動）。**LS-209 merge-review R1
 # m1 裁決**：development 的 patch 模式刻意不強制加 ci-ipad——development 是快速整合分支，`qa` status 同理也只在
@@ -63,10 +65,14 @@ summary() {  # 一行摘要：require_pr／checks／enforce_admins／force_push�
 # 設計一致（不是遺漏）。
 # **LS-385 例外**：UITests 自 `ci` 拆成 `ci-ui-1..3`，而 development 原本就要求 `ci`（當時含 UITests）——patch 模式一併把
 # `ci-ui-1..3`（@15368）編進 request／verify，維持「UITests 紅的 PR 併不進 development」這條既有把關，不是新增分層。
-# request＝before 的其他 check（去掉既有的 ci-ui-*，改以 DEV_ADD 為準）＋DEV_ADD＋merge-review；verify 同源比對。
-DEV_ADD='[{"context":"ci-ui-1","app_id":15368},{"context":"ci-ui-2","app_id":15368},{"context":"ci-ui-3","app_id":15368}]'
+# **LS-478 例外**：`android-lint`／`android-unit` 同樣編進 DEV_ADD——否則 Android 紅燈的 PR 併得進 development（push gate 本機
+# 無 SDK 時略過、不擋），promote.sh 的 required 清單只在 development→test 才擋，等於 Android 錯誤已進了整合分支；與 ci-ui-* 同理，
+# 這是把既有把關擴到新 job，不是新增分層。**套用（`protection-apply.sh <branch>` 改 GitHub 設定）由 orchestrator 在本變更併入 development
+# 之後執行**——先套用的話，PR 自己會被尚未存在的 check 擋住。
+# request＝before 的其他 check（去掉既有的 ci-ui-* 與 DEV_ADD 內同名者，改以 DEV_ADD 為準）＋DEV_ADD＋merge-review；verify 同源比對。
+DEV_ADD='[{"context":"ci-ui-1","app_id":15368},{"context":"ci-ui-2","app_id":15368},{"context":"ci-ui-3","app_id":15368},{"context":"android-lint","app_id":15368},{"context":"android-unit","app_id":15368}]'
 CHECKS_OK='(.required_status_checks.strict | not)
-    and ([.required_status_checks.checks[].context] | sort == ["ci","ci-ipad","ci-ui-1","ci-ui-2","ci-ui-3","db","lint","merge-review","rules"])
+    and ([.required_status_checks.checks[].context] | sort == ["android-lint","android-unit","ci","ci-ipad","ci-ui-1","ci-ui-2","ci-ui-3","db","lint","merge-review","rules"])
     and ([.required_status_checks.checks[] | select(.context != "merge-review") | .app_id] | all(. == 15368))
     and ([.required_status_checks.checks[] | select(.context == "merge-review") | .app_id] | all(. == null or . == -1))'
 verify() {  # 回讀是否等於目標狀態
@@ -80,7 +86,7 @@ verify() {  # 回讀是否等於目標狀態
       and (.restrictions == null)" "$1" >/dev/null ;;
     patch) jq -e --slurpfile b "$before" --argjson add "$DEV_ADD" '
       def others: [.required_status_checks.checks[] | select(.context != "merge-review") | {context, app_id: (.app_id // -1)}] | sort_by(.context);
-      def want: ([($b[0] | others)[] | select(.context | test("^ci-ui-[0-9]+$") | not)] + $add) | sort_by(.context);
+      def want: ([($b[0] | others)[] | select((.context | test("^ci-ui-[0-9]+$") | not) and (.context as $c | $add | map(.context) | index($c) | not))] + $add) | sort_by(.context);
       (.required_pull_request_reviews != null)
       and (.required_status_checks.strict | not)
       and (([.required_status_checks.checks[].context] | unique) == (([$b[0].required_status_checks.checks[].context] + ["merge-review"] + [$add[].context]) | unique))
@@ -105,6 +111,8 @@ CHECKS_JSON='{
       {"context": "db",           "app_id": 15368},
       {"context": "lint",         "app_id": 15368},
       {"context": "rules",        "app_id": 15368},
+      {"context": "android-lint", "app_id": 15368},
+      {"context": "android-unit", "app_id": 15368},
       {"context": "merge-review", "app_id": -1}
     ]
   }'
@@ -127,11 +135,11 @@ case "$MODE" in
 EOF
     echo "  request: PUT ${EP}" ;;
   patch)
-    # 加 merge-review＋DEV_ADD（ci-ui-1..3，LS-385）：其餘 check 照 before 原樣（context／app_id；null→-1 同義「任何 app」），不順手收緊（R2 M2）
-    if ! jq --argjson add "$DEV_ADD" '{strict: false, checks: ([.required_status_checks.checks[] | select(.context != "merge-review" and (.context | test("^ci-ui-[0-9]+$") | not)) | {context, app_id: (.app_id // -1)}] + $add + [{context: "merge-review", app_id: -1}])}' "$before" > "$request"; then
+    # 加 merge-review＋DEV_ADD（ci-ui-1..3，LS-385；android-lint／android-unit，LS-478）：其餘 check 照 before 原樣（context／app_id；null→-1 同義「任何 app」），不順手收緊（R2 M2）
+    if ! jq --argjson add "$DEV_ADD" '{strict: false, checks: ([.required_status_checks.checks[] | select(.context != "merge-review" and (.context | test("^ci-ui-[0-9]+$") | not) and (.context as $c | $add | map(.context) | index($c) | not)) | {context, app_id: (.app_id // -1)}] + $add + [{context: "merge-review", app_id: -1}])}' "$before" > "$request"; then
       echo "✗ protection-apply：從 ${before} 產生 request 失敗" >&2; exit 2
     fi
-    echo "  request: PATCH ${EP_CHECKS}（加 merge-review＋ci-ui-1..3（LS-385）；其餘 check 照現況、require PR 等其餘設定不動）" ;;
+    echo "  request: PATCH ${EP_CHECKS}（加 merge-review＋ci-ui-1..3（LS-385）＋android-lint／android-unit（LS-478）；其餘 check 照現況、require PR 等其餘設定不動）" ;;
 esac
 sed 's/^/    /' "$request"
 echo "  可推送者（collaborators 有 push 權限；user-owned repo 無 restrictions 可設）："
