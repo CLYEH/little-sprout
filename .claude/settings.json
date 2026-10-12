@@ -94,5 +94,9 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "firebase@firebase": true,
+    "supabase@claude-plugins-official": true
   }
 }
