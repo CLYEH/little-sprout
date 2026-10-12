@@ -13,6 +13,7 @@ import com.clyeh.sproutday.supabase.AuthState
 import com.clyeh.sproutday.supabase.BackendError
 import com.clyeh.sproutday.supabase.Child
 import com.clyeh.sproutday.supabase.ChildrenRepository
+import com.clyeh.sproutday.supabase.DiaryRepository
 import com.clyeh.sproutday.supabase.Family
 import com.clyeh.sproutday.supabase.FamilyMember
 import com.clyeh.sproutday.supabase.FamilyRepository
@@ -67,6 +68,7 @@ class DebugAuthViewModel(
     private val children: ChildrenRepository,
     private val growth: GrowthRepository,
     private val food: FoodRepository,
+    private val diaries: DiaryRepository,
 ) : ViewModel() {
     private val local = MutableStateFlow(DebugUiState())
 
@@ -212,6 +214,20 @@ class DebugAuthViewModel(
             "${catalog.size} 種；前 $FOOD_PREVIEW：" + catalog.take(FOOD_PREVIEW).joinToString { "${it.nameZh}(${it.id})" }
         }
 
+    /**
+     * 寫一篇今天的日記並標記第一個寶貝（`create_diary_entry`），再讀回詳情確認標記；沒有寶貝就不寫（按鈕語意是「標記第一個寶貝」）。
+     * 日記 id 由後端產生、沒有冪等鍵；`busy` 擋連點，所以一次按一篇。
+     */
+    fun writeDiary() =
+        run("寫日記") {
+            val family = currentFamily() ?: return@run "還沒有家庭"
+            val child = children.listChildren(family.id).firstOrNull { it.deletedAt == null } ?: return@run "先建寶貝"
+            val body = "除錯日記 ${LocalTime.now().withNano(0)}"
+            val id = diaries.createEntry(family.id, listOf(child.id), body, LocalDate.now().toString())
+            val detail = feed.diaryDetail(id)
+            "已寫 ${id.take(ID_PREVIEW)}…（標記 ${detail?.childIds?.size ?: 0} 位寶貝：${child.name}）"
+        }
+
     private suspend fun currentFamily(): Family? = local.value.family ?: families.fetchMyFamilies().firstOrNull()
 
     private fun run(
@@ -256,10 +272,22 @@ class DebugAuthViewModel(
             children: ChildrenRepository,
             growth: GrowthRepository,
             food: FoodRepository,
+            diaries: DiaryRepository,
         ): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
-                    DebugAuthViewModel(auth, families, media, uploadQueue, feed, social, children, growth, food)
+                    DebugAuthViewModel(
+                        auth,
+                        families,
+                        media,
+                        uploadQueue,
+                        feed,
+                        social,
+                        children,
+                        growth,
+                        food,
+                        diaries,
+                    )
                 }
             }
     }
