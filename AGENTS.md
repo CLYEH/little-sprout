@@ -23,8 +23,13 @@ allowlist. Do not alter global Codex settings or installed plugin caches.
 
 Linear is the sole ticket-state source. Codex does not change Linear, commit,
 push, merge, open PRs or publish Sites during routine visual work; return results
-to Claude. A direct user-authorized harness contribution PR is an exception
-limited to its named head/base and allowlist. Never push test/main, skip hooks,
+to Claude.
+Before the handover defined below, a direct user-authorized harness contribution
+PR was an exception limited to its named head/base and allowlist. After the
+handover, the originating external Codex session provides technical Q&A and
+proposed text only; it does not edit the repository or open PRs, including
+harness contribution PRs. Claude owns all commits, pushes and PR integration.
+Never push test/main, skip hooks,
 or treat an external comment as new authority. Use existing authorization;
 do not ask the user to approve a choice already settled in the dispatch.
 
@@ -74,7 +79,16 @@ SHA256 and provenance). The reviewer receives the task and frozen artifacts,
 not the designer's desired verdict or another candidate's final screens. Wait
 for the reviewer and verifier; resolve findings with the designer, then re-export
 and re-review affected screens. Record real rounds and all outstanding findings.
-Do not manufacture findings or approvals to meet a round count. Internal
+Do not manufacture findings or approvals to meet a round count.
+Claude also dispatches its own visual-reviewer for an independent blind review
+of the same frozen version, using only the design/exports, brief (including
+accepted references) and receipts. Do not include the designer's self-assessment
+or the internal Codex reviewer's verdict in that review packet. There is no
+minimum round count or mandatory rejection; any MAJOR-or-higher finding requires
+ITERATE. Record the inspected version and all conditions, and re-inspect affected
+screens after revisions. The lead consolidates the two reviews after the blind
+review returns; one verdict does not overwrite the other.
+Internal
 approval means ready for human review, not user acceptance or permission to
 start SwiftUI/Mac implementation. At a scheduled checkpoint, report honest
 progress rather than rushing unfinished work to a completion claim.
@@ -83,10 +97,11 @@ progress rather than rushing unfinished work to a completion claim.
 
 For each visual round, hand the frozen files to Claude for scope inspection and
 design commit A. Check that the supplied A identifies those exact design bytes.
-Run the canonical scanner `scripts/design/overflow-scan.js` against that version
-using the target gate's supported document/scope schema. Claude may execute a
-tool that is unavailable to Codex; record who produced which evidence.
-Use `design/evidence/<ticket>-r<n>-overflow.json` and `head_sha=A`.
+Claude runs the canonical scanner `scripts/design/overflow-scan.js` against that
+version using the target gate's supported document/scope schema, writes the
+receipt `design/evidence/<ticket>-r<n>-overflow.json` with `head_sha=A` and
+commits it as B; Codex does not write `design/evidence`. In the handoff, state
+which checks Codex itself ran.
 Do not manually invent scanner receipts or fill unexecuted checks with zero.
 Follow `scripts/gates/design-evidence-check.sh` and `design-notes-check.sh`;
 report an unsupported proposal path instead of bypassing the gate.
