@@ -144,6 +144,12 @@ expect 1 '⑪ 事實列不放寬：「成果」段的版本句沒 tag／Done 引
 - 里程碑進度：M7 TestFlight 62%'
 expect 0 '⑪ 「成果」標籤句帶 id 的列改算已查（進抽樣池，不計豁免）' '1 條事實列皆有引據（豁免 0 條）' '## 成果
 - 可看：核可頁 artifact（LS-425 Done，e2d4fa02）'
+expect 0 '⑪ 「風險與需要你注意」段單獨一個「無」豁免；帶 id 的風險列照查' '1 條事實列皆有引據（豁免 1 條）' '## 風險與需要你注意
+無
+## 風險與需要你注意
+- LS-417 BLOCKED：第 2 條等 LS-427（512feab5）'
+expect 1 '⑪ 事實列不放寬：「風險與需要你注意」段的風險列沒引據仍紅' '✗ 第 2 行缺引據' '## 風險與需要你注意
+- 分類器擋 docker pause，QA 第 2 條沒驗'
 expect 1 '⑪ 事實列不放寬：「事實列」底下的在飛列缺引據仍紅' '✗ 第 3 行缺引據' '## 事實列
 ### 在飛
 - 設計者今天畫了六態'
@@ -204,11 +210,13 @@ fi
 
 # mutation（LS-495）：拿掉段落標題白名單（「待你決策」從整段豁免移除＋「成果」標籤句豁免改成不命中）→ ⑪ 兩個豁免案必須變紅
 mutA="$work/mutA.sh"
-sed -e 's/|待你決策//' -e '/# MUT:allowlist/s/.*/EXEMPT_RESULT_RE="^(ZZZNOMATCH)$"/' "$check" > "$mutA"
-if ! grep -q '^EXEMPT_FULL_RE=.*待你決策' "$mutA" && ! grep -q 'MUT:allowlist' "$mutA" && grep -q 'MUT:allowlist' "$check"; then
+sed -e 's/|待你決策//' -e 's/|風險與需要你注意//' -e '/# MUT:allowlist/s/.*/EXEMPT_RESULT_RE="^(ZZZNOMATCH)$"/' "$check" > "$mutA"
+if ! grep -q '^EXEMPT_FULL_RE=.*待你決策' "$mutA" && ! grep -q '^EXEMPT_ABSENT_RE=.*風險與需要你注意' "$mutA" && ! grep -q 'MUT:allowlist' "$mutA" && grep -q 'MUT:allowlist' "$check"; then
   printf '%s\n' "$DECIDE" > "$work/r.md"; bash "$mutA" "$work/r.md" >/dev/null 2>&1; gotA1=$?
   printf '%s\n' "$RESULT" > "$work/r.md"; bash "$mutA" "$work/r.md" >/dev/null 2>&1; gotA2=$?
-  if [ "$gotA1" -eq 1 ] && [ "$gotA2" -eq 1 ]; then echo "✓ mutant（拿掉段落標題白名單）：⑪ 待你決策案與成果案皆變紅（白名單確實是豁免的原因）"; else echo "✗ mutant 拿掉白名單後兩案應皆 exit 1（實得 ${gotA1}／${gotA2}）" >&2; fail=1; fi
+  printf '%s\n' '## 風險與需要你注意
+無' > "$work/r.md"; bash "$mutA" "$work/r.md" >/dev/null 2>&1; gotA3=$?
+  if [ "$gotA1" -eq 1 ] && [ "$gotA2" -eq 1 ] && [ "$gotA3" -eq 1 ]; then echo "✓ mutant（拿掉段落標題白名單）：⑪ 待你決策案、成果案、風險「無」案皆變紅（白名單確實是豁免的原因）"; else echo "✗ mutant 拿掉白名單後三案應皆 exit 1（實得 ${gotA1}／${gotA2}／${gotA3}）" >&2; fail=1; fi
 else
   echo "✗ mutant（白名單）的 sed 未命中（負控本身無效）" >&2; fail=1
 fi
