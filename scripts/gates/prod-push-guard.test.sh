@@ -121,6 +121,29 @@ expect 'R2-m2f storage rm（deny）' 2 'supabase storage rm ss:///media/x.png'
 expect 'R2-m2g storage cp --local（allow）' 0 'supabase storage cp --local a.png ss:///media/a.png'
 expect 'R2-m2h secrets unset 有當日 token（allow）' 0 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase secrets unset FOO"
 
+# ---- LS-503：config push 一律擋（token 也不放行），--local／--help／-h 放行，其他 token 路徑不變 ----
+expect 'LS503-a config push 有當日 token 仍擋（deny）' 2 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase config push"
+expect 'LS503-b config push --yes 仍擋（deny）' 2 'supabase config push --yes'
+expect 'LS503-b2 config push --yes＋當日 token＋--project-ref 旗標順序不同仍擋（deny）' 2 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase --yes config push --project-ref abcdefghijklmnopqrst"
+expect 'LS503-b3 同命令先 db push（有 token）再 config push 仍擋（deny）' 2 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase db push --linked && supabase config push"
+expect 'LS503-c config push --local 放行（allow）' 0 'supabase config push --local'
+expect 'LS503-d config push --help 放行（allow）' 0 'supabase config push --help'
+expect 'LS503-d2 config push -h 放行（allow）' 0 'supabase config push -h'
+expect 'LS503-e db push＋當日 token 不受影響（allow）' 0 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase db push --linked"
+expect 'LS503-g config push --yes # --help（註解內旗標不算，deny）' 2 'supabase config push --yes # --help'
+expect 'LS503-g2 config push # -h（deny）' 2 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase config push # -h"
+expect 'LS503-g3 db push # --local（註解內 --local 不放行，deny）' 2 'supabase db push # --local'
+expect 'LS503-g6 db push # --db-url 本機（註解內本機 db-url 不放行，deny）' 2 'supabase db push # --db-url postgres://u@127.0.0.1:54322/postgres'
+expect 'LS503-g7 db push --db-url 本機 # note（allow）' 0 'supabase db push --db-url postgres://u@127.0.0.1:54322/postgres # note'
+expect 'LS503-g8 遠端 --db-url 在前、註解內再放本機 --db-url（deny）' 2 "supabase db push --db-url ${REMOTE} # --db-url ${LOCALDB}"
+expect 'LS503-g4 db push --local # 註解（旗標在註解前，allow）' 0 'supabase db push --local # note'
+expect 'LS503-g5 config push --help # 註解（allow）' 0 'supabase config push --help # note'
+out=$(payload "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase config push" | bash "$gate" 2>&1)
+case "$out" in
+  *'無 dry-run'*'Management API'*'使用者在自己終端機互動執行'*'agent 不代推'*) echo '✓ LS503-f 攔截訊息含三句要點（無 dry-run／Management API／使用者互動）' ;;
+  *) echo "✗ LS503-f 攔截訊息缺要點：${out}" >&2; fail=1 ;;
+esac
+
 # ---- R3：heredoc 內文（reviewer i4：verdict／PR body 草稿要寫到這些字）----
 expect 'R3-a cat heredoc 內文含 supabase db push --linked（allow）' 0 $'cat > f <<\'X\'\nsupabase db push --linked\nX'
 expect 'R3-b bash heredoc 內文含之（deny）' 2 $'bash <<\'X\'\nsupabase db push --linked\nX'
@@ -211,9 +234,9 @@ mutate_expect_allow() {  # $1=label $2=sed 表達式 $3=原本會 deny 的 comma
 mutate_expect_allow 'M1：拿掉 token 比對（一律放行已偵測者）→ 無 token 的 --linked 改判 allow' \
   's/^sys.exit(0 if tok.search(cmd) else 2)$/sys.exit(0)/' 'supabase db push --linked'
 mutate_expect_allow 'M2：拿掉 db push 預設 linked 判斷 → 裸跑 db push 改判 allow' \
-  's/ and dburl is None and not has_local/ and False/' 'supabase db push'
+  's/ and dburl_pre is None and not has_local/ and False/' 'supabase db push'
 mutate_expect_allow 'M3：拿掉 --db-url 主機判斷 → 遠端 --db-url 改判 allow' \
-  's/if dburl is not None and host_of(dburl) not in LOCAL_HOSTS:/if False:/' "supabase migration up --db-url ${REMOTE}"
+  's/^    if any(u is not None and host_of(u) not in LOCAL_HOSTS for u in (dburl, dburl_pre)):$/    if False:/' "supabase migration up --db-url ${REMOTE}"
 mutate_expect_allow 'M4：拿掉 functions deploy／secrets set 規則 → functions deploy 改判 allow' \
   's/^    if re.search(ALWAYS_REMOTE, text):$/    if False:/' 'supabase functions deploy foo'
 mutate_expect_allow 'M5：拿掉 --linked 判斷 → db query --linked 改判 allow' \
@@ -230,6 +253,14 @@ mutate_expect_deny 'M10：拿掉 heredoc 內文剝除 → cat heredoc 內文含 
   's/^    command = strip_heredocs(\(.*\))$/    command = \1/' $'cat > f <<\'X\'\nsupabase db push --linked\nX'
 mutate_expect_allow 'M11：接收端一律略過內文（不分 shell 直譯器）→ bash heredoc 內文改判 allow' \
   's/^            keep = stdin_is_shell(words)$/            keep = False/' $'bash <<\'X\'\nsupabase db push --linked\nX'
+mutate_expect_allow 'M12（LS-503）：拿掉 config push 一律擋分支 → 有 token 的 config push 改判 allow' \
+  's/^if CFG_HIT:$/if False:/' "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase config push"
+mutate_expect_allow 'M13（LS-503 R1c）：拿掉註解截斷 → config push --yes # --help 改判 allow' \
+  's/^        if a.startswith("#"):$/        if False:/' 'supabase config push --yes # --help'
+mutate_expect_allow 'M13b（LS-503 R1c）：拿掉註解截斷 → db push # --local 改判 allow' \
+  's/^        if a.startswith("#"):$/        if False:/' 'supabase db push # --local'
+mutate_expect_allow 'M14（LS-503 R1d）：本機 db-url 判定改回整段 → db push # --db-url 本機 改判 allow' \
+  's/re.search(DEFAULT_LINKED, text) and dburl_pre is None/re.search(DEFAULT_LINKED, text) and dburl is None/' 'supabase db push # --db-url postgres://u@127.0.0.1:54322/postgres'
 mutate_expect_allow 'M6：拿掉行尾續行摺疊 → 續行寫法的 --linked 改判 allow' \
   's/command\.replace(.*, " "))$/command)/' $'supabase db query \\\n  -f x.sql \\\n  --linked'
 mutate_expect_allow 'M7：拿掉 migration repair 預設 linked → 改判 allow' \

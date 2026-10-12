@@ -247,6 +247,8 @@ otp_expiry = 3600
 #   smtp_admin_email=no-reply@auth.sproutday.app、smtp_sender_name=Sprout Day。
 # 換寄件網域必須同時換成該網域的 key，否則 Resend 回 403 → GoTrue 回 500
 # 「Error sending confirmation email」。key 不進 repo（使用者本機 ~/.secrets）。
+# LS-503：正式站以 Management API 開啟（LS-487），本檔刻意不啟用；`supabase config push` 無 dry-run、
+# 會逐服務覆蓋正式站設定，agent 不得代推（prod-push-guard hook 一律擋），config push 由使用者互動執行。
 # Use a production-ready SMTP server
 # [auth.email.smtp]
 # enabled = true
