@@ -22,6 +22,7 @@ extension TapTargetGateScreenName {
         // 標題一定會渲染，不依賴任何 seed 資料。
         case .settingsRegular: return .staticText("個人")
         case .forkViewNoFamily: return .button("我要自己建立家庭")
+        case .familyLookupFailed: return .button("重試")
         case .diaryEditor: return .staticText("寫日記")
         case .createChild: return .staticText("幫寶貝建立檔案")
         case .timelineDefaultState: return .button("新增回憶")

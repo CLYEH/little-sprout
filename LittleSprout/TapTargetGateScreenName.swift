@@ -191,12 +191,11 @@ enum TapTargetGateScreenName: String {
     // environment 指定畫面」這條既有通道，讓 `PasswordSignInUITests` 能直接啟動到歡迎頁，
     // 測「小字連結存在且 tap 能導覽到帳密登入畫面」這條票文驗收，不需要真的登入或建立家庭。
     case welcome = "WelcomeView"
-    // LS-505：已登入、無家庭的一般三岔路頁（`ForkView` 本身仍在 `tap-target-exemptions.txt`，
-    // rawValue 刻意不以 `View` 結尾，同其他變體 case）——**不**做逐元件 tap target 量測，純粹
-    // 借用「launch environment 指定畫面」通道，讓 `ForkViewSignOutUITests` 驗證「登出」鈕存在、
-    // 可點，點後 session 清除並回到歡迎頁（host 以 `authStore.session == nil` 切換，同
-    // `RootRoute` 的 `.welcome` 分支），不需要真的登入。
+    // LS-505：只借「launch environment 指定畫面」通道（`ForkViewSignOutUITests`），不做 tap target 量測；
+    // rawValue 刻意不以 `View` 結尾（`ForkView` 在 exemptions）。host＝`ForkViewSignOutHost`，以
+    // `authStore.session == nil` 切回歡迎頁，鏡像 `RootRoute.welcome`。後者＝家庭查詢失敗兜底頁。
     case forkViewNoFamily = "ForkViewNoFamily"
+    case familyLookupFailed = "FamilyLookupFailedScreen"
     // LS-192：02 顯示名稱與頭像編輯——從 `ContentUnavailableView` 佔位換成正式內容，取代
     // `tap-target-exemptions.txt` 原本的具名排除（同 `albumsDefaultState` 的既有理由）。初始態
     // （`.preview(withFamily:)` 免登入即可建構）就有代表性：頭像欄（PhotosPicker 觸發鈕）／

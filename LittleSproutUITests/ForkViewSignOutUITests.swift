@@ -21,4 +21,23 @@ final class ForkViewSignOutUITests: XCTestCase {
         )
         XCTAssertFalse(app.buttons["我要自己建立家庭"].exists, "回到歡迎頁後不該還看得到三岔路")
     }
+
+    /// 帳號在後端被刪、存的 access token 仍有效時，家庭查詢失敗落在 `FamilyLookupFailedView`——
+    /// 同樣要有「登出」出口。
+    func testFamilyLookupFailedView_signOutButton_existsAndReturnsToWelcome() {
+        let app = TapTargetMeasurement.launch(.familyLookupFailed)
+        TapTargetMeasurement.assertScreenRendered(.familyLookupFailed, in: app)
+
+        let signOutButton = app.buttons["登出"]
+        XCTAssertTrue(signOutButton.waitForExistence(timeout: 5), "家庭查詢失敗頁應該要有「登出」出口")
+        XCTAssertTrue(signOutButton.isHittable, "「登出」鈕應該可點（minHeight 48）")
+
+        signOutButton.tap()
+
+        XCTAssertTrue(
+            TapTargetGateScreenName.welcome.sentinel.element(in: app).waitForExistence(timeout: 5),
+            "登出後 session 清除，應該回到歡迎（登入）頁"
+        )
+        XCTAssertFalse(app.buttons["重試"].exists, "回到歡迎頁後不該還看得到失敗頁")
+    }
 }

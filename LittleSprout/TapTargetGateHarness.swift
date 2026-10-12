@@ -89,8 +89,8 @@ enum TapTargetGateHarness {
         case .importBatchFlowEntry, .importBatchFlowEntryDark, .importBatchFlowQuotaFailure:
             importBatchFlowEntryHost(for: screen)
         case .passwordSignIn: passwordSignInHost
-        // LS-505：本 enum body 已貼齊 `type_body_length` 250 上限，`.forkViewNoFamily` 併進 `.welcome` 單行分派。
-        case .welcome, .forkViewNoFamily: welcomeOrForkViewHost(for: screen)
+        // LS-505：enum body 貼齊 `type_body_length` 上限，`.forkViewNoFamily`／`.familyLookupFailed` 併進 `.welcome` 分派。
+        case .welcome, .forkViewNoFamily, .familyLookupFailed: welcomeOrForkViewHost(for: screen)
         case .profileEdit: profileEditHost
         case .familyMembers: familyMembersHost
         case .deleteAccountGeneralMember: deleteAccountGeneralMemberHost
