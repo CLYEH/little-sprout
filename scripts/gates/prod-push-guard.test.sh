@@ -130,6 +130,11 @@ expect 'LS503-c config push --local 放行（allow）' 0 'supabase config push -
 expect 'LS503-d config push --help 放行（allow）' 0 'supabase config push --help'
 expect 'LS503-d2 config push -h 放行（allow）' 0 'supabase config push -h'
 expect 'LS503-e db push＋當日 token 不受影響（allow）' 0 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase db push --linked"
+expect 'LS503-g config push --yes # --help（註解內旗標不算，deny）' 2 'supabase config push --yes # --help'
+expect 'LS503-g2 config push # -h（deny）' 2 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase config push # -h"
+expect 'LS503-g3 db push # --local（註解內 --local 不放行，deny）' 2 'supabase db push # --local'
+expect 'LS503-g4 db push --local # 註解（旗標在註解前，allow）' 0 'supabase db push --local # note'
+expect 'LS503-g5 config push --help # 註解（allow）' 0 'supabase config push --help # note'
 out=$(payload "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase config push" | bash "$gate" 2>&1)
 case "$out" in
   *'無 dry-run'*'Management API'*'使用者在自己終端機互動執行'*'agent 不代推'*) echo '✓ LS503-f 攔截訊息含三句要點（無 dry-run／Management API／使用者互動）' ;;
@@ -247,6 +252,10 @@ mutate_expect_allow 'M11：接收端一律略過內文（不分 shell 直譯器�
   's/^            keep = stdin_is_shell(words)$/            keep = False/' $'bash <<\'X\'\nsupabase db push --linked\nX'
 mutate_expect_allow 'M12（LS-503）：拿掉 config push 一律擋分支 → 有 token 的 config push 改判 allow' \
   's/^if CFG_HIT:$/if False:/' "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase config push"
+mutate_expect_allow 'M13（LS-503 R1c）：拿掉註解截斷 → config push --yes # --help 改判 allow' \
+  's/^        if a.startswith("#"):$/        if False:/' 'supabase config push --yes # --help'
+mutate_expect_allow 'M13b（LS-503 R1c）：拿掉註解截斷 → db push # --local 改判 allow' \
+  's/^        if a.startswith("#"):$/        if False:/' 'supabase db push # --local'
 mutate_expect_allow 'M6：拿掉行尾續行摺疊 → 續行寫法的 --linked 改判 allow' \
   's/command\.replace(.*, " "))$/command)/' $'supabase db query \\\n  -f x.sql \\\n  --linked'
 mutate_expect_allow 'M7：拿掉 migration repair 預設 linked → 改判 allow' \

@@ -24,7 +24,7 @@
 #   **`config push` 例外（LS-503）**：CLI（v2.115.0 實查）的 `config push` 沒有 `--dry-run`、會逐服務覆蓋正式站
 #   auth／api／db 設定，且 `supabase/config.toml` 不是正式站 auth 的單一來源（SMTP／Apple provider 由 Management API
 #   管，LS-487／LS-488）——所以 `config push`（任何旗標順序、含 `--yes`）一律 deny，**有無當日 token 都擋**（token 不放行這一類）；
-#   `--local`／`--help`／`-h` 放行。要推只能使用者在自己終端機互動執行（逐服務看 CLI 印的 diff 答 y/n），agent 不代推。
+#   `--local`／`--help`／`-h` 放行（這類放行旗標只看第一個 `#` 開頭 token 之前的參數：`config push --yes # --help`、`db push # --local` 不因註解放行，R1c）。要推只能使用者在自己終端機互動執行（逐服務看 CLI 印的 diff 答 y/n），agent 不代推。
 #   `migration up` 不帶 --linked／遠端 --db-url 時預設是本機（CLI 預設 --local），放行。
 #   本機 `supabase start`／`stop`／`status`／`db reset`／`db query`（無 --linked）放行。
 #   子指令比對只看不含空白的 args token（引號內整段 SQL 之類不參與），regex 對串起來的 args 比對，所以
@@ -110,12 +110,22 @@ CONFIG_PUSH = r"(?:^|\s)config\s+push(?=\s|$)"
 CFG_HIT = []
 
 
+def before_comment(args):
+    """LS-503 R1c：放行旗標（--local／--help／-h）只看第一個以 `#` 開頭的 token 之前的參數——bash 把它之後當註解，
+    `config push --yes # --help` 實際跑的是 `config push --yes`。引號內含空白的 `#` 字串是單一 token 不以 `#` 起頭；
+    引號包住的單字 `"#x"` 切完與註解無法區分，一律當註解（只會多擋，fail closed）。"""
+    for k, a in enumerate(args):
+        if a.startswith("#"):
+            return args[:k]
+    return args
+
+
 def config_push_blocked(args):
     """LS-503：`config push` 一律擋（有無 token、有無 --yes 都擋）；--local／--help／-h 放行（唯讀或本機）。"""
     text = " ".join(a for a in args if not re.search(r"\s", a))
     if not re.search(CONFIG_PUSH, text):
         return False
-    return not any(a in ("--local", "--help", "-h") for a in args)
+    return not any(a in ("--local", "--help", "-h") for a in before_comment(args))
 
 
 def tokenize(cmd, punct):
@@ -144,7 +154,7 @@ def remote_target(args):
     """args＝supabase 之後、下一個運算子之前的 token。回傳 True＝打正式站。"""
     text = " ".join(a for a in args if not re.search(r"\s", a))
     linked = any(a == "--linked" or a.startswith("--linked=") for a in args)
-    has_local = "--local" in args
+    has_local = "--local" in before_comment(args)
     dburl = None
     for k, a in enumerate(args):
         if a == "--db-url":
@@ -157,7 +167,7 @@ def remote_target(args):
         return True
     if re.search(ALWAYS_REMOTE, text):
         return True
-    if re.search(CONFIG_PUSH, text) and any(a in ("--help", "-h") for a in args):
+    if re.search(CONFIG_PUSH, text) and any(a in ("--help", "-h") for a in before_comment(args)):
         return False
     if re.search(DEFAULT_LINKED, text) and dburl is None and not has_local:
         return True
