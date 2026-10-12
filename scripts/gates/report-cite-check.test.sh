@@ -150,6 +150,12 @@ expect 0 '⑪ 「風險與需要你注意」段單獨一個「無」豁免；帶
 - LS-417 BLOCKED：第 2 條等 LS-427（512feab5）'
 expect 1 '⑪ 事實列不放寬：「風險與需要你注意」段的風險列沒引據仍紅' '✗ 第 2 行缺引據' '## 風險與需要你注意
 - 分類器擋 docker pause，QA 第 2 條沒驗'
+DEGRADE='查無：成果素材收集員失敗（成果段只列 git 來源的 tag）'
+if grep -qF "「${DEGRADE}」" "${root}/.claude/workflows/morning-report.js"; then echo "✓ ⑪ 降級句固定字串仍在 morning-report.js 彙整員 prompt（改字會同時讓此案與下案失真）"; else echo "✗ ⑪ morning-report.js 找不到降級句固定字串「${DEGRADE}」" >&2; fail=1; fi
+expect 0 '⑪ 成果素材收集員失敗的降級句（morning-report.js 固定字串）在「風險與查無」段過 gate' '0 條事實列皆有引據（豁免 1 條）' "### 風險與查無
+- ${DEGRADE}"
+expect 1 '⑪ 降級句若不以缺席句型開頭（「成果素材收集員失敗」）gate 紅——證明固定字串必須照寫' '✗ 第 2 行缺引據' '### 風險與查無
+- 成果素材收集員失敗（成果段只列 git 來源的 tag）'
 expect 1 '⑪ 事實列不放寬：「事實列」底下的在飛列缺引據仍紅' '✗ 第 3 行缺引據' '## 事實列
 ### 在飛
 - 設計者今天畫了六態'
