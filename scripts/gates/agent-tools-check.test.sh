@@ -223,7 +223,7 @@ QA_BODY="${QA_BODY} ${ANDROIDE2E} ${ANDROIDFONT} ${ANDROIDKILL}"
 RUBRICREF='四維度檢查項的單一來源是 `docs/REVIEW-RUBRIC.md`（本檔不另抄一份）。'
 MR_BODY="${MR_BODY} ${RUBRICREF}"
 # LS-352：merge-reviewer 正文另須含自檢抽驗句（informational 記池、不得要求本 PR 修）；併進 MR_BODY
-SELFCHECKSAMPLE='自檢已宣告通過的項只抽驗、不重寫；informational 只有 P1／P2 記 LS-413 池、P3 不入池。'
+SELFCHECKSAMPLE='自檢已宣告通過的項只抽驗、不重寫；informational 只有 P1／P2 記 LS-494 池、P3 不入池。'
 MR_BODY="${MR_BODY} ${SELFCHECKSAMPLE}"
 # LS-458（池 P1 e0f65a8f／f608d582／def25a8f）：merge-reviewer 正文另須含「UI 斷言前必有等待；消失用 waitForNonExistence」；併進 MR_BODY
 WAITRULE='UI 斷言前必有等待；消失用 waitForNonExistence（審 UITest 變更）。'
