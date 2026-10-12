@@ -4,6 +4,7 @@
 # 表格資料列不檢查、同段第二張表的表頭誤紅、編號清單／縮排子彈／段落行不檢查、豁免段落擴到下一段、程式碼區塊／引文被當事實、
 # 缺檔靜默放行、`--sample` 抽到豁免列或由固定順序取前 N 列——這裡會紅。
 # mutation：把 `# MUT:state-word` 那行換成無條件放行 → ③ 負樣本（LS-<n> 無狀態詞）變綠，證明紅是那條規則造成。
+# LS-495 mutation：拿掉段落標題白名單（`待你決策` 與 `# MUT:allowlist` 那行）→ ⑪ 的待你決策案與成果案變紅。
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -123,6 +124,46 @@ expect 0 '⑦ 豁免段內的編號清單與段落都不算' '✓ report-cite-ch
 2. C2 已刪照片 a／b
 回覆格式：回「C1a C2b」。'
 
+# ---- ⑪ LS-495 晨報改版：「待你決策」整段豁免、「成果」只豁免標籤句、事實列規則不放寬 ----
+DECIDE='## 待你決策
+1. 背景：LS-148 名稱要沿用或改名
+   - 選項：a 沿用 Sprout Day／b 改名
+   - 建議：a
+   - 不裁的後果：卡住字標與 App Store 文案（LS-148）'
+expect 0 '⑪ 豁免段：「待你決策」每題四要素的句子不計缺引據' '0 條事實列皆有引據（豁免 4 條）' "$DECIDE"
+
+RESULT='## 成果
+- v0.27.70 讓 TestFlight 版能用 Apple 登入（LS-498）
+- 里程碑進度：M7 TestFlight 62%（5/8）
+- Cycle 進度：cycle 7 完成 12/20 票
+- 路線圖位置：Phase 1 第 9 步 TestFlight 發給家人實測
+- 可看：截圖 .claude/evidence/LS-498/qa1/login.png、TestFlight build 3514'
+expect 0 '⑪ 豁免段：「成果」的標籤句（無 id）豁免，版本句照查（tag＋票號）' '1 條事實列皆有引據（豁免 4 條）' "$RESULT"
+expect 1 '⑪ 事實列不放寬：「成果」段的版本句沒 tag／Done 引據仍紅' '✗ 第 2 行缺引據' '## 成果
+- 這版讓家人能用 Apple 登入
+- 里程碑進度：M7 TestFlight 62%'
+expect 0 '⑪ 「成果」標籤句帶 id 的列改算已查（進抽樣池，不計豁免）' '1 條事實列皆有引據（豁免 0 條）' '## 成果
+- 可看：核可頁 artifact（LS-425 Done，e2d4fa02）'
+expect 0 '⑪ 「風險與需要你注意」段單獨一個「無」豁免；帶 id 的風險列照查' '1 條事實列皆有引據（豁免 1 條）' '## 風險與需要你注意
+無
+## 風險與需要你注意
+- LS-417 BLOCKED：第 2 條等 LS-427（512feab5）'
+expect 1 '⑪ 事實列不放寬：「風險與需要你注意」段的風險列沒引據仍紅' '✗ 第 2 行缺引據' '## 風險與需要你注意
+- 分類器擋 docker pause，QA 第 2 條沒驗'
+DEGRADE='查無：成果素材收集員失敗（成果段只列 git 來源的 tag）'
+if grep -qF "「${DEGRADE}」" "${root}/.claude/workflows/morning-report.js"; then echo "✓ ⑪ 降級句固定字串仍在 morning-report.js 彙整員 prompt（改字會同時讓此案與下案失真）"; else echo "✗ ⑪ morning-report.js 找不到降級句固定字串「${DEGRADE}」" >&2; fail=1; fi
+expect 0 '⑪ 成果素材收集員失敗的降級句（morning-report.js 固定字串）在「風險與查無」段過 gate' '0 條事實列皆有引據（豁免 1 條）' "### 風險與查無
+- ${DEGRADE}"
+expect 1 '⑪ 降級句若不以缺席句型開頭（「成果素材收集員失敗」）gate 紅——證明固定字串必須照寫' '✗ 第 2 行缺引據' '### 風險與查無
+- 成果素材收集員失敗（成果段只列 git 來源的 tag）'
+expect 1 '⑪ 事實列不放寬：「事實列」底下的在飛列缺引據仍紅' '✗ 第 3 行缺引據' '## 事實列
+### 在飛
+- 設計者今天畫了六態'
+expect 1 '⑪ 豁免不外溢：「成果」的下一段「正在做」恢復檢查，標籤句不豁免' '✗ 第 4 行缺引據' '## 成果
+- 里程碑進度：M7 TestFlight 62%
+## 正在做
+- 里程碑進度：M8 Android 資料層 10%'
+
 out8="$(bash "$check" "$work/none.md" 2>&1)"; got8=$?
 if [ "$got8" -eq 2 ]; then echo "✓ ⑧ 檔案不存在 → exit 2"; else echo "✗ ⑧ 檔案不存在應 exit 2（實得 ${got8}）" >&2; fail=1; fi
 out9="$(bash "$check" 2>&1)"; got9=$?
@@ -171,6 +212,19 @@ if ! grep -q 'MUT:heading-space' "$mutH" && grep -q 'MUT:heading-space' "$check"
   if [ "$gotH" -eq 1 ]; then echo "✓ mutant（任何 # 都算標題）：豁免段內 #5 案變紅（標題判定確實是原因）"; else echo "✗ mutant 標題判定退回後應 exit 1（實得 ${gotH}）" >&2; printf '%s\n' "$outH" | sed 's/^/    /' >&2; fail=1; fi
 else
   echo "✗ mutant（標題）的 sed 未命中（負控本身無效）" >&2; fail=1
+fi
+
+# mutation（LS-495）：拿掉段落標題白名單（「待你決策」從整段豁免移除＋「成果」標籤句豁免改成不命中）→ ⑪ 兩個豁免案必須變紅
+mutA="$work/mutA.sh"
+sed -e 's/|待你決策//' -e 's/|風險與需要你注意//' -e '/# MUT:allowlist/s/.*/EXEMPT_RESULT_RE="^(ZZZNOMATCH)$"/' "$check" > "$mutA"
+if ! grep -q '^EXEMPT_FULL_RE=.*待你決策' "$mutA" && ! grep -q '^EXEMPT_ABSENT_RE=.*風險與需要你注意' "$mutA" && ! grep -q 'MUT:allowlist' "$mutA" && grep -q 'MUT:allowlist' "$check"; then
+  printf '%s\n' "$DECIDE" > "$work/r.md"; bash "$mutA" "$work/r.md" >/dev/null 2>&1; gotA1=$?
+  printf '%s\n' "$RESULT" > "$work/r.md"; bash "$mutA" "$work/r.md" >/dev/null 2>&1; gotA2=$?
+  printf '%s\n' '## 風險與需要你注意
+無' > "$work/r.md"; bash "$mutA" "$work/r.md" >/dev/null 2>&1; gotA3=$?
+  if [ "$gotA1" -eq 1 ] && [ "$gotA2" -eq 1 ] && [ "$gotA3" -eq 1 ]; then echo "✓ mutant（拿掉段落標題白名單）：⑪ 待你決策案、成果案、風險「無」案皆變紅（白名單確實是豁免的原因）"; else echo "✗ mutant 拿掉白名單後三案應皆 exit 1（實得 ${gotA1}／${gotA2}／${gotA3}）" >&2; fail=1; fi
+else
+  echo "✗ mutant（白名單）的 sed 未命中（負控本身無效）" >&2; fail=1
 fi
 
 # mutation：`# MUT:state-word` 那行改成無條件 continue → ③ 負樣本必須變綠

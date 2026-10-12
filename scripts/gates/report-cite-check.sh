@@ -8,9 +8,13 @@
 #   - 每條事實列至少含一個可反查 id：≥7 位且含英文字母的 hex token（Linear comment id 前綴或 git sha；純數字如日期不算）、
 #     `#<PR 號>`（≥2 位數），或 `LS-<n>` 且同一行帶整字狀態詞（Done／In Progress／In Review／QA／Ready／Backlog／Canceled／PASS／
 #     FAIL／BLOCKED／APPROVE／ITERATE／REQUEST_CHANGES／merged／open／tag／v<版本>；`tagline`／`reopened` 不算，R1 I1）——單獨提到票號不算引據。
-#   - 標題（`#`+空白）整行是「待使用者（裁決）」「待裁決」「建議」（可帶括號附註）的段落整段豁免（問句、orchestrator 補的判斷）；
-#     整行是「風險與查無」「查無」的段落只豁免「句首」為固定缺席句型（無在飛票／無新 comment／無完成票／查無／收集員失敗：無）且無 id
+#   - 標題（`#`+空白）整行是「待使用者（裁決）」「待你決策」「待裁決」「建議」（可帶括號附註）的段落整段豁免（問句、選項句、orchestrator 補的判斷；
+#     「待你決策」每題的背景／選項／建議／不裁的後果是收集員逐字轉述的句子，來源票號括號尾不驗，LS-495）；
+#     整行是「風險與查無」「風險與需要你注意」「查無」的段落只豁免「句首」為固定缺席句型（無在飛票／無新 comment／無完成票／查無／收集員失敗：無／單獨一個「無」）且無 id
 #     的列，帶 id 的列照查照抽（R2 m2／R3 M1：豁免不能靠 Haiku 寫的標題「含」或「開頭含」關鍵字；R3 I3：缺席句不是「含」）。
+#   - 標題整行是「成果」（可帶括號附註）的段落（LS-495）只豁免「標籤句」：句首（去掉清單記號與 `**`）為 里程碑進度／Cycle 進度／路線圖位置／可看 + `：`
+#     且無 id 的列（進度百分比、截圖路徑、TestFlight build 號沒有 id 可引）；其餘列——昨夜版本「帶了什麼」句——照事實列查（須 tag `vX.Y.Z`
+#     或 Done 票號＋狀態詞），標籤句帶 id 的列也照查並進抽樣池。事實列（含 `事實列` 底下的各小節）規則不放寬。
 #   - 空行、標題、引文（`>`）、程式碼區塊（``` 內）、`|---` 分隔列、表頭不檢查。
 #   - `--sample N`：通過時另印「抽驗樣本」N 行——**由本腳本從已查事實列隨機抽**（R1 M1：不能讓受驗的 Haiku 自己挑樣本），
 #     orchestrator 對這 N 行反查 id。排序鍵由 bash RANDOM 產生（R2 m1：mawk 不理 srand），種子預設 $RANDOM，自測用 CITE_SAMPLE_SEED 釘死。
@@ -36,10 +40,12 @@ STATE_RE="(^|[^A-Za-z_])(${STATE_WORDS})([^A-Za-z_]|$)"
 #   整段豁免：標題以 待使用者／待裁決／建議 開頭；缺席句豁免：標題以 風險與查無／查無 開頭，段內只豁免固定的缺席句型，帶 id 的列照查照抽。
 # R3 M1：整行比對（可帶括號附註），「建議與在飛」這種以關鍵字開頭的標題不再整段豁免
 # 註：多位元組字元不能放進 `[…]` 括號式（C locale 的 grep -E 會逐位元組比對、ubuntu runner 下失配），一律用 `(a|b)` 交替
-EXEMPT_FULL_RE='^(待使用者裁決|待使用者|待裁決|建議)((（|\().*)?$'
-EXEMPT_ABSENT_RE='^(風險與查無|查無)((（|\().*)?$'
+EXEMPT_FULL_RE='^(待使用者裁決|待使用者|待你決策|待裁決|建議)((（|\().*)?$'
+EXEMPT_ABSENT_RE='^(風險與查無|風險與需要你注意|查無)((（|\().*)?$'
+EXEMPT_RESULT_RE='^成果((（|\().*)?$'   # MUT:allowlist（LS-495：成果段只豁免下面的標籤句）
+RESULT_LABEL_RE='^(- |\* |\+ |[0-9]+\. )?(\*\*)?(里程碑進度|Cycle 進度|路線圖位置|可看)(\*\*)?(（.*）)?(：|:)'
 # 缺席句型要在（去掉清單記號與 `lane:x：`／`[lane:x]` 前綴後）整句開頭命中，不是「含」（R3 I3）
-ABSENT_LINE_RE='^(- |\* |\+ |[0-9]+\. )?(\[?lane:[a-z]+\]?(：|:)? *)?(本 lane )?(無在飛票|無新 comment|無完成票|查無|收集員失敗：無|失敗：無)'
+ABSENT_LINE_RE='^(- |\* |\+ |[0-9]+\. )?(\[?lane:[a-z]+\]?(：|:)? *)?(本 lane )?(無在飛票|無新 comment|無完成票|查無|收集員失敗：無|失敗：無|無$)'
 
 has_id() {  # ≥7 位 hex 且含字母（排除純數字日期／run id），或 #<PR>
   printf '%s' "$1" | grep -Eo '[0-9a-f]{7,}' | grep -q '[a-f]' && return 0
@@ -72,6 +78,7 @@ while [ "$i" -lt "$total" ]; do
         title="${rest#"${rest%%[![:space:]]*}"}"
         if printf '%s' "$title" | grep -Eq "$EXEMPT_FULL_RE"; then in_exempt=1
         elif printf '%s' "$title" | grep -Eq "$EXEMPT_ABSENT_RE"; then in_exempt=2
+        elif printf '%s' "$title" | grep -Eq "$EXEMPT_RESULT_RE"; then in_exempt=3
         else in_exempt=0; fi
         continue
       fi
@@ -86,6 +93,7 @@ while [ "$i" -lt "$total" ]; do
   esac
   if [ "$in_exempt" -eq 1 ]; then exempt=$((exempt + 1)); continue; fi
   if [ "$in_exempt" -eq 2 ] && printf '%s' "$stripped" | grep -Eq "$ABSENT_LINE_RE" && ! has_id "$stripped"; then exempt=$((exempt + 1)); continue; fi
+  if [ "$in_exempt" -eq 3 ] && printf '%s' "$stripped" | grep -Eq "$RESULT_LABEL_RE" && ! has_id "$stripped"; then exempt=$((exempt + 1)); continue; fi
   checked=$((checked + 1))
   if has_id "$stripped"; then printf '%s\n' "第 ${n} 行：${stripped}" >> "$checked_file"; continue; fi
   if printf '%s' "$stripped" | grep -Eq 'LS-[0-9]+'; then

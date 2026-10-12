@@ -38,7 +38,7 @@ bash "$(git rev-parse --show-toplevel)/scripts/gates/tracked-ignored-check.sh"
 bash "$(git rev-parse --show-toplevel)/scripts/gates/conflict-marker-check.sh"
 
 # 審查取證不得進版控（LS-61：staged 路徑任一目錄層命中 review*／*-review*／ls[0-9]*、或 *.png 不在 design/／
-# LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/ 白名單即擋（大小寫不敏感）——.gitignore 只認固定位置 .claude/evidence/，散落路徑沒規則可 ignore）
+# LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/／docs/design-proposals/*/{exports,assets,skill/references/images}/ 白名單即擋（大小寫不敏感）——.gitignore 只認固定位置 .claude/evidence/，散落路徑沒規則可 ignore）
 bash "$(git rev-parse --show-toplevel)/scripts/gates/evidence-path-check.sh"
 
 # design/ 大檔二進位體積 gate（LS-74）：design/ 下新增／修改的二進位檔 >500 KB 即擋，文字檔（.pen JSON、
