@@ -39,7 +39,7 @@ struct ForkView: View {
     @State var path: [FamilyOnboardingRoute] = []
     @State var isSigningOut = false
     @State var signOutErrorMessage: String?
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -53,6 +53,7 @@ struct ForkView: View {
                 }
             }
             .appBackground()
+            .safeAreaInset(edge: .bottom, spacing: 0) { pinnedSignOutBar }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: FamilyOnboardingRoute.self) { route in
                 switch route {
@@ -269,6 +270,7 @@ struct ForkView: View {
                     .padding(.top, AppSpacing.block)
                 suspendedFooter
                     .padding(.top, AppSpacing.item)
+                signOutFooter(pinned: false)
             }
             .frame(width: 294)
         }

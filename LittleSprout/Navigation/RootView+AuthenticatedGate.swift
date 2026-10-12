@@ -105,7 +105,7 @@ struct AuthenticatedGate: View {
         if case .failure(let error) = eulaStore.checkState, eulaStore.judgedUserID == userID {
             // 重用 `FamilyLookupFailedView`（純泛型「訊息＋重試鈕」畫面，見該檔）——同一種
             // 網路失敗兜底樣式，不需要另外造一份幾乎一樣的畫面。
-            FamilyLookupFailedView(message: error.userFacingMessage) {
+            FamilyLookupFailedView(message: error.userFacingMessage, signOut: disagreeAndSignOut) {
                 Task { await eulaStore.checkStatus(userID: userID) }
             }
         } else if !eulaStore.isKnown(for: userID) {
@@ -137,7 +137,7 @@ struct AuthenticatedGate: View {
         case .idle, .submitting:
             ProgressView("正在確認你的家庭…")
         case .failure(let error):
-            FamilyLookupFailedView(message: error.userFacingMessage) {
+            FamilyLookupFailedView(message: error.userFacingMessage, signOut: disagreeAndSignOut) {
                 Task { await familyStore.refreshMyFamily() }
             }
         case .success:
@@ -178,9 +178,19 @@ struct AuthenticatedGate: View {
 
 /// 查詢「我的家庭」失敗（多半是網路）時的重試畫面——沒有對應的 .pen 設計稿：這是一個純技術性
 /// 的錯誤兜底，不是產品要求的畫面，維持最簡單的系統風格文字＋按鈕，不套用沖印品母題。
-private struct FamilyLookupFailedView: View {
+///
+/// LS-505：重試鈕下方補「登出」文字鈕（`cmp/Button Text` 語彙，同 `ForkView+SuspendedFooter`／
+/// `EULAConsentView.disagreeButton`）——帳號在後端已被刪除、但本地存的 access token 仍有效時，
+/// 家庭查詢會一直失敗，使用者只剩「重試」可按、沒有出口（使用者實機回報）。登出失敗（網路）不清
+/// 本地 session，用 alert 顯示、可重試，同 `ForkView.signOutTapped()`。非 `private`：
+/// `TapTargetGateHarness`（`ForkViewSignOutHost`）需要直接建構。
+struct FamilyLookupFailedView: View {
     let message: String
+    let signOut: () async throws -> Void
     let retry: () -> Void
+
+    @State private var isSigningOut = false
+    @State private var signOutErrorMessage: String?
 
     var body: some View {
         VStack(spacing: AppSpacing.item) {
@@ -190,7 +200,43 @@ private struct FamilyLookupFailedView: View {
                 .multilineTextAlignment(.center)
             Button("重試", action: retry)
                 .appFont(.body, weight: .semibold)
+                .disabled(isSigningOut)
+            Button(action: signOutTapped) {
+                HStack(spacing: AppSpacing.tight) {
+                    if isSigningOut {
+                        ProgressView()
+                    }
+                    Text("登出")
+                        .appFont(.body, weight: .semibold)
+                        .foregroundStyle(Color.lsTextSecondary)
+                }
+                .frame(maxWidth: .infinity, minHeight: 48)
+            }
+            .disabled(isSigningOut)
+            .accessibilityLabel("登出")
+            .accessibilityHint("回到登入頁，可改用其他帳號")
         }
         .padding(AppSpacing.screenPad)
+        .alert("登出失敗", isPresented: Binding(
+            get: { signOutErrorMessage != nil },
+            set: { if !$0 { signOutErrorMessage = nil } }
+        )) {
+            Button("好", role: .cancel) {}
+        } message: {
+            Text(signOutErrorMessage ?? "")
+        }
+    }
+
+    private func signOutTapped() {
+        guard !isSigningOut else { return }
+        isSigningOut = true
+        Task {
+            defer { isSigningOut = false }
+            do {
+                try await signOut()
+            } catch {
+                signOutErrorMessage = AppError.map(error).userFacingMessage
+            }
+        }
     }
 }
