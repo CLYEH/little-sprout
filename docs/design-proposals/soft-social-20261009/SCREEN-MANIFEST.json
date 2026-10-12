@@ -4,7 +4,7 @@
   "ticket": "LS-511",
   "design_date": "2026-10-09",
   "delivery_date": "2026-10-13",
-  "scope": "r1e common reusable component library and exact-render-preserving ref conversion of existing13 boards; no batch2 entry screens",
+  "scope": "r1f:53instanceAXoverride attempts/readback,12libraryAX3variants,labeledIconButton,r2inventory; original13boards visually unchanged",
   "font": {
     "family": "Noto Sans TC",
     "bundled": false
@@ -26,15 +26,16 @@
       "board_name": "C / 01 家庭動態",
       "state": "feed-with-content",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 202261,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "95e2d7a9af1706c31fa87f9ef6ea67fc46466402204321e3de88204d7e585706",
         "optimization": "original approved export palette; no dithering; native dimensions preserved",
-        "baseline_file_sha256": "18b6fd6fa4ac9b460c1bd2ce1c12beec7cd0bcbbe363c75ab2fefaea69ed0377"
+        "baseline_file_sha256": "18b6fd6fa4ac9b460c1bd2ce1c12beec7cd0bcbbe363c75ab2fefaea69ed0377",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 19,
@@ -74,6 +75,13 @@
           "percent_gt_48": 0.0,
           "max_channel_delta": 48
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/01-home.png",
+        "node": "rsm56",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 202261
       }
     },
     {
@@ -92,15 +100,16 @@
       "board_name": "C / 02 回憶詳情",
       "state": "memory-with-comments",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 222387,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "ac3b81f34a4aa72f89528b07512b635177bab188086d73da2f13f81de08a9826",
         "optimization": "original approved export palette; no dithering; native dimensions preserved",
-        "baseline_file_sha256": "797ba5b676cc09f4b9ae95d7efd66e5e640feb611efe130d6c9dcd7a24b6ffc1"
+        "baseline_file_sha256": "797ba5b676cc09f4b9ae95d7efd66e5e640feb611efe130d6c9dcd7a24b6ffc1",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 14,
@@ -140,6 +149,13 @@
           "percent_gt_48": 0.0,
           "max_channel_delta": 47
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/02-memory.png",
+        "node": "M7qpWP",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 222387
       }
     },
     {
@@ -158,15 +174,16 @@
       "board_name": "C / 03 相簿",
       "state": "albums-with-content",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 287891,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "27677284908d69bb9961f459b168141ef3c574d12f7639ca00e89b20b7576a39",
         "optimization": "original approved export palette; no dithering; native dimensions preserved",
-        "baseline_file_sha256": "e38e6fe1a0f2de889c7a0b6b813a56959390f096a058fa154b7e0cd11acce87d"
+        "baseline_file_sha256": "e38e6fe1a0f2de889c7a0b6b813a56959390f096a058fa154b7e0cd11acce87d",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 12,
@@ -206,6 +223,13 @@
           "percent_gt_48": 0.00820269777615749,
           "max_channel_delta": 61
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/03-albums.png",
+        "node": "WavOD",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 287891
       }
     },
     {
@@ -224,15 +248,16 @@
       "board_name": "C / 04 寶貝成長概覽",
       "state": "growth-overview",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 118443,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "541010cfd6fe4ee623e022828ff8e8830cf425e821200ff2ba8e008be1930f0f",
         "optimization": "lossless RGB PNG optimization",
-        "baseline_file_sha256": "0a8369f1117f7b07b40956104417c0aa37e9a1282ef6632d450785ed0db67da2"
+        "baseline_file_sha256": "0a8369f1117f7b07b40956104417c0aa37e9a1282ef6632d450785ed0db67da2",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 11,
@@ -272,6 +297,13 @@
           "percent_gt_48": 0.0,
           "max_channel_delta": 0
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/04-child.png",
+        "node": "ftrBE",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 118443
       }
     },
     {
@@ -290,15 +322,16 @@
       "board_name": "C / 05 飲食小記",
       "state": "food-record",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 101872,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "b4f119547b50a3521707602121319634a62c30d115847011a466e46c0756a681",
         "optimization": "lossless RGB PNG optimization",
-        "baseline_file_sha256": "ba03edf3a5ffef16fe4ff89c4f0bef733a223fddc8e98a3e0229ea2c71fe4011"
+        "baseline_file_sha256": "ba03edf3a5ffef16fe4ff89c4f0bef733a223fddc8e98a3e0229ea2c71fe4011",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 11,
@@ -338,6 +371,13 @@
           "percent_gt_48": 0.0,
           "max_channel_delta": 0
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/05-food.png",
+        "node": "e347tY",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 101872
       }
     },
     {
@@ -356,15 +396,16 @@
       "board_name": "C / 06 家庭",
       "state": "family-members",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 120300,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "438f6ece0b86af1db42cf0f970615986191c5d1512ea75cdd5798c30d7eb8463",
         "optimization": "lossless RGB PNG optimization",
-        "baseline_file_sha256": "435a0ac51d550b40b23aafa3520994fbb6ad5363d192f837c3aaae0b6bf6b662"
+        "baseline_file_sha256": "435a0ac51d550b40b23aafa3520994fbb6ad5363d192f837c3aaae0b6bf6b662",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 15,
@@ -404,6 +445,13 @@
           "percent_gt_48": 0.0,
           "max_channel_delta": 0
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/06-family.png",
+        "node": "CxGiV",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 120300
       }
     },
     {
@@ -422,15 +470,16 @@
       "board_name": "C / 07 加入照片",
       "state": "composer-with-selected-photo",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 211308,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "32227fe5b76894abedbe52778e4fc02b052bc235bc5a0eff21d963f97e5b4d85",
         "optimization": "original approved export palette; no dithering; native dimensions preserved",
-        "baseline_file_sha256": "5566cca4168fb5ead1a72f003f12b34815dc4a7cbae30e08b06f57e3cb7223a3"
+        "baseline_file_sha256": "5566cca4168fb5ead1a72f003f12b34815dc4a7cbae30e08b06f57e3cb7223a3",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 11,
@@ -470,6 +519,13 @@
           "percent_gt_48": 0.0,
           "max_channel_delta": 48
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/07-composer.png",
+        "node": "LefzY",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 211308
       }
     },
     {
@@ -488,15 +544,16 @@
       "board_name": "C / 08 相簿內頁",
       "state": "album-with-photos",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 315168,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "4202c8dd6bfc413390a4bc1128bc8241f8602c69fc3583ec968567f2164e7d9d",
         "optimization": "original approved export palette; no dithering; native dimensions preserved",
-        "baseline_file_sha256": "3f08f40bfaeb2793c3e5003f5db9ea6a6097b4f54b57eb4013ab33d518efb910"
+        "baseline_file_sha256": "3f08f40bfaeb2793c3e5003f5db9ea6a6097b4f54b57eb4013ab33d518efb910",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 7,
@@ -536,6 +593,13 @@
           "percent_gt_48": 0.0046330052254222875,
           "max_channel_delta": 60
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/08-album-detail.png",
+        "node": "m8Dfo",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 315168
       }
     },
     {
@@ -554,15 +618,16 @@
       "board_name": "C / 09 通知",
       "state": "notifications-with-unread",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 169915,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "a17c1dbba7d9587476092af6e6450f5ec64b04eaac64da885b487a47a741fca8",
         "optimization": "lossless RGB PNG optimization",
-        "baseline_file_sha256": "ab107dc8a15bb0b49be8f2b76075f96cbe6989cf2c6ba8f33465eb89d07e6826"
+        "baseline_file_sha256": "ab107dc8a15bb0b49be8f2b76075f96cbe6989cf2c6ba8f33465eb89d07e6826",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 10,
@@ -602,6 +667,13 @@
           "percent_gt_48": 0.0,
           "max_channel_delta": 0
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/09-notifications.png",
+        "node": "Y506Lc",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 169915
       }
     },
     {
@@ -620,15 +692,16 @@
       "board_name": "C / 10 回憶搜尋",
       "state": "search-results",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 283500,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "8494f18ae985be3042f2fced8458a878eb46f8352d3df57fa74975850a0c4c7e",
         "optimization": "lossless RGB PNG optimization",
-        "baseline_file_sha256": "a5cf6570a52c0bc64cadecabcd2fea6c4eab46802295d5deb59ed6b1e68115bd"
+        "baseline_file_sha256": "a5cf6570a52c0bc64cadecabcd2fea6c4eab46802295d5deb59ed6b1e68115bd",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 9,
@@ -668,6 +741,13 @@
           "percent_gt_48": 0.0,
           "max_channel_delta": 0
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/10-search.png",
+        "node": "MZghz",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 283500
       }
     },
     {
@@ -686,15 +766,16 @@
       "board_name": "C / 11 邀請家人",
       "state": "invitation-code-proposal",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 72780,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "98ea737b65e56b3f5d8cb075570400f72b90bf31ce3049fdd2d5933f77bb99d5",
         "optimization": "lossless RGB PNG optimization",
-        "baseline_file_sha256": "96ff463ca3f6d881630beb3367c3e6abebf75d13e079ce3b4c41434ae90794eb"
+        "baseline_file_sha256": "96ff463ca3f6d881630beb3367c3e6abebf75d13e079ce3b4c41434ae90794eb",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 5,
@@ -734,6 +815,13 @@
           "percent_gt_48": 0.0,
           "max_channel_delta": 0
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/11-invite.png",
+        "node": "g5YJ4r",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 72780
       }
     },
     {
@@ -752,15 +840,16 @@
       "board_name": "C / 12 相簿尚無照片",
       "state": "empty-album",
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "bytes": 45643,
       "export_provenance": {
-        "status": "reexported-LS-511-r1e",
+        "status": "fresh-reexported-LS-511-r1f",
         "source_commit": null,
-        "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+        "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
         "native_export_sha256": "3d170746c264c960d8226f045ac084912cf127f2d3cfabfabe77962576119db0",
         "optimization": "lossless RGB PNG optimization",
-        "baseline_file_sha256": "807f6696b4135bf5aef6720cbae603df28b395f464709ab83c3709f64bf45722"
+        "baseline_file_sha256": "807f6696b4135bf5aef6720cbae603df28b395f464709ab83c3709f64bf45722",
+        "comparison_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc"
       },
       "componentization": {
         "conversion_operations": 8,
@@ -800,6 +889,13 @@
           "percent_gt_48": 0.0,
           "max_channel_delta": 0
         }
+      },
+      "r1f_pixel_comparison": {
+        "file": "exports/12-album-empty.png",
+        "node": "Qr7b0",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 45643
       }
     }
   ],
@@ -917,7 +1013,7 @@
       "state": "visual-language-reference",
       "canonical_screen_for_notes": true,
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "export": null,
       "export_status": "not-exported"
     },
@@ -928,7 +1024,7 @@
       "state": "screen-level-attributes",
       "canonical_screen_for_notes": false,
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "heading_node": "RbUUK",
       "header_node": "i13pX",
       "row_nodes": [
@@ -958,7 +1054,7 @@
       "state": "component-library",
       "canonical_screen_for_notes": true,
       "source_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-      "source_document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "source_document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
       "export": "exports/00-components.png",
       "export_status": "native-exported",
       "sha256": "c596df0d64893115f50c0485298e3790840196aef81ae29b75bd3648d5a413f3",
@@ -973,457 +1069,310 @@
         "optimization": "256-color median-cut; no dithering; native dimensions preserved"
       },
       "data_destination": "元件庫，無",
-      "notes_row": "YPZvK"
+      "notes_row": "YPZvK",
+      "export_node": "h1H1mI",
+      "split_export_note": "Both sections are inside same top-level YiySC; no new top-level board.",
+      "additional_exports": [
+        {
+          "node": "o7xWI",
+          "file": "exports/00-components-ax3.png",
+          "sha256": "9b4388bf905c437b69c9daf0f31fb80eaad3ca718fb3c4fd588736a18dc5c862",
+          "bytes": 184454,
+          "dimensions": {
+            "width": 1608,
+            "height": 1955
+          },
+          "scale": 1,
+          "native_export_sha256": "d1260acaa71f21487e982238aab247cfbe3c92a304e40f79ee7c53cb705ae566",
+          "optimization": "lossless RGB PNG optimization; native/delivery RGBA exact0"
+        }
+      ]
     }
   ],
   "revision": {
     "round": "r1",
-    "continuation": "r1e",
+    "continuation": "r1f",
     "date": "2026-10-13",
     "artifact_status": "needs_revision",
-    "base_commit": "f510cafc6d02fd711a59a2a653710d580647abf2",
+    "base_commit": "3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc",
     "design_commit": null,
     "document_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
-    "document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
-    "document_bytes": 497331,
+    "document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
+    "document_bytes": 578395,
     "notes_row": "YPZvK",
     "provenance": "All Pencil get_app_state/execute/Get/Export and official CLI save() called only by parent; workers limited to files/specs/review. No document switch, commit, push, Linear update or evidence receipt.",
-    "primary_pixel_method": "Decoded RGB max absolute channel difference; count>48. r1e primary compares same-renderer pre-mutation native exports vs post-mutation native exports; all12 maxdelta0 and changedpixels0. Archived baseline and optimized-delivery comparisons retained.",
+    "primary_pixel_method": "Final delivered PNG vs Git commit A 3b7b0310 decoded RGBA, every channel exact equality. All12 maxdifference0 and changedpixels0; independently freshly exported and regenerated using unchanged r1e optimization.",
     "components": [
       {
         "id": "omZ3B",
-        "name": "cmp/Status Bar",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 24,
-        "reusable": true
+        "name": "cmp/Status Bar"
       },
       {
         "id": "HH1QX",
-        "name": "cmp/Nav Header",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 52,
-        "reusable": true
+        "name": "cmp/Nav Header"
       },
       {
         "id": "P7mWr",
-        "name": "cmp/Nav Header / Back Balanced",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 52,
-        "reusable": true
+        "name": "cmp/Nav Header / Back Balanced"
       },
       {
         "id": "rDHvN",
-        "name": "cmp/Nav Header / Right Text",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 52,
-        "reusable": true
+        "name": "cmp/Nav Header / Right Text"
       },
       {
         "id": "J8CcLb",
-        "name": "cmp/Nav Header / Back and Text",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 52,
-        "reusable": true
+        "name": "cmp/Nav Header / Back and Text"
       },
       {
         "id": "Wz0yi",
-        "name": "cmp/Nav Header / Back and Icon",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 52,
-        "reusable": true
+        "name": "cmp/Nav Header / Back and Icon"
       },
       {
         "id": "z6ri9",
-        "name": "cmp/Nav Header / Notification",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 52,
-        "reusable": true
+        "name": "cmp/Nav Header / Notification"
       },
       {
         "id": "Umbo7",
-        "name": "cmp/Tab Bar",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 84,
-        "reusable": true
+        "name": "cmp/Tab Bar"
       },
       {
         "id": "rfO68",
-        "name": "cmp/Tab Bar / Selected 2",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 84,
-        "reusable": true
+        "name": "cmp/Tab Bar / Selected 2"
       },
       {
         "id": "doiqi",
-        "name": "cmp/Tab Bar / Selected 3",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 84,
-        "reusable": true
+        "name": "cmp/Tab Bar / Selected 3"
       },
       {
         "id": "o5gk0",
-        "name": "cmp/Tab Bar / Selected 4",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 84,
-        "reusable": true
+        "name": "cmp/Tab Bar / Selected 4"
       },
       {
         "id": "Xgk7U",
-        "name": "cmp/Avatar",
-        "type": "frame",
-        "width": 44,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Avatar"
       },
       {
         "id": "PkeXE",
-        "name": "cmp/Avatar / 28 pt",
-        "type": "frame",
-        "width": 28,
-        "height": 28,
-        "reusable": true
+        "name": "cmp/Avatar / 28 pt"
       },
       {
         "id": "FF1yR",
-        "name": "cmp/Avatar / 48 pt",
-        "type": "frame",
-        "width": 48,
-        "height": 48,
-        "reusable": true
+        "name": "cmp/Avatar / 48 pt"
       },
       {
         "id": "fzLJC",
-        "name": "cmp/Avatar / 84 pt",
-        "type": "frame",
-        "width": 84,
-        "height": 84,
-        "reusable": true
+        "name": "cmp/Avatar / 84 pt"
       },
       {
         "id": "NxYOK",
-        "name": "cmp/Avatar / 32 pt",
-        "type": "frame",
-        "width": 32,
-        "height": 32,
-        "reusable": true
+        "name": "cmp/Avatar / 32 pt"
       },
       {
         "id": "vMRIi",
-        "name": "cmp/Button Primary / Icon 44",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Button Primary / Icon 44"
       },
       {
         "id": "KQFqi",
-        "name": "cmp/Button Primary",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 52,
-        "reusable": true
+        "name": "cmp/Button Primary"
       },
       {
         "id": "o9DR9i",
-        "name": "cmp/Button Secondary",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 48,
-        "reusable": true
+        "name": "cmp/Button Secondary"
       },
       {
         "id": "AzENe",
-        "name": "cmp/Button Text / Icon on Surface",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Button Text / Icon on Surface"
       },
       {
         "id": "RAFgI",
-        "name": "cmp/Button Text / Icon and Label",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Button Text / Icon and Label"
       },
       {
         "id": "Sm3n8",
-        "name": "cmp/Button Text / Compact Add",
-        "type": "frame",
-        "width": 108,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Button Text / Compact Add"
       },
       {
         "id": "wsApu",
-        "name": "cmp/Button Text / Record Link",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 48,
-        "reusable": true
+        "name": "cmp/Button Text / Record Link"
       },
       {
         "id": "spdU6",
-        "name": "cmp/Button Text",
-        "type": "frame",
-        "width": 44,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Button Text"
       },
       {
         "id": "r7FT9D",
-        "name": "cmp/Button Text / Outlined Link",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 48,
-        "reusable": true
+        "name": "cmp/Button Text / Outlined Link"
       },
       {
         "id": "oi3E0",
-        "name": "cmp/Button Icon",
-        "type": "frame",
-        "width": 44,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Button Icon"
       },
       {
         "id": "c4WEm",
-        "name": "cmp/Chip",
-        "type": "frame",
-        "width": 96,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Chip"
       },
       {
         "id": "TKP5U",
-        "name": "cmp/Chip / Selected Label",
-        "type": "frame",
-        "width": 76,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Chip / Selected Label"
       },
       {
         "id": "AbF6y",
-        "name": "cmp/Chip / Avatar Unselected",
-        "type": "frame",
-        "width": 104,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Chip / Avatar Unselected"
       },
       {
         "id": "mwQ24",
-        "name": "cmp/Chip / Family Context",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Chip / Family Context"
       },
       {
         "id": "dqH6x",
-        "name": "cmp/Chip / Avatar Selected",
-        "type": "frame",
-        "width": 126,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Chip / Avatar Selected"
       },
       {
         "id": "SpvTW",
-        "name": "cmp/Chip / Add Child",
-        "type": "frame",
-        "width": 144,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Chip / Add Child"
       },
       {
         "id": "ztLwH",
-        "name": "cmp/Chip / Child Tag",
-        "type": "frame",
-        "width": 102,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Chip / Child Tag"
       },
       {
         "id": "yG31M",
-        "name": "cmp/Chip / Date Tag",
-        "type": "frame",
-        "width": 176,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Chip / Date Tag"
       },
       {
         "id": "zjeFm",
-        "name": "cmp/Button Apple",
-        "type": "frame",
-        "width": 188,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Button Apple"
       },
       {
         "id": "mkAh0",
-        "name": "cmp/Button Google",
-        "type": "frame",
-        "width": 188,
-        "height": 44,
-        "reusable": true
+        "name": "cmp/Button Google"
       },
       {
         "id": "l0LrlB",
-        "name": "cmp/Section Title",
-        "type": "text",
-        "width": "fill_container",
-        "height": null,
-        "reusable": true
+        "name": "cmp/Section Title"
       },
       {
         "id": "geONL",
-        "name": "cmp/Section Title / 22 pt",
-        "type": "text",
-        "width": "fill_container",
-        "height": null,
-        "reusable": true
+        "name": "cmp/Section Title / 22 pt"
       },
       {
         "id": "V0xV0",
-        "name": "cmp/Text Field / Comment",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 48,
-        "reusable": true
+        "name": "cmp/Text Field / Comment"
       },
       {
         "id": "kgvVr",
-        "name": "cmp/Text Field / Multiline",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 116,
-        "reusable": true
+        "name": "cmp/Text Field / Multiline"
       },
       {
         "id": "fBw8K",
-        "name": "cmp/Text Field / Search",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 52,
-        "reusable": true
+        "name": "cmp/Text Field / Search"
       },
       {
         "id": "rtKjT",
-        "name": "cmp/Text Field",
-        "type": "frame",
-        "width": "fill_container",
-        "height": null,
-        "reusable": true
+        "name": "cmp/Text Field"
       },
       {
         "id": "ojvcu",
-        "name": "cmp/OTP Cell",
-        "type": "frame",
-        "width": 48,
-        "height": 56,
-        "reusable": true
+        "name": "cmp/OTP Cell"
       },
       {
         "id": "B9wID",
-        "name": "cmp/OTP Cell / Filled",
-        "type": "frame",
-        "width": 48,
-        "height": 56,
-        "reusable": true
+        "name": "cmp/OTP Cell / Filled"
       },
       {
         "id": "v7CIP",
-        "name": "cmp/OTP Cell / Focused",
-        "type": "frame",
-        "width": 48,
-        "height": 56,
-        "reusable": true
+        "name": "cmp/OTP Cell / Focused"
       },
       {
         "id": "VJPTn",
-        "name": "cmp/Comment Row",
-        "type": "frame",
-        "width": "fill_container",
-        "height": null,
-        "reusable": true
+        "name": "cmp/Comment Row"
       },
       {
         "id": "PiIWd",
-        "name": "cmp/List Row",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 78,
-        "reusable": true
+        "name": "cmp/List Row"
       },
       {
         "id": "KeOi7",
-        "name": "cmp/Empty State",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 404,
-        "reusable": true
+        "name": "cmp/Empty State"
       },
       {
         "id": "dSNcO",
-        "name": "cmp/Card Post",
-        "type": "frame",
-        "width": "fill_container",
-        "height": null,
-        "reusable": true
+        "name": "cmp/Card Post"
       },
       {
         "id": "rTQZR",
-        "name": "cmp/Post Author",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 68,
-        "reusable": true
+        "name": "cmp/Post Author"
       },
       {
         "id": "Xu5Bf",
-        "name": "cmp/Post Reaction Summary",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 36,
-        "reusable": true
+        "name": "cmp/Post Reaction Summary"
       },
       {
         "id": "y9s1z",
-        "name": "cmp/Post Actions",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 52,
-        "reusable": true
+        "name": "cmp/Post Actions"
       },
       {
         "id": "vhkQe",
-        "name": "cmp/Card Album",
-        "type": "frame",
-        "width": "fill_container",
-        "height": null,
-        "reusable": true
+        "name": "cmp/Card Album"
       },
       {
         "id": "TJsFD",
-        "name": "cmp/Family Scope Note",
-        "type": "frame",
-        "width": "fill_container",
-        "height": 48,
-        "reusable": true
+        "name": "cmp/Family Scope Note"
+      },
+      {
+        "id": "YWBav",
+        "name": "cmp/Button Primary · AX3"
+      },
+      {
+        "id": "lAKcR",
+        "name": "cmp/Button Secondary · AX3"
+      },
+      {
+        "id": "WzoZS",
+        "name": "cmp/Button Text · AX3"
+      },
+      {
+        "id": "VdPW8",
+        "name": "cmp/Button Apple · AX3"
+      },
+      {
+        "id": "ola2I",
+        "name": "cmp/Button Google · AX3"
+      },
+      {
+        "id": "Vy6NW",
+        "name": "cmp/Icon Button / Labeled"
+      },
+      {
+        "id": "TYVis",
+        "name": "cmp/Nav Header · AX3"
+      },
+      {
+        "id": "x9L7US",
+        "name": "cmp/Tab Bar · AX3"
+      },
+      {
+        "id": "ZHbY7",
+        "name": "cmp/Chip · AX3"
+      },
+      {
+        "id": "F7ROI",
+        "name": "cmp/List Row · AX3"
+      },
+      {
+        "id": "E7hep",
+        "name": "cmp/Section Title · AX3"
+      },
+      {
+        "id": "xWtkY",
+        "name": "cmp/Empty State · AX3"
+      },
+      {
+        "id": "Puhr6",
+        "name": "cmp/Family Scope Note · AX3"
       }
     ],
-    "component_count": 54,
+    "component_count": 67,
     "board_componentization": [
       {
         "id": "ev2Pc",
@@ -2585,9 +2534,10 @@
       },
       {
         "id": "YiySC",
-        "authoredNodes": 347,
+        "authoredNodes": 447,
         "authoredRefs": 24,
-        "expandedNodes": 378
+        "expandedNodes": null,
+        "expanded_nodes_note": "not counted in r1f; original r1e378 is historical"
       }
     ],
     "source_accessibility_annotations": [
@@ -3017,72 +2967,71 @@
       }
     ],
     "reviews": {
-      "completed_frozen_rounds": 2,
+      "completed_frozen_rounds": 1,
+      "historical_r1e_rounds": 2,
       "internal_visual": "ITERATE",
-      "delivery_verifier": "mechanical PASS; readiness needs_revision",
-      "external_blind_review": "pending Claude",
+      "delivery_verifier": "mechanical PASS; readiness FAIL/needs_revision",
+      "external_blind_review": "not requested by Claude until F02/F03 resolved",
       "rounds": [
         {
           "round": 1,
-          "document_sha256": "297fa9ba8f7296420658e32d6221739a5564b6efb2c57d564ec73a79c63368ef",
-          "scope": "12 screens and component board; references, official assets, hashes, scope, pixels and accessibility conditions",
+          "continuation": "r1f",
+          "document_sha256": "6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d",
+          "pre_review_manifest_sha256": "fdf1b6b8e7356794e2089228200b0f23bd289dc459c397b648ab99f24769f96d",
+          "pre_review_readme_sha256": "3829b5c4784a17ee8b23e9df7b19953931a3676f2421baa77b79610a89a644e0",
+          "official_Get_snapshot_sha256": "0932c03d34bc9937c03f40ba05512592af4572ac7b364b83fcf442f8f2058d9d",
+          "scope": "Actual native AX3 and normal component PNG viewed; all12finaldeliveryPNG byte+RGBA equality vsGitA;67definitions/119refs,53savedAXreadbacks,scope/provenance/hash checks",
           "visual_verdict": "ITERATE",
           "delivery_verdict": "mechanical PASS; readiness FAIL",
-          "findings": "F01-F08 retained; Apple artwork metadata MINOR found, corrected in round2",
-          "get_snapshot": "/tmp/LS-511-r1e-freeze/round1-official-after.json",
-          "get_snapshot_sha256": "d2ffe957cbd1c74290185400e51272970473f9937d4ccfd3645a208c52afa014",
-          "retention": "Historical Get/manifest/README and raw PNG observations preserved; round1 native binary not separately retained."
-        },
-        {
-          "round": 2,
-          "document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
-          "scope": "Affected Apple definition and Components export; all13 delivery export hashes unchanged, prior screen observations carried forward",
-          "visual_verdict": "ITERATE",
-          "delivery_verdict": "affected mechanical PASS; readiness needs_revision",
-          "resolved_finding": "LS511-F09: zjeFm Apple metadata corrected; old Lonlu absent and no refs target it",
-          "get_snapshot": "/tmp/LS-511-r1e-review2/official-after.json",
-          "get_snapshot_sha256": "e444c333a4f7ddbd47a158cc15aa03f881b261e3e38d5336889734dbfd195f88",
-          "native_snapshot": "/tmp/LS-511-r1e-review2/littlesprout-soft-social.pen",
-          "native_components_png_sha256": "d543c324d9b574d66355f0aa39191f32cac4edd37fc8d9a2b2499350cba1255b"
+          "static_AX3": "10 editablefamilies,18textnodes40pt fixedwidth/autoheight,complete visible text,no observed clipping/overlap,interactive containers>=44pt",
+          "provider_AX3": "2 image-onlyfamilies; nominal enlargement doesnotprove exact40pt/reflow; MAJOR acceptancegap",
+          "icon_inventory": "18 actions across10boards;13boards allaccounted;deferredr2peruser"
         }
       ],
       "severity_assessments": {
         "LS511-F01": {
-          "visual_reviewer": "MAJOR",
-          "delivery_verifier": "MAJOR"
+          "visual_reviewer": "INFORMATIONAL deferredr2",
+          "delivery_verifier": "INFORMATIONAL deferredr2"
         },
         "LS511-F02": {
-          "visual_reviewer": "INFORMATIONAL",
+          "visual_reviewer": "MAJOR",
           "delivery_verifier": "MAJOR"
         },
         "LS511-F03": {
           "visual_reviewer": "INFORMATIONAL",
-          "delivery_verifier": "MAJOR"
+          "delivery_verifier": "MAJOR readiness"
         }
       },
-      "evidence_note": "Temporary review evidence is local, not a Git-anchored scanner receipt. Final review-record edit changes README/manifest only; native design and exports remain frozen."
+      "evidence_note": "Final review-record update changes docs only; native6d70...c48d and allPNG remain frozen. No Git-anchored receipt created.",
+      "reviewer_finding_mapping": {
+        "R1F-01": "LS511-F02",
+        "R1F-02": "LS511-F01",
+        "R1F-03": "LS511-F03",
+        "R1F-04": "LS511-F12",
+        "R1F-05": "LS511-F10"
+      }
     },
     "findings": [
       {
         "id": "LS511-F01",
-        "severity": "MAJOR",
-        "status": "open-inherited",
+        "severity": "INFORMATIONAL",
+        "status": "deferred-r2-by-user-r1f",
         "finding": "Original icon-only back/bell/more/send/clear controls conflict with strict visible icon-label requirement. Existing screen pixels intentionally preserved.",
-        "disposition": "Requires explicit scope decision; no follow-up ticket created."
+        "disposition": "已轉 r2，附18個動作清單與新帶標籤元件Vy6NW。r2批2及後續遷移一律使用帶標籤變體；無新增票ID。"
       },
       {
         "id": "LS511-F02",
         "severity": "MAJOR",
-        "status": "open-native-verification",
-        "finding": "AX3 no-truncation is unverified; normal-size PNGs do not establish Dynamic Type behavior.",
-        "disposition": "Native or AX3 variant validation still required; no passing claim."
+        "status": "partial-static-AX3-library",
+        "finding": "12 AX3 variants added.10 editable text families use40pt and wrapping; Apple/Google remain proportionally enlarged official rasters, actual40pt text and reflow not established.",
+        "disposition": "10 editable40pt families statically/visually reviewed with no truncation;provider2remainopen. Existing13screensAX3 explicitly outside scope; nativebehavior not tested."
       },
       {
         "id": "LS511-F03",
         "severity": "MAJOR",
         "status": "open-tool-limitation",
-        "finding": "Pencil ref metadata overrides are not persisted/resolved:53 original accessibility metadata values inherit from definitions. Original values preserved in per-instance context annotations and manifest source_accessibility_annotations.",
-        "disposition": "Do not derive implementation accessibility labels from inherited metadata; resolve Pencil override support or a reviewed semantic variant strategy before implementation."
+        "finding": "All53 official instance metadata updates still resolve to inherited metadata; saved readback confirms0/53 restored.",
+        "disposition": "Requires Pencil metadata override capability correction or a separately authorized semantic component strategy. Source values and all53 actual readbacks retained; do not derive AX labels from inherited metadata."
       },
       {
         "id": "LS511-F04",
@@ -3096,7 +3045,7 @@
         "severity": "INFORMATIONAL",
         "status": "pending-Claude",
         "finding": "Canonical overflow scan/gates and external blind review not run by Codex.",
-        "disposition": "Claude commits exactdesign A, runs canonical scan receipt head_sha=A, reviews, commits B. No receipt manufactured."
+        "disposition": "Commit A3b7b0310 now exists for r1e; this r1f design is uncommitted and needs next A. Claude runs canonical overflow scan and gates against that A; no receipt fabricated."
       },
       {
         "id": "LS511-F06",
@@ -3110,7 +3059,7 @@
         "severity": "INFORMATIONAL",
         "status": "open-native-verification",
         "finding": "Provider button artwork is official raster; Google English title and14pt branding differ from17pt app action convention.",
-        "disposition": "Official image unmodified; r2 localization/native provider controls require review."
+        "disposition": "Original official files and normal controls unchanged. AX3provider specimens use nominal proportional raster scaling; actual40pt/reflow remains part ofF02. r2native/localization still pending."
       },
       {
         "id": "LS511-F08",
@@ -3130,8 +3079,8 @@
         "id": "LS511-F10",
         "severity": "INFORMATIONAL",
         "status": "documented-delivery-encoding",
-        "finding": "Palette-optimized delivery PNGs differ from raw native renders; same-renderer exact0 refers to raw native exports.",
-        "disposition": "Separate raw/delivery hashes and pixel comparisons retained; no exact-pixel claim for optimized delivery files."
+        "finding": "Optimized delivery can differ from raw native renders. Historical r1e same-renderer exact0 compared raw native pre/post images; r1f independently compares final optimized delivery with Git commit A.",
+        "disposition": "Optimized delivery is not claimed identical to raw native. All12 r1f final optimized screen PNGs are byte-identical and RGBA-exact0 against Git commit A3b7b0310. Normal Components raw/delivery palette difference retained; newAX3 raw/deliveryRGBAexact0."
       },
       {
         "id": "LS511-F11",
@@ -3139,14 +3088,21 @@
         "status": "review-scope-limit",
         "finding": "Only supplied appearances inspected, including OTP empty/filled/focused; error and disabled states were not requested or supplied.",
         "disposition": "Do not infer verification of absent states; r2 screen work remains excluded."
+      },
+      {
+        "id": "LS511-F12",
+        "severity": "INFORMATIONAL",
+        "status": "static-library-scope",
+        "finding": "Editable AX3 specimens are560pt-wide library examples; no390pt screen layout or native DynamicType behavior is established.",
+        "disposition": "Retain static-library-only scope; original13screen AX3 remains r2/migration work peruser."
       }
     ],
     "checks": {
-      "same_renderer12screens": "pass-exact0",
+      "same_renderer12screens": "fresh native images regenerated; final12deliveryPNG exactRGBA0 vscommitA",
       "original13board_ids": "preserved",
       "original13notes_rows": "unchanged",
       "protected_age_text": "exact-preserved-HwhMJ-jxHRS",
-      "reference_targets": "all119 authored refs resolve to47 live reusable targets;54 reusable definitions total",
+      "reference_targets": "119 authoredrefs;67 reusabledefinitions; existing targets unchanged",
       "provider_assets": "official source bytes unchanged,376x88 at188x44pt",
       "touch_targets": "static explicit Button/Tab dimensions>=44; symbolic fill widths/native hit regions not independently confirmed",
       "contrast_ratios": {
@@ -3163,9 +3119,10 @@
         "muted_on_growth": 5.263,
         "muted_on_weight": 5.441
       },
-      "AX3": "not-verified",
+      "AX3": "10 editable40pt staticfamilies visually verified;2rasterprovider typography/reflow unverified",
       "overflow_scanner": "not-run",
-      "gates": "not-run"
+      "gates": "not-run",
+      "AX_metadata": "0/53restored;53/53attempted andreadback"
     },
     "task_ids": {
       "parent_task": "/root",
@@ -3177,7 +3134,1153 @@
       "worker_runtime_model": "gpt-6.1-sol",
       "worker_runtime_effort": "high",
       "runtime_verification": "Parent read matching session_meta and turn_context, not merely worker self-report"
-    }
+    },
+    "AX_metadata_r1f": {
+      "attempted": 53,
+      "verified_restored": 0,
+      "unresolved": 53,
+      "method": "Official Update(id,{metadata:source}) for all53, then Get(id,{depth:0,resolveInstances:true}) immediately and after save(). Insert(ref with metadata) also tested and ignored; temporary probe deleted. No documented alternate override API available. Official Copy and Replace ref probes also ignoredmetadata; both temporarynodes removed, full libraryGet matched frozen snapshot and subsequent save() retained exactnativeSHA.",
+      "source_has_hint": false,
+      "actual_readback": [
+        {
+          "id": "La70H",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "分享給家人",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "加入照片",
+            "role": "button"
+          }
+        },
+        {
+          "id": "L8Lmdx",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "小禾",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "全部孩子",
+            "role": "button",
+            "selected": true
+          }
+        },
+        {
+          "id": "jijrr",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "通知",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "PvZYs",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的圓形頭像",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的分享頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "VvEGx",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "留言",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "喜歡",
+            "role": "button"
+          }
+        },
+        {
+          "id": "TEBBy",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "QXIZn",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的圓形頭像",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的分享頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "zOyEX",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "留言",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "喜歡",
+            "role": "button"
+          }
+        },
+        {
+          "id": "J8uoIq",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "阿嬤的留言頭像",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的分享頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "UBUlb",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "傳送留言",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "bzqLH",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "新增",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看",
+            "role": "button"
+          }
+        },
+        {
+          "id": "g4j1oH",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "全部",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "喜歡",
+            "role": "button"
+          }
+        },
+        {
+          "id": "c36iuX",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "小禾",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "喜歡",
+            "role": "button"
+          }
+        },
+        {
+          "id": "fRoxR",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "家人共用",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "喜歡",
+            "role": "button"
+          }
+        },
+        {
+          "id": "A3IJl9",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "開啟相簿 一起的週末",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "開啟相簿 公園的小發現",
+            "role": "button"
+          }
+        },
+        {
+          "id": "A3IJl9/DUWhA",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "一起的週末相簿封面",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "公園的小發現相簿封面",
+            "role": "image"
+          }
+        },
+        {
+          "id": "LK7GC",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "開啟相簿 阿嬤的懷抱",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "開啟相簿 公園的小發現",
+            "role": "button"
+          }
+        },
+        {
+          "id": "LK7GC/DUWhA",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "阿嬤的懷抱相簿封面",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "公園的小發現相簿封面",
+            "role": "image"
+          }
+        },
+        {
+          "id": "koC1H",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "開啟相簿 長大一點點",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "開啟相簿 公園的小發現",
+            "role": "button"
+          }
+        },
+        {
+          "id": "koC1H/DUWhA",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "長大一點點相簿封面",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "公園的小發現相簿封面",
+            "role": "image"
+          }
+        },
+        {
+          "id": "SLABn",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "編輯",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看",
+            "role": "button"
+          }
+        },
+        {
+          "id": "BVbzz",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "小禾的選擇頭像",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "小禾篩選頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "oht9A",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "VQoM4",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "新增",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看",
+            "role": "button"
+          }
+        },
+        {
+          "id": "H7W8m",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "普通",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "喜歡",
+            "role": "button"
+          }
+        },
+        {
+          "id": "w9EXkl",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "先不要",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "喜歡",
+            "role": "button"
+          }
+        },
+        {
+          "id": "p0wGZ",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "記下一個新味道",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "加入照片",
+            "role": "button"
+          }
+        },
+        {
+          "id": "G92Bmv",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "設定",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看",
+            "role": "button"
+          }
+        },
+        {
+          "id": "gNxjn",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看媽媽",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "X8m3P",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "爸爸的家庭頭像",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的家庭頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "C6uU5E",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看爸爸",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "nHnbu",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "阿嬤的家庭頭像",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的家庭頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "wPjty",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看阿嬤",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "PH10Y",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "邀請家人",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "加入照片",
+            "role": "button"
+          }
+        },
+        {
+          "id": "FtgLT",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "BHC7W",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "取消",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看",
+            "role": "button"
+          }
+        },
+        {
+          "id": "cONd2",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "分享給家人",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "加入照片",
+            "role": "button"
+          }
+        },
+        {
+          "id": "Q0cDAS",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "jhmIE",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "更多",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "X9nkc6",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "xQIYU",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "全部已讀",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看",
+            "role": "button"
+          }
+        },
+        {
+          "id": "rQRf7",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "阿嬤的通知頭像",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的分享頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "CSnC9",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "爸爸的通知頭像",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的分享頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "aSZRL",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "爸爸的分享頭像",
+            "role": "image"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的分享頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "TaBbn",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "bYwoa",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "清除搜尋",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "y1bUF",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "全部",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "喜歡",
+            "role": "button"
+          }
+        },
+        {
+          "id": "ynZnD",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "照片",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "喜歡",
+            "role": "button"
+          }
+        },
+        {
+          "id": "Eg2Dm",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "日記",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "喜歡",
+            "role": "button"
+          }
+        },
+        {
+          "id": "fsjM4",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "vzJT2",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "分享邀請碼",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "加入照片",
+            "role": "button"
+          }
+        },
+        {
+          "id": "FxJ8l",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        },
+        {
+          "id": "GoBqy",
+          "expected": {
+            "type": "accessibility",
+            "accessibilityLabel": "更多",
+            "role": "button"
+          },
+          "actual": {
+            "type": "accessibility",
+            "accessibilityLabel": "貼文更多選項",
+            "role": "button"
+          }
+        }
+      ],
+      "saved_readback_evidence_sha256": "24923035a6d0b303f4736b13ae3b06741caf604cb3c9013e8c657616520483ea",
+      "additional_probe_evidence_sha256": "d7b3c7be4f23afb61e25255306c9dcce005b604dbcb1183a34849d105f1fc90a"
+    },
+    "AX3_library": {
+      "node": "o7xWI",
+      "body_font_pt": 40,
+      "text_rule": "Every actual text descendant of the10 non-provider AX3 definitions is40pt, fixed-width, autoheight. Caption texts outside definitions use17/20pt.",
+      "provider_rule": "Existing official raster bytes unchanged; Apple factor40/19, Google40/14, nominal only. Actual raster font size and reflow are NOT verified.",
+      "provider_sources": [
+        "https://developer.apple.com/design/human-interface-guidelines/sign-in-with-apple/",
+        "https://developers.google.com/identity/branding-guidelines"
+      ],
+      "definitions": [
+        {
+          "id": "YWBav",
+          "name": "cmp/Button Primary · AX3",
+          "type": "frame",
+          "reusable": true,
+          "metadata": {
+            "type": "accessibility",
+            "role": "button",
+            "accessibilityLabel": "分享給家人，一起珍藏今天的小片刻"
+          },
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 560,
+            "height": 144
+          }
+        },
+        {
+          "id": "lAKcR",
+          "name": "cmp/Button Secondary · AX3",
+          "type": "frame",
+          "reusable": true,
+          "metadata": {
+            "type": "accessibility",
+            "role": "button",
+            "accessibilityLabel": "複製家庭邀請碼"
+          },
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 560,
+            "height": 88
+          }
+        },
+        {
+          "id": "WzoZS",
+          "name": "cmp/Button Text · AX3",
+          "type": "frame",
+          "reusable": true,
+          "metadata": {
+            "type": "accessibility",
+            "role": "button",
+            "accessibilityLabel": "查看完整的成長紀錄"
+          },
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 560,
+            "height": 88
+          }
+        },
+        {
+          "id": "VdPW8",
+          "name": "cmp/Button Apple · AX3",
+          "type": "frame",
+          "reusable": true,
+          "metadata": {
+            "type": "accessibility",
+            "role": "button",
+            "accessibilityLabel": "透過 Apple 繼續",
+            "officialArtworkSHA256": "81c4419beb013011e511b2bed6976004c4d2c28a4316d09d9a66577f1449ece2"
+          },
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 395.7894736842105,
+            "height": 92.63157894736841
+          }
+        },
+        {
+          "id": "ola2I",
+          "name": "cmp/Button Google · AX3",
+          "type": "frame",
+          "reusable": true,
+          "metadata": {
+            "type": "accessibility",
+            "role": "button",
+            "accessibilityLabel": "Sign in with Google",
+            "officialArtworkSHA256": "13cd8a896195c12332cdfa74135f7075339a23482210c4f484098cf7e77ff631"
+          },
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 537.1428571428571,
+            "height": 125.71428571428572
+          }
+        },
+        {
+          "id": "TYVis",
+          "name": "cmp/Nav Header · AX3",
+          "type": "frame",
+          "reusable": true,
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 560,
+            "height": 184
+          }
+        },
+        {
+          "id": "x9L7US",
+          "name": "cmp/Tab Bar · AX3",
+          "type": "frame",
+          "reusable": true,
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 560,
+            "height": 140
+          }
+        },
+        {
+          "id": "ZHbY7",
+          "name": "cmp/Chip · AX3",
+          "type": "frame",
+          "reusable": true,
+          "metadata": {
+            "type": "accessibility",
+            "role": "button",
+            "accessibilityLabel": "和家人一起分享的回憶",
+            "selected": true
+          },
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 560,
+            "height": 80
+          }
+        },
+        {
+          "id": "F7ROI",
+          "name": "cmp/List Row · AX3",
+          "type": "frame",
+          "reusable": true,
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 560,
+            "height": 370
+          }
+        },
+        {
+          "id": "E7hep",
+          "name": "cmp/Section Title · AX3",
+          "type": "text",
+          "reusable": true,
+          "fontSize": 40,
+          "content": "小禾和家人一起成長的珍貴時刻",
+          "textGrowth": "fixed-width",
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 560,
+            "height": 56
+          }
+        },
+        {
+          "id": "xWtkY",
+          "name": "cmp/Empty State · AX3",
+          "type": "frame",
+          "reusable": true,
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 560,
+            "height": 452
+          }
+        },
+        {
+          "id": "Puhr6",
+          "name": "cmp/Family Scope Note · AX3",
+          "type": "frame",
+          "reusable": true,
+          "bounds": {
+            "x": 0,
+            "y": 126,
+            "width": 560,
+            "height": 80
+          }
+        }
+      ],
+      "labeled_icon_button": {
+        "id": "Vy6NW",
+        "name": "cmp/Icon Button / Labeled",
+        "size": [
+          180,
+          56
+        ],
+        "label": "更多選項"
+      },
+      "export_scale": 1,
+      "layout_evidence_sha256": "926c5e79b6b39de7744db92198544a9c8055485543370680a6ee80847ba67ab6",
+      "native_behavior": "not tested; scope is static library specimens only",
+      "static_review": "PASS for10editablefamilies;provider2requireinspectable40pt/reflow evidence or explicitexception;overallITERATE"
+    },
+    "r2_icon_action_inventory": [
+      {
+        "board": "ev2Pc",
+        "actions": []
+      },
+      {
+        "board": "rsm56",
+        "actions": [
+          {
+            "id": "jijrr",
+            "icon_path": "jijrr/oZ6k8",
+            "suggested_label": "通知"
+          },
+          {
+            "id": "dnOUH",
+            "icon_path": "dnOUH/oZ6k8",
+            "suggested_label": "更多選項"
+          }
+        ]
+      },
+      {
+        "board": "M7qpWP",
+        "actions": [
+          {
+            "id": "TEBBy",
+            "icon_path": "TEBBy/oZ6k8",
+            "suggested_label": "返回"
+          },
+          {
+            "id": "tiEk3",
+            "icon_path": "tiEk3/oZ6k8",
+            "suggested_label": "更多選項"
+          },
+          {
+            "id": "UBUlb",
+            "icon_path": "UBUlb/oZ6k8",
+            "suggested_label": "傳送留言"
+          }
+        ]
+      },
+      {
+        "board": "WavOD",
+        "actions": []
+      },
+      {
+        "board": "ftrBE",
+        "actions": []
+      },
+      {
+        "board": "e347tY",
+        "actions": [
+          {
+            "id": "oht9A",
+            "icon_path": "oht9A/oZ6k8",
+            "suggested_label": "返回"
+          }
+        ]
+      },
+      {
+        "board": "CxGiV",
+        "actions": [
+          {
+            "id": "gNxjn",
+            "icon_path": "gNxjn/oZ6k8",
+            "suggested_label": "查看媽媽"
+          },
+          {
+            "id": "C6uU5E",
+            "icon_path": "C6uU5E/oZ6k8",
+            "suggested_label": "查看爸爸"
+          },
+          {
+            "id": "wPjty",
+            "icon_path": "wPjty/oZ6k8",
+            "suggested_label": "查看阿嬤"
+          }
+        ]
+      },
+      {
+        "board": "LefzY",
+        "actions": [
+          {
+            "id": "FtgLT",
+            "icon_path": "FtgLT/oZ6k8",
+            "suggested_label": "返回"
+          }
+        ]
+      },
+      {
+        "board": "m8Dfo",
+        "actions": [
+          {
+            "id": "Q0cDAS",
+            "icon_path": "Q0cDAS/oZ6k8",
+            "suggested_label": "返回"
+          },
+          {
+            "id": "jhmIE",
+            "icon_path": "jhmIE/oZ6k8",
+            "suggested_label": "更多選項"
+          }
+        ]
+      },
+      {
+        "board": "Y506Lc",
+        "actions": [
+          {
+            "id": "X9nkc6",
+            "icon_path": "X9nkc6/oZ6k8",
+            "suggested_label": "返回"
+          }
+        ]
+      },
+      {
+        "board": "MZghz",
+        "actions": [
+          {
+            "id": "TaBbn",
+            "icon_path": "TaBbn/oZ6k8",
+            "suggested_label": "返回"
+          },
+          {
+            "id": "bYwoa",
+            "icon_path": "bYwoa/oZ6k8",
+            "suggested_label": "清除搜尋"
+          }
+        ]
+      },
+      {
+        "board": "g5YJ4r",
+        "actions": [
+          {
+            "id": "fsjM4",
+            "icon_path": "fsjM4/oZ6k8",
+            "suggested_label": "返回"
+          }
+        ]
+      },
+      {
+        "board": "Qr7b0",
+        "actions": [
+          {
+            "id": "FxJ8l",
+            "icon_path": "FxJ8l/oZ6k8",
+            "suggested_label": "返回"
+          },
+          {
+            "id": "GoBqy",
+            "icon_path": "GoBqy/oZ6k8",
+            "suggested_label": "更多選項"
+          }
+        ]
+      }
+    ],
+    "r1f_pixel_comparison": [
+      {
+        "file": "exports/01-home.png",
+        "node": "rsm56",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 202261
+      },
+      {
+        "file": "exports/02-memory.png",
+        "node": "M7qpWP",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 222387
+      },
+      {
+        "file": "exports/03-albums.png",
+        "node": "WavOD",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 287891
+      },
+      {
+        "file": "exports/04-child.png",
+        "node": "ftrBE",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 118443
+      },
+      {
+        "file": "exports/05-food.png",
+        "node": "e347tY",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 101872
+      },
+      {
+        "file": "exports/06-family.png",
+        "node": "CxGiV",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 120300
+      },
+      {
+        "file": "exports/07-composer.png",
+        "node": "LefzY",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 211308
+      },
+      {
+        "file": "exports/08-album-detail.png",
+        "node": "m8Dfo",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 315168
+      },
+      {
+        "file": "exports/09-notifications.png",
+        "node": "Y506Lc",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 169915
+      },
+      {
+        "file": "exports/10-search.png",
+        "node": "MZghz",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 283500
+      },
+      {
+        "file": "exports/11-invite.png",
+        "node": "g5YJ4r",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 72780
+      },
+      {
+        "file": "exports/12-album-empty.png",
+        "node": "Qr7b0",
+        "max_channel_difference": 0,
+        "changed_pixels": 0,
+        "bytes": 45643
+      }
+    ]
   },
   "revision_history": [
     {
@@ -3212,6 +4315,2209 @@
         "Claude 解鎖後以 scripts/design/overflow-scan.js 對 commit A 掃描，寫入 design/evidence/LS-455-r1-overflow.json，head_sha=A，隨 commit B 提交。",
         "Claude 獨立盲審；未宣稱版面、深色、AX3、iPad 或原生行為通過驗證。"
       ]
+    },
+    {
+      "round": "r1",
+      "continuation": "r1e",
+      "date": "2026-10-13",
+      "artifact_status": "needs_revision",
+      "base_commit": "f510cafc6d02fd711a59a2a653710d580647abf2",
+      "design_commit": null,
+      "document_path": "docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen",
+      "document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+      "document_bytes": 497331,
+      "notes_row": "YPZvK",
+      "provenance": "All Pencil get_app_state/execute/Get/Export and official CLI save() called only by parent; workers limited to files/specs/review. No document switch, commit, push, Linear update or evidence receipt.",
+      "primary_pixel_method": "Decoded RGB max absolute channel difference; count>48. r1e primary compares same-renderer pre-mutation native exports vs post-mutation native exports; all12 maxdelta0 and changedpixels0. Archived baseline and optimized-delivery comparisons retained.",
+      "components": [
+        {
+          "id": "omZ3B",
+          "name": "cmp/Status Bar",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 24,
+          "reusable": true
+        },
+        {
+          "id": "HH1QX",
+          "name": "cmp/Nav Header",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 52,
+          "reusable": true
+        },
+        {
+          "id": "P7mWr",
+          "name": "cmp/Nav Header / Back Balanced",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 52,
+          "reusable": true
+        },
+        {
+          "id": "rDHvN",
+          "name": "cmp/Nav Header / Right Text",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 52,
+          "reusable": true
+        },
+        {
+          "id": "J8CcLb",
+          "name": "cmp/Nav Header / Back and Text",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 52,
+          "reusable": true
+        },
+        {
+          "id": "Wz0yi",
+          "name": "cmp/Nav Header / Back and Icon",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 52,
+          "reusable": true
+        },
+        {
+          "id": "z6ri9",
+          "name": "cmp/Nav Header / Notification",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 52,
+          "reusable": true
+        },
+        {
+          "id": "Umbo7",
+          "name": "cmp/Tab Bar",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 84,
+          "reusable": true
+        },
+        {
+          "id": "rfO68",
+          "name": "cmp/Tab Bar / Selected 2",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 84,
+          "reusable": true
+        },
+        {
+          "id": "doiqi",
+          "name": "cmp/Tab Bar / Selected 3",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 84,
+          "reusable": true
+        },
+        {
+          "id": "o5gk0",
+          "name": "cmp/Tab Bar / Selected 4",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 84,
+          "reusable": true
+        },
+        {
+          "id": "Xgk7U",
+          "name": "cmp/Avatar",
+          "type": "frame",
+          "width": 44,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "PkeXE",
+          "name": "cmp/Avatar / 28 pt",
+          "type": "frame",
+          "width": 28,
+          "height": 28,
+          "reusable": true
+        },
+        {
+          "id": "FF1yR",
+          "name": "cmp/Avatar / 48 pt",
+          "type": "frame",
+          "width": 48,
+          "height": 48,
+          "reusable": true
+        },
+        {
+          "id": "fzLJC",
+          "name": "cmp/Avatar / 84 pt",
+          "type": "frame",
+          "width": 84,
+          "height": 84,
+          "reusable": true
+        },
+        {
+          "id": "NxYOK",
+          "name": "cmp/Avatar / 32 pt",
+          "type": "frame",
+          "width": 32,
+          "height": 32,
+          "reusable": true
+        },
+        {
+          "id": "vMRIi",
+          "name": "cmp/Button Primary / Icon 44",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "KQFqi",
+          "name": "cmp/Button Primary",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 52,
+          "reusable": true
+        },
+        {
+          "id": "o9DR9i",
+          "name": "cmp/Button Secondary",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 48,
+          "reusable": true
+        },
+        {
+          "id": "AzENe",
+          "name": "cmp/Button Text / Icon on Surface",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "RAFgI",
+          "name": "cmp/Button Text / Icon and Label",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "Sm3n8",
+          "name": "cmp/Button Text / Compact Add",
+          "type": "frame",
+          "width": 108,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "wsApu",
+          "name": "cmp/Button Text / Record Link",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 48,
+          "reusable": true
+        },
+        {
+          "id": "spdU6",
+          "name": "cmp/Button Text",
+          "type": "frame",
+          "width": 44,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "r7FT9D",
+          "name": "cmp/Button Text / Outlined Link",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 48,
+          "reusable": true
+        },
+        {
+          "id": "oi3E0",
+          "name": "cmp/Button Icon",
+          "type": "frame",
+          "width": 44,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "c4WEm",
+          "name": "cmp/Chip",
+          "type": "frame",
+          "width": 96,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "TKP5U",
+          "name": "cmp/Chip / Selected Label",
+          "type": "frame",
+          "width": 76,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "AbF6y",
+          "name": "cmp/Chip / Avatar Unselected",
+          "type": "frame",
+          "width": 104,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "mwQ24",
+          "name": "cmp/Chip / Family Context",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "dqH6x",
+          "name": "cmp/Chip / Avatar Selected",
+          "type": "frame",
+          "width": 126,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "SpvTW",
+          "name": "cmp/Chip / Add Child",
+          "type": "frame",
+          "width": 144,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "ztLwH",
+          "name": "cmp/Chip / Child Tag",
+          "type": "frame",
+          "width": 102,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "yG31M",
+          "name": "cmp/Chip / Date Tag",
+          "type": "frame",
+          "width": 176,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "zjeFm",
+          "name": "cmp/Button Apple",
+          "type": "frame",
+          "width": 188,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "mkAh0",
+          "name": "cmp/Button Google",
+          "type": "frame",
+          "width": 188,
+          "height": 44,
+          "reusable": true
+        },
+        {
+          "id": "l0LrlB",
+          "name": "cmp/Section Title",
+          "type": "text",
+          "width": "fill_container",
+          "height": null,
+          "reusable": true
+        },
+        {
+          "id": "geONL",
+          "name": "cmp/Section Title / 22 pt",
+          "type": "text",
+          "width": "fill_container",
+          "height": null,
+          "reusable": true
+        },
+        {
+          "id": "V0xV0",
+          "name": "cmp/Text Field / Comment",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 48,
+          "reusable": true
+        },
+        {
+          "id": "kgvVr",
+          "name": "cmp/Text Field / Multiline",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 116,
+          "reusable": true
+        },
+        {
+          "id": "fBw8K",
+          "name": "cmp/Text Field / Search",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 52,
+          "reusable": true
+        },
+        {
+          "id": "rtKjT",
+          "name": "cmp/Text Field",
+          "type": "frame",
+          "width": "fill_container",
+          "height": null,
+          "reusable": true
+        },
+        {
+          "id": "ojvcu",
+          "name": "cmp/OTP Cell",
+          "type": "frame",
+          "width": 48,
+          "height": 56,
+          "reusable": true
+        },
+        {
+          "id": "B9wID",
+          "name": "cmp/OTP Cell / Filled",
+          "type": "frame",
+          "width": 48,
+          "height": 56,
+          "reusable": true
+        },
+        {
+          "id": "v7CIP",
+          "name": "cmp/OTP Cell / Focused",
+          "type": "frame",
+          "width": 48,
+          "height": 56,
+          "reusable": true
+        },
+        {
+          "id": "VJPTn",
+          "name": "cmp/Comment Row",
+          "type": "frame",
+          "width": "fill_container",
+          "height": null,
+          "reusable": true
+        },
+        {
+          "id": "PiIWd",
+          "name": "cmp/List Row",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 78,
+          "reusable": true
+        },
+        {
+          "id": "KeOi7",
+          "name": "cmp/Empty State",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 404,
+          "reusable": true
+        },
+        {
+          "id": "dSNcO",
+          "name": "cmp/Card Post",
+          "type": "frame",
+          "width": "fill_container",
+          "height": null,
+          "reusable": true
+        },
+        {
+          "id": "rTQZR",
+          "name": "cmp/Post Author",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 68,
+          "reusable": true
+        },
+        {
+          "id": "Xu5Bf",
+          "name": "cmp/Post Reaction Summary",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 36,
+          "reusable": true
+        },
+        {
+          "id": "y9s1z",
+          "name": "cmp/Post Actions",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 52,
+          "reusable": true
+        },
+        {
+          "id": "vhkQe",
+          "name": "cmp/Card Album",
+          "type": "frame",
+          "width": "fill_container",
+          "height": null,
+          "reusable": true
+        },
+        {
+          "id": "TJsFD",
+          "name": "cmp/Family Scope Note",
+          "type": "frame",
+          "width": "fill_container",
+          "height": 48,
+          "reusable": true
+        }
+      ],
+      "component_count": 54,
+      "board_componentization": [
+        {
+          "id": "ev2Pc",
+          "name": "C / Visual language · 一起長大",
+          "before_nodes": 17,
+          "before_refs": 0,
+          "conversion_operations": 2,
+          "authoredNodes": 15,
+          "authoredRefs": 2,
+          "expandedNodes": 17
+        },
+        {
+          "id": "rsm56",
+          "name": "C / 01 家庭動態",
+          "before_nodes": 67,
+          "before_refs": 0,
+          "conversion_operations": 19,
+          "authoredNodes": 17,
+          "authoredRefs": 10,
+          "expandedNodes": 67
+        },
+        {
+          "id": "M7qpWP",
+          "name": "C / 02 回憶詳情",
+          "before_nodes": 43,
+          "before_refs": 0,
+          "conversion_operations": 14,
+          "authoredNodes": 16,
+          "authoredRefs": 8,
+          "expandedNodes": 43
+        },
+        {
+          "id": "WavOD",
+          "name": "C / 03 相簿",
+          "before_nodes": 61,
+          "before_refs": 0,
+          "conversion_operations": 12,
+          "authoredNodes": 17,
+          "authoredRefs": 11,
+          "expandedNodes": 61
+        },
+        {
+          "id": "ftrBE",
+          "name": "C / 04 寶貝成長概覽",
+          "before_nodes": 70,
+          "before_refs": 0,
+          "conversion_operations": 11,
+          "authoredNodes": 39,
+          "authoredRefs": 9,
+          "expandedNodes": 70
+        },
+        {
+          "id": "e347tY",
+          "name": "C / 05 飲食小記",
+          "before_nodes": 49,
+          "before_refs": 0,
+          "conversion_operations": 11,
+          "authoredNodes": 36,
+          "authoredRefs": 9,
+          "expandedNodes": 49
+        },
+        {
+          "id": "CxGiV",
+          "name": "C / 06 家庭",
+          "before_nodes": 63,
+          "before_refs": 0,
+          "conversion_operations": 15,
+          "authoredNodes": 21,
+          "authoredRefs": 8,
+          "expandedNodes": 63
+        },
+        {
+          "id": "LefzY",
+          "name": "C / 07 加入照片",
+          "before_nodes": 42,
+          "before_refs": 0,
+          "conversion_operations": 11,
+          "authoredNodes": 21,
+          "authoredRefs": 9,
+          "expandedNodes": 42
+        },
+        {
+          "id": "m8Dfo",
+          "name": "C / 08 相簿內頁",
+          "before_nodes": 35,
+          "before_refs": 0,
+          "conversion_operations": 7,
+          "authoredNodes": 23,
+          "authoredRefs": 5,
+          "expandedNodes": 35
+        },
+        {
+          "id": "Y506Lc",
+          "name": "C / 09 通知",
+          "before_nodes": 49,
+          "before_refs": 0,
+          "conversion_operations": 10,
+          "authoredNodes": 38,
+          "authoredRefs": 8,
+          "expandedNodes": 49
+        },
+        {
+          "id": "MZghz",
+          "name": "C / 10 回憶搜尋",
+          "before_nodes": 60,
+          "before_refs": 0,
+          "conversion_operations": 9,
+          "authoredNodes": 29,
+          "authoredRefs": 7,
+          "expandedNodes": 60
+        },
+        {
+          "id": "g5YJ4r",
+          "name": "C / 11 邀請家人",
+          "before_nodes": 33,
+          "before_refs": 0,
+          "conversion_operations": 5,
+          "authoredNodes": 23,
+          "authoredRefs": 4,
+          "expandedNodes": 33
+        },
+        {
+          "id": "Qr7b0",
+          "name": "C / 12 相簿尚無照片",
+          "before_nodes": 43,
+          "before_refs": 0,
+          "conversion_operations": 8,
+          "authoredNodes": 10,
+          "authoredRefs": 5,
+          "expandedNodes": 43
+        }
+      ],
+      "conversion_operations": 134,
+      "conversion_map_note": "Intermediate replacement IDs may later be nested/replaced by parent components; finallive references are in official final counts and Get snapshots.",
+      "conversion_map": [
+        {
+          "old": "UykWn",
+          "id": "Eo2vj",
+          "component": "Xgk7U",
+          "family": "Avatar",
+          "board": "rsm56"
+        },
+        {
+          "old": "OVWNT",
+          "id": "CKrPa",
+          "component": "vMRIi",
+          "family": "Button Primary",
+          "board": "rsm56"
+        },
+        {
+          "old": "rpfpF",
+          "id": "RAdVM",
+          "component": "AzENe",
+          "family": "Button Text",
+          "board": "rsm56"
+        },
+        {
+          "old": "ugbLO",
+          "id": "eWn15",
+          "component": "PkeXE",
+          "family": "Avatar",
+          "board": "rsm56"
+        },
+        {
+          "old": "SDqgF",
+          "id": "qRUwE",
+          "component": "Xgk7U",
+          "family": "Avatar",
+          "board": "rsm56"
+        },
+        {
+          "old": "Bmyjg",
+          "id": "g9jFZ",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "rsm56"
+        },
+        {
+          "old": "fy3BR",
+          "id": "gTq42",
+          "component": "RAFgI",
+          "family": "Button Text",
+          "board": "rsm56"
+        },
+        {
+          "old": "RxqdK",
+          "id": "xZOk0",
+          "component": "RAFgI",
+          "family": "Button Text",
+          "board": "rsm56"
+        },
+        {
+          "old": "rwdRu",
+          "id": "fCMGf",
+          "component": "vhkQe",
+          "family": "Card Album",
+          "board": "WavOD"
+        },
+        {
+          "old": "EoP6i",
+          "id": "A3IJl9",
+          "component": "vhkQe",
+          "family": "Card Album",
+          "board": "WavOD"
+        },
+        {
+          "old": "X1c04Q",
+          "id": "LK7GC",
+          "component": "vhkQe",
+          "family": "Card Album",
+          "board": "WavOD"
+        },
+        {
+          "old": "UCQYq",
+          "id": "koC1H",
+          "component": "vhkQe",
+          "family": "Card Album",
+          "board": "WavOD"
+        },
+        {
+          "old": "p6qHR4",
+          "id": "VDeUO",
+          "component": "PkeXE",
+          "family": "Avatar",
+          "board": "ftrBE"
+        },
+        {
+          "old": "YdzoF",
+          "id": "UxDOI",
+          "component": "c4WEm",
+          "family": "Chip",
+          "board": "e347tY"
+        },
+        {
+          "old": "EcICx",
+          "id": "H7W8m",
+          "component": "c4WEm",
+          "family": "Chip",
+          "board": "e347tY"
+        },
+        {
+          "old": "Qb1XU",
+          "id": "w9EXkl",
+          "component": "c4WEm",
+          "family": "Chip",
+          "board": "e347tY"
+        },
+        {
+          "old": "B6BHsi",
+          "id": "B9vCne",
+          "component": "FF1yR",
+          "family": "Avatar",
+          "board": "CxGiV"
+        },
+        {
+          "old": "sLiUp",
+          "id": "eYb6h",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "CxGiV"
+        },
+        {
+          "old": "O7N67c",
+          "id": "Da6S5",
+          "component": "FF1yR",
+          "family": "Avatar",
+          "board": "CxGiV"
+        },
+        {
+          "old": "i7Jcl",
+          "id": "SzUMr",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "CxGiV"
+        },
+        {
+          "old": "fbwtJ",
+          "id": "PNBao",
+          "component": "FF1yR",
+          "family": "Avatar",
+          "board": "CxGiV"
+        },
+        {
+          "old": "PFCMU",
+          "id": "EPCJT",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "CxGiV"
+        },
+        {
+          "old": "VVWa0",
+          "id": "y85CFe",
+          "component": "Sm3n8",
+          "family": "Button Text",
+          "board": "LefzY"
+        },
+        {
+          "old": "qv3Uw",
+          "id": "rQRf7",
+          "component": "Xgk7U",
+          "family": "Avatar",
+          "board": "Y506Lc"
+        },
+        {
+          "old": "wuWdh",
+          "id": "CSnC9",
+          "component": "Xgk7U",
+          "family": "Avatar",
+          "board": "Y506Lc"
+        },
+        {
+          "old": "qKxRX",
+          "id": "aSZRL",
+          "component": "Xgk7U",
+          "family": "Avatar",
+          "board": "Y506Lc"
+        },
+        {
+          "old": "MfYV0",
+          "id": "yaDbR",
+          "component": "TKP5U",
+          "family": "Chip",
+          "board": "rsm56"
+        },
+        {
+          "old": "G87Iz",
+          "id": "sW1ba",
+          "component": "AbF6y",
+          "family": "Chip",
+          "board": "rsm56"
+        },
+        {
+          "old": "z2jUv",
+          "id": "nptF8",
+          "component": "mwQ24",
+          "family": "Chip",
+          "board": "rsm56"
+        },
+        {
+          "old": "LOKSv",
+          "id": "gl8Ka",
+          "component": "rTQZR",
+          "family": "Post Author",
+          "board": "rsm56"
+        },
+        {
+          "old": "I54ijv",
+          "id": "wju0w",
+          "component": "Xu5Bf",
+          "family": "Post Reaction Summary",
+          "board": "rsm56"
+        },
+        {
+          "old": "EFYAR",
+          "id": "qgURV",
+          "component": "y9s1z",
+          "family": "Post Actions",
+          "board": "rsm56"
+        },
+        {
+          "old": "DVfkx",
+          "id": "XPceK",
+          "component": "Xgk7U",
+          "family": "Avatar",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "RQQSz",
+          "id": "hSyS9",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "x0ofV",
+          "id": "bXp3E",
+          "component": "RAFgI",
+          "family": "Button Text",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "p8Z9g",
+          "id": "t9PMy",
+          "component": "RAFgI",
+          "family": "Button Text",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "dV6hH",
+          "id": "SI7PP",
+          "component": "Xgk7U",
+          "family": "Avatar",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "L7vpQu",
+          "id": "g4j1oH",
+          "component": "c4WEm",
+          "family": "Chip",
+          "board": "WavOD"
+        },
+        {
+          "old": "SGQ0y",
+          "id": "c36iuX",
+          "component": "c4WEm",
+          "family": "Chip",
+          "board": "WavOD"
+        },
+        {
+          "old": "V0tk9",
+          "id": "fRoxR",
+          "component": "c4WEm",
+          "family": "Chip",
+          "board": "WavOD"
+        },
+        {
+          "old": "sy4D3",
+          "id": "wHjh2",
+          "component": "dqH6x",
+          "family": "Chip",
+          "board": "ftrBE"
+        },
+        {
+          "old": "XestN",
+          "id": "W8amsy",
+          "component": "SpvTW",
+          "family": "Chip",
+          "board": "ftrBE"
+        },
+        {
+          "old": "A8G8x",
+          "id": "JarLK",
+          "component": "fzLJC",
+          "family": "Avatar",
+          "board": "ftrBE"
+        },
+        {
+          "old": "b3n68",
+          "id": "MuqxZ",
+          "component": "wsApu",
+          "family": "Button Text",
+          "board": "ftrBE"
+        },
+        {
+          "old": "WsoVT",
+          "id": "D2mh2e",
+          "component": "spdU6",
+          "family": "Button Text",
+          "board": "ftrBE"
+        },
+        {
+          "old": "gJuWP",
+          "id": "Vr7Vf",
+          "component": "NxYOK",
+          "family": "Avatar",
+          "board": "e347tY"
+        },
+        {
+          "old": "BRuu2",
+          "id": "W7Yp5",
+          "component": "l0LrlB",
+          "family": "Section Title",
+          "board": "e347tY"
+        },
+        {
+          "old": "H7jQyr",
+          "id": "APr8i",
+          "component": "PiIWd",
+          "family": "List Row",
+          "board": "CxGiV"
+        },
+        {
+          "old": "fmb4c",
+          "id": "IybpM",
+          "component": "PiIWd",
+          "family": "List Row",
+          "board": "CxGiV"
+        },
+        {
+          "old": "XKYER",
+          "id": "Q0a7rb",
+          "component": "PiIWd",
+          "family": "List Row",
+          "board": "CxGiV"
+        },
+        {
+          "old": "MJAaK",
+          "id": "PjpL0",
+          "component": "Xgk7U",
+          "family": "Avatar",
+          "board": "LefzY"
+        },
+        {
+          "old": "WtYH5",
+          "id": "StdID",
+          "component": "ztLwH",
+          "family": "Chip",
+          "board": "LefzY"
+        },
+        {
+          "old": "YrwZ3",
+          "id": "iyK8w",
+          "component": "yG31M",
+          "family": "Chip",
+          "board": "LefzY"
+        },
+        {
+          "old": "wG7df",
+          "id": "O10K74",
+          "component": "l0LrlB",
+          "family": "Section Title",
+          "board": "m8Dfo"
+        },
+        {
+          "old": "qHiNh",
+          "id": "rMV7F",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "MZghz"
+        },
+        {
+          "old": "N7rOU",
+          "id": "y1bUF",
+          "component": "c4WEm",
+          "family": "Chip",
+          "board": "MZghz"
+        },
+        {
+          "old": "a0kfc",
+          "id": "ynZnD",
+          "component": "c4WEm",
+          "family": "Chip",
+          "board": "MZghz"
+        },
+        {
+          "old": "Ad6bg",
+          "id": "Eg2Dm",
+          "component": "c4WEm",
+          "family": "Chip",
+          "board": "MZghz"
+        },
+        {
+          "old": "U8zIa3",
+          "id": "hZz9e",
+          "component": "o9DR9i",
+          "family": "Button Secondary",
+          "board": "g5YJ4r"
+        },
+        {
+          "old": "kh80l",
+          "id": "u3A4n9",
+          "component": "KQFqi",
+          "family": "Button Primary",
+          "board": "Qr7b0"
+        },
+        {
+          "old": "q8jPVU",
+          "id": "La70H",
+          "component": "KQFqi",
+          "family": "Button Primary",
+          "board": "ev2Pc"
+        },
+        {
+          "old": "NuMx0",
+          "id": "L8Lmdx",
+          "component": "TKP5U",
+          "family": "Chip",
+          "board": "ev2Pc"
+        },
+        {
+          "old": "jE1jy",
+          "id": "ZQRtc",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "rsm56"
+        },
+        {
+          "old": "BoIaI",
+          "id": "XZg1K",
+          "component": "dSNcO",
+          "family": "Card Post",
+          "board": "rsm56"
+        },
+        {
+          "old": "iIkPU",
+          "id": "xG4jJ",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "WxHEB",
+          "id": "EarpO",
+          "component": "rTQZR",
+          "family": "Post Author",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "ZbM6z",
+          "id": "Jkf9P",
+          "component": "Xu5Bf",
+          "family": "Post Reaction Summary",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "jVHyz",
+          "id": "CsA9O",
+          "component": "y9s1z",
+          "family": "Post Actions",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "OVRim",
+          "id": "EntW3",
+          "component": "VJPTn",
+          "family": "Comment Row",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "aWg1G",
+          "id": "CvyFQ",
+          "component": "V0xV0",
+          "family": "Text Field",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "W4bPE",
+          "id": "UBUlb",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "z3SxD",
+          "id": "ldocZ",
+          "component": "spdU6",
+          "family": "Button Text",
+          "board": "WavOD"
+        },
+        {
+          "old": "je8jw",
+          "id": "d6VcI9",
+          "component": "TJsFD",
+          "family": "Family Scope Note",
+          "board": "WavOD"
+        },
+        {
+          "old": "hz1xl",
+          "id": "F9N0P",
+          "component": "spdU6",
+          "family": "Button Text",
+          "board": "ftrBE"
+        },
+        {
+          "old": "bdrw6",
+          "id": "tLtMi",
+          "component": "l0LrlB",
+          "family": "Section Title",
+          "board": "ftrBE"
+        },
+        {
+          "old": "I93tpx",
+          "id": "LNMAy",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "e347tY"
+        },
+        {
+          "old": "DeNFY",
+          "id": "cZF9D",
+          "component": "spdU6",
+          "family": "Button Text",
+          "board": "e347tY"
+        },
+        {
+          "old": "B1TG8",
+          "id": "c0fPFV",
+          "component": "l0LrlB",
+          "family": "Section Title",
+          "board": "e347tY"
+        },
+        {
+          "old": "qlBXs",
+          "id": "p0wGZ",
+          "component": "KQFqi",
+          "family": "Button Primary",
+          "board": "e347tY"
+        },
+        {
+          "old": "q3uT1d",
+          "id": "d80CFJ",
+          "component": "spdU6",
+          "family": "Button Text",
+          "board": "CxGiV"
+        },
+        {
+          "old": "TSvHX",
+          "id": "x4uO1l",
+          "component": "l0LrlB",
+          "family": "Section Title",
+          "board": "CxGiV"
+        },
+        {
+          "old": "br2wO",
+          "id": "PH10Y",
+          "component": "KQFqi",
+          "family": "Button Primary",
+          "board": "CxGiV"
+        },
+        {
+          "old": "Ygbre",
+          "id": "d3pe4a",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "LefzY"
+        },
+        {
+          "old": "c5Z4Nk",
+          "id": "R97XSV",
+          "component": "spdU6",
+          "family": "Button Text",
+          "board": "LefzY"
+        },
+        {
+          "old": "pF1X3",
+          "id": "TFuu6",
+          "component": "kgvVr",
+          "family": "Text Field",
+          "board": "LefzY"
+        },
+        {
+          "old": "dbtvo",
+          "id": "C2XeSC",
+          "component": "TJsFD",
+          "family": "Family Scope Note",
+          "board": "LefzY"
+        },
+        {
+          "old": "D9mRTF",
+          "id": "cONd2",
+          "component": "KQFqi",
+          "family": "Button Primary",
+          "board": "LefzY"
+        },
+        {
+          "old": "XpTfR",
+          "id": "SDs3f",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "m8Dfo"
+        },
+        {
+          "old": "bnbA9",
+          "id": "Li3mj",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "m8Dfo"
+        },
+        {
+          "old": "wcDV3",
+          "id": "YGdo6",
+          "component": "r7FT9D",
+          "family": "Button Text",
+          "board": "m8Dfo"
+        },
+        {
+          "old": "Oi9b7",
+          "id": "pFLER",
+          "component": "KQFqi",
+          "family": "Button Primary",
+          "board": "m8Dfo"
+        },
+        {
+          "old": "Cg4rH",
+          "id": "XHRnY",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "Y506Lc"
+        },
+        {
+          "old": "xLVju",
+          "id": "ITgjP",
+          "component": "spdU6",
+          "family": "Button Text",
+          "board": "Y506Lc"
+        },
+        {
+          "old": "q5HIK",
+          "id": "QKeGu",
+          "component": "l0LrlB",
+          "family": "Section Title",
+          "board": "Y506Lc"
+        },
+        {
+          "old": "xwVNQ",
+          "id": "SPGGQ",
+          "component": "l0LrlB",
+          "family": "Section Title",
+          "board": "Y506Lc"
+        },
+        {
+          "old": "TbjkS",
+          "id": "z29L9",
+          "component": "TJsFD",
+          "family": "Family Scope Note",
+          "board": "Y506Lc"
+        },
+        {
+          "old": "MmEnh",
+          "id": "go50X",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "MZghz"
+        },
+        {
+          "old": "NUOYJ",
+          "id": "f2Cyzr",
+          "component": "fBw8K",
+          "family": "Text Field",
+          "board": "MZghz"
+        },
+        {
+          "old": "g0wk2t",
+          "id": "qmk4M",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "g5YJ4r"
+        },
+        {
+          "old": "jRvFe",
+          "id": "vzJT2",
+          "component": "KQFqi",
+          "family": "Button Primary",
+          "board": "g5YJ4r"
+        },
+        {
+          "old": "PcAZD",
+          "id": "S1xVR",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "Qr7b0"
+        },
+        {
+          "old": "o6lIS7",
+          "id": "peThy",
+          "component": "oi3E0",
+          "family": "Button Icon",
+          "board": "Qr7b0"
+        },
+        {
+          "old": "coaZY",
+          "id": "nmQBu",
+          "component": "KeOi7",
+          "family": "Empty State",
+          "board": "Qr7b0"
+        },
+        {
+          "old": "a7Ti3",
+          "id": "aiSMr",
+          "component": "TJsFD",
+          "family": "Family Scope Note",
+          "board": "Qr7b0"
+        },
+        {
+          "old": "riyBQ",
+          "id": "e8npE",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "rsm56"
+        },
+        {
+          "old": "rTVDS",
+          "id": "KYXN9",
+          "component": "HH1QX",
+          "family": "Nav Header",
+          "board": "rsm56"
+        },
+        {
+          "old": "MGupw",
+          "id": "m4FDNE",
+          "component": "Umbo7",
+          "family": "Tab Bar",
+          "board": "rsm56"
+        },
+        {
+          "old": "GTQH0",
+          "id": "cSzNs",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "EzIR4",
+          "id": "wuJ9Q",
+          "component": "P7mWr",
+          "family": "Nav Header",
+          "board": "M7qpWP"
+        },
+        {
+          "old": "biFK5",
+          "id": "nSazJ",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "WavOD"
+        },
+        {
+          "old": "CYW3v",
+          "id": "zFXN3",
+          "component": "rDHvN",
+          "family": "Nav Header",
+          "board": "WavOD"
+        },
+        {
+          "old": "N3p6KL",
+          "id": "uWRQr",
+          "component": "rfO68",
+          "family": "Tab Bar",
+          "board": "WavOD"
+        },
+        {
+          "old": "jvd70",
+          "id": "y3hGJY",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "ftrBE"
+        },
+        {
+          "old": "VJDZf",
+          "id": "McdcU",
+          "component": "rDHvN",
+          "family": "Nav Header",
+          "board": "ftrBE"
+        },
+        {
+          "old": "w7T63H",
+          "id": "F51S8i",
+          "component": "doiqi",
+          "family": "Tab Bar",
+          "board": "ftrBE"
+        },
+        {
+          "old": "uqhN7",
+          "id": "ABapJ",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "e347tY"
+        },
+        {
+          "old": "MikCq",
+          "id": "IIsFv",
+          "component": "J8CcLb",
+          "family": "Nav Header",
+          "board": "e347tY"
+        },
+        {
+          "old": "G0OvbL",
+          "id": "QnKck",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "CxGiV"
+        },
+        {
+          "old": "ic2Xz",
+          "id": "K11sL",
+          "component": "rDHvN",
+          "family": "Nav Header",
+          "board": "CxGiV"
+        },
+        {
+          "old": "tHfsH",
+          "id": "HiBPb",
+          "component": "o5gk0",
+          "family": "Tab Bar",
+          "board": "CxGiV"
+        },
+        {
+          "old": "G52MKi",
+          "id": "MEg9K",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "LefzY"
+        },
+        {
+          "old": "mOw0P",
+          "id": "aFAEW",
+          "component": "J8CcLb",
+          "family": "Nav Header",
+          "board": "LefzY"
+        },
+        {
+          "old": "Wcaps",
+          "id": "E65wK",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "m8Dfo"
+        },
+        {
+          "old": "XSRnz",
+          "id": "yEZIf",
+          "component": "Wz0yi",
+          "family": "Nav Header",
+          "board": "m8Dfo"
+        },
+        {
+          "old": "Ei6dG",
+          "id": "zlGRQ",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "Y506Lc"
+        },
+        {
+          "old": "C4t4j",
+          "id": "m1AU0H",
+          "component": "z6ri9",
+          "family": "Nav Header",
+          "board": "Y506Lc"
+        },
+        {
+          "old": "W3Qf1",
+          "id": "Lhhsc",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "MZghz"
+        },
+        {
+          "old": "o1maA",
+          "id": "SYACW",
+          "component": "P7mWr",
+          "family": "Nav Header",
+          "board": "MZghz"
+        },
+        {
+          "old": "g4D6F",
+          "id": "SCE6N",
+          "component": "Umbo7",
+          "family": "Tab Bar",
+          "board": "MZghz"
+        },
+        {
+          "old": "H3lH2",
+          "id": "r5r9ho",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "g5YJ4r"
+        },
+        {
+          "old": "G7FYP8",
+          "id": "YK9sf",
+          "component": "P7mWr",
+          "family": "Nav Header",
+          "board": "g5YJ4r"
+        },
+        {
+          "old": "Ya3cp",
+          "id": "f3GaEb",
+          "component": "omZ3B",
+          "family": "Status Bar",
+          "board": "Qr7b0"
+        },
+        {
+          "old": "gLJJk",
+          "id": "sjOIm",
+          "component": "Wz0yi",
+          "family": "Nav Header",
+          "board": "Qr7b0"
+        },
+        {
+          "old": "oblv7",
+          "id": "hwESe",
+          "component": "rfO68",
+          "family": "Tab Bar",
+          "board": "Qr7b0"
+        }
+      ],
+      "final_native_counts": [
+        {
+          "id": "ev2Pc",
+          "authoredNodes": 15,
+          "authoredRefs": 2,
+          "expandedNodes": 17
+        },
+        {
+          "id": "rsm56",
+          "authoredNodes": 17,
+          "authoredRefs": 10,
+          "expandedNodes": 67
+        },
+        {
+          "id": "M7qpWP",
+          "authoredNodes": 16,
+          "authoredRefs": 8,
+          "expandedNodes": 43
+        },
+        {
+          "id": "WavOD",
+          "authoredNodes": 17,
+          "authoredRefs": 11,
+          "expandedNodes": 61
+        },
+        {
+          "id": "ftrBE",
+          "authoredNodes": 39,
+          "authoredRefs": 9,
+          "expandedNodes": 70
+        },
+        {
+          "id": "e347tY",
+          "authoredNodes": 36,
+          "authoredRefs": 9,
+          "expandedNodes": 49
+        },
+        {
+          "id": "CxGiV",
+          "authoredNodes": 21,
+          "authoredRefs": 8,
+          "expandedNodes": 63
+        },
+        {
+          "id": "LefzY",
+          "authoredNodes": 21,
+          "authoredRefs": 9,
+          "expandedNodes": 42
+        },
+        {
+          "id": "m8Dfo",
+          "authoredNodes": 23,
+          "authoredRefs": 5,
+          "expandedNodes": 35
+        },
+        {
+          "id": "Y506Lc",
+          "authoredNodes": 38,
+          "authoredRefs": 8,
+          "expandedNodes": 49
+        },
+        {
+          "id": "MZghz",
+          "authoredNodes": 29,
+          "authoredRefs": 7,
+          "expandedNodes": 60
+        },
+        {
+          "id": "g5YJ4r",
+          "authoredNodes": 23,
+          "authoredRefs": 4,
+          "expandedNodes": 33
+        },
+        {
+          "id": "Qr7b0",
+          "authoredNodes": 10,
+          "authoredRefs": 5,
+          "expandedNodes": 43
+        },
+        {
+          "id": "tVh58",
+          "authoredNodes": 18,
+          "authoredRefs": 0,
+          "expandedNodes": 18
+        },
+        {
+          "id": "YiySC",
+          "authoredNodes": 347,
+          "authoredRefs": 24,
+          "expandedNodes": 378
+        }
+      ],
+      "source_accessibility_annotations": [
+        {
+          "id": "La70H",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "分享給家人",
+            "role": "button"
+          }
+        },
+        {
+          "id": "L8Lmdx",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "小禾",
+            "role": "button"
+          }
+        },
+        {
+          "id": "jijrr",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "通知",
+            "role": "button"
+          }
+        },
+        {
+          "id": "PvZYs",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的圓形頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "VvEGx",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "留言",
+            "role": "button"
+          }
+        },
+        {
+          "id": "TEBBy",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          }
+        },
+        {
+          "id": "QXIZn",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "媽媽的圓形頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "zOyEX",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "留言",
+            "role": "button"
+          }
+        },
+        {
+          "id": "J8uoIq",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "阿嬤的留言頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "UBUlb",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "傳送留言",
+            "role": "button"
+          }
+        },
+        {
+          "id": "bzqLH",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "新增",
+            "role": "button"
+          }
+        },
+        {
+          "id": "g4j1oH",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "全部",
+            "role": "button"
+          }
+        },
+        {
+          "id": "c36iuX",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "小禾",
+            "role": "button"
+          }
+        },
+        {
+          "id": "fRoxR",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "家人共用",
+            "role": "button"
+          }
+        },
+        {
+          "id": "A3IJl9",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "開啟相簿 一起的週末",
+            "role": "button"
+          }
+        },
+        {
+          "id": "A3IJl9/DUWhA",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "一起的週末相簿封面",
+            "role": "image"
+          }
+        },
+        {
+          "id": "LK7GC",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "開啟相簿 阿嬤的懷抱",
+            "role": "button"
+          }
+        },
+        {
+          "id": "LK7GC/DUWhA",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "阿嬤的懷抱相簿封面",
+            "role": "image"
+          }
+        },
+        {
+          "id": "koC1H",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "開啟相簿 長大一點點",
+            "role": "button"
+          }
+        },
+        {
+          "id": "koC1H/DUWhA",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "長大一點點相簿封面",
+            "role": "image"
+          }
+        },
+        {
+          "id": "SLABn",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "編輯",
+            "role": "button"
+          }
+        },
+        {
+          "id": "BVbzz",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "小禾的選擇頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "oht9A",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          }
+        },
+        {
+          "id": "VQoM4",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "新增",
+            "role": "button"
+          }
+        },
+        {
+          "id": "H7W8m",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "普通",
+            "role": "button"
+          }
+        },
+        {
+          "id": "w9EXkl",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "先不要",
+            "role": "button"
+          }
+        },
+        {
+          "id": "p0wGZ",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "記下一個新味道",
+            "role": "button"
+          }
+        },
+        {
+          "id": "G92Bmv",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "設定",
+            "role": "button"
+          }
+        },
+        {
+          "id": "gNxjn",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看媽媽",
+            "role": "button"
+          }
+        },
+        {
+          "id": "X8m3P",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "爸爸的家庭頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "C6uU5E",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看爸爸",
+            "role": "button"
+          }
+        },
+        {
+          "id": "nHnbu",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "阿嬤的家庭頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "wPjty",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "查看阿嬤",
+            "role": "button"
+          }
+        },
+        {
+          "id": "PH10Y",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "邀請家人",
+            "role": "button"
+          }
+        },
+        {
+          "id": "FtgLT",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          }
+        },
+        {
+          "id": "BHC7W",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "取消",
+            "role": "button"
+          }
+        },
+        {
+          "id": "cONd2",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "分享給家人",
+            "role": "button"
+          }
+        },
+        {
+          "id": "Q0cDAS",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          }
+        },
+        {
+          "id": "jhmIE",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "更多",
+            "role": "button"
+          }
+        },
+        {
+          "id": "X9nkc6",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          }
+        },
+        {
+          "id": "xQIYU",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "全部已讀",
+            "role": "button"
+          }
+        },
+        {
+          "id": "rQRf7",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "阿嬤的通知頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "CSnC9",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "爸爸的通知頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "aSZRL",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "爸爸的分享頭像",
+            "role": "image"
+          }
+        },
+        {
+          "id": "TaBbn",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          }
+        },
+        {
+          "id": "bYwoa",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "清除搜尋",
+            "role": "button"
+          }
+        },
+        {
+          "id": "y1bUF",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "全部",
+            "role": "button"
+          }
+        },
+        {
+          "id": "ynZnD",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "照片",
+            "role": "button"
+          }
+        },
+        {
+          "id": "Eg2Dm",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "日記",
+            "role": "button"
+          }
+        },
+        {
+          "id": "fsjM4",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          }
+        },
+        {
+          "id": "vzJT2",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "分享邀請碼",
+            "role": "button"
+          }
+        },
+        {
+          "id": "FxJ8l",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "返回上一頁",
+            "role": "button"
+          }
+        },
+        {
+          "id": "GoBqy",
+          "metadata": {
+            "type": "accessibility",
+            "accessibilityLabel": "更多",
+            "role": "button"
+          }
+        }
+      ],
+      "reviews": {
+        "completed_frozen_rounds": 2,
+        "internal_visual": "ITERATE",
+        "delivery_verifier": "mechanical PASS; readiness needs_revision",
+        "external_blind_review": "pending Claude",
+        "rounds": [
+          {
+            "round": 1,
+            "document_sha256": "297fa9ba8f7296420658e32d6221739a5564b6efb2c57d564ec73a79c63368ef",
+            "scope": "12 screens and component board; references, official assets, hashes, scope, pixels and accessibility conditions",
+            "visual_verdict": "ITERATE",
+            "delivery_verdict": "mechanical PASS; readiness FAIL",
+            "findings": "F01-F08 retained; Apple artwork metadata MINOR found, corrected in round2",
+            "get_snapshot": "/tmp/LS-511-r1e-freeze/round1-official-after.json",
+            "get_snapshot_sha256": "d2ffe957cbd1c74290185400e51272970473f9937d4ccfd3645a208c52afa014",
+            "retention": "Historical Get/manifest/README and raw PNG observations preserved; round1 native binary not separately retained."
+          },
+          {
+            "round": 2,
+            "document_sha256": "5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf",
+            "scope": "Affected Apple definition and Components export; all13 delivery export hashes unchanged, prior screen observations carried forward",
+            "visual_verdict": "ITERATE",
+            "delivery_verdict": "affected mechanical PASS; readiness needs_revision",
+            "resolved_finding": "LS511-F09: zjeFm Apple metadata corrected; old Lonlu absent and no refs target it",
+            "get_snapshot": "/tmp/LS-511-r1e-review2/official-after.json",
+            "get_snapshot_sha256": "e444c333a4f7ddbd47a158cc15aa03f881b261e3e38d5336889734dbfd195f88",
+            "native_snapshot": "/tmp/LS-511-r1e-review2/littlesprout-soft-social.pen",
+            "native_components_png_sha256": "d543c324d9b574d66355f0aa39191f32cac4edd37fc8d9a2b2499350cba1255b"
+          }
+        ],
+        "severity_assessments": {
+          "LS511-F01": {
+            "visual_reviewer": "MAJOR",
+            "delivery_verifier": "MAJOR"
+          },
+          "LS511-F02": {
+            "visual_reviewer": "INFORMATIONAL",
+            "delivery_verifier": "MAJOR"
+          },
+          "LS511-F03": {
+            "visual_reviewer": "INFORMATIONAL",
+            "delivery_verifier": "MAJOR"
+          }
+        },
+        "evidence_note": "Temporary review evidence is local, not a Git-anchored scanner receipt. Final review-record edit changes README/manifest only; native design and exports remain frozen."
+      },
+      "findings": [
+        {
+          "id": "LS511-F01",
+          "severity": "MAJOR",
+          "status": "open-inherited",
+          "finding": "Original icon-only back/bell/more/send/clear controls conflict with strict visible icon-label requirement. Existing screen pixels intentionally preserved.",
+          "disposition": "Requires explicit scope decision; no follow-up ticket created."
+        },
+        {
+          "id": "LS511-F02",
+          "severity": "MAJOR",
+          "status": "open-native-verification",
+          "finding": "AX3 no-truncation is unverified; normal-size PNGs do not establish Dynamic Type behavior.",
+          "disposition": "Native or AX3 variant validation still required; no passing claim."
+        },
+        {
+          "id": "LS511-F03",
+          "severity": "MAJOR",
+          "status": "open-tool-limitation",
+          "finding": "Pencil ref metadata overrides are not persisted/resolved:53 original accessibility metadata values inherit from definitions. Original values preserved in per-instance context annotations and manifest source_accessibility_annotations.",
+          "disposition": "Do not derive implementation accessibility labels from inherited metadata; resolve Pencil override support or a reviewed semantic variant strategy before implementation."
+        },
+        {
+          "id": "LS511-F04",
+          "severity": "INFORMATIONAL",
+          "status": "accepted-comparison-method-r1e",
+          "finding": "Original baseline vs fresh native rendering exceeds0.05% on7 screens before any mutation.",
+          "disposition": "r1e explicitly authorizes same-renderer pre/post primary comparison; exact0 onall12. Original comparisons retained."
+        },
+        {
+          "id": "LS511-F05",
+          "severity": "INFORMATIONAL",
+          "status": "pending-Claude",
+          "finding": "Canonical overflow scan/gates and external blind review not run by Codex.",
+          "disposition": "Claude commits exactdesign A, runs canonical scan receipt head_sha=A, reviews, commits B. No receipt manufactured."
+        },
+        {
+          "id": "LS511-F06",
+          "severity": "INFORMATIONAL",
+          "status": "open-reference-limit",
+          "finding": "Main document naming comparison was not performed because shared Pen must not switch documents.",
+          "disposition": "cmp/ naming convention applied from explicit brief; direct comparison remains unverified."
+        },
+        {
+          "id": "LS511-F07",
+          "severity": "INFORMATIONAL",
+          "status": "open-native-verification",
+          "finding": "Provider button artwork is official raster; Google English title and14pt branding differ from17pt app action convention.",
+          "disposition": "Official image unmodified; r2 localization/native provider controls require review."
+        },
+        {
+          "id": "LS511-F08",
+          "severity": "INFORMATIONAL",
+          "status": "shared-session-limit",
+          "finding": "Saved current document and read back in active Pencil; no close/reopen of shared document.",
+          "disposition": "Independent persisted-file reopen verification remains for Claude; shared Pen not switched or restarted."
+        },
+        {
+          "id": "LS511-F09",
+          "severity": "MINOR",
+          "status": "resolved-round2",
+          "finding": "Round1 Apple definition retained stale artwork hash and sign-in label after switching to official Continue artwork.",
+          "disposition": "Replaced definition Lonlu with zjeFm, matching visible label and actual official artwork SHA256; unchanged visual schema and native PNG verified independently."
+        },
+        {
+          "id": "LS511-F10",
+          "severity": "INFORMATIONAL",
+          "status": "documented-delivery-encoding",
+          "finding": "Palette-optimized delivery PNGs differ from raw native renders; same-renderer exact0 refers to raw native exports.",
+          "disposition": "Separate raw/delivery hashes and pixel comparisons retained; no exact-pixel claim for optimized delivery files."
+        },
+        {
+          "id": "LS511-F11",
+          "severity": "INFORMATIONAL",
+          "status": "review-scope-limit",
+          "finding": "Only supplied appearances inspected, including OTP empty/filled/focused; error and disabled states were not requested or supplied.",
+          "disposition": "Do not infer verification of absent states; r2 screen work remains excluded."
+        }
+      ],
+      "checks": {
+        "same_renderer12screens": "pass-exact0",
+        "original13board_ids": "preserved",
+        "original13notes_rows": "unchanged",
+        "protected_age_text": "exact-preserved-HwhMJ-jxHRS",
+        "reference_targets": "all119 authored refs resolve to47 live reusable targets;54 reusable definitions total",
+        "provider_assets": "official source bytes unchanged,376x88 at188x44pt",
+        "touch_targets": "static explicit Button/Tab dimensions>=44; symbolic fill widths/native hit regions not independently confirmed",
+        "contrast_ratios": {
+          "rose_on_primary": 5.624,
+          "rose_on_white": 8.422,
+          "rose_on_blush": 6.561,
+          "muted_on_white": 6.139,
+          "muted_on_canvas": 5.614,
+          "ink_on_white": 13.606,
+          "ink_on_canvas": 12.442,
+          "google_ink_on_white": 16.483,
+          "apple_white_on_black": 21.0,
+          "muted_on_blush": 4.782,
+          "muted_on_growth": 5.263,
+          "muted_on_weight": 5.441
+        },
+        "AX3": "not-verified",
+        "overflow_scanner": "not-run",
+        "gates": "not-run"
+      },
+      "task_ids": {
+        "parent_task": "/root",
+        "parent_thread": "01a13167-5a0a-78f3-8402-6a135f6ef317",
+        "job_id": null,
+        "designer_thread": "01a13168-0b24-7c52-9c48-f61c515c335f",
+        "visual_reviewer_thread": "01a13168-4d4b-7273-8cc4-a77092b706c7",
+        "delivery_verifier_thread": "01a13168-91cd-7f93-a833-8d0c9c8c562c",
+        "worker_runtime_model": "gpt-6.1-sol",
+        "worker_runtime_effort": "high",
+        "runtime_verification": "Parent read matching session_meta and turn_context, not merely worker self-report"
+      }
     }
   ]
 }

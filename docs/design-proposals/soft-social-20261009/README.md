@@ -1,5 +1,81 @@
 # LS-511 · 柔粉社群共用元件提案
 
+## LS-511 r1f（2026-10-13）
+
+**needs_revision**。以已凍結commit A `3b7b031076fb53fc21f7d0a5d0d88be4b3264fcc`續作；53筆實例AX override仍無法持久化，provider兩個AX3樣本仍是名義放大的官方點陣圖，不能宣稱三項全部解除。
+
+- 已新增12個`cmp/* · AX3`定義與`cmp/Icon Button / Labeled`；總計67個reusable，既有119refs不變。全部放在原`YiySC`板，未新增頂層板。一般樣本區`h1H1mI`與AX3區`o7xWI`分別匯出。
+- 12張既有畫面重新原生匯出並用相同方法壓縮，**交付PNG對commit A的RGBA每個通道差皆0、changed pixels皆0**；01home、02memory、03albums、04child、05food、06family、07composer、08album-detail、09notifications、10search、11invite、12album-empty逐板數字均為0。原13板ID、Notes與年齡字串不變。
+- 元件庫一般圖1608×2605、235316bytes；AX3圖1608×1955、184454bytes，皆scale1、≤400KB。既有12張交付圖與一般元件圖SHA256不變；兩個官方資產bytes也不變。
+- 53/53已嘗試官方`Update(id,{metadata:source})`，**0/53讀回符合原值**。新建ref帶metadata亦被忽略；官方Copy與Replace同樣失敗，測試節點均已刪，刪除後Get及再存檔SHA與凍結稿相同。存檔後逐ref `Get(resolveInstances:true)`重讀仍失敗；完整expected/actual在manifest `AX_metadata_r1f.actual_readback`。53筆原值皆無hint欄位，未捏造hint。
+- 抽查：`La70H`分享給家人→仍加入照片；`jijrr`通知→仍貼文更多選項；`p0wGZ`記下一個新味道→仍加入照片；`PH10Y`邀請家人→仍加入照片；`fsjM4`返回上一頁→仍貼文更多選項。這些是未修復證據。
+- 10個可編輯AX3元件內的所有文字均40pt、fixed-width與自動高度；明定互動區≥44pt。保留原配色，實算對比rose/primary5.624、muted/canvas5.614、ink/canvas12.442。全樹正典scanner未跑；本輪靜態圖不證明原生VoiceOver/DynamicType行為。
+- Apple官方圖188×44按40/19放大至395.79×92.63，Google按40/14放大至537.14×125.71，完整等比、不裁切、不自繪或改字。名義比例參照[Apple HIG](https://developer.apple.com/design/human-interface-guidelines/sign-in-with-apple/)及[Google branding](https://developers.google.com/identity/branding-guidelines)。點陣图沒有可核對的fontSize或換行；這兩項仍未通過40pt文字驗證。
+- 內部r1f實際完成1輪凍結複核（先前r1e另有2輪）：視覺ITERATE，交付機械核對PASS、就緒FAIL。兩位均獨立重算12張交付圖對Git A為byte-identical／RGBA通道差0。原生稿已用官方CLI save()保存，Get讀回；不切換/關閉共享Pen，不commit、不寫收據。
+
+### AX3與帶標籤變體
+
+下表寬高取官方Get解析；鎖屏環境只採尺寸與匯出視看，不採偏移座標作全樹溢出證明。
+
+| ID | 定義 | 寬 × 高 pt |
+| --- | --- | ---: |
+| `YWBav` | cmp/Button Primary · AX3 | 560 × 144 |
+| `lAKcR` | cmp/Button Secondary · AX3 | 560 × 88 |
+| `WzoZS` | cmp/Button Text · AX3 | 560 × 88 |
+| `VdPW8` | cmp/Button Apple · AX3 | 395.79 × 92.63 |
+| `ola2I` | cmp/Button Google · AX3 | 537.14 × 125.71 |
+| `Vy6NW` | cmp/Icon Button / Labeled | 180 × 56 |
+| `TYVis` | cmp/Nav Header · AX3 | 560 × 184 |
+| `x9L7US` | cmp/Tab Bar · AX3 | 560 × 140 |
+| `ZHbY7` | cmp/Chip · AX3 | 560 × 80 |
+| `F7ROI` | cmp/List Row · AX3 | 560 × 370 |
+| `E7hep` | cmp/Section Title · AX3 | 560 × 56 |
+| `xWtkY` | cmp/Empty State · AX3 | 560 × 452 |
+| `Puhr6` | cmp/Family Scope Note · AX3 | 560 × 80 |
+
+### r2 待辦
+
+**已轉 r2，附清單**：依r1f裁決保留原13板視覺。r2批2與日後遷移一律使用`cmp/Icon Button / Labeled`（`Vy6NW`）的icon＋常駐文字方式；文字依操作語意替換。共18個純icon動作、涵蓋10板，下面列齊13板。每個icon子路徑為`<動作ID>/oZ6k8`。家庭三列雖有旁邊姓名，獨立按鈕內無文字，仍列入。沒有另開後續票。
+
+| 板ID | 動作ID → 建議標籤 |
+| --- | --- |
+| `ev2Pc` | 無 |
+| `rsm56` | `jijrr` → 通知；`dnOUH` → 更多選項 |
+| `M7qpWP` | `TEBBy` → 返回；`tiEk3` → 更多選項；`UBUlb` → 傳送留言 |
+| `WavOD` | 無 |
+| `ftrBE` | 無 |
+| `e347tY` | `oht9A` → 返回 |
+| `CxGiV` | `gNxjn` → 查看媽媽；`C6uU5E` → 查看爸爸；`wPjty` → 查看阿嬤 |
+| `LefzY` | `FtgLT` → 返回 |
+| `m8Dfo` | `Q0cDAS` → 返回；`jhmIE` → 更多選項 |
+| `Y506Lc` | `X9nkc6` → 返回 |
+| `MZghz` | `TaBbn` → 返回；`bYwoa` → 清除搜尋 |
+| `g5YJ4r` | `fsjM4` → 返回 |
+| `Qr7b0` | `FxJ8l` → 返回；`GoBqy` → 更多選項 |
+
+### r1f open findings與處置
+
+- F01 INFORMATIONAL：已依使用者裁決轉r2，以上完整清單與帶標籤元件已交付。
+- F02 MAJOR：10個可編輯40pt樣本已通過靜態視覺複核（18個文字節點、無可見截斷或重疊、互動區≥44pt）；Apple/Google兩個官方點陣樣本的實際40pt與換行仍未驗證。既有13板AX3不在本輪範圍。
+- F03 MAJOR：53筆AX override工具仍忽略；保留逐ref失敗證據，需工具支援修正或另行裁定語意元件方案。不可使用繼承錯誤值產生實作AX。
+- F04 INFORMATIONAL：r1e原基準噪訊沿革保留；本輪改用commit A交付圖嚴格通道差0，12/12通過。
+- F05 INFORMATIONAL：本輪需下一個設計commit A。Claude對該A跑正典scanner、gates及後續盲審；Codex未產收據。
+- F06 INFORMATIONAL：未切共享Pen直接開主稿比對命名；沿用brief的cmp/規則。
+- F07 INFORMATIONAL：官方provider圖稿原樣保留，原生登入及語系待r2；本輪字級限制併F02。
+- F08 INFORMATIONAL：save()+Get讀回完成，獨立重開持久化驗證未做。
+- F09 RESOLVED：r1e Apple metadata來源hash修正仍有效。
+- F10 INFORMATIONAL：交付PNG有palette壓縮；本輪比較的是最終交付圖對A，exact0並非只比原生中間檔。
+- F11 INFORMATIONAL：只驗提供狀態；未提供error/disabled及原生行為不冒稱通過。
+- F12 INFORMATIONAL：10個可編輯AX3為560pt寬元件库樣本；不代表390pt整屏或原生Dynamic Type通過，後者依裁決留r2／遷移。
+
+F02兩位reviewer均列MAJOR。F03視覺reviewer列INFORMATIONAL、交付verifier列MAJOR readiness條件，兩者評估均保留；不能以原始值註記或工具回覆OK代替實際語意正確。審查錨定原生SHA `6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d`，最終只補審查記錄，未改原生稿或PNG。
+
+本輪證據暫存`/tmp/LS-511-r1f-evidence/`，包含原生匯出、正式Get快照、53筆存檔後讀回、AX3局部尺寸與像素比對。非Git錨定收據。
+
+原生稿SHA256 `6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d`。
+
+## r1e／commit A歷史說明（以下為前輪紀錄，r1f處置以上段為準）
+
 ## LS-511 r1e 元件化（2026-10-13）
 
 狀態：**needs_revision**。原生元件化與匯出已完成；下列 open findings 尚未解除，並非人審接受或原生實作完成。原 LS-455 說明保留於下方歷史段落。
@@ -197,7 +273,7 @@ README不自列hash，避免循環參照。
 | 路徑 | SHA256 |
 | --- | --- |
 | `.gitattributes` | `41d1d6b8931ca0534a187b19f57585d644616540ddc344cb1d0661a449524827` |
-| `SCREEN-MANIFEST.json` | `fd6c2367dfdfd3fd6781179e7bd423be020f90b081d7173b7a4a703cf431f050` |
+| `SCREEN-MANIFEST.json` | `b41eb81193a224e1ba1b07f260dd77ab316d32d1c87037390d6eeda80cf2fa5a` |
 | `assets/app-icon.png` | `356a7f56136abe8068c7c2d21a3dc73d6287e5faea88ec8186e79361d7d77a37` |
 | `assets/apple-sign-in-zh-TW@2x.png` | `81c4419beb013011e511b2bed6976004c4d2c28a4316d09d9a66577f1449ece2` |
 | `assets/child-leaf.jpg` | `f57ac0bbdab129a61dd51a99eb8c0444c531075cfd1705d6b651524645b8cf7f` |
@@ -210,6 +286,7 @@ README不自列hash，避免循環參照。
 | `assets/mandarin-sticker.png` | `e25b803b978c20bf9e7f61ca30882aa766fdc06c2e8f97db049afa82b5bbef0b` |
 | `assets/mom.jpg` | `dbef7acf304bd38e436824f3c0469724659da3d9c245879edff9f15e0774ccf4` |
 | `assets/wordmark.png` | `f17e92c5ffe215356ff5a8d54ad25f842efa11d4c49fbc6ced1707be3c38195b` |
+| `exports/00-components-ax3.png` | `9b4388bf905c437b69c9daf0f31fb80eaad3ca718fb3c4fd588736a18dc5c862` |
 | `exports/00-components.png` | `c596df0d64893115f50c0485298e3790840196aef81ae29b75bd3648d5a413f3` |
 | `exports/01-home.png` | `1d60265c62df0752ece5e5b382b93db8b3ec1cb0c977c251713cc5171817d1ea` |
 | `exports/02-memory.png` | `49b5bd789b08b60efaa5e051c1103e71950270b586a4db6f970082db3a8a2bee` |
@@ -223,7 +300,7 @@ README不自列hash，避免循環參照。
 | `exports/10-search.png` | `44d65177985d4304c6db1699218a11d5158ecbeac78b211feefbcfd552611e3b` |
 | `exports/11-invite.png` | `427c717b8fe4df51fe8927b35be1a1d934d1e1df8da2976888ffa8e7a95694cd` |
 | `exports/12-album-empty.png` | `52a583ade46b5adfe437580fd4b4e185584cd23d199b69ece15edcee22569356` |
-| `littlesprout-soft-social.pen` | `5be1b222c0d5d56d385b4546a57ac2b94252df60eaf694388c5d0e9c1e665dcf` |
+| `littlesprout-soft-social.pen` | `6d70eb62f54c6667ad456422da8e1b05d1903e2a4b79955504241175a847c48d` |
 | `skill/SKILL.md` | `9b4a627dc735bf3f26209a6751d1002ef0ef8dd0800ae23eb099850f13a2e760` |
 | `skill/agents/openai.yaml` | `ab452d2f8df8e0ec0342dd7beeef04bf4a33b3c3cb0091eec15348b250a26fa3` |
 | `skill/references/baseline.md` | `b5208d9136068d815efd8f8e3e0dd4d8e0187c3b54870f6fa6974aa00c44a095` |
