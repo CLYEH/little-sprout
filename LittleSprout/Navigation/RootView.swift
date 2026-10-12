@@ -44,7 +44,8 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if authStore.isAuthenticated() {
+            switch RootRoute.resolve(session: authStore.session, now: Date(), restoreState: authStore.restoreState) {
+            case .authenticated:
                 AuthenticatedGate(
                     authStore: authStore,
                     familyStore: familyStore,
@@ -62,8 +63,10 @@ struct RootView: View {
                     pushNotificationStore: pushNotificationStore,
                     pendingInviteCode: $pendingInviteCode
                 )
-            } else {
+            case .welcome:
                 WelcomeView(authStore: authStore)
+            case .restoring:
+                LaunchPlaceholderView()
             }
         }
         .onChange(of: scenePhase) { _, phase in

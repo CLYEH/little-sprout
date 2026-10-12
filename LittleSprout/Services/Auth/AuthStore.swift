@@ -37,15 +37,57 @@ final class AuthStore {
 
     private(set) var session: AuthSession?
 
+    /// LS-502：冷啟動「還原中」狀態。init 時讀到「存在但已過期」的 session（Keychain 裡 1h 的
+    /// access token 隔一段時間再開 app 必過期），SDK 會在背景用 refresh token 換新——這段網路
+    /// 往返期間不能直接路由到登入頁（會閃一下才進動態），所以先 `.pending`，由
+    /// `RootRoute.resolve` 顯示啟動佔位頁。session 為 nil 或一開始就有效 → 直接 `.settled`。
+    enum RestoreState: Equatable, Sendable {
+        case pending
+        case settled
+    }
+
+    /// 還原逾時：離線時 SDK 的 refresh 失敗但不一定發任何事件，沒有這個兜底會永遠停在佔位頁。
+    /// 逾時後依當下（仍過期的）session 路由 → 登入頁，與 LS-502 之前的離線行為相同。
+    static let restoreTimeout: Duration = .seconds(5)
+
+    private(set) var restoreState: RestoreState
+
+    @ObservationIgnored
+    private var restoreTimeoutTask: Task<Void, Never>?
+
     init(authService: AuthService) {
         self.authService = authService
-        self.session = authService.currentSession
+        let initialSession = authService.currentSession
+        self.session = initialSession
+        let needsRestore = initialSession != nil && !Self.isSessionValid(initialSession, asOf: Date())
+        self.restoreState = needsRestore ? .pending : .settled
         observeSessionUpdatesTask = Task { [weak self] in
             for await _ in authService.sessionUpdates {
                 guard let self, !Task.isCancelled else { return }
                 self.session = authService.currentSession
+                // 只有「重讀後 session 為 nil（刷新失敗／signOut）或已有效（刷新成功）」才算還原
+                // 結束：SDK 的第一個事件 `.initialSession` 帶的就是 Keychain 裡那份過期 session
+                // （`emitLocalSessionAsInitialSession`，見 `SupabaseClientFactory`），緊接著才是
+                // 背景刷新的 `tokenRefreshed`／`signedOut`——見到過期的那一筆不能結束。
+                if self.session == nil || self.isAuthenticated() { self.settleRestore() }
             }
         }
+        if needsRestore {
+            restoreTimeoutTask = Task { [weak self] in
+                try? await Task.sleep(for: Self.restoreTimeout)
+                guard !Task.isCancelled else { return }
+                self?.settleRestore()
+            }
+        }
+    }
+
+    /// 事件與逾時兩條路徑都走這裡；兩者都在 MainActor 上，`guard` 保證 `.settled` 只設一次，
+    /// 並在第一條抵達時取消另一條（逾時 Task 收到事件後取消）。
+    private func settleRestore() {
+        guard restoreState == .pending else { return }
+        restoreState = .settled
+        restoreTimeoutTask?.cancel()
+        restoreTimeoutTask = nil
     }
 
     // 這裡的 cancel 不只停掉這個 store 自己的訂閱迴圈——`sessionUpdates` 是一次性訂閱，
@@ -55,6 +97,7 @@ final class AuthStore {
     // 會讓下一個訂閱它的 store 永遠收不到事件、且不會有任何錯誤（LS-82 PR #147 review F1）。
     deinit {
         observeSessionUpdatesTask?.cancel()
+        restoreTimeoutTask?.cancel()
     }
 
     /// 離線開 app 時 `currentSession` 可能回傳非 nil 但已過期的 session（LS-55 N1／I5）；
