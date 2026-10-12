@@ -1,5 +1,8 @@
 package com.clyeh.sproutday.debug
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clyeh.sproutday.supabase.AuthState
 import com.clyeh.sproutday.upload.UploadSource
@@ -52,6 +56,7 @@ fun DebugAuthPanel(viewModel: DebugAuthViewModel) {
         UploadSection(viewModel, ui, enabled = !ui.busy)
         FeedSection(viewModel, ui, enabled = !ui.busy)
         ChildSection(viewModel, ui, enabled = !ui.busy)
+        PushSection(viewModel, enabled = !ui.busy)
         Text("紀錄", style = MaterialTheme.typography.titleSmall)
         ui.log.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
     }
@@ -155,6 +160,24 @@ private fun ChildSection(
     }
     DebugButton("寫一篇日記（標記第一個寶貝）", enabled, "write-diary") { viewModel.writeDiary() }
     ui.child?.let { Text("寶貝：${it.name}", modifier = Modifier.testTag("child-${it.id}")) }
+}
+
+/** 先要通知權限（API 33+，結果不影響註冊：被拒絕只是前景通知不顯示），再取 FCM token 註冊。 */
+@Composable
+private fun PushSection(
+    viewModel: DebugAuthViewModel,
+    enabled: Boolean,
+) {
+    val context = LocalContext.current
+    val permission =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.registerPush() }
+    DebugButton("註冊推播（取 FCM token）", enabled, "register-push") {
+        val needsPermission =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+        if (needsPermission) permission.launch(Manifest.permission.POST_NOTIFICATIONS) else viewModel.registerPush()
+    }
 }
 
 @Composable
