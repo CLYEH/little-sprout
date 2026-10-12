@@ -7,6 +7,13 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// LS-497：google-services.json 是 Firebase 設定（gitignored，由 ~/.secrets 複製進來）。缺檔時不套 google-services plugin
+// （plugin 缺檔會讓建置 fail）——CI 的 android-lint／android-unit／android-connected 與沒有該檔的 worktree 都因此照常建置；
+// 代價是這樣的 build 沒有 Firebase 設定，取 FCM token 在執行期 fail loud（FcmTokenSource），不影響其他功能。
+if (file("google-services.json").exists()) {
+    apply(plugin = libs.plugins.google.services.get().pluginId)
+}
+
 // scripts/ops/release-version.sh 寫入（gitignored）；缺檔 fallback 0.0.0／1，與 iOS 的 project.yml fallback 同值。
 val versionProps =
     Properties().apply {
@@ -79,6 +86,8 @@ dependencies {
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
