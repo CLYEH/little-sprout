@@ -24,7 +24,7 @@
 #   **`config push` 例外（LS-503）**：CLI（v2.115.0 實查）的 `config push` 沒有 `--dry-run`、會逐服務覆蓋正式站
 #   auth／api／db 設定，且 `supabase/config.toml` 不是正式站 auth 的單一來源（SMTP／Apple provider 由 Management API
 #   管，LS-487／LS-488）——所以 `config push`（任何旗標順序、含 `--yes`）一律 deny，**有無當日 token 都擋**（token 不放行這一類）；
-#   `--local`／`--help`／`-h` 放行（這類放行旗標只看第一個 `#` 開頭 token 之前的參數：`config push --yes # --help`、`db push # --local` 不因註解放行，R1c）。要推只能使用者在自己終端機互動執行（逐服務看 CLI 印的 diff 答 y/n），agent 不代推。
+#   `--local`／`--help`／`-h` 放行（這類放行旗標只看第一個 `#` 開頭 token 之前的參數：`config push --yes # --help`、`db push # --local`、`db push # --db-url <本機>` 不因註解放行，R1c／R1d）。要推只能使用者在自己終端機互動執行（逐服務看 CLI 印的 diff 答 y/n），agent 不代推。
 #   `migration up` 不帶 --linked／遠端 --db-url 時預設是本機（CLI 預設 --local），放行。
 #   本機 `supabase start`／`stop`／`status`／`db reset`／`db query`（無 --linked）放行。
 #   子指令比對只看不含空白的 args token（引號內整段 SQL 之類不參與），regex 對串起來的 args 比對，所以
@@ -155,21 +155,27 @@ def remote_target(args):
     text = " ".join(a for a in args if not re.search(r"\s", a))
     linked = any(a == "--linked" or a.startswith("--linked=") for a in args)
     has_local = "--local" in before_comment(args)
-    dburl = None
-    for k, a in enumerate(args):
-        if a == "--db-url":
-            dburl = args[k + 1] if k + 1 < len(args) else ""
-        elif a.startswith("--db-url="):
-            dburl = a[len("--db-url="):]
+    def find_dburl(xs):
+        v = None
+        for k, a in enumerate(xs):
+            if a == "--db-url":
+                v = xs[k + 1] if k + 1 < len(xs) else ""
+            elif a.startswith("--db-url="):
+                v = a[len("--db-url="):]
+        return v
+
+    # R1d：「本機 --db-url 放行」只認註解 `#` 之前的；遠端偵測整段與註解前兩份都看（只多擋不少擋）
+    dburl = find_dburl(args)
+    dburl_pre = find_dburl(before_comment(args))
     if linked:
         return True
-    if dburl is not None and host_of(dburl) not in LOCAL_HOSTS:
+    if any(u is not None and host_of(u) not in LOCAL_HOSTS for u in (dburl, dburl_pre)):
         return True
     if re.search(ALWAYS_REMOTE, text):
         return True
     if re.search(CONFIG_PUSH, text) and any(a in ("--help", "-h") for a in before_comment(args)):
         return False
-    if re.search(DEFAULT_LINKED, text) and dburl is None and not has_local:
+    if re.search(DEFAULT_LINKED, text) and dburl_pre is None and not has_local:
         return True
     return False
 

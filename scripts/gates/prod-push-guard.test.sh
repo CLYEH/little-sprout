@@ -133,6 +133,9 @@ expect 'LS503-e db push＋當日 token 不受影響（allow）' 0 "env PROD-PUSH
 expect 'LS503-g config push --yes # --help（註解內旗標不算，deny）' 2 'supabase config push --yes # --help'
 expect 'LS503-g2 config push # -h（deny）' 2 "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase config push # -h"
 expect 'LS503-g3 db push # --local（註解內 --local 不放行，deny）' 2 'supabase db push # --local'
+expect 'LS503-g6 db push # --db-url 本機（註解內本機 db-url 不放行，deny）' 2 'supabase db push # --db-url postgres://u@127.0.0.1:54322/postgres'
+expect 'LS503-g7 db push --db-url 本機 # note（allow）' 0 'supabase db push --db-url postgres://u@127.0.0.1:54322/postgres # note'
+expect 'LS503-g8 遠端 --db-url 在前、註解內再放本機 --db-url（deny）' 2 "supabase db push --db-url ${REMOTE} # --db-url ${LOCALDB}"
 expect 'LS503-g4 db push --local # 註解（旗標在註解前，allow）' 0 'supabase db push --local # note'
 expect 'LS503-g5 config push --help # 註解（allow）' 0 'supabase config push --help # note'
 out=$(payload "env PROD-PUSH-APPROVED-BY-USER=${TODAY} supabase config push" | bash "$gate" 2>&1)
@@ -231,9 +234,9 @@ mutate_expect_allow() {  # $1=label $2=sed 表達式 $3=原本會 deny 的 comma
 mutate_expect_allow 'M1：拿掉 token 比對（一律放行已偵測者）→ 無 token 的 --linked 改判 allow' \
   's/^sys.exit(0 if tok.search(cmd) else 2)$/sys.exit(0)/' 'supabase db push --linked'
 mutate_expect_allow 'M2：拿掉 db push 預設 linked 判斷 → 裸跑 db push 改判 allow' \
-  's/ and dburl is None and not has_local/ and False/' 'supabase db push'
+  's/ and dburl_pre is None and not has_local/ and False/' 'supabase db push'
 mutate_expect_allow 'M3：拿掉 --db-url 主機判斷 → 遠端 --db-url 改判 allow' \
-  's/if dburl is not None and host_of(dburl) not in LOCAL_HOSTS:/if False:/' "supabase migration up --db-url ${REMOTE}"
+  's/^    if any(u is not None and host_of(u) not in LOCAL_HOSTS for u in (dburl, dburl_pre)):$/    if False:/' "supabase migration up --db-url ${REMOTE}"
 mutate_expect_allow 'M4：拿掉 functions deploy／secrets set 規則 → functions deploy 改判 allow' \
   's/^    if re.search(ALWAYS_REMOTE, text):$/    if False:/' 'supabase functions deploy foo'
 mutate_expect_allow 'M5：拿掉 --linked 判斷 → db query --linked 改判 allow' \
@@ -256,6 +259,8 @@ mutate_expect_allow 'M13（LS-503 R1c）：拿掉註解截斷 → config push --
   's/^        if a.startswith("#"):$/        if False:/' 'supabase config push --yes # --help'
 mutate_expect_allow 'M13b（LS-503 R1c）：拿掉註解截斷 → db push # --local 改判 allow' \
   's/^        if a.startswith("#"):$/        if False:/' 'supabase db push # --local'
+mutate_expect_allow 'M14（LS-503 R1d）：本機 db-url 判定改回整段 → db push # --db-url 本機 改判 allow' \
+  's/re.search(DEFAULT_LINKED, text) and dburl_pre is None/re.search(DEFAULT_LINKED, text) and dburl is None/' 'supabase db push # --db-url postgres://u@127.0.0.1:54322/postgres'
 mutate_expect_allow 'M6：拿掉行尾續行摺疊 → 續行寫法的 --linked 改判 allow' \
   's/command\.replace(.*, " "))$/command)/' $'supabase db query \\\n  -f x.sql \\\n  --linked'
 mutate_expect_allow 'M7：拿掉 migration repair 預設 linked → 改判 allow' \
