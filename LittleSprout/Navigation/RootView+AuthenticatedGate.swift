@@ -200,6 +200,7 @@ struct FamilyLookupFailedView: View {
                 .multilineTextAlignment(.center)
             Button("重試", action: retry)
                 .appFont(.body, weight: .semibold)
+                .disabled(isSigningOut)
             Button(action: signOutTapped) {
                 HStack(spacing: AppSpacing.tight) {
                     if isSigningOut {

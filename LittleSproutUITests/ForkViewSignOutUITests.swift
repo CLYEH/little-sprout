@@ -9,17 +9,21 @@ final class ForkViewSignOutUITests: XCTestCase {
         TapTargetMeasurement.assertScreenRendered(.forkViewNoFamily, in: app)
 
         let signOutButton = app.buttons["登出"]
-        XCTAssertTrue(signOutButton.waitForExistence(timeout: 5), "一般三岔路頁應該要有「登出」出口")
+        XCTAssertTrue(signOutButton.waitForExistence(timeout: UITestTimeouts.standard), "一般三岔路頁應該要有「登出」出口")
         XCTAssertEqual(app.buttons.matching(identifier: "登出").count, 1, "不該同時出現兩顆登出鈕")
-        XCTAssertTrue(signOutButton.isHittable, "「登出」鈕應該可點（minHeight 48）")
+        XCTAssertTrue(signOutButton.waitForHittable(timeout: UITestTimeouts.standard), "「登出」鈕應該可點（minHeight 48）")
 
-        signOutButton.tap()
+        signOutButton.tapWhenHittable()
 
         XCTAssertTrue(
-            TapTargetGateScreenName.welcome.sentinel.element(in: app).waitForExistence(timeout: 5),
+            TapTargetGateScreenName.welcome.sentinel.element(in: app)
+                .waitForExistence(timeout: UITestTimeouts.standard),
             "登出後 session 清除，應該回到歡迎（登入）頁"
         )
-        XCTAssertFalse(app.buttons["我要自己建立家庭"].exists, "回到歡迎頁後不該還看得到三岔路")
+        XCTAssertTrue(
+            app.buttons["我要自己建立家庭"].waitUntilGone(timeout: UITestTimeouts.standard),
+            "回到歡迎頁後不該還看得到三岔路"
+        )
     }
 
     /// 帳號在後端被刪、存的 access token 仍有效時，家庭查詢失敗落在 `FamilyLookupFailedView`——
@@ -29,15 +33,19 @@ final class ForkViewSignOutUITests: XCTestCase {
         TapTargetMeasurement.assertScreenRendered(.familyLookupFailed, in: app)
 
         let signOutButton = app.buttons["登出"]
-        XCTAssertTrue(signOutButton.waitForExistence(timeout: 5), "家庭查詢失敗頁應該要有「登出」出口")
-        XCTAssertTrue(signOutButton.isHittable, "「登出」鈕應該可點（minHeight 48）")
+        XCTAssertTrue(signOutButton.waitForExistence(timeout: UITestTimeouts.standard), "家庭查詢失敗頁應該要有「登出」出口")
+        XCTAssertTrue(signOutButton.waitForHittable(timeout: UITestTimeouts.standard), "「登出」鈕應該可點（minHeight 48）")
 
-        signOutButton.tap()
+        signOutButton.tapWhenHittable()
 
         XCTAssertTrue(
-            TapTargetGateScreenName.welcome.sentinel.element(in: app).waitForExistence(timeout: 5),
+            TapTargetGateScreenName.welcome.sentinel.element(in: app)
+                .waitForExistence(timeout: UITestTimeouts.standard),
             "登出後 session 清除，應該回到歡迎（登入）頁"
         )
-        XCTAssertFalse(app.buttons["重試"].exists, "回到歡迎頁後不該還看得到失敗頁")
+        XCTAssertTrue(
+            app.buttons["重試"].waitUntilGone(timeout: UITestTimeouts.standard),
+            "回到歡迎頁後不該還看得到失敗頁"
+        )
     }
 }
