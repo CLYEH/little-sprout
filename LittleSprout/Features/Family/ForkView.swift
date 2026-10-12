@@ -147,6 +147,7 @@ struct ForkView: View {
                 .padding(.top, AppSpacing.item)
             suspendedFooter
                 .padding(.top, AppSpacing.item)
+            signOutFooter(pinsToBottom: true)
         }
         .padding(.horizontal, AppSpacing.screenPad)
         .padding(.top, AppSpacing.block)
@@ -269,6 +270,7 @@ struct ForkView: View {
                     .padding(.top, AppSpacing.block)
                 suspendedFooter
                     .padding(.top, AppSpacing.item)
+                signOutFooter(pinsToBottom: false)
             }
             .frame(width: 294)
         }

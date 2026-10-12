@@ -65,6 +65,43 @@ extension ForkView {
         }
     }
 
+    /// LS-505：一般（非停權、非刪除進行中）三岔路頁的「登出」出口——停權 footer 顯示時它已經自帶
+    /// 「登出」鈕（`suspendedFooterBody`），兩者條件互斥（與 `suspendedFooter` 的顯示條件同一份
+    /// 判斷），避免畫面上出現兩顆登出。沿用同一支 `signOutTapped()`／`signOutButton`
+    /// （`cmp/Button Text` 版式，不另做新元件）；失敗用 alert 顯示 `signOutErrorMessage`。
+    /// 登出成功後 `RootView` 依 `authStore.session == nil` 自動回 `WelcomeView`，這裡不導頁。
+    @ViewBuilder
+    func signOutFooter(pinsToBottom: Bool) -> some View {
+        if !isSuspendedFooterShown {
+            VStack(spacing: 0) {
+                if pinsToBottom {
+                    Spacer(minLength: AppSpacing.section)
+                }
+                signOutButton
+                    .accessibilityLabel("登出")
+                    .accessibilityHint("回到登入頁，可改用其他帳號")
+                    .padding(.top, pinsToBottom ? 0 : AppSpacing.section)
+            }
+            .padding(.bottom, AppSpacing.item)
+            .alert("登出失敗", isPresented: signOutErrorPresented) {
+                Button("好", role: .cancel) {}
+            } message: {
+                Text(signOutErrorMessage ?? "")
+            }
+        }
+    }
+
+    private var signOutErrorPresented: Binding<Bool> {
+        Binding(
+            get: { signOutErrorMessage != nil },
+            set: { if !$0 { signOutErrorMessage = nil } }
+        )
+    }
+
+    private var isSuspendedFooterShown: Bool {
+        isAccountDeletionPending || familyStore.suspendedOrRegistrationClosedError != nil
+    }
+
     private var isAccountDeletionPending: Bool {
         if familyStore.accountDeletionInProgressError != nil { return true }
         guard let userID = authStore.session?.userID else { return false }

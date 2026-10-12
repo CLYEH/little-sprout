@@ -89,7 +89,8 @@ enum TapTargetGateHarness {
         case .importBatchFlowEntry, .importBatchFlowEntryDark, .importBatchFlowQuotaFailure:
             importBatchFlowEntryHost(for: screen)
         case .passwordSignIn: passwordSignInHost
-        case .welcome: welcomeHost
+        // LS-505：本 enum body 已貼齊 `type_body_length` 250 上限，`.forkViewNoFamily` 併進 `.welcome` 單行分派。
+        case .welcome, .forkViewNoFamily: welcomeOrForkViewHost(for: screen)
         case .profileEdit: profileEditHost
         case .familyMembers: familyMembersHost
         case .deleteAccountGeneralMember: deleteAccountGeneralMemberHost
@@ -239,7 +240,7 @@ enum TapTargetGateHarness {
     /// LS-164：見 `TapTargetGateScreenName.welcome` 文件註解——這個 host 純粹借用「launch
     /// environment 指定畫面」通道給 `PasswordSignInUITests` 用，不掛進 `TapTargetGateTests`。
     @MainActor
-    private static var welcomeHost: WelcomeView {
+    static var welcomeHost: WelcomeView {
         WelcomeView(authStore: .preview())
     }
 
