@@ -24,9 +24,9 @@ android/.gradle/
 android/.kotlin/
 android/.idea/
 android/captures/
+*.iml
 # LS-481：Firebase google-services.json 不進 repo（原檔在 ~/.secrets/sprout-day-google-services.json，需要時 cp 進票 worktree）
 android/app/google-services.json
-*.iml
 
 # Claude Code
 .claude/worktrees/
