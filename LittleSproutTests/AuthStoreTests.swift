@@ -312,4 +312,43 @@ final class AuthStoreTests: XCTestCase {
         XCTAssertEqual(store.session, refreshed)
         XCTAssertTrue(store.isAuthenticated())
     }
+
+    // MARK: - restoreState（LS-502：冷啟動還原中）
+
+    func test_init_expiredSession_isPending() {
+        // 過期 session ＝ 還原尚未結束，root routing 顯示啟動佔位頁而不是登入頁。
+        let expired = AuthSession(userID: userID, email: "a@example.com", expiresAt: Date().addingTimeInterval(-3600))
+        XCTAssertEqual(AuthStore(authService: StubAuthService(currentSession: expired)).restoreState, .pending)
+
+        // 對照：nil 與有效 session 一開始就 settled，路由與 LS-502 前完全相同。
+        XCTAssertEqual(AuthStore(authService: StubAuthService()).restoreState, .settled)
+        let valid = AuthSession(userID: userID, email: "a@example.com", expiresAt: .distantFuture)
+        XCTAssertEqual(AuthStore(authService: StubAuthService(currentSession: valid)).restoreState, .settled)
+    }
+
+    func test_sessionUpdate_afterExpiredInit_staysPendingUntilRefreshedThenSettles() async throws {
+        let expired = AuthSession(userID: userID, email: "a@example.com", expiresAt: Date().addingTimeInterval(-3600))
+        let stub = StubAuthService(currentSession: expired)
+        let store = AuthStore(authService: stub)
+        XCTAssertEqual(store.restoreState, .pending)
+
+        // SDK 的 `.initialSession` 事件帶的就是 Keychain 裡那份過期 session——收到它不能結束還原。
+        stub.emitSessionUpdate(expired)
+        try await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(store.restoreState, .pending, "過期的 initialSession 事件不是還原結果")
+
+        // 背景刷新成功（tokenRefreshed）→ 有效 session → settled。
+        stub.emitSessionUpdate(AuthSession(userID: userID, email: "a@example.com", expiresAt: .distantFuture))
+        let expectation = expectation(description: "刷新後的有效 session 事件讓 restoreState 變 settled")
+        let pollTask = Task {
+            while store.restoreState != .settled {
+                try await Task.sleep(nanoseconds: 5_000_000)
+            }
+            expectation.fulfill()
+        }
+        await fulfillment(of: [expectation], timeout: 2)
+        pollTask.cancel()
+
+        XCTAssertTrue(store.isAuthenticated())
+    }
 }

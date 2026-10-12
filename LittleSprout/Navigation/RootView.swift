@@ -44,7 +44,8 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if authStore.isAuthenticated() {
+            switch RootRoute.resolve(session: authStore.session, now: Date(), restoreState: authStore.restoreState) {
+            case .authenticated:
                 AuthenticatedGate(
                     authStore: authStore,
                     familyStore: familyStore,
@@ -62,21 +63,13 @@ struct RootView: View {
                     pushNotificationStore: pushNotificationStore,
                     pendingInviteCode: $pendingInviteCode
                 )
-            } else {
+            case .welcome:
                 WelcomeView(authStore: authStore)
+            case .restoring:
+                LaunchPlaceholderView()
             }
         }
-        .onChange(of: scenePhase) { _, phase in
-            albumsStore.uploadQueueScenePhaseChanged(phase) // LS-397：進背景／回前景的上傳續傳
-            if phase == .active {
-                authStore.refreshSnapshot()
-                // LS-217 票文範圍 2：「每次 App 進前景重讀狀態」——沒有登入者時沒有東西可重讀
-                // （token 送出需要 `userID`），跳過。
-                if let userID = authStore.session?.userID {
-                    Task { await pushNotificationStore.refreshOnForeground(userID: userID) }
-                }
-            }
-        }
+        .onChange(of: scenePhase) { _, phase in handleScenePhaseChange(phase) }
     }
 }
 

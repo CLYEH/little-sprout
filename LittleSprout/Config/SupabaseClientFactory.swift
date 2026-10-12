@@ -1,3 +1,4 @@
+import Auth
 import Foundation
 import Supabase
 
@@ -38,6 +39,9 @@ enum SupabaseClientFactory {
             "Config/Secrets.xcconfig 未設定（目前用的是 Config/Base.xcconfig 的安全佔位值）——" +
             "本機開發請複製 Config/Secrets.xcconfig.example 為 Config/Secrets.xcconfig 並填入真實值。"
         )
+        #if DEBUG
+        expireStoredSessionIfRequested(env: ProcessInfo.processInfo.environment, supabaseURL: url)
+        #endif
         return SupabaseClient(
             supabaseURL: url,
             supabaseKey: qaOverride?.anonKey ?? AppConfig.supabaseAnonKey,
@@ -70,6 +74,23 @@ enum SupabaseClientFactory {
     static func qaAPIURL(in env: [String: String]) -> URL? {
         guard let raw = env["LS_QA_API_URL"], let url = URL(string: raw), url.host != nil else { return nil }
         return url
+    }
+    #endif
+
+    #if DEBUG
+    /// LS-502：QA／模擬器實測用——`LS_QA_EXPIRE_SESSION=1` 時，在建 client 之前把 Keychain 裡 SDK 存的
+    /// session 的 `expiresAt` 改成一小時前（refresh token 不動），重現「隔一段時間再開 app、access
+    /// token 已過期」的冷啟動。沒有存 session 或解不開就什麼都不做。整段 `#if DEBUG`，Release 不編入。
+    static func expireStoredSessionIfRequested(env: [String: String], supabaseURL: URL) {
+        guard env["LS_QA_EXPIRE_SESSION"] == "1", let host = supabaseURL.host else { return }
+        let storage = KeychainLocalStorage()
+        // 與 `SupabaseClient` 建 `AuthClient` 時的預設 storageKey 同一算式（`sb-<host 第一段>-auth-token`）。
+        let key = "sb-\(host.split(separator: ".")[0])-auth-token"
+        guard let data = try? storage.retrieve(key: key),
+              var session = try? JSONDecoder().decode(Session.self, from: data) else { return }
+        session.expiresAt = Date().addingTimeInterval(-3600).timeIntervalSince1970
+        guard let expired = try? JSONEncoder().encode(session) else { return }
+        try? storage.store(key: key, value: expired)
     }
     #endif
 
