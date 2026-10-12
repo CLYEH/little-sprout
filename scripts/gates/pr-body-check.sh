@@ -18,7 +18,7 @@
 #
 # LS-316 design-ref 分支反查（--verify 才跑）：branch 對 base（hotfix/* 對 origin/main、feature|fix/* 對
 # origin/development，同 push-gate.sh 既有的 base 判定慣例）的 diff 若含 `design/*.pen` 或新增 SwiftUI
-# View（判定同 ci.yml Design gate 段），呼叫 design-ref-check.sh 核對 body 的 `Design:` 行板名／id 是否
+# View（判定同 ci.yml Design gate 段；LS-489 起 `docs/design-proposals/**/*.pen` 也算），呼叫 design-ref-check.sh 核對 body 的 `Design:` 行板名／id 是否
 # 與 head 的 design/littlesprout.pen 頂層節點一致；不觸發時整段略過（多數 PR 不動設計稿）。base 解析不到
 # （origin/development／origin/main 本機未 fetch）時這段整個略過、不 fail closed——這裡只是 agent 本機
 # `gh pr create` 前的提早攔截，真正把關的是 CI 對同一支 ci.yml「Design gate」step 的獨立呼叫（用
@@ -459,7 +459,8 @@ design_ref_head=${head_sha:-HEAD}
 if design_ref_base_sha=$(git merge-base "$design_ref_base" "$design_ref_head" 2>/dev/null); then
   design_ref_new_views=$(git diff "$design_ref_base_sha"..."$design_ref_head" -- '*.swift' 2>/dev/null | grep '^+' \
     | grep -cE 'struct +[A-Za-z0-9_]+(<[^>]*>)? *: *([A-Za-z0-9_]+ *, *)*(some +)?View\b' || true)
-  design_ref_pen_touched=$(git diff --name-only "$design_ref_base_sha"..."$design_ref_head" -- 'design/*.pen' 2>/dev/null || true)
+  # LS-489：提案稿（docs/design-proposals/**/*.pen）同觸發，與 ci.yml Design gate 的 pens_touched 一致。
+  design_ref_pen_touched=$(git diff --name-only "$design_ref_base_sha"..."$design_ref_head" -- 'design/*.pen' 'docs/design-proposals/*.pen' 2>/dev/null || true)
   if [ "${design_ref_new_views:-0}" -gt 0 ] || [ -n "$design_ref_pen_touched" ]; then
     design_ref_args=("$file" design/littlesprout.pen)
     [ -n "$head_sha" ] && design_ref_args+=(--head-sha "$head_sha")

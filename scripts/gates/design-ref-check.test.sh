@@ -14,6 +14,9 @@
 #   ⑧（LS-318；LS-96 池項 `6fee5681`）形狀不明（如 `Design: 見上方截圖`，不是「板名（id）」也不是純
 #     id token）→ 綠、印「（略過）」提示行、exit 0——這是 design_ref_check.py:110,160-164 既有的
 #     `skipped` 分支，這支腳本落地以來零夾具命中過它
+#   ⑨–⑭（LS-489）`Design:` 行指定 .pen 路徑（`<路徑>.pen:` 前綴）：⑨ 提案稿新格式 → 綠；⑩ 提案稿 id 不存在 → 紅；
+#     ⑪ 路徑不存在 → 紅；⑫ 路徑在 allowlist 外 → 紅；⑬ 前綴與主稿並存（兩行 Design:）各查各的 → 綠；
+#     ⑭ mutation（拿掉路徑解析，前綴行改回對主稿查）→ ⑨ 由綠轉紅
 # 五例＋mutation 對應票文驗收「design-ref-check.test.sh 夾具：名稱相符／id 缺／名稱不符／純 id 寫法／
 # 無 Design 行 五例綠；mutation（#475 body 改一字）紅」——後半句（用真實 PR #475 body／.pen 跑基準與
 # mutation）是 LS-316 基準步驟本身（scratchpad/LS-316-baseline/、handoff 附證據)，不進這支合成夾具
@@ -104,6 +107,56 @@ expect 1 '⑦ mutation：③ 板名改一字，紅訊息的宣稱名稱隨之換
 #   「（略過）」提示、exit 0；不得出現「✗ Design 行」（沒有東西被判定違規，只是沒核對）
 b8=$(body_file body-8.md 'Design: 見上方截圖')
 expect 0 '⑧ 形狀不明（Design: 見上方截圖）→ 綠、印略過提示' '（略過）Design 行「見上方截圖」：無法解析為「板名（id）」或純 id，未核對（design-ref-check 盲區）' '✗ Design 行' "$b8" design/littlesprout.pen
+
+# ---- LS-489：提案稿路徑 ----
+# 提案稿板 Pr0pAb（與主稿的 Ab12Cd 刻意不同 id，證明「查對檔」）、Pr0pCm
+mkdir -p "$R/docs/design-proposals/p1"
+prop=docs/design-proposals/p1/p.pen
+printf '{"version":"2.17","children":[%s,%s]}\n' "$(board Pr0pAb 'C / 01 提案板')" "$(board Pr0pCm 'cmp/提案元件')" > "$R/$prop"
+g add "$prop"; g commit -qm proposal
+
+# ⑨ 提案稿新格式（行級路徑前綴＋板名（id）、純 id 混用）→ 綠
+b9=$(body_file body-9.md "Design: ${prop}: C / 01 提案板（\`Pr0pAb\`）、Pr0pCm")
+expect 0 '⑨ 提案稿路徑前綴＋板名（id）／純 id → 綠' '條目 2 筆、缺 id 0、名稱不符 0、略過 0、路徑錯誤 0' '✗' "$b9" design/littlesprout.pen
+
+# ⑩ 提案稿 id 不存在（Ab12Cd 在主稿但不在提案稿）→ 紅，且列出該提案稿路徑
+b10=$(body_file body-10.md "Design: ${prop}: Ab12Cd")
+expect 1 '⑩ 提案稿內查無該 id（id 只在主稿）→ 紅' "id Ab12Cd 不在 .pen 頂層節點內" '' "$b10" design/littlesprout.pen
+
+# ⑪ 路徑不存在（allowlist 內但檔案不存在）→ 紅
+b11=$(body_file body-11.md 'Design: docs/design-proposals/nope/x.pen: Pr0pAb')
+expect 1 '⑪ 提案稿路徑在 head 不存在 → 紅' '路徑「docs/design-proposals/nope/x.pen」：在 head 不存在' '' "$b11" design/littlesprout.pen
+
+# ⑫ 路徑在 allowlist 外（即便檔案存在）→ 紅
+mkdir -p "$R/other"; cp "$R/$prop" "$R/other/q.pen"; g add other/q.pen; g commit -qm other
+b12=$(body_file body-12.md 'Design: other/q.pen: Pr0pAb')
+expect 1 '⑫ 路徑在 allowlist 外 → 紅' '路徑「other/q.pen」：不在 allowlist' '' "$b12" design/littlesprout.pen
+b12b=$(body_file body-12b.md 'Design: docs/design-proposals/../../other/q.pen: Pr0pAb')
+expect 1 '⑫b 路徑含 .. 逃出 allowlist → 紅' 'allowlist' '' "$b12b" design/littlesprout.pen
+
+# ⑬ 主稿舊格式行與提案稿前綴行並存，各查各的 → 綠
+b13=$(body_file body-13.md 'Design: 01 板（`Ab12Cd`）' "Design: ${prop}: Pr0pAb")
+expect 0 '⑬ 主稿舊格式行＋提案稿前綴行並存 → 綠' '缺 id 0、名稱不符 0、略過 0、路徑錯誤 0' '✗' "$b13" design/littlesprout.pen
+
+# ⑭ mutation：拿掉路徑解析（split_pen_prefix 永遠回 None），⑨ 由綠轉紅（前綴行被當成不明形狀或對主稿查）
+mut_dir="$work/mut-gates"; mkdir -p "$mut_dir"
+cp "${root}/scripts/gates/design-ref-check.sh" "${root}/scripts/gates/design_ref_check.py" "$mut_dir/"
+python3 - "$mut_dir/design_ref_check.py" <<'PY'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+a = '    m = PEN_PREFIX_RE.match(content)\n'
+assert a in s, "mutation 錨點不見了——design_ref_check.py 的 split_pen_prefix 改過，請更新這裡"
+open(p, "w", encoding="utf-8").write(s.replace(a, '    m = None\n', 1))
+PY
+mut_out="$(cd "$R" && bash "$mut_dir/design-ref-check.sh" "$b9" design/littlesprout.pen 2>&1)"; mut_rc=$?
+if [ "$mut_rc" -ne 0 ] && has "$mut_out" "不在 .pen 頂層節點內"; then
+  echo "✓ ⑭ mutation：拿掉路徑解析後 ⑨ 的新格式由綠轉紅（rc=${mut_rc}）"
+else
+  echo "✗ ⑭ mutation：拿掉路徑解析後 ⑨ 仍綠或訊息不符（rc=${mut_rc}）——路徑解析沒被自測守住" >&2
+  printf '%s\n' "$mut_out" | sed 's/^/    /' >&2
+  fail=1
+fi
 
 if [ "$fail" -eq 0 ]; then
   echo "design-ref-check.test.sh：全數通過"
