@@ -22,7 +22,7 @@ data class PendingTransferFamily(
 
 /**
  * 後端錯誤的 sealed 表示（docs/API.md §5）。`code` 是 Postgres SQLSTATE（`LSnnn`／`42501`…），沒有則為 null。
- * 對應 iOS `LSErrorCode`／`AppError`；這裡只列本層（Auth＋profiles／families／family_members＋邀請／加入流程＋媒體＋時間軸／留言／愛心＋寶貝／成長／飲食）會碰到的碼，
+ * 對應 iOS `LSErrorCode`／`AppError`；這裡只列本層（Auth＋profiles／families／family_members＋邀請／加入流程＋媒體＋時間軸／留言／愛心＋寶貝／成長／飲食＋日記寫入）會碰到的碼，
  * 其餘自訂碼落到 [Server]（保留原始 code），之後的票遇到時再補成具名 case。
  */
 sealed class BackendError(
@@ -71,6 +71,16 @@ sealed class BackendError(
     class InviteParamsInvalid(
         cause: Throwable?,
     ) : BackendError("邀請碼參數不合法（到期時間或可用次數超出範圍）", "LS017", cause)
+
+    /** `LS020`：`update_diary_entry`／`set_diary_deleted` 的日記不存在；`update_diary_entry` 另含已軟刪（須先還原才能編輯）。 */
+    class DiaryNotFound(
+        cause: Throwable?,
+    ) : BackendError("日記不存在，或已被移除須先還原", "LS020", cause)
+
+    /** `LS021`：`update_diary_entry` 的呼叫者不是作者本人，或雖是作者但已不是該家庭 owner／member。 */
+    class NotDiaryAuthor(
+        cause: Throwable?,
+    ) : BackendError("只有日記作者本人能編輯", "LS021", cause)
 
     /** `LS022`：keyset 游標只給了一半（`get_family_timeline`／`list_comments` 的兩個游標參數要嘛都給、要嘛都不給）。 */
     class PartialCursor(
@@ -249,6 +259,8 @@ private val simpleMappers: Map<String, (PostgrestRestException) -> BackendError>
         "LS015" to { BackendError.JoinRequestNotFound(it) },
         "LS016" to { BackendError.InviteCodeCollision(it) },
         "LS017" to { BackendError.InviteParamsInvalid(it) },
+        "LS020" to { BackendError.DiaryNotFound(it) },
+        "LS021" to { BackendError.NotDiaryAuthor(it) },
         "LS022" to { BackendError.PartialCursor(it) },
         "LS024" to { BackendError.CommentNotFound(it) },
         "LS026" to { BackendError.TargetFamilyMismatch(it) },
