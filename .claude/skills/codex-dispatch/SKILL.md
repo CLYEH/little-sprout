@@ -5,7 +5,7 @@ description: Orchestrator 經本機 codex:rescue（codex-companion task）派任
 
 # Codex 視覺票派工寫法（本專案版）
 
-來源：`AGENTS.md`、`.codex/README.md`（LS-482）、GitHub issue #648 回覆 2（Q4 四步）／回覆 3（七欄、盲審）／回覆 6（切換點）、COLLABORATION §1「Codex 視覺 lead」三段、LS-482 Q1 探針（companion 1.0.6、CLI 0.162.1）。契約本體在 `AGENTS.md`（內容由 Codex 提供文字〔#648 問答〕，由 Claude commit／push，見 `AGENTS.md:29-31`；Claude 側不自行改寫契約語意）；本檔只寫 orchestrator 這一側要放進 brief 的句子與前後手續。
+來源：`AGENTS.md`、`.codex/README.md`（LS-482）、GitHub issue #648 回覆 2（Q4 四步）／回覆 3（七欄、盲審）／回覆 6（切換點）、COLLABORATION §1「Codex 視覺 lead」三段、LS-482 Q1 探針（companion 1.0.6、CLI 0.162.1）。契約本體在 `AGENTS.md`（內容由 Codex 提供文字〔#648 問答〕，由 Claude commit／push，見 `AGENTS.md:27-31`；Claude 側不自行改寫契約語意）；本檔只寫 orchestrator 這一側要放進 brief 的句子與前後手續。
 
 ## 1. 派工前（orchestrator 自己做）
 
