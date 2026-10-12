@@ -76,6 +76,24 @@ g add LittleSprout/Features/home.PNG
 expect 1 '⑦ LittleSprout/ 非 Assets* 的 .PNG → 紅' 'LittleSprout/Features/home.PNG'
 g rm -q --cached LittleSprout/Features/home.PNG
 
+# ⑦b 設計提案目錄的匯出是資產（LS-455 票文；LS-500）：docs/design-proposals/<slug>/exports/*.png 放行
+mk docs/design-proposals/soft/exports/01-home.png
+g add docs/design-proposals/soft/exports/01-home.png
+expect 0 '⑦b docs/design-proposals/<slug>/exports/*.png → 綠'
+g rm -q --cached docs/design-proposals/soft/exports/01-home.png
+
+# ⑦c 提案根目錄或非 exports/ 子目錄的 png 仍擋（白名單只開 exports/）
+mk docs/design-proposals/soft/01-home.png docs/design-proposals/soft/shots/01.png
+g add docs/design-proposals/soft/01-home.png docs/design-proposals/soft/shots/01.png
+expect 1 '⑦c docs/design-proposals/<slug>/ 非 exports/ 的 png → 紅' 'docs/design-proposals/soft/shots/01.png'
+g rm -q --cached docs/design-proposals/soft/01-home.png docs/design-proposals/soft/shots/01.png
+
+# ⑦d 提案隨附的 assets/（字標等）與 brand skill 參考圖（skill/references/images/）同為資產 → 放行
+mk docs/design-proposals/soft/skill/references/images/home.png docs/design-proposals/soft/assets/wordmark.png
+g add docs/design-proposals/soft/skill/references/images/home.png docs/design-proposals/soft/assets/wordmark.png
+expect 0 '⑦d docs/design-proposals/<slug>/{assets,skill/references/images}/*.png → 綠'
+g rm -q --cached docs/design-proposals/soft/skill/references/images/home.png docs/design-proposals/soft/assets/wordmark.png
+
 # ⑧ 固定位置 .claude/evidence/：.gitignore 先擋（add 直接失敗、index 無變更 → 綠）；-f 硬加 → 紅
 printf '.claude/evidence/\n' > "$work/repo/.gitignore"
 g add .gitignore

@@ -5,7 +5,7 @@
 # （根 .gitignore 已 ignore；git add -f 硬加的由 tracked-ignored-check 擋）。這裡擋的是「沒照規矩放、
 # 又 git add 進來」的形狀——歷史上取證散落在 worktree 根（ls46r7-review/、ls46r8/…），.gitignore
 # 沒有規則可 ignore。staged 路徑任一目錄層以 review 開頭或含 -review（review*／*-review*；不是 *review*——
-# 那會誤擋 Xcode 預設的 Preview Content/）、或以 ls<數字> 開頭，或檔名 *.png 不在白名單
+# 那會誤擋 Xcode 預設的 Preview Content/）、或以 ls<數字> 開頭，或檔名 *.png 不在白名單（LS-500 起含 docs/design-proposals/<slug>/exports/，設計提案的匯出是資產）
 # （design/、LittleSprout/Assets.xcassets/、LittleSprout/Preview Content/——Xcode 模板的 Preview Assets.xcassets、
 # docs/img/）即紅並列出檔案。目錄名規則不看白名單（docs/img/ 底下也不准有 *-review/）。
 # 所有比對大小寫不敏感（nocasematch：LS46r9/、Review-shots/、.PNG 都擋；白名單亦然——macOS 檔案系統本就不分）。
@@ -75,8 +75,8 @@ while IFS= read -r -d '' p; do
     case "$p" in
       *.png)
         case "$p" in
-          design/*|LittleSprout/Assets.xcassets/*|'LittleSprout/Preview Content/'*|docs/img/*) ;;
-          *) why='png 不在白名單 design/／LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/' ;;
+          design/*|LittleSprout/Assets.xcassets/*|'LittleSprout/Preview Content/'*|docs/img/*|docs/design-proposals/*/exports/*|docs/design-proposals/*/assets/*|docs/design-proposals/*/skill/references/images/*) ;;
+          *) why='png 不在白名單 design/／LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/／docs/design-proposals/<slug>/{exports,assets,skill/references/images}/' ;;
         esac ;;
     esac
   fi
@@ -89,9 +89,9 @@ if [ -n "$hits" ]; then
   echo "✗ evidence-path gate（${mode_desc}）：下列路徑是審查取證的形狀（截圖／匯出／掃描輸出不入版控）：" >&2
   printf '%s' "$hits" >&2
   if [ -n "$base" ]; then
-    echo "  解法：取證一律放 .claude/evidence/<票號>/<輪次>/（已 ignore）；本機 --no-verify 繞過了 pre-commit，改分支上把該檔從 tracked 移除（git rm --cached -- <檔> 後補一個 commit）。確為資產者：png 只准放 design/／LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/，其他新資產路徑要改 scripts/gates/evidence-path-check.sh 的白名單。" >&2
+    echo "  解法：取證一律放 .claude/evidence/<票號>/<輪次>/（已 ignore）；本機 --no-verify 繞過了 pre-commit，改分支上把該檔從 tracked 移除（git rm --cached -- <檔> 後補一個 commit）。確為資產者：png 只准放 design/／LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/／docs/design-proposals/<slug>/{exports,assets,skill/references/images}/，其他新資產路徑要改 scripts/gates/evidence-path-check.sh 的白名單。" >&2
   else
-    echo "  解法：取證一律放 .claude/evidence/<票號>/<輪次>/（已 ignore）；git rm --cached -- <檔> 從 index 移除（工作區檔案保留）。確為資產者：png 只准放 design/／LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/，其他新資產路徑要改 scripts/gates/evidence-path-check.sh 的白名單。" >&2
+    echo "  解法：取證一律放 .claude/evidence/<票號>/<輪次>/（已 ignore）；git rm --cached -- <檔> 從 index 移除（工作區檔案保留）。確為資產者：png 只准放 design/／LittleSprout/Assets.xcassets/／LittleSprout/Preview Content/／docs/img/／docs/design-proposals/<slug>/{exports,assets,skill/references/images}/，其他新資產路徑要改 scripts/gates/evidence-path-check.sh 的白名單。" >&2
   fi
   exit 1
 fi
