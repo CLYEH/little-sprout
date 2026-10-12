@@ -94,6 +94,23 @@ unset LINEAR_API_KEY
 printf '{"rate_limits":{"seven_day":{"used_percentage":10,"resets_at":9999999999},"five_hour":{"used_percentage":1,"resets_at":9999999999}},"written_at":%s}' "$(date +%s)" > "$work/fake-usage-cache-default.json"
 export PATROL_USAGE_FILE="$work/fake-usage-cache-default.json"
 
+# LS-512：keep-awake 段（patrol.sh 每輪呼叫 `keep-awake.sh start`＋`status`）預設指到假身——真腳本會改本機螢幕保護程式
+# 設定、起 hold／caffeinate 行程，自測不得碰。假身把每次呼叫的子命令記進 $FAKE_KA_LOG，`status` 的 exit 由
+# $FAKE_KA_STATUS_RC 決定（預設 0＝生效中）、`start` 的 exit 由 $FAKE_KA_START_RC 決定；㊳ 逐案覆寫。
+export FAKE_KA_LOG="$work/fake-ka.log"
+cat > "$work/fake-keep-awake.sh" <<'FAKEKA'
+#!/bin/bash
+echo "$1" >> "${FAKE_KA_LOG:-/dev/null}"
+case "$1" in
+  start) echo "keep-awake：start ok（假身）"; exit "${FAKE_KA_START_RC:-0}" ;;
+  status)
+    if [ "${FAKE_KA_STATUS_RC:-0}" = 2 ]; then echo "keep-awake：idleTime=300 caffeinate=無 locked=true HIDIdleTime=9s hold=無 lease剩餘=無"
+    else echo "keep-awake：idleTime=0 caffeinate=4242 locked=false HIDIdleTime=1s hold=4243 lease剩餘=3000s"; fi
+    exit "${FAKE_KA_STATUS_RC:-0}" ;;
+esac
+FAKEKA
+export PATROL_KEEP_AWAKE_SH="$work/fake-keep-awake.sh"
+
 # 臨時 repo 與本機全域／系統 git 設定隔離：自測結果不能因人而異
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 g() { git -c user.name=t -c user.email=t@t -c commit.gpgsign=false "$@"; }
@@ -2826,6 +2843,53 @@ else
   echo "✗ ㊲ mutant 的 sed 未命中（負控本身無效）" >&2; fail=1
 fi
 rm -rf "$EMULATOR_LOCK_ROOT"/*
+# ---- ㊳ LS-512：patrol 每輪呼叫 keep-awake（使用者 2026-10-13「防鎖定跟著巡檢程式，由程式控制，關掉時就復原」）：
+#        每輪一律先 `start`（冪等續租）再 `status`；status exit 2 → 印 ⚠ keep-awake 未生效（帶 idleTime／caffeinate／locked 三個值）、
+#        exit 0 → 不印；start 失敗 → ⚠；PATROL_NO_KEEP_AWAKE=1 → 整段不呼叫；經 patrol-filter.sh 後 ⚠ 保留、一般狀態行被濾掉。
+#        假身見檔頭 FAKE_KA_*。mutation：status 的 exit 2 判斷改掉 → 正樣本（有 ⚠）或負樣本（無 ⚠）各自轉紅 ----
+filt="${root}/scripts/ops/patrol-filter.sh"
+: > "$FAKE_KA_LOG"
+out38="$(bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㊳ 每輪呼叫 start（續租）' "$(cat "$FAKE_KA_LOG")" 'start'
+has   '㊳ 每輪呼叫 status' "$(cat "$FAKE_KA_LOG")" 'status'
+if [ "$(grep -n . "$FAKE_KA_LOG" | head -1 | cut -d: -f2)" = start ]; then echo "✓ ㊳ start 先於 status"; else echo "✗ ㊳ 呼叫順序應為 start→status（得到：$(tr '\n' ' ' < "$FAKE_KA_LOG")）" >&2; fail=1; fi
+has   '㊳ (負樣本) status exit 0 → brief 印一行狀態' "$out38" 'keep-awake：idleTime=0 caffeinate=4242 locked=false'
+hasnt '㊳ (負樣本) status exit 0 → 不印未生效 ⚠' "$out38" 'keep-awake 未生效'
+hasnt '㊳ (負樣本) 不掛 [keep-awake] 旗標' "$out38" '[keep-awake]'
+flt38="$(printf '%s\n' "$out38" | bash "$filt")"
+hasnt '㊳ (負樣本) 一般狀態行被 patrol-filter 濾掉（零 context 成本）' "$flt38" 'keep-awake：idleTime=0'
+out38p="$(FAKE_KA_STATUS_RC=2 bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㊳ (正樣本) status exit 2 → ⚠ keep-awake 未生效（三個值）' "$out38p" '[keep-awake] ⚠ keep-awake 未生效（idleTime=300 caffeinate=無 locked=true）——鎖定會讓設計票的收據掃描假陽性（LS-512）→ bash scripts/ops/keep-awake.sh start'
+flt38p="$(printf '%s\n' "$out38p" | bash "$filt")"
+has   '㊳ (正樣本) ⚠ 行經 patrol-filter 後保留' "$flt38p" 'keep-awake 未生效'
+out38h="$(FAKE_KA_STATUS_RC=2 bash "$patrol" --repo "$repo" --no-pr --no-fetch "$STALE" 2>&1)"
+has   '㊳ (正樣本) human 模式也有 keep-awake 段與 ⚠' "$out38h" '== keep-awake（LS-512'
+has   '㊳ (正樣本) human 模式 ⚠ 旗標' "$out38h" 'keep-awake 未生效'
+out38s="$(FAKE_KA_START_RC=1 bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+has   '㊳ start 失敗 → ⚠ start 失敗' "$out38s" '[keep-awake] ⚠ keep-awake start 失敗（exit 1'
+: > "$FAKE_KA_LOG"
+PATROL_NO_KEEP_AWAKE=1 bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" >/dev/null 2>&1
+if [ ! -s "$FAKE_KA_LOG" ]; then echo "✓ ㊳ PATROL_NO_KEEP_AWAKE=1 → 不呼叫 keep-awake"; else echo "✗ ㊳ PATROL_NO_KEEP_AWAKE=1 仍呼叫了 keep-awake" >&2; fail=1; fi
+# mutation A：exit 2 判斷改成恆真（`-eq 2` → `-ne 99`）→ 負樣本（status 0）也印「未生效」而轉紅
+mut38a="$work/patrol-mut38a.sh"
+sed 's/^    if \[ "\$ka_rc" -eq 2 \]; then$/    if [ "$ka_rc" -ne 99 ]; then/' "$patrol" > "$mut38a"
+if ! diff -q "$patrol" "$mut38a" >/dev/null 2>&1; then
+  out38ma="$(bash "$mut38a" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+  has '㊳ mutant A（exit 2 判斷恆真）：status 0 也印未生效 ⚠（負樣本的「不印」確由 exit 2 判斷造成）' "$out38ma" 'keep-awake 未生效'
+else
+  echo "✗ ㊳ mutant A 的 sed 未命中（負控本身無效）" >&2; fail=1
+fi
+# mutation B：exit 2 判斷改成恆假（`-eq 2` → `-eq 99`）→ 正樣本（status 2）不再印「未生效」而轉紅
+mut38b="$work/patrol-mut38b.sh"
+sed 's/^    if \[ "\$ka_rc" -eq 2 \]; then$/    if [ "$ka_rc" -eq 99 ]; then/' "$patrol" > "$mut38b"
+if ! diff -q "$patrol" "$mut38b" >/dev/null 2>&1; then
+  out38mb="$(FAKE_KA_STATUS_RC=2 bash "$mut38b" --repo "$repo" --no-pr --no-fetch --brief "$STALE" 2>&1)"
+  hasnt '㊳ mutant B（exit 2 判斷恆假）：status 2 不再印未生效 ⚠（正樣本的 ⚠ 確由 exit 2 判斷造成）' "$out38mb" 'keep-awake 未生效'
+else
+  echo "✗ ㊳ mutant B 的 sed 未命中（負控本身無效）" >&2; fail=1
+fi
+: > "$FAKE_KA_LOG"
+
 
 if [ "$fail" -eq 0 ]; then
   if [ "$jq_skipped" -gt 0 ]; then

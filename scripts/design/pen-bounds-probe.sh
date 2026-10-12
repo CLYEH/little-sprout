@@ -58,6 +58,7 @@ if command -v "$ioreg_bin" >/dev/null 2>&1; then
     *'<true/>'*)
       echo "$STALE_MSG" >&2
       echo "  原因：ioreg IOConsoleLocked＝true（螢幕鎖定時 Pen 不重新排版，Get 回的 bounds 會偏移，LS-471 R3）。停下回報，不產收據。" >&2
+      echo "  → bash scripts/ops/keep-awake.sh start（LS-512；防鎖定租約，解鎖後重跑前先確保它生效）" >&2
       exit 3 ;;
   esac
 else
@@ -199,5 +200,6 @@ case "$verdict" in
   *)
     echo "$STALE_MSG" >&2
     echo "  原因：探針節點 Get bounds 與${ref_label}記載的 x/y 差 >${tol}pt（見上方 OFFSET 列）。停下回報，不產收據；解鎖後 open -a Pen 一次、等 autosave 再重跑本探針。" >&2
+    echo "  → bash scripts/ops/keep-awake.sh start（LS-512；防鎖定租約，解鎖後重跑前先確保它生效）" >&2
     exit 3 ;;
 esac

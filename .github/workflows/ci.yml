@@ -465,6 +465,8 @@ jobs:
           # LS-267 R2 M1：巡檢輸出過濾（§4-b cron 模板唯一定義處）自測——過濾行為本身＋「異常／略過／
           # 讀不到結論行都帶得動標記」的配套前提（逐分支夾具＋兩個 mutation）
           bash scripts/ops/patrol-filter.test.sh || rc=1
+          # LS-512：Mac 防鎖定租約（keep-awake.sh；macOS 專用，無 defaults 的 runner 自測自己 SKIP）
+          bash scripts/ops/keep-awake.test.sh || rc=1
           bash scripts/ops/supabase-lock.test.sh || rc=1
           # LS-207（c18ef27f）：--udid 字級／外觀自動調整＋復原；push-gate.test.sh 另外覆蓋核心互斥／逾時邏輯（把
           # 真正的 simulator-lock.sh 複製進合成 repo），這裡只補新參數
