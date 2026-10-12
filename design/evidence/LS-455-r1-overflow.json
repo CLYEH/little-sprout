@@ -1,0 +1,116 @@
+{
+  "scanned_nodes": 649,
+  "scan_scope": "document",
+  "scans": {
+    "sibling_intersection": {
+      "scope": "document",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "0ef65223397859e6"
+    },
+    "row_overflow": {
+      "scope": "document",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "fcd9e9028117b7ad"
+    },
+    "cross_parent_collision": {
+      "scope": "document",
+      "document_count": 0,
+      "classes": 0,
+      "flagged": [],
+      "result_hash": "0295cc1b2de4c9a6"
+    },
+    "corner_anchor": {
+      "scope": "document",
+      "document_count": 0,
+      "boards": [
+        "ev2Pc",
+        "rsm56",
+        "M7qpWP",
+        "WavOD",
+        "ftrBE",
+        "e347tY",
+        "CxGiV",
+        "LefzY",
+        "m8Dfo",
+        "Y506Lc",
+        "MZghz",
+        "g5YJ4r",
+        "Qr7b0",
+        "tVh58"
+      ],
+      "containers": 0,
+      "points": 0,
+      "mismatch": 0,
+      "flagged": [],
+      "unresolved": [],
+      "ref_hits": 0,
+      "ref_hits_defs": 0,
+      "document_containers": 0,
+      "document_points": 0,
+      "document_mismatch": 0,
+      "document_flagged": [],
+      "document_unresolved": [],
+      "result_hash": "4080e4753eb113db"
+    },
+    "text_occlusion": {
+      "scope": "document",
+      "document_count": 0,
+      "boards": [
+        "ev2Pc",
+        "rsm56",
+        "M7qpWP",
+        "WavOD",
+        "ftrBE",
+        "e347tY",
+        "CxGiV",
+        "LefzY",
+        "m8Dfo",
+        "Y506Lc",
+        "MZghz",
+        "g5YJ4r",
+        "Qr7b0",
+        "tVh58"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "b5205b9065c91c5b"
+    },
+    "board_clip": {
+      "scope": "document",
+      "document_count": 0,
+      "boards": [
+        "ev2Pc",
+        "rsm56",
+        "M7qpWP",
+        "WavOD",
+        "ftrBE",
+        "e347tY",
+        "CxGiV",
+        "LefzY",
+        "m8Dfo",
+        "Y506Lc",
+        "MZghz",
+        "g5YJ4r",
+        "Qr7b0",
+        "tVh58"
+      ],
+      "flagged": [],
+      "document_flagged": [],
+      "result_hash": "f86f5dc21b570dd9"
+    }
+  },
+  "total_nodes": 649,
+  "tree_hash": "47fb28b7e0e9d59f",
+  "flags": {
+    "cross_all": false,
+    "custom_overlay_re": false
+  },
+  "scan_note": "snapshot mode，dump sha256=7001a11e044be7c502d7c94f98ed1f143949b83fbd39f108e3b6e532a26d8696；掃描者 orchestrator（Claude），對 commit A 212decb4 快照、Pen active=提案檔、pen-bounds-probe 三探針 ok（螢幕解鎖）；boards＝13 正典板＋Notes 板 tVh58；corner_anchor document_containers=0 為真實狀態：本提案稿無 cmp/Photo Corner 角托元件（提案視覺不用角托），非快照缺 ref（refMap 走訪已跑、稿內 ref 節點 0）",
+  "ticket": "LS-455",
+  "round": 1,
+  "head_sha": "212decb410f00b6177981bd689d58857573de92c"
+}
