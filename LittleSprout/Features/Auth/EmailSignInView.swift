@@ -33,7 +33,7 @@ struct EmailSignInView: View {
                     label: "Email 地址",
                     placeholder: "yourname@example.com",
                     text: Binding(get: { model.email }, set: { model.updateEmail($0) }),
-                    helpText: model.errorMessage ?? "驗證碼會寄到這個信箱，10 分鐘內有效。",
+                    helpText: model.errorMessage ?? AuthCopy.emailHelpText,
                     isError: model.errorMessage != nil,
                     keyboardType: .emailAddress,
                     textContentType: .emailAddress,

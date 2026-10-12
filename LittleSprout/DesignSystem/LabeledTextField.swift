@@ -115,7 +115,7 @@ struct LabeledTextField: View {
             label: "Email 地址",
             placeholder: "yourname@example.com",
             text: .constant(""),
-            helpText: "驗證碼會寄到這個信箱，10 分鐘內有效。"
+            helpText: AuthCopy.emailHelpText
         )
         LabeledTextField(
             label: "Email 地址",

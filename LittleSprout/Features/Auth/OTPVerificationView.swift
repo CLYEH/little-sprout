@@ -104,9 +104,7 @@ struct OTPVerificationView: View {
     }
 
     private var footerNoteText: String {
-        model.visibleMessages.isEmpty
-            ? "驗證碼 10 分鐘內有效。找不到信時，請看一下垃圾郵件匣。"
-            : "驗證碼 10 分鐘內有效。沒看到信？看一下垃圾郵件匣。"
+        AuthCopy.otpFooterNote(hasMessages: !model.visibleMessages.isEmpty)
     }
 
     @ViewBuilder
