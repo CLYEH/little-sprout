@@ -59,6 +59,10 @@ final class AuthStore {
     @ObservationIgnored
     private var restoreTimeoutTask: Task<Void, Never>?
 
+    /// 最近一次觀察到的路由是否為已登入（見 `sceneDidBecomeActive()`）。
+    @ObservationIgnored
+    private var wasAuthenticated = false
+
     init(authService: AuthService, restoreTimeout: Duration = AuthStore.restoreTimeout) {
         self.authService = authService
         self.restoreTimeoutDuration = restoreTimeout
@@ -93,12 +97,28 @@ final class AuthStore {
     /// 熱回前景：app 在背景超過 access token 壽命（1h）再回前景時，store 早已 `.settled`、
     /// session 已過期，`RootRoute` 會直接落登入頁，等 SDK 在 didBecomeActive 後刷新才切回
     /// ——與冷啟動同一個閃爍。這裡把「存在但已過期」的 session 重新標成還原中，規則同 init
-    /// （事件或逾時結束）。已在 `.pending` 就不重啟逾時；session 為 nil 或有效不動。
-    /// `RootView` 在 `refreshSnapshot()` 之後呼叫。
+    /// （事件或逾時結束）。`RootView+ScenePhase` 在 `.inactive` 與 `.active` 都呼叫（回前景先經
+    /// `.inactive`，body 此刻就會重算路由，等到 `.active` 才設會先閃幾幀登入頁）；已在
+    /// `.pending` 不重啟逾時，重複呼叫無副作用。
+    ///
+    /// 只在「進背景前路由是已登入」時才重設（`wasAuthenticated`）：使用者停在登入頁（過期 session、
+    /// 離線）時每次回前景若都換成佔位頁，會清掉登入頁上的 OTP／nonce 等輸入狀態。`wasAuthenticated`
+    /// 由 `sceneDidEnterBackground()` 與本方法在 session 有效時刷新，重設成 pending 時消耗掉
+    /// （刷新失敗落登入頁後，後續 `.inactive` 往返不再重設）。
     func sceneDidBecomeActive() {
-        guard restoreState == .settled, session != nil, !isAuthenticated() else { return }
+        if isAuthenticated() {
+            wasAuthenticated = true
+            return
+        }
+        guard wasAuthenticated, restoreState == .settled, session != nil else { return }
+        wasAuthenticated = false
         restoreState = .pending
         startRestoreTimeout()
+    }
+
+    /// `RootView+ScenePhase` 在 `.background` 呼叫：記下「進背景當下路由是否為已登入」。
+    func sceneDidEnterBackground() {
+        wasAuthenticated = isAuthenticated()
     }
 
     /// 事件與逾時兩條路徑都走這裡；兩者都在 MainActor 上，`guard` 保證 `.settled` 只設一次，

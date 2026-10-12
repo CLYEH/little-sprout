@@ -48,4 +48,36 @@ final class AuthStoreRestoreTests: XCTestCase {
         XCTAssertEqual(store.restoreState, .settled, "沒有任何事件時，逾時必須結束還原，否則離線會永遠卡在佔位頁")
         XCTAssertFalse(store.isAuthenticated(), "逾時後 session 仍過期 → RootRoute 落登入頁")
     }
+
+    // MARK: - R1c：背景前路由為已登入才重設（`.inactive`／`.active` 都會呼叫）
+
+    func test_sceneDidBecomeActive_backgroundedWhileAuthenticated_pendingOnInactiveThenStays() async throws {
+        let shortLived = AuthSession(userID: userID, email: "a@example.com", expiresAt: Date().addingTimeInterval(0.5))
+        let store = AuthStore(authService: StubAuthService(currentSession: shortLived))
+        store.sceneDidEnterBackground() // 進背景時路由為已登入
+        try await Task.sleep(nanoseconds: 700_000_000) // 背景期間 session 過期
+
+        store.sceneDidBecomeActive() // 回前景先經 `.inactive`
+        XCTAssertEqual(store.restoreState, .pending, "`.inactive` 就要進還原中，否則 body 重算會先閃登入頁")
+
+        store.sceneDidBecomeActive() // 緊接著 `.active`：已 pending，重複呼叫無副作用
+        XCTAssertEqual(store.restoreState, .pending)
+    }
+
+    func test_sceneDidBecomeActive_backgroundedWhileNotAuthenticated_staysSettled() async throws {
+        // 使用者停在登入頁（過期 session、離線，逾時後 settled）：回前景不能換成佔位頁，
+        // 否則登入頁上的 OTP／nonce 輸入狀態會被清掉。
+        let expired = AuthSession(userID: userID, email: "a@example.com", expiresAt: Date().addingTimeInterval(-3600))
+        let store = AuthStore(authService: StubAuthService(currentSession: expired), restoreTimeout: .milliseconds(50))
+        for _ in 0..<200 where store.restoreState == .pending {
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
+        XCTAssertEqual(store.restoreState, .settled)
+
+        store.sceneDidEnterBackground() // 進背景時路由是登入頁
+        store.sceneDidBecomeActive()
+        store.sceneDidBecomeActive()
+
+        XCTAssertEqual(store.restoreState, .settled, "進背景時不是已登入 → 回前景不重設為還原中")
+    }
 }
