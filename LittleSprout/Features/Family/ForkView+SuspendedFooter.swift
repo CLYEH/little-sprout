@@ -71,23 +71,35 @@ extension ForkView {
     /// （`cmp/Button Text` 版式，不另做新元件）；失敗用 alert 顯示 `signOutErrorMessage`。
     /// 登出成功後 `RootView` 依 `authStore.session == nil` 自動回 `WelcomeView`，這裡不導頁。
     @ViewBuilder
-    func signOutFooter(pinsToBottom: Bool) -> some View {
+    func signOutFooter(pinned: Bool) -> some View {
         if !isSuspendedFooterShown {
-            VStack(spacing: 0) {
-                if pinsToBottom {
-                    Spacer(minLength: AppSpacing.section)
+            signOutButton
+                .accessibilityLabel("登出")
+                .accessibilityHint("回到登入頁，可改用其他帳號")
+                .padding(.top, pinned ? AppSpacing.label : AppSpacing.section)
+                .padding(.bottom, AppSpacing.item)
+                .alert("登出失敗", isPresented: signOutErrorPresented) {
+                    Button("好", role: .cancel) {}
+                } message: {
+                    Text(signOutErrorMessage ?? "")
                 }
-                signOutButton
-                    .accessibilityLabel("登出")
-                    .accessibilityHint("回到登入頁，可改用其他帳號")
-                    .padding(.top, pinsToBottom ? 0 : AppSpacing.section)
-            }
-            .padding(.bottom, AppSpacing.item)
-            .alert("登出失敗", isPresented: signOutErrorPresented) {
-                Button("好", role: .cancel) {}
-            } message: {
-                Text(signOutErrorMessage ?? "")
-            }
+        }
+    }
+
+    /// iPhone（compact）三岔路內容在 17 Pro 加上登出鈕後已超過一屏、要捲動才看得到，「想登出」的
+    /// 出口不能藏在捲動後面——釘在底部安全區上方（內容在它上方捲動）；iPad 內容置中放得下，維持
+    /// 內嵌（見 `regularLayout`）。實底＋上緣細線，同 `EULAConsentView` 釘底動作帶：否則 AX 字級時
+    /// 內容捲到它底下會與「登出」重疊。
+    @ViewBuilder
+    var pinnedSignOutBar: some View {
+        if horizontalSizeClass != .regular {
+            signOutFooter(pinned: true)
+                .padding(.horizontal, AppSpacing.screenPad)
+                .frame(maxWidth: .infinity)
+                .background(Color.lsSurface.ignoresSafeArea(edges: .bottom))
+                .overlay(alignment: .top) {
+                    Rectangle().fill(Color.lsBorder).frame(height: 1)
+                }
         }
     }
 
