@@ -5,7 +5,7 @@
 # （根 .gitignore 已 ignore；git add -f 硬加的由 tracked-ignored-check 擋）。這裡擋的是「沒照規矩放、
 # 又 git add 進來」的形狀——歷史上取證散落在 worktree 根（ls46r7-review/、ls46r8/…），.gitignore
 # 沒有規則可 ignore。staged 路徑任一目錄層以 review 開頭或含 -review（review*／*-review*；不是 *review*——
-# 那會誤擋 Xcode 預設的 Preview Content/）、或以 ls<數字> 開頭，或檔名 *.png 不在白名單（LS-500 起含 docs/design-proposals/<slug>/exports/，設計提案的匯出是資產）
+# 那會誤擋 Xcode 預設的 Preview Content/）、或以 ls<數字> 開頭，或檔名 *.png 不在白名單（LS-500 起含 docs/design-proposals/<slug>/{exports,assets,skill/references/images}/，設計提案的匯出、字標與 skill 參考圖是資產）
 # （design/、LittleSprout/Assets.xcassets/、LittleSprout/Preview Content/——Xcode 模板的 Preview Assets.xcassets、
 # docs/img/）即紅並列出檔案。目錄名規則不看白名單（docs/img/ 底下也不准有 *-review/）。
 # 所有比對大小寫不敏感（nocasematch：LS46r9/、Review-shots/、.PNG 都擋；白名單亦然——macOS 檔案系統本就不分）。

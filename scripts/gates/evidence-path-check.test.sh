@@ -82,11 +82,15 @@ g add docs/design-proposals/soft/exports/01-home.png
 expect 0 '⑦b docs/design-proposals/<slug>/exports/*.png → 綠'
 g rm -q --cached docs/design-proposals/soft/exports/01-home.png
 
-# ⑦c 提案根目錄或非 exports/ 子目錄的 png 仍擋（白名單只開 exports/）
-mk docs/design-proposals/soft/01-home.png docs/design-proposals/soft/shots/01.png
-g add docs/design-proposals/soft/01-home.png docs/design-proposals/soft/shots/01.png
-expect 1 '⑦c docs/design-proposals/<slug>/ 非 exports/ 的 png → 紅' 'docs/design-proposals/soft/shots/01.png'
-g rm -q --cached docs/design-proposals/soft/01-home.png docs/design-proposals/soft/shots/01.png
+# ⑦c 提案根目錄或非白名單子目錄的 png 仍擋（白名單只開 exports/／assets/／skill/references/images/）：兩個負樣本各自斷言
+mk docs/design-proposals/soft/01-home.png
+g add docs/design-proposals/soft/01-home.png
+expect 1 '⑦c-1 docs/design-proposals/<slug>/ 根目錄 png → 紅' 'docs/design-proposals/soft/01-home.png'
+g rm -q --cached docs/design-proposals/soft/01-home.png
+mk docs/design-proposals/soft/shots/01.png
+g add docs/design-proposals/soft/shots/01.png
+expect 1 '⑦c-2 docs/design-proposals/<slug>/shots/ 非白名單子目錄 png → 紅' 'docs/design-proposals/soft/shots/01.png'
+g rm -q --cached docs/design-proposals/soft/shots/01.png
 
 # ⑦d 提案隨附的 assets/（字標等）與 brand skill 參考圖（skill/references/images/）同為資產 → 放行
 mk docs/design-proposals/soft/skill/references/images/home.png docs/design-proposals/soft/assets/wordmark.png
