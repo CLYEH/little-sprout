@@ -640,7 +640,10 @@ jobs:
           # sonnet 杜撰板描述，非空檢查完全擋不住（LS-96 池項 216c3a2d）。這裡追加呼叫 design-ref-check.sh
           # 逐筆核對 body 的 Design: 行板名／id 是否與 head checkout 的 design/littlesprout.pen 頂層節點
           # 一致；觸發條件同上（新 View 或本 PR 動了 design/*.pen）。
-          pens_touched=$(git diff --name-only "$base_sha"...HEAD -- 'design/*.pen' || true)
+          # LS-489：Design: 行可帶 `<路徑>.pen:` 前綴指向 docs/design-proposals/**/*.pen（見 design-ref-check.sh 檔頭）；
+          # 本 PR 動了提案稿也觸發。無前綴的行對 design/littlesprout.pen 查（向後相容）；帶前綴的行由腳本依路徑
+          # 各讀一次該 .pen 的 head 快照——一次呼叫涵蓋 body 解析出的每個 .pen，不必在 yaml 迴圈。
+          pens_touched=$(git diff --name-only "$base_sha"...HEAD -- 'design/*.pen' 'docs/design-proposals/*.pen' || true)
           if [ "${new_views:-0}" -gt 0 ] || [ -n "$pens_touched" ]; then
             printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body-design-ref.txt"
             bash scripts/gates/design-ref-check.sh "$RUNNER_TEMP/pr-body-design-ref.txt" design/littlesprout.pen --head-sha "$HEAD_SHA"
