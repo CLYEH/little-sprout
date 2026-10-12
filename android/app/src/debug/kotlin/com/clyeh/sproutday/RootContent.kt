@@ -33,6 +33,7 @@ fun RootContent(supabase: SupabaseClient) {
                     GrowthRepository(supabase),
                     FoodRepository(supabase),
                     DiaryRepository(supabase),
+                    app.pushTokenSync,
                 ),
         )
     DebugAuthPanel(vm)

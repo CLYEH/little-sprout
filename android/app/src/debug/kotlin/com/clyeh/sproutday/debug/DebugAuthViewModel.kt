@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.clyeh.sproutday.BuildConfig
+import com.clyeh.sproutday.push.PushTokenSync
 import com.clyeh.sproutday.supabase.Album
 import com.clyeh.sproutday.supabase.AuthRepository
 import com.clyeh.sproutday.supabase.AuthState
@@ -69,6 +70,7 @@ class DebugAuthViewModel(
     private val growth: GrowthRepository,
     private val food: FoodRepository,
     private val diaries: DiaryRepository,
+    private val push: PushTokenSync,
 ) : ViewModel() {
     private val local = MutableStateFlow(DebugUiState())
 
@@ -228,6 +230,13 @@ class DebugAuthViewModel(
             "已寫 ${id.take(ID_PREVIEW)}…（標記 ${detail?.childIds?.size ?: 0} 位寶貝：${child.name}）"
         }
 
+    /** 取 FCM token 並註冊到 `device_tokens`（`register_device_token`，platform=android）；log 只顯示 token 前 12 碼。 */
+    fun registerPush() =
+        run("註冊推播") {
+            val token = push.registerCurrentToken()
+            "token ${token.take(TOKEN_PREVIEW)}… 已註冊"
+        }
+
     private suspend fun currentFamily(): Family? = local.value.family ?: families.fetchMyFamilies().firstOrNull()
 
     private fun run(
@@ -257,6 +266,7 @@ class DebugAuthViewModel(
         private const val LOG_LIMIT = 30
         private const val TIMELINE_PREVIEW = 5
         private const val ID_PREVIEW = 8
+        private const val TOKEN_PREVIEW = 12
         private const val FOOD_PREVIEW = 3
         private const val DEBUG_BIRTHDAY = "2025-01-01"
         private const val DEBUG_HEIGHT_CM = 70.5
@@ -273,6 +283,7 @@ class DebugAuthViewModel(
             growth: GrowthRepository,
             food: FoodRepository,
             diaries: DiaryRepository,
+            push: PushTokenSync,
         ): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
@@ -287,6 +298,7 @@ class DebugAuthViewModel(
                         growth,
                         food,
                         diaries,
+                        push,
                     )
                 }
             }

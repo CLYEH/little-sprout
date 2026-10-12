@@ -16,6 +16,7 @@ class MainActivity : ComponentActivity() {
         // 只在「全新啟動」處理：旋轉／行程還原重建時 getIntent() 仍是當初的 callback intent，重複處理會白做一次注定失敗的 code 交換。
         // 冷啟動就是從 sproutday://auth/callback 進來（行程在 Custom Tab 期間被系統回收）的情況仍涵蓋。
         if (savedInstanceState == null) handleAuthCallback(intent)
+        (application as SproutDayApplication).startPushSync()
         setContent {
             MaterialTheme {
                 RootContent(supabase)

@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- API 33+ 的通知執行期權限（LS-497）；未授予時前景通知只記 log，註冊 token 不受影響。 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".SproutDayApplication"
@@ -23,6 +25,17 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+        <!-- FCM（LS-497）：背景時 SDK 自己顯示的通知用這個 channel（與 PushNotifications.CHANNEL_ID 同值，Application.onCreate 建立）。 -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="sprout_day_default" />
+        <service
+            android:name=".push.SproutDayMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
         <!-- singleTask：Apple OAuth 的 Custom Tab 回到 sproutday://auth/callback 時，由既有 Activity 的 onNewIntent 接手。 -->
         <activity
             android:name=".MainActivity"
