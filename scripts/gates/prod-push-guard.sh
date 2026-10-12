@@ -21,6 +21,10 @@
 #         也沒有 localhost 的 `--db-url` 時
 #     (d) 沒有本機模式、一律打遠端的子指令：`functions deploy`、`functions delete`、`secrets set`、
 #         `secrets unset`（票文只列 db push／migration up／--db-url，其餘同屬正式站寫入面，orchestrator 裁定納入）
+#   **`config push` 例外（LS-503）**：CLI（v2.115.0 實查）的 `config push` 沒有 `--dry-run`、會逐服務覆蓋正式站
+#   auth／api／db 設定，且 `supabase/config.toml` 不是正式站 auth 的單一來源（SMTP／Apple provider 由 Management API
+#   管，LS-487／LS-488）——所以 `config push`（任何旗標順序、含 `--yes`）一律 deny，**有無當日 token 都擋**（token 不放行這一類）；
+#   `--local`／`--help`／`-h` 放行。要推只能使用者在自己終端機互動執行（逐服務看 CLI 印的 diff 答 y/n），agent 不代推。
 #   `migration up` 不帶 --linked／遠端 --db-url 時預設是本機（CLI 預設 --local），放行。
 #   本機 `supabase start`／`stop`／`status`／`db reset`／`db query`（無 --linked）放行。
 #   子指令比對只看不含空白的 args token（引號內整段 SQL 之類不參與），regex 對串起來的 args 比對，所以
@@ -102,6 +106,16 @@ OPS = set(";|&()\n`")
 SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
 ALWAYS_REMOTE = r"(?:^|\s)(?:functions\s+(?:deploy|delete)|secrets\s+(?:set|unset))(?=\s|$)"
 DEFAULT_LINKED = r"(?:^|\s)(?:db\s+push|migration\s+repair|config\s+push|storage\s+(?:rm|cp|mv))(?=\s|$)"
+CONFIG_PUSH = r"(?:^|\s)config\s+push(?=\s|$)"
+CFG_HIT = []
+
+
+def config_push_blocked(args):
+    """LS-503：`config push` 一律擋（有無 token、有無 --yes 都擋）；--local／--help／-h 放行（唯讀或本機）。"""
+    text = " ".join(a for a in args if not re.search(r"\s", a))
+    if not re.search(CONFIG_PUSH, text):
+        return False
+    return not any(a in ("--local", "--help", "-h") for a in args)
 
 
 def tokenize(cmd, punct):
@@ -143,6 +157,8 @@ def remote_target(args):
         return True
     if re.search(ALWAYS_REMOTE, text):
         return True
+    if re.search(CONFIG_PUSH, text) and any(a in ("--help", "-h") for a in args):
+        return False
     if re.search(DEFAULT_LINKED, text) and dburl is None and not has_local:
         return True
     return False
@@ -153,14 +169,17 @@ def is_op(tok):
 
 
 def scan_tokens(t, depth):
+    hit = False
     for i, tok in enumerate(t):
         base = os.path.basename(tok)
         if base == "supabase":
             j = i + 1
             while j < len(t) and not is_op(t[j]):
                 j += 1
+            if config_push_blocked(t[i + 1:j]):
+                CFG_HIT.append(1)
             if remote_target(t[i + 1:j]):
-                return True
+                hit = True
         elif (base in SHELLS or base == "eval") and depth < 3:
             if base == "eval":
                 inner = t[i + 1] if i + 1 < len(t) else None
@@ -168,8 +187,8 @@ def scan_tokens(t, depth):
                 c = next((k for k in range(i + 1, len(t)) if re.match(r"^-[a-z]*c[a-z]*$", t[k])), None)
                 inner = t[c + 1] if c is not None and c + 1 < len(t) else None
             if inner and scan(inner, depth + 1):
-                return True
-    return False
+                hit = True
+    return hit
 
 
 REDIR = re.compile(r"^(?:<<-?|<<<|<&|>&|&>>?|>>|<|>\|?)$")
@@ -319,12 +338,15 @@ def scan(command, depth=0):
     # 兩種標點集合各掃一次取聯集：含 & 時 URL 查詢字串的 & 會切斷 args（--db-url 後的 --linked 掉出去）；
     # 不含 & 時 `true&&supabase` 這種黏在一起的寫法看不到 supabase token。
     try:
+        hit = False
         for punct in ("();<>|&\n`", "();<>|\n`"):
             if scan_tokens(tokenize(command, punct), depth):
-                return True
-        return False
+                hit = True
+        return hit
     except ValueError:
         raw = command.split()
+        if any(os.path.basename(w) == "supabase" for w in raw) and config_push_blocked(raw):
+            CFG_HIT.append(1)
         return any(os.path.basename(w) == "supabase" for w in raw) and remote_target(raw)
 
 
@@ -336,7 +358,10 @@ ti = data.get("tool_input") if isinstance(data, dict) else None
 cmd = ti.get("command") if isinstance(ti, dict) else None
 if not isinstance(cmd, str) or not cmd:
     sys.exit(0)
-if not scan(cmd):
+hit = scan(cmd)
+if CFG_HIT:
+    sys.exit(4)
+if not hit:
     sys.exit(0)
 tok = re.compile(r"(?<![\w-])PROD-PUSH-APPROVED-BY-USER=" + re.escape(os.environ["PPG_TODAY"]) + r"(?![\w-])")
 sys.exit(0 if tok.search(cmd) else 2)
@@ -347,6 +372,7 @@ rc=$?
 case "$rc" in
   0) final_allow ;;
   2) final_deny "LS-78：偵測到對正式站的部署面指令（supabase db push／functions deploy／secrets set，或 --linked／非 localhost 的 --db-url），且同一條命令沒有使用者當次給的核可字面。正式站每次部署需使用者當次授權（${COLL_REF}）：請停下回報使用者；使用者在對話中給出 PROD-PUSH-APPROVED-BY-USER=<YYYY-MM-DD>（當日日期）後，把該字面原樣放進同一條命令，例如 env PROD-PUSH-APPROVED-BY-USER=<YYYY-MM-DD> supabase db push …（名稱含連字號，不是合法的 shell 賦值前綴，要經 env 或寫成同命令內的 echo／註解）。agent 不得自行生成日期或改寫指令繞過。本機容器（--local／127.0.0.1／localhost／host.docker.internal）不受限。" ;;
+  4) final_deny "LS-503：supabase config push 無 dry-run、會逐服務覆蓋正式站 auth／api／db 設定；supabase/config.toml 不是正式站 auth 的單一來源（SMTP／Apple provider 由 Management API 管，LS-487／LS-488）；要推請使用者在自己終端機互動執行（! 前綴），逐服務看 CLI 印的 diff 答 y/n——agent 不代推，有無 PROD-PUSH-APPROVED-BY-USER 核可字面都擋（${COLL_REF}；--local／--help／-h 放行）。" ;;
   3) final_deny "LS-78：hook JSON 解析失敗（fail-closed），見 ${COLL_REF}" ;;
   *) final_deny "LS-78：prod-push-guard 判定引擎執行異常（rc=${rc}，fail-closed），見 ${COLL_REF}" ;;
 esac
