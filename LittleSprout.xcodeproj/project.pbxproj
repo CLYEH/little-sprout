@@ -355,6 +355,7 @@
 		7D47646E48BEF800416888E7 /* UploadQueueStoreRemoveFailedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 055287CA1E9DB9633B757670 /* UploadQueueStoreRemoveFailedTests.swift */; };
 		7D4D667F5AC9C2D2D221979B /* FoodBookCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB1158626A81AAAB03182FBA /* FoodBookCopy.swift */; };
 		7DA98586E59FA617D07C323D /* SupabaseFamilyAPIClientInviteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64087AB29C1A51AC86834868 /* SupabaseFamilyAPIClientInviteTests.swift */; };
+		7DD036581355EAA395B8E2AD /* AppErrorAppleSignInTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 346C7FF11B4D1601879F6FC6 /* AppErrorAppleSignInTests.swift */; };
 		7E099D08B1EDBEBE5A6437C0 /* FoodRecordSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E04B4A97FE65EFEB6195BCC /* FoodRecordSheet.swift */; };
 		7F08F478DF8A0C469FDD0E57 /* DiaryComposerStoreDraftCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C80FBB4835B68D0EE95FD6 /* DiaryComposerStoreDraftCleanupTests.swift */; };
 		7F4B5EC36F95C02CCF5A14E0 /* StubChildAvatarUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA51041D6190DA7BB8F683D0 /* StubChildAvatarUploadService.swift */; };
@@ -831,6 +832,7 @@
 		341F999EAAACA40B2E7B7424 /* TapTargetGateHarness+Comments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TapTargetGateHarness+Comments.swift"; sourceTree = "<group>"; };
 		3426D48B93D0809933E05622 /* UploadQueueStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueueStoreTests.swift; sourceTree = "<group>"; };
 		3430D5B33F6693A06536C073 /* EULAAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EULAAPIClient.swift; sourceTree = "<group>"; };
+		346C7FF11B4D1601879F6FC6 /* AppErrorAppleSignInTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppErrorAppleSignInTests.swift; sourceTree = "<group>"; };
 		349D50973057FF7C3329F069 /* SupabaseAlbumsAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAlbumsAPIClientTests.swift; sourceTree = "<group>"; };
 		35722FF8F70D0F6329F4069C /* EmailSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInView.swift; sourceTree = "<group>"; };
 		3626E5AD602F5C5151E75278 /* CommentDeleteConfirmationSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentDeleteConfirmationSheetTests.swift; sourceTree = "<group>"; };
@@ -1689,6 +1691,7 @@
 				18844323648EBC99E2C04E09 /* AlbumSummaryCardCoverWidthTests.swift */,
 				F6E311904EB7885960AF830E /* AlbumThicknessTierTests.swift */,
 				8C74E777AB0094919EC703B2 /* AppConfigTests.swift */,
+				346C7FF11B4D1601879F6FC6 /* AppErrorAppleSignInTests.swift */,
 				F6A788B6CC504D5166582012 /* AppErrorTests.swift */,
 				DC5027E02B9CD08C0E248406 /* AppFontTokenClampTests.swift */,
 				A912608AE602C827E4786763 /* AppleSignInNonceTests.swift */,
@@ -3030,6 +3033,7 @@
 				7B1479806249CE5B68050D67 /* AlbumsStoreTests.swift in Sources */,
 				8370A25F227FFA833BD2B933 /* AlbumsStoreUploadQueueRelaunchTests.swift in Sources */,
 				649D627F2BC3D16B5A550488 /* AppConfigTests.swift in Sources */,
+				7DD036581355EAA395B8E2AD /* AppErrorAppleSignInTests.swift in Sources */,
 				912E644926254F979A9250AB /* AppErrorTests.swift in Sources */,
 				A3EF30A323D55F605B593614 /* AppFontTokenClampTests.swift in Sources */,
 				13A3F51D8D1936880AA037CF /* AppSectionTests.swift in Sources */,

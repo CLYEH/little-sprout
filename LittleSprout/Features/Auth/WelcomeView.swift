@@ -339,10 +339,9 @@ extension WelcomeView {
                 }
             }
         case .failure(let error):
-            if let authError = error as? ASAuthorizationError, authError.code == .canceled {
-                return
-            }
-            appleErrorMessage = AppError.map(error).userFacingMessage
+            // `.canceled` → nil（靜默）；其他 ASAuthorizationError 顯示 Apple 代碼（LS-498）。
+            guard let appError = AppError.fromAppleSignIn(error) else { return }
+            appleErrorMessage = appError.userFacingMessage
         }
     }
 }

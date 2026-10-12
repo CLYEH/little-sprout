@@ -1,4 +1,5 @@
 import Auth
+import AuthenticationServices
 import Foundation
 
 /// App 層統一錯誤分類，對應設計稿 k2Mw4 四層錯誤文法（LS-38 定案；四層敘述見 LS-49 ticket
@@ -14,6 +15,9 @@ import Foundation
 /// - `rejected`：沒有權限、帳號被拒絕，或流程層級的驗證失敗（例如 PKCE/JWT 驗證失敗）；
 ///   也包含「同一動作重試永遠不會成功、需要別的動作」的狀態衝突（見 `LSErrorCode.tier`）。
 /// - `server`：後端本身出錯（5xx、格式看不懂的回應），不是使用者能修正的。
+/// - `appleSignInFailed`：Apple 原生登入面板在到達後端前就失敗（`ASAuthorizationError`，非使用者取消；
+///   LS-498：build 缺 Sign in with Apple entitlement 時真機回 code 1000，過去被誤顯示成「伺服器發生問題」）。
+///   帶 Apple 的 error code 讓使用者回報時看得出是哪一種。
 ///
 /// `message` 是後端／SDK 給的原始訊息，供 log／除錯用；`userFacingMessage` 才是可以直接
 /// 顯示給使用者看的文案——後端訊息可能夾帶 HTML（例如 502 錯誤頁）或 SQL 錯字，不該直接上螢幕。
@@ -25,6 +29,7 @@ enum AppError: Error, Equatable {
     case retryableSystem(message: String, code: String?)
     case rejected(message: String, code: String?)
     case server(message: String, code: String?)
+    case appleSignInFailed(code: Int)
 
     /// 給使用者看的通用文案，不含任何後端細節。呼叫端要更精確的文案時可以另外依 `code` 分流，
     /// 這裡只保證「不會把後端的技術訊息洩漏到 UI」這個底線。
@@ -40,6 +45,8 @@ enum AppError: Error, Equatable {
             return "無法完成這個操作。"
         case .server:
             return "伺服器發生問題，請稍後再試一次。"
+        case .appleSignInFailed(let code):
+            return "Apple 登入未完成（代碼 \(code)），請稍後再試或改用其他方式登入。"
         }
     }
 }
@@ -239,6 +246,15 @@ enum LSErrorCode: String, CaseIterable, Sendable {
 }
 
 extension AppError {
+    /// Apple 原生登入 callback 的失敗映射（LS-498）。使用者主動取消（`.canceled`）回 nil＝呼叫端靜默；
+    /// 其他 `ASAuthorizationError`（`.unknown`／`.failed`／`.invalidResponse`／`.notHandled`…）帶 Apple
+    /// 的 error code 落 `.appleSignInFailed`；非 `ASAuthorizationError` 的錯誤照 `map(_:)`。
+    static func fromAppleSignIn(_ error: Error) -> AppError? {
+        guard let authError = error as? ASAuthorizationError else { return map(error) }
+        if authError.code == .canceled { return nil }
+        return .appleSignInFailed(code: authError.code.rawValue)
+    }
+
     /// 把 Supabase SDK（Auth／PostgREST）或系統層的 `Error` 映射成上面幾類之一。
     ///
     /// Fail loud 的取捨：任何辨認不出來的錯誤一律落在 `.server`，不會有第五種「未知」分類

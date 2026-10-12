@@ -190,7 +190,7 @@ final class FoodRecordEditorStore {
     private static func mayHaveReachedServer(_ error: AppError) -> Bool {
         switch error {
         case .network, .server, .retryableSystem: true
-        case .rejected, .validationRetryable: false
+        case .rejected, .validationRetryable, .appleSignInFailed: false
         }
     }
 

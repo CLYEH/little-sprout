@@ -45,7 +45,7 @@ enum JoinCodeFormPhase: Equatable {
         case .validationRetryable(_, let code), .retryableSystem(_, let code),
              .rejected(_, let code), .server(_, let code):
             return code
-        case .network:
+        case .network, .appleSignInFailed:
             return nil
         }
     }
