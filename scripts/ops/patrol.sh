@@ -1429,7 +1429,7 @@ fi
 #      Done／Canceled 但 worktree 還在的票（iOS 專屬機的 LS-187 --linear 路徑）這裡**沒做**：emulator 殘機的主因是 worktree 清掉
 #      後忘了關，先收這一類；要補再另票。無 adb（沒裝 Android SDK）→ 整段略過、不當異常。`adb devices` 第一次會順手起 adb server，
 #      所以用看門狗限 5 秒（逾時只印略過，不卡巡檢；hook timeout 30s）。adb 路徑可用 PATROL_ADB 覆寫（自測餵假身，隔離本機真的 adb）。
-EMU_LINES=; emu_total=0; emu_flagged=0; emu_note=
+EMU_LINES=; emu_total=0; emu_note=
 emu_run_bounded() {  # $1=秒 其餘=命令；stdout 印命令輸出；逾時被殺回非 0。背景子程序 fd 全接 /dev/null（同 fetch 看門狗的理由）
   local secs=$1 tmp pid wd rc=0; shift
   tmp=$(mktemp)
@@ -1468,7 +1468,6 @@ else
         EMU_LINES="${EMU_LINES}  ${emu_name}（${emu_serial}）票 ${emu_ticket} worktree 仍在，使用中"$'\n'
         continue
       fi
-      emu_flagged=$((emu_flagged + 1))
       EMU_LINES="${EMU_LINES}  ⚠ ${emu_name}（${emu_serial}）票 ${emu_ticket} 的 worktree 已不在（殘機）→ adb -s ${emu_serial} emu kill｜連 AVD 一起清：bash scripts/ops/cleanup-merged.sh --apply ${emu_ticket}"$'\n'
       add_flag "[Booted emulator ${emu_name}] 票 ${emu_ticket} 的 worktree 已不在（殘機，LS-477）→ adb -s ${emu_serial} emu kill｜連 AVD 一起清：bash scripts/ops/cleanup-merged.sh --apply ${emu_ticket}"
     done <<EOF

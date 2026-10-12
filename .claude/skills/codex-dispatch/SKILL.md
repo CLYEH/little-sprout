@@ -5,11 +5,11 @@ description: Orchestrator 經本機 codex:rescue（codex-companion task）派任
 
 # Codex 視覺票派工寫法（本專案版）
 
-來源：`AGENTS.md`、`.codex/README.md`（LS-482）、GitHub issue #648 回覆 2（Q4 四步）／回覆 3（七欄、盲審）／回覆 6（切換點）、COLLABORATION §1「Codex 視覺 lead」三段、LS-482 Q1 探針（companion 1.0.6、CLI 0.162.1）。契約本體在 `AGENTS.md`（Codex 維護，Claude 側不改）；本檔只寫 orchestrator 這一側要放進 brief 的句子與前後手續。
+來源：`AGENTS.md`、`.codex/README.md`（LS-482）、GitHub issue #648 回覆 2（Q4 四步）／回覆 3（七欄、盲審）／回覆 6（切換點）、COLLABORATION §1「Codex 視覺 lead」三段、LS-482 Q1 探針（companion 1.0.6、CLI 0.162.1）。契約本體在 `AGENTS.md`（內容由 Codex 提供文字〔#648 問答〕，由 Claude commit／push，見 `AGENTS.md:29-31`；Claude 側不自行改寫契約語意）；本檔只寫 orchestrator 這一側要放進 brief 的句子與前後手續。
 
 ## 1. 派工前（orchestrator 自己做）
 
-1. **票與 worktree**：一票一 worktree（`.claude/worktrees/LS-<n>`）一分支（`feature/LS-<n>-<slug>`），自 development 切出；記下 base commit。design lane WIP＝1（LS-483：Mac 上 headless Pen 與桌面 Pen 不能並存，`pen` CLI 0.3.4 對 2.18／2.21 格式會讀成空文件）。
+1. **票與 worktree**：一票一 worktree（`.claude/worktrees/LS-<n>`）一分支（`feature/LS-<n>-<slug>`），自 development 切出；記下 base commit。design lane WIP＝1（LS-483：桌面 Pen 可同時開不同檔，但切換只能序列；headless `pen` CLI 0.3.4 不支援 2.18／2.21 格式，會讀成空文件）。
 2. **brief 檔**：寫 scratchpad `LS-<n>-brief.md`（帶票號，不用通名），用 companion `--prompt-file` 傳；brief 內容照第 3 節固定句。
 3. **提案 .pen 路徑**：`docs/design-proposals/<slug>/<name>.pen`（不是 `design/littlesprout.pen`）；新稿由 Codex 建檔，改稿就寫既有提案檔路徑。
 4. **Pen 切檔由 orchestrator 代跑**：`bash scripts/ops/pen-open.sh <票 worktree 絕對路徑> --pen <提案檔>`，exit 0 才派。`AGENTS.md` 禁止 Codex 切換、關閉或殺共用的桌面 Pen；設計票期間 Pen 停在票檔，Codex 收工也不切回。
@@ -35,8 +35,8 @@ node ~/.claude/plugins/cache/openai-codex/codex/<ver>/scripts/codex-companion.mj
 2. **可寫路徑 allowlist**：「只寫 `docs/design-proposals/<slug>/` 下的 `<name>.pen`、`exports/`、`manifest`；不碰 `.claude/**`、`AGENTS.md`、`.codex/**`、Swift、pbxproj、`supabase/`、`design/littlesprout.pen`、任何 harness 檔。」
 3. **不自行 commit**：「凍結本輪 .pen、匯出與 manifest（screen id、state、來源路徑、SHA256、provenance）後交回；不 commit、不 push、不開 PR、不改 Linear。設計 commit A 與收據／審查 commit B 由 Claude 提交。」
 4. **worker 與 effort**：「明確委派 `sprout_designer`／`sprout_visual_reviewer`／`sprout_delivery_verifier`（gpt-6.1-sol），同時最多三個 worker，不再加一層。spawn worker 時要求 reasoning effort high；Q1 實測子 thread 的 runtime effort 是 low（parent high），若 spawn 參數不支援指定 effort，在 handoff「風險」欄寫明實際值，不得默默接受。」（待辦池 LS-413 `ea000770`：role 檔 effort 欄位待查。）
-5. **收據**：「全樹溢出掃描一律用正典 `scripts/design/overflow-scan.js`，對 Claude 提交的 commit A 那份快照跑，收據 `design/evidence/LS-<n>-r<k>-overflow.json`、`head_sha`＝A；不得手造收據或把沒跑的檢查填 0。誰產出哪份證據要記明（Codex 跑不了的由 Claude 跑）。」
-6. **gate 會驗的稿面規則**：「Notes 板（頂層 frame 名稱含『實作註記』或『Handoff Notes』）的『畫面級屬性』段每個新畫面一列（板名｜隱藏 Tab Bar｜標題｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大｜資料落點），Notes 只引用現行節點 id；年齡字串『N 歲 N 個月』／『N 個月』分隔用 U+00A0（月前 U+2060）。這三條由 `design-notes-check.sh`／`design-identity-header-check.sh` 機械驗，新增提案稿整份都算新增（LS-484）。」
+5. **收據**：「全樹溢出掃描一律用正典 `scripts/design/overflow-scan.js`。收據 `design/evidence/LS-<n>-r<k>-overflow.json` 由 orchestrator 對 Claude 提交的 commit A 那份快照跑出並落檔（隨 commit B 提交），`head_sha`＝A；你不寫 `design/evidence`，也不得手造收據或把沒跑的檢查填 0，只需在交接「已驗證」欄寫明你自己跑過哪些檢查。」
+6. **gate 會驗的稿面規則**：「Notes 板（頂層 frame 名稱含『實作註記』或『Handoff Notes』）的『畫面級屬性』段每個新畫面一列（板名｜隱藏 Tab Bar｜標題｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大｜資料落點），Notes 只引用現行節點 id；年齡字串『N 歲 N 個月』／『N 個月』分隔用 U+00A0（月前 U+2060）。機械驗的只有：節點 id 存活（`design-notes-check.sh`；每個新畫面板名要出現在畫面級屬性段並含『資料落點』字樣）與年齡字串分隔（`design-identity-header-check.sh`）；九欄的欄位內容 gate 不驗，由 Claude 盲審看。新增提案稿整份都算新增（LS-484）。」
 7. **Pen**：「Pen 已由 Claude 切到 `<提案檔>`；開工 `get_app_state` 核對 active 文件＝該路徑，不切換、不關閉、不殺 Pen，收工不切檔。」
 8. **七欄交接**：「handoff 用七欄：Ticket（含 task／job／thread id）／已完成（artifact 狀態 ready_for_pitch｜needs_revision｜blocked，不是 Linear 狀態）／已驗證（怎麼驗）／自檢／未完成（每條 open finding 含 informational 與處置）／風險／產出位置；內部審查輪次照實記，不湊輪數。」
 

@@ -3,7 +3,7 @@
 #
 # 背景（LS-471 R3 實錄）：螢幕鎖定時 Pen 不重新排版——Pencil MCP `Get` 回的 bounds 對新節點系統性 y+50、
 # `fill_container` 兄弟的 x 呈二分序列錯位；整輪 `overflow-scan`／快照 dump 因此產出假陽性收據（R3 一次作廢）。
-# 解鎖後 `open -a Pen` 一次才刷新。本探針讓收據掃描（SCAN_*／pen-snapshot-dump.js／overflow-scan.js --from-snapshot）
+# 解鎖後 `open -a Pen` 一次才刷新。本探針讓收據掃描（overflow-scan.js snippet 模式的 SCAN_BOARDS 等旗標／pen-snapshot-dump.js／overflow-scan.js --from-snapshot）
 # 前先自檢，exit 3 就停下回報，**不產任何收據檔**（本腳本只印診斷，從不寫 .pen／收據）。
 #
 # 用法：pen-bounds-probe.sh [--pen <path>] [--root <dir>] [--ids id1,id2,…]

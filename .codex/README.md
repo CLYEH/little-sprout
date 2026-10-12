@@ -14,6 +14,8 @@ a Markdown role description is not proof that a runtime agent was registered.
 Authoring environment: Codex CLI 0.161.0; codex-cc-plugin/codex-companion bundle
 1.0.6. Target reported by Claude: CLI 0.149.1; companion bundle 1.0.3.
 Those versions are evidence context, not a tested minimum-version guarantee.
+As of 2026-10-12, measured on the target host: CLI 0.162.1 / companion 1.0.6
+(LS-482 Q1); the 0.149.1 statements below remain the static-schema evidence.
 
 References:
 - [Current subagents documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents)
@@ -21,10 +23,14 @@ References:
 - [0.149.1 role loader](https://github.com/openai/codex/blob/rust-v0.149.1/codex-rs/core/src/agent/role.rs)
 
 The pinned schema supports the three `[agents]` fields used here. Standalone
-roles specify name, description, developer_instructions and model. Reasoning
-effort is inherited; if the target reports an unsupported combination, fail
-visibly and have Claude select a supported setting rather than changing it
-silently. The three-worker cap excludes the lead.
+roles specify name, description, developer_instructions and model. These files
+do not pin reasoning effort. Do not assume it equals the parent's effort:
+the target Q1 run on CLI 0.162.1 / companion 1.0.6 recorded parent high and all
+three gpt-6.1-sol children low. If a task requires a particular effort, Claude
+must request it through a supported runtime setting/spawn parameter and verify
+the actual child turn context. Unsupported combinations must fail visibly,
+without silently substituting a model or effort. The three-worker cap excludes
+the lead.
 
 **Permissions are inherited.** In the 0.149.1 role application path, sandbox/MCP
 settings are not among the applied role overrides. No `sandbox_mode` or MCP
