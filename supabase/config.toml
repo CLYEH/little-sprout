@@ -240,6 +240,13 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
+# LS-487 沿革（2026-10-12）：此段維持註解、不要打開——本機容器走 Mailpit，不經 Resend。
+# 正式站 SMTP 由 Management API `/v1/projects/{ref}/config/auth` 管理（不靠 config push）：
+#   smtp_host=smtp.resend.com、smtp_user=resend、
+#   smtp_pass＝Resend per-domain sending key（只限單一寄件網域）、
+#   smtp_admin_email=no-reply@auth.sproutday.app、smtp_sender_name=Sprout Day。
+# 換寄件網域必須同時換成該網域的 key，否則 Resend 回 403 → GoTrue 回 500
+# 「Error sending confirmation email」。key 不進 repo（使用者本機 ~/.secrets）。
 # Use a production-ready SMTP server
 # [auth.email.smtp]
 # enabled = true
