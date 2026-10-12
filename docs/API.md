@@ -4006,11 +4006,11 @@ HTTP 端點。這裡记錄呼叫端（iOS）需要知道的契約；函式本體
 | --- | --- | --- | --- |
 | apple | enabled | bundle id `com.clyeh.sproutday`（iOS 原生 `signInWithIdToken`） | 無（原生流程不需；Android web OAuth 需 Service ID＋secret，另票） |
 | google | enabled | GCP OAuth web client（本機 config.toml 讀 env `GOOGLE_CLIENT_ID`／`GOOGLE_CLIENT_SECRET`） | 正式站 dashboard 設定 |
-| email | enabled | 不適用 | SMTP 設定見 LS-487 |
+| email | enabled | 不適用 | SMTP：供應商 Resend（`smtp.resend.com`，user `resend`）；寄件人 `no-reply@auth.sproutday.app`、名稱 `Sprout Day`；`smtp_pass`＝該網域的 per-domain sending key（id `ddd70bc8…`，token 在使用者本機 `~/.secrets`，不進 repo）；備援網域 `auth.littlesprout.xyz`（verified，舊 key 仍在，換回時 sender 與 key 必須成對一起換）；設定走 Management API `PATCH /v1/projects/{ref}/config/auth`（LS-487，2026-10-12） |
 
 `uri_allow_list`：`littlesprout://auth/callback,sproutday://auth/callback`。
 
-正式站值以 Management API `GET /config/auth` 為準；改動走 PATCH 或 `supabase config push`，需使用者授權
+正式站值以 Management API `GET /v1/projects/{ref}/config/auth` 為準；改動走 PATCH 或 `supabase config push`，需使用者授權
 （LS-78，當日 token）。`supabase/config.toml` 只是本機與文件對照，不會自動同步到正式站。
 
 ---
