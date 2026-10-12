@@ -17,7 +17,7 @@
 # 釘住檔（`.jdk-version`／`.android-api`）缺檔＝fail loud（exit 1），不當成「未安裝」——那是 repo 壞了，不是本機環境。
 #
 # 用法：android-env-check.sh [--require-emulator] [--repo <path>]
-# exit：0＝齊；3＝本機未安裝／版本不符（stdout 印逐項原因，呼叫端轉成 ⚠）；1＝釘住檔缺／壞；2＝參數錯
+# exit：0＝齊（JDK major 與釘住值不同只多印 ⚠、仍 exit 0）；3＝本機未安裝／不齊（JDK 跑不出版本、SDK 缺或不齊，--require-emulator 時另含 emulator；stdout 印逐項原因，呼叫端轉成 ⚠）；1＝釘住檔缺／壞；2＝參數錯
 # 自測：scripts/gates/android-env-check.test.sh（假 java／假 SDK 目錄；本機沒有真 JDK／SDK 時「已安裝」路徑只能靠夾具）
 set -uo pipefail
 
