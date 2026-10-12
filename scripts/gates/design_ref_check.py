@@ -20,6 +20,10 @@ DESIGN_LINE_RE = re.compile(r"^Design:\s*(.*)$")
 # id 形＝5–6 碼英數（design_notes_check.py 既有慣例：Pencil id 實測皆 5–6 碼），可選反引號包住。
 NAMED_ENTRY_RE = re.compile(r"^(?P<name>.*\S)\s*（\s*`?(?P<id>[A-Za-z0-9]{5,6})`?\s*）\s*$")
 ID_ONLY_RE = re.compile(r"^`?(?P<id>[A-Za-z0-9]{5,6})`?$")
+# LS-489：`Design:` 行內容開頭的 `<路徑>.pen:` 前綴（半形或全形冒號，路徑可選反引號包住）＝這一行所有條目對該 .pen 查。
+PEN_PREFIX_RE = re.compile(r"^`?(?P<path>[^\s`:：（）、,]+\.pen)`?\s*[:：]\s*(?P<rest>.*)$")
+# 路徑 allowlist：主稿或提案稿目錄；不接受 `..` 段、絕對路徑。
+PEN_ALLOWED_RE = re.compile(r"^(design/littlesprout\.pen|docs/design-proposals/(?:[^/\s]+/)*[^/\s]+\.pen)$")
 
 
 def die(msg):
@@ -63,6 +67,18 @@ def design_lines(body_text):
     return out
 
 
+def pen_path_allowed(path):
+    return bool(PEN_ALLOWED_RE.match(path)) and ".." not in path.split("/")
+
+
+def split_pen_prefix(content):
+    """回傳 (pen 路徑或 None, 去掉前綴後的內容)。無前綴＝None＝預設主稿（向後相容）。"""
+    m = PEN_PREFIX_RE.match(content)
+    if m:
+        return m.group("path"), m.group("rest").strip()
+    return None, content
+
+
 def split_entries(content):
     if "、" in content:
         parts = content.split("、")
@@ -74,11 +90,13 @@ def split_entries(content):
 
 
 def all_entries(lines):
-    """所有 Design: 行拆出的條目（跳過空內容的行，如模板留空的「Design:」）。"""
+    """所有 Design: 行拆出的 (pen 路徑或 None, 條目)（跳過空內容的行，如模板留空的「Design:」）。
+    LS-489：路徑前綴作用於整行（一行＝一個 .pen）；無前綴的行 pen＝None＝呼叫端給的預設主稿。"""
     out = []
     for content in lines:
         if content:
-            out.extend(split_entries(content))
+            pen, rest = split_pen_prefix(content)
+            out.extend((pen, e) for e in split_entries(rest))
     return out
 
 
@@ -149,10 +167,29 @@ def main(argv):
         print("✓ design-ref gate：Design 行 %d 條、條目 0 筆——無條目可核對" % len(lines))
         return 0
 
-    doc = load_snapshot(head, pen)
-    id_to_name = top_level_names(doc)
-    missing, mismatched, skipped = check(entries, id_to_name)
+    # LS-489：依條目指定的 .pen 分組，每個 .pen 只讀一次快照；預設主稿（pen）只在有條目用到時才讀。
+    groups = {}
+    for entry_pen, entry in entries:
+        groups.setdefault(entry_pen or pen, []).append(entry)
 
+    missing, mismatched, skipped, bad_paths = [], [], [], []
+    for gpen, gentries in groups.items():
+        suffix = "" if gpen == pen else "（%s）" % gpen
+        if gpen != pen:
+            if not pen_path_allowed(gpen):
+                bad_paths.append((gpen, "不在 allowlist（只接受 design/littlesprout.pen 或 docs/design-proposals/**/*.pen）"))
+                continue
+            if subprocess.run(["git", "cat-file", "-e", "%s:%s" % (head, gpen)], capture_output=True).returncode != 0:
+                bad_paths.append((gpen, "在 head 不存在"))
+                continue
+        id_to_name = top_level_names(load_snapshot(head, gpen))
+        m_, mm_, sk_ = check(gentries, id_to_name)
+        missing += [(e + suffix, i) for e, i in m_]
+        mismatched += [(e + suffix, i, c, a) for e, i, c, a in mm_]
+        skipped += sk_
+
+    for gpen, why in bad_paths:
+        print("✗ Design 行 .pen 路徑「%s」：%s" % (gpen, why), file=sys.stderr)
     for entry, eid in missing:
         print("✗ Design 行「%s」：id %s 不在 .pen 頂層節點內" % (entry, eid), file=sys.stderr)
     for entry, eid, claimed, actual in mismatched:
@@ -160,9 +197,9 @@ def main(argv):
     for entry in skipped:
         print("（略過）Design 行「%s」：無法解析為「板名（id）」或純 id，未核對（design-ref-check 盲區）" % entry)
 
-    summary = "Design 行 %d 條、條目 %d 筆、缺 id %d、名稱不符 %d、略過 %d" % (
-        len(lines), len(entries), len(missing), len(mismatched), len(skipped))
-    if missing or mismatched:
+    summary = "Design 行 %d 條、條目 %d 筆、缺 id %d、名稱不符 %d、略過 %d、路徑錯誤 %d" % (
+        len(lines), len(entries), len(missing), len(mismatched), len(skipped), len(bad_paths))
+    if missing or mismatched or bad_paths:
         print("✗ design-ref gate：%s——board 名稱／id 須與 .pen 頂層節點一致（LS-316）" % summary, file=sys.stderr)
         return 1
     print("✓ design-ref gate 通過：%s" % summary)

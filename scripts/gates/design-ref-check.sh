@@ -16,6 +16,13 @@
 #   同一 `Design:` 行內多條目以 `、` 或 `,` 分隔（該行用了哪個就切哪個；都沒有就整行當一條）。
 #   id 形＝5–6 碼英數（沿 design_notes_check.py 既有慣例：Pencil id 實測皆 5–6 碼）。
 #
+# LS-489：`Design:` 行可指定 .pen 路徑——內容開頭加 `<路徑>.pen:` 前綴（半形／全形冒號皆可），例：
+#   `Design: docs/design-proposals/soft-social-20261009/littlesprout-soft-social.pen: C / 01 家庭動態（rsm56）、ev2Pc`
+# 前綴作用於整行（一行＝一個 .pen；要引用兩個 .pen 就寫兩行 `Design:`）；無前綴＝呼叫端給的 <path.pen>（主稿，
+# 向後相容）。選行級前綴而非條目級 `#id`／獨立 `Design-Pen:` 行的理由：路徑不含空白與冒號、板名不會誤吞成路徑，
+# 不依賴行序，且舊兩種寫法完全不受影響。路徑限 `design/littlesprout.pen` 或 `docs/design-proposals/**/*.pen`
+# （無 `..`）；不在 allowlist 或在 head 不存在 → ✗（exit 1）；id 在指定 .pen 的頂層節點查，每個 .pen 只讀一次快照。
+#
 # 判定：
 #   - id 不在 head .pen 頂層節點裡 → ✗ 缺 id
 #   - 寫法 1 且 id 存在但宣稱的板名與 .pen 實際名稱不符（全形括號內外空白正規化、內部連續空白壓一個、
