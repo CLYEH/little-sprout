@@ -50,13 +50,18 @@ final class AuthStore {
     /// 逾時後依當下（仍過期的）session 路由 → 登入頁，與 LS-502 之前的離線行為相同。
     static let restoreTimeout: Duration = .seconds(5)
 
+    /// 實際使用的逾時長度：生產路徑一律 `restoreTimeout`；測試可注入短值（LS-502 R1b）。
+    @ObservationIgnored
+    private let restoreTimeoutDuration: Duration
+
     private(set) var restoreState: RestoreState
 
     @ObservationIgnored
     private var restoreTimeoutTask: Task<Void, Never>?
 
-    init(authService: AuthService) {
+    init(authService: AuthService, restoreTimeout: Duration = AuthStore.restoreTimeout) {
         self.authService = authService
+        self.restoreTimeoutDuration = restoreTimeout
         let initialSession = authService.currentSession
         self.session = initialSession
         let needsRestore = initialSession != nil && !Self.isSessionValid(initialSession, asOf: Date())
@@ -72,13 +77,28 @@ final class AuthStore {
                 if self.session == nil || self.isAuthenticated() { self.settleRestore() }
             }
         }
-        if needsRestore {
-            restoreTimeoutTask = Task { [weak self] in
-                try? await Task.sleep(for: Self.restoreTimeout)
-                guard !Task.isCancelled else { return }
-                self?.settleRestore()
-            }
+        if needsRestore { startRestoreTimeout() }
+    }
+
+    private func startRestoreTimeout() {
+        restoreTimeoutTask?.cancel()
+        let duration = restoreTimeoutDuration
+        restoreTimeoutTask = Task { [weak self] in
+            try? await Task.sleep(for: duration)
+            guard !Task.isCancelled else { return }
+            self?.settleRestore()
         }
+    }
+
+    /// 熱回前景：app 在背景超過 access token 壽命（1h）再回前景時，store 早已 `.settled`、
+    /// session 已過期，`RootRoute` 會直接落登入頁，等 SDK 在 didBecomeActive 後刷新才切回
+    /// ——與冷啟動同一個閃爍。這裡把「存在但已過期」的 session 重新標成還原中，規則同 init
+    /// （事件或逾時結束）。已在 `.pending` 就不重啟逾時；session 為 nil 或有效不動。
+    /// `RootView` 在 `refreshSnapshot()` 之後呼叫。
+    func sceneDidBecomeActive() {
+        guard restoreState == .settled, session != nil, !isAuthenticated() else { return }
+        restoreState = .pending
+        startRestoreTimeout()
     }
 
     /// 事件與逾時兩條路徑都走這裡；兩者都在 MainActor 上，`guard` 保證 `.settled` 只設一次，
