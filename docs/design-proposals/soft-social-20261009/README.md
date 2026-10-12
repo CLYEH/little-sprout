@@ -6,7 +6,7 @@
 
 ## 交付內容
 
-- `littlesprout-soft-social.pen`：獨立、可編輯的 Pencil 原生稿，與來源原稿位元組一致。
+- `littlesprout-soft-social.pen`：獨立、可編輯的 Pencil 原生稿；2026-10-12 已加入 r1 註記與年齡分隔修正。
 - `exports/`：十二張 780×1688（2x）原生匯出預覽，每張嚴格小於 400,000 bytes（400 KB）；較大的圖使用 PNG 調色盤壓縮，沒有縮小尺寸。
 - `assets/`：原生稿引用的十個必要素材；相對路徑保留在此提案目錄。素材來源類型見索引，PNG 同樣小於 400,000 bytes。
 - `skill/`：完整、獨立的品牌 skill，包含入口、agent 設定、兩份規範與兩張內附參考；不安裝或替換現有 skill。
@@ -14,6 +14,15 @@
 - `.gitattributes`：固定本包文字換行為 LF，並將原生稿與圖片視為二進位，讓跨平台 checkout 的 SHA256 一致。
 
 以 Pencil 開啟原生稿時，請保留 assets/ 相對位置。字型為 Noto Sans TC，未隨包附帶。PNG 是靜態預覽；ImageGen 只提供部分畫面內素材，並非十二屏的原生 UI 稿。
+
+## r1 修稿（2026-10-12；續派 r1b）
+
+- 原生稿已存檔：新增 `實作註記 / Handoff Notes`（`tVh58`）的「畫面級屬性」13 列，每列九欄；每列含現行正典板名、節點 id 與「資料落點」。不確定的實作契約明列「待實作票定」。
+- 原有 632 個節點僅 `HwhMJ.content`、`jxHRS.content` 改變：年齡片語為 `1\u00A0歲\u00A03\u00A0個\u2060月`；字型、版面及其他原有屬性未改。新增 Notes 後共 649 個節點。
+- 官方 Pencil `Get` 核對修改前後屬性、Notes 13 × 9 欄及 Unicode；以官方 CLI `save()` 存入同一文件，未切換或重開文件。
+- `exports/` 保留 `c2ef2fde` 的十二張基準預覽，雜湊未變；它們不是 r1 新匯出。鎖屏期間未做 bounds／溢出／新渲染驗證。
+- 本輪未 commit、push 或寫入掃描收據。Claude 接手提交設計 commit A、執行兩支 development 版 gate、解鎖後跑正典掃描並以 `head_sha=A` 產出收據，再提交審查／收據 commit B。
+- 畫面 state、來源路徑、原生稿 SHA256、基準匯出 provenance 及未完成驗證見 `SCREEN-MANIFEST.json`。
 
 ## 畫面索引
 
@@ -61,8 +70,8 @@
 | `exports/10-search.png` | `a5cf6570a52c0bc64cadecabcd2fea6c4eab46802295d5deb59ed6b1e68115bd` |
 | `exports/11-invite.png` | `96ff463ca3f6d881630beb3367c3e6abebf75d13e079ce3b4c41434ae90794eb` |
 | `exports/12-album-empty.png` | `807f6696b4135bf5aef6720cbae603df28b395f464709ab83c3709f64bf45722` |
-| `littlesprout-soft-social.pen` | `d1fb5fe4ea4a22fb5e86f5ecce0a8bd24439330e393df09438ca351ecba41d9a` |
-| `SCREEN-MANIFEST.json` | `dca8353bccad69bc1d1e2f8436b825d6ca6845a95f6568c83357812a71ce7e12` |
+| `littlesprout-soft-social.pen` | `424ed837d76ccdb2d9e3233361734dc56435ea26ede1bc99e417d005da94c663` |
+| `SCREEN-MANIFEST.json` | `eeb4e5a1c25c15bef0740433e4263167a78736dc44b9e17efa8ccd0ebe893f1a` |
 | `skill/agents/openai.yaml` | `ab452d2f8df8e0ec0342dd7beeef04bf4a33b3c3cb0091eec15348b250a26fa3` |
 | `skill/references/baseline.md` | `b5208d9136068d815efd8f8e3e0dd4d8e0187c3b54870f6fa6974aa00c44a095` |
 | `skill/references/images/growth.png` | `0a8369f1117f7b07b40956104417c0aa37e9a1282ef6632d450785ed0db67da2` |

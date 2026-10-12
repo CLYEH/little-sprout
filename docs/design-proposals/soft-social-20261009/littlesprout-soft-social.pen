@@ -1,5 +1,5 @@
 {
-  "version": "2.18",
+  "version": "2.21",
   "children": [
     {
       "type": "frame",
@@ -37,7 +37,7 @@
                 "type": "image",
                 "enabled": true,
                 "url": "assets/wordmark.png",
-                "mode": "fit"
+                "mode": "contain"
               },
               "layout": "none"
             },
@@ -417,7 +417,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/mom.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 22,
                       "layout": "none"
@@ -630,7 +630,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/child-leaf.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 14,
                       "layout": "none"
@@ -719,7 +719,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/mom.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 22,
                       "layout": "none"
@@ -832,7 +832,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/child-leaf.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "layout": "none"
                 },
@@ -1373,7 +1373,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/mom.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 22,
                   "layout": "none"
@@ -1458,7 +1458,7 @@
                 "type": "image",
                 "enabled": true,
                 "url": "assets/child-leaf.jpg",
-                "mode": "fill"
+                "mode": "cover"
               },
               "layout": "none"
             },
@@ -1669,7 +1669,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/grandma.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 22,
                   "layout": "none"
@@ -2107,7 +2107,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/child-leaf.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         },
@@ -2184,7 +2184,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/family-picnic.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         },
@@ -2271,7 +2271,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/family-moment.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         },
@@ -2348,7 +2348,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/child.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         },
@@ -2866,7 +2866,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/child-leaf.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 14,
                       "layout": "none"
@@ -2970,7 +2970,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/child-leaf.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 42,
                   "layout": "none"
@@ -3003,7 +3003,7 @@
                       "fill": "$muted",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "1 歲 3 個月",
+                      "content": "1 歲 3 個⁠月",
                       "lineHeight": 1.4,
                       "fontFamily": "Noto Sans TC",
                       "fontSize": 17,
@@ -3322,7 +3322,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/mandarin-sticker.png",
-                    "mode": "fit"
+                    "mode": "contain"
                   },
                   "layout": "none"
                 },
@@ -3833,7 +3833,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/child-leaf.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 16,
                   "layout": "none"
@@ -3845,7 +3845,7 @@
                   "fill": "$ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "小禾・1 歲 3 個月",
+                  "content": "小禾・1 歲 3 個⁠月",
                   "lineHeight": 1.4,
                   "fontFamily": "Noto Sans TC",
                   "fontSize": 17,
@@ -3931,7 +3931,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/mandarin-sticker.png",
-                    "mode": "fit"
+                    "mode": "contain"
                   },
                   "layout": "none"
                 }
@@ -4497,7 +4497,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/app-icon.png",
-                        "mode": "fit"
+                        "mode": "contain"
                       },
                       "cornerRadius": 12,
                       "layout": "none"
@@ -4607,7 +4607,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/mom.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 24,
                       "layout": "none"
@@ -4702,7 +4702,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/dad.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 24,
                       "layout": "none"
@@ -4797,7 +4797,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/grandma.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 24,
                       "layout": "none"
@@ -5388,7 +5388,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/mom.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 22,
                   "layout": "none"
@@ -5456,7 +5456,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/child-leaf.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "layout": "none"
                 },
@@ -6065,7 +6065,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/family-picnic.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         }
@@ -6104,7 +6104,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/child-leaf.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         }
@@ -6153,7 +6153,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/family-moment.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         }
@@ -6192,7 +6192,7 @@
                             "type": "image",
                             "enabled": true,
                             "url": "assets/child.jpg",
-                            "mode": "fill"
+                            "mode": "cover"
                           },
                           "layout": "none"
                         }
@@ -6538,7 +6538,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/grandma.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 22,
                       "layout": "none"
@@ -6642,7 +6642,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/child-leaf.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 8,
                       "layout": "none"
@@ -6683,7 +6683,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/dad.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 22,
                       "layout": "none"
@@ -6787,7 +6787,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/child-leaf.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 8,
                       "layout": "none"
@@ -6850,7 +6850,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/dad.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 22,
                       "layout": "none"
@@ -6944,7 +6944,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/family-picnic.jpg",
-                        "mode": "fill"
+                        "mode": "cover"
                       },
                       "cornerRadius": 8,
                       "layout": "none"
@@ -7376,7 +7376,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/child-leaf.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 10,
                   "layout": "none"
@@ -7465,7 +7465,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/family-picnic.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 10,
                   "layout": "none"
@@ -7554,7 +7554,7 @@
                     "type": "image",
                     "enabled": true,
                     "url": "assets/family-moment.jpg",
-                    "mode": "fill"
+                    "mode": "cover"
                   },
                   "cornerRadius": 10,
                   "layout": "none"
@@ -8034,7 +8034,7 @@
                         "type": "image",
                         "enabled": true,
                         "url": "assets/app-icon.png",
-                        "mode": "fit"
+                        "mode": "contain"
                       },
                       "cornerRadius": 12,
                       "layout": "none"
@@ -8897,6 +8897,227 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "tVh58",
+      "x": 0,
+      "y": 1300,
+      "name": "實作註記 / Handoff Notes",
+      "width": 2200,
+      "fill": "#FAF3F5",
+      "layout": "vertical",
+      "gap": 20,
+      "padding": 32,
+      "children": [
+        {
+          "type": "text",
+          "id": "RbUUK",
+          "name": "畫面級屬性",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "畫面級屬性",
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 26,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "WCU4U",
+          "name": "註記範圍與未定事項",
+          "fill": "#715C65",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "以下 13 列對應現行正典板。Tab Bar、標題與動作帶只記錄提案稿面；數值為節點 authored 屬性，未以鎖屏 bounds 量測。原生導覽、鍵盤、安全區及未提供狀態皆待實作票定。深色、AX3、iPad 尚未形成核准範例。示意資料不代表產品固定值。",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "i13pX",
+          "name": "畫面級屬性 / 九欄表頭",
+          "fill": "#8E2447",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "板名｜隱藏 Tab Bar｜標題｜釘底動作帶｜失敗文案鍵｜深色特例｜AX3 特例｜iPad 重排/放大｜資料落點",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "A0evvb",
+          "name": "畫面級屬性 / 00 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / Visual language · 一起長大（ev2Pc）｜不適用（視覺規範板）｜自訂：C．一起長大｜無｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：無持久化（視覺 tokens、字標與元件參考）",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "KxZu3",
+          "name": "畫面級屬性 / 01 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 01 家庭動態（rsm56）｜✗（稿面有 Tab Bar）｜自訂：家庭動態｜無｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：動態讀取 get_family_timeline；喜歡 toggle_reaction；留言 create_comment；分享文字與日期對應 diaries.body／entry_date，照片關聯 diary_media；新增流程參見加入照片板",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "iaeC1",
+          "name": "畫面級屬性 / 02 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 02 回憶詳情（M7qpWP）｜✓（稿面無 Tab Bar）｜自訂：回憶｜有：留言輸入帶，稿面屬性高度 68；原生鍵盤行為待實作票定｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：diaries.body／entry_date、diary_media 讀取；喜歡 toggle_reaction；留言 create_comment；刪改與錯誤流程待實作票定",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "b7pTMg",
+          "name": "畫面級屬性 / 03 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 03 相簿（WavOD）｜✗（稿面有 Tab Bar）｜自訂：相簿｜無｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：albums.title／cover_media_id；張數讀取 album_summaries.visible_media_count；照片關聯 album_media；寶貝關聯 set_album_children；新增相簿提交 RPC 待實作票定",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "rbHCJ",
+          "name": "畫面級屬性 / 04 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 04 寶貝成長概覽（ftrBE）｜✗（稿面有 Tab Bar）｜自訂：寶貝｜無｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：children.name／birthday／avatar_url；年齡由 birthday 衍生、無獨立持久化；growth_records.measured_on／height_cm／weight_kg／head_cm／note 經 upsert_growth_record；小進步資料契約待實作票定",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "YRyZm",
+          "name": "畫面級屬性 / 05 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 05 飲食小記（e347tY）｜✓（稿面無 Tab Bar）｜自訂：飲食小記｜有：記下一個新味道，稿面屬性高度 72；原生實作待實作票定｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：food_catalog 為唯讀食物來源；child_food_records.first_tried_on／media_id／note／reaction 經 upsert_child_food_record；寶貝姓名與年齡讀取 children.name／birthday；反應值映射待實作票定",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "lsud0",
+          "name": "畫面級屬性 / 06 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 06 家庭（CxGiV）｜✗（稿面有 Tab Bar）｜自訂：家庭｜無｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：families.name；family_members.role／can_upload；profiles.display_name／avatar_url（本板顯示讀取）；家庭設定寫入契約待實作票定；邀請參見邀請家人板",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "jKneU",
+          "name": "畫面級屬性 / 07 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 07 加入照片（LefzY）｜✓（稿面無 Tab Bar）｜自訂：加入照片｜有：分享給家人，稿面屬性高度 76；原生鍵盤／安全區行為待實作票定｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：照片 media、關聯 diary_media；敘事／日期／寶貝選擇經 create_diary_entry(p_body,p_entry_date,p_child_ids)；對應 diaries.body／entry_date；上傳與分享失敗流程待實作票定",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "Cu7ft",
+          "name": "畫面級屬性 / 08 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 08 相簿內頁（m8Dfo）｜✓（稿面無 Tab Bar）｜自訂：一起的週末（相簿名）｜有：加入照片，稿面屬性高度 76；原生實作待實作票定｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：albums.title／cover_media_id；張數 album_summaries.visible_media_count；照片 album_media；寶貝關聯 set_album_children；相簿描述文字欄位與加入照片提交契約待實作票定",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "Fvq1D",
+          "name": "畫面級屬性 / 09 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 09 通知（Y506Lc）｜✓（稿面無 Tab Bar）｜自訂：通知｜無｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：通知清單、未讀／已讀與全部設為已讀的使用者端表／RPC 待實作票定；提案不指定通知服務佇列為此畫面的資料來源",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "P1CTWG",
+          "name": "畫面級屬性 / 10 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 10 回憶搜尋（MZghz）｜✗（稿面有 Tab Bar）｜自訂：搜尋回憶｜無｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：查詢字串與照片／日記篩選為畫面狀態、無持久化；結果查詢 API 與回憶資料組合待實作票定",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "uIoC8",
+          "name": "畫面級屬性 / 11 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 11 邀請家人（g5YJ4r）｜✓（稿面無 Tab Bar）｜自訂：邀請家人｜有：分享邀請碼，稿面屬性高度 76；原生分享行為待實作票定｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：家庭名稱讀取 families.name；建立邀請 create_invite(p_family_id,p_role,p_expires_at,p_max_uses)；參數策略、示意邀請碼／QR 與實際邀請憑證映射待實作票定；複製與分享無額外持久化",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "A6iCm",
+          "name": "畫面級屬性 / 12 正典列",
+          "fill": "#362B2F",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "C / 12 相簿尚無照片（Qr7b0）｜✗（稿面有 Tab Bar）｜自訂：一起長大的日子（相簿名）｜無（加入照片在內容區）｜待實作票定（提案未含失敗狀態／文案鍵）｜待實作票定（提案未含深色稿）｜待實作票定（提案未含 AX3 稿；非原生驗證）｜待實作票定（提案未含 iPad 稿）｜資料落點：albums.title；張數讀取 album_summaries.visible_media_count；照片關聯 album_media；加入照片提交契約待實作票定；空白提示無持久化",
+          "lineHeight": 1.5,
+          "fontFamily": "Noto Sans TC",
+          "fontSize": 17,
+          "fontWeight": "normal"
         }
       ]
     }
