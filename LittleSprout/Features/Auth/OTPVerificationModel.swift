@@ -259,7 +259,7 @@ final class OTPVerificationModel {
             } else {
                 recordFailure()
             }
-        case .network, .retryableSystem, .server:
+        case .network, .retryableSystem, .server, .appleSignInFailed:
             errorMessage = appError.userFacingMessage
         }
     }
@@ -362,7 +362,7 @@ final class OTPVerificationModel {
                 } else {
                     errorMessage = appError.userFacingMessage
                 }
-            case .network, .retryableSystem, .server:
+            case .network, .retryableSystem, .server, .appleSignInFailed:
                 errorMessage = appError.userFacingMessage
             }
             return false

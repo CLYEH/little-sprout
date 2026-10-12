@@ -135,7 +135,7 @@ enum UploadFailureReason: Equatable {
             return .network
         case .rejected(_, let code) where code == LSErrorCode.storageQuotaExceeded.rawValue:
             return .quota
-        case .validationRetryable, .retryableSystem, .rejected, .server:
+        case .validationRetryable, .retryableSystem, .rejected, .server, .appleSignInFailed:
             return .server
         }
     }
