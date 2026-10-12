@@ -99,14 +99,20 @@ cmd_start() {
     dflt write -int 0 || { echo "✗ keep-awake：寫 idleTime 0 失敗" >&2; exit 1; }
   fi
   printf '%s\n' "$lease" > "$LEASE_FILE" || { echo "✗ keep-awake：寫租約檔失敗（${LEASE_FILE}）" >&2; exit 1; }
+  local fresh=0
   if ! is_hold "$hpid"; then
     nohup bash "$SELF" hold </dev/null >/dev/null 2>&1 &
     hpid=$!
     disown 2>/dev/null || true
+    fresh=1
   fi
   write_state "$orig" "$hpid"
-  ensure_caffeinate "$hpid"
-  sleep 0.3   # 讓剛起的 caffeinate 進得了 pgrep
+  if [ "$fresh" -eq 1 ]; then
+    # 新起的 hold 第一圈自己會補 caffeinate；這裡再起會兩邊同時看到「沒有」而各起一支。只等它出現（最多 3 秒）
+    local w=30; while [ -z "$(first_caff)" ] && [ "$w" -gt 0 ]; do sleep 0.1; w=$((w - 1)); done
+  else
+    ensure_caffeinate "$hpid"; sleep 0.3   # 讓剛起的 caffeinate 進得了 pgrep
+  fi
   echo "keep-awake：start ok（原 idleTime=${orig}，lease=${lease}s，hold pid=${hpid}，caffeinate pid=$(first_caff || true)）"
 }
 
