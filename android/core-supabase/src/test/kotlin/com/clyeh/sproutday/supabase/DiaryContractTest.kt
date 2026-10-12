@@ -73,7 +73,15 @@ class DiaryContractTest {
         s: Scene,
         diaryId: String,
     ) {
-        val denied = expectError<BackendError.NotDiaryAuthor> { s.b.diary.updateEntry(diaryId, "B 想改", "2025-03-03", emptyList()) }
+        val denied =
+            expectError<BackendError.NotDiaryAuthor> {
+                s.b.diary.updateEntry(
+                    diaryId,
+                    "B 想改",
+                    "2025-03-03",
+                    emptyList(),
+                )
+            }
         assertEquals("LS021", denied.code)
         val detail = checkNotNull(s.a.feed.diaryDetail(diaryId))
         assertEquals("被拒絕的寫入沒有改到資料", "第二版內文", detail.diary.body)
@@ -90,7 +98,8 @@ class DiaryContractTest {
         assertNull("軟刪後時間軸不含這篇", s.a.timelineDiary(s.familyId, diaryId))
         assertNull("軟刪後詳情回 null", s.a.feed.diaryDetail(diaryId))
         assertNull("軟刪後同家庭 member 的時間軸也不含", s.b.timelineDiary(s.familyId, diaryId))
-        val edit = expectError<BackendError.DiaryNotFound> { s.a.diary.updateEntry(diaryId, "x", "2025-02-02", emptyList()) }
+        val edit =
+            expectError<BackendError.DiaryNotFound> { s.a.diary.updateEntry(diaryId, "x", "2025-02-02", emptyList()) }
         assertEquals("已軟刪須先還原才能編輯 → LS020", "LS020", edit.code)
 
         s.a.diary.setDeleted(diaryId, deleted = false)
@@ -100,16 +109,39 @@ class DiaryContractTest {
 
     /** 標記別的家庭的寶貝：建立與更新都得 `23503`（複合外鍵），空陣列則是家庭共用（合法）。 */
     private suspend fun assertCrossFamilyChildRejected(s: Scene) {
-        val other = s.a.user.family.createFamily("另一個家庭")
+        val other =
+            s.a.user.family
+                .createFamily("另一個家庭")
         val foreignChild = s.a.children.createChild(other.id, "別家寶貝", "2024-01-01")
         val create =
-            expectError<BackendError.Server> { s.a.diary.createEntry(s.familyId, listOf(foreignChild), "跨家庭", "2025-04-04") }
+            expectError<BackendError.Server> {
+                s.a.diary.createEntry(
+                    s.familyId,
+                    listOf(foreignChild),
+                    "跨家庭",
+                    "2025-04-04",
+                )
+            }
         assertEquals("建立時標記別家寶貝 → 外鍵違反", "23503", create.code)
 
         val shared = s.a.diary.createEntry(s.familyId, emptyList(), "家庭共用", "2025-04-04")
-        val update = expectError<BackendError.Server> { s.a.diary.updateEntry(shared, "跨家庭", "2025-04-04", listOf(foreignChild)) }
+        val update =
+            expectError<BackendError.Server> {
+                s.a.diary.updateEntry(
+                    shared,
+                    "跨家庭",
+                    "2025-04-04",
+                    listOf(foreignChild),
+                )
+            }
         assertEquals("更新時標記別家寶貝 → 外鍵違反", "23503", update.code)
-        assertTrue("空陣列＝不標記寶貝", s.a.timelineDiary(s.familyId, shared)?.childIds?.isEmpty() == true)
+        assertTrue(
+            "空陣列＝不標記寶貝",
+            s.a
+                .timelineDiary(s.familyId, shared)
+                ?.childIds
+                ?.isEmpty() == true,
+        )
     }
 
     private class Actor(
@@ -124,7 +156,10 @@ class DiaryContractTest {
             familyId: String,
             diaryId: String,
         ): FeedPointer? =
-            feed.timeline(familyId, limit = TIMELINE_LIMIT).firstOrNull { it.kind == FeedKind.DIARY && it.refId == diaryId }
+            feed.timeline(familyId, limit = TIMELINE_LIMIT).firstOrNull {
+                it.kind == FeedKind.DIARY &&
+                    it.refId == diaryId
+            }
 
         /** 上傳一張照片（原檔，不含縮圖）並建好 `media` 列（尚未掛任何日記／相簿）；回傳 media id。 */
         suspend fun uploadPhoto(familyId: String): String {

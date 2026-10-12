@@ -153,6 +153,7 @@ private fun ChildSection(
         DebugButton("加一筆身高", enabled, "add-height") { viewModel.addHeight() }
         DebugButton("列飲食圖鑑前 3 筆", enabled, "list-food") { viewModel.listFood() }
     }
+    DebugButton("寫一篇日記（標記第一個寶貝）", enabled, "write-diary") { viewModel.writeDiary() }
     ui.child?.let { Text("寶貝：${it.name}", modifier = Modifier.testTag("child-${it.id}")) }
 }
 

@@ -7,6 +7,7 @@ import com.clyeh.sproutday.debug.DebugAuthPanel
 import com.clyeh.sproutday.debug.DebugAuthViewModel
 import com.clyeh.sproutday.supabase.AuthRepository
 import com.clyeh.sproutday.supabase.ChildrenRepository
+import com.clyeh.sproutday.supabase.DiaryRepository
 import com.clyeh.sproutday.supabase.FamilyRepository
 import com.clyeh.sproutday.supabase.FeedRepository
 import com.clyeh.sproutday.supabase.FoodRepository
@@ -31,6 +32,7 @@ fun RootContent(supabase: SupabaseClient) {
                     ChildrenRepository(supabase),
                     GrowthRepository(supabase),
                     FoodRepository(supabase),
+                    DiaryRepository(supabase),
                 ),
         )
     DebugAuthPanel(vm)

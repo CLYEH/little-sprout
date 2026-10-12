@@ -22,7 +22,8 @@ data class PendingTransferFamily(
 
 /**
  * 後端錯誤的 sealed 表示（docs/API.md §5）。`code` 是 Postgres SQLSTATE（`LSnnn`／`42501`…），沒有則為 null。
- * 對應 iOS `LSErrorCode`／`AppError`；這裡只列本層（Auth＋profiles／families／family_members＋邀請／加入流程＋媒體＋時間軸／留言／愛心＋寶貝／成長／飲食＋日記寫入）會碰到的碼，
+ * 對應 iOS `LSErrorCode`／`AppError`；這裡只列本層（Auth＋profiles／families／family_members＋邀請／加入流程＋媒體＋時間軸／留言／愛心＋
+ * 寶貝／成長／飲食＋日記寫入）會碰到的碼，
  * 其餘自訂碼落到 [Server]（保留原始 code），之後的票遇到時再補成具名 case。
  */
 sealed class BackendError(
