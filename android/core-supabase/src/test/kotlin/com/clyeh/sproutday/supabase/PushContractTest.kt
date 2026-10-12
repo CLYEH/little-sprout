@@ -51,7 +51,8 @@ class PushContractTest {
         }
 
     /** 本人可讀自己的 `device_tokens` 列（RLS `user_id = auth.uid()`）；token 在每次執行都是新的，不受其他測試影響。 */
-    private suspend fun TestUser.rows(): List<DeviceTokenRow> = client.from("device_tokens").select().decodeList<DeviceTokenRow>()
+    private suspend fun TestUser.rows(): List<DeviceTokenRow> =
+        client.from("device_tokens").select().decodeList<DeviceTokenRow>()
 
     @Serializable
     private data class DeviceTokenRow(

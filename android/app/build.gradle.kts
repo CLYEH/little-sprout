@@ -11,7 +11,7 @@ plugins {
 // （plugin 缺檔會讓建置 fail）——CI 的 android-lint／android-unit／android-connected 與沒有該檔的 worktree 都因此照常建置；
 // 代價是這樣的 build 沒有 Firebase 設定，取 FCM token 在執行期 fail loud（FcmTokenSource），不影響其他功能。
 if (file("google-services.json").exists()) {
-    apply(plugin = libs.plugins.google.services.get().pluginId)
+    apply(plugin = "com.google.gms.google-services") // 版本由 libs.versions.toml 的 google-services（root 已宣告 apply false）
 }
 
 // scripts/ops/release-version.sh 寫入（gitignored）；缺檔 fallback 0.0.0／1，與 iOS 的 project.yml fallback 同值。
