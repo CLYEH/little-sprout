@@ -8,6 +8,8 @@
 # `patrol.test.sh` ㉛（git 半段旗標／停滯行）；本檔補 patrol.sh 的退化分支與文件引用對帳。
 # ⑨（LS-287）：harness 開票行的「已落地：」附註裁定「進 context」（隨同一條 → 行通過），理由見該區塊註解。
 set -uo pipefail
+# LS-512：patrol.sh 每輪會呼叫真的 keep-awake.sh start（改本機螢幕保護程式設定、起 hold 行程）——本檔經 patrol.sh 跑到那段，自測不得碰真機狀態。
+export PATROL_NO_KEEP_AWAKE=1
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 pf="${root}/scripts/ops/patrol-filter.sh"

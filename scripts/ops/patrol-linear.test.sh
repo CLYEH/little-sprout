@@ -20,6 +20,8 @@
 # ⑬（LS-287）：harness 池項來源候選再多一層排除——id 前 8 碼若已被 repo 腳本檔頭等引用（`git grep`）視為已落地，
 # 從候選移除並在「→ 開票」行附註「已落地：…」；未命中維持現行；mutation 證明綠來自這段排除本身。
 set -uo pipefail
+# LS-512：patrol.sh 每輪會呼叫真的 keep-awake.sh start（改本機螢幕保護程式設定、起 hold 行程）——本檔經 patrol.sh 跑到那段，自測不得碰真機狀態。
+export PATROL_NO_KEEP_AWAKE=1
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 plsh="${root}/scripts/ops/patrol-linear.sh"

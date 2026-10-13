@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=\"${CLAUDE_PROJECT_DIR:-.}/scripts/ops/keep-awake.sh\"; [ -f \"$f\" ] && bash \"$f\" restore; exit 0",
+            "command": "f=\"${CLAUDE_PROJECT_DIR:-.}/scripts/ops/keep-awake.sh\"; [ -f \"$f\" ] && bash \"$f\" restore --if-owner; exit 0",
             "timeout": 10
           }
         ]

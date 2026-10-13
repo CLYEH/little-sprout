@@ -4,7 +4,8 @@
 # 驗：start 記原值＋寫 0＋起 hold／caffeinate＋status 0；重複 start 冪等（不重複起行程、原值不被 0 蓋掉）；
 # 接手手動狀態（idleTime 已 0、無 json、已有 caffeinate → 原值記 300、不重複起 caffeinate）；status 三種 exit 2；
 # restore 還原；租約過期 → hold 自動 restore；每次 start 續租（超過單一租約長度仍活著）。
-# mutation：hold 永不判過期 → 租約過期案紅；start 把 0 當原值 → 接手案紅。
+# ⑪ restore --if-owner（SessionEnd hook，merge-review R1 M1）：owner 相同才 restore；不同／json 缺／無 owner 欄位一律不動。
+# mutation：hold 永不判過期 → 租約過期案紅；start 把 0 當原值 → 接手案紅；--if-owner 比對拿掉 → ⑪ 不同 owner 案紅。
 set -uo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 script="${root}/scripts/ops/keep-awake.sh"
@@ -157,6 +158,46 @@ new_env 8
 bash "$script" start --lease abc >/dev/null 2>&1; eq '⑧ --lease 非整數 exit 2' "$?" 2
 bash "$script" bogus >/dev/null 2>&1; eq '⑧ 未知子命令 exit 2' "$?" 2
 
+# ⑪ restore --if-owner：start 把 CLAUDE_CODE_SESSION_ID 記成 owner；hook 以 stdin {"session_id":…} 比對
+new_env 11
+defaults write "$KEEP_AWAKE_DEFAULTS_DOMAIN" idleTime -int 300
+CLAUDE_CODE_SESSION_ID=sidA bash "$script" start >/dev/null 2>&1; h11=$(hold_pid)
+eq '⑪ start 把 CLAUDE_CODE_SESSION_ID 寫進 json owner' "$(sed -n 's/.*"owner":"\([^"]*\)".*/\1/p' "$KEEP_AWAKE_STATE_DIR/keep-awake.json")" sidA
+out=$(printf '{"session_id":"sidB","hook_event_name":"SessionEnd"}' | bash "$script" restore --if-owner 2>&1); rc=$?
+eq '⑪ (不同 owner) exit 0' "$rc" 0
+has '⑪ (不同 owner) 印「不符」' "$out" '--if-owner 不符'
+eq '⑪ (不同 owner) idleTime 仍 0（沒被撤掉）' "$(idle)" 0
+kill -0 "$h11" 2>/dev/null && ok '⑪ (不同 owner) hold 仍活著' || bad '⑪ (不同 owner) hold 被殺了'
+eq '⑪ (不同 owner) caffeinate 仍在' "$(ncaff)" 1
+[ -f "$KEEP_AWAKE_STATE_DIR/keep-awake.json" ] && ok '⑪ (不同 owner) json 仍在' || bad '⑪ (不同 owner) json 被刪了'
+printf '' | bash "$script" restore --if-owner >/dev/null 2>&1; eq '⑪ (stdin 無 session_id) exit 0' "$?" 0
+eq '⑪ (stdin 無 session_id) idleTime 仍 0' "$(idle)" 0
+out=$(printf '{"session_id":"sidA"}' | bash "$script" restore --if-owner 2>&1); rc=$?
+eq '⑪ (相同 owner) exit 0' "$rc" 0
+eq '⑪ (相同 owner) idleTime 還原 300' "$(idle)" 300
+wait_for 5 gone "$h11" && ok '⑪ (相同 owner) hold 已結束' || bad '⑪ (相同 owner) hold 仍在'
+[ ! -e "$KEEP_AWAKE_STATE_DIR/keep-awake.json" ] && ok '⑪ (相同 owner) json 已刪' || bad '⑪ (相同 owner) json 仍在'
+# json 缺：什麼都不動（手動設的 idleTime 0 不被寫成 300）
+new_env 12
+defaults write "$KEEP_AWAKE_DEFAULTS_DOMAIN" idleTime -int 0
+out=$(printf '{"session_id":"sidA"}' | bash "$script" restore --if-owner 2>&1); rc=$?
+eq '⑪ (json 缺) exit 0' "$rc" 0
+eq '⑪ (json 缺) idleTime 不動（仍 0）' "$(idle)" 0
+# 接手既有 json（沒有 owner 欄位）：--if-owner 不動；下一次 start 補寫 owner；沒有 session id 的 start 不清空 owner
+new_env 13
+defaults write "$KEEP_AWAKE_DEFAULTS_DOMAIN" idleTime -int 300
+bash "$script" start >/dev/null 2>&1; h13=$(hold_pid)
+printf '{"original_idle_time":300,"hold_pid":%s,"started_at":"x"}\n' "$h13" > "$KEEP_AWAKE_STATE_DIR/keep-awake.json"   # 舊版 json：沒有 owner 欄位
+printf '{"session_id":"sidA"}' | bash "$script" restore --if-owner >/dev/null 2>&1
+eq '⑪ (舊 json 無 owner) --if-owner 不動：idleTime 仍 0' "$(idle)" 0
+CLAUDE_CODE_SESSION_ID=sidC bash "$script" start >/dev/null 2>&1
+eq '⑪ (舊 json 無 owner) 下一次 start 補寫 owner' "$(sed -n 's/.*"owner":"\([^"]*\)".*/\1/p' "$KEEP_AWAKE_STATE_DIR/keep-awake.json")" sidC
+env -u CLAUDE_CODE_SESSION_ID bash "$script" start >/dev/null 2>&1
+eq '⑪ 無 session id 的 start 保留既有 owner' "$(sed -n 's/.*"owner":"\([^"]*\)".*/\1/p' "$KEEP_AWAKE_STATE_DIR/keep-awake.json")" sidC
+bash "$script" restore --bogus >/dev/null 2>&1; eq '⑪ restore 未知旗標 exit 2' "$?" 2
+bash "$script" restore >/dev/null 2>&1
+eq '⑪ 無旗標 restore 行為不變（無條件還原）' "$(idle)" 300
+
 # ⑨ mutation 1：hold 永不判過期（`-lt 0` → `-lt -99999`）→ ⑦ 的租約過期案轉紅（idleTime 停在 0）
 mut1="$work/keep-awake-mut1.sh"
 sed 's/\[ "\$rem" -lt 0 \]/[ "$rem" -lt -99999 ]/' "$script" > "$mut1"
@@ -182,6 +223,20 @@ if ! diff -q "$script" "$mut2" >/dev/null 2>&1; then
   bash "$mut2" restore >/dev/null 2>&1
 else
   bad '⑩ mutation 2 的 sed 未命中（負控本身無效）'
+fi
+
+# ⑫ mutation 3：--if-owner 的比對拿掉（`!= "$owner"` 恆假）→ ⑪ 的「不同 owner 不動」案轉紅（別的 session 結束仍撤掉防鎖定）
+mut3="$work/keep-awake-mut3.sh"
+sed 's/ || \[ "\$sid" != "\$owner" \]//' "$script" > "$mut3"
+if ! diff -q "$script" "$mut3" >/dev/null 2>&1; then
+  new_env 14
+  defaults write "$KEEP_AWAKE_DEFAULTS_DOMAIN" idleTime -int 300
+  CLAUDE_CODE_SESSION_ID=sidA bash "$mut3" start >/dev/null 2>&1
+  printf '{"session_id":"sidB"}' | bash "$mut3" restore --if-owner >/dev/null 2>&1
+  eq '⑫ mutant：拿掉 owner 比對 → 別的 session 的 SessionEnd 也還原了 idleTime（⑪ 的「不動」確由比對造成）' "$(idle)" 300
+  bash "$mut3" restore >/dev/null 2>&1
+else
+  bad '⑫ mutation 3 的 sed 未命中（負控本身無效）'
 fi
 
 if [ "$fail" -eq 0 ]; then echo "✓ keep-awake 自測通過"; fi

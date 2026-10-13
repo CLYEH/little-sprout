@@ -17,7 +17,10 @@
 #   status   印一行：idleTime、caffeinate pid、locked（ioreg IOConsoleLocked）、HIDIdleTime 秒、hold pid、租約剩餘秒。
 #            idleTime≠0、無 caffeinate、locked=true 任一成立 → exit 2，否則 0。
 #   restore  idleTime 還原為 json 記的原值（沒有 json 且目前為 0 → 還原 300）、kill hold 與 caffeinate、刪 json／租約檔。
-#            冪等。SessionEnd hook（.claude/settings.json）呼叫它做立即復原。
+#            冪等。`restore --if-owner`（SessionEnd hook 用）：從 stdin JSON 讀 `session_id`，與 json 的 `owner`（start 時記下的
+#            CLAUDE_CODE_SESSION_ID）相同才 restore；不同、沒有 json、沒有 owner 欄位一律不動、exit 0——別的 session 結束
+#            不能撤掉主 session 的防鎖定（merge-review R1 M1）。start 在 CLAUDE_CODE_SESSION_ID 非空時（補）寫 owner，
+#            為空（如 hook 環境）則保留既有 owner。
 # 不碰 sysadminctl／密碼設定；`defaults` 只寫 com.apple.screensaver 的 idleTime。非 macOS（無 defaults）→ 印一行略過、exit 0。
 #
 # 環境變數（自測／覆寫）：KEEP_AWAKE_STATE_DIR（預設 ~/.little-sprout）、KEEP_AWAKE_LEASE_FILE、
@@ -40,7 +43,7 @@ POLL="${KEEP_AWAKE_POLL_SEC:-60}"
 LEASE_DEFAULT="${KEEP_AWAKE_LEASE_DEFAULT:-3600}"
 DEFAULT_IDLE=300
 
-usage() { echo "用法：keep-awake.sh start [--lease <秒>] | status | restore | hold" >&2; }
+usage() { echo "用法：keep-awake.sh start [--lease <秒>] | status | restore [--if-owner] | hold" >&2; }
 
 if ! command -v defaults >/dev/null 2>&1; then
   echo "keep-awake：非 macOS（無 defaults），略過"; exit 0
@@ -54,9 +57,9 @@ read_idle() { dflt read 2>/dev/null | tr -d '[:space:]'; }
 caff_pids() { pgrep -f -- "$CAFF_PATTERN" 2>/dev/null; }
 first_caff() { caff_pids | head -1; }
 state_get() { sed -n "s/.*\"$1\":[[:space:]]*\"\{0,1\}\([^\",}]*\)\"\{0,1\}.*/\1/p" "$STATE_FILE" 2>/dev/null | head -1; }
-write_state() {  # write_state <原 idleTime> <hold pid>
+write_state() {  # write_state <原 idleTime> <hold pid> <owner session id（可空）>
   mkdir -p "$STATE_DIR"
-  printf '{"original_idle_time":%s,"hold_pid":%s,"started_at":"%s"}\n' "$1" "${2:-0}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$STATE_FILE"
+  printf '{"original_idle_time":%s,"hold_pid":%s,"owner":"%s","started_at":"%s"}\n' "$1" "${2:-0}" "${3:-}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$STATE_FILE"
 }
 is_hold() {  # pid 還活著且命令列真的是 keep-awake.sh hold（防 pid 重用誤殺）
   local p=${1:-}
@@ -106,7 +109,9 @@ cmd_start() {
     disown 2>/dev/null || true
     fresh=1
   fi
-  write_state "$orig" "$hpid"
+  local owner=${CLAUDE_CODE_SESSION_ID:-}
+  [ -n "$owner" ] || owner=$(state_get owner)   # 沒有 session id（SessionStart hook 環境）→ 保留既有 owner，不清空
+  write_state "$orig" "$hpid" "$owner"
   if [ "$fresh" -eq 1 ]; then
     # 新起的 hold 第一圈自己會補 caffeinate；這裡再起會兩邊同時看到「沒有」而各起一支。只等它出現（最多 3 秒）
     local w=30; while [ -z "$(first_caff)" ] && [ "$w" -gt 0 ]; do sleep 0.1; w=$((w - 1)); done
@@ -155,11 +160,27 @@ cmd_restore() {
   echo "keep-awake：restore ok（idleTime=${orig:-未動}，hold／caffeinate 已結束，json／租約已刪）"
 }
 
+cmd_restore_cli() {
+  case "${1:-}" in
+    '') cmd_restore ;;
+    --if-owner)
+      [ $# -eq 1 ] || { usage; exit 2; }
+      local sid owner
+      sid=$([ -t 0 ] || cat); sid=$(printf '%s' "$sid" | tr -d '\n' | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+      owner=$(state_get owner)
+      if [ -z "$sid" ] || [ -z "$owner" ] || [ "$sid" != "$owner" ]; then
+        echo "keep-awake：--if-owner 不符（session_id=${sid:-無} owner=${owner:-無}，或沒有 json），不動"; exit 0
+      fi
+      cmd_restore ;;
+    *) usage; exit 2 ;;
+  esac
+}
+
 cmd=${1:-}; [ $# -gt 0 ] && shift
 case "$cmd" in
   start) cmd_start "$@" ;;
   hold) cmd_hold ;;
   status) cmd_status ;;
-  restore) cmd_restore ;;
+  restore) cmd_restore_cli "$@" ;;
   *) usage; exit 2 ;;
 esac
