@@ -106,12 +106,12 @@
       "result_hash": "9a68b439105391de"
     }
   },
-  "total_nodes": 1361,
+  "total_nodes": 976,
   "tree_hash": "328a57114f7de99d",
   "flags": {
     "cross_all": false,
     "custom_overlay_re": false
   },
-  "scan_note": "snapshot mode，dump sha256=d0d50fcf8e6c475a993947bc09212b463c24afa40ee732aa088345258dcda84d；corner_anchor document_containers=0／ref_hits=0 為真實狀態（提案稿無 cmp/Photo Corner 角托元件，同 LS-455 r1／LS-511 r1）；掃描者 orchestrator（Claude）對 commit A3 4b7ce3f9 跑 pen-bounds-probe（三探針 ok；合蓋＋假 HDMI、keep-awake 生效）→ pen-snapshot-dump → overflow-scan --from-snapshot；head_sha=4b7ce3f9",
+  "scan_note": "snapshot mode，dump sha256=d0d50fcf8e6c475a993947bc09212b463c24afa40ee732aa088345258dcda84d；corner_anchor document_containers=0／ref_hits=0 為真實狀態（提案稿無 cmp/Photo Corner 角托元件，同 LS-455 r1）；掃描者 orchestrator（Claude）對 commit A3 4b7ce3f9 跑 pen-bounds-probe（三探針 ok；合蓋＋假 HDMI、keep-awake 生效）→ pen-snapshot-dump → overflow-scan --from-snapshot；total_nodes＝該 commit .pen 未展開節點數、scanned_nodes＝展開後快照列數；head_sha=4b7ce3f9",
   "head_sha": "4b7ce3f9fc2a301dcc579ffa47a538e31d4e50b2"
 }
