@@ -71,7 +71,11 @@ if [ ! -f "$statusline_sh" ] || ! grep -q 'usage-cache' "$statusline_sh" 2>/dev/
   usage_snippet_note="⚠ ${usage_cfg_dir}/statusline-command.sh 未掛用量快取寫入段——巡檢「用量」段讀不到 ${usage_cfg_dir}/usage-cache.json，週用量門檻偵測會印「探針無資料」（不擋，但等於沒巡到）。安裝方式見 scripts/ops/usage-cache-snippet.sh 檔頭（LS-311）。"
 fi
 
-out=$(bash "${here}/patrol.sh" --brief --repo "$root" "$stale" 2>&1); rc=$?
+# LS-512 R2 M2：SessionStart hook 環境帶的 CLAUDE_CODE_SESSION_ID 是「新 session 自己的 id」（merge-review R2 實測）。patrol.sh 的 keep-awake 段
+# 會呼叫 `start`，若帶著這個 id 就把防鎖定租約的 owner 改成每個新開的 session——臨時 session 一關，SessionEnd 的
+# `restore --if-owner` 就撤掉主 session 的防鎖定。所以這條路徑一律 `env -u` 拿掉 id：照樣續租／啟用，但不搶 owner；
+# owner 只由主 session 巡檢（cron）與 codex-dispatch 前置的 `start` 認領。
+out=$(env -u CLAUDE_CODE_SESSION_ID bash "${here}/patrol.sh" --brief --repo "$root" "$stale" 2>&1); rc=$?
 ctx="## 巡檢（SessionStart hook → scripts/ops/patrol.sh --brief；規約 docs/COLLABORATION.md §4-b）"$'\n'
 if [ "$rc" -ne 0 ]; then
   ctx="${ctx}⚠ 巡檢腳本失敗（exit ${rc}），本次略過，請手動跑 bash scripts/ops/patrol.sh 看原因："$'\n'

@@ -45,13 +45,17 @@ chmod +x "$work/fake-ioreg"
 
 new_env() {  # new_env <n>：每個案例一組獨立的 domain／狀態目錄，互不污染
   export KEEP_AWAKE_STATE_DIR="$work/state$1" KEEP_AWAKE_DEFAULTS_DOMAIN="$work/dom$1"
-  export KEEP_AWAKE_CAFFEINATE_BIN="$work/fake-caffeinate" KEEP_AWAKE_CAFFEINATE_PATTERN="$work/fake-caffeinate -d -i -s"
+  export KEEP_AWAKE_CAFFEINATE_BIN="$work/fake-caffeinate" KEEP_AWAKE_CAFFEINATE_PATTERN="^/bin/bash $work/fake-caffeinate -d -i -s"
   export KEEP_AWAKE_IOREG_BIN="$work/fake-ioreg" KEEP_AWAKE_POLL_SEC=1
   unset KEEP_AWAKE_LEASE_FILE
   rm -f "$work/locked"
+  # 上一案剛殺的假 caffeinate 還在 1 秒輪詢內垂死時，本案的 start 會把它當「已有 caffeinate」接手、隨後它退出 → status 假紅；先確認清乾淨
+  pkill -f "$work/fake-caffeinate -d -i -s" 2>/dev/null; wait_for 5 no_caff
 }
 idle() { defaults read "$KEEP_AWAKE_DEFAULTS_DOMAIN" idleTime 2>/dev/null; }
-ncaff() { pgrep -f "$work/fake-caffeinate -d -i -s" 2>/dev/null | wc -l | tr -d ' '; }
+# pgrep -f 的樣式必須錨在行首：未錨定時，別的行程（hold／start 同時在跑的 pgrep）命令列裡的樣式字面也會被當成 caffeinate，
+# 造成「憑空多一支／憑空消失」的間歇假紅（merge-review R2 m2 的根因；真實預設樣式 ^(/usr/bin/)?caffeinate … 本來就錨定）
+ncaff() { pgrep -f "^/bin/bash $work/fake-caffeinate -d -i -s" 2>/dev/null | wc -l | tr -d ' '; }
 hold_pid() { sed -n 's/.*"hold_pid":\([0-9]*\).*/\1/p' "$KEEP_AWAKE_STATE_DIR/keep-awake.json"; }
 orig_idle() { sed -n 's/.*"original_idle_time":\([0-9]*\).*/\1/p' "$KEEP_AWAKE_STATE_DIR/keep-awake.json"; }
 wait_for() {  # wait_for <秒> <命令…>：命令成功就回 0，逾時回 1
@@ -61,6 +65,7 @@ wait_for() {  # wait_for <秒> <命令…>：命令成功就回 0，逾時回 1
 idle_is() { [ "$(idle)" = "$1" ]; }
 gone() { ! kill -0 "$1" 2>/dev/null; }
 no_caff() { [ "$(ncaff)" = 0 ]; }
+caff_n() { [ "$(ncaff)" = "$1" ]; }   # 負載高時 hold／start 補 caffeinate 會晚幾秒：一律用 wait_for 等計數到位，不做一次性斷言（merge-review R2 m2）
 
 # ① start：記原值 300、寫 0、起 hold＋caffeinate、status exit 0
 new_env 1
@@ -73,7 +78,7 @@ eq '① json 記原值 300' "$(orig_idle)" 300
 [ -f "$KEEP_AWAKE_STATE_DIR/keep-awake.lease" ] && ok '① 租約檔已建' || bad '① 租約檔不存在'
 eq '① 租約檔內容＝預設 3600' "$(tr -d '[:space:]' < "$KEEP_AWAKE_STATE_DIR/keep-awake.lease")" 3600
 h1=$(hold_pid); kill -0 "$h1" 2>/dev/null && ok '① hold 行程在' || bad '① hold 行程不在'
-eq '① 只有一支 caffeinate' "$(ncaff)" 1
+wait_for 8 caff_n 1 && ok '① 只有一支 caffeinate' || bad "① 只有一支 caffeinate（期望「1」，實得「$(ncaff)」）"
 st=$(bash "$script" status 2>&1); rc=$?
 eq '① status exit 0' "$rc" 0
 has '① status 帶 idleTime=0／locked=false／HIDIdleTime=5s' "$st" 'idleTime=0 '
@@ -88,7 +93,7 @@ out=$(bash "$script" start --lease 1800 2>&1); rc=$?
 eq '② 第二次 start exit 0' "$rc" 0
 eq '② hold pid 不變（沒重複起）' "$(hold_pid)" "$h1"
 eq '② 原值仍 300' "$(orig_idle)" 300
-eq '② 仍只有一支 caffeinate' "$(ncaff)" 1
+wait_for 8 caff_n 1 && ok '② 仍只有一支 caffeinate' || bad "② 仍只有一支 caffeinate（期望「1」，實得「$(ncaff)」）"
 eq '② 租約檔內容更新為 --lease 1800' "$(tr -d '[:space:]' < "$KEEP_AWAKE_STATE_DIR/keep-awake.lease")" 1800
 
 # ③ restore：idleTime 回 300、hold／caffeinate 結束、json／租約刪除；再 restore 冪等
@@ -113,7 +118,7 @@ sleep 0.5
 bash "$script" start >/dev/null 2>&1; rc=$?
 eq '④ 接手 start exit 0' "$rc" 0
 eq '④ 原值記 300（不把 0 當原值）' "$(orig_idle)" 300
-eq '④ 沿用既有 caffeinate、不重複起' "$(ncaff)" 1
+wait_for 8 caff_n 1 && ok '④ 沿用既有 caffeinate、不重複起' || bad "④ 沿用既有 caffeinate、不重複起（期望「1」，實得「$(ncaff)」）"
 bash "$script" restore >/dev/null 2>&1
 eq '④ restore 還原成 300' "$(idle)" 300
 kill "$manual" 2>/dev/null
@@ -122,7 +127,7 @@ kill "$manual" 2>/dev/null
 new_env 5
 defaults write "$KEEP_AWAKE_DEFAULTS_DOMAIN" idleTime -int 300
 bash "$script" start >/dev/null 2>&1
-bash "$script" status >/dev/null 2>&1; eq '⑤ 正常 exit 0' "$?" 0
+st=$(bash "$script" status 2>&1); rc=$?; eq '⑤ 正常 exit 0' "$rc" 0; [ "$rc" = 0 ] || printf '%s\n' "$st" | sed 's/^/    status: /' >&2
 touch "$work/locked"
 st=$(bash "$script" status 2>&1); rc=$?
 eq '⑤ locked=true → exit 2' "$rc" 2
@@ -139,16 +144,16 @@ eq '⑤ 無 caffeinate → exit 2' "$rc" 2
 has '⑤ 無 caffeinate 印「無」' "$st" 'caffeinate=無'
 bash "$script" restore >/dev/null 2>&1
 
-# ⑥ 每次 start 續租：lease 3 秒、每 2 秒續一次，跑 7 秒（> 單一租約）hold 仍活著、idleTime 仍 0
+# ⑥ 每次 start 續租：lease 6 秒（負載高時 start 本身可能耗數秒，3 秒會假紅，merge-review R2 m2）、每 2 秒續一次，跑 6 秒後再 2 秒，hold 仍活著、idleTime 仍 0
 new_env 6
 defaults write "$KEEP_AWAKE_DEFAULTS_DOMAIN" idleTime -int 300
-bash "$script" start --lease 3 >/dev/null 2>&1; h6=$(hold_pid)
-for _ in 1 2 3; do sleep 2; bash "$script" start --lease 3 >/dev/null 2>&1; done
+bash "$script" start --lease 6 >/dev/null 2>&1; h6=$(hold_pid)
+for _ in 1 2 3 4; do sleep 2; bash "$script" start --lease 6 >/dev/null 2>&1; done
 kill -0 "$h6" 2>/dev/null && ok '⑥ 持續續租 → 超過單一租約長度 hold 仍活著' || bad '⑥ 續租了 hold 卻死了'
 eq '⑥ 續租期間 idleTime 仍 0' "$(idle)" 0
 
 # ⑦ 租約過期：停止續租 → hold 在 lease＋一個輪詢週期內自動 restore（idleTime 回 300、hold／caffeinate 結束、檔案清掉）
-wait_for 8 idle_is 300 && ok '⑦ 租約過期 → hold 自動還原 idleTime=300' || bad "⑦ 租約過期後 idleTime 仍為「$(idle)」"
+wait_for 20 idle_is 300 && ok '⑦ 租約過期 → hold 自動還原 idleTime=300' || bad "⑦ 租約過期後 idleTime 仍為「$(idle)」"
 wait_for 5 gone "$h6" && ok '⑦ hold 已自行結束' || bad '⑦ hold 仍在'
 wait_for 5 no_caff && ok '⑦ caffeinate 已結束' || bad '⑦ caffeinate 仍在'
 [ ! -e "$KEEP_AWAKE_STATE_DIR/keep-awake.json" ] && ok '⑦ json 已刪' || bad '⑦ json 仍在'
@@ -168,7 +173,7 @@ eq '⑪ (不同 owner) exit 0' "$rc" 0
 has '⑪ (不同 owner) 印「不符」' "$out" '--if-owner 不符'
 eq '⑪ (不同 owner) idleTime 仍 0（沒被撤掉）' "$(idle)" 0
 kill -0 "$h11" 2>/dev/null && ok '⑪ (不同 owner) hold 仍活著' || bad '⑪ (不同 owner) hold 被殺了'
-eq '⑪ (不同 owner) caffeinate 仍在' "$(ncaff)" 1
+wait_for 8 caff_n 1 && ok '⑪ (不同 owner) caffeinate 仍在' || bad "⑪ (不同 owner) caffeinate 仍在（期望「1」，實得「$(ncaff)」）"
 [ -f "$KEEP_AWAKE_STATE_DIR/keep-awake.json" ] && ok '⑪ (不同 owner) json 仍在' || bad '⑪ (不同 owner) json 被刪了'
 printf '' | bash "$script" restore --if-owner >/dev/null 2>&1; eq '⑪ (stdin 無 session_id) exit 0' "$?" 0
 eq '⑪ (stdin 無 session_id) idleTime 仍 0' "$(idle)" 0

@@ -2890,6 +2890,35 @@ else
 fi
 : > "$FAKE_KA_LOG"
 
+# ---- ㊴ LS-512 R2 M2：SessionStart 路徑不搶防鎖定租約的 owner。SessionStart hook 環境帶「新 session 自己的 id」
+#        （merge-review R2 實測），session-start.sh → patrol.sh --brief → keep-awake `start`；id 若原樣帶進去，每個新開的臨時 session
+#        都會把 owner 改成自己、一關就 `restore --if-owner` 撤掉主 session 的防鎖定。session-start.sh 因此 `env -u CLAUDE_CODE_SESSION_ID`。
+#        假 keep-awake 把 start 收到的 CLAUDE_CODE_SESSION_ID 記進檔；對照組＝直接跑 patrol.sh（cron 路徑）要收到 id。
+#        mutation：拿掉 `env -u` → SessionStart 路徑收到 id → 本案紅 ----
+cat > "$work/fake-ka-sid.sh" <<'FAKEKASID'
+#!/bin/bash
+[ "$1" = start ] && printf '%s\n' "${CLAUDE_CODE_SESSION_ID-<unset>}" >> "$FAKE_KA_SID_LOG"
+[ "$1" = status ] && echo "keep-awake：idleTime=0 caffeinate=1 locked=false HIDIdleTime=1s hold=2 lease剩餘=3000s"
+exit 0
+FAKEKASID
+export FAKE_KA_SID_LOG="$work/ka-sid.log"
+: > "$FAKE_KA_SID_LOG"
+printf '{}' | CLAUDE_CODE_SESSION_ID=sess-newly-opened PATROL_KEEP_AWAKE_SH="$work/fake-ka-sid.sh" CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$hook" >/dev/null 2>&1
+if [ -s "$FAKE_KA_SID_LOG" ]; then echo "✓ ㊴ SessionStart 路徑確實呼叫了 keep-awake start"; else echo "✗ ㊴ SessionStart 路徑沒呼叫 keep-awake start（本案無從驗起）" >&2; fail=1; fi
+eq39() { if [ "$2" = "$3" ]; then echo "✓ $1"; else echo "✗ ${1}（期望「${3}」，實得「${2}」）" >&2; fail=1; fi; }
+eq39 '㊴ SessionStart 路徑的 start 收不到 CLAUDE_CODE_SESSION_ID（不搶 owner）' "$(head -1 "$FAKE_KA_SID_LOG")" '<unset>'
+: > "$FAKE_KA_SID_LOG"
+CLAUDE_CODE_SESSION_ID=sess-main PATROL_KEEP_AWAKE_SH="$work/fake-ka-sid.sh" bash "$patrol" --repo "$repo" --no-pr --no-fetch --brief "$STALE" >/dev/null 2>&1
+eq39 '㊴ (對照) cron 巡檢路徑（直接跑 patrol.sh）的 start 仍收到 id（owner 由這條認領）' "$(head -1 "$FAKE_KA_SID_LOG")" 'sess-main'
+mut39="$work/session-start.keep-env.sh"
+sed -e 's/env -u CLAUDE_CODE_SESSION_ID //' -e "s|^here=.*|here=\"${root}/scripts/ops\"|" "$hook" > "$mut39"
+if ! diff -q "$hook" "$mut39" >/dev/null 2>&1 && ! grep -q 'env -u CLAUDE_CODE_SESSION_ID' "$mut39"; then
+  : > "$FAKE_KA_SID_LOG"
+  printf '{}' | CLAUDE_CODE_SESSION_ID=sess-newly-opened PATROL_KEEP_AWAKE_SH="$work/fake-ka-sid.sh" CLAUDE_PROJECT_DIR="$repo" PATROL_STALE="$STALE" bash "$mut39" >/dev/null 2>&1
+  eq39 '㊴ mutant：拿掉 env -u → SessionStart 路徑的 start 收到新 session 的 id（上面「收不到」確由 env -u 造成）' "$(head -1 "$FAKE_KA_SID_LOG")" 'sess-newly-opened'
+else
+  echo "✗ ㊴ mutant 的 sed 未命中（負控本身無效）" >&2; fail=1
+fi
 
 if [ "$fail" -eq 0 ]; then
   if [ "$jq_skipped" -gt 0 ]; then

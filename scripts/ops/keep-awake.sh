@@ -20,7 +20,8 @@
 #            冪等。`restore --if-owner`（SessionEnd hook 用）：從 stdin JSON 讀 `session_id`，與 json 的 `owner`（start 時記下的
 #            CLAUDE_CODE_SESSION_ID）相同才 restore；不同、沒有 json、沒有 owner 欄位一律不動、exit 0——別的 session 結束
 #            不能撤掉主 session 的防鎖定（merge-review R1 M1）。start 在 CLAUDE_CODE_SESSION_ID 非空時（補）寫 owner，
-#            為空（如 hook 環境）則保留既有 owner。
+#            為空則保留既有 owner。**SessionStart hook 環境其實會帶「新 session 自己的 id」**（merge-review R2 實測），
+#            所以 session-start.sh 呼叫 patrol 時 `env -u CLAUDE_CODE_SESSION_ID`，那條路徑的 start 不搶 owner。
 # 不碰 sysadminctl／密碼設定；`defaults` 只寫 com.apple.screensaver 的 idleTime。非 macOS（無 defaults）→ 印一行略過、exit 0。
 #
 # 環境變數（自測／覆寫）：KEEP_AWAKE_STATE_DIR（預設 ~/.little-sprout）、KEEP_AWAKE_LEASE_FILE、
@@ -110,11 +111,11 @@ cmd_start() {
     fresh=1
   fi
   local owner=${CLAUDE_CODE_SESSION_ID:-}
-  [ -n "$owner" ] || owner=$(state_get owner)   # 沒有 session id（SessionStart hook 環境）→ 保留既有 owner，不清空
+  [ -n "$owner" ] || owner=$(state_get owner)   # 沒有 session id（session-start.sh 刻意 env -u 拿掉）→ 保留既有 owner，不清空
   write_state "$orig" "$hpid" "$owner"
   if [ "$fresh" -eq 1 ]; then
-    # 新起的 hold 第一圈自己會補 caffeinate；這裡再起會兩邊同時看到「沒有」而各起一支。只等它出現（最多 3 秒）
-    local w=30; while [ -z "$(first_caff)" ] && [ "$w" -gt 0 ]; do sleep 0.1; w=$((w - 1)); done
+    # 新起的 hold 第一圈自己會補 caffeinate；這裡再起會兩邊同時看到「沒有」而各起一支。只等它出現（最多 8 秒；高負載下 hold 第一圈可能慢）
+    local w=80; while [ -z "$(first_caff)" ] && [ "$w" -gt 0 ]; do sleep 0.1; w=$((w - 1)); done
   else
     ensure_caffeinate "$hpid"; sleep 0.3   # 讓剛起的 caffeinate 進得了 pgrep
   fi
