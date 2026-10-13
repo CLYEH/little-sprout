@@ -1,6 +1,7 @@
 #!/bin/bash
 # 巡檢（LS-71）：列出「無依賴卻沒人動」的 PR／分支／worktree＋Supabase lock 持有者（LS-70）＋三分支祖先鏈漂移（LS-85）＋gate hooks 是否
-# 裝好（LS-87），只讀不寫（唯一的寫入是 git fetch origin）。
+# 裝好（LS-87），只讀不寫（寫入只有兩處：git fetch origin；LS-512 起每輪呼叫 `keep-awake.sh start` 續租 Mac 防鎖定租約——
+# 巡檢停了租約到期自動復原，`PATROL_NO_KEEP_AWAKE=1` 可整段略過）。
 # 給 orchestrator 的巡檢 cron（每 26 分鐘，prompt 模板見 docs/COLLABORATION.md §4-b）與 SessionStart hook
 # （scripts/ops/session-start.sh）用。Linear 那一半（Ready 無人接／In Progress 無 worktree／QA 但 test 未含）
 # 要 orchestrator 用 MCP list_issues 對照，這裡只印提醒。自測：scripts/ops/patrol.test.sh（合成 repo，掛 CI rules job）。
@@ -1114,6 +1115,34 @@ if [ -n "$pen_abs" ]; then
 fi
 # LS376-PEN-DESIGN-END
 
+# ---- keep-awake（LS-512；使用者 2026-10-13 裁「防鎖定跟著巡檢程式，由程式控制，關掉時就復原」）：每輪一律呼叫冪等的
+#      `keep-awake.sh start`（第一次：記原 idleTime、寫 0、起 hold／caffeinate；之後只 touch 租約，租約 3600 秒），
+#      再跑 `status`：exit 2（idleTime≠0／無 caffeinate／IOConsoleLocked=true）→ 印 ⚠（提示不擋，比照 runtime 不一致那行）。
+#      巡檢 cron 被刪／session 結束後租約到期，hold 自動 restore（idleTime 回原值、caffeinate 結束）。根因：Pen 1.2.16 鎖定即停排版，
+#      收據掃描出假陽性（LS-511 r1 卡 4h40m）。PATROL_KEEP_AWAKE_SH 可換假身（自測用，避免動本機真的螢幕保護程式設定）；
+#      PATROL_NO_KEEP_AWAKE=1 整段略過。KA_LINE 不帶 ⚠／→ 標記：patrol-filter.sh 會濾掉它，只有 ⚠ 旗標進 orchestrator context。
+KA_LINE=; KA_WARNS=; ka_ran=0
+ka_warn() { KA_WARNS="${KA_WARNS}${1}"$'\n'; add_flag "[keep-awake] ${1}"; }   # human 段印 KA_WARNS（human 模式不印 FLAGS，一樣要有 ⚠ 行進得了 patrol-filter）
+if [ -z "${PATROL_NO_KEEP_AWAKE:-}" ]; then
+  ka_sh="${PATROL_KEEP_AWAKE_SH:-${here}/keep-awake.sh}"
+  if [ -f "$ka_sh" ]; then
+    ka_ran=1
+    ka_start_out=$(bash "$ka_sh" start 2>&1); ka_start_rc=$?
+    KA_LINE=$(bash "$ka_sh" status 2>&1); ka_rc=$?
+    ka_field() { printf '%s' "$KA_LINE" | sed -n "s/.*$1=\([^ ]*\).*/\1/p" | head -1; }
+    if [ "$ka_start_rc" -ne 0 ]; then
+      ka_warn "⚠ keep-awake start 失敗（exit ${ka_start_rc}：$(printf '%s' "$ka_start_out" | head -1)）→ bash scripts/ops/keep-awake.sh start（LS-512）"
+    fi
+    if [ "$ka_rc" -eq 2 ]; then
+      ka_warn "⚠ keep-awake 未生效（idleTime=$(ka_field idleTime) caffeinate=$(ka_field caffeinate) locked=$(ka_field locked)）——鎖定會讓設計票的收據掃描假陽性（LS-512）→ bash scripts/ops/keep-awake.sh start"
+    elif [ "$ka_rc" -ne 0 ]; then
+      ka_warn "⚠ keep-awake status 失敗（exit ${ka_rc}）→ bash scripts/ops/keep-awake.sh status（LS-512）"
+    fi
+  else
+    ka_warn "⚠ keep-awake 腳本不存在（${ka_sh}），這輪沒續租防鎖定（LS-512）"
+  fi
+fi
+
 # ---- 用量（LS-311；使用者 2026-09-16 指示：讀 statusline 落地的 usage-cache.json（rate_limits.
 #      seven_day／five_hour，由 scripts/ops/usage-cache-snippet.sh／statusline-command.sh 原子寫入）——週用量
 #      ≥ PATROL_USAGE_STOP（預設 99）→ 印 99 級行，指示 orchestrator 停下所有工作＋寫交接；≥ PATROL_USAGE_WARN
@@ -1619,6 +1648,7 @@ case "$MODE" in
     [ "$pencil_ran" -eq 1 ] && printf '%s\n' "$PENCIL_LINE"
     [ -n "$PEN_WRONG_LINE" ] && printf '%s\n' "$PEN_WRONG_LINE"
     [ -n "$PEN_DESIGN_LINE" ] && [ "$PEN_DESIGN_FLAGGED" -eq 0 ] && printf '%s\n' "$PEN_DESIGN_LINE"
+    [ -n "$KA_LINE" ] && printf '%s\n' "$KA_LINE"
     [ -n "$USAGE_LINE" ] && printf '%s\n' "$USAGE_LINE"
     if [ -n "$FLAGS" ]; then printf '%s' "$FLAGS"; else echo "巡檢：無異常（git／PR 面；Linear 對照仍需 list_issues）"; fi
     ;;
@@ -1668,6 +1698,9 @@ case "$MODE" in
       sim_rt_note=; [ "$sim_rt_mismatch" -gt 0 ] && sim_rt_note="（釘住 iOS ${sim_pinned_os}，提示不擋）"
       echo "  Xcode 預設模擬器 ${sim_default} 台（未列入清理；修剪需使用者裁定） · runtime 不一致 ${sim_rt_mismatch}${sim_rt_note} · CoreSimulator/Devices ${disk_devices_gb:-?} GB（${devices_du_src:-無資料}）${sim_linear_note:+ · ${sim_linear_note}}"
     fi
+    echo "== keep-awake（LS-512；每輪呼叫 keep-awake.sh start 續租防鎖定租約；status exit 2＝未生效 ⚠；巡檢停了租約到期自動復原）"
+    echo "  ${KA_LINE:-（PATROL_NO_KEEP_AWAKE 略過）}"
+    [ -n "$KA_WARNS" ] && printf '%s' "$KA_WARNS" | sed 's/^/  /'
     echo "== Booted 模擬器（LS-100；demo-* 豁免；>1 台非豁免同時 Booted＝用完沒關）"
     if [ -n "$BOOT_LINES" ]; then printf '%s' "$BOOT_LINES"; else echo "  （無異常；Booted ${boot_total} 台，非 demo-* ${nonexempt_boot_count} 台）"; fi
     echo "== Booted emulator（LS-477；adb devices 的 emulator-* 對照 worktree，票 worktree 已不在＝殘機 ⚠；無 adb 略過）"

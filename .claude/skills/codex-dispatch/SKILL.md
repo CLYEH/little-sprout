@@ -14,6 +14,7 @@ description: Orchestrator 經本機 codex:rescue（codex-companion task）派任
 3. **提案 .pen 路徑**：`docs/design-proposals/<slug>/<name>.pen`（不是 `design/littlesprout.pen`）；新稿由 Codex 建檔，改稿就寫既有提案檔路徑。
 4. **Pen 切檔由 orchestrator 代跑**：`bash scripts/ops/pen-open.sh <票 worktree 絕對路徑> --pen <提案檔>`，exit 0 才派。`AGENTS.md` 禁止 Codex 切換、關閉或殺共用的桌面 Pen；設計票期間 Pen 停在票檔，Codex 收工也不切回。
 5. **鎖屏規則（LS-480／LS-483）**：螢幕鎖定時 Pen 不重新排版、`Get` bounds 系統性偏移，收據會出假陽性。派工前與每次掃描前跑 `bash scripts/design/pen-bounds-probe.sh --pen <提案檔>`，exit 3（鎖屏或 bounds 偏移）就不派掃描、等解鎖；無人值守時段只派不需要版面量測的工作。
+6. **防鎖定（LS-512）**：派工前 `bash scripts/ops/keep-awake.sh start`，exit 0 才派（`start` 印的狀態行與 `status` 皆正常；status exit 2＝idleTime≠0／無 caffeinate／IOConsoleLocked=true，先處理再派）。租約制：巡檢每輪自動續租（`patrol.sh` 每輪呼叫 `start`），巡檢停了或 session 結束租約到期（預設 3600 秒）hold 自動 restore；設計票長時間無巡檢時手動 `start --lease <秒>` 拉長。
 
 ## 2. companion 命令
 
